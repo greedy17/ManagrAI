@@ -559,13 +559,14 @@ def disregard_meeting_review_block_set(context, *args, **kwargs):
 def final_meeting_interaction_block_set(context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     meeting = workflow.meeting
-    meeting_form = OrgCustomSlackFormInstance.objects.get(resource_id=workflow.resource_id)
+    meeting_form = workflow.forms.filter(
+        template__form_type=slack_const.FORM_TYPE_MEETING_REVIEW
+    ).first()
     blocks = None
     if meeting_form.saved_data["meeting_type"] == "No Update":
         blocks = [
             block_builders.simple_section(
-                f":+1: Got it! No updated needed for meeting *{meeting.topic}* :calendar:",
-                "mrkdwn",
+                f"No updated needed for meeting *{meeting.topic}* :calendar:", "mrkdwn",
             )
         ]
     else:
