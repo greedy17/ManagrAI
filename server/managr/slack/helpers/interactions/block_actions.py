@@ -827,6 +827,8 @@ def process_no_changes_made(payload, context):
         return logger.exception(f"Bad request {e}")
     state = {"meeting_type": "No Update", "meeting_comments": "No Update"}
     form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_MEETING_REVIEW).first()
+    form.is_submitted = True
+    form.submission_date = timezone.now()
     form.save_form(state, False)
     ops = [
         f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}",
