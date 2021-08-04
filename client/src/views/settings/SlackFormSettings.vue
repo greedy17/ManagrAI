@@ -188,7 +188,7 @@
               Stage Related Fields
             </button>
             <img
-              style="height: 2rem; cursor: pointer"
+              style="cursor: pointer"
               src="@/assets/images/info.png"
               @click.prevent.stop="toggleObjectsModal"
             />
