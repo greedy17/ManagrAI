@@ -1,5 +1,129 @@
 <template>
   <div class="alerts-page">
+    <Modal ref="modalName">
+      <template v-slot:header>
+        <h1>Popular Smart Alerts</h1>
+      </template>
+
+      <template v-slot:body>
+        <div>
+          <div class="top">
+            <p>
+              <strong style="font-size: 18px; color: black">"Rotting"</strong> Opps/Leads/Accounts
+              not touched in over 7 days
+            </p>
+          </div>
+
+          <div class="row_">
+            <span class="col">
+              <label for="lasgt">SFDC Field</label>
+              <input type="text" id="last" placeholder="Last Activity" disabled />
+            </span>
+
+            <span class="col">
+              <label for="less">Operator</label>
+              <input type="text" id="less" placeholder="Less than" disabled />
+            </span>
+
+            <span class="col">
+              <label for="seven">Days</label>
+              <input type="text" id="seven" placeholder="-7" disabled />
+            </span>
+          </div>
+          <p style="color: #199e54">Run Day: Wed | Pipeline: Myself | Send to: myself</p>
+        </div>
+
+        <div>
+          <div class="top">
+            <p>
+              <strong style="font-size: 18px; color: black">"Close Date Passed"</strong> Past due
+              next step date (also works for close date)
+            </p>
+          </div>
+
+          <div class="row_">
+            <span class="col">
+              <label for="next">SFDC Field</label>
+              <input type="text" id="next" placeholder="Next Step Date" disabled />
+            </span>
+
+            <span class="col">
+              <label for="leq">Operator</label>
+              <input type="text" id="leq" placeholder="Less than/Equal to" disabled />
+            </span>
+
+            <span class="col">
+              <label for="none">Days</label>
+              <input type="text" id="none" placeholder="0" disabled />
+            </span>
+          </div>
+          <p style="color: #199e54">
+            Run Day: Monday | Pipeline: Myself | Send to: #my-pipe (create this channel + invite
+            @managr to it)
+          </p>
+        </div>
+
+        <div>
+          <div class="top">
+            <p>
+              <strong style="font-size: 18px; color: black">"Update Forecast"</strong> Deals due to
+              close this week, not in Commit
+            </p>
+          </div>
+
+          <div class="row_">
+            <span class="col">
+              <label for="close">SFDC field</label>
+              <input type="text" id="close" placeholder="Close date" disabled />
+            </span>
+
+            <span class="col">
+              <label for="opr">Operator</label>
+              <input type="text" id="opr" placeholder="Greater than" disabled />
+            </span>
+
+            <span class="col">
+              <label for="days">Days</label>
+              <input type="text" id="days" placeholder="5" disabled />
+            </span>
+          </div>
+
+          <div class="row_">
+            <span class="col">
+              <label for="forcast">SFDC Field</label>
+              <input type="text" id="forcast" placeholder="Forecast Category" disabled />
+            </span>
+
+            <span class="col">
+              <p style="margin-top: -1rem; color: #4d4e4c">AND</p>
+              <label style="margin-top: -1rem" for="not">Operator</label>
+              <input type="text" id="not" placeholder="Does not =" disabled />
+            </span>
+
+            <span class="col">
+              <label for="commit">SFDC Field</label>
+              <input type="text" id="commit" placeholder="commit" disabled />
+            </span>
+          </div>
+          <p style="color: #199e54">Run Day: Friday | Pipeline: Everyone | Send to: Owner</p>
+        </div>
+      </template>
+
+      <!-- <template v-slot:footer>
+        <div>
+          <button @click="$refs.modalName.closeModal()">exit</button>
+        </div>
+      </template> -->
+    </Modal>
+
+    <div>
+      <p class="gray" style="font-size: 16px; font-weight: bold">
+        Dont know where to start ? These
+        <span @click="$refs.modalName.openModal()" class="alertsModal">Smart Alerts</span>
+        are the most popular.
+      </p>
+    </div>
+
     <ExpandablePanel>
       <template v-slot:panel-header="{ classes, expand }" class="box__header">
         <div :class="classes" @click="expand">
@@ -54,7 +178,7 @@
             :class="
               alertTemplateForm.field.title.isValid &&
               !alertTemplateForm.field.alertGroups.groups
-                .map(fields => fields.isValid)
+                .map((fields) => fields.isValid)
                 .includes(false)
                 ? 'slate'
                 : 'gray'
@@ -67,9 +191,9 @@
             :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
             v-if="
               alertTemplateForm.field.title.isValid &&
-                !alertTemplateForm.field.alertGroups.groups
-                  .map(fields => fields.isValid)
-                  .includes(false)
+              !alertTemplateForm.field.alertGroups.groups
+                .map((fields) => fields.isValid)
+                .includes(false)
             "
           >
             <svg width="24px" height="24px" viewBox="0 0 24 24">
@@ -141,7 +265,7 @@
     <ExpandablePanel
       v-if="
         alertTemplateForm.field.title.isValid &&
-          !alertTemplateForm.field.alertGroups.groups.map(fields => fields.isValid).includes(false)
+        !alertTemplateForm.field.alertGroups.groups.map((fields) => fields.isValid).includes(false)
       "
     >
       <template v-slot:panel-header="{ classes, expand }" class="box__header">
@@ -149,7 +273,7 @@
           <span
             :class="
               !alertTemplateForm.field.alertMessages.groups
-                .map(fields => fields.isValid)
+                .map((fields) => fields.isValid)
                 .includes(false)
                 ? 'slate'
                 : 'gray'
@@ -160,7 +284,7 @@
             :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
             v-if="
               !alertTemplateForm.field.alertMessages.groups
-                .map(fields => fields.isValid)
+                .map((fields) => fields.isValid)
                 .includes(false)
             "
           >
@@ -179,7 +303,7 @@
       </template>
       <template slot="panel-content">
         <template v-if="selectedResourceType">
-          <div class="alerts-page__message">
+          <div class="alerts-page__message" style="height: 60vh">
             <div class="alerts-page__message-options">
               <!-- <FormField
                 v-model="
@@ -201,16 +325,16 @@
                       :options="{
                         modules: { toolbar: { container: ['bold', 'italic', 'strike'] } },
                         placeholder:
-                          'Type your message here!  \n \nPRO TIP: try adding the links below or selecting a field in order to display the {field value}. \n \nEx. Hey, { __Recipient.full_name } your deal { Opportunity.Name } has a passed closed date { Opportunity.CloseDate } . Please update it!',
+                          'Type your message here, or copy and paste your favorite template...',
                         theme: 'snow',
                       }"
-                      class="bottom top"
+                      class="bottom"
                     />
                   </template>
                 </FormField>
                 <div class="alerts-page__message-options-body__bindings">
                   <div class="alerts-page__message-options-body__bindings__fields">
-                    <ListContainer horizontal>
+                    <ListContainer v-if="!listVisible" horizontal>
                       <template v-slot:list>
                         <ListItem
                           :key="key"
@@ -222,11 +346,12 @@
                       </template>
                     </ListContainer>
                     <DropDownSearch
+                      v-if="!dropdownVisible"
                       :items="fields.list"
                       @input="bindText(`${selectedResourceType}.${$event}`)"
                       displayKey="referenceDisplayLabel"
                       valueKey="apiName"
-                      nullDisplay="Additional fields"
+                      nullDisplay="Select field to display"
                       searchable
                       :hasNext="!!fields.pagination.hasNextPage"
                       @load-more="fieldNextPage"
@@ -235,12 +360,72 @@
                       class="left"
                     />
                   </div>
+                  <div style="display: flex; flex-direction: row">
+                    <div class="group">
+                      <button class="btn btn--secondary btn--icon" @click="showList">
+                        <svg width="24px" height="24px" viewBox="0 0 24 24">
+                          <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
+                        </svg>
+                      </button>
+                      <p class="sub">Recipient name</p>
+                    </div>
+                    <div class="group">
+                      <button class="btn btn--secondary btn--icon" @click="showDropDown">
+                        <svg width="24px" height="24px" viewBox="0 0 24 24">
+                          <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
+                        </svg>
+                      </button>
+                      <p class="sub">Insert Salesforce field</p>
+                    </div>
+                  </div>
+                  <p style="font-size: 14px">
+                    <strong class="pink">Pro Tip:</strong> inserting the
+                    <strong>Salesforce field</strong> will display the field value in the message.
+                  </p>
                 </div>
               </div>
             </div>
-            <div class="alerts-page__message-template">
-              <div class="alerts-page__message-template__message">
+            <div
+              class="alerts-page__message-template"
+              style="margin-left: 7.5rem; margin-top: -1rem"
+            >
+              <!-- <div class="alerts-page__message-template__message">
                 <SlackMessagePreview :alert="alertObj" />
+              </div> -->
+              <h3 class="pink">Templates:</h3>
+              <div style="font-size: 14px">
+                <div class="templates">
+                  <p>
+                    Hey <strong>{ __Recipient.full_name }</strong>, your deal
+                    <strong>{ Opportunity.Name }</strong> has a passed closed date
+                    <strong>{ Opportunity.Name }</strong>. Please update it!
+                  </p>
+                </div>
+
+                <div class="templates">
+                  <p>
+                    <strong>{ Opportunity.Name }</strong> is a new Opp booked for this week! The
+                    appointment was booked via <strong>{ Opportunity.LeadSource }</strong>!
+                  </p>
+                  <p>Handoff notes: <strong>{ Opportunity.Handoff_Notes_c }</strong></p>
+                  <p style="margin-top: -0.75rem">
+                    Using a Competitor: <strong>{ Opportunity.Competitors_c }</strong>
+                  </p>
+                  <p style="margin-top: -0.75rem">
+                    Meeting date:
+                    <strong>{ Opportunity.Meeting_Date_c }</strong>
+                  </p>
+                </div>
+
+                <div class="templates">
+                  <p>
+                    Please update the forecast for <strong>{ Opportunity.Name }</strong>! it's
+                    expected to close on <strong>{ Opportunity.CloseDate }</strong> and forecasted
+                    as <strong>{ Opportunity.ForecastCategoryName }</strong> - please ither move to
+                    Commit or update the Close Date.
+                  </p>
+                  <p>Next Step: <strong>{ Opportunity.NextStep }</strong></p>
+                </div>
               </div>
             </div>
           </div>
@@ -252,7 +437,9 @@
     </ExpandablePanel>
     <ExpandablePanel
       v-if="
-        !alertTemplateForm.field.alertMessages.groups.map(fields => fields.isValid).includes(false)
+        !alertTemplateForm.field.alertMessages.groups
+          .map((fields) => fields.isValid)
+          .includes(false)
       "
     >
       <template v-slot:panel-header="{ classes, expand }" class="box__header">
@@ -260,7 +447,7 @@
           <span
             :class="
               !alertTemplateForm.field.alertConfig.groups
-                .map(fields => fields.isValid)
+                .map((fields) => fields.isValid)
                 .includes(false)
                 ? 'slate'
                 : 'gray'
@@ -271,7 +458,7 @@
           <span
             v-if="
               !alertTemplateForm.field.alertConfig.groups
-                .map(fields => fields.isValid)
+                .map((fields) => fields.isValid)
                 .includes(false)
             "
             :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
@@ -292,7 +479,7 @@
       <template slot="panel-content">
         <template v-if="selectedResourceType">
           <div
-            class="alerts-page__settings"
+            class="alerts-page__settings row_"
             :key="i"
             v-for="(form, i) in alertTemplateForm.field.alertConfig.groups"
           >
@@ -304,11 +491,12 @@
                 @blur="form.field.recurrenceDay.validate()"
                 v-model="form.field.recurrenceDay.value"
                 small
-                style="margin-top: 2rem"
+                style="margin-top: 2rem; margin-bottom: 2rem"
               />
               <FormField
                 v-else-if="form.field.recurrenceFrequency.value == 'WEEKLY'"
                 :errors="form.field.recurrenceDay.errors"
+                style="margin-bottom: 3rem; margin-top: 2rem"
               >
                 <template v-slot:input>
                   <DropDownSearch
@@ -324,10 +512,7 @@
                   />
                 </template>
               </FormField>
-              <div
-                class="alerts-page__settings__frequency"
-                style="margin-bottom: -3rem; padding-top: 1.25rem"
-              >
+              <div class="alerts-page__settings__frequency">
                 <label class="alerts-page__settings__frequency-label">Weekly</label>
                 <ToggleCheckBox
                   @input="
@@ -342,9 +527,9 @@
                 <label class="alerts-page__settings__frequency-label">Monthly</label>
               </div>
             </div>
-            <div class="alerts-page__settings__target-users">
+            <div class="alerts-page__settings__target-users" style="margin-bottom: 2rem">
               <span class="muted">
-                <em style="margin-left: 0.5rem">select one/multiple users or groups.</em>
+                <em style="margin-left: 0.5rem">Select Pipelines.</em>
               </span>
               <FormField :errors="form.field.alertTargets.errors">
                 <template v-slot:input>
@@ -363,7 +548,6 @@
                     :hasNext="!!users.pagination.hasNextPage"
                     @load-more="onUsersNextPage"
                     @search-term="onSearchUsers"
-                    style="padding-bottom: 0.25rem"
                   />
                 </template>
               </FormField>
@@ -379,12 +563,12 @@
                 <em>{{ form.field._recipients.value.name }}</em> channel
               </span>
               <span v-if="form.field.recipientType.value == 'USER_LEVEL'" class="muted">
-                <em style="margin-left: 0.5rem">select one or multiple user-groups.</em>
+                <em style="margin-left: 0.5rem; margin-top: 2rem">Select Recipients.</em>
               </span>
               <FormField
                 v-if="form.field.recipientType.value == 'USER_LEVEL'"
                 :errors="form.field.recipients.errors"
-                style="padding-bottom: 0.25rem"
+                style="margin-bottom: 2.5rem"
               >
                 <template v-slot:input>
                   <DropDownSearch
@@ -436,19 +620,17 @@
                   </DropDownSearch>
                 </template>
               </FormField>
-            </div>
-            <div class="row__">
+
               <span
                 @click="
                   form.field.recipientType.value = recipientTypeToggle(
                     form.field.recipientType.value,
                   )
                 "
-                class="muted--link"
-                style="margin-left: -3rem"
+                class="bolder"
                 v-if="form.field.recipientType.value == 'USER_LEVEL'"
               >
-                Send to channel instead ?
+                Send to a <strong class="pink">#channel</strong> instead ?
               </span>
 
               <span
@@ -457,23 +639,23 @@
                     form.field.recipientType.value,
                   )
                 "
-                class="muted--link"
+                class="bolder"
                 v-else
               >
                 Send to a group of users (DM) instead ?
               </span>
-              <div class="alerts-page__settings-remove">
-                <button
-                  style="margin-left: 0.5rem"
-                  class="btn btn--danger btn--icon"
-                  @click.stop="onRemoveSetting(i)"
-                  :disabled="alertTemplateForm.field.alertConfig.groups.length - 1 <= 0"
-                >
-                  <svg width="16px" height="16px" viewBox="0 0 24 24">
-                    <use xlink:href="@/assets/images/remove.svg#remove" />
-                  </svg>
-                </button>
-              </div>
+            </div>
+
+            <div class="alerts-page__settings-remove">
+              <button
+                class="btn btn--danger btn--icon"
+                @click.stop="onRemoveSetting(i)"
+                :disabled="alertTemplateForm.field.alertConfig.groups.length - 1 <= 0"
+              >
+                <svg width="16px" height="16px" viewBox="0 0 24 24">
+                  <use xlink:href="@/assets/images/remove.svg#remove" />
+                </svg>
+              </button>
             </div>
           </div>
           <div class="add__group">
@@ -494,7 +676,7 @@
       class="slate"
       title="5. Confirm and save your alert"
       v-if="
-        !alertTemplateForm.field.alertConfig.groups.map(fields => fields.isValid).includes(false)
+        !alertTemplateForm.field.alertConfig.groups.map((fields) => fields.isValid).includes(false)
       "
     >
       <template slot="panel-content">
@@ -540,6 +722,7 @@ import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotif
 import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePreview'
 import DropDownSearch from '@/components/DropDownSearch'
 import ExpandablePanel from '@/components/ExpandablePanel'
+import Modal from '@/components/Modal'
 
 /**
  * Services
@@ -578,11 +761,14 @@ export default {
     FormField,
     AlertSummary,
     PulseLoadingSpinnerButton,
+    Modal,
   },
   data() {
     return {
       channelOpts: new SlackListResponse(),
       savingTemplate: false,
+      listVisible: true,
+      dropdownVisible: true,
       NON_FIELD_ALERT_OPTS,
       stringRenderer,
       SOBJECTS_LIST,
@@ -760,12 +946,18 @@ export default {
     async onUsersNextPage() {
       await this.users.addNextPage()
     },
+    showList() {
+      this.listVisible = !this.listVisible
+    },
+    showDropDown() {
+      this.dropdownVisible = !this.dropdownVisible
+    },
   },
   computed: {
     userTargetsOpts() {
       if (this.user.userLevel == 'MANAGER') {
         return [
-          ...this.alertTargetOpts.map(opt => {
+          ...this.alertTargetOpts.map((opt) => {
             return {
               id: opt.value,
               fullName: opt.key,
@@ -780,7 +972,7 @@ export default {
     recipientOpts() {
       if (this.user.userLevel == 'MANAGER') {
         return [
-          ...this.alertRecipientOpts.map(opt => {
+          ...this.alertRecipientOpts.map((opt) => {
             return {
               id: opt.value,
               fullName: opt.key,
@@ -978,10 +1170,18 @@ textarea {
   margin-top: 1rem;
   border-bottom: 3px solid $silver;
 }
+.row_ {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 2rem;
+}
 .row__ {
   display: flex;
   flex-direction: row;
   align-items: center;
+  justify-content: space-between;
   margin-top: 10rem;
 }
 .bottom {
@@ -989,7 +1189,7 @@ textarea {
   height: 170px;
 }
 .left {
-  margin-bottom: 5rem;
+  margin-bottom: 2rem;
 }
 .space {
   margin-bottom: 0.5rem;
@@ -1001,5 +1201,42 @@ textarea {
   margin-top: 3rem;
   padding-bottom: 1rem;
   border-bottom: 3px solid $mid-gray;
+}
+.bolder {
+  font-size: 16px;
+  margin-left: 1rem;
+  cursor: pointer;
+  color: $base-gray;
+}
+.bolder:hover {
+  border-bottom: 2px solid $candy;
+  color: $candy;
+}
+.alertsModal {
+  color: $candy;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.modal__container {
+  overflow-y: scroll;
+}
+.blue {
+  color: $slate-gray;
+}
+.top {
+  border-top: 3px solid $grape;
+}
+.templates {
+  border-bottom: 1px solid $gray;
+}
+input {
+  width: 130px;
+  text-align: center;
+  height: 36px;
+  border-radius: 0.25rem;
+  margin-top: 0.75rem;
+  border: none;
+  border-bottom: 1px solid $slate-gray;
+  font-weight: bold;
 }
 </style>

@@ -9,6 +9,10 @@
       text="Continue to Slack Form Builder"
       :loading="false"
     ></PulseLoadingSpinnerButton>
+    <button class="alertButton__" @click="goToSmartAlerts" v-if="!user.isAdmin">
+      Continue to Smart Alerts
+    </button>
+
     <div
       v-if="!hasSalesforceIntegration && user.isAdmin"
       class="slack-button slack-button--disabled"
@@ -64,7 +68,7 @@
           text="Connect"
           :loading="generatingToken && selectedIntegration == 'ZOOM'"
         ></PulseLoadingSpinnerButton>
-        <div v-else style="display:flex;justify-content:space-between;">
+        <div v-else style="display: flex; justify-content: space-between">
           <PulseLoadingSpinnerButton
             text="Revoke"
             :loading="generatingToken && selectedIntegration == 'ZOOM'"
@@ -104,7 +108,7 @@
         ></PulseLoadingSpinnerButton>
         <div
           v-else-if="hasSlackIntegration && orgHasSlackIntegration"
-          style="display:flex;justify-content:space-between;"
+          style="display: flex; justify-content: space-between"
         >
           <PulseLoadingSpinnerButton
             @click="onRevoke('SLACK')"
@@ -219,6 +223,9 @@ export default {
   methods: {
     goToSlackFormBuilder() {
       this.$router.push({ name: 'SlackFormSettings' })
+    },
+    goToSmartAlerts() {
+      this.$router.push({ name: 'ListTemplates' })
     },
     async onGetAuthLink(integration) {
       this.generatingToken = true
@@ -405,6 +412,7 @@ export default {
   width: 10rem;
   margin-right: 1rem;
   margin-bottom: 2rem;
+  border-radius: 1rem;
   @media only screen and (min-width: 768px) {
     flex: 1 0 24%;
     min-width: 21rem;
@@ -493,5 +501,23 @@ export default {
   font-size: 1.4rem;
   font-weight: 900;
   margin-bottom: 1.5rem;
+  color: white;
+}
+a {
+  text-decoration: none;
+  color: $grape;
+  font-weight: bold;
+}
+.alertButton__ {
+  height: 2.5rem;
+  width: 19rem;
+  margin: 0rem 0 2rem 0;
+  color: white;
+  background-color: $dark-green;
+  border: none;
+  font-weight: bold;
+  font-size: 14px;
+  border-radius: 0.25rem;
+  cursor: pointer;
 }
 </style>

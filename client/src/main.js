@@ -87,7 +87,7 @@ Vue.filter('timeOnlyShort', timeOnlyShort)
 Vue.filter('capitalCase', toCapitalCase)
 Vue.filter('numberSuffix', toNumberSuffix)
 
-Vue.filter('pluralize', function(value, number) {
+Vue.filter('pluralize', function (value, number) {
   return pluralize(value, number)
 })
 

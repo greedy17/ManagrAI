@@ -29,11 +29,11 @@ SECRET_KEY = _env_get_required("SECRET_KEY")
 DEBUG = _env_get_required("DEBUG") == "True"
 
 if IN_DEV:
-    SERVER_EMAIL = "Managr Development <noreply-dev@managr.com>"
+    SERVER_EMAIL = "Managr Support <support@managr.ai>"
 elif IN_STAGING:
-    SERVER_EMAIL = "Managr Staging <noreply-staging@managr.com>"
+    SERVER_EMAIL = "Managr <no-reply-staging@managr.ai>"
 else:
-    SERVER_EMAIL = "Managr <support@managr.com>"
+    SERVER_EMAIL = "Managr <no-reply@managr.ai>"
 
 DEFAULT_FROM_EMAIL = SERVER_EMAIL
 

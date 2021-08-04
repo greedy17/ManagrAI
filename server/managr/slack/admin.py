@@ -18,7 +18,9 @@ class CustomOrgSlackForms(admin.ModelAdmin):
 
 class CustomOrgSlackFormsInstance(admin.ModelAdmin):
     model = slack_models.OrgCustomSlackFormInstance
-    list_filter = ("user",)
+    list_filter = ("user", "user__organization", "template__form_type")
+    list_display = ("template", "user", "submission_date")
+    ordering = ("-datetime_created",)
 
 
 admin.site.register(slack_models.OrgCustomSlackForm, CustomOrgSlackForms)

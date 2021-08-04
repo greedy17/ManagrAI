@@ -19,7 +19,7 @@
               </router-link>
             </li>
             <li>
-              <router-link active-class="active" :to="{ name: 'alerts' }"
+              <router-link active-class="active" :to="{ name: 'ListTemplates' }"
                 >Smart Alerts
               </router-link>
             </li>
@@ -39,7 +39,7 @@
               </router-link>
             </li>
             <li>
-              <router-link active-class="active" :to="{ name: 'alerts' }"
+              <router-link active-class="active" :to="{ name: 'ListTemplates' }"
                 >Smart Alerts
               </router-link>
             </li>
@@ -59,7 +59,7 @@
               </router-link>
             </li>
             <li>
-              <router-link active-class="active" :to="{ name: 'alerts' }"
+              <router-link active-class="active" :to="{ name: 'ListTemplates' }"
                 >Smart Alerts
               </router-link>
             </li>
@@ -69,7 +69,7 @@
 
       <div class="right">
         <img
-          src="@/assets/images/toolTip.png"
+          src="@/assets/images/blackhelp.png"
           class="tooltip__icon"
           @mouseover="toggleTooltip"
           @mouseleave="toggleTooltip"
@@ -87,7 +87,11 @@
 
         <div>
           <router-link :to="{ name: 'Login' }"
-            ><img @click="logOut" src="@/assets/images/logout.png" alt="" style="height: 1.5rem"
+            ><img
+              @click="logOut"
+              src="@/assets/images/blacklogout.png"
+              alt=""
+              style="height: 1.5rem"
           /></router-link>
         </div>
       </div>
@@ -179,8 +183,6 @@ nav {
   display: flex;
   flex-flow: row;
   align-items: center;
-  background-color: $white;
-  border-bottom: 1px solid $soft-gray;
 }
 
 .logo {
@@ -281,8 +283,7 @@ nav {
 .tooltip {
   position: relative;
   &__icon {
-    width: 18px;
-    margin-top: 1rem;
+    height: 2rem;
     &:hover {
       cursor: pointer;
     }
@@ -333,7 +334,7 @@ img {
 }
 a {
   text-decoration: none;
-  color: $night-rider;
+  color: $slate-gray;
 }
 
 a:hover {
