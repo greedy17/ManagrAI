@@ -329,6 +329,11 @@ pipelines:
       - step: *fargateProdDeployment
           #- step: *fargateStagingDeployment
           # - step: *fargatePRTeardown
+    demo:
+      - parallel:
+          - step: *djangoTests
+          - step: *e2eTests
+      - step: *fargateDemoDeployment
 
 definitions:
   caches:
