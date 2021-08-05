@@ -303,7 +303,6 @@ def initial_meeting_interaction_block_set(context):
     # get the meeting
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     # check the resource attached to this meeting
-
     resource = workflow.resource
     meeting = workflow.meeting
     workflow_id_param = "w=" + context.get("w")
@@ -327,7 +326,6 @@ def initial_meeting_interaction_block_set(context):
         str(workflow.id),
         "Map to a different Account / Opportunity :mag_right:",
         action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
-        style="primary",
     )
     if not resource:
         title_section = _initial_interaction_message()
@@ -364,13 +362,14 @@ def initial_meeting_interaction_block_set(context):
     )
 
     create_contacts_block = block_builders.actions_block([create_contacts_button])
-
     blocks = [
         *default_blocks,
         create_contacts_block,
-        create_change_button,
         {"type": "divider"},
     ]
+    if workflow.resource_type:
+        blocks.insert(len(blocks) - 1, create_change_button)
+
     action_blocks = []
     if (
         workflow.resource_type == slack_const.FORM_RESOURCE_OPPORTUNITY
