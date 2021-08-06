@@ -191,11 +191,7 @@ def meeting_contacts_block_set(context):
         block_sets.extend(
             [
                 block_builders.simple_section(
-                    ":dart: *Managr found these attendees as contacts in Salesforce*", "mrkdwn",
-                ),
-                block_builders.simple_section(
-                    f":ballot_box_with_check: _These contacts will be attached to the {workflow.resource_type if len(workflow.resource_type) else 'Resource'}_",
-                    "mrkdwn",
+                    ":dart: *Attendees below are already saved as Contacts*", "mrkdwn",
                 ),
             ]
         )
