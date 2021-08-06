@@ -123,10 +123,11 @@ def alert_instance_block_set(context):
         in_channel = True
     blocks = [
         block_builders.section_with_button_block(
-            "Update",
+            f"Update {instance.template.resource_type}",
             instance.resource_id,
             instance.render_text(),
             action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(resource_owner.id)}&resource={instance.template.resource_type}",
+            style="primary",
         ),
     ]
 
