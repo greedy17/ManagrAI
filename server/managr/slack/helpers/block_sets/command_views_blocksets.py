@@ -85,7 +85,7 @@ def custom_paginator_block(pagination_object, invocation, channel, config_id):
         prev_page_button = block_builders.simple_button_block(
             "Previous",
             str(prev_page),
-            style="primary",
+            style="danger",
             action_id=f"{slack_const.PAGINATE_ALERTS}?{urlencode({**page_context,'new_page':int(prev_page)})}",
         )
         button_blocks.append(prev_page_button)
@@ -93,7 +93,6 @@ def custom_paginator_block(pagination_object, invocation, channel, config_id):
         next_page_button = block_builders.simple_button_block(
             "Next",
             str(next_page),
-            style="primary",
             action_id=f"{slack_const.PAGINATE_ALERTS}?{urlencode({**page_context,'new_page':int(next_page)})}",
         )
         button_blocks.append(next_page_button)
