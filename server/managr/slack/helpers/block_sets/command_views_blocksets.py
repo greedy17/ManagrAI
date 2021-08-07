@@ -85,7 +85,7 @@ def custom_paginator_block(pagination_object, invocation, channel, config_id):
         prev_page_button = block_builders.simple_button_block(
             "Previous",
             str(prev_page),
-            style="primary",
+            style="danger",
             action_id=f"{slack_const.PAGINATE_ALERTS}?{urlencode({**page_context,'new_page':int(prev_page)})}",
         )
         button_blocks.append(prev_page_button)
@@ -93,7 +93,6 @@ def custom_paginator_block(pagination_object, invocation, channel, config_id):
         next_page_button = block_builders.simple_button_block(
             "Next",
             str(next_page),
-            style="primary",
             action_id=f"{slack_const.PAGINATE_ALERTS}?{urlencode({**page_context,'new_page':int(next_page)})}",
         )
         button_blocks.append(next_page_button)
@@ -123,17 +122,18 @@ def alert_instance_block_set(context):
         in_channel = True
     blocks = [
         block_builders.section_with_button_block(
-            "Update",
+            f"Update {instance.template.resource_type}",
             instance.resource_id,
             instance.render_text(),
             action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(resource_owner.id)}&resource={instance.template.resource_type}",
+            style="primary",
         ),
     ]
 
     if in_channel or (user.id != resource_owner.id):
         blocks.append(
-            block_builders.simple_section(
-                f"_This {instance.template.resource_type} is owned by {resource_owner.full_name}_",
+            block_builders.context_block(
+                f"_This {instance.template.resource_type} is owned by_ *{resource_owner.full_name}*",
                 "mrkdwn",
             ),
         )

@@ -591,7 +591,7 @@ def process_create_or_search_selected(payload, context):
     if not select_block:
         # create new block including the resource type
         block_sets = get_block_set("attach_resource_interaction", {"w": workflow_id})
-        previous_blocks.insert(4, block_sets[0])
+        previous_blocks.insert(5, block_sets[0])
     try:
         res = slack_requests.update_channel_message(
             payload["channel"]["id"],
@@ -827,6 +827,8 @@ def process_no_changes_made(payload, context):
         return logger.exception(f"Bad request {e}")
     state = {"meeting_type": "No Update", "meeting_comments": "No Update"}
     form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_MEETING_REVIEW).first()
+    form.is_submitted = True
+    form.submission_date = timezone.now()
     form.save_form(state, False)
     ops = [
         f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}",
