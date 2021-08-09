@@ -225,7 +225,7 @@ fargateDemoDeployment: &fargateDemoDeployment
     - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-processalltasks-demo" IMAGE_TAG="demo-$BITBUCKET_COMMIT" ./deploy/update-task.sh
     - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-processsyncqueues-demo" IMAGE_TAG="demo-$BITBUCKET_COMMIT" ./deploy/update-task.sh
     - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-runalerts-demo" IMAGE_TAG="demo-$BITBUCKET_COMMIT" ./deploy/update-task.sh
-    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-clearstaledata-demo" IMAGE_TAG="demo-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-clearsfstaledata-demo" IMAGE_TAG="demo-$BITBUCKET_COMMIT" ./deploy/update-task.sh
     - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-syncresourcedata-demo" IMAGE_TAG="demo-$BITBUCKET_COMMIT" ./deploy/update-task.sh
     - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-syncresourcefields-demo" IMAGE_TAG="demo-$BITBUCKET_COMMIT" ./deploy/update-task.sh
 
