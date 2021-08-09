@@ -127,12 +127,10 @@
     <ExpandablePanel>
       <template v-slot:panel-header="{ classes, expand }" class="box__header">
         <div :class="classes" @click="expand">
-          <span :class="selectedResourceType ? 'slate' : 'gray'">
-            {{
-              selectedResourceType
-                ? `1. ${selectedResourceType}`
-                : "1. Select the Salesforce Object that you'd like to build an alert for"
-            }}
+          <span class="gray">
+            1. Select the
+            <span style="color: #cc3873; font-weight: bold">Salesforce Object</span> that you'd like
+            to build an alert for
           </span>
 
           <span
