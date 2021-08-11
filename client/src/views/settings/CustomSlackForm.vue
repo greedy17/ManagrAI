@@ -139,9 +139,7 @@
                   v-if="field.id === '6407b7a1-a877-44e2-979d-1effafec5035'"
                   class="form-field__body"
                 >
-                  {{
-                    "This logs the type of meeting you’ve had, ie 'Discovery Call, Follow Up, etc.'"
-                  }}
+                  {{ 'Update title and meeting subject' }}
                 </div>
 
                 <div
@@ -217,7 +215,7 @@
                 </div>
               </div>
             </div>
-            <div style="display: flex; align-items: center">
+            <!-- <div style="display: flex; align-items: center">
               <input
                 v-if="field.id === '6407b7a1-a877-44e2-979d-1effafec5035'"
                 placeholder="Enter Meeting Type"
@@ -226,9 +224,9 @@
                 @keypress="updateMeeting"
               />
               <small v-if="meetingType.length" style="margin-left: 1rem">Press Enter to Save</small>
-            </div>
+            </div>  -->
 
-            <div
+            <!-- <div
               v-if="field.id === '6407b7a1-a877-44e2-979d-1effafec5035' && actionChoices.length"
               class="meeting-type__list"
             >
@@ -249,7 +247,7 @@
               <template v-else>
                 <PulseLoadingSpinner :loading="loadingMeetingTypes" />
               </template>
-            </div>
+            </div> -->
           </div>
         </div>
       </div>
