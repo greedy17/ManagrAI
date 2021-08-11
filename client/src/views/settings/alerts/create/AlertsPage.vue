@@ -127,10 +127,9 @@
     <ExpandablePanel>
       <template v-slot:panel-header="{ classes, expand }" class="box__header">
         <div :class="classes" @click="expand">
-          <span class="gray">
-            1. Select the
-            <span style="color: #cc3873; font-weight: bold">Salesforce Object</span> that you'd like
-            to build an alert for
+          <span :class="alertTemplateForm.field.resourceType.isValid ? 'slate' : 'gray'">
+            1. <strong style="color: #cc3873; font-weight: bold">Select</strong> the Salesforce
+            Object that you'd like to build an alert for
           </span>
 
           <span
@@ -182,9 +181,7 @@
                 : 'gray'
             "
           >
-            {{
-              selectedResourceType ? `2. Build your ${selectedResourceType} alert` : 'Build alert'
-            }}</span
+            2. <strong style="color: #cc3873">Build</strong> your Smart Alert</span
           ><span
             :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
             v-if="
@@ -276,7 +273,8 @@
                 ? 'slate'
                 : 'gray'
             "
-            >3. Construct your alert message
+            >3. <strong style="color: #cc3873; font-weight: bold">Construct</strong> your alert
+            message
           </span>
           <span
             :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
@@ -451,7 +449,7 @@
                 : 'gray'
             "
           >
-            4. Choose your delivery options </span
+            4. <strong style="color: #cc3873">Choose</strong> your delivery options </span
           ><span> </span>
           <span
             v-if="
@@ -671,7 +669,7 @@
       </template>
     </ExpandablePanel>
     <ExpandablePanel
-      class="slate"
+      class="pink"
       title="5. Confirm and save your alert"
       v-if="
         !alertTemplateForm.field.alertConfig.groups.map((fields) => fields.isValid).includes(false)
