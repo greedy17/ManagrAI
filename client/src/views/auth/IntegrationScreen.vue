@@ -501,7 +501,6 @@ export default {
   font-size: 1.4rem;
   font-weight: 900;
   margin-bottom: 1.5rem;
-  color: white;
 }
 a {
   text-decoration: none;
