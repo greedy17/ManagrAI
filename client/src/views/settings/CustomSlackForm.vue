@@ -336,6 +336,14 @@ export default {
       handler(val) {
         if (val && val.fields) {
           this.addedFields = [...val.fieldsRef]
+          if (this.formType !== 'UPDATE') {
+            this.addedFields = this.addedFields.filter((field) => {
+              return (
+                field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
+                field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
+              )
+            })
+          }
         }
       },
     },
