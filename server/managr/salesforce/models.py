@@ -699,7 +699,7 @@ class MeetingWorkflow(SFSyncOperation):
         )
 
         if self.resource and self.resource != slack_consts.FORM_RESOURCE_LEAD:
-            self.add_form(self.resource_type, slack_consts.FORM_TYPE_MEETING_REVIEW)
+            self.add_form(self.resource_type, slack_consts.FORM_TYPE_UPDATE)
         if not now:
             return emit_kick_off_slack_interaction(str(self.user.id), str(self.id))
             # used for testing a fake meeting

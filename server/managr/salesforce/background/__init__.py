@@ -412,7 +412,7 @@ def _process_update_resource_from_meeting(workflow_id, *args):
     # collect forms for resource meeting_review and if stages any stages related forms
     update_forms = workflow.forms.filter(
         template__form_type__in=[
-            slack_consts.FORM_TYPE_MEETING_REVIEW,
+            slack_consts.FORM_TYPE_UPDATE,
             slack_consts.FORM_TYPE_STAGE_GATING,
         ]
     )
@@ -469,9 +469,7 @@ def _process_add_call_to_sf(workflow_id, *args):
         return logger.exception(f"User not found unable to log call {str(user.id)}")
     if not hasattr(user, "salesforce_account"):
         return logger.exception("User does not have a salesforce account cannot push to sf")
-    review_form = workflow.forms.filter(
-        template__form_type=slack_consts.FORM_TYPE_MEETING_REVIEW
-    ).first()
+    review_form = workflow.forms.filter(template__form_type=slack_consts.FORM_TYPE_UPDATE).first()
 
     user_timezone = user.zoom_account.timezone
     start_time = workflow.meeting.start_time

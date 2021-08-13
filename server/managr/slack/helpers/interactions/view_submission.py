@@ -144,7 +144,7 @@ def process_zoom_meeting_data(payload, context):
     # otherwise we save the meeting review form
     else:
         form = workflow.forms.filter(
-            template__form_type=slack_const.FORM_TYPE_MEETING_REVIEW
+            template__form_type=slack_const.FORM_TYPE_UPDATE
         ).first()
         form.save_form(state)
 
@@ -592,7 +592,7 @@ def process_zoom_meeting_attach_resource(payload, context):
     # clear old forms (except contact forms)
     workflow.forms.exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT).delete()
     workflow.add_form(
-        meeting_resource, slack_const.FORM_TYPE_MEETING_REVIEW,
+        meeting_resource, slack_const.FORM_TYPE_UPDATE,
     )
     try:
         # update initial interaction workflow with new resource
