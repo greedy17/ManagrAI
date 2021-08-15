@@ -95,10 +95,6 @@
             <strong>Update:</strong>
             This form appears whenever you see the “Update” button
           </p>
-          <p class="mar">
-            <strong>Zoom Meeting:</strong>
-            This form is triggered immediately after your Zoom meeting ends
-          </p>
 
           <p class="mar">
             <strong>Create:</strong>
@@ -164,14 +160,7 @@
               <img src="@/assets/images/edit.png" alt="update" />
               {{ ` Update ${resource}` }}
             </button>
-            <button
-              @click="selectForm(resource, MEETING_REVIEW)"
-              v-if="resource == 'Opportunity' || resource == 'Account'"
-              :class="this.formType == MEETING_REVIEW ? 'activeTab' : 'buttons__'"
-            >
-              <img src="@/assets/images/zoom.png" alt="zoom" height="24rem" />
-              Zoom Meeting
-            </button>
+
             <button
               @click="selectForm(resource, CREATE)"
               :class="this.formType == CREATE ? 'activeTab' : 'buttons__'"
