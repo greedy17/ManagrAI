@@ -20,9 +20,9 @@ from managr.api.decorators import log_all_exceptions, sf_api_exceptions_wf
 from managr.api.emails import send_html_email
 
 from managr.core.models import User
-from managr.organization.models import Account, Stage
+from managr.organization.models import Account, Stage, Contact
 from managr.organization.serializers import AccountSerializer, StageSerializer
-from managr.opportunity.models import Opportunity
+from managr.opportunity.models import Opportunity, Lead
 from managr.opportunity.serializers import OpportunitySerializer
 from managr.slack import constants as slack_consts
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
@@ -93,6 +93,10 @@ def emit_sync_sobject_picklist(user_id, sync_id, resource, scheduled_for=timezon
 
 def emit_add_call_to_sf(workflow_id, *args):
     return _process_add_call_to_sf(workflow_id, *args)
+
+
+def emit_add_update_to_sf(form_id, *args):
+    return _process_add_update_to_sf(form_id, *args)
 
 
 def emit_update_contacts(workflow_id, *args):
@@ -412,7 +416,7 @@ def _process_update_resource_from_meeting(workflow_id, *args):
     # collect forms for resource meeting_review and if stages any stages related forms
     update_forms = workflow.forms.filter(
         template__form_type__in=[
-            slack_consts.FORM_TYPE_MEETING_REVIEW,
+            slack_consts.FORM_TYPE_UPDATE,
             slack_consts.FORM_TYPE_STAGE_GATING,
         ]
     )
@@ -469,9 +473,7 @@ def _process_add_call_to_sf(workflow_id, *args):
         return logger.exception(f"User not found unable to log call {str(user.id)}")
     if not hasattr(user, "salesforce_account"):
         return logger.exception("User does not have a salesforce account cannot push to sf")
-    review_form = workflow.forms.filter(
-        template__form_type=slack_consts.FORM_TYPE_MEETING_REVIEW
-    ).first()
+    review_form = workflow.forms.filter(template__form_type=slack_consts.FORM_TYPE_UPDATE).first()
 
     user_timezone = user.zoom_account.timezone
     start_time = workflow.meeting.start_time
@@ -494,6 +496,64 @@ def _process_add_call_to_sf(workflow_id, *args):
         Description=f"{review_form.saved_data.get('meeting_comments')}, this meeting started on {formatted_start} and ended on {formatted_end} ",
         WhatId=workflow.resource.integration_id,
         ActivityDate=workflow.meeting.start_time.strftime("%Y-%m-%d"),
+        Status="Completed",
+        TaskSubType="Call",
+    )
+    attempts = 1
+    while True:
+        sf = user.salesforce_account
+        try:
+            ActivityAdapter.save_zoom_meeting_to_salesforce(data, sf.access_token, sf.instance_url)
+            attempts = 1
+            break
+        except TokenExpired as e:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to refresh user token for Salesforce operation add contact as contact role to opportunity"
+                )
+            else:
+                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                time.sleep(sleep)
+                sf.regenerate_token()
+                attempts += 1
+        except UnableToUnlockRow as e:
+            if attempts >= 5:
+                logger.exception(
+                    f"Failed to create call log from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+                )
+                raise e
+            else:
+                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                time.sleep(sleep)
+                attempts += 1
+    return
+
+
+@background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
+@sf_api_exceptions_wf("add_call_log")
+def _process_add_update_to_sf(form_id, *args):
+    form = OrgCustomSlackFormInstance.objects.filter(id=form_id).first()
+    resource = None
+    if form.resource_type == "Opportunity":
+        resource = Opportunity.objects.get(id=form.resource_id)
+    elif form.resource_type == "Account":
+        resource = Account.objects.get(id=form.resource_id)
+    elif form.resource_type == "Lead":
+        resource = Lead.objects.get(id=form.resource_id)
+    else:
+        resource = Contact.objects.get(id=form.resource_id)
+    user = form.user
+    if not user:
+        return logger.exception(f"User not found unable to log call {str(user.id)}")
+    if not hasattr(user, "salesforce_account"):
+        return logger.exception("User does not have a salesforce account cannot push to sf")
+
+    start_time = form.submission_date
+    data = dict(
+        Subject=f"{form.saved_data.get('meeting_type')}",
+        Description=f"{form.saved_data.get('meeting_comments')}",
+        WhatId=resource.integration_id,
+        ActivityDate=start_time.strftime("%Y-%m-%d"),
         Status="Completed",
         TaskSubType="Call",
     )

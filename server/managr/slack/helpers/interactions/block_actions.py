@@ -50,7 +50,7 @@ def process_meeting_review(payload, context):
     }
     context = {
         "w": workflow_id,
-        "f": str(workflow.forms.filter(template__form_type="MEETING_REVIEW").first().id),
+        "f": str(workflow.forms.filter(template__form_type="UPDATE").first().id),
     }
 
     private_metadata.update(context)
@@ -826,7 +826,7 @@ def process_no_changes_made(payload, context):
     except Exception as e:
         return logger.exception(f"Bad request {e}")
     state = {"meeting_type": "No Update", "meeting_comments": "No Update"}
-    form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_MEETING_REVIEW).first()
+    form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
     form.is_submitted = True
     form.submission_date = timezone.now()
     form.save_form(state, False)
