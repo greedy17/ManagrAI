@@ -12,7 +12,7 @@
       "data_type": "String",
       "display_value": "",
       "value": null,
-      "label": "Call Type",
+      "label": "Call Subject",
       "length": 30,
       "reference": false,
       "reference_to_infos": [],
