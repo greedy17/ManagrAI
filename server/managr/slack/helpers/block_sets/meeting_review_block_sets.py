@@ -110,7 +110,7 @@ def create_meeting_task(context):
     return block_builders.section_with_button_block(
         "Create Task",
         "CREATE_A_TASK",
-        "Would you like to Create a task?",
+        "Would you like to Create a Task?",
         action_id=action_with_params(
             slack_const.ZOOM_MEETING__CREATE_TASK,
             params=[
@@ -129,7 +129,8 @@ def schedule_meeting(context):
     return block_builders.section_with_button_block(
         "Schedule Meeting",
         "SCHEDULE_MEETING",
-        "Schedule another meeting?",
+        "Schedule another Zoom meeting?",
+        style="primary",
         action_id=action_with_params(
             slack_const.ZOOM_MEETING__SCHEDULE_MEETING, params=[f"u={str(workflow.user.id)}"],
         ),
