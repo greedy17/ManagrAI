@@ -4,7 +4,7 @@ import uuid
 import json
 import logging
 
-from datetime import datetime
+from datetime import datetime, date
 
 from django.db.models import Q
 
@@ -118,6 +118,20 @@ def create_meeting_task(context):
                 f"resource_type={workflow.resource_type}",
                 f"resource_id={workflow.resource_id}",
             ],
+        ),
+    )
+
+
+@block_set(required_context=["w"])
+def schedule_meeting(context):
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+
+    return block_builders.section_with_button_block(
+        "Schedule Meeting",
+        "SCHEDULE_MEETING",
+        "Schedule another meeting?",
+        action_id=action_with_params(
+            slack_const.ZOOM_MEETING__SCHEDULE_MEETING, params=[f"u={str(workflow.user.id)}"],
         ),
     )
 
@@ -563,7 +577,6 @@ def create_modal_block_set(context, *args, **kwargs):
 def disregard_meeting_review_block_set(context, *args, **kwargs):
     """Shows a modal to create/select a resource"""
     w = MeetingWorkflow.objects.get(id=context.get("w"))
-    user = w.user
     blocks = [
         block_builders.section_with_button_block(
             "Review",
@@ -667,4 +680,17 @@ def meeting_summary_blockset(context):
     review_str = f"{review_str}*Managr Insights:* {attendance_component[0].rendered_message} {duration_component[0].rendered_message}\n*Meeting Comments:*\n {review.meeting_comments}"
     blocks.append(block_builders.simple_section(review_str, "mrkdwn"))
 
+    return blocks
+
+
+@block_set(required_context=[])
+def schedule_zoom_meeting_modal(context):
+    today = str(date.today())
+    date_block = block_builders.datepicker(today, "DO_NOTHING", "schedule_date")
+    time_block = block_builders.timepicker("DO_NOTHING")
+
+    blocks = [
+        date_block,
+        time_block,
+    ]
     return blocks

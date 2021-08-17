@@ -894,7 +894,6 @@ def process_create_task(payload, context):
             "private_metadata": json.dumps(context),
         },
     }
-
     try:
         slack_requests.generic_request(url, data, access_token=org.slack_integration.access_token)
     except InvalidBlocksException as e:
@@ -1196,6 +1195,43 @@ def process_paginate_alerts(payload, context):
     return
 
 
+@processor(required_context="u")
+def process_schedule_meeting(payload, context):
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    trigger_id = payload["trigger_id"]
+    u = User.objects.get(id=context.get("u"))
+    org = u.organization
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.COMMAND_CREATE_TASK,
+            "title": {"type": "plain_text", "text": "Meeting Details"},
+            "blocks": get_block_set("schedule_meeting_modal"),
+            "submit": {"type": "plain_text", "text": "Book Meeting",},
+            "private_metadata": json.dumps(context),
+        },
+    }
+    try:
+        slack_requests.generic_request(url, data, access_token=org.slack_integration.access_token)
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
+        )
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -1215,6 +1251,7 @@ def handle_block_actions(payload):
         slack_const.ZOOM_MEETING__STAGE_SELECTED: process_stage_selected,
         slack_const.ZOOM_MEETING__CREATE_TASK: process_create_task,
         slack_const.ZOOM_MEETING__CONVERT_LEAD: process_coming_soon,
+        slack_const.ZOOM_MEETING__SCHEDULE_MEETING: process_schedule_meeting,
         slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS: process_show_update_resource_form,
         slack_const.COMMAND_FORMS__STAGE_SELECTED: process_stage_selected_command_form,
         slack_const.UPDATE_TASK_SELECTED_RESOURCE: process_resource_selected_for_task,

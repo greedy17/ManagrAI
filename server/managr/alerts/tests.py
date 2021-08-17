@@ -1040,4 +1040,3 @@ class UserTestCase(TestCase):
 
         self.assertEquals(conf_1.target_users.count(), 1)
         self.assertIn(self.admin_user.id, conf_1.target_users.values_list("id", flat=True))
-

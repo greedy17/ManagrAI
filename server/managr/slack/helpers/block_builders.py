@@ -561,3 +561,21 @@ def context_block(value, text_type="plain_text", block_id=None):
         "block_id": block_id,
     }
 
+
+def timepicker(
+    action_id=None, label="Select time", placeholder="Select a time",
+):
+    block = {
+        "type": "section",
+        "text": {"type": "mrkdwn", "text": label},
+        "accessory": {
+            "type": "timepicker",
+            "initial_time": "13:37",
+            "placeholder": {"type": "plain_text", "text": placeholder},
+            "action_id": "timepicker-action",
+        },
+    }
+    if action_id:
+        block["accessory"]["action_id"] = action_id
+    return block
+

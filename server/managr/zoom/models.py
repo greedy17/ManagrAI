@@ -317,4 +317,3 @@ class ZoomMeeting(TimeStampModel):
 
                 self.workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
         return super(ZoomMeeting, self).delete(*args, **kwargs)
-

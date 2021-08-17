@@ -744,6 +744,7 @@ class MeetingWorkflow(SFSyncOperation):
             block_set = [
                 *get_block_set("final_meeting_interaction", {"w": str(self.id)}),
                 get_block_set("create_meeting_task", {"w": str(self.id)}),
+                get_block_set("schedule_meeting", {"w": str(self.id)}),
             ]
 
             if len(self.failed_task_description):
