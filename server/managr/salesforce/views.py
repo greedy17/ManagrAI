@@ -41,6 +41,7 @@ from managr.api.decorators import log_all_exceptions
 from managr.api.emails import send_html_email
 
 from managr.slack.models import OrgCustomSlackForm
+from managr.slack import constants as slack_consts
 from .models import (
     SFResourceSync,
     SFObjectFieldsOperation,
@@ -150,12 +151,31 @@ def revoke(request):
     return Response()
 
 
+# @api_view(["get"])
+# @permission_classes([permissions.IsAuthenticated])
+# def get_public_fields(request):
+#     public_fields = SObjectField.objects.filter(is_public=True)
+#     return Response({"data": json.dumps(public_fields)})
+
+
 class SObjectValidationViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     serializer_class = SObjectValidationSerializer
     filter_fields = ("salesforce_object",)
 
     def get_queryset(self):
         return SObjectValidation.objects.for_user(self.request.user)
+
+
+class PublicSObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+    serializer_class = SObjectFieldSerializer
+    filter_backends = (
+        DjangoFilterBackend,
+        filters.SearchFilter,
+    )
+    filter_class = SObjectFieldFilterSet
+
+    def get_queryset(self):
+        return SObjectField.objects.filter(is_public=True)
 
 
 class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):

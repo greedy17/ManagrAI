@@ -225,6 +225,7 @@
               v-on:update:selectedForm="updateForm($event)"
               :loading="formFields.refreshing"
               :stageForms="formStages"
+              :managrFields="publicFields"
             />
           </div>
         </template>
@@ -248,7 +249,7 @@ import { mapState } from 'vuex'
 import SlackOAuth, { salesforceFields } from '@/services/slack'
 import { SObjectField, SObjectValidation, SObjectPicklist } from '@/services/salesforce'
 import DropDownSearch from '@/components/DropDownSearch'
-import { SOBJECTS_LIST } from '@/services/salesforce'
+import SObjectFormBuilderAPI, { SOBJECTS_LIST } from '@/services/salesforce'
 import * as FORM_CONSTS from '@/services/slack'
 
 export default {
@@ -260,6 +261,7 @@ export default {
       SOBJECTS_LIST,
       allForms: [],
       allFields: [],
+      publicFields: [],
       formsByType: [],
       isLoading: false,
       selectedTab: null,
@@ -291,6 +293,7 @@ export default {
     try {
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
       this.allFields = await this.listFields()
+      this.publicFields = await SObjectField.api.getPublicFields()
       await this.listPicklists({
         salesforceObject: this.Opportunity,
         picklistFor: 'StageName',
