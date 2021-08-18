@@ -111,6 +111,19 @@ class ZoomAcct:
         data["zoom_account"] = str(self.id)
         return ZoomMtg(**data)
 
+    def schedule_meeting(self, topic, date, time, duration):
+        url = f"{zoom_model_consts.ZOOM_API_ENDPOINT}/users/{self.zoom_id}/meetings"
+        headers = dict(Authorization=(f"Bearer {self.access_token}"))
+        data = {
+            "topic": f"{topic}",
+            "type": 2,
+            "start_time": f"{date}T{time}:00",
+            "duration": f"{duration}",
+        }
+        r = client.post(url, json.dumps(data), headers=headers)
+        response_data = self._handle_response(r)
+        return response_data
+
     @property
     def as_dict(self):
         return vars(self)

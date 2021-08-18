@@ -424,4 +424,3 @@ class Meeting(TestCase):
                             participants.append(p)
 
         self.assertEquals(len(participants), len(self.fake_meeting_participants_w_random))
-

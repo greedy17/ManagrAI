@@ -4,7 +4,7 @@ import uuid
 import json
 import logging
 
-from datetime import datetime
+from datetime import datetime, date
 
 from django.db.models import Q
 
@@ -22,7 +22,7 @@ from managr.slack.helpers.utils import (
     block_finder,
 )
 
-from managr.slack.helpers import block_builders
+from managr.slack.helpers import block_builders, block_sets
 from managr.utils.misc import snake_to_space
 from managr.salesforce.routes import routes as form_routes
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
@@ -110,7 +110,7 @@ def create_meeting_task(context):
     return block_builders.section_with_button_block(
         "Create Task",
         "CREATE_A_TASK",
-        "Would you like to Create a task?",
+        "Would you like to Create a Task?",
         action_id=action_with_params(
             slack_const.ZOOM_MEETING__CREATE_TASK,
             params=[
@@ -118,6 +118,21 @@ def create_meeting_task(context):
                 f"resource_type={workflow.resource_type}",
                 f"resource_id={workflow.resource_id}",
             ],
+        ),
+    )
+
+
+@block_set(required_context=["w"])
+def schedule_meeting(context):
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+
+    return block_builders.section_with_button_block(
+        "Schedule Meeting",
+        "SCHEDULE_MEETING",
+        "Schedule another Zoom meeting?",
+        style="primary",
+        action_id=action_with_params(
+            slack_const.ZOOM_MEETING__SCHEDULE_MEETING, params=[f"u={str(workflow.user.id)}"],
         ),
     )
 
@@ -561,7 +576,6 @@ def create_modal_block_set(context, *args, **kwargs):
 def disregard_meeting_review_block_set(context, *args, **kwargs):
     """Shows a modal to create/select a resource"""
     w = MeetingWorkflow.objects.get(id=context.get("w"))
-    user = w.user
     blocks = [
         block_builders.section_with_button_block(
             "Review",
@@ -664,3 +678,32 @@ def meeting_summary_blockset(context):
     blocks.append(block_builders.simple_section(review_str, "mrkdwn"))
 
     return blocks
+
+
+@block_set(required_context=[])
+def schedule_zoom_meeting_modal(context):
+    today = str(date.today())
+    blocks = [
+        block_builders.input_block("Meeting Topic", placeholder="Enter your topic", optional=False),
+        block_builders.datepicker(today, "DO_NOTHING", "schedule_date", "Meeting Date"),
+        block_builders.static_select(
+            "Start Time (Hour)", block_sets.get_block_set("hour_options"), placeholder="Hour"
+        ),
+        block_builders.static_select(
+            "Start Time (Minutes)",
+            block_sets.get_block_set("minute_options"),
+            placeholder="Minutes",
+        ),
+        block_builders.static_select(
+            "AM/PM",
+            block_sets.get_block_set("time_options"),
+            initial_option={"text": {"type": "plain_text", "text": "AM"}, "value": "AM"},
+        ),
+        block_builders.static_select(
+            "Duration",
+            block_sets.get_block_set("duration_options"),
+            initial_option={"text": {"type": "plain_text", "text": "30"}, "value": "30"},
+        ),
+    ]
+    return blocks
+
