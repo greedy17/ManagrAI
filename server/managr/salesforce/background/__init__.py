@@ -492,7 +492,7 @@ def _process_add_call_to_sf(workflow_id, *args):
     )
 
     data = dict(
-        Subject=f"Meeting - {review_form.saved_data.get('meeting_type')}",
+        Subject=f"Zoom Meeting - {review_form.saved_data.get('meeting_type')}",
         Description=f"{review_form.saved_data.get('meeting_comments')}, this meeting started on {formatted_start} and ended on {formatted_end} ",
         WhatId=workflow.resource.integration_id,
         ActivityDate=workflow.meeting.start_time.strftime("%Y-%m-%d"),
