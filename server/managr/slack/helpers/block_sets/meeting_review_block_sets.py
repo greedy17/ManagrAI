@@ -684,7 +684,7 @@ def meeting_summary_blockset(context):
 def schedule_zoom_meeting_modal(context):
     today = str(date.today())
     blocks = [
-        block_builders.input_block("Meeting Topic", placeholder="Enter your topic"),
+        block_builders.input_block("Meeting Topic", placeholder="Enter your topic", optional=False),
         block_builders.datepicker(today, "DO_NOTHING", "schedule_date", "Meeting Date"),
         block_builders.static_select(
             "Start Time (Hour)", block_sets.get_block_set("hour_options"), placeholder="Hour"

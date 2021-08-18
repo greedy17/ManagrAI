@@ -267,14 +267,14 @@ def home_modal_generic_block_set(context):
 
 
 @block_set()
-def hour_options():
+def hour_options(context):
     hours = list(range(1, 13))
     blocks = [block_builders.option(str(val), str(val)) for val in hours]
     return blocks
 
 
 @block_set()
-def minute_options():
+def minute_options(context):
     minutes = list(range(0, 56, 5))
     blocks = []
     for minute in minutes:
@@ -286,13 +286,14 @@ def minute_options():
 
 
 @block_set()
-def time_options():
+def time_options(context):
     time = ["AM", "PM"]
     blocks = [block_builders.option(val, val) for val in time]
     return blocks
 
+
 @block_set()
-def duration_options():
+def duration_options(context):
     times = list(range(0, 56, 5))
     blocks = []
     for time in times:

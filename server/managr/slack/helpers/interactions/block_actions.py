@@ -1208,7 +1208,7 @@ def process_schedule_meeting(payload, context):
             "callback_id": slack_const.COMMAND_CREATE_TASK,
             "title": {"type": "plain_text", "text": "Meeting Details"},
             "blocks": get_block_set("schedule_meeting_modal"),
-            "submit": {"type": "plain_text", "text": "Book Meeting",},
+            "submit": {"type": "plain_text", "text": "Add Contacts",},
             "private_metadata": json.dumps(context),
         },
     }
