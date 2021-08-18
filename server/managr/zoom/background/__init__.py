@@ -434,12 +434,12 @@ def _send_meeting_summary(workflow_id):
     organization = user.organization
     # only send meeting reviews for opps if the leadership box is selected or owner is selected
     send_summ_to_leadership = (
-        workflow.forms.filter(template__form_type="MEETING_REVIEW")
+        workflow.forms.filter(template__form_type="UPDATE")
         .first()
         .saved_data.get("__send_recap_to_leadership")
     )
     send_summ_to_owner = (
-        workflow.forms.filter(template__form_type="MEETING_REVIEW")
+        workflow.forms.filter(template__form_type="UPDATE")
         .first()
         .saved_data.get("__send_recap_to_reps")
     )

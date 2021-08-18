@@ -58,7 +58,6 @@ export class SObjectFormBuilderAPI extends ModelAPI {
     }
 
     let params = ApiFilter.buildParams(filterMaps, { ...query_params })
-
     try {
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'fields/', {
         params: this.cls.toAPI(params),
@@ -67,6 +66,15 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       return res.data.results.map(f => this.cls.fromAPI(f))
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Zoom Auth Link' })(e)
+    }
+  }
+
+  async getPublicFields() {
+    try {
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'public-fields')
+      return res.data.results.map(f => this.cls.fromAPI(f))
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
     }
   }
 

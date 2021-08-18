@@ -40,6 +40,7 @@ from managr.salesforce.background import (
     _process_create_new_resource,
     _process_create_task,
     emit_meeting_workflow_tracker,
+    emit_add_update_to_sf,
     _send_recap,
 )
 
@@ -143,9 +144,7 @@ def process_zoom_meeting_data(payload, context):
             form.save_form(state)
     # otherwise we save the meeting review form
     else:
-        form = workflow.forms.filter(
-            template__form_type=slack_const.FORM_TYPE_MEETING_REVIEW
-        ).first()
+        form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
         form.save_form(state)
 
     contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
@@ -250,6 +249,7 @@ def process_submit_resource_data(payload, context):
         pass
     current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
     main_form = current_forms.filter(template__form_type__in=["UPDATE", "CREATE"]).first()
+
     stage_forms = current_forms.exclude(template__form_type__in=["UPDATE", "CREATE"])
     stage_form_data_collector = {}
     for form in stage_forms:
@@ -461,6 +461,11 @@ def process_submit_resource_data(payload, context):
             or all_form_data.get("__send_recap_to_channels") is not None
         ):
             _send_recap(current_form_ids)
+        if (
+            all_form_data.get("meeting_comments") is not None
+            and all_form_data.get("meeting_type") is not None
+        ):
+            emit_add_update_to_sf(str(main_form.id))
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
         success_view_data = {
             "trigger_id": trigger_id,
@@ -592,7 +597,7 @@ def process_zoom_meeting_attach_resource(payload, context):
     # clear old forms (except contact forms)
     workflow.forms.exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT).delete()
     workflow.add_form(
-        meeting_resource, slack_const.FORM_TYPE_MEETING_REVIEW,
+        meeting_resource, slack_const.FORM_TYPE_UPDATE,
     )
     try:
         # update initial interaction workflow with new resource

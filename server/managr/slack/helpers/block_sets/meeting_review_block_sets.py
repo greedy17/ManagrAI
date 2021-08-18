@@ -441,9 +441,7 @@ def initial_meeting_interaction_block_set(context):
 def meeting_review_modal_block_set(context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = workflow.user
-    slack_form = workflow.forms.filter(
-        template__form_type=slack_const.FORM_TYPE_MEETING_REVIEW
-    ).first()
+    slack_form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
 
     blocks = []
 
@@ -594,9 +592,7 @@ def disregard_meeting_review_block_set(context, *args, **kwargs):
 def final_meeting_interaction_block_set(context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     meeting = workflow.meeting
-    meeting_form = workflow.forms.filter(
-        template__form_type=slack_const.FORM_TYPE_MEETING_REVIEW
-    ).first()
+    meeting_form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
     blocks = None
     if meeting_form.saved_data["meeting_type"] == "No Update":
         blocks = [
