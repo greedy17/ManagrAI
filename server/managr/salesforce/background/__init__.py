@@ -1015,7 +1015,6 @@ def _send_recap(form_ids):
     send_summ_to_channels = new_data.get("__send_recap_to_channels")
 
     slack_access_token = user.organization.slack_integration.access_token
-
     blocks = []
 
     message_string_for_recap = ""
@@ -1027,7 +1026,10 @@ def _send_recap(form_ids):
         if main_form.template.form_type == "UPDATE":
             # Only sends values for fields that have been updated
             # all fields on update form are included by default users cannot edit
-
+            if new_value:
+                if field.field.is_public and field.field.data_type == "String":
+                    new_value = check_for_display_value(field.field, new_value)
+                    message_string_for_recap += f"\n*{field_label}:* {new_value}"
             if key in old_data:
                 if str(old_data.get(key)) != str(new_value):
                     old_value = old_data.get(key)
