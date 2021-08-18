@@ -311,6 +311,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    managrFields: {
+      type: Array,
+      default: () => [],
+    },
   },
   data() {
     return {
@@ -336,6 +340,33 @@ export default {
       handler(val) {
         if (val && val.fields) {
           this.addedFields = [...val.fieldsRef]
+          if (this.formType == 'UPDATE') {
+            let currentFormFields = this.addedFields.map((field) => {
+              return field.id
+            })
+            if (currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false) {
+              let fieldsToAdd = this.managrFields.filter((field) => {
+                return (
+                  field.id == '6407b7a1-a877-44e2-979d-1effafec5035' ||
+                  field.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
+                )
+              })
+              let copyArray = this.addedFields
+              fieldsToAdd = fieldsToAdd.concat(copyArray)
+              this.addedFields = fieldsToAdd.map((field, i) => {
+                let altField = { ...field }
+                altField.order = i
+                if (
+                  altField.id == '6407b7a1-a877-44e2-979d-1effafec5035' ||
+                  altField.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
+                ) {
+                  altField.includeInRecap = true
+                }
+                return altField
+              })
+              this.onSave()
+            }
+          }
           if (this.formType !== 'UPDATE') {
             this.addedFields = this.addedFields.filter((field) => {
               return (
