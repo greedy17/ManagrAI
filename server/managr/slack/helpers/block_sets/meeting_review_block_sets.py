@@ -22,7 +22,7 @@ from managr.slack.helpers.utils import (
     block_finder,
 )
 
-from managr.slack.helpers import block_builders
+from managr.slack.helpers import block_builders, block_sets
 from managr.utils.misc import snake_to_space
 from managr.salesforce.routes import routes as form_routes
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
@@ -687,11 +687,27 @@ def meeting_summary_blockset(context):
 @block_set(required_context=[])
 def schedule_zoom_meeting_modal(context):
     today = str(date.today())
-    date_block = block_builders.datepicker(today, "DO_NOTHING", "schedule_date")
-    time_block = block_builders.timepicker("DO_NOTHING")
-
     blocks = [
-        date_block,
-        time_block,
+        block_builders.input_block("Meeting Topic", placeholder="Enter your topic"),
+        block_builders.datepicker(today, "DO_NOTHING", "schedule_date", "Meeting Date"),
+        block_builders.static_select(
+            "Start Time (Hour)", block_sets.get_block_set("hour_options"), placeholder="Hour"
+        ),
+        block_builders.static_select(
+            "Start Time (Minutes)",
+            block_sets.get_block_set("minute_options"),
+            placeholder="Minutes",
+        ),
+        block_builders.static_select(
+            "AM/PM",
+            block_sets.get_block_set("time_options"),
+            initial_option={"text": {"type": "plain_text", "text": "AM"}, "value": "AM"},
+        ),
+        block_builders.static_select(
+            "Duration",
+            block_sets.get_block_set("duration_options"),
+            initial_option={"text": {"type": "plain_text", "text": "30"}, "value": "30"},
+        ),
     ]
     return blocks
+
