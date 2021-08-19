@@ -902,6 +902,48 @@ def process_create_task(payload, context):
     }
 
 
+@log_all_exceptions
+@slack_api_exceptions(rethrow=True)
+@processor(required_context=[])
+def process_schedule_meeting(payload, context):
+    u = User.objects.get(id=context.get("u"))
+    trigger_id = payload["trigger_id"]
+    view_id = payload["view"]["id"]
+    org = u.organization
+    access_token = org.slack_integration.access_token
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    try:
+        data = {
+            "trigger_id": trigger_id,
+            "view_id": view_id,
+            "view": {
+                "type": "modal",
+                "callback_id": slack_const.ZOOM_MEETING__ADD_CALENDAR_EVENT,
+                "title": {"type": "plain_text", "text": "Add Calendar Event"},
+                "blocks": get_block_set("create_calendar_event_modal", context=context),
+                "private_metadata": json.dumps(context),
+            },
+        }
+        slack_requests.generic_request(url, data, access_token=access_token)
+
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Faild to update Zoom Schedule Meeting modal for user {u.email}, {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Faild to update Zoom Schedule Meeting modal for user {u.email}, {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Faild to update Zoom Schedule Meeting modal for user {u.email}, {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Faild to update Zoom Schedule Meeting modal for user {u.email}, {e}"
+        )
+
+
 def handle_view_submission(payload):
     """
     This takes place when a modal's Submit button is clicked.
@@ -916,6 +958,7 @@ def handle_view_submission(payload):
         slack_const.COMMAND_FORMS__SUBMIT_FORM: process_submit_resource_data,
         slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE: process_next_page_slack_commands_form,
         slack_const.COMMAND_CREATE_TASK: process_create_task,
+        slack_const.ZOOM_MEETING__SCHEDULE_MEETING: process_schedule_meeting,
     }
 
     callback_id = payload["view"]["callback_id"]

@@ -73,6 +73,10 @@ def emit_send_meeting_summary(workflow_id):
     return _send_meeting_summary(workflow_id)
 
 
+def emit_process_schedule_zoom_meeting(user, zoom_data):
+    return _process_schedule_zoom_meeting(user, zoom_data)
+
+
 def _send_zoom_error_message(user, meeting_uuid):
     if hasattr(user, "slack_integration"):
         user_slack_channel = user.slack_integration.channel
@@ -502,4 +506,13 @@ def _send_meeting_summary(workflow_id):
 def _process_confirm_compliance(obj):
     """Sends Compliance verification on app deauth to zoom"""
     ZoomAcct.compliance_api(json.loads(obj))
+    return
+
+
+@background(schedule=0)
+def _process_schedule_zoom_meeting(payload, context):
+    print(payload, context)
+    # get details of meeting
+    # data to send
+    # Use create or search
     return

@@ -1196,7 +1196,7 @@ def process_paginate_alerts(payload, context):
 
 
 @processor(required_context="u")
-def process_schedule_meeting(payload, context):
+def process_meeting_details(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
     u = User.objects.get(id=context.get("u"))
@@ -1205,10 +1205,10 @@ def process_schedule_meeting(payload, context):
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
-            "callback_id": slack_const.COMMAND_CREATE_TASK,
+            "callback_id": slack_const.ZOOM_MEETING__SCHEDULE_MEETING,
             "title": {"type": "plain_text", "text": "Meeting Details"},
-            "blocks": get_block_set("schedule_meeting_modal"),
-            "submit": {"type": "plain_text", "text": "Add Contacts",},
+            "blocks": get_block_set("schedule_meeting_modal", context=context),
+            "submit": {"type": "plain_text", "text": "Save",},
             "private_metadata": json.dumps(context),
         },
     }
@@ -1251,7 +1251,7 @@ def handle_block_actions(payload):
         slack_const.ZOOM_MEETING__STAGE_SELECTED: process_stage_selected,
         slack_const.ZOOM_MEETING__CREATE_TASK: process_create_task,
         slack_const.ZOOM_MEETING__CONVERT_LEAD: process_coming_soon,
-        slack_const.ZOOM_MEETING__SCHEDULE_MEETING: process_schedule_meeting,
+        slack_const.ZOOM_MEETING__MEETING_DETAILS: process_meeting_details,
         slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS: process_show_update_resource_form,
         slack_const.COMMAND_FORMS__STAGE_SELECTED: process_stage_selected_command_form,
         slack_const.UPDATE_TASK_SELECTED_RESOURCE: process_resource_selected_for_task,

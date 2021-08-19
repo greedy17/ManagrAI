@@ -132,7 +132,7 @@ def schedule_meeting(context):
         "Schedule another Zoom meeting?",
         style="primary",
         action_id=action_with_params(
-            slack_const.ZOOM_MEETING__SCHEDULE_MEETING, params=[f"u={str(workflow.user.id)}"],
+            slack_const.ZOOM_MEETING__MEETING_DETAILS, params=[f"u={str(workflow.user.id)}"],
         ),
     )
 
@@ -682,28 +682,51 @@ def meeting_summary_blockset(context):
 
 @block_set(required_context=[])
 def schedule_zoom_meeting_modal(context):
+    user = User.objects.get(id=context.get("u"))
+    contacts = user.contacts.all()
+    ops = [*[contact.as_slack_option for contact in contacts]]
     today = str(date.today())
     blocks = [
         block_builders.input_block("Meeting Topic", placeholder="Enter your topic", optional=False),
         block_builders.datepicker(today, "DO_NOTHING", "schedule_date", "Meeting Date"),
         block_builders.static_select(
-            "Start Time (Hour)", block_sets.get_block_set("hour_options"), placeholder="Hour"
+            "Start Time (Hour)",
+            block_sets.get_block_set("hour_options"),
+            action_id="DO_NOTHING",
+            placeholder="Hour",
         ),
         block_builders.static_select(
             "Start Time (Minutes)",
             block_sets.get_block_set("minute_options"),
+            action_id="DO_NOTHING",
             placeholder="Minutes",
         ),
         block_builders.static_select(
             "AM/PM",
             block_sets.get_block_set("time_options"),
+            action_id="DO_NOTHING",
             initial_option={"text": {"type": "plain_text", "text": "AM"}, "value": "AM"},
         ),
         block_builders.static_select(
             "Duration",
             block_sets.get_block_set("duration_options"),
+            action_id="DO_NOTHING",
             initial_option={"text": {"type": "plain_text", "text": "30"}, "value": "30"},
         ),
+        block_builders.multi_static_select(
+            "*Add Contacts to this meeting*",
+            options=ops,
+            action_id="DO_NOTHING",
+            block_id="select_existing",
+            placeholder="Search Contacts",
+        ),
     ]
+    return blocks
+
+
+@block_set(required_context=[])
+def create_calendar_event_modal(context):
+
+    blocks = []
     return blocks
 
