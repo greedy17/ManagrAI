@@ -1,14 +1,14 @@
 <template>
   <div class="invite-users">
-    <h2>Build Your Team</h2>
-    <div class="invite-users__text">Invite your team sales representatives to join your team</div>
+    <h2 style="font-size: 1.5rem">Build Your Team</h2>
+    <div class="invite-users__text">
+      Invite your team sales representatives to join you on Managr
+    </div>
 
-    <button type="submit" @click="handleInvite">Invite Team Member</button>
+    <button class="invite_button" type="submit" @click="handleInvite">Invite Team Member</button>
     <Invite class="invite-users__inviter" :inviteOpen="inviteOpen" @cancel="handleCancel" />
 
-    <button type="submit" @click="handleContinue" class="invite-users__continue-button">
-      Continue to Integrations
-    </button>
+    <!-- <button class="continue_button" type="submit" @click="handleContinue">Continue</button> -->
   </div>
 </template>
 
@@ -45,12 +45,13 @@ export default {
 @import '@/styles/mixins/utils';
 
 .invite-users {
+  color: white;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   text-align: center;
-  background-color: transparent;
+  margin-top: 1rem;
   &__logo {
     height: 5rem;
   }
@@ -58,8 +59,8 @@ export default {
   &__text {
     font-family: #{$base-font-family};
     width: 100%;
-
-    margin-bottom: 2rem;
+    margin-top: -1rem;
+    margin-bottom: 1.5rem;
   }
 
   &__input {
@@ -67,12 +68,12 @@ export default {
   }
 
   &__inviter {
-    margin-top: 5rem;
+    margin-top: 2rem;
   }
 
   &__continue-button {
     width: 19rem;
-    margin-top: 2.5rem;
+    margin-top: 3rem;
   }
 }
 
@@ -92,16 +93,37 @@ h2 {
   }
 }
 
-button {
-  @include primary-button();
-  margin-top: 1.25rem;
-  height: 2.25rem;
-  border-radius: 3px;
-  width: 10rem;
-  font-size: 0.75rem;
-}
-
 .hidden {
   display: none;
+}
+
+.invite_button {
+  color: $panther-orange;
+  background-color: white;
+  width: 12.5vw;
+  height: 6vh;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  font-weight: bold;
+  font-size: 16px;
+  border: none;
+}
+
+.continue_button {
+  color: white;
+  background-color: $panther-purple;
+  width: 10vw;
+  height: 5vh;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  font-weight: bold;
+  font-size: 16px;
+  border: none;
+  margin-top: 2rem;
+}
+
+.invite_button:hover,
+.continue_button:hover {
+  cursor: pointer;
 }
 </style>
