@@ -10,7 +10,7 @@
       "
     >
       <form class="invite-form" @submit.prevent="handleInvite">
-        <div class="invite-form__title">Invite Users to Managr</div>
+        <div class="invite-form__title" style="color: #ff7649">Invite Users to Managr</div>
         <div class="invite-form__subtitle">
           {{ $store.state.user.organizationRef.name }}
         </div>
@@ -89,22 +89,28 @@
       </form>
     </Modal>
     <div class="invite-list__container">
-      <div class="invite-list__title">Your Team</div>
+      <div class="invite-list__title" style="color: #beb5cc">Your Team:</div>
       <div class="invite-list__section__container" style="margin-bottom: 1.5rem">
-        <div class="invite-list__section__item invite-list__name">{{ user.fullName }}</div>
+        <div class="invite-list__section__item invite-list__name">
+          {{ user.fullName }}
+        </div>
         <div class="invite-list__section__item invite-list__status">
           {{ user.userLevel == 'MANAGER' ? 'Team Leader(You)' : 'Rep(You)' }}
         </div>
-        <div class="invite-list__section__item invite-list__status">Registered</div>
+        <div class="invite-list__section__item invite-list__status" style="color: #5f8cff">
+          Registered
+        </div>
       </div>
       <div v-for="member in team.list" :key="member.id" class="invite-list__section__container">
         <template v-if="member.id !== user.id">
-          <div class="invite-list__section__item invite-list__name">{{ member.email }}</div>
+          <div class="invite-list__section__item invite-list__name">
+            {{ member.email }}
+          </div>
           <div class="invite-list__section__item invite-list__status">
             {{ member.userLevel == 'MANAGER' ? 'Manager' : 'Rep' }}
           </div>
-          <div class="invite-list__section__item invite-list__status">
-            {{ member.isActive ? 'Registered' : 'Pending' }}
+          <div :class="member.isActive ? 'registered' : 'unregistered'">
+            {{ member.isActive ? 'Registered' : 'Pending..' }}
           </div>
         </template>
       </div>
@@ -308,11 +314,16 @@ form,
 }
 
 .invite-button {
-  @include primary-button();
+  background-color: white;
+  color: $panther-orange;
   margin-top: 1.25rem;
   height: 2.5rem;
-  width: 19rem;
+  width: 10rem;
   font-size: 14px;
+}
+.invite-button:hover {
+  background-color: white;
+  color: $panther-orange;
 }
 
 button {
@@ -325,12 +336,14 @@ button {
 
 .invite-form {
   border: none;
+  border-radius: 0.75rem;
   width: 100%;
-  height: 70vh;
+  height: 80vh;
   min-height: 30rem;
   display: flex;
   align-items: center;
   flex-direction: column;
+  background-color: $panther;
   > .form_field {
     flex: 0 0 auto;
   }
@@ -342,11 +355,9 @@ button {
   }
   &__title {
     @include base-font-styles();
-    padding: 1rem 1rem;
-    font-size: 14px;
-    font-weight: 700;
-    line-height: 1.14;
-    color: $main-font-gray;
+    padding: 2rem 2rem;
+    font-size: 16px;
+    font-weight: bold;
     text-transform: uppercase;
     text-align: left;
   }
@@ -370,14 +381,14 @@ button {
     margin-bottom: 2rem;
   }
   &__container {
-    border: solid 2px #dcdddf;
+    background-color: $panther;
+    border: none;
     width: 0%;
     min-width: 40vw;
     padding: 1.5rem 1rem 1.5rem 1.5rem;
     border-radius: 5px;
-    box-shadow: 0 5px 10px 0 rgba(132, 132, 132, 0.26);
+    box-shadow: 0 5px 10px 0 black;
     display: flex;
-    background-color: white;
 
     align-items: flex-start;
     flex-direction: column;
@@ -407,6 +418,17 @@ button {
     font-size: 0.75rem;
   }
 }
+.registered {
+  width: 33%;
+  font-size: 0.75rem;
+  color: $panther-blue;
+}
+.unregistered {
+  width: 33%;
+  font-size: 0.75rem;
+  color: $panther-turq;
+}
+
 .cancel-button {
   width: 19rem;
   margin-top: 0.5rem;

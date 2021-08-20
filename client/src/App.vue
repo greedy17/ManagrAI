@@ -7,7 +7,7 @@
     <div :class="{ 'page-content': !hideNavBar }">
       <router-view :key="$route.fullPath"></router-view>
     </div>
-    <!-- <img src="@/assets/images/backgroundLogo.png" class="background-logo" /> -->
+    <img src="@/assets/images/backgroundLogo.png" class="background-logo grayscale" />
   </div>
 </template>
 
@@ -74,6 +74,12 @@ body {
   margin: 0;
   min-height: 100vh;
   position: relative;
+  background-color: $panther-gray;
+}
+.grayscale {
+  filter: invert(100%);
+  opacity: 5%;
+  filter: brightness(0.75);
 }
 
 #app {

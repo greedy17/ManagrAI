@@ -1,5 +1,90 @@
 <template>
   <div class="slack-form-builder">
+    <Modal ref="modalName">
+      <template v-slot:header>
+        <p>Search for these fields & add them to your slack form</p>
+      </template>
+
+      <template v-slot:body>
+        <div>
+          <p style="color: #ff7649; font-weight: bold">Required:</p>
+          <ul>
+            <li>"Name"</li>
+            <li>"Stage"</li>
+            <li>"Close Date"</li>
+          </ul>
+        </div>
+        <p style="color: #5f8cff">Suggested:</p>
+        <ul>
+          <li>"Amount" or "MRR"</li>
+          <li>"Forecast Category"</li>
+          <li>"Next Step"</li>
+          <li>"Next Step Date"</li>
+        </ul>
+      </template>
+    </Modal>
+    <Modal ref="ContactModal">
+      <template v-slot:header>
+        <p>Search for these fields & add them to your slack form</p>
+      </template>
+
+      <template v-slot:body>
+        <div>
+          <p style="color: #ff7649; font-weight: bold">Required:</p>
+          <ul>
+            <li>"Last Name"</li>
+          </ul>
+        </div>
+        <p style="color: #5f8cff">Suggested:</p>
+        <ul>
+          <li>"First Name"</li>
+          <li>"Title"</li>
+          <li>"Email"</li>
+          <li>"Phone"</li>
+          <li>"Account Name"</li>
+        </ul>
+      </template>
+    </Modal>
+    <Modal ref="AccountModal">
+      <template v-slot:header>
+        <p>Search for these fields & add them to your slack form</p>
+      </template>
+
+      <template v-slot:body>
+        <div>
+          <p style="color: #ff7649; font-weight: bold">Required:</p>
+          <ul>
+            <li>"Name"</li>
+          </ul>
+        </div>
+        <p style="color: #5f8cff">Suggested:</p>
+        <ul>
+          <li>"Type"</li>
+        </ul>
+      </template>
+    </Modal>
+    <Modal ref="LeadModal">
+      <template v-slot:header>
+        <p>Search for these fields & add them to your slack form</p>
+      </template>
+
+      <template v-slot:body>
+        <div>
+          <p style="color: #ff7649; font-weight: bold">Required:</p>
+          <ul>
+            <li>"Last name"</li>
+          </ul>
+        </div>
+        <p style="color: #5f8cff">Suggested:</p>
+        <ul>
+          <li>"Title"</li>
+          <li>"Phone"</li>
+          <li>"Email"</li>
+          <li>"Company Name"</li>
+          <li>"Status"</li>
+        </ul>
+      </template>
+    </Modal>
     <div>
       <div class="slack-from-builder__sf-validations">
         <template v-if="showValidations">
@@ -18,78 +103,56 @@
       </div>
     </div>
 
-    <div style="display: flex">
-      <div>
-        <div class="fields">Select or search for SFDC fields.</div>
-        <CollectionSearch
-          :collection="formFields"
-          itemDisplayKey="referenceDisplayLabel"
-          :showSubmitBtn="false"
-          @onClickItem="
-            e => {
-              onAddField(e)
-            }
-          "
-          @onSearch="
-            () => {
-              formFields.pagination = new Pagination()
-            }
-          "
-        >
-          <template v-slot:item="{ result }">
-            <div class="slack-form-builder__container">
-              <CheckBox :checked="addedFieldIds.includes(result.id)" />
-              <div class="slack-form-builder__sf-field">{{ result['referenceDisplayLabel'] }}</div>
-            </div>
-          </template>
-        </CollectionSearch>
-        <div
-          class="paginator__container"
-          v-if="formFields.pagination.next || formFields.pagination.previous"
-        >
-          <div class="paginator__text">View More</div>
+    <div class="opportunity__row">
+      <div class="opportunity__column">
+        <div class="fields_title" style="text-align: center">1. Select your fields</div>
+        <div class="collection_fields">
+          <CollectionSearch
+            :collection="formFields"
+            itemDisplayKey="referenceDisplayLabel"
+            :showSubmitBtn="false"
+            @onClickItem="
+              (e) => {
+                onAddField(e)
+              }
+            "
+            @onSearch="
+              () => {
+                formFields.pagination = new Pagination()
+              }
+            "
+          >
+            <template v-slot:item="{ result }">
+              <div class="slack-form-builder__container">
+                <CheckBox :checked="addedFieldIds.includes(result.id)" />
+                <div class="slack-form-builder__sf-field">
+                  {{ result['referenceDisplayLabel'] }}
+                </div>
+              </div>
+            </template>
+          </CollectionSearch>
+          <div
+            class="paginator__container"
+            v-if="formFields.pagination.next || formFields.pagination.previous"
+          >
+            <div class="paginator__text">View More</div>
 
-          <Paginator
-            :pagination="formFields.pagination"
-            @next-page="nextPage"
-            @previous-page="previousPage"
-            :loading="formFields.loadingNextPage"
-            arrows
-            size="small"
-            class="paginator"
-          />
+            <Paginator
+              :pagination="formFields.pagination"
+              @next-page="nextPage"
+              @previous-page="previousPage"
+              :loading="formFields.loadingNextPage"
+              arrows
+              size="small"
+              class="paginator"
+            />
+          </div>
         </div>
       </div>
 
-      <div class="slack-form-builder__form" v-if="customForm">
-        <div class="form-header">
-          <div class="save-button">
-            <PulseLoadingSpinnerButton
-              @click="onSave"
-              class="primary-button"
-              text="Save"
-              :loading="savingForm"
-              :disabled="!$store.state.user.isAdmin"
-            />
-          </div>
-          <div class="heading">
-            <h2>
-              {{ customForm.stage ? `${customForm.stage} Stage` : `${resource} Slack Form` }}
-            </h2>
-            <p class="muted">Add fields that you’d like to update using Slack</p>
-          </div>
-        </div>
-        <div>
-          <!-- <div class="save-button">
-          <PulseLoadingSpinnerButton
-            @click="onSave"
-            class="primary-button"
-            text="Save"
-            :loading="savingForm"
-            :disabled="!$store.state.user.isAdmin"
-          />
-        </div> -->
-
+      <div class="opportunity__column" v-if="customForm">
+        <div class="fields_title" style="text-align: center">2. Re-order</div>
+        <div class="slack-form-builder__form">
           <div class="slack-form-builder__form-meta" v-if="customForm.stage">
             <h5>Previous stage specific forms</h5>
             <small v-if="!orderedStageForm.length"> This is your first stage specific form </small>
@@ -117,25 +180,27 @@
             </div>
           </div>
 
-          <div v-if="customForm.formType == 'CREATE' || customForm.stage" class="recap">
+          <!-- <div v-if="customForm.formType == 'CREATE' || customForm.stage" class="recap">
             <h5>Include in recap</h5>
-          </div>
+          </div> -->
+
+          <h2 style="text-align: center; margin-bottom: 1rem">Slack form</h2>
 
           <div v-for="(field, index) in [...addedFields]" :key="field.apiName" class="form-field">
-            <div
+            <!-- <div
               v-if="
                 field.id === '6407b7a1-a877-44e2-979d-1effafec5035' ||
-                  field.id === '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' ||
-                  field.id === 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' ||
-                  field.id === 'fae88a10-53cc-470e-86ec-32376c041893'
+                field.id === '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' ||
+                field.id === 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' ||
+                field.id === 'fae88a10-53cc-470e-86ec-32376c041893'
               "
               class="form-field__label"
             >
               {{ field.referenceDisplayLabel }}
-            </div>
+            </div> -->
             <div style="display: flex; width: 100%">
               <div class="form-field__left">
-                <div
+                <!-- <div
                   v-if="field.id === '6407b7a1-a877-44e2-979d-1effafec5035'"
                   class="form-field__body"
                 >
@@ -162,46 +227,63 @@
                   class="form-field__body"
                 >
                   {{ 'Gives the reps the option to send themselves a recap' }}
-                </div>
+                </div> -->
+                <img
+                  v-if="canRemoveField(field)"
+                  style="height: 1rem; margin-right: 0.5rem"
+                  src="@/assets/images/remove.png"
+                  @click="() => onRemoveField(field)"
+                />
 
                 <div
                   class="form-field__label"
                   v-if="
                     field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
-                      field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
-                      field.id !== 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' &&
-                      field.id !== 'fae88a10-53cc-470e-86ec-32376c041893'
+                    field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
+                    field.id !== 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' &&
+                    field.id !== 'fae88a10-53cc-470e-86ec-32376c041893' &&
+                    field.id !== 'fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed'
                   "
                 >
                   {{ field.referenceDisplayLabel }}
                 </div>
               </div>
 
-              <div class="form-field__middle">
+              <div class="form-field__middle orange">
                 {{ field.required ? 'required' : '' }}
               </div>
               <div class="form-field__right">
-                <img
-                  v-if="canRemoveField(field)"
-                  style="height: 1.25rem; padding-right: 0.75rem"
-                  src="@/assets/images/trashcan.png"
-                  @click="() => onRemoveField(field)"
-                />
-
                 <div
-                  class="form-field__btn form-field__btn--flipped"
+                  v-if="
+                    field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
+                    field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
+                    field.id !== 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' &&
+                    field.id !== 'fae88a10-53cc-470e-86ec-32376c041893' &&
+                    field.id !== 'fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed'
+                  "
+                  class="form-field__btn"
                   @click="() => onMoveFieldUp(field, index)"
                 >
-                  <img src="@/assets/images/dropdown-arrow-green.svg" />
-                </div>
-                <div class="form-field__btn" @click="() => onMoveFieldDown(field, index)">
-                  <img src="@/assets/images/dropdown-arrow-green.svg" />
+                  <img src="@/assets/images/upArrow.png" />
                 </div>
                 <div
                   v-if="
+                    field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
+                    field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
+                    field.id !== 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' &&
+                    field.id !== 'fae88a10-53cc-470e-86ec-32376c041893' &&
+                    field.id !== 'fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed'
+                  "
+                  class="form-field__btn"
+                  @click="() => onMoveFieldDown(field, index)"
+                >
+                  <img src="@/assets/images/downArrow.png" />
+                </div>
+                <!-- <div
+                  v-if="
                     customForm.formType == 'CREATE' ||
-                      customForm.formType == 'MEETING_REVIEW' ||
-                      customForm.stage
+                    customForm.formType == 'MEETING_REVIEW' ||
+                    customForm.stage
                   "
                   class="form-field__right"
                   @click="field.includeInRecap = !field.includeInRecap"
@@ -214,7 +296,7 @@
                       }}</i></small
                     >
                   </h5>
-                </div>
+                </div> -->
               </div>
             </div>
             <div style="display: flex; align-items: center">
@@ -251,8 +333,103 @@
               </template>
             </div>
           </div>
+          <p v-if="resource == OPPORTUNITY" class="popular_fields">
+            These <span @click="$refs.modalName.openModal()" class="popularModal">fields</span> are
+            the most popular
+          </p>
+          <p v-else-if="resource == CONTACT" class="popular_fields">
+            These
+            <span @click="$refs.ContactModal.openModal()" class="popularModal">fields</span> are the
+            most popular
+          </p>
+          <p v-else-if="resource == ACCOUNT" class="popular_fields">
+            These
+            <span @click="$refs.AccountModal.openModal()" class="popularModal">fields</span> are the
+            most popular
+          </p>
+          <p v-else class="popular_fields">
+            These
+            <span @click="$refs.LeadModal.openModal()" class="popularModal">fields</span> are the
+            most popular
+          </p>
         </div>
       </div>
+
+      <div class="opportunity__column">
+        <div class="fields_title" style="text-align: center">3. Save</div>
+
+        <div class="collection_fields">
+          <div class="save-button">
+            <span v-if="formType == 'UPDATE' && resource == OPPORTUNITY"></span>
+            <button
+              v-else-if="formType == 'CREATE' && resource == CONTACT"
+              @click="goToUpdateOpp"
+              class="back__button"
+            >
+              <img src="@/assets/images/back.png" style="height: 1.2rem" alt="" />
+              back
+            </button>
+            <button v-else @click="goToCustomize" class="back__button">
+              <img src="@/assets/images/back.png" style="height: 1.5rem" alt="" />
+              customize
+            </button>
+          </div>
+
+          <div class="save-button">
+            <PulseLoadingSpinnerButton
+              @click="onSave"
+              class="primary-button"
+              text="Save"
+              :loading="savingForm"
+              :disabled="!$store.state.user.isAdmin"
+            />
+          </div>
+
+          <div v-if="formType == 'UPDATE' && resource == OPPORTUNITY" class="save-button">
+            <button @click="goToContacts" v-if="canContinue" class="continue__button">
+              Continue
+            </button>
+            <button v-else class="cant__continue">Continue</button>
+          </div>
+          <div v-else class="save-button" style="flex-direction: column; align-items: center">
+            <button @click="goToCustomize" v-if="canContinue" class="continue__button">
+              Continue
+            </button>
+            <button v-else class="cant__continue">Continue</button>
+          </div>
+          <div class="warning" v-if="canContinue">
+            <img src="@/assets/images/warning.png" alt="" />
+            <p>If you make any additional changes you must save again!</p>
+          </div>
+        </div>
+      </div>
+      <!-- <div class="form-header">
+          <div class="save-button">
+            <PulseLoadingSpinnerButton
+              @click="onSave"
+              class="primary-button"
+              text="Save"
+              :loading="savingForm"
+              :disabled="!$store.state.user.isAdmin"
+            />
+          </div>
+          <div class="heading">
+            <h2>
+              {{ customForm.stage ? `${customForm.stage} Stage` : `${resource} Slack Form` }}
+            </h2>
+            <p class="muted">Add fields that you’d like to update using Slack</p>
+          </div>
+        </div> -->
+      <!-- <div>
+          <div class="save-button">
+          <PulseLoadingSpinnerButton
+            @click="onSave"
+            class="primary-button"
+            text="Save"
+            :loading="savingForm"
+            :disabled="!$store.state.user.isAdmin"
+          />
+        </div> -->
     </div>
   </div>
 </template>
@@ -263,6 +440,7 @@ import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
 import CheckBox from '../../components/CheckBoxUpdated'
 import ListItem from '@/components/ListItem'
 import ListContainer from '@/components/ListContainer'
+import Modal from '@/components/Modal'
 
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
 import CollectionSearch from '@thinknimble/collection-search'
@@ -284,6 +462,7 @@ export default {
     CollectionSearch,
     ListItem,
     ListContainer,
+    Modal,
   },
   props: {
     stageForms: {
@@ -329,6 +508,8 @@ export default {
       meetingType: '',
       actionChoices: [],
       loadingMeetingTypes: false,
+      requiredFields: [],
+      canContinue: false,
     }
   },
   watch: {
@@ -398,7 +579,7 @@ export default {
     orderedStageForm() {
       let forms = []
       if (this.customForm.stage) {
-        let index = this.stageForms.findIndex(f => f.stage == this.customForm.stage)
+        let index = this.stageForms.findIndex((f) => f.stage == this.customForm.stage)
         if (~index) {
           forms = this.stageForms.slice(0, index)
         }
@@ -412,7 +593,7 @@ export default {
       return this.customForm ? this.customForm.fields : []
     },
     addedFieldIds() {
-      return this.addedFields.map(field => {
+      return this.addedFields.map((field) => {
         return field.id
       })
     },
@@ -428,7 +609,7 @@ export default {
       this.loadingMeetingTypes = true
       const action = ActionChoice.api
         .list({})
-        .then(res => {
+        .then((res) => {
           this.actionChoices = res.results
         })
         .finally((this.loadingMeetingTypes = false))
@@ -439,14 +620,13 @@ export default {
     previousPage() {
       this.formFields.prevPage()
     },
-
     canRemoveField(field) {
       // If form is create required fields cannot be removed
       // if form is update required fields can be removed
       // if form is meeting review depening on the resource it can/cant be removed
       if (
         this.MEETING_REVIEW_REQUIRED_FIELDS[this.resource] &&
-        ~this.MEETING_REVIEW_REQUIRED_FIELDS[this.resource].findIndex(f => field.id == f)
+        ~this.MEETING_REVIEW_REQUIRED_FIELDS[this.resource].findIndex((f) => field.id == f)
       ) {
         return false
       } else {
@@ -458,17 +638,26 @@ export default {
         this.canRemoveField(field) && this.onRemoveField(field)
         return
       }
-      this.addedFields.unshift({ ...field, order: this.addedFields.length, includeInRecap: true })
+      this.addedFields.push({ ...field, order: this.addedFields.length, includeInRecap: true })
     },
 
+    goToCustomize() {
+      this.$router.push({ name: 'CustomizeLandingPage' })
+    },
+    goToContacts() {
+      this.$router.push({ name: 'CreateContacts' })
+    },
+    goToUpdateOpp() {
+      this.$router.push({ name: 'UpdateOpportunity' })
+    },
     onRemoveField(field) {
       // remove from the array if  it exists
 
-      this.addedFields = [...this.addedFields.filter(f => f.id != field.id)]
+      this.addedFields = [...this.addedFields.filter((f) => f.id != field.id)]
 
       // if it exists in the current fields add it to remove field
 
-      if (~this.currentFields.findIndex(f => f == field.id)) {
+      if (~this.currentFields.findIndex((f) => f == field.id)) {
         this.removedFields = [this.removedFields, field]
       }
     },
@@ -523,7 +712,7 @@ export default {
 
             await ActionChoice.api
               .create(obj)
-              .then(res => {
+              .then((res) => {
                 this.$Alert.alert({
                   type: 'success',
                   message: 'New meeting type created',
@@ -568,9 +757,9 @@ export default {
       }
       this.savingForm = true
 
-      let fields = new Set([...this.addedFields.map(f => f.id)])
-      fields = Array.from(fields).filter(f => !this.removedFields.map(f => f.id).includes(f))
-      let fields_ref = this.addedFields.filter(f => fields.includes(f.id))
+      let fields = new Set([...this.addedFields.map((f) => f.id)])
+      fields = Array.from(fields).filter((f) => !this.removedFields.map((f) => f.id).includes(f))
+      let fields_ref = this.addedFields.filter((f) => fields.includes(f.id))
       SlackOAuth.api
         .postOrgCustomForm({
           ...this.customForm,
@@ -578,11 +767,12 @@ export default {
           removedFields: this.removedFields,
           fields_ref: fields_ref,
         })
-        .then(res => {
+        .then((res) => {
           this.$emit('update:selectedForm', res)
         })
         .finally(() => {
           this.savingForm = false
+          this.canContinue = true
         })
     },
   },
@@ -604,6 +794,7 @@ export default {
   .collection-search__results
   .collection-search__result-item {
   border: none;
+  background-color: $panther;
 }
 .slack-form-builder
   ::v-deep
@@ -612,15 +803,13 @@ export default {
   .collection-search__input
   .search__input {
   @include input-field();
-  height: 2.5rem !important;
-  width: 13rem;
+  height: 2.5rem;
+  background-color: $panther-silver;
+  border: 1px solid $panther-gray;
+  width: 10rem;
   padding: 0 0 0 1rem;
   margin: 1rem;
-}
-
-::v-deep .collection-search .collection-search__form .collection-search__input .search__input {
-  border: none;
-  border-bottom: 2px solid #eaebed;
+  box-shadow: 1px 4px 7px black;
 }
 
 .slack-form-builder {
@@ -635,31 +824,45 @@ export default {
 
   &__container {
     display: flex;
+    background-color: $panther;
   }
 
   &__sf-field {
     padding: 0.25rem;
-    font-size: 0.75rem;
+    font-size: 0.85rem;
+    font-weight: bold;
     font-display: #{$bold-font-family};
-
+    background-color: $panther;
     &:hover {
-      //ackground-color: $dark-gray-blue;
+      background-color: $panther;
       cursor: pointer;
+      color: $panther-silver;
+    }
+  }
+
+  &__required {
+    padding: 0.25rem;
+    font-size: 0.85rem;
+    font-weight: bold;
+    font-display: #{$bold-font-family};
+    background-color: $panther;
+    &:hover {
+      background-color: $panther;
+      cursor: pointer;
+      color: $panther-orange;
     }
   }
 
   &__form {
     // flex: 10;
-    width: 100%;
+    width: 24vw;
     padding: 2rem;
-    margin: 0.5rem;
-    border-radius: 5px;
     box-shadow: 0 5px 10px 0 rgba(132, 132, 132, 0.26);
-    border: solid 2px #dcdddf;
-    background-color: #ffffff;
-    min-height: 70vh;
-
-    border-radius: 1rem;
+    background-color: $panther;
+    height: 50vh;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    border-radius: 0.5rem;
   }
 }
 .paginator {
@@ -683,9 +886,8 @@ export default {
 
   position: -webkit-sticky;
   position: sticky;
-  background-color: white;
+  background-color: $panther;
   top: 0;
-  border-bottom: 2px solid lighten($very-light-gray, 15);
   > .save-button {
     flex: 0.5 0 auto;
   }
@@ -705,10 +907,8 @@ export default {
 }
 
 .form-field {
-  background-color: white;
-  padding: 1rem;
-  margin: 0.5rem 0;
-
+  background-color: $panther;
+  margin-top: 0.5rem;
   &__left {
     flex: 10;
 
@@ -728,11 +928,11 @@ export default {
   }
 
   &__label {
-    font-weight: 600;
+    font-weight: bold;
   }
 
   &__right {
-    flex: 2;
+    // flex: 2;
     display: flex;
     padding-left: 1rem;
     margin-right: -0.5rem;
@@ -826,12 +1026,131 @@ h2 {
   justify-content: flex-end;
   margin-bottom: -2rem;
 }
-.fields {
-  padding-left: 1rem;
-  font-weight: bolder;
-  font-size: 0.9rem;
-}
 img:hover {
   cursor: pointer;
+}
+.collection_fields {
+  background-color: $panther;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  height: 50vh;
+  width: 22vw;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+.fields_title {
+  background-color: $panther;
+  margin: 1rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  width: 100%;
+}
+.heading {
+  background-color: $panther;
+}
+.opportunity__column {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-right: 2rem;
+}
+.opportunity__row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+.orange {
+  color: $panther-orange;
+}
+.required__fields {
+  color: $panther-orange;
+}
+::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: 4px;
+}
+::-webkit-scrollbar-thumb {
+  border-radius: 2px;
+  background-color: $panther-silver;
+}
+.popular_fields {
+  font-weight: bold;
+  text-align: center;
+}
+.popularModal {
+  color: $panther-silver;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.continue__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 1rem;
+  border-radius: 0.3rem;
+  font-weight: bold;
+  line-height: 1.14;
+  text-indent: none;
+  border-style: none;
+  letter-spacing: 0.03rem;
+  color: white;
+  background-color: $panther-purple;
+  cursor: pointer;
+  height: 2rem;
+  width: 10rem;
+  font-weight: bold;
+  font-size: 1.02rem;
+  margin-right: 0.5rem;
+}
+.cant__continue {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 1rem;
+  border-radius: 0.3rem;
+  font-weight: bold;
+  line-height: 1.14;
+  text-indent: none;
+  border-style: none;
+  letter-spacing: 0.03rem;
+  background-color: $panther-silver;
+  color: $panther-gray;
+  cursor: not-allowed;
+  height: 2rem;
+  width: 10rem;
+  font-weight: bold;
+  font-size: 1.02rem;
+  margin-right: 0.5rem;
+}
+.back__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 1rem;
+  border-radius: 0.3rem;
+  font-weight: bold;
+  line-height: 1.14;
+  text-indent: none;
+  border-style: none;
+  letter-spacing: 0.03rem;
+  color: white;
+  background-color: $panther-gold;
+  cursor: pointer;
+  height: 2rem;
+  width: 10rem;
+  font-weight: bold;
+  font-size: 1.02rem;
+  margin-right: 0.5rem;
+}
+.warning {
+  margin-top: 1rem;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  color: $panther-gold;
 }
 </style>

@@ -75,14 +75,14 @@ export default {
   }
   &__dialog {
     $bold-font-family: Lato-Bold;
-    color: $gray;
-    background-color: white;
+    color: white;
+    background-color: $panther;
     position: relative;
-    width: 44vw;
+    width: 30vw;
     margin: 50px auto;
     display: flex;
     flex-direction: column;
-    border-radius: 1.25rem;
+    border-radius: 0.5rem;
     font-weight: bold;
     z-index: 2;
     @media screen and (max-width: 992px) {
@@ -92,13 +92,15 @@ export default {
   &__close {
     width: 24px;
     height: 24px;
+    background-color: $panther-gray;
+    color: $panther-silver;
   }
   &__header {
     padding: 8px 20px 4px;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    color: $grape;
+    color: $panther-silver;
   }
   &__body {
     padding: 10px 20px 10px;

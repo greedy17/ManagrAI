@@ -2,7 +2,7 @@
   <div>
     <nav id="nav" v-if="userIsLoggedIn">
       <div class="logo">
-        <img src="@/assets/images/logo-with-name.png" />
+        <img style="height: 3rem" src="@/assets/images/logo.png" />
       </div>
 
       <div class="left" ref="user-menu-icon">
@@ -10,22 +10,22 @@
           <ul>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Integrations' }"
-                >Integrations
+                >Connect
               </router-link>
             </li>
             <li>
-              <router-link exact-active-class="active" :to="{ name: 'SlackFormSettings' }"
-                >Form Builder
+              <router-link exact-active-class="active" :to="{ name: 'CustomizeLandingPage' }"
+                >Customize
               </router-link>
             </li>
             <li>
-              <router-link active-class="active" :to="{ name: 'alerts' }"
-                >Smart Alerts
+              <router-link active-class="active" :to="{ name: 'SlackFormSettings' }"
+                >Automate
               </router-link>
             </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
-                >Invite Users</router-link
+                >Invite</router-link
               >
             </li>
           </ul>
@@ -35,17 +35,17 @@
           <ul>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Integrations' }"
-                >Integrations
+                >Connect
               </router-link>
             </li>
             <li>
               <router-link active-class="active" :to="{ name: 'ListTemplates' }"
-                >Smart Alerts
+                >Automate
               </router-link>
             </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
-                >Invite Users</router-link
+                >Invite</router-link
               >
             </li>
           </ul>
@@ -55,12 +55,12 @@
           <ul>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Integrations' }"
-                >Integrations
+                >Connect
               </router-link>
             </li>
             <li>
               <router-link active-class="active" :to="{ name: 'ListTemplates' }"
-                >Smart Alerts
+                >Automate
               </router-link>
             </li>
           </ul>
@@ -69,9 +69,10 @@
 
       <div class="right">
         <img
-          src="@/assets/images/blackhelp.png"
+          style="height: 1.75rem"
+          src="@/assets/images/help.png"
           class="tooltip__icon"
-          @mouseover="toggleTooltip"
+          @mouseenter="toggleTooltip"
           @mouseleave="toggleTooltip"
         />
         <div class="tooltip__popup" v-if="tooltipOpen">
@@ -80,18 +81,12 @@
         </div>
 
         <div class="profile">
-          <router-link style="color: #199e54" :to="{ name: 'ProfilePage' }">{{
-            userInitials
-          }}</router-link>
+          <router-link :to="{ name: 'ProfilePage' }">{{ userInitials }}</router-link>
         </div>
 
         <div>
           <router-link :to="{ name: 'Login' }"
-            ><img
-              @click="logOut"
-              src="@/assets/images/blacklogout.png"
-              alt=""
-              style="height: 1.5rem"
+            ><img @click="logOut" src="@/assets/images/logout.png" alt="" style="height: 1.75rem"
           /></router-link>
         </div>
       </div>
@@ -321,7 +316,7 @@ li {
   margin-top: 1rem;
 }
 .profile {
-  border: 3px solid $dark-green;
+  border: 3px solid $panther-blue;
   border-radius: 50%;
   font-size: 12px;
   font-weight: bold;
@@ -334,18 +329,20 @@ img {
 }
 a {
   text-decoration: none;
-  color: $slate-gray;
+  font-weight: bold;
+  color: white;
 }
 
 a:hover {
-  color: $dark-green;
+  filter: opacity(60%);
 }
 .mar {
   margin-top: 1rem;
 }
 .active {
-  border-bottom: 3px solid $dark-green;
-  padding-bottom: 1rem;
-  color: $dark-green;
+  border-bottom: 3px solid $panther-gold;
+  font-weight: bold;
+  padding-bottom: 0.5rem;
+  color: $panther-gold;
 }
 </style>
