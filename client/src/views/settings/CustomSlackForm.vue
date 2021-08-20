@@ -396,6 +396,9 @@ export default {
                 ...fieldParam,
               }
               this.formFields.refresh()
+              if (this.formType == 'UPDATE') {
+                this.onSave()
+              }
             } catch (e) {
               console.log(e)
             }
