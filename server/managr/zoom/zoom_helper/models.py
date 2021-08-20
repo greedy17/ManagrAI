@@ -113,12 +113,15 @@ class ZoomAcct:
 
     def schedule_meeting(self, topic, date, time, duration):
         url = f"{zoom_model_consts.ZOOM_API_ENDPOINT}/users/{self.zoom_id}/meetings"
-        headers = dict(Authorization=(f"Bearer {self.access_token}"))
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json",
+        }
         data = {
             "topic": f"{topic}",
             "type": 2,
             "start_time": f"{date}T{time}:00",
-            "duration": f"{duration}",
+            "duration": duration,
         }
         r = client.post(url, json.dumps(data), headers=headers)
         response_data = self._handle_response(r)
@@ -144,7 +147,7 @@ class ZoomAcct:
         if not hasattr(response, "status_code"):
             raise ValueError
 
-        elif response.status_code == 200:
+        elif response.status_code == 200 or response.status_code == 201:
             try:
                 data = response.json()
             except Exception as e:

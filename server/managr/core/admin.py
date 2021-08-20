@@ -45,6 +45,7 @@ class EmailAuthAccForm(forms.ModelForm):
             "sync_state",
             "name",
             "user",
+            "event_calendar_id",
         )
 
 
