@@ -463,8 +463,7 @@ def email_auth_token(request):
             details = get_account_details(access_token)
             account = details["account"]
             calendar_data = details["calendars"]
-            calendar = [cal for cal in calendar_data if cal["read_only"] is False]
-            print(calendar)
+            calendar = [cal for cal in calendar_data if cal["read_only"] is False][0]
 
             NylasAuthAccount.objects.create(
                 access_token=access_token,
