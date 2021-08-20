@@ -509,10 +509,19 @@ def _process_confirm_compliance(obj):
     return
 
 
-@background(schedule=0)
-def _process_schedule_zoom_meeting(payload, context):
-    print(payload, context)
+def _process_schedule_zoom_meeting(user, zoom_data):
     # get details of meeting
-    # data to send
-    # Use create or search
-    return
+    hour = int(zoom_data["meeting_hour"])
+    if zoom_data["meeting_time"] == "PM" and hour != 12:
+        hour = hour + 12
+    formatted_time = f"{str(hour)}:{zoom_data['meeting_minute']}"
+    try:
+        res = user.zoom_account.helper_class.schedule_meeting(
+            zoom_data["meeting_topic"],
+            zoom_data["meeting_date"],
+            formatted_time,
+            int(zoom_data["meeting_duration"]),
+        )
+        return res
+    except Exception as e:
+        logger.warning(f"Zoom schedule error: {e}")

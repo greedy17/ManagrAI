@@ -20,8 +20,9 @@ from managr.salesforce.adapter.exceptions import (
     UnhandledSalesforceError,
     SFNotFoundError,
 )
-from managr.organization.models import Organization
+from managr.organization.models import Organization, Contact
 from managr.core.models import User
+from managr.core.background import emit_create_calendar_event
 from managr.opportunity.models import Opportunity
 from managr.zoom.models import ZoomMeeting
 from managr.salesforce.models import MeetingWorkflow
@@ -43,6 +44,7 @@ from managr.salesforce.background import (
     emit_add_update_to_sf,
     _send_recap,
 )
+from managr.zoom.background import emit_process_schedule_zoom_meeting
 
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
@@ -907,24 +909,43 @@ def process_create_task(payload, context):
 @processor(required_context=[])
 def process_schedule_meeting(payload, context):
     u = User.objects.get(id=context.get("u"))
+    data = payload["view"]["state"]["values"]
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
     org = u.organization
     access_token = org.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    participants = []
+    if data["meeting_participants"]["meeting_data"]["selected_options"]:
+        query_data = Contact.objects.filter(
+            id__in=list(
+                map(
+                    lambda val: val["value"],
+                    data["meeting_participants"]["meeting_data"]["selected_options"],
+                )
+            )
+        ).values("email", "secondary_data")
+        for participant in query_data:
+            participants.append(
+                {
+                    "email": participant["email"],
+                    "name": participant["secondary_data"]["Name"],
+                    "status": "noreply",
+                }
+            )
+    zoom_data = {
+        "meeting_topic": data["meeting_topic"]["meeting_data"]["value"],
+        "meeting_date": data["meeting_date"]["meeting_data"]["selected_date"],
+        "meeting_hour": data["meeting_hour"]["meeting_data"]["selected_option"]["value"],
+        "meeting_minute": data["meeting_minute"]["meeting_data"]["selected_option"]["value"],
+        "meeting_time": data["meeting_time"]["meeting_data"]["selected_option"]["value"],
+        "meeting_duration": data["meeting_duration"]["meeting_data"]["selected_option"]["value"],
+    }
     try:
-        data = {
-            "trigger_id": trigger_id,
-            "view_id": view_id,
-            "view": {
-                "type": "modal",
-                "callback_id": slack_const.ZOOM_MEETING__ADD_CALENDAR_EVENT,
-                "title": {"type": "plain_text", "text": "Add Calendar Event"},
-                "blocks": get_block_set("create_calendar_event_modal", context=context),
-                "private_metadata": json.dumps(context),
-            },
-        }
-        slack_requests.generic_request(url, data, access_token=access_token)
+        zoom_res = emit_process_schedule_zoom_meeting(u, zoom_data)
+        cal_res = emit_create_calendar_event(
+            u, zoom_res["topic"], zoom_res["start_time"], participants, zoom_res["join_url"]
+        )
 
     except InvalidBlocksException as e:
         return logger.exception(
@@ -942,6 +963,9 @@ def process_schedule_meeting(payload, context):
         return logger.exception(
             f"Faild to update Zoom Schedule Meeting modal for user {u.email}, {e}"
         )
+    return {
+        "response_action": "update",
+    }
 
 
 def handle_view_submission(payload):
