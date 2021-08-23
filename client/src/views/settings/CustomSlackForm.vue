@@ -106,7 +106,30 @@
     <div class="opportunity__row">
       <div class="opportunity__column">
         <div class="fields_title" style="text-align: center">1. Select your fields</div>
+
         <div class="collection_fields">
+          <div>
+            <p v-if="resource == OPPORTUNITY" class="popular_fields">
+              These
+              <span @click="$refs.modalName.openModal()" class="popularModal">fields</span> are the
+              most popular
+            </p>
+            <p v-else-if="resource == CONTACT" class="popular_fields">
+              These
+              <span @click="$refs.ContactModal.openModal()" class="popularModal">fields</span> are
+              the most popular
+            </p>
+            <p v-else-if="resource == ACCOUNT" class="popular_fields">
+              These
+              <span @click="$refs.AccountModal.openModal()" class="popularModal">fields</span> are
+              the most popular
+            </p>
+            <p v-else class="popular_fields">
+              These
+              <span @click="$refs.LeadModal.openModal()" class="popularModal">fields</span> are the
+              most popular
+            </p>
+          </div>
           <CollectionSearch
             :collection="formFields"
             itemDisplayKey="referenceDisplayLabel"
@@ -333,25 +356,6 @@
               </template>
             </div>
           </div>
-          <p v-if="resource == OPPORTUNITY" class="popular_fields">
-            These <span @click="$refs.modalName.openModal()" class="popularModal">fields</span> are
-            the most popular
-          </p>
-          <p v-else-if="resource == CONTACT" class="popular_fields">
-            These
-            <span @click="$refs.ContactModal.openModal()" class="popularModal">fields</span> are the
-            most popular
-          </p>
-          <p v-else-if="resource == ACCOUNT" class="popular_fields">
-            These
-            <span @click="$refs.AccountModal.openModal()" class="popularModal">fields</span> are the
-            most popular
-          </p>
-          <p v-else class="popular_fields">
-            These
-            <span @click="$refs.LeadModal.openModal()" class="popularModal">fields</span> are the
-            most popular
-          </p>
         </div>
       </div>
 
@@ -396,10 +400,6 @@
               Continue
             </button>
             <button v-else class="cant__continue">Continue</button>
-          </div>
-          <div class="warning" v-if="canContinue">
-            <img src="@/assets/images/warning.png" alt="" />
-            <p>If you make any additional changes you must save again!</p>
           </div>
         </div>
       </div>

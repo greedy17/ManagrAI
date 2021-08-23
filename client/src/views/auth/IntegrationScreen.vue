@@ -48,7 +48,7 @@
             src="@/assets/images/zoom.png"
             style="height: 3rem; width: 3rem"
           />
-          <h2 class="card__title" style="margin-right: 2rem">Zoom</h2>
+          <h2 class="card__title" style="margin-right: 1rem">Zoom</h2>
           <PulseLoadingSpinnerButton
             v-if="!hasZoomIntegration"
             :disabled="hasZoomIntegration"
@@ -57,18 +57,18 @@
             text="Connect"
             :loading="generatingToken && selectedIntegration == 'ZOOM'"
           ></PulseLoadingSpinnerButton>
-          <div v-else style="display: flex; justify-content: space-between">
+          <div v-else>
             <PulseLoadingSpinnerButton
               text="Revoke"
               :loading="generatingToken && selectedIntegration == 'ZOOM'"
               @click="onRevoke('ZOOM')"
-              class="revoke"
+              class="revoke__"
             ></PulseLoadingSpinnerButton>
             <PulseLoadingSpinnerButton
-              text="Refresh Token"
+              text="Refresh"
               :loading="generatingToken && selectedIntegration == 'ZOOM'"
               @click="onGetAuthLink('ZOOM')"
-              class="orange_button"
+              class="orange__button"
             ></PulseLoadingSpinnerButton>
           </div>
         </div>
@@ -82,7 +82,7 @@
       <div class="card">
         <div class="card__header">
           <img style="height: 3rem" src="@/assets/images/slackLogo.png" />
-          <h2 class="card__title" style="margin-right: 2rem">Slack</h2>
+          <h2 class="card__title" style="margin-right: 1rem">Slack</h2>
           <PulseLoadingSpinnerButton
             v-if="
               (!orgHasSlackIntegration && userCanIntegrateSlack) ||
@@ -94,20 +94,17 @@
             :text="slackButtonMessage"
             :loading="generatingToken && selectedIntegration == 'SLACK'"
           ></PulseLoadingSpinnerButton>
-          <div
-            v-else-if="hasSlackIntegration && orgHasSlackIntegration"
-            style="display: flex; justify-content: space-between"
-          >
+          <div v-else-if="hasSlackIntegration && orgHasSlackIntegration">
             <PulseLoadingSpinnerButton
               @click="onRevoke('SLACK')"
-              class="revoke"
+              class="revoke__"
               text="Revoke"
               :loading="generatingToken && selectedIntegration == 'SLACK'"
             ></PulseLoadingSpinnerButton>
             <PulseLoadingSpinnerButton
               v-if="userCanIntegrateSlack"
               @click="onRefreshSlack"
-              class="orange_button"
+              class="orange__button"
               text="Refresh Token"
               :loading="generatingToken && selectedIntegration == 'SLACK'"
             ></PulseLoadingSpinnerButton>
@@ -585,8 +582,18 @@ a {
   font-size: 16px;
   border: none;
 }
+.orange__button {
+  color: $panther-purple;
+  background-color: white;
+  border-radius: 0.25rem;
+  font-weight: bold;
+  padding: 0.4rem;
+  border: none;
+  cursor: pointer;
+}
 
-.orange_button:hover {
+.orange_button,
+.orange__button:hover {
   background-color: $off-white;
   filter: brightness(0.9);
   cursor: pointer;
@@ -612,7 +619,21 @@ a {
   border: 2px solid $panther-silver;
   cursor: pointer;
 }
-.revoke:hover {
+.revoke__ {
+  color: $panther-silver;
+  background-color: transparent;
+  width: 5vw;
+  border-radius: 0.25rem;
+  padding: 0.25rem;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  font-weight: bold;
+  font-size: 14px;
+  border: 2px solid $panther-silver;
+  cursor: pointer;
+}
+.revoke,
+.revoke__:hover {
   filter: brightness(0.85);
 }
 </style>
