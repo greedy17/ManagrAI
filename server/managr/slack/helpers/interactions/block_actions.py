@@ -52,7 +52,6 @@ def process_meeting_review(payload, context):
         "w": workflow_id,
         "f": str(workflow.forms.filter(template__form_type="UPDATE").first().id),
     }
-
     private_metadata.update(context)
     data = {
         "trigger_id": trigger_id,
@@ -1201,6 +1200,15 @@ def process_meeting_details(payload, context):
     trigger_id = payload["trigger_id"]
     u = User.objects.get(id=context.get("u"))
     org = u.organization
+    blocks = payload["message"]["blocks"]
+    blocks.pop()
+    blocks.append({"type": "section", "text": {"type": "mrkdwn", "text": "Meeting Booked :+1:"}})
+    private_metadata = {
+        "original_message_channel": payload["channel"]["id"],
+        "original_message_timestamp": payload["message"]["ts"],
+        "current_block": blocks,
+    }
+    private_metadata.update(context)
     data = {
         "trigger_id": trigger_id,
         "view": {
@@ -1209,7 +1217,7 @@ def process_meeting_details(payload, context):
             "title": {"type": "plain_text", "text": "Meeting Details"},
             "blocks": get_block_set("schedule_meeting_modal", context=context),
             "submit": {"type": "plain_text", "text": "Save",},
-            "private_metadata": json.dumps(context),
+            "private_metadata": json.dumps(private_metadata),
         },
     }
     try:
