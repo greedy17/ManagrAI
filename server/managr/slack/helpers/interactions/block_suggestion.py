@@ -64,7 +64,7 @@ def process_get_user_contacts(payload, context):
     user = User.objects.get(id=context["u"])
     value = payload["value"]
     return {
-        "options": [l.as_slack_option for l in user.contacts.filter(email__icontains=value)],
+        "options": [l.as_slack_option for l in user.contacts.filter(email__icontains=value)[:50]],
     }
 
 

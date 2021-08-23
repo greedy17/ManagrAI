@@ -683,8 +683,6 @@ def meeting_summary_blockset(context):
 @block_set(required_context=[])
 def schedule_zoom_meeting_modal(context):
     user = User.objects.get(id=context.get("u"))
-    contacts = user.contacts.all()
-    ops = [*[contact.as_slack_option for contact in contacts]]
     today = str(date.today())
     blocks = [
         block_builders.input_block(
@@ -715,7 +713,7 @@ def schedule_zoom_meeting_modal(context):
             "AM/PM",
             block_sets.get_block_set("time_options"),
             action_id="meeting_data",
-            initial_option={"text": {"type": "plain_text", "text": "AM"}, "value": "AM"},
+            initial_option={"text": {"type": "plain_text", "text": "PM"}, "value": "PM"},
             block_id="meeting_time",
         ),
         block_builders.static_select(
