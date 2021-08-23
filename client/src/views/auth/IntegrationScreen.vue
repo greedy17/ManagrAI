@@ -105,7 +105,7 @@
               v-if="userCanIntegrateSlack"
               @click="onRefreshSlack"
               class="orange__button"
-              text="Refresh Token"
+              text="Refresh"
               :loading="generatingToken && selectedIntegration == 'SLACK'"
             ></PulseLoadingSpinnerButton>
           </div>

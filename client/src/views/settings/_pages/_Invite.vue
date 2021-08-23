@@ -11,7 +11,7 @@
     >
       <form class="invite-form" @submit.prevent="handleInvite">
         <div class="invite-form__title" style="color: #ff7649">Invite Users to Managr</div>
-        <div class="invite-form__subtitle">
+        <div class="invite-form__subtitle" style="color: #ddad3c">
           {{ $store.state.user.organizationRef.name }}
         </div>
         <div class="form_field">
@@ -51,7 +51,7 @@
             </template>
           </FormField>
         </div>
-        <div class="dropdown">
+        <!-- <div class="dropdown">
           <FormField :errors="userInviteForm.field.role.errors" label="Role">
             <template v-slot:input>
               <DropDownSelect
@@ -66,14 +66,13 @@
               />
             </template>
           </FormField>
-        </div>
+        </div> -->
         <div class="invite-form__actions">
-          <div
-            @click="onConfirmSlackInvite"
-            style="display: flex; align-items: center; align-self: flex-start"
-          >
+          <div @click="onConfirmSlackInvite" style="display: flex; align-items: center">
             <CheckBox :checked="userInviteForm.field.slackInvite.value" />
-            <span style="margin-left: 1rem">Send Slack Invite</span>
+            <span style="margin-top: 0.25rem; margin-left: 0.25rem; color: #beb5cc"
+              >Send Slack Invite</span
+            >
           </div>
           <template>
             <PulseLoadingSpinnerButton
@@ -279,6 +278,7 @@ export default {
 Override dropdown select input field
 */
 .dropdown {
+  margin-left: 8%;
   ::v-deep .tn-dropdown__selection-container {
     border-radius: 4px;
     background-color: $white;
@@ -286,6 +286,14 @@ Override dropdown select input field
     box-sizing: border-box;
     line-height: 1.29;
     letter-spacing: 0.5px;
+    width: 18vw;
+    height: 6vh;
+    color: $panther;
+  }
+
+  ::v-deep .tn-dropdown__options__option {
+    color: $panther-gray;
+    font-weight: bold;
   }
 }
 
@@ -316,10 +324,11 @@ form,
 .invite-button {
   background-color: white;
   color: $panther-orange;
-  margin-top: 1.25rem;
+  margin-top: 2.5rem;
   height: 2.5rem;
   width: 10rem;
-  font-size: 14px;
+  font-size: 16px;
+  font-weight: bold;
 }
 .invite-button:hover {
   background-color: white;
@@ -342,6 +351,7 @@ button {
   min-height: 30rem;
   display: flex;
   align-items: center;
+  justify-content: center;
   flex-direction: column;
   background-color: $panther;
   > .form_field {
