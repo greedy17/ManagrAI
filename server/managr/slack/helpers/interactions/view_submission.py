@@ -923,7 +923,7 @@ def process_schedule_meeting(payload, context):
                     lambda val: val["value"],
                     data["meeting_participants"]["meeting_data"]["selected_options"],
                 )
-            )
+            )[:50]
         ).values("email", "secondary_data")
         for participant in query_data:
             participants.append(
