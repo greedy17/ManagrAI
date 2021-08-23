@@ -452,7 +452,6 @@ class SalesforceAuthAccountAdapter:
                 url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
             )
             res = self._handle_response(res)
-            print(res)
             saved_response = res
             logger.info(
                 f"Request returned {res.get('totalSize')} number of results for {resource} at offset {offset} with limit {limit}"
