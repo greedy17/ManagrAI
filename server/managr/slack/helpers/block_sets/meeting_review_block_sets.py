@@ -713,7 +713,7 @@ def schedule_zoom_meeting_modal(context):
             "AM/PM",
             block_sets.get_block_set("time_options"),
             action_id="meeting_data",
-            initial_option={"text": {"type": "plain_text", "text": "PM"}, "value": "PM"},
+            initial_option={"text": {"type": "plain_text", "text": "AM"}, "value": "AM"},
             block_id="meeting_time",
         ),
         block_builders.static_select(
