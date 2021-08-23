@@ -725,20 +725,12 @@ def schedule_zoom_meeting_modal(context):
             initial_option={"text": {"type": "plain_text", "text": "30"}, "value": "30"},
             block_id="meeting_duration",
         ),
-        block_builders.multi_static_select(
+        block_builders.multi_external_select(
             "*Add Contacts to this meeting*",
-            options=ops,
-            action_id="meeting_data",
+            action_id=f"{slack_const.GET_USER_CONTACTS}?u={user.id}",
             block_id="meeting_participants",
             placeholder="Search Contacts",
         ),
     ]
-    return blocks
-
-
-@block_set(required_context=[])
-def create_calendar_event_modal(context):
-
-    blocks = []
     return blocks
 
