@@ -264,3 +264,41 @@ def home_modal_generic_block_set(context):
 
     view = {"type": "home", "blocks": blocks}
     return view
+
+
+@block_set()
+def hour_options(context):
+    hours = list(range(1, 13))
+    blocks = [block_builders.option(str(val), str(val)) for val in hours]
+    return blocks
+
+
+@block_set()
+def minute_options(context):
+    minutes = list(range(0, 56, 5))
+    blocks = []
+    for minute in minutes:
+        minute = str(minute)
+        if len(minute) < 2:
+            minute = "0" + minute
+        blocks.append(block_builders.option(minute, minute))
+    return blocks
+
+
+@block_set()
+def time_options(context):
+    time = ["AM", "PM"]
+    blocks = [block_builders.option(val, val) for val in time]
+    return blocks
+
+
+@block_set()
+def duration_options(context):
+    times = list(range(0, 56, 5))
+    blocks = []
+    for time in times:
+        time = str(time)
+        if len(time) < 2:
+            time = "0" + time
+        blocks.append(block_builders.option(time, time))
+    return blocks

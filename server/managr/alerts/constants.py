@@ -10,4 +10,3 @@ ALERT_RECIPIENT_GROUPS = [
     *ALERT_TARGET_GROUPS,
     {"key": "Owner", "value": "OWNER"},
 ]
-

@@ -4,7 +4,7 @@ import uuid
 import json
 import logging
 
-from datetime import datetime
+from datetime import datetime, date
 
 from django.db.models import Q
 
@@ -22,7 +22,7 @@ from managr.slack.helpers.utils import (
     block_finder,
 )
 
-from managr.slack.helpers import block_builders
+from managr.slack.helpers import block_builders, block_sets
 from managr.utils.misc import snake_to_space
 from managr.salesforce.routes import routes as form_routes
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
@@ -110,7 +110,7 @@ def create_meeting_task(context):
     return block_builders.section_with_button_block(
         "Create Task",
         "CREATE_A_TASK",
-        "Would you like to Create a task?",
+        "Would you like to Create a Task?",
         action_id=action_with_params(
             slack_const.ZOOM_MEETING__CREATE_TASK,
             params=[
@@ -118,6 +118,21 @@ def create_meeting_task(context):
                 f"resource_type={workflow.resource_type}",
                 f"resource_id={workflow.resource_id}",
             ],
+        ),
+    )
+
+
+@block_set(required_context=["w"])
+def schedule_meeting(context):
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+
+    return block_builders.section_with_button_block(
+        "Schedule Meeting",
+        "SCHEDULE_MEETING",
+        "Schedule another Zoom meeting?",
+        style="primary",
+        action_id=action_with_params(
+            slack_const.ZOOM_MEETING__MEETING_DETAILS, params=[f"u={str(workflow.user.id)}"],
         ),
     )
 
@@ -426,9 +441,7 @@ def initial_meeting_interaction_block_set(context):
 def meeting_review_modal_block_set(context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = workflow.user
-    slack_form = workflow.forms.filter(
-        template__form_type=slack_const.FORM_TYPE_MEETING_REVIEW
-    ).first()
+    slack_form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
 
     blocks = []
 
@@ -563,7 +576,6 @@ def create_modal_block_set(context, *args, **kwargs):
 def disregard_meeting_review_block_set(context, *args, **kwargs):
     """Shows a modal to create/select a resource"""
     w = MeetingWorkflow.objects.get(id=context.get("w"))
-    user = w.user
     blocks = [
         block_builders.section_with_button_block(
             "Review",
@@ -580,9 +592,7 @@ def disregard_meeting_review_block_set(context, *args, **kwargs):
 def final_meeting_interaction_block_set(context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     meeting = workflow.meeting
-    meeting_form = workflow.forms.filter(
-        template__form_type=slack_const.FORM_TYPE_MEETING_REVIEW
-    ).first()
+    meeting_form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
     blocks = None
     if meeting_form.saved_data["meeting_type"] == "No Update":
         blocks = [
@@ -668,3 +678,57 @@ def meeting_summary_blockset(context):
     blocks.append(block_builders.simple_section(review_str, "mrkdwn"))
 
     return blocks
+
+
+@block_set(required_context=[])
+def schedule_zoom_meeting_modal(context):
+    user = User.objects.get(id=context.get("u"))
+    today = str(date.today())
+    blocks = [
+        block_builders.input_block(
+            "Meeting Topic",
+            placeholder="Enter your topic",
+            optional=False,
+            block_id="meeting_topic",
+            action_id="meeting_data",
+        ),
+        block_builders.datepicker(
+            today, block_id="meeting_date", action_id="meeting_data", label="Meeting Date"
+        ),
+        block_builders.static_select(
+            "Start Time (Hour)",
+            block_sets.get_block_set("hour_options"),
+            action_id="meeting_data",
+            placeholder="Hour",
+            block_id="meeting_hour",
+        ),
+        block_builders.static_select(
+            "Start Time (Minutes)",
+            block_sets.get_block_set("minute_options"),
+            action_id="meeting_data",
+            placeholder="Minutes",
+            block_id="meeting_minute",
+        ),
+        block_builders.static_select(
+            "AM/PM",
+            block_sets.get_block_set("time_options"),
+            action_id="meeting_data",
+            initial_option={"text": {"type": "plain_text", "text": "AM"}, "value": "AM"},
+            block_id="meeting_time",
+        ),
+        block_builders.static_select(
+            "Duration",
+            block_sets.get_block_set("duration_options"),
+            action_id="meeting_data",
+            initial_option={"text": {"type": "plain_text", "text": "30"}, "value": "30"},
+            block_id="meeting_duration",
+        ),
+        block_builders.multi_external_select(
+            "*Add Contacts to this meeting*",
+            action_id=f"{slack_const.GET_USER_CONTACTS}?u={user.id}",
+            block_id="meeting_participants",
+            placeholder="Search Contacts",
+        ),
+    ]
+    return blocks
+

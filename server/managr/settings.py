@@ -31,7 +31,7 @@ DEBUG = _env_get_required("DEBUG") == "True"
 if IN_DEV:
     SERVER_EMAIL = "Managr Support <support@mg.managr.ai>"
 elif IN_STAGING:
-    SERVER_EMAIL = "Managr <no-reply-staging@mg.managr.ai>"
+    SERVER_EMAIL = "Managr <no-reply-staging@managr.ai>"
 else:
     SERVER_EMAIL = "Managr <no-reply@mg.managr.ai>"
 

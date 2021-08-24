@@ -12,12 +12,15 @@ EMAIL_AUTH_TOKEN_URI = "oauth/token"
 EMAIL_AUTH_TOKEN_REVOKE_URI = "oauth/revoke"
 EMAIL_ACCOUNT_URI = "account"
 SEND_EMAIL_URI = "send"
+CALENDAR_URI = "calendars"
+EVENT_POST = "events?notify_participants=true"
 
 
 # OAuth permission scopes to request from Nylas
-SCOPE_EMAIL_CALENDAR_READ_ONLY = "calendar.read_only"
+SCOPE_EMAIL_CALENDAR = "calendar"
 
-ALL_SCOPES = [SCOPE_EMAIL_CALENDAR_READ_ONLY]
+
+ALL_SCOPES = [SCOPE_EMAIL_CALENDAR]
 ALL_SCOPES_STR = ", ".join(ALL_SCOPES)
 
 

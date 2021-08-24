@@ -73,6 +73,10 @@ def emit_send_meeting_summary(workflow_id):
     return _send_meeting_summary(workflow_id)
 
 
+def emit_process_schedule_zoom_meeting(user, zoom_data):
+    return _process_schedule_zoom_meeting(user, zoom_data)
+
+
 def _send_zoom_error_message(user, meeting_uuid):
     if hasattr(user, "slack_integration"):
         user_slack_channel = user.slack_integration.channel
@@ -434,12 +438,12 @@ def _send_meeting_summary(workflow_id):
     organization = user.organization
     # only send meeting reviews for opps if the leadership box is selected or owner is selected
     send_summ_to_leadership = (
-        workflow.forms.filter(template__form_type="MEETING_REVIEW")
+        workflow.forms.filter(template__form_type="UPDATE")
         .first()
         .saved_data.get("__send_recap_to_leadership")
     )
     send_summ_to_owner = (
-        workflow.forms.filter(template__form_type="MEETING_REVIEW")
+        workflow.forms.filter(template__form_type="UPDATE")
         .first()
         .saved_data.get("__send_recap_to_reps")
     )
@@ -503,3 +507,21 @@ def _process_confirm_compliance(obj):
     """Sends Compliance verification on app deauth to zoom"""
     ZoomAcct.compliance_api(json.loads(obj))
     return
+
+
+def _process_schedule_zoom_meeting(user, zoom_data):
+    # get details of meeting
+    hour = int(zoom_data["meeting_hour"])
+    if zoom_data["meeting_time"] == "PM" and hour != 12:
+        hour = hour + 12
+    formatted_time = f"{str(hour)}:{zoom_data['meeting_minute']}"
+    try:
+        res = user.zoom_account.helper_class.schedule_meeting(
+            zoom_data["meeting_topic"],
+            zoom_data["meeting_date"],
+            formatted_time,
+            int(zoom_data["meeting_duration"]),
+        )
+        return res
+    except Exception as e:
+        logger.warning(f"Zoom schedule error: {e}")

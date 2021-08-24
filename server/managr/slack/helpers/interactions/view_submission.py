@@ -20,8 +20,9 @@ from managr.salesforce.adapter.exceptions import (
     UnhandledSalesforceError,
     SFNotFoundError,
 )
-from managr.organization.models import Organization
+from managr.organization.models import Organization, Contact
 from managr.core.models import User
+from managr.core.background import emit_create_calendar_event
 from managr.opportunity.models import Opportunity
 from managr.zoom.models import ZoomMeeting
 from managr.salesforce.models import MeetingWorkflow
@@ -40,8 +41,10 @@ from managr.salesforce.background import (
     _process_create_new_resource,
     _process_create_task,
     emit_meeting_workflow_tracker,
+    emit_add_update_to_sf,
     _send_recap,
 )
+from managr.zoom.background import emit_process_schedule_zoom_meeting
 
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
@@ -143,9 +146,7 @@ def process_zoom_meeting_data(payload, context):
             form.save_form(state)
     # otherwise we save the meeting review form
     else:
-        form = workflow.forms.filter(
-            template__form_type=slack_const.FORM_TYPE_MEETING_REVIEW
-        ).first()
+        form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
         form.save_form(state)
 
     contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
@@ -250,6 +251,7 @@ def process_submit_resource_data(payload, context):
         pass
     current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
     main_form = current_forms.filter(template__form_type__in=["UPDATE", "CREATE"]).first()
+
     stage_forms = current_forms.exclude(template__form_type__in=["UPDATE", "CREATE"])
     stage_form_data_collector = {}
     for form in stage_forms:
@@ -461,6 +463,11 @@ def process_submit_resource_data(payload, context):
             or all_form_data.get("__send_recap_to_channels") is not None
         ):
             _send_recap(current_form_ids)
+        if (
+            all_form_data.get("meeting_comments") is not None
+            and all_form_data.get("meeting_type") is not None
+        ):
+            emit_add_update_to_sf(str(main_form.id))
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
         success_view_data = {
             "trigger_id": trigger_id,
@@ -592,7 +599,7 @@ def process_zoom_meeting_attach_resource(payload, context):
     # clear old forms (except contact forms)
     workflow.forms.exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT).delete()
     workflow.add_form(
-        meeting_resource, slack_const.FORM_TYPE_MEETING_REVIEW,
+        meeting_resource, slack_const.FORM_TYPE_UPDATE,
     )
     try:
         # update initial interaction workflow with new resource
@@ -897,6 +904,91 @@ def process_create_task(payload, context):
     }
 
 
+@log_all_exceptions
+@slack_api_exceptions(rethrow=True)
+@processor(required_context=[])
+def process_schedule_meeting(payload, context):
+    u = User.objects.get(id=context.get("u"))
+    data = payload["view"]["state"]["values"]
+    trigger_id = payload["trigger_id"]
+    view_id = payload["view"]["id"]
+    org = u.organization
+    meta_data = json.loads(payload["view"]["private_metadata"])
+    access_token = org.slack_integration.access_token
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    participants = []
+    if data["meeting_participants"][f"GET_USER_CONTACTS?u={u.id}"]["selected_options"]:
+        query_data = Contact.objects.filter(
+            id__in=list(
+                map(
+                    lambda val: val["value"],
+                    data["meeting_participants"][f"GET_USER_CONTACTS?u={u.id}"]["selected_options"],
+                )
+            )
+        ).values("email", "secondary_data")
+        for participant in query_data:
+            participants.append(
+                {
+                    "email": participant["email"],
+                    "name": participant["secondary_data"]["Name"],
+                    "status": "noreply",
+                }
+            )
+    zoom_data = {
+        "meeting_topic": data["meeting_topic"]["meeting_data"]["value"],
+        "meeting_date": data["meeting_date"]["meeting_data"]["selected_date"],
+        "meeting_hour": data["meeting_hour"]["meeting_data"]["selected_option"]["value"],
+        "meeting_minute": data["meeting_minute"]["meeting_data"]["selected_option"]["value"],
+        "meeting_time": data["meeting_time"]["meeting_data"]["selected_option"]["value"],
+        "meeting_duration": data["meeting_duration"]["meeting_data"]["selected_option"]["value"],
+    }
+    loading_data = {
+        "trigger_id": trigger_id,
+        "view_id": view_id,
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Loading"},
+            "blocks": get_block_set(
+                "loading",
+                {
+                    "message": ":rocket: Creating your Zoom meeting and inviting contacts!",
+                    "fill": True,
+                },
+            ),
+        },
+    }
+    try:
+        res = slack_requests.generic_request(url, loading_data, access_token=access_token)
+        zoom_res = emit_process_schedule_zoom_meeting(u, zoom_data)
+        cal_res = emit_create_calendar_event(
+            u, zoom_res["topic"], zoom_res["start_time"], participants, zoom_res["join_url"]
+        )
+        updated_message = slack_requests.update_channel_message(
+            meta_data["original_message_channel"],
+            meta_data["original_message_timestamp"],
+            access_token,
+            block_set=json.dumps(meta_data["current_block"]),
+        )
+
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Faild to update Zoom Schedule Meeting modal for user {u.email}, {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Faild to update Zoom Schedule Meeting modal for user {u.email}, {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Faild to update Zoom Schedule Meeting modal for user {u.email}, {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Faild to update Zoom Schedule Meeting modal for user {u.email}, {e}"
+        )
+    return
+
+
 def handle_view_submission(payload):
     """
     This takes place when a modal's Submit button is clicked.
@@ -911,6 +1003,7 @@ def handle_view_submission(payload):
         slack_const.COMMAND_FORMS__SUBMIT_FORM: process_submit_resource_data,
         slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE: process_next_page_slack_commands_form,
         slack_const.COMMAND_CREATE_TASK: process_create_task,
+        slack_const.ZOOM_MEETING__SCHEDULE_MEETING: process_schedule_meeting,
     }
 
     callback_id = payload["view"]["callback_id"]

@@ -50,9 +50,8 @@ def process_meeting_review(payload, context):
     }
     context = {
         "w": workflow_id,
-        "f": str(workflow.forms.filter(template__form_type="MEETING_REVIEW").first().id),
+        "f": str(workflow.forms.filter(template__form_type="UPDATE").first().id),
     }
-
     private_metadata.update(context)
     data = {
         "trigger_id": trigger_id,
@@ -826,7 +825,7 @@ def process_no_changes_made(payload, context):
     except Exception as e:
         return logger.exception(f"Bad request {e}")
     state = {"meeting_type": "No Update", "meeting_comments": "No Update"}
-    form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_MEETING_REVIEW).first()
+    form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
     form.is_submitted = True
     form.submission_date = timezone.now()
     form.save_form(state, False)
@@ -894,7 +893,6 @@ def process_create_task(payload, context):
             "private_metadata": json.dumps(context),
         },
     }
-
     try:
         slack_requests.generic_request(url, data, access_token=org.slack_integration.access_token)
     except InvalidBlocksException as e:
@@ -1196,6 +1194,52 @@ def process_paginate_alerts(payload, context):
     return
 
 
+@processor(required_context="u")
+def process_meeting_details(payload, context):
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    trigger_id = payload["trigger_id"]
+    u = User.objects.get(id=context.get("u"))
+    org = u.organization
+    blocks = payload["message"]["blocks"]
+    blocks.pop()
+    blocks.append({"type": "section", "text": {"type": "mrkdwn", "text": "Meeting Booked :+1:"}})
+    private_metadata = {
+        "original_message_channel": payload["channel"]["id"],
+        "original_message_timestamp": payload["message"]["ts"],
+        "current_block": blocks,
+    }
+    private_metadata.update(context)
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.ZOOM_MEETING__SCHEDULE_MEETING,
+            "title": {"type": "plain_text", "text": "Meeting Details"},
+            "blocks": get_block_set("schedule_meeting_modal", context=context),
+            "submit": {"type": "plain_text", "text": "Save",},
+            "private_metadata": json.dumps(private_metadata),
+        },
+    }
+    try:
+        slack_requests.generic_request(url, data, access_token=org.slack_integration.access_token)
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
+        )
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -1215,6 +1259,7 @@ def handle_block_actions(payload):
         slack_const.ZOOM_MEETING__STAGE_SELECTED: process_stage_selected,
         slack_const.ZOOM_MEETING__CREATE_TASK: process_create_task,
         slack_const.ZOOM_MEETING__CONVERT_LEAD: process_coming_soon,
+        slack_const.ZOOM_MEETING__MEETING_DETAILS: process_meeting_details,
         slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS: process_show_update_resource_form,
         slack_const.COMMAND_FORMS__STAGE_SELECTED: process_stage_selected_command_form,
         slack_const.UPDATE_TASK_SELECTED_RESOURCE: process_resource_selected_for_task,
