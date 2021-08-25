@@ -54,6 +54,7 @@ from managr.zoom.zoom_helper.models import ZoomAcct, ZoomMtg
 from managr.zoom.zoom_helper.exceptions import InvalidRequest
 from managr.slack.models import UserSlackIntegration
 from managr.salesforce.models import MeetingWorkflow
+from managr.core.models import User
 from .models import ZoomAuthAccount, ZoomMeeting
 from .serializers import (
     ZoomAuthRefSerializer,
@@ -342,3 +343,57 @@ def score_meetings(request):
     call_command("generatemeetingscores")
 
     return Response(data="Scoring Meeting...")
+
+
+@api_view(["post"])
+@permission_classes([permissions.AllowAny])
+@authentication_classes((zoom_auth.ZoomWebhookAuthentication,))
+def zoom_recordings_webhook(request):
+    print(request.data)
+    event = request.data.get("event", None)
+    main_payload = request.data.get("payload")
+    obj = main_payload.get("object", None)
+    topic = main_payload.get("topic", None)
+    user = User.objects.get(zoom_account__account_id=obj["account_id"])
+    if event == zoom_consts.ZOOM_RECORDING_COMPLETED:
+        download_object = list(
+            filter(lambda file: file["file_type"] == "MP4", obj["recording_files"])
+        )[0]
+        print(download_object)
+        download_url = download_object["download_url"]
+        try:
+            res = slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                text="Your meeting recording is ready!",
+                block_set=get_block_set(
+                    "zoom_recording_blockset",
+                    {"u": str(user.id), "url": download_url, "topic": topic},
+                ),
+            )
+        except Exception as e:
+            logger.warning(f"Zoom recording error: {e}")
+        return Response()
+
+
+@api_view(["post"])
+@permission_classes([permissions.AllowAny])
+@authentication_classes((slack_auth.SlackWebhookAuthentication,))
+def fake_recording(request):
+    print(request.data)
+    slack_id = request.data.get("user_id")
+    user = User.objects.get(slack_integration__slack_id=slack_id)
+    topic = "test"
+    download_url = "https://us06web.zoom.us/rec/webhook_download/_XTU8KwMgoJV3NkXbv3ZDdORNSBzPqneTyb-i2MO8qIVKPOtCaNwwlk5K2izyotkXE3iY2Lyz1aMINkJ.2wtE9i4dx27tqIWT/98tyKvXsqGFFYoPDz3jVW_YEA9zPaKnWu1xZ5o5tyHTwgkw-G9lDE_ggxCtBAJQ"
+    try:
+        res = slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            text="Your meeting recording is ready!",
+            block_set=get_block_set(
+                "zoom_recording_blockset", {"u": str(user.id), "url": download_url, "topic": topic},
+            ),
+        )
+    except Exception as e:
+        logger.warning(f"Zoom recording error: {e}")
+    return Response()

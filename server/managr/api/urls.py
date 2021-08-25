@@ -64,7 +64,10 @@ urlpatterns = [
     ),
     path("zoom/webhooks/deauthorize", zoom_views.zoom_deauth_webhook, name="zoom_deauth",),
     path("zoom/webhooks/meetings", zoom_views.zoom_meetings_webhook, name="get_zoom_auth_link",),
-    path("zoom/webhooks/recording", zoom_views.zoom_meetings_webhook, name="get_zoom_auth_link",),
+    path(
+        "zoom/webhooks/recordings", zoom_views.zoom_recordings_webhook, name="get_zoom_recording",
+    ),
+    path("zoom/fake-recording", zoom_views.fake_recording, name="fake-recording"),
     path(
         "users/salesforce/authorization",
         sf_views.salesforce_auth_link,
