@@ -352,6 +352,7 @@ def zoom_recordings_webhook(request):
     event = request.data.get("event", None)
     main_payload = request.data.get("payload")
     obj = main_payload.get("object", None)
+    topic = main_payload.get("topic", None)
     user = User.objects.get(zoom_account__account_id=obj["account_id"])
     if event == zoom_consts.ZOOM_RECORDING_COMPLETED:
         download_object = list(
@@ -365,7 +366,8 @@ def zoom_recordings_webhook(request):
                 user.organization.slack_integration.access_token,
                 text="Your meeting recording is ready!",
                 block_set=get_block_set(
-                    "zoom_recording_blockset", {"u": str(user.id), "url": download_url}
+                    "zoom_recording_blockset",
+                    {"u": str(user.id), "url": download_url, "topic": topic},
                 ),
             )
         except Exception as e:

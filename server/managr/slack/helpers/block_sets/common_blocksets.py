@@ -307,9 +307,13 @@ def duration_options(context):
 @block_set()
 def zoom_recording_blockset(context):
     url = context["url"]
+    topic = context["topic"]
     blocks = [
         block_builders.section_with_button_block(
-            "Download Recording", "download_recording", "Your recording is ready to share", url=url
+            "Download Recording",
+            "download_recording",
+            f"Your recording of {topic} is ready to share",
+            url=url,
         ),
         block_builders.context_block("*Download link will expire after 24 hours"),
     ]
