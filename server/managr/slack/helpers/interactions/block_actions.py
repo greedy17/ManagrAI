@@ -1214,7 +1214,7 @@ def process_meeting_details(payload, context):
         "view": {
             "type": "modal",
             "callback_id": slack_const.ZOOM_MEETING__SCHEDULE_MEETING,
-            "title": {"type": "plain_text", "text": "Meeting Details"},
+            "title": {"type": "plain_text", "text": "Zoom Meeting Scheduler"},
             "blocks": get_block_set("schedule_meeting_modal", context=context),
             "submit": {"type": "plain_text", "text": "Save",},
             "private_metadata": json.dumps(private_metadata),
