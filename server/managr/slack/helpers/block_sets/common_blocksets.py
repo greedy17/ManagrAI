@@ -319,3 +319,20 @@ def zoom_recording_blockset(context):
     ]
     return blocks
 
+@block_set()
+def zoom_fake_recording(context):
+    url = context["url"]
+    topic = context["topic"]
+    blocks = [
+        block_builders.section_with_button_block(
+            "Download Recording",
+            "download_recording",
+            f"Your recording of {topic} is ready to share",
+            url=url,
+        ),
+        block_builders.context_block("*Download link will expire after 24 hours"),
+    ]
+    return blocks
+
+
+
