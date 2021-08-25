@@ -127,7 +127,7 @@ def schedule_meeting(context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
 
     return block_builders.section_with_button_block(
-        "Schedule Meeting",
+        "Schedule Zoom Meeting",
         "SCHEDULE_MEETING",
         "Schedule another Zoom meeting?",
         style="primary",
