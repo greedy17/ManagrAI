@@ -722,8 +722,8 @@ def process_edit_meeting_contact(payload, context):
         "response_action": "push",
         "view": {
             "type": "modal",
-            "title": {"type": "plain_text", "text": "Updated view"},
-            "submit": {"type": "plain_text", "text": "Submit"},
+            "title": {"type": "plain_text", "text": "Edit Contact"},
+            "submit": {"type": "plain_text", "text": "Save"},
             "blocks": get_block_set("edit_meeting_contacts", context,),
             "callback_id": slack_const.ZOOM_MEETING__UPDATE_PARTICIPANT_DATA,
             "private_metadata": json.dumps(context),
