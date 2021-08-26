@@ -50,7 +50,11 @@ class Organization(TimeStampModel):
         max_length=255, choices=org_consts.STATE_CHOCIES, default=org_consts.STATE_ACTIVE,
     )
     is_trial = models.BooleanField(default=False)
-
+    ignore_emails = ArrayField(
+        models.CharField(max_length=255),
+        default=list,
+        help_text="Email to ignore in meeting reviews",
+    )
     objects = OrganizationQuerySet.as_manager()
 
     @property
