@@ -218,7 +218,6 @@ class SfSyncTestCase(TestCase):
     def test_generates_forms_with_public_fields(self):
         for form in slack_consts.INITIAL_FORMS:
             resource, form_type = form.split(".")
-            print(form)
             f = OrgCustomSlackForm.objects.create(
                 form_type=form_type, resource=resource, organization=self.admin_user.organization
             )

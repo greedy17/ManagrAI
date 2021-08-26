@@ -137,7 +137,6 @@ class CustomAPIException:
     def _extract_invalid_args_block(self, error):
         # regex to get [json-pointer:/blocks/0/text]
         matches = re.search(r"json-pointer:", error)
-        print(error)
         if matches:
             if len(error) >= matches.end() + 13 and self.blocks:
                 block_index = int(error[matches.end() + 13])

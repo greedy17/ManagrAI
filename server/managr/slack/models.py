@@ -198,7 +198,9 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         default=False,
     )
     submission_date = models.DateTimeField(null=True, help_text="Date form was submitted")
-
+    update_source = models.CharField(
+        max_length=30, blank=True, help_text="On update forms, sets the source of the update"
+    )
     objects = OrgCustomSlackFormInstanceQuerySet.as_manager()
 
     def __str__(self):

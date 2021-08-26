@@ -373,7 +373,6 @@ class NylasAuthAccount(TimeStampModel):
         }
         if len(participants) > 0:
             data["participants"] = participants
-        print(data)
         r = client.post(url, json.dumps(data), headers=headers)
         response_data = self._handle_response(r)
         return response_data
