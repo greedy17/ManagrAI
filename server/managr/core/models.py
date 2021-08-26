@@ -313,7 +313,7 @@ class NylasAuthAccount(TimeStampModel):
     account_id = models.CharField(max_length=255, null=True)
     email_address = models.CharField(max_length=255, null=True)
     provider = models.CharField(max_length=255, null=True)
-    event_calendar_id = models.CharField(max_length=255, null=True)
+    event_calendar_id = models.CharField(max_length=255, null=True, blank=True)
     sync_state = models.CharField(
         max_length=255,
         null=True,
