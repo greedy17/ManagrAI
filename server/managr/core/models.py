@@ -346,8 +346,13 @@ class NylasAuthAccount(TimeStampModel):
                 }
             )
 
-    def schedule_meeting(self, title, start_time, end_time, participants, meeting_link):
+    def schedule_meeting(
+        self, title, start_time, end_time, participants, meeting_link, description
+    ):
         url = f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.EVENT_POST}"
+        calendar_description = f"Meeting link: {meeting_link}"
+        if description:
+            calendar_description = f"Meeting link: {meeting_link} \n{description}"
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
@@ -357,7 +362,7 @@ class NylasAuthAccount(TimeStampModel):
             "title": title,
             "calendar_id": f"{self.event_calendar_id}",
             "status": "confirmed",
-            "description": f"Meeting link: {meeting_link}",
+            "description": calendar_description,
             "when": {
                 "start_time": start_time,
                 "end_time": end_time,
@@ -368,6 +373,7 @@ class NylasAuthAccount(TimeStampModel):
         }
         if len(participants) > 0:
             data["participants"] = participants
+        print(data)
         r = client.post(url, json.dumps(data), headers=headers)
         response_data = self._handle_response(r)
         return response_data
