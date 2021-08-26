@@ -365,7 +365,7 @@ def initial_meeting_interaction_block_set(context):
     # )
 
     create_contacts_button = block_builders.simple_button_block(
-        "Create New Contacts",
+        "Add/Edit Meeting Attendees",
         str(workflow.id),
         action_id=action_with_params(
             slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,]
@@ -388,7 +388,7 @@ def initial_meeting_interaction_block_set(context):
     ):
         action_blocks.append(
             block_builders.simple_button_block(
-                f"Update {workflow.resource_type}",
+                f"Update {workflow.resource_type} + Add Notes",
                 str(workflow.id),
                 action_id=slack_const.ZOOM_MEETING__INIT_REVIEW,
                 style="primary",
