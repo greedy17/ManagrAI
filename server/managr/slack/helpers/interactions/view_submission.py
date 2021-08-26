@@ -915,6 +915,7 @@ def process_schedule_meeting(payload, context):
     org = u.organization
     meta_data = json.loads(payload["view"]["private_metadata"])
     access_token = org.slack_integration.access_token
+    description = data["meeting_description"]["meeting_data"]["value"]
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     participants = []
     if data["meeting_participants"][f"GET_USER_CONTACTS?u={u.id}"]["selected_options"]:
@@ -961,7 +962,12 @@ def process_schedule_meeting(payload, context):
         res = slack_requests.generic_request(url, loading_data, access_token=access_token)
         zoom_res = emit_process_schedule_zoom_meeting(u, zoom_data)
         cal_res = emit_create_calendar_event(
-            u, zoom_res["topic"], zoom_res["start_time"], participants, zoom_res["join_url"]
+            u,
+            zoom_res["topic"],
+            zoom_res["start_time"],
+            participants,
+            zoom_res["join_url"],
+            description,
         )
         updated_message = slack_requests.update_channel_message(
             meta_data["original_message_channel"],
@@ -969,7 +975,7 @@ def process_schedule_meeting(payload, context):
             access_token,
             block_set=json.dumps(meta_data["current_block"]),
         )
-
+        print(data)
     except InvalidBlocksException as e:
         return logger.exception(
             f"Faild to update Zoom Schedule Meeting modal for user {u.email}, {e}"

@@ -723,6 +723,13 @@ def schedule_zoom_meeting_modal(context):
             initial_option={"text": {"type": "plain_text", "text": "30"}, "value": "30"},
             block_id="meeting_duration",
         ),
+        block_builders.input_block(
+            "Description",
+            placeholder="Put your adgenda and notes here",
+            action_id="meeting_data",
+            block_id="meeting_description",
+            multiline=True,
+        ),
         block_builders.multi_external_select(
             "*Add Contacts to this meeting*",
             action_id=f"{slack_const.GET_USER_CONTACTS}?u={user.id}",
