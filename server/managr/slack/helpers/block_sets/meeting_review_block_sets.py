@@ -516,6 +516,7 @@ def create_or_search_modal_block_set(context):
             f"*Search for an {resource_type}*",
             f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={resource_type}&add_opts={json.dumps(additional_opts)}&__block_action={slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION}",
             block_id="select_existing",
+            placeholder="Type to search",
             initial_option=block_builders.option(resource.name, str(resource.id))
             if resource_id and resource
             else None,

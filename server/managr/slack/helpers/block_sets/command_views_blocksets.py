@@ -37,6 +37,7 @@ def command_update_resource_interaction(context):
             f"*Search for an {context.get('resource_type')}*",
             f"{slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={context.get('resource_type')}",
             block_id="select_existing",
+            placeholder="Type to search"
         ),
     ]
 
@@ -68,6 +69,7 @@ def command_meeting_summary(context):
             f"*Search for an {context.get('resource_type')}*",
             f"{slack_const.COMMAND_SUMMARY__GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={context.get('resource_type')}",
             block_id="select_existing",
+            placeholder="Type to search"
         ),
     ]
 
@@ -180,6 +182,7 @@ def update_modal_block_set(context, *args, **kwargs):
                 f"*Search for an {context.get('resource_type')}*",
                 f"{slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource_type}",
                 block_id="select_existing",
+                placeholder="Type to search",
                 initial_option=block_builders.option(resource_id, resource_id)
                 if resource_id
                 else None,

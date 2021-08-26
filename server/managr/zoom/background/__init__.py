@@ -140,6 +140,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
     # SEND SLACK IS USED FOR TESTING ONLY
     zoom_account = ZoomAuthAccount.objects.filter(user__id=user_id).first()
     user = zoom_account.user
+    ignore_emails = user.organization.ignore_emails
     meeting = {}
     if zoom_account and not zoom_account.is_revoked:
 
@@ -196,6 +197,11 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
         remove_users_with_these_domains_regex = r"(@[\w.]+calendar.google.com)|({})".format(
             org_email_domain
         )
+        for email in ignore_emails:
+            remove_users_with_these_domains_regex = (
+                remove_users_with_these_domains_regex + r"|({})".format(email)
+            )
+        print(remove_users_with_these_domains_regex)
         # re.search(remove_users_with_these_domains_regex, p.get("user_email", ""))
         #### first check if we care about this meeting before going forward
         should_register_this_meeting = [
@@ -203,6 +209,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
             for p in zoom_participants
             if not re.search(remove_users_with_these_domains_regex, p.get("user_email", ""))
         ]
+
         if not len(should_register_this_meeting):
             return
 
