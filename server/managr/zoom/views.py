@@ -349,7 +349,6 @@ def score_meetings(request):
 @permission_classes([permissions.AllowAny])
 @authentication_classes((zoom_auth.ZoomWebhookAuthentication,))
 def zoom_recordings_webhook(request):
-    print(request.data)
     event = request.data.get("event", None)
     main_payload = request.data.get("payload")
     obj = main_payload.get("object", None)
@@ -359,7 +358,6 @@ def zoom_recordings_webhook(request):
         download_object = list(
             filter(lambda file: file["file_type"] == "MP4", obj["recording_files"])
         )[0]
-        print(download_object)
         download_url = download_object["download_url"]
         try:
             res = slack_requests.send_channel_message(
@@ -380,7 +378,6 @@ def zoom_recordings_webhook(request):
 @permission_classes([permissions.AllowAny])
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 def fake_recording(request):
-    print(request.data)
     slack_id = request.data.get("user_id")
     user = User.objects.get(slack_integration__slack_id=slack_id)
     topic = "test"
