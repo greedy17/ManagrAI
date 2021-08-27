@@ -32,6 +32,7 @@ import UpdateAccounts from '@/views/customize/UpdateAccounts'
 import UpdateLeads from '@/views/customize/UpdateLeads'
 import CreateLeads from '@/views/customize/CreateLeads'
 import ProfilePage from '@/views/user/ProfilePage'
+import CloseDatePassed from '@/views/settings/alerts/create/templates/CloseDatePassed'
 
 // TODO: We should keep this style guide page
 // import Styles from '@/views/settings/Styles'
@@ -154,7 +155,11 @@ export default new Router({
       name: 'CreateOpportunity',
       component: CreateOpportunity,
     },
-
+    {
+      path: '/close-date-passed',
+      name: 'CloseDatePassed',
+      component: CloseDatePassed,
+    },
     {
       path: '/alerts',
       name: 'alerts',
@@ -163,10 +168,16 @@ export default new Router({
       beforeEnter: Auth.requireAuth,
       children: [
         {
-          path: 'new',
+          path: 'templates',
           name: 'CreateNew',
           component: () =>
             import(/* webpackChunkName: "settings" */ '../views/settings/alerts/create/AlertsPage'),
+        },
+        {
+          path: 'build-your-own',
+          name: 'BuildYourOwn',
+          component: () =>
+            import(/* webpackChunkName: "settings" */ '../views/settings/alerts/create/BuildYourOwn'),
         },
         {
           path: 'list-templates',

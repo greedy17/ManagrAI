@@ -1,31 +1,91 @@
 <template>
   <div class="alerts-page">
     <div class="col">
-      <h2 class="title">Templates</h2>
-      <p class="sub__">Highly recommended and easy to setup</p>
+      <h2 class="title">Build your own</h2>
+      <p class="sub__">Create your own Smart Alert</p>
+      <progress id="progress" value="0" max="5" ref="progress" style="margin-bottom: 2rem">
+        1/5
+      </progress>
     </div>
 
-    <div class="alert_cards">
-      <div class="card__">
-        <div class="card__header">
-          <h3>Close date <span style="color: #5f8cff">Passed/Approaching</span></h3>
+    <div class="alert__row">
+      <div class="alert__column">
+        <div class="collection_fields">
+          <div v-if="pageNumber === 0" class="col__">
+            <label for="alert-title">1. Name your alert</label>
+            <FormField
+              id="alert-title"
+              v-model="alertTemplateForm.field.title.value"
+              placeholder="Ex. Close Date Passed"
+              :errors="alertTemplateForm.field.title.errors"
+              @blur="alertTemplateForm.field.title.validate()"
+            />
+
+            <label for="sfObject">2. Select a Salesforce Object</label>
+            <div>
+              <FormField id="sfObject" :errors="alertTemplateForm.field.resourceType.errors">
+                <template v-slot:input>
+                  <DropDownSearch
+                    :items.sync="SOBJECTS_LIST"
+                    :itemsRef.sync="alertTemplateForm.field._resourceType.value"
+                    v-model="alertTemplateForm.field.resourceType.value"
+                    displayKey="key"
+                    valueKey="value"
+                    nullDisplay="Salesforce Objects"
+                    searchable
+                    local
+                    @input="alertTemplateForm.field.resourceType.validate()"
+                  />
+                </template>
+              </FormField>
+            </div>
+          </div>
+
+          <div v-if="pageNumber === 1" class="column">
+            <label for="group">3. placeholder title</label>
+            <div
+              id="group"
+              :key="index"
+              v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
+            >
+              <AlertGroup
+                :form="alertGroup"
+                :resourceType="alertTemplateForm.field.resourceType.value"
+              />
+            </div>
+          </div>
         </div>
-        <button @click="goToCloseDatePassed" class="orange_button">Activate</button>
+
+        <div class="row_">
+          <button
+            @click="onPreviousPage"
+            :class="pageNumber === 0 ? 'disabled__button' : 'gold__button'"
+          >
+            Prev
+          </button>
+          <button @click="onNextPage" class="purple__button">Next</button>
+        </div>
       </div>
 
-      <div class="card__">
-        <div class="card__header">
-          <h3>Deal <span style="color: #ff7649">Rotting</span></h3>
+      <!-- <div class="alert__column">
+        <div class="fields_title" style="text-align: center">2. Select your fields</div>
+        <div class="collection_fields">
+          <div
+            :key="index"
+            v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
+          >
+            <AlertGroup
+              :form="alertGroup"
+              :resourceType="alertTemplateForm.field.resourceType.value"
+            />
+          </div>
         </div>
-        <button class="orange_button">Activate</button>
       </div>
 
-      <div class="card__">
-        <div class="card__header">
-          <h3>Update <span style="color: #69e3cd">Forecast</span></h3>
-        </div>
-        <button class="orange_button">Activate</button>
-      </div>
+      <div class="alert__column">
+        <div class="fields_title" style="text-align: center">3. Select your fields</div>
+        <div class="collection_fields"></div>
+      </div> -->
     </div>
 
     <!-- <ExpandablePanel>
@@ -633,7 +693,7 @@ import {
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
-  name: 'AlertsPage',
+  name: 'BuildYourOwn',
   components: {
     ExpandablePanel,
     DropDownSearch,
@@ -651,6 +711,7 @@ export default {
   },
   data() {
     return {
+      pageNumber: 0,
       channelOpts: new SlackListResponse(),
       savingTemplate: false,
       listVisible: true,
@@ -726,6 +787,14 @@ export default {
         responseMetadata: { nextCursor: res.nextCursor },
       })
       this.channelOpts = results
+    },
+    onNextPage() {
+      this.pageNumber <= 4 ? (this.pageNumber += 1) : (this.pageNumber = this.pageNumber)
+      this.$refs.progress.value = this.pageNumber
+    },
+    onPreviousPage() {
+      this.pageNumber >= 1 ? (this.pageNumber -= 1) : (this.pageNumber = this.pageNumber)
+      this.$refs.progress.value = this.pageNumber
     },
     recipientTypeToggle(value) {
       if (!this.user.slackRef) {
@@ -838,9 +907,6 @@ export default {
     showDropDown() {
       this.dropdownVisible = !this.dropdownVisible
     },
-    goToCloseDatePassed() {
-      this.$router.push({ name: 'CloseDatePassed' })
-    },
   },
   computed: {
     userTargetsOpts() {
@@ -914,6 +980,47 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
+
+.alert__column {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-right: 2rem;
+}
+.alert__row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+.collection_fields {
+  background-color: $panther;
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  height: 50vh;
+  width: 34vw;
+  overflow: scroll;
+}
+.fields_title {
+  background-color: $panther;
+  margin: 1rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  width: 100%;
+}
+::-webkit-scrollbar {
+  background-color: $panther;
+  -webkit-appearance: none;
+  width: 4px;
+  height: 100%;
+}
+::-webkit-scrollbar-thumb {
+  border-radius: 2px;
+  background-color: $panther-silver;
+}
 .quill-editor {
   width: 100%;
 }
@@ -935,6 +1042,7 @@ textarea {
   }
 }
 .alerts-page {
+  color: white;
   margin-left: 8vw;
   &__previous-step {
     @include muted-font(12);
@@ -971,7 +1079,7 @@ textarea {
   background-color: $panther;
   border: none;
   width: 10rem;
-  height: 20vh;
+  min-height: 25vh;
   margin-right: 1rem;
   margin-bottom: 2rem;
   border-radius: 0.5rem;
@@ -1034,10 +1142,6 @@ textarea {
     font-size: 11px;
   }
 }
-.alerts-page__message-options-body__bindings__fields {
-  // margin: 3rem 0rem;
-  // width: 40rem;
-}
 .gray {
   color: $gray;
 }
@@ -1073,8 +1177,6 @@ textarea {
   margin-top: -0.5rem;
   color: $panther-silver;
 }
-.title {
-}
 .group {
   display: flex;
   flex-direction: row;
@@ -1088,6 +1190,17 @@ textarea {
   align-items: center;
   color: white;
 }
+.col__ {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+}
+.column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 .row {
   display: flex;
   flex-direction: row;
@@ -1099,8 +1212,9 @@ textarea {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
-  padding-bottom: 2rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+  margin-top: 2rem;
 }
 .row__ {
   display: flex;
@@ -1174,5 +1288,64 @@ input {
   border-radius: 0.5rem;
   border: 2px solid white;
   cursor: pointer;
+}
+.gold__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 1rem;
+  border-radius: 0.3rem;
+  font-weight: bold;
+  line-height: 1.14;
+  text-indent: none;
+  border-style: none;
+  letter-spacing: 0.03rem;
+  color: white;
+  background-color: $panther-gold;
+  cursor: pointer;
+  height: 2rem;
+  width: 10rem;
+  font-weight: bold;
+  font-size: 1.02rem;
+  margin-right: 1rem;
+}
+.purple__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 1rem;
+  border-radius: 0.3rem;
+  font-weight: bold;
+  line-height: 1.14;
+  text-indent: none;
+  border-style: none;
+  letter-spacing: 0.03rem;
+  color: white;
+  background-color: $panther-purple;
+  cursor: pointer;
+  height: 2rem;
+  width: 10rem;
+  font-weight: bold;
+  font-size: 1.02rem;
+}
+.disabled__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 1rem;
+  border-radius: 0.3rem;
+  font-weight: bold;
+  line-height: 1.14;
+  text-indent: none;
+  border-style: none;
+  letter-spacing: 0.03rem;
+  background-color: $panther-silver;
+  color: $panther-gray;
+  cursor: not-allowed;
+  height: 2rem;
+  width: 10rem;
+  font-weight: bold;
+  font-size: 1.02rem;
+  margin-right: 1rem;
 }
 </style>

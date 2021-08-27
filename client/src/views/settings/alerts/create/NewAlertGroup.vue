@@ -1,7 +1,6 @@
 <template>
-  <div>
-    <!-- <span class="alert-group-row--label">create automation</span> -->
-    <div v-if="form.field.groupOrder.value != 0">
+  <div class="alert-group-row">
+    <!-- <div class="alert-group-row__condition" v-if="form.field.groupOrder.value != 0">
       <label class="alert-group-row__condition-label">AND</label>
       <ToggleCheckBox
         @input="
@@ -12,27 +11,35 @@
         onColor="#199e54"
       />
       <label class="alert-group-row__condition-label">OR</label>
-    </div>
-
-    <div>
-      <div :key="i" v-for="(alertOperand, i) in form.field.alertOperands.groups">
-        <AlertOperandRow
+    </div> -->
+    <div class="alert-group-row__operands">
+      <div class="alert-group-row__operands__row rows">
+        <NewAlertOperandRow
           @remove-operand="onRemoveOperand(i)"
           :resourceType="resourceType"
-          :form.sync="alertOperand"
+          class="left"
         />
-        <div class="row__buttons">
+
+        <!-- <div class="add__remove" v-if="form.field.alertOperands.groups.length > 1">
           <button
+            class="btn btn--danger btn--icon"
             @click.stop="onRemoveOperand(i)"
-            v-if="form.field.alertOperands.groups.length > 1"
             :disabled="form.field.alertOperands.groups.length - 1 <= 0"
           >
-            Remove
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <use xlink:href="@/assets/images/remove.svg#remove" />
+            </svg>
           </button>
-          <button class="plus_button" @click="addOperandForm">
-            Add Row<img src="@/assets/images/plusOne.png" style="height: 1rem" alt="" />
-          </button>
+          <p class="sub">Remove</p>
         </div>
+        <div class="add__remove">
+          <button class="btn btn--secondary btn--icon" @click="addOperandForm">
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
+            </svg>
+          </button>
+          <p class="sub">Row</p>
+        </div> -->
       </div>
     </div>
   </div>
@@ -45,7 +52,7 @@
 // Pacakges
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 //Internal
-import AlertOperandRow from '@/views/settings/alerts/create/_AlertOperandRow'
+import NewAlertOperandRow from '@/views/settings/alerts/create/NewAlertOperandRow'
 
 /**
  * Services
@@ -59,8 +66,8 @@ export default {
    * the object multiple levels deep (this current implementation could be seen as incorrect)
    *
    */
-  name: 'AlertGroup',
-  components: { ToggleCheckBox, AlertOperandRow },
+  name: 'NewAlertGroup',
+  components: { ToggleCheckBox, NewAlertOperandRow },
 
   props: {
     form: { type: AlertGroupForm },
@@ -137,9 +144,20 @@ export default {
 .alert-group-row {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  overflow: scroll;
+  overflow: visible;
+  &__operands {
+    &__row {
+      display: flex;
+      &-remove {
+        height: 1rem;
+      }
+    }
+  }
+  &--label {
+    @include muted-font();
+    top: -1.1rem;
+    position: relative;
+  }
 }
 .alert-group-row__condition {
   position: relative;
@@ -153,19 +171,15 @@ export default {
     margin: 0 0.5rem;
   }
 }
-
-.row__buttons {
+.alert-group-row__operands {
+}
+.add__remove {
+  margin-right: 1.5rem;
   display: flex;
   flex-direction: row;
-  justify-content: flex-end;
-  align-items: center;
-}
-.plus_button {
-  color: white;
-  border-radius: 0.5rem;
-  padding: 0.25rem;
-  border: 1px solid white;
-  background: transparent;
+  margin-bottom: -1rem;
+  margin-left: -3rem;
+  padding: 1rem;
 }
 .sub {
   font-size: 13px;

@@ -19,9 +19,7 @@
               </router-link>
             </li>
             <li>
-              <router-link active-class="active" :to="{ name: 'SlackFormSettings' }"
-                >Automate
-              </router-link>
+              <router-link active-class="active" :to="{ name: 'alerts' }">Automate </router-link>
             </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
@@ -72,7 +70,7 @@
           <img style="height: 2rem" src="@/assets/images/help.png" class="tooltip__icon" />
           <div class="tooltip__popup">
             <div class="tooltip__popup__bold">Having issues?</div>
-            <div class="tip">Email support@mymanagr.com</div>
+            <div class="tip">Email Us: support@mymanagr.com</div>
           </div>
         </div>
 
@@ -284,14 +282,16 @@ nav {
     padding: 13px 21px;
     border-radius: 5px;
     box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
-    border: solid 2px #dcdddf;
-    background-color: #ffffff;
+    border: solid 2px $panther-gray;
+    background-color: $panther;
+    color: white;
     position: absolute;
     top: -5px;
     right: 105%;
 
     &__bold {
       font-family: #{$bold-font-family};
+      color: $panther-silver;
     }
   }
 }

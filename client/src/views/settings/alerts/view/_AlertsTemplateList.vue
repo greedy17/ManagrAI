@@ -1,22 +1,62 @@
 <template>
   <div class="alerts-template-list">
+    <div class="col">
+      <h2 style="color: white; font-weight: bold; text-align: center">
+        Run/edit your Smart Alerts
+      </h2>
+      <div>
+        <p
+          v-if="!templates.list.length"
+          style="color: #beb5cc; font-weight: bold; text-align: center"
+        >
+          No alerts found. <router-link to="templates">Templates</router-link> are a great place to
+          start, or you can <router-link to="templates">build your own!</router-link>
+        </p>
+      </div>
+    </div>
     <template v-if="!templates.isLoading && templates.list.length">
-      <ExpandablePanel>
-        <template v-slot:panel-header="{ classes, expand }">
-          <div
-            :class="classes"
-            class="alerts-template-list__header alerts-template-list__header--heading"
-          >
-            <span class="alerts-template-list__header-item alerts-template-list__header-item--main"
-              >Title</span
-            >
-            <span class="alerts-template-list__header-item">Run Now</span>
-            <span class="alerts-template-list__header-item">Schedule</span>
-            <span class="alerts-template-list__header-item">Delete</span>
+      <div class="alert_cards">
+        <div :key="i" v-for="(alert, i) in templates.list" class="card__">
+          <div :data-key="alert.id" class="card__header">
+            <h3>{{ alert.title.toUpperCase() }}</h3>
           </div>
-        </template>
-      </ExpandablePanel>
-      <ExpandablePanel :key="i" v-for="(alert, i) in templates.list">
+          <div class="row">
+            <button @click.stop="onRunAlertTemplateNow(alert.id)" class="green_button">
+              Run now
+            </button>
+            <div>
+              <button class="edit_button" style="margin-right: 0.25rem">Edit</button>
+              <button class="delete_button" @click.stop="onDeleteTemplate(alert.id)">Delete</button>
+            </div>
+          </div>
+
+          <div class="row__two">
+            <div class="row__">
+              <p style="margin-right: 0.25rem">OFF</p>
+              <ToggleCheckBox
+                @input="onToggleAlert(alert.id, alert.isActive)"
+                v-model="alert.isActive"
+                offColor="#aaaaaa"
+                onColor="#199e54"
+                @click="
+                  () => {
+                    console.log('log')
+                  }
+                "
+              />
+              <p style="margin-left: 0.25rem">ON</p>
+            </div>
+          </div>
+
+          <template slot="panel-content">
+            <div>
+              <AlertsEditPanel :alert="alert" />
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- <ExpandablePanel :key="i" v-for="(alert, i) in templates.list">
         <template v-slot:panel-header="{ classes, expand }">
           <div :data-key="alert.id" @click="expand" :class="classes">
             <span class="alerts-template-list__header-item alerts-template-list__header-item--main"
@@ -53,14 +93,14 @@
                 <use xlink:href="@/assets/images/remove.svg#remove" />
               </svg>
             </span>
-            <!-- <span
+            <span
               @click.stop="onTest(alert.id)"
               class="alerts-template-list__header-item alerts-template-list__header-item"
             >
               <svg class="icon" fill="black" viewBox="0 0 30 30">
                 <use xlink:href="@/assets/images/loop.svg#loop" />
               </svg>
-            </span> -->
+            </span>
           </div>
         </template>
         <template slot="panel-content">
@@ -68,16 +108,9 @@
             <AlertsEditPanel :alert="alert" />
           </div>
         </template>
-      </ExpandablePanel>
+      </ExpandablePanel> -->
     </template>
-    <template v-else-if="!templates.isLoading && !templates.list.length">
-      <div class="no-data">
-        <p>No alerts found. Click <strong>''Build''</strong> to create your first Smart Alert!</p>
-      </div>
-    </template>
-    <template v-else>
-      <PulseLoadingSpinner />
-    </template>
+    <template> </template>
   </div>
 </template>
 
@@ -206,6 +239,7 @@ export default {
   @include header-subtitle();
 }
 .alerts-template-list {
+  margin-left: 7vw;
   &__header {
     display: flex;
 
@@ -217,7 +251,41 @@ export default {
     }
   }
 }
+.alert_cards {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
+  margin-top: 2rem;
+}
+.card__ {
+  background-color: $panther;
+  border: none;
+  width: 10rem;
+  min-height: 25vh;
+  margin-right: 1rem;
+  margin-bottom: 2rem;
+  border-radius: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 3px 4px 7px black;
+  color: white;
+  @media only screen and (min-width: 768px) {
+    flex: 1 0 24%;
+    min-width: 21rem;
+    max-width: 30rem;
+  }
 
+  &header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 3rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+}
 .icon {
   display: block;
   cursor: pointer;
@@ -226,5 +294,68 @@ export default {
 }
 .pink {
   color: $candy;
+}
+a {
+  text-decoration: none;
+  color: white;
+  cursor: pointer;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-evenly;
+}
+.row__ {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0.5rem 0 0.5rem;
+  color: $panther-silver;
+}
+.row__two {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 1rem;
+  width: 100%;
+}
+.green_button {
+  color: $dark-green;
+  background-color: white;
+  width: 8vw;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  font-weight: bold;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+}
+.delete_button {
+  color: $panther-silver;
+  border: 1px solid $panther-silver;
+  background-color: $panther;
+  width: 5vw;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+}
+.edit_button {
+  color: $panther-purple;
+  background-color: white;
+  width: 5vw;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  font-weight: bold;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+}
+.debug {
+  border: 2px solid red;
 }
 </style>

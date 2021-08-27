@@ -8,10 +8,10 @@
         >
         </span>
       </template>
-
       <template v-slot:tn-dropdown-option="{ option }">
         <slot name="tn-dropdown-option" :option="option"> </slot>
       </template>
+      <img src="@/assets/images/dropdown.png" alt="" />
       <template v-if="$attrs.hasNext" v-slot:tn-dropdown__pagination>
         <div
           @click.stop="$emit('load-more')"
@@ -43,51 +43,49 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables.scss';
 @import '@/styles/mixins/inputs.scss';
+
 ::v-deep .tn-dropdown__options__container {
   @include base-font-styles();
   border-radius: 0.5rem;
-  background-color: $white;
-  border: 2px solid $dark-green;
-  color: black;
-  margin-top: 2rem;
+  background-color: $panther;
+  border: 2px solid $panther-silver;
+  color: white;
+  margin-top: 1.5rem;
 }
 
 ::v-deep .tn-dropdown__options__container:hover,
 ::v-deep .tn-dropdown__selection-container:hover {
-  border: 3px solid $dark-green;
+  border: 2px solid $panther-silver;
+  color: $panther-silver;
 }
 
-::v-deep .tn-dropdown__selection-container {
-  @include base-font-styles();
-}
 ::v-deep .tn-dropdown__selection-container {
   @include base-font-styles();
   border-radius: 0.5rem;
-  border: 2px solid $dark-green;
-  box-shadow: 0 4px 8px 2px $very-light-gray;
+  border: 2px solid $panther-silver;
   box-sizing: border-box;
   line-height: 1.29;
   letter-spacing: 0.5px;
-  color: $base-gray;
-
+  color: $panther-silver;
+  margin-right: 1rem;
   height: 3.35rem;
-  padding: 4%;
-  margin: 3%;
+  background-color: $panther;
   .tn-dropdown__search {
     @include input-field-white();
     border: none;
+    background-color: $panther;
     &:focus {
       box-shadow: 0 0 0 0;
-      outline: none;
-      background-color: $white;
     }
   }
 }
 ::v-deep .tn-dropdown {
+  width: 18vw;
 }
 
 ::v-deep .tn-dropdown__trigger-icon {
   margin-right: 0.25rem;
+  color: white;
 }
 
 ::v-deep .tn-dropdown__selected-items--multi__item {
@@ -95,5 +93,9 @@ export default {
   background-color: $grape;
   color: white;
   width: 100%;
+}
+::v-deep .tn-dropdown__selected-items__item-selection,
+::v-deep .tn-dropdown__selected-items__item-selection--muted {
+  color: white;
 }
 </style>
