@@ -463,8 +463,10 @@ def email_auth_token(request):
             details = get_account_details(access_token)
             account = details["account"]
             calendar_data = details["calendars"]
-            calendar = [cal for cal in calendar_data if cal["read_only"] is False][0]
-
+            calendar = [cal for cal in calendar_data if cal["read_only"] is False]
+            calendar_id = None
+            if len(calendar):
+                calendar_id = calendar[0]["id"]
             NylasAuthAccount.objects.create(
                 access_token=access_token,
                 account_id=account["account_id"],
@@ -473,7 +475,7 @@ def email_auth_token(request):
                 sync_state=account["sync_state"],
                 name=account["name"],
                 user=request.user,
-                event_calendar_id=calendar["id"],
+                event_calendar_id=calendar_id,
             )
         except requests.exceptions.HTTPError as e:
             if 400 in e.args:

@@ -17,7 +17,7 @@ EVENT_POST = "events?notify_participants=true"
 
 
 # OAuth permission scopes to request from Nylas
-SCOPE_EMAIL_CALENDAR = "calendar"
+SCOPE_EMAIL_CALENDAR = "calendar.read_only"
 
 
 ALL_SCOPES = [SCOPE_EMAIL_CALENDAR]
