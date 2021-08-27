@@ -253,7 +253,7 @@ def process_submit_resource_data(payload, context):
         pass
     current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
     main_form = current_forms.filter(template__form_type__in=["UPDATE", "CREATE"]).first()
-
+    print(main_form.template.form_type)
     stage_forms = current_forms.exclude(template__form_type__in=["UPDATE", "CREATE"])
     stage_form_data_collector = {}
     for form in stage_forms:
@@ -261,7 +261,8 @@ def process_submit_resource_data(payload, context):
         form.save_form(state)
         stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
     if not len(stage_forms):
-        main_form.update_source = type
+        if main_form.template.form_type == "UPDATE":
+            main_form.update_source = type
         main_form.save_form(state)
 
     all_form_data = {**stage_form_data_collector, **main_form.saved_data}
