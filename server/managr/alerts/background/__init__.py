@@ -236,12 +236,12 @@ def _process_send_alert(invocation, channel, config_id):
             if alert_instances.first().channel
             else instance_user.slack_integration.channel
         )
-    alert_instances = custom_paginator(alert_instances)
+    alert_page_instances = custom_paginator(alert_instances)
     access_token = template.user.organization.slack_integration.access_token
     text = template.title
     blocks = []
 
-    for alert_instance in alert_instances.get("results", []):
+    for alert_instance in alert_page_instances.get("results", []):
         blocks = [
             *blocks,
             *get_block_set("alert_instance", {"instance_id": str(alert_instance.id)}),
@@ -252,7 +252,7 @@ def _process_send_alert(invocation, channel, config_id):
     if len(blocks):
         blocks = [
             *blocks,
-            *custom_paginator_block(alert_instances, invocation, channel, config_id),
+            *custom_paginator_block(alert_page_instances, invocation, channel, config_id),
         ]
         try:
             slack_requests.send_channel_message(

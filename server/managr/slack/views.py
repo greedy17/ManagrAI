@@ -499,7 +499,8 @@ def update_resource(request):
         resource_type = command_params[0][0].upper() + command_params[0][1:]
 
         blocks = get_block_set(
-            "update_modal_block_set", {"resource_type": resource_type, "u": str(user.id)}
+            "update_modal_block_set",
+            {"resource_type": resource_type, "u": str(user.id), "type": "command"},
         )
         access_token = user.organization.slack_integration.access_token
 
@@ -508,7 +509,7 @@ def update_resource(request):
 
         private_metadata = {
             "original_message_channel": request.data.get("channel_id"),
-            "triggered_from": "command",
+            "type": "command",
         }
 
         data = {

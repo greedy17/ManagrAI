@@ -169,7 +169,7 @@ class CustomUserAdmin(UserAdmin):
         UserSlackIntegrationInline,
         ZoomAuthAccountInline,
     )
-    list_display = ("email", "first_name", "last_name")
+    list_display = ("email", "first_name", "last_name", "datetime_created")
 
     list_display_links = (
         "email",
@@ -184,7 +184,7 @@ class CustomUserAdmin(UserAdmin):
     )
     list_filter = ("organization",)
 
-    ordering = []
+    ordering = ("-datetime_created",)
 
 
 class CustomNylasAuthAccount(admin.ModelAdmin):

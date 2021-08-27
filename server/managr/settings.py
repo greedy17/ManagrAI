@@ -60,7 +60,6 @@ METADATA_URI = os.environ.get("ECS_CONTAINER_METADATA_URI_V4", None)
 try:
     resp = requests.get(METADATA_URI)
     data = resp.json()
-    # print(data)
 
     EC2_PRIVATE_IP = data["Networks"][0]["IPv4Addresses"][0]
 except Exception as e:

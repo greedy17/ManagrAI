@@ -51,6 +51,7 @@ def process_meeting_review(payload, context):
     context = {
         "w": workflow_id,
         "f": str(workflow.forms.filter(template__form_type="UPDATE").first().id),
+        "type": "meeting",
     }
     private_metadata.update(context)
     data = {
@@ -60,7 +61,7 @@ def process_meeting_review(payload, context):
             "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
             "title": {"type": "plain_text", "text": "Log Meeting"},
             "blocks": get_block_set("meeting_review_modal", context=context),
-            "submit": {"type": "plain_text", "text": "Submit"},
+            "submit": {"type": "plain_text", "text": "Save Changes"},
             "private_metadata": json.dumps(private_metadata),
             "external_id": f"meeting_review_modal.{str(uuid.uuid4())}",
         },
@@ -828,6 +829,7 @@ def process_no_changes_made(payload, context):
     form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
     form.is_submitted = True
     form.submission_date = timezone.now()
+    form.update_source = "meeting"
     form.save_form(state, False)
     ops = [
         f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}",
@@ -958,6 +960,7 @@ def process_check_is_owner(payload, context):
     slack_id = payload.get("user", {}).get("id")
     user_id = context.get("u")
     resource = context.get("resource")
+    context.update({"type": "alert"})
     user_slack = UserSlackIntegration.objects.filter(slack_id=slack_id).first()
     if user_slack and str(user_slack.user.id) == user_id:
         return process_show_update_resource_form(payload, context)
@@ -1214,7 +1217,7 @@ def process_meeting_details(payload, context):
         "view": {
             "type": "modal",
             "callback_id": slack_const.ZOOM_MEETING__SCHEDULE_MEETING,
-            "title": {"type": "plain_text", "text": "Meeting Details"},
+            "title": {"type": "plain_text", "text": "Zoom Meeting Scheduler"},
             "blocks": get_block_set("schedule_meeting_modal", context=context),
             "submit": {"type": "plain_text", "text": "Save",},
             "private_metadata": json.dumps(private_metadata),

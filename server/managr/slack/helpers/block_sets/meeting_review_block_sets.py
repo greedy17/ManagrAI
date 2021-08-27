@@ -127,7 +127,7 @@ def schedule_meeting(context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
 
     return block_builders.section_with_button_block(
-        "Schedule Meeting",
+        "Schedule Zoom Meeting",
         "SCHEDULE_MEETING",
         "Schedule another Zoom meeting?",
         style="primary",
@@ -365,7 +365,7 @@ def initial_meeting_interaction_block_set(context):
     # )
 
     create_contacts_button = block_builders.simple_button_block(
-        "Create New Contacts",
+        "Add/Edit Meeting Attendees",
         str(workflow.id),
         action_id=action_with_params(
             slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,]
@@ -388,7 +388,7 @@ def initial_meeting_interaction_block_set(context):
     ):
         action_blocks.append(
             block_builders.simple_button_block(
-                f"Update {workflow.resource_type}",
+                f"Update {workflow.resource_type} + Add Notes",
                 str(workflow.id),
                 action_id=slack_const.ZOOM_MEETING__INIT_REVIEW,
                 style="primary",
@@ -516,6 +516,7 @@ def create_or_search_modal_block_set(context):
             f"*Search for an {resource_type}*",
             f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={resource_type}&add_opts={json.dumps(additional_opts)}&__block_action={slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION}",
             block_id="select_existing",
+            placeholder="Type to search",
             initial_option=block_builders.option(resource.name, str(resource.id))
             if resource_id and resource
             else None,
@@ -722,6 +723,13 @@ def schedule_zoom_meeting_modal(context):
             action_id="meeting_data",
             initial_option={"text": {"type": "plain_text", "text": "30"}, "value": "30"},
             block_id="meeting_duration",
+        ),
+        block_builders.input_block(
+            "Description",
+            placeholder="Put your adgenda and notes here",
+            action_id="meeting_data",
+            block_id="meeting_description",
+            multiline=True,
         ),
         block_builders.multi_external_select(
             "*Add Contacts to this meeting*",
