@@ -10,6 +10,7 @@ from managr.zoom import views as zoom_views
 from managr.salesforce import views as sf_views
 from managr.alerts import views as alert_views
 from managr.autonomous import views as auto_views
+from managr.salesloft import views as salesloft_views
 
 # from . import views
 
