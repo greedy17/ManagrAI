@@ -79,6 +79,26 @@
       </div>
 
       <div class="card">
+        <img class="card-img" src="@/assets/images/salesloft.svg" />
+        <h3>Calendar</h3>
+        <p class="card-text">Pu Contacts right into Cadences</p>
+        <PulseLoadingSpinnerButton
+          v-if="!hasSalesloftIntegration"
+          @click="onGetAuthLink('SALESLOFT')"
+          class="primary-button"
+          text="Connect"
+          :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
+        ></PulseLoadingSpinnerButton>
+        <PulseLoadingSpinnerButton
+          text="Revoke"
+          :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
+          v-else
+          @click="onRevoke('SALESLOFT')"
+          class="secondary-button"
+        ></PulseLoadingSpinnerButton>
+      </div>
+
+      <div class="card">
         <img
           class="card-img"
           src="@/assets/images/google-calendar.svg"

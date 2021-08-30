@@ -27,5 +27,13 @@ from rest_framework.decorators import (
     authentication_classes,
 )
 
+from . import constants as salesloft_consts
+
 # Create your views here.
 logger = logging.getLogger("managr")
+
+
+@api_view(["GET"])
+def get_salesloft_auth_link(request):
+    query = urlencode(salesloft_consts.AUTHORIZATION_QUERY_PARAMS)
+    return f"{salesloft_consts.AUTHORIZATION_URI}?{query}"

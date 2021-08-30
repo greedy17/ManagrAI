@@ -433,4 +433,12 @@ if USE_SALESFORCE:
     # )
     SALESFORCE_API_VERSION = f'v{_env_get_required("SALESFORCE_API_VERSION")}'
 
+
+USE_SALESLOFT = os.environ.get("USE_SALESLOFT") == "True"
+if USE_SALESLOFT:
+    SALESLOFT_SECRET = _env_get_required("SALESLOFT_SECRET")
+    SALESLOFT_CLIENT_ID = _env_get_required("SALESLOFT_CLIENT_ID")
+    SALESLOFT_BASE_URL = _env_get_required("SALESLOFT_BASE_URL")
+    SALESLOFT_REDIRECT_URI = _env_get_required("SALESLOFT_REDIRECT_URI")
+
 MAX_ATTEMPTS = 5
