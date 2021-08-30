@@ -91,6 +91,7 @@ INSTALLED_APPS = [
     "managr.salesforce",
     "managr.alerts",
     "managr.autonomous",
+    "managr.salesloft",
     # "managr.demo",
     # Django
     "django.contrib.admin",
