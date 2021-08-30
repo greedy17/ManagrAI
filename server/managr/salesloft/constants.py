@@ -12,15 +12,15 @@ from managr.utils.misc import get_site_url
 
 if settings.USE_SALESLOFT:
 
-    CLIENT_ID = setting.SALESLOFT_CLIENT_ID
-    REDIRECT_URI = setting.SALESLOFT_REDIRECT_URI
+    CLIENT_ID = settings.SALESLOFT_CLIENT_ID
+    REDIRECT_URI = settings.SALESLOFT_REDIRECT_URI
 
     AUTHENTICATION_URI = "https://accounts.salesloft.com/oauth/token"
     AUTHORIZATION_URI = "https://accounts.salesloft.com/oauth/authorize"
 
     AUTHORIZATION_QUERY_PARAMS = {
         "client_id": CLIENT_ID,
-        "redirect_uri": RED,
+        "redirect_uri": REDIRECT_URI,
         "response_type": "code",
     }
 

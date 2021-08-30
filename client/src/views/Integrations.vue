@@ -81,7 +81,7 @@
       <div class="card">
         <img class="card-img" src="@/assets/images/salesloft.svg" />
         <h3>Calendar</h3>
-        <p class="card-text">Pu Contacts right into Cadences</p>
+        <p class="card-text">Put Contacts right into Cadences</p>
         <PulseLoadingSpinnerButton
           v-if="!hasSalesloftIntegration"
           @click="onGetAuthLink('SALESLOFT')"
@@ -135,6 +135,7 @@ import SlackOAuth from '@/services/slack'
 import ZoomAccount from '@/services/zoom/account/'
 import Nylas from '@/services/nylas'
 import Salesforce from '@/services/salesforce'
+import Salesloft from '@/services/salesloft'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 
 export default {
@@ -243,6 +244,11 @@ export default {
     hasNylasIntegration() {
       return !!this.$store.state.user.nylas
     },
+    hasSalesloftIntegration() {
+      return (
+        !!this.$store.state.user.salesloftAccount && this.$store.state.user.hasSalesloftIntegration
+      )
+    },
     userCanIntegrateSlack() {
       return this.$store.state.user.isAdmin
     },
@@ -257,6 +263,8 @@ export default {
           return Nylas
         case 'SLACK':
           return SlackOAuth
+        case 'SALESLOFT':
+          return Salesloft
         default:
           return null
       }

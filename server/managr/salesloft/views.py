@@ -35,5 +35,43 @@ logger = logging.getLogger("managr")
 
 @api_view(["GET"])
 def get_salesloft_auth_link(request):
-    query = urlencode(salesloft_consts.AUTHORIZATION_QUERY_PARAMS)
-    return f"{salesloft_consts.AUTHORIZATION_URI}?{query}"
+    link = SalesloftAccount.get_authorization()
+    return Response({"link": link})
+
+
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
+def get_salesloft_authentication(request):
+    print(request.data)
+    # code = request.data.get("code", None)
+    # if not code:
+    #     raise ValidationError()
+    # res = SalesloftAccount.create_account(code, request.user.id)
+    # existing = SalesloftAuthAccount.objects.filter(user=request.user).first()
+    # if existing:
+    #     serializer = ZoomAuthSerializer(data=res.as_dict, instance=existing)
+    # else:
+    #     serializer = ZoomAuthSerializer(data=res.as_dict)
+    # serializer.is_valid(raise_exception=True)
+    # serializer.save()
+    # return Response(data={"success": True})
+
+
+@api_view(["delete"])
+@permission_classes([permissions.IsAuthenticated])
+def revoke_salesloft_access_token(request):
+    if hasattr(request.user, "salesloft_account"):
+        salesloft = request.user.zoom_account
+        try:
+            salesloft.helper_class.revoke()
+        except Exception:
+            # revoke token will fail if ether token is expired
+            pass
+        if salesloft.refresh_token_task:
+            task = Task.objects.filter(id=salesloft.refresh_token_task).first()
+            if task:
+                task.delete()
+        salesloft.delete()
+
+    return Response()
+
