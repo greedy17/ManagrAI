@@ -10,6 +10,7 @@ from django.shortcuts import render, redirect
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 
+from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import (
     authentication,
@@ -28,6 +29,7 @@ from rest_framework.decorators import (
 )
 
 from . import constants as salesloft_consts
+from .models import SalesloftAuthAccount
 
 # Create your views here.
 logger = logging.getLogger("managr")
@@ -35,18 +37,19 @@ logger = logging.getLogger("managr")
 
 @api_view(["GET"])
 def get_salesloft_auth_link(request):
-    link = SalesloftAccount.get_authorization()
+    link = SalesloftAuthAccount.get_authorization()
     return Response({"link": link})
 
 
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
 def get_salesloft_authentication(request):
-    print(request.data)
-    # code = request.data.get("code", None)
-    # if not code:
-    #     raise ValidationError()
-    # res = SalesloftAccount.create_account(code, request.user.id)
+    code = request.data.get("code", None)
+    context = request.date.get("context", None)
+    scope = request.date.get("scope", None)
+    if not code:
+        raise ValidationError()
+    res = SalesloftAccount.create_account(code, context, scope, request.user.id)
     # existing = SalesloftAuthAccount.objects.filter(user=request.user).first()
     # if existing:
     #     serializer = ZoomAuthSerializer(data=res.as_dict, instance=existing)
@@ -75,3 +78,18 @@ def revoke_salesloft_access_token(request):
 
     return Response()
 
+
+def redirect_from_salesloft(request):
+    if settings.IN_DEV:
+        print(request)
+        code = request.GET.get("code", None)
+        context = request.GET.get("context", None)
+        scope = request.GET.get("scope", None)
+        q = urlencode({"code": code, "scope": scope, "context": context})
+        if not code:
+            err = {"error": "there was an error"}
+            err = urlencode(err)
+            return redirect(f"{salesloft_consts.SALESLOFT_FRONTEND_REDIRECT}")
+        return redirect(f"{salesloft_consts.SALESLOFT_FRONTEND_REDIRECT}?{q}")
+    else:
+        return redirect(f"{salesloft_consts.SALESLOFT_FRONTEND_REDIRECT}")

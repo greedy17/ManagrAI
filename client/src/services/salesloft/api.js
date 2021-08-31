@@ -21,12 +21,12 @@ export default class SalesloftAccountAPI extends ModelAPI {
       const res = await this.client.get(SalesloftAccountAPI.ENDPOINT + 'authorization')
       return res.data
     } catch (e) {
-      apiErrorHandler({ apiName: 'Error Retrieving Zoom Auth Link' })(e)
+      apiErrorHandler({ apiName: 'Error Retrieving Salesloft Auth Link' })(e)
     }
   }
-  async authenticate(code) {
+  async authenticate(code, context, scope) {
     try {
-      const res = await this.client.post(SalesloftAccountAPI.ENDPOINT + 'authenticate', { code: code })
+      const res = await this.client.post(SalesloftAccountAPI.ENDPOINT + 'authenticate', { code: code, context: context, scope:scope})
       return res
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Data from Code' })(e)

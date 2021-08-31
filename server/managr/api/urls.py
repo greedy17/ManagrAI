@@ -46,6 +46,11 @@ urlpatterns = [
     path("users/nylas/authenticate/", core_views.email_auth_token, name="get_email_auth_token",),
     path("users/nylas/revoke/", core_views.revoke_access_token, name="revoke_email_auth",),
     path("users/zoom/re-direct", zoom_views.redirect_from_zoom, name="redirect-from-zoom"),
+    path(
+        "users/salesloft/re-direct",
+        salesloft_views.redirect_from_salesloft,
+        name="redirect-from-salesloft",
+    ),
     path("users/slack/re-direct", slack_views.redirect_from_slack, name="redirect-from-slack"),
     path("account-status/", core_views.get_account_status, name="get_account_status"),
     path("get-file/<str:file_id>/", core_views.GetFileView.as_view(), name="get_file_from_nylas",),

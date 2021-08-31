@@ -346,6 +346,13 @@ export default {
 
       try {
         const modelClass = this.selectedIntegrationSwitcher
+        if (this.selectedIntegration == 'SALESLOFT') {
+          await modelClass.api.authenticate(
+            this.$route.query.code,
+            this.$route.query.context,
+            this.$route.query.scope,
+          )
+        }
         if (this.selectedIntegration != 'SLACK') {
           await modelClass.api.authenticate(this.$route.query.code)
         } else {

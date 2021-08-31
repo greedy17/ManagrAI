@@ -18,12 +18,16 @@ if settings.USE_SALESLOFT:
     AUTHENTICATION_URI = "https://accounts.salesloft.com/oauth/token"
     AUTHORIZATION_URI = "https://accounts.salesloft.com/oauth/authorize"
 
+    if settings.IN_DEV:
+        SALESLOFT_FRONTEND_REDIRECT = "http://localhost:8080/settings/integrations"
+
     AUTHORIZATION_QUERY_PARAMS = {
         "client_id": CLIENT_ID,
         "redirect_uri": REDIRECT_URI,
         "response_type": "code",
     }
-
+    AUTHENTICATION_HEADERS = {"Content-Type": "application/x-www-form-urlencoded"}
+    
     AUTHENTICATION_QUERY_PARAMS = lambda code, context, scope: {
         "client_id": "YOUR_CLIENT_ID",
         "client_secret": "YOUR_CLIENT_SECRET",
