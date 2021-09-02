@@ -11,6 +11,7 @@ from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 
 from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
 from rest_framework.views import APIView
 from rest_framework import (
     authentication,
@@ -29,7 +30,8 @@ from rest_framework.decorators import (
 )
 
 from . import constants as salesloft_consts
-from .models import SalesloftAuthAccount
+from .models import SalesloftAuthAccount, SalesloftAuthAdapter
+from .serializers import SalesloftAuthSerializer
 
 # Create your views here.
 logger = logging.getLogger("managr")
@@ -37,7 +39,7 @@ logger = logging.getLogger("managr")
 
 @api_view(["GET"])
 def get_salesloft_auth_link(request):
-    link = SalesloftAuthAccount.get_authorization()
+    link = SalesloftAuthAdapter.get_authorization()
     return Response({"link": link})
 
 
@@ -45,19 +47,21 @@ def get_salesloft_auth_link(request):
 @permission_classes([permissions.IsAuthenticated])
 def get_salesloft_authentication(request):
     code = request.data.get("code", None)
-    context = request.date.get("context", None)
-    scope = request.date.get("scope", None)
+    context = request.data.get("context", None)
+    scope = request.data.get("scope", None)
     if not code:
         raise ValidationError()
-    res = SalesloftAccount.create_account(code, context, scope, request.user.id)
-    # existing = SalesloftAuthAccount.objects.filter(user=request.user).first()
-    # if existing:
-    #     serializer = ZoomAuthSerializer(data=res.as_dict, instance=existing)
-    # else:
-    #     serializer = ZoomAuthSerializer(data=res.as_dict)
-    # serializer.is_valid(raise_exception=True)
-    # serializer.save()
-    # return Response(data={"success": True})
+    res = SalesloftAuthAdapter.create_auth_account(code, context, scope, request.user.id)
+    existing = SalesloftAuthAccount.objects.filter(admin=request.user).first()
+    print(res)
+    if existing:
+        serializer = SalesloftAuthSerializer(data=res.as_dict, instance=existing)
+    else:
+        serializer = SalesloftAuthSerializer(data=res.as_dict)
+        print(serializer)
+    print(serializer.is_valid(raise_exception=True))
+    serializer.save()
+    return Response(data={"success": True})
 
 
 @api_view(["delete"])
@@ -81,11 +85,10 @@ def revoke_salesloft_access_token(request):
 
 def redirect_from_salesloft(request):
     if settings.IN_DEV:
-        print(request)
         code = request.GET.get("code", None)
         context = request.GET.get("context", None)
         scope = request.GET.get("scope", None)
-        q = urlencode({"code": code, "scope": scope, "context": context})
+        q = urlencode({"code": code, "scope": scope, "context": context, "state": "SALESLOFT"})
         if not code:
             err = {"error": "there was an error"}
             err = urlencode(err)

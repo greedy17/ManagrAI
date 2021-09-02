@@ -6,7 +6,7 @@ logger = logging.getLogger("managr")
 
 
 class TokenExpired(Exception):
-    def __init(self, message="Token Expired"):
+    def __init(self, error="Invalid Bearer token"):
         self.message = message
         super().__init__(self.message)
 

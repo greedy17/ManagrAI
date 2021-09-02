@@ -2,6 +2,7 @@ import jwt
 import pytz
 import math
 import logging
+import json
 
 from datetime import datetime
 from django.db import models
@@ -11,9 +12,10 @@ from requests.exceptions import HTTPError
 
 from django.contrib.postgres.fields import JSONField, ArrayField
 
-from managr.core.models import TimeStampModel
+from managr.core.models import TimeStampModel, User
 from managr.utils.client import HttpClient
 from .exceptions import SalesloftAPIException
+from managr.organization.models import Organization
 
 from managr.salesforce.adapter.models import ActivityAdapter
 
@@ -25,30 +27,17 @@ logger = logging.getLogger("managr")
 client = HttpClient().client
 
 
-class SalesloftAuthAccountQuerySet(models.QuerySet):
-    def for_user(self, user):
-        if user.is_superuser:
-            return self.all()
-        if user.organization and user.is_active:
-            if user.type == core_consts.ACCOUNT_TYPE_MANAGER:
-                return self.filter(user__organization=user.organization)
-            elif user.type == core_consts.ACCOUNT_TYPE_REP:
-                return self.filter(user=user)
-            else:
-                return self.none()
+class SalesloftAuthAdapter:
+    def __init__(self, **kwargs):
+        self.id = kwargs.get("id", None)
+        self.organization = kwargs.get("organization", None)
+        self.access_token = kwargs.get("access_token", None)
+        self.refresh_token = kwargs.get("refresh_token", None)
+        self.admin = kwargs.get("admin", None)
 
-
-class SalesloftAuthAccount(TimeStampModel):
-    user = models.OneToOneField(
-        "core.User", on_delete=models.CASCADE, related_name="salesloft_account"
-    )
-    access_token = models.TextField(blank=True)
-    refresh_token = models.TextField(blank=True)
-
-    objects = SalesloftAuthAccountQuerySet.as_manager()
-
-    class Meta:
-        ordering = ["-datetime_created"]
+    @property
+    def as_dict(self):
+        return vars(self)
 
     @staticmethod
     def get_authorization():
@@ -59,7 +48,6 @@ class SalesloftAuthAccount(TimeStampModel):
     def _handle_response(response, fn_name=None):
         if not hasattr(response, "status_code"):
             raise ValueError
-
         elif response.status_code == 200 or response.status_code == 201:
             try:
                 data = response.json()
@@ -67,9 +55,7 @@ class SalesloftAuthAccount(TimeStampModel):
                 SalesloftAPIException(e, fn_name)
             except json.decoder.JSONDecodeError as e:
                 return logger.error(f"An error occured with a zoom integration, {e}")
-
         else:
-
             status_code = response.status_code
             error_data = response.json()
             error_param = error_data.get("error", None)
@@ -90,13 +76,62 @@ class SalesloftAuthAccount(TimeStampModel):
         query = salesloft_consts.AUTHENTICATION_QUERY_PARAMS(code, context, scope)
         query = urlencode(query)
         r = client.post(f"{salesloft_consts.AUTHENTICATION_URI}?{query}",)
-        print(r)
+        return SalesloftAuthAdapter._handle_response(r)
 
     @classmethod
-    def create_account(cls, code: str, context: str, scope: str, managr_user_id):
+    def create_auth_account(cls, code: str, context: str, scope: str, managr_user_id):
+        user = User.objects.get(id=managr_user_id)
+        org = Organization.objects.get(id=user.organization.id)
         auth_data = cls.get_auth_token(code, context, scope)
-        user_data = cls._get_user_data(auth_data["access_token"])
-        data = {**auth_data, **user_data}
-        data["user"] = str(managr_user_id)
-
+        # user_data = cls._get_user_data(auth_data["access_token"])
+        data = {}
+        data["organization"] = org
+        data["access_token"] = auth_data["access_token"]
+        data["refresh_token"] = auth_data["refresh_token"]
+        data["admin"] = user
         return cls(**data)
+
+    def refresh_access_token(self):
+        query = salesloft_consts.REAUTHENTICATION_QUERY_PARAMS(self.refresh_token)
+        query = urlencode(query)
+        ## error handling here
+
+        r = client.post(
+            f"{salesloft_consts.AUTHENTICATION_URI}?{query}",
+            headers=dict(Authorization=(f"Basic {salesloft_consts.APP_BASIC_TOKEN}")),
+        )
+        return SalesloftAuthAdapter._handle_response(r)
+
+
+class SalesloftAuthAccountQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.organization and user.is_active:
+            return self.filter(organization=user.organization)
+        else:
+            self.none()
+
+
+class SalesloftAuthAccount(TimeStampModel):
+    organization = models.OneToOneField(
+        "organization.Organization",
+        related_name="salesloft_auth_account",
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE,
+    )
+    access_token = models.TextField(blank=True)
+    refresh_token = models.TextField(blank=True)
+    admin = models.OneToOneField(
+        "core.User", on_delete=models.CASCADE, related_name="salesloft_admin", blank=True, null=True
+    )
+    objects = SalesloftAuthAccountQuerySet.as_manager()
+
+    class Meta:
+        ordering = ["-datetime_created"]
+
+    @property
+    def helper_class(self):
+        data = self.__dict__
+        data["id"] = str(data.get("id"))
+        return SalesloftAuthAdapter(**data)
+

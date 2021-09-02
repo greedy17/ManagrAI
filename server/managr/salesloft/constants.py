@@ -14,6 +14,7 @@ if settings.USE_SALESLOFT:
 
     CLIENT_ID = settings.SALESLOFT_CLIENT_ID
     REDIRECT_URI = settings.SALESLOFT_REDIRECT_URI
+    CLIENT_SECRET = settings.SALESLOFT_SECRET
 
     AUTHENTICATION_URI = "https://accounts.salesloft.com/oauth/token"
     AUTHORIZATION_URI = "https://accounts.salesloft.com/oauth/authorize"
@@ -27,13 +28,20 @@ if settings.USE_SALESLOFT:
         "response_type": "code",
     }
     AUTHENTICATION_HEADERS = {"Content-Type": "application/x-www-form-urlencoded"}
-    
+
     AUTHENTICATION_QUERY_PARAMS = lambda code, context, scope: {
-        "client_id": "YOUR_CLIENT_ID",
-        "client_secret": "YOUR_CLIENT_SECRET",
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
         "code": code,
         "grant_type": "authorization_code",
-        "redirect_uri": "YOUR_REDIRECT_URI",
+        "redirect_uri": REDIRECT_URI,
         "context": context,
         "scope": scope,
+    }
+
+    REAUTHENTICATION_QUERY_PARAMS = lambda token: {
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "grant_type": "refresh_token",
+        "refresh_token": token,
     }
