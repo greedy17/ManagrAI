@@ -31,6 +31,7 @@ class CustomZoomMeeting(admin.ModelAdmin):
     form = CustomZoomMeetingForm
     list_filter = ("zoom_account__user",)
     list_display = (
+        "datetime_created",
         "meeting_uuid",
         "host_id",
         "zoom_account",
