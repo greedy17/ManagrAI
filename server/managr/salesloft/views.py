@@ -53,13 +53,10 @@ def get_salesloft_authentication(request):
         raise ValidationError()
     res = SalesloftAuthAdapter.create_auth_account(code, context, scope, request.user.id)
     existing = SalesloftAuthAccount.objects.filter(admin=request.user).first()
-    print(res)
     if existing:
         serializer = SalesloftAuthSerializer(data=res.as_dict, instance=existing)
     else:
         serializer = SalesloftAuthSerializer(data=res.as_dict)
-        print(serializer)
-    print(serializer.is_valid(raise_exception=True))
     serializer.save()
     return Response(data={"success": True})
 

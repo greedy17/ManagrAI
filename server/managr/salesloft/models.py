@@ -85,10 +85,10 @@ class SalesloftAuthAdapter:
         auth_data = cls.get_auth_token(code, context, scope)
         # user_data = cls._get_user_data(auth_data["access_token"])
         data = {}
-        data["organization"] = org
+        data["organization"] = org.id
         data["access_token"] = auth_data["access_token"]
         data["refresh_token"] = auth_data["refresh_token"]
-        data["admin"] = user
+        data["admin"] = managr_user_id
         return cls(**data)
 
     def refresh_access_token(self):
@@ -135,3 +135,37 @@ class SalesloftAuthAccount(TimeStampModel):
         data["id"] = str(data.get("id"))
         return SalesloftAuthAdapter(**data)
 
+
+class SalesloftAccountQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.organization and user.is_active:
+            return self.filter(auth_account__organization=user.organization)
+        else:
+            return self.none()
+
+
+class SalesloftAccount(TimeStampModel):
+    auth_account = models.ForeignKey(
+        "SalesloftAuthAccount",
+        related_name="users",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
+    user = models.OneToOneField(
+        "core.User",
+        on_delete=models.CASCADE,
+        related_name="salesloft_account",
+        blank=True,
+        null=True,
+    )
+    salesloft_id = models.IntegerField()
+    guid = models.CharField(max_length=50)
+    is_active = models.BooleanField()
+    email = models.EmailField()
+    team_id = models.IntegerField()
+
+    objects = SalesloftAccountQuerySet.as_manager()
+
+    class Meta:
+        ordering = ["-datetime_created"]
