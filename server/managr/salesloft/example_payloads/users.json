@@ -1,0 +1,125 @@
+{
+    "metadata": {
+        "filtering": {},
+        "sorting": {
+            "sort_by": "id",
+            "sort_direction": "DESC NULLS LAST"
+        }
+    },
+    "data": [
+        {
+            "id": 6516,
+            "guid": "e0bdc8b8-657b-4f53-a267-3bd20055dd90",
+            "created_at": "2021-08-26T17:03:56.004170-04:00",
+            "updated_at": "2021-08-26T17:06:42.263334-04:00",
+            "name": "michael gorodisher",
+            "first_name": "michael",
+            "last_name": "gorodisher",
+            "job_role": "Other",
+            "active": true,
+            "time_zone": "US/Eastern",
+            "slack_username": "mike",
+            "twitter_handle": null,
+            "email": "mike@mymanagr.com",
+            "email_client_email_address": "mike@mymanagr.com",
+            "sending_email_address": "mike@mymanagr.com",
+            "from_address": null,
+            "full_email_address": "\"michael gorodisher\" <mike@mymanagr.com>",
+            "bcc_email_address": null,
+            "email_signature": "",
+            "email_signature_type": "html",
+            "email_signature_click_tracking_disabled": false,
+            "team_admin": true,
+            "local_dial_enabled": false,
+            "click_to_call_enabled": false,
+            "email_client_configured": true,
+            "crm_connected": true,
+            "external_feature_flags": {
+                "ma_enabled": true,
+                "ma_live_feed": true,
+                "ma_recent_activities_update": true,
+                "ma_person_page": true,
+                "ma_push_notifications": true,
+                "ma_websockets": true,
+                "ma_edit_person": true,
+                "ma_dev_qa_tools": false,
+                "ma_cadences": false,
+                "hot_leads": true,
+                "people_crud_allow_create": true,
+                "people_crud_allow_delete": true,
+                "ma_mobile_workflow": false,
+                "linkedin_oauth_flow": true
+            },
+            "_private_fields": {},
+            "phone_client": {
+                "id": 7064
+            },
+            "phone_number_assignment": null,
+            "group": null,
+            "team": {
+                "_href": "https://api.salesloft.com/v2/team",
+                "id": 104716
+            },
+            "role": {
+                "id": "Admin"
+            }
+        },
+        {
+            "id": 6439,
+            "guid": "2fddee48-0b29-4d4c-816b-5f4f35eb0a59",
+            "created_at": "2021-08-25T10:58:51.860421-04:00",
+            "updated_at": "2021-08-26T17:03:01.397382-04:00",
+            "name": "Zachary Bradley",
+            "first_name": "Zachary",
+            "last_name": "Bradley",
+            "job_role": null,
+            "active": true,
+            "time_zone": "US/Eastern",
+            "slack_username": "zach",
+            "twitter_handle": null,
+            "email": "zach@mymanagr.com",
+            "email_client_email_address": "zach@mymanagr.com",
+            "sending_email_address": "zach@mymanagr.com",
+            "from_address": null,
+            "full_email_address": "\"Zachary Bradley\" <zach@mymanagr.com>",
+            "bcc_email_address": null,
+            "email_signature": "",
+            "email_signature_type": "html",
+            "email_signature_click_tracking_disabled": false,
+            "team_admin": true,
+            "local_dial_enabled": false,
+            "click_to_call_enabled": false,
+            "email_client_configured": true,
+            "crm_connected": false,
+            "external_feature_flags": {
+                "ma_enabled": true,
+                "ma_live_feed": true,
+                "ma_recent_activities_update": true,
+                "ma_person_page": true,
+                "ma_push_notifications": true,
+                "ma_websockets": true,
+                "ma_edit_person": true,
+                "ma_dev_qa_tools": false,
+                "ma_cadences": false,
+                "hot_leads": true,
+                "people_crud_allow_create": true,
+                "people_crud_allow_delete": true,
+                "ma_mobile_workflow": false,
+                "linkedin_oauth_flow": true
+            },
+            "_private_fields": {},
+            "phone_client": {
+                "id": 6986
+            },
+            "phone_number_assignment": null,
+            "group": null,
+            "team": {
+                "_href": "https://api.salesloft.com/v2/team",
+                "id": 104716
+            },
+            "role": {
+                "id": "Admin"
+            }
+        }
+    ]
+}

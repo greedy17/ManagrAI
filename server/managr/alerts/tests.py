@@ -284,7 +284,7 @@ class UserTestCase(TestCase):
                 template=self.template,
             )
         conf = self.config
-        conf.recurrence_day = (timezone.now() + timezone.timedelta(days=1)).day
+        conf.recurrence_day = (timezone.now() + timezone.timedelta(days=2)).day
         conf.save()
         f = alert_models.AlertConfig.objects.filter(
             Q(template__user__is_active=True, template__is_active=True)

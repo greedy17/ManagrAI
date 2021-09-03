@@ -165,6 +165,42 @@
           class="btn btn--danger"
         ></PulseLoadingSpinnerButton>
       </div>
+
+      <div class="card">
+        <div class="card__header">
+          <img
+            class="card-img card-img__radius"
+            src="@/assets/images/salesloft.png"
+            style="height: 3rem; width: 3rem"
+          />
+          <h3 class="card__title">Salesloft</h3>
+        </div>
+
+        <p class="card-text">Put Contacts right into a Cadence from Slack</p>
+        <PulseLoadingSpinnerButton
+          v-if="!hasSalesloftIntegration"
+          :disabled="hasSalesloftIntegration"
+          @click="onGetAuthLink('SALESLOFT')"
+          class="primary-button"
+          text="Connect"
+          :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
+        ></PulseLoadingSpinnerButton>
+        <div v-else style="display: flex; justify-content: space-between">
+          <PulseLoadingSpinnerButton
+            text="Revoke"
+            :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
+            @click="onRevoke('SALESLOFT')"
+            class="btn btn--danger"
+          ></PulseLoadingSpinnerButton>
+          <PulseLoadingSpinnerButton
+            text="Refresh Token"
+            :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
+            @click="onGetAuthLink('SALESLOFT')"
+            class="secondary-button"
+          ></PulseLoadingSpinnerButton>
+        </div>
+      </div>
+
       <div class="card">
         <div class="card__header">
           <img class="card-img" src="@/assets/images/teams.png" />
@@ -207,6 +243,7 @@ import SlackOAuth from '@/services/slack'
 import ZoomAccount from '@/services/zoom/account/'
 import Nylas from '@/services/nylas'
 import Salesforce from '@/services/salesforce'
+import Salesloft from '@/services/salesloft'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import GoogleButton from '@/components/GoogleButton'
 
@@ -309,6 +346,13 @@ export default {
 
       try {
         const modelClass = this.selectedIntegrationSwitcher
+        if (this.selectedIntegration == 'SALESLOFT') {
+          await modelClass.api.authenticate(
+            this.$route.query.code,
+            this.$route.query.context,
+            this.$route.query.scope,
+          )
+        }
         if (this.selectedIntegration != 'SLACK') {
           await modelClass.api.authenticate(this.$route.query.code)
         } else {
@@ -346,6 +390,11 @@ export default {
     hasZoomIntegration() {
       return !!this.$store.state.user.zoomAccount && this.$store.state.user.hasZoomIntegration
     },
+    hasSalesloftIntegration() {
+      return (
+        !!this.$store.state.user.salesloftAccount && this.$store.state.user.hasSalesloftIntegration
+      )
+    },
     orgHasSlackIntegration() {
       return !!this.$store.state.user.organizationRef.slackIntegration
     },
@@ -369,6 +418,8 @@ export default {
           return Nylas
         case 'SLACK':
           return SlackOAuth
+        case 'SALESLOFT':
+          return Salesloft
         default:
           return null
       }
