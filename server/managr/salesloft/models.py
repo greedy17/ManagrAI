@@ -144,6 +144,36 @@ class SalesloftAccountQuerySet(models.QuerySet):
             return self.none()
 
 
+class SalesloftAccountAdapter:
+    def __init__(self, **kwargs):
+        self.id = (kwargs.get("id", None),)
+        self.auth_account = (kwargs.get("auth_account", None),)
+        self.user = (kwargs.get("user", None),)
+        self.salesloft_id = (kwargs.get("salesloft_id", None),)
+        self.guid = (kwargs.get("guid", None),)
+        self.is_active = (kwargs.get("is_active", None),)
+        self.email = (kwargs.get("email", None),)
+        self.team_id = (kwargs.get("team_id", None),)
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+    @classmethod
+    def create_account(cls, data, auth_account_id):
+        user = User.objects.get(email=data.get("email"))
+        data_dump = json.dumps(data)
+        data = {}
+        data["auth_account"] = auth_account_id
+        data["user"] = user.id
+        data["salesloft_id"] = data_dump.get("id")
+        data["guid"] = data_dump.get("guid")
+        data["is_active"] = data_dump.get("is_active")
+        data["email"] = data_dump.get("email")
+        data["team_id"] = data_dump.get("team_id")
+        return cls(**data)
+
+
 class SalesloftAccount(TimeStampModel):
     auth_account = models.ForeignKey(
         "SalesloftAuthAccount",
@@ -169,3 +199,9 @@ class SalesloftAccount(TimeStampModel):
 
     class Meta:
         ordering = ["-datetime_created"]
+
+    @property
+    def helper_class(self):
+        data = self.__dict__
+        data["id"] = str(data.get("id"))
+        return SalesloftAuthAdapter(**data)
