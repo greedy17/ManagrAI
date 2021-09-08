@@ -18,7 +18,7 @@ if settings.USE_SALESLOFT:
 
     AUTHENTICATION_URI = "https://accounts.salesloft.com/oauth/token"
     AUTHORIZATION_URI = "https://accounts.salesloft.com/oauth/authorize"
-
+    SALESLOFT_BASE_URI = "https://api.salesloft.com/v2"
     if settings.IN_DEV:
         SALESLOFT_FRONTEND_REDIRECT = "http://localhost:8080/settings/integrations"
 

@@ -5,3 +5,4 @@ from . import models as models
 
 
 admin.site.register(models.SalesloftAuthAccount)
+admin.site.register(models.SalesloftAccount)

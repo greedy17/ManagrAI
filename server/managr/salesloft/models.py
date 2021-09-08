@@ -11,6 +11,7 @@ from urllib.parse import urlencode
 from requests.exceptions import HTTPError
 
 from django.contrib.postgres.fields import JSONField, ArrayField
+from django.core.exceptions import ObjectDoesNotExist
 
 from managr.core.models import TimeStampModel, User
 from managr.utils.client import HttpClient
@@ -102,6 +103,15 @@ class SalesloftAuthAdapter:
         )
         return SalesloftAuthAdapter._handle_response(r)
 
+    def get_all_users(self):
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json",
+        }
+        print(headers)
+        res = client.get(f"{salesloft_consts.SALESLOFT_BASE_URI}/users.json", headers=headers)
+        return SalesloftAuthAdapter._handle_response(res)
+
 
 class SalesloftAuthAccountQuerySet(models.QuerySet):
     def for_user(self, user):
@@ -146,32 +156,35 @@ class SalesloftAccountQuerySet(models.QuerySet):
 
 class SalesloftAccountAdapter:
     def __init__(self, **kwargs):
-        self.id = (kwargs.get("id", None),)
-        self.auth_account = (kwargs.get("auth_account", None),)
-        self.user = (kwargs.get("user", None),)
-        self.salesloft_id = (kwargs.get("salesloft_id", None),)
-        self.guid = (kwargs.get("guid", None),)
-        self.is_active = (kwargs.get("is_active", None),)
-        self.email = (kwargs.get("email", None),)
-        self.team_id = (kwargs.get("team_id", None),)
+        self.id = kwargs.get("id", None)
+        self.auth_account = kwargs.get("auth_account", None)
+        self.user = kwargs.get("user", None)
+        self.salesloft_id = kwargs.get("salesloft_id", None)
+        self.guid = kwargs.get("guid", None)
+        self.is_active = kwargs.get("is_active", None)
+        self.email = kwargs.get("email", None)
+        self.team_id = kwargs.get("team_id", None)
 
     @property
     def as_dict(self):
         return vars(self)
 
     @classmethod
-    def create_account(cls, data, auth_account_id):
-        user = User.objects.get(email=data.get("email"))
-        data_dump = json.dumps(data)
-        data = {}
-        data["auth_account"] = auth_account_id
-        data["user"] = user.id
-        data["salesloft_id"] = data_dump.get("id")
-        data["guid"] = data_dump.get("guid")
-        data["is_active"] = data_dump.get("is_active")
-        data["email"] = data_dump.get("email")
-        data["team_id"] = data_dump.get("team_id")
-        return cls(**data)
+    def create_account(cls, user_data, auth_account_id):
+        try:
+            user = User.objects.get(email=user_data["email"])
+            team = user_data["team"]
+            data = {}
+            data["auth_account"] = auth_account_id
+            data["user"] = user.id
+            data["salesloft_id"] = user_data["id"]
+            data["guid"] = user_data["guid"]
+            data["is_active"] = user_data["active"]
+            data["email"] = user_data["email"]
+            data["team_id"] = team["id"]
+            return cls(**data)
+        except ObjectDoesNotExist:
+            return None
 
 
 class SalesloftAccount(TimeStampModel):
@@ -191,9 +204,9 @@ class SalesloftAccount(TimeStampModel):
     )
     salesloft_id = models.IntegerField()
     guid = models.CharField(max_length=50)
-    is_active = models.BooleanField()
+    is_active = models.BooleanField(default=True)
     email = models.EmailField()
-    team_id = models.IntegerField()
+    team_id = models.IntegerField(blank=True)
 
     objects = SalesloftAccountQuerySet.as_manager()
 

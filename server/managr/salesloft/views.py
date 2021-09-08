@@ -30,8 +30,13 @@ from rest_framework.decorators import (
 )
 
 from . import constants as salesloft_consts
-from .models import SalesloftAuthAccount, SalesloftAuthAdapter
-from .serializers import SalesloftAuthSerializer
+from .models import (
+    SalesloftAuthAccount,
+    SalesloftAuthAdapter,
+    SalesloftAccount,
+    SalesloftAccountAdapter,
+)
+from .serializers import SalesloftAuthSerializer, SalesloftAccountSerializer
 
 # Create your views here.
 logger = logging.getLogger("managr")
@@ -57,7 +62,26 @@ def get_salesloft_authentication(request):
         serializer = SalesloftAuthSerializer(data=res.as_dict, instance=existing)
     else:
         serializer = SalesloftAuthSerializer(data=res.as_dict)
+    serializer.is_valid(raise_exception=True)
     serializer.save()
+    admin_account = SalesloftAuthAccount.objects.filter(admin=request.user).first()
+    if admin_account:
+        users = admin_account.helper_class.get_all_users()
+        user_data = users.get("data")
+        for user in user_data:
+            user_res = SalesloftAccountAdapter.create_account(user, admin_account.id)
+            if user_res is None:
+                logger.error(f"Could not create salesloft account for {user['email']}")
+                continue
+            user_existing = SalesloftAccount.objects.filter(email=user.get("email")).first()
+            if user_existing:
+                user_serializer = SalesloftAccountSerializer(
+                    data=user_res.as_dict, instance=user_existing
+                )
+            else:
+                user_serializer = SalesloftAccountSerializer(data=user_res.as_dict)
+            user_serializer.is_valid(raise_exception=True)
+            user_serializer.save()
     return Response(data={"success": True})
 
 
