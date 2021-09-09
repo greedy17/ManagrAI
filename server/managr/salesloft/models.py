@@ -217,3 +217,88 @@ class SalesloftAccount(TimeStampModel):
         data = self.__dict__
         data["id"] = str(data.get("id"))
         return SalesloftAuthAdapter(**data)
+
+
+class CadenceQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.organization and user.is_active:
+            return self.filter(owner__organization=user.organization_id)
+        else:
+            return self.none()
+
+
+class CadenceAdapter:
+    def __init__(self, **kwargs):
+        self.cadence_id = kwargs.get("cadence_id", None)
+        self.name = kwargs.get("name", None)
+        self.owner = kwargs.get("owner", None)
+        self.is_team_cadence = kwargs.get("is_team_cadence", None)
+        self.is_shared = kwargs.get("is_shared", None)
+        self.created_at = kwargs.get("created_at", None)
+        self.updated_at = kwargs.get("updated_at", None)
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+
+class Cadence(TimeStampModel):
+    cadence_id = models.IntegerField()
+    name = models.CharField(max_length=100)
+    owner = models.models.ForeignKey(
+        "SalesloftAccount",
+        related_name="cadences",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
+    is_team_cadence = models.BooleanField()
+    is_shared = models.BooleanField()
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+
+    objects = CadenceQuerySet.as_manager()
+
+    class Meta:
+        ordering = ["-datetime_created"]
+
+
+class SLAccountQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.organization and user.is_active:
+            return self.filter(owner__organization=user.organization_id)
+        else:
+            return self.none()
+
+class SLAccountAdapter:
+    def __init__(self, **kwargs):
+        self.account_id = kwargs.get("cadence_id", None)
+        self.name = kwargs.get("name", None)
+        self.owner = kwargs.get("owner", None)
+        self.created_at = kwargs.get("created_at", None)
+        self.updated_at = kwargs.get("updated_at", None)
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+    def create_slaccount(self, data):
+        
+
+class SLAccount(TimeStampModel):
+    account_id = models.IntegerField()
+    name = models.CharField(max_length=100)
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+    owner = models.ForeignKey(
+        "SalesloftAccount",
+        related_name="sl_accounts",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
+
+    objects = SLAccountQuerySet.as_manager()
+
+    class Meta:
+        ordering = ["-datetime_created"]

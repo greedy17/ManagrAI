@@ -6,3 +6,5 @@ from . import models as models
 
 admin.site.register(models.SalesloftAuthAccount)
 admin.site.register(models.SalesloftAccount)
+admin.site.register(models.Cadence)
+admin.site.register(models.SLAccount)
