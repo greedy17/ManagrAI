@@ -73,15 +73,16 @@ def get_salesloft_authentication(request):
             if user_res is None:
                 logger.error(f"Could not create salesloft account for {user['email']}")
                 continue
-            user_existing = SalesloftAccount.objects.filter(email=user.get("email")).first()
-            if user_existing:
-                user_serializer = SalesloftAccountSerializer(
-                    data=user_res.as_dict, instance=user_existing
-                )
             else:
-                user_serializer = SalesloftAccountSerializer(data=user_res.as_dict)
-            user_serializer.is_valid(raise_exception=True)
-            user_serializer.save()
+                user_existing = SalesloftAccount.objects.filter(email=user.get("email")).first()
+                if user_existing:
+                    user_serializer = SalesloftAccountSerializer(
+                        data=user_res.as_dict, instance=user_existing
+                    )
+                else:
+                    user_serializer = SalesloftAccountSerializer(data=user_res.as_dict)
+                user_serializer.is_valid(raise_exception=True)
+                user_serializer.save()
     return Response(data={"success": True})
 
 

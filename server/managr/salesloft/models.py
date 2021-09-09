@@ -108,7 +108,6 @@ class SalesloftAuthAdapter:
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
         }
-        print(headers)
         res = client.get(f"{salesloft_consts.SALESLOFT_BASE_URI}/users.json", headers=headers)
         return SalesloftAuthAdapter._handle_response(res)
 
