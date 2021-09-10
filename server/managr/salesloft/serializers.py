@@ -12,6 +12,7 @@ class SalesloftAuthSerializer(serializers.ModelSerializer):
             "organization",
             "access_token",
             "refresh_token",
+            "token_generated_date",
             "admin",
         )
 
@@ -34,10 +35,19 @@ class SalesloftAccountSerializer(serializers.ModelSerializer):
 class CadenceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cadence
-        fields = ("id", "name", "owner", "is_team_cadence", "is_shared", "created_at", "updated_at")
+        fields = (
+            "id",
+            "cadence_id",
+            "name",
+            "owner",
+            "is_team_cadence",
+            "is_shared",
+            "created_at",
+            "updated_at",
+        )
 
 
 class SLAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = SLAccount
-        fields = ("id", "name", "owner", "created_at", "updated_at")
+        fields = ("id", "account_id", "name", "owner", "created_at", "updated_at")

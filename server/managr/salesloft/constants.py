@@ -13,6 +13,7 @@ from managr.utils.misc import get_site_url
 USERS = "users.json"
 CADENCES = "cadences.json"
 CADENCE = lambda id: f"cadences/{id}.json"
+ACCOUNTS = "accounts.json"
 ADD_TO_CADENCE = "cadence_memberships.json"
 
 if settings.USE_SALESLOFT:

@@ -37,6 +37,7 @@ from .models import (
     SalesloftAccountAdapter,
 )
 from .serializers import SalesloftAuthSerializer, SalesloftAccountSerializer
+from .background import emit_sync_cadences, emit_sync_slaccounts
 
 # Create your views here.
 logger = logging.getLogger("managr")
@@ -48,7 +49,7 @@ def get_salesloft_auth_link(request):
     return Response({"link": link})
 
 
-@api_view(["post"])
+@api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def get_salesloft_authentication(request):
     code = request.data.get("code", None)
@@ -83,6 +84,8 @@ def get_salesloft_authentication(request):
                     user_serializer = SalesloftAccountSerializer(data=user_res.as_dict)
                 user_serializer.is_valid(raise_exception=True)
                 user_serializer.save()
+    emit_sync_slaccounts(admin_account.id)
+    emit_sync_cadences(admin_account.id)
     return Response(data={"success": True})
 
 
@@ -90,17 +93,17 @@ def get_salesloft_authentication(request):
 @permission_classes([permissions.IsAuthenticated])
 def revoke_salesloft_access_token(request):
     if hasattr(request.user, "salesloft_account"):
-        salesloft = request.user.zoom_account
+        salesloft = request.user.salesloft_account
         try:
             salesloft.helper_class.revoke()
         except Exception:
             # revoke token will fail if ether token is expired
             pass
-        if salesloft.refresh_token_task:
-            task = Task.objects.filter(id=salesloft.refresh_token_task).first()
-            if task:
-                task.delete()
-        salesloft.delete()
+        # if salesloft.refresh_token_task:
+        #     task = Task.objects.filter(id=salesloft.refresh_token_task).first()
+        #     if task:
+        #         task.delete()
+        # salesloft.delete()
 
     return Response()
 

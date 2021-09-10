@@ -3,6 +3,7 @@ import pytz
 import math
 import logging
 import json
+import dateutil.parser
 
 from datetime import datetime
 from django.db import models
@@ -15,7 +16,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from managr.core.models import TimeStampModel, User
 from managr.utils.client import HttpClient
-from .exceptions import SalesloftAPIException
+from .exceptions import SalesloftAPIException, TokenExpired
 from managr.organization.models import Organization
 
 from managr.salesforce.adapter.models import ActivityAdapter
@@ -34,6 +35,7 @@ class SalesloftAuthAdapter:
         self.organization = kwargs.get("organization", None)
         self.access_token = kwargs.get("access_token", None)
         self.refresh_token = kwargs.get("refresh_token", None)
+        self.token_generated_date = kwargs.get("token_generated_date", None)
         self.admin = kwargs.get("admin", None)
 
     @property
@@ -84,32 +86,58 @@ class SalesloftAuthAdapter:
         user = User.objects.get(id=managr_user_id)
         org = Organization.objects.get(id=user.organization.id)
         auth_data = cls.get_auth_token(code, context, scope)
-        # user_data = cls._get_user_data(auth_data["access_token"])
         data = {}
         data["organization"] = org.id
         data["access_token"] = auth_data["access_token"]
         data["refresh_token"] = auth_data["refresh_token"]
         data["admin"] = managr_user_id
+        data["token_generated_date"] = timezone.now()
         return cls(**data)
-
-    def refresh_access_token(self):
-        query = salesloft_consts.REAUTHENTICATION_QUERY_PARAMS(self.refresh_token)
-        query = urlencode(query)
-        ## error handling here
-
-        r = client.post(
-            f"{salesloft_consts.AUTHENTICATION_URI}?{query}",
-            headers=dict(Authorization=(f"Basic {salesloft_consts.APP_BASIC_TOKEN}")),
-        )
-        return SalesloftAuthAdapter._handle_response(r)
 
     def get_all_users(self):
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
         }
-        res = client.get(f"{salesloft_consts.SALESLOFT_BASE_URI}/users.json", headers=headers)
+        res = client.get(
+            f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.USERS}", headers=headers
+        )
         return SalesloftAuthAdapter._handle_response(res)
+
+    def get_all_cadences(self):
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json",
+        }
+        res = client.get(
+            f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.CADENCES}", headers=headers
+        )
+        return SalesloftAuthAdapter._handle_response(res)
+
+    def get_all_accounts(self):
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json",
+        }
+        res = client.get(
+            f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.ACCOUNTS}", headers=headers
+        )
+        return SalesloftAuthAdapter._handle_response(res)
+
+    def refresh(self):
+        query = salesloft_consts.REAUTHENTICATION_QUERY_PARAMS(self.refresh_token)
+        query = urlencode(query)
+        res = client.post(f"{salesloft_consts.AUTHENTICATION_URI}?{query}")
+
+        return SalesloftAuthAdapter._handle_response(res)
+
+    def revoke(self):
+        salesloft_account = SalesloftAccount.objects.get(id=self.id)
+        try:
+            salesloft_account.delete()
+            return logger.info(f"Succefully deleted account {salesloft_account}")
+        except Exception as e:
+            logger.exception(f"Failed to delete account {salesloft_account},{e}")
 
 
 class SalesloftAuthAccountQuerySet(models.QuerySet):
@@ -130,19 +158,34 @@ class SalesloftAuthAccount(TimeStampModel):
     )
     access_token = models.TextField(blank=True)
     refresh_token = models.TextField(blank=True)
+    token_generated_date = models.DateTimeField(null=True, blank=True)
     admin = models.OneToOneField(
         "core.User", on_delete=models.CASCADE, related_name="salesloft_admin", blank=True, null=True
     )
+
     objects = SalesloftAuthAccountQuerySet.as_manager()
 
     class Meta:
         ordering = ["-datetime_created"]
+
+    def __str__(self):
+        return f"Auth account for {self.organization} owned by {self.admin.email}"
 
     @property
     def helper_class(self):
         data = self.__dict__
         data["id"] = str(data.get("id"))
         return SalesloftAuthAdapter(**data)
+
+    def regenerate_token(self):
+        data = self.__dict__
+        data["id"] = str(data.get("id"))
+        helper = SalesloftAuthAdapter(**data)
+        res = helper.refresh()
+        self.token_generated_date = timezone.now()
+        self.access_token = res.get("access_token", None)
+        self.refresh_token = res.get("refresh_token", None)
+        self.save()
 
 
 class SalesloftAccountQuerySet(models.QuerySet):
@@ -212,6 +255,9 @@ class SalesloftAccount(TimeStampModel):
     class Meta:
         ordering = ["-datetime_created"]
 
+    def __str__(self):
+        return f"Salesloft Account for {self.user.email}"
+
     @property
     def helper_class(self):
         data = self.__dict__
@@ -241,11 +287,28 @@ class CadenceAdapter:
     def as_dict(self):
         return vars(self)
 
+    @classmethod
+    def create_cadence(cls, cadence_data):
+        try:
+            owner = cadence_data["owner"]
+            slacc = SalesloftAccount.objects.get(salesloft_id=owner["id"])
+            data = {}
+            data["cadence_id"] = cadence_data["id"]
+            data["name"] = cadence_data["name"]
+            data["owner"] = slacc.id
+            data["is_team_cadence"] = cadence_data["team_cadence"]
+            data["is_shared"] = cadence_data["shared"]
+            data["created_at"] = dateutil.parser.isoparse(cadence_data["created_at"])
+            data["updated_at"] = dateutil.parser.isoparse(cadence_data["updated_at"])
+            return cls(**data)
+        except ObjectDoesNotExist:
+            return None
+
 
 class Cadence(TimeStampModel):
     cadence_id = models.IntegerField()
     name = models.CharField(max_length=100)
-    owner = models.models.ForeignKey(
+    owner = models.ForeignKey(
         "SalesloftAccount",
         related_name="cadences",
         on_delete=models.SET_NULL,
@@ -262,6 +325,9 @@ class Cadence(TimeStampModel):
     class Meta:
         ordering = ["-datetime_created"]
 
+    def __str__(self):
+        return f"Cadence {self.name} owned by {self.admin.email}"
+
 
 class SLAccountQuerySet(models.QuerySet):
     def for_user(self, user):
@@ -270,20 +336,34 @@ class SLAccountQuerySet(models.QuerySet):
         else:
             return self.none()
 
+
 class SLAccountAdapter:
     def __init__(self, **kwargs):
-        self.account_id = kwargs.get("cadence_id", None)
+        self.account_id = kwargs.get("account_id", None)
         self.name = kwargs.get("name", None)
-        self.owner = kwargs.get("owner", None)
         self.created_at = kwargs.get("created_at", None)
         self.updated_at = kwargs.get("updated_at", None)
+        self.owner = kwargs.get("owner", None)
 
     @property
     def as_dict(self):
         return vars(self)
 
-    def create_slaccount(self, data):
-        
+    @classmethod
+    def create_slaccount(cls, account_data):
+        try:
+            owner = account_data["owner"]
+            slacc = SalesloftAccount.objects.get(salesloft_id=owner["id"])
+            data = {}
+            data["account_id"] = account_data["id"]
+            data["name"] = account_data["name"]
+            data["owner"] = slacc.id
+            data["created_at"] = dateutil.parser.isoparse(account_data["created_at"])
+            data["updated_at"] = dateutil.parser.isoparse(account_data["updated_at"])
+            return cls(**data)
+        except ObjectDoesNotExist:
+            return None
+
 
 class SLAccount(TimeStampModel):
     account_id = models.IntegerField()
@@ -302,3 +382,6 @@ class SLAccount(TimeStampModel):
 
     class Meta:
         ordering = ["-datetime_created"]
+
+    def __str__(self):
+        return f"SLAccount {self.name} owned by {self.admin.email}"
