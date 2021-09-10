@@ -13,8 +13,16 @@ from background_task import background
 from rest_framework.exceptions import ValidationError
 
 from ..exceptions import TokenExpired
-from ..models import SalesloftAuthAccount, SLAccountAdapter, SLAccount, CadenceAdapter, Cadence
-from ..serializers import SLAccountSerializer, CadenceSerializer
+from ..models import (
+    SalesloftAuthAccount,
+    SLAccountAdapter,
+    SLAccount,
+    CadenceAdapter,
+    Cadence,
+    People,
+    PeopleAdpater,
+)
+from ..serializers import SLAccountSerializer, CadenceSerializer, PeopleSerializer
 
 
 logger = logging.getLogger("managr")
@@ -117,7 +125,7 @@ def sync_people(auth_account_id):
                 attempts += 1
 
     for people in res["data"]:
-        account_res = PeopleAdapter.create_people(account)
+        people_res = PeopleAdapter.create_people(people)
         if people_res is None:
             logger.error(f"Could not create salesloft account {account['name']}")
             continue

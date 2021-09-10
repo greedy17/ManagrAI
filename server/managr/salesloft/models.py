@@ -385,3 +385,69 @@ class SLAccount(TimeStampModel):
 
     def __str__(self):
         return f"SLAccount {self.name} owned by {self.admin.email}"
+
+
+class PeopleQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.organization and user.is_active:
+            return self.filter(owner__organization=user.organization_id)
+        else:
+            return self.none()
+
+
+class PeopleAdapter:
+    def __init__(self, **kwargs):
+        self.people_id = kwargs.get("account_id", None)
+        self.first_name = kwargs.get("first_name", None)
+        self.last_name = kwargs.get("last_name", None)
+        self.full_name = kwargs.get("full_name", None)
+        self.email = kwargs.get("email", None)
+        self.account = kwargs.get("account", None)
+        self.owner = kwargs.get("owner", None)
+        self.created_at = kwargs.get("created_at", None)
+        self.updated_at = kwargs.get("updated_at", None)
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+    @classmethod
+    def create_people(cls, people_data):
+        try:
+            owner = people_data["owner"]
+            account = people_data["account"]
+            slacc = SalesloftAccount.objects.get(salesloft_id=owner["id"])
+            acc = SLAccount.objects.get(account_id=account["id"])
+            data = {}
+            data["people_id"] = people_data["id"]
+            data["first_name"] = people_data["first_name"]
+            data["last_name"] = people_data["last_name"]
+            data["full_name"] = people_data["display_name"]
+            data["email"] = people_data["email"]
+            data["owner"] = slacc.id
+            data["account"] = acc.id
+            data["created_at"] = dateutil.parser.isoparse(people_data["created_at"])
+            data["updated_at"] = dateutil.parser.isoparse(people_data["updated_at"])
+            return cls(**data)
+        except ObjectDoesNotExist:
+            return None
+
+
+class People(TimeStampModel):
+    people_id = models.IntegerField()
+    first_name = models.CharField()
+    last_name = models.CharField()
+    full_name = models.CharField()
+    email = models.EmailField()
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+    account = models.ForeignKey(
+        "SLAccount", related_name="people", on_delete=models.CASCADE, blank=True, null=True,
+    )
+    owner = models.ForeignKey(
+        "SalesloftAccount", related_name="people", on_delete=models.SET_NULL, blank=True, null=True,
+    )
+
+    class Meta:
+        ordering = ["-datetime_created"]
+

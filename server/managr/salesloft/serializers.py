@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
-from .models import SalesloftAuthAccount, SalesloftAccount, Cadence, SLAccount
+from .models import SalesloftAuthAccount, SalesloftAccount, Cadence, SLAccount, People
 
 
 class SalesloftAuthSerializer(serializers.ModelSerializer):
@@ -51,3 +51,19 @@ class SLAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = SLAccount
         fields = ("id", "account_id", "name", "owner", "created_at", "updated_at")
+
+
+class PeopleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = People
+        fields = (
+            "id",
+            "people_id",
+            "first_name",
+            "last_name",
+            "display_name",
+            "owner",
+            "account",
+            "created_at",
+            "updated_at",
+        )
