@@ -20,7 +20,7 @@ from ..models import (
     CadenceAdapter,
     Cadence,
     People,
-    PeopleAdpater,
+    PeopleAdapter,
 )
 from ..serializers import SLAccountSerializer, CadenceSerializer, PeopleSerializer
 
@@ -127,16 +127,16 @@ def sync_people(auth_account_id):
     for people in res["data"]:
         people_res = PeopleAdapter.create_people(people)
         if people_res is None:
-            logger.error(f"Could not create salesloft account {account['name']}")
+            logger.error(f"Could not create people {people['display_name']}")
             continue
         else:
-            people_existing = People.objects.filter(people_id=account["id"]).first()
+            people_existing = People.objects.filter(people_id=people["id"]).first()
             if people_existing:
                 people_serializer = PeopleSerializer(
                     data=people_res.as_dict, instance=people_existing
                 )
             else:
-                people_serializer = SLAccountSerializer(data=account_res.as_dict)
+                people_serializer = PeopleSerializer(data=people_res.as_dict)
             people_serializer.is_valid(raise_exception=True)
             people_serializer.save()
     return logger.info(f"Synced people for {auth_account}")

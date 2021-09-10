@@ -124,6 +124,16 @@ class SalesloftAuthAdapter:
         )
         return SalesloftAuthAdapter._handle_response(res)
 
+    def get_all_people(self):
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json",
+        }
+        res = client.get(
+            f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.PEOPLE}", headers=headers
+        )
+        return SalesloftAuthAdapter._handle_response(res)
+
     def refresh(self):
         query = salesloft_consts.REAUTHENTICATION_QUERY_PARAMS(self.refresh_token)
         query = urlencode(query)
