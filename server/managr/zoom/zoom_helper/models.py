@@ -205,7 +205,6 @@ class ZoomAcct:
         data["user"] = str(managr_user_id)
 
         zoom_id = data.pop("id", None)
-        print(data)
         data["zoom_id"] = zoom_id
 
         return cls(**data)

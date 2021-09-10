@@ -9,6 +9,7 @@ from django.contrib.auth.forms import ReadOnlyPasswordHashField, UserCreationFor
 
 from managr.slack.models import UserSlackIntegration
 from managr.zoom.models import ZoomAuthAccount
+from managr.salesloft.models import SalesloftAccount
 from .models import (
     User,
     NylasAuthAccount,
@@ -30,6 +31,10 @@ class UserSlackIntegrationInline(admin.StackedInline):
 
 class ZoomAuthAccountInline(admin.StackedInline):
     model = ZoomAuthAccount
+
+
+class SalesloftAccountInline(admin.StackedInline):
+    model = SalesloftAccount
 
 
 class EmailAuthAccForm(forms.ModelForm):
@@ -165,10 +170,7 @@ class CustomUserAdmin(UserAdmin):
         (None, {"classes": ("wide",), "fields": ("email", "password1", "password2",),},),
     )
 
-    inlines = (
-        UserSlackIntegrationInline,
-        ZoomAuthAccountInline,
-    )
+    inlines = (UserSlackIntegrationInline, ZoomAuthAccountInline, SalesloftAccountInline)
     list_display = ("email", "first_name", "last_name", "datetime_created")
 
     list_display_links = (

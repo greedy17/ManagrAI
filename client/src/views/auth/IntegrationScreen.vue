@@ -243,7 +243,7 @@ import SlackOAuth from '@/services/slack'
 import ZoomAccount from '@/services/zoom/account/'
 import Nylas from '@/services/nylas'
 import Salesforce from '@/services/salesforce'
-import Salesloft from '@/services/salesloft'
+import SalesloftAccount from '@/services/salesloft'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import GoogleButton from '@/components/GoogleButton'
 
@@ -352,8 +352,7 @@ export default {
             this.$route.query.context,
             this.$route.query.scope,
           )
-        }
-        if (this.selectedIntegration != 'SLACK') {
+        } else if (this.selectedIntegration != 'SLACK' && this.selectedIntegration != 'SALESLOFT') {
           await modelClass.api.authenticate(this.$route.query.code)
         } else {
           // auto sends a channel message, will also send a private dm
@@ -373,7 +372,6 @@ export default {
         }
       } finally {
         await this.$store.dispatch('refreshCurrentUser')
-
         this.generatingToken = false
         this.selectedIntegration = null
         this.$router.replace({
@@ -419,7 +417,7 @@ export default {
         case 'SLACK':
           return SlackOAuth
         case 'SALESLOFT':
-          return Salesloft
+          return SalesloftAccount
         default:
           return null
       }

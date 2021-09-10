@@ -1,0 +1,119 @@
+{
+    "metadata": {
+        "filtering": {},
+        "paging": {
+            "per_page": 25,
+            "current_page": 1,
+            "next_page": null,
+            "prev_page": null
+        },
+        "sorting": {
+            "sort_by": "updated_at",
+            "sort_direction": "DESC NULLS LAST"
+        }
+    },
+    "data": [
+        {
+            "id": 23833,
+            "created_at": "2021-09-09T10:07:28.844483-04:00",
+            "updated_at": "2021-09-09T10:07:28.844483-04:00",
+            "archived_at": null,
+            "team_cadence": true,
+            "shared": true,
+            "remove_bounces_enabled": false,
+            "remove_replies_enabled": false,
+            "opt_out_link_included": false,
+            "draft": false,
+            "cadence_framework_id": null,
+            "cadence_function": "outbound",
+            "name": "Test Team",
+            "tags": [],
+            "creator": {
+                "_href": "https://api.salesloft.com/v2/users/6439",
+                "id": 6439
+            },
+            "owner": {
+                "_href": "https://api.salesloft.com/v2/users/6439",
+                "id": 6439
+            },
+            "bounced_stage": {
+                "_href": "https://api.salesloft.com/v2/person_stages/9575",
+                "id": 9575
+            },
+            "replied_stage": {
+                "_href": "https://api.salesloft.com/v2/person_stages/9577",
+                "id": 9577
+            },
+            "added_stage": {
+                "_href": "https://api.salesloft.com/v2/person_stages/9580",
+                "id": 9580
+            },
+            "finished_stage": {
+                "_href": "https://api.salesloft.com/v2/person_stages/9579",
+                "id": 9579
+            },
+            "cadence_priority": {
+                "_href": "https://api.salesloft.com/v2/cadence_priorities",
+                "id": 3208
+            },
+            "counts": {
+                "cadence_people": null,
+                "people_acted_on_count": 0,
+                "target_daily_people": 0,
+                "opportunities_created": 0,
+                "meetings_booked": 0
+            }
+        },
+        {
+            "id": 23831,
+            "created_at": "2021-09-09T10:01:52.028925-04:00",
+            "updated_at": "2021-09-09T10:01:52.028925-04:00",
+            "archived_at": null,
+            "team_cadence": false,
+            "shared": true,
+            "remove_bounces_enabled": true,
+            "remove_replies_enabled": true,
+            "opt_out_link_included": false,
+            "draft": false,
+            "cadence_framework_id": null,
+            "cadence_function": "event",
+            "name": "Test",
+            "tags": [],
+            "creator": {
+                "_href": "https://api.salesloft.com/v2/users/6439",
+                "id": 6439
+            },
+            "owner": {
+                "_href": "https://api.salesloft.com/v2/users/6439",
+                "id": 6439
+            },
+            "bounced_stage": {
+                "_href": "https://api.salesloft.com/v2/person_stages/9579",
+                "id": 9579
+            },
+            "replied_stage": {
+                "_href": "https://api.salesloft.com/v2/person_stages/9582",
+                "id": 9582
+            },
+            "added_stage": {
+                "_href": "https://api.salesloft.com/v2/person_stages/9575",
+                "id": 9575
+            },
+            "finished_stage": {
+                "_href": "https://api.salesloft.com/v2/person_stages/9581",
+                "id": 9581
+            },
+            "cadence_priority": {
+                "_href": "https://api.salesloft.com/v2/cadence_priorities",
+                "id": 3208
+            },
+            "counts": {
+                "cadence_people": null,
+                "people_acted_on_count": 0,
+                "target_daily_people": 0,
+                "opportunities_created": 0,
+                "meetings_booked": 0
+            }
+        }
+    ]
+}

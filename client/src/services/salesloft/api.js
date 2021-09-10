@@ -27,7 +27,7 @@ export default class SalesloftAccountAPI extends ModelAPI {
   async authenticate(code, context, scope) {
     try {
       const res = await this.client.post(SalesloftAccountAPI.ENDPOINT + 'authenticate', { code: code, context: context, scope:scope})
-      return res
+      return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Data from Code' })(e)
     }

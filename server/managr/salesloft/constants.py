@@ -10,11 +10,18 @@ from requests.exceptions import HTTPError
 
 from managr.utils.misc import get_site_url
 
+USERS = "users.json"
+CADENCES = "cadences.json"
+CADENCE = lambda id: f"cadences/{id}.json"
+ACCOUNTS = "accounts.json"
+ADD_TO_CADENCE = "cadence_memberships.json"
+
 if settings.USE_SALESLOFT:
 
     CLIENT_ID = settings.SALESLOFT_CLIENT_ID
     REDIRECT_URI = settings.SALESLOFT_REDIRECT_URI
     CLIENT_SECRET = settings.SALESLOFT_SECRET
+    SALESLOFT_BASE_URI = settings.SALESLOFT_BASE_URL
 
     AUTHENTICATION_URI = "https://accounts.salesloft.com/oauth/token"
     AUTHORIZATION_URI = "https://accounts.salesloft.com/oauth/authorize"
@@ -45,3 +52,9 @@ if settings.USE_SALESLOFT:
         "grant_type": "refresh_token",
         "refresh_token": token,
     }
+
+    SALESLOFT_REQUEST_HEADERS = lambda token: {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
+
