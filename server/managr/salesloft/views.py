@@ -37,7 +37,7 @@ from .models import (
     SalesloftAccountAdapter,
 )
 from .serializers import SalesloftAuthSerializer, SalesloftAccountSerializer
-from .background import emit_sync_cadences, emit_sync_slaccounts
+from .background import emit_sync_cadences, emit_sync_slaccounts, emit_sync_people
 
 # Create your views here.
 logger = logging.getLogger("managr")
@@ -86,6 +86,7 @@ def get_salesloft_authentication(request):
                 user_serializer.save()
     emit_sync_slaccounts(admin_account.id)
     emit_sync_cadences(admin_account.id)
+    emit_sync_people(admin_account.id)
     return Response(data={"success": True})
 
 

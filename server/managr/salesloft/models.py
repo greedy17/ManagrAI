@@ -124,6 +124,16 @@ class SalesloftAuthAdapter:
         )
         return SalesloftAuthAdapter._handle_response(res)
 
+    def get_all_people(self):
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json",
+        }
+        res = client.get(
+            f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.PEOPLE}", headers=headers
+        )
+        return SalesloftAuthAdapter._handle_response(res)
+
     def refresh(self):
         query = salesloft_consts.REAUTHENTICATION_QUERY_PARAMS(self.refresh_token)
         query = urlencode(query)
@@ -326,7 +336,7 @@ class Cadence(TimeStampModel):
         ordering = ["-datetime_created"]
 
     def __str__(self):
-        return f"Cadence {self.name} owned by {self.admin.email}"
+        return f"Cadence {self.name} owned by {self.owner}"
 
 
 class SLAccountQuerySet(models.QuerySet):
@@ -384,4 +394,70 @@ class SLAccount(TimeStampModel):
         ordering = ["-datetime_created"]
 
     def __str__(self):
-        return f"SLAccount {self.name} owned by {self.admin.email}"
+        return f"SLAccount {self.name} owned by {self.owner}"
+
+
+class PeopleQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.organization and user.is_active:
+            return self.filter(owner__organization=user.organization_id)
+        else:
+            return self.none()
+
+
+class PeopleAdapter:
+    def __init__(self, **kwargs):
+        self.people_id = kwargs.get("people_id", None)
+        self.first_name = kwargs.get("first_name", None)
+        self.last_name = kwargs.get("last_name", None)
+        self.full_name = kwargs.get("full_name", None)
+        self.email = kwargs.get("email", None)
+        self.account = kwargs.get("account", None)
+        self.owner = kwargs.get("owner", None)
+        self.created_at = kwargs.get("created_at", None)
+        self.updated_at = kwargs.get("updated_at", None)
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+    @classmethod
+    def create_people(cls, people_data):
+        try:
+            owner = people_data["owner"]
+            account = people_data["account"]
+            slacc = SalesloftAccount.objects.get(salesloft_id=owner["id"])
+            acc = SLAccount.objects.get(account_id=account["id"])
+            data = {}
+            data["people_id"] = people_data["id"]
+            data["first_name"] = people_data["first_name"]
+            data["last_name"] = people_data["last_name"]
+            data["full_name"] = people_data["display_name"]
+            data["email"] = people_data["email_address"]
+            data["owner"] = slacc.id
+            data["account"] = acc.id
+            data["created_at"] = dateutil.parser.isoparse(people_data["created_at"])
+            data["updated_at"] = dateutil.parser.isoparse(people_data["updated_at"])
+            return cls(**data)
+        except ObjectDoesNotExist:
+            return None
+
+
+class People(TimeStampModel):
+    people_id = models.IntegerField()
+    first_name = models.CharField(max_length=20)
+    last_name = models.CharField(max_length=20)
+    full_name = models.CharField(max_length=50)
+    email = models.EmailField()
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+    account = models.ForeignKey(
+        "SLAccount", related_name="people", on_delete=models.CASCADE, blank=True, null=True,
+    )
+    owner = models.ForeignKey(
+        "SalesloftAccount", related_name="people", on_delete=models.SET_NULL, blank=True, null=True,
+    )
+
+    class Meta:
+        ordering = ["-datetime_created"]
+
