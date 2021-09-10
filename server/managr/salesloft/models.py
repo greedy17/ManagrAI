@@ -336,7 +336,7 @@ class Cadence(TimeStampModel):
         ordering = ["-datetime_created"]
 
     def __str__(self):
-        return f"Cadence {self.name} owned by {self.admin.email}"
+        return f"Cadence {self.name} owned by {self.owner}"
 
 
 class SLAccountQuerySet(models.QuerySet):
@@ -394,7 +394,7 @@ class SLAccount(TimeStampModel):
         ordering = ["-datetime_created"]
 
     def __str__(self):
-        return f"SLAccount {self.name} owned by {self.admin.email}"
+        return f"SLAccount {self.name} owned by {self.owner}"
 
 
 class PeopleQuerySet(models.QuerySet):
@@ -407,7 +407,7 @@ class PeopleQuerySet(models.QuerySet):
 
 class PeopleAdapter:
     def __init__(self, **kwargs):
-        self.people_id = kwargs.get("account_id", None)
+        self.people_id = kwargs.get("people_id", None)
         self.first_name = kwargs.get("first_name", None)
         self.last_name = kwargs.get("last_name", None)
         self.full_name = kwargs.get("full_name", None)
@@ -433,7 +433,7 @@ class PeopleAdapter:
             data["first_name"] = people_data["first_name"]
             data["last_name"] = people_data["last_name"]
             data["full_name"] = people_data["display_name"]
-            data["email"] = people_data["email"]
+            data["email"] = people_data["email_address"]
             data["owner"] = slacc.id
             data["account"] = acc.id
             data["created_at"] = dateutil.parser.isoparse(people_data["created_at"])
@@ -445,9 +445,9 @@ class PeopleAdapter:
 
 class People(TimeStampModel):
     people_id = models.IntegerField()
-    first_name = models.CharField()
-    last_name = models.CharField()
-    full_name = models.CharField()
+    first_name = models.CharField(max_length=20)
+    last_name = models.CharField(max_length=20)
+    full_name = models.CharField(max_length=50)
     email = models.EmailField()
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()

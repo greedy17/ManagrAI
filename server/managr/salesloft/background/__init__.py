@@ -36,6 +36,10 @@ def emit_sync_slaccounts(auth_account_id):
     return sync_slaccounts(auth_account_id)
 
 
+def emit_sync_people(auth_account_id):
+    return sync_people(auth_account_id)
+
+
 @background()
 def sync_cadences(auth_account_id):
     auth_account = SalesloftAuthAccount.objects.get(id=auth_account_id)
