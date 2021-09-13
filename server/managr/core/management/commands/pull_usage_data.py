@@ -41,7 +41,7 @@ class Command(BaseCommand):
             end = date.today()
             start = end - timedelta(end.day - 1)
         else:
-            create_date = datetime.strptime(start, "%b %d %Y")
+            create_date = datetime.strptime(end, "%b %d %Y")
             end = create_date.date()
             start = end - timedelta(end.day - 1)
 

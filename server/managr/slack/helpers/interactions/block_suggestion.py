@@ -17,6 +17,8 @@ from managr.slack.helpers import block_builders
 from managr.slack.helpers.utils import process_action_id, NO_OP, processor
 from managr.salesforce.adapter.exceptions import TokenExpired
 
+from managr.salesloft.models import Cadence
+
 logger = logging.getLogger("managr")
 
 
@@ -229,6 +231,16 @@ def process_get_external_relationship_options(payload, context):
     }
 
 
+@processor(required_context=["u"])
+def process_get_cadences(payload, context):
+    user = User.objects.get(id=context["u"])
+    cadences = Cadence.objects.filter(Q(is_team_cadence=True) | Q(owner=user.salesloft_account))
+    value = payload["value"]
+    return {
+        "options": [l.as_slack_option for l in cadences.filter(name__icontains=value)[:50]],
+    }
+
+
 def handle_block_suggestion(payload):
     """
     This takes place when a select_field requires data from Managr
@@ -244,6 +256,7 @@ def handle_block_suggestion(payload):
         slack_const.COMMAND_SUMMARY__GET_LOCAL_RESOURCE_OPTIONS: process_get_local_resource_options,
         slack_const.GET_PICKLIST_OPTIONS: process_get_picklist_options,
         slack_const.GET_EXTERNAL_PICKLIST_OPTIONS: process_get_external_picklist_options,
+        slack_const.GET_CADENCE_OPTIONS: process_get_cadences,
     }
     action_query_string = payload["action_id"]
     processed_string = process_action_id(action_query_string)

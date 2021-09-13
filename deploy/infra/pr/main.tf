@@ -124,6 +124,7 @@ data "template_file" "managr_app" {
     use_zoom       = title(var.app_config.use_zoom)
     use_slack      = title(var.app_config.use_slack)
     use_salesforce = title(var.app_config.use_salesforce)
+    use_salesloft  = title(var.app_config.use_salesloft)
   }
 }
 
@@ -281,6 +282,11 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     salesforceScopes      = join(" ", var.app_config.salesforce_scopes)
     salesforceRedirectUri = var.app_config.salesforce_redirect_uri
     salesforceApiVersion  = var.app_config.salesforce_api_version
+
+    salesloftBaseUrl      = var.app_config.salesloft_base_url
+    salesloftClientId     = var.app_config.salesloft_client_id
+    salesloftSecret       = var.app_config.salesloft_secret
+    salesloftRedirectUri  = var.app_config.salesloft_redirect_uri
   })
 }
 

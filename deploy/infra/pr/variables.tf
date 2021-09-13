@@ -117,6 +117,12 @@ variable "app_config" {
     salesforce_scopes       = set(string)
     salesforce_redirect_uri = string
     salesforce_api_version  = string
+
+    use_salesloft           = bool
+    salesloft_base_url      = string
+    salesloft_client_id     = string
+    salesloft_secret        = string
+    salesloft_redirect_uri  = string
   })
 }
 

@@ -1243,6 +1243,51 @@ def process_meeting_details(payload, context):
         )
 
 
+@processor(required_context="u")
+def process_show_cadence_modal(payload, context):
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    trigger_id = payload["trigger_id"]
+    u = User.objects.get(id=context.get("u"))
+    org = u.organization
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.ADD_TO_CADENCE,
+            "title": {"type": "plain_text", "text": "Add to a Cadence"},
+            "blocks": get_block_set(
+                "cadence_modal_blockset",
+                context={
+                    "u": context.get("u"),
+                    "resource_name": context.get("resource_name"),
+                    "resource_id": context.get("resource_id"),
+                },
+            ),
+            "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
+            "private_metadata": json.dumps(context),
+        },
+    }
+    try:
+        slack_requests.generic_request(url, data, access_token=org.slack_integration.access_token)
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
+        )
+    return
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -1270,6 +1315,7 @@ def handle_block_actions(payload):
         slack_const.RETURN_TO_FORM_MODAL: process_return_to_form_modal,
         slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL: process_check_is_owner,
         slack_const.PAGINATE_ALERTS: process_paginate_alerts,
+        slack_const.ADD_TO_CADENCE_MODAL: process_show_cadence_modal,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)

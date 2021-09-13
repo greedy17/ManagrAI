@@ -79,6 +79,26 @@
       </div>
 
       <div class="card">
+        <img class="card-img" src="@/assets/images/salesloft.svg" />
+        <h3>Calendar</h3>
+        <p class="card-text">Put Contacts right into Cadences</p>
+        <PulseLoadingSpinnerButton
+          v-if="!hasSalesloftIntegration"
+          @click="onGetAuthLink('SALESLOFT')"
+          class="primary-button"
+          text="Connect"
+          :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
+        ></PulseLoadingSpinnerButton>
+        <PulseLoadingSpinnerButton
+          text="Revoke"
+          :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
+          v-else
+          @click="onRevoke('SALESLOFT')"
+          class="secondary-button"
+        ></PulseLoadingSpinnerButton>
+      </div>
+
+      <div class="card">
         <img
           class="card-img"
           src="@/assets/images/google-calendar.svg"
@@ -115,6 +135,7 @@ import SlackOAuth from '@/services/slack'
 import ZoomAccount from '@/services/zoom/account/'
 import Nylas from '@/services/nylas'
 import Salesforce from '@/services/salesforce'
+import Salesloft from '@/services/salesloft'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 
 export default {
@@ -179,7 +200,6 @@ export default {
     },
   },
   async created() {
-    console.log('here')
     // if there is a code assume an integration has begun
     if (this.$route.query.code) {
       this.generatingToken = true
@@ -223,6 +243,11 @@ export default {
     hasNylasIntegration() {
       return !!this.$store.state.user.nylas
     },
+    hasSalesloftIntegration() {
+      return (
+        !!this.$store.state.user.salesloftAccount && this.$store.state.user.hasSalesloftIntegration
+      )
+    },
     userCanIntegrateSlack() {
       return this.$store.state.user.isAdmin
     },
@@ -237,6 +262,8 @@ export default {
           return Nylas
         case 'SLACK':
           return SlackOAuth
+        case 'SALESLOFT':
+          return Salesloft
         default:
           return null
       }
