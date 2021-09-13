@@ -175,17 +175,19 @@
           />
           <h3 class="card__title">Salesloft</h3>
         </div>
-
         <p class="card-text">Put Contacts right into a Cadence from Slack</p>
         <PulseLoadingSpinnerButton
-          v-if="!hasSalesloftIntegration"
+          v-if="!hasSalesloftIntegration && user.isAdmin"
           :disabled="hasSalesloftIntegration"
           @click="onGetAuthLink('SALESLOFT')"
           class="primary-button"
           text="Connect"
           :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
         ></PulseLoadingSpinnerButton>
-        <div v-else style="display: flex; justify-content: space-between">
+        <div
+          v-else-if="hasSalesloftIntegration && user.isAdmin"
+          style="display: flex; justify-content: space-between"
+        >
           <PulseLoadingSpinnerButton
             text="Revoke"
             :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
@@ -199,6 +201,8 @@
             class="secondary-button"
           ></PulseLoadingSpinnerButton>
         </div>
+        <p v-else-if="hasSalesloftIntegration && !user.isAdmin">Salesloft is connected!</p>
+        <p v-else>Contact your organization admin to add Salesloft</p>
       </div>
 
       <div class="card">
