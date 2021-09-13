@@ -5,6 +5,7 @@ import pytz
 import uuid
 import random
 from datetime import datetime
+from urllib.parse import urlencode
 
 from django.conf import settings
 from django.db.models import Q
@@ -38,6 +39,10 @@ def emit_sync_slaccounts(auth_account_id):
 
 def emit_sync_people(auth_account_id):
     return sync_people(auth_account_id)
+
+
+def emit_add_cadence_membership(people_id, cadence_id):
+    return add_cadence_membership(people_id, cadence_id)
 
 
 @background()
@@ -145,3 +150,11 @@ def sync_people(auth_account_id):
             people_serializer.save()
     return logger.info(f"Synced people for {auth_account}")
 
+
+@background()
+def add_cadence_membership(people_id, cadence_id):
+    cadence = Cadence.objects.get(id=cadence_id)
+    person = People.objects.get(people_id=people_id)
+    try:
+        res = 
+    return

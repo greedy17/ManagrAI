@@ -37,7 +37,7 @@ def command_update_resource_interaction(context):
             f"*Search for an {context.get('resource_type')}*",
             f"{slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={context.get('resource_type')}",
             block_id="select_existing",
-            placeholder="Type to search"
+            placeholder="Type to search",
         ),
     ]
 
@@ -69,7 +69,7 @@ def command_meeting_summary(context):
             f"*Search for an {context.get('resource_type')}*",
             f"{slack_const.COMMAND_SUMMARY__GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={context.get('resource_type')}",
             block_id="select_existing",
-            placeholder="Type to search"
+            placeholder="Type to search",
         ),
     ]
 
@@ -237,4 +237,18 @@ def create_modal_block_set(context, *args, **kwargs):
                 )
             ]
 
+    return blocks
+
+
+@block_set(required_context=["u"])
+def create_add_to_cadence_block_set(context):
+    user_id = context.get("u")
+    blocks = [
+        block_builders.external_select(
+            f"*Add contacts from {context.get('resource_name')} to cadence*",
+            f"{slack_const.GET_CADENCE_OPTIONS}?u={user_id}",
+            block_id="select_cadence",
+            placeholder="Type to search",
+        ),
+    ]
     return blocks

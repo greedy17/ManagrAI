@@ -24,6 +24,8 @@ from managr.salesforce.adapter.models import ActivityAdapter
 from managr.core import constants as core_consts
 from . import constants as salesloft_consts
 
+from managr.slack.helpers import block_builders
+
 logger = logging.getLogger("managr")
 
 client = HttpClient().client
@@ -337,6 +339,10 @@ class Cadence(TimeStampModel):
 
     def __str__(self):
         return f"Cadence {self.name} owned by {self.owner}"
+
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.name, str(self.id))
 
 
 class SLAccountQuerySet(models.QuerySet):

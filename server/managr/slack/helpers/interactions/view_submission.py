@@ -20,7 +20,7 @@ from managr.salesforce.adapter.exceptions import (
     UnhandledSalesforceError,
     SFNotFoundError,
 )
-from managr.organization.models import Organization, Contact
+from managr.organization.models import Organization, Contact, Account
 from managr.core.models import User
 from managr.core.background import emit_create_calendar_event
 from managr.opportunity.models import Opportunity
@@ -44,6 +44,8 @@ from managr.salesforce.background import (
     emit_add_update_to_sf,
     _send_recap,
 )
+from managr.salesloft.models import People, Cadence
+from managr.salesloft.background import emit_add_cadence_membership
 from managr.zoom.background import emit_process_schedule_zoom_meeting
 
 from managr.slack.helpers.exceptions import (
@@ -999,6 +1001,26 @@ def process_schedule_meeting(payload, context):
     return
 
 
+@log_all_exceptions
+@slack_api_exceptions(rethrow=True)
+@processor(required_context=["resource_id", "u", "resource_type"])
+def process_add_contacts_to_cadence(payload, context):
+    cadence_id = payload["view"]["state"]["values"]["select_cadence"][
+            f"GET_CADENCE_OPTIONS?u={context.get('u')}"
+        ]["selected_option"]["value"]
+    resource_type = context.get("resource_type")
+    if resource_type == "opportunity":
+        resource = Opportunity.objects.get(id=context.get("resource_id"))
+    else:
+        resource = Account.objects.get(id=context.get("resource_id"))
+    contacts = resource.contacts.all().values_list("email", flat=True)
+    people = People.objects.filter(email__in=contacts).values_list("people_id", flat=True)
+    cadence = Cadence.objects.get(id=)
+    for person in people:
+
+    return {"message": f"{people}"}
+
+
 def handle_view_submission(payload):
     """
     This takes place when a modal's Submit button is clicked.
@@ -1014,6 +1036,7 @@ def handle_view_submission(payload):
         slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE: process_next_page_slack_commands_form,
         slack_const.COMMAND_CREATE_TASK: process_create_task,
         slack_const.ZOOM_MEETING__SCHEDULE_MEETING: process_schedule_meeting,
+        slack_const.ADD_TO_CADENCE: process_add_contacts_to_cadence,
     }
 
     callback_id = payload["view"]["callback_id"]
