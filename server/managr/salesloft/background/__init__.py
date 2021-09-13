@@ -13,7 +13,7 @@ from django.db.models import Q
 from background_task import background
 from rest_framework.exceptions import ValidationError
 
-from ..exceptions import TokenExpired
+from ..exceptions import TokenExpired, InvalidRequest
 from ..models import (
     SalesloftAuthAccount,
     SLAccountAdapter,
@@ -151,10 +151,25 @@ def sync_people(auth_account_id):
     return logger.info(f"Synced people for {auth_account}")
 
 
-@background()
 def add_cadence_membership(people_id, cadence_id):
     cadence = Cadence.objects.get(id=cadence_id)
-    person = People.objects.get(people_id=people_id)
-    try:
-        res = 
-    return
+    auth_account = SalesloftAuthAccount.objects.get(id=cadence.owner.auth_account.id)
+    while True:
+        attempts = 1
+        try:
+            res = cadence.helper_class.add_membership(people_id, auth_account.access_token)
+            break
+        except TokenExpired:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to add Person with id {people_id} to Cadence {cadence.name}, could not regenerate token"
+                )
+            else:
+                auth_account.regenerate_token()
+                attempts += 1
+        except InvalidRequest:
+            return {"status": "Failed"}
+        except ValidationError as e:
+            return logger.exception(f"Error adding cadence: {e}")
+    logger.info(f"Person with id {people_id} added to cadence {cadence.id}")
+    return {"status": "Success"}

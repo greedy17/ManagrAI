@@ -7,7 +7,7 @@ logger = logging.getLogger("managr")
 
 class TokenExpired(Exception):
     def __init(self, error="Invalid Bearer token"):
-        self.message = message
+        self.message = error
         super().__init__(self.message)
 
 
@@ -22,9 +22,8 @@ class SalesloftAPIException:
         self.error = e
         self.error_class_name = e.__class__.__name__
         self.status_code = e.args[0]["status_code"]
-        self.code = e.args[0]["error_code"]
-        self.param = e.args[0]["error_param"]
-        self.message = e.args[0]["error_message"]
+        self.error = e.args[0]["error_param"]
+        self.errors = e.args[0]["errors_param"]
         self.fn_name = fn_name
         self.retry_attempts = 0
         self.raise_error()
@@ -32,16 +31,9 @@ class SalesloftAPIException:
     def raise_error(self):
         # if an invalid Basic auth is sent the response is still a 200 success
         # instead we check data.json() which will return a JSONDecodeError
-        if self.status_code == 422 or self.error_class_name == "JSONDecodeError":
-            logger.error(f"An error occured with a zoom integration, {self.message}")
-            raise Zoom500Error()
-        elif self.status_code == 401 and self.code == 124:
+        if self.status_code == 422:
+            raise InvalidRequest()
+        elif self.status_code == 403 or self.status_code == 401:
             raise TokenExpired()
-        elif self.status_code == 400 and self.code == 200:
-            raise AccountSubscriptionLevel(self.message)
-        elif self.status_code == 400 and not self.code:
-            raise InvalidRequest(f"The request was invalid {self.param}")
         else:
-            raise ValidationError(
-                {"detail": {"key": self.code, "message": self.message, "field": self.param,}}
-            )
+            raise ValidationError({"detail": {"message": self.error,}})

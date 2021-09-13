@@ -44,7 +44,7 @@ from managr.salesforce.background import (
     emit_add_update_to_sf,
     _send_recap,
 )
-from managr.salesloft.models import People, Cadence
+from managr.salesloft.models import People
 from managr.salesloft.background import emit_add_cadence_membership
 from managr.zoom.background import emit_process_schedule_zoom_meeting
 
@@ -1005,9 +1005,15 @@ def process_schedule_meeting(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor(required_context=["resource_id", "u", "resource_type"])
 def process_add_contacts_to_cadence(payload, context):
+    u = User.objects.get(id=context.get("u"))
     cadence_id = payload["view"]["state"]["values"]["select_cadence"][
-            f"GET_CADENCE_OPTIONS?u={context.get('u')}"
-        ]["selected_option"]["value"]
+        f"GET_CADENCE_OPTIONS?u={context.get('u')}"
+    ]["selected_option"]["value"]
+    trigger_id = payload["trigger_id"]
+    view_id = payload["view"]["id"]
+    org = u.organization
+    access_token = org.slack_integration.access_token
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     resource_type = context.get("resource_type")
     if resource_type == "opportunity":
         resource = Opportunity.objects.get(id=context.get("resource_id"))
@@ -1015,10 +1021,25 @@ def process_add_contacts_to_cadence(payload, context):
         resource = Account.objects.get(id=context.get("resource_id"))
     contacts = resource.contacts.all().values_list("email", flat=True)
     people = People.objects.filter(email__in=contacts).values_list("people_id", flat=True)
-    cadence = Cadence.objects.get(id=)
-    for person in people:
-
-    return {"message": f"{people}"}
+    loading_data = {
+        "trigger_id": trigger_id,
+        "view_id": view_id,
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Loading"},
+            "blocks": get_block_set(
+                "loading",
+                {"message": ":rocket: Putting contacts into your Cadence", "fill": True,},
+            ),
+        },
+    }
+    if len(people):
+        res = slack_requests.generic_request(url, loading_data, access_token=access_token)
+        for person in people:
+            person_res = emit_add_cadence_membership(person, cadence_id)
+        return
+    else:
+        return
 
 
 def handle_view_submission(payload):
