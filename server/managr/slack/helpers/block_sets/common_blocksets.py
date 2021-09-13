@@ -163,11 +163,14 @@ def tasks_list_block_set(context={}):
         resource = "_salesforce object n/a_"
         # get the resource if it is what_id is for account/opp
         # get the resource if it is who_id is for lead
+        resource_type = None
         if t.what_id:
             # first check for opp
             obj = user.imported_opportunity.filter(integration_id=t.what_id).first()
+            resource_type = "opportunity"
             if not obj:
                 obj = user.imported_account.filter(integration_id=t.what_id).first()
+                resource_type = "account"
             if obj:
                 resource = f"*{obj.name}*"
 
@@ -175,7 +178,6 @@ def tasks_list_block_set(context={}):
             obj = user.imported_lead.filter(integration_id=t.who_id).first()
             if obj:
                 resource = f"*{obj.name}*"
-
         task_blocks.extend(
             [
                 block_builders.simple_section(
@@ -187,6 +189,12 @@ def tasks_list_block_set(context={}):
                     "view_task",
                     "_View task in salesforce_",
                     url=f"{user.salesforce_account.instance_url}/lightning/r/Task/{t.id}/view",
+                ),
+                block_builders.section_with_button_block(
+                    "Add To Cadence",
+                    "add_to_cadence",
+                    "_Add contacts to Cadence_",
+                    action_id=f"{slack_const.ADD_TO_CADENCE_MODAL}?u={user_id}&resource_id={obj.id}&resource_name={obj.name}&resource_type={resource_type}",
                 ),
                 block_builders.divider_block(),
             ]
@@ -319,6 +327,7 @@ def zoom_recording_blockset(context):
     ]
     return blocks
 
+
 @block_set()
 def zoom_fake_recording(context):
     url = context["url"]
@@ -333,6 +342,4 @@ def zoom_fake_recording(context):
         block_builders.context_block("*Download link will expire after 24 hours"),
     ]
     return blocks
-
-
 

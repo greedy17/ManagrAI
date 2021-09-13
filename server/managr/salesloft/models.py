@@ -24,6 +24,8 @@ from managr.salesforce.adapter.models import ActivityAdapter
 from managr.core import constants as core_consts
 from . import constants as salesloft_consts
 
+from managr.slack.helpers import block_builders
+
 logger = logging.getLogger("managr")
 
 client = HttpClient().client
@@ -297,6 +299,31 @@ class CadenceAdapter:
     def as_dict(self):
         return vars(self)
 
+    @staticmethod
+    def _handle_response(response, fn_name=None):
+        if not hasattr(response, "status_code"):
+            raise ValueError
+        elif response.status_code == 200 or response.status_code == 201:
+            try:
+                data = response.json()
+            except Exception as e:
+                SalesloftAPIException(e, fn_name)
+            except json.decoder.JSONDecodeError as e:
+                return logger.error(f"An error occured with a zoom integration, {e}")
+        else:
+            status_code = response.status_code
+            error_data = response.json()
+            error_param = error_data.get("error", None)
+            errors_param = error_data.get("errors", None)
+            kwargs = {
+                "status_code": status_code,
+                "error_param": error_param,
+                "errors_param": errors_param,
+            }
+
+            SalesloftAPIException(HTTPError(kwargs), fn_name)
+        return data
+
     @classmethod
     def create_cadence(cls, cadence_data):
         try:
@@ -313,6 +340,18 @@ class CadenceAdapter:
             return cls(**data)
         except ObjectDoesNotExist:
             return None
+
+    def add_membership(self, person_id, access_token):
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json",
+        }
+        query = urlencode({"person_id": person_id, "cadence_id": self.cadence_id})
+        res = client.post(
+            f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.ADD_TO_CADENCE}?{query}",
+            headers=headers,
+        )
+        return CadenceAdapter._handle_response(res)
 
 
 class Cadence(TimeStampModel):
@@ -337,6 +376,16 @@ class Cadence(TimeStampModel):
 
     def __str__(self):
         return f"Cadence {self.name} owned by {self.owner}"
+
+    @property
+    def helper_class(self):
+        data = self.__dict__
+        data["id"] = str(data.get("id"))
+        return CadenceAdapter(**data)
+
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.name, str(self.id))
 
 
 class SLAccountQuerySet(models.QuerySet):
