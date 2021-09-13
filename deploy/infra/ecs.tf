@@ -82,6 +82,7 @@ data "template_file" "managr_app" {
     use_zoom       = title(each.value.use_zoom)
     use_slack      = title(each.value.use_slack)
     use_salesforce = title(each.value.use_salesforce)
+    use_salesloft  = title(each.value.env.use_salesloft)
   }
 }
 
@@ -127,6 +128,7 @@ data "template_file" "managr_app_scheduled_tasks" {
     use_zoom       = title(each.value.env.use_zoom)
     use_slack      = title(each.value.env.use_slack)
     use_salesforce = title(each.value.env.use_salesforce)
+    use_salesloft  = title(each.value.env.use_salesloft)
   }
 }
 
@@ -292,5 +294,10 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     salesforceScopes      = join(" ", each.value.salesforce_scopes)
     salesforceRedirectUri = each.value.salesforce_redirect_uri
     salesforceApiVersion  = each.value.salesforce_api_version
+
+    salesloftBaseUrl      = each.value.salesloft_base_url
+    salesloftClientId     = each.value.salesloft_client_id
+    salesloftSecret       = each.value.salesloft_secret
+    salesloftRedirectUri  = each.value.salesloft_redirect_uri
   })
 }

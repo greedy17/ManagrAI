@@ -27,7 +27,8 @@
       { "name": "USE_TWILIO", "value": "${use_twilio}" },
       { "name": "USE_ZOOM", "value": "${use_zoom}" },
       { "name": "USE_SLACK", "value": "${use_slack}" },
-      { "name": "USE_SALESFORCE", "value": "${use_salesforce}" }
+      { "name": "USE_SALESFORCE", "value": "${use_salesforce}" },
+      { "name": "USE_SALESLOFT", "value": "${use_salesloft}" }
     ],
     "secrets": [
       {
@@ -190,6 +191,22 @@
       {
         "name": "SALESFORCE_API_VERSION",
         "valueFrom": "${config_secret_arn}:salesforceApiVersion::"
+      },
+      {
+        "name": "SALESLOFT_BASE_URL",
+        "valueFrom": "${config_secret_arn}:salesloftBaseUrl::"
+      },
+      {
+        "name": "SALESLOFT_CLIENT_ID",
+        "valueFrom": "${config_secret_arn}:salesloftClientId::"
+      },
+      {
+        "name": "SALESLOFT_SECRET",
+        "valueFrom": "${config_secret_arn}:salesloftSecret::"
+      },
+      {
+        "name": "SALESLOFT_REDIRECT_URI",
+        "valueFrom": "${config_secret_arn}:salesloftRedirectUri::"
       }
     ],
     "logConfiguration": {
