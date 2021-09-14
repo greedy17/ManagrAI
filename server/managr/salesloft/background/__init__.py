@@ -65,11 +65,10 @@ def sync_cadences(auth_account_id):
     for cadence in res["data"]:
         cadence_res = CadenceAdapter.create_cadence(cadence)
         if cadence_res is None:
-            logger.error(f"Could not create salesloft account {cadence['name']}")
+            logger.error(f"Could not create cadence {cadence['name']}")
             continue
         else:
             cadence_existing = Cadence.objects.filter(cadence_id=cadence["id"]).first()
-            print(cadence_existing)
             if cadence_existing:
                 cadence_serializer = CadenceSerializer(
                     data=cadence_res.as_dict, instance=cadence_existing
