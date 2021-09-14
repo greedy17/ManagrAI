@@ -29,6 +29,10 @@ if settings.USE_SALESLOFT:
 
     if settings.IN_DEV:
         SALESLOFT_FRONTEND_REDIRECT = "http://localhost:8080/settings/integrations"
+    elif settings.IN_STAGING:
+        SALESLOFT_FRONTEND_REDIRECT = "https://staging.managr.ai/settings/integrations"
+    else:
+        SALESLOFT_FRONTEND_REDIRECT = "https://app.managr.ai/settings/integrations"
 
     AUTHORIZATION_QUERY_PARAMS = {
         "client_id": CLIENT_ID,
