@@ -594,8 +594,9 @@ def final_meeting_interaction_block_set(context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     meeting = workflow.meeting
     meeting_form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
+    meet_type = meeting_form.saved_data.get("meeting_type", None)
     blocks = None
-    if meeting_form.saved_data["meeting_type"] == "No Update":
+    if meet_type == "No Update":
         blocks = [
             block_builders.simple_section(
                 f"No updated needed for meeting *{meeting.topic}* :calendar:", "mrkdwn",
