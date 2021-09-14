@@ -472,7 +472,6 @@ class PeopleAdapter:
 
     @classmethod
     def create_people(cls, people_data):
-        print(people_data)
         try:
             owner = people_data["owner"]
             account = people_data["account"]
