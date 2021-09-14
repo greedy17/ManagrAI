@@ -37,6 +37,8 @@ export default class User extends Model {
   static userLevel = new fields.Field({})
   static role = new fields.Field({})
   static timezone = new fields.CharField()
+  static salesloftAccount = new fields.Field()
+  static hasSalesloftIntegration = new fields.Field({ readOnly: true })
 
   static fromAPI(json = {}) {
     return new User(objectToCamelCase(json))

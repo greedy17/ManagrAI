@@ -289,6 +289,10 @@ class User(AbstractUser, TimeStampModel):
         return hasattr(self, "nylas")
 
     @property
+    def has_salesloft_integration(self):
+        return hasattr(self, "salesloft_account")
+
+    @property
     def as_slack_option(self):
         return block_builders.option(self.full_name, str(self.id))
 
