@@ -475,16 +475,22 @@ class PeopleAdapter:
         try:
             owner = people_data["owner"]
             account = people_data["account"]
-            slacc = SalesloftAccount.objects.get(salesloft_id=owner["id"])
-            acc = SLAccount.objects.get(account_id=account["id"])
+            slacc_id = None
+            acc_id = None
+            if owner:
+                slacc = SalesloftAccount.objects.get(salesloft_id=owner["id"])
+                slacc_id = slacc.id
+            if account:
+                acc = SLAccount.objects.get(account_id=account["id"])
+                acc_id = acc.id
             data = {}
             data["people_id"] = people_data["id"]
             data["first_name"] = people_data["first_name"]
             data["last_name"] = people_data["last_name"]
             data["full_name"] = people_data["display_name"]
             data["email"] = people_data["email_address"]
-            data["owner"] = slacc.id
-            data["account"] = acc.id
+            data["owner"] = slacc_id
+            data["account"] = acc_id
             data["created_at"] = dateutil.parser.isoparse(people_data["created_at"])
             data["updated_at"] = dateutil.parser.isoparse(people_data["updated_at"])
             return cls(**data)

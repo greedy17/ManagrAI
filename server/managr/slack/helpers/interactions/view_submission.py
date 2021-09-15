@@ -1035,11 +1035,17 @@ def process_add_contacts_to_cadence(payload, context):
     }
     if len(people):
         res = slack_requests.generic_request(url, loading_data, access_token=access_token)
+        success = 0
+        failed = 0
         for person in people:
             person_res = emit_add_cadence_membership(person, cadence_id)
-        return
+            if person_res["status"] == "Success":
+                success += 1
+            else:
+                failed += 1
+        return logger.info(f"{success} out of {success + failed} added to cadence")
     else:
-        return
+        return logger.info(f"No people associated for {resource}")
 
 
 def handle_view_submission(payload):

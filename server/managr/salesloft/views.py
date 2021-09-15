@@ -110,15 +110,13 @@ def revoke_salesloft_access_token(request):
 
 
 def redirect_from_salesloft(request):
-    if settings.IN_DEV:
-        code = request.GET.get("code", None)
-        context = request.GET.get("context", None)
-        scope = request.GET.get("scope", None)
-        q = urlencode({"code": code, "scope": scope, "context": context, "state": "SALESLOFT"})
-        if not code:
-            err = {"error": "there was an error"}
-            err = urlencode(err)
-            return redirect(f"{salesloft_consts.SALESLOFT_FRONTEND_REDIRECT}")
-        return redirect(f"{salesloft_consts.SALESLOFT_FRONTEND_REDIRECT}?{q}")
-    else:
-        return redirect(f"{salesloft_consts.SALESLOFT_FRONTEND_REDIRECT}")
+    code = request.GET.get("code", None)
+    context = request.GET.get("context", None)
+    scope = request.GET.get("scope", None)
+    q = urlencode({"code": code, "scope": scope, "context": context, "state": "SALESLOFT"})
+    if not code:
+        err = {"error": "there was an error"}
+        err = urlencode(err)
+        return redirect(f"{salesloft_consts.SALESLOFT_FRONTEND_REDIRECT}?{err}")
+    return redirect(f"{salesloft_consts.SALESLOFT_FRONTEND_REDIRECT}?{q}")
+
