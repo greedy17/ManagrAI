@@ -17,7 +17,7 @@ from managr.slack.helpers import block_builders
 from managr.slack.helpers.utils import process_action_id, NO_OP, processor
 from managr.salesforce.adapter.exceptions import TokenExpired
 
-from managr.salesloft.models import Cadence
+from managr.salesloft.models import Cadence, People
 
 logger = logging.getLogger("managr")
 
@@ -241,6 +241,22 @@ def process_get_cadences(payload, context):
     }
 
 
+@processor(required_context=["resource_id", "resource_type"])
+def process_get_people(payload, context):
+    type = context.get("resource_type")
+    resource_id = context.get("resource_id")
+    value = payload["value"]
+    if type == "opportunity":
+        account = Account.objects.filter(opportunities__in=[resource_id]).first()
+    else:
+        account = Account.objects.get(id=resource_id)
+    contacts = account.contacts.all().values_list("email", flat=True)
+    people = People.objects.filter(email__in=contacts)
+    return {
+        "options": [l.as_slack_option for l in people.filter(full_name__icontains=value)[:50]],
+    }
+
+
 def handle_block_suggestion(payload):
     """
     This takes place when a select_field requires data from Managr
@@ -257,6 +273,7 @@ def handle_block_suggestion(payload):
         slack_const.GET_PICKLIST_OPTIONS: process_get_picklist_options,
         slack_const.GET_EXTERNAL_PICKLIST_OPTIONS: process_get_external_picklist_options,
         slack_const.GET_CADENCE_OPTIONS: process_get_cadences,
+        slack_const.GET_PEOPLE_OPTIONS: process_get_people,
     }
     action_query_string = payload["action_id"]
     processed_string = process_action_id(action_query_string)

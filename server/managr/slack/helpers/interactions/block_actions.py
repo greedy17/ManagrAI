@@ -1261,6 +1261,7 @@ def process_show_cadence_modal(payload, context):
                     "u": context.get("u"),
                     "resource_name": context.get("resource_name"),
                     "resource_id": context.get("resource_id"),
+                    "resource_type": context.get("resource_type"),
                 },
             ),
             "submit": {"type": "plain_text", "text": "Submit", "emoji": True},

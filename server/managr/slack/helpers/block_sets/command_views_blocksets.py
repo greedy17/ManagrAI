@@ -245,10 +245,17 @@ def create_add_to_cadence_block_set(context):
     user_id = context.get("u")
     blocks = [
         block_builders.external_select(
-            f"*Add contacts from {context.get('resource_name')} to cadence*",
+            f"*Cadence to add to:*",
             f"{slack_const.GET_CADENCE_OPTIONS}?u={user_id}",
             block_id="select_cadence",
             placeholder="Type to search",
         ),
+        block_builders.multi_external_select(
+            f"*Add contacts from {context.get('resource_name')} to cadence*:",
+            f"{slack_const.GET_PEOPLE_OPTIONS}?u={user_id}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}",
+            block_id="select_people",
+            placeholder="Type to search",
+        ),
     ]
     return blocks
+
