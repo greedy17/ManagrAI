@@ -1014,13 +1014,13 @@ def process_add_contacts_to_cadence(payload, context):
     org = u.organization
     access_token = org.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    resource_type = context.get("resource_type")
-    if resource_type == "opportunity":
-        resource = Opportunity.objects.get(id=context.get("resource_id"))
-    else:
-        resource = Account.objects.get(id=context.get("resource_id"))
-    contacts = resource.contacts.all().values_list("email", flat=True)
-    people = People.objects.filter(email__in=contacts).values_list("people_id", flat=True)
+    contacts = [
+        option["value"]
+        for option in payload["view"]["state"]["values"]["select_people"][
+            f"{slack_const.GET_PEOPLE_OPTIONS}?u={u.id}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}"
+        ]["selected_options"]
+    ]
+    people = People.objects.filter(id__in=contacts).values_list("people_id", flat=True)
     loading_data = {
         "trigger_id": trigger_id,
         "view_id": view_id,
@@ -1043,9 +1043,10 @@ def process_add_contacts_to_cadence(payload, context):
                 success += 1
             else:
                 failed += 1
-        return logger.info(f"{success} out of {success + failed} added to cadence")
+        logger.info(f"{success} out of {success + failed} added to cadence")
+        return {"response_action": "clear"}
     else:
-        return logger.info(f"No people associated for {resource}")
+        return logger.info(f"No people associated for {resource_id}")
 
 
 def handle_view_submission(payload):

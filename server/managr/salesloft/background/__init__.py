@@ -169,6 +169,7 @@ def add_cadence_membership(people_id, cadence_id):
         except InvalidRequest:
             return {"status": "Failed"}
         except ValidationError as e:
-            return logger.exception(f"Error adding cadence: {e}")
+            logger.exception(f"Error adding cadence: {e}")
+            return {"status": "Failed"}
     logger.info(f"Person with id {people_id} added to cadence {cadence.id}")
     return {"status": "Success"}
