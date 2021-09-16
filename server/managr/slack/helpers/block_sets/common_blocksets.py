@@ -190,24 +190,9 @@ def tasks_list_block_set(context={}):
                     "_View task in salesforce_",
                     url=f"{user.salesforce_account.instance_url}/lightning/r/Task/{t.id}/view",
                 ),
+                block_builders.divider_block(),
             ]
         )
-        if user.has_salesloft_integration:
-            task_blocks.extend(
-                [
-                    block_builders.section_with_button_block(
-                        "Add To Cadence",
-                        "add_to_cadence",
-                        "_Add contacts to Cadence_",
-                        action_id=f"{slack_const.ADD_TO_CADENCE_MODAL}?u={user_id}&resource_id={obj.id}&resource_name={obj.name}&resource_type={resource_type}",
-                    ),
-                    block_builders.divider_block(),
-                ]
-            )
-        else:
-            task_blocks.extend(
-                [block_builders.divider_block(),]
-            )
     return task_blocks
 
 
