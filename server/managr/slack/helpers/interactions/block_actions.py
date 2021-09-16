@@ -1249,6 +1249,11 @@ def process_show_cadence_modal(payload, context):
     trigger_id = payload["trigger_id"]
     u = User.objects.get(id=context.get("u"))
     org = u.organization
+    private_metadata = {
+        "channel_id": payload["channel"]["id"],
+        "slack_id": payload["user"]["id"],
+    }
+    private_metadata.update(context)
     data = {
         "trigger_id": trigger_id,
         "view": {
@@ -1261,10 +1266,11 @@ def process_show_cadence_modal(payload, context):
                     "u": context.get("u"),
                     "resource_name": context.get("resource_name"),
                     "resource_id": context.get("resource_id"),
+                    "resource_type": context.get("resource_type"),
                 },
             ),
             "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
-            "private_metadata": json.dumps(context),
+            "private_metadata": json.dumps(private_metadata),
         },
     }
     try:

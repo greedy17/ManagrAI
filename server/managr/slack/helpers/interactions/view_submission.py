@@ -1011,16 +1011,17 @@ def process_add_contacts_to_cadence(payload, context):
     ]["selected_option"]["value"]
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
+    meta_data = json.loads(payload["view"]["private_metadata"])
     org = u.organization
     access_token = org.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    resource_type = context.get("resource_type")
-    if resource_type == "opportunity":
-        resource = Opportunity.objects.get(id=context.get("resource_id"))
-    else:
-        resource = Account.objects.get(id=context.get("resource_id"))
-    contacts = resource.contacts.all().values_list("email", flat=True)
-    people = People.objects.filter(email__in=contacts).values_list("people_id", flat=True)
+    contacts = [
+        option["value"]
+        for option in payload["view"]["state"]["values"]["select_people"][
+            f"{slack_const.GET_PEOPLE_OPTIONS}?u={u.id}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}"
+        ]["selected_options"]
+    ]
+    people = People.objects.filter(id__in=contacts).values_list("people_id", flat=True)
     loading_data = {
         "trigger_id": trigger_id,
         "view_id": view_id,
@@ -1035,10 +1036,33 @@ def process_add_contacts_to_cadence(payload, context):
     }
     if len(people):
         res = slack_requests.generic_request(url, loading_data, access_token=access_token)
+        success = 0
+        failed = 0
         for person in people:
             person_res = emit_add_cadence_membership(person, cadence_id)
+            if person_res["status"] == "Success":
+                success += 1
+            else:
+                failed += 1
+        logger.info(f"{success} out of {success + failed} added to cadence")
+        update_res = slack_requests.send_ephemeral_message(
+            meta_data["channel_id"],
+            access_token,
+            meta_data["slack_id"],
+            block_set=[
+                block_builders.simple_section(
+                    f"{success} out of {success + failed} added to cadence"
+                )
+            ],
+        )
         return
     else:
+        update_res = slack_requests.send_ephemeral_message(
+            meta_data["channel_id"],
+            access_token,
+            meta_data["slack_id"],
+            block_set=[block_builders.simple_section(f"No people associated for {resource_id}")],
+        )
         return
 
 

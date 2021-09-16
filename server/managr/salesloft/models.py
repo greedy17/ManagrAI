@@ -472,7 +472,6 @@ class PeopleAdapter:
 
     @classmethod
     def create_people(cls, people_data):
-        print(people_data)
         try:
             owner = people_data["owner"]
             account = people_data["account"]
@@ -517,3 +516,6 @@ class People(TimeStampModel):
     class Meta:
         ordering = ["-datetime_created"]
 
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.full_name, str(self.id))
