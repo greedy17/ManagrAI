@@ -1246,9 +1246,15 @@ def process_meeting_details(payload, context):
 @processor(required_context="u")
 def process_show_cadence_modal(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    print(payload)
     trigger_id = payload["trigger_id"]
     u = User.objects.get(id=context.get("u"))
     org = u.organization
+    private_metadata = {
+        "channel_id": payload["channel"]["id"],
+        "slack_id": payload["user"]["id"],
+    }
+    private_metadata.update(context)
     data = {
         "trigger_id": trigger_id,
         "view": {
@@ -1265,7 +1271,7 @@ def process_show_cadence_modal(payload, context):
                 },
             ),
             "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
-            "private_metadata": json.dumps(context),
+            "private_metadata": json.dumps(private_metadata),
         },
     }
     try:

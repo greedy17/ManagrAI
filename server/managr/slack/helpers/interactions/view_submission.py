@@ -1011,6 +1011,7 @@ def process_add_contacts_to_cadence(payload, context):
     ]["selected_option"]["value"]
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
+    meta_data = json.loads(payload["view"]["private_metadata"])
     org = u.organization
     access_token = org.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
@@ -1044,9 +1045,25 @@ def process_add_contacts_to_cadence(payload, context):
             else:
                 failed += 1
         logger.info(f"{success} out of {success + failed} added to cadence")
-        return {"response_action": "clear"}
+        update_res = slack_requests.send_ephemeral_message(
+            meta_data["channel_id"],
+            access_token,
+            meta_data["slack_id"],
+            block_set=[
+                block_builders.simple_section(
+                    f"{success} out of {success + failed} added to cadence"
+                )
+            ],
+        )
+        return
     else:
-        return logger.info(f"No people associated for {resource_id}")
+        update_res = slack_requests.send_ephemeral_message(
+            meta_data["channel_id"],
+            access_token,
+            meta_data["slack_id"],
+            block_set=[block_builders.simple_section(f"No people associated for {resource_id}")],
+        )
+        return
 
 
 def handle_view_submission(payload):
