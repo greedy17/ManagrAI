@@ -130,6 +130,21 @@ def alert_instance_block_set(context):
             action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(resource_owner.id)}&resource={instance.template.resource_type}",
             style="primary",
         ),
+        block_builders.section_with_button_block(
+            "Add to Cadence",
+            "add_to_cadence",
+            "Add contacts to Cadence",
+            style="danger",
+            action_id=action_with_params(
+                slack_const.ADD_TO_CADENCE_MODAL,
+                params=[
+                    f"u={str(user.id)}",
+                    f"resource_id={str(instance.resource_id)}",
+                    f"resource_name={instance.resource.name}",
+                    f"resource_type={instance.template.resource_type}",
+                ],
+            ),
+        ),
     ]
 
     if in_channel or (user.id != resource_owner.id):
