@@ -1246,7 +1246,6 @@ def process_meeting_details(payload, context):
 @processor(required_context="u")
 def process_show_cadence_modal(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
-    print(payload)
     trigger_id = payload["trigger_id"]
     u = User.objects.get(id=context.get("u"))
     org = u.organization

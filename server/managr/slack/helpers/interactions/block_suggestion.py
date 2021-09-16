@@ -246,7 +246,7 @@ def process_get_people(payload, context):
     type = context.get("resource_type")
     resource_id = context.get("resource_id")
     value = payload["value"]
-    if type == "opportunity":
+    if type == "Opportunity":
         account = Account.objects.filter(opportunities__in=[resource_id]).first()
     else:
         account = Account.objects.get(id=resource_id)
