@@ -167,10 +167,10 @@ def tasks_list_block_set(context={}):
         if t.what_id:
             # first check for opp
             obj = user.imported_opportunity.filter(integration_id=t.what_id).first()
-            resource_type = "opportunity"
+            resource_type = "Opportunity"
             if not obj:
                 obj = user.imported_account.filter(integration_id=t.what_id).first()
-                resource_type = "account"
+                resource_type = "Account"
             if obj:
                 resource = f"*{obj.name}*"
 
