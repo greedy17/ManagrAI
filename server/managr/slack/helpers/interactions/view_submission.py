@@ -1021,7 +1021,6 @@ def process_add_contacts_to_cadence(payload, context):
             f"{slack_const.GET_PEOPLE_OPTIONS}?u={u.id}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}"
         ]["selected_options"]
     ]
-    people = People.objects.filter(id__in=contacts).values_list("people_id", flat=True)
     loading_data = {
         "trigger_id": trigger_id,
         "view_id": view_id,
@@ -1034,26 +1033,34 @@ def process_add_contacts_to_cadence(payload, context):
             ),
         },
     }
-    if len(people):
+    if len(contacts):
         res = slack_requests.generic_request(url, loading_data, access_token=access_token)
         success = 0
         failed = 0
-        for person in people:
+        created = 0
+        for person in contacts:
             person_res = emit_add_cadence_membership(person, cadence_id)
+            print(person_res)
             if person_res["status"] == "Success":
                 success += 1
+            elif person_res["status"] == "Created":
+                success += 1
+                created += 1
             else:
                 failed += 1
-        logger.info(f"{success} out of {success + failed} added to cadence")
+        logger.info(
+            f"{success} out of {success + failed} added to cadence and {created} People created in Salesloft"
+        )
+        message = (
+            f"{success}/{success + failed} added to cadence ({created} new People imported to Salesloft)"
+            if created > 0
+            else f"{success}/{success + failed} added to cadence"
+        )
         update_res = slack_requests.send_ephemeral_message(
             meta_data["channel_id"],
             access_token,
             meta_data["slack_id"],
-            block_set=[
-                block_builders.simple_section(
-                    f"{success} out of {success + failed} added to cadence"
-                )
-            ],
+            block_set=[block_builders.simple_section(message)],
         )
         return
     else:
