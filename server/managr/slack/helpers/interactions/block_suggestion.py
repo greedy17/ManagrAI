@@ -248,12 +248,12 @@ def process_get_people(payload, context):
     value = payload["value"]
     if type == "Opportunity":
         account = Account.objects.filter(opportunities__in=[resource_id]).first()
+        contacts = account.contacts.all()
     else:
         account = Account.objects.get(id=resource_id)
-    contacts = account.contacts.all().values_list("email", flat=True)
-    people = People.objects.filter(email__in=contacts)
+        contacts = account.contacts.all()
     return {
-        "options": [l.as_slack_option for l in people.filter(full_name__icontains=value)[:50]],
+        "options": [l.as_slack_option for l in contacts.filter(email__icontains=value)[:50]],
     }
 
 

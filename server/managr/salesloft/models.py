@@ -342,10 +342,7 @@ class CadenceAdapter:
             return None
 
     def add_membership(self, person_id, access_token):
-        headers = {
-            "Authorization": f"Bearer {access_token}",
-            "Content-Type": "application/json",
-        }
+        headers = salesloft_consts.SALESLOFT_REQUEST_HEADERS(access_token)
         query = urlencode({"person_id": person_id, "cadence_id": self.cadence_id})
         res = client.post(
             f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.ADD_TO_CADENCE}?{query}",
@@ -470,6 +467,31 @@ class PeopleAdapter:
     def as_dict(self):
         return vars(self)
 
+    @staticmethod
+    def _handle_response(response, fn_name=None):
+        if not hasattr(response, "status_code"):
+            raise ValueError
+        elif response.status_code == 200 or response.status_code == 201:
+            try:
+                data = response.json()
+            except Exception as e:
+                SalesloftAPIException(e, fn_name)
+            except json.decoder.JSONDecodeError as e:
+                return logger.error(f"An error occured with a zoom integration, {e}")
+        else:
+            status_code = response.status_code
+            error_data = response.json()
+            error_param = error_data.get("error", None)
+            errors_param = error_data.get("errors", None)
+            kwargs = {
+                "status_code": status_code,
+                "error_param": error_param,
+                "errors_param": errors_param,
+            }
+
+            SalesloftAPIException(HTTPError(kwargs), fn_name)
+        return data
+
     @classmethod
     def create_people(cls, people_data):
         try:
@@ -496,6 +518,16 @@ class PeopleAdapter:
             return cls(**data)
         except ObjectDoesNotExist:
             return None
+
+    @staticmethod
+    def create_in_salesloft(access_token, data):
+        headers = salesloft_consts.SALESLOFT_REQUEST_HEADERS(access_token)
+        res = client.post(
+            f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.PEOPLE}",
+            headers=headers,
+            data=json.dumps(data),
+        )
+        return PeopleAdapter._handle_response(res)
 
 
 class People(TimeStampModel):

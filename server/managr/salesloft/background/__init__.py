@@ -23,6 +23,7 @@ from ..models import (
     People,
     PeopleAdapter,
 )
+from managr.organization.models import Contact
 from ..serializers import SLAccountSerializer, CadenceSerializer, PeopleSerializer
 
 
@@ -43,6 +44,21 @@ def emit_sync_people(auth_account_id):
 
 def emit_add_cadence_membership(people_id, cadence_id):
     return add_cadence_membership(people_id, cadence_id)
+
+
+def create_person(people):
+    people_res = PeopleAdapter.create_people(people)
+    if people_res is None:
+        logger.error(f"Could not create people {people['display_name']}")
+    else:
+        people_existing = People.objects.filter(people_id=people["id"]).first()
+        if people_existing:
+            people_serializer = PeopleSerializer(data=people_res.as_dict, instance=people_existing)
+        else:
+            people_serializer = PeopleSerializer(data=people_res.as_dict)
+        people_serializer.is_valid(raise_exception=True)
+        people_serializer.save()
+    return
 
 
 @background()
@@ -133,29 +149,35 @@ def sync_people(auth_account_id):
                 attempts += 1
 
     for people in res["data"]:
-        people_res = PeopleAdapter.create_people(people)
-        if people_res is None:
-            logger.error(f"Could not create people {people['display_name']}")
-            continue
-        else:
-            people_existing = People.objects.filter(people_id=people["id"]).first()
-            if people_existing:
-                people_serializer = PeopleSerializer(
-                    data=people_res.as_dict, instance=people_existing
-                )
-            else:
-                people_serializer = PeopleSerializer(data=people_res.as_dict)
-            people_serializer.is_valid(raise_exception=True)
-            people_serializer.save()
+        create_person(people)
     return logger.info(f"Synced people for {auth_account}")
 
 
-def add_cadence_membership(people_id, cadence_id):
+def add_cadence_membership(person_id, cadence_id):
     cadence = Cadence.objects.get(id=cadence_id)
     auth_account = SalesloftAuthAccount.objects.get(id=cadence.owner.auth_account.id)
+    contact = Contact.objects.get(id=person_id)
+    person = People.objects.filter(email=contact.email).first()
+    slaccount = SLAccount.objects.get(name=contact.account.name)
+    owner = slaccount.owner.salesloft_id
+    people_id = person.id if person else None
+    created = False
     while True:
         attempts = 1
         try:
+            if not person:
+                data = {
+                    "first_name": contact.secondary_data["FirstName"],
+                    "last_name": contact.secondary_data["LastName"],
+                    "email_address": contact.email,
+                    "owner_id": owner,
+                    "account_id": slaccount.account_id,
+                }
+                create_res = PeopleAdapter.create_in_salesloft(auth_account.access_token, data)
+                create_person(create_res["data"])
+                people_id = create_res["data"]["id"]
+                created = True
+
             res = cadence.helper_class.add_membership(people_id, auth_account.access_token)
             break
         except TokenExpired:
@@ -172,4 +194,6 @@ def add_cadence_membership(people_id, cadence_id):
             logger.exception(f"Error adding cadence: {e}")
             return {"status": "Failed"}
     logger.info(f"Person with id {people_id} added to cadence {cadence.id}")
+    if created:
+        return {"status": "Created"}
     return {"status": "Success"}
