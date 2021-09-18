@@ -1265,7 +1265,8 @@ def process_show_cadence_modal(payload, context):
     resource_type = "Account" if type == "command" else context.get("resource_type")
     url = f"{slack_const.SLACK_API_ROOT}{slack_const.VIEWS_UPDATE if is_update else slack_const.VIEWS_OPEN}"
     trigger_id = payload["trigger_id"]
-    meta_data = json.loads(payload["view"]["private_metadata"])
+    if is_update:
+        meta_data = json.loads(payload["view"]["private_metadata"])
 
     org = u.organization
     private_metadata = {
