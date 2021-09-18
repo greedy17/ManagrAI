@@ -70,6 +70,15 @@ def process_get_user_contacts(payload, context):
     }
 
 
+@processor(required_context=["u"])
+def process_get_user_accounts(payload, context):
+    user = User.objects.get(id=context["u"])
+    value = payload["value"]
+    return {
+        "options": [l.as_slack_option for l in user.accounts.filter(name__icontains=value)[:50]],
+    }
+
+
 @processor(required_context=["u", "resource"])
 def process_get_local_resource_options(payload, context):
     """
@@ -248,12 +257,12 @@ def process_get_people(payload, context):
     value = payload["value"]
     if type == "Opportunity":
         account = Account.objects.filter(opportunities__in=[resource_id]).first()
+        contacts = account.contacts.all()
     else:
         account = Account.objects.get(id=resource_id)
-    contacts = account.contacts.all().values_list("email", flat=True)
-    people = People.objects.filter(email__in=contacts)
+        contacts = account.contacts.all()
     return {
-        "options": [l.as_slack_option for l in people.filter(full_name__icontains=value)[:50]],
+        "options": [l.as_slack_option for l in contacts.filter(email__icontains=value)[:50]],
     }
 
 
@@ -266,6 +275,7 @@ def handle_block_suggestion(payload):
         slack_const.GET_ORGANIZATION_ACTION_CHOICES: process_get_organization_action_choices,
         slack_const.GET_USER_OPPORTUNITIES: process_get_user_opportunities,
         slack_const.GET_USER_CONTACTS: process_get_user_contacts,
+        slack_const.GET_USER_ACCOUNTS: process_get_user_accounts,
         slack_const.GET_LOCAL_RESOURCE_OPTIONS: process_get_local_resource_options,
         slack_const.GET_EXTERNAL_RELATIONSHIP_OPTIONS: process_get_external_relationship_options,
         slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS: process_get_local_resource_options,
