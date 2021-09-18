@@ -1003,15 +1003,16 @@ def process_schedule_meeting(payload, context):
 
 @log_all_exceptions
 @slack_api_exceptions(rethrow=True)
-@processor(required_context=["resource_id", "u", "resource_type"])
+@processor(required_context=["u"])
 def process_add_contacts_to_cadence(payload, context):
+    meta_data = json.loads(payload["view"]["private_metadata"])
     u = User.objects.get(id=context.get("u"))
     cadence_id = payload["view"]["state"]["values"]["select_cadence"][
         f"GET_CADENCE_OPTIONS?u={context.get('u')}"
     ]["selected_option"]["value"]
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
-    meta_data = json.loads(payload["view"]["private_metadata"])
+
     org = u.organization
     access_token = org.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
@@ -1040,7 +1041,6 @@ def process_add_contacts_to_cadence(payload, context):
         created = 0
         for person in contacts:
             person_res = emit_add_cadence_membership(person, cadence_id)
-            print(person_res)
             if person_res["status"] == "Success":
                 success += 1
             elif person_res["status"] == "Created":
@@ -1057,7 +1057,7 @@ def process_add_contacts_to_cadence(payload, context):
             else f"{success}/{success + failed} added to cadence"
         )
         update_res = slack_requests.send_ephemeral_message(
-            meta_data["channel_id"],
+            u.slack_integration.channel,
             access_token,
             meta_data["slack_id"],
             block_set=[block_builders.simple_section(message)],
@@ -1065,7 +1065,7 @@ def process_add_contacts_to_cadence(payload, context):
         return
     else:
         update_res = slack_requests.send_ephemeral_message(
-            meta_data["channel_id"],
+            u.slack_integration.channel,
             access_token,
             meta_data["slack_id"],
             block_set=[block_builders.simple_section(f"No people associated for {resource_id}")],

@@ -160,7 +160,7 @@ def add_cadence_membership(person_id, cadence_id):
     person = People.objects.filter(email=contact.email).first()
     slaccount = SLAccount.objects.get(name=contact.account.name)
     owner = slaccount.owner.salesloft_id
-    people_id = person.id if person else None
+    people_id = person.people_id if person else None
     created = False
     while True:
         attempts = 1

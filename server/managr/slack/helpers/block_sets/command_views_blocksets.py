@@ -43,6 +43,19 @@ def command_update_resource_interaction(context):
 
 
 @block_set(required_context=["u"])
+def command_select_account_interaction(context):
+    user = User.objects.get(id=context.get("u"))
+    return [
+        block_builders.external_select(
+            f"*Search for an account*",
+            f"{slack_const.GET_USER_ACCOUNTS}?u={str(user.id)}&type={context.get('type')}",
+            block_id="select_existing",
+            placeholder="Type to search",
+        ),
+    ]
+
+
+@block_set(required_context=["u"])
 def command_create_task_interaction(context):
     # form = OrgCustomSlackFormInstances.objects.get(id=context.get("f"))
     user = User.objects.get(id=context.get("u"))
