@@ -470,6 +470,7 @@ class PeopleAdapter:
 
     @staticmethod
     def _handle_response(response, fn_name=None):
+        print(response.json())
         if not hasattr(response, "status_code"):
             raise ValueError
         elif response.status_code == 200 or response.status_code == 201:
