@@ -96,7 +96,7 @@ class SalesloftAuthAdapter:
         data["token_generated_date"] = timezone.now()
         return cls(**data)
 
-    def get_all_users(self):
+    def get_users(self, page=1):
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
@@ -106,33 +106,39 @@ class SalesloftAuthAdapter:
         )
         return SalesloftAuthAdapter._handle_response(res)
 
-    def get_all_cadences(self):
+    def get_cadences(self, page=1):
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
         }
+        query = urlencode({"include_paging_counts": True, "page": page})
         res = client.get(
-            f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.CADENCES}", headers=headers
+            f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.CADENCES}?{query}",
+            headers=headers,
         )
         return SalesloftAuthAdapter._handle_response(res)
 
-    def get_all_accounts(self):
+    def get_accounts(self, page=1):
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
         }
+        query = urlencode({"include_paging_counts": True, "page": page})
         res = client.get(
-            f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.ACCOUNTS}", headers=headers
+            f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.ACCOUNTS}?{query}",
+            headers=headers,
         )
         return SalesloftAuthAdapter._handle_response(res)
 
-    def get_all_people(self):
+    def get_people(self, page=1):
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
         }
+        query = urlencode({"include_paging_counts": True, "page": page})
         res = client.get(
-            f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.PEOPLE}", headers=headers
+            f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.PEOPLE}?{query}",
+            headers=headers,
         )
         return SalesloftAuthAdapter._handle_response(res)
 
@@ -301,7 +307,6 @@ class CadenceAdapter:
 
     @staticmethod
     def _handle_response(response, fn_name=None):
-        print(response.json())
         if not hasattr(response, "status_code"):
             raise ValueError
         elif response.status_code == 200 or response.status_code == 201:
@@ -470,7 +475,6 @@ class PeopleAdapter:
 
     @staticmethod
     def _handle_response(response, fn_name=None):
-        print(response.json())
         if not hasattr(response, "status_code"):
             raise ValueError
         elif response.status_code == 200 or response.status_code == 201:
