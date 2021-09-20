@@ -24,8 +24,15 @@ from ..models import (
     PeopleAdapter,
 )
 from managr.organization.models import Contact
-from ..serializers import SLAccountSerializer, CadenceSerializer, PeopleSerializer
 
+from ..helpers.class_functions import (
+    process_cadence,
+    process_person,
+    process_slaccount,
+    sync_current_slaccount_page,
+    sync_current_person_page,
+    sync_current_cadence_page,
+)
 
 logger = logging.getLogger("managr")
 
@@ -46,28 +53,20 @@ def emit_add_cadence_membership(people_id, cadence_id):
     return add_cadence_membership(people_id, cadence_id)
 
 
-def create_person(people):
-    people_res = PeopleAdapter.create_people(people)
-    if people_res is None:
-        logger.error(f"Could not create people {people['display_name']}")
-    else:
-        people_existing = People.objects.filter(people_id=people["id"]).first()
-        if people_existing:
-            people_serializer = PeopleSerializer(data=people_res.as_dict, instance=people_existing)
-        else:
-            people_serializer = PeopleSerializer(data=people_res.as_dict)
-        people_serializer.is_valid(raise_exception=True)
-        people_serializer.save()
-    return
-
-
 @background()
 def sync_cadences(auth_account_id):
     auth_account = SalesloftAuthAccount.objects.get(id=auth_account_id)
     while True:
         attempts = 1
         try:
-            res = auth_account.helper_class.get_all_cadences()
+            res = auth_account.helper_class.get_cadences()
+            sync_current_cadence_page(res["data"])
+            if res["metadata"]["paging"]["total_pages"] > 1:
+                count = 2
+                while count <= res["metadata"]["paging"]["total_pages"]:
+                    page_res = auth_account.helper_class.get_cadences(count)
+                    sync_current_cadence_page(page_res["data"])
+                    count += 1
             break
         except TokenExpired:
             if attempts >= 5:
@@ -77,23 +76,7 @@ def sync_cadences(auth_account_id):
             else:
                 auth_account.regenerate_token()
                 attempts += 1
-
-    for cadence in res["data"]:
-        cadence_res = CadenceAdapter.create_cadence(cadence)
-        if cadence_res is None:
-            logger.error(f"Could not create cadence {cadence['name']}")
-            continue
-        else:
-            cadence_existing = Cadence.objects.filter(cadence_id=cadence["id"]).first()
-            if cadence_existing:
-                cadence_serializer = CadenceSerializer(
-                    data=cadence_res.as_dict, instance=cadence_existing
-                )
-            else:
-                cadence_serializer = CadenceSerializer(data=cadence_res.as_dict)
-            cadence_serializer.is_valid(raise_exception=True)
-            cadence_serializer.save()
-    return logger.info(f"Synced cadences for {auth_account.id}")
+    return logger.info(f"Synced all cadences for {auth_account}")
 
 
 @background()
@@ -102,7 +85,18 @@ def sync_slaccounts(auth_account_id):
     while True:
         attempts = 1
         try:
-            res = auth_account.helper_class.get_all_accounts()
+            res = auth_account.helper_class.get_accounts()
+            sync_current_slaccount_page(res["data"])
+            logger.info(f"Synced page 1 of salesloft accounts for account {auth_account}")
+            if res["metadata"]["paging"]["total_pages"] > 1:
+                count = 2
+                while count <= res["metadata"]["paging"]["total_pages"]:
+                    page_res = auth_account.helper_class.get_accounts(count)
+                    sync_current_slaccount_page(page_res["data"])
+                    count += 1
+                    logger.info(
+                        f"Synced page {count} of salesloft accounts for account {auth_account}"
+                    )
             break
         except TokenExpired:
             if attempts >= 5:
@@ -112,23 +106,7 @@ def sync_slaccounts(auth_account_id):
             else:
                 auth_account.regenerate_token()
                 attempts += 1
-
-    for account in res["data"]:
-        account_res = SLAccountAdapter.create_slaccount(account)
-        if account_res is None:
-            logger.error(f"Could not create salesloft account {account['name']}")
-            continue
-        else:
-            account_existing = SLAccount.objects.filter(account_id=account["id"]).first()
-            if account_existing:
-                account_serializer = SLAccountSerializer(
-                    data=account_res.as_dict, instance=account_existing
-                )
-            else:
-                account_serializer = SLAccountSerializer(data=account_res.as_dict)
-            account_serializer.is_valid(raise_exception=True)
-            account_serializer.save()
-    return logger.info(f"Synced accounts for {auth_account}")
+    return logger.info(f"Synced all accounts for {auth_account}")
 
 
 @background()
@@ -137,7 +115,14 @@ def sync_people(auth_account_id):
     while True:
         attempts = 1
         try:
-            res = auth_account.helper_class.get_all_people()
+            res = auth_account.helper_class.get_people()
+            sync_current_person_page(res["data"])
+            if res["metadata"]["paging"]["total_pages"] > 1:
+                count = 2
+                while count <= res["metadata"]["paging"]["total_pages"]:
+                    page_res = auth_account.helper_class.get_people(count)
+                    sync_current_person_page(page_res["data"])
+                    count += 1
             break
         except TokenExpired:
             if attempts >= 5:
@@ -147,10 +132,7 @@ def sync_people(auth_account_id):
             else:
                 auth_account.regenerate_token()
                 attempts += 1
-
-    for people in res["data"]:
-        create_person(people)
-    return logger.info(f"Synced people for {auth_account}")
+    return logger.info(f"Synced all people for {auth_account}")
 
 
 def add_cadence_membership(person_id, cadence_id):
