@@ -326,7 +326,7 @@ form,
   color: $panther-orange;
   margin-top: 2.5rem;
   height: 2.5rem;
-  width: 10rem;
+  width: 18vw;
   font-size: 16px;
   font-weight: bold;
 }

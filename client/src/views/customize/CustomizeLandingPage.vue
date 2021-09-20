@@ -152,8 +152,8 @@
       </button>
     </div> -->
 
-    <button v-if="user.isAdmin" class="slack-button">Continue</button>
-    <button v-else class="slack-button">Continue</button>
+    <!-- <button v-if="user.isAdmin" class="slack-button">Continue</button> -->
+    <button @click="goToTemplates" class="slack-button">Automate</button>
   </div>
 </template>
 
@@ -183,9 +183,15 @@ export default {
     goToCreate() {
       this.$router.push({ name: 'CreateContacts' })
     },
+    goToTemplates() {
+      this.$router.push({ name: 'CreateNew' })
+    },
     // handleShowOptional() {
     //   this.showOptional = !this.showOptional
     // },
+  },
+  beforeMount() {
+    console.log(this.user)
   },
 }
 </script>

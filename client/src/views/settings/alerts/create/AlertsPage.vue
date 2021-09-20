@@ -1,30 +1,37 @@
 <template>
   <div class="alerts-page">
     <div class="col">
-      <h2 class="title">Templates</h2>
+      <h2 class="title">Smart Alert Templates</h2>
       <p class="sub__">Highly recommended and easy to setup</p>
     </div>
 
     <div class="alert_cards">
       <div class="card__">
         <div class="card__header">
-          <h3>Close date <span style="color: #5f8cff">Passed/Approaching</span></h3>
+          <h3><span style="color: #5f8cff">Close Date</span> Approaching</h3>
+        </div>
+        <button @click="goToCloseDateApproaching" class="orange_button">Activate</button>
+      </div>
+
+      <div class="card__">
+        <div class="card__header">
+          <h3><span style="color: #5f8cff">Close Date</span> Passed</h3>
         </div>
         <button @click="goToCloseDatePassed" class="orange_button">Activate</button>
       </div>
 
       <div class="card__">
         <div class="card__header">
-          <h3>Deal <span style="color: #ff7649">Rotting</span></h3>
+          <h3><span style="color: #ff7649">Deal</span> Rotting</h3>
         </div>
-        <button class="orange_button">Activate</button>
+        <button @click="goToDealRotting" class="orange_button">Activate</button>
       </div>
 
       <div class="card__">
         <div class="card__header">
           <h3>Update <span style="color: #69e3cd">Forecast</span></h3>
         </div>
-        <button class="orange_button">Activate</button>
+        <button class="cs__button">Coming Soon</button>
       </div>
     </div>
 
@@ -838,8 +845,14 @@ export default {
     showDropDown() {
       this.dropdownVisible = !this.dropdownVisible
     },
+    goToCloseDateApproaching() {
+      this.$router.push({ name: 'CloseDateApproaching' })
+    },
     goToCloseDatePassed() {
       this.$router.push({ name: 'CloseDatePassed' })
+    },
+    goToDealRotting() {
+      this.$router.push({ name: 'DealRotting' })
     },
   },
   computed: {
@@ -966,6 +979,7 @@ textarea {
   justify-content: space-evenly;
   align-items: center;
   margin-top: 2rem;
+  flex-wrap: wrap;
 }
 .card__ {
   background-color: $panther;
@@ -1174,5 +1188,16 @@ input {
   border-radius: 0.5rem;
   border: 2px solid white;
   cursor: pointer;
+}
+.cs__button {
+  width: 9rem;
+  background-color: transparent;
+  color: $panther-silver;
+  font-weight: bold;
+  font-size: 16px;
+  height: 2rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: not-allowed;
 }
 </style>

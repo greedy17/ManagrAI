@@ -19,7 +19,7 @@
         v-for="(alertOperand, i) in form.field.alertOperands.groups"
         class="alert-group-row__operands__row rows"
       >
-        <NewAlertOperandRow
+        <DealOperandRow
           @remove-operand="onRemoveOperand(i)"
           :resourceType="resourceType"
           :form.sync="alertOperand"
@@ -57,7 +57,7 @@
 // Pacakges
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 //Internal
-import NewAlertOperandRow from '@/views/settings/alerts/create/NewAlertOperandRow'
+import DealOperandRow from '@/views/settings/alerts/create/DealOperandRow'
 
 /**
  * Services
@@ -71,8 +71,8 @@ export default {
    * the object multiple levels deep (this current implementation could be seen as incorrect)
    *
    */
-  name: 'NewAlertGroup',
-  components: { ToggleCheckBox, NewAlertOperandRow },
+  name: 'DealAlertGroup',
+  components: { ToggleCheckBox, DealOperandRow },
 
   props: {
     form: { type: AlertGroupForm },
@@ -116,9 +116,6 @@ export default {
         this.form.field.groupCondition.value = val
       },
     },
-  },
-  beforeMount() {
-    this.addOperandForm()
   },
 }
 </script>

@@ -1,6 +1,6 @@
 <template>
   <div class="alert-settings-modal">
-    <div class="alerts-page__settings">
+    <div class="row__save">
       <div class="alerts-page__settings__frequency">
         <label class="alerts-page__settings__frequency-label">Weekly</label>
         <ToggleCheckBox
@@ -15,23 +15,27 @@
         />
         <label class="alerts-page__settings__frequency-label">Monthly</label>
       </div>
-      <div class="alerts-page__settings__day">
-        <div v-if="weeklyOrMonthly == 'WEEKLY'">
-          <FormField :errors="form.field.recurrenceDay.errors">
-            <template v-slot:input>
-              <DropDownSearch
-                :items.sync="weeklyOpts"
-                :itemsRef.sync="form.field._recurrenceDay.value"
-                v-model="form.field.recurrenceDay.value"
-                @input="form.field.recurrenceDay.validate()"
-                displayKey="key"
-                valueKey="value"
-                nullDisplay="Select"
-                searchable
-                local
-              />
-            </template>
-          </FormField>
+      <PulseLoadingSpinnerButton
+        text="save"
+        @click="onSave"
+        class="btn btn--primary"
+        :loading="isSaving"
+        :disabled="!form.isValid"
+      />
+    </div>
+    <div class="alerts-page__settings">
+      <div style="margin-right: 1rem" class="alerts-page__settings__day">
+        <p style="color: #ff7649">Day:</p>
+        <div style="margin-top: 1rem; margin-bottom: 1rem" v-if="weeklyOrMonthly == 'WEEKLY'">
+          <div :key="value" v-for="(key, value) in weeklyOpts">
+            <input
+              :value="key.value"
+              v-model="form.field.recurrenceDay.value"
+              id="value"
+              type="radio"
+            />
+            <label for="value">{{ key.key }}</label>
+          </div>
         </div>
         <span v-else-if="weeklyOrMonthly == 'MONTHLY'">
           <FormField
@@ -39,36 +43,25 @@
             :errors="form.field.recurrenceDay.errors"
             @blur="form.field.recurrenceDay.validate()"
             v-model="form.field.recurrenceDay.value"
-            small
+            large
           />
         </span>
       </div>
-      <div class="alerts-page__settings__target-users">
-        <FormField
-          :errors="form.field.alertTargets.errors"
-          label="select one/multiple users/groups to include in the search"
-        >
-          <template v-slot:input>
-            <DropDownSearch
-              :items.sync="userTargetsOpts"
-              :itemsRef.sync="form.field._alertTargets.value"
-              v-model="form.field.alertTargets.value"
-              @input="form.field.alertTargets.validate()"
-              displayKey="fullName"
-              valueKey="id"
-              nullDisplay="Search"
-              searchable
-              multi
-              medium
-              :loading="users.loadingNextPage"
-              :hasNext="!!users.pagination.hasNextPage"
-              @load-more="onUsersNextPage"
-              @search-term="onSearchUsers"
-            />
-          </template>
-        </FormField>
+      <div style="margin-right: 1rem" class="alerts-page__settings__target-users">
+        <p style="color: #ff7649">Pipelines:</p>
+
+        <div :key="value" v-for="(key, value) in userTargetsOpts">
+          <input
+            v-model="form.field.alertTargets.value"
+            :value="key.id"
+            id="value"
+            type="checkbox"
+          />
+          <label for="value">{{ key.fullName }}</label>
+        </div>
       </div>
       <div class="alerts-page__settings__recipients">
+        <p style="color: #ff7649">Recipients:</p>
         <span
           v-if="form.field._recipients.value && form.field.recipientType.value == 'SLACK_CHANNEL'"
           class="muted--link--important"
@@ -76,34 +69,18 @@
           Please make sure @managr has been added to
           <em>{{ form.field._recipients.value.name }}</em> channel
         </span>
-        <FormField
-          v-if="form.field.recipientType.value == 'USER_LEVEL'"
-          :errors="form.field.recipients.errors"
-          :label="
-            form.field.recipientType.value == 'USER_LEVEL'
-              ? 'select one or multiple user groups'
-              : ''
-          "
-        >
-          <template v-slot:input>
-            <DropDownSearch
-              :items.sync="recipientOpts"
-              :itemsRef.sync="form.field._recipients.value"
+
+        <div v-if="form.field.recipientType.value == 'USER_LEVEL'">
+          <div :key="value" v-for="(key, value) in recipientOpts">
+            <input
+              type="checkbox"
+              id="value"
+              :value="key.id"
               v-model="form.field.recipients.value"
-              @input="form.field.recipients.validate()"
-              displayKey="fullName"
-              valueKey="id"
-              nullDisplay="Search"
-              searchable
-              multi
-              medium
-              :loading="users.loadingNextPage"
-              :hasNext="!!users.pagination.hasNextPage"
-              @load-more="onUsersNextPage"
-              @search-term="onSearchUsers"
             />
-          </template>
-        </FormField>
+            <label for="value">{{ key.fullName }}</label>
+          </div>
+        </div>
 
         <FormField
           v-if="form.field.recipientType.value == 'SLACK_CHANNEL'"
@@ -127,7 +104,7 @@
                 <img
                   v-if="option.isPrivate == true"
                   class="card-img"
-                  style="width:1rem;height:1rem;margin-right:0.2rem;"
+                  style="width: 1rem; height: 1rem; margin-right: 0.2rem"
                   src="@/assets/images/lockAsset.png"
                 />
                 {{ option['name'] }}
@@ -136,34 +113,28 @@
           </template>
         </FormField>
       </div>
-      <div class="alerts-page__settings__recipient-type">
-        <span
-          @click="
-            form.field.recipientType.value = recipientTypeToggle(form.field.recipientType.value)
-          "
-          class="muted--link"
-          v-if="form.field.recipientType.value == 'USER_LEVEL'"
-          >Send to a channel instead ?</span
-        >
-
-        <span
-          @click="
-            form.field.recipientType.value = recipientTypeToggle(form.field.recipientType.value)
-          "
-          class="muted--link"
-          v-else
-        >
-          Send to a group of users (DM) instead ?
-        </span>
-      </div>
     </div>
-    <PulseLoadingSpinnerButton
-      text="save"
-      @click="onSave"
-      class="btn btn--primary"
-      :loading="isSaving"
-      :disabled="!form.isValid"
-    />
+    <div class="alerts-page__settings__recipient-type">
+      <span
+        @click="
+          form.field.recipientType.value = recipientTypeToggle(form.field.recipientType.value)
+        "
+        class="muted--link"
+        v-if="form.field.recipientType.value == 'USER_LEVEL'"
+        style="border-bottom: 2px solid #69e3cd; color: #69e3cd; cursor: pointer"
+        >Send to a channel instead ?</span
+      >
+
+      <span
+        @click="
+          form.field.recipientType.value = recipientTypeToggle(form.field.recipientType.value)
+        "
+        class="muted--link"
+        v-else
+      >
+        Send to a group of users (DM) instead ?
+      </span>
+    </div>
   </div>
 </template>
 
@@ -304,7 +275,7 @@ export default {
     userTargetsOpts() {
       if (this.user.userLevel == 'MANAGER') {
         return [
-          ...this.alertTargetOpts.map(opt => {
+          ...this.alertTargetOpts.map((opt) => {
             return {
               id: opt.value,
               fullName: opt.key,
@@ -319,7 +290,7 @@ export default {
     recipientOpts() {
       if (this.user.userLevel == 'MANAGER') {
         return [
-          ...this.alertRecipientOpts.map(opt => {
+          ...this.alertRecipientOpts.map((opt) => {
             return {
               id: opt.value,
               fullName: opt.key,
@@ -351,6 +322,12 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
+
+.row__save {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
 .btn {
   &--danger {
     @include button-danger();
@@ -367,20 +344,25 @@ export default {
   }
 }
 .alert-settings-modal {
-  padding: 0.5rem;
+  padding: 1rem;
   height: 100%;
   overflow-y: scroll;
   max-height: 100%;
+  background-color: $panther;
+  color: white;
+  font-family: $bold-font-family;
 }
 ::v-deep .dropdown-search {
   margin: 1rem 0rem;
 }
 .alerts-page__settings {
+  margin: 2rem;
   &__frequency {
     display: flex;
     align-items: center;
     &-label {
-      @include muted-font();
+      color: $panther-silver;
+      font-size: 0.75rem;
       margin: 0 0.5rem;
     }
   }

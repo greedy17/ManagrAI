@@ -32,7 +32,9 @@ import UpdateAccounts from '@/views/customize/UpdateAccounts'
 import UpdateLeads from '@/views/customize/UpdateLeads'
 import CreateLeads from '@/views/customize/CreateLeads'
 import ProfilePage from '@/views/user/ProfilePage'
+import CloseDateApproaching from '@/views/settings/alerts/create/templates/CloseDateApproaching'
 import CloseDatePassed from '@/views/settings/alerts/create/templates/CloseDatePassed'
+import DealRotting from '@/views/settings/alerts/create/templates/DealRotting'
 
 // TODO: We should keep this style guide page
 // import Styles from '@/views/settings/Styles'
@@ -159,6 +161,16 @@ export default new Router({
       path: '/close-date-passed',
       name: 'CloseDatePassed',
       component: CloseDatePassed,
+    },
+    {
+      path: '/close-date-approaching',
+      name: 'CloseDateApproaching',
+      component: CloseDateApproaching,
+    },
+    {
+      path: '/deal-rotting',
+      name: 'DealRotting',
+      component: DealRotting,
     },
     {
       path: '/alerts',

@@ -1,17 +1,19 @@
 <template>
   <div>
     <!-- <span class="alert-group-row--label">create automation</span> -->
-    <div v-if="form.field.groupOrder.value != 0">
-      <label class="alert-group-row__condition-label">AND</label>
-      <ToggleCheckBox
-        @input="
-          selectedCondition == 'AND' ? (selectedCondition = 'OR') : (selectedCondition = 'AND')
-        "
-        :value="selectedCondition !== 'AND'"
-        offColor="#199e54"
-        onColor="#199e54"
-      />
-      <label class="alert-group-row__condition-label">OR</label>
+    <div class="centered">
+      <div class="toggle__switch" v-if="form.field.groupOrder.value != 0">
+        <label class="alert-group-row__condition-label">AND</label>
+        <ToggleCheckBox
+          @input="
+            selectedCondition == 'AND' ? (selectedCondition = 'OR') : (selectedCondition = 'AND')
+          "
+          :value="selectedCondition !== 'AND'"
+          offColor="#199e54"
+          onColor="#199e54"
+        />
+        <label class="alert-group-row__condition-label">OR</label>
+      </div>
     </div>
 
     <div>
@@ -23,14 +25,21 @@
         />
         <div class="row__buttons">
           <button
+            class="remove_button"
             @click.stop="onRemoveOperand(i)"
             v-if="form.field.alertOperands.groups.length > 1"
             :disabled="form.field.alertOperands.groups.length - 1 <= 0"
           >
-            Remove
+            Remove Row
           </button>
+
           <button class="plus_button" @click="addOperandForm">
-            Add Row<img src="@/assets/images/plusOne.png" style="height: 1rem" alt="" />
+            Add Row
+            <img
+              src="@/assets/images/plusOne.png"
+              style="height: 1.25rem; margin-left: 0.25rem"
+              alt=""
+            />
           </button>
         </div>
       </div>
@@ -153,23 +162,51 @@ export default {
     margin: 0 0.5rem;
   }
 }
-
+.centered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 2rem;
+}
 .row__buttons {
   display: flex;
   flex-direction: row;
-  justify-content: flex-end;
+  justify-content: center;
   align-items: center;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+.toggle__switch {
+  display: flex;
+  flex-direction: row;
 }
 .plus_button {
-  color: white;
+  color: $panther-blue;
   border-radius: 0.5rem;
-  padding: 0.25rem;
-  border: 1px solid white;
+  border: none;
   background: transparent;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: bold;
 }
+
+.remove_button {
+  color: $panther-orange;
+  border: none;
+  font-weight: bold;
+  background: transparent;
+  cursor: pointer;
+}
+
 .sub {
   font-size: 13px;
   margin-left: 0.5rem;
+}
+.row {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
 }
 .rows {
   display: flex;
@@ -178,5 +215,9 @@ export default {
 }
 .left {
   margin-left: -5rem;
+}
+.column {
+  display: flex;
+  align-items: center;
 }
 </style>

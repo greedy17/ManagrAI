@@ -1,5 +1,6 @@
 <template>
-  <div class="alert-operand-row">
+  <div v-if="form.field.operandOrder.value === 0" class="alert-operand-row">
+    <!-- <span class="alert-operand-row--label">Alert Operands</span> -->
     <!-- <div class="alert-operand-row__condition" v-if="form.field.operandOrder.value != 0">
       <label class="alert-operand-row__condition-label">AND</label>
       <ToggleCheckBox
@@ -11,7 +12,11 @@
       <label class="alert-operand-row__condition-label">OR</label>
     </div> -->
     <div class="alert-operand-row__options">
-      <div class="alert-operand-row__field" style="margin: 0 0.3rem">
+      <div
+        v-if="selectedFieldType != 'DATE'"
+        class="alert-operand-row__field"
+        style="margin: 0 0.3rem"
+      >
         <FormField :errors="form.field.operandIdentifier.errors">
           <template v-slot:input>
             <DropDownSearch
@@ -21,7 +26,7 @@
               v-model="form.field.operandIdentifier.value"
               displayKey="referenceDisplayLabel"
               valueKey="apiName"
-              nullDisplay="Select an SFDC field"
+              nullDisplay="Search SFDC fields"
               searchable
               :hasNext="!!objectFields.pagination.hasNextPage"
               @load-more="objectFieldNextPage"
@@ -31,7 +36,11 @@
           </template>
         </FormField>
       </div>
-      <div class="alert-operand-row__operator" style="margin: 0 0.3rem">
+      <div
+        v-if="!(selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME')"
+        class="alert-operand-row__operator"
+        style="margin: 0 0.3rem"
+      >
         <FormField :errors="form.field.operandOperator.errors">
           <template v-slot:input>
             <DropDownSearch
@@ -48,7 +57,7 @@
           </template>
         </FormField>
       </div>
-      <!-- <div class="alert-operand-row__value">
+      <div class="alert-operand-row__value">
         <FormField
           v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'"
           :errors="form.field.operandValue.errors"
@@ -86,38 +95,59 @@
               />
             </template>
           </FormField>
+          <div v-else>
+            <FormField
+              @blur="form.field.operandValue.validate()"
+              :errors="form.field.operandValue.errors"
+              v-model="form.field.operandValue.value"
+              :inputType="getInputType(form.field._operandIdentifier.value)"
+              large
+              bordered
+              placeholder="Enter a value"
+              v-if="!(selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME')"
+            />
+            <div
+              v-if="selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME'"
+              class="column"
+            >
+              <!-- <span class="row"
+                ><input
+                  @click="setOperandDateValue(0)"
+                  type="radio"
+                  id="today"
+                  value="0"
+                  v-model="operandDate"
+                />
+                <label for="today">{{ form.field.operandIdentifier.value }} is today.</label>
+              </span> -->
 
-          <FormField
-            v-else
-            style="margin: 1rem 2rem"
-            @blur="form.field.operandValue.validate()"
-            :errors="form.field.operandValue.errors"
-            v-model="form.field.operandValue.value"
-            :inputType="getInputType(form.field._operandIdentifier.value)"
-            large
-            bordered
-            placeholder="Enter a value"
-            class="mar"
-          />
-          <div
-            v-if="selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME'"
-            class="alert-operand-row__date-range"
-          >
-            This alert will look for resources {{ form.field.operandValue.value }}
-            {{ /^\-/.test(form.field.operandValue.value) ? ' days before ' : ' days after ' }}
-            selected alert trigger date
-            {{
-              form.field.operandOperator.value
-                ? /=/.test(form.field.operandOperator.value)
-                  ? ' including the specified day '
-                  : ' excluding the specified day '
-                : ''
-            }}
-            see preview for details
-            -1 = yesterday, 0 = today, 1 = tomorrow
+              <span class="row"
+                ><input
+                  @click="setOperandDateValue(5)"
+                  type="radio"
+                  id="Approaching"
+                  value="5"
+                  v-model="operandDate"
+                />
+                <label for="Approaching"
+                  >{{ form.field.operandIdentifier.value }} is approaching.</label
+                >
+              </span>
+
+              <span class="row"
+                ><input
+                  @click="setOperandDateValue(-1)"
+                  type="radio"
+                  id="passed"
+                  value="-1"
+                  v-model="operandDate"
+                />
+                <label for="passed">{{ form.field.operandIdentifier.value }} has passed.</label>
+              </span>
+            </div>
           </div>
         </template>
-      </div> -->
+      </div>
     </div>
   </div>
 </template>
@@ -174,12 +204,12 @@ export default {
         ModelClass: SObjectField,
         filters: { forAlerts: true, filterable: true, page: 1 },
       }),
-
       // used by dropdown as a ref field to retrieve obj of selected opt
       selectedOperandFieldRef: null,
       // used by dd as a ref field to retrieve obj of selected opt
       selectedOperandValueRef: null,
       picklistOpts: [],
+      operandDate: '',
       NON_FIELD_ALERT_OPTS,
 
       intOpts: [
@@ -275,6 +305,10 @@ export default {
         console.log(e)
       }
     },
+    setOperandDateValue(val) {
+      this.form.field.operandValue.value = val
+      this.form.field.operandOperator.value = '<='
+    },
   },
   computed: {
     selectedField() {
@@ -340,11 +374,42 @@ export default {
         this.form.field.operandType.value = val
       },
     },
-    mounted() {
-      setTimeout(() => {
-        this.form.field.operandType.value = 'FIELD'
-      }, 500)
-    },
+  },
+  beforeMount() {
+    this.form.field.operandIdentifier.value = 'CloseDate'
+    this.form.field._operandIdentifier.value = {
+      apiName: 'CloseDate',
+      createable: true,
+      custom: false,
+      dataType: 'Date',
+      displayValue: '',
+      filterable: 'true',
+      id: '310405d5-0b5e-4c60-8493-54b26b2c3d39',
+      includeInRecap: null,
+      label: 'Close Date',
+      length: 0,
+      order: null,
+      reference: 'false',
+      referenceDisplayLabel: 'Close Date',
+      referenceToInfos: Array[0],
+      required: true,
+      unique: false,
+      updateable: true,
+      value: '',
+    }
+  },
+  mounted() {
+    console.log(this.form.field.operandOrder.value)
+
+    if (this.form.field.operandOrder.value === 1) {
+      this.form.field.operandIdentifier.value = 'CloseDate'
+      this.form.field.operandOperator.value = '>='
+      this.form.field.operandValue.value = 1
+    } else if (this.form.field.operandOrder.value === 0) {
+      this.form.field.operandIdentifier.value = 'CloseDate'
+      this.form.field.operandOperator.value = '<='
+      this.form.field.operandValue.value = 7
+    }
   },
 }
 </script>
@@ -376,8 +441,8 @@ export default {
 }
 .alert-operand-row {
   // @include standard-border();
-  margin: 1rem;
-  padding: 0.5rem 1rem;
+  // margin: 1rem;
+  // padding: 0.5rem 1rem;
   display: flex;
   flex-direction: column;
 
@@ -391,6 +456,7 @@ export default {
   position: relative;
   top: 0rem;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
   &-label {
@@ -416,7 +482,21 @@ export default {
     color: black;
   }
 }
+.toggle__row {
+  display: flex;
+  flex-direction: row;
+}
 .mar {
   margin-top: 1rem;
+}
+.column {
+  display: flex;
+  flex-direction: column;
+  margin: 1rem;
+}
+.row {
+  display: flex;
+  flex-direction: row;
+  margin: 0.2rem;
 }
 </style>

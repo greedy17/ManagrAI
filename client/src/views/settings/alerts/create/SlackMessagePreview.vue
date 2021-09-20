@@ -15,11 +15,24 @@
           </span>
         </div>
         <div class="slack-message__container-content__body">
+          <span class="row__preview" style="word-wrap: break-word">
+            <p>
+              Hey {{ userName }}, your deal with Netflix has a passed closed date . Please update
+              it!
+            </p>
+            <div class="column__buttons">
+              <button class="update">Update Opportunity</button>
+              <button class="playbook">Open Playbook</button>
+              <button class="recording">Call recording</button>
+            </div>
+          </span>
           <div class="divider"></div>
-          <span v-html="alert.message" style="word-wrap: break-word"></span>
-          <div class="divider"></div>
-          <button class="btn btn--primary">Update {{ alert.resourceType }}</button>
+          <em style="align-self: flex-start; color: #beb5cc">
+            This Opportunity is owned by {{ userName }}
+            <span style="margin-left: 2rem; color: white">Example</span>
+          </em>
         </div>
+        <!-- <p style="align-self: flex-end; color: #beb5cc">Example</p> -->
       </div>
     </div>
   </div>
@@ -35,6 +48,11 @@ export default {
       default: true,
     },
   },
+  data() {
+    return {
+      userName: this.$store.state.user.firstName + ' ' + this.$store.state.user.lastName,
+    }
+  },
 }
 </script>
 
@@ -42,22 +60,56 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/mixins/utils';
 @import '@/styles/mixins/buttons';
-.btn {
-  &--primary {
-    @include primary-button();
-  }
+
+.update {
+  color: white;
+  background-color: teal;
+  border: none;
+  font-weight: bold;
+  width: 9rem;
+  height: 2rem;
+  border-radius: 0.25rem;
+  margin-bottom: 0.25rem;
 }
-
+.playbook {
+  color: white;
+  background-color: tomato;
+  border: none;
+  font-weight: bold;
+  width: 9rem;
+  height: 2rem;
+  border-radius: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+.recording {
+  color: white;
+  background-color: transparent;
+  border: 1px solid white;
+  font-weight: bold;
+  width: 9rem;
+  height: 2rem;
+  border-radius: 0.25rem;
+}
+.column__buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.row__preview {
+  display: flex;
+  flex-direction: row;
+}
 .slack-message {
-  box-shadow: 0.2rem 0.5rem 0.5rem 0.2rem whitesmoke, -0.2rem 0.5rem 0.5rem 0.2rem whitesmoke;
-
+  box-shadow: 1px 2px 4px black;
+  background-color: $panther;
   padding: 0.8rem 2rem;
   border-radius: 1rem;
-  min-height: 10rem;
-  width: 100%;
+  min-height: 12rem;
+  width: 40vw;
 }
 .slack-message__container {
   display: flex;
+  color: white;
   &-icon {
     background-image: url(../../../../assets/images/logo.png);
     background-repeat: no-repeat;
@@ -83,12 +135,16 @@ export default {
         font-size: 20px;
         margin: 0rem 1rem;
         max-width: 35rem;
+        color: $panther-silver;
       }
       &-type {
         background-color: whitesmoke;
         color: gray;
-        font-size: 15px;
+        font-size: 13px;
+        font-weight: bold;
         margin: 0rem 1rem;
+        padding: 0.2rem;
+        border-radius: 0.25rem;
       }
       &-time {
         @include muted-font();

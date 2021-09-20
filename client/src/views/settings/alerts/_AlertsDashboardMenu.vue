@@ -25,12 +25,12 @@
       <router-link exact-active-class="active" :to="{ name: 'ListTemplates' }">
         <div class="row">
           <img src="@/assets/images/edit.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
-          <h3>Run/Edit</h3>
+          <h3>Run/Activate</h3>
         </div>
       </router-link>
 
       <div>
-        <div class="row">
+        <div class="row" style="cursor: not-allowed">
           <img
             src="@/assets/images/analyze.png"
             style="height: 1.25rem; margin-right: 0.5rem"
@@ -42,10 +42,15 @@
     </div>
 
     <div v-if="isHome" style="margin-left: 6vw">
-      <h2 style="color: white">Smart Alerts</h2>
-      <p style="font-weight: bold; color: #beb5cc; margin-top: -0.5rem">
-        Automated workflows that keep you on track
+      <h2 class="center" style="color: white">Smart Alerts</h2>
+      <p class="center" style="font-weight: bold; color: #beb5cc; margin-top: -0.5rem">
+        Automated workflows that help keep you on track
       </p>
+
+      <div class="center" style="margin-top: 2rem">
+        <SlackMessagePreview />
+        <!-- <p style="color: #3c3940; align-self: flex-end; width: 30%">Ex.</p> -->
+      </div>
     </div>
 
     <router-view :key="$route.fullPath"></router-view>
@@ -53,8 +58,13 @@
 </template>
 
 <script>
+import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePreview'
+
 export default {
   name: 'AlertsDashboardMenu',
+  components: {
+    SlackMessagePreview,
+  },
   computed: {
     isHome() {
       return this.$route.name == 'alerts'
@@ -70,7 +80,12 @@ export default {
 .coming-soon {
   @include muted-font(13px);
 }
-
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
 .sidenav {
   height: 100%;
   width: 15vw;
@@ -97,10 +112,10 @@ a:hover {
 }
 .active {
   color: white;
-  text-shadow: 0 0 20px $panther-gold;
+  text-shadow: 0 0 10px $dark-green;
 }
 .title {
-  color: $panther-orange;
+  color: $panther-gold;
   font-weight: bold;
 }
 .row {

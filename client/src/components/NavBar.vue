@@ -37,9 +37,7 @@
               </router-link>
             </li>
             <li>
-              <router-link active-class="active" :to="{ name: 'ListTemplates' }"
-                >Automate
-              </router-link>
+              <router-link active-class="active" :to="{ name: 'alerts' }">Automate </router-link>
             </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
@@ -57,9 +55,7 @@
               </router-link>
             </li>
             <li>
-              <router-link active-class="active" :to="{ name: 'ListTemplates' }"
-                >Automate
-              </router-link>
+              <router-link active-class="active" :to="{ name: 'alerts' }">Automate </router-link>
             </li>
           </ul>
         </div>

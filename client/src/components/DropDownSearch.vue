@@ -90,12 +90,18 @@ export default {
 
 ::v-deep .tn-dropdown__selected-items--multi__item {
   font-size: 16px;
-  background-color: $grape;
+  background-color: $panther-orange;
   color: white;
   width: 100%;
 }
 ::v-deep .tn-dropdown__selected-items__item-selection,
 ::v-deep .tn-dropdown__selected-items__item-selection--muted {
   color: white;
+}
+
+::v-deep
+  .tn-dropdown__selected-items--multi.tn-dropdown__selected-items--multi--searchable.tn-dropdown__selected-items--multi--visible {
+  -webkit-transform: translateY(0);
+  transform: translateY(0);
 }
 </style>

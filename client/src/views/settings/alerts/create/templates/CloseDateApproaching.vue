@@ -4,7 +4,7 @@
       <h2 style="font-weight: bold; text-align: center">
         <span style="border-bottom: 3px solid #ddad3c; padding-bottom: 0.25rem">
           Close date
-          <span style="color: #5f8cff">Passed</span>
+          <span style="color: #5f8cff">Approaching</span>
         </span>
       </h2>
     </div>
@@ -43,6 +43,7 @@
                     <label for="value">{{ key.key }}</label>
                   </span>
                 </div>
+
                 <div class="bottom__middle">
                   <p style="color: #beb5cc">Step 1/4</p>
                 </div>
@@ -51,7 +52,7 @@
               <div>
                 <div v-if="pageNumber === 1">
                   <p style="font-weight: bold; color: #beb5cc">
-                    Who's Close Date's are we checking for ?
+                    Who's pipelines are we searching through ?
                     <span style="color: #ff7649; font-size: 0.9em"> *check all that apply</span>
                   </p>
                   <div :key="value" v-for="(key, value) in userTargetsOpts">
@@ -65,7 +66,6 @@
                       <label for="value">{{ key.fullName }}</label>
                     </span>
                   </div>
-
                   <div class="bottom__middle">
                     <p style="color: #beb5cc">Step 2/4</p>
                   </div>
@@ -156,6 +156,7 @@
                   >
                     Send to a group of users (DM) instead ?
                   </span>
+
                   <div class="bottom__middle">
                     <p style="color: #beb5cc">Step 3/4</p>
                   </div>
@@ -169,24 +170,23 @@
       <div v-if="pageNumber === 3" class="alert__column">
         <div class="collection">
           <h2 class="centered__" style="color: #beb5cc">
-            {{ this.alertTemplateForm.field.title.value }}
+            <!-- {{ this.alertTemplateForm.field.title.value }} -->Summary
           </h2>
 
           <p>
-            This Smart Alert will check for passed
-            <span style="color: #ff7649">Close Date's</span> every
+            Recipients will recieve this Smart Alert for all
+            <span style="color: #ff7649">Close Date's</span> approaching every
             <span style="color: #ff7649">week</span> on
             <span style="color: #ff7649">{{
               onConvert(alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value)
             }}</span
-            >.
+            >:
           </p>
 
-          <p>Recipients will recieve the following message:</p>
           <p>
             "Hey <span style="color: #69e3cd">(Recipient Name)</span>, your deal
-            <span style="color: #69e3cd">(Opportunity Name)</span> has a closed date that has
-            passed. Please update it!"
+            <span style="color: #69e3cd">(Opportunity Name)</span> has an upcoming closed date.
+            Please update it!"
           </p>
 
           <div class="bottom__middle">
@@ -233,7 +233,7 @@
       v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
       class="visible"
     >
-      <PassedAlertGroup
+      <NewAlertGroup
         :form="alertGroup"
         :resourceType="alertTemplateForm.field.resourceType.value"
       />
@@ -255,7 +255,7 @@ import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 //Internal
 import FormField from '@/components/forms/FormField'
-import PassedAlertGroup from '@/views/settings/alerts/create/PassedAlertGroup'
+import NewAlertGroup from '@/views/settings/alerts/create/NewAlertGroup'
 import AlertSummary from '@/views/settings/alerts/create/_AlertSummary'
 import ListContainer from '@/components/ListContainer'
 import ListItem from '@/components/ListItem'
@@ -289,14 +289,14 @@ import {
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
-  name: 'CloseDatePassed',
+  name: 'CloseDateApproaching',
   components: {
     ExpandablePanel,
     DropDownSearch,
     ListContainer,
     ListItem,
     SlackMessagePreview,
-    PassedAlertGroup,
+    NewAlertGroup,
     SlackNotificationTemplate,
     quillEditor,
     ToggleCheckBox,
@@ -352,6 +352,10 @@ export default {
         { key: 'Friday', value: '4' },
         { key: 'Saturday', value: '5' },
         { key: 'Sunday', value: '6' },
+      ],
+      nameOptions: [
+        { key: 'Close Date Passed', value: 'Close Date Passed' },
+        { key: 'Close Date Approaching', value: 'Close Date Approaching' },
       ],
     }
   },
@@ -603,9 +607,9 @@ export default {
   },
   beforeMount() {
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
-    this.alertTemplateForm.field.title.value = 'Close Date Passed'
+    this.alertTemplateForm.field.title.value = 'Close Date Approaching'
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
-      'Hey { __Recipient.full_name }, your deal { Opportunity.Name } has a close date that has passed. Please update it!'
+      'Hey { __Recipient.full_name }, your deal { Opportunity.Name } has an upcoming closed date. Please update it!'
   },
 }
 </script>
@@ -698,12 +702,14 @@ export default {
 }
 .collection {
   background-color: $panther;
-
+  margin-top: 1rem;
   padding: 1rem;
   border-radius: 0.5rem;
   height: 50vh;
   width: 34vw;
   box-shadow: 3px 4px 7px black;
+  display: flex;
+  flex-direction: column;
 }
 .bottom {
   margin-bottom: 2rem;
@@ -728,7 +734,7 @@ export default {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  margin-top: 1rem;
+  margin-top: 2rem;
 }
 input {
   cursor: pointer;
@@ -808,6 +814,7 @@ input {
   height: 50vh;
   width: 34vw;
   box-shadow: 3px 4px 7px black;
+  margin-top: 1rem;
 }
 .fields_title {
   background-color: $panther;

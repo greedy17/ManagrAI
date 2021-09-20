@@ -1,21 +1,47 @@
 <template>
   <div class="alerts-template-list">
+    <Modal v-if="deleteOpen" dimmed>
+      <div class="delete_modal">
+        <h2 style="color: #ff7649">Delete Alert</h2>
+        <div>
+          <p>This action cannot be undone, are you sure ?</p>
+          <div class="center">
+            <button class="yes__button" @click.stop="onDeleteTemplate(deleteId)">Yep, do it</button>
+            <button class="no__button" @click="deleteClose">Just kidding</button>
+          </div>
+        </div>
+      </div>
+    </Modal>
+
     <div class="col">
-      <h2 style="color: white; font-weight: bold; text-align: center">
-        Run/edit your Smart Alerts
+      <h2 v-if="editing" style="color: white; font-weight: bold; text-align: center">
+        Run/Activate your Smart Alerts
+      </h2>
+      <h2 v-if="!editing" style="color: white; font-weight: bold; text-align: center">
+        Edit your Smart Alert
       </h2>
       <div>
         <p
           v-if="!templates.list.length"
           style="color: #beb5cc; font-weight: bold; text-align: center"
         >
-          No alerts found. <router-link to="templates">Templates</router-link> are a great place to
-          start, or you can <router-link to="templates">build your own!</router-link>
+          No alerts found.
+          <router-link to="templates" style="color: #69e3cd">Templates</router-link> are a great
+          place to start, or you can
+          <router-link to="build-your-own" style="color: #69e3cd">build your own!</router-link>
         </p>
       </div>
     </div>
     <template v-if="!templates.isLoading && templates.list.length">
-      <div class="alert_cards">
+      <div class="middle" v-if="!editing">
+        <div class="edit__modal">
+          <div>
+            <AlertsEditPanel :alert="currentAlert" />
+          </div>
+          <button style="margin-bottom: 1rem" class="no__button" @click="closeEdit">Done</button>
+        </div>
+      </div>
+      <div class="alert_cards" v-if="editing">
         <div :key="i" v-for="(alert, i) in templates.list" class="card__">
           <div :data-key="alert.id" class="card__header">
             <h3>{{ alert.title.toUpperCase() }}</h3>
@@ -24,13 +50,26 @@
             <button @click.stop="onRunAlertTemplateNow(alert.id)" class="green_button">
               Run now
             </button>
-            <div>
-              <button class="edit_button" style="margin-right: 0.25rem">Edit</button>
-              <button class="delete_button" @click.stop="onDeleteTemplate(alert.id)">Delete</button>
+            <div class="centered">
+              <button
+                @click="makeAlertCurrent(alert)"
+                class="edit_button"
+                style="margin-right: 0.25rem"
+              >
+                Edit Alert
+              </button>
+
+              <button class="delete_button" @click="deleteClosed(alert.id)">Delete Alert</button>
             </div>
           </div>
 
           <div class="row__two">
+            <p style="margin-right: 0.5rem; color: #beb5cc; font-size: 0.75rem">
+              *may have to refresh page for edits to reflect
+            </p>
+            <p style="margin-right: 0.5rem; font-weight: bold; color: #69e3cd">
+              Results: {{ alert.instances.length }}
+            </p>
             <div class="row__">
               <p style="margin-right: 0.25rem">OFF</p>
               <ToggleCheckBox
@@ -110,7 +149,6 @@
         </template>
       </ExpandablePanel> -->
     </template>
-    <template> </template>
   </div>
 </template>
 
@@ -128,6 +166,7 @@ import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
 import ExpandablePanel from '@/components/ExpandablePanel'
 import FormField from '@/components/forms/FormField'
 import AlertsEditPanel from '@/views/settings/alerts/view/_AlertsEditPanel'
+import Modal from '@/components/InviteModal'
 
 /**
  * Services
@@ -145,20 +184,46 @@ import AlertTemplate, {
 
 export default {
   name: 'AlertsTemplateList',
-  components: { ExpandablePanel, PulseLoadingSpinner, ToggleCheckBox, FormField, AlertsEditPanel },
+  components: {
+    ExpandablePanel,
+    PulseLoadingSpinner,
+    ToggleCheckBox,
+    FormField,
+    AlertsEditPanel,
+    Modal,
+  },
   data() {
     return {
       templates: CollectionManager.create({ ModelClass: AlertTemplate }),
+      deleteOpen: false,
+      deleteId: '',
+      currentAlert: {},
+      editing: true,
     }
   },
   async created() {
     this.templates.refresh()
   },
   methods: {
+    makeAlertCurrent(val) {
+      this.currentAlert = val
+      this.editing = !this.editing
+    },
+    deleteClosed(val) {
+      this.deleteOpen === false ? (this.deleteOpen = true) : (this.deleteOpen = false)
+      this.deleteId = val
+    },
+    deleteClose() {
+      this.deleteOpen === false ? (this.deleteOpen = true) : (this.deleteOpen = false)
+    },
+    closeEdit() {
+      this.editing = !this.editing
+    },
     async onDeleteTemplate(id) {
       try {
         await AlertTemplate.api.deleteAlertTemplate(id)
         await this.templates.refresh()
+        this.deleteOpen = !this.deleteOpen
       } catch {
         this.$Alert.alert({
           message: 'There was an error removing your alert',
@@ -230,6 +295,74 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
+
+::v-deep .item-container__label {
+  color: white;
+  border: none;
+}
+::v-deep .ls-container__list--horizontal {
+  background-color: $panther;
+  width: 50vw;
+}
+::v-deep .ls-container {
+  background: transparent;
+  box-shadow: none;
+  margin-bottom: 1rem;
+}
+.middle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.delete_modal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: $panther;
+  border-radius: 0.5rem;
+  color: white;
+  height: 28vh;
+}
+.edit__modal {
+  background-color: $panther;
+  border-radius: 1rem;
+  color: white;
+  height: 40vh;
+  width: 80%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: column;
+  overflow: scroll;
+}
+.editing__button {
+}
+.yes__button {
+  width: 8vw;
+  background-color: $panther-gold;
+  border: none;
+  border-radius: 0.25rem;
+  color: white;
+  cursor: pointer;
+  margin-right: 0.5rem;
+  padding: 0.5rem;
+  font-weight: bold;
+}
+.no__button {
+  width: 8vw;
+  background-color: $panther-purple;
+  border: none;
+  border-radius: 0.25rem;
+  color: white;
+  cursor: pointer;
+  padding: 0.5rem;
+  font-weight: bold;
+}
+.yes__button:hover,
+.no__button:hover {
+  filter: brightness(80%);
+}
 .no-data {
   color: $gray;
   margin-left: 0.5rem;
@@ -257,6 +390,7 @@ export default {
   justify-content: space-evenly;
   align-items: center;
   margin-top: 2rem;
+  flex-wrap: wrap;
 }
 .card__ {
   background-color: $panther;
@@ -284,6 +418,7 @@ export default {
     height: 3rem;
     font-weight: bold;
     margin-bottom: 1rem;
+    color: white;
   }
 }
 .icon {
@@ -323,8 +458,8 @@ a {
   width: 100%;
 }
 .green_button {
-  color: $dark-green;
-  background-color: white;
+  color: white;
+  background-color: $dark-green;
   width: 8vw;
   border-radius: 0.25rem;
   padding: 0.5rem;
@@ -335,9 +470,9 @@ a {
 }
 .delete_button {
   color: $panther-silver;
-  border: 1px solid $panther-silver;
+  border: 2px solid $panther-silver;
   background-color: $panther;
-  width: 5vw;
+  width: 8vw;
   border-radius: 0.25rem;
   padding: 0.5rem;
   font-weight: bold;
@@ -347,15 +482,36 @@ a {
 .edit_button {
   color: $panther-purple;
   background-color: white;
-  width: 5vw;
+  width: 8vw;
   border-radius: 0.25rem;
   padding: 0.5rem;
   font-weight: bold;
   font-size: 16px;
-  border: none;
+  border: 2px solid $white;
   cursor: pointer;
 }
 .debug {
   border: 2px solid red;
+}
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.centered {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+::-webkit-scrollbar {
+  background-color: $panther;
+  -webkit-appearance: none;
+  width: 4px;
+  height: 100%;
+}
+::-webkit-scrollbar-thumb {
+  border-radius: 2px;
+  background-color: $panther-silver;
 }
 </style>
