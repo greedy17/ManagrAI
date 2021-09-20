@@ -156,7 +156,7 @@ def add_cadence_membership(person_id, cadence_id):
                     "account_id": slaccount.account_id,
                 }
                 create_res = PeopleAdapter.create_in_salesloft(auth_account.access_token, data)
-                create_person(create_res["data"])
+                process_person(create_res["data"])
                 people_id = create_res["data"]["id"]
                 created = True
 
