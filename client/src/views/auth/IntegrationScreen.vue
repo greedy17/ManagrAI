@@ -17,7 +17,7 @@
       <div class="card">
         <div class="card__header">
           <img class="card-img" src="@/assets/images/salesforce.png" />
-          <h2 class="card__title">Salesforce</h2>
+          <h3 class="card__title">Salesforce</h3>
           <PulseLoadingSpinnerButton
             v-if="!hasSalesforceIntegration"
             @click="onGetAuthLink('SALESFORCE')"
@@ -48,7 +48,7 @@
             src="@/assets/images/zoom.png"
             style="height: 3rem; width: 3rem"
           />
-          <h2 class="card__title" style="margin-right: 1rem">Zoom</h2>
+          <h3 class="card__title" style="margin-right: 1rem">Zoom</h3>
           <PulseLoadingSpinnerButton
             v-if="!hasZoomIntegration"
             :disabled="hasZoomIntegration"
@@ -82,7 +82,7 @@
       <div class="card">
         <div class="card__header">
           <img style="height: 3rem" src="@/assets/images/slackLogo.png" />
-          <h2 class="card__title" style="margin-right: 1rem">Slack</h2>
+          <h3 class="card__title" style="margin-right: 1rem">Slack</h3>
           <PulseLoadingSpinnerButton
             v-if="
               (!orgHasSlackIntegration && userCanIntegrateSlack) ||
@@ -105,7 +105,7 @@
               v-if="userCanIntegrateSlack"
               @click="onRefreshSlack"
               class="orange__button"
-              text="Refresh Token"
+              text="Refresh"
               :loading="generatingToken && selectedIntegration == 'SLACK'"
             ></PulseLoadingSpinnerButton>
           </div>
@@ -161,17 +161,41 @@
           />
         </div> -->
       </div>
+
       <div class="card">
         <div class="card__header">
-          <img style="height: 3.5rem" src="@/assets/images/teamsLogo.png" />
-          <h2 class="card__title">Teams</h2>
+          <img style="height: 1.5rem" src="@/assets/images/salesloftLogo.jpeg" />
+          <h3 class="card__title">Salesloft</h3>
           <p class="card-text" style="margin-left: 1rem; font-size: 16px">Coming Soon...</p>
         </div>
       </div>
       <div class="card">
         <div class="card__header">
+          <img style="height: 3rem" src="@/assets/images/gong.png" />
+          <h3 class="card__title">Gong</h3>
+          <p class="card-text" style="margin-left: 1rem; font-size: 16px">Coming Soon...</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card__header">
           <img style="height: 6rem" src="@/assets/images/hubspott.png" />
-          <!-- <h2 class="card__title">Hubspot</h2> -->
+          <h3 class="card__title">Hubspot</h3>
+          <p class="card-text" style="margin-left: 1rem; font-size: 16px">Coming Soon...</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card__header">
+          <img style="height: 3.5rem" src="@/assets/images/teamsLogo.png" />
+          <h3 class="card__title">Teams</h3>
+          <p class="card-text" style="margin-left: 1rem; font-size: 16px">Coming Soon...</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card__header">
+          <img style="height: 3rem" src="@/assets/images/googleDrive.png" />
+          Google Drive
           <p class="card-text" style="margin-left: 1rem; font-size: 16px">Coming Soon...</p>
         </div>
       </div>
@@ -195,7 +219,7 @@
       <div>
         <PulseLoadingSpinnerButton
           v-if="hasSalesforceIntegration && !user.isAdmin"
-          @click="goToSmartAlerts"
+          @click="goToSlackFormBuilder"
           class="slack-button"
           text="Continue"
           :loading="false"

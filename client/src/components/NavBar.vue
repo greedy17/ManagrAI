@@ -19,9 +19,7 @@
               </router-link>
             </li>
             <li>
-              <router-link active-class="active" :to="{ name: 'SlackFormSettings' }"
-                >Automate
-              </router-link>
+              <router-link active-class="active" :to="{ name: 'alerts' }">Automate </router-link>
             </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
@@ -39,9 +37,7 @@
               </router-link>
             </li>
             <li>
-              <router-link active-class="active" :to="{ name: 'ListTemplates' }"
-                >Automate
-              </router-link>
+              <router-link active-class="active" :to="{ name: 'alerts' }">Automate </router-link>
             </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
@@ -59,25 +55,19 @@
               </router-link>
             </li>
             <li>
-              <router-link active-class="active" :to="{ name: 'ListTemplates' }"
-                >Automate
-              </router-link>
+              <router-link active-class="active" :to="{ name: 'alerts' }">Automate </router-link>
             </li>
           </ul>
         </div>
       </div>
 
       <div class="right">
-        <img
-          style="height: 1.75rem"
-          src="@/assets/images/help.png"
-          class="tooltip__icon"
-          @mouseenter="toggleTooltip"
-          @mouseleave="toggleTooltip"
-        />
-        <div class="tooltip__popup" v-if="tooltipOpen">
-          <div class="tooltip__popup__bold">Having issues?</div>
-          <div>Email support@mymanagr.com</div>
+        <div class="tooltip">
+          <img style="height: 2rem" src="@/assets/images/help.png" class="tooltip__icon" />
+          <div class="tooltip__popup">
+            <div class="tooltip__popup__bold">Having issues?</div>
+            <div class="tip">Email Us: support@mymanagr.com</div>
+          </div>
         </div>
 
         <div class="profile">
@@ -279,27 +269,31 @@ nav {
   position: relative;
   &__icon {
     height: 2rem;
-    &:hover {
-      cursor: pointer;
-    }
   }
 
   &__popup {
-    width: 20rem;
+    width: 18rem;
+    visibility: hidden;
 
-    margin: 2px 13px 3px 40px;
-    padding: 13px 21px 16px 29px;
+    padding: 13px 21px;
     border-radius: 5px;
     box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
-    border: solid 2px #dcdddf;
-    background-color: #ffffff;
+    border: solid 2px $panther-gray;
+    background-color: $panther;
+    color: white;
     position: absolute;
-    right: 4rem;
+    top: -5px;
+    right: 105%;
 
     &__bold {
       font-family: #{$bold-font-family};
+      color: $panther-silver;
     }
   }
+}
+
+.tooltip:hover .tooltip__popup {
+  visibility: visible;
 }
 
 ul {

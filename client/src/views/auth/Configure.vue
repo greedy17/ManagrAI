@@ -38,9 +38,13 @@
       <p style="padding-top: 0.75rem" v-if="syncing">Syncing, please wait...</p>
     </div>
 
-    <div>
+    <div v-if="user.isAdmin">
       <button v-if="syncing" class="disabled">Continue</button>
       <button v-else @click="goToUpdate" class="continue_button">Continue</button>
+    </div>
+    <div v-else>
+      <button v-if="syncing" class="disabled">Continue</button>
+      <button v-else @click="goToAlerts" class="continue_button">Continue</button>
     </div>
   </div>
 </template>
@@ -64,6 +68,14 @@ export default {
     },
     goToUpdate() {
       this.$router.push({ name: 'UpdateOpportunity' })
+    },
+    goToAlerts() {
+      this.$router.push({ name: 'alerts' })
+    },
+  },
+  computed: {
+    user() {
+      return this.$store.state.user
     },
   },
   mounted() {

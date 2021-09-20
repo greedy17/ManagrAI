@@ -1,0 +1,1072 @@
+<template>
+  <div class="alerts-page">
+    <div>
+      <h2 style="font-weight: bold; text-align: center">
+        <span style="border-bottom: 3px solid #ddad3c; padding-bottom: 0.25rem">
+          Close date
+          <span style="color: #5f8cff">Approaching</span>
+        </span>
+      </h2>
+    </div>
+
+    <div class="alert__row">
+      <div v-if="pageNumber < 3" class="alert__column">
+        <div class="collection_fields">
+          <template>
+            <div :key="i" v-for="(form, i) in alertTemplateForm.field.alertConfig.groups">
+              <div class="visible" style="height: 5vh">
+                <label>Weekly</label>
+                <ToggleCheckBox
+                  @input="
+                    form.field.recurrenceFrequency.value == 'WEEKLY'
+                      ? (form.field.recurrenceFrequency.value = 'MONTHLY')
+                      : (form.field.recurrenceFrequency.value = 'WEEKLY')
+                  "
+                  :value="form.field.recurrenceFrequency.value !== 'WEEKLY'"
+                  offColor="#199e54"
+                  onColor="#199e54"
+                />
+                <label>Monthly</label>
+              </div>
+
+              <div v-if="pageNumber === 0" :errors="form.field.recurrenceDay.errors">
+                <p style="color: #beb5cc">What day would you like to recieve your Smart Alert ?</p>
+
+                <div :key="value" v-for="(key, value) in weeklyOpts">
+                  <span class="row">
+                    <input
+                      type="radio"
+                      :value="key.value"
+                      id="value"
+                      v-model="form.field.recurrenceDay.value"
+                    />
+                    <label for="value">{{ key.key }}</label>
+                  </span>
+                </div>
+
+                <div class="bottom__middle">
+                  <p style="color: #beb5cc">Step 1/4</p>
+                </div>
+              </div>
+
+              <div>
+                <div v-if="pageNumber === 1">
+                  <p style="font-weight: bold; color: #beb5cc">
+                    Who's pipelines are we searching through ?
+                    <span style="color: #ff7649; font-size: 0.9em"> *check all that apply</span>
+                  </p>
+                  <div :key="value" v-for="(key, value) in userTargetsOpts">
+                    <span class="row">
+                      <input
+                        v-model="form.field.alertTargets.value"
+                        :value="key.id"
+                        id="value"
+                        type="checkbox"
+                      />
+                      <label for="value">{{ key.fullName }}</label>
+                    </span>
+                  </div>
+                  <div class="bottom__middle">
+                    <p style="color: #beb5cc">Step 2/4</p>
+                  </div>
+                </div>
+                <div v-if="pageNumber === 2">
+                  <span
+                    v-if="
+                      form.field._recipients.value &&
+                      form.field.recipientType.value == 'SLACK_CHANNEL'
+                    "
+                  >
+                    Please make sure @managr has been added to
+                    <em style="color: #69e3cd">{{ form.field._recipients.value.name }}</em> channel
+                  </span>
+                  <p style="font-weight: bold; color: #beb5cc">
+                    Who's recieving these Smart Alerts ?
+                    <span style="color: #ff7649; font-size: 0.9em"> *check all that apply</span>
+                  </p>
+
+                  <div
+                    v-if="form.field.recipientType.value == 'USER_LEVEL'"
+                    :errors="form.field.recipients.errors"
+                  >
+                    <div :key="value" v-for="(key, value) in recipientOpts">
+                      <span class="row">
+                        <input
+                          v-model="form.field.recipients.value"
+                          :value="key.id"
+                          id="value"
+                          type="checkbox"
+                        />
+                        <label for="value">{{ key.fullName }}</label>
+                      </span>
+                    </div>
+                  </div>
+
+                  <FormField
+                    v-if="form.field.recipientType.value == 'SLACK_CHANNEL'"
+                    :errors="form.field.recipients.errors"
+                  >
+                    <template v-slot:input>
+                      <DropDownSearch
+                        :items.sync="channelOpts.channels"
+                        :itemsRef.sync="form.field._recipients.value"
+                        v-model="form.field.recipients.value"
+                        @input="form.field.recipients.validate()"
+                        displayKey="name"
+                        valueKey="id"
+                        nullDisplay="Channels"
+                        :hasNext="!!channelOpts.nextCursor"
+                        @load-more="listChannels(channelOpts.nextCursor)"
+                        searchable
+                        local
+                      >
+                        <template v-slot:tn-dropdown-option="{ option }">
+                          <img
+                            v-if="option.isPrivate == true"
+                            class="card-img"
+                            src="@/assets/images/lockAsset.png"
+                          />
+                          {{ option['name'] }}
+                        </template>
+                      </DropDownSearch>
+                    </template>
+                  </FormField>
+
+                  <span
+                    @click="
+                      form.field.recipientType.value = recipientTypeToggle(
+                        form.field.recipientType.value,
+                      )
+                    "
+                    v-if="form.field.recipientType.value == 'USER_LEVEL'"
+                    style="margin: 2rem"
+                  >
+                    Send to a
+                    <strong style="color: #69e3cd; cursor: pointer">#channel</strong>
+                    instead ?
+                  </span>
+
+                  <span
+                    @click="
+                      form.field.recipientType.value = recipientTypeToggle(
+                        form.field.recipientType.value,
+                      )
+                    "
+                    v-else
+                  >
+                    Send to a group of users (DM) instead ?
+                  </span>
+
+                  <div class="bottom__middle">
+                    <p style="color: #beb5cc">Step 3/4</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <div v-if="pageNumber === 3" class="alert__column">
+        <div class="collection">
+          <h2 class="centered__" style="color: #beb5cc">
+            <!-- {{ this.alertTemplateForm.field.title.value }} -->Summary
+          </h2>
+
+          <p>
+            Recipients will recieve this Smart Alert for all
+            <span style="color: #ff7649">Close Date's</span> approaching every
+            <span style="color: #ff7649">week</span> on
+            <span style="color: #ff7649">{{
+              onConvert(alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value)
+            }}</span
+            >:
+          </p>
+
+          <p>
+            "Hey <span style="color: #69e3cd">(Recipient Name)</span>, your deal
+            <span style="color: #69e3cd">(Opportunity Name)</span> has an upcoming closed date.
+            Please update it!"
+          </p>
+
+          <div class="bottom__middle">
+            <p style="color: #beb5cc">Step 4/4</p>
+          </div>
+        </div>
+      </div>
+      <div class="row__">
+        <button
+          @click="goToTemplates"
+          v-if="pageNumber === 0"
+          style="margin-right: 0.5rem"
+          class="gold__button"
+        >
+          <img src="@/assets/images/back.png" alt="" />
+          Templates
+        </button>
+        <button @click="onPreviousPage" v-else style="margin-right: 0.5rem" class="gold__button">
+          Prev
+        </button>
+        <button
+          v-if="pageNumber < 3"
+          @click="onNextPage"
+          :class="pageNumber === 3 ? 'disabled__button' : 'purple__button'"
+          style="margin-right: 2rem"
+        >
+          Next
+        </button>
+        <PulseLoadingSpinnerButton
+          v-else
+          :loading="savingTemplate"
+          :class="
+            !alertTemplateForm.isValid || savingTemplate ? 'disabled__button' : 'purple__button'
+          "
+          text="Activate alert"
+          @click.stop="onSave"
+          :disabled="!alertTemplateForm.isValid || savingTemplate"
+        />
+      </div>
+    </div>
+
+    <div
+      :key="index"
+      v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
+      class="visible"
+    >
+      <NewAlertGroup
+        :form="alertGroup"
+        :resourceType="alertTemplateForm.field.resourceType.value"
+      />
+    </div>
+  </div>
+</template>
+
+<script>
+/**
+ * Components
+ * */
+// Pacakges
+import 'quill/dist/quill.core.css'
+import 'quill/dist/quill.snow.css'
+import 'quill/dist/quill.bubble.css'
+
+import { quillEditor } from 'vue-quill-editor'
+import ToggleCheckBox from '@thinknimble/togglecheckbox'
+import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
+//Internal
+import FormField from '@/components/forms/FormField'
+import NewAlertGroup from '@/views/settings/alerts/create/NewAlertGroup'
+import AlertSummary from '@/views/settings/alerts/create/_AlertSummary'
+import ListContainer from '@/components/ListContainer'
+import ListItem from '@/components/ListItem'
+import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotificationTemplate'
+import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePreview'
+import DropDownSearch from '@/components/DropDownSearch'
+import ExpandablePanel from '@/components/ExpandablePanel'
+import Modal from '@/components/Modal'
+import SmartAlertTemplateBuilder from '@/views/settings/alerts/create/SmartAlertTemplateBuilder'
+
+/**
+ * Services
+ */
+
+import AlertTemplate, {
+  AlertGroupForm,
+  AlertTemplateForm,
+  AlertConfigForm,
+  AlertMessageTemplateForm,
+  AlertOperandForm,
+} from '@/services/alerts/'
+import { stringRenderer } from '@/services/utils'
+import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import {
+  SObjectField,
+  SObjectValidations,
+  SObjectPicklist,
+  NON_FIELD_ALERT_OPTS,
+  SOBJECTS_LIST,
+} from '@/services/salesforce'
+import User from '@/services/users'
+import SlackOAuth, { SlackListResponse } from '@/services/slack'
+export default {
+  name: 'CloseDateApproaching',
+  components: {
+    ExpandablePanel,
+    DropDownSearch,
+    ListContainer,
+    ListItem,
+    SlackMessagePreview,
+    NewAlertGroup,
+    SlackNotificationTemplate,
+    quillEditor,
+    ToggleCheckBox,
+    FormField,
+    AlertSummary,
+    PulseLoadingSpinnerButton,
+    Modal,
+    SmartAlertTemplateBuilder,
+  },
+  data() {
+    return {
+      channelOpts: new SlackListResponse(),
+      savingTemplate: false,
+      listVisible: true,
+      dropdownVisible: true,
+      NON_FIELD_ALERT_OPTS,
+      stringRenderer,
+      OPPORTUNITY: 'Opportunity',
+      operandDate: '',
+      recurrenceDay: '',
+      SOBJECTS_LIST,
+      pageNumber: 0,
+      alertTemplateForm: new AlertTemplateForm(),
+      selectedBindings: [],
+      fields: CollectionManager.create({ ModelClass: SObjectField }),
+      users: CollectionManager.create({ ModelClass: User }),
+      recipientBindings: [
+        { referenceDisplayLabel: 'Recipient Full Name', apiName: 'full_name' },
+        { referenceDisplayLabel: 'Recipient First Name', apiName: 'first_name' },
+        { referenceDisplayLabel: 'Recipient Last Name', apiName: 'last_name' },
+        { referenceDisplayLabel: 'Recipient Email', apiName: 'email' },
+      ],
+      alertRecipientOpts: [
+        { key: 'Myself', value: 'SELF' },
+        { key: 'Owner', value: 'OWNER' },
+        { key: 'All Managers', value: 'MANAGERS' },
+        { key: 'All Reps', value: 'REPS' },
+        { key: 'Everyone', value: 'ALL' },
+        { key: 'SDR', value: 'SDR' },
+      ],
+      alertTargetOpts: [
+        { key: 'Myself', value: 'SELF' },
+        { key: 'All Managers', value: 'MANAGERS' },
+        { key: 'All Reps', value: 'REPS' },
+        { key: 'Everyone', value: 'ALL' },
+        { key: 'SDR', value: 'SDR' },
+      ],
+      weeklyOpts: [
+        { key: 'Monday', value: '0' },
+        { key: 'Tuesday', value: '1' },
+        { key: 'Wednesday', value: '2' },
+        { key: 'Thursday', value: '3' },
+        { key: 'Friday', value: '4' },
+        { key: 'Saturday', value: '5' },
+        { key: 'Sunday', value: '6' },
+      ],
+      nameOptions: [
+        { key: 'Close Date Passed', value: 'Close Date Passed' },
+        { key: 'Close Date Approaching', value: 'Close Date Approaching' },
+      ],
+    }
+  },
+  async created() {
+    if (this.user.slackRef) {
+      await this.listChannels()
+    }
+    if (this.user.userLevel == 'MANAGER') {
+      await this.users.refresh()
+    }
+  },
+  watch: {
+    selectedResourceType: {
+      immediate: true,
+      async handler(val, prev) {
+        if (prev && val !== prev) {
+          this.alertTemplateForm = this.alertTemplateForm.reset()
+          this.selectedResourceType = val
+        }
+        if (this.selectedResourceType) {
+          this.fields.filters.salesforceObject = this.selectedResourceType
+          this.fields.filters.page = 1
+          await this.fields.refresh()
+        }
+      },
+    },
+  },
+  methods: {
+    onConvert(val) {
+      let newVal = ''
+      if (val == 0) {
+        newVal = 'Monday'
+      } else if (val == 1) {
+        newVal = 'Tuesday'
+      } else if (val == 2) {
+        newVal = 'Wednesday'
+      } else if (val == 3) {
+        newVal = 'Thursday'
+      } else if (val == 4) {
+        newVal = 'Friday'
+      } else if (val == 5) {
+        newVal = 'Saturday'
+      } else if (val == 6) {
+        newVal = 'Sunday'
+      }
+      return newVal
+    },
+    onNextPage() {
+      this.pageNumber <= 2 ? (this.pageNumber += 1) : (this.pageNumber = this.pageNumber)
+    },
+    onPreviousPage() {
+      this.pageNumber >= 1 ? (this.pageNumber -= 1) : (this.pageNumber = this.pageNumber)
+    },
+    goToTemplates() {
+      this.$router.push({ name: 'CreateNew' })
+    },
+    async listChannels(cursor = null) {
+      const res = await SlackOAuth.api.listChannels(cursor)
+      const results = new SlackListResponse({
+        channels: [...this.channelOpts.channels, ...res.channels],
+        responseMetadata: { nextCursor: res.nextCursor },
+      })
+      this.channelOpts = results
+    },
+    recipientTypeToggle(value) {
+      if (!this.user.slackRef) {
+        this.$Alert.alert({ type: 'error', message: 'Slack Not Integrated', timeout: 2000 })
+        return 'USER_LEVEL'
+      }
+      if (value == 'USER_LEVEL') {
+        return 'SLACK_CHANNEL'
+      } else if (value == 'SLACK_CHANNEL') {
+        return 'USER_LEVEL'
+      }
+      return value
+    },
+    async onSave() {
+      this.savingTemplate = true
+      this.alertTemplateForm.validate()
+      if (this.alertTemplateForm.isValid) {
+        try {
+          const res = await AlertTemplate.api.createAlertTemplate({
+            ...this.alertTemplateForm.toAPI,
+            user: this.$store.state.user.id,
+          })
+          this.$router.push({ name: 'ListTemplates' })
+        } catch (e) {
+          this.$Alert.alert({
+            message: 'An error occured saving template',
+            timeout: 2000,
+            type: 'error',
+          })
+        } finally {
+          this.savingTemplate = false
+        }
+      }
+    },
+    bindText(val) {
+      this.$refs['message-body'].quill.focus()
+      let start = 0
+      if (this.editor.selection.lastRange) {
+        start = this.editor.selection.lastRange.index
+      }
+      this.editor.insertText(start, `{ ${val} }`)
+    },
+    onAddAlertGroup() {
+      // length determines order
+      const order = this.alertTemplateForm.field.alertGroups.groups.length
+      if (order >= 3) {
+        this.$Alert.alert({ message: 'You can only add 3 groups', timeout: 2000 })
+        return
+      }
+      // set next order
+
+      this.alertTemplateForm.addToArray('alertGroups', new AlertGroupForm())
+      this.alertTemplateForm.field.alertGroups.groups[order].field.groupOrder.value = order
+    },
+    onAddAlertSetting() {
+      if (this.alertTemplateForm.field.alertConfig.groups.length >= 3) {
+        this.$Alert.alert({ message: 'You can only add 3 configurations', timeout: 2000 })
+        return
+      }
+      this.alertTemplateForm.addToArray('alertConfig', new AlertConfigForm())
+    },
+    onRemoveAlertGroup(i) {
+      // get order and update options
+
+      if (this.alertTemplateForm.field.alertGroups.groups.length - 1 <= 0) {
+        return
+      }
+
+      const order = this.alertTemplateForm.field.alertGroups.groups[i].field.groupOrder.value
+
+      this.alertTemplateForm.removeFromArray('alertGroups', i)
+
+      let greaterThan = this.alertTemplateForm.field.alertGroups.groups.slice(i)
+
+      greaterThan.forEach((el, index) => {
+        el.field.groupOrder.value = order + index
+      })
+    },
+    onRemoveSetting(i) {
+      if (this.alertTemplateForm.field.alertConfig.groups.length - 1 <= 0) {
+        return
+      }
+      this.alertTemplateForm.removeFromArray('alertConfig', i)
+    },
+    async onSearchFields(v) {
+      this.fields.pagination = new Pagination()
+      this.fields.filters = {
+        ...this.fields.filters,
+        search: v,
+      }
+      await this.fields.refresh()
+    },
+    async fieldNextPage() {
+      await this.fields.addNextPage()
+    },
+    async onSearchUsers(v) {
+      this.users.pagination = new Pagination()
+      this.users.filters = {
+        ...this.users.filters,
+        search: v,
+      }
+      await this.users.refresh()
+    },
+    async onUsersNextPage() {
+      await this.users.addNextPage()
+    },
+    showList() {
+      this.listVisible = !this.listVisible
+    },
+    showDropDown() {
+      this.dropdownVisible = !this.dropdownVisible
+    },
+    setAlertValues(date, name) {
+      this.alertTemplateForm.field.title = name
+      this.alertTemplateForm.alertGroups.groups[0].fields.alertOperands.groups[0].fields.operandValue.value =
+        date
+      this.alertTemplateForm.alertGroups.groups[0].fields.alertOperands.groups[0].fields.operandOperator.value =
+        '<='
+      if (date >= 0) {
+        this.alertGroups.groups[0].fields.alertOperands.groups[0].fields.field.operandOperator.value =
+          '='
+      }
+    },
+    setRecurrenceDay(val) {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = val
+    },
+  },
+  computed: {
+    userTargetsOpts() {
+      if (this.user.userLevel == 'MANAGER') {
+        return [
+          ...this.alertTargetOpts.map((opt) => {
+            return {
+              id: opt.value,
+              fullName: opt.key,
+            }
+          }),
+          ...this.users.list,
+        ]
+      } else {
+        return [{ fullName: 'Myself', id: 'SELF' }]
+      }
+    },
+    recipientOpts() {
+      if (this.user.userLevel == 'MANAGER') {
+        return [
+          ...this.alertRecipientOpts.map((opt) => {
+            return {
+              id: opt.value,
+              fullName: opt.key,
+            }
+          }),
+          ...this.users.list,
+        ]
+      } else {
+        return [{ fullName: 'Myself', id: 'SELF' }]
+      }
+    },
+    formValue() {
+      return this.alertTemplateForm.value
+    },
+    editor() {
+      return this.$refs['message-body'].quill
+    },
+    selection() {
+      return this.editor.selection.lastRange
+    },
+    alertObj() {
+      return {
+        title: this.formValue.title,
+        message: this.formValue.alertMessages[0].body,
+        resourceType: this.selectedResourceType,
+      }
+    },
+    user() {
+      return this.$store.state.user
+    },
+    selectedResourceType: {
+      get() {
+        return this.alertTemplateForm.field.resourceType.value
+      },
+      set(val) {
+        this.alertTemplateForm.field.resourceType.value = val
+      },
+    },
+  },
+  beforeMount() {
+    this.alertTemplateForm.field.resourceType.value = 'Opportunity'
+    this.alertTemplateForm.field.title.value = 'Close Date Approaching'
+    this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
+      'Hey { __Recipient.full_name }, your deal { Opportunity.Name } has an upcoming closed date. Please update it!'
+  },
+}
+</script>
+
+<style lang="scss" scoped>
+@import '@/styles/variables';
+@import '@/styles/layout';
+@import '@/styles/containers';
+@import '@/styles/forms';
+@import '@/styles/emails';
+@import '@/styles/sidebars';
+@import '@/styles/mixins/buttons';
+@import '@/styles/mixins/utils';
+@import '@/styles/buttons';
+
+.bottom__middle {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  filter: drop-shadow(8px 10px 7px black);
+}
+.collection__fields {
+  background-color: $panther;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  flex-direction: row;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  height: 46vh;
+  width: 50vw;
+  overflow-x: scroll;
+}
+.gold__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 1rem;
+  border-radius: 0.3rem;
+  font-weight: bold;
+  line-height: 1.14;
+  text-indent: none;
+  border-style: none;
+  letter-spacing: 0.03rem;
+  color: white;
+  background-color: $panther-gold;
+  cursor: pointer;
+  height: 2rem;
+  width: 10rem;
+  font-weight: bold;
+  font-size: 1.02rem;
+}
+.purple__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 1rem;
+  border-radius: 0.3rem;
+  font-weight: bold;
+  line-height: 1.14;
+  text-indent: none;
+  border-style: none;
+  letter-spacing: 0.03rem;
+  color: white;
+  background-color: $panther-purple;
+  cursor: pointer;
+  height: 2rem;
+  width: 10rem;
+  font-weight: bold;
+  font-size: 1.02rem;
+}
+.disabled__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 1rem;
+  border-radius: 0.3rem;
+  font-weight: bold;
+  line-height: 1.14;
+  text-indent: none;
+  border-style: none;
+  letter-spacing: 0.03rem;
+  background-color: $panther-silver;
+  color: $panther-gray;
+  cursor: not-allowed;
+  height: 2rem;
+  width: 10rem;
+  font-weight: bold;
+  font-size: 1.02rem;
+}
+.collection {
+  background-color: $panther;
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  height: 50vh;
+  width: 34vw;
+  box-shadow: 3px 4px 7px black;
+  display: flex;
+  flex-direction: column;
+}
+.bottom {
+  margin-bottom: 2rem;
+  height: 24vh;
+  width: 26vw;
+  margin-top: 1rem;
+}
+.message {
+  width: 20vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+.row {
+  display: flex;
+  flex-direction: row;
+  font-weight: bold;
+}
+.row__ {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2rem;
+}
+input {
+  cursor: pointer;
+}
+.column {
+  display: flex;
+  flex-direction: column;
+  margin: 1rem;
+}
+.centered__ {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.visible {
+  visibility: hidden;
+}
+.continue__button {
+  margin: 0.2rem;
+  padding: 0.35rem;
+  width: 10vw;
+  background-color: $panther-purple;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 2rem;
+}
+.back__button {
+  margin: 0.2rem;
+  padding: 0.35rem;
+  width: 10vw;
+  background-color: $panther-gold;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 2rem;
+}
+.disabled__continue {
+  margin: 0.2rem;
+  padding: 0.35rem;
+  width: 10vw;
+  background-color: $panther-silver;
+  color: $panther;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: bold;
+  cursor: not-allowed;
+  margin-top: 2rem;
+}
+.days__start {
+  display: flex;
+  flex-direction: column;
+}
+.alert__column {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-right: 2rem;
+}
+.alert__row {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.collection_fields {
+  background-color: $panther;
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  height: 50vh;
+  width: 34vw;
+  box-shadow: 3px 4px 7px black;
+  margin-top: 1rem;
+}
+.fields_title {
+  background-color: $panther;
+  margin: 1rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  width: 100%;
+}
+.quill-editor {
+  width: 100%;
+}
+
+textarea {
+  @extend .textarea;
+}
+.box__header {
+  &__status {
+    display: flex;
+    &--error {
+      color: $coral;
+      fill: $coral;
+    }
+    &--success {
+      color: $dark-green;
+      fill: $dark-green;
+    }
+  }
+}
+.alerts-page {
+  color: white;
+  &__previous-step {
+    @include muted-font(12);
+  }
+  &__groups {
+    &__group {
+      display: flex;
+    }
+  }
+  &__message {
+    display: flex;
+    height: 20rem;
+    &-template {
+      margin: 0rem 1rem;
+      &__notification {
+        width: 30rem;
+        margin: 1rem 0rem;
+      }
+      &__message {
+        width: 40rem;
+        margin: 1rem 0rem;
+      }
+    }
+  }
+}
+.alert_cards {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
+  margin-top: 2rem;
+}
+.card__ {
+  background-color: $panther;
+  border: none;
+  width: 10rem;
+  height: 20vh;
+  margin-right: 1rem;
+  margin-bottom: 2rem;
+  border-radius: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 3px 4px 7px black;
+  color: white;
+  @media only screen and (min-width: 768px) {
+    flex: 1 0 24%;
+    min-width: 21rem;
+    max-width: 30rem;
+  }
+
+  &header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 5rem;
+  }
+}
+.alerts-page__settings {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+
+  &__frequency {
+    display: flex;
+    align-items: center;
+    &-label {
+      @include muted-font();
+      margin: 0 0.5rem;
+    }
+  }
+  &-remove {
+    justify-self: end;
+  }
+}
+.btn {
+  &--danger {
+    @include button-danger();
+  }
+  &--primary {
+    @include primary-button();
+  }
+  &--secondary {
+    @include secondary-button();
+  }
+
+  &--icon {
+    @include --icon();
+  }
+}
+.muted--link {
+  @include muted-font();
+  @include pointer-on-hover();
+  &--important {
+    color: red;
+    font-weight: bold;
+    font-size: 11px;
+  }
+}
+.alerts-page__message-options-body__bindings__fields {
+  // margin: 3rem 0rem;
+  // width: 40rem;
+}
+.green {
+  color: $dark-green;
+}
+.red {
+  color: red;
+}
+.pad {
+  padding-bottom: 1rem;
+  margin-top: -1rem;
+}
+.pink {
+  color: $candy;
+  font-weight: bold;
+}
+.purple {
+  color: $grape;
+  font-weight: bold;
+}
+.mar {
+  margin-top: -2rem;
+}
+.center {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+.sub {
+  font-size: 12px;
+  margin-left: 0.5rem;
+}
+.sub__ {
+  font-size: 16px;
+  margin-top: -0.5rem;
+  color: $panther-silver;
+}
+.group {
+  display: flex;
+  flex-direction: row;
+  height: auto;
+  margin: 0.5rem;
+  padding: 0.5rem;
+}
+.col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: white;
+}
+.row_ {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 2rem;
+}
+
+.bottom {
+  margin-bottom: 1.25rem;
+  height: 170px;
+}
+.left {
+  margin-bottom: 2rem;
+}
+.space {
+  margin-bottom: 0.5rem;
+}
+.add__group {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  margin-top: 3rem;
+  padding-bottom: 1rem;
+  border-bottom: 3px solid $mid-gray;
+}
+.bolder {
+  font-size: 16px;
+  margin-left: 1rem;
+  cursor: pointer;
+  color: $base-gray;
+}
+.bolder:hover {
+  border-bottom: 2px solid $candy;
+  color: $candy;
+}
+.alertsModal {
+  color: $candy;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.modal__container {
+  overflow-y: scroll;
+}
+.blue {
+  color: $slate-gray;
+}
+.top {
+  border-top: 3px solid $grape;
+}
+.templates {
+  border-bottom: 1px solid $gray;
+}
+.orange_button {
+  width: 7rem;
+  background-color: white;
+  color: $panther-orange;
+  font-weight: bold;
+  font-size: 16px;
+  height: 2rem;
+  border-radius: 0.5rem;
+  border: 2px solid white;
+  cursor: pointer;
+}
+::-webkit-scrollbar {
+  background-color: $panther;
+  -webkit-appearance: none;
+  width: 4px;
+  height: 100%;
+}
+::-webkit-scrollbar-thumb {
+  border-radius: 2px;
+  background-color: $panther-silver;
+}
+</style>
