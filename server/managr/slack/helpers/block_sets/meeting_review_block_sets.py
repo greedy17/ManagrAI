@@ -140,10 +140,10 @@ def schedule_meeting(context):
 @block_set(required_context=["u", "resource_type", "resource_id", "resource_name"])
 def add_to_cadence_block_set(context):
     return block_builders.section_with_button_block(
-        "Add to a Cadence",
+        "Add to Cadence",
         "add_to_cadence",
         "Add contacts to Cadence",
-        style="primary",
+        style="danger",
         action_id=action_with_params(
             slack_const.ADD_TO_CADENCE_MODAL,
             params=[
