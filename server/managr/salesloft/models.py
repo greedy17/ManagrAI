@@ -487,12 +487,12 @@ class PeopleAdapter:
         else:
             status_code = response.status_code
             error_data = response.json()
-            error_param = error_data.get("error", None)
-            errors_param = error_data.get("errors", None)
+            logger.info(f"{error_data}")
+            error_check = error_data.get("error_param", None)
+            error_param = error_check if error_check else error_data.get("errors")
             kwargs = {
                 "status_code": status_code,
                 "error_param": error_param,
-                "errors_param": errors_param,
             }
 
             SalesloftAPIException(HTTPError(kwargs), fn_name)

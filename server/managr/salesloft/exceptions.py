@@ -23,7 +23,6 @@ class SalesloftAPIException:
         self.error_class_name = e.__class__.__name__
         self.status_code = e.args[0]["status_code"]
         self.error = e.args[0]["error_param"]
-        self.errors = e.args[0]["errors_param"]
         self.fn_name = fn_name
         self.retry_attempts = 0
         self.raise_error()

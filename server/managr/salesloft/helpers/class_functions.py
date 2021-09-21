@@ -32,8 +32,8 @@ def sync_current_cadence_page(data):
     for resource in data:
         res = process_cadence(resource)
         if "failed" in res:
-            logger.error(f"Could not create cadence {resource['name']}")
-            return
+            logger.error(f"Failed create cadence {resource['name']}")
+            continue
     return {"success": True}
 
 
@@ -58,8 +58,8 @@ def sync_current_slaccount_page(data):
     for resource in data:
         res = process_slaccount(resource)
         if "failed" in res:
-            logger.error(f"Could not create salesloft account {resource['name']}")
-            return
+            logger.error(f"Failed to create salesloft account {resource['name']}")
+            continue
     return {"success": True}
 
 
@@ -82,7 +82,7 @@ def sync_current_person_page(data):
     for resource in data:
         res = process_person(resource)
         if "failed" in res:
-            logger.error(f"Could not create person {resource['display_name']}")
-            return
+            logger.error(f"Failed create person {resource['display_name']}")
+            continue
     return {"success": True}
 
