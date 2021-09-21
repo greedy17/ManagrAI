@@ -87,16 +87,12 @@ def sync_slaccounts(auth_account_id):
         try:
             res = auth_account.helper_class.get_accounts()
             sync_current_slaccount_page(res["data"])
-            logger.info(f"Synced page 1 of salesloft accounts for account {auth_account}")
             if res["metadata"]["paging"]["total_pages"] > 1:
                 count = 2
                 while count <= res["metadata"]["paging"]["total_pages"]:
                     page_res = auth_account.helper_class.get_accounts(count)
                     sync_current_slaccount_page(page_res["data"])
                     count += 1
-                    logger.info(
-                        f"Synced page {count} of salesloft accounts for account {auth_account}"
-                    )
             break
         except TokenExpired:
             if attempts >= 5:
