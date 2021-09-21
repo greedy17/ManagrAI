@@ -903,3 +903,39 @@ def add_to_cadence(request):
     slack_requests.generic_request(url, data, access_token=access_token)
 
     return Response()
+
+
+@api_view(["post"])
+@permission_classes([permissions.AllowAny])
+@authentication_classes((slack_auth.SlackWebhookAuthentication,))
+def schedule_meeting_command(request):
+    slack_id = request.data.get("user_id")
+    if slack_id:
+        slack = (
+            UserSlackIntegration.objects.filter(slack_id=slack_id).select_related("user").first()
+        )
+        if not slack:
+            return Response(
+                data={
+                    "response_type": "ephemeral",
+                    "text": "Sorry I cant find your managr account",
+                }
+            )
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    user = slack.user
+    access_token = user.organization.slack_integration.access_token
+    trigger_id = request.data.get("trigger_id")
+    context = {"u": str(user.id), "type": "command", "slack_id": slack_id}
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.ZOOM_MEETING__SCHEDULE_MEETING,
+            "title": {"type": "plain_text", "text": "Zoom Meeting Scheduler"},
+            "blocks": get_block_set("schedule_meeting_modal", context=context),
+            "submit": {"type": "plain_text", "text": "Submit",},
+            "private_metadata": json.dumps(context),
+        },
+    }
+    slack_requests.generic_request(url, data, access_token=access_token)
+    return Response()

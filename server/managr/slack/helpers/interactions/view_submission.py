@@ -718,7 +718,7 @@ def process_update_meeting_contact(payload, context):
             f"Failed To load update meeting contact modal for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
         )
 
-    return
+    return {"response_action": "clear"}
 
 
 @processor()
@@ -916,6 +916,7 @@ def process_create_task(payload, context):
 @processor(required_context=[])
 def process_schedule_meeting(payload, context):
     u = User.objects.get(id=context.get("u"))
+    type = context.get("type", None)
     data = payload["view"]["state"]["values"]
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
@@ -976,12 +977,20 @@ def process_schedule_meeting(payload, context):
             zoom_res["join_url"],
             description,
         )
-        updated_message = slack_requests.update_channel_message(
-            meta_data["original_message_channel"],
-            meta_data["original_message_timestamp"],
-            access_token,
-            block_set=json.dumps(meta_data["current_block"]),
-        )
+        if type:
+            update_res = slack_requests.send_ephemeral_message(
+                u.slack_integration.channel,
+                access_token,
+                meta_data["slack_id"],
+                block_set=[block_builders.simple_section(f"Zoom meeting scheduled")],
+            )
+        else:
+            updated_message = slack_requests.update_channel_message(
+                meta_data["original_message_channel"],
+                meta_data["original_message_timestamp"],
+                access_token,
+                block_set=json.dumps(meta_data["current_block"]),
+            )
     except InvalidBlocksException as e:
         return logger.exception(
             f"Faild to update Zoom Schedule Meeting modal for user {u.email}, {e}"
@@ -998,7 +1007,7 @@ def process_schedule_meeting(payload, context):
         return logger.exception(
             f"Faild to update Zoom Schedule Meeting modal for user {u.email}, {e}"
         )
-    return
+    return {}
 
 
 @log_all_exceptions
