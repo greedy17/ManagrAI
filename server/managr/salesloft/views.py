@@ -67,7 +67,7 @@ def get_salesloft_authentication(request):
     serializer.save()
     admin_account = SalesloftAuthAccount.objects.filter(admin=request.user).first()
     if admin_account:
-        users = admin_account.helper_class.get_all_users()
+        users = admin_account.helper_class.get_users()
         user_data = users.get("data")
         for user in user_data:
             user_res = SalesloftAccountAdapter.create_account(user, admin_account.id)

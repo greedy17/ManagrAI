@@ -718,7 +718,7 @@ def process_update_meeting_contact(payload, context):
             f"Failed To load update meeting contact modal for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
         )
 
-    return
+    return {"response_action": "clear"}
 
 
 @processor()
@@ -916,6 +916,7 @@ def process_create_task(payload, context):
 @processor(required_context=[])
 def process_schedule_meeting(payload, context):
     u = User.objects.get(id=context.get("u"))
+    type = context.get("type", None)
     data = payload["view"]["state"]["values"]
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
@@ -976,12 +977,20 @@ def process_schedule_meeting(payload, context):
             zoom_res["join_url"],
             description,
         )
-        updated_message = slack_requests.update_channel_message(
-            meta_data["original_message_channel"],
-            meta_data["original_message_timestamp"],
-            access_token,
-            block_set=json.dumps(meta_data["current_block"]),
-        )
+        if type:
+            update_res = slack_requests.send_ephemeral_message(
+                u.slack_integration.channel,
+                access_token,
+                meta_data["slack_id"],
+                block_set=[block_builders.simple_section(f"Zoom meeting scheduled")],
+            )
+        else:
+            updated_message = slack_requests.update_channel_message(
+                meta_data["original_message_channel"],
+                meta_data["original_message_timestamp"],
+                access_token,
+                block_set=json.dumps(meta_data["current_block"]),
+            )
     except InvalidBlocksException as e:
         return logger.exception(
             f"Faild to update Zoom Schedule Meeting modal for user {u.email}, {e}"
@@ -998,29 +1007,30 @@ def process_schedule_meeting(payload, context):
         return logger.exception(
             f"Faild to update Zoom Schedule Meeting modal for user {u.email}, {e}"
         )
-    return
+    return {}
 
 
 @log_all_exceptions
 @slack_api_exceptions(rethrow=True)
-@processor(required_context=["resource_id", "u", "resource_type"])
+@processor(required_context=["u"])
 def process_add_contacts_to_cadence(payload, context):
+    meta_data = json.loads(payload["view"]["private_metadata"])
     u = User.objects.get(id=context.get("u"))
     cadence_id = payload["view"]["state"]["values"]["select_cadence"][
         f"GET_CADENCE_OPTIONS?u={context.get('u')}"
     ]["selected_option"]["value"]
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
+
     org = u.organization
     access_token = org.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    resource_type = context.get("resource_type")
-    if resource_type == "opportunity":
-        resource = Opportunity.objects.get(id=context.get("resource_id"))
-    else:
-        resource = Account.objects.get(id=context.get("resource_id"))
-    contacts = resource.contacts.all().values_list("email", flat=True)
-    people = People.objects.filter(email__in=contacts).values_list("people_id", flat=True)
+    contacts = [
+        option["value"]
+        for option in payload["view"]["state"]["values"]["select_people"][
+            f"{slack_const.GET_PEOPLE_OPTIONS}?u={u.id}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}"
+        ]["selected_options"]
+    ]
     loading_data = {
         "trigger_id": trigger_id,
         "view_id": view_id,
@@ -1033,12 +1043,42 @@ def process_add_contacts_to_cadence(payload, context):
             ),
         },
     }
-    if len(people):
+    if len(contacts):
         res = slack_requests.generic_request(url, loading_data, access_token=access_token)
-        for person in people:
+        success = 0
+        failed = 0
+        created = 0
+        for person in contacts:
             person_res = emit_add_cadence_membership(person, cadence_id)
+            if person_res["status"] == "Success":
+                success += 1
+            elif person_res["status"] == "Created":
+                success += 1
+                created += 1
+            else:
+                failed += 1
+        logger.info(
+            f"{success} out of {success + failed} added to cadence and {created} People created in Salesloft"
+        )
+        message = (
+            f"{success}/{success + failed} added to cadence ({created} new People imported to Salesloft)"
+            if created > 0
+            else f"{success}/{success + failed} added to cadence"
+        )
+        update_res = slack_requests.send_ephemeral_message(
+            u.slack_integration.channel,
+            access_token,
+            meta_data["slack_id"],
+            block_set=[block_builders.simple_section(message)],
+        )
         return
     else:
+        update_res = slack_requests.send_ephemeral_message(
+            u.slack_integration.channel,
+            access_token,
+            meta_data["slack_id"],
+            block_set=[block_builders.simple_section(f"No people associated for {resource_id}")],
+        )
         return
 
 

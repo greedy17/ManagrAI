@@ -857,3 +857,85 @@ def redirect_from_slack(request):
         return redirect(f"http://localhost:8080/settings/integrations?{q}")
     else:
         return redirect("http://localhost:8080/settings/integrations")
+
+
+@api_view(["post"])
+@authentication_classes((slack_auth.SlackWebhookAuthentication,))
+@permission_classes([permissions.AllowAny])
+@slack_api_exceptions(
+    return_opt=Response(data={"response_type": "ephemeral", "text": "Oh-Ohh an error occured",}),
+)
+def add_to_cadence(request):
+    slack_id = request.data.get("user_id", None)
+    if slack_id:
+        slack = (
+            UserSlackIntegration.objects.filter(slack_id=slack_id).select_related("user").first()
+        )
+        if not slack:
+            return Response(
+                data={
+                    "response_type": "ephemeral",
+                    "text": "Sorry I cant find your managr account",
+                }
+            )
+    user = slack.user
+    blocks = get_block_set("select_account", {"u": str(user.id), "type": "command"},)
+    access_token = user.organization.slack_integration.access_token
+
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    trigger_id = request.data.get("trigger_id")
+    private_metadata = {
+        "channel_id": request.data.get("channel_id"),
+        "slack_id": request.data.get("user_id"),
+        "resource_type": "Account",
+    }
+
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.ADD_TO_CADENCE,
+            "title": {"type": "plain_text", "text": "Select Account"},
+            "blocks": blocks,
+            "private_metadata": json.dumps(private_metadata),
+        },
+    }
+    slack_requests.generic_request(url, data, access_token=access_token)
+
+    return Response()
+
+
+@api_view(["post"])
+@permission_classes([permissions.AllowAny])
+@authentication_classes((slack_auth.SlackWebhookAuthentication,))
+def schedule_meeting_command(request):
+    slack_id = request.data.get("user_id")
+    if slack_id:
+        slack = (
+            UserSlackIntegration.objects.filter(slack_id=slack_id).select_related("user").first()
+        )
+        if not slack:
+            return Response(
+                data={
+                    "response_type": "ephemeral",
+                    "text": "Sorry I cant find your managr account",
+                }
+            )
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    user = slack.user
+    access_token = user.organization.slack_integration.access_token
+    trigger_id = request.data.get("trigger_id")
+    context = {"u": str(user.id), "type": "command", "slack_id": slack_id}
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.ZOOM_MEETING__SCHEDULE_MEETING,
+            "title": {"type": "plain_text", "text": "Zoom Meeting Scheduler"},
+            "blocks": get_block_set("schedule_meeting_modal", context=context),
+            "submit": {"type": "plain_text", "text": "Submit",},
+            "private_metadata": json.dumps(context),
+        },
+    }
+    slack_requests.generic_request(url, data, access_token=access_token)
+    return Response()

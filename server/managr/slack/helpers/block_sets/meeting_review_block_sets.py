@@ -137,6 +137,25 @@ def schedule_meeting(context):
     )
 
 
+@block_set(required_context=["u", "resource_type", "resource_id", "resource_name"])
+def add_to_cadence_block_set(context):
+    return block_builders.section_with_button_block(
+        "Add to Cadence",
+        "add_to_cadence",
+        "Add contacts to Cadence",
+        style="danger",
+        action_id=action_with_params(
+            slack_const.ADD_TO_CADENCE_MODAL,
+            params=[
+                f"u={context.get('u')}",
+                f"resource_id={context.get('resource_id')}",
+                f"resource_name={context.get('resource_name')}",
+                f"resource_type={context.get('resource_type')}",
+            ],
+        ),
+    )
+
+
 @block_set(required_context=["w"])
 def meeting_contacts_block_set(context):
     # if this is a returning view it will also contain the selected contacts
@@ -599,7 +618,8 @@ def final_meeting_interaction_block_set(context):
     if meet_type == "No Update":
         blocks = [
             block_builders.simple_section(
-                f"No updated needed for meeting *{meeting.topic}* :calendar:", "mrkdwn",
+                f":+1: Got it! No updated needed for meeting *{meeting.topic}* :calendar:",
+                "mrkdwn",
             )
         ]
     else:

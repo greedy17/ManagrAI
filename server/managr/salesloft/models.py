@@ -96,7 +96,7 @@ class SalesloftAuthAdapter:
         data["token_generated_date"] = timezone.now()
         return cls(**data)
 
-    def get_all_users(self):
+    def get_users(self, page=1):
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
@@ -106,33 +106,39 @@ class SalesloftAuthAdapter:
         )
         return SalesloftAuthAdapter._handle_response(res)
 
-    def get_all_cadences(self):
+    def get_cadences(self, page=1):
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
         }
+        query = urlencode({"include_paging_counts": True, "page": page})
         res = client.get(
-            f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.CADENCES}", headers=headers
+            f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.CADENCES}?{query}",
+            headers=headers,
         )
         return SalesloftAuthAdapter._handle_response(res)
 
-    def get_all_accounts(self):
+    def get_accounts(self, page=1):
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
         }
+        query = urlencode({"include_paging_counts": True, "page": page})
         res = client.get(
-            f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.ACCOUNTS}", headers=headers
+            f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.ACCOUNTS}?{query}",
+            headers=headers,
         )
         return SalesloftAuthAdapter._handle_response(res)
 
-    def get_all_people(self):
+    def get_people(self, page=1):
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
         }
+        query = urlencode({"include_paging_counts": True, "page": page})
         res = client.get(
-            f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.PEOPLE}", headers=headers
+            f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.PEOPLE}?{query}",
+            headers=headers,
         )
         return SalesloftAuthAdapter._handle_response(res)
 
@@ -342,10 +348,7 @@ class CadenceAdapter:
             return None
 
     def add_membership(self, person_id, access_token):
-        headers = {
-            "Authorization": f"Bearer {access_token}",
-            "Content-Type": "application/json",
-        }
+        headers = salesloft_consts.SALESLOFT_REQUEST_HEADERS(access_token)
         query = urlencode({"person_id": person_id, "cadence_id": self.cadence_id})
         res = client.post(
             f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.ADD_TO_CADENCE}?{query}",
@@ -470,9 +473,33 @@ class PeopleAdapter:
     def as_dict(self):
         return vars(self)
 
+    @staticmethod
+    def _handle_response(response, fn_name=None):
+        if not hasattr(response, "status_code"):
+            raise ValueError
+        elif response.status_code == 200 or response.status_code == 201:
+            try:
+                data = response.json()
+            except Exception as e:
+                SalesloftAPIException(e, fn_name)
+            except json.decoder.JSONDecodeError as e:
+                return logger.error(f"An error occured with a zoom integration, {e}")
+        else:
+            status_code = response.status_code
+            error_data = response.json()
+            logger.info(f"{error_data}")
+            error_check = error_data.get("error_param", None)
+            error_param = error_check if error_check else error_data.get("errors")
+            kwargs = {
+                "status_code": status_code,
+                "error_param": error_param,
+            }
+
+            SalesloftAPIException(HTTPError(kwargs), fn_name)
+        return data
+
     @classmethod
     def create_people(cls, people_data):
-        print(people_data)
         try:
             owner = people_data["owner"]
             account = people_data["account"]
@@ -498,6 +525,16 @@ class PeopleAdapter:
         except ObjectDoesNotExist:
             return None
 
+    @staticmethod
+    def create_in_salesloft(access_token, data):
+        headers = salesloft_consts.SALESLOFT_REQUEST_HEADERS(access_token)
+        res = client.post(
+            f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.PEOPLE}",
+            headers=headers,
+            data=json.dumps(data),
+        )
+        return PeopleAdapter._handle_response(res)
+
 
 class People(TimeStampModel):
     people_id = models.IntegerField()
@@ -517,3 +554,6 @@ class People(TimeStampModel):
     class Meta:
         ordering = ["-datetime_created"]
 
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.full_name, str(self.id))

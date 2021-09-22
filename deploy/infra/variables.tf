@@ -179,7 +179,13 @@ variable "scheduled_tasks" {
       command    = "triggeralerts"
       cron       = "cron(0 5 * * ? *)"
       task_count = 1
-    }
+    },
+    {
+      name       = "syncsalesloftaccounts"
+      command    = "initsalesloftsync"
+      cron       = "cron(*/10 * * * ? *)"
+      task_count = 1
+    },
   ]
 }
 
