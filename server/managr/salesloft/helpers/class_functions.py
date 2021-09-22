@@ -29,12 +29,15 @@ def process_cadence(cadence):
 
 
 def sync_current_cadence_page(data):
+    failed = 0
+    success = 0
     for resource in data:
         res = process_cadence(resource)
         if "failed" in res:
-            logger.error(f"Failed create cadence {resource['name']}")
-            continue
-    return {"success": True}
+            failed += 1
+        else:
+            success += 1
+    return {"success": success, "failed": failed}
 
 
 def process_slaccount(slaccount):
@@ -55,12 +58,15 @@ def process_slaccount(slaccount):
 
 
 def sync_current_slaccount_page(data):
+    failed = 0
+    success = 0
     for resource in data:
         res = process_slaccount(resource)
         if "failed" in res:
-            logger.error(f"Failed to create salesloft account {resource['name']}")
-            continue
-    return {"success": True}
+            failed += 1
+        else:
+            success += 1
+    return {"success": success, "failed": failed}
 
 
 def process_person(people):
@@ -79,10 +85,13 @@ def process_person(people):
 
 
 def sync_current_person_page(data):
+    failed = 0
+    success = 0
     for resource in data:
         res = process_person(resource)
         if "failed" in res:
-            logger.error(f"Failed create person {resource['display_name']}")
-            continue
-    return {"success": True}
+            failed += 1
+        else:
+            success += 1
+    return {"success": success, "failed": failed}
 
