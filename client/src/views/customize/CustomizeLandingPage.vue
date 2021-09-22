@@ -12,37 +12,37 @@
           </p>
           <ul>
             <router-link :to="{ name: 'CreateOpportunity' }"
-              >Create <span style="color: #5f8cff; font-weight: bold">Opportunity</span>
+              >Create <span style="font-weight: bold">Opportunity</span>
             </router-link>
             <router-link :to="{ name: 'UpdateContacts' }"
-              >Update <span style="color: #ff7649; font-weight: bold">Contacts</span>
+              >Update <span style="font-weight: bold">Contacts</span>
             </router-link>
             <router-link :to="{ name: 'CreateAccounts' }"
-              >Create <span style="color: #69e3cd; font-weight: bold">Accounts</span>
+              >Create <span style="font-weight: bold">Accounts</span>
             </router-link>
             <router-link :to="{ name: 'UpdateAccounts' }"
-              >Update <span style="color: #69e3cd; font-weight: bold">Accounts</span>
+              >Update <span style="font-weight: bold">Accounts</span>
             </router-link>
             <router-link :to="{ name: 'UpdateLeads' }"
-              >Update <span style="color: #b270ff; font-weight: bold">Leads</span>
+              >Update <span style="font-weight: bold">Leads</span>
             </router-link>
             <router-link :to="{ name: 'CreateLeads' }"
-              >Create <span style="color: #b270ff; font-weight: bold">Leads</span>
+              >Create <span style="font-weight: bold">Leads</span>
             </router-link>
           </ul>
         </div>
       </template>
     </Modal>
 
-    <h2 class="title">Make updates to Salesforce from Slack</h2>
-    <p style="font-weight: bold; margin-top: -0.5rem; margin-bottom: 2rem; color: #beb5cc">
+    <h2 style="color: black" class="title">Make updates to Salesforce from Slack</h2>
+    <p style="font-weight: bold; margin-top: -0.5rem; margin-bottom: 2rem; color: #5d5e5e">
       Customize your slack forms
     </p>
 
     <div class="customizations__cards">
       <div class="card">
         <div class="card__header">
-          <h2 class="title">Update <span style="color: #5f8cff">Opportunity</span></h2>
+          <h2 class="title">Update <span>Opportunity</span></h2>
           <button @click="goToUpdateOpp" class="blue_button">View + Edit</button>
         </div>
         <div class="form_images">
@@ -65,7 +65,7 @@
 
       <div class="card">
         <div class="card__header">
-          <h2 class="title">Create <span style="color: #ff7649">Contacts</span></h2>
+          <h2 class="title">Create <span>Contacts</span></h2>
           <button @click="goToCreate" class="orange_button">View + Edit</button>
         </div>
         <div class="form_images">
@@ -184,7 +184,7 @@ export default {
       this.$router.push({ name: 'CreateContacts' })
     },
     goToTemplates() {
-      this.$router.push({ name: 'CreateNew' })
+      this.$router.push({ name: 'ListTemplates' })
     },
     // handleShowOptional() {
     //   this.showOptional = !this.showOptional
@@ -266,7 +266,7 @@ export default {
   font-size: 1.25rem;
   font-weight: bold;
   color: white;
-  background-color: $panther-purple;
+  background-color: $dark-green;
   border: none;
   cursor: pointer;
 
@@ -289,8 +289,8 @@ export default {
   border-radius: 0.5rem;
   font-size: 1.025rem;
   font-weight: bold;
-  color: white;
-  background-color: $panther-blue;
+  color: $dark-green;
+  background-color: white;
   border: none;
   cursor: pointer;
 }
@@ -300,8 +300,8 @@ export default {
   border-radius: 0.5rem;
   font-size: 1.025rem;
   font-weight: bold;
-  color: white;
-  background-color: $panther-orange;
+  color: $dark-green;
+  background-color: white;
   border: none;
   cursor: pointer;
 }
@@ -311,7 +311,7 @@ export default {
   border-radius: 0.5rem;
   font-size: 1.025rem;
   font-weight: bold;
-  color: $panther-orange;
+  color: $dark-green;
   background-color: white;
   border: none;
   cursor: pointer;
@@ -331,6 +331,10 @@ a {
   text-decoration: none;
   margin-bottom: 0.75rem;
   font-size: 1.1rem;
+  transition: all 0.5s;
+}
+a:hover {
+  transform: scale(1.025);
 }
 ul {
   display: flex;

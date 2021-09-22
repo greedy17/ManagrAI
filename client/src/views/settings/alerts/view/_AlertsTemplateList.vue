@@ -2,33 +2,43 @@
   <div class="alerts-template-list">
     <Modal v-if="deleteOpen" dimmed>
       <div class="delete_modal">
-        <h2 style="color: #ff7649">Delete Alert</h2>
+        <h2 style="color: white">Delete Alert</h2>
         <div>
           <p>This action cannot be undone, are you sure ?</p>
           <div class="center">
-            <button class="yes__button" @click.stop="onDeleteTemplate(deleteId)">Yep, do it</button>
-            <button class="no__button" @click="deleteClose">Just kidding</button>
+            <button style="margin-right: 0.5rem" class="no__button" @click="deleteClose">No</button>
+            <button class="yes__button" @click.stop="onDeleteTemplate(deleteId)">Yes</button>
           </div>
         </div>
       </div>
     </Modal>
 
     <div class="col">
-      <h2 v-if="editing" style="color: white; font-weight: bold; text-align: center">
-        Run/Activate your Smart Alerts
+      <h2
+        v-if="editing && templates.list.length"
+        style="color: black; font-weight: bold; text-align: center"
+      >
+        Run your Smart Alerts
       </h2>
-      <h2 v-if="!editing" style="color: white; font-weight: bold; text-align: center">
+      <h2 v-if="!editing" style="color: black; font-weight: bold; text-align: center">
         Edit your Smart Alert
       </h2>
-      <div>
-        <p
-          v-if="!templates.list.length"
-          style="color: #beb5cc; font-weight: bold; text-align: center"
-        >
+      <h2 v-if="!templates.list.length" style="color: black; font-weight: bold; text-align: center">
+        Smart Alerts
+      </h2>
+      <div v-if="!templates.list.length">
+        <p class="center" style="font-weight: bold; color: #5d5e5e; margin-top: -0.5rem">
+          Automated workflows that help keep you on track
+        </p>
+        <p style="color: #5d5e5e; font-weight: bold; text-align: center; margin-top: 2rem">
           No alerts found.
-          <router-link to="templates" style="color: #69e3cd">Templates</router-link> are a great
-          place to start, or you can
-          <router-link to="build-your-own" style="color: #69e3cd">build your own!</router-link>
+          <router-link to="templates" style="color: #199e54; border-bottom: 3px solid #19954e"
+            >Templates</router-link
+          >
+          are a great place to start, or you can
+          <router-link to="build-your-own" style="color: #199e54; border-bottom: 3px solid #19954e"
+            >build your own!</router-link
+          >
         </p>
       </div>
     </div>
@@ -51,25 +61,13 @@
               Run now
             </button>
             <div class="centered">
-              <button
-                @click="makeAlertCurrent(alert)"
-                class="edit_button"
-                style="margin-right: 0.25rem"
-              >
-                Edit Alert
-              </button>
+              <button @click="onTest(alert.id)" class="test-button">Test Alert</button>
 
-              <button class="delete_button" @click="deleteClosed(alert.id)">Delete Alert</button>
+              <p style="margin-left: 0.5rem">Results: {{ alert.instances.length }}</p>
             </div>
           </div>
-
-          <div class="row__two">
-            <p style="margin-right: 0.5rem; color: #beb5cc; font-size: 0.75rem">
-              *may have to refresh page for edits to reflect
-            </p>
-            <p style="margin-right: 0.5rem; font-weight: bold; color: #69e3cd">
-              Results: {{ alert.instances.length }}
-            </p>
+          <div class="row__start">
+            <p style="margin: 0.5rem 0.5rem">Schedule</p>
             <div class="row__">
               <p style="margin-right: 0.25rem">OFF</p>
               <ToggleCheckBox
@@ -84,6 +82,20 @@
                 "
               />
               <p style="margin-left: 0.25rem">ON</p>
+            </div>
+
+            <div class="row__two">
+              <img
+                @click="makeAlertCurrent(alert)"
+                src="@/assets/images/settings.png"
+                style="height: 2rem; cursor: pointer"
+              />
+
+              <img
+                src="@/assets/images/whitetrash.png"
+                style="height: 2rem; cursor: pointer"
+                @click="deleteClosed(alert.id)"
+              />
             </div>
           </div>
 
@@ -208,6 +220,7 @@ export default {
     makeAlertCurrent(val) {
       this.currentAlert = val
       this.editing = !this.editing
+      console.log(this.currentAlert)
     },
     deleteClosed(val) {
       this.deleteOpen === false ? (this.deleteOpen = true) : (this.deleteOpen = false)
@@ -242,7 +255,7 @@ export default {
         })
       } catch {
         this.$Alert.alert({
-          message: 'There was an error removing your alert',
+          message: 'There was an error testing your alert',
           type: 'error',
           timeout: 2000,
         })
@@ -259,7 +272,7 @@ export default {
         })
       } catch {
         this.$Alert.alert({
-          message: 'There was an error removing your alert',
+          message: 'There was an error toggling your alert',
           type: 'error',
           timeout: 2000,
         })
@@ -309,6 +322,15 @@ export default {
   box-shadow: none;
   margin-bottom: 1rem;
 }
+.test-button {
+  background-color: white;
+  color: $dark-green;
+  border: none;
+  font-weight: bold;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
 .middle {
   display: flex;
   justify-content: center;
@@ -336,11 +358,10 @@ export default {
   flex-direction: column;
   overflow: scroll;
 }
-.editing__button {
-}
+
 .yes__button {
   width: 8vw;
-  background-color: $panther-gold;
+  background-color: $dark-green;
   border: none;
   border-radius: 0.25rem;
   color: white;
@@ -351,7 +372,7 @@ export default {
 }
 .no__button {
   width: 8vw;
-  background-color: $panther-purple;
+  background-color: $panther-gray;
   border: none;
   border-radius: 0.25rem;
   color: white;
@@ -457,6 +478,13 @@ a {
   margin-top: 1rem;
   width: 100%;
 }
+.row__start {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: 1rem;
+  width: 100%;
+}
 .green_button {
   color: white;
   background-color: $dark-green;
@@ -469,8 +497,8 @@ a {
   cursor: pointer;
 }
 .delete_button {
-  color: $panther-silver;
-  border: 2px solid $panther-silver;
+  color: $panther-orange;
+  border: none;
   background-color: $panther;
   width: 8vw;
   border-radius: 0.25rem;
@@ -480,7 +508,7 @@ a {
   cursor: pointer;
 }
 .edit_button {
-  color: $panther-purple;
+  color: $panther-blue;
   background-color: white;
   width: 8vw;
   border-radius: 0.25rem;

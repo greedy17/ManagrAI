@@ -1,8 +1,8 @@
 <template>
   <div class="update_opportunity">
     <div class="opportunity_title">
-      <h2 style="border-bottom: 3px solid #ddad3c; padding-bottom: 0.5rem">
-        Update <span style="color: #5f8cff">Opportunity</span>
+      <h2 style="border-bottom: 3px solid #199e54; padding-bottom: 0.5rem; color: black">
+        Update <span>Opportunity</span>
       </h2>
     </div>
     <div class="box__content--expanded">

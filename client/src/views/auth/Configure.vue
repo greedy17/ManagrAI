@@ -1,8 +1,8 @@
 <template>
   <div class="config">
     <div class="col">
-      <h2>Configuring your apps</h2>
-      <p style="margin-top: -0.5rem; font-weight: bold; color: #beb5cc">
+      <h2 style="color: black">Configuring your apps</h2>
+      <p style="margin-top: -0.5rem; font-weight: bold; color: #5d5e5e">
         Managr is working it's magic to bring your apps together...
       </p>
     </div>
@@ -67,10 +67,10 @@ export default {
       )
     },
     goToUpdate() {
-      this.$router.push({ name: 'UpdateOpportunity' })
+      this.$router.push({ name: 'CustomizeLandingPage' })
     },
     goToAlerts() {
-      this.$router.push({ name: 'alerts' })
+      this.$router.push({ name: 'ListTemplates' })
     },
   },
   computed: {
@@ -112,7 +112,7 @@ export default {
   font-size: 1.05rem;
   font-weight: bold;
   color: white;
-  background-color: $panther-purple;
+  background-color: $dark-green;
   border: none;
   cursor: pointer;
 }

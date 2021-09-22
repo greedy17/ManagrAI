@@ -1,35 +1,35 @@
 <template>
   <div class="alerts-page">
     <div class="col">
-      <h2 class="title">Smart Alert Templates</h2>
-      <p class="sub__">Highly recommended and easy to setup</p>
+      <h2 style="color: black" class="title">Smart Alert Templates</h2>
+      <p style="color: #5d5e5e" class="sub__">Highly recommended and easy to setup</p>
     </div>
 
     <div class="alert_cards">
       <div class="card__">
         <div class="card__header">
-          <h3><span style="color: #5f8cff">Close Date</span> Approaching</h3>
+          <h3><span>Close Date</span> Approaching</h3>
         </div>
         <button @click="goToCloseDateApproaching" class="orange_button">Activate</button>
       </div>
 
       <div class="card__">
         <div class="card__header">
-          <h3><span style="color: #5f8cff">Close Date</span> Passed</h3>
+          <h3><span>Close Date</span> Passed</h3>
         </div>
         <button @click="goToCloseDatePassed" class="orange_button">Activate</button>
       </div>
 
       <div class="card__">
         <div class="card__header">
-          <h3><span style="color: #ff7649">Deal</span> Rotting</h3>
+          <h3><span>Deal</span> Rotting</h3>
         </div>
         <button @click="goToDealRotting" class="orange_button">Activate</button>
       </div>
 
       <div class="card__">
         <div class="card__header">
-          <h3>Update <span style="color: #69e3cd">Forecast</span></h3>
+          <h3>Update <span>Forecast</span></h3>
         </div>
         <button class="cs__button">Coming Soon</button>
       </div>
@@ -1181,7 +1181,7 @@ input {
 .orange_button {
   width: 7rem;
   background-color: white;
-  color: $panther-orange;
+  color: $dark-green;
   font-weight: bold;
   font-size: 16px;
   height: 2rem;

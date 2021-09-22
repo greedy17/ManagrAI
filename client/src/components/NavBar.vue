@@ -19,7 +19,9 @@
               </router-link>
             </li>
             <li>
-              <router-link active-class="active" :to="{ name: 'alerts' }">Automate </router-link>
+              <router-link active-class="active" :to="{ name: 'ListTemplates' }"
+                >Automate
+              </router-link>
             </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
@@ -37,7 +39,9 @@
               </router-link>
             </li>
             <li>
-              <router-link active-class="active" :to="{ name: 'alerts' }">Automate </router-link>
+              <router-link active-class="active" :to="{ name: 'ListTemplates' }"
+                >Automate
+              </router-link>
             </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
@@ -55,7 +59,9 @@
               </router-link>
             </li>
             <li>
-              <router-link active-class="active" :to="{ name: 'alerts' }">Automate </router-link>
+              <router-link active-class="active" :to="{ name: 'ListTemplates' }"
+                >Automate
+              </router-link>
             </li>
           </ul>
         </div>
@@ -63,20 +69,24 @@
 
       <div class="right">
         <div class="tooltip">
-          <img style="height: 2rem" src="@/assets/images/help.png" class="tooltip__icon" />
+          <img style="height: 1.75rem" src="@/assets/images/blackhelp.png" class="tooltip__icon" />
           <div class="tooltip__popup">
             <div class="tooltip__popup__bold">Having issues?</div>
             <div class="tip">Email Us: support@mymanagr.com</div>
           </div>
         </div>
 
-        <div class="profile">
+        <div style="color: black" class="profile">
           <router-link :to="{ name: 'ProfilePage' }">{{ userInitials }}</router-link>
         </div>
 
         <div>
           <router-link :to="{ name: 'Login' }"
-            ><img @click="logOut" src="@/assets/images/logout.png" alt="" style="height: 1.75rem"
+            ><img
+              @click="logOut"
+              src="@/assets/images/blacklogout.png"
+              alt=""
+              style="height: 1.55rem"
           /></router-link>
         </div>
       </div>
@@ -310,7 +320,7 @@ li {
   margin-top: 1rem;
 }
 .profile {
-  border: 3px solid $panther-blue;
+  border: 3px solid black;
   border-radius: 50%;
   font-size: 12px;
   font-weight: bold;
@@ -324,7 +334,7 @@ img {
 a {
   text-decoration: none;
   font-weight: bold;
-  color: white;
+  color: $black;
 }
 
 a:hover {
@@ -334,9 +344,9 @@ a:hover {
   margin-top: 1rem;
 }
 .active {
-  border-bottom: 3px solid $panther-gold;
+  border-bottom: 3px solid $dark-green;
   font-weight: bold;
   padding-bottom: 0.5rem;
-  color: $panther-gold;
+  color: black;
 }
 </style>

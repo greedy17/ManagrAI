@@ -99,6 +99,7 @@ export default {
   overflow-x: hidden;
   padding-top: 20px;
   padding: 1rem;
+  border-radius: 0.5rem;
 }
 a {
   text-decoration: none;
@@ -111,11 +112,11 @@ a:hover {
   cursor: pointer;
 }
 .active {
-  color: white;
-  text-shadow: 0 0 10px $dark-green;
+  color: $dark-green;
+  font-weight: bold;
 }
 .title {
-  color: $panther-gold;
+  color: white;
   font-weight: bold;
 }
 .row {

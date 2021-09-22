@@ -1,8 +1,8 @@
 <template>
   <div class="update_opportunity">
     <div class="opportunity_title">
-      <h2 style="border-bottom: 3px solid #5f8cff; padding-bottom: 0.5rem">
-        Create <span style="color: #ff7649">Contacts</span>
+      <h2 style="border-bottom: 3px solid #199e54; padding-bottom: 0.5rem; color: black">
+        Create <span>Contacts</span>
       </h2>
     </div>
     <!-- <div style="text-align: center">

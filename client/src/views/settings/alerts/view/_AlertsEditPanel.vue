@@ -72,7 +72,7 @@
                     alt=""
                   />
                 </button>
-                <button style="color: #5f8cff" class="row__button" @click="onShowGroupModal()">
+                <button class="row__button" @click="onShowGroupModal()">
                   Add a Group
                   <img
                     style="height: 1rem; margin-left: 0.15rem"
@@ -661,7 +661,7 @@ export default {
 }
 .row__button {
   border: none;
-  color: $panther-turq;
+  color: $dark-green;
   background: transparent;
   display: flex;
   align-items: center;

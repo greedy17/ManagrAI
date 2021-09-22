@@ -59,7 +59,7 @@
             </span>
 
             <div
-              style="margin-top: 1rem; color: #69e3cd"
+              style="margin-top: 1rem; color: #ff7649"
               class="box__content-recipient-group__recipient-group__conditions__operands"
               :key="key"
               v-for="(operandRow, key) in group.alertOperands"

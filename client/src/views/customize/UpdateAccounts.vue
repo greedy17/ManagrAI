@@ -1,8 +1,8 @@
 <template>
   <div class="update_opportunity">
     <div class="opportunity_title">
-      <h2 style="border-bottom: 3px solid #ddad3c; padding-bottom: 0.5rem">
-        Update <span style="color: #69e3cd">Accounts</span>
+      <h2 style="border-bottom: 3px solid #199e54; padding-bottom: 0.5rem; color: black">
+        Update <span>Accounts</span>
       </h2>
       <p style="color: #beb5cc; font-weight: bold; margin-top: -0.5rem">*Optional</p>
     </div>

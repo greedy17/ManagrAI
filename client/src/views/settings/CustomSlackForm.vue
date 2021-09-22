@@ -364,18 +364,9 @@
 
         <div class="collection_fields">
           <div class="save-button">
-            <span v-if="formType == 'UPDATE' && resource == OPPORTUNITY"></span>
-            <button
-              v-else-if="formType == 'CREATE' && resource == CONTACT"
-              @click="goToUpdateOpp"
-              class="back__button"
-            >
+            <button @click="goToCustomize" class="back__button">
               <img src="@/assets/images/back.png" style="height: 1.2rem" alt="" />
               back
-            </button>
-            <button v-else @click="goToCustomize" class="back__button">
-              <img src="@/assets/images/back.png" style="height: 1.5rem" alt="" />
-              customize
             </button>
           </div>
 
@@ -389,13 +380,13 @@
             />
           </div>
 
-          <div v-if="formType == 'UPDATE' && resource == OPPORTUNITY" class="save-button">
+          <!-- <div v-if="formType == 'UPDATE' && resource == OPPORTUNITY" class="save-button">
             <button @click="goToContacts" v-if="canContinue" class="continue__button">
               Continue
             </button>
             <button v-else class="cant__continue">Continue</button>
-          </div>
-          <div v-else class="save-button" style="flex-direction: column; align-items: center">
+          </div> -->
+          <div class="save-button" style="flex-direction: column; align-items: center">
             <button @click="goToCustomize" v-if="canContinue" class="continue__button">
               Continue
             </button>
@@ -1095,8 +1086,8 @@ img:hover {
   text-indent: none;
   border-style: none;
   letter-spacing: 0.03rem;
-  color: white;
-  background-color: $panther-purple;
+  color: $dark-green;
+  background-color: white;
   cursor: pointer;
   height: 2rem;
   width: 10rem;
@@ -1136,7 +1127,7 @@ img:hover {
   border-style: none;
   letter-spacing: 0.03rem;
   color: white;
-  background-color: $panther-gold;
+  background-color: $panther-orange;
   cursor: pointer;
   height: 2rem;
   width: 10rem;

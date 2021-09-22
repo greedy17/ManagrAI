@@ -1,7 +1,7 @@
 <template>
   <div class="invite-users">
-    <h2 style="font-size: 1.5rem">Build Your Team</h2>
-    <div class="invite-users__text">
+    <h2 style="font-size: 1.5rem; color: black">Build Your Team</h2>
+    <div style="color: #5d5e5e" class="invite-users__text">
       Invite your team sales representatives to join you on Managr
     </div>
 
@@ -98,8 +98,8 @@ h2 {
 }
 
 .invite_button {
-  color: $panther-orange;
-  background-color: white;
+  color: $white;
+  background-color: $dark-green;
   width: 12.5vw;
   height: 6vh;
   border-radius: 0.25rem;
