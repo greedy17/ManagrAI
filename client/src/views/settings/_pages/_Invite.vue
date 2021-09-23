@@ -10,8 +10,8 @@
       "
     >
       <form class="invite-form" @submit.prevent="handleInvite">
-        <div class="invite-form__title" style="color: #ff7649">Invite Users to Managr</div>
-        <div class="invite-form__subtitle" style="color: #ddad3c">
+        <div class="invite-form__title" style="color: white">Invite Users to Managr</div>
+        <div class="invite-form__subtitle" style="color: #199e54">
           {{ $store.state.user.organizationRef.name }}
         </div>
         <div class="form_field">
@@ -322,8 +322,8 @@ form,
 }
 
 .invite-button {
-  background-color: white;
-  color: $panther-orange;
+  background-color: $dark-green;
+  color: white;
   margin-top: 2.5rem;
   height: 2.5rem;
   width: 18vw;
