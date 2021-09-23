@@ -59,13 +59,19 @@ def sync_cadences(auth_account_id):
     while True:
         attempts = 1
         try:
+            success = 0
+            failed = 0
             res = auth_account.helper_class.get_cadences()
-            sync_current_cadence_page(res["data"])
+            initial_page = sync_current_cadence_page(res["data"])
+            success += initial_page["success"]
+            failed += initial_page["failed"]
             if res["metadata"]["paging"]["total_pages"] > 1:
                 count = 2
-                while count <= res["metadata"]["paging"]["total_pages"]:
+                while count <= res["metadata"]["paging"]["total_pages"] and count <= 20:
                     page_res = auth_account.helper_class.get_cadences(count)
-                    sync_current_cadence_page(page_res["data"])
+                    curr_page = sync_current_cadence_page(page_res["data"])
+                    success += curr_page["success"]
+                    failed += curr_page["failed"]
                     count += 1
             break
         except TokenExpired:
@@ -76,7 +82,7 @@ def sync_cadences(auth_account_id):
             else:
                 auth_account.regenerate_token()
                 attempts += 1
-    return logger.info(f"Synced all cadences for {auth_account}")
+    return logger.info(f"Synced {success}/{success+failed} cadences for {auth_account}")
 
 
 @background()
@@ -85,13 +91,19 @@ def sync_slaccounts(auth_account_id):
     while True:
         attempts = 1
         try:
+            success = 0
+            failed = 0
             res = auth_account.helper_class.get_accounts()
-            sync_current_slaccount_page(res["data"])
+            initial_page = sync_current_slaccount_page(res["data"])
+            success += initial_page["success"]
+            failed += initial_page["failed"]
             if res["metadata"]["paging"]["total_pages"] > 1:
                 count = 2
-                while count <= res["metadata"]["paging"]["total_pages"]:
+                while count <= res["metadata"]["paging"]["total_pages"] and count <= 20:
                     page_res = auth_account.helper_class.get_accounts(count)
-                    sync_current_slaccount_page(page_res["data"])
+                    curr_page = sync_current_slaccount_page(page_res["data"])
+                    success += curr_page["success"]
+                    failed += curr_page["failed"]
                     count += 1
             break
         except TokenExpired:
@@ -102,7 +114,7 @@ def sync_slaccounts(auth_account_id):
             else:
                 auth_account.regenerate_token()
                 attempts += 1
-    return logger.info(f"Synced all accounts for {auth_account}")
+    return logger.info(f"Synced {success}/{success+failed} accounts for {auth_account}")
 
 
 @background()
@@ -111,13 +123,19 @@ def sync_people(auth_account_id):
     while True:
         attempts = 1
         try:
+            success = 0
+            failed = 0
             res = auth_account.helper_class.get_people()
-            sync_current_person_page(res["data"])
+            initial_page = sync_current_person_page(res["data"])
+            success += initial_page["success"]
+            failed += initial_page["failed"]
             if res["metadata"]["paging"]["total_pages"] > 1:
                 count = 2
-                while count <= res["metadata"]["paging"]["total_pages"]:
+                while count <= res["metadata"]["paging"]["total_pages"] and count <= 20:
                     page_res = auth_account.helper_class.get_people(count)
-                    sync_current_person_page(page_res["data"])
+                    curr_page = sync_current_person_page(page_res["data"])
+                    success += curr_page["success"]
+                    failed += curr_page["failed"]
                     count += 1
             break
         except TokenExpired:
@@ -128,7 +146,7 @@ def sync_people(auth_account_id):
             else:
                 auth_account.regenerate_token()
                 attempts += 1
-    return logger.info(f"Synced all people for {auth_account}")
+    return logger.info(f"Synced {success}/{success+failed} people for {auth_account}")
 
 
 def add_cadence_membership(person_id, cadence_id):
