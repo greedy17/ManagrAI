@@ -124,7 +124,6 @@ alias connect-staging-app="aws ecs execute-command --cluster managr-cluster --ta
 
 
 ### Helpful commands
-
 When updating values for environment variables you will need to re apply the terraform configuration 
 `terraform apply -auto-approve -parallelism=1`
 

@@ -17,6 +17,8 @@ from managr.slack.helpers import block_builders
 from managr.slack.helpers.utils import process_action_id, NO_OP, processor
 from managr.salesforce.adapter.exceptions import TokenExpired
 
+from managr.salesloft.models import Cadence, People
+
 logger = logging.getLogger("managr")
 
 
@@ -56,6 +58,24 @@ def process_get_user_opportunities(payload, context):
         "options": [
             l.as_slack_option for l in user.owned_opportunities.filter(title__icontains=value)
         ],
+    }
+
+
+@processor(required_context=["u"])
+def process_get_user_contacts(payload, context):
+    user = User.objects.get(id=context["u"])
+    value = payload["value"]
+    return {
+        "options": [l.as_slack_option for l in user.contacts.filter(email__icontains=value)[:50]],
+    }
+
+
+@processor(required_context=["u"])
+def process_get_user_accounts(payload, context):
+    user = User.objects.get(id=context["u"])
+    value = payload["value"]
+    return {
+        "options": [l.as_slack_option for l in user.accounts.filter(name__icontains=value)[:50]],
     }
 
 
@@ -220,6 +240,32 @@ def process_get_external_relationship_options(payload, context):
     }
 
 
+@processor(required_context=["u"])
+def process_get_cadences(payload, context):
+    user = User.objects.get(id=context["u"])
+    cadences = Cadence.objects.filter(Q(is_team_cadence=True) | Q(owner=user.salesloft_account))
+    value = payload["value"]
+    return {
+        "options": [l.as_slack_option for l in cadences.filter(name__icontains=value)[:50]],
+    }
+
+
+@processor(required_context=["resource_id", "resource_type"])
+def process_get_people(payload, context):
+    type = context.get("resource_type")
+    resource_id = context.get("resource_id")
+    value = payload["value"]
+    if type == "Opportunity":
+        account = Account.objects.filter(opportunities__in=[resource_id]).first()
+        contacts = account.contacts.all()
+    else:
+        account = Account.objects.get(id=resource_id)
+        contacts = account.contacts.all()
+    return {
+        "options": [l.as_slack_option for l in contacts.filter(email__icontains=value)[:50]],
+    }
+
+
 def handle_block_suggestion(payload):
     """
     This takes place when a select_field requires data from Managr
@@ -228,12 +274,16 @@ def handle_block_suggestion(payload):
     switcher = {
         slack_const.GET_ORGANIZATION_ACTION_CHOICES: process_get_organization_action_choices,
         slack_const.GET_USER_OPPORTUNITIES: process_get_user_opportunities,
+        slack_const.GET_USER_CONTACTS: process_get_user_contacts,
+        slack_const.GET_USER_ACCOUNTS: process_get_user_accounts,
         slack_const.GET_LOCAL_RESOURCE_OPTIONS: process_get_local_resource_options,
         slack_const.GET_EXTERNAL_RELATIONSHIP_OPTIONS: process_get_external_relationship_options,
         slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS: process_get_local_resource_options,
         slack_const.COMMAND_SUMMARY__GET_LOCAL_RESOURCE_OPTIONS: process_get_local_resource_options,
         slack_const.GET_PICKLIST_OPTIONS: process_get_picklist_options,
         slack_const.GET_EXTERNAL_PICKLIST_OPTIONS: process_get_external_picklist_options,
+        slack_const.GET_CADENCE_OPTIONS: process_get_cadences,
+        slack_const.GET_PEOPLE_OPTIONS: process_get_people,
     }
     action_query_string = payload["action_id"]
     processed_string = process_action_id(action_query_string)

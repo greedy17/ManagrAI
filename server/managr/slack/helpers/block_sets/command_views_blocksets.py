@@ -37,6 +37,20 @@ def command_update_resource_interaction(context):
             f"*Search for an {context.get('resource_type')}*",
             f"{slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={context.get('resource_type')}",
             block_id="select_existing",
+            placeholder="Type to search",
+        ),
+    ]
+
+
+@block_set(required_context=["u"])
+def command_select_account_interaction(context):
+    user = User.objects.get(id=context.get("u"))
+    return [
+        block_builders.external_select(
+            f"*Search for an account*",
+            f"{slack_const.GET_USER_ACCOUNTS}?u={str(user.id)}&type={context.get('type')}",
+            block_id="select_existing",
+            placeholder="Type to search",
         ),
     ]
 
@@ -68,6 +82,7 @@ def command_meeting_summary(context):
             f"*Search for an {context.get('resource_type')}*",
             f"{slack_const.COMMAND_SUMMARY__GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={context.get('resource_type')}",
             block_id="select_existing",
+            placeholder="Type to search",
         ),
     ]
 
@@ -121,15 +136,34 @@ def alert_instance_block_set(context):
     if config and config.recipient_type == "SLACK_CHANNEL":
         in_channel = True
     blocks = [
-        block_builders.section_with_button_block(
+        block_builders.simple_section(instance.render_text(), text_type="mrkdwn"),
+    ]
+    action_blocks = [
+        block_builders.simple_button_block(
             f"Update {instance.template.resource_type}",
             instance.resource_id,
-            instance.render_text(),
             action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(resource_owner.id)}&resource={instance.template.resource_type}",
             style="primary",
-        ),
+        )
     ]
-
+    if instance.template.resource_type != "Lead":
+        action_blocks.append(
+            block_builders.simple_button_block(
+                "Add to Cadence",
+                "add_to_cadence",
+                style="danger",
+                action_id=action_with_params(
+                    slack_const.ADD_TO_CADENCE_MODAL,
+                    params=[
+                        f"u={str(user.id)}",
+                        f"resource_id={str(instance.resource_id)}",
+                        f"resource_name={instance.resource.name}",
+                        f"resource_type={instance.template.resource_type}",
+                    ],
+                ),
+            )
+        )
+    blocks.append(block_builders.actions_block(action_blocks))
     if in_channel or (user.id != resource_owner.id):
         blocks.append(
             block_builders.context_block(
@@ -149,6 +183,7 @@ def update_modal_block_set(context, *args, **kwargs):
     resource_id = context.get("resource_id", None)
     user_id = context.get("u")
     form_ids = context.get("f")
+    type = context.get("type")
     main_form = None
     if form_ids:
         form_ids = form_ids.split(",")
@@ -178,8 +213,9 @@ def update_modal_block_set(context, *args, **kwargs):
         blocks.append(
             block_builders.external_select(
                 f"*Search for an {context.get('resource_type')}*",
-                f"{slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource_type}",
+                f"{slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource_type}&type={type}",
                 block_id="select_existing",
+                placeholder="Type to search",
                 initial_option=block_builders.option(resource_id, resource_id)
                 if resource_id
                 else None,
@@ -234,3 +270,24 @@ def create_modal_block_set(context, *args, **kwargs):
             ]
 
     return blocks
+
+
+@block_set(required_context=["u"])
+def create_add_to_cadence_block_set(context):
+    user_id = context.get("u")
+    blocks = [
+        block_builders.external_select(
+            f"*Select Cadence:*",
+            f"{slack_const.GET_CADENCE_OPTIONS}?u={user_id}",
+            block_id="select_cadence",
+            placeholder="Type to search",
+        ),
+        block_builders.multi_external_select(
+            f"*Add Contacts from {context.get('resource_name')} to selected Cadence*:",
+            f"{slack_const.GET_PEOPLE_OPTIONS}?u={user_id}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}",
+            block_id="select_people",
+            placeholder="Type to search",
+        ),
+    ]
+    return blocks
+

@@ -197,4 +197,3 @@ class AlertOperandViewSet(
             return alert_serializers.AlertOperandWriteSerializer
 
         return self.serializer_class
-

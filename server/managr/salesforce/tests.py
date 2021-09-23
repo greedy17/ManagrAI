@@ -218,7 +218,6 @@ class SfSyncTestCase(TestCase):
     def test_generates_forms_with_public_fields(self):
         for form in slack_consts.INITIAL_FORMS:
             resource, form_type = form.split(".")
-
             f = OrgCustomSlackForm.objects.create(
                 form_type=form_type, resource=resource, organization=self.admin_user.organization
             )
@@ -230,7 +229,6 @@ class SfSyncTestCase(TestCase):
             for i, field in enumerate(public_fields):
                 f.fields.add(field, through_defaults={"order": i})
             f.save()
-
             self.assertEquals(
                 f.formfield_set.count(),
                 len(slack_consts.DEFAULT_PUBLIC_FORM_FIELDS.get(resource, {}).get(form_type, [])),

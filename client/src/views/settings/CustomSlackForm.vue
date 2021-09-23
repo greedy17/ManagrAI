@@ -227,9 +227,7 @@
                   v-if="field.id === '6407b7a1-a877-44e2-979d-1effafec5035'"
                   class="form-field__body"
                 >
-                  {{
-                    "This logs the type of meeting you’ve had, ie 'Discovery Call, Follow Up, etc.'"
-                  }}
+                  {{ 'Update title and meeting subject' }}
                 </div>
 
                 <div
@@ -322,7 +320,7 @@
                 </div> -->
               </div>
             </div>
-            <div style="display: flex; align-items: center">
+            <!-- <div style="display: flex; align-items: center">
               <input
                 v-if="field.id === '6407b7a1-a877-44e2-979d-1effafec5035'"
                 placeholder="Enter Meeting Type"
@@ -331,9 +329,9 @@
                 @keypress="updateMeeting"
               />
               <small v-if="meetingType.length" style="margin-left: 1rem">Press Enter to Save</small>
-            </div>
+            </div>  -->
 
-            <div
+            <!-- <div
               v-if="field.id === '6407b7a1-a877-44e2-979d-1effafec5035' && actionChoices.length"
               class="meeting-type__list"
             >
@@ -354,7 +352,7 @@
               <template v-else>
                 <PulseLoadingSpinner :loading="loadingMeetingTypes" />
               </template>
-            </div>
+            </div> -->
           </div>
         </div>
       </div>
@@ -483,6 +481,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    managrFields: {
+      type: Array,
+      default: () => [],
+    },
   },
   data() {
     return {
@@ -510,6 +512,41 @@ export default {
       handler(val) {
         if (val && val.fields) {
           this.addedFields = [...val.fieldsRef]
+          if (this.formType == 'UPDATE') {
+            let currentFormFields = this.addedFields.map((field) => {
+              return field.id
+            })
+            if (currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false) {
+              let fieldsToAdd = this.managrFields.filter((field) => {
+                return (
+                  field.id == '6407b7a1-a877-44e2-979d-1effafec5035' ||
+                  field.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
+                )
+              })
+              let copyArray = this.addedFields
+              fieldsToAdd = fieldsToAdd.concat(copyArray)
+              this.addedFields = fieldsToAdd.map((field, i) => {
+                let altField = { ...field }
+                altField.order = i
+                if (
+                  altField.id == '6407b7a1-a877-44e2-979d-1effafec5035' ||
+                  altField.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
+                ) {
+                  altField.includeInRecap = true
+                }
+                return altField
+              })
+              this.onSave()
+            }
+          }
+          if (this.formType !== 'UPDATE') {
+            this.addedFields = this.addedFields.filter((field) => {
+              return (
+                field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
+                field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
+              )
+            })
+          }
         }
       },
     },
@@ -531,6 +568,9 @@ export default {
                 ...fieldParam,
               }
               this.formFields.refresh()
+              if (this.formType == 'UPDATE') {
+                this.onSave()
+              }
             } catch (e) {
               console.log(e)
             }

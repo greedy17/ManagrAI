@@ -9,6 +9,7 @@ from django.contrib.auth.forms import ReadOnlyPasswordHashField, UserCreationFor
 
 from managr.slack.models import UserSlackIntegration
 from managr.zoom.models import ZoomAuthAccount
+from managr.salesloft.models import SalesloftAccount
 from .models import (
     User,
     NylasAuthAccount,
@@ -32,6 +33,10 @@ class ZoomAuthAccountInline(admin.StackedInline):
     model = ZoomAuthAccount
 
 
+class SalesloftAccountInline(admin.StackedInline):
+    model = SalesloftAccount
+
+
 class EmailAuthAccForm(forms.ModelForm):
     linked_at = forms.IntegerField()
 
@@ -45,6 +50,7 @@ class EmailAuthAccForm(forms.ModelForm):
             "sync_state",
             "name",
             "user",
+            "event_calendar_id",
         )
 
 
@@ -164,11 +170,8 @@ class CustomUserAdmin(UserAdmin):
         (None, {"classes": ("wide",), "fields": ("email", "password1", "password2",),},),
     )
 
-    inlines = (
-        UserSlackIntegrationInline,
-        ZoomAuthAccountInline,
-    )
-    list_display = ("email", "first_name", "last_name")
+    inlines = (UserSlackIntegrationInline, ZoomAuthAccountInline, SalesloftAccountInline)
+    list_display = ("email", "first_name", "last_name", "datetime_created")
 
     list_display_links = (
         "email",
@@ -183,7 +186,7 @@ class CustomUserAdmin(UserAdmin):
     )
     list_filter = ("organization",)
 
-    ordering = []
+    ordering = ("-datetime_created",)
 
 
 class CustomNylasAuthAccount(admin.ModelAdmin):

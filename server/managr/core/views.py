@@ -460,7 +460,13 @@ def email_auth_token(request):
         # we may need to catch the error as an exception or not use the api sdk
         try:
             access_token = get_access_token(code)
-            account = get_account_details(access_token)
+            details = get_account_details(access_token)
+            account = details["account"]
+            calendar_data = details["calendars"]
+            calendar = [cal for cal in calendar_data if cal["read_only"] is False]
+            calendar_id = None
+            if len(calendar):
+                calendar_id = calendar[0]["id"]
             NylasAuthAccount.objects.create(
                 access_token=access_token,
                 account_id=account["account_id"],
@@ -469,6 +475,7 @@ def email_auth_token(request):
                 sync_state=account["sync_state"],
                 name=account["name"],
                 user=request.user,
+                event_calendar_id=calendar_id,
             )
         except requests.exceptions.HTTPError as e:
             if 400 in e.args:

@@ -284,7 +284,7 @@ class UserTestCase(TestCase):
                 template=self.template,
             )
         conf = self.config
-        conf.recurrence_day = (timezone.now() + timezone.timedelta(days=1)).day
+        conf.recurrence_day = (timezone.now() + timezone.timedelta(days=2)).day
         conf.save()
         f = alert_models.AlertConfig.objects.filter(
             Q(template__user__is_active=True, template__is_active=True)
@@ -1040,4 +1040,3 @@ class UserTestCase(TestCase):
 
         self.assertEquals(conf_1.target_users.count(), 1)
         self.assertIn(self.admin_user.id, conf_1.target_users.values_list("id", flat=True))
-

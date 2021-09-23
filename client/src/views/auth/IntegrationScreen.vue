@@ -192,7 +192,31 @@
         </div>
         <p class="card-text">Add Contacts to cadences</p>
         <div class="card__body">
-          <p style="color: #beb5cc">Coming Soon</p>
+          <PulseLoadingSpinnerButton
+            v-if="!hasSalesloftIntegration && user.isAdmin"
+            :disabled="hasSalesloftIntegration"
+            @click="onGetAuthLink('SALESLOFT')"
+            style="margin-left: 1rem; cursor: pointer"
+            class="orange_button"
+            text="Connect"
+            :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
+          ></PulseLoadingSpinnerButton>
+          <div v-else-if="hasSalesloftIntegration && user.isAdmin">
+            <img
+              src="@/assets/images/unplug.png"
+              :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
+              @click="onRevoke('SALESLOFT')"
+              style="height: 2rem; cursor: pointer"
+            />
+            <img
+              src="@/assets/images/refresh.png"
+              @click="onRefreshSalesloft"
+              :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
+              style="height: 2rem; cursor: pointer"
+            />
+          </div>
+          <p v-else-if="hasSalesloftIntegration && !user.isAdmin">Salesloft is connected!</p>
+          <p v-else>Contact your organization admin to add Salesloft</p>
         </div>
       </div>
 
@@ -262,6 +286,7 @@ import SlackOAuth from '@/services/slack'
 import ZoomAccount from '@/services/zoom/account/'
 import Nylas from '@/services/nylas'
 import Salesforce from '@/services/salesforce'
+import SalesloftAccount from '@/services/salesloft'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import GoogleButton from '@/components/GoogleButton'
 
@@ -364,7 +389,13 @@ export default {
 
       try {
         const modelClass = this.selectedIntegrationSwitcher
-        if (this.selectedIntegration != 'SLACK') {
+        if (this.selectedIntegration == 'SALESLOFT') {
+          await modelClass.api.authenticate(
+            this.$route.query.code,
+            this.$route.query.context,
+            this.$route.query.scope,
+          )
+        } else if (this.selectedIntegration != 'SLACK' && this.selectedIntegration != 'SALESLOFT') {
           await modelClass.api.authenticate(this.$route.query.code)
         } else {
           // auto sends a channel message, will also send a private dm
@@ -384,7 +415,6 @@ export default {
         }
       } finally {
         await this.$store.dispatch('refreshCurrentUser')
-
         this.generatingToken = false
         this.selectedIntegration = null
         this.$router.replace({
@@ -400,6 +430,11 @@ export default {
     },
     hasZoomIntegration() {
       return !!this.$store.state.user.zoomAccount && this.$store.state.user.hasZoomIntegration
+    },
+    hasSalesloftIntegration() {
+      return (
+        !!this.$store.state.user.salesloftAccount && this.$store.state.user.hasSalesloftIntegration
+      )
     },
     orgHasSlackIntegration() {
       return !!this.$store.state.user.organizationRef.slackIntegration
@@ -424,6 +459,8 @@ export default {
           return Nylas
         case 'SLACK':
           return SlackOAuth
+        case 'SALESLOFT':
+          return SalesloftAccount
         default:
           return null
       }

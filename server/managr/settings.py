@@ -31,7 +31,7 @@ DEBUG = _env_get_required("DEBUG") == "True"
 if IN_DEV:
     SERVER_EMAIL = "Managr Support <support@mg.managr.ai>"
 elif IN_STAGING:
-    SERVER_EMAIL = "Managr <no-reply-staging@mg.managr.ai>"
+    SERVER_EMAIL = "Managr <no-reply-staging@managr.ai>"
 else:
     SERVER_EMAIL = "Managr <no-reply@mg.managr.ai>"
 
@@ -60,7 +60,6 @@ METADATA_URI = os.environ.get("ECS_CONTAINER_METADATA_URI_V4", None)
 try:
     resp = requests.get(METADATA_URI)
     data = resp.json()
-    # print(data)
 
     EC2_PRIVATE_IP = data["Networks"][0]["IPv4Addresses"][0]
 except Exception as e:
@@ -92,6 +91,7 @@ INSTALLED_APPS = [
     "managr.salesforce",
     "managr.alerts",
     "managr.autonomous",
+    "managr.salesloft",
     # "managr.demo",
     # Django
     "django.contrib.admin",
@@ -432,5 +432,13 @@ if USE_SALESFORCE:
     #    else f'{site_utils.get_site_url()}/{_env_get_required("SALESFORCE_REDIRECT_URI")}'
     # )
     SALESFORCE_API_VERSION = f'v{_env_get_required("SALESFORCE_API_VERSION")}'
+
+
+USE_SALESLOFT = os.environ.get("USE_SALESLOFT") == "True"
+if USE_SALESLOFT:
+    SALESLOFT_SECRET = _env_get_required("SALESLOFT_SECRET")
+    SALESLOFT_CLIENT_ID = _env_get_required("SALESLOFT_CLIENT_ID")
+    SALESLOFT_BASE_URL = _env_get_required("SALESLOFT_BASE_URL")
+    SALESLOFT_REDIRECT_URI = _env_get_required("SALESLOFT_REDIRECT_URI")
 
 MAX_ATTEMPTS = 5

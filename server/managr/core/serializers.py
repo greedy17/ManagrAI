@@ -73,6 +73,8 @@ class UserSerializer(serializers.ModelSerializer):
             "salesforce_account_ref",
             "slack_ref",
             "zoom_account",
+            "salesloft_account",
+            "has_salesloft_integration",
             "has_zoom_integration",
             "has_salesforce_integration",
             "timezone",
