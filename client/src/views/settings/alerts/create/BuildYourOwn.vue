@@ -6,7 +6,7 @@
       </template>
       <template v-slot:body>
         <div class="template__border">
-          <h3 style="color: #ff7649">Close Date Passed</h3>
+          <h3 style="color: #199e54">Close Date Passed</h3>
           <p>
             Hey <strong>{ __Recipient.full_name }</strong>, your deal
             <strong>{ Opportunity.Name }</strong> has a passed closed date. Please update it!
@@ -14,7 +14,7 @@
         </div>
 
         <div class="template__border">
-          <h3 style="color: #ff7649">New Opportunity</h3>
+          <h3 style="color: #199e54">New Opportunity</h3>
           <p>
             2. <strong>{ Opportunity.Name }</strong> is a new Opp booked for this week! The
             appointment was booked via <strong>{ Opportunity.LeadSource }</strong>!
@@ -30,7 +30,7 @@
         </div>
 
         <div class="template__border">
-          <h3 style="color: #ff7649">Update Forecast</h3>
+          <h3 style="color: #199e54">Update Forecast</h3>
           <p>
             3. Please update the forecast for <strong>{ Opportunity.Name }</strong>! it's expected
             to close on <strong>{ Opportunity.CloseDate }</strong> and forecasted as
@@ -43,22 +43,27 @@
     </Modal>
 
     <div v-if="pageNumber === 0">
-      <h3 style="text-align: center" class="title">
+      <h3 style="text-align: center; color: black" class="title">
         {{ alertTemplateForm.field.resourceType.value }} Selected
       </h3>
-      <p class="sub__">
+      <p style="color: #5d5e5e; font-weight: bold" class="sub__">
         Switch to
         <span
           v-if="selectedResourceType === 'Opportunity'"
           v-on:click="accountResource"
-          style="color: #69e3cd; cursor: pointer"
+          style="border-bottom: 3px solid #5d5e5e; cursor: pointer"
           >Account</span
         >
-        <span v-else v-on:click="opportunityResource" style="color: #5f8cff; cursor: pointer"
+        <span
+          v-else
+          v-on:click="opportunityResource"
+          style="border-bottom: 3px solid #5d5e5e; cursor: pointer"
           >Opporunity</span
         >
         or
-        <span v-on:click="leadResource" style="color: #b270ff; cursor: pointer">Lead</span>
+        <span v-on:click="leadResource" style="border-bottom: 3px solid #5d5e5e; cursor: pointer"
+          >Lead</span
+        >
       </p>
       <!-- <progress id="progress" value="0" max="5" ref="progress" style="margin-bottom: 2rem">
         1/5
@@ -114,7 +119,7 @@
               Write a custom alert message in the message box, or copy and paste your favorite
               <span
                 @click="$refs.templateModal.openModal()"
-                style="color: #69e3cd; cursor: pointer; border-bottom: 2px solid #69e3cd"
+                style="color: #beb5cc; cursor: pointer; border-bottom: 2px solid #beb5cc"
                 >template.</span
               >
             </p>
@@ -243,6 +248,33 @@
                   </span>
                 </div>
 
+                <div
+                  class="row__"
+                  style="
+                    margin-bottom: 0.75rem;
+                    margin-top: 2rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                  "
+                >
+                  <label>DM users</label>
+                  <ToggleCheckBox
+                    style="margin: 0.25rem"
+                    @input="
+                      form.field.recipientType.value == 'USER_LEVEL'
+                        ? (form.field.recipientType.value = recipientTypeToggle(
+                            form.field.recipientType.value,
+                          ))
+                        : (form.field.recipientType.value = recipientTypeToggle('SLACK_CHANNEL'))
+                    "
+                    :value="form.field.recipientType.value !== 'USER_LEVEL'"
+                    offColor="#199e54"
+                    onColor="#199e54"
+                  />
+                  <label>Send to #Channel<span style="color: #ff7649"> *recommended</span></label>
+                </div>
+
                 <div v-if="form.field.recipientType.value == 'USER_LEVEL'" style="margin-top: 1rem">
                   <p style="font-weight: bold; color: #beb5cc">
                     Whose recieving these alerts:
@@ -357,32 +389,6 @@
                     instead ?
                   </span> -->
                 </div>
-              </div>
-              <div
-                class="row__"
-                style="
-                  margin-bottom: 0.75rem;
-                  margin-top: 2rem;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                "
-              >
-                <label>DM users</label>
-                <ToggleCheckBox
-                  style="margin: 0.25rem"
-                  @input="
-                    form.field.recipientType.value == 'USER_LEVEL'
-                      ? (form.field.recipientType.value = recipientTypeToggle(
-                          form.field.recipientType.value,
-                        ))
-                      : (form.field.recipientType.value = recipientTypeToggle('SLACK_CHANNEL'))
-                  "
-                  :value="form.field.recipientType.value !== 'USER_LEVEL'"
-                  offColor="#199e54"
-                  onColor="#199e54"
-                />
-                <label>Send to #Channel<span style="color: #ff7649"> (recommended)</span></label>
               </div>
             </div>
           </template>
@@ -1159,7 +1165,7 @@ export default {
   background-color: $panther-silver;
 }
 .plus_button {
-  color: $panther-blue;
+  color: $dark-green;
   border: none;
   background: transparent;
   display: flex;
@@ -1478,7 +1484,7 @@ input {
   border-style: none;
   letter-spacing: 0.03rem;
   color: white;
-  background-color: $panther-gold;
+  background-color: $panther;
   cursor: pointer;
   height: 2rem;
   width: 10rem;
@@ -1496,8 +1502,8 @@ input {
   text-indent: none;
   border-style: none;
   letter-spacing: 0.03rem;
-  color: white;
-  background-color: $panther-purple;
+  color: $white;
+  background-color: $dark-green;
   cursor: pointer;
   height: 2rem;
   width: 10rem;

@@ -160,22 +160,22 @@
           </FormField> -->
           <div v-else>
             <div v-if="selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME'">
-              <p>
-                Is the {{ form.field.operandIdentifier.value }}
-                <span
-                  style="color: #69e3cd; cursor: pointer; border-bottom: 1px solid #69e3cd"
-                  @click="pastOp"
-                  >in the past </span
-                >or<span
-                  style="color: #b270ff; cursor: pointer; border-bottom: 1px solid #b270ff"
-                  @click="futureOp"
-                >
-                  in the future</span
-                >?
-              </p>
+              <div style="display: flex; align-items: center">
+                <p>{{ form.field.operandIdentifier.value }} is:</p>
+                <div class="centered">
+                  <label class="alert-operand-row__condition-label">In the past</label>
+                  <ToggleCheckBox
+                    @input="toggleSelectedOperand"
+                    :value="MyOperand !== 'Negative'"
+                    offColor="#199e54"
+                    onColor="#199e54"
+                  />
+                  <label class="alert-operand-row__condition-label">In the Future</label>
+                </div>
+              </div>
 
-              <div v-if="negativeOperand">
-                <label for="quantityNeg">Number of <span style="color: #69e3cd">days</span>:</label>
+              <div v-if="MyOperand === 'Negative'">
+                <label for="quantityNeg">Number of <span>days</span>:</label>
                 <input
                   id="quantityNeg"
                   name="quantityNeg"
@@ -186,8 +186,8 @@
                 />
               </div>
 
-              <div v-if="positiveOperand">
-                <label for="quantity">Number of <span style="color: #b270ff">days</span>:</label>
+              <div v-else>
+                <label for="quantity">Number of <span>days</span>:</label>
                 <input
                   id="quantity"
                   name="quantity"
@@ -277,6 +277,7 @@ export default {
       NON_FIELD_ALERT_OPTS,
       negativeOperand: false,
       positiveOperand: false,
+      MyOperand: 'Negative',
       intOpts: [
         { label: '>= (Greater or Equal)', value: '>=' },
         { label: '<= (Less or Equal)', value: '<=' },
@@ -360,6 +361,10 @@ export default {
         ? (this.selectedCondition = 'OR')
         : (this.selectedCondition = 'AND')
     },
+    toggleSelectedOperand() {
+      this.form.field.operandValue.value = '0'
+      this.MyOperand === 'Negative' ? (this.MyOperand = 'Positive') : (this.MyOperand = 'Negative')
+    },
     async objectFieldNextPage() {
       await this.objectFields.addNextPage()
     },
@@ -389,7 +394,12 @@ export default {
     },
     negVal(val) {
       let newVal = ''
-      newVal = val * -1
+      if (val < 0) {
+        val = val
+      } else {
+        val = val * -1
+      }
+      newVal = -Math.abs(val).toString()
       this.form.field.operandValue.value = newVal
     },
     pastOp() {
@@ -470,6 +480,10 @@ export default {
         this.form.field.operandType.value = val
       },
     },
+  },
+  beforeMount() {
+    this.form.field.operandOperator.value = '='
+    this.form.field._operandValue.value = { label: '= (Equals)', value: '=' }
   },
 }
 </script>
