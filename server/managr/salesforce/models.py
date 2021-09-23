@@ -699,7 +699,7 @@ class MeetingWorkflow(SFSyncOperation):
         )
 
         if self.resource and self.resource != slack_consts.FORM_RESOURCE_LEAD:
-            self.add_form(self.resource_type, slack_consts.FORM_TYPE_MEETING_REVIEW)
+            self.add_form(self.resource_type, slack_consts.FORM_TYPE_UPDATE)
         if not now:
             return emit_kick_off_slack_interaction(str(self.user.id), str(self.id))
             # used for testing a fake meeting
@@ -744,8 +744,17 @@ class MeetingWorkflow(SFSyncOperation):
             block_set = [
                 *get_block_set("final_meeting_interaction", {"w": str(self.id)}),
                 get_block_set("create_meeting_task", {"w": str(self.id)}),
+                get_block_set("schedule_meeting", {"w": str(self.id)}),
+                get_block_set(
+                    "add_to_cadence",
+                    context={
+                        "u": str(self.user.id),
+                        "resource_name": str(self.resource.name),
+                        "resource_id": str(self.resource_id),
+                        "resource_type": str(self.resource_type),
+                    },
+                ),
             ]
-
             if len(self.failed_task_description):
                 for i, m in enumerate(self.failed_task_description):
                     block_set.insert(

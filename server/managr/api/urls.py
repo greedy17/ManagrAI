@@ -10,6 +10,7 @@ from managr.zoom import views as zoom_views
 from managr.salesforce import views as sf_views
 from managr.alerts import views as alert_views
 from managr.autonomous import views as auto_views
+from managr.salesloft import views as salesloft_views
 
 # from . import views
 
@@ -45,6 +46,11 @@ urlpatterns = [
     path("users/nylas/authenticate/", core_views.email_auth_token, name="get_email_auth_token",),
     path("users/nylas/revoke/", core_views.revoke_access_token, name="revoke_email_auth",),
     path("users/zoom/re-direct", zoom_views.redirect_from_zoom, name="redirect-from-zoom"),
+    path(
+        "users/salesloft/re-direct",
+        salesloft_views.redirect_from_salesloft,
+        name="redirect-from-salesloft",
+    ),
     path("users/slack/re-direct", slack_views.redirect_from_slack, name="redirect-from-slack"),
     path("account-status/", core_views.get_account_status, name="get_account_status"),
     path("get-file/<str:file_id>/", core_views.GetFileView.as_view(), name="get_file_from_nylas",),
@@ -62,8 +68,27 @@ urlpatterns = [
     path(
         "users/zoom/revoke", zoom_views.revoke_zoom_access_token, name="revoke_zoom_access_token",
     ),
+    path(
+        "users/salesloft/authenticate",
+        salesloft_views.get_salesloft_authentication,
+        name="get_salesloft_authentication",
+    ),
+    path(
+        "users/salesloft/authorization",
+        salesloft_views.get_salesloft_auth_link,
+        name="get_salesloft_auth_link",
+    ),
+    path(
+        "users/salesloft/revoke",
+        salesloft_views.revoke_salesloft_access_token,
+        name="revoke_salesloft_access_token",
+    ),
     path("zoom/webhooks/deauthorize", zoom_views.zoom_deauth_webhook, name="zoom_deauth",),
     path("zoom/webhooks/meetings", zoom_views.zoom_meetings_webhook, name="get_zoom_auth_link",),
+    path(
+        "zoom/webhooks/recordings", zoom_views.zoom_recordings_webhook, name="get_zoom_recording",
+    ),
+    path("zoom/fake-recording", zoom_views.fake_recording, name="fake-recording"),
     path(
         "users/salesforce/authorization",
         sf_views.salesforce_auth_link,
@@ -73,6 +98,8 @@ urlpatterns = [
     path("users/salesforce/revoke", sf_views.revoke, name="salesforce-revoke",),
     path("zoom/fake-meeting", zoom_views.init_fake_meeting, name="init-meeting",),
     path("slack/commands/create-task", slack_views.create_task, name="create-task",),
+    path("slack/commands/add-to-cadence", slack_views.add_to_cadence, name="add-to-cadence",),
+    path("slack/commands/schedule-meeting", slack_views.schedule_meeting_command, name="schedule-meeting",),
     path("slack/list-public-channels", slack_views.create_task, name="list-public-channels",),
     path("slack/commands/create-resource", slack_views.create_resource, name="create-resource",),
     path("slack/webhooks/events", slack_views.slack_events, name="slack-events",),
@@ -92,6 +119,7 @@ router.register("accounts", organization_views.AccountViewSet, "accounts")
 router.register("contacts", organization_views.ContactViewSet, "contacts")
 router.register("action-choices", organization_views.ActionChoiceViewSet, "action-choices")
 router.register("salesforce/fields", sf_views.SObjectFieldViewSet, "salesforce-fields")
+router.register("salesforce/public-fields", sf_views.PublicSObjectFieldViewSet, "public-fields")
 router.register(
     "salesforce/validations", sf_views.SObjectValidationViewSet, "salesforce-validation"
 )

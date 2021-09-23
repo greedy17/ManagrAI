@@ -95,10 +95,6 @@
             <strong>Update:</strong>
             This form appears whenever you see the “Update” button
           </p>
-          <p class="mar">
-            <strong>Zoom Meeting:</strong>
-            This form is triggered immediately after your Zoom meeting ends
-          </p>
 
           <p class="mar">
             <strong>Create:</strong>
@@ -164,14 +160,7 @@
               <img src="@/assets/images/edit.png" alt="update" />
               {{ ` Update ${resource}` }}
             </button>
-            <button
-              @click="selectForm(resource, MEETING_REVIEW)"
-              v-if="resource == 'Opportunity' || resource == 'Account'"
-              :class="this.formType == MEETING_REVIEW ? 'activeTab' : 'buttons__'"
-            >
-              <img src="@/assets/images/zoom.png" alt="zoom" height="24rem" />
-              Zoom Meeting
-            </button>
+
             <button
               @click="selectForm(resource, CREATE)"
               :class="this.formType == CREATE ? 'activeTab' : 'buttons__'"
@@ -236,6 +225,7 @@
               v-on:update:selectedForm="updateForm($event)"
               :loading="formFields.refreshing"
               :stageForms="formStages"
+              :managrFields="publicFields"
             />
           </div>
         </template>
@@ -259,7 +249,7 @@ import { mapState } from 'vuex'
 import SlackOAuth, { salesforceFields } from '@/services/slack'
 import { SObjectField, SObjectValidation, SObjectPicklist } from '@/services/salesforce'
 import DropDownSearch from '@/components/DropDownSearch'
-import { SOBJECTS_LIST } from '@/services/salesforce'
+import SObjectFormBuilderAPI, { SOBJECTS_LIST } from '@/services/salesforce'
 import * as FORM_CONSTS from '@/services/slack'
 
 export default {
@@ -271,6 +261,7 @@ export default {
       SOBJECTS_LIST,
       allForms: [],
       allFields: [],
+      publicFields: [],
       formsByType: [],
       isLoading: false,
       selectedTab: null,
@@ -302,6 +293,7 @@ export default {
     try {
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
       this.allFields = await this.listFields()
+      this.publicFields = await SObjectField.api.getPublicFields()
       await this.listPicklists({
         salesforceObject: this.Opportunity,
         picklistFor: 'StageName',

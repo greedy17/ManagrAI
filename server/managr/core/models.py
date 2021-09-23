@@ -1,4 +1,5 @@
 import uuid
+import json
 import logging
 
 from urllib.error import HTTPError
@@ -13,13 +14,17 @@ from django.contrib.postgres.fields import JSONField
 
 from managr.utils import sites as site_utils
 from managr.utils.misc import datetime_appended_filepath
+from managr.utils.client import HttpClient
 from managr.core import constants as core_consts
 from managr.organization import constants as org_consts
 from managr.slack.helpers import block_builders
 
+from .nylas.exceptions import NylasAPIError
+
 
 from managr.core.nylas.auth import gen_auth_url, revoke_access_token
 
+client = HttpClient().client
 logger = logging.getLogger("managr")
 
 
@@ -284,6 +289,10 @@ class User(AbstractUser, TimeStampModel):
         return hasattr(self, "nylas")
 
     @property
+    def has_salesloft_integration(self):
+        return hasattr(self, "salesloft_account")
+
+    @property
     def as_slack_option(self):
         return block_builders.option(self.full_name, str(self.id))
 
@@ -308,6 +317,7 @@ class NylasAuthAccount(TimeStampModel):
     account_id = models.CharField(max_length=255, null=True)
     email_address = models.CharField(max_length=255, null=True)
     provider = models.CharField(max_length=255, null=True)
+    event_calendar_id = models.CharField(max_length=255, null=True, blank=True)
     sync_state = models.CharField(
         max_length=255,
         null=True,
@@ -339,6 +349,67 @@ class NylasAuthAccount(TimeStampModel):
                     }
                 }
             )
+
+    def schedule_meeting(
+        self, title, start_time, end_time, participants, meeting_link, description
+    ):
+        url = f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.EVENT_POST}"
+        calendar_description = f"Meeting link: {meeting_link}"
+        if description:
+            calendar_description = f"Meeting link: {meeting_link} \n{description}"
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json",
+            "Cache-Control": "no-cache",
+        }
+        data = {
+            "title": title,
+            "calendar_id": f"{self.event_calendar_id}",
+            "status": "confirmed",
+            "description": calendar_description,
+            "when": {
+                "start_time": start_time,
+                "end_time": end_time,
+                "start_timezone": f"{self.user.timezone}",
+                "end_timezone": f"{self.user.timezone}",
+            },
+            "busy": True,
+        }
+        if len(participants) > 0:
+            data["participants"] = participants
+        r = client.post(url, json.dumps(data), headers=headers)
+        response_data = self._handle_response(r)
+        return response_data
+
+    @staticmethod
+    def _handle_response(response, fn_name=None):
+        if not hasattr(response, "status_code"):
+            raise ValueError
+
+        elif response.status_code == 200 or response.status_code == 201:
+            try:
+                data = response.json()
+            except Exception as e:
+                NylasAPIError(e)
+            except json.decoder.JSONDecodeError as e:
+                return logger.error(f"An error occured with a nylas integration, {e}")
+
+        else:
+
+            status_code = response.status_code
+            error_data = response.json()
+            error_param = error_data.get("error", None)
+            error_message = error_data.get("message", None)
+            error_code = error_data.get("code", None)
+            kwargs = {
+                "status_code": status_code,
+                "error_code": error_code,
+                "error_param": error_param,
+                "error_message": error_message,
+            }
+
+            NylasAPIError(e)
+        return data
 
 
 class NotificationQuerySet(models.QuerySet):

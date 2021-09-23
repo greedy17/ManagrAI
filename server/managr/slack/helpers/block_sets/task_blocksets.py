@@ -3,7 +3,7 @@ import pytz
 import uuid
 import json
 
-from datetime import datetime
+from datetime import datetime, date
 
 from django.db.models import Q
 

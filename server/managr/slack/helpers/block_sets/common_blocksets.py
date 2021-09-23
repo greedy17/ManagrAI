@@ -163,11 +163,14 @@ def tasks_list_block_set(context={}):
         resource = "_salesforce object n/a_"
         # get the resource if it is what_id is for account/opp
         # get the resource if it is who_id is for lead
+        resource_type = None
         if t.what_id:
             # first check for opp
             obj = user.imported_opportunity.filter(integration_id=t.what_id).first()
+            resource_type = "Opportunity"
             if not obj:
                 obj = user.imported_account.filter(integration_id=t.what_id).first()
+                resource_type = "Account"
             if obj:
                 resource = f"*{obj.name}*"
 
@@ -175,7 +178,6 @@ def tasks_list_block_set(context={}):
             obj = user.imported_lead.filter(integration_id=t.who_id).first()
             if obj:
                 resource = f"*{obj.name}*"
-
         task_blocks.extend(
             [
                 block_builders.simple_section(
@@ -264,3 +266,74 @@ def home_modal_generic_block_set(context):
 
     view = {"type": "home", "blocks": blocks}
     return view
+
+
+@block_set()
+def hour_options(context):
+    hours = list(range(1, 13))
+    blocks = [block_builders.option(str(val), str(val)) for val in hours]
+    return blocks
+
+
+@block_set()
+def minute_options(context):
+    minutes = list(range(0, 56, 5))
+    blocks = []
+    for minute in minutes:
+        minute = str(minute)
+        if len(minute) < 2:
+            minute = "0" + minute
+        blocks.append(block_builders.option(minute, minute))
+    return blocks
+
+
+@block_set()
+def time_options(context):
+    time = ["AM", "PM"]
+    blocks = [block_builders.option(val, val) for val in time]
+    return blocks
+
+
+@block_set()
+def duration_options(context):
+    times = list(range(0, 56, 5))
+    blocks = []
+    for time in times:
+        time = str(time)
+        if len(time) < 2:
+            time = "0" + time
+        blocks.append(block_builders.option(time, time))
+    return blocks
+
+
+@block_set()
+def zoom_recording_blockset(context):
+    url = context["url"]
+    topic = context["topic"]
+    blocks = [
+        block_builders.section_with_button_block(
+            "Download Recording",
+            "download_recording",
+            f"Your recording of {topic} is ready to share",
+            url=url,
+        ),
+        block_builders.context_block("*Download link will expire after 24 hours"),
+    ]
+    return blocks
+
+
+@block_set()
+def zoom_fake_recording(context):
+    url = context["url"]
+    topic = context["topic"]
+    blocks = [
+        block_builders.section_with_button_block(
+            "Download Recording",
+            "download_recording",
+            f"Your recording of {topic} is ready to share",
+            url=url,
+        ),
+        block_builders.context_block("*Download link will expire after 24 hours"),
+    ]
+    return blocks
+
