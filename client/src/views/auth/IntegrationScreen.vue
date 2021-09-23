@@ -162,7 +162,31 @@
         </div>
         <p class="card-text">Add Contacts to cadences</p>
         <div class="card__body">
-          <p style="color: #beb5cc">Coming Soon</p>
+          <PulseLoadingSpinnerButton
+            v-if="!hasSalesloftIntegration && user.isAdmin"
+            :disabled="hasSalesloftIntegration"
+            @click="onGetAuthLink('SALESLOFT')"
+            style="margin-left: 1rem; cursor: pointer"
+            class="orange_button"
+            text="Connect"
+            :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
+          ></PulseLoadingSpinnerButton>
+          <div v-else-if="hasSalesloftIntegration && user.isAdmin">
+            <img
+              src="@/assets/images/unplug.png"
+              :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
+              @click="onRevoke('SALESLOFT')"
+              style="height: 2rem; cursor: pointer"
+            />
+            <img
+              src="@/assets/images/refresh.png"
+              @click="onRefreshSalesloft"
+              :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
+              style="height: 2rem; cursor: pointer"
+            />
+          </div>
+          <p v-else-if="hasSalesloftIntegration && !user.isAdmin">Salesloft is connected!</p>
+          <p v-else>Contact your organization admin to add Salesloft</p>
         </div>
       </div>
 
