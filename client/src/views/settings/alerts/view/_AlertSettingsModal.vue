@@ -50,7 +50,14 @@
       <div style="margin-right: 1rem" class="alerts-page__settings__target-users">
         <p style="color: #ff7649">Pipelines:</p>
 
-        <div :key="value" v-for="(key, value) in userTargetsOpts">
+        <input
+          class="search__input"
+          type="text"
+          v-model="searchQuery"
+          placeholder="Search pipelines..."
+        />
+
+        <div :key="value" v-for="(key, value) in filteredUserTargets">
           <input
             v-model="form.field.alertTargets.value"
             :value="key.id"
@@ -71,18 +78,40 @@
         </span>
 
         <div v-if="form.field.recipientType.value == 'USER_LEVEL'">
-          <div :key="value" v-for="(key, value) in recipientOpts">
+          <input
+            class="search__input"
+            type="text"
+            v-model="searchText"
+            placeholder="Search Recipients..."
+          />
+
+          <div :key="value" v-for="(key, value) in filteredRecipients">
             <input
               type="checkbox"
               id="value"
               :value="key.id"
               v-model="form.field.recipients.value"
+              @click="setRecipients(key)"
             />
             <label for="value">{{ key.fullName }}</label>
           </div>
         </div>
 
-        <FormField
+        <div v-if="form.field.recipientType.value == 'SLACK_CHANNEL'" class="channels_height">
+          <div :key="value" v-for="(key, value) in reversedChannels">
+            <input
+              @click="setRecipient(key)"
+              v-model="form.field.recipients.value"
+              :value="key.id"
+              type="radio"
+              id="value"
+              style="height: 1rem; margin-top: 0.5rem"
+            />
+            <label style="margin-bottom: 1rem" for="value">{{ key.name }}</label>
+          </div>
+        </div>
+
+        <!-- <FormField
           v-if="form.field.recipientType.value == 'SLACK_CHANNEL'"
           :errors="form.field.recipients.errors"
         >
@@ -111,29 +140,36 @@
               </template>
             </DropDownSearch>
           </template>
-        </FormField>
+        </FormField> -->
       </div>
     </div>
     <div class="alerts-page__settings__recipient-type">
-      <span
-        @click="
-          form.field.recipientType.value = recipientTypeToggle(form.field.recipientType.value)
+      <div
+        class="row__"
+        style="
+          margin-bottom: 0.75rem;
+          margin-top: 2rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         "
-        class="muted--link"
-        v-if="form.field.recipientType.value == 'USER_LEVEL'"
-        style="border-bottom: 2px solid #69e3cd; color: #69e3cd; cursor: pointer"
-        >Send to a channel instead ?</span
       >
-
-      <span
-        @click="
-          form.field.recipientType.value = recipientTypeToggle(form.field.recipientType.value)
-        "
-        class="muted--link"
-        v-else
-      >
-        Send to a group of users (DM) instead ?
-      </span>
+        <label>DM users</label>
+        <ToggleCheckBox
+          style="margin: 0.25rem"
+          @input="
+            form.field.recipientType.value == 'USER_LEVEL'
+              ? (form.field.recipientType.value = recipientTypeToggle(
+                  form.field.recipientType.value,
+                ))
+              : (form.field.recipientType.value = recipientTypeToggle('SLACK_CHANNEL'))
+          "
+          :value="form.field.recipientType.value !== 'USER_LEVEL'"
+          offColor="#199e54"
+          onColor="#199e54"
+        />
+        <label>Send to #Channel<span style="color: #ff7649"> *recommended</span></label>
+      </div>
     </div>
   </div>
 </template>
@@ -181,6 +217,8 @@ export default {
   data() {
     return {
       channelOpts: new SlackListResponse(),
+      searchQuery: '',
+      searchText: '',
       users: CollectionManager.create({ ModelClass: User }),
       alertRecipientOpts: [
         { key: 'Myself', value: 'SELF' },
@@ -258,6 +296,12 @@ export default {
       }
       return value
     },
+    setRecipient(obj) {
+      this.form.field._recipients.value = obj
+    },
+    setRecipients(obj) {
+      this.form.field._recipients.value.push(obj)
+    },
     async onSearchUsers(v) {
       this.users.pagination = new Pagination()
       this.users.filters = {
@@ -302,6 +346,27 @@ export default {
         return [{ fullName: 'Myself', id: 'SELF' }]
       }
     },
+    filteredUserTargets() {
+      if (this.searchQuery) {
+        return this.userTargetsOpts.filter((key) => {
+          return key.fullName.toLowerCase().startsWith(this.searchQuery.toLowerCase())
+        })
+      } else {
+        return this.userTargetsOpts
+      }
+    },
+    filteredRecipients() {
+      if (this.searchText) {
+        return this.recipientOpts.filter((key) => {
+          return key.fullName.toLowerCase().startsWith(this.searchText.toLowerCase())
+        })
+      } else {
+        return this.recipientOpts
+      }
+    },
+    reversedChannels() {
+      return this.channelOpts.channels.reverse()
+    },
     user() {
       return this.$store.state.user
     },
@@ -327,6 +392,30 @@ export default {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+}
+.channels_height {
+  height: 22vh;
+  overflow-y: scroll;
+}
+.search__input {
+  font-family: Lato-Regular, sans-serif;
+  font-weight: normal;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  font-size: 16px;
+  border-radius: 4px;
+  line-height: 1.29;
+  letter-spacing: 0.5px;
+  color: #4d4e4c;
+  height: 2.5rem;
+  background-color: #beb5cc;
+  border: 1px solid #5d5e5e;
+  width: 70%;
+  // padding: 0 0 0 1rem;
+  margin: 1rem;
+  -webkit-box-shadow: 1px 4px 7px black;
+  box-shadow: 1px 4px 7px black;
 }
 .btn {
   &--danger {

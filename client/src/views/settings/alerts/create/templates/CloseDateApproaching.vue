@@ -2,9 +2,9 @@
   <div class="alerts-page">
     <div>
       <h2 style="font-weight: bold; text-align: center">
-        <span style="border-bottom: 3px solid #ddad3c; padding-bottom: 0.25rem">
+        <span style="border-bottom: 3px solid #199e54; padding-bottom: 0.25rem; color: black">
           Close date
-          <span style="color: #5f8cff">Approaching</span>
+          <span style="">Approaching</span>
         </span>
       </h2>
     </div>
@@ -55,7 +55,28 @@
                     Who's pipelines are we searching through ?
                     <span style="color: #ff7649; font-size: 0.9em"> *check all that apply</span>
                   </p>
-                  <div :key="value" v-for="(key, value) in userTargetsOpts">
+
+                  <input
+                    class="search__input"
+                    type="text"
+                    v-model="searchQuery"
+                    placeholder="Search pipelines..."
+                  />
+
+                  <div :key="value" v-for="(key, value) in filteredUserTargets">
+                    <span id="utops" class="delivery__row">
+                      <input
+                        v-model="form.field.alertTargets.value"
+                        :value="key.id"
+                        id="value"
+                        type="checkbox"
+                        style="height: 1rem"
+                        @click="setPipelines(key)"
+                      />
+                      <label style="margin-top: 0.5rem" for="value">{{ key.fullName }}</label>
+                    </span>
+                  </div>
+                  <!-- <div :key="value" v-for="(key, value) in userTargetsOpts">
                     <span class="row">
                       <input
                         v-model="form.field.alertTargets.value"
@@ -65,31 +86,77 @@
                       />
                       <label for="value">{{ key.fullName }}</label>
                     </span>
-                  </div>
+                  </div> -->
                   <div class="bottom__middle">
                     <p style="color: #beb5cc">Step 2/4</p>
                   </div>
                 </div>
                 <div v-if="pageNumber === 2">
-                  <span
-                    v-if="
-                      form.field._recipients.value &&
-                      form.field.recipientType.value == 'SLACK_CHANNEL'
+                  <div
+                    class="row__"
+                    style="
+                      margin-bottom: 0.75rem;
+                      margin-top: 2rem;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
                     "
                   >
-                    Please make sure @managr has been added to
-                    <em style="color: #69e3cd">{{ form.field._recipients.value.name }}</em> channel
-                  </span>
-                  <p style="font-weight: bold; color: #beb5cc">
-                    Who's recieving these Smart Alerts ?
-                    <span style="color: #ff7649; font-size: 0.9em"> *check all that apply</span>
-                  </p>
+                    <label>DM users</label>
+                    <ToggleCheckBox
+                      style="margin: 0.25rem"
+                      @input="
+                        form.field.recipientType.value == 'USER_LEVEL'
+                          ? (form.field.recipientType.value = recipientTypeToggle(
+                              form.field.recipientType.value,
+                            ))
+                          : (form.field.recipientType.value = recipientTypeToggle('SLACK_CHANNEL'))
+                      "
+                      :value="form.field.recipientType.value !== 'USER_LEVEL'"
+                      offColor="#199e54"
+                      onColor="#199e54"
+                    />
+                    <label
+                      >Send to #Channel<span style="color: #ff7649"> (recommended)</span></label
+                    >
+                  </div>
+                  <div v-if="form.field.recipientType.value == 'SLACK_CHANNEL'">
+                    <p>
+                      Please make sure @managr has been added to
+                      <em style="color: #beb5cc">{{ form.field._recipients.value.name }}</em>
+                      channel
+                    </p>
+                    <p>Select a #Channel:</p>
+                    <div class="channels_height">
+                      <div :key="value" v-for="(key, value) in reversedChannels">
+                        <input
+                          @click="setRecipient(key)"
+                          v-model="form.field.recipients.value"
+                          :value="key.id"
+                          type="radio"
+                          id="value"
+                          style="height: 1rem; margin-top: 0.5rem"
+                        />
+                        <label style="padding-bottom: 1rem" for="value">{{ key.name }}</label>
+                      </div>
+                    </div>
+                  </div>
 
                   <div
                     v-if="form.field.recipientType.value == 'USER_LEVEL'"
                     :errors="form.field.recipients.errors"
                   >
-                    <div :key="value" v-for="(key, value) in recipientOpts">
+                    <p style="font-weight: bold; color: #beb5cc">
+                      Who's recieving these Smart Alerts ?
+                      <span style="color: #ff7649; font-size: 0.9em"> *check all that apply</span>
+                    </p>
+                    <input
+                      class="search__input"
+                      type="text"
+                      v-model="searchText"
+                      placeholder="Search Recipients..."
+                    />
+                    <div :key="value" v-for="(key, value) in filteredRecipients">
                       <span class="row">
                         <input
                           v-model="form.field.recipients.value"
@@ -102,7 +169,7 @@
                     </div>
                   </div>
 
-                  <FormField
+                  <!-- <FormField
                     v-if="form.field.recipientType.value == 'SLACK_CHANNEL'"
                     :errors="form.field.recipients.errors"
                   >
@@ -130,32 +197,7 @@
                         </template>
                       </DropDownSearch>
                     </template>
-                  </FormField>
-
-                  <span
-                    @click="
-                      form.field.recipientType.value = recipientTypeToggle(
-                        form.field.recipientType.value,
-                      )
-                    "
-                    v-if="form.field.recipientType.value == 'USER_LEVEL'"
-                    style="margin: 2rem"
-                  >
-                    Send to a
-                    <strong style="color: #69e3cd; cursor: pointer">#channel</strong>
-                    instead ?
-                  </span>
-
-                  <span
-                    @click="
-                      form.field.recipientType.value = recipientTypeToggle(
-                        form.field.recipientType.value,
-                      )
-                    "
-                    v-else
-                  >
-                    Send to a group of users (DM) instead ?
-                  </span>
+                  </FormField> -->
 
                   <div class="bottom__middle">
                     <p style="color: #beb5cc">Step 3/4</p>
@@ -184,9 +226,9 @@
           </p>
 
           <p>
-            "Hey <span style="color: #69e3cd">(Recipient Name)</span>, your deal
-            <span style="color: #69e3cd">(Opportunity Name)</span> has an upcoming closed date.
-            Please update it!"
+            "Hey <span style="color: #ff7649">Recipient Name</span>, your deal
+            <span style="color: #ff7649">Opportunity Name</span> has an upcoming closed date. Please
+            update it!"
           </p>
 
           <div class="bottom__middle">
@@ -316,6 +358,8 @@ export default {
       stringRenderer,
       OPPORTUNITY: 'Opportunity',
       operandDate: '',
+      searchQuery: '',
+      searchText: '',
       recurrenceDay: '',
       SOBJECTS_LIST,
       pageNumber: 0,
@@ -431,6 +475,18 @@ export default {
         return 'USER_LEVEL'
       }
       return value
+    },
+    setRecipients(obj) {
+      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value.push(obj)
+    },
+    setRecipient(obj) {
+      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = obj
+    },
+    setDay(obj) {
+      this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDay.value = obj
+    },
+    setPipelines(obj) {
+      this.alertTemplateForm.field.alertConfig.groups[0].field._alertTargets.value.push(obj)
     },
     async onSave() {
       this.savingTemplate = true
@@ -577,6 +633,27 @@ export default {
         return [{ fullName: 'Myself', id: 'SELF' }]
       }
     },
+    filteredUserTargets() {
+      if (this.searchQuery) {
+        return this.userTargetsOpts.filter((key) => {
+          return key.fullName.toLowerCase().startsWith(this.searchQuery.toLowerCase())
+        })
+      } else {
+        return this.userTargetsOpts
+      }
+    },
+    filteredRecipients() {
+      if (this.searchText) {
+        return this.recipientOpts.filter((key) => {
+          return key.fullName.toLowerCase().startsWith(this.searchText.toLowerCase())
+        })
+      } else {
+        return this.recipientOpts
+      }
+    },
+    reversedChannels() {
+      return this.channelOpts.channels.reverse()
+    },
     formValue() {
       return this.alertTemplateForm.value
     },
@@ -625,6 +702,30 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
+.search__input {
+  font-family: Lato-Regular, sans-serif;
+  font-weight: normal;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  font-size: 16px;
+  border-radius: 4px;
+  line-height: 1.29;
+  letter-spacing: 0.5px;
+  color: #4d4e4c;
+  height: 2.5rem;
+  background-color: #beb5cc;
+  border: 1px solid #5d5e5e;
+  width: 70%;
+  // padding: 0 0 0 1rem;
+  margin: 1rem;
+  -webkit-box-shadow: 1px 4px 7px black;
+  box-shadow: 1px 4px 7px black;
+}
+.channels_height {
+  height: 22vh;
+  overflow-y: scroll;
+}
 .bottom__middle {
   display: flex;
   justify-content: flex-end;
@@ -655,7 +756,7 @@ export default {
   border-style: none;
   letter-spacing: 0.03rem;
   color: white;
-  background-color: $panther-gold;
+  background-color: $panther;
   cursor: pointer;
   height: 2rem;
   width: 10rem;
@@ -674,7 +775,7 @@ export default {
   border-style: none;
   letter-spacing: 0.03rem;
   color: white;
-  background-color: $panther-purple;
+  background-color: $dark-green;
   cursor: pointer;
   height: 2rem;
   width: 10rem;
@@ -815,6 +916,7 @@ input {
   width: 34vw;
   box-shadow: 3px 4px 7px black;
   margin-top: 1rem;
+  overflow-x: scroll;
 }
 .fields_title {
   background-color: $panther;

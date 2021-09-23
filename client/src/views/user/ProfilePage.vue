@@ -153,8 +153,8 @@ export default {
 }
 
 .update-button {
-  background-color: white;
-  color: $panther-orange;
+  background-color: $dark-green;
+  color: white;
   margin-top: 1.25rem;
   height: 2.5rem;
   width: 16.2rem;

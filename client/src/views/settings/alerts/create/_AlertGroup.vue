@@ -181,7 +181,7 @@ export default {
   flex-direction: row;
 }
 .plus_button {
-  color: $panther-blue;
+  color: $dark-green;
   border-radius: 0.5rem;
   border: none;
   background: transparent;

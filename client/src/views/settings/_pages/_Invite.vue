@@ -96,7 +96,7 @@
         <div class="invite-list__section__item invite-list__status">
           {{ user.userLevel == 'MANAGER' ? 'Team Leader(You)' : 'Rep(You)' }}
         </div>
-        <div class="invite-list__section__item invite-list__status" style="color: #5f8cff">
+        <div class="invite-list__section__item invite-list__status" style="color: #ff7649">
           Registered
         </div>
       </div>
@@ -431,12 +431,12 @@ button {
 .registered {
   width: 33%;
   font-size: 0.75rem;
-  color: $panther-blue;
+  color: $panther-orange;
 }
 .unregistered {
   width: 33%;
   font-size: 0.75rem;
-  color: $panther-turq;
+  color: $panther-silver;
 }
 
 .cancel-button {
