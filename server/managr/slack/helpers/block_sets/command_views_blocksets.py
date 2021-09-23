@@ -136,20 +136,21 @@ def alert_instance_block_set(context):
     if config and config.recipient_type == "SLACK_CHANNEL":
         in_channel = True
     blocks = [
-        block_builders.section_with_button_block(
+        block_builders.simple_section(instance.render_text(), text_type="mrkdwn"),
+    ]
+    action_blocks = [
+        block_builders.simple_button_block(
             f"Update {instance.template.resource_type}",
             instance.resource_id,
-            instance.render_text(),
             action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(resource_owner.id)}&resource={instance.template.resource_type}",
             style="primary",
-        ),
+        )
     ]
     if instance.template.resource_type != "Lead":
-        blocks.append(
-            block_builders.section_with_button_block(
+        action_blocks.append(
+            block_builders.simple_button_block(
                 "Add to Cadence",
                 "add_to_cadence",
-                "Add contacts to Cadence",
                 style="danger",
                 action_id=action_with_params(
                     slack_const.ADD_TO_CADENCE_MODAL,
@@ -160,8 +161,9 @@ def alert_instance_block_set(context):
                         f"resource_type={instance.template.resource_type}",
                     ],
                 ),
-            ),
+            )
         )
+    blocks.append(block_builders.actions_block(action_blocks))
     if in_channel or (user.id != resource_owner.id):
         blocks.append(
             block_builders.context_block(
