@@ -94,11 +94,11 @@ export default {
     --active-opacity: 1;
   }
 
-  /*   ::v-deep .input-content__active {
+  ::v-deep .input-content__active {
     box-shadow: 0 0 10px rgba($color: $dark-green, $alpha: 0.5);
     outline: none;
     background-color: $white;
-  } */
+  }
 
   &__errors {
     position: relative;
@@ -118,6 +118,6 @@ export default {
   outline: none;
 }
 ::v-deep .input-form__active {
-  border: $dark-green;
+  border: $panther-gold;
 }
 </style>

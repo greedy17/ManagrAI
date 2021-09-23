@@ -1,130 +1,41 @@
 <template>
   <div class="alerts-page">
-    <Modal ref="modalName">
-      <template v-slot:header>
-        <h1>Popular Smart Alerts</h1>
-      </template>
-
-      <template v-slot:body>
-        <div>
-          <div class="top">
-            <p>
-              <strong style="font-size: 18px; color: black">"Rotting"</strong> Opps/Leads/Accounts
-              not touched in over 7 days
-            </p>
-          </div>
-
-          <div class="row_">
-            <span class="col">
-              <label for="lasgt">SFDC Field</label>
-              <input type="text" id="last" placeholder="Last Activity" disabled />
-            </span>
-
-            <span class="col">
-              <label for="less">Operator</label>
-              <input type="text" id="less" placeholder="Less than" disabled />
-            </span>
-
-            <span class="col">
-              <label for="seven">Days</label>
-              <input type="text" id="seven" placeholder="-7" disabled />
-            </span>
-          </div>
-          <p style="color: #199e54">Run Day: Wed | Pipeline: Myself | Send to: myself</p>
-        </div>
-
-        <div>
-          <div class="top">
-            <p>
-              <strong style="font-size: 18px; color: black">"Close Date Passed"</strong> Past due
-              next step date (also works for close date)
-            </p>
-          </div>
-
-          <div class="row_">
-            <span class="col">
-              <label for="next">SFDC Field</label>
-              <input type="text" id="next" placeholder="Next Step Date" disabled />
-            </span>
-
-            <span class="col">
-              <label for="leq">Operator</label>
-              <input type="text" id="leq" placeholder="Less than/Equal to" disabled />
-            </span>
-
-            <span class="col">
-              <label for="none">Days</label>
-              <input type="text" id="none" placeholder="0" disabled />
-            </span>
-          </div>
-          <p style="color: #199e54">
-            Run Day: Monday | Pipeline: Myself | Send to: #my-pipe (create this channel + invite
-            @managr to it)
-          </p>
-        </div>
-
-        <div>
-          <div class="top">
-            <p>
-              <strong style="font-size: 18px; color: black">"Update Forecast"</strong> Deals due to
-              close this week, not in Commit
-            </p>
-          </div>
-
-          <div class="row_">
-            <span class="col">
-              <label for="close">SFDC field</label>
-              <input type="text" id="close" placeholder="Close date" disabled />
-            </span>
-
-            <span class="col">
-              <label for="opr">Operator</label>
-              <input type="text" id="opr" placeholder="Greater than" disabled />
-            </span>
-
-            <span class="col">
-              <label for="days">Days</label>
-              <input type="text" id="days" placeholder="5" disabled />
-            </span>
-          </div>
-
-          <div class="row_">
-            <span class="col">
-              <label for="forcast">SFDC Field</label>
-              <input type="text" id="forcast" placeholder="Forecast Category" disabled />
-            </span>
-
-            <span class="col">
-              <p style="margin-top: -1rem; color: #4d4e4c">AND</p>
-              <label style="margin-top: -1rem" for="not">Operator</label>
-              <input type="text" id="not" placeholder="Does not =" disabled />
-            </span>
-
-            <span class="col">
-              <label for="commit">SFDC Field</label>
-              <input type="text" id="commit" placeholder="commit" disabled />
-            </span>
-          </div>
-          <p style="color: #199e54">Run Day: Friday | Pipeline: Everyone | Send to: Owner</p>
-        </div>
-      </template>
-
-      <!-- <template v-slot:footer>
-        <div>
-          <button @click="$refs.modalName.closeModal()">exit</button>
-        </div>
-      </template> -->
-    </Modal>
-
-    <div>
-      <p class="gray" style="font-size: 16px; font-weight: bold">
-        Dont know where to start ? These
-        <span @click="$refs.modalName.openModal()" class="alertsModal">Smart Alerts</span>
-        are the most popular.
-      </p>
+    <div class="col">
+      <h2 style="color: black" class="title">Smart Alert Templates</h2>
+      <p style="color: #5d5e5e" class="sub__">Highly recommended and easy to setup</p>
     </div>
 
-    <ExpandablePanel>
+    <div class="alert_cards">
+      <div class="card__">
+        <div class="card__header">
+          <h3><span>Close Date</span> Approaching</h3>
+        </div>
+        <button @click="goToCloseDateApproaching" class="orange_button">Activate</button>
+      </div>
+
+      <div class="card__">
+        <div class="card__header">
+          <h3><span>Close Date</span> Passed</h3>
+        </div>
+        <button @click="goToCloseDatePassed" class="orange_button">Activate</button>
+      </div>
+
+      <div class="card__">
+        <div class="card__header">
+          <h3><span>Deal</span> Rotting</h3>
+        </div>
+        <button @click="goToDealRotting" class="orange_button">Activate</button>
+      </div>
+
+      <div class="card__">
+        <div class="card__header">
+          <h3>Update <span>Forecast</span></h3>
+        </div>
+        <button class="cs__button">Coming Soon</button>
+      </div>
+    </div>
+
+    <!-- <ExpandablePanel>
       <template v-slot:panel-header="{ classes, expand }" class="box__header">
         <div :class="classes" @click="expand">
           <span :class="alertTemplateForm.field.resourceType.isValid ? 'slate' : 'gray'">
@@ -214,9 +125,6 @@
               :errors="alertTemplateForm.field.title.errors"
               @blur="alertTemplateForm.field.title.validate()"
             />
-            <!-- <p style="margin-left: 6rem; color: #aaaaaa">
-              Select the events you'd like to recieve a Smart Alert for
-            </p> -->
           </div>
 
           <div
@@ -301,14 +209,6 @@
         <template v-if="selectedResourceType">
           <div class="alerts-page__message" style="height: 60vh">
             <div class="alerts-page__message-options">
-              <!-- <FormField
-                v-model="
-                  alertTemplateForm.field.alertMessages.groups[0].field.notificationText.value
-                "
-                id="notification-text"
-                large
-                placeholder="Snippet in slack notification"
-              /> -->
               <div class="alerts-page__message-options-body" style="height: 5rem; width: 30rem">
                 <FormField
                   :errors="alertTemplateForm.field.alertMessages.groups[0].field.body.errors"
@@ -385,9 +285,6 @@
               class="alerts-page__message-template"
               style="margin-left: 7.5rem; margin-top: -1rem"
             >
-              <!-- <div class="alerts-page__message-template__message">
-                <SlackMessagePreview :alert="alertObj" />
-              </div> -->
               <h3 class="pink">Templates:</h3>
               <div style="font-size: 14px">
                 <div class="templates">
@@ -692,7 +589,7 @@
           <div class="alerts-page__previous-step">Please Select a resource to get started</div>
         </template>
       </template>
-    </ExpandablePanel>
+    </ExpandablePanel> -->
   </div>
 </template>
 
@@ -948,6 +845,15 @@ export default {
     showDropDown() {
       this.dropdownVisible = !this.dropdownVisible
     },
+    goToCloseDateApproaching() {
+      this.$router.push({ name: 'CloseDateApproaching' })
+    },
+    goToCloseDatePassed() {
+      this.$router.push({ name: 'CloseDatePassed' })
+    },
+    goToDealRotting() {
+      this.$router.push({ name: 'DealRotting' })
+    },
   },
   computed: {
     userTargetsOpts() {
@@ -1042,6 +948,7 @@ textarea {
   }
 }
 .alerts-page {
+  margin-left: 8vw;
   &__previous-step {
     @include muted-font(12);
   }
@@ -1064,6 +971,40 @@ textarea {
         margin: 1rem 0rem;
       }
     }
+  }
+}
+.alert_cards {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+.card__ {
+  background-color: $panther;
+  border: none;
+  width: 10rem;
+  height: 20vh;
+  margin-right: 1rem;
+  margin-bottom: 2rem;
+  border-radius: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 3px 4px 7px black;
+  color: white;
+  @media only screen and (min-width: 768px) {
+    flex: 1 0 24%;
+    min-width: 21rem;
+    max-width: 30rem;
+  }
+
+  &header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 5rem;
   }
 }
 .alerts-page__settings {
@@ -1142,10 +1083,11 @@ textarea {
   margin-left: 0.5rem;
 }
 .sub__ {
-  font-size: 12px;
-  margin-left: 1rem;
-  margin-top: 1rem;
-  color: $gray;
+  font-size: 16px;
+  margin-top: -0.5rem;
+  color: $panther-silver;
+}
+.title {
 }
 .group {
   display: flex;
@@ -1158,6 +1100,7 @@ textarea {
   display: flex;
   flex-direction: column;
   align-items: center;
+  color: white;
 }
 .row {
   display: flex;
@@ -1234,5 +1177,27 @@ input {
   border: none;
   border-bottom: 1px solid $slate-gray;
   font-weight: bold;
+}
+.orange_button {
+  width: 7rem;
+  background-color: white;
+  color: $dark-green;
+  font-weight: bold;
+  font-size: 16px;
+  height: 2rem;
+  border-radius: 0.5rem;
+  border: 2px solid white;
+  cursor: pointer;
+}
+.cs__button {
+  width: 9rem;
+  background-color: transparent;
+  color: $panther-silver;
+  font-weight: bold;
+  font-size: 16px;
+  height: 2rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: not-allowed;
 }
 </style>

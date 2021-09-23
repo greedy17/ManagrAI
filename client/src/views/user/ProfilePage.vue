@@ -67,7 +67,7 @@ export default {
       lastName: this.getUser.lastName,
       timezone: this.getUser.timezone,
     })
-    this.timezones = this.timezones.map(tz => {
+    this.timezones = this.timezones.map((tz) => {
       return { key: tz, value: tz }
     })
   },
@@ -77,7 +77,7 @@ export default {
 
       User.api
         .update(this.getUser.id, this.profileForm.value)
-        .then(response => {
+        .then((response) => {
           this.$Alert.alert({
             message: 'Successfully Updated Profile info',
             type: 'success',
@@ -87,7 +87,7 @@ export default {
 
           this.resetProfileForm()
         })
-        .catch(e => {
+        .catch((e) => {
           console.log(e)
           this.resetProfileForm()
         })
@@ -134,7 +134,10 @@ export default {
   width: 31.25rem;
   min-height: 15rem;
   height: auto;
-  background-color: $white;
+  background-color: $panther;
+  border: none;
+  border-radius: 0.5rem;
+  color: white;
   display: flex;
   flex-flow: column;
   align-items: center;
@@ -150,13 +153,16 @@ export default {
 }
 
 .update-button {
-  @include primary-button();
+  background-color: $dark-green;
+  color: white;
   margin-top: 1.25rem;
   height: 2.5rem;
-  width: 19rem;
+  width: 16.2rem;
   font-size: 14px;
 }
-
+.update-button:hover {
+  background-color: white;
+}
 button {
   @include primary-button();
   margin-top: 1.25rem;

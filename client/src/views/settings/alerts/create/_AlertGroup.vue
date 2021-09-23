@@ -1,50 +1,46 @@
 <template>
-  <div class="alert-group-row debug">
+  <div>
     <!-- <span class="alert-group-row--label">create automation</span> -->
-    <div class="alert-group-row__condition" v-if="form.field.groupOrder.value != 0">
-      <label class="alert-group-row__condition-label">AND</label>
-      <ToggleCheckBox
-        @input="
-          selectedCondition == 'AND' ? (selectedCondition = 'OR') : (selectedCondition = 'AND')
-        "
-        :value="selectedCondition !== 'AND'"
-        offColor="#199e54"
-        onColor="#199e54"
-      />
-      <label class="alert-group-row__condition-label">OR</label>
+    <div class="centered">
+      <div class="toggle__switch" v-if="form.field.groupOrder.value != 0">
+        <label class="alert-group-row__condition-label">AND</label>
+        <ToggleCheckBox
+          @input="
+            selectedCondition == 'AND' ? (selectedCondition = 'OR') : (selectedCondition = 'AND')
+          "
+          :value="selectedCondition !== 'AND'"
+          offColor="#199e54"
+          onColor="#199e54"
+        />
+        <label class="alert-group-row__condition-label">OR</label>
+      </div>
     </div>
-    <div class="alert-group-row__operands">
-      <div
-        class="alert-group-row__operands__row rows"
-        :key="i"
-        v-for="(alertOperand, i) in form.field.alertOperands.groups"
-      >
+
+    <div>
+      <div :key="i" v-for="(alertOperand, i) in form.field.alertOperands.groups">
         <AlertOperandRow
           @remove-operand="onRemoveOperand(i)"
           :resourceType="resourceType"
           :form.sync="alertOperand"
-          class="left"
         />
-
-        <div class="add__remove" v-if="form.field.alertOperands.groups.length > 1">
+        <div class="row__buttons">
           <button
-            class="btn btn--danger btn--icon"
+            class="remove_button"
             @click.stop="onRemoveOperand(i)"
+            v-if="form.field.alertOperands.groups.length > 1"
             :disabled="form.field.alertOperands.groups.length - 1 <= 0"
           >
-            <svg width="24px" height="24px" viewBox="0 0 24 24">
-              <use xlink:href="@/assets/images/remove.svg#remove" />
-            </svg>
+            Remove Row
           </button>
-          <p class="sub">Remove</p>
-        </div>
-        <div class="add__remove">
-          <button class="btn btn--secondary btn--icon" @click="addOperandForm">
-            <svg width="24px" height="24px" viewBox="0 0 24 24">
-              <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
-            </svg>
+
+          <button class="plus_button" @click="addOperandForm">
+            Add Row
+            <img
+              src="@/assets/images/plusOne.png"
+              style="height: 1.25rem; margin-left: 0.25rem"
+              alt=""
+            />
           </button>
-          <p class="sub">Row</p>
         </div>
       </div>
     </div>
@@ -150,20 +146,9 @@ export default {
 .alert-group-row {
   display: flex;
   flex-direction: column;
-  overflow: visible;
-  &__operands {
-    &__row {
-      display: flex;
-      &-remove {
-        height: 1rem;
-      }
-    }
-  }
-  &--label {
-    @include muted-font();
-    top: -1.1rem;
-    position: relative;
-  }
+  align-items: center;
+  justify-content: center;
+  overflow: scroll;
 }
 .alert-group-row__condition {
   position: relative;
@@ -177,19 +162,51 @@ export default {
     margin: 0 0.5rem;
   }
 }
-.alert-group-row__operands {
+.centered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 2rem;
 }
-.add__remove {
-  margin-right: 1.5rem;
+.row__buttons {
   display: flex;
   flex-direction: row;
-  margin-bottom: -1rem;
-  margin-left: -3rem;
-  padding: 1rem;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
 }
+.toggle__switch {
+  display: flex;
+  flex-direction: row;
+}
+.plus_button {
+  color: $dark-green;
+  border-radius: 0.5rem;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.remove_button {
+  color: $panther-orange;
+  border: none;
+  font-weight: bold;
+  background: transparent;
+  cursor: pointer;
+}
+
 .sub {
   font-size: 13px;
   margin-left: 0.5rem;
+}
+.row {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
 }
 .rows {
   display: flex;
@@ -198,5 +215,9 @@ export default {
 }
 .left {
   margin-left: -5rem;
+}
+.column {
+  display: flex;
+  align-items: center;
 }
 </style>

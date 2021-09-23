@@ -5,7 +5,7 @@
         class="google-btn__img"
         src="@/assets/images/google-btn/btn_google_light_normal_ios.svg"
       />
-      SIGN IN WITH GOOGLE
+      Sign in
     </template>
     <template v-else>
       <PulseLoadingSpinnerButton :loading="loading"></PulseLoadingSpinnerButton>
@@ -34,17 +34,18 @@ export default {
 // https://developers.google.com/identity/branding-guidelines
 .google-btn {
   width: 100%;
-  padding: 0 0.5rem;
+  padding: 0 0.25rem;
   padding-right: 1.5rem;
   display: flex;
+  align-items: center;
+  justify-content: center;
   font-family: 'Roboto Medium', sans-serif;
   font-weight: 600;
   font-size: 0.9rem;
-  color: rgba(0, 0, 0, 0.54);
-
+  color: black;
+  background-color: white;
+  border-radius: 0.25rem;
   box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.35);
-  align-items: center;
-
   cursor: pointer;
 
   &__img {
