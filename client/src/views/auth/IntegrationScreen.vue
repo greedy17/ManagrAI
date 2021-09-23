@@ -1,10 +1,40 @@
 <template>
   <div class="integrations">
     <h2 class="title">Connect your apps to Managr</h2>
-    <p style="font-weight: bold; margin-top: -0.5rem; margin-bottom: 2rem; color: #5d5e5e">
+    <p style="font-weight: bold; margin-top: -0.5rem; color: #5d5e5e">
       Managr utilizes a secure oAuth connection
     </p>
+    <div>
+      <PulseLoadingSpinnerButton
+        v-if="hasSalesforceIntegration && user.isAdmin"
+        @click="goToSlackFormBuilder"
+        class="slack-button"
+        text="Customize"
+        :loading="false"
+      ></PulseLoadingSpinnerButton>
+      <PulseLoadingSpinnerButton
+        v-if="!hasSalesforceIntegration && user.isAdmin"
+        class="disabled-button"
+        text="Customize"
+        :loading="false"
+      ></PulseLoadingSpinnerButton>
+    </div>
 
+    <div>
+      <PulseLoadingSpinnerButton
+        v-if="hasSalesforceIntegration && !user.isAdmin"
+        @click="goToSlackFormBuilder"
+        class="slack-button"
+        text="Customize"
+        :loading="false"
+      ></PulseLoadingSpinnerButton>
+      <PulseLoadingSpinnerButton
+        v-if="!hasSalesforceIntegration && !user.isAdmin"
+        class="disabled-button"
+        text="Customize"
+        :loading="false"
+      ></PulseLoadingSpinnerButton>
+    </div>
     <!-- <div
       v-if="!hasSalesforceIntegration && user.isAdmin"
       class="slack-button slack-button--disabled"
@@ -80,7 +110,7 @@
           <img style="height: 3rem" src="@/assets/images/slackLogo.png" />
           <h2 class="card__title">Slack</h2>
         </div>
-        <p class="card-text">Connect your company or personal worskspace</p>
+        <p class="card-text">Interact with Managr through Slack</p>
         <div class="card__body">
           <PulseLoadingSpinnerButton
             v-if="
@@ -232,38 +262,6 @@
         <div class="card__body">
           <p style="color: #beb5cc">Coming Soon</p>
         </div>
-      </div>
-
-      <div>
-        <PulseLoadingSpinnerButton
-          v-if="hasSalesforceIntegration && user.isAdmin"
-          @click="goToSlackFormBuilder"
-          class="slack-button"
-          text="Continue"
-          :loading="false"
-        ></PulseLoadingSpinnerButton>
-        <PulseLoadingSpinnerButton
-          v-if="!hasSalesforceIntegration && user.isAdmin"
-          class="disabled-button"
-          text="Continue"
-          :loading="false"
-        ></PulseLoadingSpinnerButton>
-      </div>
-
-      <div>
-        <PulseLoadingSpinnerButton
-          v-if="hasSalesforceIntegration && !user.isAdmin"
-          @click="goToSlackFormBuilder"
-          class="slack-button"
-          text="Continue"
-          :loading="false"
-        ></PulseLoadingSpinnerButton>
-        <PulseLoadingSpinnerButton
-          v-if="!hasSalesforceIntegration && !user.isAdmin"
-          class="disabled-button"
-          text="Continue"
-          :loading="false"
-        ></PulseLoadingSpinnerButton>
       </div>
     </div>
 

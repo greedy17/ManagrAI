@@ -153,7 +153,7 @@
     </div> -->
 
     <!-- <button v-if="user.isAdmin" class="slack-button">Continue</button> -->
-    <button @click="goToTemplates" class="slack-button">Automate</button>
+    <button @click="goToTemplates" class="slack-button">Activate Workflow Automations</button>
   </div>
 </template>
 
@@ -259,10 +259,8 @@ export default {
 }
 
 .slack-button {
-  height: 2.75rem;
-  width: 12rem;
+  padding: 1rem;
   border-radius: 0.5rem;
-  margin: 0rem 0 2rem 0;
   font-size: 1.25rem;
   font-weight: bold;
   color: white;
