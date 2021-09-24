@@ -9,23 +9,24 @@ from requests.exceptions import HTTPError
 
 from managr.utils.misc import get_site_url
 
+GONG_SCOPES = []
 
 if settings.USE_GONG:
 
-    CLIENT_ID = settings.SALESLOFT_CLIENT_ID
-    REDIRECT_URI = settings.SALESLOFT_REDIRECT_URI
-    CLIENT_SECRET = settings.SALESLOFT_SECRET
-    SALESLOFT_BASE_URI = settings.SALESLOFT_BASE_URL
+    CLIENT_ID = settings.GONG_CLIENT_ID
+    REDIRECT_URI = settings.GONG_REDIRECT_URI
+    CLIENT_SECRET = settings.GONG_SECRET
+    GONG_BASE_URI = settings.GONG_BASE_URL
 
-    AUTHENTICATION_URI = "https://accounts.salesloft.com/oauth/token"
-    AUTHORIZATION_URI = "https://accounts.salesloft.com/oauth/authorize"
+    AUTHENTICATION_URI = "https://accounts.GONG.com/oauth/token"
+    AUTHORIZATION_URI = "https://app.gong.io/oauth2/authorize"
 
     if settings.IN_DEV:
-        SALESLOFT_FRONTEND_REDIRECT = "http://localhost:8080/settings/integrations"
+        GONG_FRONTEND_REDIRECT = "http://localhost:8080/settings/integrations"
     elif settings.IN_STAGING:
-        SALESLOFT_FRONTEND_REDIRECT = "https://staging.managr.ai/settings/integrations"
+        GONG_FRONTEND_REDIRECT = "https://staging.managr.ai/settings/integrations"
     else:
-        SALESLOFT_FRONTEND_REDIRECT = "https://app.managr.ai/settings/integrations"
+        GONG_FRONTEND_REDIRECT = "https://app.managr.ai/settings/integrations"
 
     AUTHORIZATION_QUERY_PARAMS = {
         "client_id": CLIENT_ID,
@@ -51,7 +52,7 @@ if settings.USE_GONG:
         "refresh_token": token,
     }
 
-    SALESLOFT_REQUEST_HEADERS = lambda token: {
+    GONG_REQUEST_HEADERS = lambda token: {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
     }
