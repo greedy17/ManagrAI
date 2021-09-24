@@ -222,14 +222,14 @@
             <span style="color: #ff7649">{{
               onConvert(alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value)
             }}</span
-            >:
+            >.
           </p>
 
-          <p>
+          <!-- <p>
             "Hey <span style="color: #ff7649">Recipient Name</span>, your deal
             <span style="color: #ff7649">Opportunity Name</span> has an upcoming closed date. Please
             update it!"
-          </p>
+          </p> -->
 
           <div class="bottom__middle">
             <p style="color: #beb5cc">Step 4/4</p>
@@ -396,10 +396,6 @@ export default {
         { key: 'Friday', value: '4' },
         { key: 'Saturday', value: '5' },
         { key: 'Sunday', value: '6' },
-      ],
-      nameOptions: [
-        { key: 'Close Date Passed', value: 'Close Date Passed' },
-        { key: 'Close Date Approaching', value: 'Close Date Approaching' },
       ],
     }
   },

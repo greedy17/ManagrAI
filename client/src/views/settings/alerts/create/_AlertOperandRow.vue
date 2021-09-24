@@ -351,7 +351,6 @@ export default {
     },
     setOperator(obj) {
       this.form.field._operandOperator.value = obj
-      console.log(obj.label)
     },
     setOperand(obj) {
       this.form.field._operandValue.value = obj
@@ -401,19 +400,6 @@ export default {
       }
       newVal = -Math.abs(val).toString()
       this.form.field.operandValue.value = newVal
-    },
-    pastOp() {
-      this.negativeOperand === false ? (this.negativeOperand = true) : (this.negativeOperand = true)
-      this.positiveOperand = false
-      this.form.field.operandOperator.value = '='
-      this.form.field._operandValue.value = { label: '= (Equals)', value: '=' }
-      console.log(this.form.field._operandValue.value)
-    },
-    futureOp() {
-      this.positiveOperand === false ? (this.positiveOperand = true) : (this.positiveOperand = true)
-      this.negativeOperand = false
-      this.form.field.operandOperator.value = '='
-      this.form.field._operandValue.value = { label: '= (Equals)', value: '=' }
     },
   },
   computed: {
@@ -483,7 +469,7 @@ export default {
   },
   beforeMount() {
     this.form.field.operandOperator.value = '='
-    this.form.field._operandValue.value = { label: '= (Equals)', value: '=' }
+    this.form.field._operandOperator.value = { label: '= (Equals)', value: '=' }
   },
 }
 </script>
