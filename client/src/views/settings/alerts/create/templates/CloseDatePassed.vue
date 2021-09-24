@@ -182,12 +182,12 @@
             >.
           </p>
 
-          <p>Recipients will recieve the following message:</p>
+          <!-- <p>Recipients will recieve the following message:</p>
           <p>
             "Hey <span style="color: #ff7649">Recipient Name</span>, your deal
             <span style="color: #ff7649">Opportunity Name</span> has a closed date that has passed.
             Please update it!"
-          </p>
+          </p> -->
 
           <div class="bottom__middle">
             <p style="color: #beb5cc">Step 4/4</p>

@@ -14,31 +14,18 @@
     </Modal>
 
     <div class="col">
-      <h2
-        v-if="editing && templates.list.length"
-        style="color: black; font-weight: bold; text-align: center"
-      >
-        Run your Smart Alerts
-      </h2>
-      <h2 v-if="!editing" style="color: black; font-weight: bold; text-align: center">
-        Edit your Smart Alert
-      </h2>
-      <h2 v-if="!templates.list.length" style="color: black; font-weight: bold; text-align: center">
-        Smart Alerts
-      </h2>
+      <h2 v-if="editing && templates.list.length" class="titles">Run your Smart Alerts</h2>
+      <h2 v-if="!editing" class="titles">Edit your Smart Alert</h2>
+      <h2 v-if="!templates.list.length" class="titles">Smart Alerts</h2>
       <div v-if="!templates.list.length">
         <p class="center" style="font-weight: bold; color: #5d5e5e; margin-top: -0.5rem">
           Automated workflows that help keep you on track
         </p>
         <p style="color: #5d5e5e; font-weight: bold; text-align: center; margin-top: 2rem">
           No alerts found.
-          <router-link to="templates" style="color: #199e54; border-bottom: 3px solid #19954e"
-            >Templates</router-link
-          >
+          <router-link to="templates" class="alert-links">Templates</router-link>
           are a great place to start, or you can
-          <router-link to="build-your-own" style="color: #199e54; border-bottom: 3px solid #19954e"
-            >build your own!</router-link
-          >
+          <router-link to="build-your-own" class="alert-links">build your own!</router-link>
         </p>
       </div>
     </div>
@@ -60,11 +47,11 @@
             <button @click.stop="onRunAlertTemplateNow(alert.id)" class="green_button">
               Run now
             </button>
-            <div class="centered">
+            <!-- <div class="centered">
               <button @click="onTest(alert.id)" class="test-button">Test Alert</button>
 
               <p style="margin-left: 0.5rem">Results: {{ alert.instances.length }}</p>
-            </div>
+            </div> -->
           </div>
           <div class="row__start">
             <p style="margin: 0.5rem 0.5rem">Schedule</p>
@@ -75,11 +62,6 @@
                 v-model="alert.isActive"
                 offColor="#aaaaaa"
                 onColor="#199e54"
-                @click="
-                  () => {
-                    console.log('log')
-                  }
-                "
               />
               <p style="margin-left: 0.25rem">ON</p>
             </div>
@@ -220,7 +202,6 @@ export default {
     makeAlertCurrent(val) {
       this.currentAlert = val
       this.editing = !this.editing
-      console.log(this.currentAlert)
     },
     deleteClosed(val) {
       this.deleteOpen === false ? (this.deleteOpen = true) : (this.deleteOpen = false)
@@ -321,6 +302,15 @@ export default {
   background: transparent;
   box-shadow: none;
   margin-bottom: 1rem;
+}
+.titles {
+  color: black;
+  font-weight: bold;
+  text-align: center;
+}
+.alert-links {
+  color: #199e54;
+  border-bottom: 3px solid #19954e;
 }
 .test-button {
   background-color: white;

@@ -184,11 +184,10 @@
             days:
           </p>
 
-          <p>
-            "Hey <span style="color: #ff7649">Recipient Name</span>, your deal
-            <span style="color: #ff7649">Opportunity Name</span>..who am i kidding. Mike what should
-            this say ???"
-          </p>
+          <!-- <p>
+            "Hey <span style="color: #ff7649">(Recipient Name)</span>, your
+            <span style="color: #ff7649">(Opportunity Name)</span>hasn’t been touched since (Last Activity)"
+          </p> -->
 
           <div class="bottom__middle">
             <p style="color: #beb5cc">Step 4/4</p>
@@ -645,7 +644,7 @@ export default {
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
     this.alertTemplateForm.field.title.value = 'Deal Rotting'
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
-      'Hey { __Recipient.full_name }, your deal { Opportunity.Name }......???'
+      'Hey { __Recipient.full_name }, your deal { Opportunity.Name }, hasnt been touched since { Opportunity.LastActivityDate }'
   },
 }
 </script>
