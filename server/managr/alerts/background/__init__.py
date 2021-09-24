@@ -254,6 +254,7 @@ def _process_send_alert(invocation, channel, config_id):
             *blocks,
             *custom_paginator_block(alert_page_instances, invocation, channel, config_id),
         ]
+        logger.error(f"Process send alert: blocks: {blocks}, text: {text}, channel_id={channel_id}")
         try:
             slack_requests.send_channel_message(
                 channel_id, access_token, text=text, block_set=blocks
