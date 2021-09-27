@@ -399,8 +399,6 @@ export default {
     }
   },
   mounted() {
-    console.log(this.form.field.operandOrder.value)
-
     if (this.form.field.operandOrder.value === 1) {
       this.form.field.operandIdentifier.value = 'CloseDate'
       this.form.field.operandOperator.value = '<='

@@ -348,6 +348,10 @@ export default {
     },
     setIdentifier(obj) {
       this.form.field._operandIdentifier.value = obj
+      if (this.selectedFieldType == 'DATE' || this.selectedFieldType == 'DATETIME') {
+        this.form.field.operandOperator.value = '='
+        this.form.field._operandOperator.value = { label: '= (Equals)', value: '=' }
+      }
     },
     setOperator(obj) {
       this.form.field._operandOperator.value = obj
@@ -382,13 +386,6 @@ export default {
         this.picklistOpts = res.length ? res[0]['values'] : []
       } catch (e) {
         console.log(e)
-      }
-    },
-    setOperandDateValue(val) {
-      this.form.field.operandValue.value = val
-      this.form.field.operandOperator.value = '<='
-      if (val >= 0) {
-        this.form.field.operandOperator.value = '='
       }
     },
     negVal(val) {
@@ -466,10 +463,6 @@ export default {
         this.form.field.operandType.value = val
       },
     },
-  },
-  beforeMount() {
-    this.form.field.operandOperator.value = '='
-    this.form.field._operandOperator.value = { label: '= (Equals)', value: '=' }
   },
 }
 </script>

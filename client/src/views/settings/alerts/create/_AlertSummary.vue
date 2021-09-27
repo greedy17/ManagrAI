@@ -24,8 +24,10 @@
             <b style="color: #ff7649">{{ getListOfTargets(config._alertTargets) }}</b>
 
             pipelines, and alerting
-
-            <b style="color: #ff7649">{{ getListOfRecipients(config._recipients) }}</b>
+            <b v-if="config.recipientType === 'SLACK_CHANNEL'" style="color: #ff7649">{{
+              config._recipients.nameNormalized
+            }}</b>
+            <b v-else style="color: #ff7649">{{ getListOfRecipients(config._recipients) }}</b>
           </div>
           <div
             class="box__content-recipient-group__recipient-group__recipient"
@@ -33,15 +35,17 @@
           >
             This alert will run every <b style="color: #ff7649">Month</b> on the
 
-            <b style="color: #ff7649">{{ config.recurrenceDay | numberSuffix }}</b>
+            <b style="color: #ff7649">{{ addSuffix(config.recurrenceDay) }}</b>
 
             , checking
 
             <b style="color: #ff7649">{{ getListOfTargets(config._alertTargets) }}</b>
 
             pipelines, and alerting
-            <b style="color: #ff7649">{{ config._recipients }}</b>
-            <b style="color: #ff7649">{{ getListOfRecipients(config._recipients) }}</b>
+            <b v-if="config.recipientType === 'SLACK_CHANNEL'" style="color: #ff7649">{{
+              config._recipients.nameNormalized
+            }}</b>
+            <b v-else style="color: #ff7649">{{ getListOfRecipients(config._recipients) }}</b>
           </div>
 
           <div
@@ -182,6 +186,17 @@ export default {
         return val * -1
       } else {
         return val
+      }
+    },
+    addSuffix(num) {
+      if ((num > 3 && num < 21) || (num > 23 && num < 31)) {
+        return num + 'th'
+      } else if (num == 1 || num == 21 || num == 31) {
+        return num + 'st'
+      } else if (num == 2 || num == 22) {
+        return num + 'nd'
+      } else if (num == 3 || num == 23) {
+        return num + 'rd'
       }
     },
     getListOfTargets(targets) {

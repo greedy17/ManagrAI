@@ -6,42 +6,19 @@
     </p>
     <div>
       <PulseLoadingSpinnerButton
-        v-if="hasSalesforceIntegration && user.isAdmin"
+        v-if="hasSalesforceIntegration && hasSlackIntegration"
         @click="goToSlackFormBuilder"
         class="slack-button"
         text="Customize"
         :loading="false"
       ></PulseLoadingSpinnerButton>
       <PulseLoadingSpinnerButton
-        v-if="!hasSalesforceIntegration && user.isAdmin"
+        v-else
         class="disabled-button"
         text="Customize"
         :loading="false"
       ></PulseLoadingSpinnerButton>
     </div>
-
-    <div>
-      <PulseLoadingSpinnerButton
-        v-if="hasSalesforceIntegration && !user.isAdmin"
-        @click="goToSlackFormBuilder"
-        class="slack-button"
-        text="Customize"
-        :loading="false"
-      ></PulseLoadingSpinnerButton>
-      <PulseLoadingSpinnerButton
-        v-if="!hasSalesforceIntegration && !user.isAdmin"
-        class="disabled-button"
-        text="Customize"
-        :loading="false"
-      ></PulseLoadingSpinnerButton>
-    </div>
-    <!-- <div
-      v-if="!hasSalesforceIntegration && user.isAdmin"
-      class="slack-button slack-button--disabled"
-      text="Continue to Slack Form Builder"
-    >
-      Slack Form Builder
-    </div> -->
 
     <div class="integrations__cards">
       <div class="card">
@@ -225,7 +202,7 @@
           <img style="height: 3rem" src="@/assets/images/gong.png" />
           <h2 class="card__title">Gong</h2>
         </div>
-        <p class="card-text">Accesses your upcoming meetings + attendees</p>
+        <p class="card-text">Access call recordings and insights</p>
         <div class="card__body">
           <p style="color: #beb5cc">Coming Soon</p>
         </div>

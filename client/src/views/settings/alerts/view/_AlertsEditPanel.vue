@@ -477,6 +477,17 @@ export default {
       }
       return `${rowData.operandIdentifier}     ${operandOperatorLabel}     ${valueLabel} `
     },
+    addSuffix(num) {
+      if ((num > 3 && num < 21) || (num > 23 && num < 31)) {
+        return num + 'th'
+      } else if (num == 1 || num == 21 || num == 31) {
+        return num + 'st'
+      } else if (num == 2 || num == 22) {
+        return num + 'nd'
+      } else if (num == 3 || num == 23) {
+        return num + 'rd'
+      }
+    },
     getReadableConfig(config) {
       let recurrenceDayString = config.recurrenceDay
 
@@ -487,13 +498,13 @@ export default {
         recurrenceDayString = `Run every ${day} (Weekly)`
       } else if ((config.recurrenceFrequency = 'MONTHLY')) {
         let day = config.recurrenceDay
-        recurrenceDayString = `Run every ${toNumberSuffix(day)} Monthly`
+        recurrenceDayString = `Run every ${this.addSuffix(day)} Monthly`
       }
-      return `${recurrenceDayString} and alert ${config.recipientsRef
-        .map((rec) => rec.key)
-        .join(',')} filtering against ${config.alertTargetsRef
-        .map((target) => target.key)
-        .join(',')}'s data`
+      return `${recurrenceDayString} and alert ${
+        config.recipientType === 'USER_LEVEL'
+          ? config.recipientsRef.map((rec) => rec.key).join(',')
+          : 'a #channel'
+      } filtering against ${config.alertTargetsRef.map((target) => target.key).join(',')}'s data`
     },
 
     async onDeleteConfig(id, index) {
