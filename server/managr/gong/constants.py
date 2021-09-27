@@ -9,7 +9,10 @@ from requests.exceptions import HTTPError
 
 from managr.utils.misc import get_site_url
 
-GONG_SCOPES = []
+USERS_SCOPE = "api:users:read"
+CALLS_SCOPE = "api:calls:read:extensive"
+GONG_SCOPES = [USERS_SCOPE, CALLS_SCOPE]
+SCOPES_STRING = " ".join(GONG_SCOPES)
 
 if settings.USE_GONG:
 
@@ -18,7 +21,7 @@ if settings.USE_GONG:
     CLIENT_SECRET = settings.GONG_SECRET
     GONG_BASE_URI = settings.GONG_BASE_URL
 
-    AUTHENTICATION_URI = "https://accounts.GONG.com/oauth/token"
+    AUTHENTICATION_URI = "https://app.gong.io/oauth2/generate-token"
     AUTHORIZATION_URI = "https://app.gong.io/oauth2/authorize"
 
     if settings.IN_DEV:
@@ -30,30 +33,31 @@ if settings.USE_GONG:
 
     AUTHORIZATION_QUERY_PARAMS = {
         "client_id": CLIENT_ID,
+        "response_type": "code",
         "redirect_uri": REDIRECT_URI,
         "response_type": "code",
+        "scope": SCOPES_STRING,
+        "state": "GONG",
     }
-    AUTHENTICATION_HEADERS = {"Content-Type": "application/x-www-form-urlencoded"}
 
-    AUTHENTICATION_QUERY_PARAMS = lambda code, context, scope: {
+    AUTHENTICATION_QUERY_PARAMS = lambda code: {
         "client_id": CLIENT_ID,
-        "client_secret": CLIENT_SECRET,
         "code": code,
         "grant_type": "authorization_code",
         "redirect_uri": REDIRECT_URI,
-        "context": context,
-        "scope": scope,
     }
 
     REAUTHENTICATION_QUERY_PARAMS = lambda token: {
-        "client_id": CLIENT_ID,
-        "client_secret": CLIENT_SECRET,
         "grant_type": "refresh_token",
         "refresh_token": token,
     }
 
     GONG_REQUEST_HEADERS = lambda token: {
-        "Authorization": f"Bearer {token}",
+        "Authorization": f"Basic {token}",
         "Content-Type": "application/json",
     }
+
+    GONG_BASIC_TOKEN = base64.b64encode(f"{CLIENT_ID}:{Client_SECRET}".encode("ascii")).decode(
+        "utf-8"
+    )
 
