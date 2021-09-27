@@ -52,6 +52,10 @@ def emit_init_alert(config_id, invocation):
     return _process_init_alert(config_id, invocation)
 
 
+def emit_send_no_alert_message(config_id, user_id):
+    return _process_send_no_alert_message(config_id, user_id)
+
+
 def emit_send_alert(invocation, channel, config_id, scheduled_time=timezone.now()):
     if isinstance(scheduled_time, str):
         scheduled_time = datetime.strptime(scheduled_time, "%Y-%m-%dT%H:%M%z")
@@ -199,6 +203,9 @@ def _process_check_alert(config_id, user_id, invocation, run_time):
                             "config_id": str(config.id),
                         },
                     ]
+    if not len(instances):
+        emit_send_no_alert_message(str(config.id), str(user.id))
+        return
 
     def reduce_fn(acc, curr):
         key = f"{curr['config_id']}.{curr['channel']}"
@@ -254,7 +261,6 @@ def _process_send_alert(invocation, channel, config_id):
             *blocks,
             *custom_paginator_block(alert_page_instances, invocation, channel, config_id),
         ]
-        logger.error(f"Process send alert: blocks: {blocks}, text: {text}, channel_id={channel_id}")
         try:
             slack_requests.send_channel_message(
                 channel_id, access_token, text=text, block_set=blocks
@@ -284,3 +290,24 @@ def _process_send_alert(invocation, channel, config_id):
             raise (e)
 
     return alert_instance
+
+
+@background(queue="MANAGR_ALERTS_QUEUE", schedule=0)
+@sf_api_exceptions(rethrow=True)
+@slack_api_exceptions()
+def _process_send_no_alert_message(config_id, user_id):
+    config = AlertConfig.objects.filter(id=config_id).first()
+    template = config.template
+    user = template.get_users.filter(id=user_id).first()
+    blocks = [block_builders.simple_section(f"No results for alert {template.title}")]
+    try:
+        slack_requests.send_ephemeral_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            user.slack_integration.slack_id,
+            block_set=blocks,
+        )
+        return
+    except Exception as e:
+        logger.exception(f"Process send no alert message error: {e}")
+        return
