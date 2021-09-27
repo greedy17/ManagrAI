@@ -47,17 +47,12 @@ if settings.USE_GONG:
         "redirect_uri": REDIRECT_URI,
     }
 
-    REAUTHENTICATION_QUERY_PARAMS = lambda token: {
+    REFRESH_QUERY_PARAMS = lambda token: {
         "grant_type": "refresh_token",
         "refresh_token": token,
     }
 
-    GONG_REQUEST_HEADERS = lambda token: {
-        "Authorization": f"Basic {token}",
-        "Content-Type": "application/json",
-    }
-
-    GONG_BASIC_TOKEN = base64.b64encode(f"{CLIENT_ID}:{Client_SECRET}".encode("ascii")).decode(
+    GONG_BASIC_TOKEN = base64.b64encode(f"{CLIENT_ID}:{CLIENT_SECRET}".encode("ascii")).decode(
         "utf-8"
     )
 

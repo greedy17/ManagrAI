@@ -83,9 +83,6 @@ def get_gong_authentication(request):
                     user_serializer = GongAccountSerializer(data=user_res.as_dict)
                 user_serializer.is_valid(raise_exception=True)
                 user_serializer.save()
-    emit_sync_slaccounts(admin_account.id)
-    emit_sync_cadences(admin_account.id)
-    emit_sync_people(admin_account.id)
     return Response(data={"success": True})
 
 

@@ -20,8 +20,6 @@ from managr.utils.client import HttpClient
 from .exceptions import GongAPIException, TokenExpired
 from managr.organization.models import Organization
 
-from managr.salesforce.adapter.models import ActivityAdapter
-
 from managr.core import constants as core_consts
 from . import constants as gong_consts
 
@@ -76,17 +74,17 @@ class GongAuthAdapter:
         return data
 
     @staticmethod
-    def get_auth_token(code: str, context: str, scope: str):
-        query = gong_consts.AUTHENTICATION_QUERY_PARAMS(code, context, scope)
-        query = urlencode(query)
-        r = client.post(f"{gong_consts.AUTHENTICATION_URI}?{query}",)
+    def get_auth_token(code: str):
+        query = urlencode(gong_consts.AUTHENTICATION_QUERY_PARAMS(code))
+        headers = {"Authorization": f"Basic {gong_consts.GONG_BASIC_TOKEN}"}
+        r = client.post(f"{gong_consts.AUTHENTICATION_URI}?{query}", headers=headers)
         return GongAuthAdapter._handle_response(r)
 
     @classmethod
-    def create_auth_account(cls, code: str, context: str, scope: str, managr_user_id):
+    def create_auth_account(cls, code: str, managr_user_id):
         user = User.objects.get(id=managr_user_id)
         org = Organization.objects.get(id=user.organization.id)
-        auth_data = cls.get_auth_token(code, context, scope)
+        auth_data = cls.get_auth_token(code)
         data = {}
         data["organization"] = org.id
         data["access_token"] = auth_data["access_token"]
