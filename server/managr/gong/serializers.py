@@ -28,5 +28,4 @@ class GongAccountSerializer(serializers.ModelSerializer):
             "guid",
             "is_active",
             "email",
-            "team_id",
         )

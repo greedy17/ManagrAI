@@ -54,7 +54,7 @@ class GongAuthAdapter:
     def _handle_response(response, fn_name=None):
         if not hasattr(response, "status_code"):
             raise ValueError
-        elif response.status_code == 200 or response.status_code == 201:
+        elif response.status_code == 200:
             try:
                 data = response.json()
             except Exception as e:
@@ -184,7 +184,6 @@ class GongAccountAdapter:
         self.guid = kwargs.get("guid", None)
         self.is_active = kwargs.get("is_active", None)
         self.email = kwargs.get("email", None)
-        self.team_id = kwargs.get("team_id", None)
 
     @property
     def as_dict(self):
