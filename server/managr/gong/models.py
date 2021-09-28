@@ -97,7 +97,7 @@ class GongAuthAdapter:
         headers = {
             "Authorization": f"Bearer {self.access_token}",
         }
-        res = client.get(f"{gong_consts.Gong_BASE_URI}/{gong_consts.USERS}", headers=headers)
+        res = client.get(f"{gong_consts.GONG_BASE_URI}/{gong_consts.USERS}", headers=headers)
         return GongAuthAdapter._handle_response(res)
 
     def refresh(self):
@@ -188,6 +188,7 @@ class GongAccountAdapter:
 
     @classmethod
     def create_account(cls, user_data, auth_account_id):
+        print("Create account {user_data}")
         try:
             user = User.objects.get(email=user_data["emailAddress"])
             data = {}
@@ -208,7 +209,7 @@ class GongAccount(TimeStampModel):
     user = models.OneToOneField(
         "core.User", on_delete=models.CASCADE, related_name="gong_account", blank=True, null=True,
     )
-    gong_id = models.IntegerField()
+    gong_id = models.CharField(max_length=50)
     is_active = models.BooleanField(default=True)
     email = models.EmailField()
 
