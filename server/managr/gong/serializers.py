@@ -25,7 +25,6 @@ class GongAccountSerializer(serializers.ModelSerializer):
             "auth_account",
             "user",
             "gong_id",
-            "guid",
             "is_active",
             "email",
         )

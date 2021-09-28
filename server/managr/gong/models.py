@@ -96,7 +96,6 @@ class GongAuthAdapter:
     def get_users(self, page=1):
         headers = {
             "Authorization": f"Bearer {self.access_token}",
-            "Content-Type": "application/json",
         }
         res = client.get(f"{gong_consts.Gong_BASE_URI}/{gong_consts.USERS}", headers=headers)
         return GongAuthAdapter._handle_response(res)
@@ -109,12 +108,12 @@ class GongAuthAdapter:
         return GongAuthAdapter._handle_response(res)
 
     def revoke(self):
-        Gong_account = GongAccount.objects.get(id=self.id)
+        gong_account = GongAccount.objects.get(id=self.id)
         try:
-            Gong_account.delete()
-            return logger.info(f"Succefully deleted account {Gong_account}")
+            gong_account.delete()
+            return logger.info(f"Succefully deleted account {gong_account}")
         except Exception as e:
-            logger.exception(f"Failed to delete account {Gong_account},{e}")
+            logger.exception(f"Failed to delete account {gong_account},{e}")
 
 
 class GongAuthAccountQuerySet(models.QuerySet):
@@ -128,7 +127,7 @@ class GongAuthAccountQuerySet(models.QuerySet):
 class GongAuthAccount(TimeStampModel):
     organization = models.OneToOneField(
         "organization.Organization",
-        related_name="Gong_auth_account",
+        related_name="gong_auth_account",
         blank=False,
         null=False,
         on_delete=models.CASCADE,
@@ -137,7 +136,7 @@ class GongAuthAccount(TimeStampModel):
     refresh_token = models.TextField(blank=True)
     token_generated_date = models.DateTimeField(null=True, blank=True)
     admin = models.OneToOneField(
-        "core.User", on_delete=models.CASCADE, related_name="Gong_admin", blank=True, null=True
+        "core.User", on_delete=models.CASCADE, related_name="gong_admin", blank=True, null=True
     )
 
     objects = GongAuthAccountQuerySet.as_manager()
@@ -178,7 +177,7 @@ class GongAccountAdapter:
         self.id = kwargs.get("id", None)
         self.auth_account = kwargs.get("auth_account", None)
         self.user = kwargs.get("user", None)
-        self.Gong_id = kwargs.get("Gong_id", None)
+        self.gong_id = kwargs.get("gong_id", None)
         self.guid = kwargs.get("guid", None)
         self.is_active = kwargs.get("is_active", None)
         self.email = kwargs.get("email", None)
@@ -190,16 +189,13 @@ class GongAccountAdapter:
     @classmethod
     def create_account(cls, user_data, auth_account_id):
         try:
-            user = User.objects.get(email=user_data["email"])
-            team = user_data["team"]
+            user = User.objects.get(email=user_data["emailAddress"])
             data = {}
             data["auth_account"] = auth_account_id
             data["user"] = user.id
-            data["Gong_id"] = user_data["id"]
-            data["guid"] = user_data["guid"]
+            data["gong_id"] = user_data["id"]
             data["is_active"] = user_data["active"]
-            data["email"] = user_data["email"]
-            data["team_id"] = team["id"]
+            data["email"] = user_data["emailAddress"]
             return cls(**data)
         except ObjectDoesNotExist:
             return None
@@ -210,13 +206,11 @@ class GongAccount(TimeStampModel):
         "GongAuthAccount", related_name="users", on_delete=models.CASCADE, blank=True, null=True,
     )
     user = models.OneToOneField(
-        "core.User", on_delete=models.CASCADE, related_name="Gong_account", blank=True, null=True,
+        "core.User", on_delete=models.CASCADE, related_name="gong_account", blank=True, null=True,
     )
-    Gong_id = models.IntegerField()
-    guid = models.CharField(max_length=50)
+    gong_id = models.IntegerField()
     is_active = models.BooleanField(default=True)
     email = models.EmailField()
-    team_id = models.IntegerField(blank=True)
 
     objects = GongAccountQuerySet.as_manager()
 
@@ -231,4 +225,3 @@ class GongAccount(TimeStampModel):
         data = self.__dict__
         data["id"] = str(data.get("id"))
         return GongAuthAdapter(**data)
-

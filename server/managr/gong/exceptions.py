@@ -17,7 +17,7 @@ class InvalidRequest(Exception):
         super().__init__(self.message)
 
 
-class SalesloftAPIException:
+class GongAPIException:
     def __init__(self, e, fn_name=None, retries=0):
         self.error = e
         self.error_class_name = e.__class__.__name__
@@ -31,7 +31,7 @@ class SalesloftAPIException:
         # if an invalid Basic auth is sent the response is still a 200 success
         # instead we check data.json() which will return a JSONDecodeError
         if self.status_code == 422:
-            logger.error(f"Salesloft API error: {self.error}")
+            logger.error(f"Gong API error: {self.error}")
             raise InvalidRequest()
         elif self.status_code == 403 or self.status_code == 401:
             raise TokenExpired()

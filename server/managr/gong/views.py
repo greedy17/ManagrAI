@@ -52,11 +52,9 @@ def get_gong_auth_link(request):
 @permission_classes([permissions.IsAuthenticated])
 def get_gong_authentication(request):
     code = request.data.get("code", None)
-    context = request.data.get("context", None)
-    scope = request.data.get("scope", None)
     if not code:
         raise ValidationError()
-    res = GongAuthAdapter.create_auth_account(code, context, scope, request.user.id)
+    res = GongAuthAdapter.create_auth_account(code, request.user.id)
     existing = GongAuthAccount.objects.filter(admin=request.user).first()
     if existing:
         serializer = GongAuthSerializer(data=res.as_dict, instance=existing)
@@ -67,7 +65,7 @@ def get_gong_authentication(request):
     admin_account = GongAuthAccount.objects.filter(admin=request.user).first()
     if admin_account:
         users = admin_account.helper_class.get_users()
-        user_data = users.get("data")
+        user_data = users.get("users")
         for user in user_data:
             user_res = GongAccountAdapter.create_account(user, admin_account.id)
             if user_res is None:
@@ -106,13 +104,15 @@ def revoke_gong_access_token(request):
 
 
 def redirect_from_gong(request):
-    code = request.GET.get("code", None)
-    context = request.GET.get("context", None)
-    scope = request.GET.get("scope", None)
-    q = urlencode({"code": code, "scope": scope, "context": context, "state": "SALESLOFT"})
-    if not code:
-        err = {"error": "there was an error"}
-        err = urlencode(err)
-        return redirect(f"{gong_consts.SALESLOFT_FRONTEND_REDIRECT}?{err}")
-    return redirect(f"{gong_consts.SALESLOFT_FRONTEND_REDIRECT}?{q}")
+    ## this is only for dev, since the redirect url to localhost will not work
+    if settings.IN_DEV:
+        code = request.GET.get("code", None)
+        q = urlencode({"code": code, "state": "GONG"})
+        if not code:
+            err = {"error": "there was an error"}
+            err = urlencode(err)
+            return redirect(f"{gong_consts.GONG_FRONTEND_REDIRECT}")
+        return redirect(f"{gong_consts.GONG_FRONTEND_REDIRECT}?{q}")
+    else:
+        return redirect(f"{gong_consts.GONG_FRONTEND_REDIRECT}")
 
