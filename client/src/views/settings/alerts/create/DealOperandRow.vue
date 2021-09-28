@@ -402,6 +402,7 @@ export default {
     console.log(this.form.field.operandOrder.value)
     this.form.field.operandIdentifier.value = 'LastActivityDate'
     this.form.field.operandOperator.value = '<'
+    this.form.field._operandOperator.value = { label: '< (Less Than)', value: '<' }
     this.form.field.operandValue.value = -30
   },
 }

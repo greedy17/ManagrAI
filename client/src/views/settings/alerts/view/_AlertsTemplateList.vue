@@ -47,11 +47,11 @@
             <button @click.stop="onRunAlertTemplateNow(alert.id)" class="green_button">
               Run now
             </button>
-            <div class="centered">
+            <!-- <div class="centered">
               <button @click="onTest(alert.id)" class="test-button">Test Alert</button>
 
               <p style="margin-left: 0.5rem">Results: {{ alert.instances.length }}</p>
-            </div>
+            </div> -->
           </div>
           <div class="row__start">
             <p style="margin: 0.5rem 0.5rem">Schedule</p>

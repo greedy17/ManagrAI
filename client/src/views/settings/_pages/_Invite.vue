@@ -286,7 +286,7 @@ Override dropdown select input field
     box-sizing: border-box;
     line-height: 1.29;
     letter-spacing: 0.5px;
-    width: 18vw;
+    width: 16rem;
     height: 6vh;
     color: $panther;
   }

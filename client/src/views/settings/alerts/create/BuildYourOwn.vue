@@ -330,18 +330,22 @@
                 </div>
                 <div
                   v-if="form.field.recipientType.value == 'SLACK_CHANNEL'"
-                  style="margin-top: 2rem"
+                  style="margin-top: 1rem"
                 >
-                  <span style="font-weight: bold; color: #beb5cc">
-                    Please make sure <span style="color: #ffff">@managr</span> has been added to
-                    <strong>{{ form.field._recipients.value.name }}</strong>
+                  <span style="font-weight: bold; color: #ff7649">
+                    Please make sure @managr has been added to
+                    <strong style="color: #beb5cc">{{ form.field._recipients.value.name }}</strong>
                     channel
                   </span>
-
                   <p>Select #Channel:</p>
-
+                  <input
+                    class="search__input"
+                    type="text"
+                    v-model="searchChannels"
+                    placeholder="Search Channels..."
+                  />
                   <div class="channels_height">
-                    <div :key="value" v-for="(key, value) in reversedChannels">
+                    <div :key="value" v-for="(key, value) in filteredChannels">
                       <input
                         @click="setRecipient(key)"
                         v-model="form.field.recipients.value"
@@ -531,6 +535,7 @@ export default {
       pageNumber: 0,
       searchQuery: '',
       searchText: '',
+      searchChannels: '',
       fields: CollectionManager.create({ ModelClass: SObjectField }),
       users: CollectionManager.create({ ModelClass: User }),
       recipientBindings: [
@@ -782,6 +787,15 @@ export default {
         })
       } else {
         return this.recipientOpts
+      }
+    },
+    filteredChannels() {
+      if (this.searchChannels) {
+        return this.reversedChannels.filter((key) => {
+          return key.name.toLowerCase().startsWith(this.searchChannels.toLowerCase())
+        })
+      } else {
+        return this.reversedChannels
       }
     },
     recipientOpts() {
