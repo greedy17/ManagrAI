@@ -66,7 +66,9 @@ def get_gong_authentication(request):
     if admin_account:
         users = admin_account.helper_class.get_users()
         user_data = users.get("users")
+        print(user_data)
         for user in user_data:
+            print(user)
             user_res = GongAccountAdapter.create_account(user, admin_account.id)
             if user_res is None:
                 logger.error(f"Could not create gong account for {user['email']}")
@@ -92,14 +94,7 @@ def revoke_gong_access_token(request):
         try:
             gong.helper_class.revoke()
         except Exception:
-            # revoke token will fail if ether token is expired
             pass
-        # if gong.refresh_token_task:
-        #     task = Task.objects.filter(id=gong.refresh_token_task).first()
-        #     if task:
-        #         task.delete()
-        # gong.delete()
-
     return Response()
 
 
