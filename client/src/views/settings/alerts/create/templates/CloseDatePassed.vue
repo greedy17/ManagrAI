@@ -39,6 +39,7 @@
                       :value="key.value"
                       id="value"
                       v-model="form.field.recurrenceDay.value"
+                      @click="setDay(key)"
                     />
                     <label for="value">{{ key.key }}</label>
                   </span>
@@ -80,6 +81,14 @@
                   </div>
                 </div>
                 <div v-if="pageNumber === 2">
+                  <p
+                    style="color: #ff7649"
+                    v-if="form.field.recipientType.value == 'SLACK_CHANNEL'"
+                  >
+                    Please make sure @managr has been added to
+                    <em style="color: #beb5cc">{{ form.field._recipients.value.name }}</em>
+                    channel
+                  </p>
                   <div
                     class="row__"
                     style="
@@ -109,11 +118,6 @@
                     >
                   </div>
                   <div v-if="form.field.recipientType.value == 'SLACK_CHANNEL'">
-                    <p>
-                      Please make sure @managr has been added to
-                      <em style="color: #beb5cc">{{ form.field._recipients.value.name }}</em>
-                      channel
-                    </p>
                     <div class="channels_height">
                       <div :key="value" v-for="(key, value) in reversedChannels">
                         <input
@@ -150,6 +154,7 @@
                           :value="key.id"
                           id="value"
                           type="checkbox"
+                          @click="setRecipients(key)"
                         />
                         <label for="value">{{ key.fullName }}</label>
                       </span>
@@ -168,27 +173,7 @@
 
       <div v-if="pageNumber === 3" class="alert__column">
         <div class="collection">
-          <h2 class="centered__" style="color: #beb5cc">
-            {{ this.alertTemplateForm.field.title.value }}
-          </h2>
-
-          <p>
-            This Smart Alert will check for passed
-            <span style="color: #ff7649">Close Date's</span> every
-            <span style="color: #ff7649">week</span> on
-            <span style="color: #ff7649">{{
-              onConvert(alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value)
-            }}</span
-            >.
-          </p>
-
-          <!-- <p>Recipients will recieve the following message:</p>
-          <p>
-            "Hey <span style="color: #ff7649">Recipient Name</span>, your deal
-            <span style="color: #ff7649">Opportunity Name</span> has a closed date that has passed.
-            Please update it!"
-          </p> -->
-
+          <AlertSummary :form="alertTemplateForm" />
           <div class="bottom__middle">
             <p style="color: #beb5cc">Step 4/4</p>
           </div>
@@ -640,7 +625,7 @@ export default {
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
     this.alertTemplateForm.field.title.value = 'Close Date Passed'
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
-      'Hey { __Recipient.full_name }, your deal { Opportunity.Name } has a close date that has passed. Please update it!'
+      'Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has a passed close date of <strong>{ Opportunity.CloseDate }</strong>. Please update it!'
   },
 }
 </script>

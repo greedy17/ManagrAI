@@ -402,10 +402,12 @@ export default {
     if (this.form.field.operandOrder.value === 1) {
       this.form.field.operandIdentifier.value = 'CloseDate'
       this.form.field.operandOperator.value = '>='
-      this.form.field.operandValue.value = 1
+      this.form.field._operandOperator.value = { label: '>= (Greater or Equal)', value: '>=' }
+      this.form.field.operandValue.value = 0
     } else if (this.form.field.operandOrder.value === 0) {
       this.form.field.operandIdentifier.value = 'CloseDate'
       this.form.field.operandOperator.value = '<='
+      this.form.field._operandOperator.value = { label: '<= (Less or Equal)', value: '<=' }
       this.form.field.operandValue.value = 7
     }
   },

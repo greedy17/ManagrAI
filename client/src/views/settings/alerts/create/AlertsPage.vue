@@ -8,28 +8,28 @@
     <div class="alert_cards">
       <div class="card__">
         <div class="card__header">
-          <h3><span>Close Date</span> Approaching</h3>
+          <h3>Close Date<span style="color: #199e54"> Approaching</span></h3>
         </div>
         <button @click="goToCloseDateApproaching" class="orange_button">Activate</button>
       </div>
 
       <div class="card__">
         <div class="card__header">
-          <h3><span>Close Date</span> Passed</h3>
+          <h3>Close Date <span style="color: #ff7649">Passed</span></h3>
         </div>
         <button @click="goToCloseDatePassed" class="orange_button">Activate</button>
       </div>
 
       <div class="card__">
         <div class="card__header">
-          <h3><span>Deal</span> Rotting</h3>
+          <h3>Deal <span style="color: #ff7649">Rotting</span></h3>
         </div>
         <button @click="goToDealRotting" class="orange_button">Activate</button>
       </div>
 
       <div class="card__">
         <div class="card__header">
-          <h3>Update <span>Forecast</span></h3>
+          <h3>Update <span style="color: #199e54">Forecast</span></h3>
         </div>
         <button class="cs__button">Coming Soon</button>
       </div>

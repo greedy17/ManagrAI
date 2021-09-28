@@ -36,7 +36,7 @@
 
     <h2 style="color: black" class="title">Make updates to Salesforce from Slack</h2>
     <p style="font-weight: bold; margin-top: -0.5rem; margin-bottom: 2rem; color: #5d5e5e">
-      Customize your slack forms
+      Map your SFDC fields to Managr. These will be fields we update via Slack
     </p>
 
     <div class="customizations__cards">

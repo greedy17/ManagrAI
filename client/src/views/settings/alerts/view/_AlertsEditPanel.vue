@@ -117,7 +117,7 @@
               <FormField :errors="messageTemplateForm.field.body.errors">
                 <template v-slot:input>
                   <quill-editor
-                    style="width: 100%; height: 6rem"
+                    style="width: 100%; height: 4rem; margin-bottom: 2rem"
                     @blur="messageTemplateForm.field.body.validate()"
                     @input="executeUpdateMessageTemplate"
                     ref="message-body"
@@ -129,21 +129,21 @@
                 </template>
               </FormField>
             </div>
-            <!-- <div class="alerts-page__message-options-body__bindings">
-              <DropDownSearch
-                :items="fields.list"
-                @input="bindText(`${alert.resourceType}.${$event}`)"
-                displayKey="referenceDisplayLabel"
-                valueKey="apiName"
-                nullDisplay="Select a field"
-                searchable
-                :hasNext="!!fields.pagination.hasNextPage"
-                @load-more="fieldNextPage"
-                @search-term="onSearchFields"
-                auto
-                class="left"
-              />
-              <ListContainer horizontal>
+
+            <DropDownSearch
+              :items="fields.list"
+              @input="bindText(`${alert.resourceType}.${$event}`)"
+              displayKey="referenceDisplayLabel"
+              valueKey="apiName"
+              nullDisplay="Select a field"
+              searchable
+              :hasNext="!!fields.pagination.hasNextPage"
+              @load-more="fieldNextPage"
+              @search-term="onSearchFields"
+              auto
+              class="left"
+            />
+            <!-- <ListContainer horizontal>
                 <template v-slot:list>
                   <ListItem
                     :key="key"
@@ -153,8 +153,7 @@
                     @item-selected="bindText(`__Recipient.${val.apiName}`)"
                   />
                 </template>
-              </ListContainer>
-            </div> -->
+              </ListContainer> -->
           </div>
           <!-- <div
             class="alerts-template-list__content-message__preview"
@@ -721,6 +720,9 @@ export default {
 }
 ::v-deep .ls-container__list--horizontal {
   background-color: transparent;
+}
+::v-deep .item-container {
+  margin-right: 2rem;
 }
 .tab__header-items {
   display: flex;
