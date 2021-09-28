@@ -78,7 +78,6 @@ class GongAuthAdapter:
         query = urlencode(gong_consts.AUTHENTICATION_QUERY_PARAMS(code))
         headers = {"Authorization": f"Basic {gong_consts.GONG_BASIC_TOKEN}"}
         r = client.post(f"{gong_consts.AUTHENTICATION_URI}?{query}", headers=headers)
-        print(f"AUTH TOKEN: {r.json()}")
         return GongAuthAdapter._handle_response(r)
 
     @classmethod
@@ -97,7 +96,6 @@ class GongAuthAdapter:
     def get_users(self, page=1):
         headers = {
             "Authorization": f"Bearer {self.access_token}",
-            "Content-Type": "application/json",
         }
         res = client.get(f"{gong_consts.Gong_BASE_URI}/{gong_consts.USERS}", headers=headers)
         return GongAuthAdapter._handle_response(res)
@@ -110,12 +108,12 @@ class GongAuthAdapter:
         return GongAuthAdapter._handle_response(res)
 
     def revoke(self):
-        Gong_account = GongAccount.objects.get(id=self.id)
+        gong_account = GongAccount.objects.get(id=self.id)
         try:
-            Gong_account.delete()
-            return logger.info(f"Succefully deleted account {Gong_account}")
+            gong_account.delete()
+            return logger.info(f"Succefully deleted account {gong_account}")
         except Exception as e:
-            logger.exception(f"Failed to delete account {Gong_account},{e}")
+            logger.exception(f"Failed to delete account {gong_account},{e}")
 
 
 class GongAuthAccountQuerySet(models.QuerySet):
@@ -191,16 +189,13 @@ class GongAccountAdapter:
     @classmethod
     def create_account(cls, user_data, auth_account_id):
         try:
-            user = User.objects.get(email=user_data["email"])
-            team = user_data["team"]
+            user = User.objects.get(email=user_data["emailAddress"])
             data = {}
             data["auth_account"] = auth_account_id
             data["user"] = user.id
-            data["Gong_id"] = user_data["id"]
-            data["guid"] = user_data["guid"]
+            data["gong_id"] = user_data["id"]
             data["is_active"] = user_data["active"]
-            data["email"] = user_data["email"]
-            data["team_id"] = team["id"]
+            data["email"] = user_data["emailAddress"]
             return cls(**data)
         except ObjectDoesNotExist:
             return None
@@ -214,10 +209,8 @@ class GongAccount(TimeStampModel):
         "core.User", on_delete=models.CASCADE, related_name="gong_account", blank=True, null=True,
     )
     gong_id = models.IntegerField()
-    guid = models.CharField(max_length=50)
     is_active = models.BooleanField(default=True)
     email = models.EmailField()
-    team_id = models.IntegerField(blank=True)
 
     objects = GongAccountQuerySet.as_manager()
 
@@ -232,4 +225,3 @@ class GongAccount(TimeStampModel):
         data = self.__dict__
         data["id"] = str(data.get("id"))
         return GongAuthAdapter(**data)
-

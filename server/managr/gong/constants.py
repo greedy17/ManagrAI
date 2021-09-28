@@ -9,6 +9,7 @@ from requests.exceptions import HTTPError
 
 from managr.utils.misc import get_site_url
 
+USERS = "users"
 USERS_SCOPE = "api:users:read"
 CALLS_SCOPE = "api:calls:read:extensive"
 GONG_SCOPES = [USERS_SCOPE, CALLS_SCOPE]

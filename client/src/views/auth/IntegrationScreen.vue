@@ -336,7 +336,7 @@ export default {
       try {
         const res = await modelClass.api.getAuthLink()
         if (res.link) {
-          // window.location.href = res.link
+          window.location.href = res.link
         }
       } finally {
         this.generatingToken = false
