@@ -210,7 +210,6 @@
             />
             <img
               src="@/assets/images/refresh.png"
-              @click="onRefreshSalesloft"
               :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
               style="height: 2rem; cursor: pointer"
             />
@@ -222,7 +221,7 @@
 
       <div class="card">
         <div class="card__header">
-          <img style="height: 1.5rem" src="@/assets/images/gong.png" />
+          <img style="height: 2rem" src="@/assets/images/gong.png" />
         </div>
         <p class="card-text">Access call recordings and insights</p>
         <div class="card__body">
@@ -244,7 +243,6 @@
             />
             <img
               src="@/assets/images/refresh.png"
-              @click="onRefreshGong"
               :loading="generatingToken && selectedIntegration == 'GONG'"
               style="height: 2rem; cursor: pointer"
             />
@@ -338,7 +336,7 @@ export default {
       try {
         const res = await modelClass.api.getAuthLink()
         if (res.link) {
-          window.location.href = res.link
+          // window.location.href = res.link
         }
       } finally {
         this.generatingToken = false
@@ -457,6 +455,11 @@ export default {
     },
     hasGongIntegration() {
       return !!this.$store.state.user.gongAccount && this.$store.state.user.hasGongIntegration
+    },
+    hasSalesloftIntegration() {
+      return (
+        !!this.$store.state.user.salesloftAccount && this.$store.state.user.hasSalesloftIntegration
+      )
     },
     orgHasSlackIntegration() {
       return !!this.$store.state.user.organizationRef.slackIntegration

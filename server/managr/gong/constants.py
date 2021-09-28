@@ -35,7 +35,6 @@ if settings.USE_GONG:
         "client_id": CLIENT_ID,
         "response_type": "code",
         "redirect_uri": REDIRECT_URI,
-        "response_type": "code",
         "scope": SCOPES_STRING,
         "state": "GONG",
     }

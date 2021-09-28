@@ -78,6 +78,7 @@ class GongAuthAdapter:
         query = urlencode(gong_consts.AUTHENTICATION_QUERY_PARAMS(code))
         headers = {"Authorization": f"Basic {gong_consts.GONG_BASIC_TOKEN}"}
         r = client.post(f"{gong_consts.AUTHENTICATION_URI}?{query}", headers=headers)
+        print(f"AUTH TOKEN: {r.json()}")
         return GongAuthAdapter._handle_response(r)
 
     @classmethod
@@ -128,7 +129,7 @@ class GongAuthAccountQuerySet(models.QuerySet):
 class GongAuthAccount(TimeStampModel):
     organization = models.OneToOneField(
         "organization.Organization",
-        related_name="Gong_auth_account",
+        related_name="gong_auth_account",
         blank=False,
         null=False,
         on_delete=models.CASCADE,
@@ -137,7 +138,7 @@ class GongAuthAccount(TimeStampModel):
     refresh_token = models.TextField(blank=True)
     token_generated_date = models.DateTimeField(null=True, blank=True)
     admin = models.OneToOneField(
-        "core.User", on_delete=models.CASCADE, related_name="Gong_admin", blank=True, null=True
+        "core.User", on_delete=models.CASCADE, related_name="gong_admin", blank=True, null=True
     )
 
     objects = GongAuthAccountQuerySet.as_manager()
@@ -178,7 +179,7 @@ class GongAccountAdapter:
         self.id = kwargs.get("id", None)
         self.auth_account = kwargs.get("auth_account", None)
         self.user = kwargs.get("user", None)
-        self.Gong_id = kwargs.get("Gong_id", None)
+        self.gong_id = kwargs.get("gong_id", None)
         self.guid = kwargs.get("guid", None)
         self.is_active = kwargs.get("is_active", None)
         self.email = kwargs.get("email", None)
@@ -210,9 +211,9 @@ class GongAccount(TimeStampModel):
         "GongAuthAccount", related_name="users", on_delete=models.CASCADE, blank=True, null=True,
     )
     user = models.OneToOneField(
-        "core.User", on_delete=models.CASCADE, related_name="Gong_account", blank=True, null=True,
+        "core.User", on_delete=models.CASCADE, related_name="gong_account", blank=True, null=True,
     )
-    Gong_id = models.IntegerField()
+    gong_id = models.IntegerField()
     guid = models.CharField(max_length=50)
     is_active = models.BooleanField(default=True)
     email = models.EmailField()

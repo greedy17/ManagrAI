@@ -19,6 +19,7 @@ export default class GongAccountAPI extends ModelAPI {
   async getAuthLink() {
     try {
       const res = await this.client.get(GongAccountAPI.ENDPOINT + 'authorization')
+      console.log(res)
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Gong Auth Link' })(e)
