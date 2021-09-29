@@ -36,7 +36,7 @@
 
     <h2 style="color: black" class="title">Make updates to Salesforce from Slack</h2>
     <p style="font-weight: bold; margin-top: -0.5rem; margin-bottom: 2rem; color: #5d5e5e">
-      Map your SFDC fields to Managr. These will be fields we update via Slack
+      Map your desired CRM fields to Managr.
     </p>
 
     <div class="customizations__cards">
@@ -99,58 +99,7 @@
           </div>
         </div>
       </div>
-
-      <!-- <div class="card">
-        <div class="card__header">
-          <h2 class="title">Create <span style="color: #5f8cff">Opportunity</span></h2>
-          <button @click="handleCreateOpportunity" class="blue_button">View + Edit</button>
-        </div>
-        <div class="form_images">
-          <div style="margin-left: 2rem">
-            <img class="card-img" src="@/assets/images/salesforce.png" />
-            <img style="height: 2.5rem; margin-left: 1rem" src="@/assets/images/slackLogo.png" />
-          </div>
-          <p style="color: #beb5cc; margin-right: 3rem">* required</p>
-        </div>
-      </div> -->
-
-      <!-- <div class="card">
-        <div class="card__header">
-          <h2 class="title">Update <span style="color: #ff7649">Contacts</span></h2>
-          <button @click="goToCreate" class="orange_button">View + Edit</button>
-        </div>
-        <div class="form_images">
-          <div style="margin-left: 2rem">
-            <img class="card-img" src="@/assets/images/salesforce.png" />
-            <img style="height: 2.5rem; margin-left: 1rem" src="@/assets/images/slackLogo.png" />
-          </div>
-          <p style="color: #beb5cc; margin-right: 3rem">* required</p>
-        </div>
-      </div> -->
-
-      <!-- <div class="card">
-        <div class="card__header">
-          <h2 class="title">Create <span style="color: #69e3cd">Accounts</span></h2>
-          <button @click="handleCreateAccounts" class="green_button">View + Edit</button>
-        </div>
-        <div class="form_images">
-          <div style="margin-left: 2rem">
-            <img class="card-img" src="@/assets/images/salesforce.png" />
-            <img style="height: 2.5rem; margin-left: 1rem" src="@/assets/images/slackLogo.png" />
-          </div>
-          <p style="color: #beb5cc; margin-right: 3rem">* required</p>
-        </div>
-      </div> -->
     </div>
-
-    <!-- <div>
-      <button @click="handleShowOptional" class="optional_button" v-if="!showOptional">
-        View/edit optional forms ?
-      </button>
-      <button @click="handleShowOptional" class="optional_button" v-else>
-        Hide optional forms ?
-      </button>
-    </div> -->
 
     <!-- <button v-if="user.isAdmin" class="slack-button">Continue</button> -->
     <button @click="goToTemplates" class="slack-button">Activate Workflow Automations</button>
@@ -189,9 +138,6 @@ export default {
     // handleShowOptional() {
     //   this.showOptional = !this.showOptional
     // },
-  },
-  beforeMount() {
-    console.log(this.user)
   },
 }
 </script>

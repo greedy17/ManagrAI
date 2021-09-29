@@ -172,24 +172,23 @@
                 alt=""
               />
             </button>
-
-            <ListContainer horizontal>
-              <template v-slot:list>
-                <img
-                  style="margin-right: 0.5rem; margin-top: 0.25rem; height: 1rem"
-                  src="@/assets/images/remove.png"
-                  alt=""
-                />
-                <ListItem
-                  @item-selected="onDeleteConfig(config.id, index)"
-                  large
-                  :key="index"
-                  v-for="(config, index) in alert.configsRef"
-                  :item="getReadableConfig(config)"
-                  :active="true"
-                />
-              </template>
-            </ListContainer>
+            <div class="config__column">
+              <ListContainer :key="index" v-for="(config, index) in alert.configsRef">
+                <template v-slot:list>
+                  <img
+                    style="margin-right: 0.5rem; margin-top: 0.25rem; height: 1rem"
+                    src="@/assets/images/remove.png"
+                    alt=""
+                  />
+                  <ListItem
+                    @item-selected="onDeleteConfig(config.id, index)"
+                    large
+                    :item="getReadableConfig(config)"
+                    :active="true"
+                  />
+                </template>
+              </ListContainer>
+            </div>
           </div>
         </div>
       </div>
@@ -666,6 +665,12 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/buttons';
 
+.config__column {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
 .filtered {
   filter: invert(66%) sepia(64%) saturate(3377%) hue-rotate(380deg) brightness(100%) contrast(105%);
 }
