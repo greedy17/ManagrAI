@@ -349,8 +349,8 @@ export default {
     setIdentifier(obj) {
       this.form.field._operandIdentifier.value = obj
       if (this.selectedFieldType == 'DATE' || this.selectedFieldType == 'DATETIME') {
-        this.form.field.operandOperator.value = '='
-        this.form.field._operandOperator.value = { label: '= (Equals)', value: '=' }
+        this.form.field.operandOperator.value = '<='
+        this.form.field._operandOperator.value = { label: '<= (Less or Equal)', value: '<=' }
       }
     },
     setOperator(obj) {

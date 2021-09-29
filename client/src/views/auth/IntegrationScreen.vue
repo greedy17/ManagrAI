@@ -185,12 +185,12 @@
               @click="onRevoke('SALESLOFT')"
               style="height: 2rem; cursor: pointer"
             />
-            <img
+            <!-- <img
               src="@/assets/images/refresh.png"
               @click="onRefreshSalesloft"
               :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
               style="height: 2rem; cursor: pointer"
-            />
+            /> -->
           </div>
           <p v-else-if="hasSalesloftIntegration && !user.isAdmin">Salesloft is connected!</p>
           <p v-else>Contact your organization admin to add Salesloft</p>
