@@ -1081,6 +1081,54 @@ def process_add_contacts_to_cadence(payload, context):
         return
 
 
+@log_all_exceptions
+@slack_api_exceptions(rethrow=True)
+@processor(required_context=["u"])
+def process_get_notes(payload, context):
+    meta_data = json.loads(payload["view"]["private_metadata"])
+    u = User.objects.get(id=context.get("u"))
+    trigger_id = payload["trigger_id"]
+    view_id = payload["view"]["id"]
+    org = u.organization
+    access_token = org.slack_integration.access_token
+    resource_id = payload["view"]["state"]["values"]["select_opp"][
+        f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={u.id}&resource=Opportunity"
+    ]["selected_option"]["value"]
+    opportunity = Opportunity.objects.get(id=resource_id)
+    note_data = (
+        OrgCustomSlackFormInstance.objects.filter(resource_id=resource_id)
+        .filter(is_submitted=True)
+        .values_list("submission_date", "saved_data__meeting_type", "saved_data__meeting_comments")
+    )
+    note_blocks = [block_builders.header_block(f"Notes for {opportunity.name}")]
+    if note_data:
+        for note in note_data:
+            date = note[0].date()
+            block_message = f"*{date} - {note[1]}*\n {note[2]}"
+            note_blocks.append(block_builders.simple_section(block_message, "mrkdwn"))
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    loading_data = {
+        "trigger_id": trigger_id,
+        "view_id": view_id,
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Loading"},
+            "blocks": get_block_set(
+                "loading",
+                {
+                    "message": ":notebook_with_decorative_cover: Putting your notes together",
+                    "fill": True,
+                },
+            ),
+        },
+    }
+    loadting_res = slack_requests.generic_request(url, loading_data, access_token=access_token)
+    update_res = slack_requests.send_channel_message(
+        u.slack_integration.channel, access_token, block_set=note_blocks,
+    )
+    return
+
+
 def handle_view_submission(payload):
     """
     This takes place when a modal's Submit button is clicked.
@@ -1097,6 +1145,7 @@ def handle_view_submission(payload):
         slack_const.COMMAND_CREATE_TASK: process_create_task,
         slack_const.ZOOM_MEETING__SCHEDULE_MEETING: process_schedule_meeting,
         slack_const.ADD_TO_CADENCE: process_add_contacts_to_cadence,
+        slack_const.GET_NOTES: process_get_notes,
     }
 
     callback_id = payload["view"]["callback_id"]
