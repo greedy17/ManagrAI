@@ -35,6 +35,7 @@ import ProfilePage from '@/views/user/ProfilePage'
 import CloseDateApproaching from '@/views/settings/alerts/create/templates/CloseDateApproaching'
 import CloseDatePassed from '@/views/settings/alerts/create/templates/CloseDatePassed'
 import DealRotting from '@/views/settings/alerts/create/templates/DealRotting'
+import UpdateForecast from '@/views/settings/alerts/create/templates/UpdateForecast'
 
 // TODO: We should keep this style guide page
 // import Styles from '@/views/settings/Styles'
@@ -171,6 +172,11 @@ export default new Router({
       path: '/deal-rotting',
       name: 'DealRotting',
       component: DealRotting,
+    },
+    {
+      path: '/update-forecast',
+      name: 'UpdateForecast',
+      component: UpdateForecast,
     },
     {
       path: '/alerts',
