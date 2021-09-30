@@ -43,7 +43,7 @@
       <div class="card">
         <div class="card__header">
           <h2 class="title">Update <span>Opportunity</span></h2>
-          <button @click="goToUpdateOpp" class="blue_button">View + Edit</button>
+          <button @click="goToUpdateOpp" class="green__button">View + Edit</button>
         </div>
         <div class="form_images">
           <div style="margin-left: 2rem">
@@ -66,7 +66,7 @@
       <div class="card">
         <div class="card__header">
           <h2 class="title">Create <span>Contacts</span></h2>
-          <button @click="goToCreate" class="orange_button">View + Edit</button>
+          <button @click="goToCreate" class="green__button">View + Edit</button>
         </div>
         <div class="form_images">
           <div style="margin-left: 2rem">
@@ -89,7 +89,7 @@
       <div class="card">
         <div class="card__header">
           <h2 class="title">Optional Forms</h2>
-          <button @click="$refs.optionalModal.openModal()" class="white_button">View</button>
+          <button @click="$refs.optionalModal.openModal()" class="green__button">View</button>
         </div>
         <div class="form_images">
           <div style="margin-left: 2rem">
@@ -227,39 +227,19 @@ export default {
     cursor: not-allowed;
   }
 }
-.blue_button {
+
+.green__button {
   height: 2.5rem;
   width: 8rem;
   border-radius: 0.5rem;
   font-size: 1.025rem;
   font-weight: bold;
-  color: $dark-green;
-  background-color: white;
+  color: white;
+  background-color: $dark-green;
   border: none;
   cursor: pointer;
 }
-.orange_button {
-  height: 2.5rem;
-  width: 8rem;
-  border-radius: 0.5rem;
-  font-size: 1.025rem;
-  font-weight: bold;
-  color: $dark-green;
-  background-color: white;
-  border: none;
-  cursor: pointer;
-}
-.white_button {
-  height: 2.5rem;
-  width: 8rem;
-  border-radius: 0.5rem;
-  font-size: 1.025rem;
-  font-weight: bold;
-  color: $dark-green;
-  background-color: white;
-  border: none;
-  cursor: pointer;
-}
+
 .form_images {
   display: flex;
   flex-direction: row;
@@ -271,7 +251,7 @@ export default {
   font-size: 22px;
 }
 a {
-  color: white;
+  color: $dark-green;
   text-decoration: none;
   margin-bottom: 0.75rem;
   font-size: 1.1rem;
