@@ -100,6 +100,41 @@ class GongAuthAdapter:
         res = client.get(f"{gong_consts.GONG_BASE_URI}/{gong_consts.USERS}", headers=headers)
         return GongAuthAdapter._handle_response(res)
 
+    def get_calls(self, start, end):
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json",
+        }
+        body = {
+            "filter": {"fromDateTime": start, "toDateTime": end},
+            "contentSelector": {
+                "context": "Extended",
+                "exposedFields": {
+                    "collaboration": {"publicComments": True},
+                    "content": {
+                        "pointsOfInterest": True,
+                        "structure": True,
+                        "topics": True,
+                        "trackers": True,
+                    },
+                    "interaction": {
+                        "personInteractionStats": True,
+                        "questions": True,
+                        "speakers": True,
+                        "video": True,
+                    },
+                    "media": True,
+                    "parties": True,
+                },
+            },
+        }
+        res = client.post(
+            f"{gong_consts.GONG_BASE_URI}/{gong_consts.CALLS_EXTENSIVE}",
+            json.dumps(body),
+            headers=headers,
+        )
+        return GongAuthAdapter._handle_response(res)
+
     def refresh(self):
         query = gong_consts.REAUTHENTICATION_QUERY_PARAMS(self.refresh_token)
         query = urlencode(query)
@@ -108,7 +143,7 @@ class GongAuthAdapter:
         return GongAuthAdapter._handle_response(res)
 
     def revoke(self):
-        gong_account = GongAccount.objects.get(id=self.id)
+        gong_account = GongAuthAccount.objects.get(id=self.id)
         try:
             gong_account.delete()
             return logger.info(f"Succefully deleted account {gong_account}")
@@ -188,7 +223,6 @@ class GongAccountAdapter:
 
     @classmethod
     def create_account(cls, user_data, auth_account_id):
-        print("Create account {user_data}")
         try:
             user = User.objects.get(email=user_data["emailAddress"])
             data = {}
@@ -226,3 +260,62 @@ class GongAccount(TimeStampModel):
         data = self.__dict__
         data["id"] = str(data.get("id"))
         return GongAuthAdapter(**data)
+
+
+class GongCallQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.organization and user.is_active:
+            return self.filter(user__organization=user.organization)
+        else:
+            return self.none()
+
+
+class GongCallAdapter:
+    def __init__(self, **kwargs):
+        self.id = kwargs.get("id", None)
+        self.auth_account = kwargs.get("auth_account", None)
+        self.crm = kwargs.get("crm", None)
+        self.crm_id = kwargs.get("crm_id", None)
+        self.gong_id = kwargs.get("gong_id", None)
+        self.client_id = kwargs.get("client_id", None)
+        self.client_system = kwargs.get("client_system", None)
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+    @classmethod
+    def create_call(cls, call_data, auth_account_id):
+        meta_data = call_data.get("metaData")
+        context_data = call_data.get("context")
+        data = {}
+        data["auth_account"] = auth_account_id
+        if len(context_data):
+            data["crm"] = context_data[0].get("system", None)
+            data["crm_id"] = context_data[0].get("objects", None)[0].get("objectId", None)
+        data["gong_id"] = meta_data.get("id")
+        data["client_sytem"] = meta_data.get("system", None)
+        data["client_id"] = meta_data.get("clientUniqueId", None)
+        return cls(**data)
+
+
+class GongCall(TimeStampModel):
+    auth_account = models.OneToOneField(
+        "GongAuthAccount", on_delete=models.CASCADE, related_name="calls", blank=True, null=True,
+    )
+    crm_id = models.CharField(max_length=100, blank=True)
+    crm = models.CharField(max_length=50, blank=True)
+    gong_id = models.CharField(max_length=30, blank=True)
+    client_system = models.CharField(max_length=50, blank=True)
+    client_id = models.CharField(max_length=50, blank=True)
+
+    objects = GongCallQuerySet.as_manager()
+
+    class Meta:
+        ordering = ["-datetime_created"]
+
+    @property
+    def helper_class(self):
+        data = self.__dict__
+        data["id"] = str(data.get("id"))
+        return GongCallAdapter(**data)

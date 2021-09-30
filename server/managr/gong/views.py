@@ -66,15 +66,13 @@ def get_gong_authentication(request):
     if admin_account:
         users = admin_account.helper_class.get_users()
         user_data = users.get("users")
-        print(user_data)
         for user in user_data:
-            print(user)
             user_res = GongAccountAdapter.create_account(user, admin_account.id)
             if user_res is None:
                 logger.error(f"Could not create gong account for {user['email']}")
                 continue
             else:
-                user_existing = GongAccount.objects.filter(email=user.get("email")).first()
+                user_existing = GongAccount.objects.filter(email=user.get("emailAddress")).first()
                 if user_existing:
                     user_serializer = GongAccountSerializer(
                         data=user_res.as_dict, instance=user_existing
@@ -90,7 +88,7 @@ def get_gong_authentication(request):
 @permission_classes([permissions.IsAuthenticated])
 def revoke_gong_access_token(request):
     if hasattr(request.user, "gong_account"):
-        gong = request.user.gong_account
+        gong = request.user.gong_admin
         try:
             gong.helper_class.revoke()
         except Exception:
