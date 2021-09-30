@@ -32,11 +32,13 @@ def sync_gong_calls(auth_account_id):
     call_data = auth_account.helper_class.get_calls(thirty, curr_date_str)
     for call in call_data.get("calls"):
         call_res = GongCallAdapter.create_call(call, auth_account.id)
-        call_existing = GongAccount.objects.filter(email=call.get("metaData").get("id")).first()
+        print(call_res)
+        call_existing = GongAccount.objects.filter(gong_id=call.get("metaData").get("id")).first()
         if call_existing:
-            call_serializer = GongAccountSerializer(data=call_res.as_dict, instance=call_existing)
+            call_serializer = GongCallSerializer(data=call_res.as_dict, instance=call_existing)
         else:
-            call_serializer = GongAccountSerializer(data=call_res.as_dict)
+            call_serializer = GongCallSerializer(data=call_res.as_dict)
+        print(call_serializer)
         call_serializer.is_valid(raise_exception=True)
         call_serializer.save()
     return logger.info(f"Synced calls for account {auth_account_id}")
