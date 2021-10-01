@@ -1098,14 +1098,27 @@ def process_get_notes(payload, context):
     note_data = (
         OrgCustomSlackFormInstance.objects.filter(resource_id=resource_id)
         .filter(is_submitted=True)
-        .values_list("submission_date", "saved_data__meeting_type", "saved_data__meeting_comments")
+        .values_list(
+            "submission_date",
+            "saved_data__meeting_type",
+            "saved_data__meeting_comments",
+            "saved_data__StageName",
+            "previous_data__StageName",
+        )
     )
     note_blocks = [block_builders.header_block(f"Notes for {opportunity.name}")]
     if note_data:
         for note in note_data:
             date = note[0].date()
-            block_message = f"*{date} - {note[1]}*\n {note[2]}"
+            current_stage = note[3]
+            previous_stage = note[4]
+            block_message = f"*{date} - {note[1]}*\n"
+            if current_stage and previous_stage:
+                if current_stage != previous_stage:
+                    block_message += f"Stage: ~{previous_stage}~ :arrow_right: {current_stage} \n"
+            block_message += f"\nNotes:\n {note[2]}"
             note_blocks.append(block_builders.simple_section(block_message, "mrkdwn"))
+            note_blocks.append({"type": "divider"})
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     loading_data = {
         "trigger_id": trigger_id,
