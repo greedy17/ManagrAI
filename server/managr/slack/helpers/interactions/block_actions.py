@@ -473,7 +473,6 @@ def process_meeting_selected_resource(payload, context):
 def process_meeting_selected_resource_option(payload, context):
     """depending on the selection on the meeting review form (create new) this will open a create form or an empty block set"""
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    trigger_id = payload["trigger_id"]
     workflow_id = json.loads(payload["view"]["private_metadata"])["w"]
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     select = payload["actions"][0]["selected_option"]["value"]
@@ -1318,6 +1317,11 @@ def process_show_cadence_modal(payload, context):
         )
 
 
+@processor(required_context="u")
+def process_get_call_details(payload, context):
+    return
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -1347,6 +1351,7 @@ def handle_block_actions(payload):
         slack_const.PAGINATE_ALERTS: process_paginate_alerts,
         slack_const.ADD_TO_CADENCE_MODAL: process_show_cadence_modal,
         slack_const.GET_USER_ACCOUNTS: process_show_cadence_modal,
+        slack_const.GONG_CALL_DETAILS: process_get_call_details,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)

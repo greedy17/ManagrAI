@@ -279,6 +279,7 @@ class GongCallAdapter:
         self.gong_id = kwargs.get("gong_id", None)
         self.client_id = kwargs.get("client_id", None)
         self.client_system = kwargs.get("client_system", None)
+        self.scheduled_date = kwargs.get("scheduled_date", None)
 
     @property
     def as_dict(self):
@@ -289,6 +290,7 @@ class GongCallAdapter:
         meta_data = call_data.get("metaData")
         context_data = call_data.get("context")
         auth_account = GongAuthAccount.objects.get(id=auth_account_id)
+        schedule_date = dateutil.parser.parse(meta_data.get("scheduled")).date()
         opp_data = (
             [d for d in context_data[0].get("objects") if d["objectType"] == "Opportunity"][0]
             if len(context_data)
@@ -301,6 +303,7 @@ class GongCallAdapter:
         data["gong_id"] = meta_data.get("id")
         data["client_id"] = meta_data.get("clientUniqueId", None)
         data["client_system"] = meta_data.get("system", None)
+        data["scheduled_date"] = schedule_date
         return cls(**data)
 
 
@@ -313,6 +316,7 @@ class GongCall(TimeStampModel):
     gong_id = models.CharField(max_length=30, null=True)
     client_system = models.CharField(max_length=50, null=True)
     client_id = models.CharField(max_length=50, null=True)
+    scheduled_date = models.DateField(null=True)
 
     objects = GongCallQuerySet.as_manager()
 
@@ -324,3 +328,7 @@ class GongCall(TimeStampModel):
         data = self.__dict__
         data["id"] = str(data.get("id"))
         return GongCallAdapter(**data)
+
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.scheduled_date, str(self.id))

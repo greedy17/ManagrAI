@@ -38,4 +38,13 @@ class GongCallSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GongCall
-        fields = ["id", "auth_account", "gong_id", "crm", "crm_id", "client_id", "client_system"]
+        fields = [
+            "id",
+            "auth_account",
+            "gong_id",
+            "crm",
+            "crm_id",
+            "client_id",
+            "client_system",
+            "scheduled_date",
+        ]

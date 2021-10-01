@@ -163,6 +163,17 @@ def alert_instance_block_set(context):
                 ),
             )
         )
+    if instance.template.resource_type == "Opportunity" and user.has_gong_integration:
+        action_blocks.append(
+            block_builders.simple_button_block(
+                "Last Call Details",
+                "call_details",
+                action_id=action_with_params(
+                    slack_const.GONG_CALL_DETAILS,
+                    params=[f"u={str(user.id)}", f"resource_id={str(instance.resource_id)}",],
+                ),
+            )
+        )
     blocks.append(block_builders.actions_block(action_blocks))
     if in_channel or (user.id != resource_owner.id):
         blocks.append(

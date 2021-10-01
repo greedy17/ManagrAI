@@ -7,7 +7,7 @@ from managr.opportunity import constants as opp_consts
 from managr.organization import constants as org_consts
 from managr.slack import constants as slack_const
 from managr.salesforce import constants as sf_consts
-
+from managr.gong.models import GongCall
 from managr.core.models import User
 from managr.opportunity.models import Opportunity, Lead
 from managr.organization.models import Organization, Account, ActionChoice
@@ -263,6 +263,13 @@ def process_get_people(payload, context):
         contacts = account.contacts.all()
     return {
         "options": [l.as_slack_option for l in contacts.filter(email__icontains=value)[:50]],
+    }
+
+def process_get_calls(payload, context):
+    opp_id = context.get("opp_id")
+    calls = GongCall.objects.filter(crm_id=opp_id)
+    return  {
+        "options": [l.slack_option for l in calls.filter()]
     }
 
 
