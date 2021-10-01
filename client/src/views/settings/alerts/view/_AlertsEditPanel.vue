@@ -117,7 +117,7 @@
               <FormField :errors="messageTemplateForm.field.body.errors">
                 <template v-slot:input>
                   <quill-editor
-                    style="width: 100%; height: 6rem"
+                    style="width: 100%; height: 4rem; margin-bottom: 2rem"
                     @blur="messageTemplateForm.field.body.validate()"
                     @input="executeUpdateMessageTemplate"
                     ref="message-body"
@@ -129,21 +129,21 @@
                 </template>
               </FormField>
             </div>
-            <!-- <div class="alerts-page__message-options-body__bindings">
-              <DropDownSearch
-                :items="fields.list"
-                @input="bindText(`${alert.resourceType}.${$event}`)"
-                displayKey="referenceDisplayLabel"
-                valueKey="apiName"
-                nullDisplay="Select a field"
-                searchable
-                :hasNext="!!fields.pagination.hasNextPage"
-                @load-more="fieldNextPage"
-                @search-term="onSearchFields"
-                auto
-                class="left"
-              />
-              <ListContainer horizontal>
+
+            <DropDownSearch
+              :items="fields.list"
+              @input="bindText(`${alert.resourceType}.${$event}`)"
+              displayKey="referenceDisplayLabel"
+              valueKey="apiName"
+              nullDisplay="Select a field"
+              searchable
+              :hasNext="!!fields.pagination.hasNextPage"
+              @load-more="fieldNextPage"
+              @search-term="onSearchFields"
+              auto
+              class="left"
+            />
+            <!-- <ListContainer horizontal>
                 <template v-slot:list>
                   <ListItem
                     :key="key"
@@ -153,8 +153,7 @@
                     @item-selected="bindText(`__Recipient.${val.apiName}`)"
                   />
                 </template>
-              </ListContainer>
-            </div> -->
+              </ListContainer> -->
           </div>
           <!-- <div
             class="alerts-template-list__content-message__preview"
@@ -173,24 +172,23 @@
                 alt=""
               />
             </button>
-
-            <ListContainer horizontal>
-              <template v-slot:list>
-                <img
-                  style="margin-right: 0.5rem; margin-top: 0.25rem; height: 1rem"
-                  src="@/assets/images/remove.png"
-                  alt=""
-                />
-                <ListItem
-                  @item-selected="onDeleteConfig(config.id, index)"
-                  large
-                  :key="index"
-                  v-for="(config, index) in alert.configsRef"
-                  :item="getReadableConfig(config)"
-                  :active="true"
-                />
-              </template>
-            </ListContainer>
+            <div class="config__column">
+              <ListContainer :key="index" v-for="(config, index) in alert.configsRef">
+                <template v-slot:list>
+                  <img
+                    style="margin-right: 0.5rem; margin-top: 0.25rem; height: 1rem"
+                    src="@/assets/images/remove.png"
+                    alt=""
+                  />
+                  <ListItem
+                    @item-selected="onDeleteConfig(config.id, index)"
+                    large
+                    :item="getReadableConfig(config)"
+                    :active="true"
+                  />
+                </template>
+              </ListContainer>
+            </div>
           </div>
         </div>
       </div>
@@ -477,6 +475,17 @@ export default {
       }
       return `${rowData.operandIdentifier}     ${operandOperatorLabel}     ${valueLabel} `
     },
+    addSuffix(num) {
+      if ((num > 3 && num < 21) || (num > 23 && num < 31)) {
+        return num + 'th'
+      } else if (num == 1 || num == 21 || num == 31) {
+        return num + 'st'
+      } else if (num == 2 || num == 22) {
+        return num + 'nd'
+      } else if (num == 3 || num == 23) {
+        return num + 'rd'
+      }
+    },
     getReadableConfig(config) {
       let recurrenceDayString = config.recurrenceDay
 
@@ -487,13 +496,13 @@ export default {
         recurrenceDayString = `Run every ${day} (Weekly)`
       } else if ((config.recurrenceFrequency = 'MONTHLY')) {
         let day = config.recurrenceDay
-        recurrenceDayString = `Run every ${toNumberSuffix(day)} Monthly`
+        recurrenceDayString = `Run every ${this.addSuffix(day)} Monthly`
       }
-      return `${recurrenceDayString} and alert ${config.recipientsRef
-        .map((rec) => rec.key)
-        .join(',')} filtering against ${config.alertTargetsRef
-        .map((target) => target.key)
-        .join(',')}'s data`
+      return `${recurrenceDayString} and alert ${
+        config.recipientType === 'USER_LEVEL'
+          ? config.recipientsRef.map((rec) => rec.key).join(',')
+          : 'a #channel'
+      } filtering against ${config.alertTargetsRef.map((target) => target.key).join(',')}'s data`
     },
 
     async onDeleteConfig(id, index) {
@@ -656,6 +665,12 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/buttons';
 
+.config__column {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
 .filtered {
   filter: invert(66%) sepia(64%) saturate(3377%) hue-rotate(380deg) brightness(100%) contrast(105%);
 }
@@ -710,6 +725,9 @@ export default {
 }
 ::v-deep .ls-container__list--horizontal {
   background-color: transparent;
+}
+::v-deep .item-container {
+  margin-right: 2rem;
 }
 .tab__header-items {
   display: flex;

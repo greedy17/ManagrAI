@@ -3,7 +3,7 @@
     <div>
       <h2 style="font-weight: bold; text-align: center">
         <span style="border-bottom: 3px solid #199e54; padding-bottom: 0.25rem; color: black">
-          Close date
+          Close Date
           <span style="">Approaching</span>
         </span>
       </h2>
@@ -39,6 +39,7 @@
                       :value="key.value"
                       id="value"
                       v-model="form.field.recurrenceDay.value"
+                      @click="setDay(key)"
                     />
                     <label for="value">{{ key.key }}</label>
                   </span>
@@ -92,6 +93,14 @@
                   </div>
                 </div>
                 <div v-if="pageNumber === 2">
+                  <p
+                    style="color: #ff7649"
+                    v-if="form.field.recipientType.value == 'SLACK_CHANNEL'"
+                  >
+                    Please make sure @managr has been added to
+                    <em style="color: #beb5cc">{{ form.field._recipients.value.name }}</em>
+                    channel
+                  </p>
                   <div
                     class="row__"
                     style="
@@ -121,11 +130,6 @@
                     >
                   </div>
                   <div v-if="form.field.recipientType.value == 'SLACK_CHANNEL'">
-                    <p>
-                      Please make sure @managr has been added to
-                      <em style="color: #beb5cc">{{ form.field._recipients.value.name }}</em>
-                      channel
-                    </p>
                     <p>Select a #Channel:</p>
                     <div class="channels_height">
                       <div :key="value" v-for="(key, value) in reversedChannels">
@@ -163,6 +167,7 @@
                           :value="key.id"
                           id="value"
                           type="checkbox"
+                          @click="setRecipients(key)"
                         />
                         <label for="value">{{ key.fullName }}</label>
                       </span>
@@ -211,26 +216,7 @@
 
       <div v-if="pageNumber === 3" class="alert__column">
         <div class="collection">
-          <h2 class="centered__" style="color: #beb5cc">
-            <!-- {{ this.alertTemplateForm.field.title.value }} -->Summary
-          </h2>
-
-          <p>
-            Recipients will recieve this Smart Alert for all
-            <span style="color: #ff7649">Close Date's</span> approaching every
-            <span style="color: #ff7649">week</span> on
-            <span style="color: #ff7649">{{
-              onConvert(alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value)
-            }}</span
-            >:
-          </p>
-
-          <p>
-            "Hey <span style="color: #ff7649">Recipient Name</span>, your deal
-            <span style="color: #ff7649">Opportunity Name</span> has an upcoming closed date. Please
-            update it!"
-          </p>
-
+          <AlertSummary :form="alertTemplateForm" />
           <div class="bottom__middle">
             <p style="color: #beb5cc">Step 4/4</p>
           </div>
@@ -265,7 +251,7 @@
           "
           text="Activate alert"
           @click.stop="onSave"
-          :disabled="!alertTemplateForm.isValid || savingTemplate"
+          :disabled="!alertTemplateForm.isValid"
         />
       </div>
     </div>
@@ -396,10 +382,6 @@ export default {
         { key: 'Friday', value: '4' },
         { key: 'Saturday', value: '5' },
         { key: 'Sunday', value: '6' },
-      ],
-      nameOptions: [
-        { key: 'Close Date Passed', value: 'Close Date Passed' },
-        { key: 'Close Date Approaching', value: 'Close Date Approaching' },
       ],
     }
   },
@@ -598,9 +580,6 @@ export default {
           '='
       }
     },
-    setRecurrenceDay(val) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = val
-    },
   },
   computed: {
     userTargetsOpts() {
@@ -686,7 +665,7 @@ export default {
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
     this.alertTemplateForm.field.title.value = 'Close Date Approaching'
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
-      'Hey { __Recipient.full_name }, your deal { Opportunity.Name } has an upcoming closed date. Please update it!'
+      'Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has an upcoming close date of <strong>{ Opportunity.CloseDate }</strong>. Please update it!'
   },
 }
 </script>

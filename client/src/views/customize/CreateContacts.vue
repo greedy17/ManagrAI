@@ -4,6 +4,9 @@
       <h2 style="border-bottom: 3px solid #199e54; padding-bottom: 0.5rem; color: black">
         Create <span>Contacts</span>
       </h2>
+      <p style="color: #5d5e5e; margin-top: -0.5rem">
+        Map the opportunity fields you’d like to update
+      </p>
     </div>
     <!-- <div style="text-align: center">
       <label for="one">2/2: </label>

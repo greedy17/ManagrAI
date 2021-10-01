@@ -36,14 +36,14 @@
 
     <h2 style="color: black" class="title">Make updates to Salesforce from Slack</h2>
     <p style="font-weight: bold; margin-top: -0.5rem; margin-bottom: 2rem; color: #5d5e5e">
-      Customize your slack forms
+      Map your desired CRM fields to Managr.
     </p>
 
     <div class="customizations__cards">
       <div class="card">
         <div class="card__header">
           <h2 class="title">Update <span>Opportunity</span></h2>
-          <button @click="goToUpdateOpp" class="blue_button">View + Edit</button>
+          <button @click="goToUpdateOpp" class="green__button">View + Edit</button>
         </div>
         <div class="form_images">
           <div style="margin-left: 2rem">
@@ -66,7 +66,7 @@
       <div class="card">
         <div class="card__header">
           <h2 class="title">Create <span>Contacts</span></h2>
-          <button @click="goToCreate" class="orange_button">View + Edit</button>
+          <button @click="goToCreate" class="green__button">View + Edit</button>
         </div>
         <div class="form_images">
           <div style="margin-left: 2rem">
@@ -89,7 +89,7 @@
       <div class="card">
         <div class="card__header">
           <h2 class="title">Optional Forms</h2>
-          <button @click="$refs.optionalModal.openModal()" class="white_button">View</button>
+          <button @click="$refs.optionalModal.openModal()" class="green__button">View</button>
         </div>
         <div class="form_images">
           <div style="margin-left: 2rem">
@@ -99,58 +99,7 @@
           </div>
         </div>
       </div>
-
-      <!-- <div class="card">
-        <div class="card__header">
-          <h2 class="title">Create <span style="color: #5f8cff">Opportunity</span></h2>
-          <button @click="handleCreateOpportunity" class="blue_button">View + Edit</button>
-        </div>
-        <div class="form_images">
-          <div style="margin-left: 2rem">
-            <img class="card-img" src="@/assets/images/salesforce.png" />
-            <img style="height: 2.5rem; margin-left: 1rem" src="@/assets/images/slackLogo.png" />
-          </div>
-          <p style="color: #beb5cc; margin-right: 3rem">* required</p>
-        </div>
-      </div> -->
-
-      <!-- <div class="card">
-        <div class="card__header">
-          <h2 class="title">Update <span style="color: #ff7649">Contacts</span></h2>
-          <button @click="goToCreate" class="orange_button">View + Edit</button>
-        </div>
-        <div class="form_images">
-          <div style="margin-left: 2rem">
-            <img class="card-img" src="@/assets/images/salesforce.png" />
-            <img style="height: 2.5rem; margin-left: 1rem" src="@/assets/images/slackLogo.png" />
-          </div>
-          <p style="color: #beb5cc; margin-right: 3rem">* required</p>
-        </div>
-      </div> -->
-
-      <!-- <div class="card">
-        <div class="card__header">
-          <h2 class="title">Create <span style="color: #69e3cd">Accounts</span></h2>
-          <button @click="handleCreateAccounts" class="green_button">View + Edit</button>
-        </div>
-        <div class="form_images">
-          <div style="margin-left: 2rem">
-            <img class="card-img" src="@/assets/images/salesforce.png" />
-            <img style="height: 2.5rem; margin-left: 1rem" src="@/assets/images/slackLogo.png" />
-          </div>
-          <p style="color: #beb5cc; margin-right: 3rem">* required</p>
-        </div>
-      </div> -->
     </div>
-
-    <!-- <div>
-      <button @click="handleShowOptional" class="optional_button" v-if="!showOptional">
-        View/edit optional forms ?
-      </button>
-      <button @click="handleShowOptional" class="optional_button" v-else>
-        Hide optional forms ?
-      </button>
-    </div> -->
 
     <!-- <button v-if="user.isAdmin" class="slack-button">Continue</button> -->
     <button @click="goToTemplates" class="slack-button">Activate Workflow Automations</button>
@@ -189,9 +138,6 @@ export default {
     // handleShowOptional() {
     //   this.showOptional = !this.showOptional
     // },
-  },
-  beforeMount() {
-    console.log(this.user)
   },
 }
 </script>
@@ -281,39 +227,19 @@ export default {
     cursor: not-allowed;
   }
 }
-.blue_button {
+
+.green__button {
   height: 2.5rem;
   width: 8rem;
   border-radius: 0.5rem;
   font-size: 1.025rem;
   font-weight: bold;
-  color: $dark-green;
-  background-color: white;
+  color: white;
+  background-color: $dark-green;
   border: none;
   cursor: pointer;
 }
-.orange_button {
-  height: 2.5rem;
-  width: 8rem;
-  border-radius: 0.5rem;
-  font-size: 1.025rem;
-  font-weight: bold;
-  color: $dark-green;
-  background-color: white;
-  border: none;
-  cursor: pointer;
-}
-.white_button {
-  height: 2.5rem;
-  width: 8rem;
-  border-radius: 0.5rem;
-  font-size: 1.025rem;
-  font-weight: bold;
-  color: $dark-green;
-  background-color: white;
-  border: none;
-  cursor: pointer;
-}
+
 .form_images {
   display: flex;
   flex-direction: row;
@@ -325,7 +251,7 @@ export default {
   font-size: 22px;
 }
 a {
-  color: white;
+  color: $dark-green;
   text-decoration: none;
   margin-bottom: 0.75rem;
   font-size: 1.1rem;
