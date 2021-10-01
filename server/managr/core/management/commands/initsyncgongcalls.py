@@ -20,7 +20,7 @@ class Command(BaseCommand):
                     self.stdout.write(
                         self.style.ERROR("User does not have a gong account {}".format(user.email,))
                     )
-                auth_id = str(user.gong_account.auth_account.id)
+                auth_id = user.gong_account.auth_account.id
                 emit_sync_gong_calls(auth_id)
                 self.stdout.write(
                     self.style.SUCCESS(

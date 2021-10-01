@@ -31,11 +31,11 @@ class GongAccountSerializer(serializers.ModelSerializer):
 
 
 class GongCallSerializer(serializers.ModelSerializer):
+    crm = serializers.CharField(required=False, allow_null=True)
+    crm_id = serializers.CharField(required=False, allow_null=True)
+    client_id = serializers.CharField(required=False, allow_null=True)
+    client_system = serializers.CharField(required=False, allow_null=True)
+
     class Meta:
         model = GongCall
-        fields = (
-            "id",
-            "auth_account",
-            "gong_id",
-        )
-        optional_fields = ("crm", "crm_id", "client_id", "client_system")
+        fields = ["id", "auth_account", "gong_id", "crm", "crm_id", "client_id", "client_system"]

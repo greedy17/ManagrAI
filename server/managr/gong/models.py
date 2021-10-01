@@ -288,26 +288,31 @@ class GongCallAdapter:
     def create_call(cls, call_data, auth_account_id):
         meta_data = call_data.get("metaData")
         context_data = call_data.get("context")
+        auth_account = GongAuthAccount.objects.get(id=auth_account_id)
+        opp_data = (
+            [d for d in context_data[0].get("objects") if d["objectType"] == "Opportunity"][0]
+            if len(context_data)
+            else {}
+        )
         data = {}
-        data["auth_account"] = auth_account_id
-        if len(context_data):
-            data["crm"] = context_data[0].get("system", None)
-            data["crm_id"] = context_data[0].get("objects", None)[0].get("objectId", None)
+        data["auth_account"] = auth_account.id
+        data["crm"] = context_data[0].get("system", None) if len(context_data) else None
+        data["crm_id"] = opp_data.get("objectId", None)
         data["gong_id"] = meta_data.get("id")
-        data["client_sytem"] = meta_data.get("system", None)
         data["client_id"] = meta_data.get("clientUniqueId", None)
+        data["client_system"] = meta_data.get("system", None)
         return cls(**data)
 
 
 class GongCall(TimeStampModel):
-    auth_account = models.OneToOneField(
-        "GongAuthAccount", on_delete=models.CASCADE, related_name="calls", blank=True, null=True,
+    auth_account = models.ForeignKey(
+        "GongAuthAccount", related_name="calls", on_delete=models.CASCADE, blank=True, null=True,
     )
-    crm_id = models.CharField(max_length=100, blank=True)
-    crm = models.CharField(max_length=50, blank=True)
-    gong_id = models.CharField(max_length=30, blank=True)
-    client_system = models.CharField(max_length=50, blank=True)
-    client_id = models.CharField(max_length=50, blank=True)
+    crm_id = models.CharField(max_length=100, null=True)
+    crm = models.CharField(max_length=50, null=True)
+    gong_id = models.CharField(max_length=30, null=True)
+    client_system = models.CharField(max_length=50, null=True)
+    client_id = models.CharField(max_length=50, null=True)
 
     objects = GongCallQuerySet.as_manager()
 
