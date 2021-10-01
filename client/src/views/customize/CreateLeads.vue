@@ -4,6 +4,9 @@
       <h2 style="border-bottom: 3px solid #199e54; padding-bottom: 0.5rem; color: black">
         Create <span>Leads</span>
       </h2>
+      <p style="color: #5d5e5e; margin-top: -0.5rem">
+        Map the opportunity fields you’d like to update
+      </p>
       <p style="color: #beb5cc; font-weight: bold; margin-top: -0.5rem">*Optional</p>
     </div>
     <div class="box__content--expanded">

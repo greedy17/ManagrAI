@@ -340,7 +340,7 @@ export default {
   background-color: $panther;
   border-radius: 1rem;
   color: white;
-  height: 40vh;
+  height: 60vh;
   width: 80%;
   display: flex;
   align-items: center;

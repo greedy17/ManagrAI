@@ -31,7 +31,7 @@
         <div class="card__header">
           <h3>Update <span style="color: #199e54">Forecast</span></h3>
         </div>
-        <button class="cs__button">Coming Soon</button>
+        <button @click="goToUpdateForecast" class="orange_button">Activate</button>
       </div>
     </div>
 
@@ -853,6 +853,9 @@ export default {
     },
     goToDealRotting() {
       this.$router.push({ name: 'DealRotting' })
+    },
+    goToUpdateForecast() {
+      this.$router.push({ name: 'UpdateForecast' })
     },
   },
   computed: {

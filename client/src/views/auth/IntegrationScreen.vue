@@ -4,12 +4,27 @@
     <p style="font-weight: bold; margin-top: -0.5rem; color: #5d5e5e">
       Managr utilizes a secure oAuth connection
     </p>
-    <div>
+    <div v-if="isAdmin">
       <PulseLoadingSpinnerButton
         v-if="hasSalesforceIntegration && hasSlackIntegration"
         @click="goToSlackFormBuilder"
         class="slack-button"
         text="Customize"
+        :loading="false"
+      ></PulseLoadingSpinnerButton>
+      <PulseLoadingSpinnerButton
+        v-else
+        class="disabled-button"
+        text="Customize"
+        :loading="false"
+      ></PulseLoadingSpinnerButton>
+    </div>
+    <div v-else>
+      <PulseLoadingSpinnerButton
+        v-if="hasSalesforceIntegration && hasSlackIntegration"
+        @click="goToSlackFormBuilder"
+        class="slack-button"
+        text="Activate Workflow Automations"
         :loading="false"
       ></PulseLoadingSpinnerButton>
       <PulseLoadingSpinnerButton
@@ -185,12 +200,12 @@
               @click="onRevoke('SALESLOFT')"
               style="height: 2rem; cursor: pointer"
             />
-            <img
+            <!-- <img
               src="@/assets/images/refresh.png"
               @click="onRefreshSalesloft"
               :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
               style="height: 2rem; cursor: pointer"
-            />
+            /> -->
           </div>
           <p v-else-if="hasSalesloftIntegration && !user.isAdmin">Salesloft is connected!</p>
           <p v-else>Contact your organization admin to add Salesloft</p>
@@ -527,8 +542,7 @@ export default {
 }
 
 .slack-button {
-  height: 2.75rem;
-  width: 12rem;
+  padding: 1rem;
   border-radius: 0.5rem;
   margin: 0rem 0 1rem 0;
   font-size: 1.05rem;
