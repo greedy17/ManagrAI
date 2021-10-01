@@ -291,3 +291,17 @@ def create_add_to_cadence_block_set(context):
     ]
     return blocks
 
+
+@block_set(required_context=["u"])
+def choose_opportunity_block_set(context):
+    user_id = context.get("u")
+    blocks = [
+        block_builders.external_select(
+            "Which opportunity would you like your notes for?",
+            f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={sf_consts.RESOURCE_SYNC_OPPORTUNITY}",
+            block_id="select_opp",
+            placeholder="Type to search",
+        )
+    ]
+    return blocks
+
