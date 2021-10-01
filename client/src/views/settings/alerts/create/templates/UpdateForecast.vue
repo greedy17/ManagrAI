@@ -119,9 +119,15 @@
                   </div>
 
                   <div v-if="form.field.recipientType.value == 'SLACK_CHANNEL'">
+                    <input
+                      class="search__input"
+                      type="text"
+                      v-model="searchChannels"
+                      placeholder="Search Channels..."
+                    />
                     <p>Select a #Channel:</p>
                     <div class="channels_height">
-                      <div :key="value" v-for="(key, value) in reversedChannels">
+                      <div :key="value" v-for="(key, value) in filteredChannels">
                         <input
                           @click="setRecipient(key)"
                           v-model="form.field.recipients.value"
@@ -306,6 +312,7 @@ export default {
       recurrenceDay: '',
       searchQuery: '',
       searchText: '',
+      searchChannels: '',
       SOBJECTS_LIST,
       pageNumber: 0,
       alertTemplateForm: new AlertTemplateForm(),
@@ -594,6 +601,15 @@ export default {
         })
       } else {
         return this.recipientOpts
+      }
+    },
+    filteredChannels() {
+      if (this.searchChannels) {
+        return this.reversedChannels.filter((key) => {
+          return key.name.toLowerCase().startsWith(this.searchChannels.toLowerCase())
+        })
+      } else {
+        return this.reversedChannels
       }
     },
     reversedChannels() {

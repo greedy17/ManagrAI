@@ -1183,13 +1183,13 @@ input {
 }
 .orange_button {
   width: 7rem;
-  background-color: white;
-  color: $dark-green;
+  background-color: $dark-green;
+  color: white;
   font-weight: bold;
   font-size: 16px;
   height: 2rem;
   border-radius: 0.5rem;
-  border: 2px solid white;
+  border: 2px solid $dark-green;
   cursor: pointer;
 }
 .cs__button {
