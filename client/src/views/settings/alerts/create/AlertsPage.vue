@@ -952,6 +952,7 @@ textarea {
 }
 .alerts-page {
   margin-left: 8vw;
+  margin-top: 4rem;
   &__previous-step {
     @include muted-font(12);
   }

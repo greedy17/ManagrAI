@@ -23,7 +23,7 @@
           :resourceType="resourceType"
           :form.sync="alertOperand"
         />
-        <div class="row__buttons">
+        <!-- <div class="row__buttons">
           <button
             class="remove_button"
             @click.stop="onRemoveOperand(i)"
@@ -41,7 +41,7 @@
               alt=""
             />
           </button>
-        </div>
+        </div> -->
       </div>
     </div>
   </div>
@@ -166,7 +166,6 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 2rem;
 }
 .row__buttons {
   display: flex;
@@ -179,6 +178,7 @@ export default {
 .toggle__switch {
   display: flex;
   flex-direction: row;
+  margin: 1rem;
 }
 .plus_button {
   color: $dark-green;

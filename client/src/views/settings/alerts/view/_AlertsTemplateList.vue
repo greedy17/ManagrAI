@@ -384,6 +384,7 @@ export default {
 }
 .alerts-template-list {
   margin-left: 7vw;
+  margin-top: 4rem;
   &__header {
     display: flex;
 

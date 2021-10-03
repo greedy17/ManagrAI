@@ -174,10 +174,17 @@ export default {
 @import '@/styles/mixins/utils';
 
 nav {
-  height: 4.5rem;
+  height: 4rem;
   display: flex;
   flex-flow: row;
   align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 200;
+  width: 100vw;
+  background-color: $soft-gray;
+  // box-shadow: 1px 4px 7px rgba(0, 0, 0, 0.2);
 }
 
 .logo {

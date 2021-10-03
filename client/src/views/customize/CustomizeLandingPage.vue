@@ -151,7 +151,7 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 0 2rem;
+  margin-top: 4rem;
   &__cards {
     display: flex;
     flex-wrap: wrap;

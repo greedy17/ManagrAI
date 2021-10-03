@@ -46,7 +46,7 @@ export default {
 
 ::v-deep .tn-dropdown__options__container {
   @include base-font-styles();
-  border-radius: 0.5rem;
+  border-radius: 0.25rem;
   background-color: $panther;
   border: 2px solid $panther-silver;
   color: white;
@@ -59,9 +59,14 @@ export default {
   color: $panther-silver;
 }
 
+::v-deep .tn-dropdown__options__option:hover {
+  color: white;
+  background-color: $panther;
+}
+
 ::v-deep .tn-dropdown__selection-container {
   @include base-font-styles();
-  border-radius: 0.5rem;
+  border-radius: 0.25rem;
   border: 2px solid $panther-silver;
   box-sizing: border-box;
   line-height: 1.29;
@@ -69,18 +74,21 @@ export default {
   color: $panther-silver;
   margin-right: 1rem;
   height: 3.35rem;
-  background-color: $panther;
+  background-color: $panther-silver;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.5);
   .tn-dropdown__search {
     @include input-field-white();
     border: none;
-    background-color: $panther;
+    background-color: $panther-silver;
     &:focus {
       box-shadow: 0 0 0 0;
+      background-color: $panther-silver;
+      color: white;
     }
   }
 }
 ::v-deep .tn-dropdown {
-  width: 18vw;
+  width: 12vw;
 }
 
 ::v-deep .tn-dropdown__trigger-icon {
@@ -98,10 +106,10 @@ export default {
 ::v-deep .tn-dropdown__selected-items__item-selection--muted {
   color: white;
 }
-
-::v-deep
-  .tn-dropdown__selected-items--multi.tn-dropdown__selected-items--multi--searchable.tn-dropdown__selected-items--multi--visible {
-  -webkit-transform: translateY(0);
-  transform: translateY(0);
+::v-deep .tn-dropdown__selected-items__item {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: 1rem;
 }
 </style>

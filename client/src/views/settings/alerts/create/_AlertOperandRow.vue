@@ -14,9 +14,12 @@
     </div>
 
     <div class="alert-operand-row__options">
-      <div style="margin: 0 0.3rem">
-        <p style="color: #beb5cc">Search/Select SFDC field:</p>
-        <CollectionSearch
+      <div
+        class="centered"
+        style="flex-direction: column; border-right: 2px solid #beb5cc; padding-right: 4rem"
+      >
+        <p>Select CRM Field:</p>
+        <!-- <CollectionSearch
           class="fields__height"
           :collection="objectFields"
           itemDisplayKey="referenceDisplayLabel"
@@ -39,16 +42,16 @@
               <label for="result">{{ result['referenceDisplayLabel'] }}</label>
             </div>
 
-            <!-- <div class="slack-form-builder__container">
+            <div class="slack-form-builder__container">
                 <CheckBox :checked="addedFieldIds.includes(result.id)" />
                 <div class="slack-form-builder__sf-field">
                   {{ result['referenceDisplayLabel'] }}
                 </div>
-              </div> -->
+              </div>
           </template>
-        </CollectionSearch>
+        </CollectionSearch> -->
 
-        <!-- <FormField :errors="form.field.operandIdentifier.errors">
+        <FormField :errors="form.field.operandIdentifier.errors">
           <template v-slot:input>
             <DropDownSearch
               v-if="selectedOperandType == 'FIELD'"
@@ -57,7 +60,7 @@
               v-model="form.field.operandIdentifier.value"
               displayKey="referenceDisplayLabel"
               valueKey="apiName"
-              nullDisplay="Search SFDC fields"
+              nullDisplay="Search"
               searchable
               :hasNext="!!objectFields.pagination.hasNextPage"
               @load-more="objectFieldNextPage"
@@ -65,15 +68,16 @@
               @input="form.field.operandIdentifier.validate()"
             />
           </template>
-        </FormField> -->
+        </FormField>
+        <p>{{ form.field.operandIdentifier.value }}</p>
       </div>
       <div
         v-if="!(selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME')"
-        class="alert-operand-row__operator"
-        style="margin: 0 0.3rem"
+        class="centered"
+        style="flex-direction: column; border-right: 2px solid #beb5cc; padding-right: 4rem"
       >
-        <p style="color: #beb5cc">Select an operator:</p>
-        <div :key="value" v-for="(key, value) in operatorOpts">
+        <p>Select an operator:</p>
+        <!-- <div :key="value" v-for="(key, value) in operatorOpts">
           <input
             v-model="form.field.operandOperator.value"
             id="key"
@@ -82,8 +86,8 @@
             @click="setOperator(key)"
           />
           <label for="key">{{ key.label }}</label>
-        </div>
-        <!-- <FormField :errors="form.field.operandOperator.errors">
+        </div> -->
+        <FormField :errors="form.field.operandOperator.errors">
           <template v-slot:input>
             <DropDownSearch
               :items.sync="operatorOpts"
@@ -92,17 +96,22 @@
               @input="form.field.operandOperator.validate()"
               displayKey="label"
               valueKey="value"
-              nullDisplay="Select an Operator"
+              nullDisplay="Search"
               searchable
               local
             />
           </template>
-        </FormField> -->
+        </FormField>
+        <p>{{ form.field.operandOperator.value }}</p>
       </div>
       <div class="alert-operand-row__value">
-        <div v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'">
+        <div
+          class="centered"
+          style="flex-direction: column"
+          v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'"
+        >
           <p style="color: #beb5cc">Select a value:</p>
-          <div :key="value" v-for="(key, value) in picklistOpts">
+          <!-- <div :key="value" v-for="(key, value) in picklistOpts">
             <input
               v-model="form.field.operandValue.value"
               id="key"
@@ -111,43 +120,12 @@
               @click="setOperand(key)"
             />
             <label for="key">{{ key.label }}</label>
-          </div>
-        </div>
-        <!-- <FormField :errors="form.field.operandValue.errors">
-          <template v-slot:input>
-            <DropDownSearch
-              :items.sync="picklistOpts"
-              :itemsRef.sync="form.field._operandValue.value"
-              v-model="form.field.operandValue.value"
-              displayKey="label"
-              valueKey="value"
-              nullDisplay="Select a value"
-              searchable
-              local
-            />
-          </template>
-        </FormField> -->
-        <template v-else>
-          <div v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'">
-            <p style="color: #beb5cc">Select a value:</p>
-            <div :key="value" v-for="(key, value) in valueOpts">
-              <input
-                v-model="form.field.operandValue.value"
-                id="key"
-                :value="key.value"
-                type="radio"
-                @click="setOperand(key)"
-              />
-              <label for="key">{{ key.label }}</label>
-            </div>
-          </div>
-          <!-- <FormField
-            
-            :errors="form.field.operandValue.errors"
-          >
+          </div> -->
+
+          <FormField :errors="form.field.operandValue.errors">
             <template v-slot:input>
               <DropDownSearch
-                :items.sync="valueOpts"
+                :items.sync="picklistOpts"
                 :itemsRef.sync="form.field._operandValue.value"
                 v-model="form.field.operandValue.value"
                 displayKey="label"
@@ -157,7 +135,45 @@
                 local
               />
             </template>
-          </FormField> -->
+          </FormField>
+          <p>{{ form.field.operandValue.value }}</p>
+        </div>
+
+        <template v-else>
+          <div
+            class="centered"
+            style="flex-direction: column"
+            v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'"
+          >
+            <p>Select a value:</p>
+            <!-- <div :key="value" v-for="(key, value) in valueOpts">
+              <input
+                v-model="form.field.operandValue.value"
+                id="key"
+                :value="key.value"
+                type="radio"
+                @click="setOperand(key)"
+              />
+              <label for="key">{{ key.label }}</label>
+            </div> -->
+
+            <FormField :errors="form.field.operandValue.errors">
+              <template v-slot:input>
+                <DropDownSearch
+                  :items.sync="valueOpts"
+                  :itemsRef.sync="form.field._operandValue.value"
+                  v-model="form.field.operandValue.value"
+                  displayKey="label"
+                  valueKey="value"
+                  nullDisplay="Select a value"
+                  searchable
+                  local
+                />
+              </template>
+            </FormField>
+            <p>{{ form.field.operandValue.value }}</p>
+          </div>
+
           <div v-else>
             <div v-if="selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME'">
               <div style="display: flex; align-items: center">
@@ -199,7 +215,7 @@
             </div>
 
             <div v-else>
-              <p style="color: #beb5cc">Enter value:</p>
+              <p>Enter value:</p>
               <FormField
                 @blur="form.field.operandValue.validate()"
                 :errors="form.field.operandValue.errors"
@@ -579,6 +595,7 @@ export default {
   align-items: flex-start;
   flex-wrap: wrap;
   justify-content: space-evenly;
+  margin-top: -1rem;
   &-label {
     color: black;
   }
