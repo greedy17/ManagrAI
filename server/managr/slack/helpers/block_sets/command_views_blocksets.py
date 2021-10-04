@@ -146,6 +146,17 @@ def alert_instance_block_set(context):
             style="primary",
         )
     ]
+    if instance.template.resource_type == "Opportunity":
+        action_blocks.append(
+            block_builders.simple_button_block(
+                "Get Notes",
+                "get_notes",
+                action_id=action_with_params(
+                    slack_const.GET_NOTES,
+                    params=[f"u={str(user.id)}", f"resource_id={str(instance.resource_id)}",],
+                ),
+            )
+        )
     if instance.template.resource_type != "Lead":
         action_blocks.append(
             block_builders.simple_button_block(
