@@ -1318,6 +1318,43 @@ def process_show_cadence_modal(payload, context):
         )
 
 
+@processor(required_context="u")
+def process_get_notes(payload, context):
+    u = User.objects.get(id=context.get("u"))
+    org = u.organization
+    access_token = org.slack_integration.access_token
+    resource_id = context.get("resource_id", None)
+    opportunity = Opportunity.objects.get(id=resource_id)
+    note_data = (
+        OrgCustomSlackFormInstance.objects.filter(resource_id=resource_id)
+        .filter(is_submitted=True)
+        .values_list(
+            "submission_date",
+            "saved_data__meeting_type",
+            "saved_data__meeting_comments",
+            "saved_data__StageName",
+            "previous_data__StageName",
+        )
+    )
+    note_blocks = [block_builders.header_block(f"Notes for {opportunity.name}")]
+    if note_data:
+        for note in note_data:
+            date = note[0].date()
+            current_stage = note[3]
+            previous_stage = note[4]
+            block_message = f"*{date} - {note[1]}*\n"
+            if current_stage and previous_stage:
+                if current_stage != previous_stage:
+                    block_message += f"Stage: ~{previous_stage}~ :arrow_right: {current_stage} \n"
+            block_message += f"\nNotes:\n {note[2]}"
+            note_blocks.append(block_builders.simple_section(block_message, "mrkdwn"))
+            note_blocks.append({"type": "divider"})
+    update_res = slack_requests.send_channel_message(
+        u.slack_integration.channel, access_token, block_set=note_blocks,
+    )
+    return
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -1347,6 +1384,7 @@ def handle_block_actions(payload):
         slack_const.PAGINATE_ALERTS: process_paginate_alerts,
         slack_const.ADD_TO_CADENCE_MODAL: process_show_cadence_modal,
         slack_const.GET_USER_ACCOUNTS: process_show_cadence_modal,
+        slack_const.GET_NOTES: process_get_notes,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)
