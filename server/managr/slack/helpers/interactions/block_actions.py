@@ -31,6 +31,7 @@ from managr.slack.helpers.exceptions import (
 )
 from managr.api.decorators import slack_api_exceptions
 from managr.alerts.models import AlertTemplate, AlertInstance, AlertConfig
+from managr.gong.models import GongCall
 
 logger = logging.getLogger("managr")
 
@@ -1318,7 +1319,9 @@ def process_show_cadence_modal(payload, context):
 
 
 @processor(required_context="u")
-def process_get_call_details(payload, context):
+def process_get_call_recording(payload, context):
+    call = GongCall.objects.filter(crm_id=context.get("resource_id")).first()
+    print(call)
     return
 
 
@@ -1351,7 +1354,7 @@ def handle_block_actions(payload):
         slack_const.PAGINATE_ALERTS: process_paginate_alerts,
         slack_const.ADD_TO_CADENCE_MODAL: process_show_cadence_modal,
         slack_const.GET_USER_ACCOUNTS: process_show_cadence_modal,
-        slack_const.GONG_CALL_DETAILS: process_get_call_details,
+        slack_const.GONG_CALL_RECORDING: process_get_call_recording,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)

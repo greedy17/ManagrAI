@@ -233,11 +233,6 @@
               @click="onRevoke('GONG')"
               style="height: 2rem; cursor: pointer"
             />
-            <img
-              src="@/assets/images/refresh.png"
-              :loading="generatingToken && selectedIntegration == 'GONG'"
-              style="height: 2rem; cursor: pointer"
-            />
           </div>
           <p v-else-if="hasGongIntegration && !user.isAdmin">Gong is connected!</p>
           <p v-else>Contact your organization admin to add Gong</p>

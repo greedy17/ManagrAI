@@ -265,12 +265,11 @@ def process_get_people(payload, context):
         "options": [l.as_slack_option for l in contacts.filter(email__icontains=value)[:50]],
     }
 
+
 def process_get_calls(payload, context):
     opp_id = context.get("opp_id")
     calls = GongCall.objects.filter(crm_id=opp_id)
-    return  {
-        "options": [l.slack_option for l in calls.filter()]
-    }
+    return {"options": [l.slack_option for l in calls]}
 
 
 def handle_block_suggestion(payload):
@@ -291,6 +290,7 @@ def handle_block_suggestion(payload):
         slack_const.GET_EXTERNAL_PICKLIST_OPTIONS: process_get_external_picklist_options,
         slack_const.GET_CADENCE_OPTIONS: process_get_cadences,
         slack_const.GET_PEOPLE_OPTIONS: process_get_people,
+        slack_const.GET_CALLS: process_get_calls,
     }
     action_query_string = payload["action_id"]
     processed_string = process_action_id(action_query_string)
