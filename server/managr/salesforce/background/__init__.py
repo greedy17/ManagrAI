@@ -30,7 +30,7 @@ from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers.exceptions import CannotSendToChannel
-
+from managr.slack.helpers.utils import action_with_params
 
 from ..routes import routes
 from ..models import (
@@ -1086,10 +1086,17 @@ def _send_recap(form_ids):
         )
     action_blocks = [
         block_builders.simple_button_block(
-            "Call Recording", "call_recording", action_id="call_recording", style="primary",
+            "Call Recording",
+            "call_recording",
+            action_id=action_with_params(slack_consts.CALL_ERROR, params=[f"u={str(user.id)}",]),
+            style="primary",
         ),
         block_builders.simple_button_block(
-            "Call Details", "call_details", action_id="call_details",
+            "Call Details",
+            "call_details",
+            action_id=action_with_params(
+                slack_consts.CALL_ERROR, params=[f"u={str(user.id)}", "type=call_details"]
+            ),
         ),
     ]
     blocks.append(block_builders.actions_block(action_blocks))
