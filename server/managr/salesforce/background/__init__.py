@@ -1086,9 +1086,11 @@ def _send_recap(form_ids):
         )
     action_blocks = [
         block_builders.simple_button_block(
-            "Call Recording",
-            "call_recording",
-            action_id=action_with_params(slack_consts.CALL_ERROR, params=[f"u={str(user.id)}",]),
+            "Call Insights",
+            "call_insights",
+            action_id=action_with_params(
+                slack_consts.GONG_CALL_RECORDING, params=[f"u={str(user.id)}",]
+            ),
             style="primary",
         ),
     ]

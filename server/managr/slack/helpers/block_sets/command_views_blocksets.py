@@ -163,8 +163,8 @@ def alert_instance_block_set(context):
         )
         action_blocks.append(
             block_builders.simple_button_block(
-                "Call Recording",
-                "call_recording",
+                "Call Details",
+                "call_details",
                 style="danger",
                 action_id=action_with_params(
                     slack_const.GONG_CALL_RECORDING,
