@@ -153,7 +153,11 @@ def alert_instance_block_set(context):
                 "get_notes",
                 action_id=action_with_params(
                     slack_const.GET_NOTES,
-                    params=[f"u={str(user.id)}", f"resource_id={str(instance.resource_id)}",],
+                    params=[
+                        f"u={str(user.id)}",
+                        f"resource_id={str(instance.resource_id)}",
+                        "type=alert",
+                    ],
                 ),
             )
         )

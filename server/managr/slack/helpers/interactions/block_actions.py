@@ -1321,6 +1321,7 @@ def process_show_cadence_modal(payload, context):
 @processor(required_context="u")
 def process_get_notes(payload, context):
     u = User.objects.get(id=context.get("u"))
+    type = context.get("type", None)
     org = u.organization
     access_token = org.slack_integration.access_token
     resource_id = context.get("resource_id", None)
@@ -1336,7 +1337,13 @@ def process_get_notes(payload, context):
             "previous_data__StageName",
         )
     )
-    note_blocks = [block_builders.header_block(f"Notes for {opportunity.name}")]
+    note_blocks = [
+        block_builders.header_block(f"Notes for {opportunity.name}")
+        if note_data
+        else block_builders.header_block(
+            f"No notes for {opportunity.name}, start leaving notes! :smiley:"
+        )
+    ]
     if note_data:
         for note in note_data:
             date = note[0].date()
@@ -1349,9 +1356,45 @@ def process_get_notes(payload, context):
             block_message += f"\nNotes:\n {note[2]}"
             note_blocks.append(block_builders.simple_section(block_message, "mrkdwn"))
             note_blocks.append({"type": "divider"})
-    update_res = slack_requests.send_channel_message(
-        u.slack_integration.channel, access_token, block_set=note_blocks,
-    )
+    if type == "alert":
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+        trigger_id = payload["trigger_id"]
+        data = {
+            "trigger_id": trigger_id,
+            "view": {
+                "type": "modal",
+                "callback_id": "NONE",
+                "title": {"type": "plain_text", "text": "Notes"},
+                "blocks": note_blocks,
+            },
+        }
+        slack_requests.generic_request(url, data, access_token=access_token)
+    else:
+        update_res = slack_requests.send_channel_message(
+            u.slack_integration.channel, access_token, block_set=note_blocks,
+        )
+    return
+
+
+@processor(required_context="u")
+def process_call_error(payload, context):
+    u = User.objects.get(id=context.get("u"))
+
+    org = u.organization
+    access_token = org.slack_integration.access_token
+    blocks = [block_builders.header_block(f"Call analysis still in progress ")]
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    trigger_id = payload["trigger_id"]
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": "NONE",
+            "title": {"type": "plain_text", "text": "Call Details"},
+            "blocks": blocks,
+        },
+    }
+    slack_requests.generic_request(url, data, access_token=access_token)
     return
 
 
@@ -1385,6 +1428,7 @@ def handle_block_actions(payload):
         slack_const.ADD_TO_CADENCE_MODAL: process_show_cadence_modal,
         slack_const.GET_USER_ACCOUNTS: process_show_cadence_modal,
         slack_const.GET_NOTES: process_get_notes,
+        slack_const.CALL_ERROR: process_call_error,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)

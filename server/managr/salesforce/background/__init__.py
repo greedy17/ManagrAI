@@ -1084,6 +1084,15 @@ def _send_recap(form_ids):
         blocks.insert(
             0, block_builders.header_block(f"Recap for new {main_form.template.resource}"),
         )
+    action_blocks = [
+        block_builders.simple_button_block(
+            "Call Recording", "call_recording", action_id="call_recording", style="primary",
+        ),
+        block_builders.simple_button_block(
+            "Call Details", "call_details", action_id="call_details",
+        ),
+    ]
+    blocks.append(block_builders.actions_block(action_blocks))
     blocks.append(
         block_builders.context_block(f"{main_form.template.resource} owned by {user.full_name}")
     )
