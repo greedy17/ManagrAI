@@ -961,7 +961,7 @@ def get_notes_command(request):
     user = slack.user
     access_token = user.organization.slack_integration.access_token
     trigger_id = request.data.get("trigger_id")
-    context = {"u": str(user.id), "slack_id": slack_id}
+    context = {"u": str(user.id), "slack_id": slack_id, "type": "command"}
     data = {
         "trigger_id": trigger_id,
         "view": {
