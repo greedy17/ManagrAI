@@ -1409,11 +1409,15 @@ def process_get_call_recording(payload, context):
             "Trackers:\nBudget mentioned 2 times\nProcess mentioned 3 times\nTiming mentioned 1 time"
         ),
         block_builders.simple_section(
-            "Topicss:\nPricing talked about for 5 minutes\nCompetitors talked about for 8 mintues\nSmall Talk talked about for 3 mintues\nInformation talked aobut for 15 mintues"
+            "Topics:\nPricing talked about for 5 minutes\nCompetitors talked about for 8 mintues\nSmall Talk talked about for 3 mintues\nInformation talked aobut for 15 mintues"
         ),
         block_builders.simple_section("Number of participants: 2"),
         block_builders.section_with_button_block(
-            "Recording", "get_recording_url", "Listen to call recording", url="https://www.gong.io/"
+            "Recording",
+            "get_recording_url",
+            "Listen to call recording",
+            url="https://www.gong.io/",
+            style="primary",
         ),
     ]
     modal_data = {
@@ -1498,7 +1502,7 @@ def handle_block_actions(payload):
         slack_const.GET_USER_ACCOUNTS: process_show_cadence_modal,
         slack_const.GET_NOTES: process_get_notes,
         slack_const.CALL_ERROR: process_call_error,
-        slack_const.GONG_CALL_RECORDING: process_get_call_recording
+        slack_const.GONG_CALL_RECORDING: process_get_call_recording,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)
