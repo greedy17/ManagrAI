@@ -8,36 +8,44 @@
         <div class="template__border">
           <h3 style="color: #199e54">Close Date Passed</h3>
           <p>
-            Hey <strong>{ __Recipient.full_name }</strong>, your deal
-            <strong>{ Opportunity.Name }</strong> has a passed closed date. Please update it!
+            Hey <strong style="color: #beb5cc">{ __Recipient.full_name }</strong> , your deal
+            <strong style="color: #beb5cc">{ Opportunity.Name }</strong> has a passed closed date.
+            Please update it!
           </p>
         </div>
 
         <div class="template__border">
           <h3 style="color: #199e54">New Opportunity</h3>
           <p>
-            2. <strong>{ Opportunity.Name }</strong> is a new Opp booked for this week! The
-            appointment was booked via <strong>{ Opportunity.LeadSource }</strong>!
+            2. <strong style="color: #beb5cc">{ Opportunity.Name }</strong> is a new Opp booked for
+            this week! The appointment was booked via
+            <strong style="color: #beb5cc">{ Opportunity.LeadSource }</strong>
+            !
           </p>
-          <p>Handoff notes: <strong>{ Opportunity.Handoff_Notes_c }</strong></p>
+          <p>
+            Handoff notes: <strong style="color: #beb5cc">{ Opportunity.Handoff_Notes_c }</strong>
+          </p>
           <p style="margin-top: -0.75rem">
-            Using a Competitor: <strong>{ Opportunity.Competitors_c }</strong>
+            Using a Competitor:
+            <strong style="color: #beb5cc">{ Opportunity.Competitors_c }</strong>
           </p>
           <p style="margin-top: -0.75rem">
             Meeting date:
-            <strong>{ Opportunity.Meeting_Date_c }</strong>
+            <strong style="color: #beb5cc">{ Opportunity.Meeting_Date_c }</strong>
           </p>
         </div>
 
         <div class="template__border">
           <h3 style="color: #199e54">Update Forecast</h3>
           <p>
-            3. Please update the forecast for <strong>{ Opportunity.Name }</strong>! it's expected
-            to close on <strong>{ Opportunity.CloseDate }</strong> and forecasted as
-            <strong>{ Opportunity.ForecastCategoryName }</strong> - please either move to Commit or
-            update the Close Date.
+            3. Please update the forecast for
+            <strong style="color: #beb5cc">{ Opportunity.Name }</strong>
+            ! it's expected to close on
+            <strong style="color: #beb5cc">{ Opportunity.CloseDate }</strong> and forecasted as
+            <strong style="color: #beb5cc">{ Opportunity.ForecastCategoryName }</strong> - please
+            either move to Commit or update the Close Date.
           </p>
-          <p>Next Step: <strong>{ Opportunity.NextStep }</strong></p>
+          <p>Next Step: <strong style="color: #beb5cc">{ Opportunity.NextStep }</strong></p>
         </div>
       </template>
     </Modal>
@@ -119,7 +127,7 @@
               Write a custom alert message in the message box, or copy and paste your favorite
               <span
                 @click="$refs.templateModal.openModal()"
-                style="color: #beb5cc; cursor: pointer; border-bottom: 2px solid #beb5cc"
+                style="color: #199e54; cursor: pointer; border-bottom: 2px solid #199e54"
                 >template.</span
               >
             </p>
@@ -322,18 +330,22 @@
                 </div>
                 <div
                   v-if="form.field.recipientType.value == 'SLACK_CHANNEL'"
-                  style="margin-top: 2rem"
+                  style="margin-top: 1rem"
                 >
-                  <span style="font-weight: bold; color: #beb5cc">
-                    Please make sure <span style="color: #ffff">@managr</span> has been added to
-                    <em>{{ form.field._recipients.value.name }}</em>
+                  <span style="font-weight: bold; color: #ff7649">
+                    Please make sure @managr has been added to
+                    <strong style="color: #beb5cc">{{ form.field._recipients.value.name }}</strong>
                     channel
                   </span>
-
                   <p>Select #Channel:</p>
-
+                  <input
+                    class="search__input"
+                    type="text"
+                    v-model="searchChannels"
+                    placeholder="Search Channels..."
+                  />
                   <div class="channels_height">
-                    <div :key="value" v-for="(key, value) in reversedChannels">
+                    <div :key="value" v-for="(key, value) in filteredChannels">
                       <input
                         @click="setRecipient(key)"
                         v-model="form.field.recipients.value"
@@ -523,6 +535,7 @@ export default {
       pageNumber: 0,
       searchQuery: '',
       searchText: '',
+      searchChannels: '',
       fields: CollectionManager.create({ ModelClass: SObjectField }),
       users: CollectionManager.create({ ModelClass: User }),
       recipientBindings: [
@@ -601,13 +614,6 @@ export default {
         return 'USER_LEVEL'
       }
       return value
-    },
-    setOperandDateValue(val) {
-      this.form.field.operandValue.value = val
-      this.form.field.operandOperator.value = '<='
-      if (val >= 0) {
-        this.form.field.operandOperator.value = '='
-      }
     },
     accountResource() {
       this.alertTemplateForm.field.resourceType.value = 'Account'
@@ -783,6 +789,15 @@ export default {
         return this.recipientOpts
       }
     },
+    filteredChannels() {
+      if (this.searchChannels) {
+        return this.reversedChannels.filter((key) => {
+          return key.name.toLowerCase().startsWith(this.searchChannels.toLowerCase())
+        })
+      } else {
+        return this.reversedChannels
+      }
+    },
     recipientOpts() {
       if (this.user.userLevel == 'MANAGER') {
         return [
@@ -832,7 +847,6 @@ export default {
   beforeMount() {
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
     // this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
-    console.log(this.channelOpts)
   },
 }
 </script>

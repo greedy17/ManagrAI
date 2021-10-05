@@ -10,9 +10,11 @@ from requests.exceptions import HTTPError
 from managr.utils.misc import get_site_url
 
 USERS = "users"
+CALLS_EXTENSIVE = "calls/extensive"
 USERS_SCOPE = "api:users:read"
-CALLS_SCOPE = "api:calls:read:extensive"
-GONG_SCOPES = [USERS_SCOPE, CALLS_SCOPE]
+CALLS_EXTENSIVE_SCOPE = "api:calls:read:extensive"
+CALLS_BASIC_SCOPE = "api:calls:read:basic"
+GONG_SCOPES = [USERS_SCOPE, CALLS_EXTENSIVE_SCOPE, CALLS_BASIC_SCOPE]
 SCOPES_STRING = " ".join(GONG_SCOPES)
 
 if settings.USE_GONG:

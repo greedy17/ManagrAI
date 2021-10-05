@@ -3,8 +3,8 @@
     <div>
       <h2 style="font-weight: bold; text-align: center">
         <span style="border-bottom: 3px solid #199e54; padding-bottom: 0.25rem; color: black">
-          Close date
-          <span style="">Passed</span>
+          Update
+          <span style="">Forecast</span>
         </span>
       </h2>
     </div>
@@ -44,6 +44,7 @@
                     <label for="value">{{ key.key }}</label>
                   </span>
                 </div>
+
                 <div class="bottom__middle">
                   <p style="color: #beb5cc">Step 1/4</p>
                 </div>
@@ -52,7 +53,7 @@
               <div>
                 <div v-if="pageNumber === 1">
                   <p style="font-weight: bold; color: #beb5cc">
-                    Who's Close Date's are we checking for ?
+                    Who's pipelines are we searching through ?
                     <span style="color: #ff7649; font-size: 0.9em"> *check all that apply</span>
                   </p>
 
@@ -75,7 +76,6 @@
                       <label for="value">{{ key.fullName }}</label>
                     </span>
                   </div>
-
                   <div class="bottom__middle">
                     <p style="color: #beb5cc">Step 2/4</p>
                   </div>
@@ -117,7 +117,9 @@
                       >Send to #Channel<span style="color: #ff7649"> (recommended)</span></label
                     >
                   </div>
+
                   <div v-if="form.field.recipientType.value == 'SLACK_CHANNEL'">
+                    <p>Select a #Channel:</p>
                     <div class="channels_height">
                       <div :key="value" v-for="(key, value) in reversedChannels">
                         <input
@@ -218,7 +220,7 @@
       v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
       class="visible"
     >
-      <PassedAlertGroup
+      <ForecastAlertGroup
         :form="alertGroup"
         :resourceType="alertTemplateForm.field.resourceType.value"
       />
@@ -240,7 +242,7 @@ import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 //Internal
 import FormField from '@/components/forms/FormField'
-import PassedAlertGroup from '@/views/settings/alerts/create/PassedAlertGroup'
+import ForecastAlertGroup from '@/views/settings/alerts/create/ForecastAlertGroup'
 import AlertSummary from '@/views/settings/alerts/create/_AlertSummary'
 import ListContainer from '@/components/ListContainer'
 import ListItem from '@/components/ListItem'
@@ -274,14 +276,14 @@ import {
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
-  name: 'CloseDatePassed',
+  name: 'UpdateForecast',
   components: {
     ExpandablePanel,
     DropDownSearch,
     ListContainer,
     ListItem,
     SlackMessagePreview,
-    PassedAlertGroup,
+    ForecastAlertGroup,
     SlackNotificationTemplate,
     quillEditor,
     ToggleCheckBox,
@@ -339,6 +341,10 @@ export default {
         { key: 'Friday', value: '4' },
         { key: 'Saturday', value: '5' },
         { key: 'Sunday', value: '6' },
+      ],
+      nameOptions: [
+        { key: 'Close Date Passed', value: 'Close Date Passed' },
+        { key: 'Close Date Approaching', value: 'Close Date Approaching' },
       ],
     }
   },
@@ -623,9 +629,9 @@ export default {
   },
   beforeMount() {
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
-    this.alertTemplateForm.field.title.value = 'Close Date Passed'
+    this.alertTemplateForm.field.title.value = 'Update Forecasst'
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
-      'Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has a passed close date of <strong>{ Opportunity.CloseDate }</strong>. Please update it!'
+      'Please update the forecast for <strong>{ Opportunity.Name }</strong> ! it’s expected to close on <strong>{ Opportunity.CloseDate }</strong> and forecasted as <strong>{ Opportunity.ForecastCategoryName }</strong> - please either move to Commit or update the Close Date. Next Step: <strong>{ Opportunity.NextStep }</strong>'
   },
 }
 </script>
@@ -660,6 +666,10 @@ export default {
   margin: 1rem;
   -webkit-box-shadow: 1px 4px 7px black;
   box-shadow: 1px 4px 7px black;
+}
+.channels_height {
+  height: 22vh;
+  overflow-y: scroll;
 }
 .bottom__middle {
   display: flex;
@@ -738,12 +748,14 @@ export default {
 }
 .collection {
   background-color: $panther;
-
+  margin-top: 1rem;
   padding: 1rem;
   border-radius: 0.5rem;
   height: 50vh;
   width: 34vw;
   box-shadow: 3px 4px 7px black;
+  display: flex;
+  flex-direction: column;
 }
 .bottom {
   margin-bottom: 2rem;
@@ -768,7 +780,7 @@ export default {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  margin-top: 1rem;
+  margin-top: 2rem;
 }
 input {
   cursor: pointer;
@@ -848,11 +860,8 @@ input {
   height: 50vh;
   width: 34vw;
   box-shadow: 3px 4px 7px black;
+  margin-top: 1rem;
   overflow-x: scroll;
-}
-.channels_height {
-  height: 22vh;
-  overflow-y: scroll;
 }
 .fields_title {
   background-color: $panther;

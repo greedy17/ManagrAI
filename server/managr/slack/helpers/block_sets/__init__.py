@@ -56,5 +56,6 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "zoom_recording_blockset": common_blocksets.zoom_recording_blockset,
         "cadence_modal_blockset": command_views_blocksets.create_add_to_cadence_block_set,
         "select_account": command_views_blocksets.command_select_account_interaction,
+        "choose_opportunity": command_views_blocksets.choose_opportunity_block_set,
     }
     return switcher.get(set_name)(context, *args, **kwargs)

@@ -69,6 +69,34 @@
       </div>
       <div class="alerts-page__settings__recipients">
         <p style="color: #ff7649">Recipients:</p>
+        <div class="alerts-page__settings__recipient-type">
+          <div
+            class="row__"
+            style="
+              margin-bottom: 0.75rem;
+              margin-top: 2rem;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            "
+          >
+            <label>DM users</label>
+            <ToggleCheckBox
+              style="margin: 0.25rem"
+              @input="
+                form.field.recipientType.value == 'USER_LEVEL'
+                  ? (form.field.recipientType.value = recipientTypeToggle(
+                      form.field.recipientType.value,
+                    ))
+                  : (form.field.recipientType.value = recipientTypeToggle('SLACK_CHANNEL'))
+              "
+              :value="form.field.recipientType.value !== 'USER_LEVEL'"
+              offColor="#199e54"
+              onColor="#199e54"
+            />
+            <label>Send to #Channel<span style="color: #ff7649"> *recommended</span></label>
+          </div>
+        </div>
         <span
           v-if="form.field._recipients.value && form.field.recipientType.value == 'SLACK_CHANNEL'"
           class="muted--link--important"
@@ -97,8 +125,15 @@
           </div>
         </div>
 
+        <input
+          class="search__input"
+          type="text"
+          v-model="searchChannels"
+          placeholder="Search Channels..."
+          v-if="form.field.recipientType.value == 'SLACK_CHANNEL'"
+        />
         <div v-if="form.field.recipientType.value == 'SLACK_CHANNEL'" class="channels_height">
-          <div :key="value" v-for="(key, value) in reversedChannels">
+          <div :key="value" v-for="(key, value) in filteredChannels">
             <input
               @click="setRecipient(key)"
               v-model="form.field.recipients.value"
@@ -143,34 +178,14 @@
         </FormField> -->
       </div>
     </div>
-    <div class="alerts-page__settings__recipient-type">
-      <div
-        class="row__"
-        style="
-          margin-bottom: 0.75rem;
-          margin-top: 2rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        "
-      >
-        <label>DM users</label>
-        <ToggleCheckBox
-          style="margin: 0.25rem"
-          @input="
-            form.field.recipientType.value == 'USER_LEVEL'
-              ? (form.field.recipientType.value = recipientTypeToggle(
-                  form.field.recipientType.value,
-                ))
-              : (form.field.recipientType.value = recipientTypeToggle('SLACK_CHANNEL'))
-          "
-          :value="form.field.recipientType.value !== 'USER_LEVEL'"
-          offColor="#199e54"
-          onColor="#199e54"
-        />
-        <label>Send to #Channel<span style="color: #ff7649"> *recommended</span></label>
-      </div>
-    </div>
+
+    <PulseLoadingSpinnerButton
+      text="save"
+      @click="onSave"
+      class="btn btn--primary"
+      :loading="isSaving"
+      :disabled="!form.isValid"
+    />
   </div>
 </template>
 
@@ -219,6 +234,7 @@ export default {
       channelOpts: new SlackListResponse(),
       searchQuery: '',
       searchText: '',
+      searchChannels: '',
       users: CollectionManager.create({ ModelClass: User }),
       alertRecipientOpts: [
         { key: 'Myself', value: 'SELF' },
@@ -362,6 +378,15 @@ export default {
         })
       } else {
         return this.recipientOpts
+      }
+    },
+    filteredChannels() {
+      if (this.searchChannels) {
+        return this.reversedChannels.filter((key) => {
+          return key.name.toLowerCase().startsWith(this.searchChannels.toLowerCase())
+        })
+      } else {
+        return this.reversedChannels
       }
     },
     reversedChannels() {

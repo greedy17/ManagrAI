@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
-from .models import GongAuthAccount, GongAccount
+from .models import GongAuthAccount, GongAccount, GongCall
 
 
 class GongAuthSerializer(serializers.ModelSerializer):
@@ -28,3 +28,23 @@ class GongAccountSerializer(serializers.ModelSerializer):
             "is_active",
             "email",
         )
+
+
+class GongCallSerializer(serializers.ModelSerializer):
+    crm = serializers.CharField(required=False, allow_null=True)
+    crm_id = serializers.CharField(required=False, allow_null=True)
+    client_id = serializers.CharField(required=False, allow_null=True)
+    client_system = serializers.CharField(required=False, allow_null=True)
+
+    class Meta:
+        model = GongCall
+        fields = [
+            "id",
+            "auth_account",
+            "gong_id",
+            "crm",
+            "crm_id",
+            "client_id",
+            "client_system",
+            "scheduled_date",
+        ]

@@ -399,16 +399,16 @@ export default {
     }
   },
   mounted() {
-    console.log(this.form.field.operandOrder.value)
-
     if (this.form.field.operandOrder.value === 1) {
       this.form.field.operandIdentifier.value = 'CloseDate'
-      this.form.field.operandOperator.value = '>='
-      this.form.field.operandValue.value = 1
+      this.form.field.operandOperator.value = '<='
+      this.form.field._operandOperator.value = { label: '<= (Less or Equal)', value: '<=' }
+      this.form.field.operandValue.value = 7
     } else if (this.form.field.operandOrder.value === 0) {
       this.form.field.operandIdentifier.value = 'CloseDate'
-      this.form.field.operandOperator.value = '<='
-      this.form.field.operandValue.value = 7
+      this.form.field.operandOperator.value = '>'
+      this.form.field._operandOperator.value = { label: '> (Greater)', value: '>' }
+      this.form.field.operandValue.value = -1
     }
   },
 }
