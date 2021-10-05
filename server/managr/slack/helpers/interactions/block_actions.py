@@ -1320,8 +1320,65 @@ def process_show_cadence_modal(payload, context):
 
 @processor(required_context="u")
 def process_get_call_recording(payload, context):
-    call = GongCall.objects.filter(crm_id=context.get("resource_id")).first()
-    print(call)
+    trigger_id = payload["trigger_id"]
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    user = User.objects.get(id=context.get("u"))
+    access_token = user.organization.slack_integration.access_token
+    opp = Opportunity.objects.get(id=context.get("resource_id"))
+    call = GongCall.objects.filter(crm_id=opp.secondary_data["Id"]).first()
+    call_res = call.helper_class.get_call_details(call.auth_account.access_token)
+    call_data = call_res["calls"][0]
+    content_data = call_data.get("content", None)
+    media_data = call_data.get("media", None)
+    trackers = content_data["trackers"]
+    topics = content_data["topics"]
+    trackers_string = "Trackers:\n"
+    topics_string = "Topics:\n"
+    modal_url = media_data["audioUrl"]
+    for tracker in trackers:
+        if tracker["count"] > 0:
+            trackers_string += f"{tracker['name']} mentioned {tracker['count']} times\n"
+    for topic in topics:
+        if topic["duration"] > 0:
+            if topic["duration"] > 60:
+                dur = topic["duration"] // 60
+                topics_string += f"{topic['name']} talked about for {dur} minutes\n"
+            else:
+                topics_string += f"{topic['name']} talked about for {topic['duration']} seconds\n"
+    blocks = [
+        block_builders.simple_section(trackers_string),
+        block_builders.simple_section(topics_string),
+        block_builders.simple_section(f"Number of participants: {len(call_data.get('parties'))}"),
+        block_builders.section_with_button_block(
+            "Recording", "get_recording_url", "Listen to call recording", url=modal_url,
+        ),
+    ]
+    modal_data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Call Details"},
+            "blocks": blocks,
+        },
+    }
+    try:
+        res = slack_requests.generic_request(url, modal_data, access_token=access_token)
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
     return
 
 

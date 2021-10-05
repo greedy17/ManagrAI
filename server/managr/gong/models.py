@@ -285,6 +285,31 @@ class GongCallAdapter:
     def as_dict(self):
         return vars(self)
 
+    @staticmethod
+    def _handle_response(response, fn_name=None):
+        if not hasattr(response, "status_code"):
+            raise ValueError
+        elif response.status_code == 200:
+            try:
+                data = response.json()
+            except Exception as e:
+                GongAPIException(e, fn_name)
+            except json.decoder.JSONDecodeError as e:
+                return logger.error(f"An error occured with a zoom integration, {e}")
+        else:
+            status_code = response.status_code
+            error_data = response.json()
+            logger.info(f"{error_data}")
+            error_check = error_data.get("error_param", None)
+            error_param = error_check if error_check else error_data.get("errors")
+            kwargs = {
+                "status_code": status_code,
+                "error_param": error_param,
+            }
+
+            GongAPIException(HTTPError(kwargs), fn_name)
+        return data
+
     @classmethod
     def create_call(cls, call_data, auth_account_id):
         meta_data = call_data.get("metaData")
@@ -305,6 +330,42 @@ class GongCallAdapter:
         data["client_system"] = meta_data.get("system", None)
         data["scheduled_date"] = schedule_date
         return cls(**data)
+
+    def get_call_details(self, access_token):
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json",
+        }
+        body = {
+            "filter": {"callIds": [self.gong_id],},
+            "contentSelector": {
+                "context": "Extended",
+                "contextTiming": ["Now"],
+                "exposedFields": {
+                    "collaboration": {"publicComments": True},
+                    "content": {
+                        "pointsOfInterest": True,
+                        "structure": True,
+                        "topics": True,
+                        "trackers": True,
+                    },
+                    "interaction": {
+                        "personInteractionStats": True,
+                        "questions": True,
+                        "speakers": True,
+                        "video": True,
+                    },
+                    "media": True,
+                    "parties": True,
+                },
+            },
+        }
+        res = client.post(
+            f"{gong_consts.GONG_BASE_URI}/{gong_consts.CALLS_EXTENSIVE}",
+            json.dumps(body),
+            headers=headers,
+        )
+        return GongCallAdapter._handle_response(res)
 
 
 class GongCall(TimeStampModel):
