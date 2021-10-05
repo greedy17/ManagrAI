@@ -161,12 +161,22 @@ def alert_instance_block_set(context):
                 ),
             )
         )
+        action_blocks.append(
+            block_builders.simple_button_block(
+                "Call Recording",
+                "call_recording",
+                style="danger",
+                action_id=action_with_params(
+                    slack_const.GONG_CALL_RECORDING,
+                    params=[f"u={str(user.id)}", f"resource_id={str(instance.resource_id)}",],
+                ),
+            )
+        )
     if instance.template.resource_type != "Lead":
         action_blocks.append(
             block_builders.simple_button_block(
                 "Add to Cadence",
                 "add_to_cadence",
-                style="danger",
                 action_id=action_with_params(
                     slack_const.ADD_TO_CADENCE_MODAL,
                     params=[
