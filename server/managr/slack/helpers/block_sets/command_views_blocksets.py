@@ -136,7 +136,15 @@ def alert_instance_block_set(context):
     if config and config.recipient_type == "SLACK_CHANNEL":
         in_channel = True
     blocks = [
-        block_builders.simple_section(instance.render_text(), text_type="mrkdwn"),
+        block_builders.section_with_button_block(
+            "Mark As Complete",
+            "mark_complete",
+            instance.render_text(),
+            text_type="mrkdwn",
+            block_id=f"{instance.id}_text",
+            action_id=f"{slack_const.MARK_COMPLETE}?u={user.id}",
+            style="danger",
+        ),
     ]
     action_blocks = [
         block_builders.simple_button_block(
@@ -188,7 +196,7 @@ def alert_instance_block_set(context):
                 ),
             )
         )
-    blocks.append(block_builders.actions_block(action_blocks))
+    blocks.append(block_builders.actions_block(action_blocks, f"{instance.id}_buttons"))
     if in_channel or (user.id != resource_owner.id):
         blocks.append(
             block_builders.context_block(
