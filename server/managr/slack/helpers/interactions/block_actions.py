@@ -15,7 +15,13 @@ from managr.zoom.models import ZoomMeeting
 from managr.slack import constants as slack_const
 from managr.opportunity import constants as opp_consts
 from managr.slack.helpers import requests as slack_requests
-from managr.slack.helpers.utils import process_action_id, NO_OP, processor, block_finder
+from managr.slack.helpers.utils import (
+    process_action_id,
+    NO_OP,
+    processor,
+    block_finder,
+    process_done_alert,
+)
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
 from managr.slack.models import OrgCustomSlackFormInstance, UserSlackIntegration
@@ -743,11 +749,9 @@ def process_show_update_resource_form(payload, context):
             block_builders.simple_section("Please re-select your salesforce resource to update")
         )
         show_submit_button_if_fields_added = False
-
     private_metadata = {
         "channel_id": payload.get("container").get("channel_id"),
     }
-
     private_metadata.update(context)
     data = {
         "trigger_id": payload["trigger_id"],
@@ -1471,6 +1475,38 @@ def process_call_error(payload, context):
     return
 
 
+@processor(required_context="u")
+def process_mark_complete(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    access_token = user.organization.slack_integration.access_token
+    action = payload.get("actions")[0]
+    updated_blocks = process_done_alert(action["block_id"], payload.get("message").get("blocks"))
+    try:
+        res = slack_requests.update_channel_message(
+            payload["channel"]["id"],
+            payload["message"]["ts"],
+            access_token,
+            block_set=updated_blocks,
+        )
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    return
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -1503,6 +1539,7 @@ def handle_block_actions(payload):
         slack_const.GET_NOTES: process_get_notes,
         slack_const.CALL_ERROR: process_call_error,
         slack_const.GONG_CALL_RECORDING: process_get_call_recording,
+        slack_const.MARK_COMPLETE: process_mark_complete,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)
