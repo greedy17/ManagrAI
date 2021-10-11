@@ -28,6 +28,7 @@ from managr.slack import constants as slack_consts
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import block_builders
+from managr.slack.helpers.utils import action_with_params
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers.exceptions import CannotSendToChannel
 from managr.slack.helpers.utils import action_with_params
@@ -1089,7 +1090,8 @@ def _send_recap(form_ids):
             "Call Details",
             "call_details",
             action_id=action_with_params(
-                slack_consts.GONG_CALL_RECORDING, params=[f"u={str(user.id)}",]
+                slack_consts.GONG_CALL_RECORDING,
+                params=[f"u={str(user.id)}", f"resource_id={main_form.resource_id}", "type=recap"],
             ),
             style="primary",
         ),

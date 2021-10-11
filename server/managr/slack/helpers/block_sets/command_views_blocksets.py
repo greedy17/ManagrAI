@@ -195,7 +195,7 @@ def alert_instance_block_set(context):
                 ),
             )
         )
-    blocks.append(block_builders.actions_block(action_blocks, f"{instance.id}_buttons"))
+    blocks.append(block_builders.actions_block(action_blocks))
     if in_channel or (user.id != resource_owner.id):
         blocks.append(
             block_builders.context_block(
