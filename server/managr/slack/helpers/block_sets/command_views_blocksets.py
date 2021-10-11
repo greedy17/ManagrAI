@@ -175,7 +175,11 @@ def alert_instance_block_set(context):
                 "call_details",
                 action_id=action_with_params(
                     slack_const.GONG_CALL_RECORDING,
-                    params=[f"u={str(user.id)}", f"resource_id={str(instance.resource_id)}",],
+                    params=[
+                        f"u={str(user.id)}",
+                        f"resource_id={str(instance.resource_id)}",
+                        "type=alert",
+                    ],
                 ),
             )
         )
@@ -195,7 +199,7 @@ def alert_instance_block_set(context):
                 ),
             )
         )
-    blocks.append(block_builders.actions_block(action_blocks, f"{instance.id}_buttons"))
+    blocks.append(block_builders.actions_block(action_blocks))
     if in_channel or (user.id != resource_owner.id):
         blocks.append(
             block_builders.context_block(

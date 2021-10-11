@@ -202,7 +202,6 @@
             />
             <!-- <img
               src="@/assets/images/refresh.png"
-              @click="onRefreshSalesloft"
               :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
               style="height: 2rem; cursor: pointer"
             /> -->
@@ -214,12 +213,29 @@
 
       <div class="card">
         <div class="card__header">
-          <img style="height: 3rem" src="@/assets/images/gong.png" />
-          <h2 class="card__title">Gong</h2>
+          <img style="height: 2rem" src="@/assets/images/gong.png" />
         </div>
         <p class="card-text">Access call recordings and insights</p>
         <div class="card__body">
-          <p style="color: #beb5cc">Coming Soon</p>
+          <PulseLoadingSpinnerButton
+            v-if="!hasGongIntegration && user.isAdmin"
+            :disabled="hasGongIntegration"
+            @click="onGetAuthLink('GONG')"
+            style="margin-left: 1rem; cursor: pointer"
+            class="orange_button"
+            text="Connect"
+            :loading="generatingToken && selectedIntegration == 'GONG'"
+          ></PulseLoadingSpinnerButton>
+          <div v-else-if="hasGongIntegration && user.isAdmin">
+            <img
+              src="@/assets/images/unplug.png"
+              :loading="generatingToken && selectedIntegration == 'GONG'"
+              @click="onRevoke('GONG')"
+              style="height: 2rem; cursor: pointer"
+            />
+          </div>
+          <p v-else-if="hasGongIntegration && !user.isAdmin">Gong is connected!</p>
+          <p v-else>Contact your organization admin to add Gong</p>
         </div>
       </div>
 
@@ -279,6 +295,7 @@ import ZoomAccount from '@/services/zoom/account/'
 import Nylas from '@/services/nylas'
 import Salesforce from '@/services/salesforce'
 import SalesloftAccount from '@/services/salesloft'
+import GongAccount from '@/services/gong'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import GoogleButton from '@/components/GoogleButton'
 
@@ -423,6 +440,9 @@ export default {
     hasZoomIntegration() {
       return !!this.$store.state.user.zoomAccount && this.$store.state.user.hasZoomIntegration
     },
+    hasGongIntegration() {
+      return !!this.$store.state.user.gongAccount && this.$store.state.user.hasGongIntegration
+    },
     hasSalesloftIntegration() {
       return (
         !!this.$store.state.user.salesloftAccount && this.$store.state.user.hasSalesloftIntegration
@@ -453,6 +473,8 @@ export default {
           return SlackOAuth
         case 'SALESLOFT':
           return SalesloftAccount
+        case 'GONG':
+          return GongAccount
         default:
           return null
       }

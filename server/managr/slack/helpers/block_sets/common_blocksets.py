@@ -20,6 +20,7 @@ from managr.slack.helpers import block_builders
 from managr.utils.misc import snake_to_space
 from managr.salesforce.routes import routes as form_routes
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
+from managr.gong.models import GongCall
 from managr.salesforce.adapter.exceptions import (
     TokenExpired,
     FieldValidationError,
