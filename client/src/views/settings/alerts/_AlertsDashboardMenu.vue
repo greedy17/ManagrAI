@@ -25,7 +25,7 @@
       <router-link exact-active-class="active" :to="{ name: 'ListTemplates' }">
         <div class="row">
           <img src="@/assets/images/edit.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
-          <h3>Run/Activate</h3>
+          <h3>Saved Alerts</h3>
         </div>
       </router-link>
 

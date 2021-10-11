@@ -183,7 +183,7 @@ variable "scheduled_tasks" {
     {
       name       = "syncsalesloftaccounts"
       command    = "initsalesloftsync"
-      cron       = "cron(*/10 * * * ? *)"
+      cron       = "cron(0 * * * ? *)"
       task_count = 1
     },
   ]

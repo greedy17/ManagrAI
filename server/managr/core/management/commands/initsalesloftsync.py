@@ -22,9 +22,7 @@ class Command(BaseCommand):
                         self.style.ERROR("User does not have an sl account {}".format(user.email,))
                     )
                 auth_id = str(user.salesloft_account.auth_account.id)
-                emit_sync_slaccounts(auth_id)
-                emit_sync_people(auth_id)
-                emit_sync_cadences(auth_id)
+                queue_account_sl_syncs(auth_id)
                 self.stdout.write(
                     self.style.SUCCESS(
                         "Successfully initiated the sync for the user {}".format(user.email,)
