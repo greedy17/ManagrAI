@@ -173,7 +173,6 @@ def alert_instance_block_set(context):
             block_builders.simple_button_block(
                 "Call Details",
                 "call_details",
-                style="danger",
                 action_id=action_with_params(
                     slack_const.GONG_CALL_RECORDING,
                     params=[f"u={str(user.id)}", f"resource_id={str(instance.resource_id)}",],
