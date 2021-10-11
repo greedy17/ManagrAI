@@ -6,6 +6,7 @@ from urllib.parse import urlencode
 
 from django.db.models import Q
 from django.utils import timezone
+from datetime import datetime, date
 
 from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_paginator_block
@@ -21,6 +22,7 @@ from managr.slack.helpers.utils import (
     processor,
     block_finder,
     process_done_alert,
+    generate_call_block,
 )
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
@@ -37,7 +39,8 @@ from managr.slack.helpers.exceptions import (
 )
 from managr.api.decorators import slack_api_exceptions
 from managr.alerts.models import AlertTemplate, AlertInstance, AlertConfig
-from managr.gong.models import GongCall
+from managr.gong.models import GongCall, GongAuthAccount
+from managr.gong.exceptions import InvalidRequest
 
 logger = logging.getLogger("managr")
 
@@ -1385,50 +1388,32 @@ def process_get_call_recording(payload, context):
     trigger_id = payload["trigger_id"]
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     user = User.objects.get(id=context.get("u"))
+    gong_auth = GongAuthAccount.objects.get(organization=user.organization)
     access_token = user.organization.slack_integration.access_token
     opp = Opportunity.objects.get(id=context.get("resource_id"))
-    call = GongCall.objects.filter(crm_id=opp.secondary_data["Id"]).first()
+    type = context.get("type", None)
     blocks = []
-    if call:
-        call_res = call.helper_class.get_call_details(call.auth_account.access_token)
-        call_data = call_res["calls"][0]
-        content_data = call_data.get("content", None)
-        media_data = call_data.get("media", None)
-        trackers = content_data["trackers"]
-        topics = content_data["topics"]
-        trackers_string = "Trackers:\n"
-        topics_string = "Topics:\n"
-        modal_url = media_data["audioUrl"]
-        for tracker in trackers:
-            if tracker["count"] > 0:
-                trackers_string += f"{tracker['name']} mentioned {tracker['count']} times\n"
-        for topic in topics:
-            if topic["duration"] > 0:
-                if topic["duration"] > 60:
-                    dur = topic["duration"] // 60
-                    topics_string += f"{topic['name']} talked about for {dur} minutes\n"
-                else:
-                    topics_string += (
-                        f"{topic['name']} talked about for {topic['duration']} seconds\n"
-                    )
-        blocks.append(block_builders.simple_section(trackers_string))
-        blocks.append(block_builders.simple_section(topics_string))
-        blocks.append(
-            block_builders.simple_section(
-                f"Number of participants: {len(call_data.get('parties'))}"
+    if type == "recap":
+        curr_date = date.today()
+        curr_date_str = curr_date.isoformat() + "T01:00:00Z"
+        try:
+            call_res = gong_auth.helper_class.check_for_current_call(curr_date_str)
+            call_details = generate_call_block(call_res)
+            blocks = [*call_details]
+        except InvalidRequest as e:
+            blocks.append(
+                block_builders.simple_section(
+                    "Sorry this call is not done processing, try again in a bit!"
+                )
             )
-        )
-        blocks.append(
-            block_builders.section_with_button_block(
-                "Recording",
-                "get_recording_url",
-                "Listen to call recording",
-                url=modal_url,
-                style="primary",
-            )
-        )
     else:
-        blocks.append(block_builders.simple_section("No call associated with this opportunity"))
+        call = GongCall.objects.filter(crm_id=opp.secondary_data["Id"]).first()
+        if call:
+            call_res = call.helper_class.get_call_details(call.auth_account.access_token)
+            call_details = generate_call_block(call_res)
+            blocks = [*call_details]
+        else:
+            blocks.append(block_builders.simple_section("No call associated with this opportunity"))
     modal_data = {
         "trigger_id": trigger_id,
         "view": {

@@ -33,6 +33,8 @@ class GongAPIException:
         if self.status_code == 422:
             logger.error(f"Gong API error: {self.error}")
             raise InvalidRequest()
+        if self.status_code == 404:
+            raise InvalidRequest()
         elif self.status_code == 403 or self.status_code == 401:
             raise TokenExpired()
         else:

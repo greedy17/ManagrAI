@@ -175,7 +175,11 @@ def alert_instance_block_set(context):
                 "call_details",
                 action_id=action_with_params(
                     slack_const.GONG_CALL_RECORDING,
-                    params=[f"u={str(user.id)}", f"resource_id={str(instance.resource_id)}",],
+                    params=[
+                        f"u={str(user.id)}",
+                        f"resource_id={str(instance.resource_id)}",
+                        "type=alert",
+                    ],
                 ),
             )
         )

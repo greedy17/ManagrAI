@@ -135,6 +135,41 @@ class GongAuthAdapter:
         )
         return GongAuthAdapter._handle_response(res)
 
+    def check_for_current_call(self, date):
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json",
+        }
+        body = {
+            "filter": {"fromDateTime": date},
+            "contentSelector": {
+                "context": "Extended",
+                "exposedFields": {
+                    "collaboration": {"publicComments": True},
+                    "content": {
+                        "pointsOfInterest": True,
+                        "structure": True,
+                        "topics": True,
+                        "trackers": True,
+                    },
+                    "interaction": {
+                        "personInteractionStats": True,
+                        "questions": True,
+                        "speakers": True,
+                        "video": True,
+                    },
+                    "media": True,
+                    "parties": True,
+                },
+            },
+        }
+        res = client.post(
+            f"{gong_consts.GONG_BASE_URI}/{gong_consts.CALLS_EXTENSIVE}",
+            json.dumps(body),
+            headers=headers,
+        )
+        return GongAuthAdapter._handle_response(res)
+
     def refresh(self):
         query = gong_consts.REAUTHENTICATION_QUERY_PARAMS(self.refresh_token)
         query = urlencode(query)
