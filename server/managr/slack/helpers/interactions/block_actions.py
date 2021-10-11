@@ -1326,33 +1326,47 @@ def process_get_call_recording(payload, context):
     access_token = user.organization.slack_integration.access_token
     opp = Opportunity.objects.get(id=context.get("resource_id"))
     call = GongCall.objects.filter(crm_id=opp.secondary_data["Id"]).first()
-    call_res = call.helper_class.get_call_details(call.auth_account.access_token)
-    call_data = call_res["calls"][0]
-    content_data = call_data.get("content", None)
-    media_data = call_data.get("media", None)
-    trackers = content_data["trackers"]
-    topics = content_data["topics"]
-    trackers_string = "Trackers:\n"
-    topics_string = "Topics:\n"
-    modal_url = media_data["audioUrl"]
-    for tracker in trackers:
-        if tracker["count"] > 0:
-            trackers_string += f"{tracker['name']} mentioned {tracker['count']} times\n"
-    for topic in topics:
-        if topic["duration"] > 0:
-            if topic["duration"] > 60:
-                dur = topic["duration"] // 60
-                topics_string += f"{topic['name']} talked about for {dur} minutes\n"
-            else:
-                topics_string += f"{topic['name']} talked about for {topic['duration']} seconds\n"
-    blocks = [
-        block_builders.simple_section(trackers_string),
-        block_builders.simple_section(topics_string),
-        block_builders.simple_section(f"Number of participants: {len(call_data.get('parties'))}"),
-        block_builders.section_with_button_block(
-            "Recording", "get_recording_url", "Listen to call recording", url=modal_url,
-        ),
-    ]
+    blocks = []
+    if call:
+        call_res = call.helper_class.get_call_details(call.auth_account.access_token)
+        call_data = call_res["calls"][0]
+        content_data = call_data.get("content", None)
+        media_data = call_data.get("media", None)
+        trackers = content_data["trackers"]
+        topics = content_data["topics"]
+        trackers_string = "Trackers:\n"
+        topics_string = "Topics:\n"
+        modal_url = media_data["audioUrl"]
+        for tracker in trackers:
+            if tracker["count"] > 0:
+                trackers_string += f"{tracker['name']} mentioned {tracker['count']} times\n"
+        for topic in topics:
+            if topic["duration"] > 0:
+                if topic["duration"] > 60:
+                    dur = topic["duration"] // 60
+                    topics_string += f"{topic['name']} talked about for {dur} minutes\n"
+                else:
+                    topics_string += (
+                        f"{topic['name']} talked about for {topic['duration']} seconds\n"
+                    )
+        blocks.append(block_builders.simple_section(trackers_string))
+        blocks.append(block_builders.simple_section(topics_string))
+        blocks.append(
+            block_builders.simple_section(
+                f"Number of participants: {len(call_data.get('parties'))}"
+            )
+        )
+        blocks.append(
+            block_builders.section_with_button_block(
+                "Recording",
+                "get_recording_url",
+                "Listen to call recording",
+                url=modal_url,
+                style="primary",
+            )
+        )
+    else:
+        blocks.append(block_builders.simple_section("No call associated with this opportunity"))
     modal_data = {
         "trigger_id": trigger_id,
         "view": {
