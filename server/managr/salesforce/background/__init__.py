@@ -1084,6 +1084,16 @@ def _send_recap(form_ids):
         blocks.insert(
             0, block_builders.header_block(f"Recap for new {main_form.template.resource}"),
         )
+    action_blocks = [
+        block_builders.simple_button_block(
+            "Call Details",
+            "call_details",
+            action_id=action_with_params(
+                slack_consts.GONG_CALL_RECORDING, params=[f"u={str(user.id)}",]
+            ),
+            style="primary",
+        ),
+    ]
     blocks.append(
         block_builders.context_block(f"{main_form.template.resource} owned by {user.full_name}")
     )
