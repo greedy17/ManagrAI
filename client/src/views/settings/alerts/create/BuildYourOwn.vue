@@ -806,12 +806,10 @@ export default {
         return 'USER_LEVEL'
       }
       if (value == 'USER_LEVEL') {
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = ''
-        this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = {}
         return 'SLACK_CHANNEL'
       } else if (value == 'SLACK_CHANNEL') {
         this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = []
-        this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = {}
+        this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = []
         return 'USER_LEVEL'
       }
       return value

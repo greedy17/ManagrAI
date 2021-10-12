@@ -236,7 +236,7 @@
                   />
                 </template>
               </FormField>
-              <div class="recipients_height">
+              <div class="items_height">
                 <p
                   :key="i"
                   v-for="(item, i) in form.field.recipients.value"
@@ -497,6 +497,8 @@ export default {
       if (value == 'USER_LEVEL') {
         return 'SLACK_CHANNEL'
       } else if (value == 'SLACK_CHANNEL') {
+        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = []
+        this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = []
         return 'USER_LEVEL'
       }
       return value
@@ -835,10 +837,9 @@ export default {
 .collection {
   background-color: $panther;
   margin-top: 1rem;
-  padding: 1rem;
+  padding: 2rem;
   border-radius: 0.5rem;
-  height: 50vh;
-  width: 34vw;
+  width: 60vw;
   box-shadow: 3px 4px 7px black;
   display: flex;
   flex-direction: column;
