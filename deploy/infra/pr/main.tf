@@ -125,7 +125,7 @@ data "template_file" "managr_app" {
     use_slack      = title(var.app_config.use_slack)
     use_salesforce = title(var.app_config.use_salesforce)
     use_salesloft  = title(var.app_config.use_salesloft)
-    use_gong       = title(each.value.env.use_gong)
+    use_gong       = title(var.app_config.use_gong)
   }
 }
 
