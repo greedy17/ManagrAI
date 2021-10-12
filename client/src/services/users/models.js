@@ -39,6 +39,9 @@ export default class User extends Model {
   static timezone = new fields.CharField()
   static salesloftAccount = new fields.Field()
   static hasSalesloftIntegration = new fields.Field({ readOnly: true })
+  static gongAccount = new fields.Field()
+  static hasGongIntegration = new fields.Field({ readOnly: true })
+
 
   static fromAPI(json = {}) {
     return new User(objectToCamelCase(json))

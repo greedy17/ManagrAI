@@ -37,16 +37,16 @@ from ..helpers.class_functions import (
 logger = logging.getLogger("managr")
 
 
-def emit_sync_cadences(auth_account_id):
-    return sync_cadences(auth_account_id)
+def emit_sync_cadences(auth_account_id, verbose_name):
+    return sync_cadences(auth_account_id, verbose_name=verbose_name)
 
 
-def emit_sync_slaccounts(auth_account_id):
-    return sync_slaccounts(auth_account_id)
+def emit_sync_slaccounts(auth_account_id, verbose_name):
+    return sync_slaccounts(auth_account_id, verbose_name=verbose_name)
 
 
-def emit_sync_people(auth_account_id):
-    return sync_people(auth_account_id)
+def emit_sync_people(auth_account_id, verbose_name):
+    return sync_people(auth_account_id, verbose_name=verbose_name)
 
 
 def emit_add_cadence_membership(people_id, cadence_id):

@@ -228,3 +228,55 @@ class processor:
             return f(payload, context, *args, **kwargs)
 
         return wrapped_f
+
+
+def process_done_alert(block_id, blocks):
+    found_block = block_finder(block_id, blocks)
+    block_index = found_block[0]
+    old_text = found_block[1].get("text").get("text").split("\n")
+    old_text.pop()
+    new_text = []
+    for idx in old_text:
+        new_text.append("~" + idx + "~")
+    new_text = "\n".join(new_text)
+    updated_blocks = blocks
+    updated_blocks[int(block_index)] = block_builders.simple_section(new_text, text_type="mrkdwn")
+    return updated_blocks
+
+
+def generate_call_block(call_res):
+    blocks = []
+    call_data = call_res["calls"][0]
+    content_data = call_data.get("content", None)
+    media_data = call_data.get("media", None)
+    trackers = content_data["trackers"]
+    topics = content_data["topics"]
+    trackers_string = "Trackers:\n"
+    topics_string = "Topics:\n"
+    modal_url = media_data["audioUrl"]
+    for tracker in trackers:
+        if tracker["count"] > 0:
+            trackers_string += f"{tracker['name']} mentioned {tracker['count']} times\n"
+    for topic in topics:
+        if topic["duration"] > 0:
+            if topic["duration"] > 60:
+                dur = topic["duration"] // 60
+                topics_string += f"{topic['name']} talked about for {dur} minutes\n"
+            else:
+                topics_string += f"{topic['name']} talked about for {topic['duration']} seconds\n"
+    blocks.append(block_builders.simple_section(trackers_string))
+    blocks.append(block_builders.simple_section(topics_string))
+    blocks.append(
+        block_builders.simple_section(f"Number of participants: {len(call_data.get('parties'))}")
+    )
+    blocks.append(
+        block_builders.section_with_button_block(
+            "Recording",
+            "get_recording_url",
+            "Listen to call recording",
+            url=modal_url,
+            style="primary",
+        )
+    )
+    return blocks
+

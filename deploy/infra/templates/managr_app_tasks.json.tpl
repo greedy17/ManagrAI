@@ -28,7 +28,8 @@
       { "name": "USE_ZOOM", "value": "${use_zoom}" },
       { "name": "USE_SLACK", "value": "${use_slack}" },
       { "name": "USE_SALESFORCE", "value": "${use_salesforce}" },
-      { "name": "USE_SALESLOFT", "value": "${use_salesloft}" }
+      { "name": "USE_SALESLOFT", "value": "${use_salesloft}" },
+      { "name": "USE_GONG", "value": "${use_gong}" }
     ],
     "secrets": [
       {
@@ -207,6 +208,22 @@
       {
         "name": "SALESLOFT_REDIRECT_URI",
         "valueFrom": "${config_secret_arn}:salesloftRedirectUri::"
+      },
+      {
+        "name": "GONG_BASE_URL",
+        "valueFrom": "${config_secret_arn}:gongBaseUrl::"
+      },
+      {
+        "name": "GONG_CLIENT_ID",
+        "valueFrom": "${config_secret_arn}:gongClientId::"
+      },
+      {
+        "name": "GONG_SECRET",
+        "valueFrom": "${config_secret_arn}:gongSecret::"
+      },
+      {
+        "name": "GONG_REDIRECT_URI",
+        "valueFrom": "${config_secret_arn}:gongRedirectUri::"
       }
     ],
     "logConfiguration": {

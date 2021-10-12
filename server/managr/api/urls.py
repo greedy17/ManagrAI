@@ -11,6 +11,7 @@ from managr.salesforce import views as sf_views
 from managr.alerts import views as alert_views
 from managr.autonomous import views as auto_views
 from managr.salesloft import views as salesloft_views
+from managr.gong import views as gong_views
 
 # from . import views
 
@@ -51,6 +52,7 @@ urlpatterns = [
         salesloft_views.redirect_from_salesloft,
         name="redirect-from-salesloft",
     ),
+    path("users/gongaccount/re-direct", gong_views.redirect_from_gong, name="redirect-from-gong",),
     path("users/slack/re-direct", slack_views.redirect_from_slack, name="redirect-from-slack"),
     path("account-status/", core_views.get_account_status, name="get_account_status"),
     path("get-file/<str:file_id>/", core_views.GetFileView.as_view(), name="get_file_from_nylas",),
@@ -82,6 +84,19 @@ urlpatterns = [
         "users/salesloft/revoke",
         salesloft_views.revoke_salesloft_access_token,
         name="revoke_salesloft_access_token",
+    ),
+    path(
+        "users/gongaccount/authenticate",
+        gong_views.get_gong_authentication,
+        name="get-gong-authentication",
+    ),
+    path(
+        "users/gongaccount/authorization", gong_views.get_gong_auth_link, name="get-gong-auth-link",
+    ),
+    path(
+        "users/gongaccount/revoke",
+        gong_views.revoke_gong_access_token,
+        name="revoke-gong-access-token",
     ),
     path("zoom/webhooks/deauthorize", zoom_views.zoom_deauth_webhook, name="zoom_deauth",),
     path("zoom/webhooks/meetings", zoom_views.zoom_meetings_webhook, name="get_zoom_auth_link",),
