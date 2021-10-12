@@ -132,6 +132,12 @@ variable "environments" {
     salesloft_client_id     = string
     salesloft_secret        = string
     salesloft_redirect_uri  = string
+    
+    use_gong                = bool
+    gong_base_url           = string
+    gong_client_id          = string
+    gong_secret             = string
+    gong_redirect_uri       = string
   }))
 }
 
