@@ -93,11 +93,11 @@ ENV SECRET_KEY='secret123' \
   SALESFORCE_SCOPES='' \
   SALESFORCE_REDIRECT_URI='' \
   SALESFORCE_API_VERSION='' \
-  USE_GONG =False \
-  GONG_BASE_URL= '' \
-  GONG_CLIENT_ID '' \
-  GONG_SECRET= '' \
-  GONG_REDIRECT_ '' \
+  USE_GONG=False \
+  GONG_BASE_URL='' \
+  GONG_CLIENT_ID='' \
+  GONG_SECRET='' \
+  GONG_REDIRECT_URI='' \
 
 # Set the name of the working directory inside the docker container
 WORKDIR /app
