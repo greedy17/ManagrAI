@@ -576,26 +576,16 @@ export default {
   cursor: pointer;
 }
 .disabled-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.4rem 1rem;
-  margin-bottom: 1rem;
-  border-radius: 0.3rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin: 0rem 0 1rem 0;
+  font-size: 1.05rem;
   font-weight: bold;
-  line-height: 1.14;
-  text-indent: none;
-  border-style: none;
-  letter-spacing: 0.03rem;
+  border: none;
   background-color: $panther-silver;
   color: $panther-gray;
   cursor: not-allowed;
-  height: 2rem;
-  width: 10rem;
-  font-weight: bold;
-  font-size: 1.02rem;
 }
-
 .btn {
   &--danger {
     @include button-danger();
