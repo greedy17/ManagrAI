@@ -1,56 +1,24 @@
 <template>
   <div class="alerts-page">
-    <Modal ref="templateModal">
+    <Modal style="margin-top: 4rem" ref="templateModal">
       <template v-slot:header>
-        <h3>Message Templates</h3>
+        <h1 style="color: #199e54">Message Template</h1>
       </template>
       <template v-slot:body>
-        <div class="template__border">
-          <h3 style="color: #199e54">Close Date Passed</h3>
-          <p>
-            Hey <strong style="color: #beb5cc">{ __Recipient.full_name }</strong> , your deal
-            <strong style="color: #beb5cc">{ Opportunity.Name }</strong> has a passed closed date.
-            Please update it!
-          </p>
-        </div>
+        <h3 style="color: #beb5cc">This is the message recipients will recieve via Slack</h3>
 
-        <div class="template__border">
-          <h3 style="color: #199e54">New Opportunity</h3>
+        <div>
+          <h4 style="font-weight: bold">Copy & Paste :</h4>
           <p>
-            2. <strong style="color: #beb5cc">{ Opportunity.Name }</strong> is a new Opp booked for
-            this week! The appointment was booked via
-            <strong style="color: #beb5cc">{ Opportunity.LeadSource }</strong>
-            !
+            Hey <strong>{ __Recipient.full_name }</strong> , your deal
+            <strong>{ Opportunity.Name }</strong>...
+            <i>Keep writing and/or add CRM fields</i>
           </p>
-          <p>
-            Handoff notes: <strong style="color: #beb5cc">{ Opportunity.Handoff_Notes_c }</strong>
-          </p>
-          <p style="margin-top: -0.75rem">
-            Using a Competitor:
-            <strong style="color: #beb5cc">{ Opportunity.Competitors_c }</strong>
-          </p>
-          <p style="margin-top: -0.75rem">
-            Meeting date:
-            <strong style="color: #beb5cc">{ Opportunity.Meeting_Date_c }</strong>
-          </p>
-        </div>
-
-        <div class="template__border">
-          <h3 style="color: #199e54">Update Forecast</h3>
-          <p>
-            3. Please update the forecast for
-            <strong style="color: #beb5cc">{ Opportunity.Name }</strong>
-            ! it's expected to close on
-            <strong style="color: #beb5cc">{ Opportunity.CloseDate }</strong> and forecasted as
-            <strong style="color: #beb5cc">{ Opportunity.ForecastCategoryName }</strong> - please
-            either move to Commit or update the Close Date.
-          </p>
-          <p>Next Step: <strong style="color: #beb5cc">{ Opportunity.NextStep }</strong></p>
         </div>
       </template>
     </Modal>
 
-    <div v-if="pageNumber === 0">
+    <!-- <div v-if="pageNumber === 0">
       <h3 style="text-align: center; color: black" class="title">
         {{ alertTemplateForm.field.resourceType.value }} Selected. Switch to
         <span
@@ -70,23 +38,50 @@
           >Lead</span
         >
       </h3>
-      <!-- <progress id="progress" value="0" max="5" ref="progress" style="margin-bottom: 2rem">
-        1/5
-      </progress> -->
-    </div>
+    </div> -->
 
     <div class="alert__row">
-      <div v-if="pageNumber === 0" class="alert__column__">
-        <!-- <div class="alert_title" style="text-align: center">1. Select fields and operators</div> -->
+      <div v-if="pageNumber === 0" class="alert__column__" style="margin-bottom: 1rem">
+        <h2 style="text-align: center; color: black; font-weight: bold">
+          Select fields and operators
+        </h2>
+        <div
+          style="
+            margin: auto;
+            text-align: center;
+            width: 30%;
+            margin-bottom: 1rem;
+            margin-top: -0.5rem;
+          "
+          title="25.00%"
+        >
+          <div
+            style="
+              text-align: left;
+              margin: 2px auto;
+              font-size: 0px;
+              line-height: 0px;
+              border: solid 1px #aaaaaa;
+              background: #0e572e;
+              overflow: hidden;
+              border-radius: 0.25rem;
+            "
+          >
+            <div
+              style="
+                font-size: 0px;
+                line-height: 0px;
+                height: 6px;
+                min-width: 0%;
+                max-width: 25%;
+                width: 25%;
+                background: #199e54;
+              "
+            ></div>
+          </div>
+        </div>
         <div :key="index" v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups">
           <div class="sf__collection">
-            <!-- <FormField
-              id="alert-title"
-              v-model="alertTemplateForm.field.title.value"
-              placeholder="Name your alert (required)"
-              :errors="alertTemplateForm.field.title.errors"
-              @blur="alertTemplateForm.field.title.validate()"
-            /> -->
             <AlertGroup
               :form="alertGroup"
               :resourceType="alertTemplateForm.field.resourceType.value"
@@ -110,16 +105,44 @@
       </div>
 
       <div v-if="pageNumber === 2" class="alert__column">
-        <div class="alert_title" style="text-align: center">3. Construct your Message</div>
+        <h2 style="text-align: center; color: black; font-weight: bold">Construct your Message</h2>
+        <div
+          style="margin: auto; text-align: center; width: 36%; margin-bottom: 1rem"
+          title="25.00%"
+        >
+          <div
+            style="
+              text-align: left;
+              margin: 2px auto;
+              font-size: 0px;
+              line-height: 0px;
+              border: solid 1px #aaaaaa;
+              background: #0e572e;
+              overflow: hidden;
+              border-radius: 0.25rem;
+            "
+          >
+            <div
+              style="
+                font-size: 0px;
+                line-height: 0px;
+                height: 6px;
+                min-width: 0%;
+                max-width: 75%;
+                width: 75%;
+                background: #199e54;
+              "
+            ></div>
+          </div>
+        </div>
         <div class="collection__fields">
           <div class="message_titles">
-            <h3>Customize your Slack Message</h3>
-            <p style="margin-top: -1rem">
-              Copy and paste the
+            <p>
+              Writer's block ? Get started with our
               <span
                 @click="$refs.templateModal.openModal()"
                 style="color: #199e54; cursor: pointer; border-bottom: 2px solid #199e54"
-                >template.</span
+                >Template.</span
               >
             </p>
             <FormField
@@ -133,7 +156,8 @@
                   v-model="alertTemplateForm.field.alertMessages.groups[0].field.body.value"
                   :options="{
                     modules: { toolbar: { container: ['bold', 'italic', 'strike'] } },
-                    placeholder: 'Your alert message...',
+                    placeholder:
+                      'Write your message from scratch, or build on top of the TEMPLATE...',
                     theme: 'snow',
                   }"
                   class="message__box"
@@ -142,14 +166,14 @@
             </FormField>
           </div>
 
-          <div class="message_titles">
-            <h3>Add CRM Fields</h3>
+          <div class="crm">
+            <h4 style="margin-top: 2rem">Add CRM Fields</h4>
             <DropDownSearch
               :items="fields.list"
               @input="bindText(`${selectedResourceType}.${$event}`)"
               displayKey="referenceDisplayLabel"
               valueKey="apiName"
-              nullDisplay="Search"
+              nullDisplay="Search Fields"
               searchable
               :hasNext="!!fields.pagination.hasNextPage"
               @load-more="fieldNextPage"
@@ -161,7 +185,36 @@
       </div>
 
       <div v-if="pageNumber === 1" class="alert__column">
-        <!-- <div class="alert_title" style="text-align: center">2. Select Delivery Options</div> -->
+        <h2 style="text-align: center; color: black">Select Delivery Options</h2>
+        <div
+          style="margin: auto; text-align: center; width: 30%; margin-bottom: 1rem"
+          title="25.00%"
+        >
+          <div
+            style="
+              text-align: left;
+              margin: 2px auto;
+              font-size: 0px;
+              line-height: 0px;
+              border: solid 1px #aaaaaa;
+              background: #0e572e;
+              overflow: hidden;
+              border-radius: 0.25rem;
+            "
+          >
+            <div
+              style="
+                font-size: 0px;
+                line-height: 0px;
+                height: 6px;
+                min-width: 0%;
+                max-width: 50%;
+                width: 50%;
+                background: #199e54;
+              "
+            ></div>
+          </div>
+        </div>
         <div class="collection__">
           <template>
             <div
@@ -175,8 +228,6 @@
                   flex-direction: column;
                   align-items: center;
                   justify-content: center;
-                  border-right: 2px solid white;
-                  padding: 1.5rem;
                 "
               >
                 <div class="row__">
@@ -205,6 +256,7 @@
                           :items.sync="weeklyOpts"
                           :itemsRef.sync="form.field._recurrenceDay.value"
                           v-model="form.field.recurrenceDay.value"
+                          @input="form.field.recurrenceDay.validate()"
                           displayKey="key"
                           valueKey="value"
                           nullDisplay="Select Day"
@@ -231,7 +283,6 @@
                   </div>
 
                   <FormField
-                    style="margin-left: 1rem"
                     id="delivery"
                     v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
                     placeholder="Day of month"
@@ -239,6 +290,10 @@
                     v-model="form.field.recurrenceDay.value"
                     small
                   />
+
+                  <p :class="form.field.recurrenceDay.value ? 'selected__item' : ''">
+                    {{ form.field._recurrenceDay.value.key }}
+                  </p>
                 </div>
               </div>
 
@@ -248,11 +303,9 @@
                   flex-direction: column;
                   align-items: center;
                   justify-content: space-evenly;
-                  border-right: 2px solid white;
-                  padding: 1.5rem;
                 "
               >
-                <span style="font-weight: bold">Whose pipelines?</span>
+                <span style="font-weight: bold; margin-bottom: 0.3rem">Select pipelines</span>
                 <!-- <input
                   class="search__input"
                   type="text"
@@ -281,14 +334,29 @@
                       :items.sync="userTargetsOpts"
                       :itemsRef.sync="form.field._alertTargets.value"
                       v-model="form.field.alertTargets.value"
+                      @input="form.field.alertTargets.validate()"
                       displayKey="fullName"
                       valueKey="id"
-                      nullDisplay="Pipelines"
+                      nullDisplay="Select pipelines"
                       searchable
-                      local
+                      multi
+                      medium
+                      :loading="users.loadingNextPage"
+                      :hasNext="!!users.pagination.hasNextPage"
+                      @load-more="onUsersNextPage"
+                      @search-term="onSearchUsers"
                     />
                   </template>
                 </FormField>
+                <div class="items_height">
+                  <p
+                    :key="i"
+                    v-for="(item, i) in form.field.alertTargets.value"
+                    :class="form.field.alertTargets.value ? 'selected__item' : ''"
+                  >
+                    {{ item.length ? item : '' }}
+                  </p>
+                </div>
               </div>
 
               <div
@@ -299,10 +367,7 @@
                   justify-content: center;
                 "
               >
-                <div
-                  class="row__"
-                  style="display: flex; align-items: center; justify-content: center"
-                >
+                <div class="row__">
                   <label>DM users</label>
                   <ToggleCheckBox
                     style="margin: 0.25rem"
@@ -351,11 +416,17 @@
                         :items.sync="recipientOpts"
                         :itemsRef.sync="form.field._recipients.value"
                         v-model="form.field.recipients.value"
+                        @input="form.field.recipients.validate()"
                         displayKey="fullName"
                         valueKey="id"
-                        nullDisplay="Recipients"
+                        nullDisplay="Select Recipients"
                         searchable
-                        local
+                        multi
+                        medium
+                        :loading="users.loadingNextPage"
+                        :hasNext="!!users.pagination.hasNextPage"
+                        @load-more="onUsersNextPage"
+                        @search-term="onSearchUsers"
                       />
                     </template>
                   </FormField>
@@ -392,9 +463,9 @@
                         @input="form.field.recipients.validate()"
                         displayKey="name"
                         valueKey="id"
-                        nullDisplay="Channels"
-                        :hasNext="!!channelOpts.nextCursor"
-                        @load-more="listChannels(channelOpts.nextCursor)"
+                        nullDisplay="Search Channels"
+                        :hasNext="!!reversedChannels.nextCursor"
+                        @load-more="listChannels(reversedChannels.nextCursor)"
                         searchable
                         local
                       >
@@ -410,6 +481,15 @@
                     </template>
                   </FormField>
                 </div>
+                <div class="recipients_height">
+                  <p
+                    :key="i"
+                    v-for="(item, i) in form.field.recipients.value"
+                    :class="form.field.recipients.value ? 'selected__item' : ''"
+                  >
+                    {{ item.length ? item : '' }}
+                  </p>
+                </div>
               </div>
             </div>
           </template>
@@ -417,11 +497,55 @@
       </div>
 
       <div class="alert__column" v-if="pageNumber === 3">
-        <div class="alert_title" style="text-align: center">4. Review and Save Smart Alert</div>
-
+        <h2 style="text-align: center; color: black; font-weight: bold">
+          Name your Alert, Review, and Save
+        </h2>
+        <div
+          style="margin: auto; text-align: center; width: 65%; margin-bottom: 1rem"
+          title="25.00%"
+        >
+          <div
+            style="
+              text-align: left;
+              margin: 2px auto;
+              font-size: 0px;
+              line-height: 0px;
+              border: solid 1px #aaaaaa;
+              background: #0e572e;
+              overflow: hidden;
+              border-radius: 0.25rem;
+            "
+          >
+            <div
+              style="
+                font-size: 0px;
+                line-height: 0px;
+                height: 6px;
+                min-width: 0%;
+                max-width: 100%;
+                width: 100%;
+                background: #199e54;
+              "
+            ></div>
+          </div>
+        </div>
         <template>
-          <div class="collection">
-            <div style="display: flex; justify-content: center"></div>
+          <div
+            style="
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              flex-direction: column;
+            "
+            class="collection"
+          >
+            <FormField
+              id="alert-title"
+              v-model="alertTemplateForm.field.title.value"
+              placeholder="Name your alert"
+              :errors="alertTemplateForm.field.title.errors"
+              @blur="alertTemplateForm.field.title.validate()"
+            />
             <AlertSummary :form="alertTemplateForm" />
           </div>
         </template>
@@ -435,24 +559,83 @@
       >
         Prev
       </button>
-      <button
-        v-if="pageNumber < 3"
-        @click="onNextPage"
-        :class="pageNumber === 3 ? 'disabled__button' : 'purple__button'"
-        style="margin-right: 2rem"
-      >
-        Next
-      </button>
-      <PulseLoadingSpinnerButton
-        v-else
-        :loading="savingTemplate"
-        :class="
-          !alertTemplateForm.isValid || savingTemplate ? 'disabled__button' : 'purple__button'
-        "
-        text="Save alert"
-        @click.stop="onSave"
-        :disabled="!alertTemplateForm.isValid || savingTemplate"
-      />
+      <div v-if="pageNumber < 3">
+        <div v-if="pageNumber === 0">
+          <button
+            v-if="
+              !alertTemplateForm.field.alertGroups.groups
+                .map((fields) => fields.isValid)
+                .includes(false)
+            "
+            @click="onNextPage"
+            class="purple__button"
+          >
+            Next
+          </button>
+          <div class="tooltip" v-else>
+            <button class="disabled__button tooltip__icon">Next</button>
+            <div class="tooltip__popup">
+              <div class="tip">Complete this section to continue.</div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="pageNumber === 1">
+          <button
+            v-if="
+              !alertTemplateForm.field.alertConfig.groups
+                .map((fields) => fields.isValid)
+                .includes(false)
+            "
+            @click="onNextPage"
+            class="purple__button"
+          >
+            Next
+          </button>
+          <div class="tooltip" v-else>
+            <button class="disabled__button tooltip__icon">Next</button>
+            <div class="tooltip__popup">
+              <div class="tip">Complete this section to continue.</div>
+            </div>
+          </div>
+        </div>
+        <div v-if="pageNumber === 2">
+          <button
+            v-if="
+              !alertTemplateForm.field.alertMessages.groups
+                .map((fields) => fields.isValid)
+                .includes(false)
+            "
+            @click="onNextPage"
+            class="purple__button"
+          >
+            Next
+          </button>
+          <div class="tooltip" v-else>
+            <button class="disabled__button tooltip__icon">Next</button>
+            <div class="tooltip__popup">
+              <div class="tip">Complete this section to continue.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else>
+        <PulseLoadingSpinnerButton
+          v-if="alertTemplateForm.isValid || savingTemplate"
+          :loading="savingTemplate"
+          class="purple__button"
+          text="Save Alert"
+          @click.stop="onSave"
+        />
+
+        <div class="tooltip" v-else>
+          <button class="disabled__button tooltip__icon">Save Alert</button>
+          <div class="tooltip__popup">
+            <div class="tip">Alert title required.</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -480,6 +663,8 @@ import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePrev
 import DropDownSearch from '@/components/DropDownSearch'
 import ExpandablePanel from '@/components/ExpandablePanel'
 import Modal from '@/components/Modal'
+import ProgressBar from '@/components/ProgressBar'
+import CheckBox from '@/components/CheckBoxUpdated'
 
 /**
  * Services
@@ -521,6 +706,8 @@ export default {
     PulseLoadingSpinnerButton,
     Modal,
     CollectionSearch,
+    ProgressBar,
+    CheckBox,
   },
   data() {
     return {
@@ -907,37 +1094,63 @@ export default {
 .message_titles {
   display: flex;
   align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+.crm {
+  display: flex;
+  align-items: center;
+
   flex-direction: column;
 }
 ::v-deep .ql-toolbar .ql-stroke {
   fill: none;
-  stroke: #fff;
+  stroke: $panther;
 }
 
 ::v-deep .ql-toolbar .ql-fill {
-  fill: #fff;
+  fill: $panther;
   stroke: none;
 }
 
 ::v-deep .ql-toolbar .ql-picker {
-  color: #fff;
+  color: $panther;
 }
 
 ::v-deep .ql-editor.ql-blank::before {
-  color: white;
+  color: $panther;
+}
+::v-deep .ql-container.ql-snow {
+  border-radius: 0.3rem;
+  border: 3px solid $panther-silver;
+}
+::v-deep .ql-toolbar.ql-snow {
+  border-radius: 0.3rem;
+  border: 3px solid $panther-silver;
+  border-bottom: 2px solid $panther-silver;
+  background-color: white;
+  margin-bottom: 0.1rem;
+}
+::v-deep .ql-blank.ql-editor {
+  background-color: white;
+  border-radius: 0.3rem;
+}
+::v-deep .ql-container {
+  background-color: white;
+  color: $panther;
 }
 ::v-deep .collection-search__result-item {
   border: none;
   background-color: $panther;
 }
 ::v-deep .input-content {
-  width: 8vw;
-  background-color: $panther-silver;
+  width: 12vw;
+  background-color: white;
   color: $panther;
 }
 ::v-deep .input-form__large {
-  width: 8vw;
-  background-color: $panther-silver;
+  width: 12vw;
+  background-color: white;
   color: $panther;
 }
 ::v-deep .collection-search .collection-search__form .collection-search__input .search__input {
@@ -950,12 +1163,27 @@ export default {
   margin: 1rem;
   box-shadow: 1px 4px 7px black;
 }
+
 .filtered {
   filter: invert(40%) sepia(28%) saturate(6559%) hue-rotate(128deg) brightness(96%) contrast(80%);
 }
 .channels_height {
   height: 22vh;
   overflow-y: scroll;
+}
+.fields_height {
+  height: 30vh;
+  overflow-y: scroll;
+}
+.items_height {
+  overflow-y: scroll;
+  max-height: 30vh;
+  width: 100%;
+}
+.recipients_height {
+  overflow-y: scroll;
+  max-height: 30vh;
+  width: 80%;
 }
 .slack-form-builder {
   display: flex;
@@ -1100,6 +1328,7 @@ export default {
   display: flex;
   flex-direction: row;
   justify-content: space-evenly;
+  align-items: flex-start;
 }
 .sf__collection {
   display: flex;
@@ -1107,18 +1336,17 @@ export default {
   justify-content: center;
   flex-direction: column;
   background-color: $panther;
-  border-radius: 0.4rem;
-  height: 30vh;
-  width: 60vw;
+  border-radius: 0.75rem;
+  max-height: 60vh;
+  width: 75vw;
+  padding: 2rem;
   margin-bottom: 1rem;
-  padding: 1rem;
 }
 .collection__ {
   background-color: $panther;
-  height: 30vh;
-  width: 60vw;
+  width: 75vw;
   padding: 2rem;
-  border-radius: 0.4rem;
+  border-radius: 0.75rem;
 }
 .option__collection {
   background-color: $panther;
@@ -1148,9 +1376,8 @@ export default {
   flex-direction: row;
   padding: 1rem;
   border-radius: 0.5rem;
-  height: 48vh;
-  width: 60vw;
-  overflow-x: scroll;
+  height: 46vh;
+  width: 70vw;
 }
 .collection__fields__ {
   background-color: $panther;
@@ -1180,18 +1407,17 @@ export default {
 }
 .collection {
   background-color: $panther;
-  height: 50vh;
+  height: 60vh;
   width: 30vw;
   padding: 2rem;
-
-  border-radius: 0.25rem;
+  border-radius: 0.33rem;
 }
 .alert_title {
   background-color: $panther;
   margin: 1rem;
   padding: 1rem;
   border-radius: 0.5rem;
-  width: 100%;
+  width: 30%;
 }
 .alert__title {
   background-color: $panther;
@@ -1206,16 +1432,16 @@ export default {
 .space__ {
   height: 16vh;
 }
-::-webkit-scrollbar {
-  background-color: $panther;
-  -webkit-appearance: none;
-  width: 4px;
-  height: 100%;
-}
-::-webkit-scrollbar-thumb {
-  border-radius: 2px;
-  background-color: $panther-silver;
-}
+// ::-webkit-scrollbar {
+//   background-color: $panther;
+//   -webkit-appearance: none;
+//   width: 4px;
+//   height: 100%;
+// }
+// ::-webkit-scrollbar-thumb {
+//   border-radius: 2px;
+//   background-color: $panther-silver;
+// }
 .plus_button {
   border: none;
   background-color: $panther-silver;
@@ -1463,7 +1689,9 @@ textarea {
 .message__box {
   margin-bottom: 2rem;
   height: 24vh;
-  width: 30vw;
+  width: 32vw;
+  border-radius: 0.25rem;
+  background-color: transparent;
 }
 .left {
   margin-bottom: 2rem;
@@ -1580,5 +1808,43 @@ input {
   width: 10rem;
   font-weight: bold;
   font-size: 1.02rem;
+}
+.tooltip {
+  position: relative;
+  &__icon {
+    height: 2rem;
+  }
+
+  &__popup {
+    width: 18rem;
+    visibility: hidden;
+
+    padding: 13px 21px;
+    border-radius: 5px;
+    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
+    border: solid 2px $panther-gray;
+    background-color: $panther;
+    color: white;
+    position: absolute;
+    bottom: -5px;
+    left: 105%;
+
+    &__bold {
+      font-family: #{$bold-font-family};
+      color: $panther-silver;
+    }
+  }
+}
+
+.tooltip:hover .tooltip__popup {
+  visibility: visible;
+}
+.selected__item {
+  padding: 0.5rem 1.2rem;
+  background-color: $dark-green;
+  border: none;
+  border-radius: 0.3rem;
+  width: 100%;
+  text-align: center;
 }
 </style>

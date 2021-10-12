@@ -212,6 +212,7 @@ export default {
     },
     closeEdit() {
       this.editing = !this.editing
+      this.$router.go()
     },
     async onDeleteTemplate(id) {
       try {

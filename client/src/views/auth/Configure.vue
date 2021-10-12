@@ -88,6 +88,7 @@ export default {
 @import '@/styles/variables';
 
 .config {
+  padding-top: 4rem;
   display: flex;
   flex-direction: column;
   justify-content: center;

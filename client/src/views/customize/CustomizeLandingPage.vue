@@ -1,6 +1,6 @@
 <template>
   <div class="customizations">
-    <Modal ref="optionalModal">
+    <Modal style="margin-top: 4rem" ref="optionalModal">
       <template v-slot:header>
         <h2>Optional Forms</h2>
       </template>
@@ -11,6 +11,9 @@
             Click on any of the links below to fill out the corresponding form:
           </p>
           <ul>
+            <router-link :to="{ name: 'SlackFormSettings' }"
+              >Stage <span style="font-weight: bold">Specific</span>
+            </router-link>
             <router-link :to="{ name: 'CreateOpportunity' }"
               >Create <span style="font-weight: bold">Opportunity</span>
             </router-link>

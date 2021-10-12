@@ -23,25 +23,21 @@
           :resourceType="resourceType"
           :form.sync="alertOperand"
         />
-        <!-- <div class="row__buttons">
+        <div class="row__buttons">
           <button
-            class="remove_button"
+            class="plus_button"
+            style="margin-right: 0.5rem"
             @click.stop="onRemoveOperand(i)"
             v-if="form.field.alertOperands.groups.length > 1"
             :disabled="form.field.alertOperands.groups.length - 1 <= 0"
           >
-            Remove Row
+            <img src="@/assets/images/remove.svg" class="filtered__red" alt="" />
           </button>
 
           <button class="plus_button" @click="addOperandForm">
-            Add Row
-            <img
-              src="@/assets/images/plusOne.png"
-              style="height: 1.25rem; margin-left: 0.25rem"
-              alt=""
-            />
+            <img src="@/assets/images/add.svg" class="filtered" alt="" />
           </button>
-        </div> -->
+        </div>
       </div>
     </div>
   </div>
@@ -143,6 +139,22 @@ export default {
     @include --icon();
   }
 }
+.plus_button {
+  border: none;
+  background-color: white;
+  border-radius: 50%;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: bold;
+}
+.filtered {
+  filter: invert(40%) sepia(28%) saturate(6559%) hue-rotate(128deg) brightness(96%) contrast(80%);
+}
+.filtered__red {
+  filter: invert(29%) sepia(33%) saturate(3647%) hue-rotate(348deg) brightness(94%) contrast(86%);
+}
 .alert-group-row {
   display: flex;
   flex-direction: column;
@@ -170,25 +182,13 @@ export default {
 .row__buttons {
   display: flex;
   flex-direction: row;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
 }
 .toggle__switch {
   display: flex;
   flex-direction: row;
   margin: 1rem;
-}
-.plus_button {
-  color: $dark-green;
-  border-radius: 0.5rem;
-  border: none;
-  background: transparent;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  font-weight: bold;
 }
 
 .remove_button {

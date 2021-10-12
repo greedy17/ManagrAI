@@ -15,7 +15,7 @@
             </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'CustomizeLandingPage' }"
-                >Customize
+                >Map
               </router-link>
             </li>
             <li>

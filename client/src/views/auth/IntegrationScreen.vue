@@ -9,13 +9,13 @@
         v-if="hasSalesforceIntegration && hasSlackIntegration"
         @click="goToSlackFormBuilder"
         class="slack-button"
-        text="Customize"
+        text="Map"
         :loading="false"
       ></PulseLoadingSpinnerButton>
       <PulseLoadingSpinnerButton
         v-else
         class="disabled-button"
-        text="Customize"
+        text="Map"
         :loading="false"
       ></PulseLoadingSpinnerButton>
     </div>
@@ -30,7 +30,7 @@
       <PulseLoadingSpinnerButton
         v-else
         class="disabled-button"
-        text="Customize"
+        text="Activate Workflow Automations"
         :loading="false"
       ></PulseLoadingSpinnerButton>
     </div>
