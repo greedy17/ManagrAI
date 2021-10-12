@@ -271,6 +271,7 @@ export default {
 @import '@/styles/variables';
 
 .update_opportunity {
+  margin-top: 4rem;
   color: white;
 }
 

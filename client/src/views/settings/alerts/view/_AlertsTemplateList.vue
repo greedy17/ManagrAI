@@ -212,6 +212,7 @@ export default {
     },
     closeEdit() {
       this.editing = !this.editing
+      this.$router.go()
     },
     async onDeleteTemplate(id) {
       try {
@@ -384,6 +385,7 @@ export default {
 }
 .alerts-template-list {
   margin-left: 7vw;
+  margin-top: 4rem;
   &__header {
     display: flex;
 

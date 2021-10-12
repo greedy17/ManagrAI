@@ -55,11 +55,7 @@
             v-for="(group, i) in form.value.alertGroups"
           >
             <span class="box__content-recipient-group__recipient-group__conditions-condition">
-              {{
-                group.groupOrder == 0
-                  ? `It will only run for ${form.value.resourceType}'s that meet the following criteria: `
-                  : `${group.groupCondition} `
-              }}
+              {{ group.groupOrder == 0 ? '' : `${group.groupCondition} ` }}
             </span>
 
             <div
