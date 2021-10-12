@@ -265,14 +265,13 @@
                 />
 
                 <div
-                  :class="
-                    field.id === '6407b7a1-a877-44e2-979d-1effafec5035' ||
-                    field.id === '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' ||
-                    field.id === 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' ||
-                    field.id === 'fae88a10-53cc-470e-86ec-32376c041893' ||
-                    field.id === 'fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed'
-                      ? 'recap__fields'
-                      : 'form-field__label'
+                  class="form-field__label"
+                  v-if="
+                    field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
+                    field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
+                    field.id !== 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' &&
+                    field.id !== 'fae88a10-53cc-470e-86ec-32376c041893' &&
+                    field.id !== 'fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed'
                   "
                 >
                   {{ field.referenceDisplayLabel }}
@@ -283,10 +282,30 @@
                 {{ field.required ? 'required' : '' }}
               </div>
               <div class="form-field__right">
-                <div class="form-field__btn" @click="() => onMoveFieldUp(field, index)">
+                <div
+                  v-if="
+                    field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
+                    field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
+                    field.id !== 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' &&
+                    field.id !== 'fae88a10-53cc-470e-86ec-32376c041893' &&
+                    field.id !== 'fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed'
+                  "
+                  class="form-field__btn"
+                  @click="() => onMoveFieldUp(field, index)"
+                >
                   <img src="@/assets/images/upArrow.png" />
                 </div>
-                <div class="form-field__btn" @click="() => onMoveFieldDown(field, index)">
+                <div
+                  v-if="
+                    field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
+                    field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
+                    field.id !== 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' &&
+                    field.id !== 'fae88a10-53cc-470e-86ec-32376c041893' &&
+                    field.id !== 'fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed'
+                  "
+                  class="form-field__btn"
+                  @click="() => onMoveFieldDown(field, index)"
+                >
                   <img src="@/assets/images/downArrow.png" />
                 </div>
                 <!-- <div
@@ -525,7 +544,6 @@ export default {
                 }
                 return altField
               })
-              this.onSave()
             }
           }
           if (this.formType !== 'UPDATE') {
@@ -884,11 +902,6 @@ export default {
     overflow-x: hidden;
     border-radius: 0.5rem;
   }
-}
-
-.recap__fields {
-  color: $panther-orange;
-  font-weight: bold;
 }
 .paginator {
   @include paginator();
