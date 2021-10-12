@@ -1337,7 +1337,7 @@ export default {
   flex-direction: column;
   background-color: $panther;
   border-radius: 0.75rem;
-  max-height: 60vh;
+
   width: 75vw;
   padding: 2rem;
   margin-bottom: 1rem;
