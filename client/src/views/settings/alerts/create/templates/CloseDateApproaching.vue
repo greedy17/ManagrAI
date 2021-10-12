@@ -2,262 +2,258 @@
   <div class="alerts-page">
     <div>
       <h2 style="font-weight: bold; text-align: center">
-        <span style="border-bottom: 3px solid #199e54; padding-bottom: 0.25rem; color: black">
+        <span style="color: black">
           Close Date
-          <span style="">Approaching</span>
+          <span style="color: #199e54">Approaching</span>
         </span>
       </h2>
     </div>
 
-    <div class="alert__row">
-      <div v-if="pageNumber < 3" class="alert__column">
-        <div class="collection_fields">
-          <template>
-            <div :key="i" v-for="(form, i) in alertTemplateForm.field.alertConfig.groups">
-              <div class="visible" style="height: 5vh">
-                <label>Weekly</label>
-                <ToggleCheckBox
-                  @input="
-                    form.field.recurrenceFrequency.value == 'WEEKLY'
-                      ? (form.field.recurrenceFrequency.value = 'MONTHLY')
-                      : (form.field.recurrenceFrequency.value = 'WEEKLY')
-                  "
-                  :value="form.field.recurrenceFrequency.value !== 'WEEKLY'"
-                  offColor="#199e54"
-                  onColor="#199e54"
-                />
-                <label>Monthly</label>
-              </div>
+    <div
+      v-if="pageNumber === 0"
+      style="margin: auto; text-align: center; width: 30%; margin-bottom: 1rem; margin-top: -0.5rem"
+      title="50.00%"
+    >
+      <div
+        style="
+          text-align: left;
+          margin: 2px auto;
+          font-size: 0px;
+          line-height: 0px;
+          border: solid 1px #aaaaaa;
+          background: #0e572e;
+          overflow: hidden;
+          border-radius: 0.25rem;
+        "
+      >
+        <div
+          style="
+            font-size: 0px;
+            line-height: 0px;
+            height: 6px;
+            min-width: 0%;
+            max-width: 50%;
+            width: 50%;
+            background: #199e54;
+          "
+        ></div>
+      </div>
+    </div>
 
-              <div v-if="pageNumber === 0" :errors="form.field.recurrenceDay.errors">
-                <p style="color: #beb5cc">What day would you like to recieve your Smart Alert ?</p>
+    <div
+      v-if="pageNumber === 1"
+      style="margin: auto; text-align: center; width: 30%; margin-bottom: 1rem; margin-top: -0.5rem"
+      title="50.00%"
+    >
+      <div
+        style="
+          text-align: left;
+          margin: 2px auto;
+          font-size: 0px;
+          line-height: 0px;
+          border: solid 1px #aaaaaa;
+          background: #0e572e;
+          overflow: hidden;
+          border-radius: 0.25rem;
+        "
+      >
+        <div
+          style="
+            font-size: 0px;
+            line-height: 0px;
+            height: 6px;
+            min-width: 0%;
+            max-width: 100%;
+            width: 100%;
+            background: #199e54;
+          "
+        ></div>
+      </div>
+    </div>
 
-                <div :key="value" v-for="(key, value) in weeklyOpts">
-                  <span class="row">
-                    <input
-                      type="radio"
-                      :value="key.value"
-                      id="value"
-                      v-model="form.field.recurrenceDay.value"
-                      @click="setDay(key)"
-                    />
-                    <label for="value">{{ key.key }}</label>
-                  </span>
-                </div>
+    <div v-if="pageNumber === 0" class="alert__column">
+      <template>
+        <div
+          class="forecast__collection"
+          :key="i"
+          v-for="(form, i) in alertTemplateForm.field.alertConfig.groups"
+        >
+          <div class="delivery__row" :errors="form.field.recurrenceDay.errors">
+            <div style="margin-bottom: 0.5rem" class="row__">
+              <label>Weekly</label>
+              <ToggleCheckBox
+                @input="
+                  form.field.recurrenceFrequency.value == 'WEEKLY'
+                    ? (form.field.recurrenceFrequency.value = 'MONTHLY')
+                    : (form.field.recurrenceFrequency.value = 'WEEKLY')
+                "
+                :value="form.field.recurrenceFrequency.value !== 'WEEKLY'"
+                offColor="#199e54"
+                onColor="#199e54"
+              />
+              <label>Monthly</label>
+            </div>
 
-                <div class="bottom__middle">
-                  <p style="color: #beb5cc">Step 1/4</p>
-                </div>
-              </div>
-
-              <div>
-                <div v-if="pageNumber === 1">
-                  <p style="font-weight: bold; color: #beb5cc">
-                    Who's pipelines are we searching through ?
-                    <span style="color: #ff7649; font-size: 0.9em"> *check all that apply</span>
-                  </p>
-
-                  <input
-                    class="search__input"
-                    type="text"
-                    v-model="searchQuery"
-                    placeholder="Search pipelines..."
+            <div v-if="form.field.recurrenceFrequency.value == 'WEEKLY'">
+              <FormField>
+                <template v-slot:input>
+                  <DropDownSearch
+                    :items.sync="weeklyOpts"
+                    :itemsRef.sync="form.field._recurrenceDay.value"
+                    v-model="form.field.recurrenceDay.value"
+                    @input="form.field.recurrenceDay.validate()"
+                    displayKey="key"
+                    valueKey="value"
+                    nullDisplay="Select Day"
+                    searchable
+                    local
                   />
+                </template>
+              </FormField>
+            </div>
+            <FormField
+              id="delivery"
+              v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
+              placeholder="Day of month"
+              @blur="form.field.recurrenceDay.validate()"
+              v-model="form.field.recurrenceDay.value"
+              small
+            />
+            <p :class="form.field.recurrenceDay.value ? 'selected__item' : ''">
+              {{ form.field._recurrenceDay.value.key }}
+            </p>
+          </div>
 
-                  <div :key="value" v-for="(key, value) in filteredUserTargets">
-                    <span id="utops" class="delivery__row">
-                      <input
-                        v-model="form.field.alertTargets.value"
-                        :value="key.id"
-                        id="value"
-                        type="checkbox"
-                        style="height: 1rem"
-                        @click="setPipelines(key)"
-                      />
-                      <label style="margin-top: 0.5rem" for="value">{{ key.fullName }}</label>
-                    </span>
-                  </div>
-                  <!-- <div :key="value" v-for="(key, value) in userTargetsOpts">
-                    <span class="row">
-                      <input
-                        v-model="form.field.alertTargets.value"
-                        :value="key.id"
-                        id="value"
-                        type="checkbox"
-                      />
-                      <label for="value">{{ key.fullName }}</label>
-                    </span>
-                  </div> -->
-                  <div class="bottom__middle">
-                    <p style="color: #beb5cc">Step 2/4</p>
-                  </div>
-                </div>
-                <div v-if="pageNumber === 2">
-                  <p
-                    style="color: #ff7649"
-                    v-if="form.field.recipientType.value == 'SLACK_CHANNEL'"
-                  >
-                    Please make sure @managr has been added to
-                    <em style="color: #beb5cc">{{ form.field._recipients.value.name }}</em>
-                    channel
-                  </p>
-                  <div
-                    class="row__"
-                    style="
-                      margin-bottom: 0.75rem;
-                      margin-top: 2rem;
-                      display: flex;
-                      align-items: center;
-                      justify-content: center;
-                    "
-                  >
-                    <label>DM users</label>
-                    <ToggleCheckBox
-                      style="margin: 0.25rem"
-                      @input="
-                        form.field.recipientType.value == 'USER_LEVEL'
-                          ? (form.field.recipientType.value = recipientTypeToggle(
-                              form.field.recipientType.value,
-                            ))
-                          : (form.field.recipientType.value = recipientTypeToggle('SLACK_CHANNEL'))
-                      "
-                      :value="form.field.recipientType.value !== 'USER_LEVEL'"
-                      offColor="#199e54"
-                      onColor="#199e54"
-                    />
-                    <label
-                      >Send to #Channel<span style="color: #ff7649"> (recommended)</span></label
-                    >
-                  </div>
-                  <div v-if="form.field.recipientType.value == 'SLACK_CHANNEL'">
-                    <input
-                      class="search__input"
-                      type="text"
-                      v-model="searchChannels"
-                      placeholder="Search Channels..."
-                    />
-                    <div class="channels_height">
-                      <div :key="value" v-for="(key, value) in filteredChannels">
-                        <input
-                          @click="setRecipient(key)"
-                          v-model="form.field.recipients.value"
-                          :value="key.id"
-                          type="radio"
-                          id="value"
-                          style="height: 1rem; margin-top: 0.5rem"
-                        />
-                        <label style="padding-bottom: 1rem" for="value">{{ key.name }}</label>
-                      </div>
-                    </div>
-                  </div>
+          <div class="delivery__row">
+            <span style="margin-bottom: 0.5rem">Select Pipelines</span>
 
-                  <div
-                    v-if="form.field.recipientType.value == 'USER_LEVEL'"
-                    :errors="form.field.recipients.errors"
-                  >
-                    <p style="font-weight: bold; color: #beb5cc">
-                      Who's recieving these Smart Alerts ?
-                      <span style="color: #ff7649; font-size: 0.9em"> *check all that apply</span>
-                    </p>
-                    <input
-                      class="search__input"
-                      type="text"
-                      v-model="searchText"
-                      placeholder="Search Recipients..."
-                    />
-                    <div :key="value" v-for="(key, value) in filteredRecipients">
-                      <span class="row">
-                        <input
-                          v-model="form.field.recipients.value"
-                          :value="key.id"
-                          id="value"
-                          type="checkbox"
-                          @click="setRecipients(key)"
-                        />
-                        <label for="value">{{ key.fullName }}</label>
-                      </span>
-                    </div>
-                  </div>
+            <FormField :errors="form.field.alertTargets.errors">
+              <template v-slot:input>
+                <DropDownSearch
+                  :items.sync="userTargetsOpts"
+                  :itemsRef.sync="form.field._alertTargets.value"
+                  v-model="form.field.alertTargets.value"
+                  @input="form.field.alertTargets.validate()"
+                  displayKey="fullName"
+                  valueKey="id"
+                  nullDisplay="Pipelines"
+                  searchable
+                  multi
+                  medium
+                  :loading="users.loadingNextPage"
+                  :hasNext="!!users.pagination.hasNextPage"
+                  @load-more="onUsersNextPage"
+                  @search-term="onSearchUsers"
+                />
+              </template>
+            </FormField>
+            <div class="items_height">
+              <p
+                :key="i"
+                v-for="(item, i) in form.field.alertTargets.value"
+                :class="form.field.alertTargets.value ? 'selected__item' : ''"
+              >
+                {{ item.length ? item : '' }}
+              </p>
+            </div>
+          </div>
 
-                  <!-- <FormField
-                    v-if="form.field.recipientType.value == 'SLACK_CHANNEL'"
-                    :errors="form.field.recipients.errors"
+          <div class="delivery__row">
+            <p
+              style="color: #beb5cc; font-weight: bold"
+              v-if="form.field.recipientType.value == 'SLACK_CHANNEL'"
+            >
+              Please add @managr to your channel
+            </p>
+            <div class="row__">
+              <label>DM users</label>
+              <ToggleCheckBox
+                style="margin: 0.25rem"
+                @input="
+                  form.field.recipientType.value == 'USER_LEVEL'
+                    ? (form.field.recipientType.value = recipientTypeToggle(
+                        form.field.recipientType.value,
+                      ))
+                    : (form.field.recipientType.value = recipientTypeToggle('SLACK_CHANNEL'))
+                "
+                :value="form.field.recipientType.value !== 'USER_LEVEL'"
+                offColor="#199e54"
+                onColor="#199e54"
+              />
+              <label>Send to #Channel</label>
+            </div>
+
+            <div v-if="form.field.recipientType.value == 'SLACK_CHANNEL'">
+              <FormField :errors="form.field.recipients.errors">
+                <template v-slot:input>
+                  <DropDownSearch
+                    :items.sync="reversedChannels"
+                    :itemsRef.sync="form.field._recipients.value"
+                    v-model="form.field.recipients.value"
+                    @input="form.field.recipients.validate()"
+                    displayKey="name"
+                    valueKey="id"
+                    nullDisplay="Channels"
+                    :hasNext="!!reversedChannels.nextCursor"
+                    @load-more="listChannels(reversedChannels.nextCursor)"
+                    searchable
+                    local
                   >
-                    <template v-slot:input>
-                      <DropDownSearch
-                        :items.sync="channelOpts.channels"
-                        :itemsRef.sync="form.field._recipients.value"
-                        v-model="form.field.recipients.value"
-                        @input="form.field.recipients.validate()"
-                        displayKey="name"
-                        valueKey="id"
-                        nullDisplay="Channels"
-                        :hasNext="!!channelOpts.nextCursor"
-                        @load-more="listChannels(channelOpts.nextCursor)"
-                        searchable
-                        local
-                      >
-                        <template v-slot:tn-dropdown-option="{ option }">
-                          <img
+                    <template v-slot:tn-dropdown-option="{ option }">
+                      <!-- <img
                             v-if="option.isPrivate == true"
                             class="card-img"
                             src="@/assets/images/lockAsset.png"
-                          />
-                          {{ option['name'] }}
-                        </template>
-                      </DropDownSearch>
+                          /> -->
+                      {{ option['name'] }}
                     </template>
-                  </FormField> -->
-
-                  <div class="bottom__middle">
-                    <p style="color: #beb5cc">Step 3/4</p>
-                  </div>
-                </div>
-              </div>
+                  </DropDownSearch>
+                </template>
+              </FormField>
             </div>
-          </template>
-        </div>
-      </div>
 
-      <div v-if="pageNumber === 3" class="alert__column">
-        <div class="collection">
-          <AlertSummary :form="alertTemplateForm" />
-          <div class="bottom__middle">
-            <p style="color: #beb5cc">Step 4/4</p>
+            <div
+              v-if="form.field.recipientType.value == 'USER_LEVEL'"
+              :errors="form.field.recipients.errors"
+            >
+              <FormField :errors="form.field.recipients.errors">
+                <template v-slot:input>
+                  <DropDownSearch
+                    :items.sync="recipientOpts"
+                    :itemsRef.sync="form.field._recipients.value"
+                    v-model="form.field.recipients.value"
+                    @input="form.field.recipients.validate()"
+                    displayKey="fullName"
+                    valueKey="id"
+                    nullDisplay="Recipients"
+                    searchable
+                    multi
+                    medium
+                    :loading="users.loadingNextPage"
+                    :hasNext="!!users.pagination.hasNextPage"
+                    @load-more="onUsersNextPage"
+                    @search-term="onSearchUsers"
+                  />
+                </template>
+              </FormField>
+            </div>
+            <div class="recipients_height">
+              <p
+                :key="i"
+                v-for="(item, i) in form.field.recipients.value"
+                :class="form.field.recipients.value ? 'selected__item' : ''"
+              >
+                {{ item.length ? item : '' }}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="row__">
-        <button
-          @click="goToTemplates"
-          v-if="pageNumber === 0"
-          style="margin-right: 0.5rem"
-          class="gold__button"
-        >
-          <img src="@/assets/images/back.png" alt="" />
-          Templates
-        </button>
-        <button @click="onPreviousPage" v-else style="margin-right: 0.5rem" class="gold__button">
-          Prev
-        </button>
-        <button
-          v-if="pageNumber < 3"
-          @click="onNextPage"
-          :class="pageNumber === 3 ? 'disabled__button' : 'purple__button'"
-          style="margin-right: 2rem"
-        >
-          Next
-        </button>
-        <PulseLoadingSpinnerButton
-          v-else
-          :loading="savingTemplate"
-          :class="
-            !alertTemplateForm.isValid || savingTemplate ? 'disabled__button' : 'purple__button'
-          "
-          text="Activate alert"
-          @click.stop="onSave"
-          :disabled="!alertTemplateForm.isValid"
-        />
+      </template>
+    </div>
+
+    <div v-if="pageNumber === 1" class="alert__column">
+      <div class="collection">
+        <AlertSummary :form="alertTemplateForm" />
       </div>
     </div>
 
@@ -269,6 +265,47 @@
       <NewAlertGroup
         :form="alertGroup"
         :resourceType="alertTemplateForm.field.resourceType.value"
+      />
+    </div>
+
+    <div class="bottom_locked">
+      <button
+        @click="goToTemplates"
+        v-if="pageNumber === 0"
+        style="margin-right: 0.5rem"
+        class="gold__button"
+      >
+        <img src="@/assets/images/back.png" alt="" />
+        Templates
+      </button>
+      <button @click="onPreviousPage" v-else style="margin-right: 0.5rem" class="gold__button">
+        Prev
+      </button>
+
+      <div v-if="pageNumber < 1">
+        <button
+          v-if="
+            !alertTemplateForm.field.alertConfig.groups
+              .map((fields) => fields.isValid)
+              .includes(false)
+          "
+          @click="onNextPage"
+          class="purple__button"
+        >
+          Next
+        </button>
+        <button v-else class="disabled__button">Next</button>
+      </div>
+
+      <PulseLoadingSpinnerButton
+        v-else
+        :loading="savingTemplate"
+        :class="
+          !alertTemplateForm.isValid || savingTemplate ? 'disabled__button' : 'purple__button'
+        "
+        text="Activate alert"
+        @click.stop="onSave"
+        :disabled="!alertTemplateForm.isValid"
       />
     </div>
   </div>
@@ -436,7 +473,7 @@ export default {
       return newVal
     },
     onNextPage() {
-      this.pageNumber <= 2 ? (this.pageNumber += 1) : (this.pageNumber = this.pageNumber)
+      this.pageNumber <= 0 ? (this.pageNumber += 1) : (this.pageNumber = this.pageNumber)
     },
     onPreviousPage() {
       this.pageNumber >= 1 ? (this.pageNumber -= 1) : (this.pageNumber = this.pageNumber)
@@ -829,7 +866,6 @@ export default {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  margin-top: 2rem;
 }
 input {
   cursor: pointer;
@@ -889,16 +925,57 @@ input {
 }
 .alert__column {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: center;
   align-items: center;
-  margin-right: 2rem;
 }
 .alert__row {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+}
+.bottom_locked {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: auto;
+  margin-bottom: 0.5rem;
+}
+.delivery__row {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+}
+.forecast__collection {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-evenly;
+  flex-direction: row;
+  background-color: $panther;
+  border-radius: 0.75rem;
+  width: 75vw;
+  padding: 2rem;
+  margin-bottom: 1rem;
+}
+.selected__item {
+  padding: 0.5rem 1.2rem;
+  background-color: $dark-green;
+  border: none;
+  border-radius: 0.3rem;
+  width: 100%;
+  text-align: center;
+}
+.items_height {
+  overflow-y: scroll;
+  max-height: 30vh;
+  width: 100%;
+}
+.recipients_height {
+  overflow-y: scroll;
+  max-height: 30vh;
+  width: 80%;
 }
 .collection_fields {
   background-color: $panther;
@@ -940,7 +1017,9 @@ textarea {
   }
 }
 .alerts-page {
+  height: 100vh;
   color: white;
+  margin-top: 4rem;
   &__previous-step {
     @include muted-font(12);
   }
@@ -1155,14 +1234,14 @@ textarea {
   border: 2px solid white;
   cursor: pointer;
 }
-::-webkit-scrollbar {
-  background-color: $panther;
-  -webkit-appearance: none;
-  width: 4px;
-  height: 100%;
-}
-::-webkit-scrollbar-thumb {
-  border-radius: 2px;
-  background-color: $panther-silver;
-}
+// ::-webkit-scrollbar {
+//   background-color: $panther;
+//   -webkit-appearance: none;
+//   width: 4px;
+//   height: 100%;
+// }
+// ::-webkit-scrollbar-thumb {
+//   border-radius: 2px;
+//   background-color: $panther-silver;
+// }
 </style>

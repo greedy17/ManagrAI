@@ -4,18 +4,18 @@
     <p style="font-weight: bold; margin-top: -0.5rem; color: #5d5e5e">
       Managr utilizes a secure oAuth connection
     </p>
-    <div v-if="isAdmin">
+    <div v-if="user.isAdmin">
       <PulseLoadingSpinnerButton
         v-if="hasSalesforceIntegration && hasSlackIntegration"
         @click="goToSlackFormBuilder"
         class="slack-button"
-        text="Customize"
+        text="Map"
         :loading="false"
       ></PulseLoadingSpinnerButton>
       <PulseLoadingSpinnerButton
         v-else
         class="disabled-button"
-        text="Customize"
+        text="Map"
         :loading="false"
       ></PulseLoadingSpinnerButton>
     </div>
@@ -30,7 +30,7 @@
       <PulseLoadingSpinnerButton
         v-else
         class="disabled-button"
-        text="Customize"
+        text="Activate Workflow Automations"
         :loading="false"
       ></PulseLoadingSpinnerButton>
     </div>
@@ -482,6 +482,7 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-top: 2rem;
   &__cards {
     display: flex;
     flex-wrap: wrap;

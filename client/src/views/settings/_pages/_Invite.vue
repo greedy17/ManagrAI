@@ -353,7 +353,7 @@ button {
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  background-color: $panther;
+  background-color: $panther-gray;
   > .form_field {
     flex: 0 0 auto;
   }
