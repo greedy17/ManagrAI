@@ -117,7 +117,6 @@
               <FormField :errors="messageTemplateForm.field.body.errors">
                 <template v-slot:input>
                   <quill-editor
-                    style="width: 100%; height: 4rem; margin-bottom: 2rem"
                     @blur="messageTemplateForm.field.body.validate()"
                     @input="executeUpdateMessageTemplate"
                     ref="message-body"
@@ -125,6 +124,7 @@
                     :options="{
                       modules: { toolbar: { container: ['bold', 'italic', 'strike'] } },
                     }"
+                    class="message__box"
                   />
                 </template>
               </FormField>
@@ -175,11 +175,11 @@
             <div class="config__column">
               <ListContainer :key="index" v-for="(config, index) in alert.configsRef">
                 <template v-slot:list>
-                  <img
+                  <!-- <img
                     style="margin-right: 0.5rem; margin-top: 0.25rem; height: 1rem"
                     src="@/assets/images/remove.png"
                     alt=""
-                  />
+                  /> -->
                   <ListItem
                     @item-selected="onDeleteConfig(config.id, index)"
                     large
@@ -665,6 +665,48 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/buttons';
 
+::v-deep .ql-toolbar .ql-stroke {
+  fill: none;
+  stroke: $panther;
+}
+
+::v-deep .ql-toolbar .ql-fill {
+  fill: $panther;
+  stroke: none;
+}
+
+::v-deep .ql-toolbar .ql-picker {
+  color: $panther;
+}
+
+::v-deep .ql-editor.ql-blank::before {
+  color: $panther;
+}
+::v-deep .ql-container.ql-snow {
+  border-radius: 0.25rem;
+  border: 3px solid $panther-silver;
+}
+::v-deep .ql-toolbar.ql-snow {
+  border-radius: 0.5rem;
+  border: 3px solid $panther-silver;
+  border-bottom: 1px solid black;
+  background-color: white;
+}
+::v-deep .ql-blank.ql-editor {
+  background-color: white;
+  border-radius: 0.25rem;
+}
+::v-deep .ql-container {
+  background-color: white;
+  color: $panther;
+}
+.message__box {
+  margin-bottom: 2rem;
+  height: 16vh;
+  width: 32vw;
+  border-radius: 0.25rem;
+  background-color: transparent;
+}
 .config__column {
   display: flex;
   flex-direction: column;

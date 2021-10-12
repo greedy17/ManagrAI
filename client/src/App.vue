@@ -79,7 +79,7 @@ body {
 .grayscale {
   filter: invert(100%);
   opacity: 5%;
-  filter: brightness(0.75);
+  filter: brightness(0.25);
 }
 
 #app {
