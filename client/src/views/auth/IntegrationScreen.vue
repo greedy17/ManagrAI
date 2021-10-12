@@ -9,13 +9,13 @@
         v-if="hasSalesforceIntegration && hasSlackIntegration"
         @click="goToSlackFormBuilder"
         class="slack-button"
-        text="Map"
+        text="Map your CRM Fields"
         :loading="false"
       ></PulseLoadingSpinnerButton>
       <PulseLoadingSpinnerButton
         v-else
         class="disabled-button"
-        text="Map"
+        text="Map your CRM Fields"
         :loading="false"
       ></PulseLoadingSpinnerButton>
     </div>
@@ -225,7 +225,7 @@
 
       <div class="card">
         <div class="card__header">
-          <img style="height: 4.5rem" src="@/assets/images/hubspott.png" />
+          <img style="width: 4rem" src="@/assets/images/hubspott.png" />
           <h2 class="card__title">Hubspot</h2>
         </div>
         <p class="card-text">Sync Companies, Deals, and Contacts</p>

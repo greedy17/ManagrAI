@@ -159,9 +159,9 @@
           </div>
 
           <div class="delivery__row">
-            <p style="color: #beb5cc" v-if="form.field.recipientType.value == 'SLACK_CHANNEL'">
+            <!-- <p style="color: #beb5cc" v-if="form.field.recipientType.value == 'SLACK_CHANNEL'">
               Please add @managr to your channel
-            </p>
+            </p> -->
             <div class="row__">
               <label>DM users</label>
               <ToggleCheckBox
@@ -207,6 +207,9 @@
                   </DropDownSearch>
                 </template>
               </FormField>
+              <p :class="form.field.recipients.value.length > 0 ? 'selected__item' : ''">
+                {{ form.field.recipients.value.length ? form.field._recipients.value.name : '' }}
+              </p>
             </div>
 
             <div
@@ -233,15 +236,15 @@
                   />
                 </template>
               </FormField>
-            </div>
-            <div class="recipients_height">
-              <p
-                :key="i"
-                v-for="(item, i) in form.field.recipients.value"
-                :class="form.field.recipients.value ? 'selected__item' : ''"
-              >
-                {{ item.length ? item : '' }}
-              </p>
+              <div class="recipients_height">
+                <p
+                  :key="i"
+                  v-for="(item, i) in form.field.recipients.value"
+                  :class="form.field.recipients.value ? 'selected__item' : ''"
+                >
+                  {{ item.length ? item : '' }}
+                </p>
+              </div>
             </div>
           </div>
         </div>

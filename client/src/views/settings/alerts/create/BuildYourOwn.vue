@@ -348,7 +348,7 @@
                     />
                   </template>
                 </FormField>
-                <div class="items_height">
+                <div style="margin-top: -0.5rem" class="items_height">
                   <p
                     :key="i"
                     v-for="(item, i) in form.field.alertTargets.value"
@@ -376,7 +376,9 @@
                         ? (form.field.recipientType.value = recipientTypeToggle(
                             form.field.recipientType.value,
                           ))
-                        : (form.field.recipientType.value = recipientTypeToggle('SLACK_CHANNEL'))
+                        : (form.field.recipientType.value = recipientTypeToggle(
+                            form.field.recipientType.value,
+                          ))
                     "
                     :value="form.field.recipientType.value !== 'USER_LEVEL'"
                     offColor="#199e54"
@@ -430,6 +432,16 @@
                       />
                     </template>
                   </FormField>
+
+                  <div class="items_height">
+                    <p
+                      :key="i"
+                      v-for="(item, i) in form.field.recipients.value"
+                      :class="form.field.recipients.value ? 'selected__item' : ''"
+                    >
+                      {{ item.length ? item : '' }}
+                    </p>
+                  </div>
                 </div>
                 <div v-if="form.field.recipientType.value == 'SLACK_CHANNEL'">
                   <!-- <input
@@ -480,14 +492,11 @@
                       </DropDownSearch>
                     </template>
                   </FormField>
-                </div>
-                <div class="recipients_height">
-                  <p
-                    :key="i"
-                    v-for="(item, i) in form.field.recipients.value"
-                    :class="form.field.recipients.value ? 'selected__item' : ''"
-                  >
-                    {{ item.length ? item : '' }}
+
+                  <p :class="form.field.recipients.value.length > 0 ? 'selected__item' : ''">
+                    {{
+                      form.field.recipients.value.length ? form.field._recipients.value.name : ''
+                    }}
                   </p>
                 </div>
               </div>
@@ -797,8 +806,12 @@ export default {
         return 'USER_LEVEL'
       }
       if (value == 'USER_LEVEL') {
+        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = ''
+        this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = {}
         return 'SLACK_CHANNEL'
       } else if (value == 'SLACK_CHANNEL') {
+        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = []
+        this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = {}
         return 'USER_LEVEL'
       }
       return value
