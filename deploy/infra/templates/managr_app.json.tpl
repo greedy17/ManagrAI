@@ -31,7 +31,8 @@
       { "name": "USE_ZOOM", "value": "${use_zoom}" },
       { "name": "USE_SLACK", "value": "${use_slack}" },
       { "name": "USE_SALESFORCE", "value": "${use_salesforce}" },
-      { "name": "USE_SALESLOFT", "value": "${use_salesloft}" }
+      { "name": "USE_SALESLOFT", "value": "${use_salesloft}" },
+      { "name": "USE_GONG", "value": "${use_gong}" }
     ],
     "secrets": [
       {
