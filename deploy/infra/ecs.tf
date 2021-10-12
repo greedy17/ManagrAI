@@ -83,6 +83,7 @@ data "template_file" "managr_app" {
     use_slack      = title(each.value.use_slack)
     use_salesforce = title(each.value.use_salesforce)
     use_salesloft  = title(each.value.use_salesloft)
+    use_gong       = title(each.value.use_gong)
   }
 }
 
