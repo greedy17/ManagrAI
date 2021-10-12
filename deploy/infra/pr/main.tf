@@ -125,6 +125,7 @@ data "template_file" "managr_app" {
     use_slack      = title(var.app_config.use_slack)
     use_salesforce = title(var.app_config.use_salesforce)
     use_salesloft  = title(var.app_config.use_salesloft)
+    use_gong       = title(each.value.env.use_gong)
   }
 }
 
@@ -287,6 +288,11 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     salesloftClientId     = var.app_config.salesloft_client_id
     salesloftSecret       = var.app_config.salesloft_secret
     salesloftRedirectUri  = var.app_config.salesloft_redirect_uri
+
+    gongBaseUrl           = each.value.gong_base_url
+    gongClientId          = each.value.gong_client_id
+    gongSecret            = each.value.gong_secret
+    gongRedirectUri       = each.value.gong_redirect_uri
   })
 }
 

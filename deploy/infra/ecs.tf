@@ -129,6 +129,7 @@ data "template_file" "managr_app_scheduled_tasks" {
     use_slack      = title(each.value.env.use_slack)
     use_salesforce = title(each.value.env.use_salesforce)
     use_salesloft  = title(each.value.env.use_salesloft)
+    use_gong       = title(each.value.env.use_gong)
   }
 }
 
@@ -299,5 +300,10 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     salesloftClientId     = each.value.salesloft_client_id
     salesloftSecret       = each.value.salesloft_secret
     salesloftRedirectUri  = each.value.salesloft_redirect_uri
+
+    gongBaseUrl           = each.value.gong_base_url
+    gongClientId          = each.value.gong_client_id
+    gongSecret            = each.value.gong_secret
+    gongRedirectUri       = each.value.gong_redirect_uri
   })
 }
