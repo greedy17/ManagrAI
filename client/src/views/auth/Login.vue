@@ -1,15 +1,14 @@
 <template>
   <div class="login-page">
-    <div class="column">
-      <img src="@/assets/images/logo.png" alt="logo" />
-      <h2>Log in to Managr</h2>
-      <p class="enter-email">Please enter your email to log into Managr</p>
-    </div>
     <div class="login-page__form">
+      <div class="column">
+        <img src="@/assets/images/logo.png" alt="logo" />
+        <h2>Log in to Managr</h2>
+        <p class="enter-email">Please enter your email and password</p>
+      </div>
       <!-- <label for="email">Enter your Email</label> -->
       <FormField
         labelRelation="email"
-        label="Email"
         @input="execCheckEmail"
         :disabled="showPassword"
         v-model="loginForm.field.email.value"
@@ -22,7 +21,6 @@
       <PulseLoadingSpinner v-if="!showPassword && loggingIn" />
       <FormField
         labelRelation="password"
-        label="Password"
         @blur="loginForm.field.password.validate()"
         v-on:keyup.enter.native="handleLoginAttempt"
         :errors="loginForm.field.password.errors"
@@ -166,18 +164,23 @@ h2 {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
+  color: white;
   @media only screen and (max-width: 768px) {
     /* For mobile phones: */
     padding: 0rem;
   }
 }
 .login-page__form {
-  background-color: transparent;
+  background-color: $panther;
+  border-radius: 1rem;
+  width: 30vw;
+  margin-top: 1rem;
+  box-shadow: 3px 4px 7px black;
   display: flex;
   flex-flow: column;
   align-items: center;
   justify-content: center;
-  margin: 5.5rem 0;
 
   @media only screen and (max-width: 768px) {
     /* For mobile phones: */
@@ -213,6 +216,7 @@ button {
 
 a {
   text-decoration: none;
+  color: $panther-silver;
 }
 
 label {
@@ -226,16 +230,18 @@ label {
   flex-direction: row;
   align-items: center;
   font-size: 13px;
-  margin-bottom: -20px;
+  margin-bottom: -16px;
 }
 .column {
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-bottom: 1rem;
 }
 .enter-email {
   @include muted-font();
-  margin-bottom: -16px;
+  margin-top: -0.5rem;
+  color: $panther-silver;
 }
 img {
   height: 80px;
@@ -247,6 +253,7 @@ img {
 }
 .links {
   font-size: 13px;
+  margin: 2rem;
 }
 /* #email,
 #password {

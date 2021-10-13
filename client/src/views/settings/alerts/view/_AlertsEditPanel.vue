@@ -29,89 +29,94 @@
             @click="selectedTab = 'MESSAGE'"
             class="tab__header-items__item"
           >
-            Message Template
+            Alert Message
           </div>
         </div>
       </div>
     </div>
     <div class="tab__panel">
-      <div style="display:flex;justify-content:center;">
+      <div style="display: flex; justify-content: center">
         <PulseLoadingSpinner v-if="savingInTab" />
         <div v-show="savedChanges">Saved Changes</div>
       </div>
       <div class="alerts-template-list__content">
         <div v-if="selectedTab == 'TEMPLATE'" class="alerts-template-list__content-template">
           <FormField
+            :id="`resource-type-${alert.id}`"
+            :disabled="true"
+            v-model="alert.resourceType"
+          />
+          <span>Edit Title: </span>
+          <FormField
             :id="`resource-title-${alert.id}`"
             :errors="templateTitleField.errors"
             @input="executeUpdateTemplate(templateTitleField)"
             v-model="templateTitleField.value"
           />
-          <FormField
-            :id="`resource-type-${alert.id}`"
-            :disabled="true"
-            v-model="alert.resourceType"
-          />
         </div>
         <div v-if="selectedTab == 'GROUPS'" class="alerts-template-list__content-groups">
           <div
+            style="margin-top: 1rem"
             v-for="(group, index) in alert.groupsRef"
             :key="index"
             class="alerts-template-list__content-conditions__group"
           >
             <span v-if="group.groupOrder != 0">{{ group.groupCondition }}</span>
             <div class="alerts-template-list__content-conditions__operand">
-              <div class="alerts-template-list__add-opts">
-                <button class="btn btn--secondary btn--icon" @click="onShowOperandModal(index)">
-                  <svg width="14px" height="14px" viewBox="0 0 24 24">
-                    <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
-                  </svg>
+              <div style="margin-left: 0.5rem; color: #beb5cc; display: flex; flex-direction: row">
+                <button class="row__button" @click="onShowOperandModal(index)">
+                  Add a new row
+                  <img
+                    style="height: 1rem; margin-left: 0.15rem"
+                    src="@/assets/images/plusOne.png"
+                    alt=""
+                  />
                 </button>
-                <span>Add Operands</span>
+                <button class="row__button" @click="onShowGroupModal()">
+                  Add a Group
+                  <img
+                    style="height: 1rem; margin-left: 0.15rem"
+                    src="@/assets/images/plusOne.png"
+                    alt=""
+                  />
+                </button>
               </div>
               <ListContainer horizontal>
                 <template v-slot:list>
+                  <img
+                    style="margin-right: 0.5rem; margin-top: 0.25rem; height: 1rem"
+                    src="@/assets/images/remove.png"
+                    alt=""
+                  />
                   <ListItem
                     @item-selected="onDeleteOperand(operand.id, i, index)"
                     medium
                     v-for="(operand, i) in group.operandsRef"
                     :key="i"
-                    :item="
-                      `${
-                        operand.operandOrder != 0 ? operand.operandCondition : ''
-                      } ${getReadableOperandRow(operand)}`
-                    "
+                    :item="`${
+                      operand.operandOrder != 0 ? operand.operandCondition : ''
+                    } ${getReadableOperandRow(operand)}`"
                     :active="true"
                   />
                 </template>
               </ListContainer>
             </div>
             <button
-              class="btn btn--danger btn--icon"
+              class="remove__button"
               @click.stop="onRemoveAlertGroup(group.id, index)"
               :disabled="index <= 0"
+              style="margin-left: 0.5rem"
             >
-              <svg width="14px" height="14px" viewBox="0 0 24 24">
-                <use xlink:href="@/assets/images/remove.svg#remove" />
-              </svg>
+              Remove Group
             </button>
-          </div>
-          <div class="alerts-template-list__add-opts">
-            <button class="btn btn--secondary btn--icon" @click="onShowGroupModal()">
-              <svg width="14px" height="14px" viewBox="0 0 24 24">
-                <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
-              </svg>
-            </button>
-            <span>Add Group</span>
           </div>
         </div>
         <div v-if="selectedTab == 'MESSAGE'" class="alerts-template-list__content-message">
-          <div class="alerts-template-list__content-message__form">
+          <div style="margin-top: 1rem" class="alerts-template-list__content-message__form">
             <div class="alerts-template-list__content-message__form-body">
               <FormField :errors="messageTemplateForm.field.body.errors">
                 <template v-slot:input>
                   <quill-editor
-                    style="width:100%;height:20rem;overflow-y:scroll;"
                     @blur="messageTemplateForm.field.body.validate()"
                     @input="executeUpdateMessageTemplate"
                     ref="message-body"
@@ -119,25 +124,26 @@
                     :options="{
                       modules: { toolbar: { container: ['bold', 'italic', 'strike'] } },
                     }"
+                    class="message__box"
                   />
                 </template>
               </FormField>
             </div>
-            <div class="alerts-page__message-options-body__bindings">
-              <DropDownSearch
-                :items="fields.list"
-                @input="bindText(`${alert.resourceType}.${$event}`)"
-                displayKey="referenceDisplayLabel"
-                valueKey="apiName"
-                nullDisplay="Select a field"
-                searchable
-                :hasNext="!!fields.pagination.hasNextPage"
-                @load-more="fieldNextPage"
-                @search-term="onSearchFields"
-                auto
-                class="left"
-              />
-              <ListContainer horizontal>
+
+            <DropDownSearch
+              :items="fields.list"
+              @input="bindText(`${alert.resourceType}.${$event}`)"
+              displayKey="referenceDisplayLabel"
+              valueKey="apiName"
+              nullDisplay="Select a field"
+              searchable
+              :hasNext="!!fields.pagination.hasNextPage"
+              @load-more="fieldNextPage"
+              @search-term="onSearchFields"
+              auto
+              class="left"
+            />
+            <!-- <ListContainer horizontal>
                 <template v-slot:list>
                   <ListItem
                     :key="key"
@@ -147,35 +153,42 @@
                     @item-selected="bindText(`__Recipient.${val.apiName}`)"
                   />
                 </template>
-              </ListContainer>
-            </div>
+              </ListContainer> -->
           </div>
-          <div
+          <!-- <div
             class="alerts-template-list__content-message__preview"
-            style="width:40rem;height:20rem;overflow-y:scroll;"
+            style="width: 40rem; height: 20rem; overflow-y: scroll"
           >
             <SlackMessagePreview :alert="alertObj" />
-          </div>
+          </div> -->
         </div>
         <div v-if="selectedTab == 'CONFIG'" class="alerts-template-list__content-settings">
-          <div class="alerts-template-list__content-settings__group">
-            <ListContainer horizontal>
-              <template v-slot:list>
-                <ListItem
-                  @item-selected="onDeleteConfig(config.id, index)"
-                  large
-                  :key="index"
-                  v-for="(config, index) in alert.configsRef"
-                  :item="getReadableConfig(config)"
-                  :active="true"
-                />
-              </template>
-            </ListContainer>
-            <button class="btn btn--secondary btn--icon" @click="onShowSettingsModal">
-              <svg width="14px" height="14px" viewBox="0 0 24 24">
-                <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
-              </svg>
+          <div style="margin-top: 1rem" class="alerts-template-list__content-settings__group">
+            <button style="margin-left: 1rem" class="row__button" @click="onShowSettingsModal">
+              Add a row
+              <img
+                style="height: 0.875rem; margin-left: 0.25rem"
+                src="@/assets/images/plusOne.png"
+                alt=""
+              />
             </button>
+            <div class="config__column">
+              <ListContainer :key="index" v-for="(config, index) in alert.configsRef">
+                <template v-slot:list>
+                  <!-- <img
+                    style="margin-right: 0.5rem; margin-top: 0.25rem; height: 1rem"
+                    src="@/assets/images/remove.png"
+                    alt=""
+                  /> -->
+                  <ListItem
+                    @item-selected="onDeleteConfig(config.id, index)"
+                    large
+                    :item="getReadableConfig(config)"
+                    :active="true"
+                  />
+                </template>
+              </ListContainer>
+            </div>
           </div>
         </div>
       </div>
@@ -361,14 +374,14 @@ export default {
           width: 600,
         },
         {
-          'before-close': e => {
+          'before-close': (e) => {
             if (e.params && e.params.createdObj) {
               this.alert.groupsRef[groupIndex].operandsRef = [
                 ...this.alert.groupsRef[groupIndex].operandsRef,
                 e.params.createdObj,
               ]
               this.alert.groupsRef[groupIndex].operands = [
-                ...this.alert.groupsRef[groupIndex].operandsRef.map(op => op.id),
+                ...this.alert.groupsRef[groupIndex].operandsRef.map((op) => op.id),
               ]
             }
           },
@@ -396,11 +409,10 @@ export default {
           adaptive: true,
         },
         {
-          'before-close': e => {
+          'before-close': (e) => {
             if (e.params && e.params.createdObj) {
-              console.log(e.params.createdObj)
               this.alert.groupsRef = [...this.alert.groupsRef, e.params.createdObj]
-              this.alert.groups = [...this.alert.groupsRef.map(op => op.id)]
+              this.alert.groups = [...this.alert.groupsRef.map((op) => op.id)]
             }
           },
         },
@@ -423,10 +435,10 @@ export default {
           width: 600,
         },
         {
-          'before-close': e => {
+          'before-close': (e) => {
             if (e.params && e.params.createdObj) {
               this.alert.configsRef = [...this.alert.configsRef, e.params.createdObj]
-              this.alert.configs = [...this.alert.configsRef.map(op => op.id)]
+              this.alert.configs = [...this.alert.configsRef.map((op) => op.id)]
             }
           },
         },
@@ -450,8 +462,8 @@ export default {
       let value = rowData.operandValue
       let operandOpts = [...this.intOpts, ...this.booleanValueOpts, ...this.strOpts]
       let valueLabel = value
-      let operandOperatorLabel = operandOpts.find(opt => opt.value == operandOperator)
-        ? operandOpts.find(opt => opt.value == operandOperator).label
+      let operandOperatorLabel = operandOpts.find((opt) => opt.value == operandOperator)
+        ? operandOpts.find((opt) => opt.value == operandOperator).label
         : operandOperator
       let dataType = this.selectedFieldType(rowData.operandIdentifierRef)
       if (dataType == 'DATETIME' || dataType == 'DATE') {
@@ -463,23 +475,34 @@ export default {
       }
       return `${rowData.operandIdentifier}     ${operandOperatorLabel}     ${valueLabel} `
     },
+    addSuffix(num) {
+      if ((num > 3 && num < 21) || (num > 23 && num < 31)) {
+        return num + 'th'
+      } else if (num == 1 || num == 21 || num == 31) {
+        return num + 'st'
+      } else if (num == 2 || num == 22) {
+        return num + 'nd'
+      } else if (num == 3 || num == 23) {
+        return num + 'rd'
+      }
+    },
     getReadableConfig(config) {
       let recurrenceDayString = config.recurrenceDay
 
       if (config.recurrenceFrequency == 'WEEKLY') {
-        let day = this.weeklyOpts.find(opt => opt.value == config.recurrenceDay)
-          ? this.weeklyOpts.find(opt => opt.value == config.recurrenceDay).key
+        let day = this.weeklyOpts.find((opt) => opt.value == config.recurrenceDay)
+          ? this.weeklyOpts.find((opt) => opt.value == config.recurrenceDay).key
           : config.recurrenceDay
         recurrenceDayString = `Run every ${day} (Weekly)`
       } else if ((config.recurrenceFrequency = 'MONTHLY')) {
         let day = config.recurrenceDay
-        recurrenceDayString = `Run every ${toNumberSuffix(day)} Monthly`
+        recurrenceDayString = `Run every ${this.addSuffix(day)} Monthly`
       }
-      return `${recurrenceDayString} and alert ${config.recipientsRef
-        .map(rec => rec.key)
-        .join(',')} filtering against ${config.alertTargetsRef
-        .map(target => target.key)
-        .join(',')}'s data`
+      return `${recurrenceDayString} and alert ${
+        config.recipientType === 'USER_LEVEL'
+          ? config.recipientsRef.map((rec) => rec.key).join(',')
+          : 'a #channel'
+      } filtering against ${config.alertTargetsRef.map((target) => target.key).join(',')}'s data`
     },
 
     async onDeleteConfig(id, index) {
@@ -492,7 +515,7 @@ export default {
             ...this.alert.configsRef.slice(0, index),
             ...this.alert.configsRef.slice(index + 1, this.alert.configsRef.length),
           ]
-          this.alert.configs = this.alert.configsRef.map(config => config.id)
+          this.alert.configs = this.alert.configsRef.map((config) => config.id)
         } catch (e) {
           console.log(e)
         }
@@ -521,7 +544,7 @@ export default {
           ]
           this.alert.groupsRef[groupIndex].operands = this.alert.groupsRef[
             groupIndex
-          ].operandsRef.map(op => op.id)
+          ].operandsRef.map((op) => op.id)
         } catch (e) {
           console.log(e)
         }
@@ -544,7 +567,7 @@ export default {
             ...this.alert.groupsRef.slice(0, index),
             ...this.alert.groupsRef.slice(index + 1, this.alert.groupsRef.length),
           ]
-          this.alert.groups = this.alert.groupsRef.map(group => group.id)
+          this.alert.groups = this.alert.groupsRef.map((group) => group.id)
         } catch (e) {
           console.log(e)
         }
@@ -641,10 +664,117 @@ export default {
 @import '@/styles/sidebars';
 @import '@/styles/mixins/buttons';
 @import '@/styles/buttons';
+
+::v-deep .ql-toolbar .ql-stroke {
+  fill: none;
+  stroke: $panther;
+}
+
+::v-deep .ql-toolbar .ql-fill {
+  fill: $panther;
+  stroke: none;
+}
+
+::v-deep .ql-toolbar .ql-picker {
+  color: $panther;
+}
+
+::v-deep .ql-editor.ql-blank::before {
+  color: $panther;
+}
+::v-deep .ql-container.ql-snow {
+  border-radius: 0.25rem;
+  border: 3px solid $panther-silver;
+}
+::v-deep .ql-toolbar.ql-snow {
+  border-radius: 0.5rem;
+  border: 3px solid $panther-silver;
+  border-bottom: 1px solid black;
+  background-color: white;
+}
+::v-deep .ql-blank.ql-editor {
+  background-color: white;
+  border-radius: 0.25rem;
+}
+::v-deep .ql-container {
+  background-color: white;
+  color: $panther;
+}
+.message__box {
+  margin-bottom: 2rem;
+  height: 16vh;
+  width: 32vw;
+  border-radius: 0.25rem;
+  background-color: transparent;
+}
+.config__column {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.filtered {
+  filter: invert(66%) sepia(64%) saturate(3377%) hue-rotate(380deg) brightness(100%) contrast(105%);
+}
+.row__button {
+  border: none;
+  color: $dark-green;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: bold;
+  padding-top: 0.2rem;
+  margin-left: -0.1rem;
+}
+.remove__button {
+  border: none;
+  color: $panther-silver;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: bold;
+  padding-top: 0.2rem;
+  margin-left: -0.1rem;
+}
+.disabled__button {
+  border: none;
+  color: $panther-silver;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: bold;
+  padding-top: 0.2rem;
+  margin-left: -0.1rem;
+}
+::v-deep .input-content {
+  background-color: $panther-silver;
+  border: none;
+  font-weight: bold;
+  color: white;
+}
+::v-deep .input-content:focus {
+  background-color: $panther-silver;
+  box-shadow: 2px 4px 7px black;
+  border: none;
+  font-weight: bold;
+  color: white;
+}
+::v-deep .ls-container__list--horizontal {
+  background-color: transparent;
+}
+::v-deep .item-container {
+  margin-right: 2rem;
+}
 .tab__header-items {
   display: flex;
   padding: 0.25rem 0 0;
-  box-shadow: 0 1px 0 0 $soft-gray;
+
   &__item {
     padding: 1rem 2rem;
     border-bottom: none;
@@ -653,8 +783,8 @@ export default {
     cursor: pointer;
     &--active {
       padding: 1rem 2rem;
-      color: #110f24;
-      border-bottom: 2px solid #2f9e54;
+      color: white;
+      border-bottom: 2px solid white;
     }
   }
   &__group {

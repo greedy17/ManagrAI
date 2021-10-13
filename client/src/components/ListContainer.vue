@@ -32,10 +32,7 @@ export default {
 <style scoped lang="scss">
 .ls-container {
   background-color: white;
-  -moz-box-shadow: inset 0 0 10px lightgray;
-  -webkit-box-shadow: inset 0 0 10px lightgray;
-  box-shadow: inset 0 0 10px lightgray;
-  border-radius: 2px;
+  border-radius: 0.25rem;
   color: white;
   width: 100%;
   height: 2.5rem;

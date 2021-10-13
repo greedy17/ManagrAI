@@ -2,7 +2,7 @@
   <div>
     <nav id="nav" v-if="userIsLoggedIn">
       <div class="logo">
-        <img src="@/assets/images/logo-with-name.png" />
+        <img style="height: 3rem" src="@/assets/images/logo.png" />
       </div>
 
       <div class="left" ref="user-menu-icon">
@@ -10,22 +10,22 @@
           <ul>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Integrations' }"
-                >Integrations
+                >Connect
               </router-link>
             </li>
             <li>
-              <router-link exact-active-class="active" :to="{ name: 'SlackFormSettings' }"
-                >Form Builder
+              <router-link exact-active-class="active" :to="{ name: 'CustomizeLandingPage' }"
+                >Map
               </router-link>
             </li>
             <li>
-              <router-link active-class="active" :to="{ name: 'alerts' }"
-                >Smart Alerts
+              <router-link active-class="active" :to="{ name: 'ListTemplates' }"
+                >Automate
               </router-link>
             </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
-                >Invite Users</router-link
+                >Invite</router-link
               >
             </li>
           </ul>
@@ -35,17 +35,17 @@
           <ul>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Integrations' }"
-                >Integrations
+                >Connect
               </router-link>
             </li>
             <li>
               <router-link active-class="active" :to="{ name: 'ListTemplates' }"
-                >Smart Alerts
+                >Automate
               </router-link>
             </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
-                >Invite Users</router-link
+                >Invite</router-link
               >
             </li>
           </ul>
@@ -55,12 +55,12 @@
           <ul>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Integrations' }"
-                >Integrations
+                >Connect
               </router-link>
             </li>
             <li>
               <router-link active-class="active" :to="{ name: 'ListTemplates' }"
-                >Smart Alerts
+                >Automate
               </router-link>
             </li>
           </ul>
@@ -68,21 +68,16 @@
       </div>
 
       <div class="right">
-        <img
-          src="@/assets/images/blackhelp.png"
-          class="tooltip__icon"
-          @mouseover="toggleTooltip"
-          @mouseleave="toggleTooltip"
-        />
-        <div class="tooltip__popup" v-if="tooltipOpen">
-          <div class="tooltip__popup__bold">Having issues?</div>
-          <div>Email support@mymanagr.com</div>
+        <div class="tooltip">
+          <img style="height: 1.75rem" src="@/assets/images/blackhelp.png" class="tooltip__icon" />
+          <div class="tooltip__popup">
+            <div class="tooltip__popup__bold">Having issues?</div>
+            <div class="tip">Email Us: support@mymanagr.com</div>
+          </div>
         </div>
 
-        <div class="profile">
-          <router-link style="color: #199e54" :to="{ name: 'ProfilePage' }">{{
-            userInitials
-          }}</router-link>
+        <div style="color: black" class="profile">
+          <router-link :to="{ name: 'ProfilePage' }">{{ userInitials }}</router-link>
         </div>
 
         <div>
@@ -91,7 +86,7 @@
               @click="logOut"
               src="@/assets/images/blacklogout.png"
               alt=""
-              style="height: 1.5rem"
+              style="height: 1.55rem"
           /></router-link>
         </div>
       </div>
@@ -179,10 +174,17 @@ export default {
 @import '@/styles/mixins/utils';
 
 nav {
-  height: 4.5rem;
+  height: 4rem;
   display: flex;
   flex-flow: row;
   align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 200;
+  width: 100vw;
+  background-color: $soft-gray;
+  // box-shadow: 1px 4px 7px rgba(0, 0, 0, 0.2);
 }
 
 .logo {
@@ -284,27 +286,31 @@ nav {
   position: relative;
   &__icon {
     height: 2rem;
-    &:hover {
-      cursor: pointer;
-    }
   }
 
   &__popup {
-    width: 20rem;
+    width: 18rem;
+    visibility: hidden;
 
-    margin: 2px 13px 3px 40px;
-    padding: 13px 21px 16px 29px;
+    padding: 13px 21px;
     border-radius: 5px;
     box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
-    border: solid 2px #dcdddf;
-    background-color: #ffffff;
+    border: solid 2px $panther-gray;
+    background-color: $panther;
+    color: white;
     position: absolute;
-    right: 4rem;
+    top: -5px;
+    right: 105%;
 
     &__bold {
       font-family: #{$bold-font-family};
+      color: $panther-silver;
     }
   }
+}
+
+.tooltip:hover .tooltip__popup {
+  visibility: visible;
 }
 
 ul {
@@ -321,7 +327,7 @@ li {
   margin-top: 1rem;
 }
 .profile {
-  border: 3px solid $dark-green;
+  border: 3px solid black;
   border-radius: 50%;
   font-size: 12px;
   font-weight: bold;
@@ -334,18 +340,20 @@ img {
 }
 a {
   text-decoration: none;
-  color: $slate-gray;
+  font-weight: bold;
+  color: $black;
 }
 
 a:hover {
-  color: $dark-green;
+  filter: opacity(60%);
 }
 .mar {
   margin-top: 1rem;
 }
 .active {
   border-bottom: 3px solid $dark-green;
-  padding-bottom: 1rem;
-  color: $dark-green;
+  font-weight: bold;
+  padding-bottom: 0.5rem;
+  color: black;
 }
 </style>

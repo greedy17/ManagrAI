@@ -1,7 +1,8 @@
 <template>
   <div class="alert-operand-row">
     <!-- <span class="alert-operand-row--label">Alert Operands</span> -->
-    <div class="alert-operand-row__condition" v-if="form.field.operandOrder.value != 0">
+
+    <div style="margin-bottom: 2rem" class="centered" v-if="form.field.operandOrder.value != 0">
       <label class="alert-operand-row__condition-label">AND</label>
       <ToggleCheckBox
         @input="toggleSelectedCondition"
@@ -11,18 +12,53 @@
       />
       <label class="alert-operand-row__condition-label">OR</label>
     </div>
+
     <div class="alert-operand-row__options">
-      <div class="alert-operand-row__field" style="margin: 0 0.3rem">
+      <div class="centered" style="flex-direction: column">
+        <p style="font-weight: bold">Select CRM Field:</p>
+
+        <!-- <CollectionSearch
+          class="fields__height"
+          :collection="objectFields"
+          itemDisplayKey="referenceDisplayLabel"
+          :showSubmitBtn="false"
+          @onSearch="
+            () => {
+              formFields.pagination = new Pagination()
+            }
+          "
+        >
+          <template v-slot:item="{ result }">
+            <div>
+              <input
+                id="key"
+                :value="result.apiName"
+                v-model="form.field.operandIdentifier.value"
+                type="radio"
+                @click="setIdentifier(result)"
+              />
+              <label for="result">{{ result['referenceDisplayLabel'] }}</label>
+            </div>
+
+            <div class="slack-form-builder__container">
+                <CheckBox :checked="addedFieldIds.includes(result.id)" />
+                <div class="slack-form-builder__sf-field">
+                  {{ result['referenceDisplayLabel'] }}
+                </div>
+              </div>
+          </template>
+        </CollectionSearch> -->
+
         <FormField :errors="form.field.operandIdentifier.errors">
           <template v-slot:input>
             <DropDownSearch
               v-if="selectedOperandType == 'FIELD'"
-              :items="objectFields.list"
+              :items.sync="objectFields.list"
               :itemsRef.sync="form.field._operandIdentifier.value"
               v-model="form.field.operandIdentifier.value"
               displayKey="referenceDisplayLabel"
               valueKey="apiName"
-              nullDisplay="Select an SFDC field"
+              nullDisplay="Select Fields"
               searchable
               :hasNext="!!objectFields.pagination.hasNextPage"
               @load-more="objectFieldNextPage"
@@ -31,8 +67,26 @@
             />
           </template>
         </FormField>
+        <p :class="form.field.operandIdentifier.value ? 'selected__item' : ''">
+          {{ form.field.operandIdentifier.value }}
+        </p>
       </div>
-      <div class="alert-operand-row__operator" style="margin: 0 0.3rem">
+      <div
+        v-if="!(selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME')"
+        class="centered"
+        style="flex-direction: column"
+      >
+        <p style="font-weight: bold">Select an operator:</p>
+        <!-- <div :key="value" v-for="(key, value) in operatorOpts">
+          <input
+            v-model="form.field.operandOperator.value"
+            id="key"
+            :value="key.value"
+            type="radio"
+            @click="setOperator(key)"
+          />
+          <label for="key">{{ key.label }}</label>
+        </div> -->
         <FormField :errors="form.field.operandOperator.errors">
           <template v-slot:input>
             <DropDownSearch
@@ -42,40 +96,38 @@
               @input="form.field.operandOperator.validate()"
               displayKey="label"
               valueKey="value"
-              nullDisplay="Select an Operator"
+              nullDisplay="Select Operators"
               searchable
               local
             />
           </template>
         </FormField>
+        <p :class="form.field.operandOperator.value ? 'selected__item' : ''">
+          {{ form.field.operandOperator.value }}
+        </p>
       </div>
       <div class="alert-operand-row__value">
-        <FormField
+        <div
+          class="centered"
+          style="flex-direction: column"
           v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'"
-          :errors="form.field.operandValue.errors"
         >
-          <template v-slot:input>
-            <DropDownSearch
-              :items.sync="picklistOpts"
-              :itemsRef.sync="form.field._operandValue.value"
+          <p style="font-weight: bold">Select a value:</p>
+          <!-- <div :key="value" v-for="(key, value) in picklistOpts">
+            <input
               v-model="form.field.operandValue.value"
-              displayKey="label"
-              valueKey="value"
-              nullDisplay="Select a value"
-              searchable
-              local
-              v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'"
+              id="key"
+              :value="key.value"
+              type="radio"
+              @click="setOperand(key)"
             />
-          </template>
-        </FormField>
-        <template v-else>
-          <FormField
-            v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'"
-            :errors="form.field.operandValue.errors"
-          >
+            <label for="key">{{ key.label }}</label>
+          </div> -->
+
+          <FormField :errors="form.field.operandValue.errors">
             <template v-slot:input>
               <DropDownSearch
-                :items.sync="valueOpts"
+                :items.sync="picklistOpts"
                 :itemsRef.sync="form.field._operandValue.value"
                 v-model="form.field.operandValue.value"
                 displayKey="label"
@@ -83,39 +135,106 @@
                 nullDisplay="Select a value"
                 searchable
                 local
-                v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'"
               />
             </template>
           </FormField>
+          <p :class="form.field.operandValue.value ? 'selected__item' : ''">
+            {{ form.field.operandValue.value }}
+          </p>
+        </div>
 
-          <FormField
-            v-else
-            style="margin: 1rem 2rem"
-            @blur="form.field.operandValue.validate()"
-            :errors="form.field.operandValue.errors"
-            v-model="form.field.operandValue.value"
-            :inputType="getInputType(form.field._operandIdentifier.value)"
-            large
-            bordered
-            placeholder="Enter a value"
-            class="mar"
-          />
+        <template v-else>
           <div
-            v-if="selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME'"
-            class="alert-operand-row__date-range"
+            class="centered"
+            style="flex-direction: column"
+            v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'"
           >
-            <!-- This alert will look for resources {{ form.field.operandValue.value }}
-            {{ /^\-/.test(form.field.operandValue.value) ? ' days before ' : ' days after ' }}
-            selected alert trigger date
-            {{
-              form.field.operandOperator.value
-                ? /=/.test(form.field.operandOperator.value)
-                  ? ' including the specified day '
-                  : ' excluding the specified day '
-                : ''
-            }}
-            see preview for details -->
-            -1 = yesterday, 0 = today, 1 = tomorrow
+            <p style="font-weight: bold">Select a value:</p>
+            <!-- <div :key="value" v-for="(key, value) in valueOpts">
+              <input
+                v-model="form.field.operandValue.value"
+                id="key"
+                :value="key.value"
+                type="radio"
+                @click="setOperand(key)"
+              />
+              <label for="key">{{ key.label }}</label>
+            </div> -->
+
+            <FormField :errors="form.field.operandValue.errors">
+              <template v-slot:input>
+                <DropDownSearch
+                  :items.sync="valueOpts"
+                  :itemsRef.sync="form.field._operandValue.value"
+                  v-model="form.field.operandValue.value"
+                  displayKey="label"
+                  valueKey="value"
+                  nullDisplay="Select a value"
+                  searchable
+                  local
+                />
+              </template>
+            </FormField>
+            <p :class="form.field.operandValue.value ? 'selected__item' : ''">
+              {{ form.field.operandValue.value }}
+            </p>
+          </div>
+
+          <div v-else>
+            <div v-if="selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME'">
+              <div style="display: flex; align-items: center">
+                <p>{{ form.field.operandIdentifier.value }} is:</p>
+                <div class="centered">
+                  <label class="alert-operand-row__condition-label">In the past</label>
+                  <ToggleCheckBox
+                    @input="toggleSelectedOperand"
+                    :value="MyOperand !== 'Negative'"
+                    offColor="#199e54"
+                    onColor="#199e54"
+                  />
+                  <label class="alert-operand-row__condition-label">In the Future</label>
+                </div>
+              </div>
+
+              <div v-if="MyOperand === 'Negative'">
+                <label for="quantityNeg">Number of <span>days</span>:</label>
+                <input
+                  id="quantityNeg"
+                  name="quantityNeg"
+                  v-model="form.field.operandValue.value"
+                  type="number"
+                  v-on:keyup="negVal(form.field.operandValue.value)"
+                  class="dayInput"
+                  @click="setIdentifier"
+                />
+              </div>
+
+              <div v-else>
+                <label for="quantity">Number of <span>days</span>:</label>
+                <input
+                  id="quantity"
+                  name="quantity"
+                  v-model="form.field.operandValue.value"
+                  type="number"
+                  class="dayInput"
+                  @click="setIdentifier"
+                />
+              </div>
+            </div>
+
+            <div class="centered" style="flex-direction: column" v-else>
+              <p style="font-weight: bold">Enter value:</p>
+              <FormField
+                @blur="form.field.operandValue.validate()"
+                :errors="form.field.operandValue.errors"
+                v-model="form.field.operandValue.value"
+                :inputType="getInputType(form.field._operandIdentifier.value)"
+                placeholder=""
+              />
+              <p :class="form.field.operandValue.value ? 'selected__item' : ''">
+                {{ form.field.operandValue.value }}
+              </p>
+            </div>
           </div>
         </template>
       </div>
@@ -139,6 +258,7 @@ import DropDownSearch from '@/components/DropDownSearch'
  */
 import { AlertOperandForm } from '@/services/alerts/'
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import CollectionSearch from '@thinknimble/collection-search'
 import {
   SObjectField,
   SObjectValidations,
@@ -164,7 +284,7 @@ export default {
    *
    */
   name: 'AlertOperandRow',
-  components: { ListContainer, ToggleCheckBox, DropDownSearch, FormField },
+  components: { ListContainer, ToggleCheckBox, DropDownSearch, FormField, CollectionSearch },
   props: {
     form: { type: AlertOperandForm },
     resourceType: { type: String },
@@ -175,14 +295,16 @@ export default {
         ModelClass: SObjectField,
         filters: { forAlerts: true, filterable: true, page: 1 },
       }),
-
       // used by dropdown as a ref field to retrieve obj of selected opt
       selectedOperandFieldRef: null,
       // used by dd as a ref field to retrieve obj of selected opt
       selectedOperandValueRef: null,
       picklistOpts: [],
+      operandDate: '',
       NON_FIELD_ALERT_OPTS,
-
+      negativeOperand: false,
+      positiveOperand: false,
+      MyOperand: 'Negative',
       intOpts: [
         { label: '>= (Greater or Equal)', value: '>=' },
         { label: '<= (Less or Equal)', value: '<=' },
@@ -251,10 +373,27 @@ export default {
       }
       return 'text'
     },
+    setIdentifier() {
+      // this.form.field._operandIdentifier.value = obj
+      if (this.selectedFieldType == 'DATE' || this.selectedFieldType == 'DATETIME') {
+        this.form.field.operandOperator.value = '<='
+        this.form.field._operandOperator.value = { label: '<= (Less or Equal)', value: '<=' }
+      }
+    },
+    setOperator(obj) {
+      this.form.field._operandOperator.value = obj
+    },
+    setOperand(obj) {
+      this.form.field._operandValue.value = obj
+    },
     toggleSelectedCondition() {
       this.selectedCondition == 'AND'
         ? (this.selectedCondition = 'OR')
         : (this.selectedCondition = 'AND')
+    },
+    toggleSelectedOperand() {
+      this.form.field.operandValue.value = '0'
+      this.MyOperand === 'Negative' ? (this.MyOperand = 'Positive') : (this.MyOperand = 'Negative')
     },
     async objectFieldNextPage() {
       await this.objectFields.addNextPage()
@@ -275,6 +414,16 @@ export default {
       } catch (e) {
         console.log(e)
       }
+    },
+    negVal(val) {
+      let newVal = ''
+      if (val < 0) {
+        val = val
+      } else {
+        val = val * -1
+      }
+      newVal = -Math.abs(val).toString()
+      this.form.field.operandValue.value = newVal
     },
   },
   computed: {
@@ -355,6 +504,50 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
+
+::v-deep .input-content {
+  width: 6rem;
+  background-color: white;
+}
+::v-deep .input-form {
+  width: 6rem;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.5);
+}
+
+::v-deep .collection-search .collection-search__form .collection-search__input .search__input {
+  font-family: Lato-Regular, sans-serif;
+  font-weight: normal;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  font-size: 16px;
+  border-radius: 4px;
+  padding: 3%;
+  line-height: 1.29;
+  letter-spacing: 0.5px;
+  color: $panther;
+  height: 2.5rem;
+  background-color: white;
+  border: 1px solid #5d5e5e;
+  width: 10rem;
+  padding: 0 0 0 1rem;
+  margin: 1rem;
+  -webkit-box-shadow: 1px 4px 7px black;
+  box-shadow: 1px 4px 7px black;
+}
+::v-deep .collection-search__result-item {
+  overflow: auto;
+  padding: 0 0.5rem;
+  border: none;
+}
+::v-deep .collection-search__result-item:hover {
+  background-color: transparent;
+}
+.centered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 .btn {
   &--danger {
     @include button-danger();
@@ -370,13 +563,17 @@ export default {
     @include --icon();
   }
 }
+.dayInput {
+  width: 50px;
+  margin-left: 0.25rem;
+  border-radius: 0.25rem;
+}
 .alert-operand-row {
   // @include standard-border();
-  margin: 1rem;
-  padding: 0.5rem 1rem;
+  // margin: 1rem;
+  // padding: 0.5rem 1rem;
   display: flex;
   flex-direction: column;
-
   &--label {
     top: -1.05rem;
     position: relative;
@@ -387,6 +584,7 @@ export default {
   position: relative;
   top: 0rem;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
   &-label {
@@ -405,14 +603,51 @@ export default {
 }
 .alert-operand-row__options {
   display: flex;
-  padding: 1rem;
+  align-items: flex-start;
   flex-wrap: wrap;
   justify-content: space-evenly;
+  margin-top: -1rem;
   &-label {
     color: black;
   }
 }
+.fields__height {
+  height: 26vh;
+  overflow-y: scroll;
+}
+.toggle__row {
+  display: flex;
+  flex-direction: row;
+}
 .mar {
   margin-top: 1rem;
+}
+.column {
+  display: flex;
+  flex-direction: column;
+  margin: 1rem;
+}
+.row {
+  display: flex;
+  flex-direction: row;
+  margin: 0.2rem;
+}
+::-webkit-scrollbar {
+  background-color: $panther;
+  -webkit-appearance: none;
+  width: 4px;
+  height: 100%;
+}
+::-webkit-scrollbar-thumb {
+  border-radius: 2px;
+  background-color: $panther-silver;
+}
+.selected__item {
+  padding: 0.5rem 1.2rem;
+  background-color: $dark-green;
+  border: none;
+  border-radius: 0.3rem;
+  width: 100%;
+  text-align: center;
 }
 </style>

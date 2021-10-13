@@ -1,15 +1,10 @@
 <template>
   <div class="alert-summary">
-    <div class="box">
-      <div class="box__header">
-        <div class="box__header-title"></div>
-        <div class="box__header-subtitle"></div>
-      </div>
-      <div class="box__content center outline">
-        <!-- <h2>
+    <div>
+      <div class="alert__summary">
+        <h2 style="text-align: center">
           {{ form.value.title ? form.value.title : 'No title' }}
-        </h2> -->
-        <h2 class="title">Alert Details</h2>
+        </h2>
 
         <div
           class="box__content-recipient-group__recipient-group"
@@ -20,95 +15,94 @@
             class="box__content-recipient-group__recipient-group__recipient"
             v-if="config.recurrenceFrequency == 'WEEKLY'"
           >
-            This alert will run every <u><b>week</b></u> on
-            <u
-              ><b>{{ config._recurrenceDay ? config._recurrenceDay.key : '' }}</b></u
-            >
-            and will check
-            <u
-              ><b>{{ getListOfTargets(config._alertTargets) }}</b></u
-            >
-            objects but only alert
-            <u
-              ><b>{{ getListOfRecipeints(config._recipients) }}</b></u
-            >
+            This alert will run every <b style="color: #199e54">week</b> on
+            <b style="color: #199e54">{{
+              config._recurrenceDay ? config._recurrenceDay.key : ''
+            }}</b>
+            , checking
+
+            <b style="color: #199e54">{{ getListOfTargets(config._alertTargets) }}</b>
+
+            pipelines, and alerting
+            <b v-if="config.recipientType === 'SLACK_CHANNEL'" style="color: #199e54">{{
+              config._recipients.nameNormalized
+            }}</b>
+            <b v-else style="color: #199e54">{{ getListOfRecipients(config._recipients) }}</b>
           </div>
           <div
             class="box__content-recipient-group__recipient-group__recipient"
             v-else-if="config.recurrenceFrequency == 'MONTHLY'"
           >
-            This alert will run every <u><b>Month</b></u> on the
-            <u
-              ><b>{{ config.recurrenceDay | numberSuffix }}</b></u
-            >
-            and will check
-            <u
-              ><b>{{ getListOfTargets(config._alertTargets) }}</b></u
-            >
-            resources but only alert
-            <u
-              ><b>{{ getListOfRecipeints(config._recipients) }}</b></u
-            >
+            This alert will run every <b style="color: #199e54">Month</b> on the
+
+            <b style="color: #199e54">{{ addSuffix(config.recurrenceDay) }}</b>
+
+            , checking
+
+            <b style="color: #199e54">{{ getListOfTargets(config._alertTargets) }}</b>
+
+            pipelines, and alerting
+            <b v-if="config.recipientType === 'SLACK_CHANNEL'" style="color: #199e54">{{
+              config._recipients.nameNormalized
+            }}</b>
+            <b v-else style="color: #199e54">{{ getListOfRecipients(config._recipients) }}:</b>
           </div>
 
-          <div
-            class="box__content-recipient-group__recipient-group__conditions"
-            :key="i"
-            v-for="(group, i) in form.value.alertGroups"
-          >
-            <span class="box__content-recipient-group__recipient-group__conditions-condition">
-              {{ group.groupOrder == 0 ? 'if ' : `${group.groupCondition} ` }} Group
-              {{ ` ${i + 1} meets the following criteria:` }}
+          <div style="margin-top: 1rem" :key="i" v-for="(group, i) in form.value.alertGroups">
+            <span class="condition">
+              {{ group.groupOrder == 0 ? '' : `${group.groupCondition} ` }}
             </span>
 
             <div
-              class="box__content-recipient-group__recipient-group__conditions__operands pink"
+              class="box__content-recipient-group__recipient-group__conditions__operands"
               :key="key"
               v-for="(operandRow, key) in group.alertOperands"
             >
-              <span
-                class="
-                  box__content-recipient-group__recipient-group__conditions__operands-condition
-                "
-                v-if="key != 0"
-              >
+              <span class="condition" v-if="key != 0">
                 {{ operandRow.operandCondition }}
               </span>
               <div
                 style="display: flex; justify-content: space-evenly"
                 class="box__content-recipient-group__recipient-group__conditions__operands-operand"
               >
-                <span>{{ form.value.resourceType }} </span>
-                <span>
+                <!-- <span>{{ form.value.resourceType }} </span> -->
+                <span class="green__item">
                   {{
                     operandRow._operandIdentifier
                       ? operandRow._operandIdentifier.referenceDisplayLabel
                       : ''
                   }}</span
                 >
-                <span>{{
-                  operandRow._operandOperator ? operandRow._operandOperator.label : ''
-                }}</span>
+                <span class="green__item">{{ operandRow._operandOperator.label }}</span>
                 <!-- If this is a monthly alert (with a datetime or date type) show the calculated period -->
 
                 <span
+                  class="green__item"
                   v-if="
                     operandRow._operandIdentifier &&
                     (operandRow._operandIdentifier.dataType == 'Date' ||
                       operandRow._operandIdentifier.dataType == 'DateTime')
                   "
                 >
-                  {{
+                  <!-- <span v-if="operandRow.operandValue === 0">is the current day</span>
+                  <span v-else-if="operandRow.operandValue === 1">is the next</span>
+                  <span v-else-if="operandRow.operandValue === -1">has passed</span> -->
+
+                  <!-- {{
                     operandDateValToStr(
                       config.recurrenceFrequency,
                       config.recurrenceDay,
                       operandRow.operandValue,
                     )
-                  }}
-                  <small><em>(or current month at run time)</em></small>
+                  }} -->
+                  <span>{{ changeNeg(operandRow.operandValue) }} days </span>
+                  <span>{{
+                    checkVal(operandRow.operandValue) ? ' in the past' : ' in the future'
+                  }}</span>
                 </span>
                 <!-- If this is a weekly alert (with a datetime or date type show) the calculated period -->
                 <span
+                  class="green__item"
                   v-else-if="
                     operandRow._operandIdentifier &&
                     operandRow._operandIdentifier.dataType == 'Picklist'
@@ -119,7 +113,7 @@
                       : operandRow.operandValue
                   }}</span
                 >
-                <span v-else>
+                <span class="green__item" v-else>
                   {{ operandRow.operandValue }}
                 </span>
               </div>
@@ -167,20 +161,45 @@ export default {
   watch: {},
   async created() {},
   methods: {
+    checkVal(val) {
+      if (val < 0) {
+        return true
+      } else {
+        return false
+      }
+    },
+    changeNeg(val) {
+      if (val < 0) {
+        return val * -1
+      } else {
+        return val
+      }
+    },
+    addSuffix(num) {
+      if ((num > 3 && num < 21) || (num > 23 && num < 31)) {
+        return num + 'th'
+      } else if (num == 1 || num == 21 || num == 31) {
+        return num + 'st'
+      } else if (num == 2 || num == 22) {
+        return num + 'nd'
+      } else if (num == 3 || num == 23) {
+        return num + 'rd'
+      }
+    },
     getListOfTargets(targets) {
       if (targets && targets.length) {
         return targets
-          .map(opt => {
+          .map((opt) => {
             return opt.id == 'SELF' ? 'Your' : opt.fullName + "'s"
           })
           .join(', ')
       }
     },
-    getListOfRecipeints(recipients) {
-      if (recipients && recipients.length) {
-        return recipients
-          .map(opt => {
-            return opt.value == 'SELF' ? 'You' : opt.key
+    getListOfRecipients(targets) {
+      if (targets && targets.length) {
+        return targets
+          .map((opt) => {
+            return opt.id == 'SELF' ? 'You' : opt.fullName + "'s"
           })
           .join(', ')
       }
@@ -222,52 +241,49 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
-.alert-group-row {
-  // @include standard-border();
-  margin: 0.5rem;
+// .alert-group-row {
+//   // @include standard-border();
+//   margin: 0.5rem;
+//   padding: 0.5rem 1rem;
+//   display: flex;
+//   flex-direction: column;
+//   overflow: visible;
+//   &--label {
+//     @include muted-font();
+//     top: -1.1rem;
+//     position: relative;
+//   }
+// }
+// .alert-group-row__condition {
+//   position: relative;
+//   top: -2.4rem;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   &-label {
+//     @include muted-font();
+//     margin: 0 0.5rem;
+//   }
+// }
+.alert__summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+.condition {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.green__item {
   padding: 0.5rem 1rem;
-  display: flex;
-  flex-direction: column;
-  overflow: visible;
-  &--label {
-    @include muted-font();
-    top: -1.1rem;
-    position: relative;
-  }
-}
-.alert-group-row__condition {
-  position: relative;
-  top: -2.4rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  &-label {
-    @include muted-font();
-    margin: 0 0.5rem;
-  }
-}
-.box__content-recipient-group__recipient-group {
-  padding: 1rem;
-}
-.pink {
-  font-weight: bold;
-  margin-right: -2rem;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-}
-.center {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-.outline {
-  color: $white;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 4px 1px $grape;
-  background: linear-gradient($grape, #231049);
-}
-.title {
-  color: $gray;
+  margin: 0.5rem;
+  background-color: $panther-orange;
+  border: 2px solid $panther-orange;
+  border-radius: 0.33rem;
+
+  text-align: center;
+  filter: drop-shadow(4px 2px 4px black);
 }
 </style>

@@ -24,9 +24,9 @@ export default class SalesloftAccountAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'Error Retrieving Salesloft Auth Link' })(e)
     }
   }
-  async authenticate(code, context, scope) {
+  async authenticate(code) {
     try {
-      const res = await this.client.post(SalesloftAccountAPI.ENDPOINT + 'authenticate', { code: code, context: context, scope:scope})
+      const res = await this.client.post(SalesloftAccountAPI.ENDPOINT + 'authenticate', { code: code})
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Data from Code' })(e)

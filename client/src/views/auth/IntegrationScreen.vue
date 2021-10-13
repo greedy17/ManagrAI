@@ -1,128 +1,142 @@
 <template>
   <div class="integrations">
     <h2 class="title">Connect your apps to Managr</h2>
-
-    <PulseLoadingSpinnerButton
-      v-if="hasSalesforceIntegration && user.isAdmin"
-      @click="goToSlackFormBuilder"
-      class="slack-button"
-      text="Continue to Slack Form Builder"
-      :loading="false"
-    ></PulseLoadingSpinnerButton>
-    <button class="alertButton__" @click="goToSmartAlerts" v-if="!user.isAdmin">
-      Continue to Smart Alerts
-    </button>
-
-    <div
-      v-if="!hasSalesforceIntegration && user.isAdmin"
-      class="slack-button slack-button--disabled"
-      text="Continue to Slack Form Builder"
-    >
-      Slack Form Builder
+    <p style="font-weight: bold; margin-top: -0.5rem; color: #5d5e5e">
+      Managr utilizes a secure oAuth connection
+    </p>
+    <div v-if="user.isAdmin">
+      <PulseLoadingSpinnerButton
+        v-if="hasSalesforceIntegration && hasSlackIntegration"
+        @click="goToSlackFormBuilder"
+        class="slack-button"
+        text="Map your CRM Fields"
+        :loading="false"
+      ></PulseLoadingSpinnerButton>
+      <PulseLoadingSpinnerButton
+        v-else
+        class="disabled-button"
+        text="Map your CRM Fields"
+        :loading="false"
+      ></PulseLoadingSpinnerButton>
+    </div>
+    <div v-else>
+      <PulseLoadingSpinnerButton
+        v-if="hasSalesforceIntegration && hasSlackIntegration"
+        @click="goToSlackFormBuilder"
+        class="slack-button"
+        text="Activate Workflow Automations"
+        :loading="false"
+      ></PulseLoadingSpinnerButton>
+      <PulseLoadingSpinnerButton
+        v-else
+        class="disabled-button"
+        text="Activate Workflow Automations"
+        :loading="false"
+      ></PulseLoadingSpinnerButton>
     </div>
 
     <div class="integrations__cards">
       <div class="card">
         <div class="card__header">
           <img class="card-img" src="@/assets/images/salesforce.png" />
-          <h3 class="card__title">Salesforce</h3>
+          <h2 class="card__title">Salesforce</h2>
         </div>
-        <p class="card-text">Sync your Accounts, Opportunities, Contacts, & Leads.</p>
-        <PulseLoadingSpinnerButton
-          v-if="!hasSalesforceIntegration"
-          @click="onGetAuthLink('SALESFORCE')"
-          class="primary-button"
-          text="Connect"
-          :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
-          >Connect</PulseLoadingSpinnerButton
-        >
-        <PulseLoadingSpinnerButton
-          text="Revoke"
-          :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
-          @click="onRevoke('SALESFORCE')"
-          v-else
-          class="btn btn--danger"
-        ></PulseLoadingSpinnerButton>
+        <div>
+          <p class="card-text">Sync Accounts, Opportunities, & Contacts</p>
+        </div>
+        <div class="card__body">
+          <PulseLoadingSpinnerButton
+            v-if="!hasSalesforceIntegration"
+            @click="onGetAuthLink('SALESFORCE')"
+            class="orange_button"
+            style="margin-left: 0.5rem"
+            text="Connect"
+            :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
+            >Connect</PulseLoadingSpinnerButton
+          >
+          <img
+            src="@/assets/images/unplug.png"
+            :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
+            @click="onRevoke('SALESFORCE')"
+            v-else
+            style="height: 2rem; cursor: pointer"
+          />
+        </div>
       </div>
 
       <div class="card">
         <div class="card__header">
-          <img
-            class="card-img card-img__radius"
-            src="@/assets/images/zoom.png"
-            style="height: 3rem; width: 3rem"
-          />
-          <h3 class="card__title">Zoom</h3>
+          <img class="card-img card-img__radius" src="@/assets/images/zoom.png" />
+          <h2 class="card__title">Zoom</h2>
         </div>
 
-        <p class="card-text">Enable meeting recap automation.</p>
-        <p class="note">
-          <strong class="bold">Note:</strong> we are only accesing your meetings not the company’s
-          or other employees.
-        </p>
-        <PulseLoadingSpinnerButton
-          v-if="!hasZoomIntegration"
-          :disabled="hasZoomIntegration"
-          @click="onGetAuthLink('ZOOM')"
-          class="primary-button"
-          text="Connect"
-          :loading="generatingToken && selectedIntegration == 'ZOOM'"
-        ></PulseLoadingSpinnerButton>
-        <div v-else style="display: flex; justify-content: space-between">
+        <p class="card-text">Activates the meeting workflow automation.</p>
+        <div class="card__body">
           <PulseLoadingSpinnerButton
-            text="Revoke"
-            :loading="generatingToken && selectedIntegration == 'ZOOM'"
-            @click="onRevoke('ZOOM')"
-            class="btn btn--danger"
-          ></PulseLoadingSpinnerButton>
-          <PulseLoadingSpinnerButton
-            text="Refresh Token"
-            :loading="generatingToken && selectedIntegration == 'ZOOM'"
+            v-if="!hasZoomIntegration"
+            :disabled="hasZoomIntegration"
             @click="onGetAuthLink('ZOOM')"
-            class="secondary-button"
+            class="orange_button"
+            text="Connect"
+            :loading="generatingToken && selectedIntegration == 'ZOOM'"
           ></PulseLoadingSpinnerButton>
+          <div style="display: flex; justify-content: center" v-else>
+            <img
+              src="@/assets/images/unplug.png"
+              :loading="generatingToken && selectedIntegration == 'ZOOM'"
+              @click="onRevoke('ZOOM')"
+              style="height: 2rem; cursor: pointer"
+            />
+            <img
+              src="@/assets/images/refresh.png"
+              :loading="generatingToken && selectedIntegration == 'ZOOM'"
+              @click="onGetAuthLink('ZOOM')"
+              style="height: 2rem; cursor: pointer"
+            />
+          </div>
         </div>
       </div>
 
       <div class="card">
         <div class="card__header">
-          <img class="card-img" src="@/assets/images/slack.png" />
-          <h3 class="card__title">Slack</h3>
+          <img style="height: 3rem" src="@/assets/images/slackLogo.png" />
+          <h2 class="card__title">Slack</h2>
         </div>
-
-        <p class="card-text">Enable 2-way messaging.</p>
-        <p class="note">
-          <strong class="bold">Note:</strong> if you need approval connecting to your company's
-          workspace, create a new one!
-        </p>
-        <PulseLoadingSpinnerButton
-          v-if="
-            (!orgHasSlackIntegration && userCanIntegrateSlack) ||
-            (orgHasSlackIntegration && !hasSlackIntegration)
-          "
-          :disabled="(!orgHasSlackIntegration && !userCanIntegrateSlack) || hasSlackIntegration"
-          @click="onIntegrateSlack"
-          class="primary-button"
-          :text="slackButtonMessage"
-          :loading="generatingToken && selectedIntegration == 'SLACK'"
-        ></PulseLoadingSpinnerButton>
-        <div
-          v-else-if="hasSlackIntegration && orgHasSlackIntegration"
-          style="display: flex; justify-content: space-between"
-        >
+        <p class="card-text">Interact with Managr through Slack</p>
+        <div class="card__body">
           <PulseLoadingSpinnerButton
-            @click="onRevoke('SLACK')"
-            class="btn btn--danger"
-            text="Revoke"
+            v-if="
+              (!orgHasSlackIntegration && userCanIntegrateSlack) ||
+              (orgHasSlackIntegration && !hasSlackIntegration)
+            "
+            :disabled="(!orgHasSlackIntegration && !userCanIntegrateSlack) || hasSlackIntegration"
+            @click="onIntegrateSlack"
+            class="orange_button"
+            :text="slackButtonMessage"
             :loading="generatingToken && selectedIntegration == 'SLACK'"
           ></PulseLoadingSpinnerButton>
-          <PulseLoadingSpinnerButton
-            v-if="userCanIntegrateSlack"
-            @click="onRefreshSlack"
-            class="secondary-button"
-            text="Refresh Token"
-            :loading="generatingToken && selectedIntegration == 'SLACK'"
-          ></PulseLoadingSpinnerButton>
+          <div v-else-if="hasSlackIntegration && orgHasSlackIntegration">
+            <img
+              src="@/assets/images/unplug.png"
+              :loading="generatingToken && selectedIntegration == 'SLACK'"
+              @click="onRevoke('SLACK')"
+              style="height: 2rem; cursor: pointer"
+            />
+            <img
+              src="@/assets/images/refresh.png"
+              v-if="userCanIntegrateSlack"
+              @click="onRefreshSlack"
+              :loading="generatingToken && selectedIntegration == 'SLACK'"
+              style="height: 2rem; cursor: pointer"
+            />
+            <!-- <PulseLoadingSpinnerButton
+              v-if="userCanIntegrateSlack"
+              @click="onRefreshSlack"
+              class="orange__button"
+              text="Refresh"
+              :loading="generatingToken && selectedIntegration == 'SLACK'"
+            ></PulseLoadingSpinnerButton> -->
+          </div>
         </div>
       </div>
 
@@ -130,111 +144,144 @@
         <div class="card__header">
           <img
             class="card-img"
-            src="@/assets/images/gmail.png"
-            style="margin-right: 1rem; height: 3rem; width: 3rem"
+            src="@/assets/images/gmailCal.png"
+            style="margin-right: 1rem; height: 2.5rem; width: 2.5rem"
           />
-          <img
-            class="card-img"
-            src="@/assets/images/outlook.png"
-            style="height: 3rem; width: 3rem"
-          />
-          <h3 class="card__title">Calendar</h3>
+          <img class="card-img" src="@/assets/images/outlookMail.png" style="height: 3rem" />
+          <h2 class="card__title">Calendar</h2>
         </div>
 
-        <p class="card-text">Pull in meeting attendees.</p>
-        <div style="margin-bottom: 0.5rem; width: 15rem">
+        <p class="card-text">Accesses your upcoming meetings + attendees</p>
+        <div class="card__body">
+          <PulseLoadingSpinnerButton
+            v-if="!hasNylasIntegration"
+            @click="onGetAuthLink('NYLAS')"
+            style="margin-left: 1rem"
+            class="orange_button"
+            text="Connect"
+            :loading="generatingToken && selectedIntegration == 'NYLAS'"
+          ></PulseLoadingSpinnerButton>
+          <img
+            v-else
+            src="@/assets/images/unplug.png"
+            :loading="generatingToken && selectedIntegration == 'NYLAS'"
+            @click="onRevoke('NYLAS')"
+            style="height: 2rem; cursor: pointer"
+          />
+        </div>
+        <!-- <div style="margin-bottom: 0.5rem; width: 15rem">
           <GoogleButton
             @click="onGetAuthLink('NYLAS')"
             :loading="generatingToken && selectedIntegration == 'NYLAS'"
             v-if="!hasNylasIntegration"
           />
-        </div>
-
-        <PulseLoadingSpinnerButton
-          v-if="!hasNylasIntegration"
-          @click="onGetAuthLink('NYLAS')"
-          class="primary-button"
-          text="Connect Other Provider"
-          :loading="generatingToken && selectedIntegration == 'NYLAS'"
-        ></PulseLoadingSpinnerButton>
-        <PulseLoadingSpinnerButton
-          text="Revoke"
-          :loading="generatingToken && selectedIntegration == 'NYLAS'"
-          v-else
-          @click="onRevoke('NYLAS')"
-          class="btn btn--danger"
-        ></PulseLoadingSpinnerButton>
+        </div> -->
       </div>
 
       <div class="card">
         <div class="card__header">
-          <img
-            class="card-img card-img__radius"
-            src="@/assets/images/salesloft.png"
-            style="height: 3rem; width: 3rem"
-          />
-          <h3 class="card__title">Salesloft</h3>
+          <img style="height: 1.5rem" src="@/assets/images/salesloft.svg" />
         </div>
-        <p class="card-text">Put Contacts right into a Cadence from Slack</p>
-        <PulseLoadingSpinnerButton
-          v-if="!hasSalesloftIntegration && user.isAdmin"
-          :disabled="hasSalesloftIntegration"
-          @click="onGetAuthLink('SALESLOFT')"
-          class="primary-button"
-          text="Connect"
-          :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
-        ></PulseLoadingSpinnerButton>
-        <div
-          v-else-if="hasSalesloftIntegration && user.isAdmin"
-          style="display: flex; justify-content: space-between"
-        >
+        <p class="card-text">Add Contacts to cadences</p>
+        <div class="card__body">
           <PulseLoadingSpinnerButton
-            text="Revoke"
-            :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
-            @click="onRevoke('SALESLOFT')"
-            class="btn btn--danger"
-          ></PulseLoadingSpinnerButton>
-          <PulseLoadingSpinnerButton
-            text="Refresh Token"
-            :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
+            v-if="!hasSalesloftIntegration && user.isAdmin"
+            :disabled="hasSalesloftIntegration"
             @click="onGetAuthLink('SALESLOFT')"
-            class="secondary-button"
+            style="margin-left: 1rem; cursor: pointer"
+            class="orange_button"
+            text="Connect"
+            :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
           ></PulseLoadingSpinnerButton>
+          <div v-else-if="hasSalesloftIntegration && user.isAdmin">
+            <img
+              src="@/assets/images/unplug.png"
+              :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
+              @click="onRevoke('SALESLOFT')"
+              style="height: 2rem; cursor: pointer"
+            />
+            <!-- <img
+              src="@/assets/images/refresh.png"
+              :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
+              style="height: 2rem; cursor: pointer"
+            /> -->
+          </div>
+          <p v-else-if="hasSalesloftIntegration && !user.isAdmin">Salesloft is connected!</p>
+          <p v-else>Contact your organization admin to add Salesloft</p>
         </div>
-        <p v-else-if="hasSalesloftIntegration && !user.isAdmin">Salesloft is connected!</p>
-        <p v-else>Contact your organization admin to add Salesloft</p>
       </div>
 
       <div class="card">
         <div class="card__header">
-          <img class="card-img" src="@/assets/images/teams.png" />
-          <h3 class="card__title">Teams</h3>
+          <img style="height: 2rem" src="@/assets/images/gong.png" />
         </div>
-
-        <p class="card-text">Coming Soon...</p>
+        <p class="card-text">Access call recordings and insights</p>
+        <div class="card__body">
+          <PulseLoadingSpinnerButton
+            v-if="!hasGongIntegration && user.isAdmin"
+            :disabled="hasGongIntegration"
+            @click="onGetAuthLink('GONG')"
+            style="margin-left: 1rem; cursor: pointer"
+            class="orange_button"
+            text="Connect"
+            :loading="generatingToken && selectedIntegration == 'GONG'"
+          ></PulseLoadingSpinnerButton>
+          <div v-else-if="hasGongIntegration && user.isAdmin">
+            <img
+              src="@/assets/images/unplug.png"
+              :loading="generatingToken && selectedIntegration == 'GONG'"
+              @click="onRevoke('GONG')"
+              style="height: 2rem; cursor: pointer"
+            />
+          </div>
+          <p v-else-if="hasGongIntegration && !user.isAdmin">Gong is connected!</p>
+          <p v-else>Contact your organization admin to add Gong</p>
+        </div>
       </div>
+
       <div class="card">
         <div class="card__header">
-          <img class="card-img" src="@/assets/images/hubspot.png" />
-          <h3 class="card__title">Hubspot</h3>
+          <img style="width: 4rem" src="@/assets/images/hubspott.png" />
+          <h2 class="card__title">Hubspot</h2>
         </div>
+        <p class="card-text">Sync Companies, Deals, and Contacts</p>
+        <div class="card__body">
+          <p style="color: #beb5cc">Coming Soon</p>
+        </div>
+      </div>
 
-        <p class="card-text">Coming Soon...</p>
+      <div class="card">
+        <div class="card__header">
+          <img style="height: 3.5rem" src="@/assets/images/teamsLogo.png" />
+          <h2 class="card__title">Teams</h2>
+        </div>
+        <p class="card-text">Interact with Managr through Teams</p>
+        <div class="card__body">
+          <p style="color: #beb5cc">Coming Soon</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card__header">
+          <img style="height: 3rem" src="@/assets/images/googleDrive.png" />
+          <h2 class="card__title">Google Drive</h2>
+        </div>
+        <p class="card-text">Enable battlecards and playbooks</p>
+        <div class="card__body">
+          <p style="color: #beb5cc">Coming Soon</p>
+        </div>
       </div>
     </div>
 
-    <img class="lock" src="@/assets/images/lockAsset.png" />
-    <div class="privacy">
-      We take your security and privacy very seriously. Your data is encrypted, and not being stored
-      by Managr.
-    </div>
-    <p>
+    <img class="lock" src="@/assets/images/blackLock.png" />
+    <p class="privacy"><strong>SOC2</strong> certified, and <strong>GDPR</strong> compliant</p>
+    <!-- <p>
       <a href="https://managr.ai/terms-of-service" target="_blank">Terms of Service</a>
       |
       <a href="https://managr.ai/documentation" target="_blank">Documentation</a>
       |
       <a href="https://managr.ai/privacy-policy" target="_blank">Privacy Policy</a>
-    </p>
+    </p> -->
   </div>
 </template>
 
@@ -248,6 +295,7 @@ import ZoomAccount from '@/services/zoom/account/'
 import Nylas from '@/services/nylas'
 import Salesforce from '@/services/salesforce'
 import SalesloftAccount from '@/services/salesloft'
+import GongAccount from '@/services/gong'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import GoogleButton from '@/components/GoogleButton'
 
@@ -263,7 +311,7 @@ export default {
   },
   methods: {
     goToSlackFormBuilder() {
-      this.$router.push({ name: 'SlackFormSettings' })
+      this.$router.push({ name: 'Configure' })
     },
     goToSmartAlerts() {
       this.$router.push({ name: 'ListTemplates' })
@@ -392,6 +440,9 @@ export default {
     hasZoomIntegration() {
       return !!this.$store.state.user.zoomAccount && this.$store.state.user.hasZoomIntegration
     },
+    hasGongIntegration() {
+      return !!this.$store.state.user.gongAccount && this.$store.state.user.hasGongIntegration
+    },
     hasSalesloftIntegration() {
       return (
         !!this.$store.state.user.salesloftAccount && this.$store.state.user.hasSalesloftIntegration
@@ -422,6 +473,8 @@ export default {
           return SlackOAuth
         case 'SALESLOFT':
           return SalesloftAccount
+        case 'GONG':
+          return GongAccount
         default:
           return null
       }
@@ -431,7 +484,7 @@ export default {
     },
     slackButtonMessage() {
       if (!this.orgHasSlackIntegration && this.userCanIntegrateSlack) {
-        return 'Connect Workspace'
+        return 'Connect'
       } else if (this.orgHasSlackIntegration && !this.hasSlackIntegration) {
         return 'Connect'
       } else {
@@ -447,9 +500,11 @@ export default {
 @import '@/styles/buttons';
 
 .integrations {
+  color: white;
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-top: 2rem;
   &__cards {
     display: flex;
     flex-wrap: wrap;
@@ -462,10 +517,17 @@ export default {
 }
 
 .card {
+  background-color: $panther;
+  padding: 2rem;
+  border: none;
   width: 10rem;
+  height: 28vh;
   margin-right: 1rem;
   margin-bottom: 2rem;
-  border-radius: 1rem;
+  border-radius: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 3px 4px 7px black;
   @media only screen and (min-width: 768px) {
     flex: 1 0 24%;
     min-width: 21rem;
@@ -474,42 +536,55 @@ export default {
 
   &__header {
     display: flex;
+    flex-direction: row;
 
     align-items: center;
-
     height: 5rem;
   }
 
   &__title {
     margin: 0 0 0 1rem;
   }
+
+  &__body {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+  }
 }
 
 .card-img {
-  width: 4.5rem;
+  width: 3rem;
 }
 
 .card-text {
-  font-size: 16px;
-  font-weight: 900;
-  color: $light-gray-blue;
-  min-height: 4rem;
+  font-size: 14px;
+  font-weight: bold;
+  color: $panther-silver;
+  text-align: center;
 }
 
 .slack-button {
-  @include primary-button();
-  height: 2.5rem;
-  width: 19rem;
-  margin: 0rem 0 2rem 0;
-
-  &--disabled {
-    background-color: #{$gray} !important;
-    height: 2.5rem;
-    width: 19rem;
-    margin: 6rem 0 5rem 0;
-    @include secondary-button();
-    cursor: default !important;
-  }
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin: 0rem 0 1rem 0;
+  font-size: 1.05rem;
+  font-weight: bold;
+  color: white;
+  background-color: $dark-green;
+  border: none;
+  cursor: pointer;
+}
+.disabled-button {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin: 0rem 0 1rem 0;
+  font-size: 1.05rem;
+  font-weight: bold;
+  border: none;
+  background-color: $panther-silver;
+  color: $panther-gray;
+  cursor: not-allowed;
 }
 .btn {
   &--danger {
@@ -529,13 +604,12 @@ export default {
 
 .privacy {
   font-family: #{$bold-font-family};
-  font-size: 14px;
-  margin-bottom: 2rem;
+  color: black;
+  font-size: 16px;
 }
 
 .lock {
   height: 2rem;
-  margin-bottom: 1rem;
 }
 .note {
   font: lato-bold;
@@ -550,10 +624,8 @@ export default {
   color: $light-gray-blue;
 }
 .title {
-  font: lato-bold;
-  font-size: 1.4rem;
-  font-weight: 900;
-  margin-bottom: 1.5rem;
+  font-weight: bold;
+  color: black;
 }
 a {
   text-decoration: none;
@@ -572,4 +644,72 @@ a {
   border-radius: 0.25rem;
   cursor: pointer;
 }
+
+.end {
+  width: 6rem;
+  align-self: flex-end;
+  color: $panther-silver;
+  background: transparent;
+  border: none;
+}
+
+.orange_button {
+  color: white;
+  background-color: $dark-green;
+  width: 8vw;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  font-weight: bold;
+  font-size: 16px;
+  border: none;
+}
+.orange__button {
+  color: $panther-purple;
+  background-color: white;
+  border-radius: 0.25rem;
+  font-weight: bold;
+  padding: 0.4rem;
+  border: none;
+  cursor: pointer;
+}
+
+.connected {
+  margin-left: 2rem;
+  color: $dark-green;
+  font-size: 1.1rem;
+  font-weight: bold;
+  text-shadow: 0 0 20px $dark-green;
+}
+
+.revoke {
+  color: $panther-silver;
+  background-color: transparent;
+  width: 7vw;
+  border-radius: 0.25rem;
+  padding: 0.25rem;
+  margin-left: 1rem;
+  font-weight: bold;
+  font-size: 14px;
+  border: 2px solid $panther-silver;
+  cursor: pointer;
+}
+.revoke__ {
+  color: $panther-silver;
+  background-color: transparent;
+  width: 5vw;
+  border-radius: 0.25rem;
+  padding: 0.25rem;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  font-weight: bold;
+  font-size: 14px;
+  border: 2px solid $panther-silver;
+  cursor: pointer;
+}
+.revoke,
+.revoke__:hover {
+  filter: brightness(0.85);
+}
 </style>
+
+￼

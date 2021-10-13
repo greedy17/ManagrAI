@@ -20,7 +20,6 @@ export default {
   name: 'ProgressBar',
   props: {
     percentComplete: {
-      type: Number,
       required: true,
     },
     centerPiece: {
@@ -28,7 +27,6 @@ export default {
       default: true,
     },
     heightValue: {
-      type: Number,
       default: 0.7,
     },
     heightUnit: {
@@ -36,7 +34,6 @@ export default {
       default: 'rem',
     },
     widthValue: {
-      type: Number,
       default: 20,
     },
     widthUnit: {

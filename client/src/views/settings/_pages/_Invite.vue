@@ -10,8 +10,8 @@
       "
     >
       <form class="invite-form" @submit.prevent="handleInvite">
-        <div class="invite-form__title">Invite Users to Managr</div>
-        <div class="invite-form__subtitle">
+        <div class="invite-form__title" style="color: white">Invite Users to Managr</div>
+        <div class="invite-form__subtitle" style="color: #199e54">
           {{ $store.state.user.organizationRef.name }}
         </div>
         <div class="form_field">
@@ -51,7 +51,7 @@
             </template>
           </FormField>
         </div>
-        <div class="dropdown">
+        <!-- <div class="dropdown">
           <FormField :errors="userInviteForm.field.role.errors" label="Role">
             <template v-slot:input>
               <DropDownSelect
@@ -66,14 +66,13 @@
               />
             </template>
           </FormField>
-        </div>
+        </div> -->
         <div class="invite-form__actions">
-          <div
-            @click="onConfirmSlackInvite"
-            style="display: flex; align-items: center; align-self: flex-start"
-          >
+          <div @click="onConfirmSlackInvite" style="display: flex; align-items: center">
             <CheckBox :checked="userInviteForm.field.slackInvite.value" />
-            <span style="margin-left: 1rem">Send Slack Invite</span>
+            <span style="margin-top: 0.25rem; margin-left: 0.25rem; color: #beb5cc"
+              >Send Slack Invite</span
+            >
           </div>
           <template>
             <PulseLoadingSpinnerButton
@@ -89,22 +88,28 @@
       </form>
     </Modal>
     <div class="invite-list__container">
-      <div class="invite-list__title">Your Team</div>
+      <div class="invite-list__title" style="color: #beb5cc">Your Team:</div>
       <div class="invite-list__section__container" style="margin-bottom: 1.5rem">
-        <div class="invite-list__section__item invite-list__name">{{ user.fullName }}</div>
+        <div class="invite-list__section__item invite-list__name">
+          {{ user.fullName }}
+        </div>
         <div class="invite-list__section__item invite-list__status">
           {{ user.userLevel == 'MANAGER' ? 'Team Leader(You)' : 'Rep(You)' }}
         </div>
-        <div class="invite-list__section__item invite-list__status">Registered</div>
+        <div class="invite-list__section__item invite-list__status" style="color: #ff7649">
+          Registered
+        </div>
       </div>
       <div v-for="member in team.list" :key="member.id" class="invite-list__section__container">
         <template v-if="member.id !== user.id">
-          <div class="invite-list__section__item invite-list__name">{{ member.email }}</div>
+          <div class="invite-list__section__item invite-list__name">
+            {{ member.email }}
+          </div>
           <div class="invite-list__section__item invite-list__status">
             {{ member.userLevel == 'MANAGER' ? 'Manager' : 'Rep' }}
           </div>
-          <div class="invite-list__section__item invite-list__status">
-            {{ member.isActive ? 'Registered' : 'Pending' }}
+          <div :class="member.isActive ? 'registered' : 'unregistered'">
+            {{ member.isActive ? 'Registered' : 'Pending..' }}
           </div>
         </template>
       </div>
@@ -273,6 +278,7 @@ export default {
 Override dropdown select input field
 */
 .dropdown {
+  margin-left: 8%;
   ::v-deep .tn-dropdown__selection-container {
     border-radius: 4px;
     background-color: $white;
@@ -280,6 +286,14 @@ Override dropdown select input field
     box-sizing: border-box;
     line-height: 1.29;
     letter-spacing: 0.5px;
+    width: 16rem;
+    height: 6vh;
+    color: $panther;
+  }
+
+  ::v-deep .tn-dropdown__options__option {
+    color: $panther-gray;
+    font-weight: bold;
   }
 }
 
@@ -308,11 +322,17 @@ form,
 }
 
 .invite-button {
-  @include primary-button();
-  margin-top: 1.25rem;
+  background-color: $dark-green;
+  color: white;
+  margin-top: 2.5rem;
   height: 2.5rem;
-  width: 19rem;
-  font-size: 14px;
+  width: 18vw;
+  font-size: 16px;
+  font-weight: bold;
+}
+.invite-button:hover {
+  background-color: white;
+  color: $panther-orange;
 }
 
 button {
@@ -325,12 +345,15 @@ button {
 
 .invite-form {
   border: none;
+  border-radius: 0.75rem;
   width: 100%;
-  height: 70vh;
+  height: 80vh;
   min-height: 30rem;
   display: flex;
   align-items: center;
+  justify-content: center;
   flex-direction: column;
+  background-color: $panther-gray;
   > .form_field {
     flex: 0 0 auto;
   }
@@ -342,11 +365,9 @@ button {
   }
   &__title {
     @include base-font-styles();
-    padding: 1rem 1rem;
-    font-size: 14px;
-    font-weight: 700;
-    line-height: 1.14;
-    color: $main-font-gray;
+    padding: 2rem 2rem;
+    font-size: 16px;
+    font-weight: bold;
     text-transform: uppercase;
     text-align: left;
   }
@@ -370,14 +391,14 @@ button {
     margin-bottom: 2rem;
   }
   &__container {
-    border: solid 2px #dcdddf;
+    background-color: $panther;
+    border: none;
     width: 0%;
     min-width: 40vw;
     padding: 1.5rem 1rem 1.5rem 1.5rem;
     border-radius: 5px;
-    box-shadow: 0 5px 10px 0 rgba(132, 132, 132, 0.26);
+    box-shadow: 0 5px 10px 0 black;
     display: flex;
-    background-color: white;
 
     align-items: flex-start;
     flex-direction: column;
@@ -407,6 +428,17 @@ button {
     font-size: 0.75rem;
   }
 }
+.registered {
+  width: 33%;
+  font-size: 0.75rem;
+  color: $panther-orange;
+}
+.unregistered {
+  width: 33%;
+  font-size: 0.75rem;
+  color: $panther-silver;
+}
+
 .cancel-button {
   width: 19rem;
   margin-top: 0.5rem;

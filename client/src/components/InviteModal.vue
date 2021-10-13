@@ -1,3 +1,4 @@
+
 <template>
   <div class="container" ref="container" :class="{ dimmed: dimmed }" @click="emitCloseModal">
     <div class="modal" :class="{ 'box-shadow': !dimmed }" :style="{ width: `${width}vw` }">
@@ -96,14 +97,14 @@ export default {
 }
 
 .dimmed {
-  background-color: rgba($color: $black, $alpha: 0.5);
+  background-color: rgba($color: $black, $alpha: 0.75);
 }
 
 .modal {
   margin: 8vh 0;
-  border: 1px solid $soft-gray; // soft-gray
+  // border: 1px solid $soft-gray; // soft-gray
   z-index: 1001;
-  background: $white;
+  // background: $white;
   display: flex;
   flex-flow: column;
   box-sizing: border-box;

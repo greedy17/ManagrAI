@@ -137,20 +137,57 @@ def alert_instance_block_set(context):
         in_channel = True
     blocks = [
         block_builders.section_with_button_block(
-            f"Update {instance.template.resource_type}",
-            instance.resource_id,
+            "Mark as Complete",
+            "mark_complete",
             instance.render_text(),
-            action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(resource_owner.id)}&resource={instance.template.resource_type}",
-            style="primary",
+            text_type="mrkdwn",
+            block_id=f"{instance.id}_text",
+            action_id=f"{slack_const.MARK_COMPLETE}?u={user.id}",
+            style="danger",
         ),
     ]
+    action_blocks = [
+        block_builders.simple_button_block(
+            f"Update {instance.template.resource_type}",
+            instance.resource_id,
+            action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(resource_owner.id)}&resource={instance.template.resource_type}",
+            style="primary",
+        )
+    ]
+    if instance.template.resource_type == "Opportunity":
+        action_blocks.append(
+            block_builders.simple_button_block(
+                "Get Notes",
+                "get_notes",
+                action_id=action_with_params(
+                    slack_const.GET_NOTES,
+                    params=[
+                        f"u={str(user.id)}",
+                        f"resource_id={str(instance.resource_id)}",
+                        "type=alert",
+                    ],
+                ),
+            )
+        )
+        action_blocks.append(
+            block_builders.simple_button_block(
+                "Call Details",
+                "call_details",
+                action_id=action_with_params(
+                    slack_const.GONG_CALL_RECORDING,
+                    params=[
+                        f"u={str(user.id)}",
+                        f"resource_id={str(instance.resource_id)}",
+                        "type=alert",
+                    ],
+                ),
+            )
+        )
     if instance.template.resource_type != "Lead":
-        blocks.append(
-            block_builders.section_with_button_block(
+        action_blocks.append(
+            block_builders.simple_button_block(
                 "Add to Cadence",
                 "add_to_cadence",
-                "Add contacts to Cadence",
-                style="danger",
                 action_id=action_with_params(
                     slack_const.ADD_TO_CADENCE_MODAL,
                     params=[
@@ -160,8 +197,9 @@ def alert_instance_block_set(context):
                         f"resource_type={instance.template.resource_type}",
                     ],
                 ),
-            ),
+            )
         )
+    blocks.append(block_builders.actions_block(action_blocks))
     if in_channel or (user.id != resource_owner.id):
         blocks.append(
             block_builders.context_block(
@@ -286,6 +324,20 @@ def create_add_to_cadence_block_set(context):
             block_id="select_people",
             placeholder="Type to search",
         ),
+    ]
+    return blocks
+
+
+@block_set(required_context=["u"])
+def choose_opportunity_block_set(context):
+    user_id = context.get("u")
+    blocks = [
+        block_builders.external_select(
+            "Which opportunity would you like your notes for?",
+            f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={sf_consts.RESOURCE_SYNC_OPPORTUNITY}",
+            block_id="select_opp",
+            placeholder="Type to search",
+        )
     ]
     return blocks
 

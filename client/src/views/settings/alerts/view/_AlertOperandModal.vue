@@ -2,13 +2,16 @@
   <div class="alert-operand-modal">
     <AlertOperandRow v-if="form" :resourceType="resourceType" :form.sync="form" />
 
-    <PulseLoadingSpinnerButton
-      text="save"
-      @click="onSave"
-      class="btn btn--primary"
-      :loading="isSaving"
-      :disabled="!form.isValid"
-    />
+    <div class="middle">
+      <PulseLoadingSpinnerButton
+        style="margin-top: 2rem"
+        text="save"
+        @click="onSave"
+        class="btn btn--primary"
+        :loading="isSaving"
+        :disabled="!form.isValid"
+      />
+    </div>
   </div>
 </template>
 
@@ -110,11 +113,19 @@ export default {
   }
 }
 .alert-operand-modal {
-  padding: 0.5rem;
+  padding: 2rem;
   height: 100%;
   overflow-y: scroll;
-
+  background-color: $panther;
+  color: white;
+  font-weight: bold;
   max-height: 100%;
   width: 100%;
+  font-family: $base-font-family;
+}
+.middle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

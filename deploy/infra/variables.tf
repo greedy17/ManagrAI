@@ -132,6 +132,12 @@ variable "environments" {
     salesloft_client_id     = string
     salesloft_secret        = string
     salesloft_redirect_uri  = string
+    
+    use_gong                = bool
+    gong_base_url           = string
+    gong_client_id          = string
+    gong_secret             = string
+    gong_redirect_uri       = string
   }))
 }
 
@@ -183,7 +189,13 @@ variable "scheduled_tasks" {
     {
       name       = "syncsalesloftaccounts"
       command    = "initsalesloftsync"
-      cron       = "cron(*/10 * * * ? *)"
+      cron       = "cron(0 * * * ? *)"
+      task_count = 1
+    },
+    {
+      name       = "syncgongcalls"
+      command    = "initsyncgongcalls"
+      cron       = "cron(*/30 * * * ? *)"
       task_count = 1
     },
   ]
