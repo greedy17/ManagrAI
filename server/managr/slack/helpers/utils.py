@@ -254,12 +254,12 @@ def generate_call_block(call_res):
     blocks = []
     call_data = call_res["calls"][0]
     content_data = call_data.get("content", None)
-    media_data = call_data.get("media", None)
+    meta_data = call_data.get("metaData", None)
     trackers = content_data["trackers"]
     topics = content_data["topics"]
     trackers_string = "Trackers:\n"
     topics_string = "Topics:\n"
-    modal_url = media_data["audioUrl"]
+    modal_url = meta_data["url"]
     for tracker in trackers:
         if tracker["count"] > 0:
             trackers_string += f"{tracker['name']} mentioned {tracker['count']} times\n"
