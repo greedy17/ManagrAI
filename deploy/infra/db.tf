@@ -12,7 +12,7 @@ resource "aws_db_instance" "managrdb" {
   identifier                 = "${replace(each.value.rds_instance_name, "_", "-")}-${each.value.name}"
   allocated_storage          = 20
   engine                     = "postgres"
-  engine_version             = "12.5"
+  engine_version             = "12.7"
   instance_class             = "db.t2.medium"
   name                       = each.value.rds_db_name
   username                   = each.value.rds_username

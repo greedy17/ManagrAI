@@ -206,7 +206,7 @@ resource "aws_db_instance" "managrdb" {
   identifier                 = "${var.app_config.rds_db_name}-${local.env}"
   allocated_storage          = 20
   engine                     = "postgres"
-  engine_version             = "12.5"
+  engine_version             = "12.7"
   instance_class             = "db.t2.micro"
   name                       = var.app_config.rds_db_name
   username                   = var.app_config.rds_username
