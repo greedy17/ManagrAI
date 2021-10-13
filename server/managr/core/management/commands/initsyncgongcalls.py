@@ -3,7 +3,7 @@ from django.utils import timezone
 from django.core.management.base import BaseCommand, CommandError
 from managr.salesforce.models import SalesforceAuthAccount
 from managr.core.models import User
-from managr.gong.background import emit_sync_gong_calls
+from managr.gong.cron import queue_gong_call_sync
 
 
 class Command(BaseCommand):
@@ -21,14 +21,14 @@ class Command(BaseCommand):
                         self.style.ERROR("User does not have a gong account {}".format(user.email,))
                     )
                 auth_id = user.gong_account.auth_account.id
-                emit_sync_gong_calls(auth_id)
+                queue_gong_call_sync(auth_id)
                 self.stdout.write(
                     self.style.SUCCESS(
-                        "Successfully initiated the sync for the user {}".format(user.email,)
+                        "Successfully initiated gong sync for the user {}".format(user.email,)
                     ),
                 )
         else:
-            queue_account_sl_syncs()
+            queue_gong_call_sync()
             self.stdout.write(
-                self.style.SUCCESS("Successfully initiated salesloft sync for all accounts"),
+                self.style.SUCCESS("Successfully initiated gong sync for all accounts"),
             )
