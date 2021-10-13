@@ -8,6 +8,7 @@ import logging
 import pdb
 
 from django.conf import settings
+from dateutil import parser
 
 from managr.slack.models import UserSlackIntegration
 from managr.slack.helpers import block_builders
@@ -268,6 +269,15 @@ def generate_call_block(call_res):
                 topics_string += f"{topic['name']} talked about for {dur} minutes\n"
             else:
                 topics_string += f"{topic['name']} talked about for {topic['duration']} seconds\n"
+    blocks.append(block_builders.simple_section(f"Title:{meta_data['title']}"))
+    blocks.append(
+        block_builders.simple_section(
+            f"Date: {parser.parse(meta_data['scheduled']).strftime('%m/%d/%Y, %H:%M:%S')}"
+        )
+    )
+    blocks.append(
+        block_builders.simple_section(f"Duration: {round(meta_data['duration'] / 60)} min")
+    )
     blocks.append(block_builders.simple_section(trackers_string))
     blocks.append(block_builders.simple_section(topics_string))
     blocks.append(
