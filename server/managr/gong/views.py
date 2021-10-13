@@ -37,6 +37,7 @@ from .models import (
     GongAccountAdapter,
 )
 from .serializers import GongAuthSerializer, GongAccountSerializer
+from .cron import queue_gong_call_sync
 
 # Create your views here.
 logger = logging.getLogger("managr")
@@ -81,6 +82,7 @@ def get_gong_authentication(request):
                     user_serializer = GongAccountSerializer(data=user_res.as_dict)
                 user_serializer.is_valid(raise_exception=True)
                 user_serializer.save()
+        queue_gong_call_sync(admin_account.id)
     return Response(data={"success": True})
 
 
