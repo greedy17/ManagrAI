@@ -337,7 +337,7 @@
                       @input="form.field.alertTargets.validate()"
                       displayKey="fullName"
                       valueKey="id"
-                      nullDisplay="Select pipelines"
+                      nullDisplay="Mulit-select"
                       searchable
                       multi
                       medium
@@ -421,7 +421,7 @@
                         @input="form.field.recipients.validate()"
                         displayKey="fullName"
                         valueKey="id"
-                        nullDisplay="Select Recipients"
+                        nullDisplay="Multi-select"
                         searchable
                         multi
                         medium
@@ -466,7 +466,38 @@
                     </div>
                   </div> -->
 
-                  <FormField :errors="form.field.recipients.errors">
+                  <FormField
+                    v-if="form.field.recipientType.value == 'SLACK_CHANNEL'"
+                    :errors="form.field.recipients.errors"
+                  >
+                    <template v-slot:input>
+                      <DropDownSearch
+                        :items.sync="reversedChannels"
+                        :itemsRef.sync="form.field._recipients.value"
+                        v-model="form.field.recipients.value"
+                        @input="form.field.recipients.validate()"
+                        displayKey="name"
+                        valueKey="id"
+                        nullDisplay="Search Channels"
+                        :hasNext="!!channelOpts.nextCursor"
+                        @load-more="listChannels(channelOpts.nextCursor)"
+                        searchable
+                        local
+                      >
+                        <!-- <template v-slot:tn-dropdown-option="{ option }">
+                          <img
+                            v-if="option.isPrivate == true"
+                            class="card-img"
+                            style="width: 1rem; height: 1rem; margin-right: 0.2rem"
+                            src="@/assets/images/lockAsset.png"
+                          />
+                          {{ option['name'] }}
+                        </template> -->
+                      </DropDownSearch>
+                    </template>
+                  </FormField>
+
+                  <!-- <FormField :errors="form.field.recipients.errors">
                     <template v-slot:input>
                       <DropDownSearch
                         :items.sync="reversedChannels"
@@ -482,16 +513,16 @@
                         local
                       >
                         <template v-slot:tn-dropdown-option="{ option }">
-                          <!-- <img
+                          <img
                             v-if="option.isPrivate == true"
                             class="card-img"
                             src="@/assets/images/lockAsset.png"
-                          /> -->
+                          />
                           {{ option['name'] }}
                         </template>
                       </DropDownSearch>
                     </template>
-                  </FormField>
+                  </FormField> -->
 
                   <p :class="form.field.recipients.value.length > 0 ? 'selected__item' : ''">
                     {{

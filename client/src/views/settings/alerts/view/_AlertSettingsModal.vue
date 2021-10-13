@@ -206,64 +206,26 @@
                 displayKey="name"
                 valueKey="id"
                 nullDisplay="Search Channels"
-                :hasNext="!!reversedChannels.nextCursor"
-                @load-more="listChannels(reversedChannels.nextCursor)"
+                :hasNext="!!channelOpts.nextCursor"
+                @load-more="listChannels(channelOpts.nextCursor)"
                 searchable
                 local
               >
-                <template v-slot:tn-dropdown-option="{ option }">
-                  <!-- <img
+                <!-- <template v-slot:tn-dropdown-option="{ option }">
+                          <img
                             v-if="option.isPrivate == true"
                             class="card-img"
+                            style="width: 1rem; height: 1rem; margin-right: 0.2rem"
                             src="@/assets/images/lockAsset.png"
-                          /> -->
-                  {{ option['name'] }}
-                </template>
+                          />
+                          {{ option['name'] }}
+                        </template> -->
               </DropDownSearch>
             </template>
           </FormField>
         </div>
-
-        <!-- <FormField
-          v-if="form.field.recipientType.value == 'SLACK_CHANNEL'"
-          :errors="form.field.recipients.errors"
-        >
-          <template v-slot:input>
-            <DropDownSearch
-              :items.sync="channelOpts.channels"
-              :itemsRef.sync="form.field._recipients.value"
-              v-model="form.field.recipients.value"
-              @input="form.field.recipients.validate()"
-              displayKey="name"
-              valueKey="id"
-              nullDisplay="Channels"
-              :hasNext="!!channelOpts.nextCursor"
-              @load-more="listChannels(channelOpts.nextCursor)"
-              searchable
-              local
-            >
-              <template v-slot:tn-dropdown-option="{ option }">
-                <img
-                  v-if="option.isPrivate == true"
-                  class="card-img"
-                  style="width: 1rem; height: 1rem; margin-right: 0.2rem"
-                  src="@/assets/images/lockAsset.png"
-                />
-                {{ option['name'] }}
-              </template>
-            </DropDownSearch>
-          </template>
-        </FormField> -->
       </div>
     </div>
-
-    <!-- <PulseLoadingSpinnerButton
-      text="save"
-      @click="onSave"
-      class="btn btn--primary"
-      :loading="isSaving"
-      :disabled="!form.isValid"
-    /> -->
   </div>
 </template>
 
