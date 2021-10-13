@@ -234,18 +234,19 @@ class processor:
 
 
 def process_done_alert(block_id, blocks):
-    logger.info(f"ORIGINAL BLOCKS --- {blocks}")
     found_block = block_finder(block_id, blocks)
+    logger.info(f"FOUND BLOCK ---- {found_block}")
     block_index = found_block[0]
     old_text = found_block[1].get("text").get("text").split("\n")
+    logger.info(f"OLD TEXT ---- {old_text}")
     old_text.pop()
     new_text = []
     for idx in old_text:
         new_text.append("~" + idx + "~")
     new_text = "\n".join(new_text)
     updated_blocks = blocks
+    logger.info(f"NEW TEXT---- {new_text}")
     updated_blocks[int(block_index)] = block_builders.simple_section(new_text, text_type="mrkdwn")
-    logger.info(f"UPDATED BLOCKS --- {updated_blocks}")
     return updated_blocks
 
 
