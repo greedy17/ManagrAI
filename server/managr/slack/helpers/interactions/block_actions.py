@@ -1469,6 +1469,8 @@ def process_call_error(payload, context):
 def process_mark_complete(payload, context):
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
+    logger.indo(f"PAYLOAD -- {payload}")
+    logger.indo(f"CONTEXT -- {context}")
     action = payload.get("actions")[0]
     updated_blocks = process_done_alert(action["block_id"], payload.get("message").get("blocks"))
     try:
