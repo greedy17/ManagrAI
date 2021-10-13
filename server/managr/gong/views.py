@@ -98,14 +98,11 @@ def revoke_gong_access_token(request):
 
 def redirect_from_gong(request):
     ## this is only for dev, since the redirect url to localhost will not work
-    if settings.IN_DEV:
-        code = request.GET.get("code", None)
-        q = urlencode({"code": code, "state": "GONG"})
-        if not code:
-            err = {"error": "there was an error"}
-            err = urlencode(err)
-            return redirect(f"{gong_consts.GONG_FRONTEND_REDIRECT}")
-        return redirect(f"{gong_consts.GONG_FRONTEND_REDIRECT}?{q}")
-    else:
-        return redirect(f"{gong_consts.GONG_FRONTEND_REDIRECT}")
+    code = request.GET.get("code", None)
+    q = urlencode({"code": code, "state": "GONG"})
+    if not code:
+        err = {"error": "there was an error"}
+        err = urlencode(err)
+        return redirect(f"{gong_consts.GONG_FRONTEND_REDIRECT}?{err}")
+    return redirect(f"{gong_consts.GONG_FRONTEND_REDIRECT}?{q}")
 
