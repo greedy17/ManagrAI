@@ -7,7 +7,7 @@ from managr.opportunity import constants as opp_consts
 from managr.organization import constants as org_consts
 from managr.slack import constants as slack_const
 from managr.salesforce import constants as sf_consts
-
+from managr.gong.models import GongCall
 from managr.core.models import User
 from managr.opportunity.models import Opportunity, Lead
 from managr.organization.models import Organization, Account, ActionChoice
@@ -266,6 +266,12 @@ def process_get_people(payload, context):
     }
 
 
+def process_get_calls(payload, context):
+    opp_id = context.get("opp_id")
+    calls = GongCall.objects.filter(crm_id=opp_id)
+    return {"options": [l.slack_option for l in calls]}
+
+
 def handle_block_suggestion(payload):
     """
     This takes place when a select_field requires data from Managr
@@ -284,6 +290,7 @@ def handle_block_suggestion(payload):
         slack_const.GET_EXTERNAL_PICKLIST_OPTIONS: process_get_external_picklist_options,
         slack_const.GET_CADENCE_OPTIONS: process_get_cadences,
         slack_const.GET_PEOPLE_OPTIONS: process_get_people,
+        slack_const.GET_CALLS: process_get_calls,
     }
     action_query_string = payload["action_id"]
     processed_string = process_action_id(action_query_string)

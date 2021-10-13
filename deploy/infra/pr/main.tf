@@ -125,6 +125,7 @@ data "template_file" "managr_app" {
     use_slack      = title(var.app_config.use_slack)
     use_salesforce = title(var.app_config.use_salesforce)
     use_salesloft  = title(var.app_config.use_salesloft)
+    use_gong       = title(var.app_config.use_gong)
   }
 }
 
@@ -205,7 +206,7 @@ resource "aws_db_instance" "managrdb" {
   identifier                 = "${var.app_config.rds_db_name}-${local.env}"
   allocated_storage          = 20
   engine                     = "postgres"
-  engine_version             = "12.5"
+  engine_version             = "12.7"
   instance_class             = "db.t2.micro"
   name                       = var.app_config.rds_db_name
   username                   = var.app_config.rds_username
@@ -287,6 +288,11 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     salesloftClientId     = var.app_config.salesloft_client_id
     salesloftSecret       = var.app_config.salesloft_secret
     salesloftRedirectUri  = var.app_config.salesloft_redirect_uri
+
+    gongBaseUrl           = each.value.gong_base_url
+    gongClientId          = each.value.gong_client_id
+    gongSecret            = each.value.gong_secret
+    gongRedirectUri       = each.value.gong_redirect_uri
   })
 }
 
