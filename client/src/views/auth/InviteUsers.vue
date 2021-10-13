@@ -51,7 +51,7 @@ export default {
   justify-content: center;
   align-items: center;
   text-align: center;
-  margin-top: 1rem;
+  margin-top: 4rem;
   &__logo {
     height: 5rem;
   }

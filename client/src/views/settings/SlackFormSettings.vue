@@ -36,7 +36,7 @@
       <div class="modal-container">
         <div v-if="!loadingStages" class="modal-container__box">
           <div class="modal-container__box__header">
-            <div class="modal-container__box__title">Select a stage</div>
+            <h2 class="modal-container__box__title">Select a stage</h2>
           </div>
           <div class="modal-container__box__content">
             <div class="box__content-select">
@@ -52,8 +52,8 @@
             </div>
           </div>
 
-          <div class="modal-container__box__footer">
-            <div style="display: flex; align-items: center; flex-direction: column">
+          <div class="modal-container__box__footer mar">
+            <div class="centered">
               <span class="user-message" v-if="!stages.length">
                 <small>Can't see your stages?</small>
               </span>
@@ -63,16 +63,19 @@
               <PulseLoadingSpinnerButton
                 @click="() => refreshFormStages()"
                 :loading="false"
-                class="primary-button mar"
+                class="stage__button"
                 text="Refresh"
               />
             </div>
-            <div>
+            <div class="centered">
               <button
+                style="margin-top: 1rem"
                 class="modal-container__box__button"
                 @click="
                   () => {
-                    $modal.hide('add-stage-modal'), addForm(this.selectedStage)
+                    $modal.hide('add-stage-modal'),
+                      addForm(this.selectedStage),
+                      selectForm('Opportunity', 'STAGE_GATING', selectedStage)
                   }
                 "
                 :disabled="!this.selectedStage"
@@ -85,8 +88,16 @@
         <div v-else>LOADING</div>
       </div>
     </modal>
-
-    <modal name="objects-modal" heading="Select a Stage">
+    <h1
+      v-if="selectedStage"
+      style="color: black; padding-bottom: 0.5rem; border-bottom: 3px solid #199e54"
+    >
+      {{ selectedStage }} Form
+    </h1>
+    <h1 v-else style="color: black; padding-bottom: 0.5rem; border-bottom: 3px solid #199e54">
+      Stage Specific Forms
+    </h1>
+    <!-- <modal name="objects-modal" heading="Select a Stage">
       <div class="objects__">
         <img class="tooltip image" src="@/assets/images/toolTip.png" @click="toggleObjectsModal" />
         <div class="required__title">Forms</div>
@@ -106,9 +117,9 @@
           </p>
         </div>
       </div>
-    </modal>
+    </modal> -->
 
-    <div class="header__container" v-if="!resource">
+    <!-- <div class="header__container" v-if="!resource">
       <div class="col" style="margin-top: 4rem">
         <h3 class="header__title">Select a Salesforce Object</h3>
         <h3 class="muted">
@@ -118,9 +129,9 @@
           objects, they are the most used.
         </h3>
       </div>
-    </div>
+    </div> -->
 
-    <div class="box-updated">
+    <div class="centered__stage">
       <!-- <div @click.prevent="toggleSelectedFormResource(resource)" class="box-updated__header">
             <span class="box-updated__title">
               {{ resource }}
@@ -133,7 +144,7 @@
             </span>
           </div> -->
 
-      <div :class="resource ? 'search_buttons_row' : ''">
+      <!-- <div :class="resource ? 'search_buttons_row' : ''">
         <DropDownSearch
           :items.sync="SOBJECTS_LIST"
           v-model="resource"
@@ -142,13 +153,6 @@
           nullDisplay="Select salesforce object"
           class="search"
         />
-
-        <div class="col" v-if="resource && !formType">
-          <p class="muted mar__">
-            <strong class="purple">Pro tip:</strong> Start with the “Update” form as that is the
-            most used. Try to fill out all of the forms.
-          </p>
-        </div>
 
         <div class="row">
           <div v-if="resource">
@@ -183,14 +187,18 @@
             />
           </div>
         </div>
-      </div>
+      </div> -->
 
-      <div v-if="stageDropDownOpen && resource == 'Opportunity'" class="stage__dropdown">
+      <div
+        v-if="stageDropDownOpen && resource == 'Opportunity'"
+        :class="selectedStage ? 'small__stage__dropdown' : 'stage__dropdown'"
+      >
         <div>
+          <!-- <div v-if="selectedStage">{{ selectedStage }} Form</div> -->
           <div class="stage__dropdown__header">Your Stage Gate Forms</div>
           <div
             v-for="(form, i) in formStages"
-            :key="form.id"
+            :key="i"
             class="stage__dropdown__stages__container"
             :class="{
               'stage__dropdown__stages__container--selected':
@@ -210,33 +218,31 @@
           </div>
         </div>
         <div style="display: flex; justify-content: center">
-          <button @click="onAddForm" class="modal-container__box__button">Add</button>
+          <button @click="onAddForm" class="modal-container__box__button">Add Form</button>
         </div>
       </div>
 
-      <div class="box__tab-content">
-        <template v-if="selectedForm">
-          <div class="box__content--expanded">
-            <CustomSlackForm
-              :show-validations="showValidations"
-              :formType="formType"
-              :customForm="selectedForm"
-              :resource="resource"
-              v-on:update:selectedForm="updateForm($event)"
-              :loading="formFields.refreshing"
-              :stageForms="formStages"
-              :managrFields="publicFields"
-            />
-          </div>
-        </template>
-      </div>
+      <template v-if="selectedForm">
+        <div class="box__content--expanded">
+          <CustomSlackForm
+            :show-validations="showValidations"
+            :formType="formType"
+            :customForm="selectedForm"
+            :resource="resource"
+            v-on:update:selectedForm="updateForm($event)"
+            :loading="formFields.refreshing"
+            :stageForms="formStages"
+            :managrFields="publicFields"
+          />
+        </div>
+      </template>
     </div>
-
+    <!-- 
     <div class="tip-continue" v-if="resource">
       <button class="primary-button">
         <router-link :to="{ name: 'ListTemplates' }">Continue to Smart Alerts </router-link>
       </button>
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -278,7 +284,7 @@ export default {
       fieldParam: null,
       loading: false,
       formFields: CollectionManager.create({ ModelClass: SObjectField }),
-      stageDropDownOpen: false,
+      stageDropDownOpen: true,
       isVisible: false,
       validations: CollectionManager.create({
         ModelClass: SObjectValidation,
@@ -339,6 +345,7 @@ export default {
         this.loadingStages = false
       }
     },
+
     nextPage() {
       this.formFields.nextPage()
     },
@@ -377,6 +384,7 @@ export default {
         (f) => f.resource == resource && f.formType == formType && f.stage == stage,
       )
       this.formType = formType
+      this.selectedStage = stage
     },
 
     async listFields(query_params = {}) {
@@ -522,6 +530,12 @@ export default {
       }
     },
   },
+  beforeMount() {
+    this.resource = 'Opportunity'
+    this.formType = 'STAGE_GATING'
+    // this.resource = OPPORTUNITY
+    // this.formType = STAGE_GATING
+  },
 }
 </script>
 
@@ -536,8 +550,13 @@ export default {
 @import '@/styles/buttons';
 
 .container {
-  padding: 0 4rem;
+  margin-top: 4rem;
+  color: white;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
 }
+
 .box-updated__header {
   &:hover {
     cursor: pointer;
@@ -585,13 +604,34 @@ export default {
   margin: 0 4em;
   padding-top: 2rem;
 }
+::v-deep .vm--modal {
+  background-color: $panther;
+  border-radius: 0.25rem;
+}
+.stage__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 1rem;
+  border-radius: 0.3rem;
+  font-weight: bold;
+  line-height: 1.14;
+  text-indent: none;
+  border-style: none;
+  letter-spacing: 0.03rem;
+  color: white;
+  background-color: $dark-green;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1.02rem;
+}
 .modal-container {
   height: 100%;
   display: flex;
   flex-direction: column;
   margin-top: 1rem;
-  border-radius: 10px;
-
+  border-radius: 0.25rem;
+  background-color: $panther;
   &__box {
     &__title {
       text-align: center;
@@ -604,19 +644,17 @@ export default {
       display: flex;
 
       justify-content: center;
-      min-height: 30rem;
+      min-height: 20rem;
     }
     &__button {
       @include primary-button();
-      margin-top: 1rem;
-      width: 10rem;
     }
     &__footer {
       display: flex;
-      padding: 0rem 1rem;
+      padding: 1rem;
 
       justify-content: space-between;
-      border-top: 2px solid $dark-green;
+      border-top: 2px solid $panther-silver;
     }
   }
 }
@@ -707,27 +745,49 @@ export default {
 .popup-paginator {
   @include paginator();
 }
+.centered__stage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  height: 100%;
+}
+.small__stage__dropdown {
+  margin-bottom: 70vh;
+  margin-left: 80vw;
+  padding: 6px 0 14px;
+  border-radius: 0.5rem;
+  box-shadow: 0 5px 10px 10px rgba(0, 0, 0, 0.5);
+  background-color: $panther;
+  position: absolute;
+
+  z-index: 100;
+  overflow-y: scroll;
+}
 .stage {
   &__container {
     position: relative;
   }
   &__dropdown {
-    width: 15rem;
+    margin-top: 16rem;
+    width: 30vw;
 
-    margin: 2px 270px 49px 108px;
+    // margin: 2px 270px 49px 108px;
     padding: 6px 0 14px;
-    border-radius: 3px;
+    border-radius: 0.5rem;
     box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
-    background-color: #f4f5f6;
+    background-color: $panther;
     position: absolute;
-    right: -7rem;
 
     z-index: 100;
+    overflow-y: scroll;
 
     &__header {
-      font-size: 0.75rem;
+      font-size: 1.25rem;
       padding: 0.5rem;
-      border-bottom: solid 0.5px #9e9ea6;
+      border-bottom: solid 2px #9e9ea6;
+      cursor: move;
+      z-index: 10;
     }
     &__stages {
       &__container {
@@ -740,7 +800,7 @@ export default {
         align-items: center;
 
         &--selected {
-          color: white !important;
+          color: white;
           background-color: #{$dark-green};
         }
       }
@@ -909,5 +969,11 @@ button {
 img {
   margin-right: 0.25rem;
   margin-top: 0.5rem;
+}
+.centered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
 }
 </style>

@@ -2,7 +2,7 @@
   <div class="alert-summary">
     <div>
       <div class="alert__summary">
-        <h2 style="color: #beb5cc; text-align: center">
+        <h2 style="text-align: center">
           {{ form.value.title ? form.value.title : 'No title' }}
         </h2>
 
@@ -15,65 +15,50 @@
             class="box__content-recipient-group__recipient-group__recipient"
             v-if="config.recurrenceFrequency == 'WEEKLY'"
           >
-            This alert will run every <b style="color: #ff7649">week</b> on
-            <b style="color: #ff7649">{{
+            This alert will run every <b style="color: #199e54">week</b> on
+            <b style="color: #199e54">{{
               config._recurrenceDay ? config._recurrenceDay.key : ''
             }}</b>
             , checking
 
-            <b style="color: #ff7649">{{ getListOfTargets(config._alertTargets) }}</b>
+            <b style="color: #199e54">{{ getListOfTargets(config._alertTargets) }}</b>
 
             pipelines, and alerting
-            <b v-if="config.recipientType === 'SLACK_CHANNEL'" style="color: #ff7649">{{
+            <b v-if="config.recipientType === 'SLACK_CHANNEL'" style="color: #199e54">{{
               config._recipients.nameNormalized
             }}</b>
-            <b v-else style="color: #ff7649">{{ getListOfRecipients(config._recipients) }}</b>
+            <b v-else style="color: #199e54">{{ getListOfRecipients(config._recipients) }}</b>
           </div>
           <div
             class="box__content-recipient-group__recipient-group__recipient"
             v-else-if="config.recurrenceFrequency == 'MONTHLY'"
           >
-            This alert will run every <b style="color: #ff7649">Month</b> on the
+            This alert will run every <b style="color: #199e54">Month</b> on the
 
-            <b style="color: #ff7649">{{ addSuffix(config.recurrenceDay) }}</b>
+            <b style="color: #199e54">{{ addSuffix(config.recurrenceDay) }}</b>
 
             , checking
 
-            <b style="color: #ff7649">{{ getListOfTargets(config._alertTargets) }}</b>
+            <b style="color: #199e54">{{ getListOfTargets(config._alertTargets) }}</b>
 
             pipelines, and alerting
-            <b v-if="config.recipientType === 'SLACK_CHANNEL'" style="color: #ff7649">{{
+            <b v-if="config.recipientType === 'SLACK_CHANNEL'" style="color: #199e54">{{
               config._recipients.nameNormalized
             }}</b>
-            <b v-else style="color: #ff7649">{{ getListOfRecipients(config._recipients) }}</b>
+            <b v-else style="color: #199e54">{{ getListOfRecipients(config._recipients) }}:</b>
           </div>
 
-          <div
-            style="margin-top: 1rem"
-            class="box__content-recipient-group__recipient-group__conditions"
-            :key="i"
-            v-for="(group, i) in form.value.alertGroups"
-          >
-            <span class="box__content-recipient-group__recipient-group__conditions-condition">
-              {{
-                group.groupOrder == 0
-                  ? `It will only run for ${form.value.resourceType}'s that meet the following criteria: `
-                  : `${group.groupCondition} `
-              }}
+          <div style="margin-top: 1rem" :key="i" v-for="(group, i) in form.value.alertGroups">
+            <span class="condition">
+              {{ group.groupOrder == 0 ? '' : `${group.groupCondition} ` }}
             </span>
 
             <div
-              style="margin-top: 1rem; color: #ff7649"
               class="box__content-recipient-group__recipient-group__conditions__operands"
               :key="key"
               v-for="(operandRow, key) in group.alertOperands"
             >
-              <span
-                class="
-                  box__content-recipient-group__recipient-group__conditions__operands-condition
-                "
-                v-if="key != 0"
-              >
+              <span class="condition" v-if="key != 0">
                 {{ operandRow.operandCondition }}
               </span>
               <div
@@ -81,17 +66,18 @@
                 class="box__content-recipient-group__recipient-group__conditions__operands-operand"
               >
                 <!-- <span>{{ form.value.resourceType }} </span> -->
-                <span>
+                <span class="green__item">
                   {{
                     operandRow._operandIdentifier
                       ? operandRow._operandIdentifier.referenceDisplayLabel
                       : ''
                   }}</span
                 >
-                <span>{{ operandRow._operandOperator.value }}</span>
+                <span class="green__item">{{ operandRow._operandOperator.label }}</span>
                 <!-- If this is a monthly alert (with a datetime or date type) show the calculated period -->
 
                 <span
+                  class="green__item"
                   v-if="
                     operandRow._operandIdentifier &&
                     (operandRow._operandIdentifier.dataType == 'Date' ||
@@ -116,6 +102,7 @@
                 </span>
                 <!-- If this is a weekly alert (with a datetime or date type show) the calculated period -->
                 <span
+                  class="green__item"
                   v-else-if="
                     operandRow._operandIdentifier &&
                     operandRow._operandIdentifier.dataType == 'Picklist'
@@ -126,7 +113,7 @@
                       : operandRow.operandValue
                   }}</span
                 >
-                <span v-else>
+                <span class="green__item" v-else>
                   {{ operandRow.operandValue }}
                 </span>
               </div>
@@ -283,5 +270,20 @@ export default {
   align-items: center;
   justify-content: center;
   flex-direction: column;
+}
+.condition {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.green__item {
+  padding: 0.5rem 1rem;
+  margin: 0.5rem;
+  background-color: $panther-orange;
+  border: 2px solid $panther-orange;
+  border-radius: 0.33rem;
+
+  text-align: center;
+  filter: drop-shadow(4px 2px 4px black);
 }
 </style>

@@ -176,18 +176,27 @@
       <div class="opportunity__column" v-if="customForm">
         <div class="fields_title" style="text-align: center">2. Re-order</div>
         <div class="slack-form-builder__form">
+          <h2 style="text-align: center; margin-bottom: 1rem">Slack form</h2>
+
           <div class="slack-form-builder__form-meta" v-if="customForm.stage">
-            <h5>Previous stage specific forms</h5>
-            <small v-if="!orderedStageForm.length"> This is your first stage specific form </small>
+            <!-- <h5 style="margin-top: -0.5rem">Previous stage specific forms</h5> -->
+            <h5 style="margin-top: -0.5rem" v-if="!orderedStageForm.length">
+              This is your first stage specific form
+            </h5>
 
             <div :key="key" v-for="(form, key) in orderedStageForm">
               <div style="margin-top: 1rem">
-                <i style="text-transform: uppercase; font-size: 12px"
+                <i style="text-transform: uppercase; font-size: 12px; color: #beb5cc"
                   >Fields from <strong>{{ form.stage }}</strong> stage</i
                 >
               </div>
               <div class="stages-list">
-                <ListContainer horizontal>
+                <div :key="key" v-for="(val, key) in form.fieldsRef">
+                  <ul>
+                    <li>{{ val.referenceDisplayLabel }}</li>
+                  </ul>
+                </div>
+                <!-- <ListContainer horizontal>
                   <template v-slot:list>
                     <ListItem
                       @item-selected="onAddField(val)"
@@ -198,7 +207,7 @@
                       showIcon
                     />
                   </template>
-                </ListContainer>
+                </ListContainer> -->
               </div>
             </div>
           </div>
@@ -207,15 +216,14 @@
             <h5>Include in recap</h5>
           </div> -->
 
-          <h2 style="text-align: center; margin-bottom: 1rem">Slack form</h2>
-
           <div v-for="(field, index) in [...addedFields]" :key="field.apiName" class="form-field">
             <!-- <div
               v-if="
                 field.id === '6407b7a1-a877-44e2-979d-1effafec5035' ||
                 field.id === '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' ||
                 field.id === 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' ||
-                field.id === 'fae88a10-53cc-470e-86ec-32376c041893'
+                field.id === 'fae88a10-53cc-470e-86ec-32376c041893' ||
+                field.id === 'fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed'
               "
               class="form-field__label"
             >
@@ -536,7 +544,6 @@ export default {
                 }
                 return altField
               })
-              this.onSave()
             }
           }
           if (this.formType !== 'UPDATE') {
@@ -886,11 +893,11 @@ export default {
 
   &__form {
     // flex: 10;
-    width: 24vw;
+    width: 26vw;
     padding: 2rem;
     box-shadow: 0 5px 10px 0 rgba(132, 132, 132, 0.26);
     background-color: $panther;
-    height: 50vh;
+    height: 54vh;
     overflow-y: scroll;
     overflow-x: hidden;
     border-radius: 0.5rem;
@@ -1064,8 +1071,8 @@ img:hover {
   background-color: $panther;
   padding: 1rem;
   border-radius: 0.5rem;
-  height: 50vh;
-  width: 22vw;
+  height: 54vh;
+  width: 26vw;
   overflow-y: scroll;
   overflow-x: hidden;
 }
@@ -1100,11 +1107,11 @@ img:hover {
 }
 ::-webkit-scrollbar {
   -webkit-appearance: none;
-  width: 4px;
+  width: 6px;
 }
 ::-webkit-scrollbar-thumb {
   border-radius: 2px;
-  background-color: $panther-silver;
+  background-color: $dark-green;
 }
 .popular_fields {
   font-weight: bold;

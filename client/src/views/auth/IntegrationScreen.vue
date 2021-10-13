@@ -4,18 +4,18 @@
     <p style="font-weight: bold; margin-top: -0.5rem; color: #5d5e5e">
       Managr utilizes a secure oAuth connection
     </p>
-    <div v-if="isAdmin">
+    <div v-if="user.isAdmin">
       <PulseLoadingSpinnerButton
         v-if="hasSalesforceIntegration && hasSlackIntegration"
         @click="goToSlackFormBuilder"
         class="slack-button"
-        text="Customize"
+        text="Map your CRM Fields"
         :loading="false"
       ></PulseLoadingSpinnerButton>
       <PulseLoadingSpinnerButton
         v-else
         class="disabled-button"
-        text="Customize"
+        text="Map your CRM Fields"
         :loading="false"
       ></PulseLoadingSpinnerButton>
     </div>
@@ -30,7 +30,7 @@
       <PulseLoadingSpinnerButton
         v-else
         class="disabled-button"
-        text="Customize"
+        text="Activate Workflow Automations"
         :loading="false"
       ></PulseLoadingSpinnerButton>
     </div>
@@ -241,7 +241,7 @@
 
       <div class="card">
         <div class="card__header">
-          <img style="height: 4.5rem" src="@/assets/images/hubspott.png" />
+          <img style="width: 4rem" src="@/assets/images/hubspott.png" />
           <h2 class="card__title">Hubspot</h2>
         </div>
         <p class="card-text">Sync Companies, Deals, and Contacts</p>
@@ -504,6 +504,7 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-top: 2rem;
   &__cards {
     display: flex;
     flex-wrap: wrap;
@@ -575,26 +576,16 @@ export default {
   cursor: pointer;
 }
 .disabled-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.4rem 1rem;
-  margin-bottom: 1rem;
-  border-radius: 0.3rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin: 0rem 0 1rem 0;
+  font-size: 1.05rem;
   font-weight: bold;
-  line-height: 1.14;
-  text-indent: none;
-  border-style: none;
-  letter-spacing: 0.03rem;
+  border: none;
   background-color: $panther-silver;
   color: $panther-gray;
   cursor: not-allowed;
-  height: 2rem;
-  width: 10rem;
-  font-weight: bold;
-  font-size: 1.02rem;
 }
-
 .btn {
   &--danger {
     @include button-danger();
