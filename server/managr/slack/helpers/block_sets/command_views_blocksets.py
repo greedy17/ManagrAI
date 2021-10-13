@@ -137,7 +137,7 @@ def alert_instance_block_set(context):
         in_channel = True
     blocks = [
         block_builders.section_with_button_block(
-            "Mark As Complete",
+            "Mark as Complete",
             "mark_complete",
             instance.render_text(),
             text_type="mrkdwn",
