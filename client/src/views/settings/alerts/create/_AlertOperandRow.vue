@@ -205,6 +205,7 @@
                   type="number"
                   v-on:keyup="negVal(form.field.operandValue.value)"
                   class="dayInput"
+                  @click="setIdentifier"
                 />
               </div>
 
@@ -216,6 +217,7 @@
                   v-model="form.field.operandValue.value"
                   type="number"
                   class="dayInput"
+                  @click="setIdentifier"
                 />
               </div>
             </div>
@@ -371,8 +373,8 @@ export default {
       }
       return 'text'
     },
-    setIdentifier(obj) {
-      this.form.field._operandIdentifier.value = obj
+    setIdentifier() {
+      // this.form.field._operandIdentifier.value = obj
       if (this.selectedFieldType == 'DATE' || this.selectedFieldType == 'DATETIME') {
         this.form.field.operandOperator.value = '<='
         this.form.field._operandOperator.value = { label: '<= (Less or Equal)', value: '<=' }

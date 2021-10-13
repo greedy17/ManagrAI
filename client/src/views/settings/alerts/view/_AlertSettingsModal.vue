@@ -27,7 +27,7 @@
       <div style="margin-right: 1rem" class="alerts-page__settings__day">
         <p style="color: #ff7649">Day:</p>
         <div style="margin-top: 1rem; margin-bottom: 1rem" v-if="weeklyOrMonthly == 'WEEKLY'">
-          <div :key="value" v-for="(key, value) in weeklyOpts">
+          <!-- <div :key="value" v-for="(key, value) in weeklyOpts">
             <input
               :value="key.value"
               v-model="form.field.recurrenceDay.value"
@@ -35,22 +35,43 @@
               type="radio"
             />
             <label for="value">{{ key.key }}</label>
-          </div>
+          </div> -->
+          <FormField>
+            <template v-slot:input>
+              <DropDownSearch
+                :items.sync="weeklyOpts"
+                :itemsRef.sync="form.field._recurrenceDay.value"
+                v-model="form.field.recurrenceDay.value"
+                @input="form.field.recurrenceDay.validate()"
+                displayKey="key"
+                valueKey="value"
+                nullDisplay="Select Day"
+                searchable
+                local
+              />
+            </template>
+          </FormField>
         </div>
-        <span v-else-if="weeklyOrMonthly == 'MONTHLY'">
-          <FormField
+        <div v-else-if="weeklyOrMonthly == 'MONTHLY'">
+          <!-- <FormField
             placeholder="Day of month"
             :errors="form.field.recurrenceDay.errors"
             @blur="form.field.recurrenceDay.validate()"
             v-model="form.field.recurrenceDay.value"
             large
+          /> -->
+          <FormField
+            placeholder="Day of month"
+            @blur="form.field.recurrenceDay.validate()"
+            v-model="form.field.recurrenceDay.value"
+            small
           />
-        </span>
+        </div>
       </div>
       <div style="margin-right: 1rem" class="alerts-page__settings__target-users">
-        <p style="color: #ff7649">Pipelines:</p>
+        <p style="color: #ff7649">Select Pipelines:</p>
 
-        <input
+        <!-- <input
           class="search__input"
           type="text"
           v-model="searchQuery"
@@ -65,7 +86,28 @@
             type="checkbox"
           />
           <label for="value">{{ key.fullName }}</label>
-        </div>
+        </div> -->
+
+        <FormField :errors="form.field.alertTargets.errors">
+          <template v-slot:input>
+            <DropDownSearch
+              :items.sync="userTargetsOpts"
+              :itemsRef.sync="form.field._alertTargets.value"
+              v-model="form.field.alertTargets.value"
+              @input="form.field.alertTargets.validate()"
+              displayKey="fullName"
+              valueKey="id"
+              nullDisplay="Select pipelines"
+              searchable
+              multi
+              medium
+              :loading="users.loadingNextPage"
+              :hasNext="!!users.pagination.hasNextPage"
+              @load-more="onUsersNextPage"
+              @search-term="onSearchUsers"
+            />
+          </template>
+        </FormField>
       </div>
       <div class="alerts-page__settings__recipients">
         <p style="color: #ff7649">Recipients:</p>
@@ -88,25 +130,20 @@
                   ? (form.field.recipientType.value = recipientTypeToggle(
                       form.field.recipientType.value,
                     ))
-                  : (form.field.recipientType.value = recipientTypeToggle('SLACK_CHANNEL'))
+                  : (form.field.recipientType.value = recipientTypeToggle(
+                      form.field.recipientType.value,
+                    ))
               "
               :value="form.field.recipientType.value !== 'USER_LEVEL'"
               offColor="#199e54"
               onColor="#199e54"
             />
-            <label>Send to #Channel<span style="color: #ff7649"> *recommended</span></label>
+            <label>Send to #Channel</label>
           </div>
         </div>
-        <span
-          v-if="form.field._recipients.value && form.field.recipientType.value == 'SLACK_CHANNEL'"
-          class="muted--link--important"
-        >
-          Please make sure @managr has been added to
-          <em>{{ form.field._recipients.value.name }}</em> channel
-        </span>
 
         <div v-if="form.field.recipientType.value == 'USER_LEVEL'">
-          <input
+          <!-- <input
             class="search__input"
             type="text"
             v-model="searchText"
@@ -122,18 +159,32 @@
               @click="setRecipients(key)"
             />
             <label for="value">{{ key.fullName }}</label>
-          </div>
+          </div> -->
+
+          <FormField :errors="form.field.recipients.errors">
+            <template v-slot:input>
+              <DropDownSearch
+                :items.sync="recipientOpts"
+                :itemsRef.sync="form.field._recipients.value"
+                v-model="form.field.recipients.value"
+                @input="form.field.recipients.validate()"
+                displayKey="fullName"
+                valueKey="id"
+                nullDisplay="Select Recipients"
+                searchable
+                multi
+                medium
+                :loading="users.loadingNextPage"
+                :hasNext="!!users.pagination.hasNextPage"
+                @load-more="onUsersNextPage"
+                @search-term="onSearchUsers"
+              />
+            </template>
+          </FormField>
         </div>
 
-        <input
-          class="search__input"
-          type="text"
-          v-model="searchChannels"
-          placeholder="Search Channels..."
-          v-if="form.field.recipientType.value == 'SLACK_CHANNEL'"
-        />
-        <div v-if="form.field.recipientType.value == 'SLACK_CHANNEL'" class="channels_height">
-          <div :key="value" v-for="(key, value) in filteredChannels">
+        <div v-if="form.field.recipientType.value == 'SLACK_CHANNEL'">
+          <!-- <div :key="value" v-for="(key, value) in filteredChannels">
             <input
               @click="setRecipient(key)"
               v-model="form.field.recipients.value"
@@ -143,7 +194,34 @@
               style="height: 1rem; margin-top: 0.5rem"
             />
             <label style="margin-bottom: 1rem" for="value">{{ key.name }}</label>
-          </div>
+          </div> -->
+
+          <FormField :errors="form.field.recipients.errors">
+            <template v-slot:input>
+              <DropDownSearch
+                :items.sync="reversedChannels"
+                :itemsRef.sync="form.field._recipients.value"
+                v-model="form.field.recipients.value"
+                @input="form.field.recipients.validate()"
+                displayKey="name"
+                valueKey="id"
+                nullDisplay="Search Channels"
+                :hasNext="!!reversedChannels.nextCursor"
+                @load-more="listChannels(reversedChannels.nextCursor)"
+                searchable
+                local
+              >
+                <template v-slot:tn-dropdown-option="{ option }">
+                  <!-- <img
+                            v-if="option.isPrivate == true"
+                            class="card-img"
+                            src="@/assets/images/lockAsset.png"
+                          /> -->
+                  {{ option['name'] }}
+                </template>
+              </DropDownSearch>
+            </template>
+          </FormField>
         </div>
 
         <!-- <FormField
@@ -179,13 +257,13 @@
       </div>
     </div>
 
-    <PulseLoadingSpinnerButton
+    <!-- <PulseLoadingSpinnerButton
       text="save"
       @click="onSave"
       class="btn btn--primary"
       :loading="isSaving"
       :disabled="!form.isValid"
-    />
+    /> -->
   </div>
 </template>
 
@@ -308,6 +386,8 @@ export default {
       if (value == 'USER_LEVEL') {
         return 'SLACK_CHANNEL'
       } else if (value == 'SLACK_CHANNEL') {
+        this.form.field.recipients.value = []
+        this.form.field._recipients.value = []
         return 'USER_LEVEL'
       }
       return value
@@ -459,8 +539,8 @@ export default {
 }
 .alert-settings-modal {
   padding: 1rem;
-  height: 100%;
   overflow-y: scroll;
+  height: 100%;
   max-height: 100%;
   background-color: $panther;
   color: white;
