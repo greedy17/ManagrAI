@@ -130,7 +130,9 @@
                   ? (form.field.recipientType.value = recipientTypeToggle(
                       form.field.recipientType.value,
                     ))
-                  : (form.field.recipientType.value = recipientTypeToggle('SLACK_CHANNEL'))
+                  : (form.field.recipientType.value = recipientTypeToggle(
+                      form.field.recipientType.value,
+                    ))
               "
               :value="form.field.recipientType.value !== 'USER_LEVEL'"
               offColor="#199e54"
@@ -384,6 +386,8 @@ export default {
       if (value == 'USER_LEVEL') {
         return 'SLACK_CHANNEL'
       } else if (value == 'SLACK_CHANNEL') {
+        this.form.field.recipients.value = []
+        this.form.field._recipients.value = []
         return 'USER_LEVEL'
       }
       return value
