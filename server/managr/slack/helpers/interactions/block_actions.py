@@ -1398,7 +1398,7 @@ def process_get_call_recording(payload, context):
         curr_date_str = curr_date.isoformat() + "T01:00:00Z"
         try:
             call_res = gong_auth.helper_class.check_for_current_call(curr_date_str)
-            call_details = generate_call_block(call_res)
+            call_details = generate_call_block(call_res, opp.secondary_data["Id"])
             blocks = [*call_details]
         except InvalidRequest as e:
             blocks.append(
