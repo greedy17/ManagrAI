@@ -3,6 +3,7 @@ import time
 import hmac
 import hashlib
 import binascii
+import logging
 
 import pdb
 
@@ -11,6 +12,8 @@ from django.conf import settings
 from managr.slack.models import UserSlackIntegration
 from managr.slack.helpers import block_builders
 from managr.slack import constants as slack_consts
+
+logger = logging.getLogger("managr")
 
 
 def create_sha256_signature(key, message):
@@ -231,6 +234,7 @@ class processor:
 
 
 def process_done_alert(block_id, blocks):
+    logger.info(f"ORIGINAL BLOCKS --- {blocks}")
     found_block = block_finder(block_id, blocks)
     block_index = found_block[0]
     old_text = found_block[1].get("text").get("text").split("\n")
@@ -241,6 +245,7 @@ def process_done_alert(block_id, blocks):
     new_text = "\n".join(new_text)
     updated_blocks = blocks
     updated_blocks[int(block_index)] = block_builders.simple_section(new_text, text_type="mrkdwn")
+    logger.info(f"UPDATED BLOCKS --- {updated_blocks}")
     return updated_blocks
 
 
