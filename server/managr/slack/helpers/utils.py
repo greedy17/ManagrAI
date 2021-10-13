@@ -251,14 +251,12 @@ def process_done_alert(block_id, blocks):
 
 def generate_call_block(call_res, resource_id=None):
     blocks = []
-    print(resource_id)
     if resource_id:
         call_data = None
         for call in call_res["calls"]:
             resource_check = [
                 d for d in call["context"][0].get("objects") if d["objectType"] == "Opportunity"
             ][0]
-            print(resource_check)
             if resource_check["objectId"] == resource_id:
                 call_data = call
     else:
