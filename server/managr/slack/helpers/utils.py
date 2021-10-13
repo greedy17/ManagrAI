@@ -239,7 +239,8 @@ def process_done_alert(block_id, blocks):
     block_index = found_block[0]
     old_text = found_block[1].get("text").get("text").split("\n")
     logger.info(f"OLD TEXT ---- {old_text}")
-    old_text.pop()
+    if old_text[len(old_text) - 1] == "":
+        old_text.pop()
     new_text = []
     for idx in old_text:
         new_text.append("~" + idx + "~")
