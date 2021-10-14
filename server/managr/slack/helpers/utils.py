@@ -8,6 +8,7 @@ import logging
 import pdb
 
 from django.conf import settings
+from dateutil import parser
 
 from managr.slack.models import UserSlackIntegration
 from managr.slack.helpers import block_builders
@@ -248,39 +249,64 @@ def process_done_alert(block_id, blocks):
     return updated_blocks
 
 
-def generate_call_block(call_res):
+def generate_call_block(call_res, resource_id=None):
     blocks = []
-    call_data = call_res["calls"][0]
-    content_data = call_data.get("content", None)
-    meta_data = call_data.get("metaData", None)
-    trackers = content_data["trackers"]
-    topics = content_data["topics"]
-    trackers_string = "Trackers:\n"
-    topics_string = "Topics:\n"
-    modal_url = meta_data["url"]
-    for tracker in trackers:
-        if tracker["count"] > 0:
-            trackers_string += f"{tracker['name']} mentioned {tracker['count']} times\n"
-    for topic in topics:
-        if topic["duration"] > 0:
-            if topic["duration"] > 60:
-                dur = topic["duration"] // 60
-                topics_string += f"{topic['name']} talked about for {dur} minutes\n"
-            else:
-                topics_string += f"{topic['name']} talked about for {topic['duration']} seconds\n"
-    blocks.append(block_builders.simple_section(trackers_string))
-    blocks.append(block_builders.simple_section(topics_string))
-    blocks.append(
-        block_builders.simple_section(f"Number of participants: {len(call_data.get('parties'))}")
-    )
-    blocks.append(
-        block_builders.section_with_button_block(
-            "Recording",
-            "get_recording_url",
-            "Listen to call recording",
-            url=modal_url,
-            style="primary",
+    if resource_id:
+        call_data = None
+        for call in call_res["calls"]:
+            resource_check = [
+                d for d in call["context"][0].get("objects") if d["objectType"] == "Opportunity"
+            ][0]
+            if resource_check["objectId"] == resource_id:
+                call_data = call
+    else:
+        call_data = call_res["calls"][0]
+    if call_data:
+        content_data = call_data.get("content", None)
+        meta_data = call_data.get("metaData", None)
+        trackers = content_data["trackers"]
+        topics = content_data["topics"]
+        trackers_string = "Trackers:\n"
+        topics_string = "Topics:\n"
+        modal_url = meta_data["url"]
+        for tracker in trackers:
+            if tracker["count"] > 0:
+                trackers_string += f"{tracker['name']} mentioned {tracker['count']} times\n"
+        for topic in topics:
+            if topic["duration"] > 0:
+                if topic["duration"] > 60:
+                    dur = topic["duration"] // 60
+                    topics_string += f"{topic['name']} talked about for {dur} minutes\n"
+                else:
+                    topics_string += (
+                        f"{topic['name']} talked about for {topic['duration']} seconds\n"
+                    )
+        blocks.append(block_builders.simple_section(f"Title:{meta_data['title']}"))
+        blocks.append(
+            block_builders.simple_section(
+                f"Date: {parser.parse(meta_data['scheduled']).strftime('%m/%d/%Y, %H:%M:%S')}"
+            )
         )
-    )
+        blocks.append(
+            block_builders.simple_section(f"Duration: {round(meta_data['duration'] / 60)} min")
+        )
+        blocks.append(block_builders.simple_section(trackers_string))
+        blocks.append(block_builders.simple_section(topics_string))
+        blocks.append(
+            block_builders.simple_section(
+                f"Number of participants: {len(call_data.get('parties'))}"
+            )
+        )
+        blocks.append(
+            block_builders.section_with_button_block(
+                "Recording",
+                "get_recording_url",
+                "Listen to call recording",
+                url=modal_url,
+                style="primary",
+            )
+        )
+    else:
+        blocks.append(block_builders.simple_section("Call still processing"))
     return blocks
 

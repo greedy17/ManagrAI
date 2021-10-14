@@ -190,20 +190,21 @@
                     @input="form.field.recipients.validate()"
                     displayKey="name"
                     valueKey="id"
-                    nullDisplay="Channels"
-                    :hasNext="!!reversedChannels.nextCursor"
-                    @load-more="listChannels(reversedChannels.nextCursor)"
+                    nullDisplay="Search Channels"
+                    :hasNext="!!channelOpts.nextCursor"
+                    @load-more="listChannels(channelOpts.nextCursor)"
                     searchable
                     local
                   >
-                    <template v-slot:tn-dropdown-option="{ option }">
-                      <!-- <img
+                    <!-- <template v-slot:tn-dropdown-option="{ option }">
+                          <img
                             v-if="option.isPrivate == true"
                             class="card-img"
+                            style="width: 1rem; height: 1rem; margin-right: 0.2rem"
                             src="@/assets/images/lockAsset.png"
-                          /> -->
-                      {{ option['name'] }}
-                    </template>
+                          />
+                          {{ option['name'] }}
+                        </template> -->
                   </DropDownSearch>
                 </template>
               </FormField>
