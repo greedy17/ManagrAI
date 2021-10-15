@@ -283,16 +283,38 @@
                   </div>
 
                   <FormField
-                    id="delivery"
                     v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
                     placeholder="Day of month"
+                    :errors="form.field.recurrenceDay.errors"
                     @blur="form.field.recurrenceDay.validate()"
                     v-model="form.field.recurrenceDay.value"
                     small
                   />
 
-                  <p :class="form.field.recurrenceDay.value ? 'selected__item' : ''">
-                    {{ form.field._recurrenceDay.value.key }}
+                  <p
+                    @click="removeDay"
+                    v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
+                    :class="form.field.recurrenceDay.value ? 'selected__item' : 'visible'"
+                  >
+                    <img
+                      src="@/assets/images/remove.png"
+                      style="height: 1rem; margin-right: 0.25rem"
+                      alt=""
+                    />
+                    {{ form.field.recurrenceDay.value }}
+                  </p>
+
+                  <p
+                    @click="removeDay"
+                    v-else-if="form.field.recurrenceFrequency.value == 'WEEKLY'"
+                    :class="form.field.recurrenceDay.value ? 'selected__item' : 'visible'"
+                  >
+                    <img
+                      src="@/assets/images/remove.png"
+                      style="height: 1rem; margin-right: 0.25rem"
+                      alt=""
+                    />
+                    {{ convertToDay(form.field.recurrenceDay.value) }}
                   </p>
                 </div>
               </div>
@@ -353,7 +375,13 @@
                     :key="i"
                     v-for="(item, i) in form.field.alertTargets.value"
                     :class="form.field.alertTargets.value ? 'selected__item' : ''"
+                    @click="removeItemFromTargetArray(item)"
                   >
+                    <img
+                      src="@/assets/images/remove.png"
+                      style="height: 1rem; margin-right: 0.25rem"
+                      alt=""
+                    />
                     {{ item.length ? item : '' }}
                   </p>
                 </div>
@@ -435,10 +463,16 @@
 
                   <div class="items_height">
                     <p
+                      @click="removeItemFromRecipientArray(item)"
                       :key="i"
                       v-for="(item, i) in form.field.recipients.value"
                       :class="form.field.recipients.value ? 'selected__item' : ''"
                     >
+                      <img
+                        src="@/assets/images/remove.png"
+                        style="height: 1rem; margin-right: 0.25rem"
+                        alt=""
+                      />
                       {{ item.length ? item : '' }}
                     </p>
                   </div>
@@ -524,7 +558,15 @@
                     </template>
                   </FormField> -->
 
-                  <p :class="form.field.recipients.value.length > 0 ? 'selected__item' : ''">
+                  <p
+                    @click="removeTarget"
+                    :class="form.field.recipients.value.length > 0 ? 'selected__item' : 'visible'"
+                  >
+                    <img
+                      src="@/assets/images/remove.png"
+                      style="height: 1rem; margin-right: 0.25rem"
+                      alt=""
+                    />
                     {{
                       form.field.recipients.value.length ? form.field._recipients.value.name : ''
                     }}
@@ -830,6 +872,42 @@ export default {
         responseMetadata: { nextCursor: res.nextCursor },
       })
       this.channelOpts = results
+    },
+    removeDay() {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = ''
+    },
+    removeTarget() {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = []
+      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = []
+    },
+    removeItemFromTargetArray(item) {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value =
+        this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.filter(
+          (i) => i !== item,
+        )
+    },
+    removeItemFromRecipientArray(item) {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
+        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value.filter(
+          (i) => i !== item,
+        )
+    },
+    convertToDay(num) {
+      if (num == 0) {
+        return 'Monday'
+      } else if (num == 1) {
+        return 'Tuesday'
+      } else if (num == 2) {
+        return 'Wednesday'
+      } else if (num == 3) {
+        return 'Thursday'
+      } else if (num == 4) {
+        return 'Friday'
+      } else if (num == 5) {
+        return 'Saturday'
+      } else if (num == 6) {
+        return 'Sunday'
+      }
     },
     recipientTypeToggle(value) {
       if (!this.user.slackRef) {
@@ -1882,11 +1960,18 @@ input {
   visibility: visible;
 }
 .selected__item {
-  padding: 0.5rem 1.2rem;
+  padding: 0.5rem;
   background-color: $dark-green;
   border: none;
   border-radius: 0.3rem;
   width: 100%;
   text-align: center;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.visible {
+  display: none;
 }
 </style>
