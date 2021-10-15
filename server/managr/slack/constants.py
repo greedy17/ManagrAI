@@ -32,6 +32,10 @@ VIEWS_PUBLISH = "views.publish"
 
 USERS_LIST = "users.list"
 
+CONVERSATIONS_CREATE = "conversations.create"
+
+CONVERSATIONS_INVITE = "conversations.invite"
+
 # https://api.slack.com/methods/chat.getPermalink
 CHAT_GET_PERMALINK = "chat.getPermalink"
 
