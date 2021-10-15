@@ -259,10 +259,11 @@ class SlackViewSet(viewsets.GenericViewSet,):
         url_path="create-channel",
     )
     def slack_create_channel(self, request, *args, **kwargs):
-        slack_id = request.data.get("slack_id")
         name = request.data.get("name")
         team_id = request.data.get("team_id")
         organization_slack = request.user.organization.slack_integration
+        team_id = organization_slack.team_id
+        slack_id = request.user.slack_integration.slack_id
         if organization_slack:
             create_data = slack_requests.create_channel(
                 organization_slack.access_token, name=name, team_id=team_id, user=slack_id,
