@@ -119,8 +119,30 @@
               v-model="form.field.recurrenceDay.value"
               small
             />
-            <p :class="form.field.recurrenceDay.value ? 'selected__item' : ''">
-              {{ form.field._recurrenceDay.value.key }}
+            <p
+              @click="removeDay"
+              v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
+              :class="form.field.recurrenceDay.value ? 'selected__item' : 'visible'"
+            >
+              <img
+                src="@/assets/images/remove.png"
+                style="height: 1rem; margin-right: 0.25rem"
+                alt=""
+              />
+              {{ form.field.recurrenceDay.value }}
+            </p>
+
+            <p
+              @click="removeDay"
+              v-else-if="form.field.recurrenceFrequency.value == 'WEEKLY'"
+              :class="form.field.recurrenceDay.value ? 'selected__item' : 'visible'"
+            >
+              <img
+                src="@/assets/images/remove.png"
+                style="height: 1rem; margin-right: 0.25rem"
+                alt=""
+              />
+              {{ onConvert(form.field.recurrenceDay.value) }}
             </p>
           </div>
 
@@ -152,7 +174,13 @@
                 :key="i"
                 v-for="(item, i) in form.field.alertTargets.value"
                 :class="form.field.alertTargets.value ? 'selected__item' : ''"
+                @click="removeItemFromTargetArray(item)"
               >
+                <img
+                  src="@/assets/images/remove.png"
+                  style="height: 1rem; margin-right: 0.25rem"
+                  alt=""
+                />
                 {{ item.length ? item : '' }}
               </p>
             </div>
@@ -208,7 +236,15 @@
                   </DropDownSearch>
                 </template>
               </FormField>
-              <p :class="form.field.recipients.value.length > 0 ? 'selected__item' : ''">
+              <p
+                @click="removeTarget"
+                :class="form.field.recipients.value.length > 0 ? 'selected__item' : 'visible'"
+              >
+                <img
+                  src="@/assets/images/remove.png"
+                  style="height: 1rem; margin-right: 0.25rem"
+                  alt=""
+                />
                 {{ form.field.recipients.value.length ? form.field._recipients.value.name : '' }}
               </p>
             </div>
@@ -239,10 +275,16 @@
               </FormField>
               <div class="items_height">
                 <p
+                  @click="removeItemFromRecipientArray(item)"
                   :key="i"
                   v-for="(item, i) in form.field.recipients.value"
                   :class="form.field.recipients.value ? 'selected__item' : ''"
                 >
+                  <img
+                    src="@/assets/images/remove.png"
+                    style="height: 1rem; margin-right: 0.25rem"
+                    alt=""
+                  />
                   {{ item.length ? item : '' }}
                 </p>
               </div>
@@ -454,6 +496,25 @@ export default {
     },
   },
   methods: {
+    removeDay() {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = ''
+    },
+    removeTarget() {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = []
+      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = []
+    },
+    removeItemFromTargetArray(item) {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value =
+        this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.filter(
+          (i) => i !== item,
+        )
+    },
+    removeItemFromRecipientArray(item) {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
+        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value.filter(
+          (i) => i !== item,
+        )
+    },
     onConvert(val) {
       let newVal = ''
       if (val == 0) {
@@ -736,6 +797,31 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
+::v-deep .input-content {
+  width: 12vw;
+  background-color: white;
+  color: $panther;
+}
+::v-deep .input-form__large {
+  width: 12vw;
+  background-color: white;
+  color: $panther;
+}
+.invisible {
+  display: none;
+}
+.selected__item {
+  padding: 0.5rem;
+  background-color: $dark-green;
+  border: none;
+  border-radius: 0.3rem;
+  width: 100%;
+  text-align: center;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
 .search__input {
   font-family: Lato-Regular, sans-serif;
   font-weight: normal;
