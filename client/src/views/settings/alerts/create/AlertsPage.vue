@@ -2,7 +2,9 @@
   <div class="alerts-page">
     <div class="col">
       <h2 style="color: black" class="title">Smart Alert Templates</h2>
-      <p style="color: #5d5e5e" class="sub__">Highly recommended and easy to setup</p>
+      <p style="color: #5d5e5e" class="sub__">
+        Keep your pipeline up to date by activating smart alerts
+      </p>
     </div>
 
     <div class="alert_cards">
