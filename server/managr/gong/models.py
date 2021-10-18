@@ -93,11 +93,14 @@ class GongAuthAdapter:
         data["token_generated_date"] = timezone.now()
         return cls(**data)
 
-    def get_users(self, page=1):
+    def get_users(self, cursor=None):
         headers = {
             "Authorization": f"Bearer {self.access_token}",
         }
-        res = client.get(f"{gong_consts.GONG_BASE_URI}/{gong_consts.USERS}", headers=headers)
+        url = f"{gong_consts.GONG_BASE_URI}/{gong_consts.USERS}"
+        if cursor:
+            url += "?" + urlencode({"cursor": cursor})
+        res = client.get(url, headers=headers)
         return GongAuthAdapter._handle_response(res)
 
     def get_calls(self, start, end):
