@@ -73,7 +73,7 @@ def get_gong_authentication(request):
             for user in user_data:
                 user_res = GongAccountAdapter.create_account(user, admin_account.id)
                 if user_res is None:
-                    logger.error(f"Could not create gong account for {user['email']}")
+                    logger.error(f"Could not create gong account for {user['emailAddress']}")
                     continue
                 else:
                     user_existing = GongAccount.objects.filter(
