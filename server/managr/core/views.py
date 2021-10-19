@@ -31,7 +31,7 @@ from rest_framework.response import Response
 
 from managr.api.emails import send_html_email
 from managr.utils import sites as site_utils
-from managr.slack.helpers import requests as slack_requests
+from managr.slack.helpers import requests as slack_requests, block_builders
 from .nylas.auth import get_access_token, get_account_details
 from .models import (
     User,
@@ -540,41 +540,34 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
     permission_classes = (IsSuperUser | IsOrganizationManager,)
 
     def create(self, request, *args, **kwargs):
-        for user in request.data:
-            if not user.is_superuser:
-                if str(user.organization.id) != str(user["organization"]):
+        response_data = []
+        for user_data in request.data["users"]:
+            if not user_data.is_superuser:
+                if str(user_data.organization.id) != str(user_data["organization"]):
                     # allow custom organization in request only for SuperUsers
                     return Response(status=status.HTTP_403_FORBIDDEN)
-            serializer = self.serializer_class(data=user, context={"request": request})
+            serializer = self.serializer_class(data=user_data, context={"request": request})
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
             user = serializer.instance
 
             serializer = UserSerializer(user, context={"request": request})
-            response_data = serializer.data
+            response_data.append(serializer.data)
 
-            subject = render_to_string("registration/invitation-subject.txt")
-            recipient = [response_data["email"]]
-            context = dict(
-                organization=user.organization.name, activation_link=user.activation_link
-            )
-            send_html_email(
-                subject,
-                "registration/invitation-body.html",
-                settings.SERVER_EMAIL,
-                recipient,
-                context=context,
-            )
             text = f"{user.full_name} has invited you to join the Managr! Activate your account here: {user.activation_link}"
+            channel_res = slack_requests.request_user_dm_channel(
+                user_data["slack_id"], user.organization.slack_integration.access_token
+            ).json()
+            channel = channel_res.get("channel", {}).get("id")
             if hasattr(user.organization, "slack_integration"):
-                slack_requests.generic_request(
-                    user.organization.slack_integration.incoming_webhook.get("url"),
-                    dict(text=text,),
+                slack_requests.send_channel_message(
+                    channel,
                     user.organization.slack_integration.access_token,
+                    text="You've been invited to Managr!",
+                    block_set=get_block_set(
+                        "onboarding_interaction", {"u": str(user_slack.user.id)}
+                    ),
                 )
-
-            response_data["activation_link"] = user.activation_link
-
         return Response(response_data)
 
 

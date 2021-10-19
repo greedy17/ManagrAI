@@ -224,9 +224,12 @@ export default {
       // check form data for this request
       try {
         const res = await User.api.invite(this.userInviteForm.value)
-
+        let email_string = ''
+        for (let record in res.data) {
+          email_string += record['email'] + ' '
+        }
         this.$Alert.alert({
-          message: `<h3 style="color:white;"> An invitation was sent to ${res.data.email}</h3>`,
+          message: `<h3 style="color:white;"> An invitation was sent to ${email_string}</h3>`,
           type: 'success',
           timeout: 3000,
         })
