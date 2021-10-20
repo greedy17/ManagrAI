@@ -37,7 +37,7 @@ from .models import (
     GongAccountAdapter,
 )
 from .serializers import GongAuthSerializer, GongAccountSerializer
-from .cron import queue_gong_call_sync
+from .cron import queue_gong_sync
 from .background import sync_gong_accounts
 
 # Create your views here.
@@ -68,7 +68,7 @@ def get_gong_authentication(request):
     if admin_account:
         account_sync = sync_gong_accounts(admin_account.id)
         if account_sync["success"]:
-            queue_gong_call_sync(admin_account.id)
+            queue_gong_sync(admin_account.id)
     return Response(data={"success": True})
 
 

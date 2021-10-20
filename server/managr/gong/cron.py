@@ -25,8 +25,9 @@ logger = logging.getLogger("managr")
 
 
 @kronos.register("*/30 * * * *")
-def queue_gong_call_sync(auth_account=None):
+def queue_gong_sync(auth_account=None):
     if auth_account:
+        emit_sync_gong_accounts(auth_account)
         emit_sync_gong_calls(auth_account)
     else:
         gong_accounts = GongAuthAccount.objects.all()
