@@ -14,8 +14,7 @@ from background_task.models import CompletedTask
 
 from rest_framework.response import Response
 
-from managr.gong import constants as gong_consts
-from managr.gong.background import emit_sync_gong_calls
+from managr.gong.background import emit_sync_gong_calls, emit_sync_gong_accounts
 from managr.gong.models import GongAuthAccount
 from managr.core.models import User
 
@@ -32,6 +31,7 @@ def queue_gong_call_sync(auth_account=None):
     else:
         gong_accounts = GongAuthAccount.objects.all()
         for account in gong_accounts:
+            emit_sync_gong_accounts(account.id)
             emit_sync_gong_calls(account.id)
             logger.info("Started Gong call sync for {account.organization}")
             continue

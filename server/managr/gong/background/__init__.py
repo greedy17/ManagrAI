@@ -24,6 +24,10 @@ def emit_sync_gong_calls(auth_account_id):
     return sync_gong_calls(auth_account_id)
 
 
+def emit_sync_gong_accounts(auth_account_id):
+    return sync_gong_accounts(auth_account_id)
+
+
 def sync_gong_calls(auth_account_id):
     curr_date = datetime.now()
     thirty = (curr_date - timedelta(30)).replace(microsecond=0).isoformat() + "Z"
