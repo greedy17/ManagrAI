@@ -559,14 +559,13 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
                 user_data["slack_id"], user.organization.slack_integration.access_token
             ).json()
             channel = channel_res.get("channel", {}).get("id")
+            blocks = [block_builders.simple_section(text)]
             if hasattr(user.organization, "slack_integration"):
                 slack_requests.send_channel_message(
                     channel,
                     user.organization.slack_integration.access_token,
                     text="You've been invited to Managr!",
-                    block_set=get_block_set(
-                        "onboarding_interaction", {"u": str(user_slack.user.id)}
-                    ),
+                    block_set=blocks,
                 )
         return Response(response_data)
 

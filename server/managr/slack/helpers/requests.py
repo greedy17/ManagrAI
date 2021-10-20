@@ -216,3 +216,17 @@ def create_channel(access_token, name, team_id, user, is_private=True):
             return _handle_response(user_invite_res)
     except Exception as e:
         print(e)
+
+
+def list_user_channels(access_token, limit=25, cursor=None, types=[]):
+    q = dict(exclude_archived=True)
+    if len(types):
+        q["types"] = ",".join(types)
+    url = slack_const.SLACK_API_ROOT + slack_const.USERS.CONVERSATIONS
+    if limit:
+        q["limit"] = limit
+    if cursor:
+        q["cursor"] = cursor
+
+    url += "?" + urlencode(q)
+    return generic_request(url, None, access_token=access_token)
