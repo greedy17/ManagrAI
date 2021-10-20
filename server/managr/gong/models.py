@@ -93,7 +93,7 @@ class GongAuthAdapter:
         data["token_generated_date"] = timezone.now()
         return cls(**data)
 
-    def get_users(self, cursor=None):
+    def get_users(self, cursor):
         headers = {
             "Authorization": f"Bearer {self.access_token}",
         }

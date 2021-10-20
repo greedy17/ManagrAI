@@ -38,6 +38,7 @@ from .models import (
 )
 from .serializers import GongAuthSerializer, GongAccountSerializer
 from .cron import queue_gong_call_sync
+from .background import sync_gong_accounts
 
 # Create your views here.
 logger = logging.getLogger("managr")
@@ -65,31 +66,9 @@ def get_gong_authentication(request):
     serializer.save()
     admin_account = GongAuthAccount.objects.filter(admin=request.user).first()
     if admin_account:
-        cursor = None
-        while True:
-            users = admin_account.helper_class.get_users(cursor)
-            cursor = users["records"]["cursor"] if "cursor" in users["records"] else None
-            user_data = users.get("users")
-            for user in user_data:
-                user_res = GongAccountAdapter.create_account(user, admin_account.id)
-                if user_res is None:
-                    logger.error(f"Could not create gong account for {user['emailAddress']}")
-                    continue
-                else:
-                    user_existing = GongAccount.objects.filter(
-                        email=user.get("emailAddress")
-                    ).first()
-                    if user_existing:
-                        user_serializer = GongAccountSerializer(
-                            data=user_res.as_dict, instance=user_existing
-                        )
-                    else:
-                        user_serializer = GongAccountSerializer(data=user_res.as_dict)
-                    user_serializer.is_valid(raise_exception=True)
-                    user_serializer.save()
-            if not cursor:
-                break
-        queue_gong_call_sync(admin_account.id)
+        account_sync = sync_gong_accounts(admin_account.id)
+        if account_sync["success"]:
+            queue_gong_call_sync(admin_account.id)
     return Response(data={"success": True})
 
 
