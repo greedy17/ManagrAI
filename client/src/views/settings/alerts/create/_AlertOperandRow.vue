@@ -204,7 +204,7 @@
             </p>
           </div>
 
-          <div v-else>
+          <div class="centered" style="flex-direction: column" v-else>
             <div v-if="selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME'">
               <div style="display: flex; align-items: center">
                 <p>{{ form.field.operandIdentifier.value }} is:</p>
@@ -677,8 +677,7 @@ export default {
 }
 .selected__item {
   padding: 0.5rem;
-  background-color: $dark-green;
-  border: none;
+  border: 2px solid white;
   border-radius: 0.3rem;
   width: 100%;
   text-align: center;

@@ -10,6 +10,7 @@ const GENERATE_ACCESS_TOKEN_ENDPOINT = '/slack/generate-access-token/'
 const SLACK_REVOKE_ENDPOINT = '/slack/revoke/'
 const SLACK_CUSTOM_FORM_ENDPOINT = '/slack/forms/'
 const SLACK_LIST_PUBLIC_CHANNELS_ENDPOINT = '/slack/list-channels/'
+const SLACK_CREATE_CHANNEL = '/slack/create-channel/'
 
 export default class SlackAPI {
   constructor(cls) {
@@ -22,6 +23,12 @@ export default class SlackAPI {
     return apiClient()
   }
 
+  async createChannel(data) {
+    return this.client
+      .post(SLACK_CREATE_CHANNEL, { name: data })
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'SlackAPI.createChannel' }))
+  }
   getOAuthLink = linkType => {
     const payload = { linkType, redirectUri: this.cls.redirectURI }
     payload.redirectUri =
@@ -106,4 +113,6 @@ export default class SlackAPI {
       })
       .catch(apiErrorHandler({ apiName: 'SlackAPI.listChannels' }))
   }
+
+
 }
