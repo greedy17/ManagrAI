@@ -97,7 +97,12 @@ ENV SECRET_KEY='secret123' \
   SALESLOFT_BASE_URL='' \
   SALESLOFT_CLIENT_ID='' \
   SALESLOFT_SECRET='' \
-  SALESLOFT_REDIRECT_URI='' 
+  SALESLOFT_REDIRECT_URI='' \
+  USE_GONG=False \
+  GONG_BASE_URL='' \
+  GONG_CLIENT_ID='' \
+  GONG_SECRET='' \
+  GONG_REDIRECT_URI=''
 
 # Set the name of the working directory inside the docker container
 WORKDIR /app

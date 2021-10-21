@@ -111,6 +111,14 @@ export default {
   transform: translateY(0%);
   -webkit-transform: translateY(0%);
 }
+::v-deep .tn-dropdown__options__option--selected {
+  color: white;
+  background-color: $dark-green;
+}
+::v-deep .tn-dropdown__options__option--selected:hover {
+  color: $panther-silver;
+  background-color: $dark-green;
+}
 ::v-deep .tn-dropdown__selected-items__item-selection,
 ::v-deep .tn-dropdown__selected-items__item-selection--muted {
   color: $panther-silver;

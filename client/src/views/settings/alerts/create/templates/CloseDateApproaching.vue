@@ -112,15 +112,31 @@
               </FormField>
             </div>
             <FormField
-              id="delivery"
               v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
               placeholder="Day of month"
+              :errors="form.field.recurrenceDay.errors"
               @blur="form.field.recurrenceDay.validate()"
               v-model="form.field.recurrenceDay.value"
               small
             />
-            <p :class="form.field.recurrenceDay.value ? 'selected__item' : ''">
-              {{ form.field._recurrenceDay.value.key }}
+            <p
+              @click="removeDay"
+              v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
+              :class="form.field.recurrenceDay.value ? 'selected__item' : 'visible'"
+            >
+              {{ form.field.recurrenceDay.value }}
+            </p>
+            <p
+              @click="removeDay"
+              v-else-if="form.field.recurrenceFrequency.value == 'WEEKLY'"
+              :class="form.field.recurrenceDay.value ? 'selected__item' : 'visible'"
+            >
+              <img
+                src="@/assets/images/remove.png"
+                style="height: 1rem; margin-right: 0.25rem"
+                alt=""
+              />
+              {{ onConvert(form.field.recurrenceDay.value) }}
             </p>
           </div>
 
@@ -136,7 +152,7 @@
                   @input="form.field.alertTargets.validate()"
                   displayKey="fullName"
                   valueKey="id"
-                  nullDisplay="Pipelines"
+                  nullDisplay="Multi-select"
                   searchable
                   multi
                   medium
@@ -152,19 +168,25 @@
                 :key="i"
                 v-for="(item, i) in form.field.alertTargets.value"
                 :class="form.field.alertTargets.value ? 'selected__item' : ''"
+                @click="removeItemFromTargetArray(item)"
               >
+                <img
+                  src="@/assets/images/remove.png"
+                  style="height: 1rem; margin-right: 0.25rem"
+                  alt=""
+                />
                 {{ item.length ? item : '' }}
               </p>
             </div>
           </div>
 
           <div class="delivery__row">
-            <p
+            <!-- <p
               style="color: #beb5cc; font-weight: bold"
               v-if="form.field.recipientType.value == 'SLACK_CHANNEL'"
             >
               Please add @managr to your channel
-            </p>
+            </p> -->
             <div class="row__">
               <label>DM users</label>
               <ToggleCheckBox
@@ -193,23 +215,36 @@
                     @input="form.field.recipients.validate()"
                     displayKey="name"
                     valueKey="id"
-                    nullDisplay="Channels"
-                    :hasNext="!!reversedChannels.nextCursor"
-                    @load-more="listChannels(reversedChannels.nextCursor)"
+                    nullDisplay="Search Channels"
+                    :hasNext="!!channelOpts.nextCursor"
+                    @load-more="listChannels(channelOpts.nextCursor)"
                     searchable
                     local
                   >
-                    <template v-slot:tn-dropdown-option="{ option }">
-                      <!-- <img
+                    <!-- <template v-slot:tn-dropdown-option="{ option }">
+                          <img
                             v-if="option.isPrivate == true"
                             class="card-img"
+                            style="width: 1rem; height: 1rem; margin-right: 0.2rem"
                             src="@/assets/images/lockAsset.png"
-                          /> -->
-                      {{ option['name'] }}
-                    </template>
+                          />
+                          {{ option['name'] }}
+                        </template> -->
                   </DropDownSearch>
                 </template>
               </FormField>
+
+              <p
+                @click="removeTarget"
+                :class="form.field.recipients.value.length > 0 ? 'selected__item' : 'visible'"
+              >
+                <img
+                  src="@/assets/images/remove.png"
+                  style="height: 1rem; margin-right: 0.25rem"
+                  alt=""
+                />
+                {{ form.field.recipients.value.length ? form.field._recipients.value.name : '' }}
+              </p>
             </div>
 
             <div
@@ -225,7 +260,7 @@
                     @input="form.field.recipients.validate()"
                     displayKey="fullName"
                     valueKey="id"
-                    nullDisplay="Recipients"
+                    nullDisplay="Multi-select"
                     searchable
                     multi
                     medium
@@ -236,15 +271,21 @@
                   />
                 </template>
               </FormField>
-            </div>
-            <div class="recipients_height">
-              <p
-                :key="i"
-                v-for="(item, i) in form.field.recipients.value"
-                :class="form.field.recipients.value ? 'selected__item' : ''"
-              >
-                {{ item.length ? item : '' }}
-              </p>
+              <div class="items_height">
+                <p
+                  @click="removeItemFromRecipientArray(item)"
+                  :key="i"
+                  v-for="(item, i) in form.field.recipients.value"
+                  :class="form.field.recipients.value ? 'selected__item' : ''"
+                >
+                  <img
+                    src="@/assets/images/remove.png"
+                    style="height: 1rem; margin-right: 0.25rem"
+                    alt=""
+                  />
+                  {{ item.length ? item : '' }}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -453,6 +494,25 @@ export default {
     },
   },
   methods: {
+    removeDay() {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = ''
+    },
+    removeTarget() {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = []
+      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = []
+    },
+    removeItemFromTargetArray(item) {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value =
+        this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.filter(
+          (i) => i !== item,
+        )
+    },
+    removeItemFromRecipientArray(item) {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
+        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value.filter(
+          (i) => i !== item,
+        )
+    },
     onConvert(val) {
       let newVal = ''
       if (val == 0) {
@@ -497,6 +557,8 @@ export default {
       if (value == 'USER_LEVEL') {
         return 'SLACK_CHANNEL'
       } else if (value == 'SLACK_CHANNEL') {
+        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = []
+        this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = []
         return 'USER_LEVEL'
       }
       return value
@@ -733,6 +795,16 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
+::v-deep .input-content {
+  width: 12vw;
+  background-color: white;
+  color: $panther;
+}
+::v-deep .input-form__large {
+  width: 12vw;
+  background-color: white;
+  color: $panther;
+}
 .search__input {
   font-family: Lato-Regular, sans-serif;
   font-weight: normal;
@@ -835,10 +907,9 @@ export default {
 .collection {
   background-color: $panther;
   margin-top: 1rem;
-  padding: 1rem;
+  padding: 2rem;
   border-radius: 0.5rem;
-  height: 50vh;
-  width: 34vw;
+  width: 60vw;
   box-shadow: 3px 4px 7px black;
   display: flex;
   flex-direction: column;
@@ -939,7 +1010,7 @@ input {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: auto;
+  margin-top: 4rem;
   margin-bottom: 0.5rem;
 }
 .delivery__row {
@@ -1233,6 +1304,21 @@ textarea {
   border-radius: 0.5rem;
   border: 2px solid white;
   cursor: pointer;
+}
+.visible {
+  display: none;
+}
+.selected__item {
+  padding: 0.5rem;
+  background-color: $dark-green;
+  border: none;
+  border-radius: 0.3rem;
+  width: 100%;
+  text-align: center;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
 }
 // ::-webkit-scrollbar {
 //   background-color: $panther;

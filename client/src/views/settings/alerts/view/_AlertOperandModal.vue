@@ -113,7 +113,7 @@ export default {
   }
 }
 .alert-operand-modal {
-  padding: 0.5rem;
+  padding: 2rem;
   height: 100%;
   overflow-y: scroll;
   background-color: $panther;

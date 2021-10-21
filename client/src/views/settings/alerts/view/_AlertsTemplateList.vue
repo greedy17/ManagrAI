@@ -21,12 +21,12 @@
         <p class="center" style="font-weight: bold; color: #5d5e5e; margin-top: -0.5rem">
           Automated workflows that help keep you on track
         </p>
-        <p style="color: #5d5e5e; font-weight: bold; text-align: center; margin-top: 2rem">
+        <h3 style="color: #5d5e5e; font-weight: bold; text-align: center; margin-top: 16vh">
           No alerts found.
           <router-link to="templates" class="alert-links">Templates</router-link>
           are a great place to start, or you can
           <router-link to="build-your-own" class="alert-links">build your own!</router-link>
-        </p>
+        </h3>
       </div>
     </div>
     <template v-if="!templates.isLoading && templates.list.length">

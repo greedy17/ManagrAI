@@ -283,16 +283,38 @@
                   </div>
 
                   <FormField
-                    id="delivery"
                     v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
                     placeholder="Day of month"
+                    :errors="form.field.recurrenceDay.errors"
                     @blur="form.field.recurrenceDay.validate()"
                     v-model="form.field.recurrenceDay.value"
                     small
                   />
 
-                  <p :class="form.field.recurrenceDay.value ? 'selected__item' : ''">
-                    {{ form.field._recurrenceDay.value.key }}
+                  <p
+                    @click="removeDay"
+                    v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
+                    :class="form.field.recurrenceDay.value ? 'selected__item' : 'visible'"
+                  >
+                    <img
+                      src="@/assets/images/remove.png"
+                      style="height: 1rem; margin-right: 0.25rem"
+                      alt=""
+                    />
+                    {{ form.field.recurrenceDay.value }}
+                  </p>
+
+                  <p
+                    @click="removeDay"
+                    v-else-if="form.field.recurrenceFrequency.value == 'WEEKLY'"
+                    :class="form.field.recurrenceDay.value ? 'selected__item' : 'visible'"
+                  >
+                    <img
+                      src="@/assets/images/remove.png"
+                      style="height: 1rem; margin-right: 0.25rem"
+                      alt=""
+                    />
+                    {{ convertToDay(form.field.recurrenceDay.value) }}
                   </p>
                 </div>
               </div>
@@ -337,7 +359,7 @@
                       @input="form.field.alertTargets.validate()"
                       displayKey="fullName"
                       valueKey="id"
-                      nullDisplay="Select pipelines"
+                      nullDisplay="Mulit-select"
                       searchable
                       multi
                       medium
@@ -348,12 +370,18 @@
                     />
                   </template>
                 </FormField>
-                <div class="items_height">
+                <div style="margin-top: -0.5rem" class="items_height">
                   <p
                     :key="i"
                     v-for="(item, i) in form.field.alertTargets.value"
                     :class="form.field.alertTargets.value ? 'selected__item' : ''"
+                    @click="removeItemFromTargetArray(item)"
                   >
+                    <img
+                      src="@/assets/images/remove.png"
+                      style="height: 1rem; margin-right: 0.25rem"
+                      alt=""
+                    />
                     {{ item.length ? item : '' }}
                   </p>
                 </div>
@@ -376,7 +404,9 @@
                         ? (form.field.recipientType.value = recipientTypeToggle(
                             form.field.recipientType.value,
                           ))
-                        : (form.field.recipientType.value = recipientTypeToggle('SLACK_CHANNEL'))
+                        : (form.field.recipientType.value = recipientTypeToggle(
+                            form.field.recipientType.value,
+                          ))
                     "
                     :value="form.field.recipientType.value !== 'USER_LEVEL'"
                     offColor="#199e54"
@@ -419,7 +449,7 @@
                         @input="form.field.recipients.validate()"
                         displayKey="fullName"
                         valueKey="id"
-                        nullDisplay="Select Recipients"
+                        nullDisplay="Multi-select"
                         searchable
                         multi
                         medium
@@ -430,6 +460,22 @@
                       />
                     </template>
                   </FormField>
+
+                  <div class="items_height">
+                    <p
+                      @click="removeItemFromRecipientArray(item)"
+                      :key="i"
+                      v-for="(item, i) in form.field.recipients.value"
+                      :class="form.field.recipients.value ? 'selected__item' : ''"
+                    >
+                      <img
+                        src="@/assets/images/remove.png"
+                        style="height: 1rem; margin-right: 0.25rem"
+                        alt=""
+                      />
+                      {{ item.length ? item : '' }}
+                    </p>
+                  </div>
                 </div>
                 <div v-if="form.field.recipientType.value == 'SLACK_CHANNEL'">
                   <!-- <input
@@ -454,7 +500,38 @@
                     </div>
                   </div> -->
 
-                  <FormField :errors="form.field.recipients.errors">
+                  <FormField
+                    v-if="form.field.recipientType.value == 'SLACK_CHANNEL'"
+                    :errors="form.field.recipients.errors"
+                  >
+                    <template v-slot:input>
+                      <DropDownSearch
+                        :items.sync="reversedChannels"
+                        :itemsRef.sync="form.field._recipients.value"
+                        v-model="form.field.recipients.value"
+                        @input="form.field.recipients.validate()"
+                        displayKey="name"
+                        valueKey="id"
+                        nullDisplay="Search Channels"
+                        :hasNext="!!channelOpts.nextCursor"
+                        @load-more="listChannels(channelOpts.nextCursor)"
+                        searchable
+                        local
+                      >
+                        <!-- <template v-slot:tn-dropdown-option="{ option }">
+                          <img
+                            v-if="option.isPrivate == true"
+                            class="card-img"
+                            style="width: 1rem; height: 1rem; margin-right: 0.2rem"
+                            src="@/assets/images/lockAsset.png"
+                          />
+                          {{ option['name'] }}
+                        </template> -->
+                      </DropDownSearch>
+                    </template>
+                  </FormField>
+
+                  <!-- <FormField :errors="form.field.recipients.errors">
                     <template v-slot:input>
                       <DropDownSearch
                         :items.sync="reversedChannels"
@@ -470,24 +547,29 @@
                         local
                       >
                         <template v-slot:tn-dropdown-option="{ option }">
-                          <!-- <img
+                          <img
                             v-if="option.isPrivate == true"
                             class="card-img"
                             src="@/assets/images/lockAsset.png"
-                          /> -->
+                          />
                           {{ option['name'] }}
                         </template>
                       </DropDownSearch>
                     </template>
-                  </FormField>
-                </div>
-                <div class="recipients_height">
+                  </FormField> -->
+
                   <p
-                    :key="i"
-                    v-for="(item, i) in form.field.recipients.value"
-                    :class="form.field.recipients.value ? 'selected__item' : ''"
+                    @click="removeTarget"
+                    :class="form.field.recipients.value.length > 0 ? 'selected__item' : 'visible'"
                   >
-                    {{ item.length ? item : '' }}
+                    <img
+                      src="@/assets/images/remove.png"
+                      style="height: 1rem; margin-right: 0.25rem"
+                      alt=""
+                    />
+                    {{
+                      form.field.recipients.value.length ? form.field._recipients.value.name : ''
+                    }}
                   </p>
                 </div>
               </div>
@@ -791,6 +873,42 @@ export default {
       })
       this.channelOpts = results
     },
+    removeDay() {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = ''
+    },
+    removeTarget() {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = []
+      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = []
+    },
+    removeItemFromTargetArray(item) {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value =
+        this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.filter(
+          (i) => i !== item,
+        )
+    },
+    removeItemFromRecipientArray(item) {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
+        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value.filter(
+          (i) => i !== item,
+        )
+    },
+    convertToDay(num) {
+      if (num == 0) {
+        return 'Monday'
+      } else if (num == 1) {
+        return 'Tuesday'
+      } else if (num == 2) {
+        return 'Wednesday'
+      } else if (num == 3) {
+        return 'Thursday'
+      } else if (num == 4) {
+        return 'Friday'
+      } else if (num == 5) {
+        return 'Saturday'
+      } else if (num == 6) {
+        return 'Sunday'
+      }
+    },
     recipientTypeToggle(value) {
       if (!this.user.slackRef) {
         this.$Alert.alert({ type: 'error', message: 'Slack Not Integrated', timeout: 2000 })
@@ -799,6 +917,8 @@ export default {
       if (value == 'USER_LEVEL') {
         return 'SLACK_CHANNEL'
       } else if (value == 'SLACK_CHANNEL') {
+        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = []
+        this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = []
         return 'USER_LEVEL'
       }
       return value
@@ -1840,11 +1960,18 @@ input {
   visibility: visible;
 }
 .selected__item {
-  padding: 0.5rem 1.2rem;
+  padding: 0.5rem;
   background-color: $dark-green;
   border: none;
   border-radius: 0.3rem;
   width: 100%;
   text-align: center;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.visible {
+  display: none;
 }
 </style>

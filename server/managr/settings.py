@@ -92,6 +92,7 @@ INSTALLED_APPS = [
     "managr.alerts",
     "managr.autonomous",
     "managr.salesloft",
+    "managr.gong",
     # "managr.demo",
     # Django
     "django.contrib.admin",
@@ -440,5 +441,12 @@ if USE_SALESLOFT:
     SALESLOFT_CLIENT_ID = _env_get_required("SALESLOFT_CLIENT_ID")
     SALESLOFT_BASE_URL = _env_get_required("SALESLOFT_BASE_URL")
     SALESLOFT_REDIRECT_URI = _env_get_required("SALESLOFT_REDIRECT_URI")
+
+USE_GONG = os.environ.get("USE_GONG") == "True"
+if USE_GONG:
+    GONG_SECRET = _env_get_required("GONG_SECRET")
+    GONG_CLIENT_ID = _env_get_required("GONG_CLIENT_ID")
+    GONG_BASE_URL = _env_get_required("GONG_BASE_URL")
+    GONG_REDIRECT_URI = _env_get_required("GONG_REDIRECT_URI")
 
 MAX_ATTEMPTS = 5

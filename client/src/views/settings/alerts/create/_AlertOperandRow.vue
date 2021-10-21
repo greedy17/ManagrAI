@@ -67,7 +67,15 @@
             />
           </template>
         </FormField>
-        <p :class="form.field.operandIdentifier.value ? 'selected__item' : ''">
+        <p
+          @click="removeIdentifier"
+          :class="form.field.operandIdentifier.value ? 'selected__item' : 'invisible'"
+        >
+          <img
+            src="@/assets/images/remove.png"
+            style="height: 1rem; margin-right: 0.25rem"
+            alt=""
+          />
           {{ form.field.operandIdentifier.value }}
         </p>
       </div>
@@ -102,7 +110,15 @@
             />
           </template>
         </FormField>
-        <p :class="form.field.operandOperator.value ? 'selected__item' : ''">
+        <p
+          @click="removeOperator"
+          :class="form.field.operandOperator.value ? 'selected__item' : 'invisible'"
+        >
+          <img
+            src="@/assets/images/remove.png"
+            style="height: 1rem; margin-right: 0.25rem"
+            alt=""
+          />
           {{ form.field.operandOperator.value }}
         </p>
       </div>
@@ -138,7 +154,15 @@
               />
             </template>
           </FormField>
-          <p :class="form.field.operandValue.value ? 'selected__item' : ''">
+          <p
+            @click="removeValue"
+            :class="form.field.operandValue.value ? 'selected__item' : 'invisible'"
+          >
+            <img
+              src="@/assets/images/remove.png"
+              style="height: 1rem; margin-right: 0.25rem"
+              alt=""
+            />
             {{ form.field.operandValue.value }}
           </p>
         </div>
@@ -205,6 +229,7 @@
                   type="number"
                   v-on:keyup="negVal(form.field.operandValue.value)"
                   class="dayInput"
+                  @click="setIdentifier"
                 />
               </div>
 
@@ -216,6 +241,7 @@
                   v-model="form.field.operandValue.value"
                   type="number"
                   class="dayInput"
+                  @click="setIdentifier"
                 />
               </div>
             </div>
@@ -365,14 +391,23 @@ export default {
     await this.objectFields.refresh()
   },
   methods: {
+    removeIdentifier() {
+      this.form.field.operandIdentifier.value = ''
+    },
+    removeOperator() {
+      this.form.field.operandOperator.value = ''
+    },
+    removeValue() {
+      this.form.field.operandValue.value = ''
+    },
     getInputType(type) {
       if (type && INPUT_TYPE_MAP[type.dataType]) {
         return INPUT_TYPE_MAP[type.dataType]
       }
       return 'text'
     },
-    setIdentifier(obj) {
-      this.form.field._operandIdentifier.value = obj
+    setIdentifier() {
+      // this.form.field._operandIdentifier.value = obj
       if (this.selectedFieldType == 'DATE' || this.selectedFieldType == 'DATETIME') {
         this.form.field.operandOperator.value = '<='
         this.form.field._operandOperator.value = { label: '<= (Less or Equal)', value: '<=' }
@@ -641,11 +676,18 @@ export default {
   background-color: $panther-silver;
 }
 .selected__item {
-  padding: 0.5rem 1.2rem;
+  padding: 0.5rem;
   background-color: $dark-green;
   border: none;
   border-radius: 0.3rem;
   width: 100%;
   text-align: center;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.invisible {
+  display: none;
 }
 </style>
