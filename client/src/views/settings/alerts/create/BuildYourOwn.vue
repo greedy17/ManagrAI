@@ -669,7 +669,7 @@ export default {
       searchQuery: '',
       searchText: '',
       searchChannels: '',
-      channelSaved: false,
+      channelCreated: false,
       fields: CollectionManager.create({ ModelClass: SObjectField }),
       users: CollectionManager.create({ ModelClass: User }),
       recipientBindings: [

@@ -212,7 +212,7 @@
                 @input="logNewName(channelName)"
               />
 
-              <div style="margin-top: 1rem">
+              <div v-if="!channelCreated" v style="margin-top: 1.25rem">
                 <button
                   v-if="channelName"
                   @click="createChannel(channelName)"
@@ -396,6 +396,7 @@ export default {
   data() {
     return {
       channelOpts: new SlackListResponse(),
+      channelCreated: false,
       savingTemplate: false,
       listVisible: true,
       dropdownVisible: true,
@@ -532,6 +533,7 @@ export default {
       if (res.channel) {
         this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = res.channel
         this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = res.channel.id
+        this.channelCreated = !this.channelCreated
       } else {
         console.log(res.error)
         this.channelName = ''
