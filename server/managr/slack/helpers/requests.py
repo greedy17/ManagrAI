@@ -73,7 +73,11 @@ def request_access_token(code, redirect_uri):
         "Accept": "application/json",
         "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
     }
-    return requests.post(url, data=data, headers=headers,)
+    return requests.post(
+        url,
+        data=data,
+        headers=headers,
+    )
 
 
 def revoke_access_token(token):
@@ -84,7 +88,10 @@ def revoke_access_token(token):
         "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
     }
 
-    return requests.post(url, headers=headers,)
+    return requests.post(
+        url,
+        headers=headers,
+    )
 
 
 def request_user_dm_channel(slack_id, access_token):
@@ -94,7 +101,11 @@ def request_user_dm_channel(slack_id, access_token):
     """
     url = slack_const.SLACK_API_ROOT + slack_const.CONVERSATIONS_OPEN
     data = {"users": slack_id}
-    return requests.post(url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),)
+    return requests.post(
+        url,
+        data=json.dumps(data),
+        headers=slack_auth.auth_headers(access_token),
+    )
 
 
 def send_channel_message(channel, access_token, text="Managr", block_set=[]):
@@ -109,7 +120,11 @@ def send_channel_message(channel, access_token, text="Managr", block_set=[]):
     data["text"] = text
     data["blocks"] = block_set
 
-    res = requests.post(url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),)
+    res = requests.post(
+        url,
+        data=json.dumps(data),
+        headers=slack_auth.auth_headers(access_token),
+    )
     return _handle_response(res, blocks=block_set)
 
 
@@ -123,7 +138,11 @@ def publish_view(slack_id, access_token, view):
     data["user_id"] = slack_id
     data["view"] = view
 
-    res = requests.post(url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),)
+    res = requests.post(
+        url,
+        data=json.dumps(data),
+        headers=slack_auth.auth_headers(access_token),
+    )
     return _handle_response(res, data)
 
 
@@ -139,7 +158,11 @@ def send_ephemeral_message(channel, access_token, slack_id, text="Managr", block
     data["blocks"] = block_set
     data["user"] = slack_id
 
-    res = requests.post(url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),)
+    res = requests.post(
+        url,
+        data=json.dumps(data),
+        headers=slack_auth.auth_headers(access_token),
+    )
     return _handle_response(res, blocks=block_set)
 
 
@@ -154,7 +177,11 @@ def update_channel_message(channel, message_timestamp, access_token, text="Manag
 
     data["text"] = text
     data["blocks"] = block_set
-    res = requests.post(url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),)
+    res = requests.post(
+        url,
+        data=json.dumps(data),
+        headers=slack_auth.auth_headers(access_token),
+    )
     return _handle_response(res, blocks=block_set if block_set else [])
 
 
@@ -192,8 +219,9 @@ def invite_channel(access_token, channel, users):
     q["users"] = users
     url = slack_const.SLACK_API_ROOT + slack_const.CONVERSATIONS_INVITE
     url += "?" + urlencode(q)
-    res = requests.post(url, headers=slack_auth.auth_headers(access_token))
-    return _handle_response(res)
+    res = requests.post(url, headers=slack_auth.encode_header(access_token))
+    print(res)
+    return res
 
 
 def create_channel(access_token, name, team_id, user, is_private=True):
@@ -204,9 +232,14 @@ def create_channel(access_token, name, team_id, user, is_private=True):
     url = slack_const.SLACK_API_ROOT + slack_const.CONVERSATIONS_CREATE
     url += "?" + urlencode(q)
     try:
-        channel_res = requests.post(url, headers=slack_auth.auth_headers(access_token))
-        if channel_res["ok"]:
-            user_invite_res = invite_channel(access_token, channel_res["id"], user)
+        channel_res = requests.post(url, headers=slack_auth.encode_header(access_token)).json()
+        if channel_res["ok"] is True:
+            user_invite_res = invite_channel(
+                access_token, channel_res.get("channel").get("id"), user
+            )
             return _handle_response(user_invite_res)
+        else:
+            print(channel_res)
+            return channel_res
     except Exception as e:
         print(e)
