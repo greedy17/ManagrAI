@@ -212,7 +212,7 @@
                 @input="logNewName(channelName)"
               />
 
-              <div v-if="!channelCreated" v style="margin-top: 1.25rem">
+              <div v-if="!createdChannel" v style="margin-top: 1.25rem">
                 <button
                   v-if="channelName"
                   @click="createChannel(channelName)"

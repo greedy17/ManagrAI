@@ -174,7 +174,7 @@
           </div>
 
           <div class="crm">
-            <h4 style="margin-top: 2rem">Add CRM Fields</h4>
+            <h4 style="margin-top: 2rem">Add CRM values</h4>
             <DropDownSearch
               :items="fields.list"
               @input="bindText(`${selectedResourceType}.${$event}`)"
