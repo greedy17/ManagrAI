@@ -409,12 +409,12 @@ export default {
     }
   },
   async created() {
-    // if (this.user.slackRef) {
-    //   await this.listChannels()
-    // }
-    // if (this.user.userLevel == 'MANAGER') {
-    //   await this.users.refresh()
-    // }
+    if (this.user.slackRef) {
+      await this.listChannels()
+    }
+    if (this.user.userLevel == 'MANAGER') {
+      await this.users.refresh()
+    }
   },
   watch: {
     selectedResourceType: {

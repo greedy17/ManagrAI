@@ -69,15 +69,17 @@
 
       <div class="right">
         <div class="tooltip">
-          <img style="height: 1.75rem" src="@/assets/images/blackhelp.png" class="tooltip__icon" />
+          <img style="height: 1.5rem" src="@/assets/images/blackhelp.png" class="tooltip__icon" />
           <div class="tooltip__popup">
             <div class="tooltip__popup__bold">Having issues?</div>
             <div class="tip">Email Us: support@mymanagr.com</div>
           </div>
         </div>
 
-        <div style="color: black" class="profile">
-          <router-link :to="{ name: 'ProfilePage' }">{{ userInitials }}</router-link>
+        <div>
+          <router-link :to="{ name: 'ProfilePage' }"
+            ><img src="@/assets/images/profile.png" style="height: 1.5rem" alt=""
+          /></router-link>
         </div>
 
         <div>
@@ -86,7 +88,7 @@
               @click="logOut"
               src="@/assets/images/blacklogout.png"
               alt=""
-              style="height: 1.55rem"
+              style="height: 1.5rem"
           /></router-link>
         </div>
       </div>
