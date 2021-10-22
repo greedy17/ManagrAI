@@ -82,6 +82,7 @@ export class UserInviteForm extends Form {
   static userLevel = new FormField({ validators: [new RequiredValidator()] })
   static organization = new FormField({ validators: [new RequiredValidator()] })
   static slackInvite = new FormField({ value: false })
+  static slackId = new FormField({ validators: [new RequiredValidator()] })
   static dynamicFormValidators = {
     confirmEmail: [new MustMatchValidator({ matcher: 'email' })],
   }

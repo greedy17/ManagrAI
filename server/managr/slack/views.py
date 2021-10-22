@@ -229,14 +229,12 @@ class SlackViewSet(
                     user_slack.channel,
                     user_slack.user.organization.slack_integration.access_token,
                     text="Welcome to Managr!",
-                    block_set=get_block_set(
-                        "onboarding_interaction", {"u": str(user_slack.user.id)}
-                    ),
+                    block_set=[
+                        block_builders.simple_section(
+                            f"Click this link to activate your account:\n{user.activation_link}"
+                        )
+                    ],
                 )
-
-                user_slack.is_onboarded = True
-                user_slack.save()
-
             # return serialized user because client-side needs updated slackRef(s)
         return Response(data=UserSerializer(request.user).data, status=status.HTTP_200_OK)
 
@@ -302,6 +300,41 @@ class SlackViewSet(
         else:
             channels = {"channels": [], "response_metadata": {}}
         return Response(status=status.HTTP_200_OK, data=channels)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="list-user-channels",
+    )
+    def slack_user_channels(self, request, *args, **kwargs):
+        cursor = request.data.get("cursor")
+        organization_slack = request.user.organization.slack_integration
+        if organization_slack:
+            channels = slack_requests.list_user_channels(
+                organization_slack.access_token,
+                cursor=cursor,
+                types=["public_channel", "private_channel"],
+                limit=100,
+            )
+        else:
+            channels = {"channels": [], "response_metadata": {}}
+        return Response(status=status.HTTP_200_OK, data=channels)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="list-users",
+    )
+    def slack_users(self, request, *args, **kwargs):
+        cursor = request.data.get("cursor", None)
+        organization_slack = request.user.organization.slack_integration
+        if organization_slack:
+            users = slack_requests.list_users(organization_slack.access_token, cursor=cursor)
+        else:
+            users = {"users": [], "response_metadata": {}}
+        return Response(status=status.HTTP_200_OK, data=users)
 
     @action(
         methods=["get"],

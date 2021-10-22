@@ -30,6 +30,10 @@ VIEWS_PUSH = "views.push"
 
 VIEWS_PUBLISH = "views.publish"
 
+USERS_LIST = "users.list"
+
+USERS_CONVERSATIONS = "users.conversations"
+
 CONVERSATIONS_CREATE = "conversations.create"
 
 CONVERSATIONS_INVITE = "conversations.invite"

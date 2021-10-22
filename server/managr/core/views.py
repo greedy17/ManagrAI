@@ -31,7 +31,7 @@ from rest_framework.response import Response
 
 from managr.api.emails import send_html_email
 from managr.utils import sites as site_utils
-from managr.slack.helpers import requests as slack_requests
+from managr.slack.helpers import requests as slack_requests, block_builders
 from .nylas.auth import get_access_token, get_account_details
 from .models import (
     User,
@@ -305,7 +305,8 @@ class ActivationLinkView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         if user and user.is_active:
             return Response(
-                data={"activation_link": user.activation_link}, status=status.HTTP_204_NO_CONTENT,
+                data={"activation_link": user.activation_link},
+                status=status.HTTP_204_NO_CONTENT,
             )
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -313,7 +314,9 @@ class ActivationLinkView(APIView):
 
 @api_view(["GET"])
 @permission_classes(
-    [permissions.IsAuthenticated,]
+    [
+        permissions.IsAuthenticated,
+    ]
 )
 def get_email_authorization_link(request):
     u = request.user
@@ -428,7 +431,9 @@ class NylasAccountWebhook(APIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [permissions.IsAuthenticated,]
+    [
+        permissions.IsAuthenticated,
+    ]
 )
 def email_auth_token(request):
     u = request.user
@@ -545,7 +550,7 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
             if str(u.organization.id) != str(request.data["organization"]):
                 # allow custom organization in request only for SuperUsers
                 return Response(status=status.HTTP_403_FORBIDDEN)
-        send_slack = request.data.pop("slack_invite", False)
+        slack_id = request.data.get("slack_id", False)
         serializer = self.serializer_class(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -554,26 +559,20 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
         serializer = UserSerializer(user, context={"request": request})
         response_data = serializer.data
 
-        subject = render_to_string("registration/invitation-subject.txt")
-        recipient = [response_data["email"]]
-        context = dict(organization=user.organization.name, activation_link=user.activation_link)
-        send_html_email(
-            subject,
-            "registration/invitation-body.html",
-            settings.SERVER_EMAIL,
-            recipient,
-            context=context,
-        )
-        text = f"{u.full_name} has invited {user.email} to join the Managr, an invitation has been sent to {user.email}"
-        if send_slack and hasattr(u.organization, "slack_integration"):
-            slack_requests.generic_request(
-                u.organization.slack_integration.incoming_webhook.get("url"),
-                dict(text=text,),
+        text = f"{u.full_name} has invited you to join the Managr! Activate your account here: {user.activation_link}"
+        channel_res = slack_requests.request_user_dm_channel(
+            slack_id, u.organization.slack_integration.access_token
+        ).json()
+        channel = channel_res.get("channel", {}).get("id")
+        print(channel)
+        blocks = [block_builders.simple_section(text)]
+        if hasattr(u.organization, "slack_integration"):
+            slack_requests.send_channel_message(
+                channel,
                 u.organization.slack_integration.access_token,
+                text="You've been invited to Managr!",
+                block_set=blocks,
             )
-
-        response_data["activation_link"] = user.activation_link
-
         return Response(response_data)
 
 
@@ -644,7 +643,9 @@ class UserPasswordManagmentView(generics.GenericAPIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [permissions.AllowAny,]
+    [
+        permissions.AllowAny,
+    ]
 )
 def request_reset_link(request):
     """endpoint to request a password reset email (forgot password)"""

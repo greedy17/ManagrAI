@@ -213,6 +213,14 @@ def list_channels(access_token, limit=25, cursor=None, types=[]):
     return generic_request(url, None, access_token=access_token)
 
 
+def list_users(access_token, cursor=None):
+    url = slack_const.SLACK_API_ROOT + slack_const.USERS_LIST
+    if cursor:
+        url += "?" + urlencode({"cursor": cursor})
+    res = requests.post(url, headers=slack_auth.auth_headers(access_token))
+    return _handle_response(res)
+
+
 def invite_channel(access_token, channel, users):
     q = dict()
     q["channel"] = channel
@@ -243,3 +251,17 @@ def create_channel(access_token, name, team_id, user, is_private=True):
             return channel_res
     except Exception as e:
         print(e)
+
+
+def list_user_channels(access_token, limit=25, cursor=None, types=[]):
+    q = dict(exclude_archived=True)
+    if len(types):
+        q["types"] = ",".join(types)
+    url = slack_const.SLACK_API_ROOT + slack_const.USERS.CONVERSATIONS
+    if limit:
+        q["limit"] = limit
+    if cursor:
+        q["cursor"] = cursor
+
+    url += "?" + urlencode(q)
+    return generic_request(url, None, access_token=access_token)
