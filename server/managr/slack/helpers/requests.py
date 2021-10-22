@@ -186,8 +186,10 @@ def list_channels(access_token, limit=25, cursor=None, types=[]):
     return generic_request(url, None, access_token=access_token)
 
 
-def list_users(access_token):
+def list_users(access_token, cursor=None):
     url = slack_const.SLACK_API_ROOT + slack_const.USERS_LIST
+    if cursor:
+        url += "?" + urlencode({"cursor": cursor})
     res = requests.post(url)
     return _handle_response(res, headers=slack_auth.auth_headers(access_token))
 

@@ -311,6 +311,21 @@ class SlackViewSet(viewsets.GenericViewSet,):
         return Response(status=status.HTTP_200_OK, data=channels)
 
     @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="list-users",
+    )
+    def slack_users(self, request, *args, **kwargs):
+        cursor = request.data.get("cursor", None)
+        organization_slack = request.user.organization.slack_integration
+        if organization_slack:
+            users = slack_requests.list_users(organization_slack.access_token, cursor=cursor)
+        else:
+            users = {"users": [], "response_metadata": {}}
+        return Response(status=status.HTTP_200_OK, data=users)
+
+    @action(
         methods=["get"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
