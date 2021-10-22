@@ -217,8 +217,8 @@ def list_users(access_token, cursor=None):
     url = slack_const.SLACK_API_ROOT + slack_const.USERS_LIST
     if cursor:
         url += "?" + urlencode({"cursor": cursor})
-    res = requests.post(url)
-    return _handle_response(res, headers=slack_auth.auth_headers(access_token))
+    res = requests.post(url, headers=slack_auth.auth_headers(access_token))
+    return _handle_response(res)
 
 
 def invite_channel(access_token, channel, users):

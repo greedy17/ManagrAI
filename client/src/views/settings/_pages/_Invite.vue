@@ -10,10 +10,28 @@
       "
     >
       <form class="invite-form" @submit.prevent="handleInvite">
-        <div class="invite-form__title" style="color: white">Invite Users to Managr</div>
-        <div class="invite-form__subtitle" style="color: #199e54">
+        <h2 class="invite-form__title">Invite Users to Managr</h2>
+        <h2 class="invite-form__subtitle" style="color: #199e54">
           {{ $store.state.user.organizationRef.name }}
+        </h2>
+
+        <div style="display: flex; align-items: center; justify-content: center">
+          <FormField style="margin-left: -5rem">
+            <template v-slot:input>
+              <DropDownSearch
+                :items.sync="slackMembers"
+                v-model="userInviteForm.field.slackId.value"
+                displayKey="name"
+                valueKey="id"
+                nullDisplay="Search Users"
+                searchable
+                local
+              >
+              </DropDownSearch>
+            </template>
+          </FormField>
         </div>
+
         <div class="form_field">
           <FormField
             label="Email"
@@ -38,7 +56,7 @@
         </div>
 
         <div class="dropdown">
-          <FormField :errors="userInviteForm.field.userLevel.errors" label="User Level">
+          <FormField :errors="userInviteForm.field.userLevel.errors" label="User Level:">
             <template v-slot:input>
               <DropDownSelect
                 :items="userTypes"
@@ -68,12 +86,10 @@
           </FormField>
         </div> -->
         <div class="invite-form__actions">
-          <div @click="onConfirmSlackInvite" style="display: flex; align-items: center">
+          <!-- <div @click="onConfirmSlackInvite" style="display: flex; align-items: center">
             <CheckBox :checked="userInviteForm.field.slackInvite.value" />
-            <span style="margin-top: 0.25rem; margin-left: 0.25rem; color: #beb5cc"
-              >Send Slack Invite</span
-            >
-          </div>
+            <span style="margin-top: 0.25rem; margin-left: 0.25rem">Send Slack Invite</span>
+          </div> -->
           <template>
             <PulseLoadingSpinnerButton
               @click="handleInvite"
@@ -90,10 +106,10 @@
     <div class="invite-list__container">
       <div class="invite-list__title" style="color: #beb5cc">Your Team:</div>
       <div class="invite-list__section__container" style="margin-bottom: 1.5rem">
-        <div class="invite-list__section__item invite-list__name">
+        <div style="color: #199e54" class="invite-list__section__item invite-list__name">
           {{ user.fullName }}
         </div>
-        <div class="invite-list__section__item invite-list__status">
+        <div style="color: white" class="invite-list__section__item invite-list__status">
           {{ user.userLevel == 'MANAGER' ? 'Team Leader(You)' : 'Rep(You)' }}
         </div>
         <div class="invite-list__section__item invite-list__status" style="color: #ff7649">
@@ -128,11 +144,14 @@ import Button from '@thinknimble/button'
 import CheckBox from '@/components/CheckBoxUpdated'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import FormField from '@/components/forms/FormField'
+import SlackOAuth, { SlackListResponse } from '@/services/slack'
+import DropDownSearch from '@/components/DropDownSearch'
 
 export default {
   name: 'Invite',
   components: {
     DropDownSelect,
+    DropDownSearch,
     Modal,
     PulseLoadingSpinnerButton,
     FormField,
@@ -150,6 +169,8 @@ export default {
       organization: null,
       organizations: CollectionManager.create({ ModelClass: Organization }),
       organizationRef: null,
+      slackMembers: {},
+      inviteRecipient: '',
       selectedUserType: User.types.REP,
       userTypes: [
         { key: 'Manager', value: User.types.MANAGER },
@@ -171,9 +192,15 @@ export default {
   watch: {},
   async created() {
     this.refresh()
+    await this.listUsers()
   },
 
   methods: {
+    async listUsers(cursor = null) {
+      const res = await SlackOAuth.api.listUsers(cursor)
+      this.slackMembers = res.data.members
+      console.log(this.slackMembers)
+    },
     onConfirmSlackInvite() {
       if (!this.userInviteForm.field.slackInvite.value) {
         let confirmSlack = confirm(
@@ -224,12 +251,9 @@ export default {
       // check form data for this request
       try {
         const res = await User.api.invite(this.userInviteForm.value)
-        let email_string = ''
-        for (let record in res.data) {
-          email_string += record['email'] + ' '
-        }
+        console.log(res)
         this.$Alert.alert({
-          message: `<h3 style="color:white;"> An invitation was sent to ${email_string}</h3>`,
+          message: `<h3 style="color:white;"> Your invitation was sent.</h3>`,
           type: 'success',
           timeout: 3000,
         })
@@ -259,6 +283,9 @@ export default {
       return this.$store.state.user.isStaff
     },
   },
+  // beforeMount() {
+  //   console.log(this.user)
+  // },
 }
 </script>
 
@@ -268,6 +295,18 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
+::v-deep .tn-dropdown__selection-container {
+  width: 16rem;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.5);
+}
+
+::v-deep .tn-dropdown__options__container {
+  width: 16rem;
+}
+
+::v-deep .tn-dropdown__selected-items__item-selection {
+  color: $panther;
+}
 .invite-container {
   display: flex;
   flex-flow: row;
@@ -300,13 +339,6 @@ Override dropdown select input field
   }
 }
 
-h2 {
-  @include base-font-styles();
-  font-weight: bold;
-  color: $main-font-gray;
-  text-align: center;
-}
-
 form,
 .success-prompt {
   //   margin-top: 3.125rem;
@@ -333,11 +365,6 @@ form,
   font-size: 16px;
   font-weight: bold;
 }
-.invite-button:hover {
-  background-color: white;
-  color: $panther-orange;
-}
-
 button {
   @include primary-button();
   margin-top: 1.25rem;
@@ -349,14 +376,14 @@ button {
 .invite-form {
   border: none;
   border-radius: 0.75rem;
-  width: 100%;
-  height: 80vh;
+
+  height: 90vh;
   min-height: 30rem;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  background-color: $panther-gray;
+  background-color: $panther;
   > .form_field {
     flex: 0 0 auto;
   }
@@ -367,9 +394,7 @@ button {
     color: red;
   }
   &__title {
-    @include base-font-styles();
-    padding: 2rem 2rem;
-    font-size: 16px;
+    padding-bottom: 1rem;
     font-weight: bold;
     text-transform: uppercase;
     text-align: left;
@@ -389,7 +414,6 @@ button {
 }
 .invite-list {
   &__title {
-    font-size: 1rem;
     font-weight: bold;
     margin-bottom: 2rem;
   }
@@ -443,12 +467,16 @@ button {
 }
 
 .cancel-button {
-  width: 19rem;
-  margin-top: 0.5rem;
+  margin-top: 1rem;
   position: relative;
   right: 1px;
   &:hover {
     cursor: pointer;
   }
 }
+
+::v-deep .dimmed {
+  background-color: rgba(0, 0, 0, 0.5);
+}
 </style>
+
