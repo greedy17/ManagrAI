@@ -540,33 +540,33 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
     permission_classes = (IsSuperUser | IsOrganizationManager,)
 
     def create(self, request, *args, **kwargs):
-        response_data = []
-        for user_data in request.data["users"]:
-            if not user_data.is_superuser:
-                if str(user_data.organization.id) != str(user_data["organization"]):
-                    # allow custom organization in request only for SuperUsers
-                    return Response(status=status.HTTP_403_FORBIDDEN)
-            serializer = self.serializer_class(data=user_data, context={"request": request})
-            serializer.is_valid(raise_exception=True)
-            self.perform_create(serializer)
-            user = serializer.instance
+        u = request.user
+        if not u.is_superuser:
+            if str(u.organization.id) != str(request.data["organization"]):
+                # allow custom organization in request only for SuperUsers
+                return Response(status=status.HTTP_403_FORBIDDEN)
+        slack_id = request.data.pop("slack_id", False)
+        serializer = self.serializer_class(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        user = serializer.instance
 
-            serializer = UserSerializer(user, context={"request": request})
-            response_data.append(serializer.data)
+        serializer = UserSerializer(user, context={"request": request})
+        response_data = serializer.data
 
-            text = f"{user.full_name} has invited you to join the Managr! Activate your account here: {user.activation_link}"
-            channel_res = slack_requests.request_user_dm_channel(
-                user_data["slack_id"], user.organization.slack_integration.access_token
-            ).json()
-            channel = channel_res.get("channel", {}).get("id")
-            blocks = [block_builders.simple_section(text)]
-            if hasattr(user.organization, "slack_integration"):
-                slack_requests.send_channel_message(
-                    channel,
-                    user.organization.slack_integration.access_token,
-                    text="You've been invited to Managr!",
-                    block_set=blocks,
-                )
+        text = f"{u.full_name} has invited you to join the Managr! Activate your account here: {user.activation_link}"
+        channel_res = slack_requests.request_user_dm_channel(
+            slack_id, u.organization.slack_integration.access_token
+        ).json()
+        channel = channel_res.get("channel", {}).get("id")
+        blocks = [block_builders.simple_section(text)]
+        if hasattr(u.organization, "slack_integration"):
+            slack_requests.send_channel_message(
+                channel,
+                u.organization.slack_integration.access_token,
+                text="You've been invited to Managr!",
+                block_set=blocks,
+            )
         return Response(response_data)
 
 
