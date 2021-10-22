@@ -25,7 +25,7 @@
 
             pipelines, and alerting
             <b v-if="config.recipientType === 'SLACK_CHANNEL'" style="color: #199e54">{{
-              config._recipients.nameNormalized
+              config._recipients.name
             }}</b>
             <b v-else style="color: #199e54">{{ getListOfRecipients(config._recipients) }}</b>
           </div>

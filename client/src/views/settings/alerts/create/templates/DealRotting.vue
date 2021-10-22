@@ -187,106 +187,40 @@
           </div>
 
           <div class="delivery__row">
-            <!-- <p style="color: #beb5cc" v-if="form.field.recipientType.value == 'SLACK_CHANNEL'">
-              Be sure to add @managr to your channel
-            </p> -->
-            <div class="row__">
-              <label>DM users</label>
-              <ToggleCheckBox
-                style="margin: 0.25rem"
-                @input="
-                  form.field.recipientType.value == 'USER_LEVEL'
-                    ? (form.field.recipientType.value = recipientTypeToggle(
-                        form.field.recipientType.value,
-                      ))
-                    : (form.field.recipientType.value = recipientTypeToggle('SLACK_CHANNEL'))
-                "
-                :value="form.field.recipientType.value !== 'USER_LEVEL'"
-                offColor="#199e54"
-                onColor="#199e54"
-              />
-              <label>Send to #Channel</label>
-            </div>
-
-            <div v-if="form.field.recipientType.value == 'SLACK_CHANNEL'">
-              <FormField :errors="form.field.recipients.errors">
-                <template v-slot:input>
-                  <DropDownSearch
-                    :items.sync="reversedChannels"
-                    :itemsRef.sync="form.field._recipients.value"
-                    v-model="form.field.recipients.value"
-                    @input="form.field.recipients.validate()"
-                    displayKey="name"
-                    valueKey="id"
-                    nullDisplay="Search Channels"
-                    :hasNext="!!channelOpts.nextCursor"
-                    @load-more="listChannels(channelOpts.nextCursor)"
-                    searchable
-                    local
-                  >
-                    <!-- <template v-slot:tn-dropdown-option="{ option }">
-                          <img
-                            v-if="option.isPrivate == true"
-                            class="card-img"
-                            style="width: 1rem; height: 1rem; margin-right: 0.2rem"
-                            src="@/assets/images/lockAsset.png"
-                          />
-                          {{ option['name'] }}
-                        </template> -->
-                  </DropDownSearch>
-                </template>
-              </FormField>
-              <p
-                @click="removeTarget"
-                :class="form.field.recipients.value.length > 0 ? 'selected__item' : 'visible'"
-              >
-                <img
-                  src="@/assets/images/remove.png"
-                  style="height: 1rem; margin-right: 0.25rem"
-                  alt=""
-                />
-                {{ form.field.recipients.value.length ? form.field._recipients.value.name : '' }}
-              </p>
-            </div>
-
             <div
-              v-if="form.field.recipientType.value == 'USER_LEVEL'"
-              :errors="form.field.recipients.errors"
+              style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+              "
             >
-              <FormField :errors="form.field.recipients.errors">
-                <template v-slot:input>
-                  <DropDownSearch
-                    :items.sync="recipientOpts"
-                    :itemsRef.sync="form.field._recipients.value"
-                    v-model="form.field.recipients.value"
-                    @input="form.field.recipients.validate()"
-                    displayKey="fullName"
-                    valueKey="id"
-                    nullDisplay="Recipients"
-                    searchable
-                    multi
-                    medium
-                    :loading="users.loadingNextPage"
-                    :hasNext="!!users.pagination.hasNextPage"
-                    @load-more="onUsersNextPage"
-                    @search-term="onSearchUsers"
-                  />
-                </template>
-              </FormField>
-              <div class="items_height">
-                <p
-                  @click="removeItemFromRecipientArray(item)"
-                  :key="i"
-                  v-for="(item, i) in form.field.recipients.value"
-                  :class="form.field.recipients.value ? 'selected__item' : ''"
+              <label v-if="!channelName" for="channel" style="font-weight: bold"
+                >Create a channel for your alert:</label
+              >
+              <label v-else for="channel" style="font-weight: bold"
+                >Alert will send to
+                <span style="color: #199e54; font-size: 1.2rem">{{ channelName }}</span>
+                channel</label
+              >
+              <input
+                v-model="channelName"
+                class="search__input"
+                type="text"
+                name="channel"
+                id="channel"
+                @input="logNewName(channelName)"
+              />
+
+              <div v-if="!channelCreated" v style="margin-top: 1.25rem">
+                <button
+                  v-if="channelName"
+                  @click="createChannel(channelName)"
+                  class="purple__button"
                 >
-                  <img
-                    src="@/assets/images/remove.png"
-                    style="height: 1rem; margin-right: 0.25rem"
-                    alt=""
-                  />
-                  {{ item.length ? item : '' }}
-                </p>
+                  Create Channel
+                </button>
+                <button v-else class="disabled__button">Create Channel</button>
               </div>
             </div>
           </div>
@@ -425,8 +359,11 @@ export default {
       savingTemplate: false,
       listVisible: true,
       dropdownVisible: true,
+      channelCreated: false,
       NON_FIELD_ALERT_OPTS,
       stringRenderer,
+      newChannel: {},
+      channelName: '',
       OPPORTUNITY: 'Opportunity',
       operandDate: '',
       searchQuery: '',
@@ -542,6 +479,87 @@ export default {
     },
     goToTemplates() {
       this.$router.push({ name: 'CreateNew' })
+    },
+    async createChannel(name) {
+      const res = await SlackOAuth.api.createChannel(name)
+      if (res.channel) {
+        this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = res.channel
+        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = res.channel.id
+        this.channelCreated = !this.channelCreated
+      } else {
+        console.log(res.error)
+        this.channelName = ''
+        if (res.error == 'name_taken') {
+          this.$Alert.alert({
+            message: 'Channel name already taken',
+            type: 'error',
+            timeout: 2000,
+          })
+        } else if (res.error == 'invalid_name_maxlength') {
+          this.$Alert.alert({
+            message: 'Channel name exceeds maximum length',
+            type: 'error',
+            timeout: 2000,
+          })
+        } else if (res.error == 'restricted_action') {
+          this.$Alert.alert({
+            message: 'A team preference is preventing you from creating channels',
+            type: 'error',
+            timeout: 2000,
+          })
+        } else if (res.error == 'invalid_name_specials') {
+          this.$Alert.alert({
+            message:
+              'The only special characters allowed are hyphens and underscores. Channel names must also begin with a letter ',
+            type: 'error',
+            timeout: 3000,
+          })
+        } else if (res.error == 'org_login_required') {
+          this.$Alert.alert({
+            message:
+              'The workspace is undergoing an enterprise migration and will not be available until migration is complete.',
+            type: 'error',
+            timeout: 2000,
+          })
+        } else if (res.error == 'ekm_access_denied') {
+          this.$Alert.alert({
+            message: 'Administrators have suspended the ability to post a message.',
+            type: 'error',
+            timeout: 2000,
+          })
+        } else if (res.error == 'too_many_convos_for_team') {
+          this.$Alert.alert({
+            message: 'The workspace has exceeded its limit of public and private channels.',
+            type: 'error',
+            timeout: 2000,
+          })
+        } else if (res.error == 'no_permission') {
+          this.$Alert.alert({
+            message:
+              'The workspace token used in this request does not have the permissions necessary to complete the request. Make sure your app is a member of the conversation its attempting to post a message to.',
+            type: 'error',
+            timeout: 4000,
+          })
+        } else if (res.error == 'team_access_not_granted') {
+          this.$Alert.alert({
+            message:
+              'You are not granted the specific workspace access required to complete this request.',
+            type: 'error',
+            timeout: 2000,
+          })
+        } else if (res.error == 'invalid_name') {
+          this.$Alert.alert({
+            message: 'Channel name invalid. Please try again',
+            type: 'error',
+            timeout: 2000,
+          })
+        }
+      }
+    },
+    logNewName(str) {
+      let new_str = ''
+      new_str = str.replace(/\s+/g, '-').toLowerCase()
+      this.channelName = new_str
     },
     async listChannels(cursor = null) {
       const res = await SlackOAuth.api.listChannels(cursor)
@@ -780,6 +798,7 @@ export default {
   beforeMount() {
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
     this.alertTemplateForm.field.title.value = 'Deal Rotting'
+    this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
       'Hey  <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong>, hasnt been touched since <strong>{ Opportunity.LastActivityDate }</strong>'
   },
@@ -812,8 +831,7 @@ export default {
 }
 .selected__item {
   padding: 0.5rem;
-  background-color: $dark-green;
-  border: none;
+  border: 2px solid white;
   border-radius: 0.3rem;
   width: 100%;
   text-align: center;
@@ -832,13 +850,12 @@ export default {
   border-radius: 4px;
   line-height: 1.29;
   letter-spacing: 0.5px;
-  color: #4d4e4c;
   height: 2.5rem;
-  background-color: #beb5cc;
+  background-color: white;
   border: 1px solid #5d5e5e;
-  width: 70%;
-  // padding: 0 0 0 1rem;
-  margin: 1rem;
+  width: 75%;
+  text-align: center;
+  margin-top: 1rem;
   -webkit-box-shadow: 1px 4px 7px black;
   box-shadow: 1px 4px 7px black;
 }
@@ -1046,14 +1063,6 @@ input {
   width: 75vw;
   padding: 2rem;
   margin-bottom: 1rem;
-}
-.selected__item {
-  padding: 0.5rem 1.2rem;
-  background-color: $dark-green;
-  border: none;
-  border-radius: 0.3rem;
-  width: 100%;
-  text-align: center;
 }
 .items_height {
   overflow-y: scroll;

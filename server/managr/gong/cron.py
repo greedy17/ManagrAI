@@ -14,8 +14,7 @@ from background_task.models import CompletedTask
 
 from rest_framework.response import Response
 
-from managr.gong import constants as gong_consts
-from managr.gong.background import emit_sync_gong_calls
+from managr.gong.background import emit_sync_gong_calls, emit_sync_gong_accounts
 from managr.gong.models import GongAuthAccount
 from managr.core.models import User
 
@@ -26,12 +25,14 @@ logger = logging.getLogger("managr")
 
 
 @kronos.register("*/30 * * * *")
-def queue_gong_call_sync(auth_account=None):
+def queue_gong_sync(auth_account=None):
     if auth_account:
+        emit_sync_gong_accounts(auth_account)
         emit_sync_gong_calls(auth_account)
     else:
         gong_accounts = GongAuthAccount.objects.all()
         for account in gong_accounts:
+            emit_sync_gong_accounts(account.id)
             emit_sync_gong_calls(account.id)
             logger.info("Started Gong call sync for {account.organization}")
             continue
