@@ -32,29 +32,6 @@
           </FormField>
         </div>
 
-        <div class="form_field">
-          <FormField
-            label="Email"
-            @blur="userInviteForm.field.email.validate()"
-            :errors="userInviteForm.field.email.errors"
-            v-model="userInviteForm.field.email.value"
-            placeholder=""
-            large
-            bordered
-          />
-        </div>
-        <div class="form_field">
-          <FormField
-            label="Confirm Email"
-            @blur="userInviteForm.field.confirmEmail.validate()"
-            :errors="userInviteForm.field.confirmEmail.errors"
-            v-model="userInviteForm.field.confirmEmail.value"
-            large
-            placeholder=""
-            bordered
-          />
-        </div>
-
         <div class="dropdown">
           <FormField :errors="userInviteForm.field.userLevel.errors" label="User Level:">
             <template v-slot:input>
@@ -189,7 +166,15 @@ export default {
       }),
     }
   },
-  watch: {},
+  watch: {
+    slackId: {
+      handler() {
+        this.userInviteForm.field.email.value = this.slackMembers.filter(
+          (member) => member.id == this.userInviteForm.field.slackId.value,
+        )[0].profile.email
+      },
+    },
+  },
   async created() {
     this.refresh()
     await this.listUsers()
@@ -199,7 +184,6 @@ export default {
     async listUsers(cursor = null) {
       const res = await SlackOAuth.api.listUsers(cursor)
       this.slackMembers = res.data.members
-      console.log(this.slackMembers)
     },
     onConfirmSlackInvite() {
       if (!this.userInviteForm.field.slackInvite.value) {
@@ -274,13 +258,17 @@ export default {
     },
 
     resetData() {
-      this.userInviteForm.reset()
       this.userInviteForm.field.organization.value = this.$store.state.user.organization
     },
   },
   computed: {
     isStaff() {
       return this.$store.state.user.isStaff
+    },
+    slackId() {
+      return this.userInviteForm.field.slackId.value
+        ? this.userInviteForm.field.slackId.value
+        : null
     },
   },
   // beforeMount() {

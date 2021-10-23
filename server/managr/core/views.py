@@ -305,8 +305,7 @@ class ActivationLinkView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         if user and user.is_active:
             return Response(
-                data={"activation_link": user.activation_link},
-                status=status.HTTP_204_NO_CONTENT,
+                data={"activation_link": user.activation_link}, status=status.HTTP_204_NO_CONTENT,
             )
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -314,9 +313,7 @@ class ActivationLinkView(APIView):
 
 @api_view(["GET"])
 @permission_classes(
-    [
-        permissions.IsAuthenticated,
-    ]
+    [permissions.IsAuthenticated,]
 )
 def get_email_authorization_link(request):
     u = request.user
@@ -431,9 +428,7 @@ class NylasAccountWebhook(APIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [
-        permissions.IsAuthenticated,
-    ]
+    [permissions.IsAuthenticated,]
 )
 def email_auth_token(request):
     u = request.user
@@ -564,7 +559,6 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
             slack_id, u.organization.slack_integration.access_token
         ).json()
         channel = channel_res.get("channel", {}).get("id")
-        print(channel)
         blocks = [block_builders.simple_section(text)]
         if hasattr(u.organization, "slack_integration"):
             slack_requests.send_channel_message(
@@ -573,6 +567,7 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
                 text="You've been invited to Managr!",
                 block_set=blocks,
             )
+        
         return Response(response_data)
 
 
@@ -643,9 +638,7 @@ class UserPasswordManagmentView(generics.GenericAPIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [
-        permissions.AllowAny,
-    ]
+    [permissions.AllowAny,]
 )
 def request_reset_link(request):
     """endpoint to request a password reset email (forgot password)"""
