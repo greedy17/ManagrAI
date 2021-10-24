@@ -32,29 +32,6 @@
           </FormField>
         </div>
 
-        <div class="form_field">
-          <FormField
-            label="Email"
-            @blur="userInviteForm.field.email.validate()"
-            :errors="userInviteForm.field.email.errors"
-            v-model="userInviteForm.field.email.value"
-            placeholder=""
-            large
-            bordered
-          />
-        </div>
-        <div class="form_field">
-          <FormField
-            label="Confirm Email"
-            @blur="userInviteForm.field.confirmEmail.validate()"
-            :errors="userInviteForm.field.confirmEmail.errors"
-            v-model="userInviteForm.field.confirmEmail.value"
-            large
-            placeholder=""
-            bordered
-          />
-        </div>
-
         <div class="dropdown">
           <FormField :errors="userInviteForm.field.userLevel.errors" label="User Level:">
             <template v-slot:input>
@@ -250,6 +227,9 @@ export default {
       }
       // check form data for this request
       try {
+        this.userInviteForm.field.email.value = this.slackMembers.filter(
+          (member) => member.id == this.userInviteForm.field.slackId.value,
+        )[0].profile.email
         const res = await User.api.invite(this.userInviteForm.value)
         console.log(res)
         this.$Alert.alert({
@@ -274,7 +254,6 @@ export default {
     },
 
     resetData() {
-      this.userInviteForm.reset()
       this.userInviteForm.field.organization.value = this.$store.state.user.organization
     },
   },
