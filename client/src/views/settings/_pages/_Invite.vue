@@ -166,15 +166,7 @@ export default {
       }),
     }
   },
-  watch: {
-    slackId: {
-      handler() {
-        this.userInviteForm.field.email.value = this.slackMembers.filter(
-          (member) => member.id == this.userInviteForm.field.slackId.value,
-        )[0].profile.email
-      },
-    },
-  },
+  watch: {},
   async created() {
     this.refresh()
     await this.listUsers()
@@ -184,6 +176,7 @@ export default {
     async listUsers(cursor = null) {
       const res = await SlackOAuth.api.listUsers(cursor)
       this.slackMembers = res.data.members
+      console.log(this.slackMembers)
     },
     onConfirmSlackInvite() {
       if (!this.userInviteForm.field.slackInvite.value) {
@@ -234,6 +227,9 @@ export default {
       }
       // check form data for this request
       try {
+        this.userInviteForm.field.email.value = this.slackMembers.filter(
+          (member) => member.id == this.userInviteForm.field.slackId.value,
+        )[0].profile.email
         const res = await User.api.invite(this.userInviteForm.value)
         console.log(res)
         this.$Alert.alert({
@@ -264,11 +260,6 @@ export default {
   computed: {
     isStaff() {
       return this.$store.state.user.isStaff
-    },
-    slackId() {
-      return this.userInviteForm.field.slackId.value
-        ? this.userInviteForm.field.slackId.value
-        : null
     },
   },
   // beforeMount() {
