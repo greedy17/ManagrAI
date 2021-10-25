@@ -28,6 +28,7 @@ def emit_sync_gong_accounts(auth_account_id):
     return sync_gong_accounts(auth_account_id)
 
 
+@background()
 def sync_gong_calls(auth_account_id):
     curr_date = datetime.now()
     thirty = (curr_date - timedelta(30)).replace(microsecond=0).isoformat() + "Z"
@@ -47,6 +48,7 @@ def sync_gong_calls(auth_account_id):
     return logger.info(f"Synced calls for account {auth_account_id}")
 
 
+@background()
 def sync_gong_accounts(auth_account_id):
     auth_account = GongAuthAccount.objects.get(id=auth_account_id)
     cursor = None
