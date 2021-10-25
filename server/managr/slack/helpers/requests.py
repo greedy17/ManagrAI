@@ -257,7 +257,7 @@ def list_user_channels(access_token, limit=25, cursor=None, types=[]):
     q = dict(exclude_archived=True)
     if len(types):
         q["types"] = ",".join(types)
-    url = slack_const.SLACK_API_ROOT + slack_const.USERS.CONVERSATIONS
+    url = slack_const.SLACK_API_ROOT + slack_const.USERS_CONVERSATIONS
     if limit:
         q["limit"] = limit
     if cursor:
