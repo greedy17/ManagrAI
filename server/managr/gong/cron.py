@@ -24,7 +24,7 @@ from managr.gong.exceptions import TokenExpired
 logger = logging.getLogger("managr")
 
 
-@kronos.register("*/30 * * * *")
+@kronos.register("30 * * * *")
 def queue_gong_sync(auth_account=None):
     if auth_account:
         emit_sync_gong_accounts(auth_account)
