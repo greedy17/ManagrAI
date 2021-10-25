@@ -175,8 +175,7 @@ export default {
   methods: {
     async listUsers(cursor = null) {
       const res = await SlackOAuth.api.listUsers(cursor)
-      this.slackMembers = res.data.members
-      console.log(this.slackMembers)
+      this.slackMembers = res.data.members.filter((member) => member.deleted == false)
     },
     onConfirmSlackInvite() {
       if (!this.userInviteForm.field.slackInvite.value) {
