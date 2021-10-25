@@ -405,32 +405,94 @@
                   padding: 0.5rem;
                 "
               >
-                <label v-if="!channelName" for="channel" style="font-weight: bold"
-                  >Create a channel for your alert:</label
-                >
+                <div v-if="!channelName" class="row__">
+                  <label>Select #channel</label>
+                  <ToggleCheckBox
+                    style="margin: 0.25rem"
+                    @input="changeCreate"
+                    :value="create"
+                    offColor="#199e54"
+                    onColor="#199e54"
+                  />
+                  <label>Create #channel</label>
+                </div>
+
                 <label v-else for="channel" style="font-weight: bold"
                   >Alert will send to
                   <span style="color: #199e54; font-size: 1.2rem">{{ channelName }}</span>
                   channel</label
                 >
-                <input
-                  v-model="channelName"
-                  class="search__input"
-                  type="text"
-                  name="channel"
-                  id="channel"
-                  @input="logNewName(channelName)"
-                />
+                <div
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: flex-start;
+                  "
+                  v-if="create"
+                >
+                  <input
+                    v-model="channelName"
+                    class="search__input"
+                    type="text"
+                    name="channel"
+                    id="channel"
+                    @input="logNewName(channelName)"
+                  />
 
-                <div v-if="!channelCreated" v style="margin-top: 1.25rem">
-                  <button
-                    v-if="channelName"
-                    @click="createChannel(channelName)"
-                    class="purple__button"
+                  <div v-if="!channelCreated" v style="margin-top: 1.25rem">
+                    <button
+                      v-if="channelName"
+                      @click="createChannel(channelName)"
+                      class="purple__button"
+                    >
+                      Create Channel
+                    </button>
+                    <button v-else class="disabled__button">Create Channel</button>
+                  </div>
+                </div>
+
+                <div v-else>
+                  <FormField>
+                    <template v-slot:input>
+                      <DropDownSearch
+                        :items.sync="userChannelOpts.channels"
+                        :itemsRef.sync="form.field._recipients.value"
+                        v-model="form.field.recipients.value"
+                        @input="form.field.recipients.validate()"
+                        displayKey="name"
+                        valueKey="id"
+                        nullDisplay="Channels"
+                        :hasNext="!!userChannelOpts.nextCursor"
+                        @load-more="listChannels(userChannelOpts.nextCursor)"
+                        searchable
+                        local
+                      >
+                        <template v-slot:tn-dropdown-option="{ option }">
+                          <img
+                            v-if="option.isPrivate == true"
+                            class="card-img"
+                            style="width: 1rem; height: 1rem; margin-right: 0.2rem"
+                            src="@/assets/images/lockAsset.png"
+                          />
+                          {{ option['name'] }}
+                        </template>
+                      </DropDownSearch>
+                    </template>
+                  </FormField>
+
+                  <p
+                    v-if="form.field.recipients.value.length > 0"
+                    @click="removeTarget"
+                    :class="form.field.recipients.value ? 'selected__item' : 'visible'"
                   >
-                    Create Channel
-                  </button>
-                  <button v-else class="disabled__button">Create Channel</button>
+                    <img
+                      src="@/assets/images/remove.png"
+                      style="height: 1rem; margin-right: 0.25rem"
+                      alt=""
+                    />
+                    {{ form.field._recipients.value.name }}
+                  </p>
                 </div>
               </div>
             </div>
@@ -654,6 +716,7 @@ export default {
   data() {
     return {
       channelOpts: new SlackListResponse(),
+      userChannelOpts: new SlackListResponse(),
       channelName: '',
       newChannel: {},
       showMenu: true,
@@ -669,6 +732,7 @@ export default {
       searchQuery: '',
       searchText: '',
       searchChannels: '',
+      create: true,
       channelCreated: false,
       fields: CollectionManager.create({ ModelClass: SObjectField }),
       users: CollectionManager.create({ ModelClass: User }),
@@ -707,6 +771,7 @@ export default {
   async created() {
     if (this.user.slackRef) {
       await this.listChannels()
+      await this.listUserChannels()
     }
     if (this.user.userLevel == 'MANAGER') {
       await this.users.refresh()
@@ -729,6 +794,16 @@ export default {
     },
   },
   methods: {
+    changeCreate() {
+      this.create = !this.create
+      if (
+        this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value !==
+        'SLACK_CHANNEL'
+      ) {
+        this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value =
+          'SLACK_CHANNEL'
+      }
+    },
     async listChannels(cursor = null) {
       const res = await SlackOAuth.api.listChannels(cursor)
       const results = new SlackListResponse({
@@ -736,6 +811,14 @@ export default {
         responseMetadata: { nextCursor: res.nextCursor },
       })
       this.channelOpts = results
+    },
+    async listUserChannels(cursor = null) {
+      const res = await SlackOAuth.api.listUserChannels(cursor)
+      const results = new SlackListResponse({
+        channels: [...this.channelOpts.channels, ...res.channels],
+        responseMetadata: { nextCursor: res.nextCursor },
+      })
+      this.userChannelOpts = results
     },
     async createChannel(name) {
       this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
@@ -830,7 +913,6 @@ export default {
       this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = ''
     },
     removeTarget() {
-      console.log(this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value)
       this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = []
       this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = []
     },
@@ -846,6 +928,11 @@ export default {
           (i) => i !== item,
         )
     },
+    // showRecipientValue(val){
+    //   if(this.alertTemplateForm.field.recipients.value.length > 0){
+
+    //   }
+    // },
     convertToDay(num) {
       if (num == 0) {
         return 'Monday'
