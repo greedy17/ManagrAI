@@ -738,6 +738,7 @@ export default {
       this.channelOpts = results
     },
     async createChannel(name) {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
       const res = await SlackOAuth.api.createChannel(name)
       if (res.channel) {
         this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = res.channel
@@ -1110,7 +1111,6 @@ export default {
   },
   beforeMount() {
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
-    this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
   },
 }
 </script>
