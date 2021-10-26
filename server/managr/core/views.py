@@ -554,12 +554,16 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
         serializer = UserSerializer(user, context={"request": request})
         response_data = serializer.data
 
-        text = f"{u.full_name} has invited you to join the Managr! Activate your account here: {user.activation_link}"
+        text = f"{u.full_name} has invited you to join the Managr! Activate your account here"
         channel_res = slack_requests.request_user_dm_channel(
             slack_id, u.organization.slack_integration.access_token
         ).json()
         channel = channel_res.get("channel", {}).get("id")
-        blocks = [block_builders.simple_section(text)]
+        blocks = [
+            block_builders.section_with_button_block(
+                "Register", "register", text, url=user.activation_link
+            )
+        ]
         if hasattr(u.organization, "slack_integration"):
             slack_requests.send_channel_message(
                 channel,
@@ -567,7 +571,7 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
                 text="You've been invited to Managr!",
                 block_set=blocks,
             )
-        
+
         return Response(response_data)
 
 
