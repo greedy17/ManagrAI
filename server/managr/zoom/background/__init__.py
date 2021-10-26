@@ -201,7 +201,6 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
             remove_users_with_these_domains_regex = (
                 remove_users_with_these_domains_regex + r"|({})".format(email)
             )
-        print(remove_users_with_these_domains_regex)
         # re.search(remove_users_with_these_domains_regex, p.get("user_email", ""))
         #### first check if we care about this meeting before going forward
         should_register_this_meeting = [
@@ -396,7 +395,7 @@ def _kick_off_slack_interaction(user_id, managr_meeting_id):
         user = workflow.user
 
         if hasattr(user, "slack_integration"):
-            user_slack_channel = user.slack_integration.channel
+            user_slack_channel = user.slack_integration.zoom_channel
             slack_org_access_token = user.organization.slack_integration.access_token
             block_set = get_block_set("initial_meeting_interaction", {"w": managr_meeting_id,},)
             try:
