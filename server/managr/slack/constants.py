@@ -53,9 +53,11 @@ WORKSPACE_SCOPES = [
     "groups:read",
     "users:read",
     "users:read.email",
+    "mpim:read",
+    "im:read",
 ]
 
-USER_SCOPES = ["identity.basic"]
+USER_SCOPES = ["channels:read", "groups:read", "im:read", "mpim:read"]
 
 # Link Types to determine which type of OAuth link to generate
 WORKSPACE = "WORKSPACE"
