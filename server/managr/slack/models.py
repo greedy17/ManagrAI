@@ -111,12 +111,11 @@ class UserSlackIntegration(TimeStampModel):
         default=False,
         help_text="When a user opens the home tab it will notifiy us (or messages tab) slack requires an 'onboarding' interaction to be sent, since this event is recurring we only do it once",
     )
+
     zoom_channel = models.CharField(
-        max_length=255,
-        null=True,
-        help_text="Channel for zoom automation, defaults to channel",
-        default=channel,
+        max_length=255, null=True, help_text="Channel for zoom automation, defaults to channel",
     )
+
     objects = UserSlackIntegrationQuerySet.as_manager()
 
     def __str__(self):

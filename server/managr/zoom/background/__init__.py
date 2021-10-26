@@ -395,7 +395,11 @@ def _kick_off_slack_interaction(user_id, managr_meeting_id):
         user = workflow.user
 
         if hasattr(user, "slack_integration"):
-            user_slack_channel = user.slack_integration.zoom_channel
+            user_slack_channel = (
+                user.slack_integration.zoom_channel
+                if user.slack_integration.zoom_channel
+                else user.slack_integration.channel
+            )
             slack_org_access_token = user.organization.slack_integration.access_token
             block_set = get_block_set("initial_meeting_interaction", {"w": managr_meeting_id,},)
             try:
