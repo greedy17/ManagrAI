@@ -717,7 +717,7 @@ def process_update_meeting_contact(payload, context):
             f"Failed To load update meeting contact modal for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
         )
 
-    return {"response_action": "clear"}
+    return
 
 
 @processor()

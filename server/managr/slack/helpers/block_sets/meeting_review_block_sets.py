@@ -201,12 +201,13 @@ def meeting_contacts_block_set(context):
                 "elements": [
                     {
                         "type": "button",
-                        "text": {"type": "plain_text", "text": "Click To Select for Editing"},
+                        "text": {"type": "plain_text", "text": "Edit Contact"},
                         "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
                         "action_id": action_with_params(
                             slack_const.ZOOM_MEETING__EDIT_CONTACT,
                             params=[workflow_id_param, tracking_id_param],
                         ),
+                        "style": "primary",
                     },
                     {
                         "type": "button",
@@ -216,6 +217,7 @@ def meeting_contacts_block_set(context):
                             slack_const.ZOOM_MEETING__REMOVE_CONTACT,
                             params=[workflow_id_param, tracking_id_param],
                         ),
+                        "style": "danger",
                     },
                 ],
             }
@@ -255,6 +257,7 @@ def meeting_contacts_block_set(context):
                             slack_const.ZOOM_MEETING__EDIT_CONTACT,
                             params=[workflow_id_param, tracking_id_param],
                         ),
+                        "style": "primary",
                     },
                     {
                         "type": "button",
@@ -264,6 +267,7 @@ def meeting_contacts_block_set(context):
                             slack_const.ZOOM_MEETING__REMOVE_CONTACT,
                             params=[workflow_id_param, tracking_id_param],
                         ),
+                        "style": "danger",
                     },
                 ],
             }
@@ -372,16 +376,6 @@ def initial_meeting_interaction_block_set(context):
             text_type="mrkdwn",
         ),
     ]
-
-    # review_participants_button = block_builders.section_with_button_block(
-    #     "Meeting Attendees",
-    #     str(workflow.id),
-    #     "Click 'Meeting Attendees' to review, edit, or remove attendees",
-    #     action_id=action_with_params(
-    #         slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,]
-    #     ),
-    #     style="primary",
-    # )
 
     create_contacts_button = block_builders.simple_button_block(
         "Review Attendees",
