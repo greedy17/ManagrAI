@@ -51,8 +51,8 @@ WORKSPACE_SCOPES = [
     "incoming-webhook",
     "channels:read",
     "groups:read",
-    "users:read",
-    "users:read.email",
+    # "users:read",
+    # "users:read.email",
 ]
 
 USER_SCOPES = ["identity.basic"]
