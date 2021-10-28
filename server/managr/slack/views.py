@@ -221,14 +221,12 @@ class SlackViewSet(viewsets.GenericViewSet,):
                     user_slack.channel,
                     user_slack.user.organization.slack_integration.access_token,
                     text="Welcome to Managr!",
-                    block_set=get_block_set(
-                        "onboarding_interaction", {"u": str(user_slack.user.id)}
-                    ),
+                    block_set=[
+                        block_builders.simple_section(
+                            f"Click this link to activate your account:\n{request.user.activation_link}"
+                        )
+                    ],
                 )
-
-                user_slack.is_onboarded = True
-                user_slack.save()
-
             # return serialized user because client-side needs updated slackRef(s)
         return Response(data=UserSerializer(request.user).data, status=status.HTTP_200_OK)
 
@@ -259,8 +257,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
         url_path="create-channel",
     )
     def slack_create_channel(self, request, *args, **kwargs):
-        name = request.data.get("name")
-        team_id = request.data.get("team_id")
+        name = request.data.get("name", None)
         organization_slack = request.user.organization.slack_integration
         team_id = organization_slack.team_id
         slack_id = request.user.slack_integration.slack_id
@@ -270,6 +267,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
             )
         else:
             create_data = {"ok": False, "response_metadata": {}}
+        print(create_data)
         return Response(status=status.HTTP_200_OK, data=create_data)
 
     @action(
@@ -291,6 +289,41 @@ class SlackViewSet(viewsets.GenericViewSet,):
         else:
             channels = {"channels": [], "response_metadata": {}}
         return Response(status=status.HTTP_200_OK, data=channels)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="list-user-channels",
+    )
+    def slack_user_channels(self, request, *args, **kwargs):
+        cursor = request.data.get("cursor")
+        organization_slack = request.user.organization.slack_integration
+        if organization_slack:
+            channels = slack_requests.list_user_channels(
+                organization_slack.access_token,
+                cursor=cursor,
+                types=["public_channel", "private_channel"],
+                limit=100,
+            )
+        else:
+            channels = {"channels": [], "response_metadata": {}}
+        return Response(status=status.HTTP_200_OK, data=channels)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="list-users",
+    )
+    def slack_users(self, request, *args, **kwargs):
+        cursor = request.data.get("cursor", None)
+        organization_slack = request.user.organization.slack_integration
+        if organization_slack:
+            users = slack_requests.list_users(organization_slack.access_token, cursor=cursor)
+        else:
+            users = {"users": [], "response_metadata": {}}
+        return Response(status=status.HTTP_200_OK, data=users)
 
     @action(
         methods=["get"],

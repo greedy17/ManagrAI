@@ -46,7 +46,7 @@ def sync_helper(auth_id):
         attempts = 1
         sync_step = step(str(sl_account.id), f"{step.__name__}_{v_name}")
         while True:
-            if attempts >= 5:
+            if attempts >= 20:
                 break
             try:
                 task = CompletedTask.objects.filter(verbose_name=f"{step.__name__}_{v_name}")

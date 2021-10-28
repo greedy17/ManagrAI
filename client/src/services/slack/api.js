@@ -10,6 +10,9 @@ const GENERATE_ACCESS_TOKEN_ENDPOINT = '/slack/generate-access-token/'
 const SLACK_REVOKE_ENDPOINT = '/slack/revoke/'
 const SLACK_CUSTOM_FORM_ENDPOINT = '/slack/forms/'
 const SLACK_LIST_PUBLIC_CHANNELS_ENDPOINT = '/slack/list-channels/'
+const SLACK_LIST_CHANNELS_ENDPOINT = '/slack/list-user-channels/'
+const SLACK_LIST_USERS = '/slack/list-users/'
+const SLACK_CREATE_CHANNEL = '/slack/create-channel/'
 
 export default class SlackAPI {
   constructor(cls) {
@@ -105,5 +108,27 @@ export default class SlackAPI {
         return SlackListResponse.fromAPI(response.data)
       })
       .catch(apiErrorHandler({ apiName: 'SlackAPI.listChannels' }))
+  }
+  async listUserChannels(cursor) {
+    return this.client
+      .post(SLACK_LIST_CHANNELS_ENDPOINT, { cursor: cursor })
+      .then(response => {
+        return SlackListResponse.fromAPI(response.data)
+      })
+      .catch(apiErrorHandler({ apiName: 'SlackAPI.listUserChannels' }))
+  }
+
+  async listUsers(cursor) {
+    return this.client
+      .post(SLACK_LIST_USERS, { cursor: cursor })
+      .then(response => response)
+      .catch(apiErrorHandler({ apiName: 'SlackAPI.slackUsers' }))
+  }
+
+  async createChannel(data) {
+    return this.client
+      .post(SLACK_CREATE_CHANNEL, { name: data })
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'SlackAPI.createChannel' }))
   }
 }

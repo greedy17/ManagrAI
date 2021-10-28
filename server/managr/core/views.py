@@ -31,7 +31,7 @@ from rest_framework.response import Response
 
 from managr.api.emails import send_html_email
 from managr.utils import sites as site_utils
-from managr.slack.helpers import requests as slack_requests
+from managr.slack.helpers import requests as slack_requests, block_builders
 from .nylas.auth import get_access_token, get_account_details
 from .models import (
     User,
@@ -539,6 +539,40 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
     serializer_class = UserInvitationSerializer
     permission_classes = (IsSuperUser | IsOrganizationManager,)
 
+    # def create(self, request, *args, **kwargs):
+    #     u = request.user
+    #     if not u.is_superuser:
+    #         if str(u.organization.id) != str(request.data["organization"]):
+    #             # allow custom organization in request only for SuperUsers
+    #             return Response(status=status.HTTP_403_FORBIDDEN)
+    #     slack_id = request.data.get("slack_id", False)
+    #     serializer = self.serializer_class(data=request.data, context={"request": request})
+    #     serializer.is_valid(raise_exception=True)
+    #     self.perform_create(serializer)
+    #     user = serializer.instance
+
+    #     serializer = UserSerializer(user, context={"request": request})
+    #     response_data = serializer.data
+
+    #     text = f"{u.full_name} has invited you to join the Managr! Activate your account here"
+    #     channel_res = slack_requests.request_user_dm_channel(
+    #         slack_id, u.organization.slack_integration.access_token
+    #     ).json()
+    #     channel = channel_res.get("channel", {}).get("id")
+    #     blocks = [
+    #         block_builders.section_with_button_block(
+    #             "Register", "register", text, url=user.activation_link
+    #         )
+    #     ]
+    #     if hasattr(u.organization, "slack_integration"):
+    #         slack_requests.send_channel_message(
+    #             channel,
+    #             u.organization.slack_integration.access_token,
+    #             text="You've been invited to Managr!",
+    #             block_set=blocks,
+    #         )
+
+    #     return Response(response_data)
     def create(self, request, *args, **kwargs):
         u = request.user
         if not u.is_superuser:

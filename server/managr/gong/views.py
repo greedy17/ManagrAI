@@ -66,9 +66,7 @@ def get_gong_authentication(request):
     serializer.save()
     admin_account = GongAuthAccount.objects.filter(admin=request.user).first()
     if admin_account:
-        account_sync = sync_gong_accounts(admin_account.id)
-        if account_sync["success"]:
-            queue_gong_sync(admin_account.id)
+        queue_gong_sync(str(admin_account.id))
     return Response(data={"success": True})
 
 
@@ -88,6 +86,7 @@ def redirect_from_gong(request):
     ## this is only for dev, since the redirect url to localhost will not work
     code = request.GET.get("code", None)
     q = urlencode({"code": code, "state": "GONG"})
+    print(request)
     if not code:
         err = {"error": "there was an error"}
         err = urlencode(err)

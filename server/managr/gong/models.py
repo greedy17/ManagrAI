@@ -262,14 +262,19 @@ class GongAccountAdapter:
     @classmethod
     def create_account(cls, user_data, auth_account_id):
         try:
-            user = User.objects.get(email=user_data["emailAddress"])
-            data = {}
-            data["auth_account"] = auth_account_id
-            data["user"] = user.id
-            data["gong_id"] = user_data["id"]
-            data["is_active"] = user_data["active"]
-            data["email"] = user_data["emailAddress"]
-            return cls(**data)
+            emails = user_data["emailAliases"]
+            emails.append(user_data["emailAddress"])
+            user = User.objects.filter(email__in=emails).first()
+            if user:
+                data = {}
+                data["auth_account"] = auth_account_id
+                data["user"] = user.id
+                data["gong_id"] = user_data["id"]
+                data["is_active"] = user_data["active"]
+                data["email"] = user_data["emailAddress"]
+                return cls(**data)
+            else:
+                return None
         except ObjectDoesNotExist:
             return None
 

@@ -195,7 +195,7 @@ variable "scheduled_tasks" {
     {
       name       = "syncgongcalls"
       command    = "initgongsync"
-      cron       = "cron(*/30 * * * ? *)"
+      cron       = "cron(30 * * * ? *)"
       task_count = 1
     },
   ]

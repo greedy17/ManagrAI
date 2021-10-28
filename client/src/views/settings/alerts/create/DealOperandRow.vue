@@ -399,7 +399,6 @@ export default {
     }
   },
   mounted() {
-    console.log(this.form.field.operandOrder.value)
     this.form.field.operandIdentifier.value = 'LastActivityDate'
     this.form.field.operandOperator.value = '<'
     this.form.field._operandOperator.value = { label: '< (Less Than)', value: '<' }
