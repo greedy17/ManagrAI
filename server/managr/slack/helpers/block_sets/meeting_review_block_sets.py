@@ -99,7 +99,6 @@ def generate_contact_group(index, contact, instance_url):
             "url": sf_consts.SALESFORCE_CONTACT_VIEW_URI(instance_url, integration_id),
             "action_id": f"button-action-{integration_id}",
         }
-
     return blocks
 
 

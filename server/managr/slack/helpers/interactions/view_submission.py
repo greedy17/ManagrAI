@@ -686,7 +686,6 @@ def process_update_meeting_contact(payload, context):
 
     access_token = org.slack_integration.access_token
     blocks = get_block_set("show_meeting_contacts", {"w": context.get("w")},)
-
     data = {
         "trigger_id": trigger_id,
         "view_id": view_id,

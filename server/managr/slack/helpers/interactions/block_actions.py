@@ -172,7 +172,7 @@ def process_edit_meeting_contact(payload, context):
             ),
         },
     }
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     # trigger_id = payload["trigger_id"]
 
     # salesforce_account = meeting.zoom_account.user.salesforce_account
