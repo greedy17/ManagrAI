@@ -1028,3 +1028,24 @@ def get_notes_command(request):
     }
     slack_requests.generic_request(url, data, access_token=access_token)
     return Response()
+
+
+@api_view(["post"])
+@permission_classes([permissions.AllowAny])
+@authentication_classes((slack_auth.SlackWebhookAuthentication,))
+def update_zoom_channel(request):
+    slack_id = request.data.get("user_id")
+    if slack_id:
+        slack = (
+            UserSlackIntegration.objects.filter(slack_id=slack_id).select_related("user").first()
+        )
+        if not slack:
+            return Response(
+                data={
+                    "success": False,
+                    "message": "Couldn't find your Slack account",
+                }
+            )
+    slack.zoom_channel = request.data.get("zoom_channel")
+    slack.save()
+    return Response(json.dumps({"success": True}))
