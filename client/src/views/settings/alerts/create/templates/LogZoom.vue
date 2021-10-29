@@ -106,7 +106,7 @@
         </div>
       </div>
 
-      <button @click="handleZoomUpdate(slackId, zoomChannel)">Test</button>
+      <button @click="handleZoomUpdate('C02KG264P17')">Test</button>
     </div>
   </div>
 </template>
@@ -147,8 +147,8 @@ export default {
     }
   },
   methods: {
-    async handleZoomUpdate(slack_id, zoom_channel) {
-      const res = await SlackOAuth.api.updateZoomChannel(slack_id, zoom_channel)
+    async handleZoomUpdate(zoom_channel) {
+      const res = await SlackOAuth.api.updateZoomChannel(this.slackId, zoom_channel)
       console.log(res)
     },
     removeZoomChannel() {
@@ -261,7 +261,7 @@ export default {
       return this.$store.state.user
     },
     slackId() {
-      this.$store.state.user.slackRef.slackId
+      return this.$store.state.user.slackRef.slackId
     },
   },
   mounted() {
