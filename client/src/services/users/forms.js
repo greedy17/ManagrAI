@@ -87,6 +87,10 @@ export class UserLoginForm extends Form {
   static password = new FormField({ validators: [new RequiredValidator({})] })
 }
 
+export class UserSlackAccountForm extends Form {
+  static slackAccount = new FormField()
+}
+
 export class UserProfileForm extends Form {
   static firstName = new FormField({ validators: [new RequiredValidator()] })
   static lastName = new FormField({ validators: [new RequiredValidator()] })

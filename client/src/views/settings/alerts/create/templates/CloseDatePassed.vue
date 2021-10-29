@@ -4,7 +4,7 @@
       <h2 style="font-weight: bold; text-align: center">
         <span style="color: black">
           Close Date
-          <span style="color: #ff7649">Passed</span>
+          <span style="color: #fa646a">Passed</span>
         </span>
       </h2>
     </div>

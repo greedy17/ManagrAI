@@ -4,7 +4,7 @@
       <h2 style="font-weight: bold; text-align: center">
         <span style="color: black">
           Deal
-          <span style="color: #ff7649">Rotting</span>
+          <span style="color: #fa646a">Rotting</span>
         </span>
       </h2>
     </div>

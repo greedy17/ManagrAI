@@ -36,6 +36,7 @@ import CloseDateApproaching from '@/views/settings/alerts/create/templates/Close
 import CloseDatePassed from '@/views/settings/alerts/create/templates/CloseDatePassed'
 import DealRotting from '@/views/settings/alerts/create/templates/DealRotting'
 import UpdateForecast from '@/views/settings/alerts/create/templates/UpdateForecast'
+import LogZoom from '@/views/settings/alerts/create/templates/LogZoom'
 
 // TODO: We should keep this style guide page
 // import Styles from '@/views/settings/Styles'
@@ -177,6 +178,11 @@ export default new Router({
       path: '/update-forecast',
       name: 'UpdateForecast',
       component: UpdateForecast,
+    },
+    {
+      path: '/log-zoom-meetings',
+      name: 'LogZoom',
+      component: LogZoom,
     },
     {
       path: '/alerts',
