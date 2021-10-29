@@ -679,7 +679,7 @@ def process_update_meeting_contact(payload, context):
     action = slack_const.VIEWS_UPDATE
     url = slack_const.SLACK_API_ROOT + action
     trigger_id = payload["trigger_id"]
-    view_id = payload["view"]["id"]
+    view_id = context.get(str("current_view_id"))
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
 
     org = workflow.user.organization

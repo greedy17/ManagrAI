@@ -164,15 +164,23 @@ def process_edit_meeting_contact(payload, context):
             "submit": {"type": "plain_text", "text": "Save"},
             "blocks": get_block_set(
                 "edit_meeting_contacts",
-                {"w": context.get("w"), "tracking_id": context.get("tracking_id")},
+                {
+                    "w": context.get("w"),
+                    "tracking_id": context.get("tracking_id"),
+                    "current_view_id": view_id,
+                },
             ),
             "callback_id": slack_const.ZOOM_MEETING__UPDATE_PARTICIPANT_DATA,
             "private_metadata": json.dumps(
-                {"w": context.get("w"), "tracking_id": context.get("tracking_id")}
+                {
+                    "w": context.get("w"),
+                    "tracking_id": context.get("tracking_id"),
+                    "current_view_id": view_id,
+                }
             ),
         },
     }
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH
     # trigger_id = payload["trigger_id"]
 
     # salesforce_account = meeting.zoom_account.user.salesforce_account
