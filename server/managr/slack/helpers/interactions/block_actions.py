@@ -282,7 +282,7 @@ def process_stage_selected(payload, context):
         if view_type == "meeting_review_modal":
             context = {
                 **context,
-                "form_type": slack_const.FORM_TYPE_MEETING_REVIEW,
+                "form_type": slack_const.FORM_TYPE_UPDATE,
                 "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
             }
         else:
