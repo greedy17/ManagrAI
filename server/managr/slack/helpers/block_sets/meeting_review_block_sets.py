@@ -407,7 +407,7 @@ def initial_meeting_interaction_block_set(context):
     ):
         action_blocks.append(
             block_builders.simple_button_block(
-                f"Update {workflow.resource_type} + Add Notes",
+                f"Update Salesforce + Add Notes",
                 str(workflow.id),
                 action_id=slack_const.ZOOM_MEETING__INIT_REVIEW,
                 style="primary",

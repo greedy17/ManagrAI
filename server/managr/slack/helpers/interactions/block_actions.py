@@ -71,7 +71,7 @@ def process_meeting_review(payload, context):
             "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
             "title": {"type": "plain_text", "text": "Log Meeting"},
             "blocks": get_block_set("meeting_review_modal", context=context),
-            "submit": {"type": "plain_text", "text": "Save Changes"},
+            "submit": {"type": "plain_text", "text": "Update Salesforce"},
             "private_metadata": json.dumps(private_metadata),
             "external_id": f"meeting_review_modal.{str(uuid.uuid4())}",
         },
@@ -841,6 +841,16 @@ def process_no_changes_made(payload, context):
     ops = [
         f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}",
     ]
+    contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
+    for form in contact_forms:
+        if form.template.form_type == slack_const.FORM_TYPE_CREATE:
+            ops.append(
+                f"{sf_consts.MEETING_REVIEW__CREATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
+            )
+        else:
+            ops.append(
+                f"{sf_consts.MEETING_REVIEW__UPDATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
+            )
     workflow.operations_list = ops
     workflow.save()
     workflow.begin_tasks()
