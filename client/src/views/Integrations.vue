@@ -34,27 +34,6 @@
       </div>
 
       <div class="card">
-        <img class="card-img" src="@/assets/images/zoom_logo.svg" />
-        <h3>Zoom</h3>
-        <p class="card-text">Connect Zoom to sync meeting data with Managr.</p>
-        <PulseLoadingSpinnerButton
-          v-if="!hasZoomIntegration"
-          :disabled="hasZoomIntegration"
-          @click="onGetAuthLink('ZOOM')"
-          class="primary-button"
-          text="Connect"
-          :loading="generatingToken && selectedIntegration == 'ZOOM'"
-        ></PulseLoadingSpinnerButton>
-        <PulseLoadingSpinnerButton
-          text="Revoke"
-          :loading="generatingToken && selectedIntegration == 'ZOOM'"
-          v-else
-          @click="onRevoke('ZOOM')"
-          class="secondary-button"
-        ></PulseLoadingSpinnerButton>
-      </div>
-
-      <div class="card">
         <img class="card-img" src="@/assets/images/slack.svg" />
         <h3>Slack</h3>
         <p class="card-text">Connect Slack to enable messaging between apps.</p>
@@ -75,6 +54,27 @@
           class="secondary-button"
           text="Revoke"
           :loading="generatingToken && selectedIntegration == 'SLACK'"
+        ></PulseLoadingSpinnerButton>
+      </div>
+
+       <div class="card">
+        <img class="card-img" src="@/assets/images/zoom_logo.svg" />
+        <h3>Zoom</h3>
+        <p class="card-text">Connect Zoom to sync meeting data with Managr.</p>
+        <PulseLoadingSpinnerButton
+          v-if="!hasZoomIntegration"
+          :disabled="hasZoomIntegration"
+          @click="onGetAuthLink('ZOOM')"
+          class="primary-button"
+          text="Connect"
+          :loading="generatingToken && selectedIntegration == 'ZOOM'"
+        ></PulseLoadingSpinnerButton>
+        <PulseLoadingSpinnerButton
+          text="Revoke"
+          :loading="generatingToken && selectedIntegration == 'ZOOM'"
+          v-else
+          @click="onRevoke('ZOOM')"
+          class="secondary-button"
         ></PulseLoadingSpinnerButton>
       </div>
 
@@ -231,14 +231,14 @@ export default {
     hasSalesforceIntegration() {
       return !!this.$store.state.user.salesforceAccount
     },
-    hasZoomIntegration() {
-      return !!this.$store.state.user.zoomAccount && this.$store.state.user.hasZoomIntegration
-    },
     orgHasSlackIntegration() {
       return !!this.$store.state.user.organizationRef.slackIntegration
     },
     hasSlackIntegration() {
       return !!this.$store.state.user.slackRef
+    },
+    hasZoomIntegration() {
+      return !!this.$store.state.user.zoomAccount && this.$store.state.user.hasZoomIntegration
     },
     hasNylasIntegration() {
       return !!this.$store.state.user.nylas
@@ -256,12 +256,12 @@ export default {
       switch (this.selectedIntegration) {
         case 'SALESFORCE':
           return Salesforce
+        case 'SLACK':
+          return SlackOAuth
         case 'ZOOM':
           return ZoomAccount
         case 'NYLAS':
           return Nylas
-        case 'SLACK':
-          return SlackOAuth
         case 'SALESLOFT':
           return Salesloft
         default:
