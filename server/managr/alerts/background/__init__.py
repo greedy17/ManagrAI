@@ -237,6 +237,7 @@ def _process_send_alert(invocation, channel, config_id):
     template = alert_instances.first().template
     channel_id = None
     instance_user = alert_instances.first().user
+    print(channel)
     if hasattr(instance_user, "slack_integration"):
         channel_id = (
             alert_instances.first().channel
@@ -297,12 +298,13 @@ def _process_send_alert(invocation, channel, config_id):
 @slack_api_exceptions()
 def _process_send_no_alert_message(config_id, user_id):
     config = AlertConfig.objects.filter(id=config_id).first()
+    channel = config.recipients[0]
     template = config.template
     user = template.get_users.filter(id=user_id).first()
     blocks = [block_builders.simple_section(f"No results for alert {template.title}")]
     try:
         slack_requests.send_ephemeral_message(
-            user.slack_integration.channel,
+            channel,
             user.organization.slack_integration.access_token,
             user.slack_integration.slack_id,
             block_set=blocks,

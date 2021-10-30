@@ -605,7 +605,7 @@ def _process_create_new_contacts(workflow_id, *args):
     for form in contact_forms:
         # if the resource is an account we set it to that account
         # if it is an opp we create a contact role as well
-
+        logger.info(f"FORM {form}")
         data = form.saved_data
         if not data:
             # try and collect whatever data we have
