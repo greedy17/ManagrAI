@@ -310,17 +310,4 @@ def generate_call_block(call_res, resource_id=None):
         blocks.append(block_builders.simple_section("Call still processing"))
     return blocks
 
-def check_send_recap(slack_id):
-    slack = UserSlackIntegration.objects.filter(slack_id=slack_id).first()
-    if not slack:
-        return False
-    if len(slack.recap_receivers):
-        for receiver in slack.recap_receivers:
-            slack_acc = UserSlackIntegration.objects.filter(slack_id=receiver).first()
-            requests.send_channel_message(
-                slack_acc,
-                u.organization.slack_integration.access_token,
-                text="You've been invited to Managr!",
-                block_set=blocks,
-            )
 
