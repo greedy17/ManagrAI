@@ -116,6 +116,11 @@ class UserSlackIntegration(TimeStampModel):
         max_length=255, null=True, help_text="Channel for zoom automation, defaults to channel",
     )
 
+    recap_channel = models.CharField(
+        max_length=255, null=True, help_text="Channel for recaps to be sent",
+    )
+    recap_receivers = ArrayField(models.CharField(max_length=255), default=list, blank=True)
+
     objects = UserSlackIntegrationQuerySet.as_manager()
 
     def __str__(self):
