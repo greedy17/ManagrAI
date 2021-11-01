@@ -7,9 +7,12 @@
           <span style="color: #5f8cff">Zoom Meetings</span>
         </span>
       </h2>
+      <p style="text-align: center; color: black; font-weight: bold">
+        Create or select a slack channel to recieve your zoom meeting recaps
+      </p>
     </div>
 
-    <div class="centered">
+    <div style="margin-top: -2rem" class="centered col">
       <div class="card centered">
         <div>
           <div v-if="!channelName" class="row">
@@ -25,7 +28,7 @@
           </div>
 
           <label v-else for="channel" style="font-weight: bold"
-            >Alert will send to
+            >Alerts will send to
             <span style="color: #199e54; font-size: 1.2rem">{{ channelName }}</span>
             channel</label
           >
@@ -105,8 +108,18 @@
           </div>
         </div>
       </div>
-
-      <button @click="handleZoomUpdate('C02KG264P17')">Test</button>
+      <div v-if="channelCreated || zoomChannel" style="margin-top: 2rem">
+        <div v-if="!create">
+          <button class="green__button" @click="handleZoomUpdate(zoomChannel)">
+            Activate Channel
+          </button>
+        </div>
+        <div v-else>
+          <button class="green__button" @click="handleZoomUpdate(createdZoomChannel)">
+            Activate Channel
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -135,6 +148,7 @@ export default {
       channelCreated: false,
       slackAccount: {},
       zoomChannel: '',
+      createdZoomChannel: '',
       users: CollectionManager.create({ ModelClass: User }),
     }
   },
@@ -149,7 +163,14 @@ export default {
   methods: {
     async handleZoomUpdate(zoom_channel) {
       const res = await SlackOAuth.api.updateZoomChannel(this.slackId, zoom_channel)
-      console.log(res)
+      this.createdZoomChannel = ''
+      this.zoomChannel = ''
+      this.$router.push({ name: 'CreateNew' })
+      this.$Alert.alert({
+        type: 'success',
+        message: 'Alert saved successfully',
+        timeout: 2000,
+      })
     },
     removeZoomChannel() {
       this.zoomChannel = ''
@@ -176,7 +197,7 @@ export default {
     async createChannel(name) {
       const res = await SlackOAuth.api.createChannel(name)
       if (res.channel) {
-        this.zoomForm.field.zoomId.value = res.channel.id
+        this.createdZoomChannel = res.channel.id
         this.channelCreated = !this.channelCreated
       } else {
         console.log(res.error)
@@ -288,8 +309,8 @@ export default {
   margin-top: 4rem;
 }
 .card {
-  width: 400px;
-  height: 200px;
+  width: 450px;
+  height: 225px;
   background-color: $panther;
   border-radius: 0.5rem;
 }
@@ -298,6 +319,9 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+.col {
+  flex-direction: column;
 }
 .row {
   display: flex;
@@ -309,7 +333,8 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.4rem 1rem;
+  width: 100%;
+  padding: 0.5rem 1rem;
   border-radius: 0.3rem;
   font-weight: bold;
   line-height: 1.14;
@@ -320,7 +345,6 @@ export default {
   background-color: $dark-green;
   cursor: pointer;
   height: 2rem;
-  width: 10rem;
   font-weight: bold;
   font-size: 1.02rem;
 }
