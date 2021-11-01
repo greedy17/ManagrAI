@@ -32,8 +32,8 @@ def queue_gong_sync(auth_account=None):
     else:
         gong_accounts = GongAuthAccount.objects.all()
         for account in gong_accounts:
-            emit_sync_gong_accounts(account.id)
-            emit_sync_gong_calls(account.id)
+            emit_sync_gong_accounts(str(account.id))
+            emit_sync_gong_calls(str(account.id))
             logger.info("Started Gong call sync for {account.organization.name}")
             continue
     return
