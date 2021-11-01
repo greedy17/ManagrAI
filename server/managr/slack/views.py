@@ -267,7 +267,6 @@ class SlackViewSet(viewsets.GenericViewSet,):
             )
         else:
             create_data = {"ok": False, "response_metadata": {}}
-        print(create_data)
         return Response(status=status.HTTP_200_OK, data=create_data)
 
     @action(
