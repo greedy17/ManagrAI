@@ -18,7 +18,7 @@
       </template>
     </Modal>
 
-    <!-- <div v-if="pageNumber === 0">
+    <div v-if="pageNumber === 0">
       <h3 style="text-align: center; color: black" class="title">
         {{ alertTemplateForm.field.resourceType.value }} Selected. Switch to
         <span
@@ -38,7 +38,7 @@
           >Lead</span
         >
       </h3>
-    </div> -->
+    </div>
 
     <div class="alert__row">
       <div v-if="pageNumber === 0" class="alert__column__" style="margin-bottom: 1rem">
@@ -167,7 +167,7 @@
           </div>
 
           <div class="crm">
-            <h4 style="margin-top: 2rem">Add CRM Fields</h4>
+            <h4 style="margin-top: 2rem">Add CRM Values</h4>
             <DropDownSearch
               :items="fields.list"
               @input="bindText(`${selectedResourceType}.${$event}`)"
@@ -228,6 +228,7 @@
                   flex-direction: column;
                   align-items: center;
                   justify-content: center;
+                  padding: 0.5rem;
                 "
               >
                 <div class="row__">
@@ -325,6 +326,7 @@
                   flex-direction: column;
                   align-items: center;
                   justify-content: space-evenly;
+                  padding: 0.5rem;
                 "
               >
                 <span style="font-weight: bold; margin-bottom: 0.3rem">Select pipelines</span>
