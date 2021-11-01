@@ -71,7 +71,7 @@ def process_meeting_review(payload, context):
             "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
             "title": {"type": "plain_text", "text": "Log Meeting"},
             "blocks": get_block_set("meeting_review_modal", context=context),
-            "submit": {"type": "plain_text", "text": "Save Changes"},
+            "submit": {"type": "plain_text", "text": "Update Salesforce"},
             "private_metadata": json.dumps(private_metadata),
             "external_id": f"meeting_review_modal.{str(uuid.uuid4())}",
         },
@@ -146,72 +146,98 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
     workflow.save()
 
 
-@processor(required_context=["w", "tracking_id"])
+@processor()
 def process_edit_meeting_contact(payload, context):
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     trigger_id = payload["trigger_id"]
+    view = payload["view"]
+    view_id = view["id"]
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     meeting = workflow.meeting
-
     org = meeting.zoom_account.user.organization
-
     access_token = org.slack_integration.access_token
-
-    salesforce_account = meeting.zoom_account.user.salesforce_account
-
-    view = payload["view"]
-    # retrieve original blocks, view will use the same blocks but change the submit action
-    blocks = view["blocks"]
-    view_id = view["id"]
-    title = view["title"]
-    actions = payload["actions"]
-    callback_id = None
-    submit_button_text = None
-    selected_action_block = actions[0] if len(actions) else None
-    if selected_action_block:
-        action = process_action_id(selected_action_block["action_id"])
-        block_id = selected_action_block["block_id"]
-        index, selected_block = block_finder(block_id, blocks)
-        if (
-            action["true_id"] == slack_const.ZOOM_MEETING__EDIT_CONTACT
-            and selected_block["elements"][0]["value"] == slack_const.ZOOM_MEETING__EDIT_CONTACT
-        ):
-            selected_block["elements"][0]["text"]["text"] = "Cancel Edit Contact"
-            selected_block["elements"][0]["value"] = slack_const.ZOOM_MEETING__CANCEL_EDIT_CONTACT
-            blocks[index] = selected_block
-            callback_id = slack_const.ZOOM_MEETING__EDIT_CONTACT
-            submit_button_text = "Edit Contact"
-            # change the block to show it is selected
-        elif (
-            action["true_id"] == slack_const.ZOOM_MEETING__EDIT_CONTACT
-            and selected_block["elements"][0]["value"]
-            == slack_const.ZOOM_MEETING__CANCEL_EDIT_CONTACT
-        ):
-            selected_block["elements"][0]["text"]["text"] = "Click To Select For Editing"
-            selected_block["elements"][0]["value"] = slack_const.ZOOM_MEETING__EDIT_CONTACT
-            blocks[index] = selected_block
-            callback_id = None
-            submit_button_text = None
-            # change the block to show it is selected
-
     data = {
         "trigger_id": trigger_id,
         "view_id": view_id,
         "view": {
-            "close": {"type": "plain_text", "text": "Close", "emoji": True},
             "type": "modal",
-            "title": title,
-            "blocks": blocks,
+            "title": {"type": "plain_text", "text": "Edit Contact"},
+            "submit": {"type": "plain_text", "text": "Save"},
+            "blocks": get_block_set(
+                "edit_meeting_contacts",
+                {
+                    "w": context.get("w"),
+                    "tracking_id": context.get("tracking_id"),
+                    "current_view_id": view_id,
+                },
+            ),
+            "callback_id": slack_const.ZOOM_MEETING__UPDATE_PARTICIPANT_DATA,
             "private_metadata": json.dumps(
-                {"w": context.get("w"), "tracking_id": context.get("tracking_id"),}
+                {
+                    "w": context.get("w"),
+                    "tracking_id": context.get("tracking_id"),
+                    "current_view_id": view_id,
+                }
             ),
         },
     }
-    if callback_id:
-        data["view"]["callback_id"] = callback_id
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH
+    # trigger_id = payload["trigger_id"]
 
-    if submit_button_text:
-        data["view"]["submit"] = {"type": "plain_text", "text": submit_button_text, "emoji": True}
+    # salesforce_account = meeting.zoom_account.user.salesforce_account
+
+    # view = payload["view"]
+    # # retrieve original blocks, view will use the same blocks but change the submit action
+    # blocks = view["blocks"]
+    # view_id = view["id"]
+    # title = view["title"]
+    # actions = payload["actions"]
+    # callback_id = None
+    # submit_button_text = None
+    # selected_action_block = actions[0] if len(actions) else None
+    # if selected_action_block:
+    #     action = process_action_id(selected_action_block["action_id"])
+    #     block_id = selected_action_block["block_id"]
+    #     index, selected_block = block_finder(block_id, blocks)
+    #     if (
+    #         action["true_id"] == slack_const.ZOOM_MEETING__EDIT_CONTACT
+    #         and selected_block["elements"][0]["value"] == slack_const.ZOOM_MEETING__EDIT_CONTACT
+    #     ):
+    #         selected_block["elements"][0]["text"]["text"] = "Cancel Edit Contact"
+    #         selected_block["elements"][0]["value"] = slack_const.ZOOM_MEETING__CANCEL_EDIT_CONTACT
+    #         blocks[index] = selected_block
+    #         callback_id = slack_const.ZOOM_MEETING__EDIT_CONTACT
+    #         submit_button_text = "Edit Contact"
+    #         # change the block to show it is selected
+    #     elif (
+    #         action["true_id"] == slack_const.ZOOM_MEETING__EDIT_CONTACT
+    #         and selected_block["elements"][0]["value"]
+    #         == slack_const.ZOOM_MEETING__CANCEL_EDIT_CONTACT
+    #     ):
+    #         selected_block["elements"][0]["text"]["text"] = "Click To Select For Editing"
+    #         selected_block["elements"][0]["value"] = slack_const.ZOOM_MEETING__EDIT_CONTACT
+    #         blocks[index] = selected_block
+    #         callback_id = None
+    #         submit_button_text = None
+    #         # change the block to show it is selected
+
+    # data = {
+    #     "trigger_id": trigger_id,
+    #     "view_id": view_id,
+    #     "view": {
+    #         "close": {"type": "plain_text", "text": "Close", "emoji": True},
+    #         "type": "modal",
+    #         "title": title,
+    #         "blocks": blocks,
+    #         "private_metadata": json.dumps(
+    #             {"w": context.get("w"), "tracking_id": context.get("tracking_id"),}
+    #         ),
+    #     },
+    # }
+    # if callback_id:
+    #     data["view"]["callback_id"] = callback_id
+
+    # if submit_button_text:
+    #     data["view"]["submit"] = {"type": "plain_text", "text": submit_button_text, "emoji": True}
     try:
         res = slack_requests.generic_request(url, data, access_token=access_token)
     except InvalidBlocksException as e:
@@ -230,8 +256,8 @@ def process_edit_meeting_contact(payload, context):
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
         )
-    workflow.slack_view = res["view"]["id"]
-    workflow.save()
+    # workflow.slack_view = res["view"]["id"]
+    # workflow.save()
 
 
 @processor(required_context=[])
@@ -282,7 +308,7 @@ def process_stage_selected(payload, context):
         if view_type == "meeting_review_modal":
             context = {
                 **context,
-                "form_type": slack_const.FORM_TYPE_MEETING_REVIEW,
+                "form_type": slack_const.FORM_TYPE_UPDATE,
                 "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
             }
         else:
@@ -841,6 +867,16 @@ def process_no_changes_made(payload, context):
     ops = [
         f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}",
     ]
+    contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
+    for form in contact_forms:
+        if form.template.form_type == slack_const.FORM_TYPE_CREATE:
+            ops.append(
+                f"{sf_consts.MEETING_REVIEW__CREATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
+            )
+        else:
+            ops.append(
+                f"{sf_consts.MEETING_REVIEW__UPDATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
+            )
     workflow.operations_list = ops
     workflow.save()
     workflow.begin_tasks()
