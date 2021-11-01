@@ -73,39 +73,6 @@ INTEGRATION SCREEN
       </div>
 
       <div class="card">
-        <div class="card__header">
-          <img class="card-img card-img__radius" src="@/assets/images/zoom.png" />
-          <h2 class="card__title">Zoom</h2>
-        </div>
-
-        <p class="card-text">Activates the meeting workflow automation.</p>
-        <div class="card__body">
-          <PulseLoadingSpinnerButton
-            v-if="!hasZoomIntegration"
-            :disabled="hasZoomIntegration"
-            @click="onGetAuthLink('ZOOM')"
-            class="orange_button"
-            text="Connect"
-            :loading="generatingToken && selectedIntegration == 'ZOOM'"
-          ></PulseLoadingSpinnerButton>
-          <div style="display: flex; justify-content: center" v-else>
-            <img
-              src="@/assets/images/unplug.png"
-              :loading="generatingToken && selectedIntegration == 'ZOOM'"
-              @click="onRevoke('ZOOM')"
-              style="height: 2rem; cursor: pointer"
-            />
-            <img
-              src="@/assets/images/refresh.png"
-              :loading="generatingToken && selectedIntegration == 'ZOOM'"
-              @click="onGetAuthLink('ZOOM')"
-              style="height: 2rem; cursor: pointer"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
         <div class="required__header">
           <div class="card__header">
             <img style="height: 3rem" src="@/assets/images/slackLogo.png" />
@@ -159,6 +126,41 @@ INTEGRATION SCREEN
           </div>
         </div>
       </div>
+
+      <div class="card">
+        <div class="card__header">
+          <img class="card-img card-img__radius" src="@/assets/images/zoom.png" />
+          <h2 class="card__title">Zoom</h2>
+        </div>
+
+        <p class="card-text">Activates the meeting workflow automation.</p>
+        <div class="card__body">
+          <PulseLoadingSpinnerButton
+            v-if="!hasZoomIntegration"
+            :disabled="hasZoomIntegration"
+            @click="onGetAuthLink('ZOOM')"
+            class="orange_button"
+            text="Connect"
+            :loading="generatingToken && selectedIntegration == 'ZOOM'"
+          ></PulseLoadingSpinnerButton>
+          <div style="display: flex; justify-content: center" v-else>
+            <img
+              src="@/assets/images/unplug.png"
+              :loading="generatingToken && selectedIntegration == 'ZOOM'"
+              @click="onRevoke('ZOOM')"
+              style="height: 2rem; cursor: pointer"
+            />
+            <img
+              src="@/assets/images/refresh.png"
+              :loading="generatingToken && selectedIntegration == 'ZOOM'"
+              @click="onGetAuthLink('ZOOM')"
+              style="height: 2rem; cursor: pointer"
+            />
+          </div>
+        </div>
+      </div>
+
+      
 
       <div class="card">
         <div class="card__header">
