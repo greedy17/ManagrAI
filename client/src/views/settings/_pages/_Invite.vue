@@ -89,9 +89,24 @@
         <div style="color: white" class="invite-list__section__item invite-list__status">
           {{ user.userLevel == 'MANAGER' ? 'Team Leader(You)' : 'Rep(You)' }}
         </div>
-        <div class="invite-list__section__item invite-list__status" style="color: #ff7649">
+        <div class="invite-list__section__item invite-list__status" style="color: #199e54">
           Registered
         </div>
+
+        <div style="color: white" class="invite-list__section__item invite-list__status">
+          <span :class="user.slackRef ? 'active' : 'inactive'">
+            <img src="@/assets/images/slackLogo.png" style="height: 0.9rem" alt="" />
+          </span>
+          <span :class="user.hasSalesforceIntegration ? 'active' : 'inactive'">
+            <img src="@/assets/images/salesforce.png" style="width: 1rem" alt="" />
+          </span>
+          <span :class="user.hasZoomIntegration ? 'active' : 'inactive'">
+            <img src="@/assets/images/zoom.png" alt="" style="height: 0.9rem" />
+          </span>
+        </div>
+        <!-- <div style="color: white" class="invite-list__section__item invite-list__status">
+          Alerts
+        </div> -->
       </div>
       <div v-for="member in team.list" :key="member.id" class="invite-list__section__container">
         <template v-if="member.id !== user.id">
@@ -104,6 +119,21 @@
           <div :class="member.isActive ? 'registered' : 'unregistered'">
             {{ member.isActive ? 'Registered' : 'Pending..' }}
           </div>
+          <div class="invite-list__section__item invite-list__status">
+            <span :class="member.slackRef ? 'active' : 'inactive'">
+              <img src="@/assets/images/slackLogo.png" style="height: 0.9rem" alt="" />
+            </span>
+            <span :class="member.hasSalesforceIntegration ? 'active' : 'inactive'">
+              <img src="@/assets/images/salesforce.png" style="width: 1rem" alt="" />
+            </span>
+            <span :class="member.hasZoomIntegration ? 'active' : 'inactive'">
+              <img src="@/assets/images/zoom.png" alt="" style="height: 0.9rem" />
+              {{ console(member) }}
+            </span>
+          </div>
+          <!-- <div class="invite-list__section__item invite-list__status">
+            <p>3</p>
+          </div> -->
         </template>
       </div>
     </div>
@@ -173,6 +203,9 @@ export default {
   },
 
   methods: {
+    console(wrd) {
+      console.log(wrd)
+    },
     async listUsers(cursor = null) {
       const res = await SlackOAuth.api.listUsers(cursor)
       this.slackMembers = res.data.members.filter((member) => member.deleted == false)
@@ -285,12 +318,25 @@ export default {
 ::v-deep .tn-dropdown__selected-items__item-selection {
   color: $panther;
 }
+
+.active {
+  border: 2px solid $dark-green;
+  padding: 0.2rem;
+  border-radius: 50%;
+  text-align: center;
+  margin-right: 0.25rem;
+}
+.inactive {
+  border: 2px solid $coral;
+  padding: 0.2rem;
+  border-radius: 50%;
+  margin-right: 0.25rem;
+}
 .invite-container {
   display: flex;
   flex-flow: row;
   justify-content: center;
   // height: 80vh;
-
   width: 80%;
 }
 
@@ -398,8 +444,7 @@ button {
   &__container {
     background-color: $panther;
     border: none;
-    width: 0%;
-    min-width: 40vw;
+    min-width: 60vw;
     padding: 1.5rem 1rem 1.5rem 1.5rem;
     border-radius: 5px;
     box-shadow: 0 5px 10px 0 black;
