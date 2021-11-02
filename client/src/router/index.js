@@ -37,6 +37,7 @@ import CloseDatePassed from '@/views/settings/alerts/create/templates/CloseDateP
 import DealRotting from '@/views/settings/alerts/create/templates/DealRotting'
 import UpdateForecast from '@/views/settings/alerts/create/templates/UpdateForecast'
 import LogZoom from '@/views/settings/alerts/create/templates/LogZoom'
+import ZoomRecap from '@/views/settings/alerts/create/templates/ZoomRecap'
 
 // TODO: We should keep this style guide page
 // import Styles from '@/views/settings/Styles'
@@ -183,6 +184,11 @@ export default new Router({
       path: '/log-zoom-meetings',
       name: 'LogZoom',
       component: LogZoom,
+    },
+    {
+      path: '/recap-zoom-meetings',
+      name: 'ZoomRecap',
+      component: ZoomRecap,
     },
     {
       path: '/alerts',

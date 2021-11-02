@@ -150,7 +150,7 @@
         </div>
       </div>
 
-      <div class="card__">
+      <div v-if="user.userLevel !== 'MANAGER'" class="card__">
         <div class="card__header">
           <h3>Log <span style="color: #5f8cff">Zoom Meetings</span></h3>
         </div>
@@ -162,6 +162,24 @@
             Activate
           </button>
           <h4 style="margin-top: -0.5rem" v-else>Connect Zoom in order to activate</h4>
+        </div>
+      </div>
+      <div v-else class="card__">
+        <div class="card__header">
+          <h3>Zoom <span style="color: #5f8cff">Meeting Recaps</span></h3>
+        </div>
+        <div class="row">
+          <img style="height: 2.25rem" src="@/assets/images/zoom.png" alt="" />
+        </div>
+        <div style="margin-top: 2rem">
+          <button
+            v-if="hasZoomIntegration && hasSlackIntegration"
+            @click="goToZoomRecap"
+            class="orange_button"
+          >
+            Activate
+          </button>
+          <h4 style="margin-top: -0.5rem" v-else>Connect Zoom and Slack in order to activate</h4>
         </div>
       </div>
     </div>
@@ -244,176 +262,9 @@ export default {
       selectedBindings: [],
       fields: CollectionManager.create({ ModelClass: SObjectField }),
       users: CollectionManager.create({ ModelClass: User }),
-      recipientBindings: [
-        { referenceDisplayLabel: 'Recipient Full Name', apiName: 'full_name' },
-        { referenceDisplayLabel: 'Recipient First Name', apiName: 'first_name' },
-        { referenceDisplayLabel: 'Recipient Last Name', apiName: 'last_name' },
-        { referenceDisplayLabel: 'Recipient Email', apiName: 'email' },
-      ],
-      alertRecipientOpts: [
-        { key: 'Myself', value: 'SELF' },
-        { key: 'Owner', value: 'OWNER' },
-        { key: 'All Managers', value: 'MANAGERS' },
-        { key: 'All Reps', value: 'REPS' },
-        { key: 'Everyone', value: 'ALL' },
-        { key: 'SDR', value: 'SDR' },
-      ],
-      alertTargetOpts: [
-        { key: 'Myself', value: 'SELF' },
-        { key: 'All Managers', value: 'MANAGERS' },
-        { key: 'All Reps', value: 'REPS' },
-        { key: 'Everyone', value: 'ALL' },
-        { key: 'SDR', value: 'SDR' },
-      ],
-      weeklyOpts: [
-        { key: 'Monday', value: '0' },
-        { key: 'Tuesday', value: '1' },
-        { key: 'Wednesday', value: '2' },
-        { key: 'Thursday', value: '3' },
-        { key: 'Friday', value: '4' },
-        { key: 'Saturday', value: '5' },
-        { key: 'Sunday', value: '6' },
-      ],
     }
-  },
-  async created() {
-    if (this.user.slackRef) {
-      await this.listChannels()
-    }
-    if (this.user.userLevel == 'MANAGER') {
-      await this.users.refresh()
-    }
-  },
-  watch: {
-    selectedResourceType: {
-      immediate: true,
-      async handler(val, prev) {
-        if (prev && val !== prev) {
-          this.alertTemplateForm = this.alertTemplateForm.reset()
-          this.selectedResourceType = val
-        }
-        if (this.selectedResourceType) {
-          this.fields.filters.salesforceObject = this.selectedResourceType
-          this.fields.filters.page = 1
-          await this.fields.refresh()
-        }
-      },
-    },
   },
   methods: {
-    async listChannels(cursor = null) {
-      const res = await SlackOAuth.api.listChannels(cursor)
-      const results = new SlackListResponse({
-        channels: [...this.channelOpts.channels, ...res.channels],
-        responseMetadata: { nextCursor: res.nextCursor },
-      })
-      this.channelOpts = results
-    },
-    recipientTypeToggle(value) {
-      if (!this.user.slackRef) {
-        this.$Alert.alert({ type: 'error', message: 'Slack Not Integrated', timeout: 2000 })
-        return 'USER_LEVEL'
-      }
-      if (value == 'USER_LEVEL') {
-        return 'SLACK_CHANNEL'
-      } else if (value == 'SLACK_CHANNEL') {
-        return 'USER_LEVEL'
-      }
-      return value
-    },
-    async onSave() {
-      this.savingTemplate = true
-      this.alertTemplateForm.validate()
-      if (this.alertTemplateForm.isValid) {
-        try {
-          const res = await AlertTemplate.api.createAlertTemplate({
-            ...this.alertTemplateForm.toAPI,
-            user: this.$store.state.user.id,
-          })
-          this.$router.push({ name: 'ListTemplates' })
-        } catch (e) {
-          this.$Alert.alert({
-            message: 'An error occured saving template',
-            timeout: 2000,
-            type: 'error',
-          })
-        } finally {
-          this.savingTemplate = false
-        }
-      }
-    },
-    bindText(val) {
-      this.$refs['message-body'].quill.focus()
-      let start = 0
-      if (this.editor.selection.lastRange) {
-        start = this.editor.selection.lastRange.index
-      }
-      this.editor.insertText(start, `{ ${val} }`)
-    },
-    onAddAlertGroup() {
-      // length determines order
-      const order = this.alertTemplateForm.field.alertGroups.groups.length
-      if (order >= 3) {
-        this.$Alert.alert({ message: 'You can only add 3 groups', timeout: 2000 })
-        return
-      }
-      // set next order
-
-      this.alertTemplateForm.addToArray('alertGroups', new AlertGroupForm())
-      this.alertTemplateForm.field.alertGroups.groups[order].field.groupOrder.value = order
-    },
-    onAddAlertSetting() {
-      if (this.alertTemplateForm.field.alertConfig.groups.length >= 3) {
-        this.$Alert.alert({ message: 'You can only add 3 configurations', timeout: 2000 })
-        return
-      }
-      this.alertTemplateForm.addToArray('alertConfig', new AlertConfigForm())
-    },
-    onRemoveAlertGroup(i) {
-      // get order and update options
-
-      if (this.alertTemplateForm.field.alertGroups.groups.length - 1 <= 0) {
-        return
-      }
-
-      const order = this.alertTemplateForm.field.alertGroups.groups[i].field.groupOrder.value
-
-      this.alertTemplateForm.removeFromArray('alertGroups', i)
-
-      let greaterThan = this.alertTemplateForm.field.alertGroups.groups.slice(i)
-
-      greaterThan.forEach((el, index) => {
-        el.field.groupOrder.value = order + index
-      })
-    },
-    onRemoveSetting(i) {
-      if (this.alertTemplateForm.field.alertConfig.groups.length - 1 <= 0) {
-        return
-      }
-      this.alertTemplateForm.removeFromArray('alertConfig', i)
-    },
-    async onSearchFields(v) {
-      this.fields.pagination = new Pagination()
-      this.fields.filters = {
-        ...this.fields.filters,
-        search: v,
-      }
-      await this.fields.refresh()
-    },
-    async fieldNextPage() {
-      await this.fields.addNextPage()
-    },
-    async onSearchUsers(v) {
-      this.users.pagination = new Pagination()
-      this.users.filters = {
-        ...this.users.filters,
-        search: v,
-      }
-      await this.users.refresh()
-    },
-    async onUsersNextPage() {
-      await this.users.addNextPage()
-    },
     showList() {
       this.listVisible = !this.listVisible
     },
@@ -434,6 +285,9 @@ export default {
     },
     goToLogZoom() {
       this.$router.push({ name: 'LogZoom' })
+    },
+    goToZoomRecap() {
+      this.$router.push({ name: 'ZoomRecap' })
     },
   },
   computed: {
@@ -520,6 +374,9 @@ export default {
         this.alertTemplateForm.field.resourceType.value = val
       },
     },
+  },
+  mounted() {
+    console.log(this.user)
   },
 }
 </script>
