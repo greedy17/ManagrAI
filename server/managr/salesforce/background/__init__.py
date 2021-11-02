@@ -1039,7 +1039,7 @@ def _send_recap(form_ids):
                         new_value = check_for_display_value(field.field, new_value)
 
                     message_string_for_recap += (
-                        f"\n*{field_label}:* ~{old_data.get(key)}~ {new_value}"
+                        f"\n*{field_label}:* ~{old_data.get(key)}~ :arrow_right: {new_value}"
                     )
         elif main_form.template.form_type == "MEETING_REVIEW":
             old_value = old_data.get(key)
@@ -1048,7 +1048,7 @@ def _send_recap(form_ids):
                 if field.field.is_public and field.field.data_type == "Reference":
                     old_value = check_for_display_value(field.field, old_value)
                     new_value = check_for_display_value(field.field, new_value)
-                message_string_for_recap += f"\n*{field_label}:* ~{old_value}~ {new_value}"
+                message_string_for_recap += f"\n*{field_label}:* ~{old_value}~ :arrow_right: {new_value}"
             else:
                 if field.field.is_public and field.field.data_type == "Reference":
                     new_value = check_for_display_value(field.field, new_value)
