@@ -504,7 +504,7 @@ export default {
     async listUserChannels(cursor = null) {
       const res = await SlackOAuth.api.listUserChannels(cursor)
       const results = new SlackListResponse({
-        channels: [...this.channelOpts.channels, ...res.channels],
+        channels: [...this.userChannelOpts.channels, ...res.channels],
         responseMetadata: { nextCursor: res.nextCursor },
       })
       this.userChannelOpts = results
