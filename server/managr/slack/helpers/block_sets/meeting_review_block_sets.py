@@ -361,7 +361,7 @@ def initial_meeting_interaction_block_set(context):
     create_change_button = block_builders.section_with_button_block(
         "Find Opportunity",
         str(workflow.id),
-        "Map to a different Account / Opportunity :mag_right:",
+        "Map to a different Opportunity :mag_right:",
         action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
     )
     
@@ -389,8 +389,8 @@ def initial_meeting_interaction_block_set(context):
     blocks = [
         *default_blocks,
     ]
-    # if workflow.resource_type:
-    #     blocks.insert(len(blocks) - 1, create_change_button)
+    if workflow.resource_type:
+        blocks.insert(2, create_change_button)
 
     action_blocks = []
     if (
@@ -405,7 +405,7 @@ def initial_meeting_interaction_block_set(context):
                 style="primary",
             ),
         )
-    elif workflow.resource_type == slack_const.FORM_RESOURCE_LEAD:
+    if workflow.resource_type == slack_const.FORM_RESOURCE_LEAD:
         action_blocks.append(
             block_builders.simple_button_block(
                 "Convert Lead",
@@ -415,15 +415,6 @@ def initial_meeting_interaction_block_set(context):
                 ),
                 style="primary",
             ),
-        )
-    else:
-        action_blocks.append(
-            block_builders.simple_button_block(
-                "Map to Opportunity or Account",
-                str(workflow.id),
-                action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
-                style="primary",
-            )
         )
 
     if workflow.resource_type:
@@ -435,7 +426,7 @@ def initial_meeting_interaction_block_set(context):
                 style="danger",
             )
         )
-    if contact_check:
+    if contact_check and workflow.resource_type:
         blocks.append({"type": "divider"})
         blocks.append(block_builders.actions_block(action_blocks))
     return blocks
