@@ -5,7 +5,8 @@
         <h2 class="title">Welcome to Managr!</h2>
         <p
           v-if="
-            slackIsIntegrated &&
+            (!(!orgHasSlackIntegration && userCanIntegrateSlack) ||
+              (orgHasSlackIntegration && !hasSlackIntegration)) &&
             hasNylasIntegration &&
             hasZoomIntegration &&
             hasSalesforceIntegration
@@ -63,7 +64,13 @@
             </div>
           </div>
           <p class="card-text">Interact with Managr through Slack</p>
-          <div v-if="!slackIsIntegrated" class="card__body">
+          <div
+            v-if="
+              (!orgHasSlackIntegration && userCanIntegrateSlack) ||
+              (orgHasSlackIntegration && !hasSlackIntegration)
+            "
+            class="card__body"
+          >
             <PulseLoadingSpinnerButton
               @click="onIntegrateSlack"
               :class="hasSalesforceIntegration ? 'orange_button test' : 'orange_button'"
@@ -95,7 +102,14 @@
           </div>
         </div>
 
-        <div :class="!slackIsIntegrated ? 'card onboarding' : 'card'">
+        <div
+          :class="
+            (!orgHasSlackIntegration && userCanIntegrateSlack) ||
+            (orgHasSlackIntegration && !hasSlackIntegration)
+              ? 'card onboarding'
+              : 'card'
+          "
+        >
           <div class="card__header">
             <img class="card-img card-img__radius" src="@/assets/images/zoom.png" />
             <h2 class="card__title">Zoom</h2>
