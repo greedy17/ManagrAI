@@ -32,6 +32,7 @@ from managr.slack.helpers.utils import action_with_params
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers.exceptions import CannotSendToChannel
 from managr.slack.helpers.utils import action_with_params
+from managr.slack.models import UserSlackIntegration
 
 from ..routes import routes
 from ..models import (
@@ -1011,9 +1012,9 @@ def _send_recap(form_ids):
             form_fields = form_fields | form.template.formfield_set.filter(include_in_recap=True)
         else:
             form_fields = form.template.formfield_set.filter(include_in_recap=True)
-    send_summ_to_leadership = new_data.get("__send_recap_to_leadership")
-    send_summ_to_owner = new_data.get("__send_recap_to_reps")
-    send_summ_to_channels = new_data.get("__send_recap_to_channels")
+    # send_summ_to_leadership = new_data.get("__send_recap_to_leadership")
+    # send_summ_to_owner = new_data.get("__send_recap_to_reps")
+    # send_summ_to_channels = new_data.get("__send_recap_to_channels")
 
     slack_access_token = user.organization.slack_integration.access_token
     blocks = []
@@ -1101,71 +1102,71 @@ def _send_recap(form_ids):
         block_builders.context_block(f"{main_form.template.resource} owned by {user.full_name}")
     )
     query = Q()
-    user_list = User.objects.none()
-    if send_summ_to_leadership is not None:
-        manager_list = send_summ_to_leadership.split(";")
-        query |= Q(user_level="MANAGER", id__in=manager_list)
-        user_list = (
-            user.organization.users.filter(query)
-            .filter(is_active=True)
-            .distinct()
-            .select_related("slack_integration")
-        )
+    user_list = UserSlackIntegration.objects.filter(slack_id__in=user.slack_integration.recap_receivers)
+    # if send_summ_to_leadership is not None:
+    #     manager_list = send_summ_to_leadership.split(";")
+    #     query |= Q(user_level="MANAGER", id__in=manager_list)
+    #     user_list = (
+    #         user.organization.users.filter(query)
+    #         .filter(is_active=True)
+    #         .distinct()
+    #         .select_related("slack_integration")
+    #     )
 
-    if send_summ_to_owner is not None:
-        rep_list = send_summ_to_owner.split(";")
-        query |= Q(id__in=rep_list)
-        user_list |= (
-            user.organization.users.filter(query)
-            .filter(is_active=True)
-            .distinct()
-            .select_related("slack_integration")
-        )
+    # if send_summ_to_owner is not None:
+    #     rep_list = send_summ_to_owner.split(";")
+    #     query |= Q(id__in=rep_list)
+    #     user_list |= (
+    #         user.organization.users.filter(query)
+    #         .filter(is_active=True)
+    #         .distinct()
+    #         .select_related("slack_integration")
+    #     )
 
     for u in user_list:
-        if hasattr(u, "slack_integration"):
+        # if hasattr(u, "slack_integration"):
+        #     try:
+        #         slack_requests.send_channel_message(
+        #             u.slack_integration.channel,
+        #             slack_access_token,
+        #             text=f"Recap {main_form.template.resource}",
+        #             block_set=blocks,
+        #         )
+        #     except Exception as e:
+        #         logger.exception(f"Failed to send recap to {u.email} due to {e}")
+        #         continue
+    # if send_summ_to_channels is not None:
+        # channel_list = send_summ_to_channels.split(";")
+        # for channel in channel_list:
+        try:
+            slack_requests.send_channel_message(
+                u.recap_channel,
+                slack_access_token,
+                text=f"Recap {main_form.template.resource}",
+                block_set=blocks,
+            )
+        except CannotSendToChannel:
             try:
                 slack_requests.send_channel_message(
-                    u.slack_integration.channel,
+                    user.slack_integration.channel,
                     slack_access_token,
-                    text=f"Recap {main_form.template.resource}",
-                    block_set=blocks,
+                    text=f"Failed to send recap to channel",
+                    block_set=[
+                        block_builders.simple_section(
+                            f"Unable to send recap to one of the channels you selected, please add <@{user.organization.slack_integration.bot_user_id}> to the channel _*<#{channel}>*_",
+                            "mrkdwn",
+                        )
+                    ],
                 )
-            except Exception as e:
-                logger.exception(f"Failed to send recap to {u.email} due to {e}")
                 continue
-    if send_summ_to_channels is not None:
-        channel_list = send_summ_to_channels.split(";")
-        for channel in channel_list:
-            try:
-                slack_requests.send_channel_message(
-                    channel,
-                    slack_access_token,
-                    text=f"Recap {main_form.template.resource}",
-                    block_set=blocks,
-                )
-            except CannotSendToChannel:
-                try:
-                    slack_requests.send_channel_message(
-                        user.slack_integration.channel,
-                        slack_access_token,
-                        text=f"Failed to send recap to channel",
-                        block_set=[
-                            block_builders.simple_section(
-                                f"Unable to send recap to one of the channels you selected, please add <@{user.organization.slack_integration.bot_user_id}> to the channel _*<#{channel}>*_",
-                                "mrkdwn",
-                            )
-                        ],
-                    )
-                    continue
-                except Exception as e:
-                    logger.exception(
-                        f"Failed to send error message to user informing them of channel issue to {user.email} due to {e}"
-                    )
-                    continue
-
             except Exception as e:
                 logger.exception(
-                    f"Failed to send recap to channel for user {user.email} due to {e}"
+                    f"Failed to send error message to user informing them of channel issue to {user.email} due to {e}"
                 )
                 continue
+
+        except Exception as e:
+            logger.exception(
+                f"Failed to send recap to channel for user {user.email} due to {e}"
+            )
+            continue
