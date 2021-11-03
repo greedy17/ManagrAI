@@ -1,11 +1,11 @@
 <template>
   <div class="integrations">
-    <div v-if="!user.isAdmin">
+    <div v-if="user.isAdmin">
       <div style="text-align: center">
         <h2 class="title">Welcome to Managr!</h2>
         <p
           v-if="
-            (hasSlackIntegration || orgHasSlackIntegration) &&
+            slackIsIntegrated &&
             hasNylasIntegration &&
             hasZoomIntegration &&
             hasSalesforceIntegration
@@ -15,7 +15,7 @@
           Managr utilizes a secure oAuth connection
         </p>
         <p v-else style="font-weight: bold; margin-top: -0.5rem; color: #5d5e5e">
-          Complete the required steps below to finish onboarding
+          <span style="font-weight: 900">Step 1: </span> Connect all four apps
         </p>
       </div>
 
@@ -63,10 +63,7 @@
             </div>
           </div>
           <p class="card-text">Interact with Managr through Slack</p>
-          <div
-            v-if="!orgHasSlackIntegration && userCanIntegrateSlack && !hasSlackIntegration"
-            class="card__body"
-          >
+          <div v-if="!slackIsIntegrated" class="card__body">
             <PulseLoadingSpinnerButton
               @click="onIntegrateSlack"
               :class="hasSalesforceIntegration ? 'orange_button test' : 'orange_button'"
@@ -98,13 +95,7 @@
           </div>
         </div>
 
-        <div
-          :class="
-            !orgHasSlackIntegration && userCanIntegrateSlack && !hasSlackIntegration
-              ? 'card onboarding'
-              : 'card'
-          "
-        >
+        <div :class="!slackIsIntegrated ? 'card onboarding' : 'card'">
           <div class="card__header">
             <img class="card-img card-img__radius" src="@/assets/images/zoom.png" />
             <h2 class="card__title">Zoom</h2>
@@ -114,11 +105,7 @@
             <PulseLoadingSpinnerButton
               :disabled="hasZoomIntegration"
               @click="onGetAuthLink('ZOOM')"
-              :class="
-                hasSlackIntegration || orgHasSlackIntegration
-                  ? 'orange_button test'
-                  : 'orange_button'
-              "
+              :class="slackIsIntegrated ? 'orange_button test' : 'orange_button'"
               text="Connect"
               :loading="generatingToken && selectedIntegration == 'ZOOM'"
             ></PulseLoadingSpinnerButton>
@@ -161,10 +148,7 @@
           <p class="card-text">Accesses your upcoming meetings + attendees</p>
           <div v-if="!hasNylasIntegration" class="card__body">
             <PulseLoadingSpinnerButton
-              @click="
-                onGetAuthLink('NYLAS')
-                goToTemplates()
-              "
+              @click="onGetAuthLink('NYLAS')"
               style="margin-left: 1rem"
               :class="hasZoomIntegration ? 'orange_button test' : 'orange_button'"
               text="Connect"
@@ -194,19 +178,17 @@
         </div> -->
         </div>
         <div v-if="allIntegrated" class="card">
-          <div class="card__header">
-            <h2>You're halfway there!!</h2>
+          <div class="card__header centered">
+            <h2>Last Step...</h2>
           </div>
-          <h5 style="color: white" class="card-text">
-            Let's activate workflow automations & complete your onboarding
-          </h5>
-          <div class="card__body">
+
+          <div class="card__text centered">
             <button
               @click="goToTemplates"
               style="display: flex; align-items: center"
               class="orange_button test"
             >
-              Automations
+              Activate Workflows
             </button>
           </div>
         </div>
@@ -698,7 +680,12 @@ export default {
     userCanIntegrateSlack() {
       return this.$store.state.user.isAdmin
     },
-
+    slackIsIntegrated() {
+      return (
+        (!this.orgHasSlackIntegration && this.userCanIntegrateSlack) ||
+        (this.orgHasSlackIntegration && !this.hasSlackIntegration)
+      )
+    },
     selectedIntegrationSwitcher() {
       switch (this.selectedIntegration) {
         case 'SALESFORCE':
@@ -799,6 +786,11 @@ export default {
     font-size: 14px;
     margin-bottom: 2rem;
   }
+}
+.centered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .rowed {
