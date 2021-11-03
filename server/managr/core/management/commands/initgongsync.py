@@ -28,7 +28,7 @@ class Command(BaseCommand):
                     ),
                 )
         else:
-            queue_gong_call_sync()
+            queue_gong_sync()
             self.stdout.write(
                 self.style.SUCCESS("Successfully initiated gong sync for all accounts"),
             )

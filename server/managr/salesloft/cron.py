@@ -15,7 +15,7 @@ from background_task.models import CompletedTask
 from rest_framework.response import Response
 
 from managr.salesloft import constants as sl_consts
-from managr.salesloft.background import emit_sync_slaccounts, emit_sync_people, emit_sync_cadences
+from managr.salesloft.background import emit_sync_slaccounts, emit_sync_people, emit_sync_cadences, emit_sync_accounts
 from managr.salesloft.models import SalesloftAuthAccount
 from managr.core.models import User
 
@@ -39,7 +39,7 @@ def queue_account_sl_syncs(auth_account=None):
 
 
 def sync_helper(auth_id):
-    sync_steps = [emit_sync_slaccounts, emit_sync_people, emit_sync_cadences]
+    sync_steps = [emit_sync_accounts,emit_sync_slaccounts, emit_sync_people, emit_sync_cadences]
     sl_account = SalesloftAuthAccount.objects.get(id=auth_id)
     v_name = uuid.uuid4()
     for step in sync_steps:

@@ -606,7 +606,7 @@ def _process_create_new_contacts(workflow_id, *args):
     for form in contact_forms:
         # if the resource is an account we set it to that account
         # if it is an opp we create a contact role as well
-
+        logger.info(f"FORM {form}")
         data = form.saved_data
         if not data:
             # try and collect whatever data we have
@@ -1040,7 +1040,7 @@ def _send_recap(form_ids):
                         new_value = check_for_display_value(field.field, new_value)
 
                     message_string_for_recap += (
-                        f"\n*{field_label}:* ~{old_data.get(key)}~ {new_value}"
+                        f"\n*{field_label}:* ~{old_data.get(key)}~ :arrow_right: {new_value}"
                     )
         elif main_form.template.form_type == "MEETING_REVIEW":
             old_value = old_data.get(key)
@@ -1049,7 +1049,7 @@ def _send_recap(form_ids):
                 if field.field.is_public and field.field.data_type == "Reference":
                     old_value = check_for_display_value(field.field, old_value)
                     new_value = check_for_display_value(field.field, new_value)
-                message_string_for_recap += f"\n*{field_label}:* ~{old_value}~ {new_value}"
+                message_string_for_recap += f"\n*{field_label}:* ~{old_value}~ :arrow_right: {new_value}"
             else:
                 if field.field.is_public and field.field.data_type == "Reference":
                     new_value = check_for_display_value(field.field, new_value)

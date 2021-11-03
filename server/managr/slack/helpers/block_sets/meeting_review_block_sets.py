@@ -99,7 +99,6 @@ def generate_contact_group(index, contact, instance_url):
             "url": sf_consts.SALESFORCE_CONTACT_VIEW_URI(instance_url, integration_id),
             "action_id": f"button-action-{integration_id}",
         }
-
     return blocks
 
 
@@ -201,12 +200,13 @@ def meeting_contacts_block_set(context):
                 "elements": [
                     {
                         "type": "button",
-                        "text": {"type": "plain_text", "text": "Click To Select for Editing"},
+                        "text": {"type": "plain_text", "text": "Edit Contact"},
                         "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
                         "action_id": action_with_params(
                             slack_const.ZOOM_MEETING__EDIT_CONTACT,
                             params=[workflow_id_param, tracking_id_param],
                         ),
+                        "style": "primary",
                     },
                     {
                         "type": "button",
@@ -216,6 +216,7 @@ def meeting_contacts_block_set(context):
                             slack_const.ZOOM_MEETING__REMOVE_CONTACT,
                             params=[workflow_id_param, tracking_id_param],
                         ),
+                        "style": "danger",
                     },
                 ],
             }
@@ -255,6 +256,7 @@ def meeting_contacts_block_set(context):
                             slack_const.ZOOM_MEETING__EDIT_CONTACT,
                             params=[workflow_id_param, tracking_id_param],
                         ),
+                        "style": "primary",
                     },
                     {
                         "type": "button",
@@ -264,6 +266,7 @@ def meeting_contacts_block_set(context):
                             slack_const.ZOOM_MEETING__REMOVE_CONTACT,
                             params=[workflow_id_param, tracking_id_param],
                         ),
+                        "style": "danger",
                     },
                 ],
             }
@@ -373,18 +376,8 @@ def initial_meeting_interaction_block_set(context):
         ),
     ]
 
-    # review_participants_button = block_builders.section_with_button_block(
-    #     "Meeting Attendees",
-    #     str(workflow.id),
-    #     "Click 'Meeting Attendees' to review, edit, or remove attendees",
-    #     action_id=action_with_params(
-    #         slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,]
-    #     ),
-    #     style="primary",
-    # )
-
     create_contacts_button = block_builders.simple_button_block(
-        "Add/Edit Meeting Attendees",
+        "Review Attendees",
         str(workflow.id),
         action_id=action_with_params(
             slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,]
@@ -407,7 +400,7 @@ def initial_meeting_interaction_block_set(context):
     ):
         action_blocks.append(
             block_builders.simple_button_block(
-                f"Update {workflow.resource_type} + Add Notes",
+                f"Update Salesforce + Add Notes",
                 str(workflow.id),
                 action_id=slack_const.ZOOM_MEETING__INIT_REVIEW,
                 style="primary",

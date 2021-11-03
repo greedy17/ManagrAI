@@ -681,14 +681,13 @@ def process_update_meeting_contact(payload, context):
     action = slack_const.VIEWS_UPDATE
     url = slack_const.SLACK_API_ROOT + action
     trigger_id = payload["trigger_id"]
-    view_id = payload["view"]["id"]
+    view_id = context.get(str("current_view_id"))
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
 
     org = workflow.user.organization
 
     access_token = org.slack_integration.access_token
     blocks = get_block_set("show_meeting_contacts", {"w": context.get("w")},)
-
     data = {
         "trigger_id": trigger_id,
         "view_id": view_id,
@@ -719,7 +718,7 @@ def process_update_meeting_contact(payload, context):
             f"Failed To load update meeting contact modal for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
         )
 
-    return {"response_action": "clear"}
+    return
 
 
 @processor()

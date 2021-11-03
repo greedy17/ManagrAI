@@ -262,14 +262,19 @@ class GongAccountAdapter:
     @classmethod
     def create_account(cls, user_data, auth_account_id):
         try:
-            user = User.objects.get(email=user_data["emailAddress"])
-            data = {}
-            data["auth_account"] = auth_account_id
-            data["user"] = user.id
-            data["gong_id"] = user_data["id"]
-            data["is_active"] = user_data["active"]
-            data["email"] = user_data["emailAddress"]
-            return cls(**data)
+            emails = user_data["emailAliases"]
+            emails.append(user_data["emailAddress"])
+            user = User.objects.filter(email__in=emails).first()
+            if user:
+                data = {}
+                data["auth_account"] = auth_account_id
+                data["user"] = user.id
+                data["gong_id"] = user_data["id"]
+                data["is_active"] = user_data["active"]
+                data["email"] = user_data["emailAddress"]
+                return cls(**data)
+            else:
+                return None
         except ObjectDoesNotExist:
             return None
 
@@ -355,14 +360,15 @@ class GongCallAdapter:
         auth_account = GongAuthAccount.objects.get(id=auth_account_id)
         schedule_date = dateutil.parser.parse(meta_data.get("scheduled")).date()
         opp_data = (
-            [d for d in context_data[0].get("objects") if d["objectType"] == "Opportunity"][0]
+            [d for d in context_data[0].get("objects") if d["objectType"] == "Opportunity"]
             if len(context_data)
             else {}
         )
+        opp = opp_data[0] if len(opp_data) else None
         data = {}
         data["auth_account"] = auth_account.id
         data["crm"] = context_data[0].get("system", None) if len(context_data) else None
-        data["crm_id"] = opp_data.get("objectId", None)
+        data["crm_id"] = opp.get("objectId") if opp else None
         data["gong_id"] = meta_data.get("id")
         data["client_id"] = meta_data.get("clientUniqueId", None)
         data["client_system"] = meta_data.get("system", None)

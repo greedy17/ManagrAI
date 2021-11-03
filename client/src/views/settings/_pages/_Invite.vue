@@ -11,10 +11,9 @@
     >
       <form class="invite-form" @submit.prevent="handleInvite">
         <h2 class="invite-form__title">Invite Users to Managr</h2>
-        <h2 class="invite-form__subtitle" style="color: #199e54">
+        <h2 class="invite-form__subtitle" style="color: #199E54">
           {{ $store.state.user.organizationRef.name }}
         </h2>
-
         <div style="display: flex; align-items: center; justify-content: center">
           <FormField style="margin-left: -5rem">
             <template v-slot:input>
@@ -31,7 +30,6 @@
             </template>
           </FormField>
         </div>
-
         <div class="dropdown">
           <FormField :errors="userInviteForm.field.userLevel.errors" label="User Level:">
             <template v-slot:input>
@@ -81,15 +79,15 @@
       </form>
     </Modal>
     <div class="invite-list__container">
-      <div class="invite-list__title" style="color: #beb5cc">Your Team:</div>
+      <div class="invite-list__title" style="color: #BEB5CC">Your Team:</div>
       <div class="invite-list__section__container" style="margin-bottom: 1.5rem">
-        <div style="color: #199e54" class="invite-list__section__item invite-list__name">
+        <div style="color: #199E54" class="invite-list__section__item invite-list__name">
           {{ user.fullName }}
         </div>
         <div style="color: white" class="invite-list__section__item invite-list__status">
           {{ user.userLevel == 'MANAGER' ? 'Team Leader(You)' : 'Rep(You)' }}
         </div>
-        <div class="invite-list__section__item invite-list__status" style="color: #ff7649">
+        <div class="invite-list__section__item invite-list__status" style="color: #FF7649">
           Registered
         </div>
       </div>
@@ -109,7 +107,6 @@
     </div>
   </div>
 </template>
-
 <script>
 import User from '@/services/users'
 import { UserInviteForm } from '@/services/users/forms'
@@ -123,7 +120,6 @@ import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button
 import FormField from '@/components/forms/FormField'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 import DropDownSearch from '@/components/DropDownSearch'
-
 export default {
   name: 'Invite',
   components: {
@@ -171,7 +167,6 @@ export default {
     this.refresh()
     await this.listUsers()
   },
-
   methods: {
     async listUsers(cursor = null) {
       const res = await SlackOAuth.api.listUsers(cursor)
@@ -191,28 +186,22 @@ export default {
     },
     async refresh() {
       this.user = this.$store.state.user
-
       if (!this.user.isAdmin && !this.user.userLevel === 'MANAGER') {
         this.$router.push({ name: 'Integrations' })
       }
-
       if (this.user.isStaff) {
         await this.organizations.refresh()
       }
       this.organization = this.$store.state.user.organization
-
       this.team.refresh()
     },
-
     async handleCancel() {
       await this.refresh()
       this.resetData()
-
       this.$emit('cancel')
     },
     async handleInvite() {
       // reset component data when submission begins, in case of prior request
-
       this.loading = true
       this.userInviteForm.validate()
       if (!this.userInviteForm.isValid) {
@@ -251,7 +240,6 @@ export default {
         this.loading = false
       }
     },
-
     resetData() {
       this.userInviteForm.field.organization.value = this.$store.state.user.organization
     },
@@ -266,22 +254,18 @@ export default {
   // },
 }
 </script>
-
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/mixins/inputs';
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
-
 ::v-deep .tn-dropdown__selection-container {
   width: 16rem;
   box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.5);
 }
-
 ::v-deep .tn-dropdown__options__container {
   width: 16rem;
 }
-
 ::v-deep .tn-dropdown__selected-items__item-selection {
   color: $panther;
 }
@@ -290,10 +274,8 @@ export default {
   flex-flow: row;
   justify-content: center;
   // height: 80vh;
-
   width: 80%;
 }
-
 /*
 Override dropdown select input field
 */
@@ -302,7 +284,7 @@ Override dropdown select input field
   ::v-deep .tn-dropdown__selection-container {
     border-radius: 4px;
     background-color: $white;
-    border: 1px solid #eaebed;
+    border: 1px solid #EAEBED;
     box-sizing: border-box;
     line-height: 1.29;
     letter-spacing: 0.5px;
@@ -310,30 +292,23 @@ Override dropdown select input field
     height: 6vh;
     color: $panther;
   }
-
   ::v-deep .tn-dropdown__options__option {
     color: $panther-gray;
     font-weight: bold;
   }
 }
-
 form,
 .success-prompt {
   //   margin-top: 3.125rem;
   width: 100%;
-
   background-color: $white;
-
   height: 50vh;
-
   justify-content: space-evenly;
 }
-
 .checkbox {
   width: auto;
   height: auto;
 }
-
 .invite-button {
   background-color: $dark-green;
   color: white;
@@ -350,11 +325,9 @@ button {
   width: 19rem;
   font-size: 14px;
 }
-
 .invite-form {
   border: none;
   border-radius: 0.75rem;
-
   height: 90vh;
   min-height: 30rem;
   display: flex;
@@ -365,7 +338,6 @@ button {
   > .form_field {
     flex: 0 0 auto;
   }
-
   > .tn-input {
   }
   > .invite-form__dropdown {
@@ -404,25 +376,20 @@ button {
     border-radius: 5px;
     box-shadow: 0 5px 10px 0 black;
     display: flex;
-
     align-items: flex-start;
     flex-direction: column;
   }
-
   &__section {
     &__container {
       width: 100%;
       display: flex;
       margin-bottom: 0.5rem;
     }
-
     &__item {
       width: 33%;
-
       overflow-wrap: break-word;
     }
   }
-
   &__name {
     font-size: 0.75rem;
     font-weight: bold !important;
@@ -443,7 +410,6 @@ button {
   font-size: 0.75rem;
   color: $panther-silver;
 }
-
 .cancel-button {
   margin-top: 1rem;
   position: relative;
@@ -452,9 +418,7 @@ button {
     cursor: pointer;
   }
 }
-
 ::v-deep .dimmed {
   background-color: rgba(0, 0, 0, 0.5);
 }
 </style>
-
