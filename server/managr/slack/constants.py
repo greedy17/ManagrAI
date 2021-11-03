@@ -47,15 +47,17 @@ CHAT_UPDATE = "chat.update"
 WORKSPACE_SCOPES = [
     "chat:write",
     "commands",
-    "im:write",
-    "incoming-webhook",
     "channels:read",
     "groups:read",
-    # "users:read",
-    # "users:read.email",
+    "im:write",
+    "incoming-webhook",
+    "channels:manage",
+    "groups:write",
+    "users:read",
+    "users:read.email",
 ]
 
-USER_SCOPES = ["identity.basic"]
+USER_SCOPES = ["channels:read"]
 
 # Link Types to determine which type of OAuth link to generate
 WORKSPACE = "WORKSPACE"

@@ -11,7 +11,7 @@ from django.conf import settings
 from dateutil import parser
 
 from managr.slack.models import UserSlackIntegration
-from managr.slack.helpers import block_builders
+from managr.slack.helpers import block_builders, requests
 from managr.slack import constants as slack_consts
 
 logger = logging.getLogger("managr")
@@ -309,4 +309,5 @@ def generate_call_block(call_res, resource_id=None):
     else:
         blocks.append(block_builders.simple_section("Call still processing"))
     return blocks
+
 

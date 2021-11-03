@@ -301,6 +301,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
         if organization_slack:
             channels = slack_requests.list_user_channels(
                 organization_slack.access_token,
+                request.user.slack_integration.slack_id,
                 cursor=cursor,
                 types=["public_channel", "private_channel"],
                 limit=100,
@@ -323,6 +324,58 @@ class SlackViewSet(viewsets.GenericViewSet,):
         else:
             users = {"users": [], "response_metadata": {}}
         return Response(status=status.HTTP_200_OK, data=users)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="update-zoom-channel",
+    )
+    def update_zoom_channel(self, request, *args, **kwargs):
+        slack_id = request.data.get("slack_id")
+        if slack_id:
+            slack = (
+                UserSlackIntegration.objects.filter(slack_id=slack_id)
+                .select_related("user")
+                .first()
+            )
+            if not slack:
+                return Response(
+                    status=status.HTTP_400,
+                    data={"success": False, "message": "Couldn't find your Slack account"},
+                )
+        slack.zoom_channel = request.data.get("zoom_channel")
+        slack.save()
+        return Response(status=status.HTTP_200_OK, data={"success": True})
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="update-recap-channel",
+    )
+    def update_recap_channel(self, request, *args, **kwargs):
+        slack_id = request.data.get("slack_id")
+        if slack_id:
+            slack = (
+                UserSlackIntegration.objects.filter(slack_id=slack_id)
+                .select_related("user")
+                .first()
+            )
+            if not slack:
+                return Response(
+                    status=status.HTTP_400,
+                    data={"success": False, "message": "Couldn't find your Slack account"},
+                )
+        response_data = {}
+        for user in request.data.get("users"):
+            user_acc = UserSlackIntegration.objects.filter(slack_id=slack_id).first()
+            if user_acc:
+                user_acc.recap_receivers.append(slack_id)
+                user_acc.save()
+        slack.recap_channel = request.data.get("recap_channel")
+        slack.save()
+        return Response(status=status.HTTP_200_OK, data={"success": True})
 
     @action(
         methods=["get"],

@@ -78,3 +78,9 @@ class OrgCustomSlackFormSerializer(serializers.ModelSerializer):
         for field in fields:
             fields_ref.append(CustomFormFieldSerializer(field).data)
         return fields_ref
+
+
+class UserFrontEndSlackIntegrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserSlackIntegration
+        fields = ("slack_id", "datetime_created", "channel", "zoom_channel")
