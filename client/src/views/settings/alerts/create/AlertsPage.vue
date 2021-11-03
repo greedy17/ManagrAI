@@ -150,7 +150,7 @@
         </div>
       </div>
 
-      <div v-if="user.userLevel !== 'MANAGER'" class="card__">
+      <div class="card__">
         <div class="card__header">
           <h3>Log <span style="color: #5f8cff">Zoom Meetings</span></h3>
         </div>
@@ -164,7 +164,7 @@
           <h4 style="margin-top: -0.5rem" v-else>Connect Zoom in order to activate</h4>
         </div>
       </div>
-      <div v-else class="card__">
+      <div v-if="user.userLevel == 'MANAGER'" class="card__">
         <div class="card__header">
           <h3>Zoom <span style="color: #5f8cff">Meeting Recaps</span></h3>
         </div>

@@ -12,15 +12,23 @@
       </p>
     </div>
 
-    <div style="margin-top: -2rem" class="centered col">
-      <div class="card">
+    <div style="margin-top: -2rem" class="centered">
+      <!-- <div class="card">
         <div :key="value" v-for="(key, value) in userTargetsOpts">
           <label for="key">{{ key.fullName }}</label>
           <input id="key" type="radio" />
         </div>
-      </div>
+      </div> -->
 
-      <div class="card centered">
+      <div class="card">
+        <div>
+          <select name="reipients" id="recipients">
+            <option :key="value" v-for="(key, value) in userTargetsOpts" :value="value">
+              {{ key.fullName }}
+            </option>
+          </select>
+        </div>
+
         <div>
           <div v-if="!channelName" class="row">
             <label>Select #channel</label>
@@ -345,7 +353,10 @@ export default {
   margin-top: 4rem;
 }
 .card {
-  width: 40vw;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  width: 60vw;
   height: 225px;
   background-color: $panther;
   border-radius: 0.5rem;
@@ -355,9 +366,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-.col {
-  flex-direction: column;
+  height: 60vh;
 }
 .row {
   display: flex;
