@@ -267,7 +267,6 @@ class SlackViewSet(viewsets.GenericViewSet,):
             )
         else:
             create_data = {"ok": False, "response_metadata": {}}
-        print(create_data)
         return Response(status=status.HTTP_200_OK, data=create_data)
 
     @action(
@@ -302,6 +301,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
         if organization_slack:
             channels = slack_requests.list_user_channels(
                 organization_slack.access_token,
+                request.user.slack_integration.slack_id,
                 cursor=cursor,
                 types=["public_channel", "private_channel"],
                 limit=100,
