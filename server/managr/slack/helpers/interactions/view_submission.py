@@ -682,11 +682,14 @@ def process_update_meeting_contact(payload, context):
     view_id = context.get(str("current_view_id"))
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     org = workflow.user.organization
-    # if check_contact_last_name(workflow.id):
-    # update_res = slack_requests.update_channel_message(
-    #     channel, ts, slack_access_token, block_set=block_set
-    # )
     access_token = org.slack_integration.access_token
+    if check_contact_last_name(workflow.id):
+        update_res = slack_requests.update_channel_message(
+                context.get("channel"),
+                context.get("timestamp"),
+                access_token,
+                block_set=get_block_set("initial_meeting_interaction", {"w": context.get("w")}),
+            )
     blocks = get_block_set("show_meeting_contacts", {"w": context.get("w")},)
     data = {
         "trigger_id": trigger_id,
