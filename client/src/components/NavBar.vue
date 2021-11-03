@@ -58,7 +58,7 @@
                 >Connect
               </router-link>
             </li>
-            <li>
+            <li v-if="hasSlack && hasNylas && hasZoom && hasSalesforce">
               <router-link active-class="active" :to="{ name: 'ListTemplates' }"
                 >Automate
               </router-link>
@@ -67,7 +67,33 @@
         </div>
       </div>
 
-      <div class="right">
+      <div v-if="hasSlack && hasNylas && hasZoom && hasSalesforce && !isAdmin" class="right">
+        <div class="tooltip">
+          <img style="height: 1.5rem" src="@/assets/images/blackhelp.png" class="tooltip__icon" />
+          <div class="tooltip__popup">
+            <div class="tooltip__popup__bold">Having issues?</div>
+            <div class="tip">Email Us: support@mymanagr.com</div>
+          </div>
+        </div>
+
+        <div>
+          <router-link :to="{ name: 'ProfilePage' }"
+            ><img src="@/assets/images/profile.png" style="height: 1.5rem" alt=""
+          /></router-link>
+        </div>
+
+        <div>
+          <router-link :to="{ name: 'Login' }"
+            ><img
+              @click="logOut"
+              src="@/assets/images/blacklogout.png"
+              alt=""
+              style="height: 1.5rem"
+          /></router-link>
+        </div>
+      </div>
+
+      <div v-else-if="isAdmin" class="right">
         <div class="tooltip">
           <img style="height: 1.5rem" src="@/assets/images/blackhelp.png" class="tooltip__icon" />
           <div class="tooltip__popup">
@@ -166,6 +192,18 @@ export default {
     },
     isAdmin() {
       return this.userIsLoggedIn && this.$store.state.user.isAdmin
+    },
+    hasSlack() {
+      return this.$store.state.user.slackRef
+    },
+    hasSalesforce() {
+      return this.$store.state.user.hasSalesforceIntegration
+    },
+    hasZoom() {
+      return this.$store.state.user.hasZoomIntegration
+    },
+    hasNylas() {
+      return this.$store.state.user.nylasRef
     },
   },
 }
