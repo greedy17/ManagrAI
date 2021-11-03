@@ -108,8 +108,13 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
     org = workflow.user.organization
 
     access_token = org.slack_integration.access_token
-    blocks = get_block_set("show_meeting_contacts", context,)
-
+    
+    private_metadata = {
+        "original_message_channel": payload["channel"]["id"],
+        "original_message_timestamp": payload["message"]["ts"],
+    }
+    private_metadata.update(context)
+    blocks = get_block_set("show_meeting_contacts", private_metadata,)
     data = {
         "trigger_id": trigger_id,
         # "view_id": view_id,
@@ -117,13 +122,11 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
             "type": "modal",
             "title": {"type": "plain_text", "text": "Contacts"},
             "blocks": blocks,
-            "private_metadata": json.dumps(context),
+            "private_metadata": json.dumps(private_metadata),
         },
     }
     if action == slack_const.VIEWS_UPDATE:
         data["view_id"] = payload["view"]["id"]
-
-    # private_metadata.update(context)
     try:
         res = slack_requests.generic_request(url, data, access_token=access_token)
     except InvalidBlocksException as e:
@@ -176,6 +179,8 @@ def process_edit_meeting_contact(payload, context):
                     "w": context.get("w"),
                     "tracking_id": context.get("tracking_id"),
                     "current_view_id": view_id,
+                    "channel": context.get("channel"),
+                    "timestamp": context.get("timestamp")
                 }
             ),
         },

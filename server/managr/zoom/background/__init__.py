@@ -250,7 +250,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
             )
             participants.append(
                 {
-                    "name": "first",
+                    "name": "not mike",
                     "id": "",
                     "user_email": f"{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}@{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}.com",
                 }

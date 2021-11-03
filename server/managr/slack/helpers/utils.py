@@ -316,8 +316,7 @@ def check_contact_last_name(meeting_id):
     meeting = workflow.meeting
     contacts = meeting.participants
     for contact in contacts:
-        print(contact)
-        if hasattr(contact, "LastName"):
-            continue
-        return False
+        contactData = contact.get("secondary_data")
+        if not contactData["LastName"]:
+            return False
     return True
