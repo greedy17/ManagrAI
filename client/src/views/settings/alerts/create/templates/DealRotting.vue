@@ -186,7 +186,32 @@
             </div>
           </div>
 
-          <div class="delivery__row">
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: flex-start;
+              padding: 0.5rem;
+            "
+          >
+            <div v-if="!channelName" class="row__">
+              <label>Select #channel</label>
+              <ToggleCheckBox
+                style="margin: 0.25rem"
+                @input="changeCreate"
+                :value="create"
+                offColor="#199e54"
+                onColor="#199e54"
+              />
+              <label>Create #channel</label>
+            </div>
+
+            <label v-else for="channel" style="font-weight: bold"
+              >Alert will send to
+              <span style="color: #199e54; font-size: 1.2rem">{{ channelName }}</span>
+              channel</label
+            >
             <div
               style="
                 display: flex;
@@ -194,15 +219,8 @@
                 align-items: center;
                 justify-content: flex-start;
               "
+              v-if="create"
             >
-              <label v-if="!channelName" for="channel" style="font-weight: bold"
-                >Create a channel for your alert:</label
-              >
-              <label v-else for="channel" style="font-weight: bold"
-                >Alert will send to
-                <span style="color: #199e54; font-size: 1.2rem">{{ channelName }}</span>
-                channel</label
-              >
               <input
                 v-model="channelName"
                 class="search__input"
@@ -222,6 +240,49 @@
                 </button>
                 <button v-else class="disabled__button">Create Channel</button>
               </div>
+            </div>
+
+            <div v-else>
+              <FormField>
+                <template v-slot:input>
+                  <DropDownSearch
+                    :items.sync="userChannelOpts.channels"
+                    :itemsRef.sync="form.field._recipients.value"
+                    v-model="form.field.recipients.value"
+                    @input="form.field.recipients.validate()"
+                    displayKey="name"
+                    valueKey="id"
+                    nullDisplay="Channels"
+                    :hasNext="!!userChannelOpts.nextCursor"
+                    @load-more="listChannels(userChannelOpts.nextCursor)"
+                    searchable
+                    local
+                  >
+                    <template v-slot:tn-dropdown-option="{ option }">
+                      <img
+                        v-if="option.isPrivate == true"
+                        class="card-img"
+                        style="width: 1rem; height: 1rem; margin-right: 0.2rem"
+                        src="@/assets/images/lockAsset.png"
+                      />
+                      {{ option['name'] }}
+                    </template>
+                  </DropDownSearch>
+                </template>
+              </FormField>
+
+              <p
+                v-if="form.field.recipients.value.length > 0"
+                @click="removeTarget"
+                :class="form.field.recipients.value ? 'selected__item' : 'visible'"
+              >
+                <img
+                  src="@/assets/images/remove.png"
+                  style="height: 1rem; margin-right: 0.25rem"
+                  alt=""
+                />
+                {{ form.field._recipients.value.name }}
+              </p>
             </div>
           </div>
         </div>
@@ -356,10 +417,12 @@ export default {
   data() {
     return {
       channelOpts: new SlackListResponse(),
+      userChannelOpts: new SlackListResponse(),
       savingTemplate: false,
       listVisible: true,
       dropdownVisible: true,
       channelCreated: false,
+      create: true,
       NON_FIELD_ALERT_OPTS,
       stringRenderer,
       newChannel: {},
@@ -411,6 +474,7 @@ export default {
   async created() {
     if (this.user.slackRef) {
       await this.listChannels()
+      await this.listUserChannels()
     }
     if (this.user.userLevel == 'MANAGER') {
       await this.users.refresh()
@@ -433,6 +497,24 @@ export default {
     },
   },
   methods: {
+    changeCreate() {
+      this.create = !this.create
+      if (
+        this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value !==
+        'SLACK_CHANNEL'
+      ) {
+        this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value =
+          'SLACK_CHANNEL'
+      }
+    },
+    async listUserChannels(cursor = null) {
+      const res = await SlackOAuth.api.listUserChannels(cursor)
+      const results = new SlackListResponse({
+        channels: [...this.userChannelOpts.channels, ...res.channels],
+        responseMetadata: { nextCursor: res.nextCursor },
+      })
+      this.userChannelOpts = results
+    },
     removeDay() {
       this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = ''
     },
@@ -481,6 +563,7 @@ export default {
       this.$router.push({ name: 'CreateNew' })
     },
     async createChannel(name) {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
       const res = await SlackOAuth.api.createChannel(name)
       if (res.channel) {
         this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = res.channel
@@ -553,6 +636,13 @@ export default {
             type: 'error',
             timeout: 2000,
           })
+        } else {
+          this.$Alert.alert({
+            message: 'Something went wrong..Please try again',
+            type: 'error',
+            timeout: 2000,
+          })
+          console.log(res.error)
         }
       }
     },
@@ -798,7 +888,6 @@ export default {
   beforeMount() {
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
     this.alertTemplateForm.field.title.value = 'Deal Rotting'
-    this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
       'Hey  <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong>, hasnt been touched since <strong>{ Opportunity.LastActivityDate }</strong>'
   },
