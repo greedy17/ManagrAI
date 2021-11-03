@@ -20,6 +20,7 @@ from managr.slack.helpers.utils import (
     block_set,
     map_fields_to_type,
     block_finder,
+    check_contact_last_name
 )
 
 from managr.slack.helpers import block_builders, block_sets
@@ -69,7 +70,7 @@ def generate_contact_group(index, contact, instance_url):
         contact_secondary_data.get("LastName")
         if contact_secondary_data.get("LastName", "")
         and len(contact_secondary_data.get("LastName", ""))
-        else "N/A"
+        else "N/A :exclamation: *Required*"
     )
 
     email = contact.get("email") if contact.get("email", "") not in ["", None] else "N/A"
@@ -339,6 +340,7 @@ def initial_meeting_interaction_block_set(context):
     resource = workflow.resource
     meeting = workflow.meeting
     workflow_id_param = "w=" + context.get("w")
+    contact_check = check_contact_last_name(context.get("w"))
     user_timezone = meeting.zoom_account.timezone
     start_time = meeting.start_time
     end_time = meeting.end_time
@@ -360,10 +362,7 @@ def initial_meeting_interaction_block_set(context):
         "Map to a different Account / Opportunity :mag_right:",
         action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
     )
-    if not resource:
-        title_section = _initial_interaction_message()
-    else:
-        title_section = _initial_interaction_message(resource.name, workflow.resource_type)
+    title_section = _initial_interaction_message(resource.name, workflow.resource_type) if resource else _initial_interaction_message()
     default_blocks = [
         block_builders.simple_section(title_section, text_type="mrkdwn"),
         {"type": "divider"},

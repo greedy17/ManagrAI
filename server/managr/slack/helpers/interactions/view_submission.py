@@ -693,7 +693,6 @@ def process_update_meeting_contact(payload, context):
             "type": "modal",
             "callback_id": slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
             "title": {"type": "plain_text", "text": "Contacts"},
-            "submit": {"type": "plain_text", "text": "Submit"},
             "blocks": blocks,
         },
     }
