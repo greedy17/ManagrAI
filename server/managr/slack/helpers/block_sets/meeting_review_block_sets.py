@@ -38,7 +38,7 @@ def _initial_interaction_message(resource_name=None, resource_type=None, missing
     # replace opp, review disregard
     if missing_attendees:
         return "Meeting mapped successfully:dart: Some attendees have missing info:exclamation:"
-    return f"Meeting mapped successfully:dart:"
+    return f"Meeting mapped successfully:dart: And contacts look good :+1:"
 
 
 def _initial_meeting_step_one_message(resource_type=None):
