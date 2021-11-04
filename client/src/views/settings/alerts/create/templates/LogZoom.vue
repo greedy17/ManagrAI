@@ -110,12 +110,12 @@
       </div>
       <div v-if="channelCreated || zoomChannel" style="margin-top: 2rem">
         <div v-if="!create">
-          <button class="green__button" @click="handleZoomUpdate(zoomChannel)">
+          <button class="green__button bouncy" @click="handleZoomUpdate(zoomChannel)">
             Activate Channel
           </button>
         </div>
         <div v-else>
-          <button class="green__button" @click="handleZoomUpdate(createdZoomChannel)">
+          <button class="green__button bouncy" @click="handleZoomUpdate(createdZoomChannel)">
             Activate Channel
           </button>
         </div>
@@ -303,6 +303,17 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
+@keyframes bounce {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-6px);
+  }
+}
+.bouncy {
+  animation: bounce 0.2s infinite alternate;
+}
 .logZoomPage {
   height: 100vh;
   color: white;

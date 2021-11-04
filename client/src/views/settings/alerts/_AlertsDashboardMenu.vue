@@ -2,30 +2,29 @@
   <div>
     <div class="sidenav sidenav__background">
       <div>
-        <h2 class="title">Smart Alerts</h2>
+        <h2 class="title">Workflow Automations</h2>
       </div>
       <router-link exact-active-class="active" :to="{ name: 'CreateNew' }">
         <div class="row">
-          <img
-            src="@/assets/images/template.png"
-            style="height: 1rem; margin-right: 0.5rem"
-            alt=""
-          />
-          <h3>Templates</h3>
+          <img src="@/assets/images/trophy.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
+          <h3>Popular Workflows <span style="margin-left: 0.25rem" class="counter">5</span></h3>
+        </div>
+      </router-link>
+
+      <router-link exact-active-class="active" :to="{ name: 'ListTemplates' }">
+        <div class="row">
+          <img src="@/assets/images/star.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
+          <h3>
+            Saved Workflows
+            <span style="margin-left: 0.25rem" class="counter">{{ templates.list.length }}</span>
+          </h3>
         </div>
       </router-link>
 
       <router-link exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
         <div class="row">
           <img src="@/assets/images/build.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
-          <h3>Build your own</h3>
-        </div>
-      </router-link>
-
-      <router-link exact-active-class="active" :to="{ name: 'ListTemplates' }">
-        <div class="row">
-          <img src="@/assets/images/edit.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
-          <h3>Saved Alerts</h3>
+          <h3>Customized Workflows</h3>
         </div>
       </router-link>
 
@@ -59,11 +58,28 @@
 
 <script>
 import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePreview'
+import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import AlertTemplate, {
+  AlertGroupForm,
+  AlertTemplateForm,
+  AlertConfigForm,
+  AlertMessageTemplateForm,
+  AlertOperandForm,
+} from '@/services/alerts/'
 
 export default {
   name: 'AlertsDashboardMenu',
   components: {
     SlackMessagePreview,
+    CollectionManager,
+  },
+  data() {
+    return {
+      templates: CollectionManager.create({ ModelClass: AlertTemplate }),
+    }
+  },
+  async created() {
+    this.templates.refresh()
   },
   computed: {
     isHome() {
@@ -86,9 +102,15 @@ export default {
   align-items: center;
   flex-direction: column;
 }
+.counter {
+  border: 2px solid white;
+  border-radius: 0.3rem;
+  padding: 0.1rem 0.3rem;
+  font-size: 0.75rem;
+}
 .sidenav {
   height: 100%;
-  width: 15vw;
+  width: 18vw;
   position: fixed;
   z-index: 1;
   left: 0;
@@ -111,9 +133,13 @@ a:hover {
   color: white;
   cursor: pointer;
 }
-.active {
-  color: $dark-green;
+.active div {
+  color: white;
+  background-color: $dark-green;
+  border-radius: 0.25rem;
+  padding: 0 0.3rem;
   font-weight: bold;
+  margin-left: -0.35rem;
 }
 .title {
   color: white;

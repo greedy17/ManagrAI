@@ -9,68 +9,6 @@
       </h2>
     </div>
 
-    <div
-      v-if="pageNumber === 0"
-      style="margin: auto; text-align: center; width: 30%; margin-bottom: 1rem; margin-top: -0.5rem"
-      title="50.00%"
-    >
-      <div
-        style="
-          text-align: left;
-          margin: 2px auto;
-          font-size: 0px;
-          line-height: 0px;
-          border: solid 1px #aaaaaa;
-          background: #0e572e;
-          overflow: hidden;
-          border-radius: 0.25rem;
-        "
-      >
-        <div
-          style="
-            font-size: 0px;
-            line-height: 0px;
-            height: 6px;
-            min-width: 0%;
-            max-width: 50%;
-            width: 50%;
-            background: #199e54;
-          "
-        ></div>
-      </div>
-    </div>
-
-    <div
-      v-if="pageNumber === 1"
-      style="margin: auto; text-align: center; width: 30%; margin-bottom: 1rem; margin-top: -0.5rem"
-      title="50.00%"
-    >
-      <div
-        style="
-          text-align: left;
-          margin: 2px auto;
-          font-size: 0px;
-          line-height: 0px;
-          border: solid 1px #aaaaaa;
-          background: #0e572e;
-          overflow: hidden;
-          border-radius: 0.25rem;
-        "
-      >
-        <div
-          style="
-            font-size: 0px;
-            line-height: 0px;
-            height: 6px;
-            min-width: 0%;
-            max-width: 100%;
-            width: 100%;
-            background: #199e54;
-          "
-        ></div>
-      </div>
-    </div>
-
     <div v-if="pageNumber === 0" class="alert__column">
       <template>
         <div
@@ -283,12 +221,6 @@
       </template>
     </div>
 
-    <div v-if="pageNumber === 1" class="alert__column">
-      <div class="collection">
-        <AlertSummary :form="alertTemplateForm" />
-      </div>
-    </div>
-
     <div
       :key="index"
       v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
@@ -301,39 +233,12 @@
     </div>
 
     <div class="bottom_locked">
-      <button
-        @click="goToTemplates"
-        v-if="pageNumber === 0"
-        style="margin-right: 0.5rem"
-        class="gold__button"
-      >
-        <img src="@/assets/images/back.png" alt="" />
-        Templates
-      </button>
-      <button @click="onPreviousPage" v-else style="margin-right: 0.5rem" class="gold__button">
-        Prev
-      </button>
-
-      <div v-if="pageNumber < 1">
-        <button
-          v-if="
-            !alertTemplateForm.field.alertConfig.groups
-              .map((fields) => fields.isValid)
-              .includes(false)
-          "
-          @click="onNextPage"
-          class="purple__button"
-        >
-          Next
-        </button>
-        <button v-else class="disabled__button">Next</button>
-      </div>
-
       <PulseLoadingSpinnerButton
-        v-else
         :loading="savingTemplate"
         :class="
-          !alertTemplateForm.isValid || savingTemplate ? 'disabled__button' : 'purple__button'
+          !alertTemplateForm.isValid || savingTemplate
+            ? 'disabled__button'
+            : 'purple__button bouncy'
         "
         text="Activate alert"
         @click.stop="onSave"
@@ -899,6 +804,17 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
+@keyframes bounce {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-6px);
+  }
+}
+.bouncy {
+  animation: bounce 0.2s infinite alternate;
+}
 ::v-deep .input-content {
   width: 12vw;
   background-color: white;
@@ -1103,6 +1019,7 @@ input {
   flex-direction: row;
   justify-content: center;
   align-items: center;
+  margin-top: 4rem;
 }
 .alert__row {
   display: flex;

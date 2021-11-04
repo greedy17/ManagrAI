@@ -39,12 +39,18 @@
               </router-link>
             </li>
             <li>
-              <router-link active-class="active" :to="{ name: 'ListTemplates' }"
+              <router-link
+                v-if="hasSlack && hasNylas && hasZoom && hasSalesforce"
+                active-class="active"
+                :to="{ name: 'ListTemplates' }"
                 >Automate
               </router-link>
             </li>
             <li>
-              <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
+              <router-link
+                v-if="hasSlack && hasNylas && hasZoom && hasSalesforce"
+                exact-active-class="active"
+                :to="{ name: 'InviteUsers' }"
                 >Invite</router-link
               >
             </li>
@@ -124,11 +130,21 @@
 
 <script>
 import DropDownMenu from '@/components/forms/DropDownMenu'
+import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+
+import AlertTemplate, {
+  AlertGroupForm,
+  AlertTemplateForm,
+  AlertConfigForm,
+  AlertMessageTemplateForm,
+  AlertOperandForm,
+} from '@/services/alerts/'
 
 export default {
   name: 'NavBar',
   components: {
     DropDownMenu,
+    CollectionManager,
   },
   props: {},
   data() {
@@ -141,10 +157,12 @@ export default {
       dropdownOpen: false,
       userInitials: this.$store.state.user.firstName[0] + this.$store.state.user.lastName[0],
       userLevel: this.$store.state.user.userLevel,
+      templates: CollectionManager.create({ ModelClass: AlertTemplate }),
     }
   },
 
   async created() {
+    this.templates.refresh()
     if (this.isAdmin) {
       this.items = [
         { key: 'Integrations', value: 'Integrations' },

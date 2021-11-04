@@ -1,13 +1,46 @@
 <template>
   <div class="alerts-page">
     <div class="col">
-      <h2 style="color: black" class="title">Smart Alert Templates</h2>
-      <p style="color: #5d5e5e" class="sub__">
-        Keep your pipeline up to date by activating smart alerts
-      </p>
+      <h2 style="color: black; margin-top: -0.5rem" class="title">Popular Workflow Automations</h2>
+      <p style="color: #5d5e5e" class="sub__">Activate the workflows that are relevant to you</p>
     </div>
 
     <div class="alert_cards">
+      <div class="card__">
+        <div class="card__header">
+          <h3>
+            Log <span style="color: #5f8cff">Zoom Meetings</span>
+            <img
+              v-if="hasZoomIntegration && hasZoomChannel"
+              class="dot"
+              src="@/assets/images/dotted.png"
+              alt=""
+            />
+          </h3>
+        </div>
+        <div class="row">
+          <img style="height: 2.25rem" src="@/assets/images/zoom.png" alt="" />
+        </div>
+        <div style="margin-top: 2rem">
+          <button
+            v-if="hasZoomIntegration && !hasZoomChannel"
+            @click="goToLogZoom"
+            class="orange_button bouncy"
+          >
+            Activate
+          </button>
+          <h4 style="margin-top: -0.5rem" v-if="!hasZoomIntegration">
+            Connect Zoom in order to activate
+          </h4>
+          <button
+            v-if="hasZoomIntegration && hasZoomChannel"
+            @click="goToLogZoom"
+            class="orange_button"
+          >
+            Change Channel
+          </button>
+        </div>
+      </div>
       <div class="card__">
         <div class="card__header">
           <h3 style="font-size: 1.3rem">
@@ -37,7 +70,7 @@
           <button
             v-if="hasSalesforceIntegration && hasSlackIntegration"
             @click="goToCloseDateApproaching"
-            class="orange_button"
+            :class="templates.list.length < 1 ? 'orange_button bouncy' : 'orange_button'"
           >
             Activate
           </button>
@@ -150,20 +183,6 @@
         </div>
       </div>
 
-      <div class="card__">
-        <div class="card__header">
-          <h3>Log <span style="color: #5f8cff">Zoom Meetings</span></h3>
-        </div>
-        <div class="row">
-          <img style="height: 2.25rem" src="@/assets/images/zoom.png" alt="" />
-        </div>
-        <div style="margin-top: 2rem">
-          <button v-if="hasZoomIntegration" @click="goToLogZoom" class="orange_button">
-            Activate
-          </button>
-          <h4 style="margin-top: -0.5rem" v-else>Connect Zoom in order to activate</h4>
-        </div>
-      </div>
       <!-- <div v-if="user.userLevel == 'MANAGER'" class="card__">
         <div class="card__header">
           <h3>Zoom <span style="color: #5f8cff">Meeting Recaps</span></h3>
@@ -232,6 +251,7 @@ import {
 } from '@/services/salesforce'
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
+
 export default {
   name: 'AlertsPage',
   components: {
@@ -262,7 +282,11 @@ export default {
       selectedBindings: [],
       fields: CollectionManager.create({ ModelClass: SObjectField }),
       users: CollectionManager.create({ ModelClass: User }),
+      templates: CollectionManager.create({ ModelClass: AlertTemplate }),
     }
+  },
+  async created() {
+    this.templates.refresh()
   },
   methods: {
     showList() {
@@ -366,6 +390,9 @@ export default {
     user() {
       return this.$store.state.user
     },
+    hasZoomChannel() {
+      return this.$store.state.user.slackAccount.zoomChannel
+    },
     selectedResourceType: {
       get() {
         return this.alertTemplateForm.field.resourceType.value
@@ -377,6 +404,7 @@ export default {
   },
   mounted() {
     console.log(this.user)
+    console.log(this.templates.list)
   },
 }
 </script>
@@ -391,10 +419,34 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
+
+@keyframes bounce {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-6px);
+  }
+}
+.bouncy {
+  animation: bounce 0.2s infinite alternate;
+}
+
+.dot {
+  filter: invert(40%) sepia(96%) saturate(431%) hue-rotate(94deg) brightness(101%) contrast(82%);
+  height: 0.5rem;
+  border-radius: 50%;
+  margin-left: 0.2rem;
+  margin-bottom: 0.2rem;
+}
+.activated {
+  color: $dark-green;
+  font-weight: bold;
+  margin-top: -0.5rem;
+}
 .quill-editor {
   width: 100%;
 }
-
 textarea {
   @extend .textarea;
 }
@@ -412,7 +464,7 @@ textarea {
   }
 }
 .alerts-page {
-  margin-left: 8vw;
+  margin-left: 14vw;
   margin-top: 4rem;
   &__previous-step {
     @include muted-font(12);
@@ -449,8 +501,7 @@ textarea {
 .card__ {
   background-color: $panther;
   border: none;
-  width: 22.5vw;
-  height: 29vh;
+  width: 20vw;
   padding: 1.25rem;
   margin-right: 1.25rem;
   margin-bottom: 2rem;

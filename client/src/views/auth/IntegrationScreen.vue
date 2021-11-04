@@ -26,6 +26,12 @@
             <div class="card__header">
               <img class="card-img" src="@/assets/images/salesforce.png" />
               <h2 class="card__title">Salesforce</h2>
+              <img
+                v-if="hasSalesforceIntegration"
+                class="dot"
+                src="@/assets/images/dot.png"
+                alt=""
+              />
             </div>
           </div>
           <div>
@@ -61,6 +67,17 @@
             <div class="card__header">
               <img style="height: 3rem" src="@/assets/images/slackLogo.png" />
               <h2 class="card__title">Slack</h2>
+              <img
+                v-if="
+                  !(
+                    (!orgHasSlackIntegration && userCanIntegrateSlack) ||
+                    (orgHasSlackIntegration && !hasSlackIntegration)
+                  )
+                "
+                class="dot"
+                src="@/assets/images/dot.png"
+                alt=""
+              />
             </div>
           </div>
           <p class="card-text">Interact with Managr through Slack</p>
@@ -113,6 +130,7 @@
           <div class="card__header">
             <img class="card-img card-img__radius" src="@/assets/images/zoom.png" />
             <h2 class="card__title">Zoom</h2>
+            <img v-if="hasZoomIntegration" class="dot" src="@/assets/images/dot.png" alt="" />
           </div>
           <p class="card-text">Activates the meeting workflow automation.</p>
           <div v-if="!hasZoomIntegration" class="card__body">
@@ -157,6 +175,7 @@
             />
             <img class="card-img" src="@/assets/images/outlookMail.png" style="height: 3rem" />
             <h2 class="card__title">Calendar</h2>
+            <img v-if="hasNylasIntegration" class="dot" src="@/assets/images/dot.png" alt="" />
           </div>
 
           <p class="card-text">Accesses your upcoming meetings + attendees</p>
@@ -191,7 +210,17 @@
           />
         </div> -->
         </div>
-        <div v-if="allIntegrated" class="card">
+        <div
+          v-if="
+            (!(!orgHasSlackIntegration && userCanIntegrateSlack) ||
+              (orgHasSlackIntegration && !hasSlackIntegration)) &&
+            hasNylasIntegration &&
+            hasZoomIntegration &&
+            hasSalesforceIntegration &&
+            templates.list.length < 1
+          "
+          class="card"
+        >
           <div class="card__header centered">
             <h2>Last Step...</h2>
           </div>
@@ -514,15 +543,25 @@ import SalesloftAccount from '@/services/salesloft'
 import GongAccount from '@/services/gong'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import GoogleButton from '@/components/GoogleButton'
+import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+
+import AlertTemplate, {
+  AlertGroupForm,
+  AlertTemplateForm,
+  AlertConfigForm,
+  AlertMessageTemplateForm,
+  AlertOperandForm,
+} from '@/services/alerts/'
 
 export default {
   name: 'Integrations',
-  components: { PulseLoadingSpinnerButton, GoogleButton },
+  components: { PulseLoadingSpinnerButton, GoogleButton, CollectionManager },
   data() {
     return {
       generatingToken: false,
       authLink: null,
       selectedIntegration: null,
+      templates: CollectionManager.create({ ModelClass: AlertTemplate }),
     }
   },
   methods: {
@@ -613,6 +652,7 @@ export default {
     },
   },
   async created() {
+    this.templates.refresh()
     // if there is a code assume an integration has begun
     if (this.$route.query.code) {
       this.generatingToken = true
@@ -733,6 +773,7 @@ export default {
   },
   mounted() {
     console.log(this.user)
+    console.log(this.templates)
   },
 }
 </script>
@@ -748,6 +789,14 @@ export default {
   100% {
     transform: translateY(-6px);
   }
+}
+
+.dot {
+  filter: invert(40%) sepia(96%) saturate(431%) hue-rotate(94deg) brightness(101%) contrast(82%);
+  height: 0.4rem;
+  border-radius: 50%;
+  margin-left: 0.4rem;
+  margin-bottom: 0.2rem;
 }
 .onboarding {
   filter: blur(10px);
