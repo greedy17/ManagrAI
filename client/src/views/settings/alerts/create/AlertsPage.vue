@@ -25,7 +25,7 @@
           <button
             v-if="hasZoomIntegration && !hasZoomChannel"
             @click="goToLogZoom"
-            class="orange_button bouncy"
+            :class="!user.isAdmin ? 'orange_button bouncy' : 'orange_button'"
           >
             Activate
           </button>
@@ -70,7 +70,9 @@
           <button
             v-if="hasSalesforceIntegration && hasSlackIntegration"
             @click="goToCloseDateApproaching"
-            :class="templates.list.length < 1 ? 'orange_button bouncy' : 'orange_button'"
+            :class="
+              templates.list.length < 1 && !user.isAdmin ? 'orange_button bouncy' : 'orange_button'
+            "
           >
             Activate
           </button>

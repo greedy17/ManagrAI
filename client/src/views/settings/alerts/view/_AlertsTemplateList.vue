@@ -94,7 +94,7 @@
           </template>
         </div>
 
-        <div v-if="user.isAdmin">
+        <div v-if="!user.isAdmin">
           <div class="card__ keep-activating" v-if="templates.list.length == 1">
             <h3 style="color: #fa646a" class="card__header">
               Only {{ templates.list.length }} workflow active

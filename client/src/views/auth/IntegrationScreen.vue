@@ -1,6 +1,6 @@
 <template>
   <div class="integrations">
-    <div v-if="user.isAdmin">
+    <div v-if="!user.isAdmin">
       <div style="text-align: center">
         <h2 class="title">Welcome to Managr!</h2>
         <p
