@@ -13,6 +13,7 @@ from dateutil import parser
 from managr.slack.models import UserSlackIntegration
 from managr.slack.helpers import block_builders, requests
 from managr.slack import constants as slack_consts
+from managr.salesforce.models import MeetingWorkflow
 
 logger = logging.getLogger("managr")
 
@@ -310,4 +311,12 @@ def generate_call_block(call_res, resource_id=None):
         blocks.append(block_builders.simple_section("Call still processing"))
     return blocks
 
-
+def check_contact_last_name(meeting_id):
+    workflow = MeetingWorkflow.objects.get(id=meeting_id)
+    meeting = workflow.meeting
+    contacts = meeting.participants
+    for contact in contacts:
+        contactData = contact.get("secondary_data")
+        if not contactData["LastName"]:
+            return False
+    return True

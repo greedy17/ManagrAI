@@ -20,6 +20,7 @@ from managr.slack.helpers.utils import (
     block_set,
     map_fields_to_type,
     block_finder,
+    check_contact_last_name
 )
 
 from managr.slack.helpers import block_builders, block_sets
@@ -30,12 +31,14 @@ from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 logger = logging.getLogger("managr")
 
 
-def _initial_interaction_message(resource_name=None, resource_type=None):
+def _initial_interaction_message(resource_name=None, resource_type=None, missing_attendees=False):
     if not resource_type:
-        return "Your meeting just ended! :calendar:"
+        return "Your meeting just ended :calendar:" 
 
     # replace opp, review disregard
-    return f"Your meeting just ended! :calendar: Please update _{resource_type}_ *{resource_name}*"
+    if missing_attendees:
+        return "Meeting mapped successfully:dart: Some attendees have missing info:exclamation:"
+    return f"Meeting mapped successfully:dart: And contacts look good :+1:"
 
 
 def _initial_meeting_step_one_message(resource_type=None):
@@ -69,7 +72,7 @@ def generate_contact_group(index, contact, instance_url):
         contact_secondary_data.get("LastName")
         if contact_secondary_data.get("LastName", "")
         and len(contact_secondary_data.get("LastName", ""))
-        else "N/A"
+        else "N/A :exclamation: *Required*"
     )
 
     email = contact.get("email") if contact.get("email", "") not in ["", None] else "N/A"
@@ -158,13 +161,13 @@ def add_to_cadence_block_set(context):
 @block_set(required_context=["w"])
 def meeting_contacts_block_set(context):
     # if this is a returning view it will also contain the selected contacts
-
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     meeting = workflow.meeting
-
+    print(context)
     contacts = meeting.participants
     sf_account = meeting.zoom_account.user.salesforce_account
-
+    channel = f"channel={context.get('original_message_channel')}"
+    timestamp = f"timestamp={context.get('original_message_timestamp')}"
     block_sets = [
         {
             "type": "header",
@@ -204,7 +207,7 @@ def meeting_contacts_block_set(context):
                         "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
                         "action_id": action_with_params(
                             slack_const.ZOOM_MEETING__EDIT_CONTACT,
-                            params=[workflow_id_param, tracking_id_param],
+                            params=[workflow_id_param, tracking_id_param, channel, timestamp],
                         ),
                         "style": "primary",
                     },
@@ -214,7 +217,7 @@ def meeting_contacts_block_set(context):
                         "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
                         "action_id": action_with_params(
                             slack_const.ZOOM_MEETING__REMOVE_CONTACT,
-                            params=[workflow_id_param, tracking_id_param],
+                            params=[workflow_id_param, tracking_id_param, channel, timestamp],
                         ),
                         "style": "danger",
                     },
@@ -250,7 +253,7 @@ def meeting_contacts_block_set(context):
                 "elements": [
                     {
                         "type": "button",
-                        "text": {"type": "plain_text", "text": "Click To Select for Editing"},
+                        "text": {"type": "plain_text", "text": "Edit Contact"},
                         "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
                         "action_id": action_with_params(
                             slack_const.ZOOM_MEETING__EDIT_CONTACT,
@@ -339,6 +342,7 @@ def initial_meeting_interaction_block_set(context):
     resource = workflow.resource
     meeting = workflow.meeting
     workflow_id_param = "w=" + context.get("w")
+    contact_check = check_contact_last_name(context.get("w"))
     user_timezone = meeting.zoom_account.timezone
     start_time = meeting.start_time
     end_time = meeting.end_time
@@ -357,15 +361,22 @@ def initial_meeting_interaction_block_set(context):
     create_change_button = block_builders.section_with_button_block(
         "Find Opportunity",
         str(workflow.id),
-        "Map to a different Account / Opportunity :mag_right:",
+        "Map to a different Opportunity :mag_right:",
         action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
     )
-    if not resource:
-        title_section = _initial_interaction_message()
-    else:
-        title_section = _initial_interaction_message(resource.name, workflow.resource_type)
+    
+    if workflow.resource_type:
+        title_section_text = _initial_interaction_message(resource.name, workflow.resource_type) if contact_check else _initial_interaction_message(resource.name, workflow.resource_type, True)
+        title_section_color = "primary" if contact_check else "danger"  
+        title_section = block_builders.section_with_button_block("Review Attendees", str(workflow.id),title_section_text,
+                action_id=action_with_params(
+                    slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,]
+                ),style=title_section_color)
+    else: 
+        title_section = block_builders.section_with_button_block("Map to Opportunity", str(workflow.id),_initial_interaction_message(),
+                action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,style="primary")
     default_blocks = [
-        block_builders.simple_section(title_section, text_type="mrkdwn"),
+        title_section,
         {"type": "divider"},
         block_builders.section_with_accessory_block(
             f"*{meeting.topic}*\n{formatted_start} - {formatted_end}\n Attendees: {meeting.participants_count}",
@@ -375,23 +386,11 @@ def initial_meeting_interaction_block_set(context):
             text_type="mrkdwn",
         ),
     ]
-
-    create_contacts_button = block_builders.simple_button_block(
-        "Review Attendees",
-        str(workflow.id),
-        action_id=action_with_params(
-            slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,]
-        ),
-    )
-
-    create_contacts_block = block_builders.actions_block([create_contacts_button])
     blocks = [
         *default_blocks,
-        create_contacts_block,
-        {"type": "divider"},
     ]
     if workflow.resource_type:
-        blocks.insert(len(blocks) - 1, create_change_button)
+        blocks.insert(2, create_change_button)
 
     action_blocks = []
     if (
@@ -406,7 +405,7 @@ def initial_meeting_interaction_block_set(context):
                 style="primary",
             ),
         )
-    elif workflow.resource_type == slack_const.FORM_RESOURCE_LEAD:
+    if workflow.resource_type == slack_const.FORM_RESOURCE_LEAD:
         action_blocks.append(
             block_builders.simple_button_block(
                 "Convert Lead",
@@ -416,15 +415,6 @@ def initial_meeting_interaction_block_set(context):
                 ),
                 style="primary",
             ),
-        )
-    else:
-        action_blocks.append(
-            block_builders.simple_button_block(
-                "Map to Opportunity or Account",
-                str(workflow.id),
-                action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
-                style="primary",
-            )
         )
 
     if workflow.resource_type:
@@ -436,16 +426,9 @@ def initial_meeting_interaction_block_set(context):
                 style="danger",
             )
         )
-    else:
-        action_blocks.append(
-            block_builders.simple_button_block(
-                "Hide",
-                str(workflow.id),
-                action_id=slack_const.ZOOM_MEETING__DISREGARD_REVIEW,
-                style="danger",
-            )
-        )
-    blocks.append(block_builders.actions_block(action_blocks))
+    if contact_check and workflow.resource_type:
+        blocks.append({"type": "divider"})
+        blocks.append(block_builders.actions_block(action_blocks))
     return blocks
 
 

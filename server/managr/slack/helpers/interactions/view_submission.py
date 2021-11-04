@@ -31,7 +31,7 @@ from managr.slack import constants as slack_const
 from managr.slack.models import OrgCustomSlackFormInstance
 from managr.slack.helpers import block_builders
 from managr.slack.helpers import requests as slack_requests
-from managr.slack.helpers.utils import action_with_params, NO_OP, processor, block_finder
+from managr.slack.helpers.utils import action_with_params, NO_OP, processor, block_finder, check_contact_last_name
 from managr.slack.helpers.block_sets import get_block_set
 from managr.salesforce.adapter.models import ContactAdapter, OpportunityAdapter, TaskAdapter
 from managr.zoom import constants as zoom_consts
@@ -683,10 +683,15 @@ def process_update_meeting_contact(payload, context):
     trigger_id = payload["trigger_id"]
     view_id = context.get(str("current_view_id"))
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-
     org = workflow.user.organization
-
     access_token = org.slack_integration.access_token
+    if check_contact_last_name(workflow.id):
+        update_res = slack_requests.update_channel_message(
+                context.get("channel"),
+                context.get("timestamp"),
+                access_token,
+                block_set=get_block_set("initial_meeting_interaction", {"w": context.get("w")}),
+            )
     blocks = get_block_set("show_meeting_contacts", {"w": context.get("w")},)
     data = {
         "trigger_id": trigger_id,
@@ -695,7 +700,6 @@ def process_update_meeting_contact(payload, context):
             "type": "modal",
             "callback_id": slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
             "title": {"type": "plain_text", "text": "Contacts"},
-            "submit": {"type": "plain_text", "text": "Submit"},
             "blocks": blocks,
         },
     }
