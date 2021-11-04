@@ -1,7 +1,3 @@
-INTEGRATION SCREEN
-
-
-
 <template>
   <div class="integrations">
     <h2 class="title">Connect your apps to Managr</h2>

@@ -4,7 +4,7 @@
       <h2 style="font-weight: bold; text-align: center">
         <span style="color: black">
           Close Date
-          <span style="color: #ff7649">Passed</span>
+          <span style="color: #fa646a">Passed</span>
         </span>
       </h2>
     </div>
@@ -496,6 +496,24 @@ export default {
     },
   },
   methods: {
+    changeCreate() {
+      this.create = !this.create
+      if (
+        this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value !==
+        'SLACK_CHANNEL'
+      ) {
+        this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value =
+          'SLACK_CHANNEL'
+      }
+    },
+    async listUserChannels(cursor = null) {
+      const res = await SlackOAuth.api.listUserChannels(cursor)
+      const results = new SlackListResponse({
+        channels: [...this.userChannelOpts.channels, ...res.channels],
+        responseMetadata: { nextCursor: res.nextCursor },
+      })
+      this.userChannelOpts = results
+    },
     removeDay() {
       this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = ''
     },

@@ -10,7 +10,10 @@ from managr.organization.serializers import (
 )
 from managr.salesforce.serializers import SalesforceAuthSerializer
 from managr.organization.models import Organization
-from managr.slack.serializers import UserSlackIntegrationSerializer
+from managr.slack.serializers import (
+    UserSlackIntegrationSerializer,
+    UserFrontEndSlackIntegrationSerializer,
+)
 
 
 from .models import (
@@ -44,6 +47,9 @@ class UserSerializer(serializers.ModelSerializer):
     nylas_ref = NylasAuthAccountSerializer(source="nylas", read_only=True)
     salesforce_account_ref = SalesforceAuthSerializer(source="salesforce_account", read_only=True)
     slack_ref = UserSlackIntegrationSerializer(source="slack_integration", read_only=True)
+    slack_account = UserFrontEndSlackIntegrationSerializer(
+        source="slack_integration", read_only=True
+    )
 
     class Meta:
         model = User
@@ -72,6 +78,7 @@ class UserSerializer(serializers.ModelSerializer):
             "salesforce_account",
             "salesforce_account_ref",
             "slack_ref",
+            "slack_account",
             "zoom_account",
             "salesloft_account",
             "has_salesloft_integration",

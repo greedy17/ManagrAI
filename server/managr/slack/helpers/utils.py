@@ -11,7 +11,7 @@ from django.conf import settings
 from dateutil import parser
 
 from managr.slack.models import UserSlackIntegration
-from managr.slack.helpers import block_builders
+from managr.slack.helpers import block_builders, requests
 from managr.slack import constants as slack_consts
 from managr.salesforce.models import MeetingWorkflow
 

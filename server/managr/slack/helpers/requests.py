@@ -250,8 +250,9 @@ def create_channel(access_token, name, team_id, user, is_private=True):
         print(e)
 
 
-def list_user_channels(access_token, limit=25, cursor=None, types=[]):
+def list_user_channels(access_token, user,limit=100, cursor=None, types=[]):
     q = dict(exclude_archived=True)
+    q["user"] = user
     if len(types):
         q["types"] = ",".join(types)
     url = slack_const.SLACK_API_ROOT + slack_const.USERS_CONVERSATIONS
@@ -261,4 +262,5 @@ def list_user_channels(access_token, limit=25, cursor=None, types=[]):
         q["cursor"] = cursor
 
     url += "?" + urlencode(q)
+    res = requests.get(url, headers=slack_auth.encode_header(access_token)).json()
     return generic_request(url, None, access_token=access_token)

@@ -6,17 +6,15 @@
     <template v-if="!isLoading">
       <template v-if="errorValidatingEmail">
         <!-- Displays if there was an error loading the user's data -->
-        <div class="box" style="display:flex;flex-direction:column;align-items:center;">
+        <div class="box" style="display: flex; flex-direction: column; align-items: center">
           <span>
             <small class="muted"
-              >You're have already activated your account, if you forgot your password you can reset
-              it here
+              >You have already activated your account, if you forgot your password you can reset it
+              here
             </small>
           </span>
           <br />
-          <router-link :to="{ name: 'ForgotPassword' }">
-            Forgot Password ?
-          </router-link>
+          <router-link :to="{ name: 'ForgotPassword' }"> Forgot Password ? </router-link>
         </div>
       </template>
       <template v-else>
