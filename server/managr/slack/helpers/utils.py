@@ -4,6 +4,7 @@ import hmac
 import hashlib
 import binascii
 import logging
+import random
 
 import pdb
 
@@ -311,6 +312,7 @@ def generate_call_block(call_res, resource_id=None):
         blocks.append(block_builders.simple_section("Call still processing"))
     return blocks
 
+
 def check_contact_last_name(meeting_id):
     workflow = MeetingWorkflow.objects.get(id=meeting_id)
     meeting = workflow.meeting
@@ -320,3 +322,25 @@ def check_contact_last_name(meeting_id):
         if not contactData["LastName"]:
             return False
     return True
+
+
+def get_random_update_message(topic):
+    RANDOM_UPDATED_RESPONSES = [
+        f"Great work! {topic} has been logged! :raised_hands:",
+        f"Woohoo! {topic} successfully logged! :raised_hands:",
+        f"Crushing it! {topic} logged. Keep it going! :raised_hands:",
+        f"Great job! {topic} has been logged :raised_hands:",
+    ]
+    idx = random.randint(0, len(RANDOM_UPDATED_RESPONSES) - 1)
+    return RANDOM_UPDATED_RESPONSES[idx]
+
+
+def get_random_no_update_message(topic):
+    RANDOM_NO_CHANGE_RESPONSES = [
+        f"Gotcha, {topic} has no updates",
+        f"10-4 {topic} needs no updating",
+        f"Cool, no updated needed for {topic}",
+        f"Ok dokie, {topic} needs no updates",
+    ]
+    idx = random.randint(0, len(RANDOM_NO_CHANGE_RESPONSES) - 1)
+    return RANDOM_NO_CHANGE_RESPONSES[idx]
