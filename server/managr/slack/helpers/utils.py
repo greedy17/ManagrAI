@@ -5,6 +5,7 @@ import hashlib
 import binascii
 import logging
 import random
+import datetime
 
 import pdb
 
@@ -256,11 +257,19 @@ def generate_call_block(call_res, resource_id=None):
     if resource_id:
         call_data = None
         for call in call_res["calls"]:
-            resource_check = [
-                d for d in call["context"][0].get("objects") if d["objectType"] == "Opportunity"
-            ][0]
-            if resource_check["objectId"] == resource_id:
+            context = call["context"]
+            context_objects = [
+                object["objects"] for object in context if object["system"] == "Salesforce"
+            ]
+            object_ids = [
+                object["objectId"]
+                for inner_list in context_objects
+                for object in inner_list
+                if object["objectId"] == resource_id
+            ]
+            if len(object_ids):
                 call_data = call
+                break
     else:
         call_data = call_res["calls"][0]
     if call_data:

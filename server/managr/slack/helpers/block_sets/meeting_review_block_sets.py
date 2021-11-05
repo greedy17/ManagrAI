@@ -12,7 +12,7 @@ from managr.utils.sites import get_site_url
 from managr.core.models import User, Notification
 from managr.opportunity.models import Opportunity
 from managr.zoom.models import ZoomMeeting
-from managr.salesforce.models import MeetingWorkflow
+from managr.salesforce.models import MeetingWorkflow, SObjectField
 from managr.salesforce import constants as sf_consts
 from managr.slack import constants as slack_const
 from managr.slack.helpers.utils import (
@@ -605,16 +605,12 @@ def final_meeting_interaction_block_set(context):
     )
     blocks = [
         block_builders.section_with_button_block(
-            "Create Task",
-            "CREATE_A_TASK",
+            "Send Recap",
+            "SEND_RECAP",
             text,
             action_id=action_with_params(
-                slack_const.ZOOM_MEETING__CREATE_TASK,
-                params=[
-                    f"u={str(workflow.user.id)}",
-                    f"resource_type={workflow.resource_type}",
-                    f"resource_id={workflow.resource_id}",
-                ],
+                slack_const.PROCESS_SEND_RECAP_MODAL,
+                params=[f"u={str(workflow.user.id)}", f"workflow_id={str(workflow.id)}"],
             ),
         )
     ]
@@ -750,3 +746,19 @@ def schedule_zoom_meeting_modal(context):
     ]
     return blocks
 
+
+@block_set(required_context=["u"])
+def send_recap_block_set(context):
+    user = User.objects.get(id=context.get("u"))
+    blocks = [
+        *SObjectField.objects.get(pk="fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed").to_slack_field(
+            user=user
+        ),
+        SObjectField.objects.get(pk="e286d1d5-5447-47e6-ad55-5f54fdd2b00d").to_slack_field(
+            user=user
+        ),
+        SObjectField.objects.get(pk="fae88a10-53cc-470e-86ec-32376c041893").to_slack_field(
+            user=user
+        ),
+    ]
+    return blocks
