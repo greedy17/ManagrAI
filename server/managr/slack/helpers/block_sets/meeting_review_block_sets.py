@@ -251,7 +251,7 @@ def meeting_contacts_block_set(context):
                         "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
                         "action_id": action_with_params(
                             slack_const.ZOOM_MEETING__EDIT_CONTACT,
-                            params=[workflow_id_param, tracking_id_param],
+                            params=[workflow_id_param, tracking_id_param, channel, timestamp],
                         ),
                         "style": "primary",
                     },
@@ -261,7 +261,7 @@ def meeting_contacts_block_set(context):
                         "value": "click_me_123",
                         "action_id": action_with_params(
                             slack_const.ZOOM_MEETING__REMOVE_CONTACT,
-                            params=[workflow_id_param, tracking_id_param],
+                            params=[workflow_id_param, tracking_id_param, channel, timestamp],
                         ),
                         "style": "danger",
                     },
