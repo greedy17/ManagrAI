@@ -23,6 +23,7 @@ from managr.slack.helpers.utils import (
     block_finder,
     process_done_alert,
     generate_call_block,
+    check_contact_last_name
 )
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
@@ -110,8 +111,8 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
     access_token = org.slack_integration.access_token
     
     private_metadata = {
-        "original_message_channel": payload["channel"]["id"],
-        "original_message_timestamp": payload["message"]["ts"],
+        "original_message_channel": payload["channel"]["id"] if "channel" in payload else context.get("channel"),
+        "original_message_timestamp": payload["message"]["ts"] if "message" in payload else context.get("timestamp"),
     }
     private_metadata.update(context)
     blocks = get_block_set("show_meeting_contacts", private_metadata,)
@@ -443,7 +444,8 @@ def process_stage_selected_command_form(payload, context):
 def process_remove_contact_from_meeting(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     meeting = workflow.meeting
-
+    org = workflow.user.organization
+    access_token = org.slack_integration.access_token
     for i, part in enumerate(meeting.participants):
         if part["_tracking_id"] == context.get("tracking_id"):
             # remove its form if it exists
@@ -452,6 +454,13 @@ def process_remove_contact_from_meeting(payload, context):
             del meeting.participants[i]
             break
     meeting.save()
+    if check_contact_last_name(workflow.id):
+        update_res = slack_requests.update_channel_message(
+                context.get("channel"),
+                context.get("timestamp"),
+                access_token,
+                block_set=get_block_set("initial_meeting_interaction", {"w": context.get("w")}),
+            )
 
     return process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_UPDATE)
 
