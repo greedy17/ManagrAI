@@ -2,11 +2,12 @@ import json
 import pdb
 import uuid
 import logging
+import pytz
 from urllib.parse import urlencode
 
 from django.db.models import Q
 from django.utils import timezone
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_paginator_block
@@ -1440,14 +1441,16 @@ def process_get_call_recording(payload, context):
     trigger_id = payload["trigger_id"]
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     user = User.objects.get(id=context.get("u"))
+    user_tz = datetime.now(pytz.timezone(user.timezone)).strftime("%z")
     gong_auth = GongAuthAccount.objects.get(organization=user.organization)
     access_token = user.organization.slack_integration.access_token
     opp = Opportunity.objects.get(id=context.get("resource_id"))
     type = context.get("type", None)
+    timestamp = datetime.fromtimestamp(float(payload["message"]["ts"]))
     blocks = []
-    if type == "recap":
+    if type == "recap" and timestamp >= (datetime.now() - timedelta(hours=24)):
         curr_date = date.today()
-        curr_date_str = curr_date.isoformat() + "T01:00:00Z"
+        curr_date_str = curr_date.isoformat() + "T01:00:00" + f"{user_tz[:3]}:{user_tz[3:]}"
         try:
             call_res = gong_auth.helper_class.check_for_current_call(curr_date_str)
             call_details = generate_call_block(call_res, opp.secondary_data["Id"])
@@ -1521,6 +1524,45 @@ def process_mark_complete(payload, context):
     return
 
 
+@processor()
+def process_send_recap_modal(payload, context):
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    trigger_id = payload["trigger_id"]
+    workflow = MeetingWorkflow.objects.get(id=context.get("workflow_id"))
+    meeting = workflow.meeting
+    organization = meeting.zoom_account.user.organization
+    access_token = organization.slack_integration.access_token
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.PROCESS_SEND_RECAPS,
+            "title": {"type": "plain_text", "text": "Send Recaps"},
+            "blocks": get_block_set("send_recap_block_set", {"u": context.get("u")}),
+            "submit": {"type": "plain_text", "text": "Send"},
+            "private_metadata": json.dumps(context),
+        },
+    }
+    try:
+        res = slack_requests.generic_request(url, data, access_token=access_token)
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.user.id)} email {workflow.user.email} {e}"
+        )
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -1554,6 +1596,7 @@ def handle_block_actions(payload):
         slack_const.CALL_ERROR: process_call_error,
         slack_const.GONG_CALL_RECORDING: process_get_call_recording,
         slack_const.MARK_COMPLETE: process_mark_complete,
+        slack_const.PROCESS_SEND_RECAP_MODAL: process_send_recap_modal,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)
