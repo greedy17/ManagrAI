@@ -11,38 +11,39 @@
     >
       <form class="invite-form" @submit.prevent="handleInvite">
         <h2 class="invite-form__title">Invite Users to Managr</h2>
-        <h2 class="invite-form__subtitle" style="color: #199E54">
+        <h2 class="invite-form__subtitle" style="color: #199e54">
           {{ $store.state.user.organizationRef.name }}
         </h2>
-        <div style="display: flex; align-items: center; justify-content: center">
-          <FormField style="margin-left: -5rem">
-            <template v-slot:input>
-              <DropDownSearch
-                :items.sync="slackMembers"
-                v-model="userInviteForm.field.slackId.value"
-                displayKey="name"
-                valueKey="id"
-                nullDisplay="Search Users"
-                searchable
-                local
-              >
-              </DropDownSearch>
-            </template>
-          </FormField>
-        </div>
-        <div class="dropdown">
-          <FormField :errors="userInviteForm.field.userLevel.errors" label="User Level:">
-            <template v-slot:input>
-              <DropDownSelect
-                :items="userTypes"
-                v-model="userInviteForm.field.userLevel.value"
-                class="invite-form__dropdown"
-                nullDisplay="Select user level"
-                :itemsRef="userTypes"
-                @input="userInviteForm.field.userLevel.validate()"
-              />
-            </template>
-          </FormField>
+        <div style="display: flex; justify-content: center; flex-direction: column">
+          <div>
+            <FormField>
+              <template v-slot:input>
+                <DropDownSearch
+                  :items.sync="slackMembers"
+                  v-model="userInviteForm.field.slackId.value"
+                  displayKey="real_name"
+                  valueKey="id"
+                  nullDisplay="Search Users"
+                  searchable
+                  local
+                >
+                </DropDownSearch>
+              </template>
+            </FormField>
+          </div>
+          <div>
+            <FormField :errors="userInviteForm.field.userLevel.errors" label="User Level:">
+              <template v-slot:input>
+                <DropDownSelect
+                  :items="userTypes"
+                  v-model="userInviteForm.field.userLevel.value"
+                  nullDisplay="Select user level"
+                  :itemsRef="userTypes"
+                  @input="userInviteForm.field.userLevel.validate()"
+                />
+              </template>
+            </FormField>
+          </div>
         </div>
         <!-- <div class="dropdown">
           <FormField :errors="userInviteForm.field.role.errors" label="Role">
@@ -79,15 +80,15 @@
       </form>
     </Modal>
     <div class="invite-list__container">
-      <div class="invite-list__title" style="color: #BEB5CC">Your Team:</div>
+      <div class="invite-list__title" style="color: #beb5cc">Your Team:</div>
       <div class="invite-list__section__container" style="margin-bottom: 1.5rem">
-        <div style="color: #199E54" class="invite-list__section__item invite-list__name">
+        <div style="color: #199e54" class="invite-list__section__item invite-list__name">
           {{ user.fullName }}
         </div>
         <div style="color: white" class="invite-list__section__item invite-list__status">
           {{ user.userLevel == 'MANAGER' ? 'Team Leader(You)' : 'Rep(You)' }}
         </div>
-        <div class="invite-list__section__item invite-list__status" style="color: #FF7649">
+        <div class="invite-list__section__item invite-list__status" style="color: #ff7649">
           Registered
         </div>
       </div>
@@ -274,28 +275,27 @@ export default {
   flex-flow: row;
   justify-content: center;
   // height: 80vh;
-  width: 80%;
+  width: 100%;
 }
 /*
 Override dropdown select input field
 */
 .dropdown {
-  margin-left: 8%;
-  ::v-deep .tn-dropdown__selection-container {
-    border-radius: 4px;
-    background-color: $white;
-    border: 1px solid #EAEBED;
-    box-sizing: border-box;
-    line-height: 1.29;
-    letter-spacing: 0.5px;
-    width: 16rem;
-    height: 6vh;
-    color: $panther;
-  }
-  ::v-deep .tn-dropdown__options__option {
-    color: $panther-gray;
-    font-weight: bold;
-  }
+}
+::v-deep .tn-dropdown__selection-container {
+  border-radius: 4px;
+  background-color: $white;
+  border: 1px solid #eaebed;
+  box-sizing: border-box;
+  line-height: 1.29;
+  letter-spacing: 0.5px;
+  width: 22vw;
+  height: 6vh;
+  color: $panther;
+}
+::v-deep .tn-dropdown__options__option {
+  color: $panther-gray;
+  font-weight: bold;
 }
 form,
 .success-prompt {
@@ -329,16 +329,16 @@ button {
   border: none;
   border-radius: 0.75rem;
   height: 90vh;
-  min-height: 30rem;
   display: flex;
   align-items: center;
-  justify-content: center;
+  // justify-content: center;
   flex-direction: column;
   background-color: $panther;
   > .form_field {
     flex: 0 0 auto;
   }
   > .tn-input {
+    width: 12rem;
   }
   > .invite-form__dropdown {
     color: red;

@@ -21,16 +21,31 @@
       </div> -->
 
       <div class="card">
-        <div>
-          <select name="reipients" id="recipients">
-            <option :key="value" v-for="(key, value) in userTargetsOpts" :value="value">
-              {{ key.fullName }}
-            </option>
-          </select>
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            margin-top: -1.5rem;
+          "
+        >
+          <p style="text-align: center; font-weight: bold">Select pipelines</p>
+          <div>
+            <multiselect
+              :close-on-select="false"
+              :multiple="true"
+              placeholder="select pipelines"
+              selectLabel=""
+              v-model="pipelines"
+              :options="options"
+              label="fullName"
+            ></multiselect>
+          </div>
         </div>
 
         <div>
-          <div v-if="!channelName" class="row">
+          <div style="margin-bottom: 0.5rem" v-if="!channelName" class="row">
             <label>Select #channel</label>
             <ToggleCheckBox
               style="margin: 0.25rem"
@@ -84,31 +99,19 @@
           >
             <FormField>
               <template v-slot:input>
-                <DropDownSearch
-                  :items.sync="userChannelOpts.channels"
+                <multiselect
+                  :options="userChannelOpts.channels"
                   v-model="zoomChannel"
-                  displayKey="name"
-                  valueKey="id"
-                  nullDisplay="Channels"
-                  :hasNext="!!userChannelOpts.nextCursor"
-                  @load-more="listChannels(userChannelOpts.nextCursor)"
-                  searchable
-                  local
+                  label="name"
+                  value="id"
+                  placeholder="Channels"
+                  selectLabel=""
                 >
-                  <template v-slot:tn-dropdown-option="{ option }">
-                    <img
-                      v-if="option.isPrivate == true"
-                      class="card-img"
-                      style="width: 1.2rem; height: 1rem; margin-right: 0.2rem"
-                      src="@/assets/images/lock.png"
-                    />
-                    {{ option['name'] }}
-                  </template>
-                </DropDownSearch>
+                </multiselect>
               </template>
             </FormField>
 
-            <p
+            <!-- <p
               v-if="zoomChannel"
               @click="removeZoomChannel"
               :class="zoomChannel ? 'selected__item' : 'visible'"
@@ -118,8 +121,8 @@
                 style="height: 1rem; margin-right: 0.25rem; margin-top: 0.25rem"
                 alt=""
               />
-              {{ getChannelName(zoomChannel) }}
-            </p>
+              {{ zoomChannel.name }}
+            </p> -->
           </div>
         </div>
       </div>
@@ -141,6 +144,7 @@ import FormField from '@/components/forms/FormField'
 import DropDownSearch from '@/components/DropDownSearch'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import Multiselect from 'vue-multiselect'
 import User from '@/services/users'
 
 export default {
@@ -149,6 +153,7 @@ export default {
     DropDownSearch,
     ToggleCheckBox,
     FormField,
+    Multiselect,
   },
   data() {
     return {
@@ -160,6 +165,9 @@ export default {
       slackAccount: {},
       zoomChannel: '',
       createdZoomChannel: '',
+      test: '',
+      pipelines: [],
+      options: [],
       users: CollectionManager.create({ ModelClass: User }),
       alertTargetOpts: [
         { key: 'Myself', value: 'SELF' },
@@ -174,7 +182,7 @@ export default {
     if (this.user.slackRef) {
       await this.listUserChannels()
     }
-    if (this.user.userLevel == 'MANAGER') {
+    if (this.user.userLevel == 'MANAGER' || this.user.isAdmin) {
       await this.users.refresh()
     }
   },
@@ -329,10 +337,7 @@ export default {
       await this.users.addNextPage()
     },
   },
-  //   mounted() {
-  //     console.log(this.user)
-  //     console.log(this.$store.state.user.slackRef.slackId)
-  //   },
+  mounted() {},
 }
 </script>
 
@@ -347,10 +352,17 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
+::v-deep .multiselect__tags {
+  min-width: 16vw;
+  max-width: 20vw;
+  -webkit-box-shadow: 1px 4px 7px black;
+  box-shadow: 1px 4px 7px black;
+}
+
 .logZoomPage {
   height: 100vh;
   color: white;
-  margin-top: 4rem;
+  margin-top: 5rem;
 }
 .card {
   display: flex;
@@ -431,5 +443,28 @@ input {
 }
 .visible {
   display: none;
+}
+.dropdown {
+  font-family: Lato-Regular, sans-serif;
+  font-weight: normal;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  font-size: 16px;
+  border-radius: 4px;
+  line-height: 1;
+  letter-spacing: 0.5px;
+  color: #4d4e4c;
+  height: 2.5rem;
+  background-color: white;
+  border: 1px solid #5d5e5e;
+  width: 12vw;
+  // padding: 0 0 0 1rem;
+  margin: 1rem;
+  -webkit-box-shadow: 1px 4px 7px black;
+  box-shadow: 1px 4px 7px black;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  margin-top: -0.5rem;
 }
 </style>

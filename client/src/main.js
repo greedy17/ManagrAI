@@ -96,6 +96,7 @@ Vue.component('ComponentLoadingSVG', ComponentLoadingSVG)
 Vue.component('Modal', Modal)
 
 Vue.component('datetime', Datetime)
+Vue.component('vue-multiselect', window.VueMultiselect.default)
 Vue.use(vmodal)
 
 /* eslint-disable no-new */

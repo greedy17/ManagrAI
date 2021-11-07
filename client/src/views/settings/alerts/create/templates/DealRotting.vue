@@ -6,79 +6,25 @@
           Deal
           <span style="color: #fa646a">Rotting</span>
         </span>
+        <p v-if="userLevel === 'REP'" style="color: #3c3940; font-size: 1.1rem">
+          Choose a delivery day and create a Slack channel for these notifications. We’ll take it
+          from there
+        </p>
       </h2>
     </div>
 
-    <div
-      v-if="pageNumber === 0"
-      style="margin: auto; text-align: center; width: 30%; margin-bottom: 1rem; margin-top: -0.5rem"
-      title="50.00%"
-    >
-      <div
-        style="
-          text-align: left;
-          margin: 2px auto;
-          font-size: 0px;
-          line-height: 0px;
-          border: solid 1px #aaaaaa;
-          background: #0e572e;
-          overflow: hidden;
-          border-radius: 0.25rem;
-        "
-      >
-        <div
-          style="
-            font-size: 0px;
-            line-height: 0px;
-            height: 6px;
-            min-width: 0%;
-            max-width: 50%;
-            width: 50%;
-            background: #199e54;
-          "
-        ></div>
-      </div>
-    </div>
-
-    <div
-      v-if="pageNumber === 1"
-      style="margin: auto; text-align: center; width: 30%; margin-bottom: 1rem; margin-top: -0.5rem"
-      title="50.00%"
-    >
-      <div
-        style="
-          text-align: left;
-          margin: 2px auto;
-          font-size: 0px;
-          line-height: 0px;
-          border: solid 1px #aaaaaa;
-          background: #0e572e;
-          overflow: hidden;
-          border-radius: 0.25rem;
-        "
-      >
-        <div
-          style="
-            font-size: 0px;
-            line-height: 0px;
-            height: 6px;
-            min-width: 0%;
-            max-width: 100%;
-            width: 100%;
-            background: #199e54;
-          "
-        ></div>
-      </div>
-    </div>
-
-    <div v-if="pageNumber === 0" class="alert__column">
+    <div style="margin-top: 4rem" v-if="pageNumber === 0" class="alert__column">
       <template>
         <div
           class="forecast__collection"
           :key="i"
           v-for="(form, i) in alertTemplateForm.field.alertConfig.groups"
         >
-          <div class="delivery__row" :errors="form.field.recurrenceDay.errors">
+          <div
+            style="margin-top: 1rem"
+            class="delivery__row"
+            :errors="form.field.recurrenceDay.errors"
+          >
             <div style="margin-bottom: 0.5rem" class="row__">
               <label>Weekly</label>
               <ToggleCheckBox
@@ -146,7 +92,11 @@
             </p>
           </div>
 
-          <div class="delivery__row">
+          <div
+            style="margin-top: 1rem; margin-left: 0.5rem"
+            v-if="userLevel !== 'REP'"
+            class="delivery__row"
+          >
             <span style="margin-bottom: 0.5rem">Select Pipelines</span>
 
             <FormField :errors="form.field.alertTargets.errors">
@@ -193,6 +143,7 @@
               align-items: center;
               justify-content: flex-start;
               padding: 0.5rem;
+              margin-top: 0.5rem;
             "
           >
             <div v-if="!channelName" class="row__">
@@ -289,12 +240,6 @@
       </template>
     </div>
 
-    <div v-if="pageNumber === 1" class="alert__column">
-      <div class="collection">
-        <AlertSummary :form="alertTemplateForm" />
-      </div>
-    </div>
-
     <div
       :key="index"
       v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
@@ -307,39 +252,12 @@
     </div>
 
     <div class="bottom_locked">
-      <button
-        @click="goToTemplates"
-        v-if="pageNumber === 0"
-        style="margin-right: 0.5rem"
-        class="gold__button"
-      >
-        <img src="@/assets/images/back.png" alt="" />
-        Templates
-      </button>
-      <button @click="onPreviousPage" v-else style="margin-right: 0.5rem" class="gold__button">
-        Prev
-      </button>
-
-      <div v-if="pageNumber < 1">
-        <button
-          v-if="
-            !alertTemplateForm.field.alertConfig.groups
-              .map((fields) => fields.isValid)
-              .includes(false)
-          "
-          @click="onNextPage"
-          class="purple__button"
-        >
-          Next
-        </button>
-        <button v-else class="disabled__button">Next</button>
-      </div>
-
       <PulseLoadingSpinnerButton
-        v-else
         :loading="savingTemplate"
         :class="
-          !alertTemplateForm.isValid || savingTemplate ? 'disabled__button' : 'purple__button'
+          !alertTemplateForm.isValid || savingTemplate
+            ? 'disabled__button'
+            : 'purple__button bouncy'
         "
         text="Activate alert"
         @click.stop="onSave"
@@ -373,6 +291,7 @@ import DropDownSearch from '@/components/DropDownSearch'
 import ExpandablePanel from '@/components/ExpandablePanel'
 import Modal from '@/components/Modal'
 import SmartAlertTemplateBuilder from '@/views/settings/alerts/create/SmartAlertTemplateBuilder'
+import { UserConfigForm } from '@/services/users/forms'
 
 /**
  * Services
@@ -435,6 +354,8 @@ export default {
       searchChannels: '',
       SOBJECTS_LIST,
       pageNumber: 0,
+      configName: '',
+      userConfigForm: new UserConfigForm({}),
       alertTemplateForm: new AlertTemplateForm(),
       selectedBindings: [],
       fields: CollectionManager.create({ ModelClass: SObjectField }),
@@ -479,6 +400,9 @@ export default {
     if (this.user.userLevel == 'MANAGER') {
       await this.users.refresh()
     }
+    this.userConfigForm = new UserConfigForm({
+      activatedManagrConfigs: this.user.activatedManagrConfigs,
+    })
   },
   watch: {
     selectedResourceType: {
@@ -497,6 +421,18 @@ export default {
     },
   },
   methods: {
+    handleUpdate() {
+      this.loading = true
+      console.log(this.userConfigForm.value)
+      User.api
+        .update(this.user.id, this.userConfigForm.value)
+        .then((response) => {
+          this.$store.dispatch('updateUser', User.fromAPI(response.data))
+        })
+        .catch((e) => {
+          console.log(e)
+        })
+    },
     changeCreate() {
       this.create = !this.create
       if (
@@ -694,7 +630,14 @@ export default {
             ...this.alertTemplateForm.toAPI,
             user: this.$store.state.user.id,
           })
-          this.$router.push({ name: 'ListTemplates' })
+          this.userConfigForm.field.activatedManagrConfigs.value.push(res.title)
+          this.handleUpdate()
+          this.$router.push({ name: 'CreateNew' })
+          this.$Alert.alert({
+            message: 'Workflow saved succcessfully!',
+            timeout: 2000,
+            type: 'success',
+          })
         } catch (e) {
           this.$Alert.alert({
             message: 'An error occured saving template',
@@ -795,6 +738,15 @@ export default {
           '='
       }
     },
+    repsPipeline() {
+      if (this.userLevel === 'REP') {
+        this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
+        this.setPipelines({
+          fullName: 'MYSELF',
+          id: 'SELF',
+        })
+      }
+    },
   },
   computed: {
     userTargetsOpts() {
@@ -876,6 +828,9 @@ export default {
     user() {
       return this.$store.state.user
     },
+    userLevel() {
+      return this.$store.state.user.userLevel
+    },
     selectedResourceType: {
       get() {
         return this.alertTemplateForm.field.resourceType.value
@@ -890,6 +845,7 @@ export default {
     this.alertTemplateForm.field.title.value = 'Deal Rotting'
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
       'Hey  <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong>, hasnt been touched since <strong>{ Opportunity.LastActivityDate }</strong>'
+    this.repsPipeline()
   },
 }
 </script>
@@ -905,6 +861,17 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
+@keyframes bounce {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-6px);
+  }
+}
+.bouncy {
+  animation: bounce 0.2s infinite alternate;
+}
 ::v-deep .input-content {
   width: 12vw;
   background-color: white;
@@ -1133,7 +1100,7 @@ input {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: auto;
+  margin-top: -4rem;
   margin-bottom: 0.5rem;
 }
 .delivery__row {

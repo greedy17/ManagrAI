@@ -20,12 +20,12 @@
             </li>
             <li>
               <router-link active-class="active" :to="{ name: 'ListTemplates' }"
-                >Automate
+                >Workflows
               </router-link>
             </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
-                >Invite</router-link
+                >Team</router-link
               >
             </li>
           </ul>
@@ -34,18 +34,30 @@
         <div class="mar" v-else-if="!isAdmin && userLevel === 'MANAGER'">
           <ul>
             <li>
-              <router-link exact-active-class="active" :to="{ name: 'Integrations' }"
+              <router-link
+                v-if="user.onboarding"
+                exact-active-class="active"
+                :to="{ name: 'Integrations' }"
+                >Onboarding
+              </router-link>
+              <router-link v-else exact-active-class="active" :to="{ name: 'Integrations' }"
                 >Connect
               </router-link>
             </li>
             <li>
-              <router-link active-class="active" :to="{ name: 'ListTemplates' }"
-                >Automate
+              <router-link
+                v-if="!user.onboarding"
+                active-class="active"
+                :to="{ name: 'ListTemplates' }"
+                >Workflows
               </router-link>
             </li>
             <li>
-              <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
-                >Invite</router-link
+              <router-link
+                v-if="!user.onboarding"
+                exact-active-class="active"
+                :to="{ name: 'InviteUsers' }"
+                >Team</router-link
               >
             </li>
           </ul>
@@ -54,20 +66,52 @@
         <div class="mar" v-else>
           <ul>
             <li>
-              <router-link exact-active-class="active" :to="{ name: 'Integrations' }"
+              <router-link
+                v-if="user.onboarding"
+                exact-active-class="active"
+                :to="{ name: 'Integrations' }"
+                >Onboarding
+              </router-link>
+              <router-link v-else exact-active-class="active" :to="{ name: 'Integrations' }"
                 >Connect
               </router-link>
             </li>
-            <li>
+            <li v-if="!user.onboarding">
               <router-link active-class="active" :to="{ name: 'ListTemplates' }"
-                >Automate
+                >Workflows
               </router-link>
             </li>
           </ul>
         </div>
       </div>
 
-      <div class="right">
+      <div v-if="!isAdmin && user.onboarding" class="right">
+        <div class="tooltip">
+          <img style="height: 1.5rem" src="@/assets/images/blackhelp.png" class="tooltip__icon" />
+          <div class="tooltip__popup">
+            <div class="tooltip__popup__bold">Having issues?</div>
+            <div class="tip">Email Us: support@mymanagr.com</div>
+          </div>
+        </div>
+
+        <div>
+          <router-link :to="{ name: 'ProfilePage' }"
+            ><img src="@/assets/images/profile.png" style="height: 1.5rem" alt=""
+          /></router-link>
+        </div>
+
+        <div>
+          <router-link :to="{ name: 'Login' }"
+            ><img
+              @click="logOut"
+              src="@/assets/images/blacklogout.png"
+              alt=""
+              style="height: 1.5rem"
+          /></router-link>
+        </div>
+      </div>
+
+      <div v-else-if="isAdmin" class="right">
         <div class="tooltip">
           <img style="height: 1.5rem" src="@/assets/images/blackhelp.png" class="tooltip__icon" />
           <div class="tooltip__popup">
@@ -98,11 +142,21 @@
 
 <script>
 import DropDownMenu from '@/components/forms/DropDownMenu'
+import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+
+import AlertTemplate, {
+  AlertGroupForm,
+  AlertTemplateForm,
+  AlertConfigForm,
+  AlertMessageTemplateForm,
+  AlertOperandForm,
+} from '@/services/alerts/'
 
 export default {
   name: 'NavBar',
   components: {
     DropDownMenu,
+    CollectionManager,
   },
   props: {},
   data() {
@@ -115,10 +169,12 @@ export default {
       dropdownOpen: false,
       userInitials: this.$store.state.user.firstName[0] + this.$store.state.user.lastName[0],
       userLevel: this.$store.state.user.userLevel,
+      templates: CollectionManager.create({ ModelClass: AlertTemplate }),
     }
   },
 
   async created() {
+    this.templates.refresh()
     if (this.isAdmin) {
       this.items = [
         { key: 'Integrations', value: 'Integrations' },
@@ -166,6 +222,18 @@ export default {
     },
     isAdmin() {
       return this.userIsLoggedIn && this.$store.state.user.isAdmin
+    },
+    hasSlack() {
+      return this.$store.state.user.slackRef
+    },
+    hasSalesforce() {
+      return this.$store.state.user.hasSalesforceIntegration
+    },
+    hasZoom() {
+      return this.$store.state.user.hasZoomIntegration
+    },
+    hasNylas() {
+      return this.$store.state.user.nylasRef
     },
   },
 }
