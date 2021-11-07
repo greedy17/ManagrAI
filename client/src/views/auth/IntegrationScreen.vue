@@ -389,9 +389,9 @@ export default {
       const modelClass = this.selectedIntegrationSwitcher
       try {
         const res = await modelClass.api.getAuthLink()
-        if (res.link) {
-          window.location.href = res.link
-        }
+        // if (res.link) {
+        //   window.location.href = res.link
+        // }
       } finally {
         this.generatingToken = false
       }

@@ -93,6 +93,7 @@ INSTALLED_APPS = [
     "managr.autonomous",
     "managr.salesloft",
     "managr.gong",
+    "managr.outreach",
     # "managr.demo",
     # Django
     "django.contrib.admin",
@@ -441,6 +442,13 @@ if USE_SALESLOFT:
     SALESLOFT_CLIENT_ID = _env_get_required("SALESLOFT_CLIENT_ID")
     SALESLOFT_BASE_URL = _env_get_required("SALESLOFT_BASE_URL")
     SALESLOFT_REDIRECT_URI = _env_get_required("SALESLOFT_REDIRECT_URI")
+
+USE_OUTREACH = os.environ.get("USE_OUTREACH") == "True"
+if USE_OUTREACH:
+    OUTREACH_SECRET = _env_get_required("OUTREACH_SECRET")
+    OUTREACH_CLIENT_ID = _env_get_required("OUTREACH_CLIENT_ID")
+    OUTREACH_BASE_URL = _env_get_required("OUTREACH_BASE_URL")
+    OUTREACH_REDIRECT_URI = _env_get_required("OUTREACH_REDIRECT_URI")
 
 USE_GONG = os.environ.get("USE_GONG") == "True"
 if USE_GONG:

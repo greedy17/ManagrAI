@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class SalesloftConfig(AppConfig):
-    name = 'salesloft'
+class OutreachConfig(AppConfig):
+    name = "managr.outreach"

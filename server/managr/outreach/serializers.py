@@ -1,20 +1,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
-from .models import OutreachAuthAccount, OutreachAccount, Sequence, Account, Prospect
-
-
-class OutreachAuthSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = OutreachAuthAccount
-        fields = (
-            "id",
-            "organization",
-            "access_token",
-            "refresh_token",
-            "token_generated_date",
-            "admin",
-        )
+from .models import OutreachAccount, Sequence, Account, Prospect
 
 
 class OutreachAccountSerializer(serializers.ModelSerializer):

@@ -31,21 +31,21 @@ from rest_framework.decorators import (
 
 from . import constants as outreach_consts
 from .models import (
-    OutreachAuthAccount,
-    OutreachAuthAdapter,
     OutreachAccount,
     OutreachAccountAdapter,
 )
-from .serializers import OutreachAuthSerializer, OutreachAccountSerializer
-from .cron import sync_helper
+from .serializers import OutreachAccountSerializer
 
 # Create your views here.
 logger = logging.getLogger("managr")
 
 
 @api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
 def get_outreach_auth_link(request):
-    link = OutreachAuthAdapter.get_authorization()
+    print(request)
+    link = OutreachAccountAdapter.get_authorization()
+    print(link)
     return Response({"link": link})
 
 
@@ -53,20 +53,16 @@ def get_outreach_auth_link(request):
 @permission_classes([permissions.IsAuthenticated])
 def get_outreach_authentication(request):
     code = request.data.get("code", None)
-    context = request.data.get("context", None)
-    scope = request.data.get("scope", None)
     if not code:
         raise ValidationError()
-    res = OutreachAuthAdapter.create_auth_account(code, context, scope, request.user.id)
-    existing = OutreachAuthAccount.objects.filter(admin=request.user).first()
+    res = OutreachAccountAdapter.create_account(code)
+    existing = OutreachAccount.objects.filter(user=request.user).first()
     if existing:
-        serializer = OutreachAuthSerializer(data=res.as_dict, instance=existing)
+        serializer = OutreachAccountSerializer(data=res.as_dict, instance=existing)
     else:
-        serializer = OutreachAuthSerializer(data=res.as_dict)
+        serializer = OutreachAccountSerializer(data=res.as_dict)
     serializer.is_valid(raise_exception=True)
     serializer.save()
-    admin_account = OutreachAuthAccount.objects.filter(admin=request.user).first()
-    sync_helper(admin_account.id)
     return Response(data={"success": True})
 
 
@@ -90,13 +86,13 @@ def revoke_outreach_access_token(request):
 
 
 def redirect_from_outreach(request):
+    print(request)
+    print(request.data)
     code = request.GET.get("code", None)
-    context = request.GET.get("context", None)
-    scope = request.GET.get("scope", None)
-    q = urlencode({"code": code, "scope": scope, "context": context, "state": "SALESLOFT"})
+    q = urlencode({"code": code, "state": "OUTREACH"})
     if not code:
         err = {"error": "there was an error"}
         err = urlencode(err)
-        return redirect(f"{outreach_consts.SALESLOFT_FRONTEND_REDIRECT}?{err}")
-    return redirect(f"{outreach_consts.SALESLOFT_FRONTEND_REDIRECT}?{q}")
+        return redirect(f"{outreach_consts.OUTREACH_FRONTEND_REDIRECT}?{err}")
+    return redirect(f"{outreach_consts.OUTREACH_FRONTEND_REDIRECT}?{q}")
 

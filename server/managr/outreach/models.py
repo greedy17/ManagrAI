@@ -17,11 +17,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from managr.core.models import TimeStampModel, User
 from managr.utils.client import HttpClient
 from .exceptions import OutreachAPIException, TokenExpired
-from managr.organization.models import Organization
 
-from managr.salesforce.adapter.models import ActivityAdapter
-
-from managr.core import constants as core_consts
 from . import constants as outreach_consts
 
 from managr.slack.helpers import block_builders
@@ -31,23 +27,26 @@ logger = logging.getLogger("managr")
 client = HttpClient().client
 
 
-class OutreachAuthAdapter:
+class OutreachAccountQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.organization and user.is_active:
+            return self.filter(auth_account__organization=user.organization)
+        else:
+            return self.none()
+
+
+class OutreachAccountAdapter:
     def __init__(self, **kwargs):
         self.id = kwargs.get("id", None)
-        self.organization = kwargs.get("organization", None)
+        self.outreach_id = kwargs.get("outreach_id", None)
+        self.user = kwargs.get("user", None)
         self.access_token = kwargs.get("access_token", None)
         self.refresh_token = kwargs.get("refresh_token", None)
         self.token_generated_date = kwargs.get("token_generated_date", None)
-        self.admin = kwargs.get("admin", None)
 
     @property
     def as_dict(self):
         return vars(self)
-
-    @staticmethod
-    def get_authorization():
-        query = urlencode(outreach_consts.AUTHORIZATION_QUERY_PARAMS)
-        return f"{outreach_consts.AUTHORIZATION_URI}?{query}"
 
     @staticmethod
     def _handle_response(response, fn_name=None):
@@ -75,24 +74,43 @@ class OutreachAuthAdapter:
         return data
 
     @staticmethod
-    def get_auth_token(code: str, context: str, scope: str):
-        query = outreach_consts.AUTHENTICATION_QUERY_PARAMS(code, context, scope)
+    def get_authorization():
+        query = urlencode(outreach_consts.AUTHORIZATION_QUERY_PARAMS)
+        print(query)
+        return f"{outreach_consts.AUTHORIZATION_URI}?{query}"
+
+    @staticmethod
+    def get_auth_token(code: str):
+        query = outreach_consts.AUTHENTICATION_QUERY_PARAMS(code)
         query = urlencode(query)
         r = client.post(f"{outreach_consts.AUTHENTICATION_URI}?{query}",)
-        return OutreachAuthAdapter._handle_response(r)
+        print(r.json())
+        return OutreachAccountAdapter._handle_response(r)
+
+    def refresh(self):
+        query = outreach_consts.REAUTHENTICATION_QUERY_PARAMS(self.refresh_token)
+        query = urlencode(query)
+        res = client.post(f"{outreach_consts.AUTHENTICATION_URI}?{query}")
+
+        return OutreachAccountAdapter._handle_response(res)
+
+    def revoke(self):
+        outreach_account = OutreachAccount.objects.get(id=self.id)
+        try:
+            outreach_account.delete()
+            return logger.info(f"Succefully deleted account {outreach_account}")
+        except Exception as e:
+            logger.exception(f"Failed to delete account {outreach_account},{e}")
 
     @classmethod
-    def create_auth_account(cls, code: str, context: str, scope: str, managr_user_id):
-        user = User.objects.get(id=managr_user_id)
-        org = Organization.objects.get(id=user.organization.id)
-        auth_data = cls.get_auth_token(code, context, scope)
-        data = {}
-        data["organization"] = org.id
-        data["access_token"] = auth_data["access_token"]
-        data["refresh_token"] = auth_data["refresh_token"]
-        data["admin"] = managr_user_id
-        data["token_generated_date"] = timezone.now()
-        return cls(**data)
+    def create_account(cls, code):
+        try:
+            auth_data = cls.get_auth_token(code)
+            print(auth_data)
+            # data = {}
+            # return cls(**data)
+        except ObjectDoesNotExist:
+            return None
 
     def get_users(self, page=1):
         headers = {
@@ -103,7 +121,7 @@ class OutreachAuthAdapter:
         res = client.get(
             f"{outreach_consts.OUTREACH_BASE_URI}/{outreach_consts.USERS}?{query}", headers=headers
         )
-        return OutreachAuthAdapter._handle_response(res)
+        return OutreachAccountAdapter._handle_response(res)
 
     def get_sequences(self, page=1):
         headers = {
@@ -115,7 +133,7 @@ class OutreachAuthAdapter:
             f"{outreach_consts.OUTREACH_BASE_URI}/{outreach_consts.CADENCES}?{query}",
             headers=headers,
         )
-        return OutreachAuthAdapter._handle_response(res)
+        return OutreachAccountAdapter._handle_response(res)
 
     def get_accounts(self, page=1):
         headers = {
@@ -127,7 +145,7 @@ class OutreachAuthAdapter:
             f"{outreach_consts.OUTREACH_BASE_URI}/{outreach_consts.ACCOUNTS}?{query}",
             headers=headers,
         )
-        return OutreachAuthAdapter._handle_response(res)
+        return OutreachAccountAdapter._handle_response(res)
 
     def get_prospects(self, page=1):
         headers = {
@@ -139,121 +157,10 @@ class OutreachAuthAdapter:
             f"{outreach_consts.OUTREACH_BASE_URI}/{outreach_consts.PEOPLE}?{query}",
             headers=headers,
         )
-        return OutreachAuthAdapter._handle_response(res)
-
-    def refresh(self):
-        query = outreach_consts.REAUTHENTICATION_QUERY_PARAMS(self.refresh_token)
-        query = urlencode(query)
-        res = client.post(f"{outreach_consts.AUTHENTICATION_URI}?{query}")
-
-        return OutreachAuthAdapter._handle_response(res)
-
-    def revoke(self):
-        outreach_account = OutreachAccount.objects.get(id=self.id)
-        try:
-            outreach_account.delete()
-            return logger.info(f"Succefully deleted account {outreach_account}")
-        except Exception as e:
-            logger.exception(f"Failed to delete account {outreach_account},{e}")
-
-
-class OutreachAuthAccountQuerySet(models.QuerySet):
-    def for_user(self, user):
-        if user.organization and user.is_active:
-            return self.filter(organization=user.organization)
-        else:
-            self.none()
-
-
-class OutreachAuthAccount(TimeStampModel):
-    organization = models.OneToOneField(
-        "organization.Organization",
-        related_name="outreach_auth_account",
-        blank=False,
-        null=False,
-        on_delete=models.CASCADE,
-    )
-    access_token = models.TextField(blank=True)
-    refresh_token = models.TextField(blank=True)
-    token_generated_date = models.DateTimeField(null=True, blank=True)
-    admin = models.OneToOneField(
-        "core.User", on_delete=models.CASCADE, related_name="outreach_admin", blank=True, null=True
-    )
-
-    objects = OutreachAuthAccountQuerySet.as_manager()
-
-    class Meta:
-        ordering = ["-datetime_created"]
-
-    def __str__(self):
-        return f"Auth account for {self.organization} owned by {self.admin.email}"
-
-    @property
-    def helper_class(self):
-        data = self.__dict__
-        data["id"] = str(data.get("id"))
-        return OutreachAuthAdapter(**data)
-
-    def regenerate_token(self):
-        data = self.__dict__
-        data["id"] = str(data.get("id"))
-        helper = OutreachAuthAdapter(**data)
-        res = helper.refresh()
-        self.token_generated_date = timezone.now()
-        self.access_token = res.get("access_token", None)
-        self.refresh_token = res.get("refresh_token", None)
-        self.save()
-
-
-class OutreachAccountQuerySet(models.QuerySet):
-    def for_user(self, user):
-        if user.organization and user.is_active:
-            return self.filter(auth_account__organization=user.organization)
-        else:
-            return self.none()
-
-
-class OutreachAccountAdapter:
-    def __init__(self, **kwargs):
-        self.id = kwargs.get("id", None)
-        self.auth_account = kwargs.get("auth_account", None)
-        self.user = kwargs.get("user", None)
-        self.outreach_id = kwargs.get("outreach_id", None)
-        self.guid = kwargs.get("guid", None)
-        self.is_active = kwargs.get("is_active", None)
-        self.email = kwargs.get("email", None)
-        self.team_id = kwargs.get("team_id", None)
-
-    @property
-    def as_dict(self):
-        return vars(self)
-
-    @classmethod
-    def create_account(cls, user_data, auth_account_id):
-        try:
-            user = User.objects.get(email=user_data["email"])
-            team = user_data["team"]
-            data = {}
-            data["auth_account"] = auth_account_id
-            data["user"] = user.id
-            data["outreach_id"] = user_data["id"]
-            data["guid"] = user_data["guid"]
-            data["is_active"] = user_data["active"]
-            data["email"] = user_data["email"]
-            data["team_id"] = team["id"]
-            return cls(**data)
-        except ObjectDoesNotExist:
-            return None
+        return OutreachAccountAdapter._handle_response(res)
 
 
 class OutreachAccount(TimeStampModel):
-    auth_account = models.ForeignKey(
-        "OutreachAuthAccount",
-        related_name="users",
-        on_delete=models.CASCADE,
-        blank=True,
-        null=True,
-    )
     user = models.OneToOneField(
         "core.User",
         on_delete=models.CASCADE,
@@ -262,10 +169,9 @@ class OutreachAccount(TimeStampModel):
         null=True,
     )
     outreach_id = models.IntegerField()
-    guid = models.CharField(max_length=50)
-    is_active = models.BooleanField(default=True)
-    email = models.EmailField()
-    team_id = models.IntegerField(blank=True)
+    access_token = models.TextField(blank=True)
+    refresh_token = models.TextField(blank=True)
+    token_generated_date = models.DateTimeField(null=True, blank=True)
 
     objects = OutreachAccountQuerySet.as_manager()
 
@@ -279,7 +185,17 @@ class OutreachAccount(TimeStampModel):
     def helper_class(self):
         data = self.__dict__
         data["id"] = str(data.get("id"))
-        return OutreachAuthAdapter(**data)
+        return OutreachAccountAdapter(**data)
+
+    def regenerate_token(self):
+        data = self.__dict__
+        data["id"] = str(data.get("id"))
+        helper = OutreachAccountAdapter(**data)
+        res = helper.refresh()
+        self.token_generated_date = timezone.now()
+        self.access_token = res.get("access_token", None)
+        self.refresh_token = res.get("refresh_token", None)
+        self.save()
 
 
 class SequenceQuerySet(models.QuerySet):
@@ -295,8 +211,6 @@ class SequenceAdapter:
         self.sequence_id = kwargs.get("sequence_id", None)
         self.name = kwargs.get("name", None)
         self.owner = kwargs.get("owner", None)
-        self.is_team_sequence = kwargs.get("is_team_sequence", None)
-        self.is_shared = kwargs.get("is_shared", None)
         self.created_at = kwargs.get("created_at", None)
         self.updated_at = kwargs.get("updated_at", None)
 
@@ -366,8 +280,6 @@ class Sequence(TimeStampModel):
         blank=True,
         null=True,
     )
-    is_team_sequence = models.BooleanField()
-    is_shared = models.BooleanField()
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
 
@@ -390,7 +302,7 @@ class Sequence(TimeStampModel):
         return block_builders.option(self.name, str(self.id))
 
 
-class SLAccountQuerySet(models.QuerySet):
+class AccountQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
             return self.filter(owner__organization=user.organization_id)
@@ -398,7 +310,7 @@ class SLAccountQuerySet(models.QuerySet):
             return self.none()
 
 
-class SLAccountAdapter:
+class AccountAdapter:
     def __init__(self, **kwargs):
         self.account_id = kwargs.get("account_id", None)
         self.name = kwargs.get("name", None)
@@ -426,26 +338,26 @@ class SLAccountAdapter:
             return None
 
 
-class SLAccount(TimeStampModel):
+class Account(TimeStampModel):
     account_id = models.IntegerField()
     name = models.CharField(max_length=100)
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
     owner = models.ForeignKey(
         "OutreachAccount",
-        related_name="sl_accounts",
+        related_name="outreach_accounts",
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
     )
 
-    objects = SLAccountQuerySet.as_manager()
+    objects = AccountQuerySet.as_manager()
 
     class Meta:
         ordering = ["-datetime_created"]
 
     def __str__(self):
-        return f"SLAccount {self.name} owned by {self.owner}"
+        return f"Account {self.name} owned by {self.owner}"
 
 
 class ProspectQuerySet(models.QuerySet):
@@ -459,8 +371,6 @@ class ProspectQuerySet(models.QuerySet):
 class ProspectAdapter:
     def __init__(self, **kwargs):
         self.prospects_id = kwargs.get("prospects_id", None)
-        self.first_name = kwargs.get("first_name", None)
-        self.last_name = kwargs.get("last_name", None)
         self.full_name = kwargs.get("full_name", None)
         self.email = kwargs.get("email", None)
         self.account = kwargs.get("account", None)
@@ -508,7 +418,7 @@ class ProspectAdapter:
                 slacc = OutreachAccount.objects.get(outreach_id=owner["id"])
                 slacc_id = slacc.id
             if account:
-                acc = SLAccount.objects.get(account_id=account["id"])
+                acc = Account.objects.get(account_id=account["id"])
                 acc_id = acc.id
             data = {}
             data["prospects_id"] = prospects_data["id"]
@@ -537,14 +447,12 @@ class ProspectAdapter:
 
 class Prospect(TimeStampModel):
     prospects_id = models.IntegerField()
-    first_name = models.CharField(max_length=20)
-    last_name = models.CharField(max_length=20)
     full_name = models.CharField(max_length=50)
     email = models.EmailField()
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
     account = models.ForeignKey(
-        "SLAccount", related_name="prospects", on_delete=models.CASCADE, blank=True, null=True,
+        "Account", related_name="prospects", on_delete=models.CASCADE, blank=True, null=True,
     )
     owner = models.ForeignKey(
         "OutreachAccount",

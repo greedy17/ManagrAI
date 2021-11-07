@@ -32,8 +32,8 @@ if settings.USE_OUTREACH:
     CLIENT_SECRET = settings.OUTREACH_SECRET
     OUTREACH_BASE_URI = settings.OUTREACH_BASE_URL
 
-    AUTHENTICATION_URI = "https://accounts.salesloft.com/oauth/token"
-    AUTHORIZATION_URI = "https://api.outreach.io/oauth/token"
+    AUTHENTICATION_URI = "https://api.outreach.io/oauth/token"
+    AUTHORIZATION_URI = "https://api.outreach.io/oauth/authorize"
 
     if settings.IN_DEV:
         OUTREACH_FRONTEND_REDIRECT = "http://localhost:8080/settings/integrations"

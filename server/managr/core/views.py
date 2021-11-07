@@ -56,6 +56,7 @@ logger = logging.getLogger("managr")
 
 
 def index(request):
+    print(request)
     try:
         return render(request, "index.html", {})
     except TemplateDoesNotExist:
@@ -538,7 +539,7 @@ def get_account_status(request):
 class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
     serializer_class = UserInvitationSerializer
     permission_classes = (IsSuperUser | IsOrganizationManager,)
-    
+
     def create(self, request, *args, **kwargs):
         u = request.user
         if not u.is_superuser:
