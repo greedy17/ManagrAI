@@ -19,7 +19,7 @@
       <p class="center" style="font-weight: bold; color: #5d5e5e; margin-top: -0.5rem">
         Edit, Run, and Schedule your saved Automations
       </p>
-      <div v-if="!templates.list.length">
+      <div v-if="!alertsCount(templates.list.length)">
         <h3
           class="bouncy"
           style="
@@ -35,7 +35,7 @@
         <p style="font-weight: bold; color: #5d5e5e; text-align: center">Nothing here.. (o^^)o</p>
       </div>
     </div>
-    <template v-if="!templates.isLoading && templates.list.length">
+    <template v-if="!templates.isLoading && alertsCount(templates.list.length)">
       <div class="middle" v-if="!editing">
         <div class="edit__modal">
           <div>
@@ -93,11 +93,17 @@
             </div>
           </template>
         </div>
+        <div v-if="hasZoomChannel" class="card__">
+          <h3 class="card__header">LOG ZOOM MEETINGS</h3>
+          <div class="row">
+            <button @click="goToLogZoom" class="green_button">Change Channel</button>
+          </div>
+        </div>
 
-        <div v-if="!user.isAdmin">
-          <div class="card__ keep-activating" v-if="templates.list.length == 1">
+        <!-- <div v-if="user.isAdmin">
+          <div class="card__ keep-activating" v-if="alertsCount(templates.list.length) == 1">
             <h3 style="color: #fa646a" class="card__header">
-              Only {{ templates.list.length }} workflow active
+              Only {{ alertsCount(templates.list.length) }} workflow active
             </h3>
             <p style="margin-top: -1rem; font-size: 0.85rem">
               We recommend at least 3 to get the most out of Managr
@@ -108,33 +114,30 @@
               </button></span
             >
           </div>
-          <div class="card__ keep-activating__" v-if="templates.list.length == 2">
+          <div class="card__ keep-activating__" v-if="alertsCount(templates.list.length) == 2">
             <h3 style="color: #ddad3c" class="card__header">
-              So close... {{ templates.list.length }} workflows active
+              So close... {{ alertsCount(templates.list.length) }} workflows active
             </h3>
             <p style="margin-top: -1rem; font-size: 0.85rem">
               Activate at least one more to get the most out of Managr
             </p>
             <span class="centered"
               ><button @click="goToTemplates" class="bouncy activate-button">
-                Activate more workflows
+                Activate one more
               </button></span
             >
           </div>
           <div
             :class="isHiding ? 'invisible' : 'card__ done-activating'"
-            v-if="templates.list.length >= 3"
+            v-if="alertsCount(templates.list.length) >= 3"
           >
             <h3 style="color: #199e54" class="card__header">Onboarding Complete</h3>
             <p style="margin-top: -1rem; font-size: 0.95rem">We'll take it from here.</p>
             <p style="margin-top: -0.75rem; font-size: 0.95rem">
               Come back anytime to add more workflows
             </p>
-            <!-- <span class="centered"
-              ><button @click="hideCard" class="activate-button">Hide message</button></span
-            > -->
           </div>
-        </div>
+        </div> -->
       </div>
 
       <!-- <ExpandablePanel :key="i" v-for="(alert, i) in templates.list">
@@ -215,6 +218,8 @@ import Modal from '@/components/InviteModal'
  *
  */
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { UserConfigForm } from '@/services/users/forms'
+import User from '@/services/users'
 
 import AlertTemplate, {
   AlertGroupForm,
@@ -237,17 +242,59 @@ export default {
   data() {
     return {
       templates: CollectionManager.create({ ModelClass: AlertTemplate }),
+      users: CollectionManager.create({ ModelClass: User }),
       deleteOpen: false,
       deleteId: '',
+      deleteTitle: '',
       currentAlert: {},
       editing: true,
       isHiding: false,
+      userConfigForm: new UserConfigForm({}),
+      configName: '',
+      configArray: [],
     }
   },
   async created() {
     this.templates.refresh()
+    this.userConfigForm = new UserConfigForm({
+      activatedManagrConfigs: this.user.activatedManagrConfigs,
+    })
+    const reloaded = localStorage.getItem('reloaded')
+    if (reloaded !== 'true') {
+      localStorage.setItem('reloaded', 'true')
+      location.reload()
+    }
   },
   methods: {
+    deletedTitle(id) {
+      let newList = []
+      newList = this.templates.list.filter((val) => val.id === id)
+      this.deleteTitle = newList[0].title
+    },
+    handleUpdate() {
+      this.loading = true
+      User.api
+        .update(this.user.id, this.userConfigForm.value)
+        .then((response) => {
+          this.$store.dispatch('updateUser', User.fromAPI(response.data))
+        })
+        .catch((e) => {
+          console.log(e)
+        })
+    },
+    alertsCount(num) {
+      if (this.hasZoomChannel) {
+        return num + 1
+      } else {
+        return num
+      }
+    },
+    goToLogZoom() {
+      this.$router.push({ name: 'LogZoom' })
+    },
+    hasZoomChannel() {
+      return this.$store.state.user.slackAccount.zoomChannel
+    },
     hideCard() {
       this.isHiding = true
     },
@@ -270,9 +317,15 @@ export default {
       this.$router.go()
     },
     async onDeleteTemplate(id) {
+      this.deletedTitle(id)
       try {
         await AlertTemplate.api.deleteAlertTemplate(id)
         await this.templates.refresh()
+        this.userConfigForm.field.activatedManagrConfigs.value =
+          this.userConfigForm.field.activatedManagrConfigs.value.filter(
+            (val) => val !== this.deleteTitle,
+          )
+        this.handleUpdate()
         this.deleteOpen = !this.deleteOpen
       } catch {
         this.$Alert.alert({
@@ -566,9 +619,8 @@ a {
 .green_button {
   color: white;
   background-color: $dark-green;
-  width: 8vw;
   border-radius: 0.25rem;
-  padding: 0.5rem;
+  padding: 0.5rem 1rem;
   font-weight: bold;
   font-size: 16px;
   border: none;

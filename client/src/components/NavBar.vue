@@ -20,12 +20,12 @@
             </li>
             <li>
               <router-link active-class="active" :to="{ name: 'ListTemplates' }"
-                >Automate
+                >Workflows
               </router-link>
             </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
-                >Invite</router-link
+                >Team</router-link
               >
             </li>
           </ul>
@@ -34,24 +34,30 @@
         <div class="mar" v-else-if="!isAdmin && userLevel === 'MANAGER'">
           <ul>
             <li>
-              <router-link exact-active-class="active" :to="{ name: 'Integrations' }"
+              <router-link
+                v-if="user.onboarding"
+                exact-active-class="active"
+                :to="{ name: 'Integrations' }"
+                >Onboarding
+              </router-link>
+              <router-link v-else exact-active-class="active" :to="{ name: 'Integrations' }"
                 >Connect
               </router-link>
             </li>
             <li>
               <router-link
-                v-if="hasSlack && hasNylas && hasZoom && hasSalesforce"
+                v-if="!user.onboarding"
                 active-class="active"
                 :to="{ name: 'ListTemplates' }"
-                >Automate
+                >Workflows
               </router-link>
             </li>
             <li>
               <router-link
-                v-if="hasSlack && hasNylas && hasZoom && hasSalesforce"
+                v-if="!user.onboarding"
                 exact-active-class="active"
                 :to="{ name: 'InviteUsers' }"
-                >Invite</router-link
+                >Team</router-link
               >
             </li>
           </ul>
@@ -60,20 +66,26 @@
         <div class="mar" v-else>
           <ul>
             <li>
-              <router-link exact-active-class="active" :to="{ name: 'Integrations' }"
+              <router-link
+                v-if="user.onboarding"
+                exact-active-class="active"
+                :to="{ name: 'Integrations' }"
+                >Onboarding
+              </router-link>
+              <router-link v-else exact-active-class="active" :to="{ name: 'Integrations' }"
                 >Connect
               </router-link>
             </li>
-            <li v-if="hasSlack && hasNylas && hasZoom && hasSalesforce">
+            <li v-if="!user.onboarding">
               <router-link active-class="active" :to="{ name: 'ListTemplates' }"
-                >Automate
+                >Workflows
               </router-link>
             </li>
           </ul>
         </div>
       </div>
 
-      <div v-if="hasSlack && hasNylas && hasZoom && hasSalesforce && !isAdmin" class="right">
+      <div v-if="!isAdmin && user.onboarding" class="right">
         <div class="tooltip">
           <img style="height: 1.5rem" src="@/assets/images/blackhelp.png" class="tooltip__icon" />
           <div class="tooltip__popup">

@@ -217,7 +217,7 @@
             hasNylasIntegration &&
             hasZoomIntegration &&
             hasSalesforceIntegration &&
-            templates.list.length < 1
+            user.onboarding
           "
           class="card"
         >
@@ -565,6 +565,13 @@ export default {
     }
   },
   methods: {
+    alertsCount(num) {
+      if (this.hasZoomChannel) {
+        return num + 1
+      } else {
+        return num
+      }
+    },
     goToSlackFormBuilder() {
       this.$router.push({ name: 'Configure' })
     },
@@ -696,17 +703,8 @@ export default {
     }
   },
   computed: {
-    allIntegrated() {
-      if (
-        (this.hasSlackIntegration || this.orgHasSlackIntegration) &&
-        this.hasNylasIntegration &&
-        this.hasZoomIntegration &&
-        this.hasSalesforceIntegration
-      ) {
-        return true
-      } else {
-        return false
-      }
+    hasZoomChannel() {
+      return this.$store.state.user.slackAccount.zoomChannel
     },
     hasSalesforceIntegration() {
       return !!this.$store.state.user.salesforceAccount

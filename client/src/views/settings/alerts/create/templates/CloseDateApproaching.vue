@@ -6,6 +6,10 @@
           Close Date
           <span style="color: #199e54">Approaching</span>
         </span>
+        <p v-if="userLevel === 'REP'" style="color: #3c3940; font-size: 1.1rem">
+          Choose a delivery day and create a Slack channel for these notifications. We’ll take it
+          from there
+        </p>
       </h2>
     </div>
 
@@ -16,7 +20,11 @@
           :key="i"
           v-for="(form, i) in alertTemplateForm.field.alertConfig.groups"
         >
-          <div class="delivery__row" :errors="form.field.recurrenceDay.errors">
+          <div
+            style="margin-top: 1rem"
+            class="delivery__row"
+            :errors="form.field.recurrenceDay.errors"
+          >
             <div style="margin-bottom: 0.5rem" class="row__">
               <label>Weekly</label>
               <ToggleCheckBox
@@ -78,7 +86,11 @@
             </p>
           </div>
 
-          <div class="delivery__row">
+          <div
+            style="margin-top: 1rem; margin-left: 0.5rem"
+            v-if="userLevel !== 'REP'"
+            class="delivery__row"
+          >
             <span style="margin-bottom: 0.5rem">Select Pipelines</span>
 
             <FormField :errors="form.field.alertTargets.errors">
@@ -125,6 +137,7 @@
               align-items: center;
               justify-content: flex-start;
               padding: 0.5rem;
+              margin-top: 0.5rem;
             "
           >
             <div v-if="!channelName" class="row__">
@@ -272,6 +285,7 @@ import DropDownSearch from '@/components/DropDownSearch'
 import ExpandablePanel from '@/components/ExpandablePanel'
 import Modal from '@/components/Modal'
 import SmartAlertTemplateBuilder from '@/views/settings/alerts/create/SmartAlertTemplateBuilder'
+import Multiselect from 'vue-multiselect'
 
 /**
  * Services
@@ -295,6 +309,7 @@ import {
 } from '@/services/salesforce'
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
+import { UserConfigForm } from '@/services/users/forms'
 export default {
   name: 'CloseDateApproaching',
   components: {
@@ -312,6 +327,7 @@ export default {
     PulseLoadingSpinnerButton,
     Modal,
     SmartAlertTemplateBuilder,
+    Multiselect,
   },
   data() {
     return {
@@ -334,10 +350,12 @@ export default {
       create: true,
       SOBJECTS_LIST,
       pageNumber: 0,
+      configName: '',
       alertTemplateForm: new AlertTemplateForm(),
       selectedBindings: [],
       fields: CollectionManager.create({ ModelClass: SObjectField }),
       users: CollectionManager.create({ ModelClass: User }),
+      userConfigForm: new UserConfigForm({}),
       recipientBindings: [
         { referenceDisplayLabel: 'Recipient Full Name', apiName: 'full_name' },
         { referenceDisplayLabel: 'Recipient First Name', apiName: 'first_name' },
@@ -378,6 +396,9 @@ export default {
     if (this.user.userLevel == 'MANAGER') {
       await this.users.refresh()
     }
+    this.userConfigForm = new UserConfigForm({
+      activatedManagrConfigs: this.user.activatedManagrConfigs,
+    })
   },
   watch: {
     selectedResourceType: {
@@ -396,6 +417,27 @@ export default {
     },
   },
   methods: {
+    repsPipeline() {
+      if (this.userLevel === 'REP') {
+        this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
+        this.setPipelines({
+          fullName: 'MYSELF',
+          id: 'SELF',
+        })
+      }
+    },
+    handleUpdate() {
+      this.loading = true
+      console.log(this.userConfigForm.value)
+      User.api
+        .update(this.user.id, this.userConfigForm.value)
+        .then((response) => {
+          this.$store.dispatch('updateUser', User.fromAPI(response.data))
+        })
+        .catch((e) => {
+          console.log(e)
+        })
+    },
     changeCreate() {
       this.create = !this.create
       if (
@@ -593,7 +635,14 @@ export default {
             ...this.alertTemplateForm.toAPI,
             user: this.$store.state.user.id,
           })
-          this.$router.push({ name: 'ListTemplates' })
+          this.userConfigForm.field.activatedManagrConfigs.value.push(res.title)
+          this.handleUpdate()
+          this.$router.push({ name: 'CreateNew' })
+          this.$Alert.alert({
+            message: 'Workflow saved succcessfully!',
+            timeout: 2000,
+            type: 'success',
+          })
         } catch (e) {
           this.$Alert.alert({
             message: 'An error occured saving template',
@@ -696,6 +745,9 @@ export default {
     },
   },
   computed: {
+    userLevel() {
+      return this.$store.state.user.userLevel
+    },
     userTargetsOpts() {
       if (this.user.userLevel == 'MANAGER') {
         return [
@@ -789,6 +841,7 @@ export default {
     this.alertTemplateForm.field.title.value = 'Close Date Approaching'
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
       'Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has an upcoming close date of <strong>{ Opportunity.CloseDate }</strong>. Please update it!'
+    this.repsPipeline()
   },
 }
 </script>
@@ -814,6 +867,13 @@ export default {
 }
 .bouncy {
   animation: bounce 0.2s infinite alternate;
+}
+
+::v-deep .multiselect__tags {
+  min-width: 16vw;
+  max-width: 20vw;
+  -webkit-box-shadow: 1px 4px 7px black;
+  box-shadow: 1px 4px 7px black;
 }
 ::v-deep .input-content {
   width: 12vw;
