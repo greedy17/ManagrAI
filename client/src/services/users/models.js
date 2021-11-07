@@ -42,6 +42,8 @@ export default class User extends Model {
   static hasSalesloftIntegration = new fields.Field({ readOnly: true })
   static gongAccount = new fields.Field()
   static hasGongIntegration = new fields.Field({ readOnly: true })
+  static outreachAccount = new fields.Field()
+  static hasOutreachIntegration = new fields.Field({ readOnly: true })
 
 
   static fromAPI(json = {}) {
