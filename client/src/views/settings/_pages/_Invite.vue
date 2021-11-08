@@ -294,7 +294,7 @@ Override dropdown select input field
   color: $panther;
 }
 ::v-deep .tn-dropdown__options__option {
-  color: $panther-gray;
+  color: $panther-silver;
   font-weight: bold;
 }
 form,

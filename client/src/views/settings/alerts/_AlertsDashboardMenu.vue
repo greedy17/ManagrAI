@@ -34,7 +34,7 @@
       <router-link
         v-if="user.onboarding"
         :class="
-          !user.onboarding && user.activatedManagrConfigs.includes('Close Date approaching')
+          user.onboarding && !user.activatedManagrConfigs.includes('Close Date approaching')
             ? 'onboarding row'
             : 'row'
         "

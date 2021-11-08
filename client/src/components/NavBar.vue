@@ -85,7 +85,7 @@
         </div>
       </div>
 
-      <div v-if="!isAdmin && user.onboarding" class="right">
+      <div v-if="!isAdmin && !user.onboarding" class="right">
         <div class="tooltip">
           <img style="height: 1.5rem" src="@/assets/images/blackhelp.png" class="tooltip__icon" />
           <div class="tooltip__popup">
@@ -193,6 +193,9 @@ export default {
   destroyed() {},
 
   methods: {
+    user() {
+      return this.$store.state.user
+    },
     toggleDropDown() {
       this.dropdownOpen = !this.dropdownOpen
     },
