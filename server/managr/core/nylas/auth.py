@@ -64,7 +64,14 @@ def get_account_details(token):
     collected_data = {"account": account.json(), "calendars": calendar.json()}
     return collected_data
 
-
+def get_calendar_details_from_nylas(token):
+    headers = dict(Authorization=f"Bearer {token}")
+    events = requests.get(
+        f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.Event_Post}", headers=headers,
+    )
+    events_data = {"events": events.json()}
+    return events_data
+    
 def revoke_access_token(token):
     """function to revoke access token
     mostly used for billing if a user changes smtp or is removed
