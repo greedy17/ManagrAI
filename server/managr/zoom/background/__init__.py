@@ -242,14 +242,14 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
         if settings.IN_DEV or settings.IN_STAGING:
             participants.append(
                 {
-                    "name": "Definitely NOT Mike",
+                    "name": "maybe mike",
                     "id": "",
                     "user_email": f"{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}@{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}.com",
                 }
             )
             participants.append(
                 {
-                    "name": "Looks like Mike",
+                    "name": "not",
                     "id": "",
                     "user_email": f"{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}@{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}.com",
                 }

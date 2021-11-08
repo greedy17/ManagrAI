@@ -2,11 +2,12 @@ import json
 import pdb
 import uuid
 import logging
+import pytz
 from urllib.parse import urlencode
 
 from django.db.models import Q
 from django.utils import timezone
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_paginator_block
@@ -23,6 +24,7 @@ from managr.slack.helpers.utils import (
     block_finder,
     process_done_alert,
     generate_call_block,
+    check_contact_last_name,
 )
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
@@ -108,8 +110,17 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
     org = workflow.user.organization
 
     access_token = org.slack_integration.access_token
-    blocks = get_block_set("show_meeting_contacts", context,)
 
+    private_metadata = {
+        "original_message_channel": payload["channel"]["id"]
+        if "channel" in payload
+        else context.get("channel"),
+        "original_message_timestamp": payload["message"]["ts"]
+        if "message" in payload
+        else context.get("timestamp"),
+    }
+    private_metadata.update(context)
+    blocks = get_block_set("show_meeting_contacts", private_metadata,)
     data = {
         "trigger_id": trigger_id,
         # "view_id": view_id,
@@ -117,13 +128,11 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
             "type": "modal",
             "title": {"type": "plain_text", "text": "Contacts"},
             "blocks": blocks,
-            "private_metadata": json.dumps(context),
+            "private_metadata": json.dumps(private_metadata),
         },
     }
     if action == slack_const.VIEWS_UPDATE:
         data["view_id"] = payload["view"]["id"]
-
-    # private_metadata.update(context)
     try:
         res = slack_requests.generic_request(url, data, access_token=access_token)
     except InvalidBlocksException as e:
@@ -176,6 +185,8 @@ def process_edit_meeting_contact(payload, context):
                     "w": context.get("w"),
                     "tracking_id": context.get("tracking_id"),
                     "current_view_id": view_id,
+                    "channel": context.get("channel"),
+                    "timestamp": context.get("timestamp"),
                 }
             ),
         },
@@ -438,7 +449,8 @@ def process_stage_selected_command_form(payload, context):
 def process_remove_contact_from_meeting(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     meeting = workflow.meeting
-
+    org = workflow.user.organization
+    access_token = org.slack_integration.access_token
     for i, part in enumerate(meeting.participants):
         if part["_tracking_id"] == context.get("tracking_id"):
             # remove its form if it exists
@@ -447,6 +459,13 @@ def process_remove_contact_from_meeting(payload, context):
             del meeting.participants[i]
             break
     meeting.save()
+    if check_contact_last_name(workflow.id):
+        update_res = slack_requests.update_channel_message(
+            context.get("channel"),
+            context.get("timestamp"),
+            access_token,
+            block_set=get_block_set("initial_meeting_interaction", {"w": context.get("w")}),
+        )
 
     return process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_UPDATE)
 
@@ -626,7 +645,7 @@ def process_create_or_search_selected(payload, context):
     if not select_block:
         # create new block including the resource type
         block_sets = get_block_set("attach_resource_interaction", {"w": workflow_id})
-        previous_blocks.insert(5, block_sets[0])
+        previous_blocks.insert(2, block_sets[0])
     try:
         res = slack_requests.update_channel_message(
             payload["channel"]["id"],
@@ -849,9 +868,7 @@ def process_no_changes_made(payload, context):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     organization = workflow.user.organization
     access_token = organization.slack_integration.access_token
-    blocks = payload["message"]["blocks"]
-    blocks.pop()
-    blocks.append(block_builders.simple_section(":+1: Got it!", text_type="mrkdwn"))
+    blocks = [*get_block_set("loading", {"message": ":+1: Got it! Logging your activity"})]
     try:
         slack_requests.update_channel_message(
             payload["channel"]["id"], payload["message"]["ts"], access_token, block_set=blocks,
@@ -1424,14 +1441,16 @@ def process_get_call_recording(payload, context):
     trigger_id = payload["trigger_id"]
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     user = User.objects.get(id=context.get("u"))
+    user_tz = datetime.now(pytz.timezone(user.timezone)).strftime("%z")
     gong_auth = GongAuthAccount.objects.get(organization=user.organization)
     access_token = user.organization.slack_integration.access_token
     opp = Opportunity.objects.get(id=context.get("resource_id"))
     type = context.get("type", None)
+    timestamp = datetime.fromtimestamp(float(payload["message"]["ts"]))
     blocks = []
-    if type == "recap":
+    if type == "recap" and timestamp >= (datetime.now() - timedelta(hours=24)):
         curr_date = date.today()
-        curr_date_str = curr_date.isoformat() + "T01:00:00Z"
+        curr_date_str = curr_date.isoformat() + "T01:00:00" + f"{user_tz[:3]}:{user_tz[3:]}"
         try:
             call_res = gong_auth.helper_class.check_for_current_call(curr_date_str)
             call_details = generate_call_block(call_res, opp.secondary_data["Id"])
@@ -1505,6 +1524,45 @@ def process_mark_complete(payload, context):
     return
 
 
+@processor()
+def process_send_recap_modal(payload, context):
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    trigger_id = payload["trigger_id"]
+    workflow = MeetingWorkflow.objects.get(id=context.get("workflow_id"))
+    meeting = workflow.meeting
+    organization = meeting.zoom_account.user.organization
+    access_token = organization.slack_integration.access_token
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.PROCESS_SEND_RECAPS,
+            "title": {"type": "plain_text", "text": "Send Recaps"},
+            "blocks": get_block_set("send_recap_block_set", {"u": context.get("u")}),
+            "submit": {"type": "plain_text", "text": "Send"},
+            "private_metadata": json.dumps(context),
+        },
+    }
+    try:
+        res = slack_requests.generic_request(url, data, access_token=access_token)
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.user.id)} email {workflow.user.email} {e}"
+        )
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -1538,6 +1596,7 @@ def handle_block_actions(payload):
         slack_const.CALL_ERROR: process_call_error,
         slack_const.GONG_CALL_RECORDING: process_get_call_recording,
         slack_const.MARK_COMPLETE: process_mark_complete,
+        slack_const.PROCESS_SEND_RECAP_MODAL: process_send_recap_modal,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)
