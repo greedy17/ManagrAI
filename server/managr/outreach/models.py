@@ -76,7 +76,6 @@ class OutreachAccountAdapter:
     @staticmethod
     def get_authorization():
         query = urlencode(outreach_consts.AUTHORIZATION_QUERY_PARAMS)
-        print(query)
         return f"{outreach_consts.AUTHORIZATION_URI}?{query}"
 
     @staticmethod
@@ -84,7 +83,6 @@ class OutreachAccountAdapter:
         query = outreach_consts.AUTHENTICATION_QUERY_PARAMS(code)
         query = urlencode(query)
         r = client.post(f"{outreach_consts.AUTHENTICATION_URI}?{query}",)
-        print(r.json())
         return OutreachAccountAdapter._handle_response(r)
 
     def refresh(self):
@@ -103,12 +101,24 @@ class OutreachAccountAdapter:
             logger.exception(f"Failed to delete account {outreach_account},{e}")
 
     @classmethod
-    def create_account(cls, code):
+    def get_basic_user(cls, access_token):
+        headers = outreach_consts.OUTREACH_REQUEST_HEADERS(access_token)
+        res = client.get(f"{outreach_consts.OUTREACH_BASE_URI}", headers=headers)
+        return OutreachAccountAdapter._handle_response(res)
+
+    @classmethod
+    def create_account(cls, code, managr_user_id):
+        user = User.objects.get(id=managr_user_id)
         try:
             auth_data = cls.get_auth_token(code)
-            print(auth_data)
-            # data = {}
-            # return cls(**data)
+            user_data = cls.get_basic_user(auth_data["access_token"])
+            data = {}
+            data["outreach_id"] = user_data["meta"]["user"]["id"]
+            data["user"] = user.id
+            data["access_token"] = auth_data["access_token"]
+            data["refresh_token"] = auth_data["refresh_token"]
+            data["token_generated_date"] = datetime.now()
+            return cls(**data)
         except ObjectDoesNotExist:
             return None
 
@@ -182,6 +192,10 @@ class OutreachAccount(TimeStampModel):
         return f"Outreach Account for {self.user.email}"
 
     @property
+    def as_dict(self):
+        return vars(self)
+
+    @property
     def helper_class(self):
         data = self.__dict__
         data["id"] = str(data.get("id"))
@@ -213,10 +227,6 @@ class SequenceAdapter:
         self.owner = kwargs.get("owner", None)
         self.created_at = kwargs.get("created_at", None)
         self.updated_at = kwargs.get("updated_at", None)
-
-    @property
-    def as_dict(self):
-        return vars(self)
 
     @staticmethod
     def _handle_response(response, fn_name=None):

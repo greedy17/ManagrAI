@@ -56,7 +56,6 @@ logger = logging.getLogger("managr")
 
 
 def index(request):
-    print(request)
     try:
         return render(request, "index.html", {})
     except TemplateDoesNotExist:

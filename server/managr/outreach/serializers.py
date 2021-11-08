@@ -9,13 +9,11 @@ class OutreachAccountSerializer(serializers.ModelSerializer):
         model = OutreachAccount
         fields = (
             "id",
-            "auth_account",
             "user",
             "outreach_id",
-            "guid",
-            "is_active",
-            "email",
-            "team_id",
+            "access_token",
+            "refresh_token",
+            "token_generated_date",
         )
 
 

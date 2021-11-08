@@ -26,7 +26,7 @@ if settings.USE_OUTREACH:
         "users.read",
         "users.write",
     ]
-    SCOPES = "+".join(ALL_SCOPES)
+    SCOPES = " ".join(ALL_SCOPES)
     CLIENT_ID = settings.OUTREACH_CLIENT_ID
     REDIRECT_URI = settings.OUTREACH_REDIRECT_URI
     CLIENT_SECRET = settings.OUTREACH_SECRET

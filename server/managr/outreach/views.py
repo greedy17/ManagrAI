@@ -43,9 +43,7 @@ logger = logging.getLogger("managr")
 @api_view(["GET"])
 @permission_classes([permissions.IsAuthenticated])
 def get_outreach_auth_link(request):
-    print(request)
     link = OutreachAccountAdapter.get_authorization()
-    print(link)
     return Response({"link": link})
 
 
@@ -55,7 +53,7 @@ def get_outreach_authentication(request):
     code = request.data.get("code", None)
     if not code:
         raise ValidationError()
-    res = OutreachAccountAdapter.create_account(code)
+    res = OutreachAccountAdapter.create_account(code, request.user.id)
     existing = OutreachAccount.objects.filter(user=request.user).first()
     if existing:
         serializer = OutreachAccountSerializer(data=res.as_dict, instance=existing)
@@ -86,8 +84,6 @@ def revoke_outreach_access_token(request):
 
 
 def redirect_from_outreach(request):
-    print(request)
-    print(request.data)
     code = request.GET.get("code", None)
     q = urlencode({"code": code, "state": "OUTREACH"})
     if not code:
