@@ -21,10 +21,10 @@
           >
             Activate
           </button>
-          <h4 style="margin-top: -0.5rem" v-if="!hasZoomIntegration">
+          <h4 style="margin-top: -0.5rem" v-else-if="!hasZoomIntegration">
             Connect Zoom in order to activate
           </h4>
-          <p style="margin-top: -0.5rem; font-weight: 900" v-if="hasZoomChannel">Activated</p>
+          <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="hasZoomChannel">Activated</p>
         </div>
       </div>
 

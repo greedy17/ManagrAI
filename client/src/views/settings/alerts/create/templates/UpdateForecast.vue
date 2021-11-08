@@ -6,7 +6,10 @@
           Update
           <span style="color: #199e54">Forecast</span>
         </span>
-        <p v-if="userLevel === 'REP'" style="color: #3c3940; font-size: 1.1rem">
+        <p
+          v-if="userLevel !== 'MANAGER' || !user.isAdmin"
+          style="color: #3c3940; font-size: 1.1rem"
+        >
           Choose a delivery day and create a Slack channel for these notifications. We’ll take it
           from there
         </p>
