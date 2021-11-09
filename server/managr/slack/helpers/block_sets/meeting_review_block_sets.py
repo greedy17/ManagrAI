@@ -39,8 +39,8 @@ def _initial_interaction_message(resource_name=None, resource_type=None, missing
 
     # replace opp, review disregard
     if missing_attendees:
-        return "Meeting mapped successfully:dart: Some attendees have missing info:exclamation:"
-    return f"Meeting mapped successfully:dart: And contacts look good :+1:"
+        return "Mapped successfully:dart: Some attendees have missing info:exclamation:"
+    return f"Mapped successfully:dart: And contacts look good :+1:"
 
 
 def generate_edit_contact_form(field, id, value, optional=True):
@@ -375,7 +375,7 @@ def initial_meeting_interaction_block_set(context):
             block_builders.section_with_button_block(
                 "Change Opportunity",
                 str(workflow.id),
-                f"Meeting was mapped to: *{workflow.resource.name}*",
+                f"Meeting {meeting.topic} was mapped to: {workflow.resource_type} *{workflow.resource.name}*",
                 action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
             ),
         ]
