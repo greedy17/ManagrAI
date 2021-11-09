@@ -94,9 +94,15 @@
           </template>
         </div>
         <div v-if="hasZoomChannel" class="card__">
-          <h3 class="card__header">LOG ZOOM MEETINGS</h3>
+          <h3 class="card__header">LOG MEETINGS</h3>
           <div class="row">
             <button @click="goToLogZoom" class="green_button">Change Channel</button>
+          </div>
+        </div>
+        <div v-if="hasRecapChannel && userLevel !== 'REP'" class="card__">
+          <h3 class="card__header">MEETING RECAPS</h3>
+          <div class="row">
+            <button @click="goToRecap" class="green_button">Change Channel/Pipelines</button>
           </div>
         </div>
 
@@ -292,6 +298,9 @@ export default {
     goToLogZoom() {
       this.$router.push({ name: 'LogZoom' })
     },
+    goToRecap() {
+      this.$router.push({ name: 'ZoomRecap' })
+    },
     hasZoomChannel() {
       return this.$store.state.user.slackAccount.zoomChannel
     },
@@ -326,7 +335,13 @@ export default {
             (val) => val !== this.deleteTitle,
           )
         this.handleUpdate()
+
         this.deleteOpen = !this.deleteOpen
+        this.$Alert.alert({
+          message: 'Workflow removed',
+          type: 'success',
+          timeout: 2000,
+        })
       } catch {
         this.$Alert.alert({
           message: 'There was an error removing your alert',
@@ -388,6 +403,12 @@ export default {
   computed: {
     user() {
       return this.$store.state.user
+    },
+    hasRecapChannel() {
+      return this.$store.state.user.slackAccount.recapChannel
+    },
+    userLevel() {
+      return this.$store.state.user.userLevel
     },
   },
 }

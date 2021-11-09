@@ -35,7 +35,7 @@
           <ul>
             <li>
               <router-link
-                v-if="user.onboarding"
+                v-if="isOnboarding"
                 exact-active-class="active"
                 :to="{ name: 'Integrations' }"
                 >Onboarding
@@ -46,7 +46,7 @@
             </li>
             <li>
               <router-link
-                v-if="!user.onboarding"
+                v-if="!isOnboarding"
                 active-class="active"
                 :to="{ name: 'ListTemplates' }"
                 >Workflows
@@ -54,7 +54,7 @@
             </li>
             <li>
               <router-link
-                v-if="!user.onboarding"
+                v-if="!isOnboarding"
                 exact-active-class="active"
                 :to="{ name: 'InviteUsers' }"
                 >Team</router-link
@@ -63,11 +63,11 @@
           </ul>
         </div>
 
-        <div class="mar" v-else>
+        <div v-else class="mar">
           <ul>
             <li>
               <router-link
-                v-if="user.onboarding"
+                v-if="isOnboarding"
                 exact-active-class="active"
                 :to="{ name: 'Integrations' }"
                 >Onboarding
@@ -76,7 +76,7 @@
                 >Connect
               </router-link>
             </li>
-            <li v-if="!user.onboarding">
+            <li v-if="!isOnboarding">
               <router-link active-class="active" :to="{ name: 'ListTemplates' }"
                 >Workflows
               </router-link>
@@ -189,13 +189,8 @@ export default {
       ]
     }
   },
-  mounted() {},
-  destroyed() {},
 
   methods: {
-    user() {
-      return this.$store.state.user
-    },
     toggleDropDown() {
       this.dropdownOpen = !this.dropdownOpen
     },
@@ -237,6 +232,12 @@ export default {
     },
     hasNylas() {
       return this.$store.state.user.nylasRef
+    },
+    user() {
+      return this.$store.state.user
+    },
+    isOnboarding() {
+      return this.$store.state.user.onboarding
     },
   },
 }
