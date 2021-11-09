@@ -171,6 +171,7 @@ export default {
         message: 'Alert saved successfully',
         timeout: 2000,
       })
+      this.$router.push({ name: 'CreateNew' })
     },
     removeZoomChannel() {
       this.zoomChannel = ''
@@ -284,10 +285,6 @@ export default {
     slackId() {
       return this.$store.state.user.slackRef.slackId
     },
-  },
-  mounted() {
-    console.log(this.user)
-    console.log(this.$store.state.user.slackRef.slackId)
   },
 }
 </script>
