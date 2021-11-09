@@ -6,11 +6,13 @@ from django.utils import timezone
 from django.db.models import Q
 
 from managr.core import constants as core_consts
-from managr.core.models import NylasAuthAccount
+from managr.core.models import NylasAuthAccount, User
 from managr.core.nylas.auth import revoke_access_token
+from managr.core.background import check_for_time
 
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.block_sets import get_block_set
+from managr.slack import constants as slack_const
 
 from managr.zoom.models import ZoomMeeting
 from managr.zoom.utils import score_meeting
@@ -104,4 +106,15 @@ def revoke_tokens():
     for token in nylas_tokens:
         revoke_access_token(token)
 
-def check_reminders()
+
+def check_reminders(user_id):
+    user = User.objects.get(id=user_id)
+    for key in user.reminders.keys():
+        if user.reminders[key]:
+            check_for_time(
+                user.timezone,
+                core_consts.REMINDER_CONFIG[key]["HOUR"],
+                core_consts.REMINDER_CONFIG[key]["MINUTE"],
+            )
+
+    return

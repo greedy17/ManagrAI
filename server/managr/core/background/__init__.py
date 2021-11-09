@@ -9,6 +9,9 @@ from django.db.models import F, Q, Count
 from django.utils import timezone
 
 from managr.salesforce.models import MeetingWorkflow
+from managr.slack.helpers import block_builders, block_sets
+from managr.slack.helpers import requests as slack_requests
+from managr.slack.helpers.exceptions import CannotSendToChannel
 
 from ..models import User
 
@@ -58,7 +61,13 @@ def check_for_uncompleted_meetings(user_id):
     return {"status": False}
 
 
-def _process_send_meeting_reminder(user_id, total, not_completed):
+def _process_send_meeting_reminder(user_id, not_completed):
     user = User.objects.get(id=user_id)
-
-    return
+    access_token = user.organization.slack_integration.access_token
+    blocks = block_sets.get_block_set("meeting_reminder", {"not_compoleted": not_completed})
+    try:
+        slack_requests.send_channel_message(
+            user.recap_channel, access_token, text="Meeting Reminder", block_set=blocks,
+        )
+    except Exception as e:
+        logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
