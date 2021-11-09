@@ -79,6 +79,27 @@
       </div>
 
       <div class="card">
+        <img class="card-img" src="@/assets/images/zoom_logo.svg" />
+        <h3>Zoom</h3>
+        <p class="card-text">Connect Zoom to sync meeting data with Managr.</p>
+        <PulseLoadingSpinnerButton
+          v-if="!hasZoomIntegration"
+          :disabled="hasZoomIntegration"
+          @click="onGetAuthLink('ZOOM')"
+          class="primary-button"
+          text="Connect"
+          :loading="generatingToken && selectedIntegration == 'ZOOM'"
+        ></PulseLoadingSpinnerButton>
+        <PulseLoadingSpinnerButton
+          text="Revoke"
+          :loading="generatingToken && selectedIntegration == 'ZOOM'"
+          v-else
+          @click="onRevoke('ZOOM')"
+          class="secondary-button"
+        ></PulseLoadingSpinnerButton>
+      </div>
+
+      <div class="card">
         <img class="card-img" src="@/assets/images/salesloft.svg" />
         <h3>Calendar</h3>
         <p class="card-text">Put Contacts right into Cadences</p>
@@ -231,7 +252,7 @@ export default {
     hasSalesforceIntegration() {
       return !!this.$store.state.user.salesforceAccount
     },
-    orgHasSlackIntegration() {
+        orgHasSlackIntegration() {
       return !!this.$store.state.user.organizationRef.slackIntegration
     },
     hasSlackIntegration() {
@@ -258,10 +279,10 @@ export default {
           return Salesforce
         case 'SLACK':
           return SlackOAuth
-        case 'ZOOM':
-          return ZoomAccount
         case 'NYLAS':
           return Nylas
+        case 'ZOOM':
+          return ZoomAccount
         case 'SALESLOFT':
           return Salesloft
         default:

@@ -1,597 +1,295 @@
 <template>
   <div class="alerts-page">
     <div class="col">
-      <h2 style="color: black" class="title">Smart Alert Templates</h2>
-      <p style="color: #5d5e5e" class="sub__">
-        Keep your pipeline up to date by activating smart alerts
-      </p>
+      <h2 style="color: black; margin-top: -0.5rem" class="title">Popular Workflow Automations</h2>
+      <p style="color: #5d5e5e" class="sub__">Activate the workflows that are relevant to you</p>
     </div>
 
     <div class="alert_cards">
       <div class="card__">
         <div class="card__header">
-          <h3>Close Date<span style="color: #199e54"> Approaching</span></h3>
+          <h3>Log <span style="color: #5f8cff">Meetings</span></h3>
         </div>
-        <button @click="goToCloseDateApproaching" class="orange_button">Activate</button>
+        <div class="row">
+          <img style="height: 2.25rem; margin-right: 1rem" src="@/assets/images/zoom.png" alt="" />
+          <img
+            style="height: 1.75rem; margin-right: 1rem"
+            src="@/assets/images/plusOne.png"
+            alt=""
+          />
+          <img
+            style="height: 2.25rem; margin-right: 1rem"
+            src="@/assets/images/gmailCal.png"
+            alt=""
+          />
+        </div>
+        <div style="margin-top: 2rem">
+          <button
+            v-if="hasZoomIntegration && !hasZoomChannel"
+            @click="goToLogZoom"
+            :class="!isAdmin && isOnboarding ? 'orange_button bouncy' : 'orange_button'"
+          >
+            Activate
+          </button>
+          <h4 style="margin-top: -0.5rem" v-else-if="!hasZoomIntegration">
+            Connect Zoom in order to activate
+          </h4>
+          <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="hasZoomChannel">Activated</p>
+        </div>
       </div>
 
-      <div class="card__">
+      <div :class="!hasZoomChannel && isOnboarding && !isAdmin ? 'onboarding card__' : 'card__'">
         <div class="card__header">
-          <h3>Close Date <span style="color: #ff7649">Passed</span></h3>
+          <h3>Close Date <span style="color: #fa646a">Passed</span></h3>
         </div>
-        <button @click="goToCloseDatePassed" class="orange_button">Activate</button>
+
+        <div class="row">
+          <img
+            style="height: 2.25rem; margin-right: 1rem"
+            src="@/assets/images/slackLogo.png"
+            alt=""
+          />
+          <img
+            style="height: 1.75rem; margin-right: 1rem"
+            src="@/assets/images/plusOne.png"
+            alt=""
+          />
+          <img
+            style="height: 2.25rem; margin-right: 1rem"
+            src="@/assets/images/salesforce.png"
+            alt=""
+          />
+        </div>
+
+        <div style="margin-top: 2rem">
+          <button
+            v-if="
+              hasSalesforceIntegration &&
+              hasSlackIntegration &&
+              !user.activatedManagrConfigs.includes('Close Date Passed')
+            "
+            @click="goToCloseDatePassed"
+            :class="!isAdmin && isOnboarding ? 'orange_button bouncy' : 'orange_button'"
+          >
+            Activate
+          </button>
+          <h4
+            style="margin-top: -0.5rem"
+            v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)"
+          >
+            Connect Slack & Salesforce to acivate
+          </h4>
+          <h4
+            style="margin-top: -0.5rem"
+            v-else-if="user.activatedManagrConfigs.includes('Close Date Passed')"
+          >
+            Activated
+          </h4>
+        </div>
       </div>
 
-      <div class="card__">
-        <div class="card__header">
-          <h3>Deal <span style="color: #ff7649">Rotting</span></h3>
-        </div>
-        <button @click="goToDealRotting" class="orange_button">Activate</button>
-      </div>
-
-      <div class="card__">
+      <div
+        :class="
+          !user.activatedManagrConfigs.includes('Close Date Passed') && isOnboarding && !isAdmin
+            ? 'card__ onboarding'
+            : 'card__'
+        "
+      >
         <div class="card__header">
           <h3>Update <span style="color: #199e54">Forecast</span></h3>
         </div>
-        <button @click="goToUpdateForecast" class="orange_button">Activate</button>
+
+        <div class="row">
+          <img
+            style="height: 2.25rem; margin-right: 1rem"
+            src="@/assets/images/slackLogo.png"
+            alt=""
+          />
+          <img
+            style="height: 1.75rem; margin-right: 1rem"
+            src="@/assets/images/plusOne.png"
+            alt=""
+          />
+          <img
+            style="height: 2.25rem; margin-right: 1rem"
+            src="@/assets/images/salesforce.png"
+            alt=""
+          />
+        </div>
+
+        <div style="margin-top: 2rem">
+          <button
+            v-if="
+              hasSalesforceIntegration &&
+              hasSlackIntegration &&
+              !user.activatedManagrConfigs.includes('Update Forecast')
+            "
+            @click="goToUpdateForecast"
+            :class="!isAdmin && isOnboarding ? 'orange_button bouncy' : 'orange_button'"
+          >
+            Activate
+          </button>
+          <h4
+            style="margin-top: -0.5rem"
+            v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)"
+          >
+            Connect Slack & Salesforce to acivate
+          </h4>
+          <h4
+            style="margin-top: -0.5rem"
+            v-else-if="user.activatedManagrConfigs.includes('Update Forecast')"
+          >
+            Activated
+          </h4>
+        </div>
+      </div>
+
+      <div
+        :class="
+          !user.activatedManagrConfigs.includes('Update Forecast') && isOnboarding && !isAdmin
+            ? 'card__ onboarding'
+            : 'card__'
+        "
+      >
+        <div class="card__header">
+          <h3>Deal <span style="color: #fa646a">Rotting</span></h3>
+        </div>
+
+        <div class="row">
+          <img
+            style="height: 2.25rem; margin-right: 1rem"
+            src="@/assets/images/slackLogo.png"
+            alt=""
+          />
+          <img
+            style="height: 1.75rem; margin-right: 1rem"
+            src="@/assets/images/plusOne.png"
+            alt=""
+          />
+          <img
+            style="height: 2.25rem; margin-right: 1rem"
+            src="@/assets/images/salesforce.png"
+            alt=""
+          />
+        </div>
+
+        <div style="margin-top: 2rem">
+          <button
+            v-if="
+              hasSalesforceIntegration &&
+              hasSlackIntegration &&
+              !user.activatedManagrConfigs.includes('Deal Rotting')
+            "
+            @click="goToDealRotting"
+            class="orange_button"
+          >
+            Activate
+          </button>
+          <h4
+            style="margin-top: -0.5rem"
+            v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)"
+          >
+            Connect Slack & Salesforce to acivate
+          </h4>
+          <h4
+            style="margin-top: -0.5rem"
+            v-else-if="user.activatedManagrConfigs.includes('Deal Rotting')"
+          >
+            Activated
+          </h4>
+        </div>
+      </div>
+
+      <div
+        :class="
+          !user.activatedManagrConfigs.includes('Update Forecast') && isOnboarding && !isAdmin
+            ? 'card__ onboarding'
+            : 'card__'
+        "
+      >
+        <div class="card__header">
+          <h3 style="font-size: 1.3rem">
+            Close Date<span style="color: #199e54"> Approaching</span>
+          </h3>
+        </div>
+
+        <div class="row">
+          <img
+            style="height: 2.25rem; margin-right: 1rem"
+            src="@/assets/images/slackLogo.png"
+            alt=""
+          />
+          <img
+            style="height: 1.75rem; margin-right: 1rem"
+            src="@/assets/images/plusOne.png"
+            alt=""
+          />
+          <img
+            style="height: 2.25rem; margin-right: 1rem"
+            src="@/assets/images/salesforce.png"
+            alt=""
+          />
+        </div>
+
+        <div style="margin-top: 2rem">
+          <button
+            v-if="
+              hasSalesforceIntegration &&
+              hasSlackIntegration &&
+              !user.activatedManagrConfigs.includes('Close Date Approaching')
+            "
+            @click="goToCloseDateApproaching"
+            class="orange_button"
+          >
+            Activate
+          </button>
+          <h4
+            style="margin-top: -0.5rem"
+            v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)"
+          >
+            Connect Slack & Salesforce to acivate
+          </h4>
+          <h4
+            style="margin-top: -0.5rem"
+            v-else-if="user.activatedManagrConfigs.includes('Close Date Approaching')"
+          >
+            Activated
+          </h4>
+        </div>
+      </div>
+
+      <div v-if="user.userLevel === 'MANAGER'" class="card__">
+        <div class="card__header">
+          <h3>Meeting<span style="color: #5f8cff"> Recaps</span></h3>
+        </div>
+        <div class="row">
+          <img style="height: 2.25rem; margin-right: 1rem" src="@/assets/images/zoom.png" alt="" />
+          <img
+            style="height: 1.75rem; margin-right: 1rem"
+            src="@/assets/images/plusOne.png"
+            alt=""
+          />
+          <img
+            style="height: 2.25rem; margin-right: 1rem"
+            src="@/assets/images/gmailCal.png"
+            alt=""
+          />
+        </div>
+        <div style="margin-top: 2rem">
+          <button
+            v-if="hasZoomIntegration && hasSlackIntegration && !recapChannel"
+            @click="goToZoomRecap"
+            class="orange_button"
+          >
+            Activate
+          </button>
+          <h4 style="margin-top: -0.5rem" v-else-if="!(hasZoomChannel && hasSlackIntegration)">
+            Connect Zoom and Slack in order to activate
+          </h4>
+          <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="recapChannel">Activated</p>
+        </div>
       </div>
     </div>
-
-    <!-- <ExpandablePanel>
-      <template v-slot:panel-header="{ classes, expand }" class="box__header">
-        <div :class="classes" @click="expand">
-          <span :class="alertTemplateForm.field.resourceType.isValid ? 'slate' : 'gray'">
-            1. <strong style="color: #cc3873; font-weight: bold">Select</strong> the Salesforce
-            Object that you'd like to build an alert for
-          </span>
-
-          <span
-            :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
-            v-if="alertTemplateForm.field.resourceType.isValid"
-          >
-            <svg width="24px" height="24px" viewBox="0 0 24 24">
-              <use xlink:href="@/assets/images/checkmark.svg#checkmark" />
-            </svg>
-            <span>Complete</span>
-          </span>
-          <span :class="`${classes + '__status' + ' ' + classes + '__status--error'}`" v-else>
-            <svg width="24px" height="24px" viewBox="0 0 24 24">
-              <use xlink:href="@/assets/images/remove.svg#remove" />
-            </svg>
-            <span> Incomplete </span>
-          </span>
-        </div>
-      </template>
-      <template slot="panel-content">
-        <FormField :errors="alertTemplateForm.field.resourceType.errors">
-          <template v-slot:input>
-            <DropDownSearch
-              :items.sync="SOBJECTS_LIST"
-              :itemsRef.sync="alertTemplateForm.field._resourceType.value"
-              v-model="alertTemplateForm.field.resourceType.value"
-              displayKey="key"
-              valueKey="value"
-              nullDisplay="Salesforce Objects"
-              searchable
-              local
-              @input="alertTemplateForm.field.resourceType.validate()"
-              class="pad"
-            />
-          </template>
-        </FormField>
-      </template>
-    </ExpandablePanel>
-    <ExpandablePanel v-if="alertTemplateForm.field.resourceType.isValid">
-      <template v-slot:panel-header="{ classes, expand }" class="box__header">
-        <div :class="classes" @click="expand">
-          <span
-            :class="
-              alertTemplateForm.field.title.isValid &&
-              !alertTemplateForm.field.alertGroups.groups
-                .map((fields) => fields.isValid)
-                .includes(false)
-                ? 'slate'
-                : 'gray'
-            "
-          >
-            2. <strong style="color: #cc3873">Build</strong> your Smart Alert</span
-          ><span
-            :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
-            v-if="
-              alertTemplateForm.field.title.isValid &&
-              !alertTemplateForm.field.alertGroups.groups
-                .map((fields) => fields.isValid)
-                .includes(false)
-            "
-          >
-            <svg width="24px" height="24px" viewBox="0 0 24 24">
-              <use xlink:href="@/assets/images/checkmark.svg#checkmark" />
-            </svg>
-            <span>Complete</span>
-          </span>
-          <span :class="`${classes + '__status' + ' ' + classes + '__status--error'}`" v-else>
-            <svg width="24px" height="24px" viewBox="0 0 24 24">
-              <use xlink:href="@/assets/images/remove.svg#remove" />
-            </svg>
-            <span> Incomplete </span>
-          </span>
-        </div>
-      </template>
-      <template slot="panel-content">
-        <template v-if="selectedResourceType">
-          <div style="display: flex; flex-direction: row">
-            <FormField
-              id="alert-title"
-              v-model="alertTemplateForm.field.title.value"
-              placeholder="Name your alert (required)"
-              :errors="alertTemplateForm.field.title.errors"
-              @blur="alertTemplateForm.field.title.validate()"
-            />
-          </div>
-
-          <div
-            :key="index"
-            v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
-            class="alerts-page__groups__group mar col"
-          >
-            <AlertGroup
-              :form="alertGroup"
-              :resourceType="alertTemplateForm.field.resourceType.value"
-            />
-            <div class="row">
-              <div class="group">
-                <button class="btn btn--secondary btn--icon" @click="onAddAlertGroup">
-                  <svg width="24px" height="24px" viewBox="0 0 24 24">
-                    <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
-                  </svg>
-                </button>
-                <p class="sub">Group</p>
-              </div>
-              <div class="group" v-if="alertTemplateForm.field.alertGroups.groups.length > 1">
-                <button
-                  class="btn btn--danger btn--icon"
-                  @click.stop="onRemoveAlertGroup(index)"
-                  :disabled="alertTemplateForm.field.alertGroups.groups.length - 1 <= 0"
-                >
-                  <svg width="24px" height="24px" viewBox="0 0 24 24">
-                    <use xlink:href="@/assets/images/remove.svg#remove" />
-                  </svg>
-                </button>
-                <p class="sub">Remove</p>
-              </div>
-            </div>
-          </div>
-        </template>
-        <template v-else>
-          <div class="alerts-page__previous-step">Please Select a resource to get started</div>
-        </template>
-      </template>
-    </ExpandablePanel>
-    <ExpandablePanel
-      v-if="
-        alertTemplateForm.field.title.isValid &&
-        !alertTemplateForm.field.alertGroups.groups.map((fields) => fields.isValid).includes(false)
-      "
-    >
-      <template v-slot:panel-header="{ classes, expand }" class="box__header">
-        <div :class="classes" @click="expand">
-          <span
-            :class="
-              !alertTemplateForm.field.alertMessages.groups
-                .map((fields) => fields.isValid)
-                .includes(false)
-                ? 'slate'
-                : 'gray'
-            "
-            >3. <strong style="color: #cc3873; font-weight: bold">Construct</strong> your alert
-            message
-          </span>
-          <span
-            :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
-            v-if="
-              !alertTemplateForm.field.alertMessages.groups
-                .map((fields) => fields.isValid)
-                .includes(false)
-            "
-          >
-            <svg width="24px" height="24px" viewBox="0 0 24 24">
-              <use xlink:href="@/assets/images/checkmark.svg#checkmark" />
-            </svg>
-            <span>Complete</span>
-          </span>
-          <span :class="`${classes + '__status' + ' ' + classes + '__status--error'}`" v-else>
-            <svg width="24px" height="24px" viewBox="0 0 24 24">
-              <use xlink:href="@/assets/images/remove.svg#remove" />
-            </svg>
-            <span> Incomplete </span>
-          </span>
-        </div>
-      </template>
-      <template slot="panel-content">
-        <template v-if="selectedResourceType">
-          <div class="alerts-page__message" style="height: 60vh">
-            <div class="alerts-page__message-options">
-              <div class="alerts-page__message-options-body" style="height: 5rem; width: 30rem">
-                <FormField
-                  :errors="alertTemplateForm.field.alertMessages.groups[0].field.body.errors"
-                >
-                  <template v-slot:input>
-                    <quill-editor
-                      @blur="alertTemplateForm.field.alertMessages.groups[0].field.body.validate()"
-                      ref="message-body"
-                      v-model="alertTemplateForm.field.alertMessages.groups[0].field.body.value"
-                      :options="{
-                        modules: { toolbar: { container: ['bold', 'italic', 'strike'] } },
-                        placeholder:
-                          'Type your message here, or copy and paste your favorite template...',
-                        theme: 'snow',
-                      }"
-                      class="bottom"
-                    />
-                  </template>
-                </FormField>
-                <div class="alerts-page__message-options-body__bindings">
-                  <div class="alerts-page__message-options-body__bindings__fields">
-                    <ListContainer v-if="!listVisible" horizontal>
-                      <template v-slot:list>
-                        <ListItem
-                          :key="key"
-                          v-for="(val, key) in recipientBindings"
-                          :item="val.referenceDisplayLabel"
-                          :active="true"
-                          @item-selected="bindText(`__Recipient.${val.apiName}`)"
-                        />
-                      </template>
-                    </ListContainer>
-                    <DropDownSearch
-                      v-if="!dropdownVisible"
-                      :items="fields.list"
-                      @input="bindText(`${selectedResourceType}.${$event}`)"
-                      displayKey="referenceDisplayLabel"
-                      valueKey="apiName"
-                      nullDisplay="Select field to display"
-                      searchable
-                      :hasNext="!!fields.pagination.hasNextPage"
-                      @load-more="fieldNextPage"
-                      @search-term="onSearchFields"
-                      auto
-                      class="left"
-                    />
-                  </div>
-                  <div style="display: flex; flex-direction: row">
-                    <div class="group">
-                      <button class="btn btn--secondary btn--icon" @click="showList">
-                        <svg width="24px" height="24px" viewBox="0 0 24 24">
-                          <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
-                        </svg>
-                      </button>
-                      <p class="sub">Recipient name</p>
-                    </div>
-                    <div class="group">
-                      <button class="btn btn--secondary btn--icon" @click="showDropDown">
-                        <svg width="24px" height="24px" viewBox="0 0 24 24">
-                          <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
-                        </svg>
-                      </button>
-                      <p class="sub">Insert Salesforce field</p>
-                    </div>
-                  </div>
-                  <p style="font-size: 14px">
-                    <strong class="pink">Pro Tip:</strong> inserting the
-                    <strong>Salesforce field</strong> will display the field value in the message.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div
-              class="alerts-page__message-template"
-              style="margin-left: 7.5rem; margin-top: -1rem"
-            >
-              <h3 class="pink">Templates:</h3>
-              <div style="font-size: 14px">
-                <div class="templates">
-                  <p>
-                    Hey <strong>{ __Recipient.full_name }</strong>, your deal
-                    <strong>{ Opportunity.Name }</strong> has a passed closed date
-                    <strong>{ Opportunity.Name }</strong>. Please update it!
-                  </p>
-                </div>
-
-                <div class="templates">
-                  <p>
-                    <strong>{ Opportunity.Name }</strong> is a new Opp booked for this week! The
-                    appointment was booked via <strong>{ Opportunity.LeadSource }</strong>!
-                  </p>
-                  <p>Handoff notes: <strong>{ Opportunity.Handoff_Notes_c }</strong></p>
-                  <p style="margin-top: -0.75rem">
-                    Using a Competitor: <strong>{ Opportunity.Competitors_c }</strong>
-                  </p>
-                  <p style="margin-top: -0.75rem">
-                    Meeting date:
-                    <strong>{ Opportunity.Meeting_Date_c }</strong>
-                  </p>
-                </div>
-
-                <div class="templates">
-                  <p>
-                    Please update the forecast for <strong>{ Opportunity.Name }</strong>! it's
-                    expected to close on <strong>{ Opportunity.CloseDate }</strong> and forecasted
-                    as <strong>{ Opportunity.ForecastCategoryName }</strong> - please ither move to
-                    Commit or update the Close Date.
-                  </p>
-                  <p>Next Step: <strong>{ Opportunity.NextStep }</strong></p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </template>
-        <template v-else>
-          <div class="alerts-page__previous-step">Please Select a resource to get started</div>
-        </template>
-      </template>
-    </ExpandablePanel>
-    <ExpandablePanel
-      v-if="
-        !alertTemplateForm.field.alertMessages.groups
-          .map((fields) => fields.isValid)
-          .includes(false)
-      "
-    >
-      <template v-slot:panel-header="{ classes, expand }" class="box__header">
-        <div :class="classes" @click="expand">
-          <span
-            :class="
-              !alertTemplateForm.field.alertConfig.groups
-                .map((fields) => fields.isValid)
-                .includes(false)
-                ? 'slate'
-                : 'gray'
-            "
-          >
-            4. <strong style="color: #cc3873">Choose</strong> your delivery options </span
-          ><span> </span>
-          <span
-            v-if="
-              !alertTemplateForm.field.alertConfig.groups
-                .map((fields) => fields.isValid)
-                .includes(false)
-            "
-            :class="`${classes + '__status' + ' ' + classes + '__status--success'}`"
-          >
-            <svg width="24px" height="24px" viewBox="0 0 24 24">
-              <use xlink:href="@/assets/images/checkmark.svg#checkmark" />
-            </svg>
-            <span>Complete</span>
-          </span>
-          <span :class="`${classes + '__status' + ' ' + classes + '__status--error'}`" v-else>
-            <svg width="24px" height="24px" viewBox="0 0 24 24">
-              <use xlink:href="@/assets/images/remove.svg#remove" />
-            </svg>
-            <span> Incomplete </span>
-          </span>
-        </div>
-      </template>
-      <template slot="panel-content">
-        <template v-if="selectedResourceType">
-          <div
-            class="alerts-page__settings row_"
-            :key="i"
-            v-for="(form, i) in alertTemplateForm.field.alertConfig.groups"
-          >
-            <div class="alerts-page__settings__day">
-              <FormField
-                v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
-                placeholder="Day of month"
-                :errors="form.field.recurrenceDay.errors"
-                @blur="form.field.recurrenceDay.validate()"
-                v-model="form.field.recurrenceDay.value"
-                small
-                style="margin-top: 2rem; margin-bottom: 2rem"
-              />
-              <FormField
-                v-else-if="form.field.recurrenceFrequency.value == 'WEEKLY'"
-                :errors="form.field.recurrenceDay.errors"
-                style="margin-bottom: 3rem; margin-top: 2rem"
-              >
-                <template v-slot:input>
-                  <DropDownSearch
-                    :items.sync="weeklyOpts"
-                    :itemsRef.sync="form.field._recurrenceDay.value"
-                    v-model="form.field.recurrenceDay.value"
-                    @input="form.field.recurrenceDay.validate()"
-                    displayKey="key"
-                    valueKey="value"
-                    nullDisplay="Select Day"
-                    searchable
-                    local
-                  />
-                </template>
-              </FormField>
-              <div class="alerts-page__settings__frequency">
-                <label class="alerts-page__settings__frequency-label">Weekly</label>
-                <ToggleCheckBox
-                  @input="
-                    form.field.recurrenceFrequency.value == 'WEEKLY'
-                      ? (form.field.recurrenceFrequency.value = 'MONTHLY')
-                      : (form.field.recurrenceFrequency.value = 'WEEKLY')
-                  "
-                  :value="form.field.recurrenceFrequency.value !== 'WEEKLY'"
-                  offColor="#199e54"
-                  onColor="#199e54"
-                />
-                <label class="alerts-page__settings__frequency-label">Monthly</label>
-              </div>
-            </div>
-            <div class="alerts-page__settings__target-users" style="margin-bottom: 2rem">
-              <span class="muted">
-                <em style="margin-left: 0.5rem">Select Pipelines.</em>
-              </span>
-              <FormField :errors="form.field.alertTargets.errors">
-                <template v-slot:input>
-                  <DropDownSearch
-                    :items.sync="userTargetsOpts"
-                    :itemsRef.sync="form.field._alertTargets.value"
-                    v-model="form.field.alertTargets.value"
-                    @input="form.field.alertTargets.validate()"
-                    displayKey="fullName"
-                    valueKey="id"
-                    nullDisplay="Search"
-                    searchable
-                    multi
-                    medium
-                    :loading="users.loadingNextPage"
-                    :hasNext="!!users.pagination.hasNextPage"
-                    @load-more="onUsersNextPage"
-                    @search-term="onSearchUsers"
-                  />
-                </template>
-              </FormField>
-            </div>
-            <div class="alerts-page__settings__recipients">
-              <span
-                v-if="
-                  form.field._recipients.value && form.field.recipientType.value == 'SLACK_CHANNEL'
-                "
-                class="muted--link--important"
-              >
-                Please make sure @managr has been added to
-                <em>{{ form.field._recipients.value.name }}</em> channel
-              </span>
-              <span v-if="form.field.recipientType.value == 'USER_LEVEL'" class="muted">
-                <em style="margin-left: 0.5rem; margin-top: 2rem">Select Recipients.</em>
-              </span>
-              <FormField
-                v-if="form.field.recipientType.value == 'USER_LEVEL'"
-                :errors="form.field.recipients.errors"
-                style="margin-bottom: 2.5rem"
-              >
-                <template v-slot:input>
-                  <DropDownSearch
-                    :items.sync="recipientOpts"
-                    :itemsRef.sync="form.field._recipients.value"
-                    v-model="form.field.recipients.value"
-                    @input="form.field.recipients.validate()"
-                    displayKey="fullName"
-                    valueKey="id"
-                    nullDisplay="Search"
-                    searchable
-                    multi
-                    medium
-                    :loading="users.loadingNextPage"
-                    :hasNext="!!users.pagination.hasNextPage"
-                    @load-more="onUsersNextPage"
-                    @search-term="onSearchUsers"
-                  />
-                </template>
-              </FormField>
-
-              <FormField
-                v-if="form.field.recipientType.value == 'SLACK_CHANNEL'"
-                :errors="form.field.recipients.errors"
-              >
-                <template v-slot:input>
-                  <DropDownSearch
-                    :items.sync="channelOpts.channels"
-                    :itemsRef.sync="form.field._recipients.value"
-                    v-model="form.field.recipients.value"
-                    @input="form.field.recipients.validate()"
-                    displayKey="name"
-                    valueKey="id"
-                    nullDisplay="Channels"
-                    :hasNext="!!channelOpts.nextCursor"
-                    @load-more="listChannels(channelOpts.nextCursor)"
-                    searchable
-                    local
-                  >
-                    <template v-slot:tn-dropdown-option="{ option }">
-                      <img
-                        v-if="option.isPrivate == true"
-                        class="card-img"
-                        style="width: 1rem; height: 1rem; margin-right: 0.2rem"
-                        src="@/assets/images/lockAsset.png"
-                      />
-                      {{ option['name'] }}
-                    </template>
-                  </DropDownSearch>
-                </template>
-              </FormField>
-
-              <span
-                @click="
-                  form.field.recipientType.value = recipientTypeToggle(
-                    form.field.recipientType.value,
-                  )
-                "
-                class="bolder"
-                v-if="form.field.recipientType.value == 'USER_LEVEL'"
-              >
-                Send to a <strong class="pink">#channel</strong> instead ?
-              </span>
-
-              <span
-                @click="
-                  form.field.recipientType.value = recipientTypeToggle(
-                    form.field.recipientType.value,
-                  )
-                "
-                class="bolder"
-                v-else
-              >
-                Send to a group of users (DM) instead ?
-              </span>
-            </div>
-
-            <div class="alerts-page__settings-remove">
-              <button
-                class="btn btn--danger btn--icon"
-                @click.stop="onRemoveSetting(i)"
-                :disabled="alertTemplateForm.field.alertConfig.groups.length - 1 <= 0"
-              >
-                <svg width="16px" height="16px" viewBox="0 0 24 24">
-                  <use xlink:href="@/assets/images/remove.svg#remove" />
-                </svg>
-              </button>
-            </div>
-          </div>
-          <div class="add__group">
-            <button class="btn btn--secondary btn--icon" @click="onAddAlertSetting">
-              <svg width="24px" height="24px" viewBox="0 0 24 24">
-                <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
-              </svg>
-            </button>
-            <p class="sub">Add a group</p>
-          </div>
-        </template>
-        <template v-else>
-          <div class="alerts-page__previous-step">Please Select a resource to get started</div>
-        </template>
-      </template>
-    </ExpandablePanel>
-    <ExpandablePanel
-      class="pink"
-      title="5. Confirm and save your alert"
-      v-if="
-        !alertTemplateForm.field.alertConfig.groups.map((fields) => fields.isValid).includes(false)
-      "
-    >
-      <template slot="panel-content">
-        <template v-if="selectedResourceType">
-          <AlertSummary :form="alertTemplateForm" />
-          <div class="center">
-            <PulseLoadingSpinnerButton
-              :loading="savingTemplate"
-              class="primary-button"
-              text="Save alert"
-              @click.stop="onSave"
-              :disabled="!alertTemplateForm.isValid || savingTemplate"
-            />
-          </div>
-        </template>
-        <template v-else>
-          <div class="alerts-page__previous-step">Please Select a resource to get started</div>
-        </template>
-      </template>
-    </ExpandablePanel> -->
   </div>
 </template>
 
@@ -641,6 +339,7 @@ import {
 } from '@/services/salesforce'
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
+
 export default {
   name: 'AlertsPage',
   components: {
@@ -671,176 +370,18 @@ export default {
       selectedBindings: [],
       fields: CollectionManager.create({ ModelClass: SObjectField }),
       users: CollectionManager.create({ ModelClass: User }),
-      recipientBindings: [
-        { referenceDisplayLabel: 'Recipient Full Name', apiName: 'full_name' },
-        { referenceDisplayLabel: 'Recipient First Name', apiName: 'first_name' },
-        { referenceDisplayLabel: 'Recipient Last Name', apiName: 'last_name' },
-        { referenceDisplayLabel: 'Recipient Email', apiName: 'email' },
-      ],
-      alertRecipientOpts: [
-        { key: 'Myself', value: 'SELF' },
-        { key: 'Owner', value: 'OWNER' },
-        { key: 'All Managers', value: 'MANAGERS' },
-        { key: 'All Reps', value: 'REPS' },
-        { key: 'Everyone', value: 'ALL' },
-        { key: 'SDR', value: 'SDR' },
-      ],
-      alertTargetOpts: [
-        { key: 'Myself', value: 'SELF' },
-        { key: 'All Managers', value: 'MANAGERS' },
-        { key: 'All Reps', value: 'REPS' },
-        { key: 'Everyone', value: 'ALL' },
-        { key: 'SDR', value: 'SDR' },
-      ],
-      weeklyOpts: [
-        { key: 'Monday', value: '0' },
-        { key: 'Tuesday', value: '1' },
-        { key: 'Wednesday', value: '2' },
-        { key: 'Thursday', value: '3' },
-        { key: 'Friday', value: '4' },
-        { key: 'Saturday', value: '5' },
-        { key: 'Sunday', value: '6' },
-      ],
+      templates: CollectionManager.create({ ModelClass: AlertTemplate }),
     }
   },
   async created() {
-    if (this.user.slackRef) {
-      await this.listChannels()
+    this.templates.refresh()
+    const reloaded = localStorage.getItem('reloaded')
+    if (reloaded !== 'true') {
+      localStorage.setItem('reloaded', 'true')
+      location.reload()
     }
-    if (this.user.userLevel == 'MANAGER') {
-      await this.users.refresh()
-    }
-  },
-  watch: {
-    selectedResourceType: {
-      immediate: true,
-      async handler(val, prev) {
-        if (prev && val !== prev) {
-          this.alertTemplateForm = this.alertTemplateForm.reset()
-          this.selectedResourceType = val
-        }
-        if (this.selectedResourceType) {
-          this.fields.filters.salesforceObject = this.selectedResourceType
-          this.fields.filters.page = 1
-          await this.fields.refresh()
-        }
-      },
-    },
   },
   methods: {
-    async listChannels(cursor = null) {
-      const res = await SlackOAuth.api.listChannels(cursor)
-      const results = new SlackListResponse({
-        channels: [...this.channelOpts.channels, ...res.channels],
-        responseMetadata: { nextCursor: res.nextCursor },
-      })
-      this.channelOpts = results
-    },
-    recipientTypeToggle(value) {
-      if (!this.user.slackRef) {
-        this.$Alert.alert({ type: 'error', message: 'Slack Not Integrated', timeout: 2000 })
-        return 'USER_LEVEL'
-      }
-      if (value == 'USER_LEVEL') {
-        return 'SLACK_CHANNEL'
-      } else if (value == 'SLACK_CHANNEL') {
-        return 'USER_LEVEL'
-      }
-      return value
-    },
-    async onSave() {
-      this.savingTemplate = true
-      this.alertTemplateForm.validate()
-      if (this.alertTemplateForm.isValid) {
-        try {
-          const res = await AlertTemplate.api.createAlertTemplate({
-            ...this.alertTemplateForm.toAPI,
-            user: this.$store.state.user.id,
-          })
-          this.$router.push({ name: 'ListTemplates' })
-        } catch (e) {
-          this.$Alert.alert({
-            message: 'An error occured saving template',
-            timeout: 2000,
-            type: 'error',
-          })
-        } finally {
-          this.savingTemplate = false
-        }
-      }
-    },
-    bindText(val) {
-      this.$refs['message-body'].quill.focus()
-      let start = 0
-      if (this.editor.selection.lastRange) {
-        start = this.editor.selection.lastRange.index
-      }
-      this.editor.insertText(start, `{ ${val} }`)
-    },
-    onAddAlertGroup() {
-      // length determines order
-      const order = this.alertTemplateForm.field.alertGroups.groups.length
-      if (order >= 3) {
-        this.$Alert.alert({ message: 'You can only add 3 groups', timeout: 2000 })
-        return
-      }
-      // set next order
-
-      this.alertTemplateForm.addToArray('alertGroups', new AlertGroupForm())
-      this.alertTemplateForm.field.alertGroups.groups[order].field.groupOrder.value = order
-    },
-    onAddAlertSetting() {
-      if (this.alertTemplateForm.field.alertConfig.groups.length >= 3) {
-        this.$Alert.alert({ message: 'You can only add 3 configurations', timeout: 2000 })
-        return
-      }
-      this.alertTemplateForm.addToArray('alertConfig', new AlertConfigForm())
-    },
-    onRemoveAlertGroup(i) {
-      // get order and update options
-
-      if (this.alertTemplateForm.field.alertGroups.groups.length - 1 <= 0) {
-        return
-      }
-
-      const order = this.alertTemplateForm.field.alertGroups.groups[i].field.groupOrder.value
-
-      this.alertTemplateForm.removeFromArray('alertGroups', i)
-
-      let greaterThan = this.alertTemplateForm.field.alertGroups.groups.slice(i)
-
-      greaterThan.forEach((el, index) => {
-        el.field.groupOrder.value = order + index
-      })
-    },
-    onRemoveSetting(i) {
-      if (this.alertTemplateForm.field.alertConfig.groups.length - 1 <= 0) {
-        return
-      }
-      this.alertTemplateForm.removeFromArray('alertConfig', i)
-    },
-    async onSearchFields(v) {
-      this.fields.pagination = new Pagination()
-      this.fields.filters = {
-        ...this.fields.filters,
-        search: v,
-      }
-      await this.fields.refresh()
-    },
-    async fieldNextPage() {
-      await this.fields.addNextPage()
-    },
-    async onSearchUsers(v) {
-      this.users.pagination = new Pagination()
-      this.users.filters = {
-        ...this.users.filters,
-        search: v,
-      }
-      await this.users.refresh()
-    },
-    async onUsersNextPage() {
-      await this.users.addNextPage()
-    },
     showList() {
       this.listVisible = !this.listVisible
     },
@@ -859,8 +400,53 @@ export default {
     goToUpdateForecast() {
       this.$router.push({ name: 'UpdateForecast' })
     },
+    goToLogZoom() {
+      this.$router.push({ name: 'LogZoom' })
+    },
+    goToZoomRecap() {
+      this.$router.push({ name: 'ZoomRecap' })
+    },
+    getWorkflowIds(arr1, arr2) {
+      return arr1.some((item) => arr2.includes(item))
+    },
   },
   computed: {
+    workFlowIds() {
+      let arr = []
+      for (let i = 0; i < this.templates.list.length; i++) {
+        arr.push(this.templates.list[i].id)
+      }
+      return arr
+    },
+    hasSalesforceIntegration() {
+      return !!this.$store.state.user.salesforceAccount
+    },
+    hasZoomIntegration() {
+      return !!this.$store.state.user.zoomAccount && this.$store.state.user.hasZoomIntegration
+    },
+    hasGongIntegration() {
+      return !!this.$store.state.user.gongAccount && this.$store.state.user.hasGongIntegration
+    },
+    hasSalesloftIntegration() {
+      return (
+        !!this.$store.state.user.salesloftAccount && this.$store.state.user.hasSalesloftIntegration
+      )
+    },
+    orgHasSlackIntegration() {
+      return !!this.$store.state.user.organizationRef.slackIntegration
+    },
+    hasSlackIntegration() {
+      return !!this.$store.state.user.slackRef
+    },
+    hasNylasIntegration() {
+      return !!this.$store.state.user.nylas
+    },
+    userCanIntegrateSlack() {
+      return this.$store.state.user.isAdmin
+    },
+    recapChannel() {
+      return this.$store.state.user.slackAccount.recapChannel
+    },
     userTargetsOpts() {
       if (this.user.userLevel == 'MANAGER') {
         return [
@@ -910,6 +496,18 @@ export default {
     user() {
       return this.$store.state.user
     },
+    isAdmin() {
+      return this.$store.state.user.isAdmin
+    },
+    hasZoomChannel() {
+      return this.$store.state.user.slackAccount.zoomChannel
+    },
+    userLevel() {
+      return this.$store.state.user.userLevel
+    },
+    isOnboarding() {
+      return this.$store.state.user.onboarding
+    },
     selectedResourceType: {
       get() {
         return this.alertTemplateForm.field.resourceType.value
@@ -918,6 +516,9 @@ export default {
         this.alertTemplateForm.field.resourceType.value = val
       },
     },
+  },
+  mounted() {
+    console.log(this.user)
   },
 }
 </script>
@@ -932,10 +533,36 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
+
+@keyframes bounce {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-6px);
+  }
+}
+.bouncy {
+  animation: bounce 0.2s infinite alternate;
+}
+.onboarding {
+  filter: blur(10px);
+}
+.dot {
+  filter: invert(40%) sepia(96%) saturate(431%) hue-rotate(94deg) brightness(101%) contrast(82%);
+  height: 0.5rem;
+  border-radius: 50%;
+  margin-left: 0.2rem;
+  margin-bottom: 0.2rem;
+}
+.activated {
+  color: $dark-green;
+  font-weight: bold;
+  margin-top: -0.5rem;
+}
 .quill-editor {
   width: 100%;
 }
-
 textarea {
   @extend .textarea;
 }
@@ -953,7 +580,7 @@ textarea {
   }
 }
 .alerts-page {
-  margin-left: 8vw;
+  margin-left: 14vw;
   margin-top: 4rem;
   &__previous-step {
     @include muted-font(12);
@@ -990,9 +617,9 @@ textarea {
 .card__ {
   background-color: $panther;
   border: none;
-  width: 10rem;
-  height: 20vh;
-  margin-right: 1rem;
+  width: 20vw;
+  padding: 1.25rem;
+  margin-right: 1.25rem;
   margin-bottom: 2rem;
   border-radius: 0.5rem;
   display: flex;
@@ -1000,17 +627,17 @@ textarea {
   align-items: center;
   box-shadow: 3px 4px 7px black;
   color: white;
-  @media only screen and (min-width: 768px) {
-    flex: 1 0 24%;
-    min-width: 21rem;
-    max-width: 30rem;
-  }
+  // @media only screen and (min-width: 768px) {
+  //   flex: 1 0 24%;
+  //   min-width: 21rem;
+  //   max-width: 30rem;
+  // }
 
   &header {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 5rem;
+    height: 3rem;
   }
 }
 .alerts-page__settings {
@@ -1111,9 +738,9 @@ textarea {
 .row {
   display: flex;
   flex-direction: row;
-  justify-content: flex-end;
+  justify-content: center;
+  align-items: space-evenly;
   margin-top: 1rem;
-  border-bottom: 3px solid $silver;
 }
 .row_ {
   display: flex;
@@ -1185,14 +812,13 @@ input {
   font-weight: bold;
 }
 .orange_button {
-  width: 7rem;
   background-color: $dark-green;
   color: white;
   font-weight: bold;
   font-size: 16px;
-  height: 2rem;
   border-radius: 0.5rem;
   border: 2px solid $dark-green;
+  padding: 0.25rem 1.5rem;
   cursor: pointer;
 }
 .cs__button {

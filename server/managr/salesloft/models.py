@@ -99,8 +99,9 @@ class SalesloftAuthAdapter:
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
         }
+        query = urlencode({"include_paging_counts": True, "page": page})
         res = client.get(
-            f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.USERS}", headers=headers
+            f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.USERS}?{query}", headers=headers
         )
         return SalesloftAuthAdapter._handle_response(res)
 

@@ -30,6 +30,7 @@ export default class User extends Model {
   static isActive = new fields.BooleanField()
   static isInvited = new fields.BooleanField()
   static slackRef = new fields.Field()
+  static slackAccount = new fields.Field()
   static zoomAccount = new fields.Field()
   static token = new fields.Field()
   static hasZoomIntegration = new fields.Field({ readOnly: true })
@@ -41,6 +42,8 @@ export default class User extends Model {
   static hasSalesloftIntegration = new fields.Field({ readOnly: true })
   static gongAccount = new fields.Field()
   static hasGongIntegration = new fields.Field({ readOnly: true })
+  static activatedManagrConfigs = new fields.Field()
+  static onboarding = new fields.BooleanField()
 
 
   static fromAPI(json = {}) {

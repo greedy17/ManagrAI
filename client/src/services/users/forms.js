@@ -74,42 +74,21 @@ export class RepRegistrationForm extends Form {
 }
 
 export class UserInviteForm extends Form {
-  static email = new FormField({ validators: [new RequiredValidator(), new EmailValidator()] })
-  static confirmEmail = new FormField({
-    validators: [new RequiredValidator()],
-  })
   static role = new FormField({ validators: [new RequiredValidator()] })
   static userLevel = new FormField({ validators: [new RequiredValidator()] })
   static organization = new FormField({ validators: [new RequiredValidator()] })
-  static slackInvite = new FormField({ value: false })
-  static dynamicFormValidators = {
-    confirmEmail: [new MustMatchValidator({ matcher: 'email' })],
-  }
-  dynamicValidators() {
-    /**
-     * helper method to add dynamic validators
-     *
-     * */
-
-    this.addValidator(
-      'confirmEmail',
-      new MustMatchValidator({
-        matcher: this.field['email'],
-        message: 'Emails do not match',
-      }),
-    )
-  }
-  reset() {
-    this.field.email.value = ''
-    this.field.confirmEmail.value = ''
-    this.field.slackInvite.value = false
-  }
+  static slackId = new FormField({ validators: [new RequiredValidator()] })
+  static email = new FormField()
 }
 
 export class UserLoginForm extends Form {
   static email = new FormField({ validators: [new RequiredValidator()] })
 
   static password = new FormField({ validators: [new RequiredValidator({})] })
+}
+
+export class UserSlackAccountForm extends Form {
+  static slackAccount = new FormField()
 }
 
 export class UserProfileForm extends Form {
@@ -119,6 +98,14 @@ export class UserProfileForm extends Form {
     value: moment.tz.guess(),
     validators: [new RequiredValidator()],
   })
+}
+
+export class UserConfigForm extends Form {
+  static activatedManagrConfigs = new FormField({ validators: [new RequiredValidator()] })
+}
+
+export class UserOnboardingForm extends Form {
+  static onboarding = new FormField({ validators: [new RequiredValidator()] })
 }
 
 export { MustMatchValidator }

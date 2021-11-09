@@ -2,11 +2,12 @@ import json
 import pdb
 import uuid
 import logging
+import pytz
 from urllib.parse import urlencode
 
 from django.db.models import Q
 from django.utils import timezone
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_paginator_block
@@ -23,6 +24,7 @@ from managr.slack.helpers.utils import (
     block_finder,
     process_done_alert,
     generate_call_block,
+    check_contact_last_name,
 )
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
@@ -71,7 +73,7 @@ def process_meeting_review(payload, context):
             "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
             "title": {"type": "plain_text", "text": "Log Meeting"},
             "blocks": get_block_set("meeting_review_modal", context=context),
-            "submit": {"type": "plain_text", "text": "Save Changes"},
+            "submit": {"type": "plain_text", "text": "Update Salesforce"},
             "private_metadata": json.dumps(private_metadata),
             "external_id": f"meeting_review_modal.{str(uuid.uuid4())}",
         },
@@ -108,8 +110,17 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
     org = workflow.user.organization
 
     access_token = org.slack_integration.access_token
-    blocks = get_block_set("show_meeting_contacts", context,)
 
+    private_metadata = {
+        "original_message_channel": payload["channel"]["id"]
+        if "channel" in payload
+        else context.get("channel"),
+        "original_message_timestamp": payload["message"]["ts"]
+        if "message" in payload
+        else context.get("timestamp"),
+    }
+    private_metadata.update(context)
+    blocks = get_block_set("show_meeting_contacts", private_metadata,)
     data = {
         "trigger_id": trigger_id,
         # "view_id": view_id,
@@ -117,13 +128,11 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
             "type": "modal",
             "title": {"type": "plain_text", "text": "Contacts"},
             "blocks": blocks,
-            "private_metadata": json.dumps(context),
+            "private_metadata": json.dumps(private_metadata),
         },
     }
     if action == slack_const.VIEWS_UPDATE:
         data["view_id"] = payload["view"]["id"]
-
-    # private_metadata.update(context)
     try:
         res = slack_requests.generic_request(url, data, access_token=access_token)
     except InvalidBlocksException as e:
@@ -146,72 +155,100 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
     workflow.save()
 
 
-@processor(required_context=["w", "tracking_id"])
+@processor()
 def process_edit_meeting_contact(payload, context):
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     trigger_id = payload["trigger_id"]
+    view = payload["view"]
+    view_id = view["id"]
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     meeting = workflow.meeting
-
     org = meeting.zoom_account.user.organization
-
     access_token = org.slack_integration.access_token
-
-    salesforce_account = meeting.zoom_account.user.salesforce_account
-
-    view = payload["view"]
-    # retrieve original blocks, view will use the same blocks but change the submit action
-    blocks = view["blocks"]
-    view_id = view["id"]
-    title = view["title"]
-    actions = payload["actions"]
-    callback_id = None
-    submit_button_text = None
-    selected_action_block = actions[0] if len(actions) else None
-    if selected_action_block:
-        action = process_action_id(selected_action_block["action_id"])
-        block_id = selected_action_block["block_id"]
-        index, selected_block = block_finder(block_id, blocks)
-        if (
-            action["true_id"] == slack_const.ZOOM_MEETING__EDIT_CONTACT
-            and selected_block["elements"][0]["value"] == slack_const.ZOOM_MEETING__EDIT_CONTACT
-        ):
-            selected_block["elements"][0]["text"]["text"] = "Cancel Edit Contact"
-            selected_block["elements"][0]["value"] = slack_const.ZOOM_MEETING__CANCEL_EDIT_CONTACT
-            blocks[index] = selected_block
-            callback_id = slack_const.ZOOM_MEETING__EDIT_CONTACT
-            submit_button_text = "Edit Contact"
-            # change the block to show it is selected
-        elif (
-            action["true_id"] == slack_const.ZOOM_MEETING__EDIT_CONTACT
-            and selected_block["elements"][0]["value"]
-            == slack_const.ZOOM_MEETING__CANCEL_EDIT_CONTACT
-        ):
-            selected_block["elements"][0]["text"]["text"] = "Click To Select For Editing"
-            selected_block["elements"][0]["value"] = slack_const.ZOOM_MEETING__EDIT_CONTACT
-            blocks[index] = selected_block
-            callback_id = None
-            submit_button_text = None
-            # change the block to show it is selected
-
     data = {
         "trigger_id": trigger_id,
         "view_id": view_id,
         "view": {
-            "close": {"type": "plain_text", "text": "Close", "emoji": True},
             "type": "modal",
-            "title": title,
-            "blocks": blocks,
+            "title": {"type": "plain_text", "text": "Edit Contact"},
+            "submit": {"type": "plain_text", "text": "Save"},
+            "blocks": get_block_set(
+                "edit_meeting_contacts",
+                {
+                    "w": context.get("w"),
+                    "tracking_id": context.get("tracking_id"),
+                    "current_view_id": view_id,
+                },
+            ),
+            "callback_id": slack_const.ZOOM_MEETING__UPDATE_PARTICIPANT_DATA,
             "private_metadata": json.dumps(
-                {"w": context.get("w"), "tracking_id": context.get("tracking_id"),}
+                {
+                    "w": context.get("w"),
+                    "tracking_id": context.get("tracking_id"),
+                    "current_view_id": view_id,
+                    "channel": context.get("channel"),
+                    "timestamp": context.get("timestamp"),
+                }
             ),
         },
     }
-    if callback_id:
-        data["view"]["callback_id"] = callback_id
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH
+    # trigger_id = payload["trigger_id"]
 
-    if submit_button_text:
-        data["view"]["submit"] = {"type": "plain_text", "text": submit_button_text, "emoji": True}
+    # salesforce_account = meeting.zoom_account.user.salesforce_account
+
+    # view = payload["view"]
+    # # retrieve original blocks, view will use the same blocks but change the submit action
+    # blocks = view["blocks"]
+    # view_id = view["id"]
+    # title = view["title"]
+    # actions = payload["actions"]
+    # callback_id = None
+    # submit_button_text = None
+    # selected_action_block = actions[0] if len(actions) else None
+    # if selected_action_block:
+    #     action = process_action_id(selected_action_block["action_id"])
+    #     block_id = selected_action_block["block_id"]
+    #     index, selected_block = block_finder(block_id, blocks)
+    #     if (
+    #         action["true_id"] == slack_const.ZOOM_MEETING__EDIT_CONTACT
+    #         and selected_block["elements"][0]["value"] == slack_const.ZOOM_MEETING__EDIT_CONTACT
+    #     ):
+    #         selected_block["elements"][0]["text"]["text"] = "Cancel Edit Contact"
+    #         selected_block["elements"][0]["value"] = slack_const.ZOOM_MEETING__CANCEL_EDIT_CONTACT
+    #         blocks[index] = selected_block
+    #         callback_id = slack_const.ZOOM_MEETING__EDIT_CONTACT
+    #         submit_button_text = "Edit Contact"
+    #         # change the block to show it is selected
+    #     elif (
+    #         action["true_id"] == slack_const.ZOOM_MEETING__EDIT_CONTACT
+    #         and selected_block["elements"][0]["value"]
+    #         == slack_const.ZOOM_MEETING__CANCEL_EDIT_CONTACT
+    #     ):
+    #         selected_block["elements"][0]["text"]["text"] = "Click To Select For Editing"
+    #         selected_block["elements"][0]["value"] = slack_const.ZOOM_MEETING__EDIT_CONTACT
+    #         blocks[index] = selected_block
+    #         callback_id = None
+    #         submit_button_text = None
+    #         # change the block to show it is selected
+
+    # data = {
+    #     "trigger_id": trigger_id,
+    #     "view_id": view_id,
+    #     "view": {
+    #         "close": {"type": "plain_text", "text": "Close", "emoji": True},
+    #         "type": "modal",
+    #         "title": title,
+    #         "blocks": blocks,
+    #         "private_metadata": json.dumps(
+    #             {"w": context.get("w"), "tracking_id": context.get("tracking_id"),}
+    #         ),
+    #     },
+    # }
+    # if callback_id:
+    #     data["view"]["callback_id"] = callback_id
+
+    # if submit_button_text:
+    #     data["view"]["submit"] = {"type": "plain_text", "text": submit_button_text, "emoji": True}
     try:
         res = slack_requests.generic_request(url, data, access_token=access_token)
     except InvalidBlocksException as e:
@@ -230,8 +267,8 @@ def process_edit_meeting_contact(payload, context):
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
         )
-    workflow.slack_view = res["view"]["id"]
-    workflow.save()
+    # workflow.slack_view = res["view"]["id"]
+    # workflow.save()
 
 
 @processor(required_context=[])
@@ -412,7 +449,8 @@ def process_stage_selected_command_form(payload, context):
 def process_remove_contact_from_meeting(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     meeting = workflow.meeting
-
+    org = workflow.user.organization
+    access_token = org.slack_integration.access_token
     for i, part in enumerate(meeting.participants):
         if part["_tracking_id"] == context.get("tracking_id"):
             # remove its form if it exists
@@ -421,6 +459,13 @@ def process_remove_contact_from_meeting(payload, context):
             del meeting.participants[i]
             break
     meeting.save()
+    if check_contact_last_name(workflow.id):
+        update_res = slack_requests.update_channel_message(
+            context.get("channel"),
+            context.get("timestamp"),
+            access_token,
+            block_set=get_block_set("initial_meeting_interaction", {"w": context.get("w")}),
+        )
 
     return process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_UPDATE)
 
@@ -600,7 +645,7 @@ def process_create_or_search_selected(payload, context):
     if not select_block:
         # create new block including the resource type
         block_sets = get_block_set("attach_resource_interaction", {"w": workflow_id})
-        previous_blocks.insert(5, block_sets[0])
+        previous_blocks.insert(2, block_sets[0])
     try:
         res = slack_requests.update_channel_message(
             payload["channel"]["id"],
@@ -823,9 +868,7 @@ def process_no_changes_made(payload, context):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     organization = workflow.user.organization
     access_token = organization.slack_integration.access_token
-    blocks = payload["message"]["blocks"]
-    blocks.pop()
-    blocks.append(block_builders.simple_section(":+1: Got it!", text_type="mrkdwn"))
+    blocks = [*get_block_set("loading", {"message": ":+1: Got it! Logging your activity"})]
     try:
         slack_requests.update_channel_message(
             payload["channel"]["id"], payload["message"]["ts"], access_token, block_set=blocks,
@@ -841,6 +884,16 @@ def process_no_changes_made(payload, context):
     ops = [
         f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}",
     ]
+    contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
+    for form in contact_forms:
+        if form.template.form_type == slack_const.FORM_TYPE_CREATE:
+            ops.append(
+                f"{sf_consts.MEETING_REVIEW__CREATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
+            )
+        else:
+            ops.append(
+                f"{sf_consts.MEETING_REVIEW__UPDATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
+            )
     workflow.operations_list = ops
     workflow.save()
     workflow.begin_tasks()
@@ -1388,14 +1441,16 @@ def process_get_call_recording(payload, context):
     trigger_id = payload["trigger_id"]
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     user = User.objects.get(id=context.get("u"))
+    user_tz = datetime.now(pytz.timezone(user.timezone)).strftime("%z")
     gong_auth = GongAuthAccount.objects.get(organization=user.organization)
     access_token = user.organization.slack_integration.access_token
     opp = Opportunity.objects.get(id=context.get("resource_id"))
     type = context.get("type", None)
+    timestamp = datetime.fromtimestamp(float(payload["message"]["ts"]))
     blocks = []
-    if type == "recap":
+    if type == "recap" and timestamp >= (datetime.now() - timedelta(hours=24)):
         curr_date = date.today()
-        curr_date_str = curr_date.isoformat() + "T01:00:00Z"
+        curr_date_str = curr_date.isoformat() + "T01:00:00" + f"{user_tz[:3]}:{user_tz[3:]}"
         try:
             call_res = gong_auth.helper_class.check_for_current_call(curr_date_str)
             call_details = generate_call_block(call_res, opp.secondary_data["Id"])
@@ -1469,6 +1524,45 @@ def process_mark_complete(payload, context):
     return
 
 
+@processor()
+def process_send_recap_modal(payload, context):
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    trigger_id = payload["trigger_id"]
+    workflow = MeetingWorkflow.objects.get(id=context.get("workflow_id"))
+    meeting = workflow.meeting
+    organization = meeting.zoom_account.user.organization
+    access_token = organization.slack_integration.access_token
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.PROCESS_SEND_RECAPS,
+            "title": {"type": "plain_text", "text": "Send Recaps"},
+            "blocks": get_block_set("send_recap_block_set", {"u": context.get("u")}),
+            "submit": {"type": "plain_text", "text": "Send"},
+            "private_metadata": json.dumps(context),
+        },
+    }
+    try:
+        res = slack_requests.generic_request(url, data, access_token=access_token)
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.user.id)} email {workflow.user.email} {e}"
+        )
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -1502,6 +1596,7 @@ def handle_block_actions(payload):
         slack_const.CALL_ERROR: process_call_error,
         slack_const.GONG_CALL_RECORDING: process_get_call_recording,
         slack_const.MARK_COMPLETE: process_mark_complete,
+        slack_const.PROCESS_SEND_RECAP_MODAL: process_send_recap_modal,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)

@@ -21,7 +21,7 @@
     <div class="alert__row">
       <div v-if="pageNumber === 0" class="alert__column__" style="margin-bottom: 1rem">
         <h2 style="text-align: center; color: black; font-weight: bold">
-          Select fields and operators
+          Create a Custom Workflow
         </h2>
         <div v-if="pageNumber === 0">
           <!-- <p style="text-align: center; border-bottom: 2px solid #beb5cc; padding-bottom: 0.25rem">
@@ -815,7 +815,7 @@ export default {
     async listUserChannels(cursor = null) {
       const res = await SlackOAuth.api.listUserChannels(cursor)
       const results = new SlackListResponse({
-        channels: [...this.channelOpts.channels, ...res.channels],
+        channels: [...this.userChannelOpts.channels, ...res.channels],
         responseMetadata: { nextCursor: res.nextCursor },
       })
       this.userChannelOpts = results
@@ -1668,7 +1668,7 @@ textarea {
 .alerts-page {
   height: 88vh;
   color: white;
-  margin-left: 12vw;
+  margin-left: 18vw;
   margin-top: 4rem;
   display: flex;
   flex-direction: column;

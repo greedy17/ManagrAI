@@ -88,7 +88,6 @@ def command_meeting_summary(context):
 
 
 def custom_paginator_block(pagination_object, invocation, channel, config_id):
-    print(pagination_object)
     next_page = pagination_object.get("next_page", None)
     prev_page = pagination_object.get("previous_page", None)
     blocks = [
