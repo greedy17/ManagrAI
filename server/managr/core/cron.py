@@ -111,10 +111,11 @@ def check_reminders(user_id):
     user = User.objects.get(id=user_id)
     for key in user.reminders.keys():
         if user.reminders[key]:
-            check_for_time(
+            check = check_for_time(
                 user.timezone,
                 core_consts.REMINDER_CONFIG[key]["HOUR"],
                 core_consts.REMINDER_CONFIG[key]["MINUTE"],
             )
-
+            if check:
+                return
     return
