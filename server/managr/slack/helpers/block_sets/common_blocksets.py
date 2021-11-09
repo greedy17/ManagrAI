@@ -338,3 +338,13 @@ def zoom_fake_recording(context):
     ]
     return blocks
 
+
+@block_set()
+def meeting_reminder_block_set(not_completed):
+    blocks = [
+        block_builders.simple_section(
+            f"FYI there are {not_completed} meetings from today that still need to be logged!"
+        )
+    ]
+    return blocks
+
