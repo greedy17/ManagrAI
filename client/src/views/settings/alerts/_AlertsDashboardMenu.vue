@@ -29,7 +29,7 @@
         id="toolTip"
       >
         <p>
-          Onboarding complete! We'll take it from here. Visit this tab to view, edit, or delete
+          Onboarding complete! We'll take it from here. Visit this tab to run, edit, or delete
           workflows.
         </p>
         <div id="tailShadow"></div>

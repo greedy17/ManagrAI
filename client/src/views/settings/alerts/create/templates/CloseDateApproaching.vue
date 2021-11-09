@@ -6,12 +6,11 @@
           Close Date
           <span style="color: #199e54">Approaching</span>
         </span>
-        <p
-          v-if="userLevel !== 'MANAGER' || !user.isAdmin"
-          style="color: #3c3940; font-size: 1.1rem"
-        >
-          Choose a delivery day and create a Slack channel for these notifications. We’ll take it
-          from there
+        <p v-if="userLevel === 'REP'" style="color: #3c3940; font-size: 1.1rem">
+          Select users and a Slack #channel for this workflow
+        </p>
+        <p style="color: #3c3940; font-size: 1.1rem" v-else>
+          Select the day (or date), users, and a Slack #channel for this workflow
         </p>
       </h2>
     </div>
@@ -94,7 +93,7 @@
             v-if="userLevel !== 'REP'"
             class="delivery__row"
           >
-            <span style="margin-bottom: 0.5rem">Select Pipelines</span>
+            <span style="margin-bottom: 0.5rem">Select Users</span>
 
             <FormField :errors="form.field.alertTargets.errors">
               <template v-slot:input>
@@ -954,7 +953,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.4rem 1rem;
+  padding: 1.25rem 1rem;
   border-radius: 0.3rem;
   font-weight: bold;
   line-height: 1.14;
@@ -973,7 +972,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.4rem 1rem;
+  padding: 1.25rem 1rem;
   border-radius: 0.3rem;
   font-weight: bold;
   line-height: 1.14;

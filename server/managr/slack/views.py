@@ -381,7 +381,7 @@ class SlackViewSet(
         slack.change_recap_channel(request.data.get("recap_channel"))
 
         for user in request.data.get("users"):
-            user_acc = User.objects.filter(id=user["id"]).first()
+            user_acc = User.objects.filter(id=user).first()
             print(user_acc)
             if user_acc:
                 print(type(slack_id))
