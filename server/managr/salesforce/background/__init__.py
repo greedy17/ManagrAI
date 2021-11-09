@@ -1012,10 +1012,9 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
             form_fields = form_fields | form.template.formfield_set.filter(include_in_recap=True)
         else:
             form_fields = form.template.formfield_set.filter(include_in_recap=True)
-    if send_to_data:
-        send_summ_to_leadership = send_to_data.get("leadership")
-        send_summ_to_reps = send_to_data.get("reps")
-        send_summ_to_channels = send_to_data.get("channels")
+    send_summ_to_leadership = send_to_data.get("leadership", None)
+    send_summ_to_reps = send_to_data.get("reps", None)
+    send_summ_to_channels = send_to_data.get("channels", None)
 
     slack_access_token = user.organization.slack_integration.access_token
     blocks = []
