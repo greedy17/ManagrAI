@@ -161,6 +161,7 @@ class CustomUserAdmin(UserAdmin):
                     "user_level",
                     "role",
                     "timezone",
+                    "reminders",
                 )
             },
         ),

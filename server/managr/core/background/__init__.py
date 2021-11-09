@@ -7,6 +7,8 @@ from background_task import background
 from django.db.models import F, Q, Count
 from django.utils import timezone
 
+from ..models import User
+
 logger = logging.getLogger("managr")
 
 
@@ -30,3 +32,7 @@ def _process_create_calendar_event(
     except Exception as e:
         logger.info(f"Nylas warning {e}")
 
+
+def _process_send_meeting_reminder(user_id):
+    user = User.objects.get(id=user_id)
+    return
