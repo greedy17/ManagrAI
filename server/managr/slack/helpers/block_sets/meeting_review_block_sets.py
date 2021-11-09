@@ -352,12 +352,6 @@ def initial_meeting_interaction_block_set(context):
         if end_time
         else end_time
     )
-    create_change_button = block_builders.section_with_button_block(
-        "Find Opportunity",
-        str(workflow.id),
-        "Map to a different Opportunity :mag_right:",
-        action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
-    )
 
     if workflow.resource_type:
         title_section_text = (
@@ -366,39 +360,43 @@ def initial_meeting_interaction_block_set(context):
             else _initial_interaction_message(resource.name, workflow.resource_type, True)
         )
         title_section_color = "primary" if contact_check else "danger"
-        title_section = block_builders.section_with_button_block(
-            "Review Attendees",
-            str(workflow.id),
-            title_section_text,
-            action_id=action_with_params(
-                slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,]
+
+        blocks = [
+            block_builders.section_with_button_block(
+                "Review Attendees",
+                str(workflow.id),
+                title_section_text,
+                action_id=action_with_params(
+                    slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,]
+                ),
+                style=title_section_color,
             ),
-            style=title_section_color,
-        )
+            {"type": "divider"},
+            block_builders.section_with_button_block(
+                "Change Opportunity",
+                str(workflow.id),
+                f"Meeting was mapped to: *{workflow.resource.name}*",
+                action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
+            ),
+        ]
     else:
-        title_section = block_builders.section_with_button_block(
-            "Map to Opportunity",
-            str(workflow.id),
-            _initial_interaction_message(),
-            action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
-            style="primary",
-        )
-    default_blocks = [
-        title_section,
-        {"type": "divider"},
-        block_builders.section_with_accessory_block(
-            f"*{meeting.topic}*\n{formatted_start} - {formatted_end}\n Attendees: {meeting.participants_count}",
-            block_builders.simple_image_block(
-                "https://managr-images.s3.amazonaws.com/slack/logo_loading.gif", "Managr Logo"
+        blocks = [
+            block_builders.section_with_button_block(
+                "Map to Opportunity",
+                str(workflow.id),
+                _initial_interaction_message(),
+                action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
+                style="primary",
             ),
-            text_type="mrkdwn",
-        ),
-    ]
-    blocks = [
-        *default_blocks,
-    ]
-    if workflow.resource_type:
-        blocks.insert(2, create_change_button)
+            {"type": "divider"},
+            block_builders.section_with_accessory_block(
+                f"*{meeting.topic}*\n{formatted_start} - {formatted_end}\n Attendees: {meeting.participants_count}",
+                block_builders.simple_image_block(
+                    "https://managr-images.s3.amazonaws.com/slack/logo_loading.gif", "Managr Logo"
+                ),
+                text_type="mrkdwn",
+            ),
+        ]
 
     action_blocks = []
     if (
