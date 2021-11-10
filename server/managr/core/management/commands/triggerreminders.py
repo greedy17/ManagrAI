@@ -6,7 +6,7 @@ from managr.core.cron import check_reminders
 
 
 class Command(BaseCommand):
-    help = "Helper starting SL sync"
+    help = "Check each user for reminders"
 
     def add_arguments(self, parser):
         parser.add_argument("-u", "--users", nargs="+", type=str)
