@@ -1,78 +1,81 @@
 <template>
   <div class="registration">
-    <img class="registration__logo" src="@/assets/images/logo.png" />
-    <h2>Register</h2>
+    <div class="registration-card">
+      <img class="logo" src="@/assets/images/logo.png" />
+      <h1>Register</h1>
 
-    <div class="registration__text">Create and customize your Managr account within minutes.</div>
-    <!-- <form @submit.prevent="onSubmit"> -->
-
-    <div class="registration__form">
-      <FormField
-        label="Your Name"
-        @blur="registrationForm.field.fullName.validate()"
-        :errors="registrationForm.field.fullName.errors"
-        v-model="registrationForm.field.fullName.value"
-        large
-        bordered
-        placeholder=""
-      />
-      <FormField
-        label="Your Email"
-        @blur="registrationForm.field.email.validate()"
-        :errors="registrationForm.field.email.errors"
-        v-model="registrationForm.field.email.value"
-        large
-        bordered
-        placeholder=""
-      />
-      <FormField
-        id="password"
-        label="Set a Password"
-        @blur="registrationForm.field.password.validate()"
-        :errors="registrationForm.field.password.errors"
-        v-model="registrationForm.field.password.value"
-        placeholder=""
-        inputType="password"
-        large
-        bordered
-      />
-      <FormField
-        id="confirm-password"
-        label="Re-Enter Password"
-        @blur="registrationForm.field.confirmPassword.validate()"
-        :errors="registrationForm.field.confirmPassword.errors"
-        v-model="registrationForm.field.confirmPassword.value"
-        placeholder=""
-        inputType="password"
-        large
-        bordered
-      />
-      <FormField
-        label="Company"
-        @blur="registrationForm.field.organizationName.validate()"
-        :errors="registrationForm.field.organizationName.errors"
-        v-model="registrationForm.field.organizationName.value"
-        placeholder=""
-        large
-        bordered
-      />
-      <div class="dropdown">
-        <FormField :errors="registrationForm.field.role.errors" label="Role">
-          <template v-slot:input>
-            <DropDownSelect
-              :items="userRoles"
-              valueKey="key"
-              displayKey="name"
-              v-model="registrationForm.field.role.value"
-              :itemsRef="userRoles"
-              class="invite-form__dropdown"
-              nullDisplay="Select user role"
-              @input="registrationForm.field.role.validate()"
-            />
-          </template>
-        </FormField>
-      </div>
-      <!-- <div class="registration__input__label">
+      <div class="registration__text">Create and customize your Managr account within minutes.</div>
+      <!-- <form @submit.prevent="onSubmit"> -->
+      <div></div>
+      <div class="registration__form">
+        <div class="form-card">
+          <FormField
+            label="Your Name"
+            @blur="registrationForm.field.fullName.validate()"
+            :errors="registrationForm.field.fullName.errors"
+            v-model="registrationForm.field.fullName.value"
+            large
+            bordered
+            placeholder=""
+          />
+          <FormField
+            label="Your Email"
+            @blur="registrationForm.field.email.validate()"
+            :errors="registrationForm.field.email.errors"
+            v-model="registrationForm.field.email.value"
+            large
+            bordered
+            placeholder=""
+          />
+          <FormField
+            id="password"
+            label="Set a Password"
+            @blur="registrationForm.field.password.validate()"
+            :errors="registrationForm.field.password.errors"
+            v-model="registrationForm.field.password.value"
+            placeholder=""
+            inputType="password"
+            large
+            bordered
+          />
+          <FormField
+            id="confirm-password"
+            label="Re-Enter Password"
+            @blur="registrationForm.field.confirmPassword.validate()"
+            :errors="registrationForm.field.confirmPassword.errors"
+            v-model="registrationForm.field.confirmPassword.value"
+            placeholder=""
+            inputType="password"
+            large
+            bordered
+          />
+          <FormField
+            label="Company"
+            @blur="registrationForm.field.organizationName.validate()"
+            :errors="registrationForm.field.organizationName.errors"
+            v-model="registrationForm.field.organizationName.value"
+            placeholder=""
+            large
+            bordered
+          />
+          <div class="dropdown">
+            <FormField :errors="registrationForm.field.role.errors" label="Role">
+              <template v-slot:input>
+                <DropDownSelect
+                  :items="userRoles"
+                  valueKey="key"
+                  displayKey="name"
+                  v-model="registrationForm.field.role.value"
+                  :itemsRef="userRoles"
+                  class="invite-form__dropdown"
+                  nullDisplay="Select user role"
+                  @input="registrationForm.field.role.validate()"
+                />
+              </template>
+            </FormField>
+          </div>
+        </div>
+        <!-- <div class="registration__input__label">
         Company
         <input
           v-model="registrationForm.field.organizationName.value"
@@ -80,18 +83,19 @@
           class="registration__input"
         />
       </div> -->
-      <div class="registration__privacy">
-        By clicking Sign Up, I agree to the
-        <a href="https://managr.ai/terms-of-service" target="_blank">Terms of Service</a> and
-        <a href="https://managr.ai/privacy-policy" target="_blank">Privacy Policy</a>
-      </div>
+        <div class="registration__privacy">
+          By clicking Sign Up, I agree to the
+          <a href="https://managr.ai/terms-of-service" target="_blank">Terms of Service</a> and
+          <a href="https://managr.ai/privacy-policy" target="_blank">Privacy Policy</a>
+        </div>
 
-      <Button class="registration__button" type="submit" @click="onSubmit" text="Sign Up" />
+        <Button class="registration__button" type="submit" @click="onSubmit" text="Sign Up" />
 
-      <div style="margin-top: 1rem">
-        <router-link :to="{ name: 'Login' }">Back to Login</router-link>
+        <div style="margin-top: 1rem">
+          <router-link :to="{ name: 'Login' }">Back to Login</router-link>
+        </div>
+        <!-- </form> -->
       </div>
-      <!-- </form> -->
     </div>
   </div>
 </template>
@@ -182,14 +186,10 @@ export default {
   flex-flow: column;
   justify-content: center;
   max-width: 24rem;
-  margin: 0 auto;
+  margin: 4rem auto;
 
-  &__logo {
-    height: 5rem;
-    object-fit: contain;
-  }
   &__text {
-    color: #{$mid-gray};
+    color: $panther-gray;
     font-family: #{$base-font-family};
     width: 100%;
     max-width: 20rem;
@@ -214,6 +214,10 @@ export default {
     margin-top: 1rem;
   }
 }
+.logo {
+  height: 5rem;
+  margin-left: 35%;
+}
 .dropdown {
   ::v-deep .tn-dropdown__selection-container {
     border-radius: 4px;
@@ -224,7 +228,15 @@ export default {
     letter-spacing: 0.5px;
   }
 }
-
+.form-card {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  border-radius: 0.5rem;
+  background-color: $panther;
+  padding: 3rem;
+  color: white;
+}
 .divider {
   height: 1px;
   background-color: #aaa;
@@ -240,11 +252,11 @@ export default {
   font-weight: 500;
 }
 
-h2 {
-  @include base-font-styles();
+h1 {
   font-weight: bold;
   color: $main-font-gray;
   text-align: center;
+  font-size: 1.6rem;
 }
 
 .registration__form {
@@ -255,9 +267,8 @@ h2 {
 }
 
 input {
-  @include input-field();
   height: 2.5rem;
-  width: 15.65rem;
+  width: 100%;
   display: block;
   margin: 0.625rem 0;
 

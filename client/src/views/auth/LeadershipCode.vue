@@ -1,15 +1,17 @@
 <template>
   <div class="leadership-code">
-    <img class="leadership-code__logo" src="@/assets/images/logo.png" />
-    <h2>Welcome</h2>
-    <div class="leadership-code__text">
-      Please enter your Leadership code provided by the Managr team.
+    <div class="leadership-card">
+      <img class="leadership-code__logo" src="@/assets/images/logo.png" />
+      <h2>Welcome</h2>
+      <div class="leadership-code__text">
+        Please enter your Leadership code provided by the Managr team.
+      </div>
+      <div class="input__container">
+        Enter Code
+        <input v-model="code" type="text" class="leadership-code__input" />
+      </div>
+      <button type="submit" @click="handleApplyCode">Apply Code</button>
     </div>
-    <div class="input__container">
-      Enter Code
-      <input v-model="code" type="text" class="leadership-code__input" />
-    </div>
-    <button type="submit" @click="handleApplyCode">Apply Code</button>
   </div>
 </template>
 
@@ -48,7 +50,16 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
+.leadership-card {
+  margin-top: 2rem;
+  background-color: $panther;
+  border-radius: 0.5rem;
+  padding: 3rem;
+  color: white;
+}
+
 .leadership-code {
+  margin-top: 4rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -60,7 +71,7 @@ export default {
   }
 
   &__text {
-    color: #{$mid-gray};
+    color: white;
     font-family: #{$base-font-family};
     width: 100%;
     max-width: 20rem;
@@ -75,7 +86,6 @@ export default {
 h2 {
   @include base-font-styles();
   font-weight: bold;
-  color: $main-font-gray;
   text-align: center;
   font-size: 20px;
   margin-bottom: 2rem;
