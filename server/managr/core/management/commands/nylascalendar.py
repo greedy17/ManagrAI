@@ -13,5 +13,17 @@ class Command(BaseCommand):
     help = "Helper for restarting the sf sync"
 
     def handle(self, *args, **options):
-
-        return _convert_nylas_calendar_details()
+        if options["users"]:
+            for t in options["users"]:
+                user = User.objects.filter(email=t).first()
+                if not hasattr(user, "nylas_account"):
+                    self.stdout.write(
+                        self.style.ERROR("User does not have a nylas account {}".format(user.email,))
+                    )
+                auth_id = str(user.nylas_account.auth_account.id)
+                _convert_nylas_calendar_details(auth_id)
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        "Successfully initiated the sync for the user {}".format(user.email,)
+                    ),
+                )
