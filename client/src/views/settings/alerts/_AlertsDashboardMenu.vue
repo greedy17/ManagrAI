@@ -130,6 +130,7 @@ export default {
         .catch((e) => {
           console.log(e)
         })
+      location.reload()
     },
     alertsCount(num) {
       let int = num
