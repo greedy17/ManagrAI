@@ -1,5 +1,5 @@
 <template>
-  <div class="alerts-page">
+  <div :key="hasZoomChannel && recapChannel" class="alerts-page">
     <div class="col">
       <h2 style="color: black; margin-top: -0.5rem" class="title">Popular Workflow Automations</h2>
       <p style="color: #5d5e5e" class="sub__">Activate the workflows that are relevant to you</p>
@@ -375,11 +375,6 @@ export default {
   },
   async created() {
     this.templates.refresh()
-    const reloaded = localStorage.getItem('reloaded')
-    if (reloaded !== 'true') {
-      localStorage.setItem('reloaded', 'true')
-      location.reload()
-    }
   },
   methods: {
     showList() {

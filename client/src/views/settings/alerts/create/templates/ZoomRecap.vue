@@ -1,18 +1,18 @@
 <template>
   <div class="logZoomPage">
     <div>
-      <h2 @click="checkUsers" style="font-weight: bold; text-align: center">
+      <h2 style="font-weight: bold; text-align: center">
         <span style="color: black">
           Meeting
           <span style="color: #5f8cff"> Recaps</span>
         </span>
       </h2>
-      <p style="text-align: center; color: black; font-weight: bold">
-        Recieve zoom meeting recaps from essential team members
+      <p style="text-align: center; color: black; font-weight: bold; margin-top: -0.5rem">
+        Recieve meeting recaps from essential team members
       </p>
     </div>
 
-    <div style="margin-top: -2rem; flex-direction: column" class="centered">
+    <div style="flex-direction: column" class="centered">
       <!-- <div class="card">
         <div :key="value" v-for="(key, value) in userTargetsOpts">
           <label for="key">{{ key.fullName }}</label>
@@ -30,9 +30,9 @@
             margin-top: -2rem;
           "
         >
-          <p style="text-align: center; font-weight: bold">Select pipelines</p>
+          <p style="text-align: center; font-weight: bold">Select Users</p>
           <div>
-            <multiselect
+            <!-- <multiselect
               :close-on-select="false"
               deselectLabel="remove"
               :multiple="true"
@@ -41,7 +41,35 @@
               v-model="pipelines"
               :options="userList"
               label="fullName"
-            ></multiselect>
+            ></multiselect> -->
+            <DropDownSearch
+              @input="checkIds"
+              :items.sync="userList"
+              v-model="userIds"
+              displayKey="fullName"
+              valueKey="id"
+              nullDisplay="Users"
+              searchable
+              local
+              multi
+            >
+            </DropDownSearch>
+          </div>
+          <div v-if="userIds.length > 0" class="items_height">
+            <p
+              :key="item"
+              v-for="item in userIds"
+              @click="removeUser(item)"
+              :class="userIds.length > 0 ? 'selected__items' : 'visible'"
+              style="margin-top: 1.5rem"
+            >
+              <img
+                src="@/assets/images/remove.png"
+                style="height: 1rem; margin-right: 0.25rem"
+                alt=""
+              />
+              {{ getUserName(item) }}
+            </p>
           </div>
         </div>
 
@@ -100,37 +128,49 @@
           >
             <FormField>
               <template v-slot:input>
-                <multiselect
-                  :options="userChannelOpts.channels"
-                  @input="setChannel(recapChannel)"
+                <DropDownSearch
+                  :items.sync="userChannelOpts.channels"
                   v-model="recapChannel"
-                  label="name"
-                  value="id"
-                  placeholder="Channels"
-                  selectLabel=""
+                  displayKey="name"
+                  valueKey="id"
+                  nullDisplay="Channels"
+                  :hasNext="!!userChannelOpts.nextCursor"
+                  @load-more="listChannels(userChannelOpts.nextCursor)"
+                  searchable
+                  local
                 >
-                </multiselect>
+                  <template v-slot:tn-dropdown-option="{ option }">
+                    <img
+                      v-if="option.isPrivate == true"
+                      class="card-img"
+                      style="width: 1.2rem; height: 1rem; margin-right: 0.2rem"
+                      src="@/assets/images/lock.png"
+                    />
+                    {{ option['name'] }}
+                  </template>
+                </DropDownSearch>
               </template>
             </FormField>
 
-            <!-- <p
-              v-if="zoomChannel"
-              @click="removeZoomChannel"
-              :class="zoomChannel ? 'selected__item' : 'visible'"
+            <p
+              v-if="recapChannel"
+              @click="removeRecapChannel"
+              :class="recapChannel ? 'selected__item' : 'visible'"
+              style="margin-top: -0.25rem"
             >
               <img
                 src="@/assets/images/remove.png"
                 style="height: 1rem; margin-right: 0.25rem; margin-top: 0.25rem"
                 alt=""
               />
-              {{ zoomChannel.name }}
-            </p> -->
+              {{ getChannelName(recapChannel) }}
+            </p>
           </div>
         </div>
       </div>
-      <div v-if="channelCreated || recapChannelId" style="margin-top: 2rem">
+      <div v-if="(channelCreated || recapChannel) && userIds.length > 0" style="margin-top: 2rem">
         <div v-if="!create">
-          <button class="green__button bouncy" @click="handleRecapUpdate(recapChannelId)">
+          <button class="green__button bouncy" @click="handleRecapUpdate(recapChannel)">
             Activate Channel
           </button>
         </div>
@@ -173,6 +213,7 @@ export default {
       recapChannelId: '',
       createdZoomChannel: '',
       test: '',
+      userIds: [],
       pipelines: [],
       users: CollectionManager.create({ ModelClass: User }),
       userList: [],
@@ -190,36 +231,52 @@ export default {
     if (this.user.slackRef) {
       await this.listUserChannels()
     }
-    if (this.user.userLevel == 'MANAGER' || this.user.isAdmin) {
+    if (this.user.userLevel == 'MANAGER') {
       await this.users.refresh()
       this.userList = this.users.list
     }
   },
   methods: {
-    checkUsers() {
-      console.log(this.userList)
+    // getPipes(arr) {
+    //   let ids = []
+    //   for (let i = 0; i < this.userList.length; i++) {
+    //     ids.push(this.userList[i].id)
+    //   }
+    //   for (let i in arr) {
+    //     if (ids.includes(arr[i])) {
+    //       this.pipelines.push(this.userList.filter((user) => user.id === arr[1]))
+    //     }
+    //   }
+    //   this.pipelines.reduce(function (a, b) {
+    //     if (a.indexOf(b) < 0) a.push(b)
+    //     return a
+    //   }, [])
+    //   console.log(this.pipelines)
+    // },
+    removeUser(id) {
+      this.userIds = this.userIds.filter((i) => i !== id)
+    },
+    checkIds() {
+      console.log(this.userIds)
     },
     setChannel(obj) {
       this.recapChannelId = obj.id
     },
     async handleRecapUpdate(recap_channel) {
-      const res = await SlackOAuth.api.updateRecapChannel(
-        this.slackId,
-        recap_channel,
-        this.pipelines,
-      )
+      const res = await SlackOAuth.api.updateRecapChannel(this.slackId, recap_channel, this.userIds)
       console.log(res)
       this.createdZoomChannel = ''
       this.recapChannel = ''
       this.$router.push({ name: 'CreateNew' })
+      location.reload()
       this.$Alert.alert({
         type: 'success',
-        message: 'Alert saved successfully',
+        message: 'Workflow saved successfully',
         timeout: 2000,
       })
     },
-    removeZoomChannel() {
-      this.zoomChannel = ''
+    removeRecapChannel() {
+      this.recapChannel = ''
     },
     logNewName(str) {
       let new_str = ''
@@ -231,6 +288,9 @@ export default {
     },
     getChannelName(id) {
       return this.userChannelOpts.channels.filter((channel) => channel.id == id)[0].name
+    },
+    getUserName(id) {
+      return this.userList.filter((user) => user.id == id)[0].fullName
     },
     async listUserChannels(cursor = null) {
       const res = await SlackOAuth.api.listUserChannels(cursor)
@@ -390,6 +450,12 @@ export default {
   box-shadow: 1px 4px 7px black;
 }
 
+.items_height {
+  overflow-y: scroll;
+  max-height: 10rem;
+  width: 100%;
+}
+
 .logZoomPage {
   height: 100vh;
   color: white;
@@ -400,7 +466,7 @@ export default {
   justify-content: space-evenly;
   align-items: center;
   width: 60vw;
-  height: 225px;
+  padding: 3rem;
   background-color: $panther;
   border-radius: 0.5rem;
 }
@@ -409,7 +475,6 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 60vh;
 }
 .row {
   display: flex;
@@ -470,7 +535,16 @@ input {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: -0.25rem;
+}
+.selected__items {
+  padding: 0.5rem 1.5rem;
+  width: 100%;
+  border: 2px solid white;
+  border-radius: 0.3rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .visible {
   display: none;
