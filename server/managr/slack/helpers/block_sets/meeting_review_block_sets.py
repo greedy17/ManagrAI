@@ -608,7 +608,11 @@ def final_meeting_interaction_block_set(context):
             text,
             action_id=action_with_params(
                 slack_const.PROCESS_SEND_RECAP_MODAL,
-                params=[f"u={str(workflow.user.id)}", f"workflow_id={str(workflow.id)}"],
+                params=[
+                    f"u={str(workflow.user.id)}",
+                    f"workflow_id={str(workflow.id)}",
+                    "type=meeting",
+                ],
             ),
         )
     ]

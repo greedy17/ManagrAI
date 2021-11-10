@@ -458,7 +458,7 @@ def process_submit_resource_data(payload, context):
 
     else:
         current_forms.update(is_submitted=True, submission_date=timezone.now())
-
+        form_id = current_form_ids[0]
         # update the channel message to clear it
         if main_form.template.form_type == "CREATE":
             text = f"Managr created {main_form.resource_type}"
@@ -467,7 +467,7 @@ def process_submit_resource_data(payload, context):
         else:
             text = f"Managr updated {main_form.resource_type}"
             message = f"Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
-        if len(user.slack_integration.recap_receivers):
+        if len(user.slack_integration.recap_receivers) and type == "meeting":
             _send_recap(current_form_ids, None, True)
         if (
             all_form_data.get("meeting_comments") is not None
@@ -481,7 +481,9 @@ def process_submit_resource_data(payload, context):
             "view": {
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Success"},
-                "blocks": get_block_set("success_modal", {"message": message},),
+                "blocks": get_block_set(
+                    "success_modal", {"message": message, "u": user.id, "form_id": form_id},
+                ),
                 "private_metadata": json.dumps(context),
                 "clear_on_close": True,
             },
@@ -500,7 +502,9 @@ def process_submit_resource_data(payload, context):
                 user.organization.slack_integration.access_token,
                 user.slack_integration.slack_id,
                 text=text,
-                block_set=get_block_set("success_modal", {"message": message},),
+                block_set=get_block_set(
+                    "success_modal", {"message": message, "u": user.id, "form_id": form_id}
+                ),
             )
         except Exception as e:
             return logger.exception(
@@ -1150,6 +1154,7 @@ def process_get_notes(payload, context):
 @processor(required_context=["u"])
 def process_send_recaps(payload, context):
     values = payload["view"]["state"]["values"]
+    type = context.get("type")
     channels = list(values["__send_recap_to_channels"].values())[0]["selected_conversations"]
     leadership = [
         option["value"]
@@ -1163,11 +1168,19 @@ def process_send_recaps(payload, context):
             f"GET_LOCAL_RESOURCE_OPTIONS?u={context.get('u')}&resource=User&field_id=fae88a10-53cc-470e-86ec-32376c041893"
         ]["selected_options"]
     ]
-    workflow = MeetingWorkflow.objects.get(id=context.get("workflow_id"))
-    # collect forms for resource meeting_review and if stages any stages related forms
-    update_forms = workflow.forms.filter(
-        template__form_type__in=[slack_const.FORM_TYPE_UPDATE, slack_const.FORM_TYPE_STAGE_GATING,]
-    )
+    if type == "meeting":
+        workflow = MeetingWorkflow.objects.get(id=context.get("workflow_id"))
+        # collect forms for resource meeting_review and if stages any stages related forms
+        update_forms = workflow.forms.filter(
+            template__form_type__in=[
+                slack_const.FORM_TYPE_UPDATE,
+                slack_const.FORM_TYPE_STAGE_GATING,
+            ]
+        )
+    else:
+        form_id = context.get("form_id")
+        command_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
+        update_forms = [command_form]
     update_form_ids = []
     # aggregate the data
     send_to_recaps = {"channels": channels, "leadership": leadership, "reps": reps}
