@@ -8,7 +8,14 @@ from django.db.models import Q
 from managr.core import constants as core_consts
 from managr.core.models import NylasAuthAccount, User
 from managr.core.nylas.auth import revoke_access_token
-from managr.core.background import check_for_time
+from managr.core.background import (
+    check_for_time,
+    check_workflows_count,
+    emit_process_send_workflow_reminder,
+    emit_process_send_meeting_reminder,
+    emit_process_send_manager_reminder,
+    check_for_uncompleted_meetings,
+)
 
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.block_sets import get_block_set
@@ -42,7 +49,7 @@ def _convert_to_user_friendly_date(date):
     return date.strftime("%m/%d/%Y")
 
 
-def _has_alert(user, notification_class, notification_type, resource_id):
+def _has_workflow(user, notification_class, notification_type, resource_id):
     return Notification.objects.filter(
         user=user,
         notification_class=notification_class,
@@ -107,6 +114,7 @@ def revoke_tokens():
         revoke_access_token(token)
 
 
+@kronos.register("*/30 * * * *")
 def check_reminders(user_id):
     user = User.objects.get(id=user_id)
     for key in user.reminders.keys():
@@ -117,5 +125,20 @@ def check_reminders(user_id):
                 core_consts.REMINDER_CONFIG[key]["MINUTE"],
             )
             if check:
-                core_consts.REMINDER_CONFIG[key]["FUNCTION"]()
+                if key == core_consts.WORKFLOW_REMINDER:
+                    if datetime.datetime.today().weekday() == 4:
+                        workflows = check_workflows_count(user.id)
+                        if workflows["status"] and workflows["workflow_count"] <= 2:
+                            emit_process_send_workflow_reminder(
+                                user.id, workflows["workflow_count"]
+                            )
+                elif key == core_consts.MEETING_REMINDER_REP:
+                    meetings = check_for_uncompleted_meetings(user.id)
+                    if meetings["status"]:
+                        emit_process_send_meeting_reminder(user.id, meetings["not_completed"])
+                elif key == core_consts.MEETING_REMINDER_MANAGER:
+                    meetings = check_for_uncompleted_meetings(user.id, True)
+                    if meetings["status"]:
+                        emit_process_send_manager_reminder(user.id, meetings["not_completed"])
+
     return

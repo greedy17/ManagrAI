@@ -46,6 +46,8 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "time_options": common_blocksets.time_options,
         "duration_options": common_blocksets.duration_options,
         "meeting_reminder": common_blocksets.meeting_reminder_block_set,
+        "manager_meeting_reminder": common_blocksets.manager_meeting_reminder_block_set,
+        "workflow_reminder": common_blocksets.workflow_reminder_block_set,
         "command_update_resource": command_views_blocksets.command_update_resource_interaction,
         "update_modal_block_set": command_views_blocksets.update_modal_block_set,
         "command_meeting_summary": command_views_blocksets.command_meeting_summary,
