@@ -1,8 +1,14 @@
 <template>
   <div :key="hasZoomChannel && recapChannel" class="alerts-page">
-    <div class="col">
+    <div v-if="!isOnboarding" class="col">
       <h2 style="color: black; margin-top: -0.5rem" class="title">Popular Workflow Automations</h2>
       <p style="color: #5d5e5e" class="sub__">Activate the workflows that are relevant to you</p>
+    </div>
+    <div v-else class="col">
+      <h2 style="color: black; margin-top: -0.5rem" class="title">Popular Workflow Automations</h2>
+      <p style="color: black; margin-top: -0.5rem" class="sub__">
+        Step 2/2: Activate at least 3 workflows
+      </p>
     </div>
 
     <div class="alert_cards">
