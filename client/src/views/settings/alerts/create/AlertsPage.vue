@@ -8,16 +8,26 @@
     <div class="alert_cards">
       <div class="card__">
         <div class="card__header">
-          <h3>Log <span style="color: #5f8cff">Zoom Meetings</span></h3>
+          <h3>Log <span style="color: #5f8cff">Meetings</span></h3>
         </div>
         <div class="row">
-          <img style="height: 2.25rem" src="@/assets/images/zoom.png" alt="" />
+          <img style="height: 2.25rem; margin-right: 1rem" src="@/assets/images/zoom.png" alt="" />
+          <img
+            style="height: 1.75rem; margin-right: 1rem"
+            src="@/assets/images/plusOne.png"
+            alt=""
+          />
+          <img
+            style="height: 2.25rem; margin-right: 1rem"
+            src="@/assets/images/gmailCal.png"
+            alt=""
+          />
         </div>
         <div style="margin-top: 2rem">
           <button
             v-if="hasZoomIntegration && !hasZoomChannel"
             @click="goToLogZoom"
-            class="orange_button bouncy"
+            :class="!isAdmin && isOnboarding ? 'orange_button bouncy' : 'orange_button'"
           >
             Activate
           </button>
@@ -28,26 +38,7 @@
         </div>
       </div>
 
-      <!-- <div v-if="user.isAdmin || user.userLevel == 'MANAGER'" class="card__">
-        <div class="card__header">
-          <h3>Zoom <span style="color: #5f8cff">Meeting Recaps</span></h3>
-        </div>
-        <div class="row">
-          <img style="height: 2.25rem" src="@/assets/images/zoom.png" alt="" />
-        </div>
-        <div style="margin-top: 2rem">
-          <button
-            v-if="hasZoomIntegration && hasSlackIntegration"
-            @click="goToZoomRecap"
-            class="orange_button"
-          >
-            Activate
-          </button>
-          <h4 style="margin-top: -0.5rem" v-else>Connect Zoom and Slack in order to activate</h4>
-        </div>
-      </div> -->
-
-      <div :class="!hasZoomChannel ? 'onboarding card__' : 'card__'">
+      <div :class="!hasZoomChannel && isOnboarding && !isAdmin ? 'onboarding card__' : 'card__'">
         <div class="card__header">
           <h3>Close Date <span style="color: #fa646a">Passed</span></h3>
         </div>
@@ -78,7 +69,7 @@
               !user.activatedManagrConfigs.includes('Close Date Passed')
             "
             @click="goToCloseDatePassed"
-            class="orange_button bouncy"
+            :class="!isAdmin && isOnboarding ? 'orange_button bouncy' : 'orange_button'"
           >
             Activate
           </button>
@@ -99,7 +90,7 @@
 
       <div
         :class="
-          !user.activatedManagrConfigs.includes('Close Date Passed')
+          !user.activatedManagrConfigs.includes('Close Date Passed') && isOnboarding && !isAdmin
             ? 'card__ onboarding'
             : 'card__'
         "
@@ -134,7 +125,7 @@
               !user.activatedManagrConfigs.includes('Update Forecast')
             "
             @click="goToUpdateForecast"
-            class="orange_button bouncy"
+            :class="!isAdmin && isOnboarding ? 'orange_button bouncy' : 'orange_button'"
           >
             Activate
           </button>
@@ -155,7 +146,9 @@
 
       <div
         :class="
-          !user.activatedManagrConfigs.includes('Update Forecast') ? 'card__ onboarding' : 'card__'
+          !user.activatedManagrConfigs.includes('Update Forecast') && isOnboarding && !isAdmin
+            ? 'card__ onboarding'
+            : 'card__'
         "
       >
         <div class="card__header">
@@ -188,7 +181,7 @@
               !user.activatedManagrConfigs.includes('Deal Rotting')
             "
             @click="goToDealRotting"
-            class="orange_button bouncy"
+            class="orange_button"
           >
             Activate
           </button>
@@ -209,7 +202,9 @@
 
       <div
         :class="
-          !user.activatedManagrConfigs.includes('Deal Rotting') ? 'card__ onboarding' : 'card__'
+          !user.activatedManagrConfigs.includes('Update Forecast') && isOnboarding && !isAdmin
+            ? 'card__ onboarding'
+            : 'card__'
         "
       >
         <div class="card__header">
@@ -244,7 +239,7 @@
               !user.activatedManagrConfigs.includes('Close Date Approaching')
             "
             @click="goToCloseDateApproaching"
-            class="orange_button bouncy"
+            class="orange_button"
           >
             Activate
           </button>
@@ -260,6 +255,38 @@
           >
             Activated
           </h4>
+        </div>
+      </div>
+
+      <div v-if="user.userLevel === 'MANAGER'" class="card__">
+        <div class="card__header">
+          <h3>Meeting<span style="color: #5f8cff"> Recaps</span></h3>
+        </div>
+        <div class="row">
+          <img style="height: 2.25rem; margin-right: 1rem" src="@/assets/images/zoom.png" alt="" />
+          <img
+            style="height: 1.75rem; margin-right: 1rem"
+            src="@/assets/images/plusOne.png"
+            alt=""
+          />
+          <img
+            style="height: 2.25rem; margin-right: 1rem"
+            src="@/assets/images/gmailCal.png"
+            alt=""
+          />
+        </div>
+        <div style="margin-top: 2rem">
+          <button
+            v-if="hasZoomIntegration && hasSlackIntegration && !recapChannel"
+            @click="goToZoomRecap"
+            class="orange_button"
+          >
+            Activate
+          </button>
+          <h4 style="margin-top: -0.5rem" v-else-if="!(hasZoomChannel && hasSlackIntegration)">
+            Connect Zoom and Slack in order to activate
+          </h4>
+          <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="recapChannel">Activated</p>
         </div>
       </div>
     </div>
@@ -417,7 +444,9 @@ export default {
     userCanIntegrateSlack() {
       return this.$store.state.user.isAdmin
     },
-
+    recapChannel() {
+      return this.$store.state.user.slackAccount.recapChannel
+    },
     userTargetsOpts() {
       if (this.user.userLevel == 'MANAGER') {
         return [
@@ -467,8 +496,17 @@ export default {
     user() {
       return this.$store.state.user
     },
+    isAdmin() {
+      return this.$store.state.user.isAdmin
+    },
     hasZoomChannel() {
       return this.$store.state.user.slackAccount.zoomChannel
+    },
+    userLevel() {
+      return this.$store.state.user.userLevel
+    },
+    isOnboarding() {
+      return this.$store.state.user.onboarding
     },
     selectedResourceType: {
       get() {
@@ -478,6 +516,9 @@ export default {
         this.alertTemplateForm.field.resourceType.value = val
       },
     },
+  },
+  mounted() {
+    console.log(this.user)
   },
 }
 </script>

@@ -210,6 +210,7 @@ class User(AbstractUser, TimeStampModel):
         models.CharField(max_length=255),
         default=list,
         help_text="List of activated Managr templates",
+        blank=True,
     )
     objects = UserManager()
 

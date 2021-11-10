@@ -14,6 +14,7 @@ from managr.slack.helpers.block_sets import get_block_set
 
 from managr.zoom.models import ZoomMeeting
 from managr.zoom.utils import score_meeting
+from server.managr.core.models import Notification
 
 
 NOTIFICATION_TITLE_STALLED_IN_STAGE = "Opportunity Stalled in Stage"
@@ -38,6 +39,7 @@ def _check_days_lead_expected_close_lapsed(lead_expected_close_date):
 
 def _convert_to_user_friendly_date(date):
     return date.strftime("%m/%d/%Y")
+
 
 
 def _has_alert(user, notification_class, notification_type, resource_id):
@@ -80,6 +82,24 @@ def _create_notification(
             "opportunities": [{"id": str(opportunity.id), "title": opportunity.title}],
         },
     )
+
+def _convert_nylas_calendar_details(
+    title, events_data, notification_type, opportunity, user, notification_class="ALERT"
+):
+    Notification.objects.create(
+        notify_at=timezone.now(),
+        title=title,
+        notification_type=notification_type,
+        resource_id=str(opportunity.id),
+        notification_class=notification_class,
+        user=user,
+        mata={
+            "id": str(opportunity.id),
+            "title": title,
+            "content": events_data,
+            "opportunities": [{"id": str(opportunity.id), "title": opportunity.title}],        
+        }
+    )   
 
 
 def _generate_notification_key_lapsed(num):

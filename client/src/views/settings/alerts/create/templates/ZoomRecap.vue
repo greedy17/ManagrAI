@@ -1,10 +1,10 @@
 <template>
   <div class="logZoomPage">
     <div>
-      <h2 style="font-weight: bold; text-align: center">
+      <h2 @click="checkUsers" style="font-weight: bold; text-align: center">
         <span style="color: black">
-          Log
-          <span style="color: #5f8cff">Zoom Meeting Recaps</span>
+          Meeting
+          <span style="color: #5f8cff"> Recaps</span>
         </span>
       </h2>
       <p style="text-align: center; color: black; font-weight: bold">
@@ -12,7 +12,7 @@
       </p>
     </div>
 
-    <div style="margin-top: -2rem" class="centered">
+    <div style="margin-top: -2rem; flex-direction: column" class="centered">
       <!-- <div class="card">
         <div :key="value" v-for="(key, value) in userTargetsOpts">
           <label for="key">{{ key.fullName }}</label>
@@ -27,18 +27,19 @@
             align-items: center;
             justify-content: center;
             flex-direction: column;
-            margin-top: -1.5rem;
+            margin-top: -2rem;
           "
         >
           <p style="text-align: center; font-weight: bold">Select pipelines</p>
           <div>
             <multiselect
               :close-on-select="false"
+              deselectLabel="remove"
               :multiple="true"
               placeholder="select pipelines"
               selectLabel=""
               v-model="pipelines"
-              :options="options"
+              :options="userList"
               label="fullName"
             ></multiselect>
           </div>
@@ -101,7 +102,8 @@
               <template v-slot:input>
                 <multiselect
                   :options="userChannelOpts.channels"
-                  v-model="zoomChannel"
+                  @input="setChannel(recapChannel)"
+                  v-model="recapChannel"
                   label="name"
                   value="id"
                   placeholder="Channels"
@@ -126,14 +128,18 @@
           </div>
         </div>
       </div>
-      <!-- <div style="margin-top: 2rem">
-        <div>
-          <button class="green__button">prev</button>
+      <div v-if="channelCreated || recapChannelId" style="margin-top: 2rem">
+        <div v-if="!create">
+          <button class="green__button bouncy" @click="handleRecapUpdate(recapChannelId)">
+            Activate Channel
+          </button>
         </div>
-        <div>
-          <button class="green__button">Next</button>
+        <div v-else>
+          <button class="green__button bouncy" @click="handleRecapUpdate(createdZoomChannel)">
+            Activate Channel
+          </button>
         </div>
-      </div> -->
+      </div>
     </div>
   </div>
 </template>
@@ -163,12 +169,14 @@ export default {
       newChannel: {},
       channelCreated: false,
       slackAccount: {},
-      zoomChannel: '',
+      recapChannel: '',
+      recapChannelId: '',
       createdZoomChannel: '',
       test: '',
       pipelines: [],
-      options: [],
       users: CollectionManager.create({ ModelClass: User }),
+      userList: [],
+      slack_id: [],
       alertTargetOpts: [
         { key: 'Myself', value: 'SELF' },
         { key: 'All Managers', value: 'MANAGERS' },
@@ -184,13 +192,25 @@ export default {
     }
     if (this.user.userLevel == 'MANAGER' || this.user.isAdmin) {
       await this.users.refresh()
+      this.userList = this.users.list
     }
   },
   methods: {
-    async handleZoomUpdate(zoom_channel) {
-      const res = await SlackOAuth.api.updateZoomChannel(this.slackId, zoom_channel)
+    checkUsers() {
+      console.log(this.userList)
+    },
+    setChannel(obj) {
+      this.recapChannelId = obj.id
+    },
+    async handleRecapUpdate(recap_channel) {
+      const res = await SlackOAuth.api.updateRecapChannel(
+        this.slackId,
+        recap_channel,
+        this.pipelines,
+      )
+      console.log(res)
       this.createdZoomChannel = ''
-      this.zoomChannel = ''
+      this.recapChannel = ''
       this.$router.push({ name: 'CreateNew' })
       this.$Alert.alert({
         type: 'success',
@@ -337,7 +357,6 @@ export default {
       await this.users.addNextPage()
     },
   },
-  mounted() {},
 }
 </script>
 
@@ -351,6 +370,18 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
+
+@keyframes bounce {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-6px);
+  }
+}
+.bouncy {
+  animation: bounce 0.2s infinite alternate;
+}
 
 ::v-deep .multiselect__tags {
   min-width: 16vw;
