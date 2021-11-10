@@ -1527,18 +1527,25 @@ def process_mark_complete(payload, context):
 @processor()
 def process_send_recap_modal(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    print(context)
+    user = User.objects.get(id=context.get("u"))
     trigger_id = payload["trigger_id"]
-    workflow = MeetingWorkflow.objects.get(id=context.get("workflow_id"))
-    meeting = workflow.meeting
-    organization = meeting.zoom_account.user.organization
-    access_token = organization.slack_integration.access_token
+    type = context.get("type")
+    if type == "meeting":
+        workflow = MeetingWorkflow.objects.get(id=context.get("workflow_id"))
+        params = {"u": context.get("u"), "workflow_id": workflow.id}
+    else:
+        params = {"u": context.get("u"), "form_id": context.get("form_id")}
+
+    access_token = user.organization.slack_integration.access_token
+    print(params)
     data = {
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
             "callback_id": slack_const.PROCESS_SEND_RECAPS,
             "title": {"type": "plain_text", "text": "Send Recaps"},
-            "blocks": get_block_set("send_recap_block_set", {"u": context.get("u")}),
+            "blocks": get_block_set("send_recap_block_set", params),
             "submit": {"type": "plain_text", "text": "Send"},
             "private_metadata": json.dumps(context),
         },
@@ -1559,7 +1566,7 @@ def process_send_recap_modal(payload, context):
         )
     except InvalidAccessToken as e:
         return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.user.id)} email {workflow.user.email} {e}"
+            f"Failed To Generate Slack Workflow Interaction for user with workflow {str(user.id)} email {user.email} {e}"
         )
 
 
