@@ -5,9 +5,14 @@
         <h2 class="title">Workflow Automations</h2>
       </div>
       <router-link exact-active-class="active" :to="{ name: 'CreateNew' }">
-        <div :class="user.onboarding ? 'onboarding row' : 'row'">
+        <div :class="isOnboarding ? 'onboarding row' : 'row'">
           <img src="@/assets/images/trophy.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
-          <h3>Popular Workflows <span style="margin-left: 0.25rem" class="counter">5</span></h3>
+          <h3 v-if="user.userLevel === 'REP'">
+            Popular Workflows <span style="margin-left: 0.25rem" class="counter">5</span>
+          </h3>
+          <h3 v-else>
+            Popular Workflows <span style="margin-left: 0.25rem" class="counter">6</span>
+          </h3>
         </div>
       </router-link>
 
@@ -18,23 +23,23 @@
         </p>
       </div> -->
       <div
-        v-if="user.onboarding && user.activatedManagrConfigs.includes('Close Date Approaching')"
+        v-if="isOnboarding && user.activatedManagrConfigs.includes('Update Forecast')"
         style="margin-bottom: -0.5rem"
         class="bouncy"
         id="toolTip"
       >
         <p>
-          Onboarding complete! We'll take it from here. Visit this tab to view, edit, or delete
-          workflows.
+          Onboarding complete! We'll take it from here. Visit this tab to run, edit, or delete
+          workflows. Stay here to activate the rest.
         </p>
         <div id="tailShadow"></div>
         <div id="tail1"></div>
         <div id="tail2"></div>
       </div>
       <router-link
-        v-if="user.onboarding"
+        v-if="isOnboarding && isAdmin"
         :class="
-          user.onboarding && !user.activatedManagrConfigs.includes('Close Date approaching')
+          isOnboarding && !user.activatedManagrConfigs.includes('Update Forecast')
             ? 'onboarding row'
             : 'row'
         "
@@ -64,14 +69,14 @@
       </router-link>
 
       <router-link exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
-        <div :class="user.onboarding ? 'onboarding row' : 'row'">
+        <div :class="isOnboarding ? 'onboarding row' : 'row'">
           <img src="@/assets/images/build.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
           <h3>Customized Workflows</h3>
         </div>
       </router-link>
 
       <div>
-        <div :class="user.onboarding ? 'onboarding row' : 'row'" style="cursor: not-allowed">
+        <div :class="isOnboarding ? 'onboarding row' : 'row'" style="cursor: not-allowed">
           <img
             src="@/assets/images/analyze.png"
             style="height: 1.25rem; margin-right: 0.5rem"
@@ -79,18 +84,6 @@
           />
           <h3>Analyze <span class="coming-soon">coming soon</span></h3>
         </div>
-      </div>
-    </div>
-
-    <div v-if="isHome" style="margin-left: 6vw">
-      <h2 class="center" style="color: white">Smart Alerts</h2>
-      <p class="center" style="font-weight: bold; color: #beb5cc; margin-top: -0.5rem">
-        Automated workflows that help keep you on track
-      </p>
-
-      <div class="center" style="margin-top: 2rem">
-        <SlackMessagePreview />
-        <!-- <p style="color: #3c3940; align-self: flex-end; width: 30%">Ex.</p> -->
       </div>
     </div>
 
@@ -120,15 +113,11 @@ export default {
   data() {
     return {
       templates: CollectionManager.create({ ModelClass: AlertTemplate }),
-      user: this.$store.state.user,
       userOnboardingForm: new UserOnboardingForm({}),
     }
   },
   async created() {
     this.templates.refresh()
-    this.userOnboardingForm = new UserOnboardingForm({
-      onboarding: this.user.onboarding,
-    })
   },
   methods: {
     handleUpdate() {
@@ -141,13 +130,17 @@ export default {
         .catch((e) => {
           console.log(e)
         })
+      this.$router.push({ name: 'ListTemplates' })
     },
     alertsCount(num) {
+      let int = num
       if (this.hasZoomChannel) {
-        return num + 1
-      } else {
-        return num
+        int++
       }
+      if (this.hasRecapChannel) {
+        int++
+      }
+      return int
     },
     onboardComplete() {
       this.userOnboardingForm.field.onboarding.value = false
@@ -155,14 +148,26 @@ export default {
     },
   },
   computed: {
+    listLength() {
+      return this.templates.list.length
+    },
     hasZoomChannel() {
       return this.$store.state.user.slackAccount.zoomChannel
     },
-    onboarding() {
+    hasRecapChannel() {
+      return this.$store.state.user.slackAccount.recapChannel
+    },
+    isOnboarding() {
       return this.$store.state.user.onboarding
     },
     isHome() {
       return this.$route.name == 'alerts'
+    },
+    isAdmin() {
+      return this.$store.state.user.isAdmin
+    },
+    user() {
+      return this.$store.state.user
     },
   },
 }

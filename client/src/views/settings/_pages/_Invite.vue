@@ -143,7 +143,7 @@ export default {
       organization: null,
       organizations: CollectionManager.create({ ModelClass: Organization }),
       organizationRef: null,
-      slackMembers: {},
+      slackMembers: [],
       inviteRecipient: '',
       selectedUserType: User.types.REP,
       userTypes: [
@@ -239,6 +239,7 @@ export default {
         }
       } finally {
         this.loading = false
+        this.inviteOpen = !this.inviteOpen
       }
     },
     resetData() {

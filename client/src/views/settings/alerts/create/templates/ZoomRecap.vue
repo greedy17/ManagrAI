@@ -3,16 +3,16 @@
     <div>
       <h2 style="font-weight: bold; text-align: center">
         <span style="color: black">
-          Log
-          <span style="color: #5f8cff">Zoom Meeting Recaps</span>
+          Meeting
+          <span style="color: #5f8cff"> Recaps</span>
         </span>
       </h2>
-      <p style="text-align: center; color: black; font-weight: bold">
-        Recieve zoom meeting recaps from essential team members
+      <p style="text-align: center; color: black; font-weight: bold; margin-top: -0.5rem">
+        Recieve meeting recaps from essential team members
       </p>
     </div>
 
-    <div style="margin-top: -2rem" class="centered">
+    <div style="flex-direction: column" class="centered">
       <!-- <div class="card">
         <div :key="value" v-for="(key, value) in userTargetsOpts">
           <label for="key">{{ key.fullName }}</label>
@@ -27,20 +27,49 @@
             align-items: center;
             justify-content: center;
             flex-direction: column;
-            margin-top: -1.5rem;
+            margin-top: -2rem;
           "
         >
-          <p style="text-align: center; font-weight: bold">Select pipelines</p>
+          <p style="text-align: center; font-weight: bold">Select Users</p>
           <div>
-            <multiselect
+            <!-- <multiselect
               :close-on-select="false"
+              deselectLabel="remove"
               :multiple="true"
               placeholder="select pipelines"
               selectLabel=""
               v-model="pipelines"
-              :options="options"
+              :options="userList"
               label="fullName"
-            ></multiselect>
+            ></multiselect> -->
+            <DropDownSearch
+              @input="checkIds"
+              :items.sync="userList"
+              v-model="userIds"
+              displayKey="fullName"
+              valueKey="id"
+              nullDisplay="Users"
+              searchable
+              local
+              multi
+            >
+            </DropDownSearch>
+          </div>
+          <div v-if="userIds.length > 0" class="items_height">
+            <p
+              :key="item"
+              v-for="item in userIds"
+              @click="removeUser(item)"
+              :class="userIds.length > 0 ? 'selected__items' : 'visible'"
+              style="margin-top: 1.5rem"
+            >
+              <img
+                src="@/assets/images/remove.png"
+                style="height: 1rem; margin-right: 0.25rem"
+                alt=""
+              />
+              {{ getUserName(item) }}
+            </p>
           </div>
         </div>
 
@@ -99,41 +128,58 @@
           >
             <FormField>
               <template v-slot:input>
-                <multiselect
-                  :options="userChannelOpts.channels"
-                  v-model="zoomChannel"
-                  label="name"
-                  value="id"
-                  placeholder="Channels"
-                  selectLabel=""
+                <DropDownSearch
+                  :items.sync="userChannelOpts.channels"
+                  v-model="recapChannel"
+                  displayKey="name"
+                  valueKey="id"
+                  nullDisplay="Channels"
+                  :hasNext="!!userChannelOpts.nextCursor"
+                  @load-more="listChannels(userChannelOpts.nextCursor)"
+                  searchable
+                  local
                 >
-                </multiselect>
+                  <template v-slot:tn-dropdown-option="{ option }">
+                    <img
+                      v-if="option.isPrivate == true"
+                      class="card-img"
+                      style="width: 1.2rem; height: 1rem; margin-right: 0.2rem"
+                      src="@/assets/images/lock.png"
+                    />
+                    {{ option['name'] }}
+                  </template>
+                </DropDownSearch>
               </template>
             </FormField>
 
-            <!-- <p
-              v-if="zoomChannel"
-              @click="removeZoomChannel"
-              :class="zoomChannel ? 'selected__item' : 'visible'"
+            <p
+              v-if="recapChannel"
+              @click="removeRecapChannel"
+              :class="recapChannel ? 'selected__item' : 'visible'"
+              style="margin-top: -0.25rem"
             >
               <img
                 src="@/assets/images/remove.png"
                 style="height: 1rem; margin-right: 0.25rem; margin-top: 0.25rem"
                 alt=""
               />
-              {{ zoomChannel.name }}
-            </p> -->
+              {{ getChannelName(recapChannel) }}
+            </p>
           </div>
         </div>
       </div>
-      <!-- <div style="margin-top: 2rem">
-        <div>
-          <button class="green__button">prev</button>
+      <div v-if="(channelCreated || recapChannel) && userIds.length > 0" style="margin-top: 2rem">
+        <div v-if="!create">
+          <button class="green__button bouncy" @click="handleRecapUpdate(recapChannel)">
+            Activate Channel
+          </button>
         </div>
-        <div>
-          <button class="green__button">Next</button>
+        <div v-else>
+          <button class="green__button bouncy" @click="handleRecapUpdate(createdZoomChannel)">
+            Activate Channel
+          </button>
         </div>
-      </div> -->
+      </div>
     </div>
   </div>
 </template>
@@ -163,12 +209,15 @@ export default {
       newChannel: {},
       channelCreated: false,
       slackAccount: {},
-      zoomChannel: '',
+      recapChannel: '',
+      recapChannelId: '',
       createdZoomChannel: '',
       test: '',
+      userIds: [],
       pipelines: [],
-      options: [],
       users: CollectionManager.create({ ModelClass: User }),
+      userList: [],
+      slack_id: [],
       alertTargetOpts: [
         { key: 'Myself', value: 'SELF' },
         { key: 'All Managers', value: 'MANAGERS' },
@@ -182,24 +231,52 @@ export default {
     if (this.user.slackRef) {
       await this.listUserChannels()
     }
-    if (this.user.userLevel == 'MANAGER' || this.user.isAdmin) {
+    if (this.user.userLevel == 'MANAGER') {
       await this.users.refresh()
+      this.userList = this.users.list
     }
   },
   methods: {
-    async handleZoomUpdate(zoom_channel) {
-      const res = await SlackOAuth.api.updateZoomChannel(this.slackId, zoom_channel)
+    // getPipes(arr) {
+    //   let ids = []
+    //   for (let i = 0; i < this.userList.length; i++) {
+    //     ids.push(this.userList[i].id)
+    //   }
+    //   for (let i in arr) {
+    //     if (ids.includes(arr[i])) {
+    //       this.pipelines.push(this.userList.filter((user) => user.id === arr[1]))
+    //     }
+    //   }
+    //   this.pipelines.reduce(function (a, b) {
+    //     if (a.indexOf(b) < 0) a.push(b)
+    //     return a
+    //   }, [])
+    //   console.log(this.pipelines)
+    // },
+    removeUser(id) {
+      this.userIds = this.userIds.filter((i) => i !== id)
+    },
+    checkIds() {
+      console.log(this.userIds)
+    },
+    setChannel(obj) {
+      this.recapChannelId = obj.id
+    },
+    async handleRecapUpdate(recap_channel) {
+      const res = await SlackOAuth.api.updateRecapChannel(this.slackId, recap_channel, this.userIds)
+      console.log(res)
       this.createdZoomChannel = ''
-      this.zoomChannel = ''
+      this.recapChannel = ''
       this.$router.push({ name: 'CreateNew' })
+      location.reload()
       this.$Alert.alert({
         type: 'success',
-        message: 'Alert saved successfully',
+        message: 'Workflow saved successfully',
         timeout: 2000,
       })
     },
-    removeZoomChannel() {
-      this.zoomChannel = ''
+    removeRecapChannel() {
+      this.recapChannel = ''
     },
     logNewName(str) {
       let new_str = ''
@@ -211,6 +288,9 @@ export default {
     },
     getChannelName(id) {
       return this.userChannelOpts.channels.filter((channel) => channel.id == id)[0].name
+    },
+    getUserName(id) {
+      return this.userList.filter((user) => user.id == id)[0].fullName
     },
     async listUserChannels(cursor = null) {
       const res = await SlackOAuth.api.listUserChannels(cursor)
@@ -337,7 +417,6 @@ export default {
       await this.users.addNextPage()
     },
   },
-  mounted() {},
 }
 </script>
 
@@ -352,11 +431,29 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
+@keyframes bounce {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-6px);
+  }
+}
+.bouncy {
+  animation: bounce 0.2s infinite alternate;
+}
+
 ::v-deep .multiselect__tags {
   min-width: 16vw;
   max-width: 20vw;
   -webkit-box-shadow: 1px 4px 7px black;
   box-shadow: 1px 4px 7px black;
+}
+
+.items_height {
+  overflow-y: scroll;
+  max-height: 10rem;
+  width: 100%;
 }
 
 .logZoomPage {
@@ -369,7 +466,7 @@ export default {
   justify-content: space-evenly;
   align-items: center;
   width: 60vw;
-  height: 225px;
+  padding: 3rem;
   background-color: $panther;
   border-radius: 0.5rem;
 }
@@ -378,7 +475,6 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 60vh;
 }
 .row {
   display: flex;
@@ -439,7 +535,16 @@ input {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: -0.25rem;
+}
+.selected__items {
+  padding: 0.5rem 1.5rem;
+  width: 100%;
+  border: 2px solid white;
+  border-radius: 0.3rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .visible {
   display: none;

@@ -59,8 +59,20 @@ def loading_block_set(context):
 @block_set()
 def success_modal_block_set(context):
     message = context.get("message", ":clap: Success!")
-    show_image = context.get("show_image", True)
-    blocks = [block_builders.simple_section(message, "mrkdwn")]
+    print(context)
+    user = context.get("u")
+    form_id = context.get("form_id")
+    blocks = [
+        block_builders.section_with_button_block(
+            "Send Recap",
+            "SEND_RECAP",
+            message,
+            action_id=action_with_params(
+                slack_const.PROCESS_SEND_RECAP_MODAL,
+                params=[f"u={user}", f"form_id={form_id}", "type=command"],
+            ),
+        )
+    ]
     return blocks
 
 

@@ -16,7 +16,7 @@
           Managr utilizes a secure oAuth connection
         </p>
         <p v-else style="font-weight: bold; margin-top: -0.5rem; color: #5d5e5e">
-          <span style="font-weight: 900">Step 1: </span> Connect all four apps
+          <span style="font-weight: 900">Step 1/2: </span> Connect all four apps
         </p>
       </div>
 

@@ -6,12 +6,11 @@
           Deal
           <span style="color: #fa646a">Rotting</span>
         </span>
-        <p
-          v-if="userLevel !== 'MANAGER' || !user.isAdmin"
-          style="color: #3c3940; font-size: 1.1rem"
-        >
-          Choose a delivery day and create a Slack channel for these notifications. We’ll take it
-          from there
+        <p v-if="userLevel === 'REP'" style="color: #3c3940; font-size: 1.1rem">
+          Select users and a Slack #channel for this workflow
+        </p>
+        <p style="color: #3c3940; font-size: 1.1rem" v-else>
+          Select the day (or date), users, and a Slack #channel for this workflow
         </p>
       </h2>
     </div>
@@ -97,10 +96,10 @@
 
           <div
             style="margin-top: 1rem; margin-left: 0.5rem"
-            v-if="userLevel !== 'REP'"
+            v-if="user.isAdmin"
             class="delivery__row"
           >
-            <span style="margin-bottom: 0.5rem">Select Pipelines</span>
+            <span style="margin-bottom: 0.5rem">Select Users</span>
 
             <FormField :errors="form.field.alertTargets.errors">
               <template v-slot:input>
@@ -742,7 +741,7 @@ export default {
       }
     },
     repsPipeline() {
-      if (this.userLevel === 'REP') {
+      if (!this.user.isAdmin) {
         this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
         this.setPipelines({
           fullName: 'MYSELF',
@@ -846,6 +845,7 @@ export default {
   beforeMount() {
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
     this.alertTemplateForm.field.title.value = 'Deal Rotting'
+    this.alertTemplateForm.field.isActive.value = true
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
       'Hey  <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong>, hasnt been touched since <strong>{ Opportunity.LastActivityDate }</strong>'
     this.repsPipeline()
@@ -963,7 +963,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.4rem 1rem;
+  padding: 1.25rem 1rem;
   border-radius: 0.3rem;
   font-weight: bold;
   line-height: 1.14;
@@ -982,7 +982,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.4rem 1rem;
+  padding: 1.25rem 1rem;
   border-radius: 0.3rem;
   font-weight: bold;
   line-height: 1.14;
