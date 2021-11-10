@@ -378,7 +378,6 @@ export default {
           type: 'success',
           timeout: 2000,
         })
-        location.reload()
       } catch {
         this.$Alert.alert({
           message: 'There was an error removing your alert',

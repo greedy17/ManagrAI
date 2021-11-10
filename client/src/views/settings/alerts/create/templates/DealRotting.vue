@@ -96,7 +96,7 @@
 
           <div
             style="margin-top: 1rem; margin-left: 0.5rem"
-            v-if="userLevel !== 'REP'"
+            v-if="user.isAdmin"
             class="delivery__row"
           >
             <span style="margin-bottom: 0.5rem">Select Users</span>
@@ -741,7 +741,7 @@ export default {
       }
     },
     repsPipeline() {
-      if (this.userLevel === 'REP') {
+      if (!this.user.isAdmin) {
         this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
         this.setPipelines({
           fullName: 'MYSELF',
