@@ -2,16 +2,14 @@ import logging
 import pytz
 from datetime import datetime
 
-
 from background_task import background
 
 from django.db.models import F, Q, Count
 from django.utils import timezone
 
-from managr.salesforce.models import MeetingWorkflow
 from managr.slack.helpers import block_builders, block_sets
 from managr.slack.helpers import requests as slack_requests
-from managr.slack.helpers.exceptions import CannotSendToChannel
+from managr.salesforce.models import MeetingWorkflow
 
 from ..models import User
 

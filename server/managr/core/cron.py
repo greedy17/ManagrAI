@@ -117,5 +117,5 @@ def check_reminders(user_id):
                 core_consts.REMINDER_CONFIG[key]["MINUTE"],
             )
             if check:
-                return
+                core_consts.REMINDER_CONFIG[key]["FUNCTION"]()
     return

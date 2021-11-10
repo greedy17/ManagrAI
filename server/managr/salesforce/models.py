@@ -16,7 +16,6 @@ from django.db.models.constraints import UniqueConstraint
 
 from background_task.models import CompletedTask, Task
 
-from managr.core import constants as core_consts
 from managr.core.models import TimeStampModel, IntegrationModel
 from managr.slack.helpers import block_builders
 from managr.slack import constants as slack_consts
