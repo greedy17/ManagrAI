@@ -30,14 +30,14 @@
       >
         <p>
           Onboarding complete! We'll take it from here. Visit this tab to run, edit, or delete
-          workflows.
+          workflows. Stay here to activate the rest.
         </p>
         <div id="tailShadow"></div>
         <div id="tail1"></div>
         <div id="tail2"></div>
       </div>
       <router-link
-        v-if="isOnboarding && !isAdmin"
+        v-if="isOnboarding && isAdmin"
         :class="
           isOnboarding && !user.activatedManagrConfigs.includes('Update Forecast')
             ? 'onboarding row'
@@ -130,7 +130,7 @@ export default {
         .catch((e) => {
           console.log(e)
         })
-      location.reload()
+      this.$router.push({ name: 'ListTemplates' })
     },
     alertsCount(num) {
       let int = num
