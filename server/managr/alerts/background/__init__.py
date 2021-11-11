@@ -220,7 +220,7 @@ def _process_check_alert(config_id, user_id, invocation, run_time):
 
     bg_tasks = dict(reduce(reduce_fn, instances, {}))
     for task_vals in bg_tasks.values():
-
+        print(task_vals)
         emit_send_alert(*task_vals, scheduled_time=run_time)
     return
 
@@ -234,6 +234,7 @@ def _process_send_alert(invocation, channel, config_id):
     )
     if not alert_instances.first():
         return
+    title = alert_instances.first().template.title
     template = alert_instances.first().template
     channel_id = None
     instance_user = alert_instances.first().user
@@ -246,14 +247,22 @@ def _process_send_alert(invocation, channel, config_id):
     alert_page_instances = custom_paginator(alert_instances)
     access_token = template.user.organization.slack_integration.access_token
     text = template.title
-    blocks = []
+    blocks = [
+        block_builders.header_block(f"{title}"),
+    ]
 
     for alert_instance in alert_page_instances.get("results", []):
         blocks = [
             *blocks,
-            *get_block_set("alert_instance", {"instance_id": str(alert_instance.id)}),
+            *get_block_set(
+                "alert_instance", {"instance_id": str(alert_instance.id), "current_page": 1}
+            ),
         ]
-        alert_instance.rendered_text = alert_instance.render_text()
+        alert_instance.rendered_text = (
+            f"~{alert_instance.render_text()}~"
+            if alert_instance.completed
+            else alert_instance.render_text()
+        )
         alert_instance.save()
 
     if len(blocks):

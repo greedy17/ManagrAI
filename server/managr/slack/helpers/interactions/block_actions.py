@@ -1241,7 +1241,13 @@ def process_paginate_alerts(payload, context):
     for alert_instance in alert_instances.get("results", []):
         blocks = [
             *blocks,
-            *get_block_set("alert_instance", {"instance_id": str(alert_instance.id)}),
+            *get_block_set(
+                "alert_instance",
+                {
+                    "instance_id": str(alert_instance.id),
+                    "current_page": int(context.get("new_page", 0)),
+                },
+            ),
         ]
         alert_instance.rendered_text = alert_instance.render_text()
         alert_instance.save()
