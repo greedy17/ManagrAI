@@ -458,10 +458,12 @@ def _process_update_resource_from_meeting(workflow_id, *args):
                 time.sleep(sleep)
                 attempts += 1
         except Exception as e:
-            _send_recap(update_form_ids)
+            if len(user.slack_integration.recap_receivers):
+                _send_recap(update_form_ids, None, True)
             raise e
 
-    _send_recap(update_form_ids)
+    if len(user.slack_integration.recap_receivers):
+        _send_recap(update_form_ids, None, True)
     # push to sf
     return res
 
@@ -994,7 +996,6 @@ def check_for_display_value(field, value):
 @background(schedule=0)
 @slack_api_exceptions(rethrow=True)
 def _send_recap(form_ids, send_to_data=None, manager_recap=False):
-
     submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
     main_form = submitted_forms.filter(
         template__form_type__in=["CREATE", "UPDATE", "MEETING_REVIEW"]
@@ -1012,10 +1013,9 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
             form_fields = form_fields | form.template.formfield_set.filter(include_in_recap=True)
         else:
             form_fields = form.template.formfield_set.filter(include_in_recap=True)
-    if send_to_data:
-        send_summ_to_leadership = send_to_data.get("leadership")
-        send_summ_to_reps = send_to_data.get("reps")
-        send_summ_to_channels = send_to_data.get("channels")
+    send_summ_to_leadership = send_to_data.get("leadership", None) if send_to_data else None
+    send_summ_to_reps = send_to_data.get("reps", None) if send_to_data else None
+    send_summ_to_channels = send_to_data.get("channels", None) if send_to_data else None
 
     slack_access_token = user.organization.slack_integration.access_token
     blocks = []
