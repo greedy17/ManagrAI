@@ -3,6 +3,7 @@ import requests
 from requests.exceptions import HTTPError
 from urllib.parse import urlencode
 
+
 from .. import constants as core_consts
 
 
@@ -70,7 +71,7 @@ def get_calendar_details_from_nylas(token):
         f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.Event_Post}", headers=headers,
     )
     events_data = {"events": events.json()}
-    return events_data
+    return events_data;
     
 def revoke_access_token(token):
     """function to revoke access token

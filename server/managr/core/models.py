@@ -3,6 +3,7 @@ import json
 import logging
 
 from urllib.error import HTTPError
+import requests
 
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
@@ -42,9 +43,7 @@ class IntegrationModel(models.Model):
         max_length=255, blank=True, help_text="The UUID from the integration source"
     )
     integration_source = models.CharField(
-        max_length=255,
-        choices=org_consts.INTEGRATION_SOURCES,
-        blank=True,
+        max_length=255, choices=org_consts.INTEGRATION_SOURCES, blank=True,
     )
     imported_by = models.ForeignKey(
         "core.User", on_delete=models.CASCADE, null=True, related_name="imported_%(class)s"
@@ -140,34 +139,13 @@ class User(AbstractUser, TimeStampModel):
     ENABLEMENT = "ENABLEMENT"
     SDR = "SDR"
     ROLE_CHOICES = [
-        (
-            LEADERSHIP,
-            "Leadership",
-        ),
-        (
-            FRONTLINE_MANAGER,
-            "Frontline Manager",
-        ),
-        (
-            ACCOUNT_EXEC,
-            "Account Executive",
-        ),
-        (
-            ACCOUNT_MANAGER,
-            "Account Manager",
-        ),
-        (
-            OPERATIONS,
-            "OPERATIONS",
-        ),
-        (
-            ENABLEMENT,
-            "Enablement",
-        ),
-        (
-            SDR,
-            "SDR",
-        ),
+        (LEADERSHIP, "Leadership",),
+        (FRONTLINE_MANAGER, "Frontline Manager",),
+        (ACCOUNT_EXEC, "Account Executive",),
+        (ACCOUNT_MANAGER, "Account Manager",),
+        (OPERATIONS, "OPERATIONS",),
+        (ENABLEMENT, "Enablement",),
+        (SDR, "SDR",),
     ]
     role = models.CharField(max_length=32, choices=ROLE_CHOICES, blank=True)
 
@@ -182,14 +160,9 @@ class User(AbstractUser, TimeStampModel):
         null=True,
     )
     user_level = models.CharField(
-        choices=core_consts.USER_LEVELS,
-        max_length=255,
-        default=core_consts.USER_LEVEL_REP,
+        choices=core_consts.USER_LEVELS, max_length=255, default=core_consts.USER_LEVEL_REP,
     )
-    first_name = models.CharField(
-        max_length=255,
-        blank=True,
-    )
+    first_name = models.CharField(max_length=255, blank=True,)
     last_name = models.CharField(max_length=255, blank=True, null=False)
     phone_number = models.CharField(max_length=255, blank=True, default="")
     is_invited = models.BooleanField(max_length=255, default=True)
@@ -211,6 +184,12 @@ class User(AbstractUser, TimeStampModel):
         default=list,
         help_text="List of activated Managr templates",
         blank=True,
+    )
+    reminders = JSONField(
+        default=core_consts.REMINDERS,
+        null=True,
+        blank=True,
+        help_text="Object for reminder setting",
     )
     objects = UserManager()
 
@@ -419,6 +398,9 @@ class NylasAuthAccount(TimeStampModel):
         response_data = self._handle_response(r)
         return response_data
 
+
+
+
     @staticmethod
     def _handle_response(response, fn_name=None):
         if not hasattr(response, "status_code"):
@@ -448,6 +430,19 @@ class NylasAuthAccount(TimeStampModel):
 
             NylasAPIError(e)
         return data
+
+    def _process_calendar_data(self):
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json",
+        }
+        events = requests.get(
+            f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.EVENT_POST}", headers=headers,
+        )
+        print(events)
+        print(events.json())
+        print('test for model')
+        return self._handle_response(events)
 
 
 class NotificationQuerySet(models.QuerySet):
