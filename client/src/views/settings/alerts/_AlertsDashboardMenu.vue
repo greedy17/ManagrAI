@@ -37,7 +37,7 @@
         <div id="tail2"></div>
       </div>
       <router-link
-        v-if="isOnboarding && isAdmin"
+        v-if="isOnboarding && !isAdmin"
         :class="
           isOnboarding && !user.activatedManagrConfigs.includes('Update Forecast')
             ? 'onboarding row'
