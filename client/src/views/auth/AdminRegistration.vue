@@ -10,13 +10,14 @@
       <div class="registration__form">
         <div class="form-card">
           <FormField
-            label="Your Name"
+            label="Full Name"
             @blur="registrationForm.field.fullName.validate()"
             :errors="registrationForm.field.fullName.errors"
             v-model="registrationForm.field.fullName.value"
             large
             bordered
             placeholder=""
+            id="name"
           />
           <FormField
             label="Your Email"
@@ -26,6 +27,7 @@
             large
             bordered
             placeholder=""
+            id="email"
           />
           <FormField
             id="password"
@@ -57,23 +59,43 @@
             placeholder=""
             large
             bordered
+            id="company"
           />
-          <div class="dropdown">
-            <FormField :errors="registrationForm.field.role.errors" label="Role">
-              <template v-slot:input>
-                <DropDownSelect
-                  :items="userRoles"
-                  valueKey="key"
-                  displayKey="name"
-                  v-model="registrationForm.field.role.value"
-                  :itemsRef="userRoles"
-                  class="invite-form__dropdown"
-                  nullDisplay="Select user role"
-                  @input="registrationForm.field.role.validate()"
-                />
-              </template>
-            </FormField>
+
+          <FormField :errors="registrationForm.field.role.errors" label="Role">
+            <template v-slot:input>
+              <DropDownSearch
+                :items="userRoles"
+                valueKey="key"
+                displayKey="name"
+                v-model="registrationForm.field.role.value"
+                :itemsRef="userRoles"
+                class="invite-form__dropdown"
+                nullDisplay="Select user role"
+                @input="registrationForm.field.role.validate()"
+              />
+            </template>
+          </FormField>
+
+          <div style="width: 100%; text-align: center">
+            <p>
+              Your timezone: <span style="color: #199e54; font-weight: bold">{{ userTime }}</span>
+            </p>
+            <p v-if="!changeZone" @click="selectZone" class="time">Change timezone ?</p>
+            <p v-else @click="selectZone" class="time">Select your timezone:</p>
           </div>
+
+          <FormField v-if="changeZone">
+            <template v-slot:input>
+              <DropDownSearch
+                :items.sync="timezones"
+                v-model="registrationForm.field.timezone.value"
+                nullDisplay="Select your timezone"
+                searchable
+                local
+              />
+            </template>
+          </FormField>
         </div>
         <!-- <div class="registration__input__label">
         Company
@@ -109,6 +131,8 @@ import managrDropdown from '@/components/managrDropdown'
 import Button from '@thinknimble/button'
 import FormField from '@/components/forms/FormField'
 import DropDownSelect from '@thinknimble/dropdownselect'
+import DropDownSearch from '@/components/DropDownSearch'
+import moment from 'moment-timezone'
 
 export default {
   name: 'Registration',
@@ -119,6 +143,7 @@ export default {
     TNDropdown,
     managrDropdown,
     Button,
+    DropDownSearch,
   },
   data() {
     return {
@@ -126,6 +151,9 @@ export default {
       submitting: false,
       registrationForm: new UserRegistrationForm(),
       userRoles: User.roleChoices,
+      timezones: moment.tz.names(),
+      userTime: moment.tz.guess(),
+      changeZone: false,
     }
   },
   created() {
@@ -137,10 +165,15 @@ export default {
         name: 'Register',
       })
     }
+    this.timezones = this.timezones.map((tz) => {
+      return { key: tz, value: tz }
+    })
   },
   methods: {
+    selectZone() {
+      this.changeZone = !this.changeZone
+    },
     async onSubmit() {
-      //
       this.registrationForm.validate()
 
       // Do not continue if the form has errors
@@ -158,6 +191,7 @@ export default {
         this.$Alert.alert({
           type: 'error',
           message: 'There was a problem creating your user account.',
+          timeout: 2000,
         })
         throw error
       } finally {
@@ -167,9 +201,16 @@ export default {
       // Update the user in the store to "log in" and navigate to integrations
       this.$store.commit('UPDATE_USER', user)
       this.$store.commit('UPDATE_USERTOKEN', user.token)
-
-      this.$router.push({ name: 'InviteUsers' })
+      this.$router.push({ name: 'Integrations' })
     },
+  },
+  computed: {
+    user() {
+      return this.$store.state.user
+    },
+  },
+  mounted() {
+    this.registrationForm.field.timezone.value = this.userTime
   },
 }
 </script>
@@ -186,14 +227,12 @@ export default {
   flex-flow: column;
   justify-content: center;
   max-width: 24rem;
-  margin: 4rem auto;
+  margin: 1.5rem auto;
 
   &__text {
     color: $panther-gray;
     font-family: #{$base-font-family};
-    width: 100%;
-    max-width: 20rem;
-    margin-bottom: 4rem;
+    margin-bottom: 1rem;
     text-align: center;
   }
   &__input {
@@ -205,6 +244,7 @@ export default {
   &__privacy {
     padding: 0.5rem 1rem;
     font-size: 0.75rem;
+    margin-top: 1rem;
   }
 
   &__button {
@@ -215,26 +255,56 @@ export default {
   }
 }
 .logo {
-  height: 5rem;
-  margin-left: 35%;
+  height: 4rem;
+  margin-left: 37%;
+}
+.time {
+  color: $very-light-gray;
+  cursor: pointer;
+  filter: opacity(60%);
+  font-size: 0.9rem;
+}
+.time:hover {
+  color: white;
 }
 .dropdown {
-  ::v-deep .tn-dropdown__selection-container {
-    border-radius: 4px;
-    background-color: $white;
-    border: 1px solid #eaebed;
-    box-sizing: border-box;
-    line-height: 1.29;
-    letter-spacing: 0.5px;
-  }
+  align-items: center;
+  width: 18vw;
+  margin: 0;
+}
+::v-deep .input-content {
+  width: 16rem;
+}
+::v-deep .tn-dropdown__selection-container {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  border-radius: 4px;
+  background-color: $white;
+  border: 1px solid #eaebed;
+  line-height: 1.29;
+  letter-spacing: 0.5px;
+  height: 2.5rem;
+}
+::v-deep .tn-dropdown__options__option {
+  color: $panther;
+}
+::v-deep .tn-dropdown__options__container {
+  background-color: white;
+}
+::v-deep .tn-dropdown--medium {
+  width: 16rem;
 }
 .form-card {
   display: flex;
-  align-items: center;
-  flex-direction: column;
+  align-items: space-evenly;
+  justify-content: space-evenly;
+  flex-direction: row;
+  flex-wrap: wrap;
   border-radius: 0.5rem;
   background-color: $panther;
   padding: 3rem;
+  width: 50vw;
   color: white;
 }
 .divider {
@@ -270,7 +340,7 @@ input {
   height: 2.5rem;
   width: 100%;
   display: block;
-  margin: 0.625rem 0;
+  margin: 1rem;
 
   &:disabled {
     border: 2px solid $dark-green;
@@ -282,5 +352,9 @@ button {
   margin-top: 1.25rem;
   height: 1.875rem;
   width: 9.375rem;
+}
+a {
+  color: $dark-green;
+  font-weight: bold;
 }
 </style>

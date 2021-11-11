@@ -239,7 +239,6 @@ export default {
         }
       } finally {
         this.loading = false
-        this.inviteOpen = !this.inviteOpen
       }
     },
     resetData() {
