@@ -349,3 +349,41 @@ def zoom_fake_recording(context):
     ]
     return blocks
 
+
+@block_set()
+def workflow_reminder_block_set(context):
+    workflow_count = context.get("workflow_count")
+    text = "workflow" if workflow_count < 2 else "workflows"
+    blocks = [
+        block_builders.simple_section(
+            f"We noticed you only have {workflow_count} {text} activated. Activate some more to boost your productivity!"
+        )
+    ]
+    return blocks
+
+
+@block_set()
+def meeting_reminder_block_set(context):
+    not_completed = context.get("not_completed")
+    text = "meeting" if not_completed < 2 else "meetings"
+    blocks = [
+        block_builders.simple_section(
+            f"FYI you have {not_completed} {text} from today that still need to be logged!"
+        )
+    ]
+    return blocks
+
+
+@block_set()
+def manager_meeting_reminder_block_set(context):
+    not_completed = context.get("not_completed")
+    name = context.get("name")
+    text = "meeting" if not_completed < 2 else "meetings"
+    blocks = [
+        block_builders.simple_section(
+            f"Hey {name} your team still has *{not_completed} {text}* from today that needs to be logged.",
+            "mrkdwn",
+        )
+    ]
+    return blocks
+

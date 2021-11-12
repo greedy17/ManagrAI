@@ -198,6 +198,12 @@ variable "scheduled_tasks" {
       cron       = "cron(30 * * * ? *)"
       task_count = 1
     },
+    {
+      name       = "runreminders"
+      command    = "triggerreminders"
+      cron       = "cron(30 * * * ? *)"
+      task_count = 1
+    },
   ]
 }
 
