@@ -467,7 +467,7 @@ def process_submit_resource_data(payload, context):
         else:
             text = f"Managr updated {main_form.resource_type}"
             message = f"Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
-        if len(user.slack_integration.recap_receivers) and type == "meeting":
+        if len(user.slack_integration.recap_receivers):
             _send_recap(current_form_ids, None, True)
         if (
             all_form_data.get("meeting_comments") is not None

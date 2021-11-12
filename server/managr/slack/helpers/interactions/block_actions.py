@@ -1450,13 +1450,15 @@ def process_get_call_recording(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     user = User.objects.get(id=context.get("u"))
     user_tz = datetime.now(pytz.timezone(user.timezone)).strftime("%z")
+    user_timezone = pytz.timezone(user.timezone)
     gong_auth = GongAuthAccount.objects.get(organization=user.organization)
     access_token = user.organization.slack_integration.access_token
     opp = Opportunity.objects.get(id=context.get("resource_id"))
     type = context.get("type", None)
     timestamp = datetime.fromtimestamp(float(payload["message"]["ts"]))
+    current = pytz.utc.localize(timestamp).astimezone(user_timezone).date()
     blocks = []
-    if type == "recap" and timestamp >= (datetime.now() - timedelta(hours=24)):
+    if type == "recap" and datetime.now().date() == current:
         curr_date = date.today()
         curr_date_str = curr_date.isoformat() + "T01:00:00" + f"{user_tz[:3]}:{user_tz[3:]}"
         try:

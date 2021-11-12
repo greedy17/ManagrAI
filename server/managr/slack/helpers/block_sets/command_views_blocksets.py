@@ -90,9 +90,7 @@ def command_meeting_summary(context):
 def custom_paginator_block(pagination_object, invocation, channel, config_id):
     next_page = pagination_object.get("next_page", None)
     prev_page = pagination_object.get("previous_page", None)
-    blocks = [
-        block_builders.context_block(f"Alert Returned {pagination_object.get('count')} results")
-    ]
+    blocks = []
     button_blocks = []
     page_context = {"invocation": invocation, "channel": channel, "config_id": config_id}
 
@@ -207,7 +205,6 @@ def alert_instance_block_set(context):
                 "mrkdwn",
             ),
         )
-    blocks.append(block_builders.context_block(f"Triggered from alert {instance.template.title}"))
     blocks.append(block_builders.divider_block())
     return blocks
 
