@@ -134,6 +134,7 @@ def check_reminders(user_id):
                             )
                 elif key == core_consts.MEETING_REMINDER_REP:
                     meetings = check_for_uncompleted_meetings(user.id)
+                    logger.info(f"UNCOMPLETED MEETINGS FOR {user.email}: {meetings}")
                     if meetings["status"]:
                         emit_process_send_meeting_reminder(user.id, meetings["not_completed"])
                 elif key == core_consts.MEETING_REMINDER_MANAGER:

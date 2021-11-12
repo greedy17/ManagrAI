@@ -39,8 +39,8 @@ def _initial_interaction_message(resource_name=None, resource_type=None, missing
 
     # replace opp, review disregard
     if missing_attendees:
-        return "Mapped successfully:dart: Some attendees have missing info:exclamation:"
-    return f"Mapped successfully:dart: And contacts look good :+1:"
+        return "Your meeting just ended, some attendees have missing info:exclamation:"
+    return f"Your meeting just ended and contacts look good :+1:"
 
 
 def generate_edit_contact_form(field, id, value, optional=True):

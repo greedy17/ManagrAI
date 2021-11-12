@@ -59,7 +59,6 @@ def loading_block_set(context):
 @block_set()
 def success_modal_block_set(context):
     message = context.get("message", ":clap: Success!")
-    print(context)
     user = context.get("u")
     form_id = context.get("form_id")
     blocks = [
