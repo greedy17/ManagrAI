@@ -1236,7 +1236,9 @@ def process_paginate_alerts(payload, context):
         return
     alert_template = alert_instance.template
     alert_text = alert_template.title
-    blocks = []
+    blocks = [
+        block_builders.header_block(f"{alert_text}"),
+    ]
     alert_instances = custom_paginator(alert_instances, page=int(context.get("new_page", 0)))
     for alert_instance in alert_instances.get("results", []):
         blocks = [
@@ -1516,24 +1518,65 @@ def process_call_error(payload, context):
 def process_mark_complete(payload, context):
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
-    action = payload.get("actions")[0]
-    updated_blocks = process_done_alert(action["block_id"], payload.get("message").get("blocks"))
-    try:
-        res = slack_requests.update_channel_message(
+    instance = AlertInstance.objects.get(id=context.get("instance_id"))
+    instance.completed = True
+    instance.save()
+    alert_instances = AlertInstance.objects.filter(
+        invocation=instance.invocation,
+        channel=payload["channel"]["id"],
+        config_id=instance.config_id,
+    ).filter(completed=False)
+    alert_instance = alert_instances.first()
+    if not alert_instance:
+        blocks = [
+            block_builders.header_block(f"{instance.template.title}"),
+            block_builders.simple_section("You're all caught up with these workflows! Great job!"),
+        ]
+        slack_requests.update_channel_message(
             payload["channel"]["id"],
             payload["message"]["ts"],
             access_token,
-            block_set=updated_blocks,
+            text="Error",
+            block_set=blocks,
         )
-    except Exception as e:
-        return logger.exception(f"Mark as Complete error ---- {e}")
+        return
+    alert_template = alert_instance.template
+    alert_text = alert_template.title
+    blocks = [
+        block_builders.header_block(f"{alert_text}"),
+    ]
+    alert_instances = custom_paginator(alert_instances, page=int(context.get("page")))
+    for alert_instance in alert_instances.get("results", []):
+        blocks = [
+            *blocks,
+            *get_block_set(
+                "alert_instance",
+                {"instance_id": str(alert_instance.id), "current_page": int(context.get("page")),},
+            ),
+        ]
+        alert_instance.rendered_text = alert_instance.render_text()
+        alert_instance.save()
+    if len(blocks):
+        blocks = [
+            *blocks,
+            *custom_paginator_block(
+                alert_instances, instance.invocation, payload["channel"]["id"], instance.config_id
+            ),
+        ]
+
+    res = slack_requests.update_channel_message(
+        payload["channel"]["id"],
+        payload["message"]["ts"],
+        access_token,
+        text=alert_text,
+        block_set=blocks,
+    )
     return
 
 
 @processor()
 def process_send_recap_modal(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
-    print(context)
     user = User.objects.get(id=context.get("u"))
     trigger_id = payload["trigger_id"]
     type = context.get("type")
@@ -1544,7 +1587,6 @@ def process_send_recap_modal(payload, context):
         params = {"u": context.get("u"), "form_id": context.get("form_id")}
 
     access_token = user.organization.slack_integration.access_token
-    print(params)
     data = {
         "trigger_id": trigger_id,
         "view": {

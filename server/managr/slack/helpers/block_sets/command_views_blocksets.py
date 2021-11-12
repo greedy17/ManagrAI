@@ -142,7 +142,7 @@ def alert_instance_block_set(context):
             instance.render_text(),
             text_type="mrkdwn",
             block_id=f"{instance.id}_text",
-            action_id=f"{slack_const.MARK_COMPLETE}?u={user.id}",
+            action_id=f"{slack_const.MARK_COMPLETE}?u={user.id}&page={context.get('current_page')}&instance_id={instance.id}",
             style="danger",
         ),
     ]

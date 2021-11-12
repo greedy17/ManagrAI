@@ -220,7 +220,6 @@ def _process_check_alert(config_id, user_id, invocation, run_time):
 
     bg_tasks = dict(reduce(reduce_fn, instances, {}))
     for task_vals in bg_tasks.values():
-        print(task_vals)
         emit_send_alert(*task_vals, scheduled_time=run_time)
     return
 
