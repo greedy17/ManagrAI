@@ -220,7 +220,6 @@ def _process_check_alert(config_id, user_id, invocation, run_time):
 
     bg_tasks = dict(reduce(reduce_fn, instances, {}))
     for task_vals in bg_tasks.values():
-
         emit_send_alert(*task_vals, scheduled_time=run_time)
     return
 
@@ -246,14 +245,22 @@ def _process_send_alert(invocation, channel, config_id):
     alert_page_instances = custom_paginator(alert_instances)
     access_token = template.user.organization.slack_integration.access_token
     text = template.title
-    blocks = []
+    blocks = [
+        block_builders.header_block(f"Workflow {text} returned {len(alert_instances)} results"),
+    ]
 
     for alert_instance in alert_page_instances.get("results", []):
         blocks = [
             *blocks,
-            *get_block_set("alert_instance", {"instance_id": str(alert_instance.id)}),
+            *get_block_set(
+                "alert_instance", {"instance_id": str(alert_instance.id), "current_page": 1}
+            ),
         ]
-        alert_instance.rendered_text = alert_instance.render_text()
+        alert_instance.rendered_text = (
+            f"~{alert_instance.render_text()}~"
+            if alert_instance.completed
+            else alert_instance.render_text()
+        )
         alert_instance.save()
 
     if len(blocks):
@@ -275,7 +282,7 @@ def _process_send_alert(invocation, channel, config_id):
                     text=text,
                     block_set=[
                         block_builders.simple_section(
-                            f"Cannot send alert to one of the channels you selected, please add <@{alert_instance.template.user.organization.slack_integration.bot_user_id}> to the channel <#{channel_id}>",
+                            f"Cannot send workflow to one of the channels you selected, please add <@{alert_instance.template.user.organization.slack_integration.bot_user_id}> to the channel <#{channel_id}>",
                             "mrkdwn",
                         )
                     ],
@@ -283,7 +290,7 @@ def _process_send_alert(invocation, channel, config_id):
             except Exception as e:
                 logger.exception(f"{e}")
                 logger.info(
-                    f"failed to send notification to user that alert could not be sent to channel because managr is not part of channel {alert_instance.template.user}"
+                    f"failed to send notification to user that workflow could not be sent to channel because managr is not part of channel {alert_instance.template.user}"
                 )
 
         except Exception as e:

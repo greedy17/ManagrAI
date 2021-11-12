@@ -39,8 +39,8 @@ def _initial_interaction_message(resource_name=None, resource_type=None, missing
 
     # replace opp, review disregard
     if missing_attendees:
-        return "Mapped successfully:dart: Some attendees have missing info:exclamation:"
-    return f"Mapped successfully:dart: And contacts look good :+1:"
+        return "Your meeting just ended, some attendees have missing info:exclamation:"
+    return f"Your meeting just ended and contacts look good :+1:"
 
 
 def generate_edit_contact_form(field, id, value, optional=True):
@@ -359,7 +359,7 @@ def initial_meeting_interaction_block_set(context):
             if contact_check
             else _initial_interaction_message(resource.name, workflow.resource_type, True)
         )
-        title_section_color = "primary" if contact_check else "danger"
+        title_section_color = "default" if contact_check else "danger"
 
         blocks = [
             block_builders.section_with_button_block(
@@ -375,7 +375,7 @@ def initial_meeting_interaction_block_set(context):
             block_builders.section_with_button_block(
                 "Change Opportunity",
                 str(workflow.id),
-                f"Meeting {meeting.topic} was mapped to: {workflow.resource_type} *{workflow.resource.name}*",
+                f"Meeting {meeting.topic} was mapped to: _{workflow.resource_type}_ *{workflow.resource.name}*",
                 action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
             ),
         ]
@@ -405,7 +405,7 @@ def initial_meeting_interaction_block_set(context):
     ):
         action_blocks.append(
             block_builders.simple_button_block(
-                f"Update Salesforce + Add Notes",
+                f"Update {workflow.resource_type} + Add Notes",
                 str(workflow.id),
                 action_id=slack_const.ZOOM_MEETING__INIT_REVIEW,
                 style="primary",
