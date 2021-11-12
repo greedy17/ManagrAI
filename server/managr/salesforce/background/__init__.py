@@ -1070,42 +1070,30 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
     blocks.append(block_builders.simple_section(message_string_for_recap, "mrkdwn"))
     if main_form.template.form_type == "UPDATE":
         resource_name = main_form.resource_object.name if main_form.resource_object.name else ""
-
-        blocks.insert(
-            0,
-            block_builders.header_block(
-                f"Recap for {main_form.template.resource} {main_form.template.form_type.lower()} {resource_name}"
-            ),
+        text = (
+            f"Meeting recap for {main_form.template.resource} {main_form.template.form_type.lower()} {resource_name}"
+            if manager_recap
+            else f"Recap for {main_form.template.resource} {main_form.template.form_type.lower()} {resource_name}"
         )
-    elif main_form.template.form_type == "MEETING_REVIEW":
-        resource_name = main_form.resource_object.name if main_form.resource_object.name else ""
         blocks.insert(
-            0,
-            block_builders.header_block(
-                f"Meeting Recap for {main_form.template.resource} {resource_name}"
-            ),
+            0, block_builders.header_block(text),
         )
-    elif main_form.template.form_type == "CREATE":
+    else:
         blocks.insert(
             0, block_builders.header_block(f"Recap for new {main_form.template.resource}"),
         )
-    if manager_recap:
-        action_blocks = [
-            block_builders.simple_button_block(
-                "Call Details",
-                "call_details",
-                action_id=action_with_params(
-                    slack_consts.GONG_CALL_RECORDING,
-                    params=[
-                        f"u={str(user.id)}",
-                        f"resource_id={main_form.resource_id}",
-                        "type=recap",
-                    ],
-                ),
-                style="primary",
+    action_blocks = [
+        block_builders.simple_button_block(
+            "Call Details",
+            "call_details",
+            action_id=action_with_params(
+                slack_consts.GONG_CALL_RECORDING,
+                params=[f"u={str(user.id)}", f"resource_id={main_form.resource_id}", "type=recap",],
             ),
-        ]
-        blocks.append(block_builders.actions_block(action_blocks))
+            style="primary",
+        ),
+    ]
+    blocks.append(block_builders.actions_block(action_blocks))
     blocks.append(
         block_builders.context_block(f"{main_form.template.resource} owned by {user.full_name}")
     )
