@@ -152,10 +152,17 @@ export default {
       return this.templates.list.length
     },
     hasZoomChannel() {
-      return this.$store.state.user.slackAccount.zoomChannel
+      if (this.hasSlack) {
+        return this.$store.state.user.slackAccount.zoomChannel
+      }
     },
     hasRecapChannel() {
-      return this.$store.state.user.slackAccount.recapChannel
+      if (this.hasSlack) {
+        return this.$store.state.user.slackAccount.recapChannel
+      }
+    },
+    hasSlack() {
+      return this.$store.state.user.slackAccount
     },
     isOnboarding() {
       return this.$store.state.user.onboarding

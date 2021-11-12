@@ -40,7 +40,7 @@ def _initial_interaction_message(resource_name=None, resource_type=None, missing
     # replace opp, review disregard
     if missing_attendees:
         return "Your meeting just ended, some attendees have missing info:exclamation:"
-    return f"Your meeting just ended and contacts look good :+1:"
+    return "Your meeting just ended and contacts look good :+1:"
 
 
 def generate_edit_contact_form(field, id, value, optional=True):
@@ -359,18 +359,28 @@ def initial_meeting_interaction_block_set(context):
             if contact_check
             else _initial_interaction_message(resource.name, workflow.resource_type, True)
         )
-        title_section_color = "default" if contact_check else "danger"
-
-        blocks = [
-            block_builders.section_with_button_block(
+        if contact_check:
+            attendees_button = block_builders.section_with_button_block(
                 "Review Attendees",
                 str(workflow.id),
                 title_section_text,
                 action_id=action_with_params(
                     slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,]
                 ),
-                style=title_section_color,
-            ),
+            )
+        else:
+            attendees_button = block_builders.section_with_button_block(
+                "Review Attendees",
+                str(workflow.id),
+                title_section_text,
+                action_id=action_with_params(
+                    slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,]
+                ),
+                style="danger",
+            )
+
+        blocks = [
+            attendees_button,
             {"type": "divider"},
             block_builders.section_with_button_block(
                 "Change Opportunity",
