@@ -286,14 +286,14 @@ export default {
       activatedManagrConfigs: this.user.activatedManagrConfigs,
     })
     await this.listUserChannels()
-    if (this.zoomChannel) {
-      this.currentZoomChannel = this.userChannelOpts.channels.filter(
-        (channel) => channel.id === this.zoomChannel,
-      )[0].name
-    }
     if (this.hasRecapChannel) {
       this.currentRecapChannel = this.userChannelOpts.channels.filter(
         (channel) => channel.id === this.hasRecapChannel,
+      )[0].name
+    }
+    if (this.zoomChannel) {
+      this.currentZoomChannel = this.userChannelOpts.channels.filter(
+        (channel) => channel.id === this.zoomChannel,
       )[0].name
     }
   },
@@ -445,14 +445,10 @@ export default {
       return this.$store.state.user.slackAccount
     },
     hasRecapChannel() {
-      if (this.hasSlack) {
-        return this.$store.state.user.slackAccount.recapChannel
-      }
+      return this.$store.state.user.slackAccount.recapChannel
     },
     zoomChannel() {
-      if (this.hasSlack) {
-        return this.$store.state.user.slackAccount.zoomChannel
-      }
+      return this.$store.state.user.slackAccount.zoomChannel
     },
     userLevel() {
       return this.$store.state.user.userLevel
