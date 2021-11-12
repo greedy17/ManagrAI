@@ -93,7 +93,7 @@
             </div>
           </template>
         </div>
-        <div v-if="hasZoomChannel" class="card__">
+        <div v-if="zoomChannel" class="card__">
           <h3 class="card__header">LOG MEETINGS</h3>
           <div class="row">
             <button @click="goToLogZoom" class="green_button">Change Channel</button>
@@ -286,12 +286,16 @@ export default {
       activatedManagrConfigs: this.user.activatedManagrConfigs,
     })
     await this.listUserChannels()
-    this.currentZoomChannel = this.userChannelOpts.channels.filter(
-      (channel) => channel.id === this.zoomChannel,
-    )[0].name
-    this.currentRecapChannel = this.userChannelOpts.channels.filter(
-      (channel) => channel.id === this.hasRecapChannel,
-    )[0].name
+    if (this.zoomChannel) {
+      this.currentZoomChannel = this.userChannelOpts.channels.filter(
+        (channel) => channel.id === this.zoomChannel,
+      )[0].name
+    }
+    if (this.hasRecapChannel) {
+      this.currentRecapChannel = this.userChannelOpts.channels.filter(
+        (channel) => channel.id === this.hasRecapChannel,
+      )[0].name
+    }
   },
   methods: {
     logChannels() {
@@ -328,9 +332,6 @@ export default {
     },
     goToRecap() {
       this.$router.push({ name: 'ZoomRecap' })
-    },
-    hasZoomChannel() {
-      return this.$store.state.user.slackAccount.zoomChannel
     },
     hideCard() {
       this.isHiding = true
@@ -440,11 +441,18 @@ export default {
     user() {
       return this.$store.state.user
     },
+    hasSlack() {
+      return this.$store.state.user.slackAccount
+    },
     hasRecapChannel() {
-      return this.$store.state.user.slackAccount.recapChannel
+      if (this.hasSlack) {
+        return this.$store.state.user.slackAccount.recapChannel
+      }
     },
     zoomChannel() {
-      return this.$store.state.user.slackAccount.zoomChannel
+      if (this.hasSlack) {
+        return this.$store.state.user.slackAccount.zoomChannel
+      }
     },
     userLevel() {
       return this.$store.state.user.userLevel

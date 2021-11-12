@@ -231,7 +231,9 @@ class UserViewSet(
         password = request.data.get("password", None)
         first_name = request.data.get("first_name", None)
         last_name = request.data.get("last_name", None)
+        timezone = request.data.get("timezone", None)
         pk = kwargs.get("pk", None)
+        print(request.data)
         if not password or not magic_token or not pk:
             raise ValidationError({"detail": [("A magic token, id, and password are required")]})
         try:
@@ -251,10 +253,11 @@ class UserViewSet(
                 user.first_name = first_name
                 user.last_name = last_name
                 user.is_active = True
+                user.timezone = timezone
                 # expire old magic token and create a new one for other uses
                 user.regen_magic_token()
                 user.save()
-
+                print(user.timezone)
                 login(request, user)
                 # create token if one does not exist
                 Token.objects.get_or_create(user=user)
@@ -305,7 +308,8 @@ class ActivationLinkView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         if user and user.is_active:
             return Response(
-                data={"activation_link": user.activation_link}, status=status.HTTP_204_NO_CONTENT,
+                data={"activation_link": user.activation_link},
+                status=status.HTTP_204_NO_CONTENT,
             )
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -313,7 +317,9 @@ class ActivationLinkView(APIView):
 
 @api_view(["GET"])
 @permission_classes(
-    [permissions.IsAuthenticated,]
+    [
+        permissions.IsAuthenticated,
+    ]
 )
 def get_email_authorization_link(request):
     u = request.user
@@ -428,7 +434,9 @@ class NylasAccountWebhook(APIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [permissions.IsAuthenticated,]
+    [
+        permissions.IsAuthenticated,
+    ]
 )
 def email_auth_token(request):
     u = request.user
@@ -538,7 +546,7 @@ def get_account_status(request):
 class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
     serializer_class = UserInvitationSerializer
     permission_classes = (IsSuperUser | IsOrganizationManager,)
-    
+
     def create(self, request, *args, **kwargs):
         u = request.user
         if not u.is_superuser:
@@ -642,7 +650,9 @@ class UserPasswordManagmentView(generics.GenericAPIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [permissions.AllowAny,]
+    [
+        permissions.AllowAny,
+    ]
 )
 def request_reset_link(request):
     """endpoint to request a password reset email (forgot password)"""

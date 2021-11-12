@@ -5,20 +5,19 @@
       <h1>Register</h1>
 
       <template v-if="!isLoading">
-        <!-- <template v-if="errorValidatingEmail">
-    
-        <div class="box" style="display: flex; flex-direction: column; align-items: center">
-          <span>
-            <small class="muted"
-              >You have already activated your account, if you forgot your password you can reset it
-              here
-            </small>
-          </span>
-          <br />
-          <router-link :to="{ name: 'ForgotPassword' }"> Forgot Password ? </router-link>
-        </div>
-      </template> -->
-        <template>
+        <template v-if="errorValidatingEmail">
+          <div class="box" style="display: flex; flex-direction: column; align-items: center">
+            <span>
+              <small class="muted"
+                >You have already activated your account, if you forgot your password you can reset
+                it here
+              </small>
+            </span>
+            <br />
+            <router-link :to="{ name: 'ForgotPassword' }"> Forgot Password ? </router-link>
+          </div>
+        </template>
+        <template v-else>
           <div class="registration__text">
             Create and customize your Managr account with {{ organization }} within minutes.
           </div>
@@ -196,6 +195,7 @@ export default {
       let user
       try {
         user = await User.api.activate(this.userId, this.token, this.registrationForm)
+        console.log(this.registrationForm)
       } catch (error) {
         this.$Alert.alert({
           type: 'error',
@@ -205,13 +205,16 @@ export default {
       } finally {
         this.submitting = false
       }
-
+      console.log(user)
       // Update the user in the store to "log in" and navigate to integrations
       this.$store.commit('UPDATE_USER', user)
       this.$store.commit('UPDATE_USERTOKEN', user.token)
 
       this.$router.push({ name: 'Integrations' })
     },
+  },
+  mounted() {
+    this.registrationForm.field.timezone.value = this.userTime
   },
 }
 </script>

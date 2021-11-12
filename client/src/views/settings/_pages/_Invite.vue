@@ -222,7 +222,7 @@ export default {
         const res = await User.api.invite(this.userInviteForm.value)
         console.log(res)
         this.$Alert.alert({
-          message: `<h3 style="color:white;"> Your invitation was sent.</h3>`,
+          message: 'Your invitation was sent',
           type: 'success',
           timeout: 3000,
         })

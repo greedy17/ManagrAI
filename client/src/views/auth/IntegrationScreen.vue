@@ -137,7 +137,14 @@
             <PulseLoadingSpinnerButton
               :disabled="hasZoomIntegration"
               @click="onGetAuthLink('ZOOM')"
-              :class="slackIsIntegrated ? 'orange_button test' : 'orange_button'"
+              :class="
+                !(
+                  (!orgHasSlackIntegration && userCanIntegrateSlack) ||
+                  (orgHasSlackIntegration && !hasSlackIntegration)
+                )
+                  ? 'orange_button test'
+                  : 'orange_button'
+              "
               text="Connect"
               :loading="generatingToken && selectedIntegration == 'ZOOM'"
             ></PulseLoadingSpinnerButton>
