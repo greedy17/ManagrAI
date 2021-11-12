@@ -57,6 +57,7 @@ def check_for_time(tz, hour, minute):
         user_timezone
     )
     min = 00 if minute <= 30 else 30
+    logger.info(f"CHECK FOR TIME INFO: current time: {currenttime}, current local: {current}")
     return current >= current.replace(minute=min) and current <= current.replace(
         hour=hour, minute=minute
     )
@@ -93,6 +94,7 @@ def check_workflows_count(user_id):
     return {"status": False}
 
 
+@background()
 def _process_send_workflow_reminder(user_id, workflow_count):
     user = User.objects.get(id=user_id)
     access_token = user.organization.slack_integration.access_token
@@ -108,6 +110,7 @@ def _process_send_workflow_reminder(user_id, workflow_count):
         logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
 
 
+@background()
 def _process_send_meeting_reminder(user_id, not_completed):
     user = User.objects.get(id=user_id)
     access_token = user.organization.slack_integration.access_token
@@ -120,6 +123,7 @@ def _process_send_meeting_reminder(user_id, not_completed):
         logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
 
 
+@background()
 def _process_send_manager_reminder(user_id, not_completed):
     user = User.objects.get(id=user_id)
     access_token = user.organization.slack_integration.access_token
