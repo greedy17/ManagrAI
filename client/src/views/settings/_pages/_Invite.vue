@@ -83,15 +83,13 @@
     <div class="invite-list__container">
       <div class="invite-list__title" style="color: #beb5cc">Your Team:</div>
       <div class="invite-list__section__container" style="margin-bottom: 1.5rem">
-        <div style="color: #199e54" class="invite-list__section__item invite-list__name">
+        <div style="color: #f2fff8" class="invite-list__section__item invite-list__name">
           {{ user.fullName }}
         </div>
         <div style="color: white" class="invite-list__section__item invite-list__status">
           {{ user.userLevel == 'MANAGER' ? 'Team Leader(You)' : 'Rep(You)' }}
         </div>
-        <div class="invite-list__section__item invite-list__status" style="color: #199e54">
-          Registered
-        </div>
+        <div class="invite-list__section__item invite-list__status">Registered</div>
 
         <div style="color: white" class="invite-list__section__item invite-list__status">
           <span :class="user.slackRef ? 'active' : 'inactive'">
@@ -111,7 +109,7 @@
       <div v-for="member in team.list" :key="member.id" class="invite-list__section__container">
         <template v-if="member.id !== user.id">
           <div class="invite-list__section__item invite-list__name">
-            {{ member.email }}
+            {{ member.firstName }}
           </div>
           <div class="invite-list__section__item invite-list__status">
             {{ member.userLevel == 'MANAGER' ? 'Manager' : 'Rep' }}
@@ -473,6 +471,7 @@ button {
     font-weight: bold !important;
     font-family: #{$bold-font-family};
     text-align: left;
+    color: #f2fff8;
   }
   &__status {
     font-size: 0.75rem;
@@ -481,12 +480,10 @@ button {
 .registered {
   width: 33%;
   font-size: 0.75rem;
-  color: $panther-orange;
 }
 .unregistered {
   width: 33%;
   font-size: 0.75rem;
-  color: $panther-silver;
 }
 
 .cancel-button {
