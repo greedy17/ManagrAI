@@ -88,52 +88,58 @@
       </form>
     </Modal>
     <div class="invite-list__container">
-      <div class="invite-list__title" style="color: #beb5cc">Your Team:</div>
+      <div class="invite-list__section__container" style="margin-bottom: 2rem">
+        <div class="invite-list__section__item" style="color: #beb5cc">Name</div>
+        <div class="invite-list__section__item" style="color: #beb5cc">User Level</div>
+        <div class="invite-list__section__item" style="color: #beb5cc">Status</div>
+        <div class="invite-list__section__item" style="color: #beb5cc">Integrations</div>
+      </div>
+
       <div class="invite-list__section__container" style="margin-bottom: 1.5rem">
-        <div style="color: #f2fff8" class="invite-list__section__item invite-list__name">
+        <div style="color: #f2fff8" class="invite-list__section__item">
           {{ user.fullName }}
         </div>
-        <div class="invite-list__section__item invite-list__status">
+        <div class="invite-list__section__item">
           {{ user.userLevel == 'MANAGER' ? 'Team Leader(You)' : 'Rep(You)' }}
         </div>
-        <div class="invite-list__section__item invite-list__status">Registered</div>
+        <div class="invite-list__section__item">Registered</div>
 
         <div style="color: white" class="invite-list__section__item invite-list__status">
           <span :class="user.slackRef ? 'active' : 'inactive'">
-            <img src="@/assets/images/slackLogo.png" style="height: 0.9rem" alt="" />
+            <img src="@/assets/images/slackLogo.png" style="height: 1rem" alt="" />
           </span>
           <span :class="user.hasSalesforceIntegration ? 'active' : 'inactive'">
-            <img src="@/assets/images/salesforce.png" style="width: 1rem" alt="" />
+            <img src="@/assets/images/salesforce.png" style="width: 1.2rem" alt="" />
           </span>
           <span :class="user.hasZoomIntegration ? 'active' : 'inactive'">
-            <img src="@/assets/images/zoom.png" alt="" style="height: 0.9rem" />
+            <img src="@/assets/images/zoom.png" alt="" style="height: 1rem" />
           </span>
         </div>
         <!-- <div style="color: white" class="invite-list__section__item invite-list__status">
-          Alerts
+          Active workflows: {{user.}}
         </div> -->
       </div>
       <div v-for="member in team.list" :key="member.id" class="invite-list__section__container">
         <template v-if="member.id !== user.id">
-          <div class="invite-list__section__item invite-list__name">
+          <div class="invite-list__section__item">
             {{ member.firstName }}
           </div>
-          <div class="invite-list__section__item invite-list__status">
+          <div class="invite-list__section__item">
             {{ member.userLevel == 'MANAGER' ? 'Manager' : 'Rep' }}
           </div>
-          <div :class="member.isActive ? 'registered' : 'unregistered'">
+          <div class="invite-list__section__item">
             {{ member.isActive ? 'Registered' : 'Pending..' }}
           </div>
           <div class="invite-list__section__item invite-list__status">
             <span :class="member.slackRef ? 'active' : 'inactive'">
-              <img src="@/assets/images/slackLogo.png" style="height: 0.9rem" alt="" />
+              <img src="@/assets/images/slackLogo.png" style="height: 1rem" alt="" />
             </span>
             <span :class="member.hasSalesforceIntegration ? 'active' : 'inactive'">
-              <img src="@/assets/images/salesforce.png" style="width: 1rem" alt="" />
+              <img src="@/assets/images/salesforce.png" style="width: 1.2rem" alt="" />
             </span>
             <span :class="member.hasZoomIntegration ? 'active' : 'inactive'">
-              <img src="@/assets/images/zoom.png" alt="" style="height: 0.9rem" />
-              {{ console(member) }}
+              <img src="@/assets/images/zoom.png" alt="" style="height: 1rem" />
+              <!-- {{ console(member) }} -->
             </span>
           </div>
           <!-- <div class="invite-list__section__item invite-list__status">
@@ -314,16 +320,15 @@ export default {
 }
 
 .active {
-  border: 2px solid $dark-green;
+  border-bottom: 2px solid $dark-green;
   padding: 0.2rem;
-  border-radius: 50%;
-  text-align: center;
+  border-radius: 10%;
   margin-right: 0.25rem;
 }
 .inactive {
-  border: 2px solid $coral;
+  border-bottom: 2px solid $coral;
   padding: 0.2rem;
-  border-radius: 50%;
+  border-radius: 10%;
   margin-right: 0.25rem;
 }
 .invite-container {
@@ -475,6 +480,10 @@ button {
 
       overflow-wrap: break-word;
     }
+
+    &__heading {
+      width: 25%;
+    }
   }
 
   &__name {
@@ -491,10 +500,12 @@ button {
 .registered {
   width: 33%;
   font-size: 0.75rem;
+  color: $dark-green;
 }
 .unregistered {
   width: 33%;
   font-size: 0.75rem;
+  color: $panther-silver;
 }
 
 .cancel-button {
