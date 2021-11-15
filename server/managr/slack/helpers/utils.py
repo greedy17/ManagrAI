@@ -4,6 +4,8 @@ import hmac
 import hashlib
 import binascii
 import logging
+import random
+import datetime
 
 import pdb
 
@@ -11,8 +13,9 @@ from django.conf import settings
 from dateutil import parser
 
 from managr.slack.models import UserSlackIntegration
-from managr.slack.helpers import block_builders
+from managr.slack.helpers import block_builders, requests
 from managr.slack import constants as slack_consts
+from managr.salesforce.models import MeetingWorkflow
 
 logger = logging.getLogger("managr")
 
@@ -254,11 +257,19 @@ def generate_call_block(call_res, resource_id=None):
     if resource_id:
         call_data = None
         for call in call_res["calls"]:
-            resource_check = [
-                d for d in call["context"][0].get("objects") if d["objectType"] == "Opportunity"
-            ][0]
-            if resource_check["objectId"] == resource_id:
+            context = call["context"]
+            context_objects = [
+                object["objects"] for object in context if object["system"] == "Salesforce"
+            ]
+            object_ids = [
+                object["objectId"]
+                for inner_list in context_objects
+                for object in inner_list
+                if object["objectId"] == resource_id
+            ]
+            if len(object_ids):
                 call_data = call
+                break
     else:
         call_data = call_res["calls"][0]
     if call_data:
@@ -310,3 +321,35 @@ def generate_call_block(call_res, resource_id=None):
         blocks.append(block_builders.simple_section("Call still processing"))
     return blocks
 
+
+def check_contact_last_name(meeting_id):
+    workflow = MeetingWorkflow.objects.get(id=meeting_id)
+    meeting = workflow.meeting
+    contacts = meeting.participants
+    for contact in contacts:
+        contactData = contact.get("secondary_data")
+        if not contactData["LastName"]:
+            return False
+    return True
+
+
+def get_random_update_message(topic):
+    RANDOM_UPDATED_RESPONSES = [
+        f"Great work! {topic} has been logged! :raised_hands:",
+        f"Woohoo! {topic} successfully logged! :raised_hands:",
+        f"Crushing it! {topic} logged. Keep it going! :raised_hands:",
+        f"Great job! {topic} has been logged :raised_hands:",
+    ]
+    idx = random.randint(0, len(RANDOM_UPDATED_RESPONSES) - 1)
+    return RANDOM_UPDATED_RESPONSES[idx]
+
+
+def get_random_no_update_message(topic):
+    RANDOM_NO_CHANGE_RESPONSES = [
+        f"Gotcha, {topic} has no updates",
+        f"10-4 {topic} needs no updating",
+        f"Cool, no updated needed for {topic}",
+        f"Ok dokie, {topic} needs no updates",
+    ]
+    idx = random.randint(0, len(RANDOM_NO_CHANGE_RESPONSES) - 1)
+    return RANDOM_NO_CHANGE_RESPONSES[idx]

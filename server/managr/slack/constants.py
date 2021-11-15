@@ -47,15 +47,17 @@ CHAT_UPDATE = "chat.update"
 WORKSPACE_SCOPES = [
     "chat:write",
     "commands",
-    "im:write",
-    "incoming-webhook",
     "channels:read",
     "groups:read",
-    # "users:read",
-    # "users:read.email",
+    "im:write",
+    "incoming-webhook",
+    "channels:manage",
+    "groups:write",
+    "users:read",
+    "users:read.email",
 ]
 
-USER_SCOPES = ["identity.basic"]
+USER_SCOPES = ["channels:read"]
 
 # Link Types to determine which type of OAuth link to generate
 WORKSPACE = "WORKSPACE"
@@ -143,6 +145,8 @@ CALL_ERROR = "CALL_ERROR"
 GONG_CALL_RECORDING = "GONG_CALL_RECORDING"
 MARK_COMPLETE = "MARK_COMPLETE"
 GET_CALLS = "GET_CALLS"
+PROCESS_SEND_RECAP_MODAL = "PROCESS_SEND_RECAP_MODAL"
+PROCESS_SEND_RECAPS = "PROCESS_SEND_RECAPS"
 
 GET_PICKLIST_OPTIONS = "GET_PICKLIST_OPTIONS"
 # Static Block ID's
@@ -229,9 +233,6 @@ FORM_RESOURCE_LIST = [
 ]
 
 UPDATE_PUBLIC_FIELD_IDS = [
-    "fae88a10-53cc-470e-86ec-32376c041893",
-    "e286d1d5-5447-47e6-ad55-5f54fdd2b00d",
-    "fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed",
     "6407b7a1-a877-44e2-979d-1effafec5035",
     "0bb152b5-aac1-4ee0-9c25-51ae98d55af1",
 ]

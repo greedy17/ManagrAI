@@ -10,7 +10,7 @@ from rest_framework.exceptions import ValidationError
 from django.db import models, IntegrityError
 from django.contrib.auth.models import AbstractUser, BaseUserManager, AnonymousUser
 from django.contrib.auth import login
-from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields import JSONField, ArrayField
 
 from managr.utils import sites as site_utils
 from managr.utils.misc import datetime_appended_filepath
@@ -150,6 +150,7 @@ class User(AbstractUser, TimeStampModel):
 
     is_active = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
+    onboarding = models.BooleanField(default=True)
     organization = models.ForeignKey(
         "organization.Organization",
         related_name="users",
@@ -177,7 +178,18 @@ class User(AbstractUser, TimeStampModel):
         upload_to=datetime_appended_filepath, max_length=255, null=True, blank=True
     )
     timezone = models.CharField(default="UTC", max_length=255)
-
+    activated_managr_configs = ArrayField(
+        models.CharField(max_length=255),
+        default=list,
+        help_text="List of activated Managr templates",
+        blank=True,
+    )
+    reminders = JSONField(
+        default=core_consts.REMINDERS,
+        null=True,
+        blank=True,
+        help_text="Object for reminder setting",
+    )
     objects = UserManager()
 
     @property

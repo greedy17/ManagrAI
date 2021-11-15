@@ -16,6 +16,8 @@ from rest_framework.exceptions import ValidationError
 from ..exceptions import TokenExpired, InvalidRequest
 from ..models import (
     SalesloftAuthAccount,
+    SalesloftAccount,
+    SalesloftAccountAdapter,
     SLAccountAdapter,
     SLAccount,
     CadenceAdapter,
@@ -32,10 +34,13 @@ from ..helpers.class_functions import (
     sync_current_slaccount_page,
     sync_current_person_page,
     sync_current_cadence_page,
+    sync_current_account_page
 )
 
 logger = logging.getLogger("managr")
 
+def emit_sync_accounts(auth_account_id, verbose_name):
+    return sync_accounts(auth_account_id, verbose_name=verbose_name)
 
 def emit_sync_cadences(auth_account_id, verbose_name):
     return sync_cadences(auth_account_id, verbose_name=verbose_name)
@@ -52,6 +57,37 @@ def emit_sync_people(auth_account_id, verbose_name):
 def emit_add_cadence_membership(people_id, cadence_id):
     return add_cadence_membership(people_id, cadence_id)
 
+
+@background()
+def sync_accounts(auth_account_id):
+    auth_account = SalesloftAuthAccount.objects.get(id=auth_account_id)
+    while True:
+        attempts = 1
+        try:
+            success = 0
+            failed = 0
+            res = auth_account.helper_class.get_users()
+            initial_page = sync_current_account_page(res["data"], auth_account.id)
+            success += initial_page["success"]
+            failed += initial_page["failed"]
+            if res["metadata"]["paging"]["total_pages"] > 1:
+                count = 2
+                while count <= res["metadata"]["paging"]["total_pages"] and count <= 20:
+                    page_res = auth_account.helper_class.get_users(count)
+                    curr_page = sync_current_account_page(page_res["data"], auth_account.id)
+                    success += curr_page["success"]
+                    failed += curr_page["failed"]
+                    count += 1
+            break
+        except TokenExpired:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to sync salesloft users for account {auth_account.id}"
+                )
+            else:
+                auth_account.regenerate_token()
+                attempts += 1
+    return logger.info(f"Synced {success}/{success+failed} users for {auth_account}")
 
 @background()
 def sync_cadences(auth_account_id):
