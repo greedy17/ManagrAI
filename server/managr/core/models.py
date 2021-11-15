@@ -431,7 +431,7 @@ class NylasAuthAccount(TimeStampModel):
             NylasAPIError(e)
         return data
 
-    def _process_calendar_data(self):
+    def _get_calendar_data(self):
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
@@ -439,9 +439,7 @@ class NylasAuthAccount(TimeStampModel):
         events = requests.get(
             f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.EVENT_POST}", headers=headers,
         )
-        print(events)
-        print(events.json())
-        print('test for model')
+
         return self._handle_response(events)
 
 

@@ -374,6 +374,18 @@ def meeting_reminder_block_set(context):
     ]
     return blocks
 
+@block_set()
+def calendar_reminders_blockset(context):
+    data = context.get('event_data')
+    participants = len(data.get('participants'))
+    title = data.get('title')
+    times = data.get('times').get('start_time')
+    
+    return block_builders.simple_section(
+            f"Hey you have a meeting called {title} at {times} with {participants}",
+        )
+    
+
 
 @block_set()
 def manager_meeting_reminder_block_set(context):

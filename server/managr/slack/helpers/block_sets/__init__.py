@@ -61,5 +61,6 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "select_account": command_views_blocksets.command_select_account_interaction,
         "choose_opportunity": command_views_blocksets.choose_opportunity_block_set,
         "send_recap_block_set": meeting_review_block_sets.send_recap_block_set,
+        "calendar_reminders_blockset" : common_blocksets.calendar_reminders_blockset,
     }
     return switcher.get(set_name)(context, *args, **kwargs)
