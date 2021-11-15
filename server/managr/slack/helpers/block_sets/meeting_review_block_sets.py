@@ -385,7 +385,7 @@ def initial_meeting_interaction_block_set(context):
             block_builders.section_with_button_block(
                 "Change Opportunity",
                 str(workflow.id),
-                f"Meeting {meeting.topic} was mapped to: _{workflow.resource_type}_ *{workflow.resource.name}*",
+                f":calendar: Meeting {meeting.topic} was mapped to: _{workflow.resource_type}_ *{workflow.resource.name}*",
                 action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
             ),
         ]
