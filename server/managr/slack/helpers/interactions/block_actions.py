@@ -1469,25 +1469,30 @@ def process_get_call_recording(payload, context):
                 blocks = [*call_details]
             else:
                 if call:
-                    call_res = call.helper_class.get_call_details(call.auth_account.access_token)
                     call_details = generate_call_block(call_res)
                     blocks = [*call_details]
                     blocks.append(
                         block_builders.context_block("Current call may still be processing")
                     )
-        except InvalidRequest as e:
+                else:
+                    blocks = [
+                        block_builders.simple_section("No call associated with this opportunity")
+                    ]
+        except InvalidRequest:
             if call:
                 call_res = call.helper_class.get_call_details(call.auth_account.access_token)
                 call_details = generate_call_block(call_res)
                 blocks = [*call_details]
                 blocks.append(block_builders.context_block("Current call may still be processing"))
+            else:
+                blocks = [block_builders.simple_section("No call associated with this opportunity")]
     else:
         if call:
             call_res = call.helper_class.get_call_details(call.auth_account.access_token)
             call_details = generate_call_block(call_res)
             blocks = [*call_details]
         else:
-            blocks.append(block_builders.simple_section("No call associated with this opportunity"))
+            blocks = [block_builders.simple_section("No call associated with this opportunity")]
     modal_data = {
         "trigger_id": trigger_id,
         "view": {
