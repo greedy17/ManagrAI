@@ -20,7 +20,7 @@ from managr.api.decorators import log_all_exceptions, sf_api_exceptions_wf
 from managr.api.emails import send_html_email
 
 from managr.core.models import User
-from managr.organization.models import Account, Stage, Contact
+from managr.organization.models import Account, Stage, Contact, Organization
 from managr.organization.serializers import AccountSerializer, StageSerializer
 from managr.opportunity.models import Opportunity, Lead
 from managr.opportunity.serializers import OpportunitySerializer
@@ -32,6 +32,7 @@ from managr.slack.helpers.utils import action_with_params
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers.exceptions import CannotSendToChannel
 from managr.slack.helpers.utils import action_with_params
+from managr.slack.models import UserSlackIntegration
 
 from ..routes import routes
 from ..models import (
@@ -457,10 +458,12 @@ def _process_update_resource_from_meeting(workflow_id, *args):
                 time.sleep(sleep)
                 attempts += 1
         except Exception as e:
-            _send_recap(update_form_ids)
+            if len(user.slack_integration.recap_receivers):
+                _send_recap(update_form_ids, None, True)
             raise e
 
-    _send_recap(update_form_ids)
+    if len(user.slack_integration.recap_receivers):
+        _send_recap(update_form_ids, None, True)
     # push to sf
     return res
 
@@ -605,7 +608,7 @@ def _process_create_new_contacts(workflow_id, *args):
     for form in contact_forms:
         # if the resource is an account we set it to that account
         # if it is an opp we create a contact role as well
-
+        logger.info(f"FORM {form}")
         data = form.saved_data
         if not data:
             # try and collect whatever data we have
@@ -992,8 +995,7 @@ def check_for_display_value(field, value):
 
 @background(schedule=0)
 @slack_api_exceptions(rethrow=True)
-def _send_recap(form_ids):
-
+def _send_recap(form_ids, send_to_data=None, manager_recap=False):
     submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
     main_form = submitted_forms.filter(
         template__form_type__in=["CREATE", "UPDATE", "MEETING_REVIEW"]
@@ -1011,9 +1013,9 @@ def _send_recap(form_ids):
             form_fields = form_fields | form.template.formfield_set.filter(include_in_recap=True)
         else:
             form_fields = form.template.formfield_set.filter(include_in_recap=True)
-    send_summ_to_leadership = new_data.get("__send_recap_to_leadership")
-    send_summ_to_owner = new_data.get("__send_recap_to_reps")
-    send_summ_to_channels = new_data.get("__send_recap_to_channels")
+    send_summ_to_leadership = send_to_data.get("leadership", None) if send_to_data else None
+    send_summ_to_reps = send_to_data.get("reps", None) if send_to_data else None
+    send_summ_to_channels = send_to_data.get("channels", None) if send_to_data else None
 
     slack_access_token = user.organization.slack_integration.access_token
     blocks = []
@@ -1039,7 +1041,7 @@ def _send_recap(form_ids):
                         new_value = check_for_display_value(field.field, new_value)
 
                     message_string_for_recap += (
-                        f"\n*{field_label}:* ~{old_data.get(key)}~ {new_value}"
+                        f"\n*{field_label}:* ~{old_data.get(key)}~ :arrow_right: {new_value}"
                     )
         elif main_form.template.form_type == "MEETING_REVIEW":
             old_value = old_data.get(key)
@@ -1048,7 +1050,9 @@ def _send_recap(form_ids):
                 if field.field.is_public and field.field.data_type == "Reference":
                     old_value = check_for_display_value(field.field, old_value)
                     new_value = check_for_display_value(field.field, new_value)
-                message_string_for_recap += f"\n*{field_label}:* ~{old_value}~ {new_value}"
+                message_string_for_recap += (
+                    f"\n*{field_label}:* ~{old_value}~ :arrow_right: {new_value}"
+                )
             else:
                 if field.field.is_public and field.field.data_type == "Reference":
                     new_value = check_for_display_value(field.field, new_value)
@@ -1066,22 +1070,15 @@ def _send_recap(form_ids):
     blocks.append(block_builders.simple_section(message_string_for_recap, "mrkdwn"))
     if main_form.template.form_type == "UPDATE":
         resource_name = main_form.resource_object.name if main_form.resource_object.name else ""
-
-        blocks.insert(
-            0,
-            block_builders.header_block(
-                f"Recap for {main_form.template.resource} {main_form.template.form_type.lower()} {resource_name}"
-            ),
+        text = (
+            f"Meeting recap for {main_form.template.resource} {main_form.template.form_type.lower()} {resource_name}"
+            if manager_recap
+            else f"Recap for {main_form.template.resource} {main_form.template.form_type.lower()} {resource_name}"
         )
-    elif main_form.template.form_type == "MEETING_REVIEW":
-        resource_name = main_form.resource_object.name if main_form.resource_object.name else ""
         blocks.insert(
-            0,
-            block_builders.header_block(
-                f"Meeting Recap for {main_form.template.resource} {resource_name}"
-            ),
+            0, block_builders.header_block(text),
         )
-    elif main_form.template.form_type == "CREATE":
+    else:
         blocks.insert(
             0, block_builders.header_block(f"Recap for new {main_form.template.resource}"),
         )
@@ -1091,7 +1088,7 @@ def _send_recap(form_ids):
             "call_details",
             action_id=action_with_params(
                 slack_consts.GONG_CALL_RECORDING,
-                params=[f"u={str(user.id)}", f"resource_id={main_form.resource_id}", "type=recap"],
+                params=[f"u={str(user.id)}", f"resource_id={main_form.resource_id}", "type=recap",],
             ),
             style="primary",
         ),
@@ -1100,46 +1097,14 @@ def _send_recap(form_ids):
     blocks.append(
         block_builders.context_block(f"{main_form.template.resource} owned by {user.full_name}")
     )
-    query = Q()
-    user_list = User.objects.none()
-    if send_summ_to_leadership is not None:
-        manager_list = send_summ_to_leadership.split(";")
-        query |= Q(user_level="MANAGER", id__in=manager_list)
-        user_list = (
-            user.organization.users.filter(query)
-            .filter(is_active=True)
-            .distinct()
-            .select_related("slack_integration")
+    if manager_recap:
+        user_channel_list = UserSlackIntegration.objects.filter(
+            slack_id__in=user.slack_integration.recap_receivers
         )
-
-    if send_summ_to_owner is not None:
-        rep_list = send_summ_to_owner.split(";")
-        query |= Q(id__in=rep_list)
-        user_list |= (
-            user.organization.users.filter(query)
-            .filter(is_active=True)
-            .distinct()
-            .select_related("slack_integration")
-        )
-
-    for u in user_list:
-        if hasattr(u, "slack_integration"):
+        for u in user_channel_list:
             try:
                 slack_requests.send_channel_message(
-                    u.slack_integration.channel,
-                    slack_access_token,
-                    text=f"Recap {main_form.template.resource}",
-                    block_set=blocks,
-                )
-            except Exception as e:
-                logger.exception(f"Failed to send recap to {u.email} due to {e}")
-                continue
-    if send_summ_to_channels is not None:
-        channel_list = send_summ_to_channels.split(";")
-        for channel in channel_list:
-            try:
-                slack_requests.send_channel_message(
-                    channel,
+                    u.recap_channel,
                     slack_access_token,
                     text=f"Recap {main_form.template.resource}",
                     block_set=blocks,
@@ -1163,9 +1128,90 @@ def _send_recap(form_ids):
                         f"Failed to send error message to user informing them of channel issue to {user.email} due to {e}"
                     )
                     continue
-
             except Exception as e:
                 logger.exception(
                     f"Failed to send recap to channel for user {user.email} due to {e}"
                 )
                 continue
+    else:
+        query = Q()
+        user_list = UserSlackIntegration.objects.filter(
+            slack_id__in=user.slack_integration.recap_receivers
+        )
+        if send_summ_to_leadership is not None:
+            query |= Q(user_level="MANAGER", id__in=send_summ_to_leadership)
+            user_list = (
+                user.organization.users.filter(query)
+                .filter(is_active=True)
+                .distinct()
+                .select_related("slack_integration")
+            )
+
+        if send_summ_to_reps is not None:
+            query |= Q(id__in=send_summ_to_reps)
+            user_list |= (
+                user.organization.users.filter(query)
+                .filter(is_active=True)
+                .distinct()
+                .select_related("slack_integration")
+            )
+
+        for u in user_list:
+            if hasattr(u, "slack_integration"):
+                try:
+                    slack_requests.send_channel_message(
+                        u.slack_integration.channel,
+                        slack_access_token,
+                        text=f"Recap {main_form.template.resource}",
+                        block_set=blocks,
+                    )
+                except Exception as e:
+                    logger.exception(f"Failed to send recap to {u.email} due to {e}")
+                    continue
+        if send_summ_to_channels is not None:
+            for channel in send_summ_to_channels:
+                try:
+                    slack_requests.send_channel_message(
+                        channel,
+                        slack_access_token,
+                        text=f"Recap {main_form.template.resource}",
+                        block_set=blocks,
+                    )
+                except CannotSendToChannel:
+                    try:
+                        slack_requests.send_channel_message(
+                            user.slack_integration.channel,
+                            slack_access_token,
+                            text=f"Failed to send recap to channel",
+                            block_set=[
+                                block_builders.simple_section(
+                                    f"Unable to send recap to one of the channels you selected, please add <@{user.organization.slack_integration.bot_user_id}> to the channel _*<#{channel}>*_",
+                                    "mrkdwn",
+                                )
+                            ],
+                        )
+                        continue
+                    except Exception as e:
+                        logger.exception(
+                            f"Failed to send error message to user informing them of channel issue to {user.email} due to {e}"
+                        )
+                        continue
+                except Exception as e:
+                    logger.exception(
+                        f"Failed to send recap to channel for user {user.email} due to {e}"
+                    )
+                    continue
+
+
+def remove_field(org_id, form_field):
+    org = Organization.objects.get(id=org_id)
+    forms = OrgCustomSlackForm.objects.filter(organization=org)
+    for form in forms:
+        for index, field in enumerate(form.fields.all().order_by("forms__order")):
+            if str(field.id) != form_field:
+                field.forms.first().order = index
+                field.forms.first().save()
+            else:
+                field.forms.first().delete()
+    return
+

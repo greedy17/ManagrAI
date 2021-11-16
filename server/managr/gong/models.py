@@ -62,14 +62,12 @@ class GongAuthAdapter:
         else:
             status_code = response.status_code
             error_data = response.json()
-            logger.info(f"{error_data}")
             error_check = error_data.get("error_param", None)
             error_param = error_check if error_check else error_data.get("errors")
             kwargs = {
                 "status_code": status_code,
                 "error_param": error_param,
             }
-
             GongAPIException(HTTPError(kwargs), fn_name)
         return data
 
@@ -342,7 +340,6 @@ class GongCallAdapter:
         else:
             status_code = response.status_code
             error_data = response.json()
-            logger.info(f"{error_data}")
             error_check = error_data.get("error_param", None)
             error_param = error_check if error_check else error_data.get("errors")
             kwargs = {
@@ -360,14 +357,15 @@ class GongCallAdapter:
         auth_account = GongAuthAccount.objects.get(id=auth_account_id)
         schedule_date = dateutil.parser.parse(meta_data.get("scheduled")).date()
         opp_data = (
-            [d for d in context_data[0].get("objects") if d["objectType"] == "Opportunity"][0]
+            [d for d in context_data[0].get("objects") if d["objectType"] == "Opportunity"]
             if len(context_data)
             else {}
         )
+        opp = opp_data[0] if len(opp_data) else None
         data = {}
         data["auth_account"] = auth_account.id
         data["crm"] = context_data[0].get("system", None) if len(context_data) else None
-        data["crm_id"] = opp_data.get("objectId", None)
+        data["crm_id"] = opp.get("objectId") if opp else None
         data["gong_id"] = meta_data.get("id")
         data["client_id"] = meta_data.get("clientUniqueId", None)
         data["client_system"] = meta_data.get("system", None)

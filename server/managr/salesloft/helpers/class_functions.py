@@ -5,10 +5,37 @@ import logging
 import json
 import dateutil.parser
 
-from ..models import Cadence, CadenceAdapter, People, PeopleAdapter, SLAccount, SLAccountAdapter
-from ..serializers import CadenceSerializer, PeopleSerializer, SLAccountSerializer
+from ..models import Cadence, CadenceAdapter, People, PeopleAdapter, SLAccount, SLAccountAdapter, SalesloftAccountAdapter,SalesloftAccount
+from ..serializers import CadenceSerializer, PeopleSerializer, SLAccountSerializer, SalesloftAccountSerializer
 
 logger = logging.getLogger("managr")
+
+def process_account(account, auth_account_id):
+    user_res = SalesloftAccountAdapter.create_account(account, auth_account_id)
+    if user_res is None:
+        return {"failed": True}
+    else:
+        user_existing = SalesloftAccount.objects.filter(email=account.get("email")).first()
+        if user_existing:
+            user_serializer = SalesloftAccountSerializer(
+                data=user_res.as_dict, instance=user_existing
+            )
+        else:
+            user_serializer = SalesloftAccountSerializer(data=user_res.as_dict)
+        user_serializer.is_valid(raise_exception=True)
+        user_serializer.save()
+        return {"success": True}
+
+def sync_current_account_page(data, auth_account_id):
+    failed = 0
+    success = 0
+    for resource in data:
+        res = process_account(resource, auth_account_id)
+        if "failed" in res:
+            failed += 1
+        else:
+            success += 1
+    return {"success": success, "failed": failed}
 
 
 def process_cadence(cadence):

@@ -16,7 +16,6 @@ from django.db.models.constraints import UniqueConstraint
 
 from background_task.models import CompletedTask, Task
 
-from managr.core import constants as core_consts
 from managr.core.models import TimeStampModel, IntegrationModel
 from managr.slack.helpers import block_builders
 from managr.slack import constants as slack_consts
@@ -741,27 +740,13 @@ class MeetingWorkflow(SFSyncOperation):
             from managr.slack.helpers import requests as slack_requests
             from managr.slack.helpers.block_sets import get_block_set
 
-            block_set = [
-                *get_block_set("final_meeting_interaction", {"w": str(self.id)}),
-                get_block_set("create_meeting_task", {"w": str(self.id)}),
-                get_block_set("schedule_meeting", {"w": str(self.id)}),
-                get_block_set(
-                    "add_to_cadence",
-                    context={
-                        "u": str(self.user.id),
-                        "resource_name": str(self.resource.name),
-                        "resource_id": str(self.resource_id),
-                        "resource_type": str(self.resource_type),
-                    },
-                ),
-            ]
+            block_set = [*get_block_set("final_meeting_interaction", {"w": str(self.id)})]
             if len(self.failed_task_description):
                 for i, m in enumerate(self.failed_task_description):
                     block_set.insert(
                         i + 1,
                         *get_block_set("error_message", {"message": f":no_entry_sign: _{m}_"}),
                     )
-
             slack_access_token = self.user.organization.slack_integration.access_token
             ts, channel = self.slack_interaction.split("|")
             try:

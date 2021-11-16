@@ -111,6 +111,16 @@ class UserSlackIntegration(TimeStampModel):
         default=False,
         help_text="When a user opens the home tab it will notifiy us (or messages tab) slack requires an 'onboarding' interaction to be sent, since this event is recurring we only do it once",
     )
+
+    zoom_channel = models.CharField(
+        max_length=255, null=True, help_text="Channel for zoom automation, defaults to channel",
+    )
+
+    recap_channel = models.CharField(
+        max_length=255, null=True, help_text="Channel for recaps to be sent",
+    )
+    recap_receivers = ArrayField(models.CharField(max_length=255), default=list, blank=True)
+
     objects = UserSlackIntegrationQuerySet.as_manager()
 
     def __str__(self):
@@ -118,6 +128,16 @@ class UserSlackIntegration(TimeStampModel):
 
     class Meta:
         ordering = ["user"]
+
+    def add_to_recap_receivers(self, id):
+        self.recap_receivers.append(id)
+        self.save()
+        return
+
+    def change_recap_channel(self, channel):
+        self.recap_channel = channel
+        self.save()
+        return
 
 
 class OrgCustomSlackFormQuerySet(models.QuerySet):
@@ -232,7 +252,6 @@ class OrgCustomSlackFormInstance(TimeStampModel):
             .order_by("order")
         )
         user_fields = []
-
         # hack to maintain order
         for field in template_fields:
             f = SObjectField.objects.get(
@@ -279,7 +298,9 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         user_fields = self.get_user_fields()
         form_values = self.generate_form_values(data)
         form_blocks = []
+        logger.info(user_fields)
         for field in user_fields:
+            logger.info(field)
             val = form_values.get(field.api_name, None)
             if field.is_public:
                 # pass in user as a kwarg

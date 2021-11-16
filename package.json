@@ -10,5 +10,8 @@
   "cacheDirectories": [
     "client/node_modules",
     ".cache/Cypress"
-  ]
+  ],
+  "dependencies": {
+    "vue-multiselect": "^2.1.6"
+  }
 }

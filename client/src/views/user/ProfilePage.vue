@@ -74,7 +74,6 @@ export default {
   methods: {
     handleUpdate() {
       this.loading = true
-
       User.api
         .update(this.getUser.id, this.profileForm.value)
         .then((response) => {
@@ -119,6 +118,7 @@ export default {
   }
 }
 .profile-page {
+  margin-top: 4rem;
   padding: 2rem 2rem;
   @media only screen and (max-width: 768px) {
     /* For mobile phones: */

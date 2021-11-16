@@ -45,6 +45,9 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "minute_options": common_blocksets.minute_options,
         "time_options": common_blocksets.time_options,
         "duration_options": common_blocksets.duration_options,
+        "meeting_reminder": common_blocksets.meeting_reminder_block_set,
+        "manager_meeting_reminder": common_blocksets.manager_meeting_reminder_block_set,
+        "workflow_reminder": common_blocksets.workflow_reminder_block_set,
         "command_update_resource": command_views_blocksets.command_update_resource_interaction,
         "update_modal_block_set": command_views_blocksets.update_modal_block_set,
         "command_meeting_summary": command_views_blocksets.command_meeting_summary,
@@ -57,5 +60,6 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "cadence_modal_blockset": command_views_blocksets.create_add_to_cadence_block_set,
         "select_account": command_views_blocksets.command_select_account_interaction,
         "choose_opportunity": command_views_blocksets.choose_opportunity_block_set,
+        "send_recap_block_set": meeting_review_block_sets.send_recap_block_set,
     }
     return switcher.get(set_name)(context, *args, **kwargs)
