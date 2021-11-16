@@ -33,14 +33,16 @@ from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 logger = logging.getLogger("managr")
 
 
-def _initial_interaction_message(resource_name=None, resource_type=None, missing_attendees=False):
+def _initial_interaction_message(
+    name, resource_name=None, resource_type=None, missing_attendees=False
+):
     if not resource_type:
-        return "Your meeting just ended :calendar:"
+        return f"Hey {name}, your meeting just ended!"
 
     # replace opp, review disregard
     if missing_attendees:
-        return "Your meeting just ended, some attendees have missing info:exclamation:"
-    return "Your meeting just ended and contacts look good :+1:"
+        return f"Hey {name}, your meeting just ended! Missing attendee info:exclamation:"
+    return "Hey {name}, your meeting just ended and contacts look good :+1:"
 
 
 def generate_edit_contact_form(field, id, value, optional=True):
@@ -355,9 +357,13 @@ def initial_meeting_interaction_block_set(context):
 
     if workflow.resource_type:
         title_section_text = (
-            _initial_interaction_message(resource.name, workflow.resource_type)
+            _initial_interaction_message(
+                workflow.user.first_name, resource.name, workflow.resource_type, False
+            )
             if contact_check
-            else _initial_interaction_message(resource.name, workflow.resource_type, True)
+            else _initial_interaction_message(
+                workflow.user.first_name, resource.name, workflow.resource_type, True
+            )
         )
         if contact_check:
             attendees_button = block_builders.section_with_button_block(
@@ -394,7 +400,7 @@ def initial_meeting_interaction_block_set(context):
             block_builders.section_with_button_block(
                 "Map to Opportunity",
                 str(workflow.id),
-                _initial_interaction_message(),
+                _initial_interaction_message(workflow.user.first_name),
                 action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
                 style="primary",
             ),
