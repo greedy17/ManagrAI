@@ -318,7 +318,7 @@ def generate_call_block(call_res, resource_id=None):
             )
         )
     else:
-        blocks.append(block_builders.simple_section("Call still processing"))
+        return None
     return blocks
 
 
