@@ -41,18 +41,21 @@
       </div>
       <div class="alerts-template-list__content">
         <div v-if="selectedTab == 'TEMPLATE'" class="alerts-template-list__content-template">
-          <FormField
+          <!-- <FormField
             :id="`resource-type-${alert.id}`"
             :disabled="true"
             v-model="alert.resourceType"
-          />
-          <span>Edit Title: </span>
-          <FormField
-            :id="`resource-title-${alert.id}`"
-            :errors="templateTitleField.errors"
-            @input="executeUpdateTemplate(templateTitleField)"
-            v-model="templateTitleField.value"
-          />
+          /> -->
+          <!-- <h3>{{ alert.resourceType }}</h3> -->
+          <div style="margin-top: 2rem">
+            <span>Edit Title: </span>
+            <FormField
+              :id="`resource-title-${alert.id}`"
+              :errors="templateTitleField.errors"
+              @input="executeUpdateTemplate(templateTitleField)"
+              v-model="templateTitleField.value"
+            />
+          </div>
         </div>
         <div v-if="selectedTab == 'GROUPS'" class="alerts-template-list__content-groups">
           <div
@@ -753,10 +756,10 @@ export default {
   margin-left: -0.1rem;
 }
 ::v-deep .input-content {
-  background-color: $panther-silver;
+  background-color: white;
   border: none;
   font-weight: bold;
-  color: white;
+  color: $panther;
 }
 ::v-deep .input-content:focus {
   background-color: $panther-silver;

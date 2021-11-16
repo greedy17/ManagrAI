@@ -549,7 +549,7 @@ export default {
   border-radius: 1rem;
   color: white;
   height: 60vh;
-  width: 80%;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
