@@ -1472,7 +1472,9 @@ def process_get_call_recording(payload, context):
                     call_details = generate_call_block(call_res)
                     blocks = [*call_details]
                     blocks.append(
-                        block_builders.context_block("Current call may still be processing")
+                        block_builders.context_block(
+                            "Gong may still be processing this call, check back in a bit"
+                        )
                     )
                 else:
                     blocks = [
@@ -1483,16 +1485,30 @@ def process_get_call_recording(payload, context):
                 call_res = call.helper_class.get_call_details(call.auth_account.access_token)
                 call_details = generate_call_block(call_res)
                 blocks = [*call_details]
-                blocks.append(block_builders.context_block("Current call may still be processing"))
+                blocks.append(
+                    block_builders.context_block(
+                        "Gong may still be processing this call, check back in a bit"
+                    )
+                )
             else:
-                blocks = [block_builders.simple_section("No call associated with this opportunity")]
+                blocks = [
+                    block_builders.simple_section("No call associated with this opportunity*"),
+                    block_builders.context_block(
+                        "*Gong may still be processing this call, check back in a bit"
+                    ),
+                ]
     else:
         if call:
             call_res = call.helper_class.get_call_details(call.auth_account.access_token)
             call_details = generate_call_block(call_res)
             blocks = [*call_details]
         else:
-            blocks = [block_builders.simple_section("No call associated with this opportunity")]
+            blocks = [
+                block_builders.simple_section("No call associated with this opportunity*"),
+                block_builders.context_block(
+                    "*Gong may still be processing this call, check back in a bit"
+                ),
+            ]
     modal_data = {
         "trigger_id": trigger_id,
         "view": {
