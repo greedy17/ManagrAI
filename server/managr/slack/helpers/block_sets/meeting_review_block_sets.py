@@ -42,7 +42,7 @@ def _initial_interaction_message(
     # replace opp, review disregard
     if missing_attendees:
         return f"Hey {name}, your meeting just ended! Missing attendee info:exclamation:"
-    return "Hey {name}, your meeting just ended and contacts look good :+1:"
+    return f"Hey {name}, your meeting just ended and contacts look good :+1:"
 
 
 def generate_edit_contact_form(field, id, value, optional=True):
@@ -384,12 +384,16 @@ def initial_meeting_interaction_block_set(context):
                 ),
                 style="danger",
             )
-
+        change_opp_button = (
+            "Change Opportunity"
+            if workflow.resource_type == "Opportunity"
+            else "Map to Opportunity"
+        )
         blocks = [
             attendees_button,
             {"type": "divider"},
             block_builders.section_with_button_block(
-                "Change Opportunity",
+                change_opp_button,
                 str(workflow.id),
                 f":calendar: Meeting {meeting.topic} was mapped to: _{workflow.resource_type}_ *{workflow.resource.name}*",
                 action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
@@ -406,7 +410,7 @@ def initial_meeting_interaction_block_set(context):
             ),
             {"type": "divider"},
             block_builders.section_with_accessory_block(
-                f"*{meeting.topic}*\n{formatted_start} - {formatted_end}\n Attendees: {meeting.participants_count}",
+                f":calendar: *{meeting.topic}*\n{formatted_start} - {formatted_end}\n Attendees: {meeting.participants_count}",
                 block_builders.simple_image_block(
                     "https://managr-images.s3.amazonaws.com/slack/logo_loading.gif", "Managr Logo"
                 ),
