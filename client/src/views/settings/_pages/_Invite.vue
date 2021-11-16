@@ -82,7 +82,7 @@
     <div class="invite-list__container">
       <div class="key">
         <div class="left-key">
-          <h3 style="color: #beb5cc">The {{ $store.state.user.organizationRef.name }} Team:</h3>
+          <h2 style="color: #beb5cc">The {{ $store.state.user.organizationRef.name }} Team:</h2>
         </div>
         <div class="right-key">
           <p class="complete">Complete</p>
@@ -91,30 +91,62 @@
       </div>
 
       <div class="invite-list__section__container" style="margin-bottom: 2rem">
-        <div class="invite-list__section__item">Name:</div>
-        <div class="invite-list__section__item">User Level:</div>
-        <div class="invite-list__section__item">Status:</div>
-        <div class="invite-list__section__item">Integrations:</div>
+        <div
+          style="display: flex; align-items: flex-start"
+          class="invite-list__section__item section-header"
+        >
+          User
+        </div>
+        <div
+          style="display: flex; align-items: flex-start"
+          class="invite-list__section__item section-header"
+        >
+          User Level
+        </div>
+        <div
+          style="display: flex; align-items: flex-start"
+          class="invite-list__section__item section-header"
+        >
+          Status
+        </div>
+        <div
+          style="display: flex; align-items: flex-start"
+          class="invite-list__section__item section-header"
+        >
+          Integrations
+        </div>
       </div>
 
-      <div class="invite-list__section__container" style="margin-bottom: 1.5rem">
-        <div style="color: #f2fff8" class="invite-list__section__item">
+      <div class="invite-list__section__container">
+        <div
+          style="display: flex; align-items: flex-start; color: #f2fff8"
+          class="invite-list__section__item col"
+        >
           {{ user.fullName }}
+          <p style="color: #beb5cc; font-size: 0.65rem; margin-top: 0.25rem">{{ user.email }}</p>
         </div>
-        <div class="invite-list__section__item">
+        <div style="display: flex; align-items: flex-start" class="invite-list__section__item">
           {{ user.userLevel == 'MANAGER' ? 'Team Leader(You)' : 'Rep(You)' }}
         </div>
-        <div class="invite-list__section__item">Registered</div>
+        <div style="display: flex; align-items: flex-start" class="invite-list__section__item">
+          Registered
+        </div>
 
-        <div style="color: white" class="invite-list__section__item invite-list__status">
+        <div
+          style="display: flex; align-items: flex-start"
+          class="invite-list__section__item invite-list__status"
+        >
           <span :class="user.slackRef ? 'active' : 'inactive'">
             <img src="@/assets/images/slackLogo.png" style="height: 1rem" alt="" />
           </span>
           <span :class="user.hasSalesforceIntegration ? 'active' : 'inactive'">
-            <img src="@/assets/images/salesforce.png" style="width: 1.2rem" alt="" />
+            <img src="@/assets/images/salesforce.png" style="height: 1rem" alt="" />
           </span>
           <span :class="user.hasZoomIntegration ? 'active' : 'inactive'">
             <img src="@/assets/images/zoom.png" alt="" style="height: 1rem" />
+          </span>
+          <span :class="user.nylasRef ? 'active' : 'inactive'">
+            <img src="@/assets/images/gmailCal.png" alt="" style="height: 1rem" />
           </span>
         </div>
         <!-- <div style="color: white" class="invite-list__section__item invite-list__status">
@@ -123,25 +155,36 @@
       </div>
       <div v-for="member in team.list" :key="member.id" class="invite-list__section__container">
         <template v-if="member.id !== user.id">
-          <div class="invite-list__section__item">
-            {{ member.firstName }}
+          <div
+            style="display: flex; align-items: flex-start"
+            class="invite-list__section__item col"
+          >
+            {{ member.firstName ? member.firstName : 'Name pending' }}
+            <p style="color: #beb5cc; font-size: 0.65rem; margin-top: 0.25rem">
+              {{ member.email }}
+            </p>
           </div>
-          <div class="invite-list__section__item">
+          <div style="display: flex; align-items: flex-start" class="invite-list__section__item">
             {{ member.userLevel == 'MANAGER' ? 'Manager' : 'Rep' }}
           </div>
-          <div class="invite-list__section__item">
+          <div style="display: flex; align-items: flex-start" class="invite-list__section__item">
             {{ member.isActive ? 'Registered' : 'Pending..' }}
           </div>
-          <div class="invite-list__section__item invite-list__status">
+          <div
+            style="display: flex; align-items: flex-start"
+            class="invite-list__section__item invite-list__status"
+          >
             <span :class="member.slackRef ? 'active' : 'inactive'">
               <img src="@/assets/images/slackLogo.png" style="height: 1rem" alt="" />
             </span>
             <span :class="member.hasSalesforceIntegration ? 'active' : 'inactive'">
-              <img src="@/assets/images/salesforce.png" style="width: 1.2rem" alt="" />
+              <img src="@/assets/images/salesforce.png" style="height: 1rem" alt="" />
             </span>
             <span :class="member.hasZoomIntegration ? 'active' : 'inactive'">
               <img src="@/assets/images/zoom.png" alt="" style="height: 1rem" />
-              <!-- {{ console(member) }} -->
+            </span>
+            <span :class="member.nylasRef ? 'active' : 'inactive'">
+              <img src="@/assets/images/gmailCal.png" alt="" style="height: 1rem" />
             </span>
           </div>
           <!-- <div class="invite-list__section__item invite-list__status">
@@ -308,6 +351,13 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
+.col {
+  display: flex;
+  flex-direction: column;
+}
+.section-header {
+  font-size: 1.2rem;
+}
 .key {
   display: flex;
   align-items: center;
@@ -318,26 +368,26 @@ export default {
 .right-key {
   display: flex;
   flex-direction: row;
-  width: 100%;
-  justify-content: flex-end;
-  margin-right: 6%;
+  width: 35%;
+  justify-content: flex-start;
 }
 .left-key {
   display: flex;
   width: 100%;
   flex-direction: row;
   justify-self: flex-start;
-  margin-left: 6%;
 }
 
 .complete {
-  border-bottom: 2px solid $dark-green;
+  border-bottom: 2.9px solid $dark-green;
+  border-radius: 10%;
   margin-right: 0.5rem;
   color: $panther-silver;
 }
 .incomplete {
   border-bottom: 2px solid $coral;
   color: $panther-silver;
+  border-radius: 10%;
 }
 
 ::v-deep .tn-dropdown__selection-container {
@@ -466,7 +516,7 @@ button {
     background-color: $panther;
     border: none;
     min-width: 60vw;
-    padding: 1.5rem 1rem 1.5rem 1.5rem;
+    padding: 1.5rem 0rem 1.5rem 1rem;
     border-radius: 5px;
     box-shadow: 0 5px 10px 0 black;
     display: flex;
