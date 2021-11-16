@@ -20,7 +20,7 @@ from managr.api.decorators import log_all_exceptions, sf_api_exceptions_wf
 from managr.api.emails import send_html_email
 
 from managr.core.models import User
-from managr.organization.models import Account, Stage, Contact
+from managr.organization.models import Account, Stage, Contact, Organization
 from managr.organization.serializers import AccountSerializer, StageSerializer
 from managr.opportunity.models import Opportunity, Lead
 from managr.opportunity.serializers import OpportunitySerializer
@@ -1201,3 +1201,17 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
                         f"Failed to send recap to channel for user {user.email} due to {e}"
                     )
                     continue
+
+
+def remove_field(org_id, form_field):
+    org = Organization.objects.get(id=org_id)
+    forms = OrgCustomSlackForm.objects.filter(organization=org)
+    for form in forms:
+        for index, field in enumerate(form.fields.all().order_by("forms__order")):
+            if str(field.id) != form_field:
+                field.forms.first().order = index
+                field.forms.first().save()
+            else:
+                field.delete()
+    return
+

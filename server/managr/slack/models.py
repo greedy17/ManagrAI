@@ -252,16 +252,13 @@ class OrgCustomSlackFormInstance(TimeStampModel):
             .order_by("order")
         )
         user_fields = []
-        logger.info(template_fields)
         # hack to maintain order
         for field in template_fields:
-            logger.info(field)
             f = SObjectField.objects.get(
                 Q(api_name=field[0])
                 & Q(Q(salesforce_object=field[1]) | Q(salesforce_object__isnull=True))
                 & (Q(is_public=True) | Q(salesforce_account=self.user.salesforce_account))
             )
-            logger.info(f)
             user_fields.append(f)
         if not template_fields:
             # user has not created form use all fields
