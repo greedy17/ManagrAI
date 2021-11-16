@@ -1212,6 +1212,6 @@ def remove_field(org_id, form_field):
                 field.forms.first().order = index
                 field.forms.first().save()
             else:
-                field.delete()
+                field.forms.first().delete()
     return
 
