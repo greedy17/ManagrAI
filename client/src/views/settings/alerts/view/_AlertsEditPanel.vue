@@ -8,7 +8,7 @@
             @click="selectedTab = 'TEMPLATE'"
             class="tab__header-items__item"
           >
-            General Info
+            Workflow Title
           </div>
           <div
             :class="{ 'tab__header-items__item--active': selectedTab == 'GROUPS' }"
@@ -22,14 +22,14 @@
             @click="selectedTab = 'CONFIG'"
             class="tab__header-items__item"
           >
-            Settings
+            Delivery
           </div>
           <div
             :class="{ 'tab__header-items__item--active': selectedTab == 'MESSAGE' }"
             @click="selectedTab = 'MESSAGE'"
             class="tab__header-items__item"
           >
-            Alert Message
+            Message
           </div>
         </div>
       </div>
@@ -48,7 +48,7 @@
           /> -->
           <!-- <h3>{{ alert.resourceType }}</h3> -->
           <div style="margin-top: 2rem">
-            <span>Edit Title: </span>
+            <span>Edit workflow title: </span>
             <FormField
               :id="`resource-title-${alert.id}`"
               :errors="templateTitleField.errors"
@@ -57,66 +57,62 @@
             />
           </div>
         </div>
-        <div v-if="selectedTab == 'GROUPS'" class="alerts-template-list__content-groups">
-          <div
-            style="margin-top: 1rem"
-            v-for="(group, index) in alert.groupsRef"
-            :key="index"
-            class="alerts-template-list__content-conditions__group"
-          >
-            <span v-if="group.groupOrder != 0">{{ group.groupCondition }}</span>
-            <div class="alerts-template-list__content-conditions__operand">
-              <div style="margin-left: 0.5rem; color: #beb5cc; display: flex; flex-direction: row">
-                <button class="row__button" @click="onShowOperandModal(index)">
-                  Add a new row
+        <div v-if="selectedTab == 'GROUPS'">
+          <div class="card-rows" v-for="(group, index) in alert.groupsRef" :key="index">
+            <div class="group-card">
+              <div class="group-card__title">Workflow conditions group {{ index + 1 }}</div>
+              <div>
+                <p
+                  @click="onDeleteOperand(operand.id, i, index)"
+                  class="row"
+                  :key="i"
+                  v-for="(operand, i) in group.operandsRef"
+                >
                   <img
-                    style="height: 1rem; margin-left: 0.15rem"
-                    src="@/assets/images/plusOne.png"
-                    alt=""
-                  />
-                </button>
-                <button class="row__button" @click="onShowGroupModal()">
-                  Add a Group
-                  <img
-                    style="height: 1rem; margin-left: 0.15rem"
-                    src="@/assets/images/plusOne.png"
-                    alt=""
-                  />
-                </button>
-              </div>
-              <ListContainer horizontal>
-                <template v-slot:list>
-                  <img
-                    style="margin-right: 0.5rem; margin-top: 0.25rem; height: 1rem"
+                    class="remove-color"
                     src="@/assets/images/remove.png"
+                    style="height: 1rem"
                     alt=""
                   />
-                  <ListItem
-                    @item-selected="onDeleteOperand(operand.id, i, index)"
-                    medium
-                    v-for="(operand, i) in group.operandsRef"
-                    :key="i"
-                    :item="`${
-                      operand.operandOrder != 0 ? operand.operandCondition : ''
-                    } ${getReadableOperandRow(operand)}`"
-                    :active="true"
-                  />
-                </template>
-              </ListContainer>
+                  <!-- <span style="margin-bottom: 1rem">
+                    {{ operand.operandOrder != 0 ? operand.operandCondition : '' }}</span
+                  > -->
+                  {{ 'Condition ' + (i + 1) + ': ' }}
+                  {{ getReadableOperandRow(operand) }}
+                </p>
+
+                <div
+                  style="display: flex; justify-content: center; width: 100%; margin-bottom: -1rem"
+                >
+                  <button class="condition-button" @click="onShowOperandModal(index)">
+                    Add condition
+                  </button>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; width: 100%">
+                  <div class="dropdown-container" tabindex="1">
+                    <div class="three-dots"></div>
+                    <div class="dropdown">
+                      <button class="add-button" @click="onShowGroupModal()">Add</button>
+                      <button
+                        class="revoke-button"
+                        @click.stop="onRemoveAlertGroup(group.id, index)"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <button
-              class="remove__button"
-              @click.stop="onRemoveAlertGroup(group.id, index)"
-              :disabled="index <= 0"
-              style="margin-left: 0.5rem"
-            >
-              Remove Group
-            </button>
           </div>
         </div>
         <div v-if="selectedTab == 'MESSAGE'" class="alerts-template-list__content-message">
-          <div style="margin-top: 1rem" class="alerts-template-list__content-message__form">
+          <div class="alerts-template-list__content-message__form">
             <div class="alerts-template-list__content-message__form-body">
+              <div style="margin-bottom: -1rem">
+                <h4>Edit your worflow message:</h4>
+              </div>
               <FormField :errors="messageTemplateForm.field.body.errors">
                 <template v-slot:input>
                   <quill-editor
@@ -166,31 +162,25 @@
           </div> -->
         </div>
         <div v-if="selectedTab == 'CONFIG'" class="alerts-template-list__content-settings">
-          <div style="margin-top: 1rem" class="alerts-template-list__content-settings__group">
-            <button style="margin-left: 1rem" class="row__button" @click="onShowSettingsModal">
-              Add a row
-              <img
-                style="height: 0.875rem; margin-left: 0.25rem"
-                src="@/assets/images/plusOne.png"
-                alt=""
-              />
-            </button>
-            <div class="config__column">
-              <ListContainer :key="index" v-for="(config, index) in alert.configsRef">
-                <template v-slot:list>
-                  <!-- <img
-                    style="margin-right: 0.5rem; margin-top: 0.25rem; height: 1rem"
-                    src="@/assets/images/remove.png"
-                    alt=""
-                  /> -->
-                  <ListItem
-                    @item-selected="onDeleteConfig(config.id, index)"
-                    large
-                    :item="getReadableConfig(config)"
-                    :active="true"
-                  />
-                </template>
-              </ListContainer>
+          <div class="card-rows">
+            <div class="group-card">
+              <div class="group-card__title">Delivery Options</div>
+              <p class="row" :key="index" v-for="(config, index) in alert.configsRef">
+                <img
+                  class="remove-color"
+                  @click="onDeleteConfig(config.id, index)"
+                  src="@/assets/images/remove.png"
+                  style="height: 1rem"
+                  alt=""
+                />
+                {{ 'Option ' + (index + 1) + ': ' }}
+                {{ getReadableConfig(config) }}
+              </p>
+              <div style="display: flex; justify-content: center; width: 100%">
+                <button class="condition-button" @click="onShowSettingsModal">
+                  Add delivery option
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -264,10 +254,10 @@ import {
   DATETIME,
 } from '@/services/salesforce/models'
 const TABS = [
-  { key: 'TEMPLATE', label: 'General Info' },
+  { key: 'TEMPLATE', label: 'Workflow Title' },
   { key: 'GROUPS', label: 'Conditions' },
-  { key: 'MESSAGE', label: 'Message Template' },
-  { key: 'CONFIG', label: 'Settings' },
+  { key: 'MESSAGE', label: 'Message' },
+  { key: 'CONFIG', label: 'Delivery Options' },
 ]
 export default {
   name: 'AlertsEditPanel',
@@ -668,6 +658,121 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/buttons';
 
+@keyframes bounce {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-6px);
+  }
+}
+.bouncy {
+  animation: bounce 0.2s infinite alternate;
+}
+.revoke-button {
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: $coral;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.add-button {
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: $dark-green;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.add-button:hover,
+.revoke-button:hover {
+  color: white;
+}
+.three-dots:after {
+  cursor: pointer;
+  color: white;
+  content: '\2026';
+  font-size: 2rem;
+  padding-left: 4rem;
+}
+.dropdown {
+  right: 10px;
+  border-radius: 0.25rem;
+  border: none;
+  background-color: $panther-gray;
+  outline: none;
+  opacity: 0;
+  z-index: -1;
+  max-height: 0;
+  transition: opacity 0.1s, z-index 0.1s, max-height 5s;
+  padding: 0.1rem 0.25rem;
+}
+
+.dropdown-container:focus {
+  outline: none;
+}
+
+.dropdown-container:focus .dropdown {
+  opacity: 1;
+  z-index: 100;
+  max-height: 100vh;
+  transition: opacity 0.2s, z-index 0.2s, max-height 0.2s;
+}
+.card-rows {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2rem;
+}
+.group-card {
+  border-radius: 0.75rem;
+  background-color: $panther;
+  padding: 1rem;
+  width: 80%;
+  margin-bottom: 2rem;
+  color: $white;
+  font-size: 0.85rem;
+  box-shadow: 3px 4px 14px black;
+  transition: all 0.2s;
+
+  &__title {
+    width: 100%;
+    height: 2rem;
+    text-align: center;
+    font-size: 1.05rem;
+    font-weight: bold;
+  }
+}
+
+.group-card:hover {
+  transform: scale(1.015);
+}
+.condition-button {
+  background-color: $dark-green;
+  color: white;
+  border-radius: 0.25rem;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem 0.75rem;
+  margin: 0.5rem;
+}
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  color: $white;
+  font-weight: bold;
+  cursor: pointer;
+}
+.remove-color {
+  filter: invert(47%) sepia(73%) saturate(969%) hue-rotate(319deg) brightness(103%) contrast(96%);
+  margin-right: 0.25rem;
+  cursor: pointer;
+}
 ::v-deep .ql-toolbar .ql-stroke {
   fill: none;
   stroke: $panther;
@@ -718,6 +823,10 @@ export default {
 }
 .filtered {
   filter: invert(66%) sepia(64%) saturate(3377%) hue-rotate(380deg) brightness(100%) contrast(105%);
+}
+.black-filter {
+  filter: invert(100%) contrast(100%);
+  height: 1.5rem;
 }
 .row__button {
   border: none;
