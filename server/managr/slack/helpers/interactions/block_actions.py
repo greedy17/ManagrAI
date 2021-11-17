@@ -1454,6 +1454,7 @@ def process_get_call_recording(payload, context):
     gong_auth = GongAuthAccount.objects.get(organization=user.organization)
     access_token = user.organization.slack_integration.access_token
     opp = Opportunity.objects.get(id=context.get("resource_id"))
+    call = GongCall.objects.filter(crm_id=opp.secondary_data["Id"]).first()
     type = context.get("type", None)
     timestamp = datetime.fromtimestamp(float(payload["message"]["ts"]))
     current = pytz.utc.localize(timestamp).astimezone(user_timezone).date()
@@ -1464,21 +1465,50 @@ def process_get_call_recording(payload, context):
         try:
             call_res = gong_auth.helper_class.check_for_current_call(curr_date_str)
             call_details = generate_call_block(call_res, opp.secondary_data["Id"])
-            blocks = [*call_details]
-        except InvalidRequest as e:
-            blocks.append(
-                block_builders.simple_section(
-                    "Sorry this call is not done processing, try again in a bit!"
+            if call_details:
+                blocks = [*call_details]
+            else:
+                if call:
+                    call_details = generate_call_block(call_res)
+                    blocks = [*call_details]
+                    blocks.append(
+                        block_builders.context_block(
+                            "Gong may still be processing this call, check back in a bit"
+                        )
+                    )
+                else:
+                    blocks = [
+                        block_builders.simple_section("No call associated with this opportunity")
+                    ]
+        except InvalidRequest:
+            if call:
+                call_res = call.helper_class.get_call_details(call.auth_account.access_token)
+                call_details = generate_call_block(call_res)
+                blocks = [*call_details]
+                blocks.append(
+                    block_builders.context_block(
+                        "Gong may still be processing this call, check back in a bit"
+                    )
                 )
-            )
+            else:
+                blocks = [
+                    block_builders.simple_section("No call associated with this opportunity*"),
+                    block_builders.context_block(
+                        "*Gong may still be processing this call, check back in a bit"
+                    ),
+                ]
     else:
-        call = GongCall.objects.filter(crm_id=opp.secondary_data["Id"]).first()
         if call:
             call_res = call.helper_class.get_call_details(call.auth_account.access_token)
             call_details = generate_call_block(call_res)
             blocks = [*call_details]
         else:
-            blocks.append(block_builders.simple_section("No call associated with this opportunity"))
+            blocks = [
+                block_builders.simple_section("No call associated with this opportunity*"),
+                block_builders.context_block(
+                    "*Gong may still be processing this call, check back in a bit"
+                ),
+            ]
     modal_data = {
         "trigger_id": trigger_id,
         "view": {

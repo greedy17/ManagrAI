@@ -252,10 +252,8 @@ class OrgCustomSlackFormInstance(TimeStampModel):
             .order_by("order")
         )
         user_fields = []
-        print(template_fields)
         # hack to maintain order
         for field in template_fields:
-            print(field)
             f = SObjectField.objects.get(
                 Q(api_name=field[0])
                 & Q(Q(salesforce_object=field[1]) | Q(salesforce_object__isnull=True))
@@ -300,7 +298,9 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         user_fields = self.get_user_fields()
         form_values = self.generate_form_values(data)
         form_blocks = []
+        logger.info(user_fields)
         for field in user_fields:
+            logger.info(field)
             val = form_values.get(field.api_name, None)
             if field.is_public:
                 # pass in user as a kwarg

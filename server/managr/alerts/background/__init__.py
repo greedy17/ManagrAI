@@ -246,7 +246,7 @@ def _process_send_alert(invocation, channel, config_id):
     access_token = template.user.organization.slack_integration.access_token
     text = template.title
     blocks = [
-        block_builders.header_block(f"Workflow {text} returned {len(alert_instances)} results"),
+        block_builders.header_block(f"{len(alert_instances)} results for workflow {text}"),
     ]
 
     for alert_instance in alert_page_instances.get("results", []):

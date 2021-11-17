@@ -318,7 +318,7 @@ export default {
         })
     },
     alertsCount(num) {
-      if (this.hasZoomChannel) {
+      if (this.zoomChannel) {
         return num + 1
       } else {
         return num

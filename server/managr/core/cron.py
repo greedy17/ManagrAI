@@ -130,16 +130,16 @@ def check_reminders(user_id):
                         workflows = check_workflows_count(user.id)
                         if workflows["status"] and workflows["workflow_count"] <= 2:
                             emit_process_send_workflow_reminder(
-                                user.id, workflows["workflow_count"]
+                                str(user.id), workflows["workflow_count"]
                             )
                 elif key == core_consts.MEETING_REMINDER_REP:
                     meetings = check_for_uncompleted_meetings(user.id)
                     logger.info(f"UNCOMPLETED MEETINGS FOR {user.email}: {meetings}")
                     if meetings["status"]:
-                        emit_process_send_meeting_reminder(user.id, meetings["not_completed"])
+                        emit_process_send_meeting_reminder(str(user.id), meetings["not_completed"])
                 elif key == core_consts.MEETING_REMINDER_MANAGER:
                     meetings = check_for_uncompleted_meetings(user.id, True)
                     if meetings["status"]:
-                        emit_process_send_manager_reminder(user.id, meetings["not_completed"])
+                        emit_process_send_manager_reminder(str(user.id), meetings["not_completed"])
 
     return
