@@ -97,6 +97,7 @@ def _send_slack_int_email(user):
 def _process_calendar_details(user_id):
     user = User.objects.get(id=user_id)
     events = user.nylas._get_calendar_data()
+
     
     processed_data = []
     for event in events:
@@ -105,13 +106,15 @@ def _process_calendar_details(user_id):
         data['participants'] = event.get('participants', None);
         data['times'] = event.get('when', None);
         processed_data.append(data)
-        return processed_data
+    return processed_data
 
     
 
 def _send_calendar_details(user_id):
     user = User.objects.get(id=user_id)
     processed_data = _process_calendar_details(user_id)
+    
+    # processed_data checks to see how many events exists 
     blocks = []
     for event in processed_data:
         event_block = block_sets.get_block_set(
@@ -119,7 +122,6 @@ def _send_calendar_details(user_id):
             {'event_data': event
             })
         blocks.append(event_block)
-    print(blocks)
     
     # Loop thru processed_data and create block for each one
 
