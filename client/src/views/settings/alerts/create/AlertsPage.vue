@@ -290,7 +290,7 @@
             Activate
           </button>
           <h4 style="margin-top: -0.5rem" v-else-if="!(hasZoomChannel && hasSlackIntegration)">
-            Connect Zoom and Slack in order to activate
+            Connect Zoom and Calendar in order to activate
           </h4>
           <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="recapChannel">Activated</p>
         </div>
