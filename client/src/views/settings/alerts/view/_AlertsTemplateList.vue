@@ -14,22 +14,28 @@
     </Modal>
 
     <div class="col">
-      <h2 v-if="editing && templates.list.length" class="titles">Run your Smart Alerts</h2>
-      <h2 v-if="!editing" class="titles">Edit your Smart Alert</h2>
-      <h2 v-if="!templates.list.length" class="titles">Smart Alerts</h2>
-      <div v-if="!templates.list.length">
-        <p class="center" style="font-weight: bold; color: #5d5e5e; margin-top: -0.5rem">
-          Automated workflows that help keep you on track
-        </p>
-        <h3 style="color: #5d5e5e; font-weight: bold; text-align: center; margin-top: 16vh">
-          No alerts found.
-          <router-link to="templates" class="alert-links">Templates</router-link>
-          are a great place to start, or you can
-          <router-link to="build-your-own" class="alert-links">build your own!</router-link>
+      <h2 v-if="!editing" class="titles">Edit your Workflow Automation</h2>
+      <h2 @click="logChannels" v-else class="titles">Saved Workflow Automations</h2>
+      <p class="center" style="font-weight: bold; color: #5d5e5e; margin-top: -0.5rem">
+        Edit, Run, and Schedule your saved Automations
+      </p>
+      <div v-if="!alertsCount(templates.list.length)">
+        <h3
+          class="bouncy"
+          style="
+            color: #5d5e5e;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 16vh;
+            font-size: 3rem;
+          "
+        >
+          0
         </h3>
+        <p style="font-weight: bold; color: #5d5e5e; text-align: center">Nothing here.. (o^^)o</p>
       </div>
     </div>
-    <template v-if="!templates.isLoading && templates.list.length">
+    <template v-if="!templates.isLoading && alertsCount(templates.list.length)">
       <div class="middle" v-if="!editing">
         <div class="edit__modal">
           <div>
@@ -70,12 +76,12 @@
               <img
                 @click="makeAlertCurrent(alert)"
                 src="@/assets/images/settings.png"
-                style="height: 2rem; cursor: pointer"
+                style="height: 1.5rem; cursor: pointer"
               />
 
               <img
                 src="@/assets/images/whitetrash.png"
-                style="height: 2rem; cursor: pointer"
+                style="height: 1.5rem; cursor: pointer"
                 @click="deleteClosed(alert.id)"
               />
             </div>
@@ -87,6 +93,73 @@
             </div>
           </template>
         </div>
+        <div v-if="zoomChannel" class="card__">
+          <h3 class="card__header">LOG MEETINGS</h3>
+          <div class="row">
+            <button @click="goToLogZoom" class="green_button">Change Channel</button>
+          </div>
+          <div>
+            <p>
+              Current channel:
+              <span style="font-weight: bold; color: #199e54">{{
+                currentZoomChannel.toUpperCase()
+              }}</span>
+            </p>
+          </div>
+        </div>
+        <div v-if="hasRecapChannel && userLevel !== 'REP'" class="card__">
+          <h3 class="card__header">MEETING RECAPS</h3>
+          <div class="row">
+            <button @click="goToRecap" class="green_button">Change Channel/Pipelines</button>
+          </div>
+          <div>
+            <p>
+              Current channel:
+              <span style="font-weight: bold; color: #199e54">{{
+                currentRecapChannel.toUpperCase()
+              }}</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- <div v-if="user.isAdmin">
+          <div class="card__ keep-activating" v-if="alertsCount(templates.list.length) == 1">
+            <h3 style="color: #fa646a" class="card__header">
+              Only {{ alertsCount(templates.list.length) }} workflow active
+            </h3>
+            <p style="margin-top: -1rem; font-size: 0.85rem">
+              We recommend at least 3 to get the most out of Managr
+            </p>
+            <span class="centered"
+              ><button @click="goToTemplates" class="bouncy activate-button">
+                Activate more workflows
+              </button></span
+            >
+          </div>
+          <div class="card__ keep-activating__" v-if="alertsCount(templates.list.length) == 2">
+            <h3 style="color: #ddad3c" class="card__header">
+              So close... {{ alertsCount(templates.list.length) }} workflows active
+            </h3>
+            <p style="margin-top: -1rem; font-size: 0.85rem">
+              Activate at least one more to get the most out of Managr
+            </p>
+            <span class="centered"
+              ><button @click="goToTemplates" class="bouncy activate-button">
+                Activate one more
+              </button></span
+            >
+          </div>
+          <div
+            :class="isHiding ? 'invisible' : 'card__ done-activating'"
+            v-if="alertsCount(templates.list.length) >= 3"
+          >
+            <h3 style="color: #199e54" class="card__header">Onboarding Complete</h3>
+            <p style="margin-top: -1rem; font-size: 0.95rem">We'll take it from here.</p>
+            <p style="margin-top: -0.75rem; font-size: 0.95rem">
+              Come back anytime to add more workflows
+            </p>
+          </div>
+        </div> -->
       </div>
 
       <!-- <ExpandablePanel :key="i" v-for="(alert, i) in templates.list">
@@ -167,6 +240,9 @@ import Modal from '@/components/InviteModal'
  *
  */
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import SlackOAuth, { SlackListResponse } from '@/services/slack'
+import { UserConfigForm } from '@/services/users/forms'
+import User from '@/services/users'
 
 import AlertTemplate, {
   AlertGroupForm,
@@ -188,17 +264,81 @@ export default {
   },
   data() {
     return {
+      userChannelOpts: new SlackListResponse(),
       templates: CollectionManager.create({ ModelClass: AlertTemplate }),
+      users: CollectionManager.create({ ModelClass: User }),
       deleteOpen: false,
       deleteId: '',
+      deleteTitle: '',
       currentAlert: {},
       editing: true,
+      isHiding: false,
+      userConfigForm: new UserConfigForm({}),
+      configName: '',
+      configArray: [],
+      currentZoomChannel: '',
+      currentRecapChannel: '',
     }
   },
   async created() {
     this.templates.refresh()
+    this.userConfigForm = new UserConfigForm({
+      activatedManagrConfigs: this.user.activatedManagrConfigs,
+    })
+    await this.listUserChannels()
+    if (this.hasRecapChannel) {
+      this.currentRecapChannel = this.userChannelOpts.channels.filter(
+        (channel) => channel.id === this.hasRecapChannel,
+      )[0].name
+    }
+    if (this.zoomChannel) {
+      this.currentZoomChannel = this.userChannelOpts.channels.filter(
+        (channel) => channel.id === this.zoomChannel,
+      )[0].name
+    }
   },
   methods: {
+    logChannels() {
+      console.log(this.userChannelOpts)
+    },
+    deletedTitle(id) {
+      let newList = []
+      newList = this.templates.list.filter((val) => val.id === id)
+      this.deleteTitle = newList[0].title
+    },
+    handleUpdate() {
+      this.loading = true
+      User.api
+        .update(this.user.id, this.userConfigForm.value)
+        .then((response) => {
+          this.$store.dispatch('updateUser', User.fromAPI(response.data))
+        })
+        .catch((e) => {
+          console.log(e)
+        })
+    },
+    alertsCount(num) {
+      if (this.zoomChannel) {
+        return num + 1
+      } else {
+        return num
+      }
+    },
+    logTemplates() {
+      console.log(this.templates.list)
+    },
+    goToLogZoom() {
+      this.$router.push({ name: 'LogZoom' })
+    },
+    goToRecap() {
+      this.$router.push({ name: 'ZoomRecap' })
+    },
+    hideCard() {
+      this.isHiding = true
+    },
+    goToTemplates() {
+      this.$router.push({ name: 'CreateNew' })
+    },
     makeAlertCurrent(val) {
       this.currentAlert = val
       this.editing = !this.editing
@@ -214,11 +354,31 @@ export default {
       this.editing = !this.editing
       this.$router.go()
     },
+    async listUserChannels(cursor = null) {
+      const res = await SlackOAuth.api.listUserChannels(cursor)
+      const results = new SlackListResponse({
+        channels: [...this.userChannelOpts.channels, ...res.channels],
+        responseMetadata: { nextCursor: res.nextCursor },
+      })
+      this.userChannelOpts = results
+    },
     async onDeleteTemplate(id) {
+      this.deletedTitle(id)
       try {
         await AlertTemplate.api.deleteAlertTemplate(id)
         await this.templates.refresh()
+        this.userConfigForm.field.activatedManagrConfigs.value =
+          this.userConfigForm.field.activatedManagrConfigs.value.filter(
+            (val) => val !== this.deleteTitle,
+          )
+        this.handleUpdate()
+
         this.deleteOpen = !this.deleteOpen
+        this.$Alert.alert({
+          message: 'Workflow removed',
+          type: 'success',
+          timeout: 2000,
+        })
       } catch {
         this.$Alert.alert({
           message: 'There was an error removing your alert',
@@ -277,6 +437,23 @@ export default {
       }
     },
   },
+  computed: {
+    user() {
+      return this.$store.state.user
+    },
+    hasSlack() {
+      return this.$store.state.user.slackAccount
+    },
+    hasRecapChannel() {
+      return this.$store.state.user.slackAccount.recapChannel
+    },
+    zoomChannel() {
+      return this.$store.state.user.slackAccount.zoomChannel
+    },
+    userLevel() {
+      return this.$store.state.user.userLevel
+    },
+  },
 }
 </script>
 
@@ -291,6 +468,17 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
+@keyframes bounce {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-6px);
+  }
+}
+.bouncy {
+  animation: bounce 0.2s infinite alternate;
+}
 ::v-deep .item-container__label {
   color: white;
   border: none;
@@ -304,6 +492,15 @@ export default {
   box-shadow: none;
   margin-bottom: 1rem;
 }
+.keep-activating {
+  outline: 2px solid $coral;
+}
+.keep-activating__ {
+  outline: 2px solid $panther-gold;
+}
+.done-activating {
+  outline: 2px solid $dark-green;
+}
 .titles {
   color: black;
   font-weight: bold;
@@ -312,6 +509,16 @@ export default {
 .alert-links {
   color: #199e54;
   border-bottom: 3px solid #19954e;
+}
+.activate-button {
+  background-color: $dark-green;
+  color: white;
+  border: none;
+  font-weight: bold;
+  font-size: 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.6rem;
+  cursor: pointer;
 }
 .test-button {
   background-color: white;
@@ -384,7 +591,7 @@ export default {
   @include header-subtitle();
 }
 .alerts-template-list {
-  margin-left: 7vw;
+  margin-left: 18vw;
   margin-top: 4rem;
   &__header {
     display: flex;
@@ -408,7 +615,8 @@ export default {
 .card__ {
   background-color: $panther;
   border: none;
-  width: 10rem;
+  min-width: 24vw;
+  max-width: 44vw;
   min-height: 25vh;
   margin-right: 1rem;
   margin-bottom: 2rem;
@@ -418,11 +626,6 @@ export default {
   align-items: center;
   box-shadow: 3px 4px 7px black;
   color: white;
-  @media only screen and (min-width: 768px) {
-    flex: 1 0 24%;
-    min-width: 21rem;
-    max-width: 30rem;
-  }
 
   &header {
     display: flex;
@@ -480,9 +683,8 @@ a {
 .green_button {
   color: white;
   background-color: $dark-green;
-  width: 8vw;
   border-radius: 0.25rem;
-  padding: 0.5rem;
+  padding: 0.5rem 1rem;
   font-weight: bold;
   font-size: 16px;
   border: none;
@@ -523,6 +725,9 @@ a {
   flex-direction: row;
   justify-content: center;
   align-items: center;
+}
+.invisible {
+  display: none;
 }
 // ::-webkit-scrollbar {
 //   background-color: $panther;

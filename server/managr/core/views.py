@@ -231,6 +231,7 @@ class UserViewSet(
         password = request.data.get("password", None)
         first_name = request.data.get("first_name", None)
         last_name = request.data.get("last_name", None)
+        timezone = request.data.get("timezone", None)
         pk = kwargs.get("pk", None)
         if not password or not magic_token or not pk:
             raise ValidationError({"detail": [("A magic token, id, and password are required")]})
@@ -251,10 +252,10 @@ class UserViewSet(
                 user.first_name = first_name
                 user.last_name = last_name
                 user.is_active = True
+                user.timezone = timezone
                 # expire old magic token and create a new one for other uses
                 user.regen_magic_token()
                 user.save()
-
                 login(request, user)
                 # create token if one does not exist
                 Token.objects.get_or_create(user=user)

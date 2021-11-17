@@ -89,6 +89,8 @@ class UserSerializer(serializers.ModelSerializer):
             "has_zoom_integration",
             "has_salesforce_integration",
             "timezone",
+            "activated_managr_configs",
+            "onboarding",
         )
 
     read_only_fields = (
@@ -118,6 +120,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             "password",
             "organization_name",
             "role",
+            "timezone",
         )
         extra_kwargs = {
             "first_name": {"required": True},

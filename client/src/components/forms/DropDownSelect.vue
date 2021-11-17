@@ -90,9 +90,7 @@
       </template>
 
       <slot name="dd-pagination" :classes="'dd-item'" :loadMore="onLoadMore">
-        <div v-if="hasNext" @click.stop class="dd-item">
-          +
-        </div>
+        <div v-if="hasNext" @click.stop class="dd-item">+</div>
       </slot>
     </div>
   </div>
@@ -300,12 +298,12 @@ export default {
         let objectItems = []
         for (let i = 0; i <= this.selectedItems.length; i++) {
           // using for loop and findIndex to maintain order
-          let index = this.itemList.findIndex(it => it[this.valueKey] == this.selectedItems[i])
+          let index = this.itemList.findIndex((it) => it[this.valueKey] == this.selectedItems[i])
           if (~index) {
             objectItems.push(this.itemList[index])
           } else if (this.itemsRef) {
             // check to see if it is part of the passed refs (as it may be serversie)
-            let index = this.itemsRef.findIndex(it => it[this.valueKey] == this.selectedItems[i])
+            let index = this.itemsRef.findIndex((it) => it[this.valueKey] == this.selectedItems[i])
             if (~index) {
               objectItems.push(this.itemsRef[index])
             }
@@ -313,8 +311,8 @@ export default {
         }
         return objectItems
       }
-      return this.itemList.find(i => i[this.valueKey] == this.selectedItems)
-        ? this.itemList.find(i => i[this.valueKey] == this.selectedItems)
+      return this.itemList.find((i) => i[this.valueKey] == this.selectedItems)
+        ? this.itemList.find((i) => i[this.valueKey] == this.selectedItems)
         : this.itemsRef[this.valueKey] == this.selectedItems
         ? this.itemsRef
         : null
@@ -328,7 +326,7 @@ export default {
        * @itemValue itemValue to check
        * will be used to style multiselect if selected and remove item if selected
        */
-      const index = this.selectedItems.findIndex(i => i == itemValue)
+      const index = this.selectedItems.findIndex((i) => i == itemValue)
       return index
     },
     updateValue(val) {
@@ -337,7 +335,7 @@ export default {
       }
       if (this.isLocalFilter) {
         this.isLoading = true
-        let results = this.items.filter(i => {
+        let results = this.items.filter((i) => {
           return i[this.displayKey].toLowerCase().includes(val.toLowerCase())
         })
 

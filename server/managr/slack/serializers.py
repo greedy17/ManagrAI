@@ -81,6 +81,19 @@ class OrgCustomSlackFormSerializer(serializers.ModelSerializer):
 
 
 class UserFrontEndSlackIntegrationSerializer(serializers.ModelSerializer):
+    recap_receivers_ref = serializers.SerializerMethodField("get_recap_receivers")
+
     class Meta:
         model = UserSlackIntegration
-        fields = ("slack_id", "datetime_created", "channel", "zoom_channel")
+        fields = (
+            "slack_id",
+            "datetime_created",
+            "channel",
+            "zoom_channel",
+            "recap_channel",
+            "recap_receivers",
+            "recap_receivers_ref",
+        )
+
+    def get_recap_receivers(self, instance):
+        return list(instance.recap_receivers)

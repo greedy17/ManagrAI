@@ -451,6 +451,7 @@ class AlertInstance(TimeStampModel):
         default=0,
         help_text="Keeps track of the number of times this alert has been triggered, this is used to inform the workspace and paginate slack views",
     )
+    completed = models.BooleanField(default=False)
 
     objects = AlertGroupQuerySet.as_manager()
 

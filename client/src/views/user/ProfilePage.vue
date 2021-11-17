@@ -74,7 +74,6 @@ export default {
   methods: {
     handleUpdate() {
       this.loading = true
-      console.log(this.profileForm.value)
       User.api
         .update(this.getUser.id, this.profileForm.value)
         .then((response) => {

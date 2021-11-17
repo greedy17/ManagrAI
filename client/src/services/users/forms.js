@@ -57,6 +57,10 @@ export class RepRegistrationForm extends Form {
   static dynamicFormValidators = {
     confirmPassword: [new MustMatchValidator({ matcher: 'password' })],
   }
+  static timezone = new FormField({
+    value: moment.tz.guess(),
+    validators: [new RequiredValidator()],
+  })
 
   toAPI() {
     const fullName = this.field.fullName.value
@@ -98,6 +102,14 @@ export class UserProfileForm extends Form {
     value: moment.tz.guess(),
     validators: [new RequiredValidator()],
   })
+}
+
+export class UserConfigForm extends Form {
+  static activatedManagrConfigs = new FormField({ validators: [new RequiredValidator()] })
+}
+
+export class UserOnboardingForm extends Form {
+  static onboarding = new FormField({ validators: [new RequiredValidator()] })
 }
 
 export { MustMatchValidator }

@@ -364,17 +364,16 @@ class SlackViewSet(viewsets.GenericViewSet,):
             )
             if not slack:
                 return Response(
-                    status=status.HTTP_400,
+                    status=status.HTTP_400_BAD_REQUEST,
                     data={"success": False, "message": "Couldn't find your Slack account"},
                 )
-        response_data = {}
+        slack.change_recap_channel(request.data.get("recap_channel"))
+
         for user in request.data.get("users"):
-            user_acc = UserSlackIntegration.objects.filter(slack_id=slack_id).first()
+            user_acc = User.objects.filter(id=user).first()
             if user_acc:
-                user_acc.recap_receivers.append(slack_id)
-                user_acc.save()
-        slack.recap_channel = request.data.get("recap_channel")
-        slack.save()
+                user_acc.slack_integration.recap_receivers.append(slack_id)
+                user_acc.slack_integration.save()
         return Response(status=status.HTTP_200_OK, data={"success": True})
 
     @action(

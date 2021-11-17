@@ -6,11 +6,20 @@ from django.utils import timezone
 from django.db.models import Q
 
 from managr.core import constants as core_consts
-from managr.core.models import NylasAuthAccount
+from managr.core.models import NylasAuthAccount, User
 from managr.core.nylas.auth import revoke_access_token
+from managr.core.background import (
+    check_for_time,
+    check_workflows_count,
+    emit_process_send_workflow_reminder,
+    emit_process_send_meeting_reminder,
+    emit_process_send_manager_reminder,
+    check_for_uncompleted_meetings,
+)
 
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.block_sets import get_block_set
+from managr.slack import constants as slack_const
 
 from managr.zoom.models import ZoomMeeting
 from managr.zoom.utils import score_meeting
@@ -40,7 +49,7 @@ def _convert_to_user_friendly_date(date):
     return date.strftime("%m/%d/%Y")
 
 
-def _has_alert(user, notification_class, notification_type, resource_id):
+def _has_workflow(user, notification_class, notification_type, resource_id):
     return Notification.objects.filter(
         user=user,
         notification_class=notification_class,
@@ -103,3 +112,34 @@ def revoke_tokens():
     ).values_list("access_token", flat=True)
     for token in nylas_tokens:
         revoke_access_token(token)
+
+
+@kronos.register("*/30 * * * *")
+def check_reminders(user_id):
+    user = User.objects.get(id=user_id)
+    for key in user.reminders.keys():
+        if user.reminders[key]:
+            check = check_for_time(
+                user.timezone,
+                core_consts.REMINDER_CONFIG[key]["HOUR"],
+                core_consts.REMINDER_CONFIG[key]["MINUTE"],
+            )
+            if check:
+                if key == core_consts.WORKFLOW_REMINDER:
+                    if datetime.datetime.today().weekday() == 4:
+                        workflows = check_workflows_count(user.id)
+                        if workflows["status"] and workflows["workflow_count"] <= 2:
+                            emit_process_send_workflow_reminder(
+                                str(user.id), workflows["workflow_count"]
+                            )
+                elif key == core_consts.MEETING_REMINDER_REP:
+                    meetings = check_for_uncompleted_meetings(user.id)
+                    logger.info(f"UNCOMPLETED MEETINGS FOR {user.email}: {meetings}")
+                    if meetings["status"]:
+                        emit_process_send_meeting_reminder(str(user.id), meetings["not_completed"])
+                elif key == core_consts.MEETING_REMINDER_MANAGER:
+                    meetings = check_for_uncompleted_meetings(user.id, True)
+                    if meetings["status"]:
+                        emit_process_send_manager_reminder(str(user.id), meetings["not_completed"])
+
+    return

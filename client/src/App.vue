@@ -74,7 +74,7 @@ body {
   margin: 0;
   min-height: 100vh;
   position: relative;
-  background-color: $soft-gray;
+  background-color: #f2fff8;
 }
 .grayscale {
   filter: invert(100%);

@@ -108,7 +108,7 @@ def apply_filter_and_search(viewset, request):
     return filter.filter_queryset(request, results, viewset)
 
 
-def custom_paginator(items, serializer=None, count=8, page=1):
+def custom_paginator(items, serializer=None, count=7, page=1):
     paginator = Paginator(items, count)
     page = paginator.page(page)
     results = page.object_list

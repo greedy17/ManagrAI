@@ -34,7 +34,7 @@ def queue_gong_sync(auth_account=None):
         for account in gong_accounts:
             emit_sync_gong_accounts(str(account.id))
             emit_sync_gong_calls(str(account.id))
-            logger.info("Started Gong call sync for {account.organization.name}")
+            logger.info(f"Started Gong call sync for {account.organization.name}")
             continue
     return
 

@@ -4,11 +4,11 @@
       <h2 style="font-weight: bold; text-align: center">
         <span style="color: black">
           Log
-          <span style="color: #5f8cff">Zoom Meetings</span>
+          <span style="color: #5f8cff"> Meetings</span>
         </span>
       </h2>
       <p style="text-align: center; color: black; font-weight: bold">
-        Create or select a slack channel to recieve your zoom meeting recaps
+        Create or select a slack #channel to recieve your meeting recaps
       </p>
     </div>
 
@@ -110,12 +110,12 @@
       </div>
       <div v-if="channelCreated || zoomChannel" style="margin-top: 2rem">
         <div v-if="!create">
-          <button class="green__button" @click="handleZoomUpdate(zoomChannel)">
+          <button class="green__button bouncy" @click="handleZoomUpdate(zoomChannel)">
             Activate Channel
           </button>
         </div>
         <div v-else>
-          <button class="green__button" @click="handleZoomUpdate(createdZoomChannel)">
+          <button class="green__button bouncy" @click="handleZoomUpdate(createdZoomChannel)">
             Activate Channel
           </button>
         </div>
@@ -168,9 +168,11 @@ export default {
       this.$router.push({ name: 'CreateNew' })
       this.$Alert.alert({
         type: 'success',
-        message: 'Alert saved successfully',
+        message: 'Workflow saved successfully',
         timeout: 2000,
       })
+      this.$router.push({ name: 'CreateNew' })
+      location.reload()
     },
     removeZoomChannel() {
       this.zoomChannel = ''
@@ -285,10 +287,6 @@ export default {
       return this.$store.state.user.slackRef.slackId
     },
   },
-  mounted() {
-    console.log(this.user)
-    console.log(this.$store.state.user.slackRef.slackId)
-  },
 }
 </script>
 
@@ -303,6 +301,17 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
+@keyframes bounce {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-6px);
+  }
+}
+.bouncy {
+  animation: bounce 0.2s infinite alternate;
+}
 .logZoomPage {
   height: 100vh;
   color: white;

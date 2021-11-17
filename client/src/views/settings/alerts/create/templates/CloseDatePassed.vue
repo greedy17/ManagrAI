@@ -6,79 +6,27 @@
           Close Date
           <span style="color: #fa646a">Passed</span>
         </span>
+        <p v-if="userLevel === 'REP'" style="color: #3c3940; font-size: 1.1rem">
+          Select users and a Slack #channel for this workflow
+        </p>
+        <p style="color: #3c3940; font-size: 1.1rem" v-else>
+          Select the day (or date), users, and a Slack #channel for this workflow
+        </p>
       </h2>
     </div>
 
-    <div
-      v-if="pageNumber === 0"
-      style="margin: auto; text-align: center; width: 30%; margin-bottom: 1rem; margin-top: -0.5rem"
-      title="50.00%"
-    >
-      <div
-        style="
-          text-align: left;
-          margin: 2px auto;
-          font-size: 0px;
-          line-height: 0px;
-          border: solid 1px #aaaaaa;
-          background: #0e572e;
-          overflow: hidden;
-          border-radius: 0.25rem;
-        "
-      >
-        <div
-          style="
-            font-size: 0px;
-            line-height: 0px;
-            height: 6px;
-            min-width: 0%;
-            max-width: 50%;
-            width: 50%;
-            background: #199e54;
-          "
-        ></div>
-      </div>
-    </div>
-
-    <div
-      v-if="pageNumber === 1"
-      style="margin: auto; text-align: center; width: 30%; margin-bottom: 1rem; margin-top: -0.5rem"
-      title="50.00%"
-    >
-      <div
-        style="
-          text-align: left;
-          margin: 2px auto;
-          font-size: 0px;
-          line-height: 0px;
-          border: solid 1px #aaaaaa;
-          background: #0e572e;
-          overflow: hidden;
-          border-radius: 0.25rem;
-        "
-      >
-        <div
-          style="
-            font-size: 0px;
-            line-height: 0px;
-            height: 6px;
-            min-width: 0%;
-            max-width: 100%;
-            width: 100%;
-            background: #199e54;
-          "
-        ></div>
-      </div>
-    </div>
-
-    <div v-if="pageNumber === 0" class="alert__column">
+    <div style="margin-top: 4rem" v-if="pageNumber === 0" class="alert__column">
       <template>
         <div
           class="forecast__collection"
           :key="i"
           v-for="(form, i) in alertTemplateForm.field.alertConfig.groups"
         >
-          <div class="delivery__row" :errors="form.field.recurrenceDay.errors">
+          <div
+            style="margin-top: 1rem"
+            class="delivery__row"
+            :errors="form.field.recurrenceDay.errors"
+          >
             <div style="margin-bottom: 0.5rem" class="row__">
               <label>Weekly</label>
               <ToggleCheckBox
@@ -146,8 +94,12 @@
             </p>
           </div>
 
-          <div class="delivery__row">
-            <span style="margin-bottom: 0.5rem">Select Pipelines</span>
+          <div
+            style="margin-top: 1rem; margin-left: 0.5rem"
+            v-if="user.isAdmin"
+            class="delivery__row"
+          >
+            <span style="margin-bottom: 0.5rem">Select Users</span>
 
             <FormField :errors="form.field.alertTargets.errors">
               <template v-slot:input>
@@ -186,118 +138,108 @@
             </div>
           </div>
 
-          <div class="delivery__row">
-            <!-- <p style="color: #beb5cc" v-if="form.field.recipientType.value == 'SLACK_CHANNEL'">
-              Please add @managr to your channel
-            </p> -->
-            <div class="row__">
-              <label>DM users</label>
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: flex-start;
+              padding: 0.5rem;
+              margin-top: 0.5rem;
+            "
+          >
+            <div v-if="!channelName" class="row__">
+              <label>Select #channel</label>
               <ToggleCheckBox
                 style="margin: 0.25rem"
-                @input="
-                  form.field.recipientType.value == 'USER_LEVEL'
-                    ? (form.field.recipientType.value = recipientTypeToggle(
-                        form.field.recipientType.value,
-                      ))
-                    : (form.field.recipientType.value = recipientTypeToggle('SLACK_CHANNEL'))
-                "
-                :value="form.field.recipientType.value !== 'USER_LEVEL'"
+                @input="changeCreate"
+                :value="create"
                 offColor="#199e54"
                 onColor="#199e54"
               />
-              <label>Send to #Channel</label>
+              <label>Create #channel</label>
             </div>
 
-            <div v-if="form.field.recipientType.value == 'SLACK_CHANNEL'">
-              <FormField :errors="form.field.recipients.errors">
+            <label v-else for="channel" style="font-weight: bold"
+              >Alert will send to
+              <span style="color: #199e54; font-size: 1.2rem">{{ channelName }}</span>
+              channel</label
+            >
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+              "
+              v-if="create"
+            >
+              <input
+                v-model="channelName"
+                class="search__input"
+                type="text"
+                name="channel"
+                id="channel"
+                @input="logNewName(channelName)"
+              />
+
+              <div v-if="!channelCreated" v style="margin-top: 1.25rem">
+                <button
+                  v-if="channelName"
+                  @click="createChannel(channelName)"
+                  class="purple__button"
+                >
+                  Create Channel
+                </button>
+                <button v-else class="disabled__button">Create Channel</button>
+              </div>
+            </div>
+
+            <div v-else>
+              <FormField>
                 <template v-slot:input>
                   <DropDownSearch
-                    :items.sync="reversedChannels"
+                    :items.sync="userChannelOpts.channels"
                     :itemsRef.sync="form.field._recipients.value"
                     v-model="form.field.recipients.value"
                     @input="form.field.recipients.validate()"
                     displayKey="name"
                     valueKey="id"
-                    nullDisplay="Search Channels"
-                    :hasNext="!!channelOpts.nextCursor"
-                    @load-more="listChannels(channelOpts.nextCursor)"
+                    nullDisplay="Channels"
+                    :hasNext="!!userChannelOpts.nextCursor"
+                    @load-more="listChannels(userChannelOpts.nextCursor)"
                     searchable
                     local
                   >
-                    <!-- <template v-slot:tn-dropdown-option="{ option }">
-                          <img
-                            v-if="option.isPrivate == true"
-                            class="card-img"
-                            style="width: 1rem; height: 1rem; margin-right: 0.2rem"
-                            src="@/assets/images/lockAsset.png"
-                          />
-                          {{ option['name'] }}
-                        </template> -->
+                    <template v-slot:tn-dropdown-option="{ option }">
+                      <img
+                        v-if="option.isPrivate == true"
+                        class="card-img"
+                        style="width: 1rem; height: 1rem; margin-right: 0.2rem"
+                        src="@/assets/images/lockAsset.png"
+                      />
+                      {{ option['name'] }}
+                    </template>
                   </DropDownSearch>
                 </template>
               </FormField>
+
               <p
+                v-if="form.field.recipients.value.length > 0"
                 @click="removeTarget"
-                :class="form.field.recipients.value.length > 0 ? 'selected__item' : 'visible'"
+                :class="form.field.recipients.value ? 'selected__item' : 'visible'"
               >
                 <img
                   src="@/assets/images/remove.png"
                   style="height: 1rem; margin-right: 0.25rem"
                   alt=""
                 />
-                {{ form.field.recipients.value.length ? form.field._recipients.value.name : '' }}
+                {{ form.field._recipients.value.name }}
               </p>
-            </div>
-
-            <div
-              v-if="form.field.recipientType.value == 'USER_LEVEL'"
-              :errors="form.field.recipients.errors"
-            >
-              <FormField :errors="form.field.recipients.errors">
-                <template v-slot:input>
-                  <DropDownSearch
-                    :items.sync="recipientOpts"
-                    :itemsRef.sync="form.field._recipients.value"
-                    v-model="form.field.recipients.value"
-                    @input="form.field.recipients.validate()"
-                    displayKey="fullName"
-                    valueKey="id"
-                    nullDisplay="Recipients"
-                    searchable
-                    multi
-                    medium
-                    :loading="users.loadingNextPage"
-                    :hasNext="!!users.pagination.hasNextPage"
-                    @load-more="onUsersNextPage"
-                    @search-term="onSearchUsers"
-                  />
-                </template>
-              </FormField>
-              <div class="items_height">
-                <p
-                  @click="removeItemFromRecipientArray(item)"
-                  :key="i"
-                  v-for="(item, i) in form.field.recipients.value"
-                  :class="form.field.recipients.value ? 'selected__item' : ''"
-                >
-                  <img
-                    src="@/assets/images/remove.png"
-                    style="height: 1rem; margin-right: 0.25rem"
-                    alt=""
-                  />
-                  {{ item.length ? item : '' }}
-                </p>
-              </div>
             </div>
           </div>
         </div>
       </template>
-    </div>
-
-    <div v-if="pageNumber === 1" class="alert__column">
-      <div class="collection">
-        <AlertSummary :form="alertTemplateForm" />
-      </div>
     </div>
 
     <div
@@ -312,39 +254,12 @@
     </div>
 
     <div class="bottom_locked">
-      <button
-        @click="goToTemplates"
-        v-if="pageNumber === 0"
-        style="margin-right: 0.5rem"
-        class="gold__button"
-      >
-        <img src="@/assets/images/back.png" alt="" />
-        Templates
-      </button>
-      <button @click="onPreviousPage" v-else style="margin-right: 0.5rem" class="gold__button">
-        Prev
-      </button>
-
-      <div v-if="pageNumber < 1">
-        <button
-          v-if="
-            !alertTemplateForm.field.alertConfig.groups
-              .map((fields) => fields.isValid)
-              .includes(false)
-          "
-          @click="onNextPage"
-          class="purple__button"
-        >
-          Next
-        </button>
-        <button v-else class="disabled__button">Next</button>
-      </div>
-
       <PulseLoadingSpinnerButton
-        v-else
         :loading="savingTemplate"
         :class="
-          !alertTemplateForm.isValid || savingTemplate ? 'disabled__button' : 'purple__button'
+          !alertTemplateForm.isValid || savingTemplate
+            ? 'disabled__button'
+            : 'purple__button bouncy'
         "
         text="Activate alert"
         @click.stop="onSave"
@@ -378,6 +293,7 @@ import DropDownSearch from '@/components/DropDownSearch'
 import ExpandablePanel from '@/components/ExpandablePanel'
 import Modal from '@/components/Modal'
 import SmartAlertTemplateBuilder from '@/views/settings/alerts/create/SmartAlertTemplateBuilder'
+import { UserConfigForm } from '@/services/users/forms'
 
 /**
  * Services
@@ -422,6 +338,11 @@ export default {
   data() {
     return {
       channelOpts: new SlackListResponse(),
+      userChannelOpts: new SlackListResponse(),
+      channelName: '',
+      newChannel: {},
+      channelCreated: false,
+      create: true,
       savingTemplate: false,
       listVisible: true,
       dropdownVisible: true,
@@ -435,6 +356,8 @@ export default {
       searchChannels: '',
       SOBJECTS_LIST,
       pageNumber: 0,
+      configName: '',
+      userConfigForm: new UserConfigForm({}),
       alertTemplateForm: new AlertTemplateForm(),
       selectedBindings: [],
       fields: CollectionManager.create({ ModelClass: SObjectField }),
@@ -474,10 +397,14 @@ export default {
   async created() {
     if (this.user.slackRef) {
       await this.listChannels()
+      await this.listUserChannels()
     }
     if (this.user.userLevel == 'MANAGER') {
       await this.users.refresh()
     }
+    this.userConfigForm = new UserConfigForm({
+      activatedManagrConfigs: this.user.activatedManagrConfigs,
+    })
   },
   watch: {
     selectedResourceType: {
@@ -496,6 +423,27 @@ export default {
     },
   },
   methods: {
+    repsPipeline() {
+      if (!this.user.isAdmin) {
+        this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
+        this.setPipelines({
+          fullName: 'MYSELF',
+          id: 'SELF',
+        })
+      }
+    },
+    handleUpdate() {
+      this.loading = true
+      console.log(this.userConfigForm.value)
+      User.api
+        .update(this.user.id, this.userConfigForm.value)
+        .then((response) => {
+          this.$store.dispatch('updateUser', User.fromAPI(response.data))
+        })
+        .catch((e) => {
+          console.log(e)
+        })
+    },
     changeCreate() {
       this.create = !this.create
       if (
@@ -513,6 +461,95 @@ export default {
         responseMetadata: { nextCursor: res.nextCursor },
       })
       this.userChannelOpts = results
+    },
+    async createChannel(name) {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
+      const res = await SlackOAuth.api.createChannel(name)
+      if (res.channel) {
+        this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = res.channel
+        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = res.channel.id
+        this.channelCreated = !this.channelCreated
+      } else {
+        console.log(res.error)
+        this.channelName = ''
+        if (res.error == 'name_taken') {
+          this.$Alert.alert({
+            message: 'Channel name already taken',
+            type: 'error',
+            timeout: 2000,
+          })
+        } else if (res.error == 'invalid_name_maxlength') {
+          this.$Alert.alert({
+            message: 'Channel name exceeds maximum length',
+            type: 'error',
+            timeout: 2000,
+          })
+        } else if (res.error == 'restricted_action') {
+          this.$Alert.alert({
+            message: 'A team preference is preventing you from creating channels',
+            type: 'error',
+            timeout: 2000,
+          })
+        } else if (res.error == 'invalid_name_specials') {
+          this.$Alert.alert({
+            message:
+              'The only special characters allowed are hyphens and underscores. Channel names must also begin with a letter ',
+            type: 'error',
+            timeout: 3000,
+          })
+        } else if (res.error == 'org_login_required') {
+          this.$Alert.alert({
+            message:
+              'The workspace is undergoing an enterprise migration and will not be available until migration is complete.',
+            type: 'error',
+            timeout: 2000,
+          })
+        } else if (res.error == 'ekm_access_denied') {
+          this.$Alert.alert({
+            message: 'Administrators have suspended the ability to post a message.',
+            type: 'error',
+            timeout: 2000,
+          })
+        } else if (res.error == 'too_many_convos_for_team') {
+          this.$Alert.alert({
+            message: 'The workspace has exceeded its limit of public and private channels.',
+            type: 'error',
+            timeout: 2000,
+          })
+        } else if (res.error == 'no_permission') {
+          this.$Alert.alert({
+            message:
+              'The workspace token used in this request does not have the permissions necessary to complete the request. Make sure your app is a member of the conversation its attempting to post a message to.',
+            type: 'error',
+            timeout: 4000,
+          })
+        } else if (res.error == 'team_access_not_granted') {
+          this.$Alert.alert({
+            message:
+              'You are not granted the specific workspace access required to complete this request.',
+            type: 'error',
+            timeout: 2000,
+          })
+        } else if (res.error == 'invalid_name') {
+          this.$Alert.alert({
+            message: 'Channel name invalid. Please try again',
+            type: 'error',
+            timeout: 2000,
+          })
+        } else {
+          this.$Alert.alert({
+            message: 'Something went wrong..Please try again',
+            type: 'error',
+            timeout: 2000,
+          })
+          console.log(res.error)
+        }
+      }
+    },
+    logNewName(str) {
+      let new_str = ''
+      new_str = str.replace(/\s+/g, '-').toLowerCase()
+      this.channelName = new_str
     },
     removeDay() {
       this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = ''
@@ -604,7 +641,14 @@ export default {
             ...this.alertTemplateForm.toAPI,
             user: this.$store.state.user.id,
           })
-          this.$router.push({ name: 'ListTemplates' })
+          this.userConfigForm.field.activatedManagrConfigs.value.push(res.title)
+          this.handleUpdate()
+          this.$router.push({ name: 'CreateNew' })
+          this.$Alert.alert({
+            message: 'Workflow saved succcessfully!',
+            timeout: 2000,
+            type: 'success',
+          })
         } catch (e) {
           this.$Alert.alert({
             message: 'An error occured saving template',
@@ -707,6 +751,9 @@ export default {
     },
   },
   computed: {
+    userLevel() {
+      return this.$store.state.user.userLevel
+    },
     userTargetsOpts() {
       if (this.user.userLevel == 'MANAGER') {
         return [
@@ -798,8 +845,10 @@ export default {
   beforeMount() {
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
     this.alertTemplateForm.field.title.value = 'Close Date Passed'
+    this.alertTemplateForm.field.isActive.value = true
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
       'Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has a passed close date of <strong>{ Opportunity.CloseDate }</strong>. Please update it!'
+    this.repsPipeline()
   },
 }
 </script>
@@ -814,6 +863,18 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
+
+@keyframes bounce {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-6px);
+  }
+}
+.bouncy {
+  animation: bounce 0.2s infinite alternate;
+}
 
 ::v-deep .input-content {
   width: 12vw;
@@ -852,7 +913,7 @@ export default {
   letter-spacing: 0.5px;
   color: #4d4e4c;
   height: 2.5rem;
-  background-color: #beb5cc;
+  background-color: white;
   border: 1px solid #5d5e5e;
   width: 70%;
   // padding: 0 0 0 1rem;
@@ -905,7 +966,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.4rem 1rem;
+  padding: 1.25rem 1rem;
   border-radius: 0.3rem;
   font-weight: bold;
   line-height: 1.14;
@@ -924,7 +985,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.4rem 1rem;
+  padding: 1.25rem 1rem;
   border-radius: 0.3rem;
   font-weight: bold;
   line-height: 1.14;
@@ -1045,8 +1106,7 @@ input {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: auto;
-  margin-bottom: 0.5rem;
+  margin-top: -3rem;
 }
 .delivery__row {
   display: flex;
@@ -1324,8 +1384,9 @@ textarea {
 }
 .selected__item {
   padding: 0.5rem 1.2rem;
-  background-color: $dark-green;
-  border: none;
+  background-color: transparent;
+  border: 3px solid white;
+  color: white;
   border-radius: 0.3rem;
   width: 100%;
   text-align: center;

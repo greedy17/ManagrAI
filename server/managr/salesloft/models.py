@@ -101,7 +101,8 @@ class SalesloftAuthAdapter:
         }
         query = urlencode({"include_paging_counts": True, "page": page})
         res = client.get(
-            f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.USERS}?{query}", headers=headers
+            f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.USERS}?{query}",
+            headers=headers,
         )
         return SalesloftAuthAdapter._handle_response(res)
 
@@ -512,9 +513,9 @@ class PeopleAdapter:
                 acc_id = acc.id
             data = {}
             data["people_id"] = people_data["id"]
-            data["first_name"] = people_data["first_name"]
-            data["last_name"] = people_data["last_name"]
-            data["full_name"] = people_data["display_name"]
+            data["first_name"] = people_data.get("first_name", None)
+            data["last_name"] = people_data.get("last_name", None)
+            data["full_name"] = people_data.get("display_name", None)
             data["email"] = people_data["email_address"]
             data["owner"] = slacc_id
             data["account"] = acc_id
@@ -537,9 +538,9 @@ class PeopleAdapter:
 
 class People(TimeStampModel):
     people_id = models.IntegerField()
-    first_name = models.CharField(max_length=20)
-    last_name = models.CharField(max_length=20)
-    full_name = models.CharField(max_length=50)
+    first_name = models.CharField(max_length=20, null=True)
+    last_name = models.CharField(max_length=20, null=True)
+    full_name = models.CharField(max_length=50, null=True)
     email = models.EmailField()
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
