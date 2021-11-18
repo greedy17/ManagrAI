@@ -374,48 +374,51 @@ def meeting_reminder_block_set(context):
     ]
     return blocks
 
+
 @block_set()
 def calendar_reminders_blockset(context):
-    data = context.get('event_data')
-    attend = data.get('participants')
+    data = context.get("event_data")
+    attend = data.get("participants")
     people = []
     for item in attend:
-        participants = item['name']
+        participants = item["name"]
         people.append(participants)
-    title = data.get('title')
-    unix_start_time = data.get('times').get('start_time')
-    unix_end_time = data.get('times').get('end_time')
-    
-    python_start_time = (datetime.utcfromtimestamp(unix_start_time).strftime('%H:%M'))
+    title = data.get("title")
+    unix_start_time = data.get("times").get("start_time")
+    unix_end_time = data.get("times").get("end_time")
+
+    python_start_time = datetime.utcfromtimestamp(unix_start_time).strftime("%H:%M")
     s = datetime.strptime(python_start_time, "%H:%M")
-    local_start_time = (s.strftime("%r"))
-    
-    python_end_time = (datetime.utcfromtimestamp(unix_end_time).strftime('%H:%M'))
+    local_start_time = s.strftime("%r")
+
+    python_end_time = datetime.utcfromtimestamp(unix_end_time).strftime("%H:%M")
     s = datetime.strptime(python_end_time, "%H:%M")
-    local_end_time = (s.strftime("%r"))
-   
-    blocks = [ 
+    local_end_time = s.strftime("%r")
+
+    blocks = [
         block_builders.section_with_button_block(
-        "Map to Opportunity",
-        action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
-        section_text= f"{title}\n Starts at {local_start_time}\n Attendees: " + str(len(people)),
-        button_value='none',
-        style="primary",
-    ),
+            "Review Attendees",
+            section_text=f"{title}\n Starts at {local_start_time}\n Attendees: " + str(len(people)),
+            button_value="none",
+            action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
+        ),
+        # block_builders.section_with_button_block(
+        #     "Map to Opportunity",
+        #     action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
+        #     section_text=f"{title}\n Starts at {local_start_time}\n Attendees: " + str(len(people)),
+        #     button_value="none",
+        #     style="primary",
+        # ),
         block_builders.section_with_button_block(
-        "Change Opportunity",
-        section_text=f"We mapped this meeting to: {title}",
-        button_value="none",
-        action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
-    ),
+            "Change Opportunity",
+            section_text=f"We mapped this meeting to: {title}",
+            button_value="none",
+            action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
+        ),
         {"type": "divider"},
     ]
 
-
     return blocks
-    
-    
-    
 
 
 @block_set()

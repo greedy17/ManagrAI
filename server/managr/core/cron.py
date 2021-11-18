@@ -118,7 +118,7 @@ def _send_calendar_details(user_id):
     # processed_data checks to see how many events exists 
     blocks = [
         block_builders.header_block(
-              _initial_interaction_message()
+             f"Upcoming Meetings For Today! :calendar:"
             # f"Good Morning! You have " + str(len(processed_data)) + " meetings today"
         )
           
