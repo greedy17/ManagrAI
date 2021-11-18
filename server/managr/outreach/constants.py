@@ -25,6 +25,7 @@ if settings.USE_OUTREACH:
         "stages.write",
         "users.read",
         "users.write",
+        "mailboxes.read",
     ]
     SCOPES = " ".join(ALL_SCOPES)
     CLIENT_ID = settings.OUTREACH_CLIENT_ID
@@ -68,5 +69,16 @@ if settings.USE_OUTREACH:
     OUTREACH_REQUEST_HEADERS = lambda token: {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
+    }
+
+    OUTREACH_SEQUENCE_STATE_BODY = lambda prospect_id, sequence_id, mailbox_id: {
+        "data": {
+            "type": "sequenceState",
+            "relationships": {
+                "prospect": {"data": {"type": "prospect", "id": prospect_id}},
+                "sequence": {"data": {"type": "sequence", "id": sequence_id}},
+                "mailbox": {"data": {"type": "mailbox", "id": mailbox_id}},
+            },
+        }
     }
 

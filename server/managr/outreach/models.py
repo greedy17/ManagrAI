@@ -40,6 +40,7 @@ class OutreachAccountAdapter:
         self.id = kwargs.get("id", None)
         self.outreach_id = kwargs.get("outreach_id", None)
         self.user = kwargs.get("user", None)
+        self.mailbox = kwargs.get("mailbox", None)
         self.access_token = kwargs.get("access_token", None)
         self.refresh_token = kwargs.get("refresh_token", None)
         self.token_generated_date = kwargs.get("token_generated_date", None)
@@ -62,9 +63,7 @@ class OutreachAccountAdapter:
         else:
             status_code = response.status_code
             error_data = response.json()
-            logger.info(f"{error_data}")
-            error_check = error_data.get("error_param", None)
-            error_param = error_check if error_check else error_data.get("errors")
+            error_param = error_data.get("title", None)
             kwargs = {
                 "status_code": status_code,
                 "error_param": error_param,
@@ -107,14 +106,23 @@ class OutreachAccountAdapter:
         return OutreachAccountAdapter._handle_response(res)
 
     @classmethod
+    def get_mailbox(cls, access_token, user_id):
+        headers = outreach_consts.OUTREACH_REQUEST_HEADERS(access_token)
+        query = urlencode({"filter[user][id]": user_id})
+        res = client.get(f"{outreach_consts.OUTREACH_BASE_URI}/mailboxes?{query}", headers=headers,)
+        return OutreachAccountAdapter._handle_response(res)
+
+    @classmethod
     def create_account(cls, code, managr_user_id):
         user = User.objects.get(id=managr_user_id)
         try:
             auth_data = cls.get_auth_token(code)
             user_data = cls.get_basic_user(auth_data["access_token"])
+            mailbox = cls.get_mailbox(auth_data["access_token"], user_data["meta"]["user"]["id"])
             data = {}
             data["outreach_id"] = user_data["meta"]["user"]["id"]
             data["user"] = user.id
+            data["mailbox"] = mailbox["data"][0]["id"]
             data["access_token"] = auth_data["access_token"]
             data["refresh_token"] = auth_data["refresh_token"]
             data["token_generated_date"] = datetime.now()
@@ -122,27 +130,13 @@ class OutreachAccountAdapter:
         except ObjectDoesNotExist:
             return None
 
-    def get_users(self, page=1):
+    def get_sequences(self):
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
         }
-        query = urlencode({"include_paging_counts": True, "page": page})
-        res = client.get(
-            f"{outreach_consts.OUTREACH_BASE_URI}/{outreach_consts.USERS}?{query}", headers=headers
-        )
-        return OutreachAccountAdapter._handle_response(res)
-
-    def get_sequences(self, page=1):
-        headers = {
-            "Authorization": f"Bearer {self.access_token}",
-            "Content-Type": "application/json",
-        }
-        query = urlencode({"include_paging_counts": True, "page": page})
-        res = client.get(
-            f"{outreach_consts.OUTREACH_BASE_URI}/{outreach_consts.CADENCES}?{query}",
-            headers=headers,
-        )
+        query = urlencode({"filter[owner][id]": self.outreach_id})
+        res = client.get(f"{outreach_consts.OUTREACH_BASE_URI}/sequences?{query}", headers=headers,)
         return OutreachAccountAdapter._handle_response(res)
 
     def get_accounts(self, page=1):
@@ -179,6 +173,7 @@ class OutreachAccount(TimeStampModel):
         null=True,
     )
     outreach_id = models.IntegerField()
+    mailbox = models.IntegerField(null=True)
     access_token = models.TextField(blank=True)
     refresh_token = models.TextField(blank=True)
     token_generated_date = models.DateTimeField(null=True, blank=True)
@@ -228,6 +223,10 @@ class SequenceAdapter:
         self.created_at = kwargs.get("created_at", None)
         self.updated_at = kwargs.get("updated_at", None)
 
+    @property
+    def as_dict(self):
+        return vars(self)
+
     @staticmethod
     def _handle_response(response, fn_name=None):
         if not hasattr(response, "status_code"):
@@ -256,23 +255,21 @@ class SequenceAdapter:
     @classmethod
     def create_sequence(cls, sequence_data):
         try:
-            owner = sequence_data["owner"]
-            slacc = OutreachAccount.objects.get(outreach_id=owner["id"])
+            owner = sequence_data["relationships"]["owner"]["data"]["id"]
+            outreach_account = OutreachAccount.objects.get(outreach_id=owner)
             data = {}
             data["sequence_id"] = sequence_data["id"]
-            data["name"] = sequence_data["name"]
-            data["owner"] = slacc.id
-            data["is_team_sequence"] = sequence_data["team_sequence"]
-            data["is_shared"] = sequence_data["shared"]
-            data["created_at"] = dateutil.parser.isoparse(sequence_data["created_at"])
-            data["updated_at"] = dateutil.parser.isoparse(sequence_data["updated_at"])
+            data["name"] = sequence_data["attributes"]["name"]
+            data["owner"] = outreach_account.id
+            data["created_at"] = dateutil.parser.isoparse(sequence_data["attributes"]["createdAt"])
+            data["updated_at"] = dateutil.parser.isoparse(sequence_data["attributes"]["updatedAt"])
             return cls(**data)
         except ObjectDoesNotExist:
             return None
 
     def add_membership(self, person_id, access_token):
         headers = outreach_consts.OUTREACH_REQUEST_HEADERS(access_token)
-        query = urlencode({"person_id": person_id, "sequence_id": self.sequence_id})
+        query = urlencode({"prospect_id": person_id, "sequence_id": self.sequence_id})
         res = client.post(
             f"{outreach_consts.OUTREACH_BASE_URI}/{outreach_consts.ADD_TO_CADENCE}?{query}",
             headers=headers,

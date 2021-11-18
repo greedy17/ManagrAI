@@ -5,32 +5,48 @@ import logging
 import json
 import dateutil.parser
 
-from ..models import Cadence, CadenceAdapter, People, PeopleAdapter, SLAccount, SLAccountAdapter, SalesloftAccountAdapter,SalesloftAccount
-from ..serializers import CadenceSerializer, PeopleSerializer, SLAccountSerializer, SalesloftAccountSerializer
+from ..models import (
+    Sequence,
+    SequenceAdapter,
+    Prospect,
+    ProspectAdapter,
+    Account,
+    AccountAdapter,
+    OutreachAccountAdapter,
+    OutreachAccount,
+)
+from ..serializers import (
+    SequenceSerializer,
+    ProspectSerializer,
+    AccountSerializer,
+    OutreachAccountSerializer,
+)
 
 logger = logging.getLogger("managr")
 
-def process_account(account, auth_account_id):
-    user_res = SalesloftAccountAdapter.create_account(account, auth_account_id)
+
+def process_account(account, outreach_account_id):
+    user_res = OutreachAccountAdapter.create_account(account, outreach_account_id)
     if user_res is None:
         return {"failed": True}
     else:
-        user_existing = SalesloftAccount.objects.filter(email=account.get("email")).first()
+        user_existing = OutreachAccount.objects.filter(email=account.get("email")).first()
         if user_existing:
-            user_serializer = SalesloftAccountSerializer(
+            user_serializer = OutreachAccountSerializer(
                 data=user_res.as_dict, instance=user_existing
             )
         else:
-            user_serializer = SalesloftAccountSerializer(data=user_res.as_dict)
+            user_serializer = OutreachAccountSerializer(data=user_res.as_dict)
         user_serializer.is_valid(raise_exception=True)
         user_serializer.save()
         return {"success": True}
 
-def sync_current_account_page(data, auth_account_id):
+
+def sync_all_sequences(data):
     failed = 0
     success = 0
     for resource in data:
-        res = process_account(resource, auth_account_id)
+        res = process_sequence(resource)
         if "failed" in res:
             failed += 1
         else:
@@ -38,28 +54,28 @@ def sync_current_account_page(data, auth_account_id):
     return {"success": success, "failed": failed}
 
 
-def process_cadence(cadence):
-    cadence_res = CadenceAdapter.create_cadence(cadence)
-    if cadence_res is None:
+def process_sequence(sequence):
+    sequence_res = SequenceAdapter.create_sequence(sequence)
+    if sequence_res is None:
         return {"failed": True}
     else:
-        cadence_existing = Cadence.objects.filter(cadence_id=cadence["id"]).first()
-        if cadence_existing:
-            cadence_serializer = CadenceSerializer(
-                data=cadence_res.as_dict, instance=cadence_existing
+        sequence_existing = Sequence.objects.filter(sequence_id=sequence["id"]).first()
+        if sequence_existing:
+            sequence_serializer = SequenceSerializer(
+                data=sequence_res.as_dict, instance=sequence_existing
             )
         else:
-            cadence_serializer = CadenceSerializer(data=cadence_res.as_dict)
-        cadence_serializer.is_valid(raise_exception=True)
-        cadence_serializer.save()
+            sequence_serializer = SequenceSerializer(data=sequence_res.as_dict)
+        sequence_serializer.is_valid(raise_exception=True)
+        sequence_serializer.save()
         return {"success": True}
 
 
-def sync_current_cadence_page(data):
+def sync_sequences(data):
     failed = 0
     success = 0
     for resource in data:
-        res = process_cadence(resource)
+        res = process_sequence(resource)
         if "failed" in res:
             failed += 1
         else:
@@ -68,17 +84,17 @@ def sync_current_cadence_page(data):
 
 
 def process_slaccount(slaccount):
-    account_res = SLAccountAdapter.create_slaccount(slaccount)
+    account_res = AccountAdapter.create_slaccount(slaccount)
     if account_res is None:
         return {"failed": True}
     else:
-        account_existing = SLAccount.objects.filter(account_id=slaccount["id"]).first()
+        account_existing = Account.objects.filter(account_id=slaccount["id"]).first()
         if account_existing:
-            account_serializer = SLAccountSerializer(
+            account_serializer = AccountSerializer(
                 data=account_res.as_dict, instance=account_existing
             )
         else:
-            account_serializer = SLAccountSerializer(data=account_res.as_dict)
+            account_serializer = AccountSerializer(data=account_res.as_dict)
         account_serializer.is_valid(raise_exception=True)
         account_serializer.save()
         return {"success": True}
@@ -97,15 +113,17 @@ def sync_current_slaccount_page(data):
 
 
 def process_person(people):
-    people_res = PeopleAdapter.create_people(people)
+    people_res = ProspectAdapter.create_people(people)
     if people_res is None:
         return {"failed": True}
     else:
-        people_existing = People.objects.filter(people_id=people["id"]).first()
+        people_existing = Prospect.objects.filter(people_id=people["id"]).first()
         if people_existing:
-            people_serializer = PeopleSerializer(data=people_res.as_dict, instance=people_existing)
+            people_serializer = ProspectSerializer(
+                data=people_res.as_dict, instance=people_existing
+            )
         else:
-            people_serializer = PeopleSerializer(data=people_res.as_dict)
+            people_serializer = ProspectSerializer(data=people_res.as_dict)
         people_serializer.is_valid(raise_exception=True)
         people_serializer.save()
     return {"success": True}

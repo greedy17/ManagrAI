@@ -14,48 +14,27 @@ from background_task import background
 from rest_framework.exceptions import ValidationError
 
 from ..exceptions import TokenExpired, InvalidRequest
-from ..models import (
-    SalesloftAuthAccount,
-    SalesloftAccount,
-    SalesloftAccountAdapter,
-    SLAccountAdapter,
-    SLAccount,
-    CadenceAdapter,
-    Cadence,
-    People,
-    PeopleAdapter,
-)
+from ..models import OutreachAccount
+from ..helpers.class_functions import sync_all_sequences
 from managr.organization.models import Contact
-
-from ..helpers.class_functions import (
-    process_cadence,
-    process_person,
-    process_slaccount,
-    sync_current_slaccount_page,
-    sync_current_person_page,
-    sync_current_cadence_page,
-    sync_current_account_page
-)
 
 logger = logging.getLogger("managr")
 
-def emit_sync_accounts(auth_account_id, verbose_name):
+
+def emit_sync_user_accounts(auth_account_id, verbose_name):
     return sync_accounts(auth_account_id, verbose_name=verbose_name)
 
-def emit_sync_cadences(auth_account_id, verbose_name):
-    return sync_cadences(auth_account_id, verbose_name=verbose_name)
+
+def emit_sync_sequences(auth_account_id):
+    return sync_sequences(auth_account_id)
 
 
-def emit_sync_slaccounts(auth_account_id, verbose_name):
+def emit_sync_accounts(auth_account_id, verbose_name):
     return sync_slaccounts(auth_account_id, verbose_name=verbose_name)
 
 
-def emit_sync_people(auth_account_id, verbose_name):
+def emit_sync_prospects(auth_account_id, verbose_name):
     return sync_people(auth_account_id, verbose_name=verbose_name)
-
-
-def emit_add_cadence_membership(people_id, cadence_id):
-    return add_cadence_membership(people_id, cadence_id)
 
 
 @background()
@@ -89,36 +68,31 @@ def sync_accounts(auth_account_id):
                 attempts += 1
     return logger.info(f"Synced {success}/{success+failed} users for {auth_account}")
 
-@background()
-def sync_cadences(auth_account_id):
-    auth_account = SalesloftAuthAccount.objects.get(id=auth_account_id)
+
+# @background()
+def sync_sequences(outreach_account_id):
+    outreach_account = OutreachAccount.objects.get(id=outreach_account_id)
     while True:
         attempts = 1
         try:
             success = 0
             failed = 0
-            res = auth_account.helper_class.get_cadences()
-            initial_page = sync_current_cadence_page(res["data"])
-            success += initial_page["success"]
-            failed += initial_page["failed"]
-            if res["metadata"]["paging"]["total_pages"] > 1:
-                count = 2
-                while count <= res["metadata"]["paging"]["total_pages"] and count <= 20:
-                    page_res = auth_account.helper_class.get_cadences(count)
-                    curr_page = sync_current_cadence_page(page_res["data"])
-                    success += curr_page["success"]
-                    failed += curr_page["failed"]
-                    count += 1
+            res = outreach_account.helper_class.get_sequences()
+            sync_count = sync_all_sequences(res["data"])
+            success += sync_count["success"]
+            failed += sync_count["failed"]
             break
         except TokenExpired:
             if attempts >= 5:
                 return logger.exception(
-                    f"Failed to sync salesloft cadences for account {auth_account.id}"
+                    f"Failed to sync outreach sequences for account {outreach_account.user.email}"
                 )
             else:
-                auth_account.regenerate_token()
+                outreach_account.regenerate_token()
                 attempts += 1
-    return logger.info(f"Synced {success}/{success+failed} cadences for {auth_account}")
+    return logger.info(
+        f"Synced {success}/{success+failed} outreach sequences for {outreach_account.user.email}"
+    )
 
 
 @background()

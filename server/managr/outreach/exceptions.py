@@ -33,7 +33,7 @@ class OutreachAPIException:
         if self.status_code == 422:
             logger.error(f"Outreach API error: {self.error}")
             raise InvalidRequest()
-        elif self.status_code == 403 or self.status_code == 401:
+        elif self.status_code == 401:
             raise TokenExpired()
         else:
             raise ValidationError({"detail": {"message": self.error,}})

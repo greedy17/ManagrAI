@@ -10,6 +10,7 @@ class OutreachAccountSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "user",
+            "mailbox",
             "outreach_id",
             "access_token",
             "refresh_token",
@@ -22,11 +23,9 @@ class SequenceSerializer(serializers.ModelSerializer):
         model = Sequence
         fields = (
             "id",
-            "cadence_id",
+            "sequence_id",
             "name",
             "owner",
-            "is_team_cadence",
-            "is_shared",
             "created_at",
             "updated_at",
         )
