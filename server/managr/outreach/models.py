@@ -330,16 +330,16 @@ class AccountAdapter:
         return vars(self)
 
     @classmethod
-    def create_slaccount(cls, account_data):
+    def create_account(cls, account_data):
         try:
-            owner = account_data["owner"]
-            slacc = OutreachAccount.objects.get(outreach_id=owner["id"])
+            owner = account_data["relationships"]["owner"]["data"]["id"]
+            outreach_account = OutreachAccount.objects.get(outreach_id=owner)
             data = {}
             data["account_id"] = account_data["id"]
-            data["name"] = account_data["name"]
-            data["owner"] = slacc.id
-            data["created_at"] = dateutil.parser.isoparse(account_data["created_at"])
-            data["updated_at"] = dateutil.parser.isoparse(account_data["updated_at"])
+            data["name"] = account_data["attributes"]["name"]
+            data["owner"] = outreach_account.id
+            data["created_at"] = dateutil.parser.isoparse(account_data["attributes"]["createdAt"])
+            data["updated_at"] = dateutil.parser.isoparse(account_data["attributes"]["updatedAt"])
             return cls(**data)
         except ObjectDoesNotExist:
             return None
@@ -415,25 +415,20 @@ class ProspectAdapter:
         return data
 
     @classmethod
-    def create_prospects(cls, prospects_data):
+    def create_prospects(cls, prospects_data, contact_id):
         try:
-            owner = prospects_data["owner"]
-            account = prospects_data["account"]
-            slacc_id = None
+            owner = prospects_data["relationships"]["owner"]
+            account = prospects_data["relationships"]["account"]
             acc_id = None
             if owner:
-                slacc = OutreachAccount.objects.get(outreach_id=owner["id"])
-                slacc_id = slacc.id
-            if account:
-                acc = Account.objects.get(account_id=account["id"])
-                acc_id = acc.id
+                owner_id = OutreachAccount.objects.get(outreach_id=owner["id"]).id
+
             data = {}
             data["prospects_id"] = prospects_data["id"]
-            data["first_name"] = prospects_data["first_name"]
-            data["last_name"] = prospects_data["last_name"]
-            data["full_name"] = prospects_data["display_name"]
-            data["email"] = prospects_data["email_address"]
-            data["owner"] = slacc_id
+            data["full_name"] = prospects_data["attributes"]["name"]
+            data["email"] = prospects_data["email_"]
+            data["owner"] = owner_id
+            data["contact_id"] = contact_id
             data["account"] = acc_id
             data["created_at"] = dateutil.parser.isoparse(prospects_data["created_at"])
             data["updated_at"] = dateutil.parser.isoparse(prospects_data["updated_at"])
@@ -456,6 +451,7 @@ class Prospect(TimeStampModel):
     prospects_id = models.IntegerField()
     full_name = models.CharField(max_length=50)
     email = models.EmailField()
+    contact_id = models.CharField()
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
     account = models.ForeignKey(
