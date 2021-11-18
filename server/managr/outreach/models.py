@@ -451,7 +451,7 @@ class Prospect(TimeStampModel):
     prospects_id = models.IntegerField()
     full_name = models.CharField(max_length=50)
     email = models.EmailField()
-    contact_id = models.CharField()
+    contact_id = models.CharField(max_length=100)
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
     account = models.ForeignKey(
