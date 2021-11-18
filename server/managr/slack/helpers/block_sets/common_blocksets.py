@@ -382,7 +382,6 @@ def calendar_reminders_blockset(context):
     for item in attend:
         participants = item['name']
         people.append(participants)
-        
     title = data.get('title')
     unix_start_time = data.get('times').get('start_time')
     unix_end_time = data.get('times').get('end_time')
@@ -394,6 +393,9 @@ def calendar_reminders_blockset(context):
     python_end_time = (datetime.utcfromtimestamp(unix_end_time).strftime('%H:%M'))
     s = datetime.strptime(python_end_time, "%H:%M")
     local_end_time = (s.strftime("%r"))
+    print(people)
+
+    
    
     return block_builders.simple_section(
             f"You have a meeting called {title} between {local_start_time} and {local_end_time} with {people}",

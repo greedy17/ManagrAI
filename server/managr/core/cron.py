@@ -116,21 +116,26 @@ def _send_calendar_details(user_id):
     
     # processed_data checks to see how many events exists 
     blocks = []
+    blocks = [
+        block_builders.header_block(
+            f"Good Morning! You have " + str(len(processed_data)) + " meetings today"
+        )
+    ]
+    
     for event in processed_data:
         event_block = block_sets.get_block_set(
             'calendar_reminders_blockset', 
             {'event_data': event
             })
         blocks.append(event_block)
-    
     # Loop thru processed_data and create block for each one
-
+          
     try:
        slack_requests.send_channel_message(
           user.slack_integration.channel,
           user.organization.slack_integration.access_token,
           text="Nylas Calendar: Meetings for Today",
-          block_set=blocks,
+          block_set= blocks,
     )
     except Exception as e:
      logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
