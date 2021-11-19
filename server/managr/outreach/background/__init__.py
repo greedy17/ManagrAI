@@ -21,23 +21,19 @@ from managr.organization.models import Contact
 logger = logging.getLogger("managr")
 
 
-def emit_sync_user_accounts(outreach_account_id, verbose_name):
-    return sync_user_accounts(outreach_account_id, verbose_name=verbose_name)
+def emit_sync_sequences(outreach_account_id, verbose_name):
+    return sync_sequences(outreach_account_id, verbose_name=verbose_name)
 
 
-def emit_sync_sequences(outreach_account_id):
-    return sync_sequences(outreach_account_id)
+def emit_sync_accounts(outreach_account_id, verbose_name):
+    return sync_accounts(outreach_account_id, verbose_name=verbose_name)
 
 
-def emit_sync_accounts(outreach_account_id):
-    return sync_accounts(outreach_account_id)
+def emit_sync_prospects(outreach_account_id, verbose_name):
+    return sync_prospects(outreach_account_id, verbose_name=verbose_name)
 
 
-def emit_sync_prospects(outreach_account_id):
-    return sync_prospects(outreach_account_id)
-
-
-# @background()
+@background()
 def sync_sequences(outreach_account_id):
     outreach_account = OutreachAccount.objects.get(id=outreach_account_id)
     while True:
@@ -46,6 +42,7 @@ def sync_sequences(outreach_account_id):
             success = 0
             failed = 0
             res = outreach_account.helper_class.get_sequences()
+            logger.info(res)
             sync_count = sync_all_sequences(res["data"])
             success += sync_count["success"]
             failed += sync_count["failed"]
@@ -63,7 +60,7 @@ def sync_sequences(outreach_account_id):
     )
 
 
-# @background()
+@background()
 def sync_accounts(outreach_account_id):
     outreach_account = OutreachAccount.objects.get(id=outreach_account_id)
     while True:
@@ -89,7 +86,7 @@ def sync_accounts(outreach_account_id):
     )
 
 
-# @background()
+@background()
 def sync_prospects(outreach_account_id):
     outreach_account = OutreachAccount.objects.get(id=outreach_account_id)
     while True:

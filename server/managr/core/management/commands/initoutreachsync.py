@@ -1,7 +1,4 @@
-from django.utils import timezone
-
-from django.core.management.base import BaseCommand, CommandError
-from managr.salesforce.models import SalesforceAuthAccount
+from django.core.management.base import BaseCommand
 from managr.core.models import User
 from managr.outreach.cron import queue_outreach_sync
 
@@ -16,14 +13,14 @@ class Command(BaseCommand):
         if options["users"]:
             for t in options["users"]:
                 user = User.objects.filter(email=t).first()
-                if not hasattr(user, "salesloft_account"):
+                if not hasattr(user, "outreach_account"):
                     self.stdout.write(
                         self.style.ERROR(
                             "User does not have an outreach account {}".format(user.email,)
                         )
                     )
-                auth_id = str(user.salesloft_account.auth_account.id)
-                queue_outreach_sync(auth_id)
+                outreach_id = str(user.outreach_account.id)
+                queue_outreach_sync(outreach_id)
                 self.stdout.write(
                     self.style.SUCCESS(
                         "Successfully initiated the sync for the user {}".format(user.email,)
