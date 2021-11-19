@@ -145,7 +145,9 @@ class OutreachAccountAdapter:
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
         }
-        query = urlencode({"filter[owner][id]": self.outreach_id, "page[limit]": 250})
+        query = urlencode(
+            {"filter[owner][id]": self.outreach_id, "page[limit]": 250, "sort": "-updatedAt"}
+        )
         res = client.get(f"{outreach_consts.OUTREACH_BASE_URI}/accounts?{query}", headers=headers,)
         return OutreachAccountAdapter._handle_response(res)
 

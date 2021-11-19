@@ -21,8 +21,9 @@ def queue_outreach_sync(account_id=None):
     else:
         outreach_accounts = OutreachAccount.objects.all()
         for account in outreach_accounts:
-            print(account)
-            sync_helper(account.id)
+            emit_sync_accounts(str(account.id))
+            emit_sync_prospects(str(account.id))
+            emit_sync_sequences(str(account.id))
             logger.info(f"Started outreach sync for {account.user.email}")
             continue
     return
@@ -33,17 +34,16 @@ def sync_helper(auth_id):
     outreach_account = OutreachAccount.objects.get(id=auth_id)
     v_name = uuid.uuid4()
     for step in sync_steps:
-        print(step)
         attempts = 1
-        sync_step = step(str(outreach_account.id), f"{step.__name__}_{v_name}")
-        while True:
-            if attempts >= 20:
-                break
-            try:
-                task = CompletedTask.objects.filter(verbose_name=f"{step.__name__}_{v_name}")
-                if task:
-                    break
-            except Exception:
-                attempts += 1
-                continue
+        step(str(outreach_account.id))
+        # while True:
+        #     if attempts >= 20:
+        #         break
+        #     try:
+        #         task = CompletedTask.objects.filter(verbose_name=f"{step.__name__}_{v_name}")
+        #         if task:
+        #             break
+        #     except Exception:
+        #         attempts += 1
+        #         continue
     return
