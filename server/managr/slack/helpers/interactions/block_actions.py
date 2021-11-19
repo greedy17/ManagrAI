@@ -1236,12 +1236,20 @@ def process_paginate_alerts(payload, context):
         return
     alert_template = alert_instance.template
     alert_text = alert_template.title
-    blocks = []
+    blocks = [
+        block_builders.header_block(f"{alert_text}"),
+    ]
     alert_instances = custom_paginator(alert_instances, page=int(context.get("new_page", 0)))
     for alert_instance in alert_instances.get("results", []):
         blocks = [
             *blocks,
-            *get_block_set("alert_instance", {"instance_id": str(alert_instance.id)}),
+            *get_block_set(
+                "alert_instance",
+                {
+                    "instance_id": str(alert_instance.id),
+                    "current_page": int(context.get("new_page", 0)),
+                },
+            ),
         ]
         alert_instance.rendered_text = alert_instance.render_text()
         alert_instance.save()
@@ -1442,33 +1450,65 @@ def process_get_call_recording(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     user = User.objects.get(id=context.get("u"))
     user_tz = datetime.now(pytz.timezone(user.timezone)).strftime("%z")
+    user_timezone = pytz.timezone(user.timezone)
     gong_auth = GongAuthAccount.objects.get(organization=user.organization)
     access_token = user.organization.slack_integration.access_token
     opp = Opportunity.objects.get(id=context.get("resource_id"))
+    call = GongCall.objects.filter(crm_id=opp.secondary_data["Id"]).first()
     type = context.get("type", None)
     timestamp = datetime.fromtimestamp(float(payload["message"]["ts"]))
+    current = pytz.utc.localize(timestamp).astimezone(user_timezone).date()
     blocks = []
-    if type == "recap" and timestamp >= (datetime.now() - timedelta(hours=24)):
+    if type == "recap" and datetime.now().date() == current:
         curr_date = date.today()
         curr_date_str = curr_date.isoformat() + "T01:00:00" + f"{user_tz[:3]}:{user_tz[3:]}"
         try:
             call_res = gong_auth.helper_class.check_for_current_call(curr_date_str)
             call_details = generate_call_block(call_res, opp.secondary_data["Id"])
-            blocks = [*call_details]
-        except InvalidRequest as e:
-            blocks.append(
-                block_builders.simple_section(
-                    "Sorry this call is not done processing, try again in a bit!"
+            if call_details:
+                blocks = [*call_details]
+            else:
+                if call:
+                    call_details = generate_call_block(call_res)
+                    blocks = [*call_details]
+                    blocks.append(
+                        block_builders.context_block(
+                            "Gong may still be processing this call, check back in a bit"
+                        )
+                    )
+                else:
+                    blocks = [
+                        block_builders.simple_section("No call associated with this opportunity")
+                    ]
+        except InvalidRequest:
+            if call:
+                call_res = call.helper_class.get_call_details(call.auth_account.access_token)
+                call_details = generate_call_block(call_res)
+                blocks = [*call_details]
+                blocks.append(
+                    block_builders.context_block(
+                        "Gong may still be processing this call, check back in a bit"
+                    )
                 )
-            )
+            else:
+                blocks = [
+                    block_builders.simple_section("No call associated with this opportunity*"),
+                    block_builders.context_block(
+                        "*Gong may still be processing this call, check back in a bit"
+                    ),
+                ]
     else:
-        call = GongCall.objects.filter(crm_id=opp.secondary_data["Id"]).first()
         if call:
             call_res = call.helper_class.get_call_details(call.auth_account.access_token)
             call_details = generate_call_block(call_res)
             blocks = [*call_details]
         else:
-            blocks.append(block_builders.simple_section("No call associated with this opportunity"))
+            blocks = [
+                block_builders.simple_section("No call associated with this opportunity*"),
+                block_builders.context_block(
+                    "*Gong may still be processing this call, check back in a bit"
+                ),
+            ]
     modal_data = {
         "trigger_id": trigger_id,
         "view": {
@@ -1510,35 +1550,82 @@ def process_call_error(payload, context):
 def process_mark_complete(payload, context):
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
-    action = payload.get("actions")[0]
-    updated_blocks = process_done_alert(action["block_id"], payload.get("message").get("blocks"))
-    try:
-        res = slack_requests.update_channel_message(
+    instance = AlertInstance.objects.get(id=context.get("instance_id"))
+    instance.completed = True
+    instance.save()
+    alert_instances = AlertInstance.objects.filter(
+        invocation=instance.invocation,
+        channel=payload["channel"]["id"],
+        config_id=instance.config_id,
+    ).filter(completed=False)
+    alert_instance = alert_instances.first()
+    if not alert_instance:
+        blocks = [
+            block_builders.header_block(f"{instance.template.title}"),
+            block_builders.simple_section("You're all caught up with these workflows! Great job!"),
+        ]
+        slack_requests.update_channel_message(
             payload["channel"]["id"],
             payload["message"]["ts"],
             access_token,
-            block_set=updated_blocks,
+            text="Error",
+            block_set=blocks,
         )
-    except Exception as e:
-        return logger.exception(f"Mark as Complete error ---- {e}")
+        return
+    alert_template = alert_instance.template
+    alert_text = alert_template.title
+    blocks = [
+        block_builders.header_block(f"{alert_text}"),
+    ]
+    alert_instances = custom_paginator(alert_instances, page=int(context.get("page")))
+    for alert_instance in alert_instances.get("results", []):
+        blocks = [
+            *blocks,
+            *get_block_set(
+                "alert_instance",
+                {"instance_id": str(alert_instance.id), "current_page": int(context.get("page")),},
+            ),
+        ]
+        alert_instance.rendered_text = alert_instance.render_text()
+        alert_instance.save()
+    if len(blocks):
+        blocks = [
+            *blocks,
+            *custom_paginator_block(
+                alert_instances, instance.invocation, payload["channel"]["id"], instance.config_id
+            ),
+        ]
+
+    res = slack_requests.update_channel_message(
+        payload["channel"]["id"],
+        payload["message"]["ts"],
+        access_token,
+        text=alert_text,
+        block_set=blocks,
+    )
     return
 
 
 @processor()
 def process_send_recap_modal(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    user = User.objects.get(id=context.get("u"))
     trigger_id = payload["trigger_id"]
-    workflow = MeetingWorkflow.objects.get(id=context.get("workflow_id"))
-    meeting = workflow.meeting
-    organization = meeting.zoom_account.user.organization
-    access_token = organization.slack_integration.access_token
+    type = context.get("type")
+    if type == "meeting":
+        workflow = MeetingWorkflow.objects.get(id=context.get("workflow_id"))
+        params = {"u": context.get("u"), "workflow_id": workflow.id}
+    else:
+        params = {"u": context.get("u"), "form_id": context.get("form_id")}
+
+    access_token = user.organization.slack_integration.access_token
     data = {
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
             "callback_id": slack_const.PROCESS_SEND_RECAPS,
             "title": {"type": "plain_text", "text": "Send Recaps"},
-            "blocks": get_block_set("send_recap_block_set", {"u": context.get("u")}),
+            "blocks": get_block_set("send_recap_block_set", params),
             "submit": {"type": "plain_text", "text": "Send"},
             "private_metadata": json.dumps(context),
         },
@@ -1559,7 +1646,7 @@ def process_send_recap_modal(payload, context):
         )
     except InvalidAccessToken as e:
         return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.user.id)} email {workflow.user.email} {e}"
+            f"Failed To Generate Slack Workflow Interaction for user with workflow {str(user.id)} email {user.email} {e}"
         )
 
 

@@ -57,6 +57,10 @@ export class RepRegistrationForm extends Form {
   static dynamicFormValidators = {
     confirmPassword: [new MustMatchValidator({ matcher: 'password' })],
   }
+  static timezone = new FormField({
+    value: moment.tz.guess(),
+    validators: [new RequiredValidator()],
+  })
 
   toAPI() {
     const fullName = this.field.fullName.value

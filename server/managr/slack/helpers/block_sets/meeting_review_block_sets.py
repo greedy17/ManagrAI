@@ -33,14 +33,16 @@ from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 logger = logging.getLogger("managr")
 
 
-def _initial_interaction_message(resource_name=None, resource_type=None, missing_attendees=False):
+def _initial_interaction_message(
+    name, resource_name=None, resource_type=None, missing_attendees=False
+):
     if not resource_type:
-        return "Your meeting just ended :calendar:"
+        return f"Hey {name}, your meeting just ended!"
 
     # replace opp, review disregard
     if missing_attendees:
-        return "Meeting mapped successfully:dart: Some attendees have missing info:exclamation:"
-    return f"Meeting mapped successfully:dart: And contacts look good :+1:"
+        return f"Hey {name}, your meeting just ended! Missing attendee info:exclamation:"
+    return f"Hey {name}, your meeting just ended and contacts look good :+1:"
 
 
 def generate_edit_contact_form(field, id, value, optional=True):
@@ -355,27 +357,45 @@ def initial_meeting_interaction_block_set(context):
 
     if workflow.resource_type:
         title_section_text = (
-            _initial_interaction_message(resource.name, workflow.resource_type)
+            _initial_interaction_message(
+                workflow.user.first_name, resource.name, workflow.resource_type, False
+            )
             if contact_check
-            else _initial_interaction_message(resource.name, workflow.resource_type, True)
+            else _initial_interaction_message(
+                workflow.user.first_name, resource.name, workflow.resource_type, True
+            )
         )
-        title_section_color = "primary" if contact_check else "danger"
-
-        blocks = [
-            block_builders.section_with_button_block(
+        if contact_check:
+            attendees_button = block_builders.section_with_button_block(
                 "Review Attendees",
                 str(workflow.id),
                 title_section_text,
                 action_id=action_with_params(
                     slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,]
                 ),
-                style=title_section_color,
-            ),
+            )
+        else:
+            attendees_button = block_builders.section_with_button_block(
+                "Review Attendees",
+                str(workflow.id),
+                title_section_text,
+                action_id=action_with_params(
+                    slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,]
+                ),
+                style="danger",
+            )
+        change_opp_button = (
+            "Change Opportunity"
+            if workflow.resource_type == "Opportunity"
+            else "Map to Opportunity"
+        )
+        blocks = [
+            attendees_button,
             {"type": "divider"},
             block_builders.section_with_button_block(
-                "Change Opportunity",
+                change_opp_button,
                 str(workflow.id),
-                f"Meeting was mapped to: *{workflow.resource.name}*",
+                f":calendar: Meeting {meeting.topic} was mapped to: _{workflow.resource_type}_ *{workflow.resource.name}*",
                 action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
             ),
         ]
@@ -384,13 +404,13 @@ def initial_meeting_interaction_block_set(context):
             block_builders.section_with_button_block(
                 "Map to Opportunity",
                 str(workflow.id),
-                _initial_interaction_message(),
+                _initial_interaction_message(workflow.user.first_name),
                 action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
                 style="primary",
             ),
             {"type": "divider"},
             block_builders.section_with_accessory_block(
-                f"*{meeting.topic}*\n{formatted_start} - {formatted_end}\n Attendees: {meeting.participants_count}",
+                f":calendar: *{meeting.topic}*\n{formatted_start} - {formatted_end}\n Attendees: {meeting.participants_count}",
                 block_builders.simple_image_block(
                     "https://managr-images.s3.amazonaws.com/slack/logo_loading.gif", "Managr Logo"
                 ),
@@ -405,7 +425,7 @@ def initial_meeting_interaction_block_set(context):
     ):
         action_blocks.append(
             block_builders.simple_button_block(
-                f"Update Salesforce + Add Notes",
+                f"Update {workflow.resource_type} + Add Notes",
                 str(workflow.id),
                 action_id=slack_const.ZOOM_MEETING__INIT_REVIEW,
                 style="primary",
@@ -608,7 +628,11 @@ def final_meeting_interaction_block_set(context):
             text,
             action_id=action_with_params(
                 slack_const.PROCESS_SEND_RECAP_MODAL,
-                params=[f"u={str(workflow.user.id)}", f"workflow_id={str(workflow.id)}"],
+                params=[
+                    f"u={str(workflow.user.id)}",
+                    f"workflow_id={str(workflow.id)}",
+                    "type=meeting",
+                ],
             ),
         )
     ]

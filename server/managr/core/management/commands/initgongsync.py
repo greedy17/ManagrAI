@@ -21,7 +21,7 @@ class Command(BaseCommand):
                         self.style.ERROR("User does not have a gong account {}".format(user.email,))
                     )
                 auth_id = user.gong_account.auth_account.id
-                queue_gong_sync(auth_id)
+                queue_gong_sync(str(auth_id))
                 self.stdout.write(
                     self.style.SUCCESS(
                         "Successfully initiated gong sync for the user {}".format(user.email,)

@@ -16,7 +16,7 @@
           Managr utilizes a secure oAuth connection
         </p>
         <p v-else style="font-weight: bold; margin-top: -0.5rem; color: #5d5e5e">
-          <span style="font-weight: 900">Step 1: </span> Connect all four apps
+          <span style="font-weight: 900">Step 1/2: </span> Connect all four apps
         </p>
       </div>
 
@@ -137,7 +137,14 @@
             <PulseLoadingSpinnerButton
               :disabled="hasZoomIntegration"
               @click="onGetAuthLink('ZOOM')"
-              :class="slackIsIntegrated ? 'orange_button test' : 'orange_button'"
+              :class="
+                !(
+                  (!orgHasSlackIntegration && userCanIntegrateSlack) ||
+                  (orgHasSlackIntegration && !hasSlackIntegration)
+                )
+                  ? 'orange_button test'
+                  : 'orange_button'
+              "
               text="Connect"
               :loading="generatingToken && selectedIntegration == 'ZOOM'"
             ></PulseLoadingSpinnerButton>

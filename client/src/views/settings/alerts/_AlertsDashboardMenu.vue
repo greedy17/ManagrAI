@@ -29,8 +29,8 @@
         id="toolTip"
       >
         <p>
-          Onboarding complete! We'll take it from here. Visit this tab to view, edit, or delete
-          workflows.
+          Onboarding complete! We'll take it from here. Visit this tab to run, edit, or delete
+          workflows. Stay here to activate the rest.
         </p>
         <div id="tailShadow"></div>
         <div id="tail1"></div>
@@ -130,6 +130,7 @@ export default {
         .catch((e) => {
           console.log(e)
         })
+      this.$router.push({ name: 'ListTemplates' })
     },
     alertsCount(num) {
       let int = num
@@ -151,10 +152,17 @@ export default {
       return this.templates.list.length
     },
     hasZoomChannel() {
-      return this.$store.state.user.slackAccount.zoomChannel
+      if (this.hasSlack) {
+        return this.$store.state.user.slackAccount.zoomChannel
+      }
     },
     hasRecapChannel() {
-      return this.$store.state.user.slackAccount.recapChannel
+      if (this.hasSlack) {
+        return this.$store.state.user.slackAccount.recapChannel
+      }
+    },
+    hasSlack() {
+      return this.$store.state.user.slackAccount
     },
     isOnboarding() {
       return this.$store.state.user.onboarding

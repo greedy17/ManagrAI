@@ -118,6 +118,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             "password",
             "organization_name",
             "role",
+            "timezone",
         )
         extra_kwargs = {
             "first_name": {"required": True},

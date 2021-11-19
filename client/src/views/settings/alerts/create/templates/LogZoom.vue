@@ -4,11 +4,11 @@
       <h2 style="font-weight: bold; text-align: center">
         <span style="color: black">
           Log
-          <span style="color: #5f8cff">Zoom Meetings</span>
+          <span style="color: #5f8cff"> Meetings</span>
         </span>
       </h2>
       <p style="text-align: center; color: black; font-weight: bold">
-        Create or select a slack channel to recieve your zoom meeting recaps
+        Create or select a slack #channel to recieve your meeting recaps
       </p>
     </div>
 
@@ -168,10 +168,11 @@ export default {
       this.$router.push({ name: 'CreateNew' })
       this.$Alert.alert({
         type: 'success',
-        message: 'Alert saved successfully',
+        message: 'Workflow saved successfully',
         timeout: 2000,
       })
       this.$router.push({ name: 'CreateNew' })
+      location.reload()
     },
     removeZoomChannel() {
       this.zoomChannel = ''

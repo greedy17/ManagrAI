@@ -15,7 +15,7 @@
 
     <div class="col">
       <h2 v-if="!editing" class="titles">Edit your Workflow Automation</h2>
-      <h2 v-else class="titles">Saved Workflow Automations</h2>
+      <h2 @click="logChannels" v-else class="titles">Saved Workflow Automations</h2>
       <p class="center" style="font-weight: bold; color: #5d5e5e; margin-top: -0.5rem">
         Edit, Run, and Schedule your saved Automations
       </p>
@@ -93,16 +93,32 @@
             </div>
           </template>
         </div>
-        <div v-if="hasZoomChannel" class="card__">
+        <div v-if="zoomChannel" class="card__">
           <h3 class="card__header">LOG MEETINGS</h3>
           <div class="row">
             <button @click="goToLogZoom" class="green_button">Change Channel</button>
+          </div>
+          <div>
+            <p>
+              Current channel:
+              <span style="font-weight: bold; color: #199e54">{{
+                currentZoomChannel.toUpperCase()
+              }}</span>
+            </p>
           </div>
         </div>
         <div v-if="hasRecapChannel && userLevel !== 'REP'" class="card__">
           <h3 class="card__header">MEETING RECAPS</h3>
           <div class="row">
             <button @click="goToRecap" class="green_button">Change Channel/Pipelines</button>
+          </div>
+          <div>
+            <p>
+              Current channel:
+              <span style="font-weight: bold; color: #199e54">{{
+                currentRecapChannel.toUpperCase()
+              }}</span>
+            </p>
           </div>
         </div>
 
@@ -218,12 +234,12 @@ import ExpandablePanel from '@/components/ExpandablePanel'
 import FormField from '@/components/forms/FormField'
 import AlertsEditPanel from '@/views/settings/alerts/view/_AlertsEditPanel'
 import Modal from '@/components/InviteModal'
-
 /**
  * Services
  *
  */
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import SlackOAuth, { SlackListResponse } from '@/services/slack'
 import { UserConfigForm } from '@/services/users/forms'
 import User from '@/services/users'
 
@@ -247,6 +263,7 @@ export default {
   },
   data() {
     return {
+      userChannelOpts: new SlackListResponse(),
       templates: CollectionManager.create({ ModelClass: AlertTemplate }),
       users: CollectionManager.create({ ModelClass: User }),
       deleteOpen: false,
@@ -258,6 +275,8 @@ export default {
       userConfigForm: new UserConfigForm({}),
       configName: '',
       configArray: [],
+      currentZoomChannel: '',
+      currentRecapChannel: '',
     }
   },
   async created() {
@@ -265,13 +284,23 @@ export default {
     this.userConfigForm = new UserConfigForm({
       activatedManagrConfigs: this.user.activatedManagrConfigs,
     })
-    const reloaded = localStorage.getItem('reloaded')
-    if (reloaded !== 'true') {
-      localStorage.setItem('reloaded', 'true')
-      location.reload()
+    await this.listUserChannels()
+    if (this.hasRecapChannel) {
+      this.currentRecapChannel = this.userChannelOpts.channels.filter(
+        (channel) => channel.id === this.hasRecapChannel,
+      )[0].name
     }
+    if (this.zoomChannel) {
+      this.currentZoomChannel = this.userChannelOpts.channels.filter(
+        (channel) => channel.id === this.zoomChannel,
+      )[0].name
+    }
+    window.addEventListener('beforeunload', this.showLoader)
   },
   methods: {
+    logChannels() {
+      console.log(this.userChannelOpts)
+    },
     deletedTitle(id) {
       let newList = []
       newList = this.templates.list.filter((val) => val.id === id)
@@ -289,20 +318,20 @@ export default {
         })
     },
     alertsCount(num) {
-      if (this.hasZoomChannel) {
+      if (this.zoomChannel) {
         return num + 1
       } else {
         return num
       }
+    },
+    logTemplates() {
+      console.log(this.templates.list)
     },
     goToLogZoom() {
       this.$router.push({ name: 'LogZoom' })
     },
     goToRecap() {
       this.$router.push({ name: 'ZoomRecap' })
-    },
-    hasZoomChannel() {
-      return this.$store.state.user.slackAccount.zoomChannel
     },
     hideCard() {
       this.isHiding = true
@@ -322,8 +351,15 @@ export default {
       this.deleteOpen === false ? (this.deleteOpen = true) : (this.deleteOpen = false)
     },
     closeEdit() {
-      this.editing = !this.editing
       this.$router.go()
+    },
+    async listUserChannels(cursor = null) {
+      const res = await SlackOAuth.api.listUserChannels(cursor)
+      const results = new SlackListResponse({
+        channels: [...this.userChannelOpts.channels, ...res.channels],
+        responseMetadata: { nextCursor: res.nextCursor },
+      })
+      this.userChannelOpts = results
     },
     async onDeleteTemplate(id) {
       this.deletedTitle(id)
@@ -404,8 +440,14 @@ export default {
     user() {
       return this.$store.state.user
     },
+    hasSlack() {
+      return this.$store.state.user.slackAccount
+    },
     hasRecapChannel() {
       return this.$store.state.user.slackAccount.recapChannel
+    },
+    zoomChannel() {
+      return this.$store.state.user.slackAccount.zoomChannel
     },
     userLevel() {
       return this.$store.state.user.userLevel
@@ -436,6 +478,7 @@ export default {
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
+
 ::v-deep .item-container__label {
   color: white;
   border: none;
@@ -505,8 +548,8 @@ export default {
   background-color: $panther;
   border-radius: 1rem;
   color: white;
-  height: 60vh;
-  width: 80%;
+  height: 70vh;
+  width: 100vw;
   display: flex;
   align-items: center;
   justify-content: space-between;
