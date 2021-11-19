@@ -92,6 +92,28 @@ def SALSFORCE_TASK_QUERY_URI(
     return f"{url} order by ActivityDate limit {limit}"
 
 
+def SALSFORCE_PRODUCT_QUERY_URI(
+    owner_id,
+    resource,
+    fields,
+    childRelationshipFields=[],
+    additional_filters=[],
+    limit=SALESFORCE_QUERY_LIMIT,
+):
+    # make a set to remove duplicates
+    fields = set(fields)
+    url = f"{CUSTOM_BASE_URI}/query/?q=SELECT {','.join(fields)}"
+    if len(childRelationshipFields):
+        for rel, v in childRelationshipFields.items():
+            url += f", (SELECT {','.join(v['fields'])} FROM {rel} {' '.join(v['attrs'])})"
+    url = f"{url} FROM {resource} WHERE OwnerId = '{owner_id}'"
+    if len(additional_filters):
+        for f in additional_filters:
+            url = f"{url} {f} "
+
+    return f"{url} order by ActivityDate limit {limit}"
+
+
 def SF_COUNT_URI(resource, owner_id):
     url = f"{CUSTOM_BASE_URI}/query/?q=SELECT COUNT () from {resource}"
     if owner_id:

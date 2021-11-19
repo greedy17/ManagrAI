@@ -319,6 +319,7 @@ class SalesforceAuthAccountAdapter:
     def list_fields(self, resource):
         """Uses the UI API to list fields for a resource using this endpoint only returns fields a user has access to"""
         url = f"{self.instance_url}{sf_consts.SALESFORCE_FIELDS_URI(resource)}"
+        print(url)
         with Client as client:
             res = client.get(
                 url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
