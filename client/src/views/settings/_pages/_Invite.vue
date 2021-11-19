@@ -10,7 +10,7 @@
       "
     >
       <form class="invite-form" @submit.prevent="handleInvite">
-        <h2 class="invite-form__title">Invite Users to Managr</h2>
+        <h2 class="invite-form__title">Invite Users via Slack</h2>
         <h2 class="invite-form__subtitle" style="color: #beb5cc; margin-top: -6rem">
           {{ $store.state.user.organizationRef.name }}
         </h2>
