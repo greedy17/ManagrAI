@@ -1,11 +1,11 @@
 <template>
   <div class="invite-users">
-    <h2 style="font-size: 1.5rem; color: black">Build Your Team</h2>
-    <div style="color: #5d5e5e" class="invite-users__text">
-      Invite your team sales representatives to join you on Managr
-    </div>
+    <h2 style="font-size: 1.5rem; color: black">Manage Your Team</h2>
 
-    <button class="invite_button" type="submit" @click="handleInvite">Invite Team Member</button>
+    <button class="invite_button" type="submit" @click="handleInvite">
+      Invite Member
+      <img style="height: 1rem; margin-left: 0.2rem" src="@/assets/images/slackLogo.png" alt="" />
+    </button>
     <Invite class="invite-users__inviter" :inviteOpen="inviteOpen" @cancel="handleCancel" />
 
     <!-- <button class="continue_button" type="submit" @click="handleContinue">Continue</button> -->

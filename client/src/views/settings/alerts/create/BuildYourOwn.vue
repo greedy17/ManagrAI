@@ -1,19 +1,32 @@
 <template>
   <div class="alerts-page">
-    <Modal style="margin-top: 4rem" ref="templateModal">
+    <Modal style="margin-top: 8rem" ref="templateModal">
       <template v-slot:header>
-        <h1 style="color: #199e54">Message Template</h1>
+        <h2 style="color: white">Popular Message Template</h2>
       </template>
-      <template v-slot:body>
-        <h3 style="color: #beb5cc">This is the message recipients will recieve via Slack</h3>
 
+      <template v-slot:body>
         <div>
-          <h4 style="font-weight: bold">Copy & Paste :</h4>
-          <p>
-            Hey <strong>{ __Recipient.full_name }</strong> , your deal
-            <strong>{ Opportunity.Name }</strong>...
-            <i>Keep writing and/or add CRM fields</i>
-          </p>
+          <div style="display: flex; flex-direction: row">
+            <textarea
+              style="height: 3rem; width: 90%; font-size: 0.75rem; margin-right: 0.25rem"
+              name=""
+              id=""
+              cols="20"
+              rows="10"
+            >
+          Hey { __Recipient.full_name }, your deal { Opportunity.Name } ...continue writing here
+          </textarea
+            >
+            <button
+              style="background-color: #3c3940; border: none; cursor: pointer"
+              v-clipboard:copy="message"
+              v-clipboard:success="onCopy"
+              v-clipboard:error="onError"
+            >
+              <img src="@/assets/images/copy.png" style="height: 1rem" alt="" />
+            </button>
+          </div>
         </div>
       </template>
     </Modal>
@@ -144,13 +157,12 @@
         </div>
         <div class="collection__fields">
           <div class="message_titles">
-            <p>
-              Writer's block ? Get started with our
-              <span
-                @click="$refs.templateModal.openModal()"
-                style="color: #199e54; cursor: pointer; border-bottom: 2px solid #199e54"
-                >Template.</span
-              >
+            <p
+              :class="templateBounce ? 'bouncy' : ''"
+              @click="$refs.templateModal.openModal(), switchBounce()"
+              style="cursor: pointer; border-bottom: 2px solid #199e54"
+            >
+              Popular Template
             </p>
             <FormField
               id="message"
@@ -175,18 +187,21 @@
 
           <div class="crm">
             <h4 style="margin-top: 2rem">Add CRM values</h4>
-            <DropDownSearch
-              :items="fields.list"
-              @input="bindText(`${selectedResourceType}.${$event}`)"
-              displayKey="referenceDisplayLabel"
-              valueKey="apiName"
-              nullDisplay="Search Fields"
-              searchable
-              :hasNext="!!fields.pagination.hasNextPage"
-              @load-more="fieldNextPage"
-              @search-term="onSearchFields"
-              auto
-            />
+            <div @click="addCount()">
+              <DropDownSearch
+                :class="!templateBounce && fieldBounce && clickCount === 0 ? 'bouncy' : ''"
+                :items="fields.list"
+                @input="bindText(`${selectedResourceType}.${$event}`)"
+                displayKey="referenceDisplayLabel"
+                valueKey="apiName"
+                nullDisplay="Search Fields"
+                searchable
+                :hasNext="!!fields.pagination.hasNextPage"
+                @load-more="fieldNextPage"
+                @search-term="onSearchFields"
+                auto
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -718,6 +733,10 @@ export default {
       channelOpts: new SlackListResponse(),
       userChannelOpts: new SlackListResponse(),
       channelName: '',
+      message: 'Hey { __Recipient.full_name }, your deal { Opportunity.Name }',
+      templateBounce: true,
+      fieldBounce: true,
+      clickCount: 0,
       newChannel: {},
       showMenu: true,
       savingTemplate: false,
@@ -794,6 +813,26 @@ export default {
     },
   },
   methods: {
+    switchBounce() {
+      this.templateBounce = !this.templateBounce
+    },
+    addCount() {
+      this.clickCount += 1
+    },
+    onCopy: function () {
+      this.$Alert.alert({
+        message: 'Message Copied to clipboard successfully',
+        type: 'success',
+        timeout: 2000,
+      })
+    },
+    onError: function () {
+      this.$Alert.alert({
+        message: 'error copying template',
+        type: 'error',
+        timeout: 2000,
+      })
+    },
     changeCreate() {
       this.create = !this.create
       if (
@@ -1214,6 +1253,17 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
+@keyframes bounce {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-6px);
+  }
+}
+.bouncy {
+  animation: bounce 0.2s infinite alternate;
+}
 .search__input {
   font-family: Lato-Regular, sans-serif;
   font-weight: normal;
