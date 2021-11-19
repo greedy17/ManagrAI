@@ -15,50 +15,26 @@ from rest_framework.exceptions import ValidationError
 
 from ..exceptions import TokenExpired, InvalidRequest
 from ..models import OutreachAccount
-from ..helpers.class_functions import sync_all_sequences
+from ..helpers.class_functions import sync_all_sequences, sync_all_prospects, sync_all_accounts
 from managr.organization.models import Contact
 
 logger = logging.getLogger("managr")
 
 
 def emit_sync_user_accounts(outreach_account_id, verbose_name):
-    return sync_accounts(outreach_account_id, verbose_name=verbose_name)
+    return sync_user_accounts(outreach_account_id, verbose_name=verbose_name)
 
 
 def emit_sync_sequences(outreach_account_id):
     return sync_sequences(outreach_account_id)
 
 
-def emit_sync_accounts(outreach_account_id, verbose_name):
-    return sync_slaccounts(outreach_account_id, verbose_name=verbose_name)
+def emit_sync_accounts(outreach_account_id):
+    return sync_accounts(outreach_account_id)
 
 
-def emit_sync_prospects(outreach_account_id, verbose_name):
-    return sync_people(outreach_account_id, verbose_name=verbose_name)
-
-
-@background()
-def sync_user_accounts(outreach_account_id):
-    outreach_account = OutreachAccount.objects.get(id=outreach_account_id)
-    while True:
-        attempts = 1
-        try:
-            success = 0
-            failed = 0
-            res = outreach_account.helper_class.get_sequences()
-            sync_count = sync_all_sequences(res["data"])
-            success += sync_count["success"]
-            failed += sync_count["failed"]
-            break
-        except TokenExpired:
-            if attempts >= 5:
-                return logger.exception(
-                    f"Failed to sync outreach sequences for account {outreach_account.user.email}"
-                )
-            else:
-                outreach_account.regenerate_token()
-                attempts += 1
-    return logger.info(f"Synced {success}/{success+failed} users for {auth_account}")
+def emit_sync_prospects(outreach_account_id):
+    return sync_prospects(outreach_account_id)
 
 
 # @background()
@@ -87,7 +63,7 @@ def sync_sequences(outreach_account_id):
     )
 
 
-@background()
+# @background()
 def sync_accounts(outreach_account_id):
     outreach_account = OutreachAccount.objects.get(id=outreach_account_id)
     while True:
@@ -95,8 +71,8 @@ def sync_accounts(outreach_account_id):
         try:
             success = 0
             failed = 0
-            res = outreach_account.helper_class.get_sequences()
-            sync_count = sync_all_sequences(res["data"])
+            res = outreach_account.helper_class.get_accounts()
+            sync_count = sync_all_accounts(res["data"])
             success += sync_count["success"]
             failed += sync_count["failed"]
             break
@@ -108,10 +84,12 @@ def sync_accounts(outreach_account_id):
             else:
                 outreach_account.regenerate_token()
                 attempts += 1
-    return logger.info(f"Synced {success}/{success+failed} accounts for {auth_account}")
+    return logger.info(
+        f"Synced {success}/{success+failed} accounts for {outreach_account.user.email}"
+    )
 
 
-@background()
+# @background()
 def sync_prospects(outreach_account_id):
     outreach_account = OutreachAccount.objects.get(id=outreach_account_id)
     while True:
@@ -119,20 +97,20 @@ def sync_prospects(outreach_account_id):
         try:
             success = 0
             failed = 0
-            res = outreach_account.helper_class.get_sequences()
-            sync_count = sync_all_sequences(res["data"])
+            res = outreach_account.helper_class.get_prospects()
+            sync_count = sync_all_prospects(res["data"])
             success += sync_count["success"]
             failed += sync_count["failed"]
             break
         except TokenExpired:
             if attempts >= 5:
                 return logger.exception(
-                    f"Failed to sync outreach sequences for account {outreach_account.user.email}"
+                    f"Failed to sync outreach prospects for account {outreach_account.user.email}"
                 )
             else:
                 outreach_account.regenerate_token()
                 attempts += 1
-    return logger.info(f"Synced {success}/{success+failed} people for {auth_account}")
+    return logger.info(f"Synced {success}/{success+failed} prospects for {outreach_account}")
 
 
 def add_cadence_membership(person_id, cadence_id):

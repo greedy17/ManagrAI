@@ -21,25 +21,9 @@ from ..serializers import (
     AccountSerializer,
     OutreachAccountSerializer,
 )
+from managr.organization.models import Contact
 
 logger = logging.getLogger("managr")
-
-
-def process_account(account, outreach_account_id):
-    user_res = OutreachAccountAdapter.create_account(account, outreach_account_id)
-    if user_res is None:
-        return {"failed": True}
-    else:
-        user_existing = OutreachAccount.objects.filter(email=account.get("email")).first()
-        if user_existing:
-            user_serializer = OutreachAccountSerializer(
-                data=user_res.as_dict, instance=user_existing
-            )
-        else:
-            user_serializer = OutreachAccountSerializer(data=user_res.as_dict)
-        user_serializer.is_valid(raise_exception=True)
-        user_serializer.save()
-        return {"success": True}
 
 
 def sync_all_sequences(data):
@@ -83,12 +67,12 @@ def sync_sequences(data):
     return {"success": success, "failed": failed}
 
 
-def process_slaccount(slaccount):
-    account_res = AccountAdapter.create_slaccount(slaccount)
+def process_account(account):
+    account_res = AccountAdapter.create_account(account)
     if account_res is None:
         return {"failed": True}
     else:
-        account_existing = Account.objects.filter(account_id=slaccount["id"]).first()
+        account_existing = Account.objects.filter(account_id=account["id"]).first()
         if account_existing:
             account_serializer = AccountSerializer(
                 data=account_res.as_dict, instance=account_existing
@@ -100,11 +84,11 @@ def process_slaccount(slaccount):
         return {"success": True}
 
 
-def sync_current_slaccount_page(data):
+def sync_all_accounts(data):
     failed = 0
     success = 0
     for resource in data:
-        res = process_slaccount(resource)
+        res = process_account(resource)
         if "failed" in res:
             failed += 1
         else:
@@ -112,28 +96,34 @@ def sync_current_slaccount_page(data):
     return {"success": success, "failed": failed}
 
 
-def process_person(people):
-    people_res = ProspectAdapter.create_people(people)
-    if people_res is None:
+def process_prospect(prospect, contact_id, email):
+    if contact_id:
+        prospect_res = ProspectAdapter.create_prospect(prospect, contact_id, email)
+    else:
+        prospect_res = None
+    if prospect_res is None:
         return {"failed": True}
     else:
-        people_existing = Prospect.objects.filter(people_id=people["id"]).first()
-        if people_existing:
-            people_serializer = ProspectSerializer(
-                data=people_res.as_dict, instance=people_existing
+        prospect_existing = Prospect.objects.filter(prospect_id=prospect["id"]).first()
+        if prospect_existing:
+            prospect_serializer = ProspectSerializer(
+                data=prospect_res.as_dict, instance=prospect_existing
             )
         else:
-            people_serializer = ProspectSerializer(data=people_res.as_dict)
-        people_serializer.is_valid(raise_exception=True)
-        people_serializer.save()
+            prospect_serializer = ProspectSerializer(data=prospect_res.as_dict)
+        prospect_serializer.is_valid(raise_exception=True)
+        prospect_serializer.save()
     return {"success": True}
 
 
-def sync_current_person_page(data):
+def sync_all_prospects(data):
     failed = 0
     success = 0
     for resource in data:
-        res = process_person(resource)
+        contact = Contact.objects.filter(email__in=resource["attributes"]["emails"]).first()
+        contact_id = contact.id if contact else None
+        email = contact.email if contact else None
+        res = process_prospect(resource, contact_id, email)
         if "failed" in res:
             failed += 1
         else:

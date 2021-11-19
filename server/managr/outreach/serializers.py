@@ -42,11 +42,12 @@ class ProspectSerializer(serializers.ModelSerializer):
         model = Prospect
         fields = (
             "id",
-            "people_id",
+            "prospect_id",
             "full_name",
             "email",
             "owner",
             "contact_id",
+            "account",
             "created_at",
             "updated_at",
         )

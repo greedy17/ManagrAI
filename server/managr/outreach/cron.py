@@ -43,7 +43,7 @@ def queue_outreach_sync(account_id=None):
 
 
 def sync_helper(auth_id):
-    sync_steps = [emit_sync_sequences]
+    sync_steps = [emit_sync_sequences, emit_sync_accounts, emit_sync_prospects]
     outreach_account = OutreachAccount.objects.get(id=auth_id)
     v_name = uuid.uuid4()
     for step in sync_steps:

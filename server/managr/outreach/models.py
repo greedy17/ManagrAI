@@ -1,3 +1,4 @@
+from django.db.models.fields.related import ForeignKey
 import jwt
 import pytz
 import math
@@ -139,28 +140,24 @@ class OutreachAccountAdapter:
         res = client.get(f"{outreach_consts.OUTREACH_BASE_URI}/sequences?{query}", headers=headers,)
         return OutreachAccountAdapter._handle_response(res)
 
-    def get_accounts(self, page=1):
+    def get_accounts(self):
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
         }
-        query = urlencode({"include_paging_counts": True, "page": page})
-        res = client.get(
-            f"{outreach_consts.OUTREACH_BASE_URI}/{outreach_consts.ACCOUNTS}?{query}",
-            headers=headers,
-        )
+        query = urlencode({"filter[owner][id]": self.outreach_id, "page[limit]": 250})
+        res = client.get(f"{outreach_consts.OUTREACH_BASE_URI}/accounts?{query}", headers=headers,)
         return OutreachAccountAdapter._handle_response(res)
 
-    def get_prospects(self, page=1):
+    def get_prospects(self):
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
         }
-        query = urlencode({"include_paging_counts": True, "page": page})
-        res = client.get(
-            f"{outreach_consts.OUTREACH_BASE_URI}/{outreach_consts.PEOPLE}?{query}",
-            headers=headers,
+        query = urlencode(
+            {"filter[owner][id]": self.outreach_id, "page[limit]": 250, "sort": "-updatedAt"}
         )
+        res = client.get(f"{outreach_consts.OUTREACH_BASE_URI}/prospects?{query}", headers=headers,)
         return OutreachAccountAdapter._handle_response(res)
 
 
@@ -377,10 +374,11 @@ class ProspectQuerySet(models.QuerySet):
 
 class ProspectAdapter:
     def __init__(self, **kwargs):
-        self.prospects_id = kwargs.get("prospects_id", None)
+        self.prospect_id = kwargs.get("prospect_id", None)
         self.full_name = kwargs.get("full_name", None)
         self.email = kwargs.get("email", None)
         self.account = kwargs.get("account", None)
+        self.contact_id = kwargs.get("contact_id", None)
         self.owner = kwargs.get("owner", None)
         self.created_at = kwargs.get("created_at", None)
         self.updated_at = kwargs.get("updated_at", None)
@@ -415,23 +413,21 @@ class ProspectAdapter:
         return data
 
     @classmethod
-    def create_prospects(cls, prospects_data, contact_id):
+    def create_prospect(cls, prospects_data, contact_id, email):
         try:
-            owner = prospects_data["relationships"]["owner"]
-            account = prospects_data["relationships"]["account"]
-            acc_id = None
-            if owner:
-                owner_id = OutreachAccount.objects.get(outreach_id=owner["id"]).id
-
+            owner = prospects_data["relationships"]["owner"]["data"]["id"]
+            account = prospects_data["relationships"]["account"]["data"]["id"]
+            owner_id = OutreachAccount.objects.filter(outreach_id=owner).first()
+            account_id = Account.objects.filter(account_id=account).first()
             data = {}
-            data["prospects_id"] = prospects_data["id"]
+            data["prospect_id"] = prospects_data["id"]
             data["full_name"] = prospects_data["attributes"]["name"]
-            data["email"] = prospects_data["email_"]
-            data["owner"] = owner_id
+            data["email"] = email
+            data["owner"] = owner_id.id
             data["contact_id"] = contact_id
-            data["account"] = acc_id
-            data["created_at"] = dateutil.parser.isoparse(prospects_data["created_at"])
-            data["updated_at"] = dateutil.parser.isoparse(prospects_data["updated_at"])
+            data["account"] = account_id.id if account_id else None
+            data["created_at"] = dateutil.parser.isoparse(prospects_data["attributes"]["createdAt"])
+            data["updated_at"] = dateutil.parser.isoparse(prospects_data["attributes"]["updatedAt"])
             return cls(**data)
         except ObjectDoesNotExist:
             return None
@@ -448,10 +444,12 @@ class ProspectAdapter:
 
 
 class Prospect(TimeStampModel):
-    prospects_id = models.IntegerField()
+    prospect_id = models.IntegerField()
     full_name = models.CharField(max_length=50)
     email = models.EmailField()
-    contact_id = models.CharField(max_length=100)
+    contact_id = models.ForeignKey(
+        "organization.Contact", on_delete=models.SET_NULL, related_name="prospect", null=True
+    )
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
     account = models.ForeignKey(
