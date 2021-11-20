@@ -1237,7 +1237,7 @@ def process_paginate_alerts(payload, context):
     alert_template = alert_instance.template
     alert_text = alert_template.title
     blocks = [
-        block_builders.header_block(f"{alert_text}"),
+        block_builders.header_block(f"{len(alert_instances)} results for workflow {alert_text}"),
     ]
     alert_instances = custom_paginator(alert_instances, page=int(context.get("new_page", 0)))
     for alert_instance in alert_instances.get("results", []):
@@ -1634,10 +1634,11 @@ def process_mark_complete(payload, context):
         config_id=instance.config_id,
     ).filter(completed=False)
     alert_instance = alert_instances.first()
+    alert_template = alert_instance.template
+    text = alert_template.title
     if not alert_instance:
         blocks = [
-            block_builders.header_block(f"{instance.template.title}"),
-            block_builders.simple_section("You're all caught up with these workflows! Great job!"),
+            block_builders.simple_section("You're all caught up with this workflows! Great job!"),
         ]
         slack_requests.update_channel_message(
             payload["channel"]["id"],
@@ -1647,10 +1648,9 @@ def process_mark_complete(payload, context):
             block_set=blocks,
         )
         return
-    alert_template = alert_instance.template
-    alert_text = alert_template.title
+
     blocks = [
-        block_builders.header_block(f"{alert_text}"),
+        block_builders.header_block(f"{len(alert_instances)} results for workflow {text}"),
     ]
     alert_instances = custom_paginator(alert_instances, page=int(context.get("page")))
     for alert_instance in alert_instances.get("results", []):
@@ -1672,11 +1672,7 @@ def process_mark_complete(payload, context):
         ]
 
     res = slack_requests.update_channel_message(
-        payload["channel"]["id"],
-        payload["message"]["ts"],
-        access_token,
-        text=alert_text,
-        block_set=blocks,
+        payload["channel"]["id"], payload["message"]["ts"], access_token, block_set=blocks,
     )
     return
 
