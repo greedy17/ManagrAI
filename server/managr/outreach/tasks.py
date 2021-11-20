@@ -15,9 +15,9 @@ from rest_framework.exceptions import ValidationError
 
 from managr.outreach.helpers.class_functions import process_prospect
 from managr.api.decorators import log_all_exceptions
-from ..exceptions import TokenExpired, InvalidRequest
-from ..models import OutreachAccount, Sequence, Account, Prospect, ProspectAdapter
-from ..helpers.class_functions import (
+from .exceptions import TokenExpired, InvalidRequest
+from .models import OutreachAccount, Sequence, Account, Prospect, ProspectAdapter
+from managr.outreach.helpers.class_functions import (
     sync_all_sequences,
     sync_all_prospects,
     sync_all_accounts,
@@ -64,7 +64,7 @@ def sync_outreach_sequences(outreach_account_id):
     )
 
 
-@background()
+@background(schedule=0)
 @log_all_exceptions
 def sync_outreach_accounts(outreach_account_id):
     outreach_account = OutreachAccount.objects.get(id=outreach_account_id)
@@ -91,7 +91,7 @@ def sync_outreach_accounts(outreach_account_id):
     )
 
 
-@background()
+@background(schedule=0)
 @log_all_exceptions
 def sync_outreach_prospects(outreach_account_id):
     outreach_account = OutreachAccount.objects.get(id=outreach_account_id)
