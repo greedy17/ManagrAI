@@ -1424,7 +1424,7 @@ def process_show_sequence_modal(payload, context):
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
-            "callback_id": slack_const.ADD_TO_CADENCE,
+            "callback_id": slack_const.ADD_TO_SEQUENCE,
             "title": {"type": "plain_text", "text": "Add to a Sequence"},
             "blocks": get_block_set(
                 "sequence_modal_blockset",

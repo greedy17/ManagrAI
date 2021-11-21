@@ -157,7 +157,7 @@ class OutreachAccountAdapter:
             "Content-Type": "application/json",
         }
         query = urlencode(
-            {"filter[owner][id]": self.outreach_id, "page[limit]": 250, "sort": "-updatedAt"}
+            {"filter[owner][id]": self.outreach_id, "page[limit]": 1000, "sort": "-updatedAt"}
         )
         res = client.get(f"{outreach_consts.OUTREACH_BASE_URI}/prospects?{query}", headers=headers,)
         return OutreachAccountAdapter._handle_response(res)
@@ -266,11 +266,13 @@ class SequenceAdapter:
         except ObjectDoesNotExist:
             return None
 
-    def add_membership(self, person_id, access_token):
+    def add_sequence_state(self, access_token, prospect_id, mailbox):
         headers = outreach_consts.OUTREACH_REQUEST_HEADERS(access_token)
-        query = urlencode({"prospect_id": person_id, "sequence_id": self.sequence_id})
+        data = outreach_consts.OUTREACH_SEQUENCE_STATE_BODY(prospect_id, self.sequence_id, mailbox)
+        print(data)
         res = client.post(
-            f"{outreach_consts.OUTREACH_BASE_URI}/{outreach_consts.ADD_TO_CADENCE}?{query}",
+            f"{outreach_consts.OUTREACH_BASE_URI}/sequenceStates",
+            data=json.dumps(data),
             headers=headers,
         )
         return SequenceAdapter._handle_response(res)
@@ -438,10 +440,11 @@ class ProspectAdapter:
     def create_in_outreach(access_token, data):
         headers = outreach_consts.OUTREACH_REQUEST_HEADERS(access_token)
         res = client.post(
-            f"{outreach_consts.OUTREACH_BASE_URI}/{outreach_consts.PEOPLE}",
+            f"{outreach_consts.OUTREACH_BASE_URI}/prospects",
             headers=headers,
             data=json.dumps(data),
         )
+        print(res.json())
         return ProspectAdapter._handle_response(res)
 
 

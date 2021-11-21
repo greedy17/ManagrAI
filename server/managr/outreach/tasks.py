@@ -17,6 +17,7 @@ from managr.outreach.helpers.class_functions import process_prospect
 from managr.api.decorators import log_all_exceptions
 from .exceptions import TokenExpired, InvalidRequest
 from .models import OutreachAccount, Sequence, Account, Prospect, ProspectAdapter
+from managr.organization.models import Contact
 from managr.outreach.helpers.class_functions import (
     sync_all_sequences,
     sync_all_prospects,
@@ -36,6 +37,10 @@ def emit_sync_outreach_accounts(outreach_account_id, verbose_name):
 
 def emit_sync_outreach_prospects(outreach_account_id, verbose_name):
     return sync_outreach_prospects(outreach_account_id, verbose_name=verbose_name)
+
+
+def emit_add_sequence_state(contact_id, sequence_id):
+    return add_sequence_state(contact_id, sequence_id)
 
 
 @background()
@@ -116,47 +121,54 @@ def sync_outreach_prospects(outreach_account_id):
     return logger.info(f"Synced {success}/{success+failed} prospects for {outreach_account}")
 
 
-# def add_cadence_membership(person_id, cadence_id):
-#     cadence = Sequence.objects.get(id=cadence_id)
-#     auth_account = OutreachAccount.objects.get(id=cadence.owner.auth_account.id)
-#     contact = Contact.objects.get(id=person_id)
-#     person = Prospect.objects.filter(email=contact.email).first()
-#     slaccount = Account.objects.get(name=contact.account.name)
-#     owner = slaccount.owner.salesloft_id
-#     people_id = person.people_id if person else None
-#     created = False
-#     while True:
-#         attempts = 1
-#         try:
-#             if not person:
-#                 data = {
-#                     "first_name": contact.secondary_data["FirstName"],
-#                     "last_name": contact.secondary_data["LastName"],
-#                     "email_address": contact.email,
-#                     "owner_id": owner,
-#                     "account_id": slaccount.account_id,
-#                 }
-#                 create_res = ProspectAdapter.create_in_salesloft(auth_account.access_token, data)
-#                 process_prospect(create_res["data"])
-#                 people_id = create_res["data"]["id"]
-#                 created = True
+def add_sequence_state(contact_id, sequence_id):
+    sequence = Sequence.objects.get(id=sequence_id)
+    outreach_account = OutreachAccount.objects.get(id=sequence.owner.id)
+    contact = Contact.objects.get(id=contact_id)
+    prospect = Prospect.objects.filter(email=contact.email).first()
+    prospect_id = prospect.prospect_id if prospect else None
+    created = False
+    while True:
+        attempts = 1
+        try:
+            if not prospect:
+                data = {
+                    "data": {
+                        "type": "prospect",
+                        "attributes": {
+                            "firstName": contact.secondary_data["FirstName"],
+                            "lastName": contact.secondary_data["LastName"],
+                            "emails": [contact.email],
+                        },
+                        "relationships": {
+                            "owner": {"data": {"type": "user", "id": outreach_account.outreach_id}}
+                        },
+                    }
+                }
+                print(data)
+                create_res = ProspectAdapter.create_in_outreach(outreach_account.access_token, data)
+                process_prospect(create_res["data"])
+                prospect_id = create_res["data"]["id"]
+                created = True
 
-#             res = cadence.helper_class.add_membership(people_id, auth_account.access_token)
-#             break
-#         except TokenExpired:
-#             if attempts >= 5:
-#                 return logger.exception(
-#                     f"Failed to add Person with id {people_id} to Sequence {cadence.name}, could not regenerate token"
-#                 )
-#             else:
-#                 auth_account.regenerate_token()
-#                 attempts += 1
-#         except InvalidRequest:
-#             return {"status": "Failed"}
-#         except ValidationError as e:
-#             logger.exception(f"Error adding cadence: {e}")
-#             return {"status": "Failed"}
-#     logger.info(f"Person with id {people_id} added to cadence {cadence.id}")
-#     if created:
-#         return {"status": "Created"}
-#     return {"status": "Success"}
+            res = sequence.helper_class.add_sequence_state(
+                outreach_account.access_token, prospect_id, outreach_account.mailbox,
+            )
+            break
+        except TokenExpired:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to add Person with id {prospect_id} to Sequence {sequence.name}, could not regenerate token"
+                )
+            else:
+                outreach_account.regenerate_token()
+                attempts += 1
+        except InvalidRequest:
+            return {"status": "Failed"}
+        except ValidationError as e:
+            logger.exception(f"Error adding sequence: {e}")
+            return {"status": "Failed"}
+    logger.info(f"Person with id {prospect_id} added to sequence {sequence.id}")
+    if created:
+        return {"status": "Created"}
+    return {"status": "Success"}
