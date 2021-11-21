@@ -93,7 +93,7 @@
             </div>
           </template>
         </div>
-        <div v-if="hasZoomChannel" class="card__">
+        <div v-if="zoomChannel" class="card__">
           <h3 class="card__header">LOG MEETINGS</h3>
           <div class="row">
             <button @click="goToLogZoom" class="green_button">Change Channel</button>
@@ -234,7 +234,6 @@ import ExpandablePanel from '@/components/ExpandablePanel'
 import FormField from '@/components/forms/FormField'
 import AlertsEditPanel from '@/views/settings/alerts/view/_AlertsEditPanel'
 import Modal from '@/components/InviteModal'
-
 /**
  * Services
  *
@@ -286,12 +285,17 @@ export default {
       activatedManagrConfigs: this.user.activatedManagrConfigs,
     })
     await this.listUserChannels()
-    this.currentZoomChannel = this.userChannelOpts.channels.filter(
-      (channel) => channel.id === this.zoomChannel,
-    )[0].name
-    this.currentRecapChannel = this.userChannelOpts.channels.filter(
-      (channel) => channel.id === this.hasRecapChannel,
-    )[0].name
+    if (this.hasRecapChannel) {
+      this.currentRecapChannel = this.userChannelOpts.channels.filter(
+        (channel) => channel.id === this.hasRecapChannel,
+      )[0].name
+    }
+    if (this.zoomChannel) {
+      this.currentZoomChannel = this.userChannelOpts.channels.filter(
+        (channel) => channel.id === this.zoomChannel,
+      )[0].name
+    }
+    window.addEventListener('beforeunload', this.showLoader)
   },
   methods: {
     logChannels() {
@@ -314,7 +318,7 @@ export default {
         })
     },
     alertsCount(num) {
-      if (this.hasZoomChannel) {
+      if (this.zoomChannel) {
         return num + 1
       } else {
         return num
@@ -328,9 +332,6 @@ export default {
     },
     goToRecap() {
       this.$router.push({ name: 'ZoomRecap' })
-    },
-    hasZoomChannel() {
-      return this.$store.state.user.slackAccount.zoomChannel
     },
     hideCard() {
       this.isHiding = true
@@ -350,7 +351,6 @@ export default {
       this.deleteOpen === false ? (this.deleteOpen = true) : (this.deleteOpen = false)
     },
     closeEdit() {
-      this.editing = !this.editing
       this.$router.go()
     },
     async listUserChannels(cursor = null) {
@@ -440,6 +440,9 @@ export default {
     user() {
       return this.$store.state.user
     },
+    hasSlack() {
+      return this.$store.state.user.slackAccount
+    },
     hasRecapChannel() {
       return this.$store.state.user.slackAccount.recapChannel
     },
@@ -475,6 +478,7 @@ export default {
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
+
 ::v-deep .item-container__label {
   color: white;
   border: none;
@@ -544,8 +548,8 @@ export default {
   background-color: $panther;
   border-radius: 1rem;
   color: white;
-  height: 60vh;
-  width: 80%;
+  height: 70vh;
+  width: 100vw;
   display: flex;
   align-items: center;
   justify-content: space-between;

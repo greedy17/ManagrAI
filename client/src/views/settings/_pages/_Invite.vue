@@ -10,13 +10,15 @@
       "
     >
       <form class="invite-form" @submit.prevent="handleInvite">
-        <h2 class="invite-form__title">Invite Users to Managr</h2>
-        <h2 class="invite-form__subtitle" style="color: #199e54">
+        <h2 class="invite-form__title">Invite Users via Slack</h2>
+        <h2 class="invite-form__subtitle" style="color: #beb5cc; margin-top: -6rem">
           {{ $store.state.user.organizationRef.name }}
         </h2>
-        <div style="display: flex; justify-content: center; flex-direction: column">
+        <div
+          style="display: flex; justify-content: center; flex-direction: column; margin-top: -3rem"
+        >
           <div>
-            <FormField>
+            <FormField label="Slack Users:">
               <template v-slot:input>
                 <DropDownSearch
                   :items.sync="slackMembers"
@@ -80,29 +82,116 @@
       </form>
     </Modal>
     <div class="invite-list__container">
-      <div class="invite-list__title" style="color: #beb5cc">Your Team:</div>
-      <div class="invite-list__section__container" style="margin-bottom: 1.5rem">
-        <div style="color: #199e54" class="invite-list__section__item invite-list__name">
-          {{ user.fullName }}
+      <div class="key">
+        <div class="left-key">
+          <h2 style="color: #beb5cc">The {{ $store.state.user.organizationRef.name }} Team:</h2>
         </div>
-        <div style="color: white" class="invite-list__section__item invite-list__status">
+        <div class="right-key">
+          <p class="complete">Complete</p>
+          <p class="incomplete">Incomplete</p>
+        </div>
+      </div>
+
+      <div class="invite-list__section__container" style="margin-bottom: 2rem">
+        <div
+          style="display: flex; align-items: flex-start"
+          class="invite-list__section__item section-header"
+        >
+          User
+        </div>
+        <div
+          style="display: flex; align-items: flex-start"
+          class="invite-list__section__item section-header"
+        >
+          User Level
+        </div>
+        <div
+          style="display: flex; align-items: flex-start"
+          class="invite-list__section__item section-header"
+        >
+          Status
+        </div>
+        <div
+          style="display: flex; align-items: flex-start"
+          class="invite-list__section__item section-header"
+        >
+          Integrations
+        </div>
+      </div>
+
+      <div class="invite-list__section__container">
+        <div
+          style="display: flex; align-items: flex-start; color: #f2fff8"
+          class="invite-list__section__item col"
+        >
+          {{ user.fullName }}
+          <p style="color: #beb5cc; font-size: 0.65rem; margin-top: 0.25rem">{{ user.email }}</p>
+        </div>
+        <div style="display: flex; align-items: flex-start" class="invite-list__section__item">
           {{ user.userLevel == 'MANAGER' ? 'Team Leader(You)' : 'Rep(You)' }}
         </div>
-        <div class="invite-list__section__item invite-list__status" style="color: #ff7649">
+        <div style="display: flex; align-items: flex-start" class="invite-list__section__item">
           Registered
         </div>
+
+        <div
+          style="display: flex; align-items: flex-start"
+          class="invite-list__section__item invite-list__status"
+        >
+          <span :class="user.slackRef ? 'active' : 'inactive'">
+            <img src="@/assets/images/slackLogo.png" style="height: 1rem" alt="" />
+          </span>
+          <span :class="user.hasSalesforceIntegration ? 'active' : 'inactive'">
+            <img src="@/assets/images/salesforce.png" style="height: 1rem" alt="" />
+          </span>
+          <span :class="user.hasZoomIntegration ? 'active' : 'inactive'">
+            <img src="@/assets/images/zoom.png" alt="" style="height: 1rem" />
+          </span>
+          <span :class="user.nylasRef ? 'active' : 'inactive'">
+            <img src="@/assets/images/gmailCal.png" alt="" style="height: 1rem" />
+          </span>
+        </div>
+        <!-- <div style="color: white" class="invite-list__section__item invite-list__status">
+          Active workflows: {{user.}}
+        </div> -->
       </div>
       <div v-for="member in team.list" :key="member.id" class="invite-list__section__container">
         <template v-if="member.id !== user.id">
-          <div class="invite-list__section__item invite-list__name">
-            {{ member.email }}
+          <div
+            style="display: flex; align-items: flex-start"
+            class="invite-list__section__item col"
+          >
+            {{ member.firstName ? member.firstName : 'Name pending' }}
+            <p style="color: #beb5cc; font-size: 0.65rem; margin-top: 0.25rem">
+              {{ member.email }}
+            </p>
           </div>
-          <div class="invite-list__section__item invite-list__status">
+          <div style="display: flex; align-items: flex-start" class="invite-list__section__item">
             {{ member.userLevel == 'MANAGER' ? 'Manager' : 'Rep' }}
           </div>
-          <div :class="member.isActive ? 'registered' : 'unregistered'">
+          <div style="display: flex; align-items: flex-start" class="invite-list__section__item">
             {{ member.isActive ? 'Registered' : 'Pending..' }}
           </div>
+          <div
+            style="display: flex; align-items: flex-start"
+            class="invite-list__section__item invite-list__status"
+          >
+            <span :class="member.slackRef ? 'active' : 'inactive'">
+              <img src="@/assets/images/slackLogo.png" style="height: 1rem" alt="" />
+            </span>
+            <span :class="member.hasSalesforceIntegration ? 'active' : 'inactive'">
+              <img src="@/assets/images/salesforce.png" style="height: 1rem" alt="" />
+            </span>
+            <span :class="member.hasZoomIntegration ? 'active' : 'inactive'">
+              <img src="@/assets/images/zoom.png" alt="" style="height: 1rem" />
+            </span>
+            <span :class="member.nylasRef ? 'active' : 'inactive'">
+              <img src="@/assets/images/gmailCal.png" alt="" style="height: 1rem" />
+            </span>
+          </div>
+          <!-- <div class="invite-list__section__item invite-list__status">
+            <p>3</p>
+          </div> -->
         </template>
       </div>
     </div>
@@ -169,6 +258,9 @@ export default {
     await this.listUsers()
   },
   methods: {
+    console(wrd) {
+      console.log(wrd)
+    },
     async listUsers(cursor = null) {
       const res = await SlackOAuth.api.listUsers(cursor)
       this.slackMembers = res.data.members.filter((member) => member.deleted == false)
@@ -222,7 +314,7 @@ export default {
         const res = await User.api.invite(this.userInviteForm.value)
         console.log(res)
         this.$Alert.alert({
-          message: `<h3 style="color:white;"> Your invitation was sent.</h3>`,
+          message: 'Your invitation was sent',
           type: 'success',
           timeout: 3000,
         })
@@ -261,22 +353,77 @@ export default {
 @import '@/styles/mixins/inputs';
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
+
+.col {
+  display: flex;
+  flex-direction: column;
+}
+.section-header {
+  font-size: 1.2rem;
+}
+.key {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  font-size: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.right-key {
+  display: flex;
+  flex-direction: row;
+  width: 35%;
+  justify-content: flex-start;
+}
+.left-key {
+  display: flex;
+  width: 100%;
+  flex-direction: row;
+  justify-self: flex-start;
+}
+
+.complete {
+  border-bottom: 2.9px solid $dark-green;
+  border-radius: 10%;
+  margin-right: 0.5rem;
+  color: $panther-silver;
+}
+.incomplete {
+  border-bottom: 2px solid $coral;
+  color: $panther-silver;
+  border-radius: 10%;
+}
+
 ::v-deep .tn-dropdown__selection-container {
   width: 16rem;
   box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.5);
 }
+
 ::v-deep .tn-dropdown__options__container {
   width: 16rem;
 }
+
 ::v-deep .tn-dropdown__selected-items__item-selection {
   color: $panther;
+}
+
+.active {
+  border-bottom: 2px solid $dark-green;
+  padding: 0.2rem;
+  border-radius: 10%;
+  margin-right: 0.25rem;
+}
+.inactive {
+  border-bottom: 2px solid $coral;
+  padding: 0.2rem;
+  border-radius: 10%;
+  margin-right: 0.25rem;
 }
 .invite-container {
   display: flex;
   flex-flow: row;
   justify-content: center;
   // height: 80vh;
-  width: 100%;
+  width: 80%;
 }
 /*
 Override dropdown select input field
@@ -345,7 +492,6 @@ button {
     color: red;
   }
   &__title {
-    padding-bottom: 1rem;
     font-weight: bold;
     text-transform: uppercase;
     text-align: left;
@@ -354,6 +500,7 @@ button {
     display: flex;
     flex-direction: column;
     align-items: center;
+    margin-top: -4rem;
   }
 }
 .invite-form__organization {
@@ -371,9 +518,8 @@ button {
   &__container {
     background-color: $panther;
     border: none;
-    width: 0%;
-    min-width: 40vw;
-    padding: 1.5rem 1rem 1.5rem 1.5rem;
+    min-width: 60vw;
+    padding: 1.5rem 0rem 1.5rem 1rem;
     border-radius: 5px;
     box-shadow: 0 5px 10px 0 black;
     display: flex;
@@ -390,12 +536,17 @@ button {
       width: 33%;
       overflow-wrap: break-word;
     }
+
+    &__heading {
+      width: 25%;
+    }
   }
   &__name {
     font-size: 0.75rem;
     font-weight: bold !important;
     font-family: #{$bold-font-family};
     text-align: left;
+    color: #f2fff8;
   }
   &__status {
     font-size: 0.75rem;
@@ -404,7 +555,7 @@ button {
 .registered {
   width: 33%;
   font-size: 0.75rem;
-  color: $panther-orange;
+  color: $dark-green;
 }
 .unregistered {
   width: 33%;

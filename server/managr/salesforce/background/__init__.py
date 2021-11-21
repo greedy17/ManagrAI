@@ -20,7 +20,7 @@ from managr.api.decorators import log_all_exceptions, sf_api_exceptions_wf
 from managr.api.emails import send_html_email
 
 from managr.core.models import User
-from managr.organization.models import Account, Stage, Contact
+from managr.organization.models import Account, Stage, Contact, Organization
 from managr.organization.serializers import AccountSerializer, StageSerializer
 from managr.opportunity.models import Opportunity, Lead
 from managr.opportunity.serializers import OpportunitySerializer
@@ -1070,22 +1070,15 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
     blocks.append(block_builders.simple_section(message_string_for_recap, "mrkdwn"))
     if main_form.template.form_type == "UPDATE":
         resource_name = main_form.resource_object.name if main_form.resource_object.name else ""
-
-        blocks.insert(
-            0,
-            block_builders.header_block(
-                f"Recap for {main_form.template.resource} {main_form.template.form_type.lower()} {resource_name}"
-            ),
+        text = (
+            f"Meeting recap for {main_form.template.resource} {main_form.template.form_type.lower()} {resource_name}"
+            if manager_recap
+            else f"Recap for {main_form.template.resource} {main_form.template.form_type.lower()} {resource_name}"
         )
-    elif main_form.template.form_type == "MEETING_REVIEW":
-        resource_name = main_form.resource_object.name if main_form.resource_object.name else ""
         blocks.insert(
-            0,
-            block_builders.header_block(
-                f"Meeting Recap for {main_form.template.resource} {resource_name}"
-            ),
+            0, block_builders.header_block(text),
         )
-    elif main_form.template.form_type == "CREATE":
+    else:
         blocks.insert(
             0, block_builders.header_block(f"Recap for new {main_form.template.resource}"),
         )
@@ -1095,7 +1088,7 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
             "call_details",
             action_id=action_with_params(
                 slack_consts.GONG_CALL_RECORDING,
-                params=[f"u={str(user.id)}", f"resource_id={main_form.resource_id}", "type=recap"],
+                params=[f"u={str(user.id)}", f"resource_id={main_form.resource_id}", "type=recap",],
             ),
             style="primary",
         ),
@@ -1208,3 +1201,17 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
                         f"Failed to send recap to channel for user {user.email} due to {e}"
                     )
                     continue
+
+
+def remove_field(org_id, form_field):
+    org = Organization.objects.get(id=org_id)
+    forms = OrgCustomSlackForm.objects.filter(organization=org)
+    for form in forms:
+        for index, field in enumerate(form.fields.all().order_by("forms__order")):
+            if str(field.id) != form_field:
+                field.forms.first().order = index
+                field.forms.first().save()
+            else:
+                field.forms.first().delete()
+    return
+

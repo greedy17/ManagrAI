@@ -52,13 +52,13 @@ def _convert_to_user_friendly_date(date):
     return date.strftime("%m/%d/%Y")
 
 
-# def _has_alert(user, notification_class, notification_type, resource_id):
-#     return Notification.objects.filter(
-#         user=user,
-#         notification_class=notification_class,
-#         notification_type=notification_type,
-#         resource_id=resource_id,
-#     ).first()
+def _has_workflow(user, notification_class, notification_type, resource_id):
+    return Notification.objects.filter(
+        user=user,
+        notification_class=notification_class,
+        notification_type=notification_type,
+        resource_id=resource_id,
+    ).first()
 
 
 def _send_slack_int_email(user):
@@ -99,50 +99,47 @@ def _process_calendar_details(user_id):
     user = User.objects.get(id=user_id)
     events = user.nylas._get_calendar_data()
 
-    
     processed_data = []
     for event in events:
-        data = {};
-        data['title'] = event.get('title', None); 
-        data['participants'] = event.get('participants', None);
-        data['times'] = event.get('when', None);
+        data = {}
+        data["title"] = event.get("title", None)
+        data["participants"] = event.get("participants", None)
+        data["times"] = event.get("when", None)
         processed_data.append(data)
     return processed_data
 
-    
 
 def _send_calendar_details(user_id):
     user = User.objects.get(id=user_id)
     processed_data = _process_calendar_details(user_id)
-    
-    # processed_data checks to see how many events exists 
+
+    # processed_data checks to see how many events exists
     blocks = [
         block_builders.header_block(
-             f"Upcoming Meetings For Today! :calendar:"
+            f"Upcoming Meetings For Today! :calendar:"
             # f"Good Morning! You have " + str(len(processed_data)) + " meetings today"
         )
-          
     ]
-    
+
     for event in processed_data:
         blocks = [
-            *blocks,         
-            *block_sets.get_block_set('calendar_reminders_blockset', {'event_data': event})
-            ]
+            *blocks,
+            *block_sets.get_block_set("calendar_reminders_blockset", {"event_data": event}),
+        ]
     # Loop thru processed_data and create block for each one
     # print(blocks)
     try:
-       slack_requests.send_channel_message(
-          user.slack_integration.channel,
-          user.organization.slack_integration.access_token,
-          text="Calendar: Meetings for Today",
-          block_set= blocks
-    )
+        slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            text="Calendar: Meetings for Today",
+            block_set=blocks,
+        )
     except Exception as e:
-     logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
+        logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
     # print(processed_data)
     return processed_data
-    
+
 
 def _generate_notification_key_lapsed(num):
     if num == 1:
@@ -183,15 +180,16 @@ def check_reminders(user_id):
                         workflows = check_workflows_count(user.id)
                         if workflows["status"] and workflows["workflow_count"] <= 2:
                             emit_process_send_workflow_reminder(
-                                user.id, workflows["workflow_count"]
+                                str(user.id), workflows["workflow_count"]
                             )
                 elif key == core_consts.MEETING_REMINDER_REP:
                     meetings = check_for_uncompleted_meetings(user.id)
+                    logger.info(f"UNCOMPLETED MEETINGS FOR {user.email}: {meetings}")
                     if meetings["status"]:
-                        emit_process_send_meeting_reminder(user.id, meetings["not_completed"])
+                        emit_process_send_meeting_reminder(str(user.id), meetings["not_completed"])
                 elif key == core_consts.MEETING_REMINDER_MANAGER:
                     meetings = check_for_uncompleted_meetings(user.id, True)
                     if meetings["status"]:
-                        emit_process_send_manager_reminder(user.id, meetings["not_completed"])
+                        emit_process_send_manager_reminder(str(user.id), meetings["not_completed"])
 
     return

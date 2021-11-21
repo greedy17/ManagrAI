@@ -1,18 +1,16 @@
 <template>
   <div>
     <div class="sidenav sidenav__background">
-      <div>
+      <div style="margin-bottom: 2rem">
         <h2 class="title">Workflow Automations</h2>
       </div>
       <router-link exact-active-class="active" :to="{ name: 'CreateNew' }">
         <div :class="isOnboarding ? 'onboarding row' : 'row'">
           <img src="@/assets/images/trophy.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
           <h3 v-if="user.userLevel === 'REP'">
-            Popular Workflows <span style="margin-left: 0.25rem" class="counter">5</span>
+            Popular<span style="margin-left: 0.5rem" class="counter">5</span>
           </h3>
-          <h3 v-else>
-            Popular Workflows <span style="margin-left: 0.25rem" class="counter">6</span>
-          </h3>
+          <h3 v-else>Popular<span style="margin-left: 0.5rem" class="counter">6</span></h3>
         </div>
       </router-link>
 
@@ -49,7 +47,7 @@
         <div class="row">
           <img src="@/assets/images/star.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
           <h3 @click="onboardComplete">
-            Saved Workflows
+            Saved
             <span style="margin-left: 0.25rem" class="counter">{{
               alertsCount(templates.list.length)
             }}</span>
@@ -60,8 +58,8 @@
         <div class="row">
           <img src="@/assets/images/star.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
           <h3>
-            Saved Workflows
-            <span style="margin-left: 0.25rem" class="counter">{{
+            Saved
+            <span style="margin-left: 0.5rem" class="counter">{{
               alertsCount(templates.list.length)
             }}</span>
           </h3>
@@ -71,19 +69,13 @@
       <router-link exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
         <div :class="isOnboarding ? 'onboarding row' : 'row'">
           <img src="@/assets/images/build.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
-          <h3>Customized Workflows</h3>
+          <h3>Custom</h3>
         </div>
       </router-link>
 
-      <div>
-        <div :class="isOnboarding ? 'onboarding row' : 'row'" style="cursor: not-allowed">
-          <img
-            src="@/assets/images/analyze.png"
-            style="height: 1.25rem; margin-right: 0.5rem"
-            alt=""
-          />
-          <h3>Analyze <span class="coming-soon">coming soon</span></h3>
-        </div>
+      <div :class="isOnboarding ? 'onboarding row' : 'row'" style="cursor: not-allowed">
+        <img src="@/assets/images/org.png" style="height: 1.25rem; margin-right: 0.5rem" alt="" />
+        <h3>Org Created<span class="coming-soon">coming soon</span></h3>
       </div>
     </div>
 
@@ -152,10 +144,17 @@ export default {
       return this.templates.list.length
     },
     hasZoomChannel() {
-      return this.$store.state.user.slackAccount.zoomChannel
+      if (this.hasSlack) {
+        return this.$store.state.user.slackAccount.zoomChannel
+      }
     },
     hasRecapChannel() {
-      return this.$store.state.user.slackAccount.recapChannel
+      if (this.hasSlack) {
+        return this.$store.state.user.slackAccount.recapChannel
+      }
+    },
+    hasSlack() {
+      return this.$store.state.user.slackAccount
     },
     isOnboarding() {
       return this.$store.state.user.onboarding
