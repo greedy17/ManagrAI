@@ -443,6 +443,38 @@
 
         <div class="card">
           <div class="card__header">
+            <img style="height: 1.5rem" src="@/assets/images/outreach.webp" />
+          </div>
+          <p class="card-text">Add Contacts to Sequences</p>
+          <div class="card__body">
+            <PulseLoadingSpinnerButton
+              v-if="!hasOutreachIntegration && user.isAdmin"
+              :disabled="hasOutreachIntegration"
+              @click="onGetAuthLink('OUTREACH')"
+              style="margin-left: 1rem; cursor: pointer"
+              class="orange_button"
+              text="Connect"
+              :loading="generatingToken && selectedIntegration == 'OUTREACH'"
+            ></PulseLoadingSpinnerButton>
+            <div v-else-if="hasOutreachIntegration && user.isAdmin">
+              <img
+                src="@/assets/images/unplug.png"
+                :loading="generatingToken && selectedIntegration == 'OUTREACH'"
+                @click="onRevoke('OUTREACH')"
+                style="height: 2rem; cursor: pointer"
+              />
+              <!-- <img
+              src="@/assets/images/refresh.png"
+              :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
+              style="height: 2rem; cursor: pointer"
+            /> -->
+            </div>
+            <p v-else="hasOutreachIntegration">Outreach is connected!</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__header">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="100"
@@ -542,6 +574,7 @@ import Nylas from '@/services/nylas'
 import Salesforce from '@/services/salesforce'
 import SalesloftAccount from '@/services/salesloft'
 import GongAccount from '@/services/gong'
+import OutreachAccount from '@/services/outreach'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import GoogleButton from '@/components/GoogleButton'
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
@@ -716,6 +749,9 @@ export default {
     hasGongIntegration() {
       return !!this.$store.state.user.gongAccount && this.$store.state.user.hasGongIntegration
     },
+    hasOutreachIntegration() {
+      return !!this.$store.state.user.outreachAccount && this.$store.state.user.hasOutreachIntegration
+    },
     hasSalesloftIntegration() {
       return (
         !!this.$store.state.user.salesloftAccount && this.$store.state.user.hasSalesloftIntegration
@@ -753,6 +789,8 @@ export default {
           return SalesloftAccount
         case 'GONG':
           return GongAccount
+        case 'OUTREACH':
+          return OutreachAccount
         default:
           return null
       }

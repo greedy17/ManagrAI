@@ -1237,7 +1237,7 @@ def process_paginate_alerts(payload, context):
     alert_template = alert_instance.template
     alert_text = alert_template.title
     blocks = [
-        block_builders.header_block(f"{alert_text}"),
+        block_builders.header_block(f"{len(alert_instances)} results for workflow {alert_text}"),
     ]
     alert_instances = custom_paginator(alert_instances, page=int(context.get("new_page", 0)))
     for alert_instance in alert_instances.get("results", []):
@@ -1353,6 +1353,81 @@ def process_show_cadence_modal(payload, context):
             "title": {"type": "plain_text", "text": "Add to a Cadence"},
             "blocks": get_block_set(
                 "cadence_modal_blockset",
+                context={
+                    "u": context.get("u"),
+                    "resource_name": resource_name,
+                    "resource_id": resource_id,
+                    "resource_type": resource_type,
+                },
+            ),
+            "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
+            "private_metadata": json.dumps(private_metadata),
+        },
+    }
+    if is_update:
+        data["view_id"] = is_update.get("id")
+    try:
+        slack_requests.generic_request(url, data, access_token=org.slack_integration.access_token)
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
+        )
+
+
+@processor(required_context="u")
+def process_show_sequence_modal(payload, context):
+    u = User.objects.get(id=context.get("u"))
+    is_update = payload.get("view", None)
+    type = context.get("type", None)
+    resource_name = (
+        payload["view"]["state"]["values"]["select_existing"][
+            f"{slack_const.GET_USER_ACCOUNTS}?u={u.id}&type=command"
+        ]["selected_option"]["text"]["text"]
+        if type == "command"
+        else context.get("resource_name")
+    )
+    resource_id = (
+        payload["view"]["state"]["values"]["select_existing"][
+            f"{slack_const.GET_USER_ACCOUNTS}?u={u.id}&type=command"
+        ]["selected_option"]["value"]
+        if type == "command"
+        else context.get("resource_id")
+    )
+    resource_type = "Account" if type == "command" else context.get("resource_type")
+    url = f"{slack_const.SLACK_API_ROOT}{slack_const.VIEWS_UPDATE if is_update else slack_const.VIEWS_OPEN}"
+    trigger_id = payload["trigger_id"]
+    if is_update:
+        meta_data = json.loads(payload["view"]["private_metadata"])
+
+    org = u.organization
+    private_metadata = {
+        "channel_id": meta_data["channel_id"] if type == "command" else payload["channel"]["id"],
+        "slack_id": meta_data["slack_id"] if type == "command" else payload["user"]["id"],
+        "resource_name": resource_name,
+        "resource_id": resource_id,
+        "resource_type": resource_type,
+    }
+    private_metadata.update(context)
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.ADD_TO_SEQUENCE,
+            "title": {"type": "plain_text", "text": "Add to a Sequence"},
+            "blocks": get_block_set(
+                "sequence_modal_blockset",
                 context={
                     "u": context.get("u"),
                     "resource_name": resource_name,
@@ -1559,10 +1634,11 @@ def process_mark_complete(payload, context):
         config_id=instance.config_id,
     ).filter(completed=False)
     alert_instance = alert_instances.first()
+    alert_template = alert_instance.template
+    text = alert_template.title
     if not alert_instance:
         blocks = [
-            block_builders.header_block(f"{instance.template.title}"),
-            block_builders.simple_section("You're all caught up with these workflows! Great job!"),
+            block_builders.simple_section("You're all caught up with this workflows! Great job!"),
         ]
         slack_requests.update_channel_message(
             payload["channel"]["id"],
@@ -1572,10 +1648,9 @@ def process_mark_complete(payload, context):
             block_set=blocks,
         )
         return
-    alert_template = alert_instance.template
-    alert_text = alert_template.title
+
     blocks = [
-        block_builders.header_block(f"{alert_text}"),
+        block_builders.header_block(f"{len(alert_instances)} results for workflow {text}"),
     ]
     alert_instances = custom_paginator(alert_instances, page=int(context.get("page")))
     for alert_instance in alert_instances.get("results", []):
@@ -1597,11 +1672,7 @@ def process_mark_complete(payload, context):
         ]
 
     res = slack_requests.update_channel_message(
-        payload["channel"]["id"],
-        payload["message"]["ts"],
-        access_token,
-        text=alert_text,
-        block_set=blocks,
+        payload["channel"]["id"], payload["message"]["ts"], access_token, block_set=blocks,
     )
     return
 
@@ -1678,6 +1749,7 @@ def handle_block_actions(payload):
         slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL: process_check_is_owner,
         slack_const.PAGINATE_ALERTS: process_paginate_alerts,
         slack_const.ADD_TO_CADENCE_MODAL: process_show_cadence_modal,
+        slack_const.ADD_TO_SEQUENCE_MODAL: process_show_sequence_modal,
         slack_const.GET_USER_ACCOUNTS: process_show_cadence_modal,
         slack_const.GET_NOTES: process_get_notes,
         slack_const.CALL_ERROR: process_call_error,

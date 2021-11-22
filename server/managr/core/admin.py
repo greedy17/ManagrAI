@@ -10,6 +10,7 @@ from django.contrib.auth.forms import ReadOnlyPasswordHashField, UserCreationFor
 from managr.slack.models import UserSlackIntegration
 from managr.zoom.models import ZoomAuthAccount
 from managr.salesloft.models import SalesloftAccount
+from managr.outreach.models import OutreachAccount
 from .models import (
     User,
     NylasAuthAccount,

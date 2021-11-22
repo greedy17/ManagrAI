@@ -4,8 +4,8 @@ import axios from 'axios'
 import CSRF from '@/services/csrf'
 import API_BASE from '@/services/api/base'
 
-export default class SalesloftAccountAPI extends ModelAPI {
-  static ENDPOINT = 'users/salesloft/'
+export default class OutreachAccountAPI extends ModelAPI {
+  static ENDPOINT = 'users/outreach/'
   static FILTERS_MAP = {
     page: ApiFilter.create({ key: 'page' }),
     pageSize: ApiFilter.create({ key: 'page_size' }),
@@ -14,19 +14,19 @@ export default class SalesloftAccountAPI extends ModelAPI {
     return apiClient()
   }
   static create(cls) {
-    return new SalesloftAccountAPI(cls)
+    return new OutreachAccountAPI(cls)
   }
   async getAuthLink() {
     try {
-      const res = await this.client.get(SalesloftAccountAPI.ENDPOINT + 'authorization')
+      const res = await this.client.get(OutreachAccountAPI.ENDPOINT + 'authorization')
       return res.data
     } catch (e) {
-      apiErrorHandler({ apiName: 'Error Retrieving Salesloft Auth Link' })(e)
+      apiErrorHandler({ apiName: 'Error Retrieving Outreach Auth Link' })(e)
     }
   }
   async authenticate(code) {
     try {
-      const res = await this.client.post(SalesloftAccountAPI.ENDPOINT + 'authenticate', { code: code })
+      const res = await this.client.post(OutreachAccountAPI.ENDPOINT + 'authenticate', { code: code })
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Data from Code' })(e)
@@ -35,7 +35,7 @@ export default class SalesloftAccountAPI extends ModelAPI {
 
   async revoke() {
     try {
-      await this.client.delete(SalesloftAccountAPI.ENDPOINT + 'revoke')
+      await this.client.delete(OutreachAccountAPI.ENDPOINT + 'revoke')
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Data from Code' })(e)
     }
