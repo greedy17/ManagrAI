@@ -25,17 +25,8 @@
     </div>
     <div class="alerts-page__settings">
       <div style="margin-right: 1rem" class="alerts-page__settings__day">
-        <p style="color: #ff7649">Day:</p>
-        <div style="margin-top: 1rem; margin-bottom: 1rem" v-if="weeklyOrMonthly == 'WEEKLY'">
-          <!-- <div :key="value" v-for="(key, value) in weeklyOpts">
-            <input
-              :value="key.value"
-              v-model="form.field.recurrenceDay.value"
-              id="value"
-              type="radio"
-            />
-            <label for="value">{{ key.key }}</label>
-          </div> -->
+        <p>Select day:</p>
+        <div style="margin-top: -1rem" v-if="weeklyOrMonthly == 'WEEKLY'">
           <FormField>
             <template v-slot:input>
               <DropDownSearch
@@ -45,7 +36,7 @@
                 @input="form.field.recurrenceDay.validate()"
                 displayKey="key"
                 valueKey="value"
-                nullDisplay="Select Day"
+                nullDisplay="Days"
                 searchable
                 local
               />
@@ -53,13 +44,6 @@
           </FormField>
         </div>
         <div v-else-if="weeklyOrMonthly == 'MONTHLY'">
-          <!-- <FormField
-            placeholder="Day of month"
-            :errors="form.field.recurrenceDay.errors"
-            @blur="form.field.recurrenceDay.validate()"
-            v-model="form.field.recurrenceDay.value"
-            large
-          /> -->
           <FormField
             placeholder="Day of month"
             @blur="form.field.recurrenceDay.validate()"
@@ -69,26 +53,8 @@
         </div>
       </div>
       <div style="margin-right: 1rem" class="alerts-page__settings__target-users">
-        <p style="color: #ff7649">Select Pipelines:</p>
-
-        <!-- <input
-          class="search__input"
-          type="text"
-          v-model="searchQuery"
-          placeholder="Search pipelines..."
-        />
-
-        <div :key="value" v-for="(key, value) in filteredUserTargets">
-          <input
-            v-model="form.field.alertTargets.value"
-            :value="key.id"
-            id="value"
-            type="checkbox"
-          />
-          <label for="value">{{ key.fullName }}</label>
-        </div> -->
-
-        <FormField :errors="form.field.alertTargets.errors">
+        <p>Select Users:</p>
+        <FormField style="margin-top: -1rem" :errors="form.field.alertTargets.errors">
           <template v-slot:input>
             <DropDownSearch
               :items.sync="userTargetsOpts"
@@ -97,7 +63,7 @@
               @input="form.field.alertTargets.validate()"
               displayKey="fullName"
               valueKey="id"
-              nullDisplay="Select pipelines"
+              nullDisplay="Users"
               searchable
               multi
               medium
@@ -109,120 +75,93 @@
           </template>
         </FormField>
       </div>
-      <div class="alerts-page__settings__recipients">
-        <p style="color: #ff7649">Recipients:</p>
+      <div style="margin-top: 1rem" class="alerts-page__settings__recipients">
         <div class="alerts-page__settings__recipient-type">
-          <div
-            class="row__"
-            style="
-              margin-bottom: 0.75rem;
-              margin-top: 2rem;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            "
-          >
-            <label>DM users</label>
+          <div v-if="!channelName" class="row__">
+            <label>Select #channel</label>
             <ToggleCheckBox
               style="margin: 0.25rem"
-              @input="
-                form.field.recipientType.value == 'USER_LEVEL'
-                  ? (form.field.recipientType.value = recipientTypeToggle(
-                      form.field.recipientType.value,
-                    ))
-                  : (form.field.recipientType.value = recipientTypeToggle(
-                      form.field.recipientType.value,
-                    ))
-              "
-              :value="form.field.recipientType.value !== 'USER_LEVEL'"
+              @input="changeCreate"
+              :value="create"
               offColor="#199e54"
               onColor="#199e54"
             />
-            <label>Send to #Channel</label>
+            <label>Create #channel</label>
+          </div>
+          <label v-else for="channel" style="font-weight: bold"
+            >Alert will send to
+            <span style="color: #199e54; font-size: 1.2rem">{{ channelName }}</span>
+            channel</label
+          >
+        </div>
+
+        <div
+          style="
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+          "
+          v-if="create"
+        >
+          <input
+            v-model="channelName"
+            class="search__input"
+            type="text"
+            name="channel"
+            id="channel"
+            @input="logNewName(channelName)"
+          />
+
+          <div v-if="!channelCreated" v style="margin-top: 1.25rem">
+            <button v-if="channelName" @click="createChannel(channelName)" class="purple__button">
+              Create Channel
+            </button>
+            <button v-else class="disabled__button">Create Channel</button>
           </div>
         </div>
 
-        <div v-if="form.field.recipientType.value == 'USER_LEVEL'">
-          <!-- <input
-            class="search__input"
-            type="text"
-            v-model="searchText"
-            placeholder="Search Recipients..."
-          />
-
-          <div :key="value" v-for="(key, value) in filteredRecipients">
-            <input
-              type="checkbox"
-              id="value"
-              :value="key.id"
-              v-model="form.field.recipients.value"
-              @click="setRecipients(key)"
-            />
-            <label for="value">{{ key.fullName }}</label>
-          </div> -->
-
-          <FormField :errors="form.field.recipients.errors">
+        <div v-else>
+          <FormField>
             <template v-slot:input>
               <DropDownSearch
-                :items.sync="recipientOpts"
-                :itemsRef.sync="form.field._recipients.value"
-                v-model="form.field.recipients.value"
-                @input="form.field.recipients.validate()"
-                displayKey="fullName"
-                valueKey="id"
-                nullDisplay="Select Recipients"
-                searchable
-                multi
-                medium
-                :loading="users.loadingNextPage"
-                :hasNext="!!users.pagination.hasNextPage"
-                @load-more="onUsersNextPage"
-                @search-term="onSearchUsers"
-              />
-            </template>
-          </FormField>
-        </div>
-
-        <div v-if="form.field.recipientType.value == 'SLACK_CHANNEL'">
-          <!-- <div :key="value" v-for="(key, value) in filteredChannels">
-            <input
-              @click="setRecipient(key)"
-              v-model="form.field.recipients.value"
-              :value="key.id"
-              type="radio"
-              id="value"
-              style="height: 1rem; margin-top: 0.5rem"
-            />
-            <label style="margin-bottom: 1rem" for="value">{{ key.name }}</label>
-          </div> -->
-
-          <FormField :errors="form.field.recipients.errors">
-            <template v-slot:input>
-              <DropDownSearch
-                :items.sync="reversedChannels"
+                :items.sync="userChannelOpts.channels"
                 :itemsRef.sync="form.field._recipients.value"
                 v-model="form.field.recipients.value"
                 @input="form.field.recipients.validate()"
                 displayKey="name"
                 valueKey="id"
-                nullDisplay="Search Channels"
-                :hasNext="!!channelOpts.nextCursor"
-                @load-more="listChannels(channelOpts.nextCursor)"
+                nullDisplay="Channels"
+                :hasNext="!!userChannelOpts.nextCursor"
+                @load-more="listChannels(userChannelOpts.nextCursor)"
                 searchable
                 local
               >
-                <!-- <template v-slot:tn-dropdown-option="{ option }">
-                          <img
-                            v-if="option.isPrivate == true"
-                            class="card-img"
-                            style="width: 1rem; height: 1rem; margin-right: 0.2rem"
-                            src="@/assets/images/lockAsset.png"
-                          />
-                          {{ option['name'] }}
-                        </template> -->
+                <template v-slot:tn-dropdown-option="{ option }">
+                  <img
+                    v-if="option.isPrivate == true"
+                    class="card-img"
+                    style="width: 1rem; height: 1rem; margin-right: 0.2rem"
+                    src="@/assets/images/lockAsset.png"
+                  />
+                  {{ option['name'] }}
+                </template>
               </DropDownSearch>
             </template>
           </FormField>
+
+          <p
+            v-if="form.field.recipients.value.length > 0"
+            @click="removeTarget"
+            :class="form.field.recipients.value ? 'selected__item' : 'visible'"
+          >
+            <img
+              src="@/assets/images/remove.png"
+              style="height: 1rem; margin-right: 0.25rem"
+              alt=""
+            />
+            {{ form.field._recipients.value.name }}
+          </p>
         </div>
       </div>
     </div>
@@ -271,7 +210,10 @@ export default {
   },
   data() {
     return {
-      channelOpts: new SlackListResponse(),
+      userChannelOpts: new SlackListResponse(),
+      create: true,
+      channelName: '',
+      channelCreated: false,
       searchQuery: '',
       searchText: '',
       searchChannels: '',
@@ -305,7 +247,7 @@ export default {
   },
   async created() {
     if (this.user.slackRef) {
-      await this.listChannels()
+      await this.listUserChannels()
     }
     if (this.user.userLevel == 'MANAGER') {
       await this.users.refresh()
@@ -339,6 +281,113 @@ export default {
         responseMetadata: { nextCursor: res.nextCursor },
       })
       this.channelOpts = results
+    },
+    async listUserChannels(cursor = null) {
+      const res = await SlackOAuth.api.listUserChannels(cursor)
+      const results = new SlackListResponse({
+        channels: [...this.userChannelOpts.channels, ...res.channels],
+        responseMetadata: { nextCursor: res.nextCursor },
+      })
+      this.userChannelOpts = results
+    },
+    logNewName(str) {
+      let new_str = ''
+      new_str = str.replace(/\s+/g, '-').toLowerCase()
+      this.channelName = new_str
+    },
+    changeCreate() {
+      this.create = !this.create
+      if (this.form.field.recipientType.value !== 'SLACK_CHANNEL') {
+        this.form.field.recipientType.value = 'SLACK_CHANNEL'
+      }
+    },
+    async createChannel(name) {
+      this.form.field.recipientType.value = 'SLACK_CHANNEL'
+      const res = await SlackOAuth.api.createChannel(name)
+      if (res.channel) {
+        this.form.field._recipients.value = res.channel
+        this.form.field.recipients.value = res.channel.id
+        this.channelCreated = !this.channelCreated
+      } else {
+        console.log(res.error)
+        this.channelName = ''
+        if (res.error == 'name_taken') {
+          this.$Alert.alert({
+            message: 'Channel name already taken',
+            type: 'error',
+            timeout: 2000,
+          })
+        } else if (res.error == 'invalid_name_maxlength') {
+          this.$Alert.alert({
+            message: 'Channel name exceeds maximum length',
+            type: 'error',
+            timeout: 2000,
+          })
+        } else if (res.error == 'restricted_action') {
+          this.$Alert.alert({
+            message: 'A team preference is preventing you from creating channels',
+            type: 'error',
+            timeout: 2000,
+          })
+        } else if (res.error == 'invalid_name_specials') {
+          this.$Alert.alert({
+            message:
+              'The only special characters allowed are hyphens and underscores. Channel names must also begin with a letter ',
+            type: 'error',
+            timeout: 3000,
+          })
+        } else if (res.error == 'org_login_required') {
+          this.$Alert.alert({
+            message:
+              'The workspace is undergoing an enterprise migration and will not be available until migration is complete.',
+            type: 'error',
+            timeout: 2000,
+          })
+        } else if (res.error == 'ekm_access_denied') {
+          this.$Alert.alert({
+            message: 'Administrators have suspended the ability to post a message.',
+            type: 'error',
+            timeout: 2000,
+          })
+        } else if (res.error == 'too_many_convos_for_team') {
+          this.$Alert.alert({
+            message: 'The workspace has exceeded its limit of public and private channels.',
+            type: 'error',
+            timeout: 2000,
+          })
+        } else if (res.error == 'no_permission') {
+          this.$Alert.alert({
+            message:
+              'The workspace token used in this request does not have the permissions necessary to complete the request. Make sure your app is a member of the conversation its attempting to post a message to.',
+            type: 'error',
+            timeout: 4000,
+          })
+        } else if (res.error == 'team_access_not_granted') {
+          this.$Alert.alert({
+            message:
+              'You are not granted the specific workspace access required to complete this request.',
+            type: 'error',
+            timeout: 2000,
+          })
+        } else if (res.error == 'invalid_name') {
+          this.$Alert.alert({
+            message: 'Channel name invalid. Please try again',
+            type: 'error',
+            timeout: 2000,
+          })
+        } else {
+          this.$Alert.alert({
+            message: 'Something went wrong..Please try again',
+            type: 'error',
+            timeout: 2000,
+          })
+          console.log(res.error)
+        }
+      }
+    },
+    removeTarget() {
+      this.form.field.recipients.value = []
+      this.form.field._recipients.value = []
     },
     recipientTypeToggle(value) {
       if (!this.user.slackRef) {
@@ -474,13 +523,11 @@ export default {
   border-radius: 4px;
   line-height: 1.29;
   letter-spacing: 0.5px;
-  color: #4d4e4c;
   height: 2.5rem;
-  background-color: #beb5cc;
-  border: 1px solid #5d5e5e;
-  width: 70%;
+  background-color: white;
+  border: none;
   // padding: 0 0 0 1rem;
-  margin: 1rem;
+  margin-top: 1rem;
   -webkit-box-shadow: 1px 4px 7px black;
   box-shadow: 1px 4px 7px black;
 }
@@ -525,5 +572,61 @@ export default {
   &-remove {
     justify-self: end;
   }
+}
+.invisible {
+  display: none;
+}
+.selected__item {
+  padding: 0.5rem 1.2rem;
+  background-color: transparent;
+  border: 3px solid white;
+  color: white;
+  border-radius: 0.3rem;
+  width: 50%;
+  text-align: center;
+}
+.row__ {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+}
+.purple__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem 1rem;
+  border-radius: 0.3rem;
+  font-weight: bold;
+  line-height: 1.14;
+  text-indent: none;
+  border-style: none;
+  letter-spacing: 0.03rem;
+  color: white;
+  background-color: $dark-green;
+  cursor: pointer;
+  height: 2rem;
+  width: 10rem;
+  font-weight: bold;
+  font-size: 1.02rem;
+}
+.disabled__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem 1rem;
+  border-radius: 0.3rem;
+  font-weight: bold;
+  line-height: 1.14;
+  text-indent: none;
+  border-style: none;
+  letter-spacing: 0.03rem;
+  background-color: $panther-silver;
+  color: $panther-gray;
+  cursor: not-allowed;
+  height: 2rem;
+  width: 10rem;
+  font-weight: bold;
+  font-size: 1.02rem;
 }
 </style>

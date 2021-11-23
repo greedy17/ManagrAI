@@ -234,7 +234,6 @@ import ExpandablePanel from '@/components/ExpandablePanel'
 import FormField from '@/components/forms/FormField'
 import AlertsEditPanel from '@/views/settings/alerts/view/_AlertsEditPanel'
 import Modal from '@/components/InviteModal'
-
 /**
  * Services
  *
@@ -296,6 +295,7 @@ export default {
         (channel) => channel.id === this.zoomChannel,
       )[0].name
     }
+    window.addEventListener('beforeunload', this.showLoader)
   },
   methods: {
     logChannels() {
@@ -351,7 +351,6 @@ export default {
       this.deleteOpen === false ? (this.deleteOpen = true) : (this.deleteOpen = false)
     },
     closeEdit() {
-      this.editing = !this.editing
       this.$router.go()
     },
     async listUserChannels(cursor = null) {
@@ -479,6 +478,7 @@ export default {
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
+
 ::v-deep .item-container__label {
   color: white;
   border: none;
@@ -548,8 +548,8 @@ export default {
   background-color: $panther;
   border-radius: 1rem;
   color: white;
-  height: 60vh;
-  width: 80%;
+  height: 70vh;
+  width: 100vw;
   display: flex;
   align-items: center;
   justify-content: space-between;
