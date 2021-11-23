@@ -8,7 +8,7 @@
         </span>
       </h2>
       <p style="text-align: center; color: black; font-weight: bold">
-        Create or select a slack #channel to recieve your meeting recaps
+        Log meetings and save attendees right after the meeting ends
       </p>
     </div>
 
@@ -166,13 +166,12 @@ export default {
       this.createdZoomChannel = ''
       this.zoomChannel = ''
       this.$router.push({ name: 'CreateNew' })
+      location.reload()
       this.$Alert.alert({
         type: 'success',
         message: 'Workflow saved successfully',
         timeout: 2000,
       })
-      this.$router.push({ name: 'CreateNew' })
-      location.reload()
     },
     removeZoomChannel() {
       this.zoomChannel = ''
