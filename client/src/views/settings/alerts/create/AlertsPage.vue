@@ -77,7 +77,7 @@
 
       <div
         :class="
-          !(hasZoomChannel || hasRecapChannel) && isOnboarding && !isAdmin
+          !(hasZoomChannel || recapChannel) && isOnboarding && !isAdmin
             ? 'onboarding card__'
             : 'card__'
         "
