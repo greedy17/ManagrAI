@@ -38,6 +38,9 @@ import DealRotting from '@/views/settings/alerts/create/templates/DealRotting'
 import UpdateForecast from '@/views/settings/alerts/create/templates/UpdateForecast'
 import LogZoom from '@/views/settings/alerts/create/templates/LogZoom'
 import ZoomRecap from '@/views/settings/alerts/create/templates/ZoomRecap'
+import Custom from '@/views/customize/Custom'
+import ValidationRules from '@/views/customize/ValidationRules'
+import Required from '@/views/customize/Required'
 
 // TODO: We should keep this style guide page
 // import Styles from '@/views/settings/Styles'
@@ -151,11 +154,6 @@ export default new Router({
       component: UpdateOpportunity
     },
     {
-      path: '/customize',
-      name: 'CustomizeLandingPage',
-      component: CustomizeLandingPage,
-    },
-    {
       path: '/create-opportunity',
       name: 'CreateOpportunity',
       component: CreateOpportunity,
@@ -189,6 +187,28 @@ export default new Router({
       path: '/recap-zoom-meetings',
       name: 'ZoomRecap',
       component: ZoomRecap,
+    },
+    {
+      path: '/map',
+      name: 'CustomizeLandingPage',
+      component: CustomizeLandingPage,
+      children: [
+        {
+          path: 'required',
+          name: 'Required',
+          component: Required,
+        },
+        {
+          path: 'validation',
+          name: 'ValidationRules',
+          component: ValidationRules,
+        },
+        {
+          path: 'custom',
+          name: 'Custom',
+          component: Custom,
+        },
+      ]
     },
     {
       path: '/alerts',

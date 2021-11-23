@@ -104,329 +104,18 @@
     </div>
 
     <div class="opportunity__row">
-      <div class="opportunity__column">
-        <div class="fields_title" style="text-align: center">1. Select your fields</div>
-
-        <div class="collection_fields">
-          <div>
-            <p v-if="resource == OPPORTUNITY" class="popular_fields">
-              These
-              <span @click="$refs.modalName.openModal()" class="popularModal">fields</span> are the
-              most popular
-            </p>
-            <p v-else-if="resource == CONTACT" class="popular_fields">
-              These
-              <span @click="$refs.ContactModal.openModal()" class="popularModal">fields</span> are
-              the most popular
-            </p>
-            <p v-else-if="resource == ACCOUNT" class="popular_fields">
-              These
-              <span @click="$refs.AccountModal.openModal()" class="popularModal">fields</span> are
-              the most popular
-            </p>
-            <p v-else class="popular_fields">
-              These
-              <span @click="$refs.LeadModal.openModal()" class="popularModal">fields</span> are the
-              most popular
-            </p>
+      <div class="collection_fields">
+        <div class="header">
+          <div style="margin-right: 2rem" class="center">
+            <img style="height: 2rem" src="@/assets/images/slackLogo.png" alt="" />
+            <p>Fields you'll see in slack</p>
           </div>
-          <CollectionSearch
-            :collection="formFields"
-            itemDisplayKey="referenceDisplayLabel"
-            :showSubmitBtn="false"
-            @onClickItem="
-              (e) => {
-                onAddField(e)
-              }
-            "
-            @onSearch="
-              () => {
-                formFields.pagination = new Pagination()
-              }
-            "
-          >
-            <template v-slot:item="{ result }">
-              <div class="slack-form-builder__container">
-                <CheckBox :checked="addedFieldIds.includes(result.id)" />
-                <div class="slack-form-builder__sf-field">
-                  {{ result['referenceDisplayLabel'] }}
-                </div>
-              </div>
-            </template>
-          </CollectionSearch>
-          <div
-            class="paginator__container"
-            v-if="formFields.pagination.next || formFields.pagination.previous"
-          >
-            <div class="paginator__text">View More</div>
-
-            <Paginator
-              :pagination="formFields.pagination"
-              @next-page="nextPage"
-              @previous-page="previousPage"
-              :loading="formFields.loadingNextPage"
-              arrows
-              size="small"
-              class="paginator"
-            />
+          <div class="center">
+            <img style="width: 2.5rem; height: 2rem" src="@/assets/images/salesforce.png" alt="" />
+            <p>SFDC fields you'll be updating</p>
           </div>
         </div>
       </div>
-
-      <div class="opportunity__column" v-if="customForm">
-        <div class="fields_title" style="text-align: center">2. Re-order</div>
-        <div class="slack-form-builder__form">
-          <h2 style="text-align: center; margin-bottom: 1rem">Slack form</h2>
-
-          <div class="slack-form-builder__form-meta" v-if="customForm.stage">
-            <!-- <h5 style="margin-top: -0.5rem">Previous stage specific forms</h5> -->
-            <h5 style="margin-top: -0.5rem" v-if="!orderedStageForm.length">
-              This is your first stage specific form
-            </h5>
-
-            <div :key="key" v-for="(form, key) in orderedStageForm">
-              <div style="margin-top: 1rem">
-                <i style="text-transform: uppercase; font-size: 12px; color: #beb5cc"
-                  >Fields from <strong>{{ form.stage }}</strong> stage</i
-                >
-              </div>
-              <div class="stages-list">
-                <div :key="key" v-for="(val, key) in form.fieldsRef">
-                  <ul>
-                    <li>{{ val.referenceDisplayLabel }}</li>
-                  </ul>
-                </div>
-                <!-- <ListContainer horizontal>
-                  <template v-slot:list>
-                    <ListItem
-                      @item-selected="onAddField(val)"
-                      :key="key"
-                      v-for="(val, key) in form.fieldsRef"
-                      :item="val.referenceDisplayLabel"
-                      :active="addedFieldIds.includes(val.id)"
-                      showIcon
-                    />
-                  </template>
-                </ListContainer> -->
-              </div>
-            </div>
-          </div>
-
-          <!-- <div v-if="customForm.formType == 'CREATE' || customForm.stage" class="recap">
-            <h5>Include in recap</h5>
-          </div> -->
-
-          <div v-for="(field, index) in [...addedFields]" :key="field.apiName" class="form-field">
-            <!-- <div
-              v-if="
-                field.id === '6407b7a1-a877-44e2-979d-1effafec5035' ||
-                field.id === '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' ||
-                field.id === 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' ||
-                field.id === 'fae88a10-53cc-470e-86ec-32376c041893' ||
-                field.id === 'fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed'
-              "
-              class="form-field__label"
-            >
-              {{ field.referenceDisplayLabel }}
-            </div> -->
-            <div style="display: flex; width: 100%">
-              <div class="form-field__left">
-                <!-- <div
-                  v-if="field.id === '6407b7a1-a877-44e2-979d-1effafec5035'"
-                  class="form-field__body"
-                >
-                  {{ 'Update title and meeting subject' }}
-                </div>
-
-                <div
-                  v-if="field.id === '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'"
-                  class="form-field__body"
-                >
-                  {{ 'Logs the rep’s comments about the meeting' }}
-                </div>
-
-                <div
-                  v-if="field.id === 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d'"
-                  class="form-field__body"
-                >
-                  {{ 'Gives the reps the option to send a recap to leadership' }}
-                </div>
-                <div
-                  v-if="field.id === 'fae88a10-53cc-470e-86ec-32376c041893'"
-                  class="form-field__body"
-                >
-                  {{ 'Gives the reps the option to send themselves a recap' }}
-                </div> -->
-                <img
-                  v-if="canRemoveField(field)"
-                  style="height: 1rem; margin-right: 0.5rem"
-                  src="@/assets/images/remove.png"
-                  @click="() => onRemoveField(field)"
-                />
-
-                <div
-                  class="form-field__label"
-                  v-if="
-                    field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
-                    field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
-                    field.id !== 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' &&
-                    field.id !== 'fae88a10-53cc-470e-86ec-32376c041893' &&
-                    field.id !== 'fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed'
-                  "
-                >
-                  {{ field.referenceDisplayLabel }}
-                </div>
-              </div>
-
-              <div class="form-field__middle orange">
-                {{ field.required ? 'required' : '' }}
-              </div>
-              <div class="form-field__right">
-                <div
-                  v-if="
-                    field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
-                    field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
-                    field.id !== 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' &&
-                    field.id !== 'fae88a10-53cc-470e-86ec-32376c041893' &&
-                    field.id !== 'fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed'
-                  "
-                  class="form-field__btn"
-                  @click="() => onMoveFieldUp(field, index)"
-                >
-                  <img src="@/assets/images/upArrow.png" />
-                </div>
-                <div
-                  v-if="
-                    field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
-                    field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
-                    field.id !== 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' &&
-                    field.id !== 'fae88a10-53cc-470e-86ec-32376c041893' &&
-                    field.id !== 'fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed'
-                  "
-                  class="form-field__btn"
-                  @click="() => onMoveFieldDown(field, index)"
-                >
-                  <img src="@/assets/images/downArrow.png" />
-                </div>
-                <!-- <div
-                  v-if="
-                    customForm.formType == 'CREATE' ||
-                    customForm.formType == 'MEETING_REVIEW' ||
-                    customForm.stage
-                  "
-                  class="form-field__right"
-                  @click="field.includeInRecap = !field.includeInRecap"
-                >
-                  <CheckBox :checked="field.includeInRecap" />
-                  <h5 class="space">
-                    <small
-                      ><i>{{
-                        customForm.stage ? ' (only available for create forms)' : ''
-                      }}</i></small
-                    >
-                  </h5>
-                </div> -->
-              </div>
-            </div>
-            <!-- <div style="display: flex; align-items: center">
-              <input
-                v-if="field.id === '6407b7a1-a877-44e2-979d-1effafec5035'"
-                placeholder="Enter Meeting Type"
-                class="meeting-type"
-                v-model="meetingType"
-                @keypress="updateMeeting"
-              />
-              <small v-if="meetingType.length" style="margin-left: 1rem">Press Enter to Save</small>
-            </div>  -->
-
-            <!-- <div
-              v-if="field.id === '6407b7a1-a877-44e2-979d-1effafec5035' && actionChoices.length"
-              class="meeting-type__list"
-            >
-              <template v-if="!loadingMeetingTypes">
-                <ListContainer horizontal>
-                  <template v-slot:list>
-                    <ListItem
-                      @item-selected="removeMeetingType(val.id)"
-                      :key="key"
-                      v-for="(val, key) in actionChoices"
-                      :item="val.title"
-                      :active="true"
-                      showIcon
-                    />
-                  </template>
-                </ListContainer>
-              </template>
-              <template v-else>
-                <PulseLoadingSpinner :loading="loadingMeetingTypes" />
-              </template>
-            </div> -->
-          </div>
-        </div>
-      </div>
-
-      <div class="opportunity__column">
-        <div class="fields_title" style="text-align: center">3. Save</div>
-
-        <div class="collection_fields">
-          <div class="save-button">
-            <button @click="goToCustomize" class="back__button">
-              <img src="@/assets/images/back.png" style="height: 1.2rem" alt="" />
-              back
-            </button>
-          </div>
-
-          <div class="save-button">
-            <PulseLoadingSpinnerButton
-              @click="onSave"
-              class="primary-button"
-              text="Save"
-              :loading="savingForm"
-              :disabled="!$store.state.user.isAdmin"
-            />
-          </div>
-
-          <!-- <div v-if="formType == 'UPDATE' && resource == OPPORTUNITY" class="save-button">
-            <button @click="goToContacts" v-if="canContinue" class="continue__button">
-              Continue
-            </button>
-            <button v-else class="cant__continue">Continue</button>
-          </div> -->
-          <div class="save-button" style="flex-direction: column; align-items: center">
-            <button @click="goToCustomize" v-if="canContinue" class="continue__button">
-              Continue
-            </button>
-            <button v-else class="cant__continue">Continue</button>
-          </div>
-        </div>
-      </div>
-      <!-- <div class="form-header">
-          <div class="save-button">
-            <PulseLoadingSpinnerButton
-              @click="onSave"
-              class="primary-button"
-              text="Save"
-              :loading="savingForm"
-              :disabled="!$store.state.user.isAdmin"
-            />
-          </div>
-          <div class="heading">
-            <h2>
-              {{ customForm.stage ? `${customForm.stage} Stage` : `${resource} Slack Form` }}
-            </h2>
-            <p class="muted">Add fields that you’d like to update using Slack</p>
-          </div>
-        </div> -->
-      <!-- <div>
-          <div class="save-button">
-          <PulseLoadingSpinnerButton
-            @click="onSave"
-            class="primary-button"
-            text="Save"
-            :loading="savingForm"
-            :disabled="!$store.state.user.isAdmin"
-          />
-        </div> -->
     </div>
   </div>
 </template>
@@ -826,6 +515,19 @@ export default {
 @import '@/styles/sidebars';
 @import '@/styles/mixins/buttons';
 @import '@/styles/buttons';
+
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  font-size: 0.85rem;
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+}
 .slack-form-builder
   ::v-deep
   .collection-search
@@ -1069,12 +771,10 @@ img:hover {
 }
 .collection_fields {
   background-color: $panther;
-  padding: 1rem;
+  padding: 2rem;
   border-radius: 0.5rem;
-  height: 54vh;
-  width: 26vw;
-  overflow-y: scroll;
-  overflow-x: hidden;
+  min-height: 66vh;
+  min-width: 44vw;
 }
 .fields_title {
   background-color: $panther;
@@ -1192,3 +892,4 @@ img:hover {
   color: $panther-gold;
 }
 </style>
+
