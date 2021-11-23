@@ -75,7 +75,13 @@
         </div>
       </div>
 
-      <div :class="!hasZoomChannel && isOnboarding && !isAdmin ? 'onboarding card__' : 'card__'">
+      <div
+        :class="
+          !(hasZoomChannel || hasRecapChannel) && isOnboarding && !isAdmin
+            ? 'onboarding card__'
+            : 'card__'
+        "
+      >
         <div class="card__header">
           <h3>Close Date <span style="color: #fa646a">Passed</span></h3>
         </div>
