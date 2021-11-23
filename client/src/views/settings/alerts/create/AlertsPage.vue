@@ -64,11 +64,11 @@
           <button
             v-if="hasZoomIntegration && hasSlackIntegration && !recapChannel"
             @click="goToZoomRecap"
-            class="orange_button"
+            :class="!isAdmin && isOnboarding ? 'orange_button bouncy' : 'orange_button'"
           >
             Activate
           </button>
-          <h4 style="margin-top: -0.5rem" v-else-if="!(hasZoomChannel && hasSlackIntegration)">
+          <h4 style="margin-top: -0.5rem" v-else-if="!(hasZoomIntegration && hasSlackIntegration)">
             Connect Zoom and Calendar in order to activate
           </h4>
           <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="recapChannel">Activated</p>
@@ -294,7 +294,14 @@
           </h4>
         </div>
       </div>
-      <div v-if="user.userLevel === 'MANAGER'" class="card__">
+      <div
+        v-if="user.userLevel === 'MANAGER'"
+        :class="
+          !user.activatedManagrConfigs.includes('Update Forecast') && isOnboarding && !isAdmin
+            ? 'card__ onboarding'
+            : 'card__'
+        "
+      >
         <div class="card__header">
           <h3>Log <span style="color: #5f8cff">Meetings</span></h3>
         </div>
@@ -315,7 +322,7 @@
           <button
             v-if="hasZoomIntegration && !hasZoomChannel"
             @click="goToLogZoom"
-            :class="!isAdmin && isOnboarding ? 'orange_button bouncy' : 'orange_button'"
+            class="orange_button"
           >
             Activate
           </button>

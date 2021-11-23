@@ -96,7 +96,7 @@
 
           <div
             style="margin-top: 1rem; margin-left: 0.5rem"
-            v-if="user.isAdmin"
+            v-if="userLevel == 'MANAGER'"
             class="delivery__row"
           >
             <span style="margin-bottom: 0.5rem">Select Users</span>
