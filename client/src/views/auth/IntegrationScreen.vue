@@ -419,7 +419,7 @@
           <div class="card__header">
             <img style="height: 1.5rem" src="@/assets/images/salesloft.svg" />
           </div>
-          <p class="card-text">Add Contacts to cadences</p>
+          <p class="card-text">Add Contacts to Cadences</p>
           <div class="card__body">
             <PulseLoadingSpinnerButton
               v-if="!hasSalesloftIntegration"
@@ -469,7 +469,7 @@
               style="height: 2rem; cursor: pointer"
             /> -->
             </div>
-            <p v-else="hasOutreachIntegration">Outreach is connected!</p>
+            <p v-else>Outreach is connected!</p>
           </div>
         </div>
 
@@ -619,6 +619,11 @@ export default {
       this.integrated = !this.integrated
     },
     async onGetAuthLink(integration) {
+      integration === 'NYLAS'
+        ? confirm(
+            'You must check all permission boxes in order for Managr to successfully connect to your calendar!',
+          )
+        : ''
       this.generatingToken = true
       this.selectedIntegration = integration
       const modelClass = this.selectedIntegrationSwitcher
@@ -642,11 +647,13 @@ export default {
       }
     },
     async onIntegrateSlack() {
-      const confirmation = confirm(
-        'Integrating Managr to your slack workspace will request access to a channel (you can choose a new one or an existing one) we will post a message letting the members of that channel know they can now integrate their Slack accounts',
-      )
-      if (!confirmation) {
-        return
+      if (this.user.isAdmin) {
+        const confirmation = confirm(
+          'Integrating Managr to your slack workspace will request access to a channel (you can choose a new one or an existing one) we will post a message letting the members of that channel know they can now integrate their Slack accounts',
+        )
+        if (!confirmation) {
+          return
+        }
       }
       this.generatingToken = true
       if (!this.orgHasSlackIntegration) {
@@ -750,7 +757,9 @@ export default {
       return !!this.$store.state.user.gongAccount && this.$store.state.user.hasGongIntegration
     },
     hasOutreachIntegration() {
-      return !!this.$store.state.user.outreachAccount && this.$store.state.user.hasOutreachIntegration
+      return (
+        !!this.$store.state.user.outreachAccount && this.$store.state.user.hasOutreachIntegration
+      )
     },
     hasSalesloftIntegration() {
       return (
@@ -930,6 +939,7 @@ export default {
     display: flex;
     align-items: flex-end;
     justify-content: flex-end;
+    margin-top: auto;
   }
   &__start {
     display: flex;
