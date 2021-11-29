@@ -11,8 +11,8 @@ from datetime import datetime, date, timedelta
 
 from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_paginator_block
-from managr.organization.models import Organization, Stage
-from managr.opportunity.models import Opportunity
+from managr.organization.models import Organization, Stage, Account
+from managr.opportunity.models import Opportunity, Lead
 from managr.zoom.models import ZoomMeeting
 from managr.slack import constants as slack_const
 from managr.opportunity import constants as opp_consts
@@ -104,10 +104,19 @@ def process_meeting_review(payload, context):
 @processor(required_context=["w"], action=slack_const.VIEWS_OPEN)
 def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPEN):
     url = slack_const.SLACK_API_ROOT + action
+    type = context.get("type", None)
     trigger_id = payload["trigger_id"]
     # view_id = payload["view"]["id"]
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    org = workflow.user.organization
+    if type:
+        if type == "Opportunity":
+            workflow = Opportunity.objects.get(id=context.get("w"))
+        elif type == "Account":
+            workflow = Account.objects.get(id=context.get("w"))
+        else:
+            workflow = Lead.objects.get(id=context.get("w"))
+    else:
+        workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    org = workflow.owner.organization if type else workflow.user.organization
 
     access_token = org.slack_integration.access_token
 
@@ -158,8 +167,9 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
         )
-    workflow.slack_view = res.get("view").get("id")
-    workflow.save()
+    if not type:
+        workflow.slack_view = res.get("view").get("id")
+        workflow.save()
 
 
 @processor()
