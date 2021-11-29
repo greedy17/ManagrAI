@@ -122,6 +122,7 @@ def _send_calendar_details(user_id):
     ]
 
     for event in processed_data:
+
         blocks = [
             *blocks,
             *block_sets.get_block_set("calendar_reminders_blockset", {"event_data": event}),

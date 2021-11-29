@@ -280,7 +280,7 @@ def meeting_contacts_block_set(context):
                         "text": {"type": "plain_text", "text": "Remove From Meeting"},
                         "value": "click_me_123",
                         "action_id": action_with_params(
-                            slack_const.ZOOM_MEETING__REMOVE_CONTACT, params=paramsS,
+                            slack_const.ZOOM_MEETING__REMOVE_CONTACT, params=params,
                         ),
                         "style": "danger",
                     },
