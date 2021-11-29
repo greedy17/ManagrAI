@@ -10,7 +10,8 @@ from django.db.models import Q
 
 from managr.utils.sites import get_site_url
 from managr.core.models import User, Notification
-from managr.opportunity.models import Opportunity
+from managr.opportunity.models import Opportunity, Lead
+from managr.organization.models import Account, Contact
 from managr.zoom.models import ZoomMeeting
 from managr.salesforce.models import MeetingWorkflow, SObjectField
 from managr.salesforce import constants as sf_consts
@@ -158,10 +159,21 @@ def add_to_cadence_block_set(context):
 @block_set(required_context=["w"])
 def meeting_contacts_block_set(context):
     # if this is a returning view it will also contain the selected contacts
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    meeting = workflow.meeting
-    contacts = meeting.participants
-    sf_account = meeting.zoom_account.user.salesforce_account
+    type = context.get("type", None)
+    if type:
+        if type == "Opportunity":
+            workflow = Opportunity.objects.get(id=context.get("w"))
+        elif type == "Account":
+            workflow = Account.objects.get(id=context.get("w"))
+        else:
+            workflow = Lead.objects.get(id=context.get("w"))
+        contacts = Contact.objects.filter(id__in=context.get("meeting_participants"))
+        sf_account = workflow.owner.salesforce_account
+    else:
+        workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+        meeting = workflow.meeting
+        contacts = meeting.participants
+        sf_account = meeting.zoom_account.user.salesforce_account
     channel = f"channel={context.get('original_message_channel')}"
     timestamp = f"timestamp={context.get('original_message_timestamp')}"
     block_sets = [
@@ -189,8 +201,13 @@ def meeting_contacts_block_set(context):
         )
 
     for i, contact in enumerate(contacts_not_in_sf):
-        workflow_id_param = f"w={str(workflow.id)}"
+        workflow_id_param = f"w={str(workflow)}" if type else f"w={str(workflow.id)}"
         tracking_id_param = f"tracking_id={contact['_tracking_id']}"
+        params = (
+            [workflow_id_param, tracking_id_param, channel, timestamp, type]
+            if type
+            else [workflow_id_param, tracking_id_param, channel, timestamp]
+        )
         block_sets.append(generate_contact_group(i, contact, sf_account.instance_url))
         # pass meeting id and contact index
         block_sets.append(
@@ -202,8 +219,7 @@ def meeting_contacts_block_set(context):
                         "text": {"type": "plain_text", "text": "Edit Contact"},
                         "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
                         "action_id": action_with_params(
-                            slack_const.ZOOM_MEETING__EDIT_CONTACT,
-                            params=[workflow_id_param, tracking_id_param, channel, timestamp],
+                            slack_const.ZOOM_MEETING__EDIT_CONTACT, params=params,
                         ),
                         "style": "primary",
                     },
@@ -212,8 +228,7 @@ def meeting_contacts_block_set(context):
                         "text": {"type": "plain_text", "text": "Remove From Meeting"},
                         "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
                         "action_id": action_with_params(
-                            slack_const.ZOOM_MEETING__REMOVE_CONTACT,
-                            params=[workflow_id_param, tracking_id_param, channel, timestamp],
+                            slack_const.ZOOM_MEETING__REMOVE_CONTACT, params=params,
                         ),
                         "style": "danger",
                     },
@@ -238,9 +253,13 @@ def meeting_contacts_block_set(context):
         )
 
     for i, contact in enumerate(contacts_in_sf):
-        workflow_id_param = f"w={str(workflow.id)}"
+        workflow_id_param = f"w={str(workflow)}" if type else f"w={str(workflow.id)}"
         tracking_id_param = f"tracking_id={contact['_tracking_id']}"
-
+        params = (
+            [workflow_id_param, tracking_id_param, channel, timestamp, type]
+            if type
+            else [workflow_id_param, tracking_id_param, channel, timestamp]
+        )
         block_sets.append(generate_contact_group(i, contact, sf_account.instance_url))
         # pass meeting id and contact index
         block_sets.append(
@@ -252,8 +271,7 @@ def meeting_contacts_block_set(context):
                         "text": {"type": "plain_text", "text": "Edit Contact"},
                         "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
                         "action_id": action_with_params(
-                            slack_const.ZOOM_MEETING__EDIT_CONTACT,
-                            params=[workflow_id_param, tracking_id_param, channel, timestamp],
+                            slack_const.ZOOM_MEETING__EDIT_CONTACT, params=params,
                         ),
                         "style": "primary",
                     },
@@ -262,8 +280,7 @@ def meeting_contacts_block_set(context):
                         "text": {"type": "plain_text", "text": "Remove From Meeting"},
                         "value": "click_me_123",
                         "action_id": action_with_params(
-                            slack_const.ZOOM_MEETING__REMOVE_CONTACT,
-                            params=[workflow_id_param, tracking_id_param, channel, timestamp],
+                            slack_const.ZOOM_MEETING__REMOVE_CONTACT, params=paramsS,
                         ),
                         "style": "danger",
                     },
@@ -300,9 +317,14 @@ def edit_meeting_contacts_block_set(context):
             .first()
         )
         # try to create the form on the fly
-        slack_form = OrgCustomSlackFormInstance.objects.create(
-            user=workflow.user, template=template, workflow=workflow
-        )
+        if type:
+            slack_form = OrgCustomSlackFormInstance.objects.create(
+                user=workflow.user, template=template
+            )
+        else:
+            slack_form = OrgCustomSlackFormInstance.objects.create(
+                user=workflow.user, template=template, workflow=workflow
+            )
     else:
         slack_form = workflow.forms.filter(id=contact.get("_form")).first()
     if not slack_form:
