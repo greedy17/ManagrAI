@@ -108,15 +108,16 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
     trigger_id = payload["trigger_id"]
     # view_id = payload["view"]["id"]
     if type:
-        if type == "Opportunity":
-            workflow = Opportunity.objects.get(id=context.get("w"))
-        elif type == "Account":
-            workflow = Account.objects.get(id=context.get("w"))
-        else:
-            workflow = Lead.objects.get(id=context.get("w"))
+        workflow = User.objects.get(id=context.get("w"))
+        # if type == "Opportunity":
+        #     workflow = Opportunity.objects.get(id=context.get("w"))
+        # elif type == "Account":
+        #     workflow = Account.objects.get(id=context.get("w"))
+        # else:
+        #     workflow = Lead.objects.get(id=context.get("w"))
     else:
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    org = workflow.owner.organization if type else workflow.user.organization
+    org = workflow.organization if type else workflow.user.organization
 
     access_token = org.slack_integration.access_token
 
@@ -127,14 +128,13 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
         "original_message_timestamp": payload["message"]["ts"]
         if "message" in payload
         else context.get("timestamp"),
+        "meeting_participants": context.get("meeting_participants"),
     }
-    calendar_info = {"type": "upcoming", "workflow_id": "test", "meeting_participants": "test"}
     private_metadata.update(context)
-    calendar_info.update(context)
     if type:
-        blocks = get_block_set("show_meeting_contacts", private_metadata, calendar_info)
+        blocks = get_block_set("show_meeting_contacts", private_metadata)
     else:
-        blocks = get_block_set("show_meeting_contacts", private_metadata, calendar_info)
+        blocks = get_block_set("show_meeting_contacts", private_metadata)
     data = {
         "trigger_id": trigger_id,
         # "view_id": view_id,
@@ -143,7 +143,6 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
             "title": {"type": "plain_text", "text": "Contacts"},
             "blocks": blocks,
             "private_metadata": json.dumps(private_metadata),
-            "calendar_info": calendar_info,
         },
     }
     if action == slack_const.VIEWS_UPDATE:
