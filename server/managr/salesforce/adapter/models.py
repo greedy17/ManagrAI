@@ -288,6 +288,10 @@ class SalesforceAuthAccountAdapter:
             sf_consts.RESOURCE_SYNC_CONTACT: True,
             sf_consts.RESOURCE_SYNC_LEAD: True,
             sf_consts.RESOURCE_SYNC_OPPORTUNITY: True,
+            sf_consts.RESOURCE_SYNC_PRODUCT2: True,
+            sf_consts.RESOURCE_SYNC_PRICEBOOK2: True,
+            sf_consts.RESOURCE_SYNC_PRICEBOOKENTRY: True,
+            sf_consts.RESOURCE_SYNC_OPPORTUNITYLINEITEM: True,
         }
         return SalesforceAuthAccountAdapter(**data)
 

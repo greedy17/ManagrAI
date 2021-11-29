@@ -246,7 +246,6 @@ def _process_sobject_fields_sync(user_id, sync_id, resource):
     user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
     if not hasattr(user, "salesforce_account"):
         return
-
     attempts = 1
     while True:
         sf = user.salesforce_account
