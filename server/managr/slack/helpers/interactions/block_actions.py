@@ -128,14 +128,13 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
         if "message" in payload
         else context.get("timestamp"),
     }
-    calendar_info = {
-        "type": "upcoming",
-        "workflow_id": "test",
-        "meeting_participants": "test"
-    }
+    calendar_info = {"type": "upcoming", "workflow_id": "test", "meeting_participants": "test"}
     private_metadata.update(context)
     calendar_info.update(context)
-    blocks = get_block_set("show_meeting_contacts", private_metadata, calendar_info)
+    if type:
+        blocks = get_block_set("show_meeting_contacts", private_metadata, calendar_info)
+    else:
+        blocks = get_block_set("show_meeting_contacts", private_metadata, calendar_info)
     data = {
         "trigger_id": trigger_id,
         # "view_id": view_id,
