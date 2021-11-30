@@ -13,7 +13,14 @@ from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
 
 
-from managr.salesforce.adapter.models import SalesforceAuthAccountAdapter, OpportunityAdapter
+from managr.salesforce.adapter.models import (
+    SalesforceAuthAccountAdapter,
+    OpportunityAdapter,
+    Product2Adapter,
+    Pricebook2Adapter,
+    ContactAdapter,
+    AccountAdapter,
+)
 from managr.utils.numbers import format_phone_number
 from managr.utils.misc import datetime_appended_filepath
 from managr.core.models import UserManager, TimeStampModel, IntegrationModel, User
@@ -21,7 +28,6 @@ from managr.salesforce.exceptions import ResourceAlreadyImported
 from managr.core import constants as core_consts
 from managr.core import nylas as email_client
 from managr.slack.helpers import block_builders
-from managr.salesforce.adapter.models import ContactAdapter, AccountAdapter
 from managr.opportunity import constants as opp_consts
 from managr.slack import constants as slack_consts
 from managr.slack.models import OrgCustomSlackForm
@@ -389,3 +395,76 @@ class ActionChoice(TimeStampModel):
 
     def __str__(self):
         return f" ActionChoice ({self.id}) -- Title: {self.title}, Organization: {self.organization.name}"
+
+
+class PriceBook2(TimeStampModel):
+    name = models.CharField(max_length=100)
+    description = models.TextField(max_length=225)
+
+    def update_in_salesforce(self, data):
+        if self.owner and hasattr(self.owner, "salesforce_account"):
+            token = self.owner.salesforce_account.access_token
+            base_url = self.owner.salesforce_account.instance_url
+            object_fields = self.owner.salesforce_account.object_fields.filter(
+                salesforce_object="Pricebook2"
+            ).values_list("api_name", flat=True)
+            res = Pricebook2Adapter.update_pricebook(
+                data, token, base_url, self.integration_id, object_fields
+            )
+            self.is_stale = True
+            self.save()
+            return res
+
+    def create_in_salesforce(self, data=None, user_id=None):
+        """when synchronous create in db first to be able to use immediately"""
+        token = self.owner.salesforce_account.access_token
+        base_url = self.owner.salesforce_account.instance_url
+        object_fields = self.owner.salesforce_account.object_fields.filter(
+            salesforce_object="Opportunity"
+        ).values_list("api_name", flat=True)
+        if not data:
+            data = self.adapter_class
+
+        res = Pricebook2Adapter.create_pricebook(data, token, base_url, object_fields, user_id)
+        from managr.salesforce.routes import routes
+
+        serializer = routes["Pricebook2"]["serializer"](data=res.as_dict)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return serializer.instance
+
+
+class Product2(TimeStampModel):
+    name = models.CharField(max_length=50)
+
+    def update_in_salesforce(self, data):
+        if self.owner and hasattr(self.owner, "salesforce_account"):
+            token = self.owner.salesforce_account.access_token
+            base_url = self.owner.salesforce_account.instance_url
+            object_fields = self.owner.salesforce_account.object_fields.filter(
+                salesforce_object="Product2"
+            ).values_list("api_name", flat=True)
+            res = Product2Adapter.update_product(
+                data, token, base_url, self.integration_id, object_fields
+            )
+            self.is_stale = True
+            self.save()
+            return res
+
+    def create_in_salesforce(self, data=None, user_id=None):
+        """when synchronous create in db first to be able to use immediately"""
+        token = self.owner.salesforce_account.access_token
+        base_url = self.owner.salesforce_account.instance_url
+        object_fields = self.owner.salesforce_account.object_fields.filter(
+            salesforce_object="Product2"
+        ).values_list("api_name", flat=True)
+        if not data:
+            data = self.adapter_class
+
+        res = Product2Adapter.create_product(data, token, base_url, object_fields, user_id)
+        from managr.salesforce.routes import routes
+
+        serializer = routes["Product2"]["serializer"](data=res.as_dict)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return serializer.instance

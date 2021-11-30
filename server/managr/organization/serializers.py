@@ -8,7 +8,7 @@ from managr.slack.serializers import OrganizationSlackIntegrationSerializer
 from managr.utils.numbers import validate_phone_number
 from managr.opportunity import constants as opp_consts
 from managr.salesforce.models import SalesforceAuthAccount
-from .models import Organization, Account, Contact, Stage, ActionChoice
+from .models import Organization, Account, Contact, PriceBook2, Stage, ActionChoice, Product2
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
@@ -168,3 +168,17 @@ class ContactSerializer(serializers.ModelSerializer):
         # remove contacts from validation
         internal_data = super().to_internal_value(data)
         return internal_data
+
+
+class Pricebook2Serializer(serializers.ModelSerializer):
+    class Meta:
+        model = PriceBook2
+        fields = ("id", "name")
+        extra_kwargs = {}
+
+
+class Product2Serializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product2
+        fields = ("id", "name")
+        extra_kwargs = {}

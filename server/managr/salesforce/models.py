@@ -1007,3 +1007,4 @@ class SalesforceAuthAccount(TimeStampModel):
 
     def delete(self, *args, **kwargs):
         return super().delete(*args, **kwargs)
+

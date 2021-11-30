@@ -1144,3 +1144,14 @@ class TaskAdapter:
     @property
     def as_dict(self):
         return vars(self)
+
+
+class PriceBook2Adapter:
+    def __init__(self, **kwargs):
+        self.name = kwargs.get("Name", None)
+        self.description = kwargs.get("Description", None)
+
+
+class Products2Adapter:
+    def __init__(self, **kwargs):
+        self.name = kwargs.get("Name", None)
