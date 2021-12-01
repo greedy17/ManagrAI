@@ -20,6 +20,7 @@ from managr.salesforce.adapter.models import (
     Pricebook2Adapter,
     ContactAdapter,
     AccountAdapter,
+    PricebookEntryAdapter,
 )
 from managr.utils.numbers import format_phone_number
 from managr.utils.misc import datetime_appended_filepath
@@ -397,9 +398,36 @@ class ActionChoice(TimeStampModel):
         return f" ActionChoice ({self.id}) -- Title: {self.title}, Organization: {self.organization.name}"
 
 
-class PriceBook2(TimeStampModel):
+class Pricebook2QuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.is_active:
+            return self.filter(organization=user.organization)
+        else:
+            return None
+
+
+class Pricebook2(TimeStampModel, IntegrationModel):
     name = models.CharField(max_length=100)
     description = models.TextField(max_length=225)
+    last_viewed_date = models.DateTimeField(null=True)
+    secondary_data = JSONField(
+        default=dict,
+        null=True,
+        help_text="All non primary fields that are on the model each org may have its own",
+        max_length=500,
+    )
+    objects = Pricebook2QuerySet.as_manager()
+
+    class Meta:
+        ordering = ["-datetime_created"]
+
+    @property
+    def adapter_class(self):
+        data = self.__dict__
+        data["id"] = str(data["id"])
+        return Pricebook2Adapter(**data)
 
     def update_in_salesforce(self, data):
         if self.owner and hasattr(self.owner, "salesforce_account"):
@@ -434,8 +462,35 @@ class PriceBook2(TimeStampModel):
         return serializer.instance
 
 
-class Product2(TimeStampModel):
+class Product2QuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.is_active:
+            return self.filter(organization=user.organization)
+        else:
+            return None
+
+
+class Product2(TimeStampModel, IntegrationModel):
     name = models.CharField(max_length=50)
+    description = models.TextField(max_length=225)
+    secondary_data = JSONField(
+        default=dict,
+        null=True,
+        help_text="All non primary fields that are on the model each org may have its own",
+        max_length=500,
+    )
+    objects = Product2QuerySet.as_manager()
+
+    class Meta:
+        ordering = ["-datetime_created"]
+
+    @property
+    def adapter_class(self):
+        data = self.__dict__
+        data["id"] = str(data["id"])
+        return Product2Adapter(**data)
 
     def update_in_salesforce(self, data):
         if self.owner and hasattr(self.owner, "salesforce_account"):
@@ -468,3 +523,46 @@ class Product2(TimeStampModel):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return serializer.instance
+
+
+class PricebookEntryQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.is_active:
+            return self.filter(organization=user.organization)
+        else:
+            return None
+
+
+class PricebookEntry(TimeStampModel, IntegrationModel):
+    name = models.CharField(max_length=50)
+    unit_price = models.IntegerField(null=True)
+    external_pricebook = models.CharField(
+        max_length=255, blank=True, help_text="value from the integration"
+    )
+    external_product = models.CharField(
+        max_length=255, blank=True, help_text="value from the integration"
+    )
+    pricebook = models.ForeignKey(
+        "organization.Pricebook2", related_name="pricebook_entries", on_delete=models.CASCADE,
+    )
+    product = models.ForeignKey(
+        "organization.Product2", related_name="pricebook_entry", on_delete=models.CASCADE,
+    )
+    secondary_data = JSONField(
+        default=dict,
+        null=True,
+        help_text="All non primary fields that are on the model each org may have its own",
+        max_length=500,
+    )
+    objects = PricebookEntryQuerySet.as_manager()
+
+    class Meta:
+        ordering = ["-datetime_created"]
+
+    @property
+    def adapter_class(self):
+        data = self.__dict__
+        data["id"] = str(data["id"])
+        return PricebookEntryAdapter(**data)

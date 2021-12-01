@@ -323,7 +323,6 @@ class SalesforceAuthAccountAdapter:
     def list_fields(self, resource):
         """Uses the UI API to list fields for a resource using this endpoint only returns fields a user has access to"""
         url = f"{self.instance_url}{sf_consts.SALESFORCE_FIELDS_URI(resource)}"
-        print(url)
         with Client as client:
             res = client.get(
                 url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
@@ -441,7 +440,7 @@ class SalesforceAuthAccountAdapter:
     def list_resource_data(self, resource, offset, *args, **kwargs):
         # add extra fields to query string
         extra_items = self.object_fields.get(resource)
-
+        print(f"Resource: {resource}, fields {extra_items}")
         from .routes import routes
 
         resource_class = routes.get(resource)
@@ -521,7 +520,6 @@ class SalesforceAuthAccountAdapter:
                 f"{self.instance_url}{sf_consts.SF_COUNT_URI(resource, self.salesforce_id)}",
                 headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
             )
-
             return self._handle_response(res)
 
     def execute_alert_query(self, url, resource):
@@ -1146,12 +1144,168 @@ class TaskAdapter:
         return vars(self)
 
 
-class PriceBook2Adapter:
+class Pricebook2Adapter:
     def __init__(self, **kwargs):
-        self.name = kwargs.get("Name", None)
-        self.description = kwargs.get("Description", None)
+        self.name = kwargs.get("name", None)
+        self.description = kwargs.get("description", None)
+        self.last_viewed_date = kwargs.get("last_viewed_date", None)
+        self.imported_by = kwargs.get("imported_by", None)
+        self.secondary_data = kwargs.get("secondary_data", None)
+        self.integration_source = kwargs.get("integration_source", None)
+        self.integration_id = kwargs.get("integration_id", None)
+
+    integration_mapping = dict(
+        # mapping of 'standard' data when sending to the SF API
+        integration_id="Id",
+        name="Name",
+        description="Description",
+        last_viewed_date="LastViewedDate",
+    )
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+    @staticmethod
+    def get_child_rels():
+        return {}
+
+    @staticmethod
+    def additional_filters():
+        """pass custom additional filters to the url"""
+        return ["AND IsDeleted = false"]
+
+    @staticmethod
+    def reverse_integration_mapping():
+        """mapping of 'standard' data when sending from the SF API"""
+        reverse = {}
+        for k, v in Pricebook2Adapter.integration_mapping.items():
+            reverse[v] = k
+        return reverse
+
+    @staticmethod
+    def from_api(data, user_id, *args, **kwargs):
+        formatted_data = dict()
+        mapping = Pricebook2Adapter.reverse_integration_mapping()
+        formatted_data = dict(secondary_data={})
+        for k, v in data.items():
+            if k in mapping:
+                formatted_data[mapping.get(k)] = v
+
+            formatted_data["secondary_data"][k] = v
+        formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_SALESFORCE
+        formatted_data["imported_by"] = str(user_id)
+
+        return Pricebook2Adapter(**formatted_data)
 
 
-class Products2Adapter:
+class Product2Adapter:
     def __init__(self, **kwargs):
-        self.name = kwargs.get("Name", None)
+        self.name = kwargs.get("name", None)
+        self.description = kwargs.get("description", None)
+        self.imported_by = kwargs.get("imported_by", None)
+        self.secondary_data = kwargs.get("secondary_data", None)
+        self.integration_source = kwargs.get("integration_source", None)
+        self.integration_id = kwargs.get("integration_id", None)
+
+    integration_mapping = dict(
+        # mapping of 'standard' data when sending to the SF API
+        integration_id="Id",
+        name="Name",
+        description="Description",
+    )
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+    @staticmethod
+    def get_child_rels():
+        return {}
+
+    @staticmethod
+    def additional_filters():
+        """pass custom additional filters to the url"""
+        return ["AND IsDeleted = false"]
+
+    @staticmethod
+    def reverse_integration_mapping():
+        """mapping of 'standard' data when sending from the SF API"""
+        reverse = {}
+        for k, v in Product2Adapter.integration_mapping.items():
+            reverse[v] = k
+        return reverse
+
+    @staticmethod
+    def from_api(data, user_id, *args, **kwargs):
+        formatted_data = dict()
+        mapping = Product2Adapter.reverse_integration_mapping()
+        formatted_data = dict(secondary_data={})
+        for k, v in data.items():
+            if k in mapping:
+                formatted_data[mapping.get(k)] = v
+
+            formatted_data["secondary_data"][k] = v
+        formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_SALESFORCE
+        formatted_data["imported_by"] = str(user_id)
+
+        return Product2Adapter(**formatted_data)
+
+
+class PricebookEntryAdapter:
+    def __init__(self, **kwargs):
+        self.name = kwargs.get("name", None)
+        self.unit_price = kwargs.get("unit_price", None)
+        self.product = kwargs.get("product", None)
+        self.pricebook = kwargs.get("pricebook", None)
+        self.imported_by = kwargs.get("imported_by", None)
+        self.secondary_data = kwargs.get("secondary_data", None)
+        self.integration_source = kwargs.get("integration_source", None)
+        self.integration_id = kwargs.get("integration_id", None)
+        self.external_pricebook = kwargs.get("external_pricebook", None)
+        self.external_product = kwargs.get("external_product", None)
+
+    integration_mapping = dict(
+        # mapping of 'standard' data when sending to the SF API
+        integration_id="Id",
+        name="Name",
+        unit_price="UnitPrice",
+        external_product="Product2Id",
+        external_pricebook="Pricebook2Id",
+    )
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+    @staticmethod
+    def get_child_rels():
+        return {}
+
+    @staticmethod
+    def additional_filters():
+        """pass custom additional filters to the url"""
+        return ["AND IsDeleted = false"]
+
+    @staticmethod
+    def reverse_integration_mapping():
+        """mapping of 'standard' data when sending from the SF API"""
+        reverse = {}
+        for k, v in PricebookEntryAdapter.integration_mapping.items():
+            reverse[v] = k
+        return reverse
+
+    @staticmethod
+    def from_api(data, user_id, *args, **kwargs):
+        formatted_data = dict()
+        mapping = PricebookEntryAdapter.reverse_integration_mapping()
+        formatted_data = dict(secondary_data={})
+        for k, v in data.items():
+            if k in mapping:
+                formatted_data[mapping.get(k)] = v
+
+            formatted_data["secondary_data"][k] = v
+        formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_SALESFORCE
+        formatted_data["imported_by"] = str(user_id)
+
+        return PricebookEntryAdapter(**formatted_data)

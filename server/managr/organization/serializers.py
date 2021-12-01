@@ -8,7 +8,16 @@ from managr.slack.serializers import OrganizationSlackIntegrationSerializer
 from managr.utils.numbers import validate_phone_number
 from managr.opportunity import constants as opp_consts
 from managr.salesforce.models import SalesforceAuthAccount
-from .models import Organization, Account, Contact, PriceBook2, Stage, ActionChoice, Product2
+from .models import (
+    Organization,
+    Account,
+    Contact,
+    Pricebook2,
+    PricebookEntry,
+    Stage,
+    ActionChoice,
+    Product2,
+)
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
@@ -172,13 +181,65 @@ class ContactSerializer(serializers.ModelSerializer):
 
 class Pricebook2Serializer(serializers.ModelSerializer):
     class Meta:
-        model = PriceBook2
-        fields = ("id", "name")
+        model = Pricebook2
+        fields = (
+            "id",
+            "name",
+            "integration_source",
+            "integration_id",
+            "imported_by",
+            "last_viewed_date",
+            "secondary_data",
+        )
         extra_kwargs = {}
 
 
 class Product2Serializer(serializers.ModelSerializer):
     class Meta:
         model = Product2
-        fields = ("id", "name")
+        fields = (
+            "id",
+            "name",
+            "integration_source",
+            "integration_id",
+            "imported_by",
+            "description",
+            "secondary_data",
+        )
         extra_kwargs = {}
+
+
+class PricebookEntrySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PricebookEntry
+        fields = (
+            "id",
+            "name",
+            "integration_source",
+            "integration_id",
+            "imported_by",
+            "unit_price",
+            "product",
+            "pricebook",
+            "external_pricebook",
+            "external_product",
+            "secondary_data",
+        )
+        extra_kwargs = {}
+
+    def to_internal_value(self, data):
+        pricebook = data.get("external_pricebook", None)
+        product = data.get("external_product", None)
+        if pricebook:
+            pb = Pricebook2.objects.filter(integration_id=pricebook).first()
+            pb_id = pb.id if pb else pb
+            data.update({"pricebook": pb_id})
+        if product:
+            prod = Product2.objects.filter(integration_id=product).first()
+            prod = prod.id if prod else prod
+            data.update({"product": prod})
+
+        # remove contacts from validation
+        internal_data = super().to_internal_value(data)
+        return internal_data
+

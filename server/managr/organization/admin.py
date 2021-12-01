@@ -2,7 +2,16 @@ from django.contrib import admin
 
 from managr.slack.models import OrganizationSlackIntegration
 
-from .models import Organization, Account, Contact, Stage, ActionChoice
+from .models import (
+    Organization,
+    Account,
+    Contact,
+    Stage,
+    ActionChoice,
+    Product2,
+    Pricebook2,
+    PricebookEntry,
+)
 
 
 class OrganizationSlackIntegrationInline(admin.StackedInline):
@@ -51,9 +60,32 @@ class CustomContact(admin.ModelAdmin):
     )
 
 
+class CustomProduct2(admin.ModelAdmin):
+    model = Product2
+    list_display = (
+        "name",
+        "description",
+    )
+
+
+class CustomPricebook2(admin.ModelAdmin):
+    model = Pricebook2
+    list_display = (
+        "name",
+        "description",
+    )
+
+
+class CustomPricebookEntry(admin.ModelAdmin):
+    model = PricebookEntry
+    list_display = ("name", "pricebook")
+
+
 admin.site.register(Organization, CustomOrganization)
 admin.site.register(Account, CustomAccount)
-
+admin.site.register(Product2, CustomProduct2)
+admin.site.register(Pricebook2, CustomPricebook2)
+admin.site.register(PricebookEntry, CustomPricebookEntry)
 admin.site.register(Contact, CustomContact)
 admin.site.register(ActionChoice)
 admin.site.register(Stage)

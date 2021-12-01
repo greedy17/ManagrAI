@@ -27,20 +27,16 @@ routes = {
         "serializer": org_ser.ActionChoiceSerializer,
     },
     sf_consts.RESOURCE_SYNC_PRICEBOOK2: {
-        "model": org_models.PriceBook2,
+        "model": org_models.Pricebook2,
         "serializer": org_ser.Pricebook2Serializer,
-    },
-    ACTION_CHOICE_RESOURCE: {
-        "model": org_models.ActionChoice,
-        "serializer": org_ser.ActionChoiceSerializer,
     },
     sf_consts.RESOURCE_SYNC_PRODUCT2: {
         "model": org_models.Product2,
         "serializer": org_ser.Product2Serializer,
     },
-    ACTION_CHOICE_RESOURCE: {
-        "model": org_models.ActionChoice,
-        "serializer": org_ser.ActionChoiceSerializer,
+    sf_consts.RESOURCE_SYNC_PRICEBOOKENTRY: {
+        "model": org_models.PricebookEntry,
+        "serializer": org_ser.PricebookEntrySerializer,
     },
     USER_RESOURCE: {"model": core_models.User, "serializer": core_ser.UserSerializer,},
 }

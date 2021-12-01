@@ -132,7 +132,6 @@ def _process_gen_next_sync(user_id, operations_list):
     user = User.objects.filter(id=user_id).first()
     if not user:
         return logger.exception(f"User not found sync operation not created {user_id}")
-
     return SFResourceSync.objects.create(
         user=user,
         operations_list=operations_list,

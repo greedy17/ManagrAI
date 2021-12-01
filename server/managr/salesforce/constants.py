@@ -33,6 +33,8 @@ REMOVE_OWNER_ID = {
     "User",
     "RecordType",
     "Pricebook2",
+    "Product2",
+    "PricebookEntry",
 }
 
 
@@ -92,7 +94,7 @@ def SALSFORCE_TASK_QUERY_URI(
     return f"{url} order by ActivityDate limit {limit}"
 
 
-def SALSFORCE_PRODUCT_QUERY_URI(
+def SALESFORCE_PRODUCT_QUERY_URI(
     owner_id,
     resource,
     fields,
@@ -116,7 +118,12 @@ def SALSFORCE_PRODUCT_QUERY_URI(
 
 def SF_COUNT_URI(resource, owner_id):
     url = f"{CUSTOM_BASE_URI}/query/?q=SELECT COUNT () from {resource}"
-    if owner_id:
+    if owner_id and resource not in [
+        "Product2",
+        "Pricebook2",
+        "PricebookEntry",
+        "OpportunityLineItem",
+    ]:
         url = f"{url} WHERE OwnerId = '{owner_id}'"
     return url
 
