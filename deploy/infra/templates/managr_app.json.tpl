@@ -229,6 +229,22 @@
       {
         "name": "GONG_REDIRECT_URI",
         "valueFrom": "${config_secret_arn}:gongRedirectUri::"
+      },
+      {
+        "name": "OUTREACH_BASE_URL",
+        "valueFrom": "${config_secret_arn}:outreachBaseUrl::"
+      },
+      {
+        "name": "OUTREACH_CLIENT_ID",
+        "valueFrom": "${config_secret_arn}:outreachClientId::"
+      },
+      {
+        "name": "OUTREACH_SECRET",
+        "valueFrom": "${config_secret_arn}:outreachSecret::"
+      },
+      {
+        "name": "OUTREACH_REDIRECT_URI",
+        "valueFrom": "${config_secret_arn}:outreachRedirectUri::"
       }
     ],
     "logConfiguration": {
