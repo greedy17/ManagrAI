@@ -399,7 +399,7 @@ def calendar_reminders_blockset(context):
             "Review Attendees",
             section_text=f"{title}\n Starts at {local_start_time}\n Attendees: " + str(len(people)),
             button_value="none",
-            action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
+            action_id=slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
         ),
         # block_builders.section_with_button_block(
         #     "Map to Opportunity",
