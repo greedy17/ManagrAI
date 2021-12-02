@@ -32,7 +32,8 @@
       { "name": "USE_SLACK", "value": "${use_slack}" },
       { "name": "USE_SALESFORCE", "value": "${use_salesforce}" },
       { "name": "USE_SALESLOFT", "value": "${use_salesloft}" },
-      { "name": "USE_GONG", "value": "${use_gong}" }
+      { "name": "USE_GONG", "value": "${use_gong}" },
+      { "name": "USE_OUTREACH", "value": "${use_outreach}" }
     ],
     "secrets": [
       {
