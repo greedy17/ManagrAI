@@ -1,6 +1,8 @@
+import json
 import logging
 import random
 import re
+from typing import Any
 import uuid
 from django.conf import settings
 import kronos
@@ -8,6 +10,8 @@ import datetime
 
 from django.utils import timezone
 from django.db.models import Q
+from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from managr.slack.helpers import block_builders, block_sets
 
@@ -27,6 +31,7 @@ from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack import constants as slack_const
 
+
 from managr.zoom.models import ZoomMeeting
 from managr.zoom.utils import score_meeting
 from managr.slack.helpers.block_sets.meeting_review_block_sets import _initial_interaction_message
@@ -38,7 +43,10 @@ from managr.opportunity.models import Lead, Opportunity
 from managr.organization.models import Account
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.zoom.serializers import ZoomMeetingSerializer
+from managr.zoom import constants as zoom_consts
 from managr.slack import constants as slack_consts
+from managr.salesforce.models import MeetingWorkflow
+
 
 NOTIFICATION_TITLE_STALLED_IN_STAGE = "Opportunity Stalled in Stage"
 NOTIFICATION_TITLE_INACTIVE = "Opportunity Inactive"
@@ -112,6 +120,7 @@ def _process_calendar_details(user_id):
     events = user.nylas._get_calendar_data()
 
     processed_data = []
+    print(len(events), "events")
     for event in events:
         data = {}
         data["title"] = event.get("title", None)
@@ -121,29 +130,24 @@ def _process_calendar_details(user_id):
     return processed_data
 
 
-def meeting_prep(processed_data, user_id):
+def meeting_prep(processed_data, user_id, send_slack=True):
         def get_domain(email):
             """Parse domain out of an email"""
             return email[email.index("@") + 1 :]
 
+       
         user = User.objects.get(id=user_id)    
         ignore_emails = user.organization.ignore_emails
+        meeting = {}
     # Getting all participants from meetings and all their emails 
-        all_participants = []
-        for item in processed_data:
-            participants = item.get('participants')
-            all_participants.append(participants)
-
+        all_participants = processed_data.get('participants')
         all_emails = []
-        for meeting in all_participants:
-            Each_meeting_participants = meeting
-            for item in meeting:
-                participants_email = item.get('email')
-                all_emails.append(participants_email)
-  
+        for participant in all_participants:
+            participants_email = participant.get('email')
+            all_emails.append(participants_email)
 
-        nylas_participants = all_participants
-        participant_emails = all_emails
+        
+        meeting = {}
 
         # all emails are now in participant_emails 
 
@@ -163,9 +167,10 @@ def meeting_prep(processed_data, user_id):
             )
         # re.search(remove_users_with_these_domains_regex, p.get("email", ""))
         #### first check if we care about this meeting before going forward
+        
         should_register_this_meeting = [
             p
-            for p in nylas_participants[0]
+            for p in all_participants
             if not re.search(remove_users_with_these_domains_regex, p.get("email", ""))
         ]
            
@@ -174,13 +179,14 @@ def meeting_prep(processed_data, user_id):
             return
 
         memo = {}
-        for p in nylas_participants:
-            if p[0].get("email", "") not in ["", None, *memo.keys()] and not re.search(
-                remove_users_with_these_domains_regex, p[0].get("email", "")
+        for p in all_participants:
+            if p.get("email", "") not in ["", None, *memo.keys()] and not re.search(
+                remove_users_with_these_domains_regex, p.get("email", "")
             ):
-                memo[p[0].get("email")] = len(participants)
+                memo[p.get("email")] = len(participants)
                 participants.append(p)
-        print(p)
+       
+        # print(p)
         # If the user has their calendar connected through Nylas, find a
         # matching meeting and gather unique participant emails.
         # calendar_participants = calendar_participants_from_zoom_meeting(meeting, user)
@@ -188,37 +194,24 @@ def meeting_prep(processed_data, user_id):
         # Combine the sets of participants. Filter out empty emails, meeting owner, and any
         # emails with domains that match the owner, which are teammates of the owner.
         logger.info(f"    Got list of participants: {participants}")
-
-        for p in nylas_participants:
+ 
+        for p in all_participants:
+            # print(p)
             if not re.search(
-                remove_users_with_these_domains_regex, p[0].get("email", "")
-            ) and p[0].get("email", "") not in ["", None]:
-                if p[0].get("email", "") in memo.keys():
-                    index = memo[p[0].get("email")]
-                    participants[index]["name"] = p[0].get("name", "")
+                remove_users_with_these_domains_regex, p.get("email", "")
+            ) and p.get("email", "") not in ["", None]:
+                if p.get("email", "") in memo.keys():
+                    index = memo[p.get("email")]
+                    participants[index]["name"] = p.get("name", "")
                 else:
-                    memo[p[0].get("email")] = len(participants)
+                    memo[p.get("email")] = len(participants)
                     participants.append(p)
 
-        if settings.IN_DEV or settings.IN_STAGING:
-            participants.append(
-                {
-                    "name": "maybe mike",
-                    "id": "",
-                    "email": f"{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}@{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}.com",
-                }
-            )
-            participants.append(
-                {
-                    "name": "not",
-                    "id": "",
-                    "email": f"{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}@{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}.com",
-                }
-            )
+        # print(participants)
         contact_forms = []
         if len(participants):
             # Reduce to set of unique participant emails
-            participant_emails = set([p[0].get("email") for p[0] in participants])
+            participant_emails = set([p.get("email") for p in participants])
             meeting_contacts = []
         # find existing contacts
 
@@ -275,7 +268,6 @@ def meeting_prep(processed_data, user_id):
         if opportunity:
             meeting_resource_data["resource_id"] = str(opportunity.id)
             meeting_resource_data["resource_type"] = "Opportunity"
-
         else:
             account = Account.objects.filter(
                 contacts__email__in=participant_emails, owner__id=user.id,
@@ -290,6 +282,7 @@ def meeting_prep(processed_data, user_id):
                 if lead:
                     meeting_resource_data["resource_id"] = str(lead.id)
                     meeting_resource_data["resource_type"] = "Lead"
+
 
         for contact in meeting_contacts:
             contact["_tracking_id"] = str(uuid.uuid4())
@@ -318,9 +311,44 @@ def meeting_prep(processed_data, user_id):
                 )
                 contact_forms.append(form)
                 contact["_form"] = str(form.id)
-        print(form.id)
-        meeting.participants = meeting_contacts
-        serializer = ZoomMeetingSerializer(data=meeting.as_dict)
+        meeting_participants = [obj.get("_form") for obj in meeting_contacts]
+        # All meeting_participants are in meeting 
+        # print(meeting_participants)
+        # print(meeting_resource_data, "This is meeting resource data")
+        resource_id = meeting_resource_data.get('resource_id', None)
+        # print(meeting_participants, "Meeting participants")
+        payload = {'meeting_participants': meeting_participants}
+        if resource_id:
+            payload.update({'resource_type': meeting_resource_data.get('resource_type'), 'resource_id': resource_id})
+        # print(payload, "payload")
+        return payload
+
+        serializer = ZoomMeetingSerializer(data=meeting)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+        except ValidationError as e:
+            logger.exception(
+                f"Unable to save and initiate slack for meeting with uuid "
+                # f"{meeting_uuid} because of error {json.dumps(e.detail)}"
+            )
+            return e
+
+        # emit the event to start slack interaction
+        workflow = MeetingWorkflow.objects.create(
+            user=user,
+            meeting=serializer.instance,
+            operation_type= zoom_consts.MEETING_REVIEW_OPERATION,
+            **meeting_resource_data,
+        )
+
+        workflow.forms.set(contact_forms)
+        if send_slack:
+            # sends false only for Mike testing
+            workflow.begin_communication()
+        return workflow
+
 
 
 def _send_calendar_details(user_id):
@@ -333,11 +361,20 @@ def _send_calendar_details(user_id):
             # f"Good Morning! You have " + str(len(processed_data)) + " meetings today"
         )
     ]
-    meeting_prep(processed_data, user_id)
+    
+    # print(len(processed_data))
     for event in processed_data:
+        meeting_info = meeting_prep(event, user_id)
+        if meeting_info:
+            meeting_participants = meeting_info.get('meeting_participants') 
+            resource_type = meeting_info.get('resource_type') #if hasattr( meeting_info, 'resource_type') else None
+            resource_id = meeting_info.get('resource_id') #if hasattr(meeting_info, 'resource_id') else None
+        context = {"event_data": event, 'meeting_participants': meeting_participants}
+        if resource_type: 
+            context.update({'resource_type': resource_type, 'resource_id': resource_id})
         blocks = [
             *blocks,
-            *block_sets.get_block_set("calendar_reminders_blockset", {"event_data": event}),
+            *block_sets.get_block_set("calendar_reminders_blockset", context),
         ]
     # Loop thru processed_data and create block for each one
     # print(blocks)

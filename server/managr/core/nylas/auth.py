@@ -1,4 +1,7 @@
 import base64
+import datetime
+import time
+import pytz
 import requests
 from requests.exceptions import HTTPError
 from urllib.parse import urlencode
@@ -65,10 +68,23 @@ def get_account_details(token):
     collected_data = {"account": account.json(), "calendars": calendar.json()}
     return collected_data
 
+def ConvertLocalTimetoUnix(timezone, hr, minute):
+    current_time = datetime.datetime.today()
+    user_timezone = pytz.timezone(timezone)
+    current = pytz.utc.localize(current_time).astimezone(user_timezone)
+    unixtime = time.mktime(current.replace(hour=hr, minute=minute).timetuple())
+    return unixtime
+
 def get_calendar_details_from_nylas(token):
     headers = dict(Authorization=f"Bearer {token}")
+    query = dict({
+        'start_time': 1638554400,
+        'end_time': 1638568800,
+    })
+    params = urlencode(query)
+    print(params, "Params")
     events = requests.get(
-        f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.Event_Post}", headers=headers,
+        f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.Event_Post}?{params}", headers=headers,
     )
     events_data = {"events": events.json()}
     return events_data;
