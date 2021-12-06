@@ -724,6 +724,11 @@ def process_show_update_resource_form(payload, context):
     else:
         selected_option = None
     resource_id = selected_option
+    alert_id = (
+        AlertInstance.objects.get(id=context.get("alert_id"))
+        if context.get("type") == "alert"
+        else None
+    )
     resource_type = context.get("resource")
     pm = json.loads(payload.get("view", {}).get("private_metadata", "{}"))
     prev_form = pm.get("f", None)
@@ -741,8 +746,14 @@ def process_show_update_resource_form(payload, context):
             .filter(Q(resource=resource_type, form_type="UPDATE"))
             .first()
         )
-        slack_form = OrgCustomSlackFormInstance.objects.create(
-            template=template, resource_id=resource_id, user=user,
+        slack_form = (
+            OrgCustomSlackFormInstance.objects.create(
+                template=template, resource_id=resource_id, user=user, alert_instance_id=alert_id,
+            )
+            if alert_id
+            else OrgCustomSlackFormInstance.objects.create(
+                template=template, resource_id=resource_id, user=user,
+            )
         )
         if slack_form:
             current_stage = slack_form.resource_object.secondary_data.get("StageName")
@@ -799,7 +810,10 @@ def process_show_update_resource_form(payload, context):
         show_submit_button_if_fields_added = False
     private_metadata = {
         "channel_id": payload.get("container").get("channel_id"),
+        "message_ts": payload.get("container").get("message_ts"),
     }
+    if alert_id:
+        private_metadata.update({"alert_id": alert_id, "current_page": context.get("current_page")})
     private_metadata.update(context)
     data = {
         "trigger_id": payload["trigger_id"],
@@ -1019,7 +1033,6 @@ def process_check_is_owner(payload, context):
     # CHECK_IS_OWNER
     slack_id = payload.get("user", {}).get("id")
     user_id = context.get("u")
-    resource = context.get("resource")
     context.update({"type": "alert"})
     user_slack = UserSlackIntegration.objects.filter(slack_id=slack_id).first()
     if user_slack and str(user_slack.user.id) == user_id:
@@ -1467,7 +1480,13 @@ def process_get_notes(payload, context):
     type = context.get("type", None)
     org = u.organization
     access_token = org.slack_integration.access_token
-    resource_id = context.get("resource_id", None)
+    resource_id = (
+        context.get("resource_id", None)
+        if type
+        else payload["view"]["state"]["values"]["select_opp"][
+            f"GET_NOTES?u={u.id}&resource=Opportunity"
+        ]["selected_option"]["value"]
+    )
     opportunity = Opportunity.objects.get(id=resource_id)
     note_data = (
         OrgCustomSlackFormInstance.objects.filter(resource_id=resource_id)
@@ -1499,23 +1518,22 @@ def process_get_notes(payload, context):
             block_message += f"\nNotes:\n {note[2]}"
             note_blocks.append(block_builders.simple_section(block_message, "mrkdwn"))
             note_blocks.append({"type": "divider"})
+    trigger_id = payload["trigger_id"]
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": "NONE",
+            "title": {"type": "plain_text", "text": "Notes"},
+            "blocks": note_blocks,
+        },
+    }
     if type == "alert":
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
-        trigger_id = payload["trigger_id"]
-        data = {
-            "trigger_id": trigger_id,
-            "view": {
-                "type": "modal",
-                "callback_id": "NONE",
-                "title": {"type": "plain_text", "text": "Notes"},
-                "blocks": note_blocks,
-            },
-        }
-        slack_requests.generic_request(url, data, access_token=access_token)
     else:
-        update_res = slack_requests.send_channel_message(
-            u.slack_integration.channel, access_token, block_set=note_blocks,
-        )
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        data["view_id"] = payload["container"]["view_id"]
+    slack_requests.generic_request(url, data, access_token=access_token)
     return
 
 
