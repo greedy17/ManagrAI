@@ -1032,7 +1032,7 @@ class OpportunityAdapter:
         )
         url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.RESOURCE_SYNC_OPPORTUNITY, "")
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
-
+        print(url)
         with Client as client:
             r = client.post(
                 url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
