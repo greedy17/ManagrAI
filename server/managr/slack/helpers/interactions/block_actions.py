@@ -173,12 +173,41 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
 
 @processor()
 def process_edit_meeting_contact(payload, context):
+    print(context)
     trigger_id = payload["trigger_id"]
     view = payload["view"]
     view_id = view["id"]
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    meeting = workflow.meeting
-    org = meeting.zoom_account.user.organization
+    type = context.get("type", None)
+    if type:
+        form = OrgCustomSlackFormInstance.objects.get(id=context.get("resource_id"))
+        org = form.user.organization
+        edit_block_context = {
+            "type": type,
+            "w": context.get("resource_id"),
+            "current_view_id": view_id,
+        }
+        private_metadata = {
+            "resource_id": context.get("resource_id"),
+            "current_view_id": view_id,
+            "channel": context.get("channel"),
+            "timestamp": context.get("timestamp"),
+        }
+    else:
+        workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+        meeting = workflow.meeting
+        org = meeting.zoom_account.user.organization
+        edit_block_context = {
+            "w": context.get("w"),
+            "tracking_id": context.get("tracking_id"),
+            "current_view_id": view_id,
+        }
+        private_metadata = {
+            "w": context.get("w"),
+            "tracking_id": context.get("tracking_id"),
+            "current_view_id": view_id,
+            "channel": context.get("channel"),
+            "timestamp": context.get("timestamp"),
+        }
     access_token = org.slack_integration.access_token
     data = {
         "trigger_id": trigger_id,
@@ -187,24 +216,9 @@ def process_edit_meeting_contact(payload, context):
             "type": "modal",
             "title": {"type": "plain_text", "text": "Edit Contact"},
             "submit": {"type": "plain_text", "text": "Save"},
-            "blocks": get_block_set(
-                "edit_meeting_contacts",
-                {
-                    "w": context.get("w"),
-                    "tracking_id": context.get("tracking_id"),
-                    "current_view_id": view_id,
-                },
-            ),
+            "blocks": get_block_set("edit_meeting_contacts", edit_block_context,),
             "callback_id": slack_const.ZOOM_MEETING__UPDATE_PARTICIPANT_DATA,
-            "private_metadata": json.dumps(
-                {
-                    "w": context.get("w"),
-                    "tracking_id": context.get("tracking_id"),
-                    "current_view_id": view_id,
-                    "channel": context.get("channel"),
-                    "timestamp": context.get("timestamp"),
-                }
-            ),
+            "private_metadata": json.dumps(private_metadata),
         },
     }
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH

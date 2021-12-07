@@ -210,13 +210,12 @@ def meeting_contacts_block_set(context):
                     lambda resource: resource["resource_id"] == contact["id"], contacts_not_in_sf
                 )
             )
-            print(resource_id)
             resource_id_param = f"resource_id={context.get(resource_id)}"
         else:
             workflow_id_param = f"w={str(workflow)}" if type else f"w={str(workflow.id)}"
             tracking_id_param = f"tracking_id={contact['_tracking_id']}"
             params = (
-                [workflow_id_param, tracking_id_param, channel, timestamp, type]
+                [workflow_id_param, tracking_id_param, channel, timestamp, f"type={type}"]
                 if type
                 else [workflow_id_param, tracking_id_param, channel, timestamp]
             )
@@ -273,7 +272,7 @@ def meeting_contacts_block_set(context):
             workflow_id_param = f"w={str(workflow)}" if type else f"w={str(workflow.id)}"
             tracking_id_param = f"tracking_id={contact['_tracking_id']}"
         params = (
-            [resource_id_param, channel, timestamp, type]
+            [resource_id_param, channel, timestamp, f"type={type}"]
             if type
             else [workflow_id_param, tracking_id_param, channel, timestamp]
         )
@@ -309,18 +308,23 @@ def meeting_contacts_block_set(context):
     return block_sets
 
 
-@block_set(required_context=["w", "tracking_id"])
+@block_set(required_context=["w"])
 def edit_meeting_contacts_block_set(context):
-
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    meeting = workflow.meeting
-    contact = dict(
-        *filter(
-            lambda contact: contact["_tracking_id"] == context.get("tracking_id"),
-            meeting.participants,
+    type = context.get("type", None)
+    if type:
+        resource_form = OrgCustomSlackFormInstance.objects.get(id=context.get("w"))
+        contact = Contact.objects.get(id=resource_form.resource_id).__dict__
+    else:
+        workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+        meeting = workflow.meeting
+        contact = dict(
+            *filter(
+                lambda contact: contact["_tracking_id"] == context.get("tracking_id"),
+                meeting.participants,
+            )
         )
-    )
     # if it already has an existing form it will be used
+    user = resource_form.user if type else workflow.user
     form_id = contact.get("_form")
     if form_id in ["", None]:
         form_type = (
@@ -329,21 +333,21 @@ def edit_meeting_contacts_block_set(context):
             else slack_const.FORM_TYPE_CREATE
         )
         template = (
-            OrgCustomSlackForm.objects.for_user(workflow.user)
+            OrgCustomSlackForm.objects.for_user(user)
             .filter(form_type=form_type, resource=slack_const.FORM_RESOURCE_CONTACT)
             .first()
         )
         # try to create the form on the fly
         if type:
-            slack_form = OrgCustomSlackFormInstance.objects.create(
-                user=workflow.user, template=template
-            )
+            slack_form = OrgCustomSlackFormInstance.objects.create(user=user, template=template)
         else:
             slack_form = OrgCustomSlackFormInstance.objects.create(
-                user=workflow.user, template=template, workflow=workflow
+                user=user, template=template, workflow=workflow
             )
     else:
-        slack_form = workflow.forms.filter(id=contact.get("_form")).first()
+        slack_form = (
+            resource_form if type else workflow.forms.filter(id=contact.get("_form")).first()
+        )
     if not slack_form:
         return [
             block_builders.simple_section(

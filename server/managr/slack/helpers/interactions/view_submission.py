@@ -647,6 +647,7 @@ def process_zoom_meeting_attach_resource(payload, context):
 
 @processor()
 def process_update_meeting_contact(payload, context):
+    print(context)
     state = payload["view"]["state"]["values"]
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     contact = dict(
