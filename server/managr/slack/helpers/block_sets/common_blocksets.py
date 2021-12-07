@@ -382,7 +382,6 @@ def calendar_reminders_blockset(context):
     for item in attend:
         participants = item["name"]
         people.append(participants)
-    # print(people)
     title = data.get("title")
     unix_start_time = data.get("times").get("start_time")
     unix_end_time = data.get("times").get("end_time")
@@ -393,19 +392,21 @@ def calendar_reminders_blockset(context):
     python_end_time = datetime.utcfromtimestamp(unix_end_time).strftime("%H:%M")
     s = datetime.strptime(python_end_time, "%H:%M")
     local_end_time = s.strftime("%r")
-    
-    # print(context.get('meeting_participants'))
-
     blocks = [
-
         block_builders.section_with_button_block(
             "Review Attendees",
             section_text=f"{title}\n Starts at {local_start_time}\n Attendees: " + str(len(people)),
-            button_value=context.get('resource_id', 'No Value'),
+            button_value=context.get("resource_id", "No Value"),
             action_id=action_with_params(
-                slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[f"w={str(context.get('resource_id'))}", f"meeting_participants={context.get('meeting_participants')}", f"type={context.get('resource_type')}", f"u={context.get('u')}"]
-            )),
-
+                slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
+                params=[
+                    f"w={str(context.get('resource_id'))}",
+                    f"meeting_participants={context.get('meeting_participants')}",
+                    f"type={context.get('resource_type')}",
+                    f"meeting_forms={context.get('meeting_forms')}",
+                ],
+            ),
+        ),
         # block_builders.section_with_button_block(
         #     "Map to Opportunity",
         #     action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,

@@ -104,11 +104,12 @@ def process_meeting_review(payload, context):
 @processor(required_context=["w"], action=slack_const.VIEWS_OPEN)
 def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPEN):
     url = slack_const.SLACK_API_ROOT + action
+    slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
     type = context.get("type", None)
     trigger_id = payload["trigger_id"]
     # view_id = payload["view"]["id"]
     if type:
-        workflow = User.objects.get(id=context.get("u"))
+        workflow = User.objects.get(id=slack_account.user.id)
         # if type == "Opportunity":
         #     workflow = Opportunity.objects.get(id=context.get("w"))
         # elif type == "Account":
@@ -128,10 +129,9 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
         "original_message_timestamp": payload["message"]["ts"]
         if "message" in payload
         else context.get("timestamp"),
-        "meeting_participants": context.get("meeting_participants"),
     }
     private_metadata.update(context)
-    print(private_metadata, "private metadata")
+    print(context)
     if type:
         blocks = get_block_set("show_meeting_contacts", private_metadata)
     else:

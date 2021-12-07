@@ -399,9 +399,6 @@ class NylasAuthAccount(TimeStampModel):
         response_data = self._handle_response(r)
         return response_data
 
-
-
-
     @staticmethod
     def _handle_response(response, fn_name=None):
         if not hasattr(response, "status_code"):
@@ -437,20 +434,12 @@ class NylasAuthAccount(TimeStampModel):
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
         }
-        query = dict({
-            'starts_after': 1638784800,
-            'ends_before': 1638842400,
-        })
+        query = dict({"starts_after": 1638784800, "ends_before": 1638842400,})
         params = urlencode(query)
-        print(params, "Params")
-
         events = requests.get(
             f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.EVENT_POST}?{params}", headers=headers,
         )
-        print(events.json(), "Events Json is here")
-
         return self._handle_response(events)
-
 
 
 class NotificationQuerySet(models.QuerySet):

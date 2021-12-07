@@ -160,20 +160,6 @@ def add_to_cadence_block_set(context):
 def meeting_contacts_block_set(context):
     # if this is a returning view it will also contain the selected contacts
     type = context.get("type", None)
-    if type:
-        if type == "Opportunity":
-            workflow = Opportunity.objects.get(id=context.get("w"))
-        elif type == "Account":
-            workflow = Account.objects.get(id=context.get("w"))
-        else:
-            workflow = Lead.objects.get(id=context.get("w"))
-        contacts = Contact.objects.filter(id__in=context.get("meeting_participants"))
-        sf_account = workflow.owner.salesforce_account
-    else:
-        workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-        meeting = workflow.meeting
-        contacts = meeting.participants
-        sf_account = meeting.zoom_account.user.salesforce_account
     channel = f"channel={context.get('original_message_channel')}"
     timestamp = f"timestamp={context.get('original_message_timestamp')}"
     block_sets = [
@@ -183,6 +169,23 @@ def meeting_contacts_block_set(context):
         },
         {"type": "divider"},
     ]
+    if type:
+        if type == "Opportunity":
+            workflow = Opportunity.objects.get(id=context.get("w"))
+        elif type == "Account":
+            workflow = Account.objects.get(id=context.get("w"))
+        else:
+            workflow = Lead.objects.get(id=context.get("w"))
+        contact_ids = context.get("meeting_participants").split("%")
+        form_ids = context.get("meeting_forms").split("%")
+        forms = list(OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).values())
+        contacts = list(Contact.objects.filter(id__in=contact_ids).values())
+        sf_account = workflow.owner.salesforce_account
+    else:
+        workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+        meeting = workflow.meeting
+        contacts = meeting.participants
+        sf_account = meeting.zoom_account.user.salesforce_account
     # list contacts we already had from sf
     contacts_in_sf = list(filter(lambda contact: contact["integration_id"], contacts))
 
@@ -201,13 +204,22 @@ def meeting_contacts_block_set(context):
         )
 
     for i, contact in enumerate(contacts_not_in_sf):
-        workflow_id_param = f"w={str(workflow)}" if type else f"w={str(workflow.id)}"
-        tracking_id_param = f"tracking_id={contact['_tracking_id']}"
-        params = (
-            [workflow_id_param, tracking_id_param, channel, timestamp, type]
-            if type
-            else [workflow_id_param, tracking_id_param, channel, timestamp]
-        )
+        if type:
+            resource_id = list(
+                filter(
+                    lambda resource: resource["resource_id"] == contact["id"], contacts_not_in_sf
+                )
+            )
+            print(resource_id)
+            resource_id_param = f"resource_id={context.get(resource_id)}"
+        else:
+            workflow_id_param = f"w={str(workflow)}" if type else f"w={str(workflow.id)}"
+            tracking_id_param = f"tracking_id={contact['_tracking_id']}"
+            params = (
+                [workflow_id_param, tracking_id_param, channel, timestamp, type]
+                if type
+                else [workflow_id_param, tracking_id_param, channel, timestamp]
+            )
         block_sets.append(generate_contact_group(i, contact, sf_account.instance_url))
         # pass meeting id and contact index
         block_sets.append(
@@ -251,12 +263,17 @@ def meeting_contacts_block_set(context):
                 "mrkdwn",
             )
         )
-
     for i, contact in enumerate(contacts_in_sf):
-        workflow_id_param = f"w={str(workflow)}" if type else f"w={str(workflow.id)}"
-        tracking_id_param = f"tracking_id={contact['_tracking_id']}"
+        if type:
+            resource_id = list(
+                filter(lambda resource: resource["resource_id"] == str(contact["id"]), forms)
+            )[0]
+            resource_id_param = f"resource_id={str(resource_id['id'])}"
+        else:
+            workflow_id_param = f"w={str(workflow)}" if type else f"w={str(workflow.id)}"
+            tracking_id_param = f"tracking_id={contact['_tracking_id']}"
         params = (
-            [workflow_id_param, tracking_id_param, channel, timestamp, type]
+            [resource_id_param, channel, timestamp, type]
             if type
             else [workflow_id_param, tracking_id_param, channel, timestamp]
         )

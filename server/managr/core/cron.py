@@ -131,253 +131,217 @@ def _process_calendar_details(user_id):
 
 
 def meeting_prep(processed_data, user_id, send_slack=True):
-        def get_domain(email):
-            """Parse domain out of an email"""
-            return email[email.index("@") + 1 :]
+    def get_domain(email):
+        """Parse domain out of an email"""
+        return email[email.index("@") + 1 :]
 
-       
-        user = User.objects.get(id=user_id)    
-        ignore_emails = user.organization.ignore_emails
-        meeting = {}
-    # Getting all participants from meetings and all their emails 
-        all_participants = processed_data.get('participants')
-        all_emails = []
-        for participant in all_participants:
-            participants_email = participant.get('email')
-            all_emails.append(participants_email)
+    user = User.objects.get(id=user_id)
+    ignore_emails = user.organization.ignore_emails
+    meeting = {}
+    # Getting all participants from meetings and all their emails
+    all_participants = processed_data.get("participants")
+    all_emails = []
+    for participant in all_participants:
+        participants_email = participant.get("email")
+        all_emails.append(participants_email)
 
-        
-        meeting = {}
+    meeting = {}
 
-        # all emails are now in participant_emails 
+    # all emails are now in participant_emails
 
- # Gather Meeting Participants from Zoom and Calendar  
- # Gather unique emails from the Zoom Meeting participants
-        logger.info("Gathering meeting participants...")    
-        participants = []
-        user = User.objects.get(id=user_id)
+    # Gather Meeting Participants from Zoom and Calendar
+    # Gather unique emails from the Zoom Meeting participants
+    participants = []
+    user = User.objects.get(id=user_id)
 
-        org_email_domain = get_domain(user.email)
-        remove_users_with_these_domains_regex = r"(@[\w.]+calendar.google.com)|({})".format(
-            org_email_domain
+    org_email_domain = get_domain(user.email)
+    remove_users_with_these_domains_regex = r"(@[\w.]+calendar.google.com)|({})".format(
+        org_email_domain
+    )
+    for email in ignore_emails:
+        remove_users_with_these_domains_regex = (
+            remove_users_with_these_domains_regex + r"|({})".format(email)
         )
-        for email in ignore_emails:
-            remove_users_with_these_domains_regex = (
-                remove_users_with_these_domains_regex + r"|({})".format(email)
-            )
-        # re.search(remove_users_with_these_domains_regex, p.get("email", ""))
-        #### first check if we care about this meeting before going forward
-        
-        should_register_this_meeting = [
-            p
-            for p in all_participants
-            if not re.search(remove_users_with_these_domains_regex, p.get("email", ""))
-        ]
-           
+    # re.search(remove_users_with_these_domains_regex, p.get("email", ""))
+    #### first check if we care about this meeting before going forward
 
-        if not len(should_register_this_meeting):
-            return
+    should_register_this_meeting = [
+        p
+        for p in all_participants
+        if not re.search(remove_users_with_these_domains_regex, p.get("email", ""))
+    ]
 
-        memo = {}
-        for p in all_participants:
-            if p.get("email", "") not in ["", None, *memo.keys()] and not re.search(
-                remove_users_with_these_domains_regex, p.get("email", "")
-            ):
+    if not len(should_register_this_meeting):
+        return
+
+    memo = {}
+    for p in all_participants:
+        if p.get("email", "") not in ["", None, *memo.keys()] and not re.search(
+            remove_users_with_these_domains_regex, p.get("email", "")
+        ):
+            memo[p.get("email")] = len(participants)
+            participants.append(p)
+
+    # print(p)
+    # If the user has their calendar connected through Nylas, find a
+    # matching meeting and gather unique participant emails.
+    # calendar_participants = calendar_participants_from_zoom_meeting(meeting, user)
+
+    # Combine the sets of participants. Filter out empty emails, meeting owner, and any
+    # emails with domains that match the owner, which are teammates of the owner.
+    for p in all_participants:
+        # print(p)
+        if not re.search(remove_users_with_these_domains_regex, p.get("email", "")) and p.get(
+            "email", ""
+        ) not in ["", None]:
+            if p.get("email", "") in memo.keys():
+                index = memo[p.get("email")]
+                participants[index]["name"] = p.get("name", "")
+            else:
                 memo[p.get("email")] = len(participants)
                 participants.append(p)
-       
-        # print(p)
-        # If the user has their calendar connected through Nylas, find a
-        # matching meeting and gather unique participant emails.
-        # calendar_participants = calendar_participants_from_zoom_meeting(meeting, user)
 
-        # Combine the sets of participants. Filter out empty emails, meeting owner, and any
-        # emails with domains that match the owner, which are teammates of the owner.
-        logger.info(f"    Got list of participants: {participants}")
- 
-        for p in all_participants:
-            # print(p)
-            if not re.search(
-                remove_users_with_these_domains_regex, p.get("email", "")
-            ) and p.get("email", "") not in ["", None]:
-                if p.get("email", "") in memo.keys():
-                    index = memo[p.get("email")]
-                    participants[index]["name"] = p.get("name", "")
-                else:
-                    memo[p.get("email")] = len(participants)
-                    participants.append(p)
+    # print(participants)
+    contact_forms = []
+    if len(participants):
+        # Reduce to set of unique participant emails
+        participant_emails = set([p.get("email") for p in participants])
+        meeting_contacts = []
+    # find existing contacts
 
-        # print(participants)
-        contact_forms = []
-        if len(participants):
-            # Reduce to set of unique participant emails
-            participant_emails = set([p.get("email") for p in participants])
-            meeting_contacts = []
-        # find existing contacts
+    existing_contacts = Contact.objects.filter(
+        email__in=participant_emails, owner__organization__id=user.organization.id
+    ).exclude(email=user.email)
+    # convert all contacts to model representation and remove from array
+    for contact in existing_contacts:
+        formatted_contact = contact.adapter_class.as_dict
 
-        existing_contacts = Contact.objects.filter(
-            email__in=participant_emails, owner__organization__id= user.organization.id
-        ).exclude(email= user.email)
-        # convert all contacts to model representation and remove from array
-        for contact in existing_contacts:
-            formatted_contact = contact.adapter_class.as_dict
-            
-            # create a form for each contact to save to workflow
-            meeting_contacts.append(formatted_contact)
-            for index, participant in enumerate(participants):
-                if (
-                    participant["email"] == contact.email
-                    or participant["email"] == User.email
-                ):
-                    del participants[index]
-        new_contacts = list(
-            filter(
-                lambda x: len(x.get("secondary_data", dict())) or x.get("email"),
-                list(
-                    map(
-                        lambda participant: {
-                            **ContactAdapter(
-                                **dict(
-                                    email=participant["email"],
-                                    # these will only get stored if lastname and firstname are accessible from sf
-                                    external_owner= user.salesforce_account.salesforce_id,
-                                    secondary_data={
-                                        "FirstName": _split_first_name(participant["name"]),
-                                        "LastName": _split_last_name(participant["name"]),
-                                        "Email": participant["email"],
-                                    },
-                                )
-                            ).as_dict,
-                        },
-                        participants,
-                    ),
+        # create a form for each contact to save to workflow
+        meeting_contacts.append(formatted_contact)
+        for index, participant in enumerate(participants):
+            if participant["email"] == contact.email or participant["email"] == User.email:
+                del participants[index]
+    new_contacts = list(
+        filter(
+            lambda x: len(x.get("secondary_data", dict())) or x.get("email"),
+            list(
+                map(
+                    lambda participant: {
+                        **ContactAdapter(
+                            **dict(
+                                email=participant["email"],
+                                # these will only get stored if lastname and firstname are accessible from sf
+                                external_owner=user.salesforce_account.salesforce_id,
+                                secondary_data={
+                                    "FirstName": _split_first_name(participant["name"]),
+                                    "LastName": _split_last_name(participant["name"]),
+                                    "Email": participant["email"],
+                                },
+                            )
+                        ).as_dict,
+                    },
+                    participants,
                 ),
-            )
+            ),
         )
+    )
 
-        meeting_contacts = [
-            *new_contacts,
-            *meeting_contacts,
-        ]
-        meeting_resource_data = dict(resource_id="", resource_type="")
-        opportunity = Opportunity.objects.filter(
-            contacts__email__in=participant_emails, owner__id=user.id
+    meeting_contacts = [
+        *new_contacts,
+        *meeting_contacts,
+    ]
+    meeting_resource_data = dict(resource_id="", resource_type="")
+    opportunity = Opportunity.objects.filter(
+        contacts__email__in=participant_emails, owner__id=user.id
+    ).first()
+    if opportunity:
+        meeting_resource_data["resource_id"] = str(opportunity.id)
+        meeting_resource_data["resource_type"] = "Opportunity"
+    else:
+        account = Account.objects.filter(
+            contacts__email__in=participant_emails, owner__id=user.id,
         ).first()
-        print(participant_emails, "Participant Emails")
-        if opportunity:
-            meeting_resource_data["resource_id"] = str(opportunity.id)
-            meeting_resource_data["resource_type"] = "Opportunity"
+        if account:
+            meeting_resource_data["resource_id"] = str(account.id)
+            meeting_resource_data["resource_type"] = "Account"
         else:
-            account = Account.objects.filter(
-                contacts__email__in=participant_emails, owner__id=user.id,
-            ).first()
-            if account:
-                meeting_resource_data["resource_id"] = str(account.id)
-                meeting_resource_data["resource_type"] = "Account"
-            else:
-                lead = Lead.objects.filter(
-                    email__in=participant_emails, owner__id=user.id
-                ).first()
-                if lead:
-                    meeting_resource_data["resource_id"] = str(lead.id)
-                    meeting_resource_data["resource_type"] = "Lead"
+            lead = Lead.objects.filter(email__in=participant_emails, owner__id=user.id).first()
+            if lead:
+                meeting_resource_data["resource_id"] = str(lead.id)
+                meeting_resource_data["resource_type"] = "Lead"
 
-
-        for contact in meeting_contacts:
-            contact["_tracking_id"] = str(uuid.uuid4())
-            form_type = (
-                slack_consts.FORM_TYPE_UPDATE
-                if contact["id"] not in ["", None]
-                else slack_consts.FORM_TYPE_CREATE
-            )
-            template = OrgCustomSlackForm.objects.filter(
-                form_type=form_type,
-                resource=slack_consts.FORM_RESOURCE_CONTACT,
-                organization=user.organization,
-            ).first()
-            if not template:
-                logger.exception(
-                    f"Unable to find Contact Form template for user {str(user_id)}, email {user.email} cannot create initial form for meeting review"
-                )
-                contact["_form"] = None
-            else:
-                # create instance
-                # logger.info(f"contact_id: {contact['id']}")
-                form = OrgCustomSlackFormInstance.objects.create(
-                    user=user,
-                    template=template,
-                    resource_id="" if contact.get("id") in ["", None] else contact.get("id"),
-                )
-                contact_forms.append(form)
-                contact["_form"] = str(form.id)
-        meeting_participants = [obj.get("_form") for obj in meeting_contacts]
-        # All meeting_participants are in meeting 
-        # print(meeting_participants, "meeting participants 315")
-        # print(meeting_resource_data, "This is meeting resource data")
-        resource_id = meeting_resource_data.get('resource_id', None)
-        # print(meeting_participants, "Meeting participants")
-        payload = {'meeting_participants': meeting_participants}
-        if resource_id:
-            payload.update({'resource_type': meeting_resource_data.get('resource_type'), 'resource_id': resource_id})
-        # print(payload, "payload")
-        return payload
-
-        serializer = ZoomMeetingSerializer(data=meeting)
-
-        try:
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-        except ValidationError as e:
-            logger.exception(
-                f"Unable to save and initiate slack for meeting with uuid "
-                # f"{meeting_uuid} because of error {json.dumps(e.detail)}"
-            )
-            return e
-
-        # emit the event to start slack interaction
-        workflow = MeetingWorkflow.objects.create(
-            user=user,
-            meeting=serializer.instance,
-            operation_type= zoom_consts.MEETING_REVIEW_OPERATION,
-            **meeting_resource_data,
+    for contact in meeting_contacts:
+        contact["_tracking_id"] = str(uuid.uuid4())
+        form_type = (
+            slack_consts.FORM_TYPE_UPDATE
+            if contact["id"] not in ["", None]
+            else slack_consts.FORM_TYPE_CREATE
         )
-
-        workflow.forms.set(contact_forms)
-        if send_slack:
-            # sends false only for Mike testing
-            workflow.begin_communication()
-        return workflow
-
+        template = OrgCustomSlackForm.objects.filter(
+            form_type=form_type,
+            resource=slack_consts.FORM_RESOURCE_CONTACT,
+            organization=user.organization,
+        ).first()
+        if not template:
+            logger.exception(
+                f"Unable to find Contact Form template for user {str(user_id)}, email {user.email} cannot create initial form for meeting review"
+            )
+            contact["_form"] = None
+        else:
+            # create instance
+            # logger.info(f"contact_id: {contact['id']}")
+            form = OrgCustomSlackFormInstance.objects.create(
+                user=user,
+                template=template,
+                resource_id="" if contact.get("id") in ["", None] else contact.get("id"),
+            )
+            contact_forms.append(form)
+            contact["_form"] = str(form.id)
+    meeting_forms = [obj.get("_form") for obj in meeting_contacts]
+    meeting_participants = [obj.get("id") for obj in meeting_contacts]
+    # All meeting_participants are in meeting
+    # print(meeting_participants, "meeting participants 315")
+    # print(meeting_resource_data, "This is meeting resource data")
+    resource_id = meeting_resource_data.get("resource_id", None)
+    # print(meeting_participants, "Meeting participants")
+    payload = {
+        "meeting_participants": "%".join(meeting_participants),
+        "meeting_forms": "%".join(meeting_forms),
+    }
+    if resource_id:
+        payload.update(
+            {
+                "resource_type": meeting_resource_data.get("resource_type"),
+                "resource_id": resource_id,
+            }
+        )
+    return payload
 
 
 def _send_calendar_details(user_id):
     user = User.objects.get(id=user_id)
     processed_data = _process_calendar_details(user_id)
     # processed_data checks to see how many events exists
-    blocks = [
-        block_builders.header_block(
-            f"Upcoming Meetings For Today! :calendar:"
-            # f"Good Morning! You have " + str(len(processed_data)) + " meetings today"
-        )
-    ]
-    print(processed_data, "This is processed data")
-    # print(len(processed_data))
+    blocks = [block_builders.header_block(f"Upcoming Meetings For Today! :calendar:")]
     for event in processed_data:
         meeting_info = meeting_prep(event, user_id)
-        print(meeting_info, "This is the Meeting Info")
         if meeting_info:
-            meeting_participants = meeting_info.get('meeting_participants') 
-            resource_type = meeting_info.get('resource_type') #if hasattr( meeting_info, 'resource_type') else None
-            resource_id = meeting_info.get('resource_id') #if hasattr(meeting_info, 'resource_id') else None
-        context = {"event_data": event, 'meeting_participants': meeting_participants, 'u': str(user.id)}
-        if resource_type: 
-            context.update({'resource_type': resource_type, 'resource_id': resource_id})
-        blocks = [
-            *blocks,
-            *block_sets.get_block_set("calendar_reminders_blockset", context),
-        ]
+            meeting_participants = meeting_info.get("meeting_participants")
+            meeting_forms = meeting_info.get("meeting_forms")
+            resource_type = meeting_info.get("resource_type")
+            resource_id = meeting_info.get("resource_id")
+            context = {
+                "event_data": event,
+                "meeting_participants": meeting_participants,
+                "meeting_forms": meeting_forms,
+            }
+            if resource_type:
+                context.update({"resource_type": resource_type, "resource_id": resource_id})
+            blocks = [
+                *blocks,
+                *block_sets.get_block_set("calendar_reminders_blockset", context),
+            ]
     # Loop thru processed_data and create block for each one
-    print(blocks, "This is blocks")
     try:
         slack_requests.send_channel_message(
             user.slack_integration.channel,
@@ -387,7 +351,6 @@ def _send_calendar_details(user_id):
         )
     except Exception as e:
         logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
-    print(processed_data)
     return processed_data
 
 
