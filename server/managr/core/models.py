@@ -1,3 +1,4 @@
+from urllib.parse import urlencode
 import uuid
 import json
 import logging
@@ -428,7 +429,7 @@ class NylasAuthAccount(TimeStampModel):
                 "error_message": error_message,
             }
 
-            NylasAPIError(e)
+            NylasAPIError(kwargs)
         return data
 
     def _get_calendar_data(self):
@@ -436,11 +437,20 @@ class NylasAuthAccount(TimeStampModel):
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
         }
+        query = dict({
+            'starts_after': 1638784800,
+            'ends_before': 1638842400,
+        })
+        params = urlencode(query)
+        print(params, "Params")
+
         events = requests.get(
-            f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.EVENT_POST}", headers=headers,
+            f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.EVENT_POST}?{params}", headers=headers,
         )
+        print(events.json(), "Events Json is here")
 
         return self._handle_response(events)
+
 
 
 class NotificationQuerySet(models.QuerySet):

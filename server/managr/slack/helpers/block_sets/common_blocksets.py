@@ -401,9 +401,9 @@ def calendar_reminders_blockset(context):
         block_builders.section_with_button_block(
             "Review Attendees",
             section_text=f"{title}\n Starts at {local_start_time}\n Attendees: " + str(len(people)),
-            button_value='',
+            button_value=context.get('resource_id', 'No Value'),
             action_id=action_with_params(
-                slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[f"w={str(context.get('resource_id'))}", f"meeting_participants={context.get('meeting_participants')}", f"type={context.get('resource_type')}"]
+                slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[f"w={str(context.get('resource_id'))}", f"meeting_participants={context.get('meeting_participants')}", f"type={context.get('resource_type')}", f"u={context.get('u')}"]
             )),
 
         # block_builders.section_with_button_block(

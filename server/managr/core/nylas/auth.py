@@ -75,19 +75,7 @@ def ConvertLocalTimetoUnix(timezone, hr, minute):
     unixtime = time.mktime(current.replace(hour=hr, minute=minute).timetuple())
     return unixtime
 
-def get_calendar_details_from_nylas(token):
-    headers = dict(Authorization=f"Bearer {token}")
-    query = dict({
-        'start_time': 1638554400,
-        'end_time': 1638568800,
-    })
-    params = urlencode(query)
-    print(params, "Params")
-    events = requests.get(
-        f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.Event_Post}?{params}", headers=headers,
-    )
-    events_data = {"events": events.json()}
-    return events_data;
+
     
 def revoke_access_token(token):
     """function to revoke access token

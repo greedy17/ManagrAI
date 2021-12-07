@@ -218,7 +218,6 @@ def meeting_prep(processed_data, user_id, send_slack=True):
         existing_contacts = Contact.objects.filter(
             email__in=participant_emails, owner__organization__id= user.organization.id
         ).exclude(email= user.email)
-
         # convert all contacts to model representation and remove from array
         for contact in existing_contacts:
             formatted_contact = contact.adapter_class.as_dict
@@ -260,11 +259,11 @@ def meeting_prep(processed_data, user_id, send_slack=True):
             *new_contacts,
             *meeting_contacts,
         ]
-        
         meeting_resource_data = dict(resource_id="", resource_type="")
         opportunity = Opportunity.objects.filter(
             contacts__email__in=participant_emails, owner__id=user.id
         ).first()
+        print(participant_emails, "Participant Emails")
         if opportunity:
             meeting_resource_data["resource_id"] = str(opportunity.id)
             meeting_resource_data["resource_type"] = "Opportunity"
@@ -303,7 +302,7 @@ def meeting_prep(processed_data, user_id, send_slack=True):
                 contact["_form"] = None
             else:
                 # create instance
-                logger.info(f"contact_id: {contact['id']}")
+                # logger.info(f"contact_id: {contact['id']}")
                 form = OrgCustomSlackFormInstance.objects.create(
                     user=user,
                     template=template,
@@ -313,7 +312,7 @@ def meeting_prep(processed_data, user_id, send_slack=True):
                 contact["_form"] = str(form.id)
         meeting_participants = [obj.get("_form") for obj in meeting_contacts]
         # All meeting_participants are in meeting 
-        # print(meeting_participants)
+        # print(meeting_participants, "meeting participants 315")
         # print(meeting_resource_data, "This is meeting resource data")
         resource_id = meeting_resource_data.get('resource_id', None)
         # print(meeting_participants, "Meeting participants")
@@ -361,15 +360,16 @@ def _send_calendar_details(user_id):
             # f"Good Morning! You have " + str(len(processed_data)) + " meetings today"
         )
     ]
-    
+    print(processed_data, "This is processed data")
     # print(len(processed_data))
     for event in processed_data:
         meeting_info = meeting_prep(event, user_id)
+        print(meeting_info, "This is the Meeting Info")
         if meeting_info:
             meeting_participants = meeting_info.get('meeting_participants') 
             resource_type = meeting_info.get('resource_type') #if hasattr( meeting_info, 'resource_type') else None
             resource_id = meeting_info.get('resource_id') #if hasattr(meeting_info, 'resource_id') else None
-        context = {"event_data": event, 'meeting_participants': meeting_participants}
+        context = {"event_data": event, 'meeting_participants': meeting_participants, 'u': str(user.id)}
         if resource_type: 
             context.update({'resource_type': resource_type, 'resource_id': resource_id})
         blocks = [
@@ -377,7 +377,7 @@ def _send_calendar_details(user_id):
             *block_sets.get_block_set("calendar_reminders_blockset", context),
         ]
     # Loop thru processed_data and create block for each one
-    # print(blocks)
+    print(blocks, "This is blocks")
     try:
         slack_requests.send_channel_message(
             user.slack_integration.channel,
@@ -387,7 +387,7 @@ def _send_calendar_details(user_id):
         )
     except Exception as e:
         logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
-    # print(processed_data)
+    print(processed_data)
     return processed_data
 
 

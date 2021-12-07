@@ -108,7 +108,7 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
     trigger_id = payload["trigger_id"]
     # view_id = payload["view"]["id"]
     if type:
-        workflow = User.objects.get(id=context.get("w"))
+        workflow = User.objects.get(id=context.get("u"))
         # if type == "Opportunity":
         #     workflow = Opportunity.objects.get(id=context.get("w"))
         # elif type == "Account":
@@ -131,6 +131,7 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
         "meeting_participants": context.get("meeting_participants"),
     }
     private_metadata.update(context)
+    print(private_metadata, "private metadata")
     if type:
         blocks = get_block_set("show_meeting_contacts", private_metadata)
     else:
