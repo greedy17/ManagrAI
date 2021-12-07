@@ -75,7 +75,6 @@ def ConvertLocalTimetoUnix(timezone, hr, minute):
     unixtime = time.mktime(current.replace(hour=hr, minute=minute).timetuple())
     return unixtime
 
-
     
 def revoke_access_token(token):
     """function to revoke access token

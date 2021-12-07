@@ -118,7 +118,6 @@ def _send_slack_int_email(user):
 def _process_calendar_details(user_id):
     user = User.objects.get(id=user_id)
     events = user.nylas._get_calendar_data()
-
     processed_data = []
     print(len(events), "events")
     for event in events:
