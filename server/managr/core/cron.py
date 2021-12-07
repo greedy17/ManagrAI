@@ -221,6 +221,7 @@ def meeting_prep(processed_data, user_id, send_slack=True):
         for index, participant in enumerate(participants):
             if participant["email"] == contact.email or participant["email"] == User.email:
                 del participants[index]
+        # print(meeting_contacts, "This is meeting contacts")
     new_contacts = list(
         filter(
             lambda x: len(x.get("secondary_data", dict())) or x.get("email"),
@@ -277,6 +278,7 @@ def meeting_prep(processed_data, user_id, send_slack=True):
             if contact["id"] not in ["", None]
             else slack_consts.FORM_TYPE_CREATE
         )
+        # print(form_type, "This is form type")
         template = OrgCustomSlackForm.objects.filter(
             form_type=form_type,
             resource=slack_consts.FORM_RESOURCE_CONTACT,
@@ -295,10 +297,11 @@ def meeting_prep(processed_data, user_id, send_slack=True):
                 template=template,
                 resource_id="" if contact.get("id") in ["", None] else contact.get("id"),
             )
-            contact_forms.append(form)
+            contact_forms.append(str(form.id))
             contact["_form"] = str(form.id)
-    meeting_forms = [obj.get("_form") for obj in meeting_contacts]
+    meeting_forms = contact_forms
     meeting_participants = [obj.get("id") for obj in meeting_contacts]
+    # print([obj for obj in meeting_contacts], 'test')
     # All meeting_participants are in meeting
     # print(meeting_participants, "meeting participants 315")
     # print(meeting_resource_data, "This is meeting resource data")
@@ -306,7 +309,7 @@ def meeting_prep(processed_data, user_id, send_slack=True):
     # print(meeting_participants, "Meeting participants")
     payload = {
         "meeting_participants": "%".join(meeting_participants),
-        "meeting_forms": "%".join(meeting_forms),
+        "meeting_forms": "%".join(contact_forms),
     }
     if resource_id:
         payload.update(
