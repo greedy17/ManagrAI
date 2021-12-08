@@ -124,7 +124,7 @@ export default class SlackAPI {
     return this.client
       .post(SLACK_LIST_USERS, { cursor: cursor })
       .then(response => response)
-      .catch(apiErrorHandler({ apiName: 'SlackAPI.slackUsers' }))
+      .catch(apiErrorHandler({ apiName: 'SlackAPI.listUsers' }))
   }
 
   async createChannel(data) {

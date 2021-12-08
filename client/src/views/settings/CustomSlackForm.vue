@@ -1,68 +1,5 @@
 <template>
   <div class="slack-form-builder">
-    <Modal ref="modalName">
-      <template v-slot:header>
-        <p>Search for these fields & add them to your slack form</p>
-      </template>
-
-      <template v-slot:body>
-        <div>
-          <p style="color: #ff7649; font-weight: bold">Required:</p>
-          <ul>
-            <li>"Name"</li>
-            <li>"Stage"</li>
-            <li>"Close Date"</li>
-          </ul>
-        </div>
-        <p style="color: #5f8cff">Suggested:</p>
-        <ul>
-          <li>"Amount" or "MRR"</li>
-          <li>"Forecast Category"</li>
-          <li>"Next Step"</li>
-          <li>"Next Step Date"</li>
-        </ul>
-      </template>
-    </Modal>
-    <Modal ref="ContactModal">
-      <template v-slot:header>
-        <p>Search for these fields & add them to your slack form</p>
-      </template>
-
-      <template v-slot:body>
-        <div>
-          <p style="color: #ff7649; font-weight: bold">Required:</p>
-          <ul>
-            <li>"Last Name"</li>
-          </ul>
-        </div>
-        <p style="color: #5f8cff">Suggested:</p>
-        <ul>
-          <li>"First Name"</li>
-          <li>"Title"</li>
-          <li>"Email"</li>
-          <li>"Phone"</li>
-          <li>"Account Name"</li>
-        </ul>
-      </template>
-    </Modal>
-    <Modal ref="AccountModal">
-      <template v-slot:header>
-        <p>Search for these fields & add them to your slack form</p>
-      </template>
-
-      <template v-slot:body>
-        <div>
-          <p style="color: #ff7649; font-weight: bold">Required:</p>
-          <ul>
-            <li>"Name"</li>
-          </ul>
-        </div>
-        <p style="color: #5f8cff">Suggested:</p>
-        <ul>
-          <li>"Type"</li>
-        </ul>
-      </template>
-    </Modal>
     <Modal ref="LeadModal">
       <template v-slot:header>
         <p>Search for these fields & add them to your slack form</p>
@@ -104,15 +41,670 @@
     </div>
 
     <div class="opportunity__row">
-      <div class="collection_fields">
-        <div class="header">
-          <div style="margin-right: 2rem" class="center">
-            <img style="height: 2rem" src="@/assets/images/slackLogo.png" alt="" />
-            <p>Fields you'll see in slack</p>
+      <div v-if="addingProducts" class="collection_fields">
+        <div style="margin-bottom: 1rem" class="row__">
+          <h2>Products</h2>
+          <div class="row__">
+            <img
+              style="height: 1.5rem; margin-left: 1rem"
+              src="@/assets/images/slackLogo.png"
+              alt=""
+            />
+            <img style="height: 1rem" src="@/assets/images/plusOne.png" alt="" />
+            <img style="height: 1.5rem" src="@/assets/images/salesforce.png" alt="" />
           </div>
-          <div class="center">
-            <img style="width: 2.5rem; height: 2rem" src="@/assets/images/salesforce.png" alt="" />
-            <p>SFDC fields you'll be updating</p>
+        </div>
+        <div
+          v-if="!addedFieldIds.includes('de1c5d78-d608-4435-95c5-a5af625666b3')"
+          class="centered field-border"
+        >
+          <p style="margin-left: 0.5rem; font-weight: bold">
+            Pricebook <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+          </p>
+
+          <img
+            src="@/assets/images/unlinked.png"
+            alt=""
+            style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+          />
+
+          <!-- <button
+            @click="
+              () => {
+                changeResouce()
+              }
+            "
+            class="default_button bouncy"
+          >
+            Pricebook
+          </button> -->
+        </div>
+
+        <div
+          v-if="!addedFieldIds.includes('de1c5d78-d608-4435-95c5-a5af625666b3')"
+          class="centered field-border"
+        >
+          <p style="margin-left: 0.5rem; font-weight: bold">
+            Product <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+          </p>
+
+          <img
+            src="@/assets/images/unlinked.png"
+            alt=""
+            style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+          />
+
+          <button
+            @click="
+              () => {
+                onAddField(
+                  this.formFields.list.filter(
+                    (field) => field.id === 'de1c5d78-d608-4435-95c5-a5af625666b3',
+                  )[0],
+                )
+              }
+            "
+            class="default_button bouncy"
+          >
+            Product
+          </button>
+        </div>
+
+        <div
+          v-if="!addedFieldIds.includes('de1c5d78-d608-4435-95c5-a5af625666b3')"
+          class="centered field-border"
+        >
+          <p style="margin-left: 0.5rem; font-weight: bold">
+            Quantity <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+          </p>
+
+          <img
+            src="@/assets/images/unlinked.png"
+            alt=""
+            style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+          />
+
+          <button
+            @click="
+              () => {
+                onAddField(
+                  this.formFields.list.filter(
+                    (field) => field.id === 'de1c5d78-d608-4435-95c5-a5af625666b3',
+                  )[0],
+                )
+              }
+            "
+            class="default_button bouncy"
+          >
+            Quantity
+          </button>
+        </div>
+
+        <div
+          v-if="!addedFieldIds.includes('de1c5d78-d608-4435-95c5-a5af625666b3')"
+          class="centered field-border"
+        >
+          <p style="margin-left: 0.5rem; font-weight: bold">
+            Line Description <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+          </p>
+
+          <img
+            src="@/assets/images/unlinked.png"
+            alt=""
+            style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+          />
+
+          <div>
+            <DropDownSearch
+              :items="formFields.list.filter((field) => !addedFieldIds.includes(field.id))"
+              displayKey="referenceDisplayLabel"
+              valueKey="id"
+              nullDisplay="Select field"
+              searchable
+              :loading="formFields.loadingNextPage"
+              :hasNext="!!formFields.pagination.hasNextPage"
+              v-model="amountValue"
+              @load-more="onFieldsNextPage"
+              @search-term="onSearchFields"
+              @input="
+                (e) => {
+                  onAddField(this.formFields.list.filter((field) => field.id === e)[0])
+                }
+              "
+            />
+          </div>
+        </div>
+      </div>
+
+      <div v-else class="collection_fields">
+        <div style="margin-bottom: -1rem">
+          <div
+            v-if="
+              addedFieldIds.includes('b3cebfa0-76bb-4639-9cc3-cd40541ef80e') &&
+              addedFieldIds.includes('8d41aaa1-422b-425f-8b57-a9c6a949a36c') &&
+              addedFieldIds.includes('87fcf847-4072-46b7-9f64-e91fa99e8354')
+            "
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              flex-direction: row;
+              margin-bottom: 3rem;
+            "
+          >
+            <img src="@/assets/images/slackLogo.png" style="height: 2.5rem" alt="" />
+            <img
+              class="filtered-green"
+              src="@/assets/images/link.png"
+              alt=""
+              style="height: 1.25rem; margin-left: 0.35rem; margin-right: 0.35rem"
+            />
+            <img src="@/assets/images/salesforce.png" style="height: 2.5rem" alt="" />
+          </div>
+          <div v-else style="margin-bottom: 1rem; margin-top: -1rem" class="row">
+            <div style="margin-right: 2rem" class="center">
+              <img style="height: 2rem" src="@/assets/images/slackLogo.png" alt="" />
+              <p>Fields you'll see in slack</p>
+            </div>
+            <div class="center">
+              <img
+                style="width: 2.5rem; height: 2rem"
+                src="@/assets/images/salesforce.png"
+                alt=""
+              />
+              <p>SFDC fields you'll be updating</p>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="resource === 'Contact'">
+          <div
+            v-if="!addedFieldIds.includes('de1c5d78-d608-4435-95c5-a5af625666b3')"
+            class="centered field-border"
+          >
+            <p style="margin-left: 0.5rem; font-weight: bold">
+              Last Name <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+            </p>
+
+            <img
+              src="@/assets/images/unlinked.png"
+              alt=""
+              style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+            />
+
+            <button
+              @click="
+                () => {
+                  onAddField(
+                    this.formFields.list.filter(
+                      (field) => field.id === 'de1c5d78-d608-4435-95c5-a5af625666b3',
+                    )[0],
+                  )
+                }
+              "
+              class="default_button bouncy"
+            >
+              Last Name
+            </button>
+          </div>
+        </div>
+        <!-- <div v-if="resource === 'Lead'">
+          <div
+            v-if="!addedFieldIds.includes('b3cebfa0-76bb-4639-9cc3-cd40541ef80e')"
+            class="centered field-border"
+          >
+            <p style="margin-left: 0.5rem; font-weight: bold">
+              Name <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+            </p>
+
+            <img
+              src="@/assets/images/unlinked.png"
+              alt=""
+              style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+            />
+
+            <button
+              @click="
+                () => {
+                  onAddField(nameField)
+                }
+              "
+              class="default_button bouncy"
+            >
+              Name
+            </button>
+          </div>
+
+          sugessted field is "TYPE"
+        </div> -->
+
+        <div v-if="resource === 'Opportunity'">
+          <div
+            v-if="!addedFieldIds.includes('b3cebfa0-76bb-4639-9cc3-cd40541ef80e')"
+            class="centered field-border"
+          >
+            <p style="margin-left: 0.5rem; font-weight: bold">
+              Name <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+            </p>
+
+            <img
+              src="@/assets/images/unlinked.png"
+              alt=""
+              style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+            />
+
+            <button
+              @click="
+                () => {
+                  onAddField(nameField)
+                }
+              "
+              class="default_button bouncy"
+            >
+              Name
+            </button>
+          </div>
+
+          <div
+            v-if="!addedFieldIds.includes('8d41aaa1-422b-425f-8b57-a9c6a949a36c')"
+            class="centered field-border"
+          >
+            <p style="margin-left: 0.5rem; font-weight: bold">
+              Stage <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+            </p>
+
+            <img
+              src="@/assets/images/unlinked.png"
+              alt=""
+              style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+            />
+            <button
+              @click="
+                () => {
+                  onAddField(stageField)
+                }
+              "
+              :class="
+                this.addedFieldIds.includes('b3cebfa0-76bb-4639-9cc3-cd40541ef80e')
+                  ? 'default_button bouncy'
+                  : 'default_button'
+              "
+            >
+              Stage
+            </button>
+          </div>
+
+          <div
+            v-if="!addedFieldIds.includes('87fcf847-4072-46b7-9f64-e91fa99e8354')"
+            class="centered field-border"
+          >
+            <p style="margin-left: 0.5rem; font-weight: bold">
+              Close Date <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+            </p>
+
+            <img
+              src="@/assets/images/unlinked.png"
+              alt=""
+              style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+            />
+
+            <button
+              @click="
+                () => {
+                  onAddField(
+                    this.formFields.list.filter(
+                      (field) => field.id === '87fcf847-4072-46b7-9f64-e91fa99e8354',
+                    )[0],
+                  )
+                }
+              "
+              :class="
+                this.addedFieldIds.includes('8d41aaa1-422b-425f-8b57-a9c6a949a36c')
+                  ? 'default_button bouncy'
+                  : 'default_button'
+              "
+            >
+              Close Date
+            </button>
+          </div>
+
+          <div v-if="!this.addedFieldIds.includes(amountValue)" class="centered field-border">
+            <div style="margin-left: 0.5rem" class="centered">
+              <label class="label">Amount</label>
+              <ToggleCheckBox
+                style="margin-left: 0.15rem; margin-right: 0.15rem"
+                :value="!productSelect"
+                @input="productSelect"
+                offColor="#199e54"
+                onColor="#199e54"
+              />
+              <label style="margin-right: 0.15rem" class="label">Products</label>
+            </div>
+
+            <img
+              v-if="!productSelected"
+              src="@/assets/images/unlinked.png"
+              alt=""
+              style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+            />
+            <div v-if="!productSelected">
+              <DropDownSearch
+                :items="formFields.list.filter((field) => !addedFieldIds.includes(field.id))"
+                displayKey="referenceDisplayLabel"
+                valueKey="id"
+                nullDisplay="Select field"
+                searchable
+                :loading="formFields.loadingNextPage"
+                :hasNext="!!formFields.pagination.hasNextPage"
+                v-model="amountValue"
+                @load-more="onFieldsNextPage"
+                @search-term="onSearchFields"
+                @input="
+                  (e) => {
+                    onAddField(this.formFields.list.filter((field) => field.id === e)[0])
+                  }
+                "
+              />
+            </div>
+            <div v-if="productSelected">Save form to continue to products</div>
+          </div>
+        </div>
+
+        <draggable
+          style="margin-top: 1rem"
+          v-model="addedFields"
+          group="fields"
+          @start="drag = true"
+          @end="drag = false"
+        >
+          <div
+            style="display: flex; flex-direction: row"
+            v-for="field in addedFields"
+            :key="field.id"
+          >
+            <div :class="unshownIds.includes(field.id) ? 'invisible' : 'centered field-border'">
+              <div
+                style="
+                  display: flex;
+                  flex-direction: row;
+                  align-items: center;
+                  margin-left: -0.5rem;
+                "
+              >
+                <img
+                  :class="unshownIds.includes(field.id) ? 'invisible' : ''"
+                  src="@/assets/images/drag.png"
+                  style="height: 1.85rem; width: 2rem"
+                  alt=""
+                />
+                <p :class="unshownIds.includes(field.id) ? 'invisible' : ''">
+                  {{ field.referenceDisplayLabel }}
+                </p>
+                <img
+                  class="filtered-green"
+                  src="@/assets/images/link.png"
+                  alt=""
+                  style="height: 1rem; margin-left: 0.5rem"
+                />
+              </div>
+
+              <img
+                src="@/assets/images/remove.png"
+                style="height: 1.25rem; margin-right: 0.2rem"
+                alt=""
+                :class="unshownIds.includes(field.id) ? 'invisible' : ''"
+                @click="
+                  () => {
+                    onRemoveField(field)
+                  }
+                "
+              />
+            </div>
+          </div>
+        </draggable>
+        <div class="recommend" v-if="addingFields">
+          <div
+            @click="
+              () => {
+                addingFields = !addingFields
+              }
+            "
+            style="font-weight: bold; display: flex; justify-content: flex-end; cursor: pointer"
+          >
+            x
+          </div>
+          <h4>Recommended Fields:</h4>
+          <div v-if="resource === 'Opportunity'" class="recommendations">
+            <p>Amount,</p>
+            &nbsp;
+            <p>Forecast Category,</p>
+            &nbsp;
+            <p>Next Step,</p>
+            &nbsp;
+            <p>Next Step Date</p>
+          </div>
+          <div v-else-if="resource === 'Contact'" class="recommendations">
+            <p>First Name,</p>
+            &nbsp;
+            <p>Title,</p>
+            &nbsp;
+            <p>Email,</p>
+            &nbsp;
+            <p>Phone,</p>
+            &nbsp;
+            <p>Account Name</p>
+          </div>
+          <DropDownSearch
+            :items="formFields.list.filter((field) => !addedFieldIds.includes(field.id))"
+            displayKey="referenceDisplayLabel"
+            valueKey="id"
+            nullDisplay="Search fields"
+            searchable
+            :loading="formFields.loadingNextPage"
+            :hasNext="!!formFields.pagination.hasNextPage"
+            v-model="nameValue"
+            @load-more="onFieldsNextPage"
+            @search-term="onSearchFields"
+            @input="
+              (e) => {
+                onAddField(this.formFields.list.filter((field) => field.id === e)[0])
+              }
+            "
+          />
+        </div>
+        <div
+          v-if="resource === 'Opportunity'"
+          style="display: flex; align-items: center; justify-content: center"
+        >
+          <button
+            v-if="
+              !addingFields &&
+              addedFieldIds.includes('b3cebfa0-76bb-4639-9cc3-cd40541ef80e') &&
+              addedFieldIds.includes('8d41aaa1-422b-425f-8b57-a9c6a949a36c') &&
+              addedFieldIds.includes('87fcf847-4072-46b7-9f64-e91fa99e8354')
+            "
+            @click="
+              () => {
+                addingFields = !addingFields
+              }
+            "
+            class="default_button"
+          >
+            Add More Fields
+          </button>
+        </div>
+
+        <div
+          v-else-if="
+            resource === 'Contact' &&
+            !addingFields &&
+            addedFieldIds.includes('de1c5d78-d608-4435-95c5-a5af625666b3')
+          "
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            margin-top: 0.5rem;
+          "
+        >
+          <button
+            @click="
+              () => {
+                addingFields = !addingFields
+              }
+            "
+            class="default_button"
+          >
+            Add More Fields
+          </button>
+          <span style="color: #beb5cc; font-size: 0.85rem; margin-top: 0.25rem"
+            >(Recommended!)</span
+          >
+        </div>
+
+        <div class="example--footer">
+          <PulseLoadingSpinnerButton
+            v-if="resource === 'Opportunity'"
+            @click="onSave"
+            class="primary-button"
+            :class="
+              !(
+                addedFieldIds.includes('b3cebfa0-76bb-4639-9cc3-cd40541ef80e') &&
+                addedFieldIds.includes('8d41aaa1-422b-425f-8b57-a9c6a949a36c') &&
+                addedFieldIds.includes('87fcf847-4072-46b7-9f64-e91fa99e8354')
+              )
+                ? 'primary-button'
+                : 'primary-button bouncy'
+            "
+            text="Save"
+            :loading="savingForm"
+            :disabled="
+              !(
+                addedFieldIds.includes('b3cebfa0-76bb-4639-9cc3-cd40541ef80e') &&
+                addedFieldIds.includes('8d41aaa1-422b-425f-8b57-a9c6a949a36c') &&
+                addedFieldIds.includes('87fcf847-4072-46b7-9f64-e91fa99e8354')
+              )
+            "
+          />
+
+          <PulseLoadingSpinnerButton
+            v-else-if="resource === 'Contact'"
+            @click="onSave"
+            class="primary-button"
+            :class="
+              !addedFieldIds.includes('de1c5d78-d608-4435-95c5-a5af625666b3')
+                ? 'primary-button'
+                : 'primary-button bouncy'
+            "
+            text="Save"
+            :loading="savingForm"
+            :disabled="!addedFieldIds.includes('de1c5d78-d608-4435-95c5-a5af625666b3')"
+          />
+        </div>
+      </div>
+
+      <div style="cursor: not-allowed" class="collection_fields">
+        <div
+          style="
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            margin-top: -2rem;
+          "
+        >
+          <div style="display: flex; flex-direction: row; align-items: center">
+            <div class="white-background">
+              <img src="@/assets/images/logo.png" style="height: 1.5rem" alt="" />
+            </div>
+            <h3>{{ lowerCase(formType, resource) }}</h3>
+          </div>
+
+          <div
+            style="display: flex; flex-direction: row; align-items: center; justify-content: center"
+          >
+            <img src="@/assets/images/share.png" style="height: 1.2rem" alt="" />
+            <img src="@/assets/images/clear.png" style="height: 1.2rem" alt="" />
+          </div>
+        </div>
+
+        <h1 class="example-text">SLACK PREVIEW</h1>
+        <div>
+          <p>Note Subject <span style="color: #beb5cc">(optional)</span></p>
+          <textarea
+            disabled
+            name=""
+            id=""
+            cols="30"
+            rows="2"
+            style="width: 100%; border-radius: 0.25rem; background-color: #3c3940; color: #aaaaaa"
+          >
+“Meeting Subject goes here” (lives in Tasks)
+          </textarea>
+        </div>
+        <div>
+          <p>Notes <span style="color: #beb5cc">(optional)</span></p>
+          <textarea
+            disabled
+            name=""
+            id=""
+            cols="30"
+            rows="4"
+            style="width: 100%; border-radius: 0.25rem; background-color: #3c3940; color: #aaaaaa"
+          >
+“Meeting Notes go here” (lives in Tasks)
+          </textarea>
+        </div>
+        <div v-for="field in addedFields" :key="field.id">
+          <!-- <p>{{ field.dataType }}</p> -->
+          <div v-if="field.dataType === 'String' || field.dataType === 'Currency'">
+            <p :class="unshownIds.includes(field.id) ? 'invisible' : ''">
+              {{ field.referenceDisplayLabel }}
+            </p>
+            <textarea
+              disabled
+              :class="unshownIds.includes(field.id) ? 'invisible' : ''"
+              name=""
+              id=""
+              cols="30"
+              rows="2"
+              style="width: 100%; border-radius: 0.25rem; background-color: #3c3940"
+            >
+            </textarea>
+          </div>
+          <div class="drop-row" v-else-if="field.dataType === 'Picklist'">
+            <p :class="unshownIds.includes(field.id) ? 'invisible' : ''">
+              {{ field.referenceDisplayLabel }}
+            </p>
+            <select
+              :class="unshownIds.includes(field.id) ? 'invisible' : 'drop'"
+              disabled
+              name="select"
+              id=""
+            >
+              <option value="select">Select</option>
+            </select>
+          </div>
+          <div class="drop-row" v-else-if="field.dataType === 'Date'">
+            <p :class="unshownIds.includes(field.id) ? 'invisible' : ''">
+              {{ field.referenceDisplayLabel }}
+            </p>
+            <input
+              :class="unshownIds.includes(field.id) ? 'invisible' : 'drop'"
+              type="date"
+              id="start"
+              name="trip-start"
+              value="2022-01-20"
+              min="2018-01-01"
+              max="2018-12-31"
+              disabled
+            />
+          </div>
+        </div>
+        <div class="example-footer">
+          <div style="margin-top: 2rem">
+            <button class="close">Close</button>
+            <button class="save">Update</button>
           </div>
         </div>
       </div>
@@ -130,8 +722,13 @@ import Modal from '@/components/Modal'
 
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
 import CollectionSearch from '@thinknimble/collection-search'
+import DropDownSearch from '@/components/DropDownSearch'
+import Multiselect from 'vue-multiselect'
+import CustomDropDown from '@/components/CustomDropDown'
 import Paginator from '@thinknimble/paginator'
 import ActionChoice from '@/services/action-choices'
+import draggable from 'vuedraggable'
+import ToggleCheckBox from '@thinknimble/togglecheckbox'
 
 import SlackOAuth, { salesforceFields } from '@/services/slack'
 import { SObjectField, SObjectValidations, SObjectPicklist } from '@/services/salesforce'
@@ -149,6 +746,11 @@ export default {
     ListItem,
     ListContainer,
     Modal,
+    DropDownSearch,
+    CustomDropDown,
+    Multiselect,
+    draggable,
+    ToggleCheckBox,
   },
   props: {
     stageForms: {
@@ -187,6 +789,7 @@ export default {
     return {
       currentStageForm: null,
       formFields: CollectionManager.create({ ModelClass: SObjectField }),
+      formFieldList: [],
       salesforceFields,
       customSlackFormConfig: [],
       formHasChanges: false,
@@ -200,6 +803,51 @@ export default {
       loadingMeetingTypes: false,
       requiredFields: [],
       canContinue: false,
+      stageField: {
+        length: 255,
+        id: '8d41aaa1-422b-425f-8b57-a9c6a949a36c',
+        apiName: 'StageName',
+        custom: false,
+        createable: true,
+        dataType: 'Picklist',
+        label: 'Stage',
+        reference: 'false',
+        referenceToInfos: [],
+        updateable: true,
+        required: true,
+        unique: false,
+        value: '',
+        displayValue: '',
+        referenceDisplayLabel: 'Stage',
+        filterable: 'true',
+        order: 4,
+        includeInRecap: true,
+      },
+      nameField: {
+        length: 120,
+        id: 'b3cebfa0-76bb-4639-9cc3-cd40541ef80e',
+        apiName: 'Name',
+        custom: false,
+        createable: true,
+        dataType: 'String',
+        label: 'Name',
+        reference: 'false',
+        referenceToInfos: [],
+        updateable: true,
+        required: true,
+        unique: false,
+        value: '',
+        displayValue: '',
+        referenceDisplayLabel: 'Name',
+        filterable: 'true',
+        order: 2,
+        includeInRecap: true,
+      },
+      nameValue: '',
+      amountValue: '',
+      addingFields: false,
+      productSelected: false,
+      addingProducts: false,
     }
   },
   watch: {
@@ -327,11 +975,33 @@ export default {
     selectedFormResourceType() {
       return `${this.formType}.${this.resource}`
     },
+    unshownIds() {
+      return [
+        '6407b7a1-a877-44e2-979d-1effafec5035',
+        '0bb152b5-aac1-4ee0-9c25-51ae98d55af1',
+        'e286d1d5-5447-47e6-ad55-5f54fdd2b00d',
+        'fae88a10-53cc-470e-86ec-32376c041893',
+      ]
+    },
   },
   created() {
     this.getActionChoices()
   },
   methods: {
+    lowerCase(word1, word2) {
+      return (word1 + ' ' + word2)
+        .toLowerCase()
+        .split(' ')
+        .map((s) => s.charAt(0).toUpperCase() + s.substring(1))
+        .join(' ')
+    },
+    productSelect() {
+      this.productSelected = !this.productSelected
+    },
+    changeResource() {
+      this.resource = 'Products'
+      this.formType = 'CREATE'
+    },
     getActionChoices() {
       this.loadingMeetingTypes = true
       const action = ActionChoice.api
@@ -341,6 +1011,18 @@ export default {
         })
         .finally((this.loadingMeetingTypes = false))
     },
+    async onSearchFields(v) {
+      this.formFields.pagination = new Pagination()
+      this.formFields.filters = {
+        ...this.formFields.filters,
+        search: v,
+      }
+      await this.formFields.refresh()
+    },
+    async onFieldsNextPage() {
+      await this.formFields.addNextPage()
+    },
+
     nextPage() {
       this.formFields.nextPage()
     },
@@ -501,6 +1183,9 @@ export default {
           this.savingForm = false
           this.canContinue = true
         })
+      if (this.productSelected) {
+        this.addingProducts = !this.addingProducts
+      }
     },
   },
 }
@@ -516,6 +1201,216 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/buttons';
 
+@keyframes bounce {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-6px);
+  }
+}
+.label {
+  font-size: 0.95rem;
+  font-weight: bold;
+}
+.or_button {
+  background: transparent;
+  border: none;
+  color: white;
+  padding-bottom: 0.25rem;
+  margin-left: 0.25rem;
+}
+.default_button {
+  font-weight: bold;
+  padding: 0.3rem 0.75rem;
+  margin-top: 0.5rem;
+  border-radius: 0.2rem;
+  border: none;
+  cursor: pointer;
+  color: $dark-green;
+  background: white;
+}
+.name_button {
+  font-size: 0px;
+  font-weight: bold;
+  padding: 0.3rem 0.75rem;
+  margin-top: 0.5rem;
+  border-radius: 0.2rem;
+  border: none;
+  cursor: pointer;
+  color: white;
+  background: transparent;
+  animation: bounce 0.2s infinite alternate;
+}
+.name_button::after {
+  font-size: 14px;
+}
+
+.name_button::after {
+  content: 'Name';
+}
+.name_button:hover::after {
+  content: 'Add Name';
+}
+.name_button:hover {
+  background-color: white;
+  color: $dark-green !important;
+}
+.stage_button {
+  font-size: 0px;
+  font-weight: bold;
+  padding: 0.3rem 0.75rem;
+  margin-top: 0.5rem;
+  border-radius: 0.2rem;
+  border: none;
+  cursor: pointer;
+  color: white;
+  background: transparent;
+  animation: bounce 0.2s infinite alternate;
+}
+.stage_button::after {
+  font-size: 14px;
+}
+.stage_button::after {
+  content: 'Stage';
+}
+.stage_button:hover::after {
+  content: 'Add Stage';
+}
+.stage_button:hover {
+  background-color: white;
+  color: $dark-green !important;
+}
+.closeDate_button {
+  font-size: 0px;
+  font-weight: bold;
+  padding: 0.3rem 0.75rem;
+  margin-top: 0.5rem;
+  border-radius: 0.2rem;
+  border: none;
+  cursor: pointer;
+  color: white;
+  background: transparent;
+  animation: bounce 0.2s infinite alternate;
+}
+.closeDate_button::after {
+  font-size: 14px;
+}
+
+.closeDate_button::after {
+  content: 'Close Date';
+}
+.closeDate_button:hover::after {
+  content: 'Add Close Date';
+}
+.closeDate_button:hover {
+  background-color: white;
+  color: $dark-green !important;
+}
+.remove-field {
+  border: 1px solid white;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.1rem;
+}
+.recommend {
+  background-color: $panther-gray;
+  padding: 0.25rem 0.5rem 1rem 0.25rem;
+  border-radius: 0.25rem;
+  margin-top: 0.5rem;
+}
+.recommendations {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  font-size: 0.9rem;
+  margin-top: -1rem;
+  color: $panther-silver;
+}
+.margin-top {
+  margin-top: 8rem;
+}
+.field_button {
+  padding: 0.3rem 0.75rem;
+  margin-top: 0.5rem;
+  border-radius: 0.2rem;
+  border: none;
+  cursor: pointer;
+  color: $dark-green;
+  background-color: white;
+  font-weight: bold;
+}
+.bouncy {
+  animation: bounce 0.2s infinite alternate;
+}
+.drop {
+  background-color: $panther;
+  border: 1px solid $panther-gray;
+  border-radius: 0.25rem;
+  color: $panther-silver;
+  padding: 0.25rem 0.5rem;
+  max-height: 2rem;
+}
+.app {
+  background-color: $panther-gray;
+  color: $panther-silver;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  padding: 2px;
+  margin-left: 0.2rem;
+  margin-right: 0.5rem;
+}
+::v-deep .tn-dropdown__selection-container {
+  height: 2rem;
+
+  box-shadow: none;
+}
+::v-deep .tn-dropdown__selection-container:after {
+  position: absolute;
+  content: '';
+  top: 12px;
+  right: 1em;
+  width: 0;
+  height: 0;
+  border: 5px solid transparent;
+  border-color: rgb(173, 171, 171) transparent transparent transparent;
+}
+.invisible {
+  display: none;
+}
+.white-background {
+  background-color: white;
+  border-radius: 0.25rem;
+  height: 1.7rem;
+  width: 1.7rem;
+  margin-right: 0.25rem;
+}
+.tn-dropdown__selected-items__item-selection--muted {
+  font-size: 10px;
+}
+.filtered-green {
+  filter: invert(39%) sepia(96%) saturate(373%) hue-rotate(94deg) brightness(104%) contrast(94%);
+}
+.field-border {
+  border: 1px solid $white;
+  display: flex;
+  align-items: center;
+  padding: 0.15rem;
+  border-radius: 0.1rem;
+  height: 2.9rem;
+  width: 100%;
+}
+.option {
+  font-weight: bold;
+  background: transparent;
+  color: white;
+  padding-bottom: 0.15rem;
+  border: none;
+  border-bottom: 2px solid $dark-green;
+  cursor: pointer;
+}
 .center {
   display: flex;
   align-items: center;
@@ -523,10 +1418,11 @@ export default {
   flex-direction: column;
   font-size: 0.85rem;
 }
-.header {
+.centered {
   display: flex;
   align-items: center;
-  justify-content: space-evenly;
+  justify-content: space-between;
+  flex-direction: row;
 }
 .slack-form-builder
   ::v-deep
@@ -645,7 +1541,12 @@ export default {
     justify-content: flex-end;
   }
 }
-
+.fields {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
 .form-field {
   background-color: $panther;
   margin-top: 0.5rem;
@@ -721,12 +1622,12 @@ export default {
 .save-button {
   display: flex;
   justify-content: center;
-  padding-top: 1rem;
+  padding-top: 4rem;
   padding-bottom: 1rem;
 }
 
 .primary-button {
-  width: 10rem;
+  width: 6rem;
 }
 
 .field-title {
@@ -769,12 +1670,71 @@ h2 {
 img:hover {
   cursor: pointer;
 }
+.close {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  color: white;
+  border: 1px solid $panther-gray;
+  border-radius: 0.25rem;
+  font-weight: bold;
+  opacity: 0.8;
+}
+.save {
+  padding: 0.5rem 1rem;
+  background-color: $dark-green;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  margin-left: 0.5rem;
+  font-weight: bold;
+  opacity: 0.8;
+}
+.example-footer {
+  border-top: 1px solid $panther-gray;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: auto;
+  width: 100%;
+  height: 10%;
+}
+.example--footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: auto;
+  margin-bottom: -1rem;
+  width: 100%;
+  height: 10%;
+}
+.example-text {
+  position: absolute;
+  bottom: 180px;
+  left: 50px;
+  opacity: 0.05;
+  filter: alpha(opacity=50);
+  font-size: 3.5rem;
+  transform: rotate(-45deg);
+}
 .collection_fields {
   background-color: $panther;
-  padding: 2rem;
+  padding: 2rem 1rem;
+  margin: 1rem;
   border-radius: 0.5rem;
-  min-height: 66vh;
-  min-width: 44vw;
+  height: 71vh;
+  min-width: 36vw;
+  overflow-y: scroll;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.collection__fields {
+  background-color: $panther;
+
+  margin: 1rem;
+  border-radius: 0.5rem;
+  min-height: 60vh;
+  min-width: 26vw;
 }
 .fields_title {
   background-color: $panther;
@@ -799,9 +1759,7 @@ img:hover {
   justify-content: center;
   align-items: center;
 }
-.orange {
-  color: $panther-orange;
-}
+
 .required__fields {
   color: $panther-orange;
 }
@@ -811,7 +1769,7 @@ img:hover {
 }
 ::-webkit-scrollbar-thumb {
   border-radius: 2px;
-  background-color: $dark-green;
+  background-color: $panther-gray;
 }
 .popular_fields {
   font-weight: bold;
@@ -891,5 +1849,21 @@ img:hover {
   justify-content: center;
   color: $panther-gold;
 }
+.row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+.row__ {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+.drop-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
 </style>
-

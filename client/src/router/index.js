@@ -41,6 +41,7 @@ import ZoomRecap from '@/views/settings/alerts/create/templates/ZoomRecap'
 import Custom from '@/views/customize/Custom'
 import ValidationRules from '@/views/customize/ValidationRules'
 import Required from '@/views/customize/Required'
+import Saved from '@/views/customize/Saved'
 
 // TODO: We should keep this style guide page
 // import Styles from '@/views/settings/Styles'
@@ -207,6 +208,11 @@ export default new Router({
           path: 'custom',
           name: 'Custom',
           component: Custom,
+        },
+        {
+          path: 'saved',
+          name: 'Saved',
+          component: Saved,
         },
       ]
     },

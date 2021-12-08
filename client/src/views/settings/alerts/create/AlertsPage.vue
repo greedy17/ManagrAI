@@ -1,5 +1,5 @@
 <template>
-  <div :key="hasZoomChannel && recapChannel" class="alerts-page">
+  <div class="alerts-page">
     <div v-if="!isOnboarding" class="col">
       <h2 style="color: black; margin-top: -0.5rem" class="title">Popular Workflow Automations</h2>
       <p style="color: #5d5e5e" class="sub__">Activate the workflows that are relevant to you</p>

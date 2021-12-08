@@ -37,17 +37,22 @@
       </router-link>
 
       <router-link exact-active-class="active" :to="{ name: 'Custom' }">
-        <div :class="isOnboarding ? 'onboarding row' : 'row'">
-          <img src="@/assets/images/loop.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
+        <div class="row">
+          <img src="@/assets/images/build.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
           <h3>Custom</h3>
         </div>
       </router-link>
 
-      <div :class="isOnboarding ? 'onboarding row' : 'row'" style="cursor: not-allowed">
-        <img src="@/assets/images/star.png" style="height: 1.25rem; margin-right: 0.5rem" alt="" />
-        <h3>Saved</h3>
-        <!-- <h3>Org Created<span class="coming-soon">coming soon</span></h3> -->
-      </div>
+      <!-- <router-link exact-active-class="active" :to="{ name: 'Saved' }">
+        <div class="row">
+          <img
+            src="@/assets/images/star.png"
+            style="height: 1.25rem; margin-right: 0.5rem"
+            alt=""
+          />
+          <h3>Saved</h3>
+        </div>
+      </router-link> -->
     </div>
 
     <router-view :key="$route.fullPath"></router-view>

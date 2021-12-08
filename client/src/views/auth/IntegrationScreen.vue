@@ -750,7 +750,9 @@ export default {
       return !!this.$store.state.user.gongAccount && this.$store.state.user.hasGongIntegration
     },
     hasOutreachIntegration() {
-      return !!this.$store.state.user.outreachAccount && this.$store.state.user.hasOutreachIntegration
+      return (
+        !!this.$store.state.user.outreachAccount && this.$store.state.user.hasOutreachIntegration
+      )
     },
     hasSalesloftIntegration() {
       return (
@@ -810,7 +812,6 @@ export default {
   },
   mounted() {
     console.log(this.user)
-    console.log(this.templates)
   },
 }
 </script>
