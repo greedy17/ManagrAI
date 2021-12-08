@@ -382,7 +382,7 @@ def calendar_reminders_blockset(context):
     for item in attend:
         participants = item["name"]
         people.append(participants)
-    resource_type = context.get("resource_type", None)
+    type = context.get("resource_type", None)
     title = data.get("title")
     unix_start_time = data.get("times").get("start_time")
     unix_end_time = data.get("times").get("end_time")
@@ -396,15 +396,16 @@ def calendar_reminders_blockset(context):
         block_builders.section_with_button_block(
             "Review Attendees",
             section_text=f"{title}\n Starts at {local_start_time}\n Attendees: " + str(len(people)),
-            button_value=context.get("meeting_prep"),
+            button_value=context.get("prep_id"),
             action_id=action_with_params(
                 slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
                 params=[
-                    f"w={str(context.get('meeting_prep'))}",
+                    f"w={str(context.get('prep_id'))}",
                     f"type={context.get('resource_type', 'prep')}",
                 ],
             ),
         ),
+        {"type": "divider"},
     ]
     if type:
         blocks.append(
@@ -425,7 +426,7 @@ def calendar_reminders_blockset(context):
                 style="primary",
             )
         )
-    blocks.append({"type": "divider"})
+
     return blocks
 
 

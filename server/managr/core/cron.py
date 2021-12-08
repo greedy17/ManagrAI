@@ -311,7 +311,7 @@ def meeting_prep(processed_data, user_id, send_slack=True):
     # All meeting_participants are in meeting
     payload = {"meeting_prep": str(meeting_prep.id)}
     if hasattr(meeting_resource_data, "resource_id"):
-        payload["resource_type" : meeting_resource_data["resource_type"]]
+        payload.update({"resource_type": meeting_resource_data["resource_type"]})
     return payload
 
 
@@ -323,7 +323,7 @@ def _send_calendar_details(user_id):
     blocks = [block_builders.header_block(f"Upcoming Meetings For Today! :calendar:")]
     for event in processed_data:
         meeting_info = meeting_prep(event, user_id)
-        context = {{"prep_id": meeting_info.get("meeting_prep"), "event_data": event}}
+        context = {"prep_id": meeting_info.get("meeting_prep"), "event_data": event}
         if hasattr("meeting_info", "resource_type"):
             context.update({"resource_type", meeting_info.get("resource_type")})
         blocks = [
