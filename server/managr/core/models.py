@@ -23,7 +23,7 @@ from managr.utils.client import HttpClient
 from managr.core import constants as core_consts
 from managr.organization import constants as org_consts
 from managr.slack.helpers import block_builders
-from managr.core.nylas.auth import ConvertLocalTimetoUnix
+from managr.core.nylas.auth import convert_local_time_to_unix
 
 from .nylas.exceptions import NylasAPIError
 
@@ -433,22 +433,14 @@ class NylasAuthAccount(TimeStampModel):
             NylasAPIError(kwargs)
         return data
 
-    # def ConvertLocalTimetoUnix(timezone, hr, minute):
-    #     current_time = datetime.datetime.today()
-    #     user_timezone = pytz.timezone(timezone)
-    #     current = pytz.utc.localize(current_time).astimezone(user_timezone)
-    #     unixtime = time.mktime(current.replace(hour=hr, minute=minute).timetuple())
-    #     return unixtime
-
-    
-
     def _get_calendar_data(self):
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
         }
-        starts_after = ConvertLocalTimetoUnix('EST', 5, 00)
-        ends_before = ConvertLocalTimetoUnix('EST', 19, 30)
+        starts_after = convert_local_time_to_unix("EST", 5, 00)
+        ends_before = convert_local_time_to_unix("EST", 19, 30)
+        print(starts_after, ends_before)
         query = dict({"starts_after": starts_after, "ends_before": ends_before,})
         params = urlencode(query)
         events = requests.get(
@@ -510,3 +502,30 @@ class Notification(TimeStampModel):
 
     class Meta:
         ordering = ["-notify_at"]
+
+
+class MeetingPrepQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.is_active:
+            return self.filter(user=user.id)
+
+
+class MeetingPrepInstance(TimeStampModel):
+    user = models.ForeignKey(
+        "core.User", on_delete=models.CASCADE, related_name="meeting_preps", null=True
+    )
+    form_id = models.CharField(max_length=255, null=True, blank=True)
+    participants = ArrayField(
+        JSONField(max_length=128, default=dict),
+        default=list,
+        blank=True,
+        null=True,
+        help_text="Json object of participants",
+    )
+
+    objects = MeetingPrepQuerySet.as_manager()
+
+    class Meta:
+        ordering = ["-datetime_created"]

@@ -68,14 +68,15 @@ def get_account_details(token):
     collected_data = {"account": account.json(), "calendars": calendar.json()}
     return collected_data
 
-def ConvertLocalTimetoUnix(timezone, hr, minute):
+
+def convert_local_time_to_unix(timezone, hr, minute):
     current_time = datetime.datetime.today()
     user_timezone = pytz.timezone(timezone)
     current = pytz.utc.localize(current_time).astimezone(user_timezone)
     unixtime = time.mktime(current.replace(hour=hr, minute=minute).timetuple())
     return unixtime
 
-    
+
 def revoke_access_token(token):
     """function to revoke access token
     mostly used for billing if a user changes smtp or is removed

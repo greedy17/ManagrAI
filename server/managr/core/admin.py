@@ -13,6 +13,7 @@ from managr.salesloft.models import SalesloftAccount
 from .models import (
     User,
     NylasAuthAccount,
+    MeetingPrepInstance,
     #    NotificationOption,
     #    NotificationSelection,
 )
@@ -194,48 +195,15 @@ class CustomNylasAuthAccount(admin.ModelAdmin):
     form = EmailAuthAccForm
 
 
-""" 
-class CustomNotificationOptionForm(forms.ModelForm):
-    default_value = forms.ChoiceField(
-        widget=forms.RadioSelect, choices=TRUE_FALSE_CHOICES
-    )
-    user_groups = forms.MultipleChoiceField(
-        choices=core_consts.ACCOUNT_TYPES, widget=forms.SelectMultiple
-    )
-
+class CustomMeetingPrepInstance(admin.ModelAdmin):
     class Meta:
-        model = NotificationOption
-        fields = (
-            "title",
-            "description",
-            "default_value",
-            "user_groups",
-            "notification_type",
-        )
+        model = MeetingPrepInstance
+        fields = ("user", "datetime_created")
 
-
-class CustomNotificationSelectionForm(forms.ModelForm):
-    value = forms.ChoiceField(widget=forms.RadioSelect, choices=TRUE_FALSE_CHOICES)
-
-    class Meta:
-        model = NotificationSelection
-        fields = (
-            "option",
-            "user",
-            "value",
-        )
-
-
-class CustomNotificationSelection(admin.ModelAdmin):
-    form = CustomNotificationSelectionForm
-
-
-class CustomNotificationOption(admin.ModelAdmin):
-    form = CustomNotificationOptionForm
- """
 
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(NylasAuthAccount, CustomNylasAuthAccount)
+admin.site.register(MeetingPrepInstance, CustomMeetingPrepInstance)
 
 # admin.site.register(NotificationOption, CustomNotificationOption)
 # admin.site.register(NotificationSelection, CustomNotificationSelection)

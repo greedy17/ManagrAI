@@ -30,7 +30,7 @@ from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
 from managr.slack.models import OrgCustomSlackFormInstance, UserSlackIntegration
 from managr.salesforce.models import MeetingWorkflow
-from managr.core.models import User
+from managr.core.models import User, MeetingPrepInstance
 from managr.salesforce.background import emit_meeting_workflow_tracker
 from managr.salesforce import constants as sf_consts
 from managr.slack.helpers.exceptions import (
@@ -169,23 +169,20 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
 
 @processor()
 def process_edit_meeting_contact(payload, context):
-    print(context, "edit")
     trigger_id = payload["trigger_id"]
     view = payload["view"]
     view_id = view["id"]
     type = context.get("type", None)
     if type:
-        form = OrgCustomSlackFormInstance.objects.get(id=context.get("resource_id"))
+        form = MeetingPrepInstance.objects.get(id=context.get("w"))
         org = form.user.organization
         edit_block_context = {
             "type": type,
             "w": context.get("w"),
             "current_view_id": view_id,
-            "resource_id": context.get("resource_id"),
         }
         private_metadata = {
             "type": type,
-            "resource_id": context.get("resource_id"),
             "w": context.get("w"),
             "current_view_id": view_id,
             "channel": context.get("channel"),
@@ -215,7 +212,7 @@ def process_edit_meeting_contact(payload, context):
             "type": "modal",
             "title": {"type": "plain_text", "text": "Edit Contact"},
             "submit": {"type": "plain_text", "text": "Save"},
-            "blocks": get_block_set("edit_meeting_contacts", edit_block_context,),
+            "blocks": get_block_set("edit_meeting_contacts", edit_block_context),
             "callback_id": slack_const.ZOOM_MEETING__UPDATE_PARTICIPANT_DATA,
             "private_metadata": json.dumps(private_metadata),
         },
