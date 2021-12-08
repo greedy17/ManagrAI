@@ -14,9 +14,7 @@
               </router-link>
             </li>
             <li>
-              <router-link exact-active-class="active" :to="{ name: 'CustomizeLandingPage' }"
-                >Map
-              </router-link>
+              <router-link exact-active-class="active" :to="{ name: 'Required' }">Map </router-link>
             </li>
             <li>
               <router-link active-class="active" :to="{ name: 'ListTemplates' }"
@@ -257,7 +255,7 @@ nav {
   left: 0;
   z-index: 200;
   width: 100vw;
-  background-color: #f2fff8;
+  background-color: $white;
   // box-shadow: 1px 4px 7px rgba(0, 0, 0, 0.2);
 }
 

@@ -5,7 +5,7 @@
         Update <span>Opportunity</span>
       </h2>
       <p style="color: #5d5e5e; margin-top: -0.5rem">
-        Map the opportunity fields you’d like to update
+        Select the Opportunity fields you’d like to display and update via Slack
       </p>
     </div>
     <div class="box__content--expanded">
@@ -271,7 +271,7 @@ export default {
 @import '@/styles/variables';
 
 .update_opportunity {
-  margin-top: 4rem;
+  margin-top: 2rem;
   color: white;
 }
 

@@ -12,6 +12,9 @@
     ".cache/Cypress"
   ],
   "dependencies": {
-    "vue-multiselect": "^2.1.6"
+    "vue-clipboard2": "^0.3.3",
+    "vue-drag-drop": "^1.1.4",
+    "vue-multiselect": "^2.1.6",
+    "vuedraggable": "^2.24.3"
   }
 }
