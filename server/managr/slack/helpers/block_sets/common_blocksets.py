@@ -386,9 +386,14 @@ def calendar_reminders_blockset(context):
     title = data.get("title")
     unix_start_time = data.get("times").get("start_time")
     unix_end_time = data.get("times").get("end_time")
-    python_start_time = datetime.utcfromtimestamp(unix_start_time).strftime("%H:%M")
-    s = datetime.strptime(python_start_time, "%H:%M")
-    local_start_time = s.strftime("%r")
+    gmt_start_time = datetime.utcfromtimestamp(int(unix_start_time)).strftime("%H:%M")
+    gmt = pytz.timezone('GMT')
+    eastern = pytz.timezone('EST')
+    s = datetime.strptime(gmt_start_time, "%H:%M")
+    date_gmt = gmt.localize(s)
+    date_eastern = date_gmt.astimezone(eastern)
+    local_start_time = date_eastern.strftime("%r")
+
 
     python_end_time = datetime.utcfromtimestamp(unix_end_time).strftime("%H:%M")
     s = datetime.strptime(python_end_time, "%H:%M")

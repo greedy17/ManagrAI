@@ -441,12 +441,10 @@ class NylasAuthAccount(TimeStampModel):
             "Content-Type": "application/json",
         }
         user_timezone = f"{self.user.timezone}"
-        # user_tz = datetime.now(pytz.timezone(user_timezone)).strftime("%z")
-        print(user_timezone, "this is tzinfo")
-        test = "EST"
+
         starts_after = convert_local_time_to_unix(user_timezone, 5, 00)
         ends_before = convert_local_time_to_unix(user_timezone, 19, 30)
-        query = dict({"starts_after": starts_after, "ends_before": ends_before,})
+        query = dict({"starts_after": starts_after, "ends_before": ends_before})
         params = urlencode(query)
         events = requests.get(
             f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.EVENT_POST}?{params}", headers=headers,
