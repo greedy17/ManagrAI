@@ -35,6 +35,7 @@ REMOVE_OWNER_ID = {
     "Pricebook2",
     "Product2",
     "PricebookEntry",
+    "OpportunityLineItem",
 }
 
 
