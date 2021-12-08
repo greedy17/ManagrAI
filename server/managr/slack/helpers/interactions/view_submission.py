@@ -648,7 +648,6 @@ def process_zoom_meeting_attach_resource(payload, context):
 
 @processor()
 def process_update_meeting_contact(payload, context):
-    print(context, "process_update")
     state = payload["view"]["state"]["values"]
     type = context.get("type", None)
     if type:
@@ -680,6 +679,7 @@ def process_update_meeting_contact(payload, context):
             serializer.save()
         org = user.organization
         access_token = org.slack_integration.access_token
+        return {"response_action": "clear"}
         show_meeting_context = {
             "original_message_channel": context.get("channel"),
             "original_message_timestamp": context.get("timestamp"),

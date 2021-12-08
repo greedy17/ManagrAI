@@ -16,7 +16,7 @@ from rest_framework.exceptions import ValidationError
 from managr.slack.helpers import block_builders, block_sets
 
 from managr.core import constants as core_consts
-from managr.core.models import NylasAuthAccount, User
+from managr.core.models import NylasAuthAccount, User, MeetingPrepInstance
 from managr.core.nylas.auth import revoke_access_token
 from managr.core.background import (
     check_for_time,
@@ -39,6 +39,7 @@ from managr.organization.models import Contact
 from managr.salesforce.adapter.models import ContactAdapter
 from managr.zoom.background import _split_first_name, _split_last_name
 from managr.core.calendars import calendar_participants_from_zoom_meeting
+from managr.core.serializers import MeetingPrepInstanceSerializer
 from managr.opportunity.models import Lead, Opportunity
 from managr.organization.models import Account
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
@@ -255,7 +256,6 @@ def meeting_prep(processed_data, user_id, send_slack=True):
     opportunity = Opportunity.objects.filter(
         contacts__email__in=participant_emails, owner__id=user.id
     ).first()
-    print(opportunity)
     if opportunity:
         meeting_resource_data["resource_id"] = str(opportunity.id)
         meeting_resource_data["resource_type"] = "Opportunity"
@@ -296,24 +296,23 @@ def meeting_prep(processed_data, user_id, send_slack=True):
                 template=template,
                 resource_id="" if contact.get("id") in ["", None] else contact.get("id"),
             )
-            contact_forms.append(str(form.id))
+            contact_forms.append(form)
             contact["_form"] = str(form.id)
-    meeting_participants = [obj.get("id") for obj in meeting_contacts]
-    # All meeting_participants are in meeting
-
-    resource_id = meeting_resource_data.get("resource_id", None)
-    print(meeting_participants, "This is meeting participants")
-    payload = {
-        "meeting_participants": "%".join(meeting_participants),
-        "meeting_forms": "%".join(contact_forms),
+    data = {
+        "user": user.id,
+        "participants": meeting_contacts,
     }
-    if resource_id:
-        payload.update(
-            {
-                "resource_type": meeting_resource_data.get("resource_type"),
-                "resource_id": resource_id,
-            }
-        )
+    if hasattr(meeting_resource_data, "resource_id"):
+        data["form_id"] = meeting_resource_data["resource_id"]
+    serializer = MeetingPrepInstanceSerializer(data=data)
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+    meeting_prep = MeetingPrepInstance.objects.filter(user=user.id).first()
+
+    # All meeting_participants are in meeting
+    payload = {"meeting_prep": str(meeting_prep.id)}
+    if hasattr(meeting_resource_data, "resource_id"):
+        payload.update({"resource_type": meeting_resource_data["resource_type"]})
     return payload
 
 
@@ -321,25 +320,17 @@ def _send_calendar_details(user_id):
     user = User.objects.get(id=user_id)
     processed_data = _process_calendar_details(user_id)
     # processed_data checks to see how many events exists
+
     blocks = [block_builders.header_block(f"Upcoming Meetings For Today! :calendar:")]
     for event in processed_data:
         meeting_info = meeting_prep(event, user_id)
-        if meeting_info:
-            meeting_participants = meeting_info.get("meeting_participants")
-            meeting_forms = meeting_info.get("meeting_forms")
-            resource_type = meeting_info.get("resource_type")
-            resource_id = meeting_info.get("resource_id")
-            context = {
-                "event_data": event,
-                "meeting_participants": meeting_participants,
-                "meeting_forms": meeting_forms,
-            }
-            if resource_type:
-                context.update({"resource_type": resource_type, "resource_id": resource_id})
-            blocks = [
-                *blocks,
-                *block_sets.get_block_set("calendar_reminders_blockset", context),
-            ]
+        context = {"prep_id": meeting_info.get("meeting_prep"), "event_data": event}
+        if hasattr("meeting_info", "resource_type"):
+            context.update({"resource_type", meeting_info.get("resource_type")})
+        blocks = [
+            *blocks,
+            *block_sets.get_block_set("calendar_reminders_blockset", context),
+        ]
     # Loop thru processed_data and create block for each one
     try:
         slack_requests.send_channel_message(

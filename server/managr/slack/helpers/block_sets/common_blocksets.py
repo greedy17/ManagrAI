@@ -382,6 +382,7 @@ def calendar_reminders_blockset(context):
     for item in attend:
         participants = item["name"]
         people.append(participants)
+    type = context.get("resource_type", None)
     title = data.get("title")
     unix_start_time = data.get("times").get("start_time")
     unix_end_time = data.get("times").get("end_time")
@@ -391,37 +392,41 @@ def calendar_reminders_blockset(context):
 
     python_end_time = datetime.utcfromtimestamp(unix_end_time).strftime("%H:%M")
     s = datetime.strptime(python_end_time, "%H:%M")
-    local_end_time = s.strftime("%r")
     blocks = [
         block_builders.section_with_button_block(
             "Review Attendees",
             section_text=f"{title}\n Starts at {local_start_time}\n Attendees: " + str(len(people)),
-            button_value=str(context.get("resource_id", None)),
+            button_value=context.get("prep_id"),
             action_id=action_with_params(
                 slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
                 params=[
-                    f"w={str(context.get('resource_id'))}",
-                    f"meeting_participants={context.get('meeting_participants')}",
-                    f"type={context.get('resource_type')}",
-                    f"meeting_forms={context.get('meeting_forms')}",
+                    f"w={str(context.get('prep_id'))}",
+                    f"type={context.get('resource_type', 'prep')}",
                 ],
             ),
         ),
-        # block_builders.section_with_button_block(
-        #     "Map to Opportunity",
-        #     action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
-        #     section_text=f"{title}\n Starts at {local_start_time}\n Attendees: " + str(len(people)),
-        #     button_value="none",
-        #     style="primary",
-        # ),
-        block_builders.section_with_button_block(
-            "Change Opportunity",
-            section_text=f"We mapped this meeting to: {title}",
-            button_value="none",
-            action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
-        ),
         {"type": "divider"},
     ]
+    if type:
+        blocks.append(
+            block_builders.section_with_button_block(
+                "Change Opportunity",
+                section_text=f"We mapped this meeting to: {context.get('resource_type')} {title}",
+                button_value="none",
+                action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
+            )
+        )
+    else:
+        blocks.append(
+            block_builders.section_with_button_block(
+                "Map to Opportunity",
+                action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
+                section_text=f"We could not find an Opportuniy or Account to map this meeting to",
+                button_value="none",
+                style="primary",
+            )
+        )
+
     return blocks
 
 
