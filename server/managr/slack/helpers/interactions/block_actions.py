@@ -109,13 +109,7 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
     trigger_id = payload["trigger_id"]
     # view_id = payload["view"]["id"]
     if type:
-        workflow = User.objects.get(id=slack_account.user.id)
-        # if type == "Opportunity":
-        #     workflow = Opportunity.objects.get(id=context.get("w"))
-        # elif type == "Account":
-        #     workflow = Account.objects.get(id=context.get("w"))
-        # else:
-        #     workflow = Lead.objects.get(id=context.get("w"))
+        workflow = MeetingPrepInstance.objects.get(id=context.get("w"))
     else:
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     org = workflow.organization if type else workflow.user.organization
