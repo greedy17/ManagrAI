@@ -396,7 +396,7 @@ def calendar_reminders_blockset(context):
         block_builders.section_with_button_block(
             "Review Attendees",
             section_text=f"{title}\n Starts at {local_start_time}\n Attendees: " + str(len(people)),
-            button_value=context.get("resource_id", "No Value"),
+            button_value=str(context.get("resource_id", None)),
             action_id=action_with_params(
                 slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
                 params=[
@@ -416,13 +416,12 @@ def calendar_reminders_blockset(context):
         # ),
         block_builders.section_with_button_block(
             "Change Opportunity",
-            section_text=f"We mapped this meeting to: {context.get('resource_type')} {title}",
+            section_text=f"We mapped this meeting to: {title}",
             button_value="none",
             action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
         ),
         {"type": "divider"},
     ]
-
     return blocks
 
 

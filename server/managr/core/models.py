@@ -5,7 +5,9 @@ import uuid
 import json
 import logging
 
+
 from urllib.error import HTTPError
+from dateutil import tz
 import pytz
 import requests
 
@@ -23,7 +25,8 @@ from managr.utils.client import HttpClient
 from managr.core import constants as core_consts
 from managr.organization import constants as org_consts
 from managr.slack.helpers import block_builders
-from managr.core.nylas.auth import ConvertLocalTimetoUnix
+from managr.core.nylas.auth import convert_local_time_to_unix
+from managr.slack.constants import USER
 
 from .nylas.exceptions import NylasAPIError
 
@@ -447,8 +450,12 @@ class NylasAuthAccount(TimeStampModel):
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
         }
-        starts_after = ConvertLocalTimetoUnix('EST', 5, 00)
-        ends_before = ConvertLocalTimetoUnix('EST', 19, 30)
+        user_timezone = f"{self.user.timezone}"
+        # user_tz = datetime.now(pytz.timezone(user_timezone)).strftime("%z")
+        print(user_timezone, "this is tzinfo")
+        test = "EST"
+        starts_after = convert_local_time_to_unix(user_timezone, 5, 00)
+        ends_before = convert_local_time_to_unix(user_timezone, 19, 30)
         query = dict({"starts_after": starts_after, "ends_before": ends_before,})
         params = urlencode(query)
         events = requests.get(

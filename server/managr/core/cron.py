@@ -119,6 +119,7 @@ def _process_calendar_details(user_id):
     user = User.objects.get(id=user_id)
     events = user.nylas._get_calendar_data()
     processed_data = []
+    print(events, "This is events")
     print(len(events), "events")
     for event in events:
         data = {}
@@ -301,6 +302,7 @@ def meeting_prep(processed_data, user_id, send_slack=True):
     # All meeting_participants are in meeting
 
     resource_id = meeting_resource_data.get("resource_id", None)
+    print(meeting_participants, "This is meeting participants")
     payload = {
         "meeting_participants": "%".join(meeting_participants),
         "meeting_forms": "%".join(contact_forms),
