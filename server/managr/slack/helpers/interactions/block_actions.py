@@ -131,11 +131,7 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
         else context.get("timestamp"),
     }
     private_metadata.update(context)
-    print(context)
-    if type:
-        blocks = get_block_set("show_meeting_contacts", private_metadata)
-    else:
-        blocks = get_block_set("show_meeting_contacts", private_metadata)
+    blocks = get_block_set("show_meeting_contacts", private_metadata)
     data = {
         "trigger_id": trigger_id,
         # "view_id": view_id,
@@ -173,7 +169,7 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
 
 @processor()
 def process_edit_meeting_contact(payload, context):
-    print(context)
+    print(context, "edit")
     trigger_id = payload["trigger_id"]
     view = payload["view"]
     view_id = view["id"]
@@ -183,11 +179,14 @@ def process_edit_meeting_contact(payload, context):
         org = form.user.organization
         edit_block_context = {
             "type": type,
-            "w": context.get("resource_id"),
+            "w": context.get("w"),
             "current_view_id": view_id,
+            "resource_id": context.get("resource_id"),
         }
         private_metadata = {
+            "type": type,
             "resource_id": context.get("resource_id"),
+            "w": context.get("w"),
             "current_view_id": view_id,
             "channel": context.get("channel"),
             "timestamp": context.get("timestamp"),

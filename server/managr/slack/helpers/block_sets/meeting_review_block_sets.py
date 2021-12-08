@@ -162,14 +162,9 @@ def meeting_contacts_block_set(context):
     type = context.get("type", None)
     channel = f"channel={context.get('original_message_channel')}"
     timestamp = f"timestamp={context.get('original_message_timestamp')}"
-    block_sets = [
-        {
-            "type": "header",
-            "text": {"type": "plain_text", "text": "Attendees below will be saved as Contacts"},
-        },
-        {"type": "divider"},
-    ]
+
     if type:
+        block_sets = []
         if type == "Opportunity":
             workflow = Opportunity.objects.get(id=context.get("w"))
         elif type == "Account":
@@ -182,6 +177,13 @@ def meeting_contacts_block_set(context):
         contacts = list(Contact.objects.filter(id__in=contact_ids).values())
         sf_account = workflow.owner.salesforce_account
     else:
+        block_sets = [
+            {
+                "type": "header",
+                "text": {"type": "plain_text", "text": "Attendees below will be saved as Contacts"},
+            },
+            {"type": "divider"},
+        ]
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
         meeting = workflow.meeting
         contacts = meeting.participants
@@ -195,6 +197,8 @@ def meeting_contacts_block_set(context):
 
     if len(contacts_not_in_sf):
         block_sets.extend(
+            [block_builders.simple_section("Contacts below are not in salesforce")]
+        ) if type else block_sets.extend(
             [
                 block_builders.simple_section(
                     "_Click_ *'Edit'* _to fill in the missing details. Click_ *'Remove'* _to discard_",
@@ -215,37 +219,46 @@ def meeting_contacts_block_set(context):
             workflow_id_param = f"w={str(workflow)}" if type else f"w={str(workflow.id)}"
             tracking_id_param = f"tracking_id={contact['_tracking_id']}"
             params = (
-                [workflow_id_param, tracking_id_param, channel, timestamp, f"type={type}"]
+                [
+                    workflow_id_param,
+                    tracking_id_param,
+                    channel,
+                    timestamp,
+                    f"type={type}",
+                    f"participants={context.get('meeting_participants')}",
+                    f"forms={context.get('meeting_forms')}",
+                ]
                 if type
                 else [workflow_id_param, tracking_id_param, channel, timestamp]
             )
         block_sets.append(generate_contact_group(i, contact, sf_account.instance_url))
         # pass meeting id and contact index
-        block_sets.append(
-            {
-                "type": "actions",
-                "elements": [
-                    {
-                        "type": "button",
-                        "text": {"type": "plain_text", "text": "Edit Contact"},
-                        "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
-                        "action_id": action_with_params(
-                            slack_const.ZOOM_MEETING__EDIT_CONTACT, params=params,
-                        ),
-                        "style": "primary",
-                    },
-                    {
-                        "type": "button",
-                        "text": {"type": "plain_text", "text": "Remove From Meeting"},
-                        "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
-                        "action_id": action_with_params(
-                            slack_const.ZOOM_MEETING__REMOVE_CONTACT, params=params,
-                        ),
-                        "style": "danger",
-                    },
-                ],
-            }
-        )
+        if not type:
+            block_sets.append(
+                {
+                    "type": "actions",
+                    "elements": [
+                        {
+                            "type": "button",
+                            "text": {"type": "plain_text", "text": "Edit Contact"},
+                            "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
+                            "action_id": action_with_params(
+                                slack_const.ZOOM_MEETING__EDIT_CONTACT, params=params,
+                            ),
+                            "style": "primary",
+                        },
+                        {
+                            "type": "button",
+                            "text": {"type": "plain_text", "text": "Remove From Meeting"},
+                            "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
+                            "action_id": action_with_params(
+                                slack_const.ZOOM_MEETING__REMOVE_CONTACT, params=params,
+                            ),
+                            "style": "danger",
+                        },
+                    ],
+                }
+            )
 
     if len(contacts_in_sf):
         block_sets.extend(
@@ -269,50 +282,60 @@ def meeting_contacts_block_set(context):
             )[0]
             resource_id_param = f"resource_id={str(resource_id['id'])}"
         else:
-            workflow_id_param = f"w={str(workflow)}" if type else f"w={str(workflow.id)}"
+
             tracking_id_param = f"tracking_id={contact['_tracking_id']}"
+        workflow_id_param = f"w={str(workflow.id)}"
         params = (
-            [resource_id_param, channel, timestamp, f"type={type}"]
+            [
+                workflow_id_param,
+                resource_id_param,
+                channel,
+                timestamp,
+                f"type={type}",
+                f"participants={context.get('meeting_participants')}",
+                f"forms={context.get('meeting_forms')}",
+            ]
             if type
             else [workflow_id_param, tracking_id_param, channel, timestamp]
         )
         block_sets.append(generate_contact_group(i, contact, sf_account.instance_url))
         # pass meeting id and contact index
-        block_sets.append(
-            {
-                "type": "actions",
-                "elements": [
-                    {
-                        "type": "button",
-                        "text": {"type": "plain_text", "text": "Edit Contact"},
-                        "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
-                        "action_id": action_with_params(
-                            slack_const.ZOOM_MEETING__EDIT_CONTACT, params=params,
-                        ),
-                        "style": "primary",
-                    },
-                    {
-                        "type": "button",
-                        "text": {"type": "plain_text", "text": "Remove From Meeting"},
-                        "value": "click_me_123",
-                        "action_id": action_with_params(
-                            slack_const.ZOOM_MEETING__REMOVE_CONTACT, params=params,
-                        ),
-                        "style": "danger",
-                    },
-                ],
-            }
-        )
-
+        if not type:
+            block_sets.append(
+                {
+                    "type": "actions",
+                    "elements": [
+                        {
+                            "type": "button",
+                            "text": {"type": "plain_text", "text": "Edit Contact"},
+                            "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
+                            "action_id": action_with_params(
+                                slack_const.ZOOM_MEETING__EDIT_CONTACT, params=params,
+                            ),
+                            "style": "primary",
+                        },
+                        {
+                            "type": "button",
+                            "text": {"type": "plain_text", "text": "Remove From Meeting"},
+                            "value": "click_me_123",
+                            "action_id": action_with_params(
+                                slack_const.ZOOM_MEETING__REMOVE_CONTACT, params=params,
+                            ),
+                            "style": "danger",
+                        },
+                    ],
+                }
+            )
         block_sets.append({"type": "divider"})
     return block_sets
 
 
 @block_set(required_context=["w"])
 def edit_meeting_contacts_block_set(context):
+    print(context, "edit_meeting_contacts")
     type = context.get("type", None)
     if type:
-        resource_form = OrgCustomSlackFormInstance.objects.get(id=context.get("w"))
+        resource_form = OrgCustomSlackFormInstance.objects.get(id=context.get("resource_id"))
         contact = Contact.objects.get(id=resource_form.resource_id).__dict__
     else:
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))

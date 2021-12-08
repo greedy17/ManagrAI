@@ -416,7 +416,7 @@ def calendar_reminders_blockset(context):
         # ),
         block_builders.section_with_button_block(
             "Change Opportunity",
-            section_text=f"We mapped this meeting to: {title}",
+            section_text=f"We mapped this meeting to: {context.get('resource_type')} {title}",
             button_value="none",
             action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
         ),
