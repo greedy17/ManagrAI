@@ -118,7 +118,6 @@ def _send_slack_int_email(user):
 def _process_calendar_details(user_id):
     user = User.objects.get(id=user_id)
     events = user.nylas._get_calendar_data()
-
     processed_data = []
     print(len(events), "events")
     for event in events:
@@ -221,6 +220,7 @@ def meeting_prep(processed_data, user_id, send_slack=True):
         for index, participant in enumerate(participants):
             if participant["email"] == contact.email or participant["email"] == User.email:
                 del participants[index]
+        # print(meeting_contacts, "This is meeting contacts")
     new_contacts = list(
         filter(
             lambda x: len(x.get("secondary_data", dict())) or x.get("email"),
@@ -290,7 +290,6 @@ def meeting_prep(processed_data, user_id, send_slack=True):
             contact["_form"] = None
         else:
             # create instance
-            # logger.info(f"contact_id: {contact['id']}")
             form = OrgCustomSlackFormInstance.objects.create(
                 user=user,
                 template=template,
