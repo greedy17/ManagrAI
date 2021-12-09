@@ -120,7 +120,7 @@ def _process_calendar_details(user_id):
     user = User.objects.get(id=user_id)
     events = user.nylas._get_calendar_data()
     processed_data = []
-    print(events, "This is events")
+    # print(events, "This is events")
     print(len(events), "events")
     for event in events:
         data = {}
@@ -324,9 +324,13 @@ def _send_calendar_details(user_id):
     blocks = [block_builders.header_block(f"Upcoming Meetings For Today! :calendar:")]
     for event in processed_data:
         meeting_info = meeting_prep(event, user_id)
+        timezone = str(user.timezone)
         context = {"prep_id": meeting_info.get("meeting_prep"), "event_data": event}
         if hasattr("meeting_info", "resource_type"):
-            context.update({"resource_type", meeting_info.get("resource_type")})
+            context.update({"resource_type", meeting_info.get("resource_type")}),
+        context.update({"timezone": timezone })
+        
+        
         blocks = [
             *blocks,
             *block_sets.get_block_set("calendar_reminders_blockset", context),

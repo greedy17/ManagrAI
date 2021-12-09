@@ -21,6 +21,8 @@ from managr.utils.misc import snake_to_space
 from managr.salesforce.routes import routes as form_routes
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.gong.models import GongCall
+from managr.core.models import NylasAuthAccount, User
+
 from managr.salesforce.adapter.exceptions import (
     TokenExpired,
     FieldValidationError,
@@ -29,6 +31,7 @@ from managr.salesforce.adapter.exceptions import (
     SFNotFoundError,
     InvalidRefreshToken,
 )
+from managr.core.models import UserQuerySet
 
 logger = logging.getLogger("managr")
 
@@ -388,9 +391,13 @@ def calendar_reminders_blockset(context):
     unix_end_time = data.get("times").get("end_time")
     gmt_start_time = datetime.utcfromtimestamp(int(unix_start_time)).strftime("%H:%M")
     gmt = pytz.timezone('GMT')
-    eastern = pytz.timezone('EST')
+    user_timezone = context.get("timezone")
+    eastern = pytz.timezone(user_timezone)
+
+
     s = datetime.strptime(gmt_start_time, "%H:%M")
     date_gmt = gmt.localize(s)
+
     date_eastern = date_gmt.astimezone(eastern)
     local_start_time = date_eastern.strftime("%r")
 

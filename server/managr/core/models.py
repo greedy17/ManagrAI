@@ -449,6 +449,7 @@ class NylasAuthAccount(TimeStampModel):
         events = requests.get(
             f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.EVENT_POST}?{params}", headers=headers,
         )
+        
         return self._handle_response(events)
 
 
