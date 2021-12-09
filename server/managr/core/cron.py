@@ -47,6 +47,7 @@ from managr.zoom.serializers import ZoomMeetingSerializer
 from managr.zoom import constants as zoom_consts
 from managr.slack import constants as slack_consts
 from managr.salesforce.models import MeetingWorkflow
+from managr.slack.helpers.block_builders import divider_block
 
 
 NOTIFICATION_TITLE_STALLED_IN_STAGE = "Opportunity Stalled in Stage"
@@ -321,11 +322,15 @@ def _send_calendar_details(user_id):
     processed_data = _process_calendar_details(user_id)
     # processed_data checks to see how many events exists
 
-    blocks = [block_builders.header_block(f"Upcoming Meetings For Today! :calendar:")]
+    blocks = [
+        block_builders.header_block(f"Upcoming Meetings For Today! :calendar:"),
+        ]
+    divider = [divider_block()]
     for event in processed_data:
         meeting_info = meeting_prep(event, user_id)
         timezone = str(user.timezone)
-        context = {"prep_id": meeting_info.get("meeting_prep"), "event_data": event}
+        if meeting_info:
+            context = {"prep_id": meeting_info.get("meeting_prep"), "event_data": event}
         if hasattr("meeting_info", "resource_type"):
             context.update({"resource_type", meeting_info.get("resource_type")}),
         context.update({"timezone": timezone })
@@ -334,7 +339,10 @@ def _send_calendar_details(user_id):
         blocks = [
             *blocks,
             *block_sets.get_block_set("calendar_reminders_blockset", context),
+            *divider
+            
         ]
+
     # Loop thru processed_data and create block for each one
     try:
         slack_requests.send_channel_message(

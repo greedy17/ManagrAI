@@ -417,7 +417,6 @@ def calendar_reminders_blockset(context):
                 ],
             ),
         ),
-        {"type": "divider"},
     ]
     if type:
         blocks.append(
@@ -426,18 +425,19 @@ def calendar_reminders_blockset(context):
                 section_text=f"We mapped this meeting to: {context.get('resource_type')} {title}",
                 button_value="none",
                 action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
-            )
+            ),
         )
     else:
         blocks.append(
             block_builders.section_with_button_block(
                 "Map to Opportunity",
                 action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
-                section_text=f"We could not find an Opportuniy or Account to map this meeting to",
+                section_text=f"We could not find an Opportunity or Account to map this meeting to",
                 button_value="none",
                 style="primary",
             )
-        )
+        ),
+        
 
     return blocks
 
