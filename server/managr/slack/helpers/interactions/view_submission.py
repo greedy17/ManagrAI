@@ -21,7 +21,7 @@ from managr.salesforce.adapter.exceptions import (
     SFNotFoundError,
 )
 from managr.organization.models import Organization, Contact, Account
-from managr.core.models import User
+from managr.core.models import User, MeetingPrepInstance
 from managr.core.background import emit_create_calendar_event
 from managr.opportunity.models import Opportunity
 from managr.zoom.models import ZoomMeeting
@@ -518,7 +518,12 @@ def process_submit_resource_data(payload, context):
 @log_all_exceptions
 @processor(required_context=["w"])
 def process_zoom_meeting_attach_resource(payload, context):
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    type = context.get("type", None)
+    workflow = (
+        MeetingPrepInstance.objects.get(id=context.get("w"))
+        if type
+        else MeetingWorkflow.objects.get(id=context.get("w"))
+    )
     user = workflow.user
     slack_access_token = user.organization.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
@@ -651,9 +656,14 @@ def process_update_meeting_contact(payload, context):
     state = payload["view"]["state"]["values"]
     type = context.get("type", None)
     if type:
-        workflow = OrgCustomSlackFormInstance.objects.get(id=context.get("resource_id"))
-        contact = contact = Contact.objects.get(id=workflow.resource_id).__dict__
-        form = workflow
+        workflow = MeetingPrepInstance.objects.get(id=context.get("w"))
+        contact = dict(
+            *filter(
+                lambda contact: contact["_tracking_id"] == context.get("tracking_id"),
+                workflow.participants,
+            )
+        )
+        form = OrgCustomSlackFormInstance.objects.get(id=contact["form"])
     else:
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
         contact = dict(

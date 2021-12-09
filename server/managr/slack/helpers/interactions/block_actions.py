@@ -112,7 +112,7 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
         workflow = MeetingPrepInstance.objects.get(id=context.get("w"))
     else:
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    org = workflow.organization if type else workflow.user.organization
+    org = workflow.user.organization
 
     access_token = org.slack_integration.access_token
 
@@ -168,36 +168,26 @@ def process_edit_meeting_contact(payload, context):
     view_id = view["id"]
     type = context.get("type", None)
     if type:
-        form = MeetingPrepInstance.objects.get(id=context.get("w"))
-        org = form.user.organization
-        edit_block_context = {
-            "type": type,
-            "w": context.get("w"),
-            "current_view_id": view_id,
-        }
-        private_metadata = {
-            "type": type,
-            "w": context.get("w"),
-            "current_view_id": view_id,
-            "channel": context.get("channel"),
-            "timestamp": context.get("timestamp"),
-        }
+        workflow = MeetingPrepInstance.objects.get(id=context.get("w"))
+        org = workflow.user.organization
     else:
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
         meeting = workflow.meeting
         org = meeting.zoom_account.user.organization
-        edit_block_context = {
-            "w": context.get("w"),
-            "tracking_id": context.get("tracking_id"),
-            "current_view_id": view_id,
-        }
-        private_metadata = {
-            "w": context.get("w"),
-            "tracking_id": context.get("tracking_id"),
-            "current_view_id": view_id,
-            "channel": context.get("channel"),
-            "timestamp": context.get("timestamp"),
-        }
+    edit_block_context = {
+        "w": context.get("w"),
+        "tracking_id": context.get("tracking_id"),
+        "current_view_id": view_id,
+    }
+    if type:
+        edit_block_context.update({"type": type})
+    private_metadata = {
+        "w": context.get("w"),
+        "tracking_id": context.get("tracking_id"),
+        "current_view_id": view_id,
+        "channel": context.get("channel"),
+        "timestamp": context.get("timestamp"),
+    }
     access_token = org.slack_integration.access_token
     data = {
         "trigger_id": trigger_id,
@@ -495,8 +485,11 @@ def process_meeting_selected_resource(payload, context):
     """opens a modal with the options to search or create"""
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
-
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    type = context.get("type", None)
+    if type:
+        workflow = MeetingPrepInstance.objects.get(id=context.get("w"))
+    else:
+        workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     select = payload["actions"][0]["selected_option"]
     selected_option = select["value"]
     organization = workflow.user.organization
@@ -510,7 +503,8 @@ def process_meeting_selected_resource(payload, context):
         "w": context.get("w"),
         "resource": str(selected_option),
     }
-
+    if type:
+        context.update({"type": type})
     private_metadata.update(context)
     data = {
         "trigger_id": trigger_id,
@@ -540,8 +534,9 @@ def process_meeting_selected_resource(payload, context):
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
         )
-    workflow.slack_view = res.get("view").get("id")
-    workflow.save()
+    if type is None:
+        workflow.slack_view = res.get("view").get("id")
+        workflow.save()
 
 
 @processor(required_context=[])
@@ -549,7 +544,11 @@ def process_meeting_selected_resource_option(payload, context):
     """depending on the selection on the meeting review form (create new) this will open a create form or an empty block set"""
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     workflow_id = json.loads(payload["view"]["private_metadata"])["w"]
-    workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    type = context.get("type", None)
+    if type:
+        workflow = MeetingPrepInstance.objects.get(id=workflow_id)
+    else:
+        workflow = MeetingWorkflow.objects.get(id=workflow_id)
     select = payload["actions"][0]["selected_option"]["value"]
     resource_type = context.get("resource")
     action = None
@@ -564,6 +563,8 @@ def process_meeting_selected_resource_option(payload, context):
         "w": workflow_id,
         "resource": resource_type,
     }
+    if type:
+        context.update({"type": type})
     if not action:
         blocks = [block_finder("select_existing", payload["view"]["blocks"])[1]]
         context["action"] = "EXISTING"
@@ -645,17 +646,23 @@ def process_meeting_selected_resource_option(payload, context):
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
         )
-    workflow.slack_view = res.get("view").get("id")
-    workflow.save()
+    if type is None:
+        workflow.slack_view = res.get("view").get("id")
+        workflow.save()
 
 
 @processor()
 def process_create_or_search_selected(payload, context):
     """attaches a drop down to the message block for selecting a resource type"""
     workflow_id = payload["actions"][0]["value"]
-    workflow = MeetingWorkflow.objects.get(id=workflow_id)
-    meeting = workflow.meeting
-
+    type = False
+    if "type" in workflow_id:
+        type = True
+        prep_id = workflow_id.split("%")[1]
+        workflow = MeetingPrepInstance.objects.get(id=prep_id)
+    else:
+        workflow = MeetingWorkflow.objects.get(id=workflow_id)
+        meeting = workflow.meeting
     organization = workflow.user.organization
     access_token = organization.slack_integration.access_token
     # get current blocks
@@ -663,9 +670,16 @@ def process_create_or_search_selected(payload, context):
     # check if the dropdown option has been added already
     select_block = block_finder(slack_const.ZOOM_MEETING__ATTACH_RESOURCE_SECTION, previous_blocks)
     if not select_block:
+        if type:
+            prep_block = block_finder(workflow_id, previous_blocks)
+            block_sets = get_block_set(
+                "attach_resource_interaction", {"w": str(workflow.id), "type": "prep"}
+            )
+            previous_blocks.insert(prep_block[0], block_sets[0])
         # create new block including the resource type
-        block_sets = get_block_set("attach_resource_interaction", {"w": workflow_id})
-        previous_blocks.insert(2, block_sets[0])
+        else:
+            block_sets = get_block_set("attach_resource_interaction", {"w": workflow_id})
+            previous_blocks.insert(2, block_sets[0])
     try:
         res = slack_requests.update_channel_message(
             payload["channel"]["id"],
@@ -689,9 +703,9 @@ def process_create_or_search_selected(payload, context):
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
         )
-
-    workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
-    workflow.meeting.save()
+    if type is False:
+        workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
+        workflow.meeting.save()
 
 
 @processor()

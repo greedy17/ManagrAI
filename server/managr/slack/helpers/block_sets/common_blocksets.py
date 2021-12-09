@@ -29,6 +29,7 @@ from managr.salesforce.adapter.exceptions import (
     SFNotFoundError,
     InvalidRefreshToken,
 )
+from managr.core.models import MeetingPrepInstance
 
 logger = logging.getLogger("managr")
 
@@ -377,6 +378,7 @@ def meeting_reminder_block_set(context):
 @block_set()
 def calendar_reminders_blockset(context):
     data = context.get("event_data")
+    meeting = MeetingPrepInstance.objects.get(id=context.get("prep_id"))
     attend = data.get("participants")
     people = []
     for item in attend:
@@ -422,7 +424,8 @@ def calendar_reminders_blockset(context):
                 "Map to Opportunity",
                 action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
                 section_text=f"We could not find an Opportuniy or Account to map this meeting to",
-                button_value="none",
+                button_value=f"type%{context.get('prep_id')}",
+                block_id=f"type%{context.get('prep_id')}",
                 style="primary",
             )
         )

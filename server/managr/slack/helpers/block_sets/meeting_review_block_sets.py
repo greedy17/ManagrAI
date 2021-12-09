@@ -207,7 +207,7 @@ def meeting_contacts_block_set(context):
         )
 
     for i, contact in enumerate(contacts_not_in_sf):
-        workflow_id_param = f"w={str(workflow)}" if type else f"w={str(workflow.id)}"
+        workflow_id_param = f"w={str(workflow.id)}"
         tracking_id_param = f"tracking_id={contact['_tracking_id']}"
         params = (
             [workflow_id_param, tracking_id_param, channel, timestamp, f"type={type}",]
@@ -299,11 +299,15 @@ def meeting_contacts_block_set(context):
 
 @block_set(required_context=["w"])
 def edit_meeting_contacts_block_set(context):
-    print(context, "edit_meeting_contacts")
     type = context.get("type", None)
     if type:
-        resource_form = OrgCustomSlackFormInstance.objects.get(id=context.get("resource_id"))
-        contact = Contact.objects.get(id=resource_form.resource_id).__dict__
+        workflow = MeetingPrepInstance.objects.get(id=context.get("w"))
+        contact = dict(
+            *filter(
+                lambda contact: contact["_tracking_id"] == context.get("tracking_id"),
+                workflow.participants,
+            )
+        )
     else:
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
         meeting = workflow.meeting
@@ -314,7 +318,7 @@ def edit_meeting_contacts_block_set(context):
             )
         )
     # if it already has an existing form it will be used
-    user = resource_form.user if type else workflow.user
+    user = workflow.user
     form_id = contact.get("_form")
     if form_id in ["", None]:
         form_type = (
@@ -336,7 +340,9 @@ def edit_meeting_contacts_block_set(context):
             )
     else:
         slack_form = (
-            resource_form if type else workflow.forms.filter(id=contact.get("_form")).first()
+            OrgCustomSlackFormInstance.objects.get(id=contact.get("_form"))
+            if type
+            else workflow.forms.filter(id=contact.get("_form")).first()
         )
     if not slack_form:
         return [
@@ -527,6 +533,12 @@ def meeting_review_modal_block_set(context):
 @block_set(required_context=["w"])
 def attach_resource_interaction_block_set(context, *args, **kwargs):
     """This interaction updates the message to show a drop down of resources"""
+    type = context.get("type", None)
+    action = (
+        f"{slack_const.ZOOM_MEETING__SELECTED_RESOURCE}?w={context.get('w')}&type={type}"
+        if type
+        else f"{slack_const.ZOOM_MEETING__SELECTED_RESOURCE}?w={context.get('w')}"
+    )
     blocks = [
         block_builders.static_select(
             ":information_source: Select an object to attach to the meeting",
@@ -536,7 +548,7 @@ def attach_resource_interaction_block_set(context, *args, **kwargs):
                     slack_const.MEETING_RESOURCE_ATTACHMENT_OPTIONS,
                 )
             ],
-            action_id=f"{slack_const.ZOOM_MEETING__SELECTED_RESOURCE}?w={context.get('w')}",
+            action_id=action,
             block_id=slack_const.ZOOM_MEETING__ATTACH_RESOURCE_SECTION,
         ),
     ]
@@ -555,8 +567,11 @@ def create_or_search_modal_block_set(context):
                 "value": f'CREATE_NEW.{context.get("resource")}',
             }
         ]
-
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    type = context.get("type", None)
+    if type:
+        workflow = MeetingPrepInstance.objects.get(id=context.get("w"))
+    else:
+        workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = workflow.user
     resource_id = context.get("resource_id", None)
     # if an id is already passed (Aka this is recurrsive) get the resource
@@ -564,11 +579,15 @@ def create_or_search_modal_block_set(context):
         resource = (
             form_routes[resource_type]["model"].objects.filter(integration_id=resource_id).first()
         )
-
+    action_id = (
+        f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={resource_type}&add_opts={json.dumps(additional_opts)}&__block_action={slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION}&type=prep"
+        if type
+        else f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={resource_type}&add_opts={json.dumps(additional_opts)}&__block_action={slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION}"
+    )
     return [
         block_builders.external_select(
             f"*Search for an {resource_type}*",
-            f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={resource_type}&add_opts={json.dumps(additional_opts)}&__block_action={slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION}",
+            action_id,
             block_id="select_existing",
             placeholder="Type to search",
             initial_option=block_builders.option(resource.name, str(resource.id))

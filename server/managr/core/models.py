@@ -516,13 +516,22 @@ class MeetingPrepInstance(TimeStampModel):
     user = models.ForeignKey(
         "core.User", on_delete=models.CASCADE, related_name="meeting_preps", null=True
     )
-    form_id = models.CharField(max_length=255, null=True, blank=True)
     participants = ArrayField(
         JSONField(max_length=128, default=dict),
         default=list,
         blank=True,
         null=True,
         help_text="Json object of participants",
+    )
+    event_data = JSONField(max_length=128, default=dict)
+    resource_id = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text="The id of the related resource unopinionated",
+    )
+    resource_type = models.CharField(
+        max_length=255, null=True, blank=True, help_text="The class name of the resource"
     )
 
     objects = MeetingPrepQuerySet.as_manager()

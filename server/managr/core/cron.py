@@ -297,12 +297,12 @@ def meeting_prep(processed_data, user_id, send_slack=True):
             )
             contact_forms.append(form)
             contact["_form"] = str(form.id)
-    data = {
-        "user": user.id,
-        "participants": meeting_contacts,
-    }
+    event_data = processed_data
+    processed_data.pop("participants")
+    data = {"user": user.id, "participants": meeting_contacts, "event_data": event_data}
     if hasattr(meeting_resource_data, "resource_id"):
-        data["form_id"] = meeting_resource_data["resource_id"]
+        data["resource_id"] = meeting_resource_data["resource_id"]
+        data["resource_type"] = meeting_resource_data["resource_type"]
     serializer = MeetingPrepInstanceSerializer(data=data)
     serializer.is_valid(raise_exception=True)
     serializer.save()
@@ -330,6 +330,9 @@ def _send_calendar_details(user_id):
             *blocks,
             *block_sets.get_block_set("calendar_reminders_blockset", context),
         ]
+    meetings = MeetingPrepInstance.objects.filter(user=user.id).filter(
+        datetime_created__gt=datetime.date.today()
+    )
     # Loop thru processed_data and create block for each one
     try:
         slack_requests.send_channel_message(

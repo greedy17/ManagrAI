@@ -196,7 +196,7 @@ class UserInvitationSerializer(serializers.ModelSerializer):
 class MeetingPrepInstanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = MeetingPrepInstance
-        fields = ("user", "form_id", "participants")
+        fields = ("user", "event_data", "participants", "resource_id", "resource_type")
 
 
 """
