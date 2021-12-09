@@ -122,7 +122,7 @@ def _process_calendar_details(user_id):
     events = user.nylas._get_calendar_data()
     processed_data = []
     # print(events, "This is events")
-    print(len(events), "events")
+    # print(len(events), "events")
     for event in events:
         data = {}
         data["title"] = event.get("title", None)

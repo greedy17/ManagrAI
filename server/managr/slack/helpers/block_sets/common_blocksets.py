@@ -399,15 +399,17 @@ def calendar_reminders_blockset(context):
     date_gmt = gmt.localize(s)
 
     date_eastern = date_gmt.astimezone(eastern)
-    local_start_time = date_eastern.strftime("%r")
-
-
+    local_start_time = date_eastern.strftime("%r").strip("00").removesuffix(":00")
+    am_or_pm = date_eastern.strftime("%p")
+    short_local_start_time = local_start_time[:-6]
+    start_time = short_local_start_time + " " + am_or_pm
+    
     python_end_time = datetime.utcfromtimestamp(unix_end_time).strftime("%H:%M")
     s = datetime.strptime(python_end_time, "%H:%M")
     blocks = [
         block_builders.section_with_button_block(
             "Review Attendees",
-            section_text=f"{title}\n Starts at {local_start_time}\n Attendees: " + str(len(people)),
+            section_text=f"{title}\n Starts at {start_time}\n Attendees: " + str(len(people)),
             button_value=context.get("prep_id"),
             action_id=action_with_params(
                 slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
