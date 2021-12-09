@@ -21,6 +21,8 @@ from managr.utils.misc import snake_to_space
 from managr.salesforce.routes import routes as form_routes
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.gong.models import GongCall
+from managr.core.models import NylasAuthAccount, User
+
 from managr.salesforce.adapter.exceptions import (
     TokenExpired,
     FieldValidationError,
@@ -388,16 +390,26 @@ def calendar_reminders_blockset(context):
     title = data.get("title")
     unix_start_time = data.get("times").get("start_time")
     unix_end_time = data.get("times").get("end_time")
-    python_start_time = datetime.utcfromtimestamp(unix_start_time).strftime("%H:%M")
-    s = datetime.strptime(python_start_time, "%H:%M")
-    local_start_time = s.strftime("%r")
+    gmt_start_time = datetime.utcfromtimestamp(int(unix_start_time)).strftime("%H:%M")
+    gmt = pytz.timezone("GMT")
+    user_timezone = context.get("timezone")
+    eastern = pytz.timezone(user_timezone)
+
+    s = datetime.strptime(gmt_start_time, "%H:%M")
+    date_gmt = gmt.localize(s)
+
+    date_eastern = date_gmt.astimezone(eastern)
+    local_start_time = date_eastern.strftime("%r").strip("00").removesuffix(":00")
+    am_or_pm = date_eastern.strftime("%p")
+    short_local_start_time = local_start_time[:-6]
+    start_time = short_local_start_time + " " + am_or_pm
 
     python_end_time = datetime.utcfromtimestamp(unix_end_time).strftime("%H:%M")
     s = datetime.strptime(python_end_time, "%H:%M")
     blocks = [
         block_builders.section_with_button_block(
             "Review Attendees",
-            section_text=f"{title}\n Starts at {local_start_time}\n Attendees: " + str(len(people)),
+            section_text=f"{title}\n Starts at {start_time}\n Attendees: " + str(len(people)),
             button_value=context.get("prep_id"),
             action_id=action_with_params(
                 slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
@@ -407,7 +419,6 @@ def calendar_reminders_blockset(context):
                 ],
             ),
         ),
-        {"type": "divider"},
     ]
     if type:
         blocks.append(
@@ -416,7 +427,7 @@ def calendar_reminders_blockset(context):
                 section_text=f"We mapped this meeting to: {context.get('resource_type')} {title}",
                 button_value="none",
                 action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
-            )
+            ),
         )
     else:
         blocks.append(
@@ -428,7 +439,7 @@ def calendar_reminders_blockset(context):
                 block_id=f"type%{context.get('prep_id')}",
                 style="primary",
             )
-        )
+        ),
 
     return blocks
 

@@ -47,6 +47,7 @@ from managr.zoom.serializers import ZoomMeetingSerializer
 from managr.zoom import constants as zoom_consts
 from managr.slack import constants as slack_consts
 from managr.salesforce.models import MeetingWorkflow
+from managr.slack.helpers.block_builders import divider_block
 
 
 NOTIFICATION_TITLE_STALLED_IN_STAGE = "Opportunity Stalled in Stage"
@@ -120,7 +121,8 @@ def _process_calendar_details(user_id):
     user = User.objects.get(id=user_id)
     events = user.nylas._get_calendar_data()
     processed_data = []
-    print(len(events), "events")
+    # print(events, "This is events")
+    # print(len(events), "events")
     for event in events:
         data = {}
         data["title"] = event.get("title", None)
@@ -320,15 +322,23 @@ def _send_calendar_details(user_id):
     processed_data = _process_calendar_details(user_id)
     # processed_data checks to see how many events exists
 
-    blocks = [block_builders.header_block(f"Upcoming Meetings For Today! :calendar:")]
+    blocks = [
+        block_builders.header_block(f"Upcoming Meetings For Today! :calendar:"),
+    ]
+    divider = [divider_block()]
     for event in processed_data:
         meeting_info = meeting_prep(event, user_id)
-        context = {"prep_id": meeting_info.get("meeting_prep"), "event_data": event}
+        timezone = str(user.timezone)
+        if meeting_info:
+            context = {"prep_id": meeting_info.get("meeting_prep"), "event_data": event}
         if hasattr("meeting_info", "resource_type"):
-            context.update({"resource_type", meeting_info.get("resource_type")})
+            context.update({"resource_type", meeting_info.get("resource_type")}),
+        context.update({"timezone": timezone})
+
         blocks = [
             *blocks,
             *block_sets.get_block_set("calendar_reminders_blockset", context),
+            *divider,
         ]
     meetings = MeetingPrepInstance.objects.filter(user=user.id).filter(
         datetime_created__gt=datetime.date.today()

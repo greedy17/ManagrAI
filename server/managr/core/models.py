@@ -5,7 +5,9 @@ import uuid
 import json
 import logging
 
+
 from urllib.error import HTTPError
+from dateutil import tz
 import pytz
 import requests
 
@@ -438,14 +440,17 @@ class NylasAuthAccount(TimeStampModel):
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
         }
-        starts_after = convert_local_time_to_unix("EST", 5, 00)
-        ends_before = convert_local_time_to_unix("EST", 19, 30)
-        print(starts_after, ends_before)
-        query = dict({"starts_after": starts_after, "ends_before": ends_before,})
+        user_timezone = f"{self.user.timezone}"
+
+        starts_after = convert_local_time_to_unix(user_timezone, 12, 30)
+        ends_before = convert_local_time_to_unix(user_timezone, 23, 00)
+        # print(ends_before, "ends before")
+        query = dict({"starts_after": starts_after, "ends_before": ends_before})
         params = urlencode(query)
         events = requests.get(
             f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.EVENT_POST}?{params}", headers=headers,
         )
+        
         return self._handle_response(events)
 
 
