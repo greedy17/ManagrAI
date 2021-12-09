@@ -10,7 +10,8 @@ from django.db.models import Q
 
 from managr.utils.sites import get_site_url
 from managr.core.models import User, Notification
-from managr.opportunity.models import Opportunity
+from managr.opportunity.models import Opportunity, Lead
+from managr.organization.models import Account
 from managr.zoom.models import ZoomMeeting
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce import constants as sf_consts
@@ -379,21 +380,14 @@ def meeting_reminder_block_set(context):
 
 @block_set()
 def calendar_reminders_blockset(context):
-    data = context.get("event_data")
     meeting = MeetingPrepInstance.objects.get(id=context.get("prep_id"))
-    attend = data.get("participants")
-    people = []
-    for item in attend:
-        participants = item["name"]
-        people.append(participants)
-    type = context.get("resource_type", None)
-    title = data.get("title")
-    unix_start_time = data.get("times").get("start_time")
-    unix_end_time = data.get("times").get("end_time")
+    data = meeting.event_data
+    title = data["title"]
+    unix_start_time = data["times"]["start_time"]
+    unix_end_time = data["times"]["end_time"]
     gmt_start_time = datetime.utcfromtimestamp(int(unix_start_time)).strftime("%H:%M")
     gmt = pytz.timezone("GMT")
-    user_timezone = context.get("timezone")
-    eastern = pytz.timezone(user_timezone)
+    eastern = pytz.timezone(meeting.user.timezone)
 
     s = datetime.strptime(gmt_start_time, "%H:%M")
     date_gmt = gmt.localize(s)
@@ -403,29 +397,33 @@ def calendar_reminders_blockset(context):
     am_or_pm = date_eastern.strftime("%p")
     short_local_start_time = local_start_time[:-6]
     start_time = short_local_start_time + " " + am_or_pm
-
     python_end_time = datetime.utcfromtimestamp(unix_end_time).strftime("%H:%M")
     s = datetime.strptime(python_end_time, "%H:%M")
+    type = "prep" if meeting.resource_type is None else meeting.resource_type
+    if type == "Opportunity":
+        resource = Opportunity.objects.get(id=meeting.resource_id)
+    elif type == "Account":
+        resource = Account.objects.get(id=meeting.resource_id)
+    elif type == "Lead":
+        resource = Lead.objects.get(id=meeting.resource_id)
     blocks = [
         block_builders.section_with_button_block(
             "Review Attendees",
-            section_text=f"{title}\n Starts at {start_time}\n Attendees: " + str(len(people)),
+            section_text=f"{title}\n Starts at {start_time}\n Attendees: "
+            + str(len(meeting.participants)),
             button_value=context.get("prep_id"),
             action_id=action_with_params(
                 slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
-                params=[
-                    f"w={str(context.get('prep_id'))}",
-                    f"type={context.get('resource_type', 'prep')}",
-                ],
+                params=[f"w={str(meeting.id)}", f"type={type}",],
             ),
         ),
     ]
-    if type:
+    if type and type is not "prep":
         blocks.append(
             block_builders.section_with_button_block(
                 "Change Opportunity",
-                section_text=f"We mapped this meeting to: {context.get('resource_type')} {title}",
-                button_value="none",
+                section_text=f"We mapped this meeting to: {type} {resource.name}",
+                button_value=f"type%{str(meeting.id)}",
                 action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
             ),
         )
@@ -435,8 +433,8 @@ def calendar_reminders_blockset(context):
                 "Map to Opportunity",
                 action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
                 section_text=f"We could not find an Opportuniy or Account to map this meeting to",
-                button_value=f"type%{context.get('prep_id')}",
-                block_id=f"type%{context.get('prep_id')}",
+                button_value=f"type%{str(meeting.id)}",
+                block_id=f"type%{str(meeting.id)}",
                 style="primary",
             )
         ),

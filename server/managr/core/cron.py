@@ -308,13 +308,7 @@ def meeting_prep(processed_data, user_id, send_slack=True):
     serializer = MeetingPrepInstanceSerializer(data=data)
     serializer.is_valid(raise_exception=True)
     serializer.save()
-    meeting_prep = MeetingPrepInstance.objects.filter(user=user.id).first()
-
-    # All meeting_participants are in meeting
-    payload = {"meeting_prep": str(meeting_prep.id)}
-    if hasattr(meeting_resource_data, "resource_id"):
-        payload.update({"resource_type": meeting_resource_data["resource_type"]})
-    return payload
+    return
 
 
 def _send_calendar_details(user_id):
@@ -323,26 +317,20 @@ def _send_calendar_details(user_id):
     # processed_data checks to see how many events exists
 
     blocks = [
-        block_builders.header_block(f"Upcoming Meetings For Today! :calendar:"),
+        block_builders.header_block("Upcoming Meetings For Today!"),
+        {"type": "divider"},
     ]
-    divider = [divider_block()]
     for event in processed_data:
-        meeting_info = meeting_prep(event, user_id)
-        timezone = str(user.timezone)
-        if meeting_info:
-            context = {"prep_id": meeting_info.get("meeting_prep"), "event_data": event}
-        if hasattr("meeting_info", "resource_type"):
-            context.update({"resource_type", meeting_info.get("resource_type")}),
-        context.update({"timezone": timezone})
-
-        blocks = [
-            *blocks,
-            *block_sets.get_block_set("calendar_reminders_blockset", context),
-            *divider,
-        ]
+        meeting_prep(event, user_id)
     meetings = MeetingPrepInstance.objects.filter(user=user.id).filter(
         datetime_created__gt=datetime.date.today()
     )
+    for meeting in meetings:
+        blocks = [
+            *blocks,
+            *block_sets.get_block_set("calendar_reminders_blockset", {"prep_id": str(meeting.id)}),
+            {"type": "divider"},
+        ]
     # Loop thru processed_data and create block for each one
     try:
         slack_requests.send_channel_message(

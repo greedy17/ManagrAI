@@ -1,7 +1,7 @@
 import json
 import pdb
 import pytz
-from datetime import datetime
+from datetime import datetime, date
 import logging
 import uuid
 import time
@@ -38,7 +38,6 @@ from managr.slack.helpers.utils import (
     block_finder,
     check_contact_last_name,
 )
-from managr.slack.helpers.block_sets import get_block_set
 from managr.salesforce.adapter.models import ContactAdapter, OpportunityAdapter, TaskAdapter
 from managr.zoom import constants as zoom_consts
 from managr.salesforce.routes import routes as model_routes
@@ -50,6 +49,7 @@ from managr.salesforce.background import (
     emit_add_update_to_sf,
     _send_recap,
 )
+from managr.slack.helpers.block_sets import get_block_set
 from managr.salesloft.models import People
 from managr.salesloft.background import emit_add_cadence_membership
 from managr.zoom.background import emit_process_schedule_zoom_meeting
@@ -611,21 +611,43 @@ def process_zoom_meeting_attach_resource(payload, context):
 
             workflow.save()
 
-    ts, channel = workflow.slack_interaction.split("|")
     # clear old forms (except contact forms)
-    workflow.forms.exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT).delete()
-    workflow.add_form(
-        meeting_resource, slack_const.FORM_TYPE_UPDATE,
-    )
+    if type:
+        ts = context.get("original_message_timestamp")
+        channel = context.get("original_message_channel")
+        current_date = date.today()
+        current_day = current_date.day
+        previous_day = current_date.replace(day=current_day - 1)
+        next_day = current_date.replace(day=current_day + 1)
+        meetings = MeetingPrepInstance.objects.filter(user=user.id).filter(
+            datetime_created__range=(previous_day, next_day)
+        )
+        print(meetings)
+        blocks_set = [
+            block_builders.header_block("Upcoming Meetings For Today!"),
+            {"type": "divider"},
+        ]
+        for meeting in meetings:
+            blocks_set = [
+                *blocks_set,
+                *get_block_set("calendar_reminders_blockset", {"prep_id": str(meeting.id)}),
+                {"type": "divider"},
+            ]
+    else:
+        ts, channel = workflow.slack_interaction.split("|")
+        workflow.forms.exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT).delete()
+        workflow.add_form(
+            meeting_resource, slack_const.FORM_TYPE_UPDATE,
+        )
+        blocks_set = get_block_set("initial_meeting_interaction", {"w": context.get("w")})
+
     try:
         # update initial interaction workflow with new resource
         res = slack_requests.update_channel_message(
-            channel,
-            ts,
-            slack_access_token,
-            block_set=get_block_set("initial_meeting_interaction", {"w": context.get("w")}),
+            channel, ts, slack_access_token, block_set=blocks_set
         )
-        workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
+        if type is None:
+            workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
         res = slack_requests.generic_request(url, data, access_token=slack_access_token)
 
     # add a message for user's if this failed

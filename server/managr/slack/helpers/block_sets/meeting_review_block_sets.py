@@ -165,14 +165,7 @@ def meeting_contacts_block_set(context):
 
     if type:
         block_sets = []
-        if type == "Opportunity":
-            workflow = Opportunity.objects.get(id=context.get("w"))
-        elif type == "Account":
-            workflow = Account.objects.get(id=context.get("w"))
-        elif type == "Lead":
-            workflow = Lead.objects.get(id=context.get("w"))
-        else:
-            workflow = MeetingPrepInstance.objects.get(id=context.get("w"))
+        workflow = MeetingPrepInstance.objects.get(id=context.get("w"))
         contacts = workflow.participants
         sf_account = workflow.user.salesforce_account
     else:
