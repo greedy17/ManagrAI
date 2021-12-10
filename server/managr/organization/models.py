@@ -54,6 +54,7 @@ class Organization(TimeStampModel):
         models.CharField(max_length=255),
         default=list,
         help_text="Email to ignore in meeting reviews",
+        blank=True,
     )
     objects = OrganizationQuerySet.as_manager()
 

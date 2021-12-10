@@ -49,6 +49,7 @@ class CustomContact(admin.ModelAdmin):
         "imported_by",
         "last_edited",
     )
+    readonly_fields = ["secondary_data", "imported_by", "account"]
 
 
 admin.site.register(Organization, CustomOrganization)
