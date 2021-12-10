@@ -811,6 +811,7 @@ class SalesforceAuthAccount(TimeStampModel):
         null=True,
         help_text="Certain Fields are not available for query are retreived as part of the user's fields, these are tracked here and excluded on resyncs",
         max_length=1000,
+        blank=True,
     )
 
     is_busy = models.BooleanField(default=False)

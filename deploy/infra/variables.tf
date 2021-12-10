@@ -195,13 +195,19 @@ variable "scheduled_tasks" {
     {
       name       = "syncsalesloftaccounts"
       command    = "initsalesloftsync"
-      cron       = "cron(0 * * * ? *)"
+      cron       = "cron(30 * * * ? *)"
       task_count = 1
     },
     {
       name       = "syncgongcalls"
       command    = "initgongsync"
-      cron       = "cron(*/30 * * * ? *)"
+      cron       = "cron(30 * * * ? *)"
+      task_count = 1
+    },
+    {
+      name       = "syncoutreachcalls"
+      command    = "initoutreachsync"
+      cron       = "cron(30 * * * ? *)"
       task_count = 1
     },
     {

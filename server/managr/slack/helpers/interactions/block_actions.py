@@ -1231,7 +1231,7 @@ def process_paginate_alerts(payload, context):
     config_id = context.get("config_id")
     alert_instances = AlertInstance.objects.filter(
         invocation=invocation, channel=channel, config_id=config_id
-    )
+    ).filter(completed=False)
     alert_instance = alert_instances.first()
     if not alert_instance:
         # check if the config was deleted
