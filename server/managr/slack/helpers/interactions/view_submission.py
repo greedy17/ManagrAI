@@ -527,15 +527,16 @@ def process_submit_resource_data(payload, context):
         else:
             url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
             success_view_data = {
-                "view_id": loading_view_data.get("view_id"),
+                "trigger_id": trigger_id,
+                "view_id": view_id,
                 "view": {
                     "type": "modal",
                     "title": {"type": "plain_text", "text": "Success"},
                     "blocks": get_block_set(
-                        "success_modal",
-                        {"message": context.get("message_ts"), "u": user.id, "form_id": form_id},
+                        "success_modal", {"message": message, "u": user.id, "form_id": form_id},
                     ),
                     "private_metadata": json.dumps(context),
+                    "clear_on_close": True,
                 },
             }
             try:
@@ -548,6 +549,22 @@ def process_submit_resource_data(payload, context):
                     f"Failed To Update slack view from loading to success modal  {str(user.id)} email {user.email} {e}"
                 )
                 pass
+            try:
+                slack_requests.send_ephemeral_message(
+                    user.slack_integration.channel,
+                    user.organization.slack_integration.access_token,
+                    user.slack_integration.slack_id,
+                    text=text,
+                    block_set=get_block_set(
+                        "success_modal", {"message": message, "u": user.id, "form_id": form_id}
+                    ),
+                )
+            except Exception as e:
+                return logger.exception(
+                    f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
+                )
+
+        return {"response_action": "clear"}
 
 
 @log_all_exceptions
