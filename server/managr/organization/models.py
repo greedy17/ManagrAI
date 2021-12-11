@@ -62,6 +62,7 @@ class Organization(TimeStampModel):
         default=list,
         help_text="Email to ignore in meeting reviews",
     )
+    has_products = models.BooleanField(default=False)
     objects = OrganizationQuerySet.as_manager()
 
     @property
