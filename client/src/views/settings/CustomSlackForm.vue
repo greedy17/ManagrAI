@@ -751,20 +751,6 @@
           />
 
           <PulseLoadingSpinnerButton
-            v-else-if="resource === 'Contact'"
-            @click="onSave"
-            class="primary-button"
-            :class="
-              !addedFieldIds.includes('de1c5d78-d608-4435-95c5-a5af625666b3')
-                ? 'primary-button'
-                : 'primary-button bouncy'
-            "
-            text="Save"
-            :loading="savingForm"
-            :disabled="!addedFieldIds.includes('de1c5d78-d608-4435-95c5-a5af625666b3')"
-          />
-
-          <PulseLoadingSpinnerButton
             v-if="resource === 'Opportunity' && productSelected"
             @click="goToProducts"
             class="primary-button"
@@ -786,6 +772,20 @@
                 addedFieldIds.includes('87fcf847-4072-46b7-9f64-e91fa99e8354')
               )
             "
+          />
+
+          <PulseLoadingSpinnerButton
+            v-else-if="resource === 'Contact'"
+            @click="onSave"
+            class="primary-button"
+            :class="
+              !addedFieldIds.includes('de1c5d78-d608-4435-95c5-a5af625666b3')
+                ? 'primary-button'
+                : 'primary-button bouncy'
+            "
+            text="Save"
+            :loading="savingForm"
+            :disabled="!addedFieldIds.includes('de1c5d78-d608-4435-95c5-a5af625666b3')"
           />
 
           <PulseLoadingSpinnerButton
@@ -812,6 +812,44 @@
                 addedFieldIds.includes('28dc4559-0d1b-4ecb-a356-58002e3a7020')
               )
             "
+          />
+
+          <PulseLoadingSpinnerButton
+            v-if="resource === 'Lead'"
+            @click="onSave"
+            class="primary-button"
+            :class="
+              !(
+                addedFieldIds.includes('3725c328-aead-404a-bb8e-6fe697dbac31') &&
+                addedFieldIds.includes('33be554d-99ea-4fae-b683-d02ce10b1988') &&
+                addedFieldIds.includes('fa00154a-4a78-43df-9ad7-bb0526ce7733')
+              )
+                ? 'primary-button'
+                : 'primary-button bouncy'
+            "
+            text="Save"
+            :loading="savingForm"
+            :disabled="
+              !(
+                addedFieldIds.includes('3725c328-aead-404a-bb8e-6fe697dbac31') &&
+                addedFieldIds.includes('33be554d-99ea-4fae-b683-d02ce10b1988') &&
+                addedFieldIds.includes('fa00154a-4a78-43df-9ad7-bb0526ce7733')
+              )
+            "
+          />
+
+          <PulseLoadingSpinnerButton
+            v-if="resource === 'Account'"
+            @click="onSave"
+            class="primary-button"
+            :class="
+              !addedFieldIds.includes('7b4ea5b0-7ba1-41b8-b398-1955461d9041')
+                ? 'primary-button'
+                : 'primary-button bouncy'
+            "
+            text="Save"
+            :loading="savingForm"
+            :disabled="!addedFieldIds.includes('7b4ea5b0-7ba1-41b8-b398-1955461d9041')"
           />
         </div>
       </div>
@@ -869,7 +907,13 @@
         </div>
         <div v-for="field in addedFields" :key="field.id">
           <!-- <p>{{ field.dataType }}</p> -->
-          <div v-if="field.dataType === 'String' || field.dataType === 'Currency'">
+          <div
+            v-if="
+              field.dataType === 'String' ||
+              field.dataType === 'Currency' ||
+              field.dataType === 'TextArea'
+            "
+          >
             <p :class="unshownIds.includes(field.id) ? 'invisible' : ''">
               {{ field.referenceDisplayLabel }}
             </p>
@@ -884,7 +928,10 @@
             >
             </textarea>
           </div>
-          <div class="drop-row" v-else-if="field.dataType === 'Picklist'">
+          <div
+            class="drop-row"
+            v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'"
+          >
             <p :class="unshownIds.includes(field.id) ? 'invisible' : ''">
               {{ field.referenceDisplayLabel }}
             </p>
@@ -906,9 +953,46 @@
               type="date"
               id="start"
               name="trip-start"
-              value="2022-01-20"
-              min="2018-01-01"
-              max="2018-12-31"
+              value="0000-00-00"
+              disabled
+            />
+          </div>
+          <div class="drop-row" v-else-if="field.dataType === 'DateTime'">
+            <p :class="unshownIds.includes(field.id) ? 'invisible' : ''">
+              {{ field.referenceDisplayLabel }}
+            </p>
+            <input
+              :class="unshownIds.includes(field.id) ? 'invisible' : 'drop'"
+              type="datetime-local"
+              id="start"
+              name="trip-start"
+              value="0000-00-00"
+              disabled
+            />
+          </div>
+          <div
+            class="drop-row"
+            v-else-if="field.dataType === 'Phone' || field.dataType === 'Reference'"
+          >
+            <p :class="unshownIds.includes(field.id) ? 'invisible' : ''">
+              {{ field.referenceDisplayLabel }}
+            </p>
+            <input
+              :class="unshownIds.includes(field.id) ? 'invisible' : 'drop'"
+              type="text"
+              disabled
+            />
+          </div>
+          <div
+            class="drop-row"
+            v-else-if="field.dataType === 'Phone' || field.dataType === 'Double'"
+          >
+            <p :class="unshownIds.includes(field.id) ? 'invisible' : ''">
+              {{ field.referenceDisplayLabel }}
+            </p>
+            <input
+              :class="unshownIds.includes(field.id) ? 'invisible' : 'drop'"
+              type="number"
               disabled
             />
           </div>

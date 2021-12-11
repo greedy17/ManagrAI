@@ -556,8 +556,11 @@
               align-items: center;
               flex-direction: column;
             "
-            class="collection"
+            class="collection__small"
           >
+            <h2>
+              {{ alertTemplateForm.field.title.value ? alertTemplateForm.field.title.value : '' }}
+            </h2>
             <FormField
               id="alert-title"
               v-model="alertTemplateForm.field.title.value"
@@ -565,7 +568,7 @@
               :errors="alertTemplateForm.field.title.errors"
               @blur="alertTemplateForm.field.title.validate()"
             />
-            <AlertSummary :form="alertTemplateForm" />
+            <!-- <AlertSummary :form="alertTemplateForm" /> -->
           </div>
         </template>
       </div>
@@ -1637,6 +1640,13 @@ export default {
 .collection {
   background-color: $panther;
   height: 60vh;
+  width: 30vw;
+  padding: 2rem;
+  border-radius: 0.33rem;
+}
+.collection__small {
+  background-color: $panther;
+  height: 30vh;
   width: 30vw;
   padding: 2rem;
   border-radius: 0.33rem;

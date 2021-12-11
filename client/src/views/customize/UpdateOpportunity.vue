@@ -90,9 +90,7 @@ export default {
 
     this.getStageForms()
   },
-  mounted() {
-    console.log(this.selectedForm)
-  },
+
   computed: {
     ...mapState(['user']),
     selectedFormType() {
