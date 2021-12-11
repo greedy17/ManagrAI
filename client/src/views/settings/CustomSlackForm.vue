@@ -1,27 +1,5 @@
 <template>
   <div class="slack-form-builder">
-    <Modal ref="LeadModal">
-      <template v-slot:header>
-        <p>Search for these fields & add them to your slack form</p>
-      </template>
-
-      <template v-slot:body>
-        <div>
-          <p style="color: #ff7649; font-weight: bold">Required:</p>
-          <ul>
-            <li>"Last name"</li>
-          </ul>
-        </div>
-        <p style="color: #5f8cff">Suggested:</p>
-        <ul>
-          <li>"Title"</li>
-          <li>"Phone"</li>
-          <li>"Email"</li>
-          <li>"Company Name"</li>
-          <li>"Status"</li>
-        </ul>
-      </template>
-    </Modal>
     <div>
       <div class="slack-from-builder__sf-validations">
         <template v-if="showValidations">
@@ -41,142 +19,7 @@
     </div>
 
     <div class="opportunity__row">
-      <div v-if="addingProducts" class="collection_fields">
-        <div style="margin-bottom: 1rem" class="row__">
-          <h2>Products</h2>
-          <div class="row__">
-            <img
-              style="height: 1.5rem; margin-left: 1rem"
-              src="@/assets/images/slackLogo.png"
-              alt=""
-            />
-            <img style="height: 1rem" src="@/assets/images/plusOne.png" alt="" />
-            <img style="height: 1.5rem" src="@/assets/images/salesforce.png" alt="" />
-          </div>
-        </div>
-        <div
-          v-if="!addedFieldIds.includes('de1c5d78-d608-4435-95c5-a5af625666b3')"
-          class="centered field-border"
-        >
-          <p style="margin-left: 0.5rem; font-weight: bold">
-            Pricebook <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
-          </p>
-
-          <img
-            src="@/assets/images/unlinked.png"
-            alt=""
-            style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-          />
-
-          <!-- <button
-            @click="
-              () => {
-                changeResouce()
-              }
-            "
-            class="default_button bouncy"
-          >
-            Pricebook
-          </button> -->
-        </div>
-
-        <div
-          v-if="!addedFieldIds.includes('de1c5d78-d608-4435-95c5-a5af625666b3')"
-          class="centered field-border"
-        >
-          <p style="margin-left: 0.5rem; font-weight: bold">
-            Product <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
-          </p>
-
-          <img
-            src="@/assets/images/unlinked.png"
-            alt=""
-            style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-          />
-
-          <button
-            @click="
-              () => {
-                onAddField(
-                  this.formFields.list.filter(
-                    (field) => field.id === 'de1c5d78-d608-4435-95c5-a5af625666b3',
-                  )[0],
-                )
-              }
-            "
-            class="default_button bouncy"
-          >
-            Product
-          </button>
-        </div>
-
-        <div
-          v-if="!addedFieldIds.includes('de1c5d78-d608-4435-95c5-a5af625666b3')"
-          class="centered field-border"
-        >
-          <p style="margin-left: 0.5rem; font-weight: bold">
-            Quantity <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
-          </p>
-
-          <img
-            src="@/assets/images/unlinked.png"
-            alt=""
-            style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-          />
-
-          <button
-            @click="
-              () => {
-                onAddField(
-                  this.formFields.list.filter(
-                    (field) => field.id === 'de1c5d78-d608-4435-95c5-a5af625666b3',
-                  )[0],
-                )
-              }
-            "
-            class="default_button bouncy"
-          >
-            Quantity
-          </button>
-        </div>
-
-        <div
-          v-if="!addedFieldIds.includes('de1c5d78-d608-4435-95c5-a5af625666b3')"
-          class="centered field-border"
-        >
-          <p style="margin-left: 0.5rem; font-weight: bold">
-            Line Description <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
-          </p>
-
-          <img
-            src="@/assets/images/unlinked.png"
-            alt=""
-            style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-          />
-
-          <div>
-            <DropDownSearch
-              :items="formFields.list.filter((field) => !addedFieldIds.includes(field.id))"
-              displayKey="referenceDisplayLabel"
-              valueKey="id"
-              nullDisplay="Select field"
-              searchable
-              :loading="formFields.loadingNextPage"
-              :hasNext="!!formFields.pagination.hasNextPage"
-              v-model="amountValue"
-              @load-more="onFieldsNextPage"
-              @search-term="onSearchFields"
-              @input="
-                (e) => {
-                  onAddField(this.formFields.list.filter((field) => field.id === e)[0])
-                }
-              "
-            />
-          </div>
-        </div>
-      </div>
-
-      <div v-else class="collection_fields">
+      <div class="collection_fields">
         <div style="margin-bottom: -1rem">
           <div
             v-if="
@@ -217,6 +60,169 @@
           </div>
         </div>
 
+        <!-- <div>
+          <DropDownSearch
+            :items="formFields.list.filter((field) => !addedFieldIds.includes(field.id))"
+            displayKey="referenceDisplayLabel"
+            valueKey="id"
+            nullDisplay="Select field"
+            searchable
+            :loading="formFields.loadingNextPage"
+            :hasNext="!!formFields.pagination.hasNextPage"
+            v-model="amountValue"
+            @load-more="onFieldsNextPage"
+            @search-term="onSearchFields"
+            @input="
+              (e) => {
+                onAddField(this.formFields.list.filter((field) => field.id === e)[0])
+              }
+            "
+          />
+
+          <PulseLoadingSpinnerButton
+            @click="onSave"
+            class="primary-button"
+            text="Save"
+            :loading="savingForm"
+          />
+        </div> -->
+        <div v-if="resource === 'OpportunityLineItem'">
+          <div
+            v-if="!addedFieldIds.includes('28dc4559-0d1b-4ecb-a356-58002e3a7020')"
+            class="centered field-border"
+          >
+            <p style="margin-left: 0.5rem; font-weight: bold">
+              Pricebook <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+            </p>
+
+            <img
+              src="@/assets/images/unlinked.png"
+              alt=""
+              style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+            />
+            <button
+              @click="
+                () => {
+                  onAddField(
+                    this.formFields.list.filter(
+                      (field) => field.id === '28dc4559-0d1b-4ecb-a356-58002e3a7020',
+                    )[0],
+                  )
+                }
+              "
+              class="default_button bouncy"
+            >
+              Pricebook
+            </button>
+          </div>
+
+          <div
+            v-if="!addedFieldIds.includes('a7f7f7e2-afd6-4fc8-9575-71e219f883eb')"
+            class="centered field-border"
+          >
+            <p style="margin-left: 0.5rem; font-weight: bold">
+              Product <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+            </p>
+
+            <img
+              src="@/assets/images/unlinked.png"
+              alt=""
+              style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+            />
+
+            <button
+              @click="
+                () => {
+                  onAddField(
+                    this.formFields.list.filter(
+                      (field) => field.id === 'a7f7f7e2-afd6-4fc8-9575-71e219f883eb',
+                    )[0],
+                  )
+                }
+              "
+              class="default_button bouncy"
+            >
+              Product
+            </button>
+          </div>
+
+          <div
+            v-if="!addedFieldIds.includes('66a5b96f-e472-4e73-9393-6dfdaae4764e')"
+            class="centered field-border"
+          >
+            <p style="margin-left: 0.5rem; font-weight: bold">
+              Quantity <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+            </p>
+
+            <img
+              src="@/assets/images/unlinked.png"
+              alt=""
+              style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+            />
+
+            <button
+              @click="
+                () => {
+                  onAddField(
+                    this.formFields.list.filter(
+                      (field) => field.id === '66a5b96f-e472-4e73-9393-6dfdaae4764e',
+                    )[0],
+                  )
+                }
+              "
+              class="default_button bouncy"
+            >
+              Quantity
+            </button>
+          </div>
+
+          <div
+            v-if="!addedFieldIds.includes('e90650f2-473b-4b78-bb65-902e6a7bb7dc')"
+            class="centered field-border"
+          >
+            <p style="margin-left: 0.5rem; font-weight: bold">
+              Line Description <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+            </p>
+
+            <img
+              src="@/assets/images/unlinked.png"
+              alt=""
+              style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+            />
+            <button
+              @click="
+                () => {
+                  onAddField(
+                    this.formFields.list.filter(
+                      (field) => field.id === 'e90650f2-473b-4b78-bb65-902e6a7bb7dc',
+                    )[0],
+                  )
+                }
+              "
+              class="default_button bouncy"
+            >
+              Line Description
+            </button>
+            <!-- <DropDownSearch
+                :items="formFields.list.filter((field) => !addedFieldIds.includes(field.id))"
+                displayKey="referenceDisplayLabel"
+                valueKey="id"
+                nullDisplay="Select field"
+                searchable
+                :loading="formFields.loadingNextPage"
+                :hasNext="!!formFields.pagination.hasNextPage"
+                v-model="amountValue"
+                @load-more="onFieldsNextPage"
+                @search-term="onSearchFields"
+                @input="
+                  (e) => {
+                    onAddField(this.formFields.list.filter((field) => field.id === e)[0])
+                  }
+                "
+              /> -->
+          </div>
+        </div>
+
         <div v-if="resource === 'Contact'">
           <div
             v-if="!addedFieldIds.includes('de1c5d78-d608-4435-95c5-a5af625666b3')"
@@ -248,13 +254,13 @@
             </button>
           </div>
         </div>
-        <!-- <div v-if="resource === 'Lead'">
+        <div v-if="resource === 'Lead'">
           <div
-            v-if="!addedFieldIds.includes('b3cebfa0-76bb-4639-9cc3-cd40541ef80e')"
+            v-if="!addedFieldIds.includes('3725c328-aead-404a-bb8e-6fe697dbac31')"
             class="centered field-border"
           >
             <p style="margin-left: 0.5rem; font-weight: bold">
-              Name <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+              Last Name<span style="color: #fa646a; font-size: 0.75rem"> (required)</span>
             </p>
 
             <img
@@ -266,17 +272,109 @@
             <button
               @click="
                 () => {
-                  onAddField(nameField)
+                  onAddField(
+                    this.formFields.list.filter(
+                      (field) => field.id === '3725c328-aead-404a-bb8e-6fe697dbac31',
+                    )[0],
+                  )
                 }
               "
               class="default_button bouncy"
             >
-              Name
+              Last Name
             </button>
           </div>
+          <div
+            v-if="!addedFieldIds.includes('33be554d-99ea-4fae-b683-d02ce10b1988')"
+            class="centered field-border"
+          >
+            <p style="margin-left: 0.5rem; font-weight: bold">
+              Company<span style="color: #fa646a; font-size: 0.75rem"> (required)</span>
+            </p>
 
-          sugessted field is "TYPE"
-        </div> -->
+            <img
+              src="@/assets/images/unlinked.png"
+              alt=""
+              style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+            />
+
+            <button
+              @click="
+                () => {
+                  onAddField(
+                    this.formFields.list.filter(
+                      (field) => field.id === '33be554d-99ea-4fae-b683-d02ce10b1988',
+                    )[0],
+                  )
+                }
+              "
+              :class="
+                addedFieldIds.includes('3725c328-aead-404a-bb8e-6fe697dbac31')
+                  ? 'default_button bouncy'
+                  : 'default_button'
+              "
+            >
+              Company
+            </button>
+          </div>
+          <div
+            v-if="!addedFieldIds.includes('fa00154a-4a78-43df-9ad7-bb0526ce7733')"
+            class="centered field-border"
+          >
+            <p style="margin-left: 0.5rem; font-weight: bold">
+              Status<span style="color: #fa646a; font-size: 0.75rem"> (required)</span>
+            </p>
+
+            <img
+              src="@/assets/images/unlinked.png"
+              alt=""
+              style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+            />
+
+            <button
+              @click="
+                () => {
+                  onAddField(statusField)
+                }
+              "
+              :class="
+                addedFieldIds.includes('33be554d-99ea-4fae-b683-d02ce10b1988')
+                  ? 'default_button bouncy'
+                  : 'default_button'
+              "
+            >
+              Status
+            </button>
+          </div>
+        </div>
+
+        <div v-if="resource === 'Account'">
+          <div
+            v-if="!addedFieldIds.includes('7b4ea5b0-7ba1-41b8-b398-1955461d9041')"
+            class="centered field-border"
+          >
+            <p style="margin-left: 0.5rem; font-weight: bold">
+              Account Name <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+            </p>
+
+            <img
+              src="@/assets/images/unlinked.png"
+              alt=""
+              style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+            />
+
+            <button
+              @click="
+                () => {
+                  onAddField(accountNameField)
+                }
+              "
+              class="default_button bouncy"
+            >
+              Account Name
+            </button>
+          </div>
+        </div>
 
         <div v-if="resource === 'Opportunity'">
           <div
@@ -494,6 +592,16 @@
             &nbsp;
             <p>Account Name</p>
           </div>
+          <div v-else-if="resource === 'Lead'" class="recommendations">
+            <p>Title,</p>
+            &nbsp;
+            <p>Email,</p>
+            &nbsp;
+            <p>Phone</p>
+          </div>
+          <div v-else class="recommendations">
+            <p>Account Type</p>
+          </div>
           <DropDownSearch
             :items="formFields.list.filter((field) => !addedFieldIds.includes(field.id))"
             displayKey="referenceDisplayLabel"
@@ -530,7 +638,7 @@
             "
             class="default_button"
           >
-            Add More Fields
+            Add Fields
           </button>
         </div>
 
@@ -556,16 +664,70 @@
             "
             class="default_button"
           >
-            Add More Fields
+            Add Fields
           </button>
           <span style="color: #beb5cc; font-size: 0.85rem; margin-top: 0.25rem"
             >(Recommended!)</span
           >
         </div>
 
+        <div
+          v-else-if="
+            resource === 'Lead' &&
+            !addingFields &&
+            addedFieldIds.includes('3725c328-aead-404a-bb8e-6fe697dbac31') &&
+            addedFieldIds.includes('33be554d-99ea-4fae-b683-d02ce10b1988') &&
+            addedFieldIds.includes('fa00154a-4a78-43df-9ad7-bb0526ce7733')
+          "
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            margin-top: 0.5rem;
+          "
+        >
+          <button
+            @click="
+              () => {
+                addingFields = !addingFields
+              }
+            "
+            class="default_button"
+          >
+            Add Fields
+          </button>
+        </div>
+
+        <div
+          v-else-if="
+            resource === 'Account' &&
+            !addingFields &&
+            addedFieldIds.includes('7b4ea5b0-7ba1-41b8-b398-1955461d9041')
+          "
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            margin-top: 0.5rem;
+          "
+        >
+          <button
+            @click="
+              () => {
+                addingFields = !addingFields
+              }
+            "
+            class="default_button"
+          >
+            Add Fields
+          </button>
+        </div>
+
         <div class="example--footer">
           <PulseLoadingSpinnerButton
-            v-if="resource === 'Opportunity'"
+            v-if="resource === 'Opportunity' && !productSelected"
             @click="onSave"
             class="primary-button"
             :class="
@@ -600,6 +762,56 @@
             text="Save"
             :loading="savingForm"
             :disabled="!addedFieldIds.includes('de1c5d78-d608-4435-95c5-a5af625666b3')"
+          />
+
+          <PulseLoadingSpinnerButton
+            v-if="resource === 'Opportunity' && productSelected"
+            @click="goToProducts"
+            class="primary-button"
+            :class="
+              !(
+                addedFieldIds.includes('b3cebfa0-76bb-4639-9cc3-cd40541ef80e') &&
+                addedFieldIds.includes('8d41aaa1-422b-425f-8b57-a9c6a949a36c') &&
+                addedFieldIds.includes('87fcf847-4072-46b7-9f64-e91fa99e8354')
+              )
+                ? 'primary-button'
+                : 'primary-button bouncy'
+            "
+            text="Save"
+            :loading="savingForm"
+            :disabled="
+              !(
+                addedFieldIds.includes('b3cebfa0-76bb-4639-9cc3-cd40541ef80e') &&
+                addedFieldIds.includes('8d41aaa1-422b-425f-8b57-a9c6a949a36c') &&
+                addedFieldIds.includes('87fcf847-4072-46b7-9f64-e91fa99e8354')
+              )
+            "
+          />
+
+          <PulseLoadingSpinnerButton
+            v-if="resource === 'OpportunityLineItem'"
+            @click="onSave"
+            class="primary-button"
+            :class="
+              !(
+                addedFieldIds.includes('66a5b96f-e472-4e73-9393-6dfdaae4764e') &&
+                addedFieldIds.includes('e90650f2-473b-4b78-bb65-902e6a7bb7dc') &&
+                addedFieldIds.includes('a7f7f7e2-afd6-4fc8-9575-71e219f883eb') &&
+                addedFieldIds.includes('28dc4559-0d1b-4ecb-a356-58002e3a7020')
+              )
+                ? 'primary-button'
+                : 'primary-button bouncy'
+            "
+            text="Save"
+            :loading="savingForm"
+            :disabled="
+              !(
+                addedFieldIds.includes('66a5b96f-e472-4e73-9393-6dfdaae4764e') &&
+                addedFieldIds.includes('e90650f2-473b-4b78-bb65-902e6a7bb7dc') &&
+                addedFieldIds.includes('a7f7f7e2-afd6-4fc8-9575-71e219f883eb') &&
+                addedFieldIds.includes('28dc4559-0d1b-4ecb-a356-58002e3a7020')
+              )
+            "
           />
         </div>
       </div>
@@ -802,7 +1014,6 @@ export default {
       actionChoices: [],
       loadingMeetingTypes: false,
       requiredFields: [],
-      canContinue: false,
       stageField: {
         length: 255,
         id: '8d41aaa1-422b-425f-8b57-a9c6a949a36c',
@@ -839,6 +1050,46 @@ export default {
         value: '',
         displayValue: '',
         referenceDisplayLabel: 'Name',
+        filterable: 'true',
+        order: 2,
+        includeInRecap: true,
+      },
+      statusField: {
+        length: 255,
+        id: 'fa00154a-4a78-43df-9ad7-bb0526ce7733',
+        apiName: 'Status',
+        custom: false,
+        createable: true,
+        dataType: 'Picklist',
+        label: 'Status',
+        reference: 'false',
+        referenceToInfos: [],
+        updateable: true,
+        required: true,
+        unique: false,
+        value: '',
+        displayValue: '',
+        referenceDisplayLabel: 'Status',
+        filterable: 'true',
+        order: 4,
+        includeInRecap: true,
+      },
+      accountNameField: {
+        length: 255,
+        id: '7b4ea5b0-7ba1-41b8-b398-1955461d9041',
+        apiName: 'Name',
+        custom: false,
+        createable: true,
+        dataType: 'String',
+        label: 'Account Name',
+        reference: 'false',
+        referenceToInfos: [],
+        updateable: true,
+        required: true,
+        unique: false,
+        value: '',
+        displayValue: '',
+        referenceDisplayLabel: 'Account Name',
         filterable: 'true',
         order: 2,
         includeInRecap: true,
@@ -950,6 +1201,9 @@ export default {
       },
     },
   },
+  mounted() {
+    console.log(this.formFields)
+  },
   computed: {
     orderedStageForm() {
       let forms = []
@@ -988,6 +1242,10 @@ export default {
     this.getActionChoices()
   },
   methods: {
+    goToProducts() {
+      this.onSave()
+      this.$router.push({ name: 'ProductForm' })
+    },
     lowerCase(word1, word2) {
       return (word1 + ' ' + word2)
         .toLowerCase()
@@ -997,10 +1255,6 @@ export default {
     },
     productSelect() {
       this.productSelected = !this.productSelected
-    },
-    changeResource() {
-      this.resource = 'Products'
-      this.formType = 'CREATE'
     },
     getActionChoices() {
       this.loadingMeetingTypes = true
@@ -1181,11 +1435,7 @@ export default {
         })
         .finally(() => {
           this.savingForm = false
-          this.canContinue = true
         })
-      if (this.productSelected) {
-        this.addingProducts = !this.addingProducts
-      }
     },
   },
 }

@@ -2,22 +2,20 @@
   <div class="update_opportunity">
     <div class="opportunity_title">
       <h2 style="border-bottom: 3px solid #199e54; padding-bottom: 0.5rem; color: black">
-        Update <span>Leads</span>
+        Products
       </h2>
-      <p style="color: #5d5e5e; margin-top: -0.5rem">
-        Select the Lead fields you’d like to display and update via Slack
-      </p>
+      <p style="color: #5d5e5e; margin-top: -0.5rem">products.............................</p>
     </div>
     <div class="box__content--expanded">
       <CustomSlackForm
         :show-validations="showValidations"
-        :formType="UPDATE"
+        :formType="CREATE"
         :customForm="
           (this.selectedForm = this.allForms.find(
-            (f) => f.resource == LEAD && f.formType == UPDATE,
+            (f) => f.resource == OPPORTUNITYLINEITEM && f.formType == CREATE,
           ))
         "
-        :resource="LEAD"
+        :resource="OPPORTUNITYLINEITEM"
         v-on:update:selectedForm="updateForm($event)"
         :loading="formFields.refreshing"
         :stageForms="formStages"
@@ -39,7 +37,7 @@ import { SOBJECTS_LIST } from '@/services/salesforce'
 import * as FORM_CONSTS from '@/services/slack'
 
 export default {
-  name: 'UpdateLeads',
+  name: 'ProductForm',
   components: { CustomSlackForm, PulseLoadingSpinnerButton, DropDownSearch, Paginator },
   data() {
     return {
@@ -60,7 +58,6 @@ export default {
       loadingStages: false,
       formType: null,
       search: '',
-      LEAD: 'Lead',
       fieldParam: null,
       loading: false,
       formFields: CollectionManager.create({ ModelClass: SObjectField }),
@@ -100,6 +97,9 @@ export default {
     currentStagesWithForms() {
       return this.formStages.map((sf) => sf.stage)
     },
+  },
+  mounted() {
+    console.log(this.selectedForm)
   },
   methods: {
     async refreshFormStages() {

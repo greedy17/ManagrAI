@@ -469,7 +469,7 @@
               style="height: 2rem; cursor: pointer"
             /> -->
             </div>
-            <p v-else="hasOutreachIntegration">Outreach is connected!</p>
+            <p v-else>Outreach is connected!</p>
           </div>
         </div>
 

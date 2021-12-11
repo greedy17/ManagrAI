@@ -15,44 +15,23 @@
         </div>
       </router-link>
 
-      <!-- <div
-        v-if="isOnboarding && user.activatedManagrConfigs.includes('Update Forecast')"
-        style="margin-bottom: -0.5rem"
-        class="bouncy"
-        id="toolTip"
-      >
-        <p>
-          Onboarding complete! We'll take it from here. Visit this tab to run, edit, or delete
-          workflows. Stay here to activate the rest.
-        </p>
-        <div id="tailShadow"></div>
-        <div id="tail1"></div>
-        <div id="tail2"></div>
-      </div> -->
+      <router-link exact-active-class="active" :to="{ name: 'Custom' }">
+        <div class="row">
+          <img
+            src="@/assets/images/optional.png"
+            style="height: 1.1rem; margin-right: 0.5rem"
+            alt=""
+          />
+          <h3>Optional</h3>
+        </div>
+      </router-link>
+
       <router-link exact-active-class="active" :to="{ name: 'ValidationRules' }">
         <div class="row">
           <img src="@/assets/images/gavel.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
           <h3>Validation Rules</h3>
         </div>
       </router-link>
-
-      <router-link exact-active-class="active" :to="{ name: 'Custom' }">
-        <div class="row">
-          <img src="@/assets/images/build.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
-          <h3>Custom</h3>
-        </div>
-      </router-link>
-
-      <!-- <router-link exact-active-class="active" :to="{ name: 'Saved' }">
-        <div class="row">
-          <img
-            src="@/assets/images/star.png"
-            style="height: 1.25rem; margin-right: 0.5rem"
-            alt=""
-          />
-          <h3>Saved</h3>
-        </div>
-      </router-link> -->
     </div>
 
     <router-view :key="$route.fullPath"></router-view>
