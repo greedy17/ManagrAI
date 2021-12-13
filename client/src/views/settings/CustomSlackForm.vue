@@ -1190,7 +1190,8 @@ export default {
       immediate: true,
       deep: true,
       handler(val) {
-        if (val && val.fields) {
+        console.log(val)
+        if (val && val.fields.length) {
           this.addedFields = [...val.fieldsRef]
           if (this.formType == 'UPDATE') {
             let currentFormFields = this.addedFields.map((field) => {
@@ -1507,6 +1508,8 @@ export default {
       let fields = new Set([...this.addedFields.map((f) => f.id)])
       fields = Array.from(fields).filter((f) => !this.removedFields.map((f) => f.id).includes(f))
       let fields_ref = this.addedFields.filter((f) => fields.includes(f.id))
+      console.log(fields)
+      console.log(fields_ref)
       SlackOAuth.api
         .postOrgCustomForm({
           ...this.customForm,
@@ -1516,6 +1519,7 @@ export default {
         })
         .then((res) => {
           this.$emit('update:selectedForm', res)
+          console.log(res)
         })
         .finally(() => {
           this.savingForm = false

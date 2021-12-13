@@ -6,14 +6,21 @@
       </h2>
       <p style="color: #5d5e5e; margin-top: -0.5rem">products.............................</p>
     </div>
+
     <div class="box__content--expanded">
       <CustomSlackForm
         :show-validations="showValidations"
         :formType="CREATE"
         :customForm="
-          (this.selectedForm = this.allForms.find(
-            (f) => f.resource == OPPORTUNITYLINEITEM && f.formType == CREATE,
-          ))
+          (this.selectedForm = {
+            config: {},
+            fields: [],
+            fields_ref: [],
+            form_type: 'CREATE',
+            organization: '',
+            resource: 'OpportunityLineItem',
+            stage: '',
+          })
         "
         :resource="OPPORTUNITYLINEITEM"
         v-on:update:selectedForm="updateForm($event)"

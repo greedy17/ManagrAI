@@ -1,6 +1,11 @@
 <template>
   <div class="customizations">
-    <h1 style="color: red; text-align: center">IN PROGRESS, TESTING</h1>
+    <div style="display: flex; align-items: center; flex-direction: column">
+      <h2 style="color: black">Stage + Validation Rules</h2>
+      <p style="color: #5d5e5e; margin-top: -0.5rem" class="sub__">
+        Map field based validation rules to your desired stage
+      </p>
+    </div>
   </div>
 </template>
 
@@ -50,6 +55,7 @@ export default {
   flex-direction: column;
   align-items: center;
   margin-top: 4rem;
+  margin-left: 14vw;
   &__cards {
     display: flex;
     flex-wrap: wrap;
