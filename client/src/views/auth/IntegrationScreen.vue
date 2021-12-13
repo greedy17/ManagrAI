@@ -419,7 +419,7 @@
           <div class="card__header">
             <img style="height: 1.5rem" src="@/assets/images/salesloft.svg" />
           </div>
-          <p class="card-text">Add Contacts to cadences</p>
+          <p class="card-text">Add Contacts to Cadences</p>
           <div class="card__body">
             <PulseLoadingSpinnerButton
               v-if="!hasSalesloftIntegration"
@@ -448,7 +448,7 @@
           <p class="card-text">Add Contacts to Sequences</p>
           <div class="card__body">
             <PulseLoadingSpinnerButton
-              v-if="!hasOutreachIntegration && user.isAdmin"
+              v-if="!hasOutreachIntegration"
               :disabled="hasOutreachIntegration"
               @click="onGetAuthLink('OUTREACH')"
               style="margin-left: 1rem; cursor: pointer"
@@ -456,20 +456,15 @@
               text="Connect"
               :loading="generatingToken && selectedIntegration == 'OUTREACH'"
             ></PulseLoadingSpinnerButton>
-            <div v-else-if="hasOutreachIntegration && user.isAdmin">
-              <img
-                src="@/assets/images/unplug.png"
-                :loading="generatingToken && selectedIntegration == 'OUTREACH'"
-                @click="onRevoke('OUTREACH')"
-                style="height: 2rem; cursor: pointer"
-              />
-              <!-- <img
-              src="@/assets/images/refresh.png"
-              :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
-              style="height: 2rem; cursor: pointer"
-            /> -->
+            <div v-else class="card__body">
+              <div class="dropdown-container" tabindex="1">
+                <div class="three-dots"></div>
+                <div class="dropdown">
+                  <button @click="onRevoke('OUTREACH')" class="revoke-button">revoke</button>
+                  <button @click="onGetAuthLink('OUTREACH')" class="plain-button">refresh</button>
+                </div>
+              </div>
             </div>
-            <p v-else>Outreach is connected!</p>
           </div>
         </div>
 
@@ -619,6 +614,11 @@ export default {
       this.integrated = !this.integrated
     },
     async onGetAuthLink(integration) {
+      integration === 'NYLAS'
+        ? confirm(
+            'You must check all permission boxes in order for Managr to successfully connect to your calendar!',
+          )
+        : ''
       this.generatingToken = true
       this.selectedIntegration = integration
       const modelClass = this.selectedIntegrationSwitcher
@@ -642,11 +642,13 @@ export default {
       }
     },
     async onIntegrateSlack() {
-      const confirmation = confirm(
-        'Integrating Managr to your slack workspace will request access to a channel (you can choose a new one or an existing one) we will post a message letting the members of that channel know they can now integrate their Slack accounts',
-      )
-      if (!confirmation) {
-        return
+      if (this.user.isAdmin) {
+        const confirmation = confirm(
+          'Integrating Managr to your slack workspace will request access to a channel (you can choose a new one or an existing one) we will post a message letting the members of that channel know they can now integrate their Slack accounts',
+        )
+        if (!confirmation) {
+          return
+        }
       }
       this.generatingToken = true
       if (!this.orgHasSlackIntegration) {
@@ -931,6 +933,7 @@ export default {
     display: flex;
     align-items: flex-end;
     justify-content: flex-end;
+    margin-top: auto;
   }
   &__start {
     display: flex;

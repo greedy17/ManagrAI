@@ -137,7 +137,7 @@ def check_reminders(user_id):
                     logger.info(f"UNCOMPLETED MEETINGS FOR {user.email}: {meetings}")
                     if meetings["status"]:
                         emit_process_send_meeting_reminder(str(user.id), meetings["not_completed"])
-                elif key == core_consts.MEETING_REMINDER_MANAGER:
+                elif key == core_consts.MEETING_REMINDER_MANAGER and user.user_level == "Manager":
                     meetings = check_for_uncompleted_meetings(user.id, True)
                     if meetings["status"]:
                         emit_process_send_manager_reminder(str(user.id), meetings["not_completed"])

@@ -34,7 +34,7 @@ def sync_helper(auth_id):
         emit_sync_outreach_prospects,
     ]
     outreach_account = OutreachAccount.objects.get(id=auth_id)
-    v_name = uuid.uuid4()
+    v_name = str(outreach_account.id)
     for step in sync_steps:
         attempts = 1
         step(str(outreach_account.id), f"{step.__name__}_{v_name}")

@@ -59,6 +59,7 @@ class CustomContact(admin.ModelAdmin):
         "imported_by",
         "last_edited",
     )
+    readonly_fields = ["secondary_data", "imported_by", "account"]
 
 
 class CustomProduct2(admin.ModelAdmin):

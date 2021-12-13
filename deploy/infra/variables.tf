@@ -138,6 +138,12 @@ variable "environments" {
     gong_client_id          = string
     gong_secret             = string
     gong_redirect_uri       = string
+
+    use_outreach            = bool
+    outreach_base_url       = string
+    outreach_client_id      = string
+    outreach_secret         = string
+    outreach_redirect_uri   = string
   }))
 }
 
@@ -189,7 +195,7 @@ variable "scheduled_tasks" {
     {
       name       = "syncsalesloftaccounts"
       command    = "initsalesloftsync"
-      cron       = "cron(0 * * * ? *)"
+      cron       = "cron(30 * * * ? *)"
       task_count = 1
     },
     {
@@ -199,9 +205,15 @@ variable "scheduled_tasks" {
       task_count = 1
     },
     {
+      name       = "syncoutreachcalls"
+      command    = "initoutreachsync"
+      cron       = "cron(30 * * * ? *)"
+      task_count = 1
+    },
+    {
       name       = "runreminders"
       command    = "triggerreminders"
-      cron       = "cron(30 * * * ? *)"
+      cron       = "cron(*/30 * * * ? *)"
       task_count = 1
     },
   ]
