@@ -30,6 +30,7 @@ from rest_framework.decorators import (
 )
 
 from . import constants as outreach_consts
+from .cron import queue_outreach_sync
 from .models import (
     OutreachAccount,
     OutreachAccountAdapter,
@@ -61,6 +62,8 @@ def get_outreach_authentication(request):
         serializer = OutreachAccountSerializer(data=res.as_dict)
     serializer.is_valid(raise_exception=True)
     serializer.save()
+    outreach_acc = OutreachAccount.objects.filter(user=request.user).first()
+    queue_outreach_sync(outreach_acc.id)
     return Response(data={"success": True})
 
 
