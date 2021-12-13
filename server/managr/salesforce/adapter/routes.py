@@ -9,5 +9,6 @@ routes = {
     sf_consts.RESOURCE_SYNC_PRODUCT2: model_adapters.Product2Adapter,
     sf_consts.RESOURCE_SYNC_PRICEBOOK2: model_adapters.Pricebook2Adapter,
     sf_consts.RESOURCE_SYNC_PRICEBOOKENTRY: model_adapters.PricebookEntryAdapter,
+    sf_consts.RESOURCE_SYNC_OPPORTUNITYLINEITEM: model_adapters.OpportunityLineItemAdapter,
     sf_consts.SALESFORCE_RESOURCE_TASK: model_adapters.TaskAdapter,
 }

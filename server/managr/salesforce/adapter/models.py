@@ -1153,6 +1153,7 @@ class Pricebook2Adapter:
         self.secondary_data = kwargs.get("secondary_data", None)
         self.integration_source = kwargs.get("integration_source", None)
         self.integration_id = kwargs.get("integration_id", None)
+        self.organization = kwargs.get("organization", None)
 
     integration_mapping = dict(
         # mapping of 'standard' data when sending to the SF API
@@ -1207,6 +1208,7 @@ class Product2Adapter:
         self.secondary_data = kwargs.get("secondary_data", None)
         self.integration_source = kwargs.get("integration_source", None)
         self.integration_id = kwargs.get("integration_id", None)
+        self.organization = kwargs.get("organization", None)
 
     integration_mapping = dict(
         # mapping of 'standard' data when sending to the SF API
@@ -1309,3 +1311,71 @@ class PricebookEntryAdapter:
         formatted_data["imported_by"] = str(user_id)
 
         return PricebookEntryAdapter(**formatted_data)
+
+
+class OpportunityLineItemAdapter:
+    def __init__(self, **kwargs):
+        self.name = kwargs.get("name", None)
+        self.description = kwargs.get("description", None)
+        self.unit_price = kwargs.get("unit_price", None)
+        self.total_price = kwargs.get("total_price", None)
+        self.quantity = kwargs.get("quantity", None)
+        self.product = kwargs.get("product", None)
+        self.pricebook = kwargs.get("pricebook", None)
+        self.opportunity = kwargs.get("opportunity", None)
+        self.imported_by = kwargs.get("imported_by", None)
+        self.secondary_data = kwargs.get("secondary_data", None)
+        self.integration_source = kwargs.get("integration_source", None)
+        self.integration_id = kwargs.get("integration_id", None)
+        self.external_pricebook = kwargs.get("external_pricebook", None)
+        self.external_product = kwargs.get("external_product", None)
+        self.external_opportunity = kwargs.get("external_opportunity", None)
+
+    integration_mapping = dict(
+        # mapping of 'standard' data when sending to the SF API
+        integration_id="Id",
+        name="Name",
+        unit_price="UnitPrice",
+        external_product="Product2Id",
+        external_pricebook="Pricebook2Id",
+        external_opportunity="OpportunityId",
+        description="Description",
+        total_price="TotalPrice",
+        quantity="Quantity",
+    )
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+    @staticmethod
+    def get_child_rels():
+        return {}
+
+    @staticmethod
+    def additional_filters():
+        """pass custom additional filters to the url"""
+        return ["AND IsDeleted = false"]
+
+    @staticmethod
+    def reverse_integration_mapping():
+        """mapping of 'standard' data when sending from the SF API"""
+        reverse = {}
+        for k, v in OpportunityLineItemAdapter.integration_mapping.items():
+            reverse[v] = k
+        return reverse
+
+    @staticmethod
+    def from_api(data, user_id, *args, **kwargs):
+        formatted_data = dict()
+        mapping = OpportunityLineItemAdapter.reverse_integration_mapping()
+        formatted_data = dict(secondary_data={})
+        for k, v in data.items():
+            if k in mapping:
+                formatted_data[mapping.get(k)] = v
+
+            formatted_data["secondary_data"][k] = v
+        formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_SALESFORCE
+        formatted_data["imported_by"] = str(user_id)
+
+        return OpportunityLineItemAdapter(**formatted_data)

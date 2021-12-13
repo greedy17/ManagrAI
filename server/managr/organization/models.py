@@ -1,37 +1,20 @@
-import json
-
-
 from django.db import models
-from django.core import serializers
-from django.db.models import Sum, Avg, Q
-from django.db.models.functions import Concat
-from django.contrib.auth.models import AbstractUser, BaseUserManager
-from django.utils import timezone
+from django.db.models import Q
 from django.contrib.postgres.fields import JSONField, ArrayField
 
-from rest_framework.authtoken.models import Token
-from rest_framework.exceptions import ValidationError
-
-
 from managr.salesforce.adapter.models import (
-    SalesforceAuthAccountAdapter,
-    OpportunityAdapter,
     Product2Adapter,
     Pricebook2Adapter,
     ContactAdapter,
     AccountAdapter,
     PricebookEntryAdapter,
+    OpportunityLineItemAdapter,
 )
-from managr.utils.numbers import format_phone_number
 from managr.utils.misc import datetime_appended_filepath
-from managr.core.models import UserManager, TimeStampModel, IntegrationModel, User
+from managr.core.models import TimeStampModel, IntegrationModel, User
 from managr.salesforce.exceptions import ResourceAlreadyImported
-from managr.core import constants as core_consts
-from managr.core import nylas as email_client
 from managr.slack.helpers import block_builders
 from managr.opportunity import constants as opp_consts
-from managr.slack import constants as slack_consts
-from managr.slack.models import OrgCustomSlackForm
 from . import constants as org_consts
 
 
@@ -413,6 +396,9 @@ class Pricebook2(TimeStampModel, IntegrationModel):
     name = models.CharField(max_length=100)
     description = models.TextField(max_length=225)
     last_viewed_date = models.DateTimeField(null=True)
+    organization = models.ForeignKey(
+        "organization.Organization", on_delete=models.CASCADE, related_name="pricebooks", null=True
+    )
     secondary_data = JSONField(
         default=dict,
         null=True,
@@ -481,6 +467,9 @@ class Product2(TimeStampModel, IntegrationModel):
         null=True,
         help_text="All non primary fields that are on the model each org may have its own",
         max_length=500,
+    )
+    organization = models.ForeignKey(
+        "organization.Organization", on_delete=models.CASCADE, related_name="products", null=True
     )
     objects = Product2QuerySet.as_manager()
 
@@ -567,3 +556,87 @@ class PricebookEntry(TimeStampModel, IntegrationModel):
         data = self.__dict__
         data["id"] = str(data["id"])
         return PricebookEntryAdapter(**data)
+
+
+class OpportunityLineItemQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.is_active:
+            return self.filter(organization=user.organization)
+        else:
+            return None
+
+
+class OpportunityLineItem(TimeStampModel, IntegrationModel):
+    name = models.CharField(max_length=50)
+    description = models.CharField(max_length=255, blank=True)
+    external_pricebook = models.CharField(
+        max_length=255, blank=True, help_text="value from the integration"
+    )
+    external_product = models.CharField(
+        max_length=255, blank=True, help_text="value from the integration"
+    )
+    external_opportunity = models.CharField(
+        max_length=255, blank=True, help_text="value from the integration"
+    )
+    pricebook = models.ForeignKey(
+        "organization.Pricebook2", related_name="opportunity_line_item", on_delete=models.CASCADE,
+    )
+    product = models.ForeignKey(
+        "organization.Product2", related_name="opportunity_line_item", on_delete=models.CASCADE,
+    )
+    opportunity = models.ForeignKey(
+        "opportunity.Opportunity", related_name="opportunity_line_item", on_delete=models.CASCADE,
+    )
+    unit_price = models.DecimalField(max_digits=13, decimal_places=2, default=0.00, null=True,)
+    quantity = models.DecimalField(max_digits=13, decimal_places=2, default=0.00, null=True,)
+    total_price = models.DecimalField(max_digits=13, decimal_places=2, default=0.00, null=True,)
+    secondary_data = JSONField(
+        default=dict,
+        null=True,
+        help_text="All non primary fields that are on the model each org may have its own",
+        max_length=500,
+    )
+    objects = OpportunityLineItemQuerySet.as_manager()
+
+    class Meta:
+        ordering = ["-datetime_created"]
+
+    @property
+    def adapter_class(self):
+        data = self.__dict__
+        data["id"] = str(data["id"])
+        return OpportunityLineItemAdapter(**data)
+
+    def update_in_salesforce(self, data):
+        if self.opportunity.owner and hasattr(self.opportunity.owner, "salesforce_account"):
+            token = self.owner.salesforce_account.access_token
+            base_url = self.owner.salesforce_account.instance_url
+            object_fields = self.owner.salesforce_account.object_fields.filter(
+                salesforce_object="Account"
+            ).values_list("api_name", flat=True)
+            res = AccountAdapter.update_account(
+                data, token, base_url, self.integration_id, object_fields
+            )
+            self.is_stale = True
+            self.save()
+            return res
+
+    def create_in_salesforce(self, data=None, user_id=None):
+        user = User.objects.get(id=user_id)
+        if user and hasattr(user, "salesforce_account"):
+            token = user.salesforce_account.access_token
+            base_url = user.salesforce_account.instance_url
+            object_fields = user.salesforce_account.object_fields.filter(
+                salesforce_object="OpportunityLineItem"
+            ).values_list("api_name", flat=True)
+            res = OpportunityLineItemAdapter.create_account(
+                data, token, base_url, self.integration_id, object_fields
+            )
+            from managr.salesforce.routes import routes
+
+            serializer = routes["OpportunityLineItem"]["serializer"](data=res.as_dict)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return serializer.instance
