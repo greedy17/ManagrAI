@@ -221,6 +221,9 @@ class OrgCustomSlackFormInstance(TimeStampModel):
     update_source = models.CharField(
         max_length=30, blank=True, help_text="On update forms, sets the source of the update"
     )
+    alert_instance_id = models.ForeignKey(
+        "alerts.AlertInstance", models.SET_NULL, related_name="form_instance", null=True, blank=True
+    )
     objects = OrgCustomSlackFormInstanceQuerySet.as_manager()
 
     def __str__(self):
@@ -298,9 +301,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         user_fields = self.get_user_fields()
         form_values = self.generate_form_values(data)
         form_blocks = []
-        logger.info(user_fields)
         for field in user_fields:
-            logger.info(field)
             val = form_values.get(field.api_name, None)
             if field.is_public:
                 # pass in user as a kwarg
