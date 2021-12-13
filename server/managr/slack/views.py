@@ -2,7 +2,7 @@ import json
 import logging
 from urllib.parse import urlencode
 import uuid
-
+import pdb
 from datetime import datetime
 from managr.utils import sites as site_utils
 
@@ -45,6 +45,7 @@ from managr.salesforce.models import SalesforceAuthAccountAdapter
 from managr.core.serializers import UserSerializer
 from managr.core.models import User
 from managr.api.decorators import slack_api_exceptions
+from managr.organization.models import Organization
 
 from .models import (
     OrganizationSlackIntegration,
@@ -488,8 +489,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
         """Handle POST action of the custom Slack form endpoint."""
         organization = request.user.organization
 
-        print("REQUEST.DATA:", request.data)
-
+        logger.info("REQUEST.DATA:", request.data)
         # Make updates - get or create custom_slack_form
         try:
             instance = organization.custom_slack_form
@@ -537,6 +537,9 @@ class SlackFormsViewSet(
             instance.fields.add(field, through_defaults={"order": i})
 
         instance.save()
+        if request.data["resource"] == "OpportunityLineItem":
+            org = Organization.objects.get(id=request.data["organization"])
+            org.update_has_settings("products")
         return Response(serializer.data)
 
     def update(self, request, *args, **kwargs):
