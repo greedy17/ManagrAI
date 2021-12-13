@@ -192,7 +192,6 @@ def meeting_prep(processed_data, user_id, send_slack=True):
     # Combine the sets of participants. Filter out empty emails, meeting owner, and any
     # emails with domains that match the owner, which are teammates of the owner.
     for p in all_participants:
-        # print(p)
         if not re.search(remove_users_with_these_domains_regex, p.get("email", "")) and p.get(
             "email", ""
         ) not in ["", None]:
@@ -203,7 +202,6 @@ def meeting_prep(processed_data, user_id, send_slack=True):
                 memo[p.get("email")] = len(participants)
                 participants.append(p)
 
-    # print(participants)
     contact_forms = []
     if len(participants):
         # Reduce to set of unique participant emails

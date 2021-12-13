@@ -622,7 +622,6 @@ def process_zoom_meeting_attach_resource(payload, context):
         meetings = MeetingPrepInstance.objects.filter(user=user.id).filter(
             datetime_created__range=(previous_day, next_day)
         )
-        print(meetings)
         blocks_set = [
             block_builders.header_block("Upcoming Meetings For Today!"),
             {"type": "divider"},
@@ -685,7 +684,7 @@ def process_update_meeting_contact(payload, context):
                 workflow.participants,
             )
         )
-        form = OrgCustomSlackFormInstance.objects.get(id=contact["form"])
+        form = OrgCustomSlackFormInstance.objects.get(id=contact["_form"])
     else:
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
         contact = dict(
@@ -704,28 +703,34 @@ def process_update_meeting_contact(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     trigger_id = payload["trigger_id"]
     view_id = context.get(str("current_view_id"))
+    new_contact = {
+        **contact,
+        **adapter.as_dict,
+        "id": contact.get("id", None),
+        "__has_changes": True,
+    }
     if type:
+        print(adapter.as_dict)
+        # contact_model = Contact.objects.get(id=)
+        # serializer = ContactSerializer()
+        part_index = None
+        for index, participant in enumerate(workflow.participants):
+            if participant["_tracking_id"] == new_contact["_tracking_id"]:
+                part_index = index
+                break
+        workflow.participants = [
+            *workflow.participants[:part_index],
+            new_contact,
+            *workflow.participants[part_index + 1 :],
+        ]
+        workflow.save()
         user = User.objects.get(id=user_id)
-        serializer = ContactSerializer(data=adapter.as_dict, instance=form)
-        if serializer.is_valid():
-            serializer.save()
         org = user.organization
         access_token = org.slack_integration.access_token
-        return {"response_action": "clear"}
-        show_meeting_context = {
-            "original_message_channel": context.get("channel"),
-            "original_message_timestamp": context.get("timestamp"),
-            "w": context.get("w"),
-            "type": type,
-            "meeting_forms": context.get("forms"),
-        }
+        show_meeting_context = {"w": context.get("w"), "type": workflow.resource_type}
+        # return {"response_action": "clear"}
     else:
-        new_contact = {
-            **contact,
-            **adapter.as_dict,
-            "id": contact.get("id", None),
-            "__has_changes": True,
-        }
+
         # replace the contact in the participants list
         part_index = None
         for index, participant in enumerate(workflow.meeting.participants):

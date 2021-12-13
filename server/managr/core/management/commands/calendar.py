@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand, CommandError
 from managr.salesforce.models import SalesforceAuthAccount
 from managr.core.models import User
 
-from managr.core.cron  import _send_calendar_details, _process_calendar_details
+from managr.core.cron import _send_calendar_details, _process_calendar_details
 
 
 class Command(BaseCommand):
@@ -19,10 +19,12 @@ class Command(BaseCommand):
                 user = User.objects.filter(email=t).first()
                 if not hasattr(user, "nylas_account"):
                     self.stdout.write(
-                        self.style.ERROR("User does not have a nylas account {}".format(user.email,))
+                        self.style.ERROR(
+                            "User does not have a nylas account {}".format(user.email,)
+                        )
                     )
                 auth_id = str(user.nylas_account.auth_account.id)
-                
+
                 _send_calendar_details(auth_id)
                 self.stdout.write(
                     self.style.SUCCESS(
@@ -34,7 +36,6 @@ class Command(BaseCommand):
             for user in users:
                 if hasattr(user, "nylas"):
                     _send_calendar_details(user.id)
-                    _process_calendar_details(user.id)
             self.stdout.write(
                 self.style.SUCCESS("Successfully initiated nylas sync for all accounts"),
             )

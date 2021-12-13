@@ -301,7 +301,6 @@ def edit_meeting_contacts_block_set(context):
                 workflow.participants,
             )
         )
-        print(workflow.participants)
     else:
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
         meeting = workflow.meeting
@@ -358,7 +357,6 @@ def edit_meeting_contacts_block_set(context):
             )
         ]
     else:
-        print(contact)
         slack_form = slack_form.generate_form(contact["secondary_data"])
         return slack_form
 

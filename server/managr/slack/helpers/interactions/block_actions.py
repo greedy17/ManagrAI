@@ -179,8 +179,6 @@ def process_edit_meeting_contact(payload, context):
         "tracking_id": context.get("tracking_id"),
         "current_view_id": view_id,
     }
-    if type:
-        edit_block_context.update({"type": type})
     private_metadata = {
         "w": context.get("w"),
         "tracking_id": context.get("tracking_id"),
@@ -188,6 +186,9 @@ def process_edit_meeting_contact(payload, context):
         "channel": context.get("channel"),
         "timestamp": context.get("timestamp"),
     }
+    if type:
+        edit_block_context.update({"type": type})
+        private_metadata.update({"type": type})
     access_token = org.slack_integration.access_token
     data = {
         "trigger_id": trigger_id,
