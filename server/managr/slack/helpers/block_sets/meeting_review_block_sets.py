@@ -209,32 +209,50 @@ def meeting_contacts_block_set(context):
         )
         block_sets.append(generate_contact_group(i, contact, sf_account.instance_url))
         # pass meeting id and contact index
-
-        block_sets.append(
-            {
-                "type": "actions",
-                "elements": [
+        if type:
+            if type != "prep":
+                block_sets.append(
                     {
-                        "type": "button",
-                        "text": {"type": "plain_text", "text": "Edit Contact"},
-                        "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
-                        "action_id": action_with_params(
-                            slack_const.ZOOM_MEETING__EDIT_CONTACT, params=params,
-                        ),
-                        "style": "primary",
-                    },
-                    {
-                        "type": "button",
-                        "text": {"type": "plain_text", "text": "Remove From Meeting"},
-                        "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
-                        "action_id": action_with_params(
-                            slack_const.ZOOM_MEETING__REMOVE_CONTACT, params=params,
-                        ),
-                        "style": "danger",
-                    },
-                ],
-            }
-        )
+                        "type": "actions",
+                        "elements": [
+                            {
+                                "type": "button",
+                                "text": {"type": "plain_text", "text": "Edit Contact"},
+                                "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
+                                "action_id": action_with_params(
+                                    slack_const.ZOOM_MEETING__EDIT_CONTACT, params=params,
+                                ),
+                                "style": "primary",
+                            }
+                        ],
+                    }
+                )
+        else:
+            block_sets.append(
+                {
+                    "type": "actions",
+                    "elements": [
+                        {
+                            "type": "button",
+                            "text": {"type": "plain_text", "text": "Edit Contact"},
+                            "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
+                            "action_id": action_with_params(
+                                slack_const.ZOOM_MEETING__EDIT_CONTACT, params=params,
+                            ),
+                            "style": "primary",
+                        },
+                        {
+                            "type": "button",
+                            "text": {"type": "plain_text", "text": "Remove From Meeting"},
+                            "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
+                            "action_id": action_with_params(
+                                slack_const.ZOOM_MEETING__REMOVE_CONTACT, params=params,
+                            ),
+                            "style": "danger",
+                        },
+                    ],
+                }
+            )
 
     if len(contacts_in_sf):
         block_sets.extend(
@@ -261,31 +279,50 @@ def meeting_contacts_block_set(context):
         )
         block_sets.append(generate_contact_group(i, contact, sf_account.instance_url))
         # pass meeting id and contact index
-        block_sets.append(
-            {
-                "type": "actions",
-                "elements": [
+        if type:
+            if type != "prep":
+                block_sets.append(
                     {
-                        "type": "button",
-                        "text": {"type": "plain_text", "text": "Edit Contact"},
-                        "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
-                        "action_id": action_with_params(
-                            slack_const.ZOOM_MEETING__EDIT_CONTACT, params=params,
-                        ),
-                        "style": "primary",
-                    },
-                    {
-                        "type": "button",
-                        "text": {"type": "plain_text", "text": "Remove From Meeting"},
-                        "value": "click_me_123",
-                        "action_id": action_with_params(
-                            slack_const.ZOOM_MEETING__REMOVE_CONTACT, params=params,
-                        ),
-                        "style": "danger",
-                    },
-                ],
-            }
-        )
+                        "type": "actions",
+                        "elements": [
+                            {
+                                "type": "button",
+                                "text": {"type": "plain_text", "text": "Edit Contact"},
+                                "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
+                                "action_id": action_with_params(
+                                    slack_const.ZOOM_MEETING__EDIT_CONTACT, params=params,
+                                ),
+                                "style": "primary",
+                            }
+                        ],
+                    }
+                )
+        else:
+            block_sets.append(
+                {
+                    "type": "actions",
+                    "elements": [
+                        {
+                            "type": "button",
+                            "text": {"type": "plain_text", "text": "Edit Contact"},
+                            "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
+                            "action_id": action_with_params(
+                                slack_const.ZOOM_MEETING__EDIT_CONTACT, params=params,
+                            ),
+                            "style": "primary",
+                        },
+                        {
+                            "type": "button",
+                            "text": {"type": "plain_text", "text": "Remove From Meeting"},
+                            "value": slack_const.ZOOM_MEETING__EDIT_CONTACT,
+                            "action_id": action_with_params(
+                                slack_const.ZOOM_MEETING__REMOVE_CONTACT, params=params,
+                            ),
+                            "style": "danger",
+                        },
+                    ],
+                }
+            )
         block_sets.append({"type": "divider"})
     return block_sets
 

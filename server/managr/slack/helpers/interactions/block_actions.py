@@ -672,7 +672,7 @@ def process_create_or_search_selected(payload, context):
     select_block = block_finder(slack_const.ZOOM_MEETING__ATTACH_RESOURCE_SECTION, previous_blocks)
     if type:
         if select_block:
-            previous_blocks.pop(select_block)
+            previous_blocks.pop(select_block[0])
         prep_block = block_finder(workflow_id, previous_blocks)
         block_sets = get_block_set(
             "attach_resource_interaction", {"w": str(workflow.id), "type": "prep"}
@@ -680,7 +680,6 @@ def process_create_or_search_selected(payload, context):
         previous_blocks.insert(prep_block[0], block_sets[0])
     # create new block including the resource type
     else:
-
         if not select_block:
             block_sets = get_block_set("attach_resource_interaction", {"w": workflow_id})
             previous_blocks.insert(2, block_sets[0])
