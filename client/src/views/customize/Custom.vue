@@ -1,27 +1,5 @@
 <template>
   <div class="customizations">
-    <!-- <ul>
-      <router-link :to="{ name: 'SlackFormSettings' }"
-        >Stage <span style="font-weight: bold">Specific</span>
-      </router-link>
-     
-      <router-link :to="{ name: 'UpdateContacts' }"
-        >Update <span style="font-weight: bold">Contacts</span>
-      </router-link>
-      <router-link :to="{ name: 'CreateAccounts' }"
-        >Create <span style="font-weight: bold">Accounts</span>
-      </router-link>
-      <router-link :to="{ name: 'UpdateAccounts' }"
-        >Update <span style="font-weight: bold">Accounts</span>
-      </router-link>
-      <router-link :to="{ name: 'UpdateLeads' }"
-        >Update <span style="font-weight: bold">Leads</span>
-      </router-link>
-      <router-link :to="{ name: 'CreateLeads' }"
-        >Create <span style="font-weight: bold">Leads</span>
-      </router-link>
-    </ul> -->
-
     <div style="display: flex; align-items: center; flex-direction: column">
       <h2 style="color: black">Optional Field Mapping</h2>
       <p style="color: #5d5e5e; margin-top: -0.5rem" class="sub__">
