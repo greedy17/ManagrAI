@@ -22,11 +22,7 @@
       <div class="collection_fields">
         <div style="margin-bottom: -1rem">
           <div
-            v-if="
-              addedFieldIds.includes('b3cebfa0-76bb-4639-9cc3-cd40541ef80e') &&
-              addedFieldIds.includes('8d41aaa1-422b-425f-8b57-a9c6a949a36c') &&
-              addedFieldIds.includes('87fcf847-4072-46b7-9f64-e91fa99e8354')
-            "
+            v-if="requiredOpportunityFields.every((i) => addedFieldNames.includes(i))"
             style="
               display: flex;
               align-items: center;
@@ -60,37 +56,8 @@
           </div>
         </div>
 
-        <!-- <div>
-          <DropDownSearch
-            :items="formFields.list.filter((field) => !addedFieldIds.includes(field.id))"
-            displayKey="referenceDisplayLabel"
-            valueKey="id"
-            nullDisplay="Select field"
-            searchable
-            :loading="formFields.loadingNextPage"
-            :hasNext="!!formFields.pagination.hasNextPage"
-            v-model="amountValue"
-            @load-more="onFieldsNextPage"
-            @search-term="onSearchFields"
-            @input="
-              (e) => {
-                onAddField(this.formFields.list.filter((field) => field.id === e)[0])
-              }
-            "
-          />
-
-          <PulseLoadingSpinnerButton
-            @click="onSave"
-            class="primary-button"
-            text="Save"
-            :loading="savingForm"
-          />
-        </div> -->
         <div v-if="resource === 'OpportunityLineItem'">
-          <div
-            v-if="!addedFieldIds.includes('28dc4559-0d1b-4ecb-a356-58002e3a7020')"
-            class="centered field-border"
-          >
+          <div v-if="!addedFieldNames.includes('PricebookEntryId')" class="centered field-border">
             <p style="margin-left: 0.5rem; font-weight: bold">
               Pricebook <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
             </p>
@@ -104,9 +71,7 @@
               @click="
                 () => {
                   onAddField(
-                    this.formFields.list.filter(
-                      (field) => field.id === '28dc4559-0d1b-4ecb-a356-58002e3a7020',
-                    )[0],
+                    this.formFields.list.filter((field) => field.apiName === 'PricebookEntryId')[0],
                   )
                 }
               "
@@ -116,10 +81,7 @@
             </button>
           </div>
 
-          <div
-            v-if="!addedFieldIds.includes('a7f7f7e2-afd6-4fc8-9575-71e219f883eb')"
-            class="centered field-border"
-          >
+          <div v-if="!addedFieldNames.includes('Product2Id')" class="centered field-border">
             <p style="margin-left: 0.5rem; font-weight: bold">
               Product <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
             </p>
@@ -134,22 +96,21 @@
               @click="
                 () => {
                   onAddField(
-                    this.formFields.list.filter(
-                      (field) => field.id === 'a7f7f7e2-afd6-4fc8-9575-71e219f883eb',
-                    )[0],
+                    this.formFields.list.filter((field) => field.apiName === 'Product2Id')[0],
                   )
                 }
               "
-              class="default_button bouncy"
+              :class="
+                this.addedFieldNames.includes('PricebookEntryId')
+                  ? 'default_button bouncy'
+                  : 'default_button'
+              "
             >
               Product
             </button>
           </div>
 
-          <div
-            v-if="!addedFieldIds.includes('66a5b96f-e472-4e73-9393-6dfdaae4764e')"
-            class="centered field-border"
-          >
+          <div v-if="!addedFieldNames.includes('Quantity')" class="centered field-border">
             <p style="margin-left: 0.5rem; font-weight: bold">
               Quantity <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
             </p>
@@ -164,22 +125,21 @@
               @click="
                 () => {
                   onAddField(
-                    this.formFields.list.filter(
-                      (field) => field.id === '66a5b96f-e472-4e73-9393-6dfdaae4764e',
-                    )[0],
+                    this.formFields.list.filter((field) => field.apiName === 'Quantity')[0],
                   )
                 }
               "
-              class="default_button bouncy"
+              :class="
+                this.addedFieldNames.includes('Product2Id')
+                  ? 'default_button bouncy'
+                  : 'default_button'
+              "
             >
               Quantity
             </button>
           </div>
 
-          <div
-            v-if="!addedFieldIds.includes('e90650f2-473b-4b78-bb65-902e6a7bb7dc')"
-            class="centered field-border"
-          >
+          <div v-if="!addedFieldNames.includes('Description')" class="centered field-border">
             <p style="margin-left: 0.5rem; font-weight: bold">
               Line Description <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
             </p>
@@ -193,41 +153,23 @@
               @click="
                 () => {
                   onAddField(
-                    this.formFields.list.filter(
-                      (field) => field.id === 'e90650f2-473b-4b78-bb65-902e6a7bb7dc',
-                    )[0],
+                    this.formFields.list.filter((field) => field.apiName === 'Description')[0],
                   )
                 }
               "
-              class="default_button bouncy"
+              :class="
+                this.addedFieldNames.includes('Quantity')
+                  ? 'default_button bouncy'
+                  : 'default_button'
+              "
             >
               Line Description
             </button>
-            <!-- <DropDownSearch
-                :items="formFields.list.filter((field) => !addedFieldIds.includes(field.id))"
-                displayKey="referenceDisplayLabel"
-                valueKey="id"
-                nullDisplay="Select field"
-                searchable
-                :loading="formFields.loadingNextPage"
-                :hasNext="!!formFields.pagination.hasNextPage"
-                v-model="amountValue"
-                @load-more="onFieldsNextPage"
-                @search-term="onSearchFields"
-                @input="
-                  (e) => {
-                    onAddField(this.formFields.list.filter((field) => field.id === e)[0])
-                  }
-                "
-              /> -->
           </div>
         </div>
 
         <div v-if="resource === 'Contact'">
-          <div
-            v-if="!addedFieldIds.includes('de1c5d78-d608-4435-95c5-a5af625666b3')"
-            class="centered field-border"
-          >
+          <div v-if="!addedFieldNames.includes('LastName')" class="centered field-border">
             <p style="margin-left: 0.5rem; font-weight: bold">
               Last Name <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
             </p>
@@ -242,9 +184,7 @@
               @click="
                 () => {
                   onAddField(
-                    this.formFields.list.filter(
-                      (field) => field.id === 'de1c5d78-d608-4435-95c5-a5af625666b3',
-                    )[0],
+                    this.formFields.list.filter((field) => field.apiName === 'LastName')[0],
                   )
                 }
               "
@@ -255,10 +195,7 @@
           </div>
         </div>
         <div v-if="resource === 'Lead'">
-          <div
-            v-if="!addedFieldIds.includes('3725c328-aead-404a-bb8e-6fe697dbac31')"
-            class="centered field-border"
-          >
+          <div v-if="!addedFieldNames.includes('LastName')" class="centered field-border">
             <p style="margin-left: 0.5rem; font-weight: bold">
               Last Name<span style="color: #fa646a; font-size: 0.75rem"> (required)</span>
             </p>
@@ -273,9 +210,7 @@
               @click="
                 () => {
                   onAddField(
-                    this.formFields.list.filter(
-                      (field) => field.id === '3725c328-aead-404a-bb8e-6fe697dbac31',
-                    )[0],
+                    this.formFields.list.filter((field) => field.apiName === 'LastName')[0],
                   )
                 }
               "
@@ -284,10 +219,7 @@
               Last Name
             </button>
           </div>
-          <div
-            v-if="!addedFieldIds.includes('33be554d-99ea-4fae-b683-d02ce10b1988')"
-            class="centered field-border"
-          >
+          <div v-if="!addedFieldNames.includes('Company')" class="centered field-border">
             <p style="margin-left: 0.5rem; font-weight: bold">
               Company<span style="color: #fa646a; font-size: 0.75rem"> (required)</span>
             </p>
@@ -301,15 +233,11 @@
             <button
               @click="
                 () => {
-                  onAddField(
-                    this.formFields.list.filter(
-                      (field) => field.id === '33be554d-99ea-4fae-b683-d02ce10b1988',
-                    )[0],
-                  )
+                  onAddField(this.formFields.list.filter((field) => field.apiName === 'Company')[0])
                 }
               "
               :class="
-                addedFieldIds.includes('3725c328-aead-404a-bb8e-6fe697dbac31')
+                this.addedFieldNames.includes('LastName')
                   ? 'default_button bouncy'
                   : 'default_button'
               "
@@ -317,10 +245,7 @@
               Company
             </button>
           </div>
-          <div
-            v-if="!addedFieldIds.includes('fa00154a-4a78-43df-9ad7-bb0526ce7733')"
-            class="centered field-border"
-          >
+          <div v-if="!addedFieldNames.includes('Status')" class="centered field-border">
             <p style="margin-left: 0.5rem; font-weight: bold">
               Status<span style="color: #fa646a; font-size: 0.75rem"> (required)</span>
             </p>
@@ -338,7 +263,7 @@
                 }
               "
               :class="
-                addedFieldIds.includes('33be554d-99ea-4fae-b683-d02ce10b1988')
+                this.addedFieldNames.includes('Company')
                   ? 'default_button bouncy'
                   : 'default_button'
               "
@@ -349,10 +274,7 @@
         </div>
 
         <div v-if="resource === 'Account'">
-          <div
-            v-if="!addedFieldIds.includes('7b4ea5b0-7ba1-41b8-b398-1955461d9041')"
-            class="centered field-border"
-          >
+          <div v-if="!addedFieldNames.includes('Name')" class="centered field-border">
             <p style="margin-left: 0.5rem; font-weight: bold">
               Account Name <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
             </p>
@@ -377,10 +299,7 @@
         </div>
 
         <div v-if="resource === 'Opportunity'">
-          <div
-            v-if="!addedFieldIds.includes('b3cebfa0-76bb-4639-9cc3-cd40541ef80e')"
-            class="centered field-border"
-          >
+          <div v-if="!addedFieldNames.includes('Name')" class="centered field-border">
             <p style="margin-left: 0.5rem; font-weight: bold">
               Name <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
             </p>
@@ -403,10 +322,7 @@
             </button>
           </div>
 
-          <div
-            v-if="!addedFieldIds.includes('8d41aaa1-422b-425f-8b57-a9c6a949a36c')"
-            class="centered field-border"
-          >
+          <div v-if="!addedFieldNames.includes('StageName')" class="centered field-border">
             <p style="margin-left: 0.5rem; font-weight: bold">
               Stage <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
             </p>
@@ -423,19 +339,14 @@
                 }
               "
               :class="
-                this.addedFieldIds.includes('b3cebfa0-76bb-4639-9cc3-cd40541ef80e')
-                  ? 'default_button bouncy'
-                  : 'default_button'
+                this.addedFieldNames.includes('Name') ? 'default_button bouncy' : 'default_button'
               "
             >
               Stage
             </button>
           </div>
 
-          <div
-            v-if="!addedFieldIds.includes('87fcf847-4072-46b7-9f64-e91fa99e8354')"
-            class="centered field-border"
-          >
+          <div v-if="!addedFieldNames.includes('CloseDate')" class="centered field-border">
             <p style="margin-left: 0.5rem; font-weight: bold">
               Close Date <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
             </p>
@@ -450,14 +361,12 @@
               @click="
                 () => {
                   onAddField(
-                    this.formFields.list.filter(
-                      (field) => field.id === '87fcf847-4072-46b7-9f64-e91fa99e8354',
-                    )[0],
+                    this.formFields.list.filter((field) => field.apiName === 'CloseDate')[0],
                   )
                 }
               "
               :class="
-                this.addedFieldIds.includes('8d41aaa1-422b-425f-8b57-a9c6a949a36c')
+                this.addedFieldNames.includes('StageName')
                   ? 'default_button bouncy'
                   : 'default_button'
               "
@@ -466,7 +375,7 @@
             </button>
           </div>
 
-          <div v-if="!this.addedFieldIds.includes(amountValue)" class="centered field-border">
+          <div v-if="!this.addedFieldNames.includes('Amount')" class="centered field-border">
             <div style="margin-left: 0.5rem" class="centered">
               <label class="label">Amount</label>
               <ToggleCheckBox
@@ -504,7 +413,7 @@
                 "
               />
             </div>
-            <div v-if="productSelected">Save form to continue to products</div>
+            <!-- <div v-if="productSelected">Save form to continue to products</div> -->
           </div>
         </div>
 
@@ -625,12 +534,7 @@
           style="display: flex; align-items: center; justify-content: center"
         >
           <button
-            v-if="
-              !addingFields &&
-              addedFieldIds.includes('b3cebfa0-76bb-4639-9cc3-cd40541ef80e') &&
-              addedFieldIds.includes('8d41aaa1-422b-425f-8b57-a9c6a949a36c') &&
-              addedFieldIds.includes('87fcf847-4072-46b7-9f64-e91fa99e8354')
-            "
+            v-if="requiredOpportunityFields.every((i) => addedFieldNames.includes(i))"
             @click="
               () => {
                 addingFields = !addingFields
@@ -673,11 +577,7 @@
 
         <div
           v-else-if="
-            resource === 'Lead' &&
-            !addingFields &&
-            addedFieldIds.includes('3725c328-aead-404a-bb8e-6fe697dbac31') &&
-            addedFieldIds.includes('33be554d-99ea-4fae-b683-d02ce10b1988') &&
-            addedFieldIds.includes('fa00154a-4a78-43df-9ad7-bb0526ce7733')
+            resource === 'Lead' && requiredLeadFields.every((i) => addedFieldNames.includes(i))
           "
           style="
             display: flex;
@@ -731,48 +631,25 @@
             @click="onSave"
             class="primary-button"
             :class="
-              !(
-                addedFieldIds.includes('b3cebfa0-76bb-4639-9cc3-cd40541ef80e') &&
-                addedFieldIds.includes('8d41aaa1-422b-425f-8b57-a9c6a949a36c') &&
-                addedFieldIds.includes('87fcf847-4072-46b7-9f64-e91fa99e8354')
-              )
+              !requiredOpportunityFields.every((i) => addedFieldNames.includes(i))
                 ? 'primary-button'
                 : 'primary-button bouncy'
             "
             text="Save"
             :loading="savingForm"
-            :disabled="
-              !(
-                addedFieldIds.includes('b3cebfa0-76bb-4639-9cc3-cd40541ef80e') &&
-                addedFieldIds.includes('8d41aaa1-422b-425f-8b57-a9c6a949a36c') &&
-                addedFieldIds.includes('87fcf847-4072-46b7-9f64-e91fa99e8354')
-              )
-            "
+            :disabled="!requiredOpportunityFields.every((i) => addedFieldNames.includes(i))"
           />
 
-          <PulseLoadingSpinnerButton
-            v-if="resource === 'Opportunity' && productSelected"
-            @click="goToProducts"
-            class="primary-button"
-            :class="
-              !(
-                addedFieldIds.includes('b3cebfa0-76bb-4639-9cc3-cd40541ef80e') &&
-                addedFieldIds.includes('8d41aaa1-422b-425f-8b57-a9c6a949a36c') &&
-                addedFieldIds.includes('87fcf847-4072-46b7-9f64-e91fa99e8354')
-              )
-                ? 'primary-button'
-                : 'primary-button bouncy'
-            "
-            text="Save"
-            :loading="savingForm"
-            :disabled="
-              !(
-                addedFieldIds.includes('b3cebfa0-76bb-4639-9cc3-cd40541ef80e') &&
-                addedFieldIds.includes('8d41aaa1-422b-425f-8b57-a9c6a949a36c') &&
-                addedFieldIds.includes('87fcf847-4072-46b7-9f64-e91fa99e8354')
-              )
-            "
-          />
+          <div v-if="resource === 'Opportunity' && productSelected">
+            <button
+              v-if="requiredOpportunityFields.every((i) => addedFieldNames.includes(i))"
+              class="save bouncy"
+              @click="goToProducts"
+            >
+              Save + Continue to products
+            </button>
+            <button v-else class="disabled">Save + Continue to products</button>
+          </div>
 
           <PulseLoadingSpinnerButton
             v-else-if="resource === 'Contact'"
@@ -793,25 +670,13 @@
             @click="onSave"
             class="primary-button"
             :class="
-              !(
-                addedFieldIds.includes('66a5b96f-e472-4e73-9393-6dfdaae4764e') &&
-                addedFieldIds.includes('e90650f2-473b-4b78-bb65-902e6a7bb7dc') &&
-                addedFieldIds.includes('a7f7f7e2-afd6-4fc8-9575-71e219f883eb') &&
-                addedFieldIds.includes('28dc4559-0d1b-4ecb-a356-58002e3a7020')
-              )
+              !requiredProductFields.every((i) => addedFieldNames.includes(i))
                 ? 'primary-button'
                 : 'primary-button bouncy'
             "
             text="Save"
             :loading="savingForm"
-            :disabled="
-              !(
-                addedFieldIds.includes('66a5b96f-e472-4e73-9393-6dfdaae4764e') &&
-                addedFieldIds.includes('e90650f2-473b-4b78-bb65-902e6a7bb7dc') &&
-                addedFieldIds.includes('a7f7f7e2-afd6-4fc8-9575-71e219f883eb') &&
-                addedFieldIds.includes('28dc4559-0d1b-4ecb-a356-58002e3a7020')
-              )
-            "
+            :disabled="!requiredProductFields.every((i) => addedFieldNames.includes(i))"
           />
 
           <PulseLoadingSpinnerButton
@@ -819,23 +684,13 @@
             @click="onSave"
             class="primary-button"
             :class="
-              !(
-                addedFieldIds.includes('3725c328-aead-404a-bb8e-6fe697dbac31') &&
-                addedFieldIds.includes('33be554d-99ea-4fae-b683-d02ce10b1988') &&
-                addedFieldIds.includes('fa00154a-4a78-43df-9ad7-bb0526ce7733')
-              )
+              !requiredLeadFields.every((i) => addedFieldNames.includes(i))
                 ? 'primary-button'
                 : 'primary-button bouncy'
             "
             text="Save"
             :loading="savingForm"
-            :disabled="
-              !(
-                addedFieldIds.includes('3725c328-aead-404a-bb8e-6fe697dbac31') &&
-                addedFieldIds.includes('33be554d-99ea-4fae-b683-d02ce10b1988') &&
-                addedFieldIds.includes('fa00154a-4a78-43df-9ad7-bb0526ce7733')
-              )
-            "
+            :disabled="!requiredLeadFields.every((i) => addedFieldNames.includes(i))"
           />
 
           <PulseLoadingSpinnerButton
@@ -867,7 +722,8 @@
             <div class="white-background">
               <img src="@/assets/images/logo.png" style="height: 1.5rem" alt="" />
             </div>
-            <h3>{{ lowerCase(formType, resource) }}</h3>
+            <h3 v-if="resource !== 'OpportunityLineItem'">{{ lowerCase(formType, resource) }}</h3>
+            <h3 v-else>Create Product</h3>
           </div>
 
           <div
@@ -879,7 +735,7 @@
         </div>
 
         <h1 class="example-text">SLACK PREVIEW</h1>
-        <div>
+        <div v-if="resource !== 'OpportunityLineItem'">
           <p>Note Subject <span style="color: #beb5cc">(optional)</span></p>
           <textarea
             disabled
@@ -892,7 +748,7 @@
 “Meeting Subject goes here” (lives in Tasks)
           </textarea>
         </div>
-        <div>
+        <div v-if="resource !== 'OpportunityLineItem'">
           <p>Notes <span style="color: #beb5cc">(optional)</span></p>
           <textarea
             disabled
@@ -1098,6 +954,9 @@ export default {
       actionChoices: [],
       loadingMeetingTypes: false,
       requiredFields: [],
+      requiredProductFields: ['PricebookEntryId', 'Product2Id', 'Quantity', 'Description'],
+      requiredOpportunityFields: ['Name', 'StageName', 'CloseDate'],
+      requiredLeadFields: ['LastName', 'Company', 'Status'],
       stageField: {
         length: 255,
         id: '8d41aaa1-422b-425f-8b57-a9c6a949a36c',
@@ -1190,7 +1049,6 @@ export default {
       immediate: true,
       deep: true,
       handler(val) {
-        console.log(val)
         if (val && val.fields.length) {
           this.addedFields = [...val.fieldsRef]
           if (this.formType == 'UPDATE') {
@@ -1286,9 +1144,7 @@ export default {
       },
     },
   },
-  mounted() {
-    console.log(this.formFields)
-  },
+
   computed: {
     orderedStageForm() {
       let forms = []
@@ -1309,6 +1165,11 @@ export default {
     addedFieldIds() {
       return this.addedFields.map((field) => {
         return field.id
+      })
+    },
+    addedFieldNames() {
+      return this.addedFields.map((field) => {
+        return field.apiName
       })
     },
     selectedFormResourceType() {
@@ -1508,8 +1369,7 @@ export default {
       let fields = new Set([...this.addedFields.map((f) => f.id)])
       fields = Array.from(fields).filter((f) => !this.removedFields.map((f) => f.id).includes(f))
       let fields_ref = this.addedFields.filter((f) => fields.includes(f.id))
-      console.log(fields)
-      console.log(fields_ref)
+
       SlackOAuth.api
         .postOrgCustomForm({
           ...this.customForm,
@@ -1519,7 +1379,6 @@ export default {
         })
         .then((res) => {
           this.$emit('update:selectedForm', res)
-          console.log(res)
         })
         .finally(() => {
           this.savingForm = false
@@ -2021,6 +1880,17 @@ img:hover {
   padding: 0.5rem 1rem;
   background-color: $dark-green;
   color: white;
+  border: none;
+  border-radius: 0.25rem;
+  margin-left: 0.5rem;
+  font-weight: bold;
+  opacity: 0.8;
+  cursor: pointer;
+}
+.disabled {
+  padding: 0.5rem 1rem;
+  background-color: $panther-silver;
+  color: $panther;
   border: none;
   border-radius: 0.25rem;
   margin-left: 0.5rem;
