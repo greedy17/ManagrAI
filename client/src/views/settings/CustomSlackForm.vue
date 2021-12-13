@@ -1379,6 +1379,11 @@ export default {
         })
         .then((res) => {
           this.$emit('update:selectedForm', res)
+          this.$Alert.alert({
+            type: 'success',
+            message: 'Form Added Succesfully!',
+            timeout: 2000,
+          })
         })
         .finally(() => {
           this.savingForm = false
