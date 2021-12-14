@@ -65,15 +65,21 @@ def process_meeting_review(payload, context):
         "f": str(workflow.forms.filter(template__form_type="UPDATE").first().id),
         "type": "meeting",
     }
+    callback_id = (
+        slack_const.PROCESS_ADD_PRODUCTS_FORM
+        if organization.has_products
+        else slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
+    )
+    submit_text = "Add Products" if organization.has_products else "Update Salesforce"
     private_metadata.update(context)
     data = {
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
-            "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
+            "callback_id": callback_id,
             "title": {"type": "plain_text", "text": "Log Meeting"},
             "blocks": get_block_set("meeting_review_modal", context=context),
-            "submit": {"type": "plain_text", "text": "Update Salesforce"},
+            "submit": {"type": "plain_text", "text": submit_text},
             "private_metadata": json.dumps(private_metadata),
             "external_id": f"meeting_review_modal.{str(uuid.uuid4())}",
         },

@@ -229,6 +229,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
 
         elif self.data_type == "Reference":
             # temporarily using id as display value need to sync display value as part of data
+            display_name = self.reference_display_label
             initial_option = block_builders.option(value, value) if value else None
             if self.is_public and not self.allow_multiple:
                 user_id = str(kwargs.get("user").id)
@@ -250,8 +251,11 @@ class SObjectField(TimeStampModel, IntegrationModel):
             else:
                 user_id = str(self.salesforce_account.user.id)
                 action_query = f"{slack_consts.GET_EXTERNAL_RELATIONSHIP_OPTIONS}?u={user_id}&relationship={self.display_value_keys['api_name']}&fields={','.join(self.display_value_keys['name_fields'])}"
+                if self.api_name == "PricebookEntryId":
+                    display_name = "Products"
+                print(self.api_name)
             return block_builders.external_select(
-                f"*{self.reference_display_label}*",
+                f"*{display_name}*",
                 action_query,
                 block_id=self.api_name,
                 initial_option=initial_option,
@@ -703,6 +707,10 @@ class MeetingWorkflow(SFSyncOperation):
 
         if self.resource and self.resource != slack_consts.FORM_RESOURCE_LEAD:
             self.add_form(self.resource_type, slack_consts.FORM_TYPE_UPDATE)
+            if self.user.organization.has_products:
+                self.add_form(
+                    slack_consts.FORM_RESOURCE_OPPORTUNITYLINEITEM, slack_consts.FORM_TYPE_CREATE
+                )
         if not now:
             return emit_kick_off_slack_interaction(str(self.user.id), str(self.id))
             # used for testing a fake meeting
