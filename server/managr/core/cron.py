@@ -376,7 +376,11 @@ def check_reminders(user_id):
                 core_consts.REMINDER_CONFIG[key]["MINUTE"],
             )
             if check:
-                if key == core_consts.WORKFLOW_REMINDER:
+                if key == core_consts.CALENDAR_REMINDER:
+                    processed_data = _process_calendar_details(str(user_id))
+                    if processed_data:
+                        meeting_prep(processed_data, user_id, send_slack=True)
+                elif key == core_consts.WORKFLOW_REMINDER:
                     if datetime.datetime.today().weekday() == 4:
                         workflows = check_workflows_count(user.id)
                         if workflows["status"] and workflows["workflow_count"] <= 2:
@@ -392,5 +396,11 @@ def check_reminders(user_id):
                     meetings = check_for_uncompleted_meetings(user.id, True)
                     if meetings["status"]:
                         emit_process_send_manager_reminder(str(user.id), meetings["not_completed"])
+                elif key == core_consts.CALENDAR_REMINDER:
+                       processed_data = _process_calendar_details(str(user_id))
+                       if processed_data:
+                            meeting_prep(processed_data, user_id, send_slack=True)
+
+
 
     return
