@@ -620,7 +620,7 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
             token = self.owner.salesforce_account.access_token
             base_url = self.owner.salesforce_account.instance_url
             object_fields = self.owner.salesforce_account.object_fields.filter(
-                salesforce_object="Account"
+                salesforce_object="OpportunityLineItem"
             ).values_list("api_name", flat=True)
             res = AccountAdapter.update_account(
                 data, token, base_url, self.integration_id, object_fields

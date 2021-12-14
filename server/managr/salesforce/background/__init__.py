@@ -113,6 +113,10 @@ def emit_sf_update_resource_from_meeting(workflow_id, *args):
     return _process_update_resource_from_meeting(workflow_id, *args)
 
 
+def emit_add_products_to_sf(workflow_id, *args):
+    return _process_add_products_to_sf(workflow_id, *args)
+
+
 def emit_generate_form_template(user_id):
     return _generate_form_template(user_id)
 
@@ -463,6 +467,56 @@ def _process_update_resource_from_meeting(workflow_id, *args):
     if len(user.slack_integration.recap_receivers):
         _send_recap(update_form_ids, None, True)
     # push to sf
+    return res
+
+
+@background(
+    schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
+)
+@sf_api_exceptions_wf("update_object_from_review")
+def _process_add_products_to_sf(workflow_id, *args):
+    # get workflow
+    workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    user = workflow.user
+    # collect forms for resource meeting_review and if stages any stages related forms
+    product_form = workflow.forms.filter(template__resource="OpportunityLineItem").first()
+    update_form_ids = []
+    # aggregate the data
+    data = dict({})
+
+    update_form_ids.append(str(product_form.id))
+    data = {**data, **product_form.saved_data}
+    print(data)
+    # attempts = 1
+    # while True:
+    #     sf = user.salesforce_account
+    #     try:
+    #         res = workflow.resource.create_in_salesforce(data)
+    #         attempts = 1
+    #         update_forms.update(is_submitted=True, submission_date=timezone.now())
+    #         break
+    #     except TokenExpired as e:
+    #         if attempts >= 5:
+    #             return logger.exception(
+    #                 f"Failed to update resource from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+    #             )
+    #         else:
+    #             sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+    #             time.sleep(sleep)
+    #             sf.regenerate_token()
+    #             attempts += 1
+    #     except UnableToUnlockRow as e:
+    #         if attempts >= 5:
+    #             logger.exception(
+    #                 f"Failed to update resource from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+    #             )
+    #             raise e
+    #         else:
+    #             sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+    #             time.sleep(sleep)
+    #             attempts += 1
+    #     except Exception as e:
+    #         raise e
     return res
 
 

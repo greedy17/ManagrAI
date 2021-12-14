@@ -265,6 +265,16 @@ export default {
       }
     },
   },
+  async beforeCreate(){
+    try{
+      this.formFields = CollectionManager.create({ ModelClass: SObjectField, pagination: {size:500} })
+      this.formFields.refresh()
+      console.log(this.formFields)
+    }catch(e){
+      console.log(e)
+    }
+
+  }
 }
 </script>
 

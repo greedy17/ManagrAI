@@ -674,6 +674,7 @@ class MeetingWorkflow(SFSyncOperation):
             emit_update_contacts,
             emit_create_new_contacts,
             emit_sf_update_resource_from_meeting,
+            emit_add_products_to_sf,
         )
 
         return {
@@ -681,6 +682,7 @@ class MeetingWorkflow(SFSyncOperation):
             sf_consts.MEETING_REVIEW__UPDATE_CONTACTS: emit_update_contacts,
             sf_consts.MEETING_REVIEW__CREATE_CONTACTS: emit_create_new_contacts,
             sf_consts.MEETING_REVIEW__SAVE_CALL_LOG: emit_add_call_to_sf,
+            sf_consts.MEETING_REVIEW__ADD_PRODUCTS: emit_add_products_to_sf,
         }
 
     def begin_tasks(self, attempts=1):

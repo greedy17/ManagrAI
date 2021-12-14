@@ -388,6 +388,8 @@ class OrgCustomSlackFormInstance(TimeStampModel):
 
         self.saved_data = new_data
         self.previous_data = old_data
+        print(new_data)
+        print(old_data)
         self.save()
 
 
