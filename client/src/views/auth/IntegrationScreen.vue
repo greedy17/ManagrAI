@@ -242,6 +242,37 @@
             </button>
           </div>
         </div>
+        <div v-if="!user.onboarding" class="card">
+          <div class="card__header">
+            <img style="height: 1.5rem" src="@/assets/images/outreach.webp" />
+          </div>
+          <p class="card-text">Add Contacts to Sequences</p>
+          <div class="card__body">
+            <PulseLoadingSpinnerButton
+              v-if="!hasOutreachIntegration && user.isAdmin"
+              :disabled="hasOutreachIntegration"
+              @click="onGetAuthLink('OUTREACH')"
+              style="margin-left: 1rem; cursor: pointer"
+              class="orange_button"
+              text="Connect"
+              :loading="generatingToken && selectedIntegration == 'OUTREACH'"
+            ></PulseLoadingSpinnerButton>
+            <div v-else-if="hasOutreachIntegration && user.isAdmin">
+              <img
+                src="@/assets/images/unplug.png"
+                :loading="generatingToken && selectedIntegration == 'OUTREACH'"
+                @click="onRevoke('OUTREACH')"
+                style="height: 2rem; cursor: pointer"
+              />
+              <!-- <img
+              src="@/assets/images/refresh.png"
+              :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
+              style="height: 2rem; cursor: pointer"
+            /> -->
+            </div>
+            <p v-else>Outreach is connected!</p>
+          </div>
+        </div>
       </div>
     </div>
 

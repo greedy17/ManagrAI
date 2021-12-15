@@ -81,7 +81,7 @@
             </button>
           </div>
 
-          <div v-if="!addedFieldNames.includes('Product2Id')" class="centered field-border">
+          <!-- <div v-if="!addedFieldNames.includes('Product2Id')" class="centered field-border">
             <p style="margin-left: 0.5rem; font-weight: bold">
               Product <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
             </p>
@@ -108,7 +108,7 @@
             >
               Product
             </button>
-          </div>
+          </div> -->
 
           <div v-if="!addedFieldNames.includes('Quantity')" class="centered field-border">
             <p style="margin-left: 0.5rem; font-weight: bold">
@@ -130,7 +130,7 @@
                 }
               "
               :class="
-                this.addedFieldNames.includes('Product2Id')
+                this.addedFieldNames.includes('PricebookEntryId')
                   ? 'default_button bouncy'
                   : 'default_button'
               "
@@ -259,7 +259,7 @@
             <button
               @click="
                 () => {
-                  onAddField(statusField)
+                  onAddField(this.formFields.list.filter((field) => field.apiName === 'Status')[0])
                 }
               "
               :class="
@@ -288,7 +288,7 @@
             <button
               @click="
                 () => {
-                  onAddField(accountNameField)
+                  onAddField(this.formFields.list.filter((field) => field.apiName === 'Name')[0])
                 }
               "
               class="default_button bouncy"
@@ -313,7 +313,7 @@
             <button
               @click="
                 () => {
-                  onAddField(nameField)
+                  onAddField(this.formFields.list.filter((field) => field.apiName === 'Name')[0])
                 }
               "
               class="default_button bouncy"
@@ -335,7 +335,9 @@
             <button
               @click="
                 () => {
-                  onAddField(stageField)
+                  onAddField(
+                    this.formFields.list.filter((field) => field.apiName === 'StageName')[0],
+                  )
                 }
               "
               :class="
@@ -396,10 +398,10 @@
             />
             <div v-if="!productSelected">
               <DropDownSearch
-                :items="formFields.list.filter((field) => !addedFieldIds.includes(field.id))"
+                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
                 displayKey="referenceDisplayLabel"
-                valueKey="id"
-                nullDisplay="Select field"
+                valueKey="apiName"
+                nullDisplay="Search fields"
                 searchable
                 :loading="formFields.loadingNextPage"
                 :hasNext="!!formFields.pagination.hasNextPage"
@@ -408,7 +410,7 @@
                 @search-term="onSearchFields"
                 @input="
                   (e) => {
-                    onAddField(this.formFields.list.filter((field) => field.id === e)[0])
+                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
                   }
                 "
               />
@@ -512,9 +514,9 @@
             <p>Account Type</p>
           </div>
           <DropDownSearch
-            :items="formFields.list.filter((field) => !addedFieldIds.includes(field.id))"
+            :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
             displayKey="referenceDisplayLabel"
-            valueKey="id"
+            valueKey="apiName"
             nullDisplay="Search fields"
             searchable
             :loading="formFields.loadingNextPage"
@@ -524,7 +526,7 @@
             @search-term="onSearchFields"
             @input="
               (e) => {
-                onAddField(this.formFields.list.filter((field) => field.id === e)[0])
+                onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
               }
             "
           />
@@ -723,7 +725,7 @@
               <img src="@/assets/images/logo.png" style="height: 1.5rem" alt="" />
             </div>
             <h3 v-if="resource !== 'OpportunityLineItem'">{{ lowerCase(formType, resource) }}</h3>
-            <h3 v-else>Create Product</h3>
+            <h3 v-else>Product</h3>
           </div>
 
           <div
@@ -940,7 +942,7 @@ export default {
   data() {
     return {
       currentStageForm: null,
-      formFields: CollectionManager.create({ ModelClass: SObjectField }),
+      // formFields: {},
       formFieldList: [],
       salesforceFields,
       customSlackFormConfig: [],
@@ -954,89 +956,9 @@ export default {
       actionChoices: [],
       loadingMeetingTypes: false,
       requiredFields: [],
-      requiredProductFields: ['PricebookEntryId', 'Product2Id', 'Quantity', 'Description'],
+      requiredProductFields: ['PricebookEntryId', 'Quantity', 'Description'],
       requiredOpportunityFields: ['Name', 'StageName', 'CloseDate'],
       requiredLeadFields: ['LastName', 'Company', 'Status'],
-      stageField: {
-        length: 255,
-        id: '8d41aaa1-422b-425f-8b57-a9c6a949a36c',
-        apiName: 'StageName',
-        custom: false,
-        createable: true,
-        dataType: 'Picklist',
-        label: 'Stage',
-        reference: 'false',
-        referenceToInfos: [],
-        updateable: true,
-        required: true,
-        unique: false,
-        value: '',
-        displayValue: '',
-        referenceDisplayLabel: 'Stage',
-        filterable: 'true',
-        order: 4,
-        includeInRecap: true,
-      },
-      nameField: {
-        length: 120,
-        id: 'b3cebfa0-76bb-4639-9cc3-cd40541ef80e',
-        apiName: 'Name',
-        custom: false,
-        createable: true,
-        dataType: 'String',
-        label: 'Name',
-        reference: 'false',
-        referenceToInfos: [],
-        updateable: true,
-        required: true,
-        unique: false,
-        value: '',
-        displayValue: '',
-        referenceDisplayLabel: 'Name',
-        filterable: 'true',
-        order: 2,
-        includeInRecap: true,
-      },
-      statusField: {
-        length: 255,
-        id: 'fa00154a-4a78-43df-9ad7-bb0526ce7733',
-        apiName: 'Status',
-        custom: false,
-        createable: true,
-        dataType: 'Picklist',
-        label: 'Status',
-        reference: 'false',
-        referenceToInfos: [],
-        updateable: true,
-        required: true,
-        unique: false,
-        value: '',
-        displayValue: '',
-        referenceDisplayLabel: 'Status',
-        filterable: 'true',
-        order: 4,
-        includeInRecap: true,
-      },
-      accountNameField: {
-        length: 255,
-        id: '7b4ea5b0-7ba1-41b8-b398-1955461d9041',
-        apiName: 'Name',
-        custom: false,
-        createable: true,
-        dataType: 'String',
-        label: 'Account Name',
-        reference: 'false',
-        referenceToInfos: [],
-        updateable: true,
-        required: true,
-        unique: false,
-        value: '',
-        displayValue: '',
-        referenceDisplayLabel: 'Account Name',
-        filterable: 'true',
-        order: 2,
-        includeInRecap: true,
-      },
       nameValue: '',
       amountValue: '',
       addingFields: false,
@@ -1186,6 +1108,18 @@ export default {
   },
   created() {
     this.getActionChoices()
+  },
+  async beforeCreate() {
+    try {
+      this.formFields = CollectionManager.create({
+        ModelClass: SObjectField,
+        pagination: { size: 500 },
+      })
+      this.formFields.refresh()
+      console.log(this.formFields)
+    } catch (e) {
+      console.log(e)
+    }
   },
   methods: {
     goToProducts() {
