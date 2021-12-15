@@ -31,7 +31,7 @@
         </div>
         <div style="margin-top: 2rem">
           <router-link :to="{ name: 'CreateOpportunity' }">
-            <button class="activate-button">Activate</button>
+            <button class="activate-button">View + Edit</button>
           </router-link>
 
           <!-- <h4 style="margin-top: -0.5rem" v-else-if="!hasZoomIntegration">
@@ -63,7 +63,7 @@
         </div>
         <div style="margin-top: 2rem">
           <router-link :to="{ name: 'UpdateContacts' }">
-            <button class="activate-button">Activate</button>
+            <button class="activate-button">View + Edit</button>
           </router-link>
           <!-- <h4 style="margin-top: -0.5rem" v-else-if="!hasZoomIntegration">
             Connect Zoom in order to activate
@@ -94,7 +94,7 @@
         </div>
         <div style="margin-top: 2rem">
           <router-link :to="{ name: 'CreateLeads' }">
-            <button class="activate-button">Activate</button>
+            <button class="activate-button">View + Edit</button>
           </router-link>
           <!-- <h4 style="margin-top: -0.5rem" v-else-if="!hasZoomIntegration">
             Connect Zoom in order to activate
@@ -125,7 +125,7 @@
         </div>
         <div style="margin-top: 2rem">
           <router-link :to="{ name: 'UpdateLeads' }">
-            <button class="activate-button">Activate</button>
+            <button class="activate-button">View + Edit</button>
           </router-link>
           <!-- <h4 style="margin-top: -0.5rem" v-else-if="!hasZoomIntegration">
             Connect Zoom in order to activate
@@ -156,7 +156,7 @@
         </div>
         <div style="margin-top: 2rem">
           <router-link :to="{ name: 'CreateAccounts' }">
-            <button class="activate-button">Activate</button>
+            <button class="activate-button">View + Edit</button>
           </router-link>
           <!-- <h4 style="margin-top: -0.5rem" v-else-if="!hasZoomIntegration">
             Connect Zoom in order to activate
@@ -187,7 +187,7 @@
         </div>
         <div style="margin-top: 2rem">
           <router-link :to="{ name: 'UpdateAccounts' }">
-            <button class="activate-button">Activate</button>
+            <button class="activate-button">View + Edit</button>
           </router-link>
           <!-- <h4 style="margin-top: -0.5rem" v-else-if="!hasZoomIntegration">
             Connect Zoom in order to activate
