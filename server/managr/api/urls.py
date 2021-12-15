@@ -12,6 +12,7 @@ from managr.alerts import views as alert_views
 from managr.autonomous import views as auto_views
 from managr.salesloft import views as salesloft_views
 from managr.gong import views as gong_views
+from managr.outreach import views as outreach_views
 
 # from . import views
 
@@ -53,6 +54,11 @@ urlpatterns = [
         name="redirect-from-salesloft",
     ),
     path("users/gongaccount/re-direct", gong_views.redirect_from_gong, name="redirect-from-gong",),
+    path(
+        "users/outreach/re-direct",
+        outreach_views.redirect_from_outreach,
+        name="redirect-from-outreach",
+    ),
     path("users/slack/re-direct", slack_views.redirect_from_slack, name="redirect-from-slack"),
     path("account-status/", core_views.get_account_status, name="get_account_status"),
     path("get-file/<str:file_id>/", core_views.GetFileView.as_view(), name="get_file_from_nylas",),
@@ -97,6 +103,21 @@ urlpatterns = [
         "users/gongaccount/revoke",
         gong_views.revoke_gong_access_token,
         name="revoke-gong-access-token",
+    ),
+    path(
+        "users/outreach/authenticate",
+        outreach_views.get_outreach_authentication,
+        name="get-outreach-authentication",
+    ),
+    path(
+        "users/outreach/authorization/",
+        outreach_views.get_outreach_auth_link,
+        name="get-outreach-auth-link",
+    ),
+    path(
+        "users/outreach/revoke",
+        outreach_views.revoke_outreach_access_token,
+        name="revoke-outreach-access_token",
     ),
     path("zoom/webhooks/deauthorize", zoom_views.zoom_deauth_webhook, name="zoom_deauth",),
     path("zoom/webhooks/meetings", zoom_views.zoom_meetings_webhook, name="get_zoom_auth_link",),

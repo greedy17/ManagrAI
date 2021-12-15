@@ -221,6 +221,9 @@ class OrgCustomSlackFormInstance(TimeStampModel):
     update_source = models.CharField(
         max_length=30, blank=True, help_text="On update forms, sets the source of the update"
     )
+    alert_instance_id = models.ForeignKey(
+        "alerts.AlertInstance", models.SET_NULL, related_name="form_instance", null=True, blank=True
+    )
     objects = OrgCustomSlackFormInstanceQuerySet.as_manager()
 
     def __str__(self):

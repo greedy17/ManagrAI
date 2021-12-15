@@ -761,6 +761,11 @@ def process_show_update_resource_form(payload, context):
     else:
         selected_option = None
     resource_id = selected_option
+    alert_id = (
+        AlertInstance.objects.get(id=context.get("alert_id"))
+        if context.get("type") == "alert"
+        else None
+    )
     resource_type = context.get("resource")
     pm = json.loads(payload.get("view", {}).get("private_metadata", "{}"))
     prev_form = pm.get("f", None)
@@ -778,8 +783,14 @@ def process_show_update_resource_form(payload, context):
             .filter(Q(resource=resource_type, form_type="UPDATE"))
             .first()
         )
-        slack_form = OrgCustomSlackFormInstance.objects.create(
-            template=template, resource_id=resource_id, user=user,
+        slack_form = (
+            OrgCustomSlackFormInstance.objects.create(
+                template=template, resource_id=resource_id, user=user, alert_instance_id=alert_id,
+            )
+            if alert_id
+            else OrgCustomSlackFormInstance.objects.create(
+                template=template, resource_id=resource_id, user=user,
+            )
         )
         if slack_form:
             current_stage = slack_form.resource_object.secondary_data.get("StageName")
@@ -836,7 +847,10 @@ def process_show_update_resource_form(payload, context):
         show_submit_button_if_fields_added = False
     private_metadata = {
         "channel_id": payload.get("container").get("channel_id"),
+        "message_ts": payload.get("container").get("message_ts"),
     }
+    if alert_id:
+        private_metadata.update({"alert_id": alert_id, "current_page": context.get("current_page")})
     private_metadata.update(context)
     data = {
         "trigger_id": payload["trigger_id"],
@@ -1056,7 +1070,6 @@ def process_check_is_owner(payload, context):
     # CHECK_IS_OWNER
     slack_id = payload.get("user", {}).get("id")
     user_id = context.get("u")
-    resource = context.get("resource")
     context.update({"type": "alert"})
     user_slack = UserSlackIntegration.objects.filter(slack_id=slack_id).first()
     if user_slack and str(user_slack.user.id) == user_id:
@@ -1255,7 +1268,7 @@ def process_paginate_alerts(payload, context):
     config_id = context.get("config_id")
     alert_instances = AlertInstance.objects.filter(
         invocation=invocation, channel=channel, config_id=config_id
-    )
+    ).filter(completed=False)
     alert_instance = alert_instances.first()
     if not alert_instance:
         # check if the config was deleted
@@ -1274,7 +1287,7 @@ def process_paginate_alerts(payload, context):
     alert_template = alert_instance.template
     alert_text = alert_template.title
     blocks = [
-        block_builders.header_block(f"{alert_text}"),
+        block_builders.header_block(f"{len(alert_instances)} results for workflow {alert_text}"),
     ]
     alert_instances = custom_paginator(alert_instances, page=int(context.get("new_page", 0)))
     for alert_instance in alert_instances.get("results", []):
@@ -1424,12 +1437,93 @@ def process_show_cadence_modal(payload, context):
 
 
 @processor(required_context="u")
+def process_show_sequence_modal(payload, context):
+    u = User.objects.get(id=context.get("u"))
+    is_update = payload.get("view", None)
+    type = context.get("type", None)
+    resource_name = (
+        payload["view"]["state"]["values"]["select_existing"][
+            f"{slack_const.GET_USER_ACCOUNTS}?u={u.id}&type=command"
+        ]["selected_option"]["text"]["text"]
+        if type == "command"
+        else context.get("resource_name")
+    )
+    resource_id = (
+        payload["view"]["state"]["values"]["select_existing"][
+            f"{slack_const.GET_USER_ACCOUNTS}?u={u.id}&type=command"
+        ]["selected_option"]["value"]
+        if type == "command"
+        else context.get("resource_id")
+    )
+    resource_type = "Account" if type == "command" else context.get("resource_type")
+    url = f"{slack_const.SLACK_API_ROOT}{slack_const.VIEWS_UPDATE if is_update else slack_const.VIEWS_OPEN}"
+    trigger_id = payload["trigger_id"]
+    if is_update:
+        meta_data = json.loads(payload["view"]["private_metadata"])
+
+    org = u.organization
+    private_metadata = {
+        "channel_id": meta_data["channel_id"] if type == "command" else payload["channel"]["id"],
+        "slack_id": meta_data["slack_id"] if type == "command" else payload["user"]["id"],
+        "resource_name": resource_name,
+        "resource_id": resource_id,
+        "resource_type": resource_type,
+    }
+    private_metadata.update(context)
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.ADD_TO_SEQUENCE,
+            "title": {"type": "plain_text", "text": "Add to a Sequence"},
+            "blocks": get_block_set(
+                "sequence_modal_blockset",
+                context={
+                    "u": context.get("u"),
+                    "resource_name": resource_name,
+                    "resource_id": resource_id,
+                    "resource_type": resource_type,
+                },
+            ),
+            "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
+            "private_metadata": json.dumps(private_metadata),
+        },
+    }
+    if is_update:
+        data["view_id"] = is_update.get("id")
+    try:
+        slack_requests.generic_request(url, data, access_token=org.slack_integration.access_token)
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
+        )
+
+
+@processor(required_context="u")
 def process_get_notes(payload, context):
     u = User.objects.get(id=context.get("u"))
     type = context.get("type", None)
     org = u.organization
     access_token = org.slack_integration.access_token
-    resource_id = context.get("resource_id", None)
+    resource_id = (
+        context.get("resource_id", None)
+        if type
+        else payload["view"]["state"]["values"]["select_opp"][
+            f"GET_NOTES?u={u.id}&resource=Opportunity"
+        ]["selected_option"]["value"]
+    )
     opportunity = Opportunity.objects.get(id=resource_id)
     note_data = (
         OrgCustomSlackFormInstance.objects.filter(resource_id=resource_id)
@@ -1461,23 +1555,22 @@ def process_get_notes(payload, context):
             block_message += f"\nNotes:\n {note[2]}"
             note_blocks.append(block_builders.simple_section(block_message, "mrkdwn"))
             note_blocks.append({"type": "divider"})
+    trigger_id = payload["trigger_id"]
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": "NONE",
+            "title": {"type": "plain_text", "text": "Notes"},
+            "blocks": note_blocks,
+        },
+    }
     if type == "alert":
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
-        trigger_id = payload["trigger_id"]
-        data = {
-            "trigger_id": trigger_id,
-            "view": {
-                "type": "modal",
-                "callback_id": "NONE",
-                "title": {"type": "plain_text", "text": "Notes"},
-                "blocks": note_blocks,
-            },
-        }
-        slack_requests.generic_request(url, data, access_token=access_token)
     else:
-        update_res = slack_requests.send_channel_message(
-            u.slack_integration.channel, access_token, block_set=note_blocks,
-        )
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        data["view_id"] = payload["container"]["view_id"]
+    slack_requests.generic_request(url, data, access_token=access_token)
     return
 
 
@@ -1596,10 +1689,11 @@ def process_mark_complete(payload, context):
         config_id=instance.config_id,
     ).filter(completed=False)
     alert_instance = alert_instances.first()
+    alert_template = alert_instance.template
+    text = alert_template.title
     if not alert_instance:
         blocks = [
-            block_builders.header_block(f"{instance.template.title}"),
-            block_builders.simple_section("You're all caught up with these workflows! Great job!"),
+            block_builders.simple_section("You're all caught up with this workflows! Great job!"),
         ]
         slack_requests.update_channel_message(
             payload["channel"]["id"],
@@ -1609,10 +1703,9 @@ def process_mark_complete(payload, context):
             block_set=blocks,
         )
         return
-    alert_template = alert_instance.template
-    alert_text = alert_template.title
+
     blocks = [
-        block_builders.header_block(f"{alert_text}"),
+        block_builders.header_block(f"{len(alert_instances)} results for workflow {text}"),
     ]
     alert_instances = custom_paginator(alert_instances, page=int(context.get("page")))
     for alert_instance in alert_instances.get("results", []):
@@ -1634,11 +1727,7 @@ def process_mark_complete(payload, context):
         ]
 
     res = slack_requests.update_channel_message(
-        payload["channel"]["id"],
-        payload["message"]["ts"],
-        access_token,
-        text=alert_text,
-        block_set=blocks,
+        payload["channel"]["id"], payload["message"]["ts"], access_token, block_set=blocks,
     )
     return
 
@@ -1715,6 +1804,7 @@ def handle_block_actions(payload):
         slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL: process_check_is_owner,
         slack_const.PAGINATE_ALERTS: process_paginate_alerts,
         slack_const.ADD_TO_CADENCE_MODAL: process_show_cadence_modal,
+        slack_const.ADD_TO_SEQUENCE_MODAL: process_show_sequence_modal,
         slack_const.GET_USER_ACCOUNTS: process_show_cadence_modal,
         slack_const.GET_NOTES: process_get_notes,
         slack_const.CALL_ERROR: process_call_error,

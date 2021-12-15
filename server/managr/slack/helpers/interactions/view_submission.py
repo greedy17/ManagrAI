@@ -20,9 +20,13 @@ from managr.salesforce.adapter.exceptions import (
     UnhandledSalesforceError,
     SFNotFoundError,
 )
+from managr.utils.misc import custom_paginator
+from managr.slack.helpers.block_sets.command_views_blocksets import custom_paginator_block
+from managr.alerts.models import AlertInstance
 from managr.organization.models import Organization, Contact, Account
 from managr.core.models import User, MeetingPrepInstance
 from managr.core.background import emit_create_calendar_event
+from managr.outreach.tasks import emit_add_sequence_state
 from managr.opportunity.models import Opportunity
 from managr.zoom.models import ZoomMeeting
 from managr.salesforce.models import MeetingWorkflow
@@ -246,6 +250,7 @@ def process_next_page_slack_commands_form(payload, context):
 @processor(required_context=["f"])
 def process_submit_resource_data(payload, context):
     # get context
+    print(context)
     has_error = False
     state = payload["view"]["state"]["values"]
     current_form_ids = context.get("f").split(",")
@@ -299,7 +304,6 @@ def process_submit_resource_data(payload, context):
         return logger.exception(
             f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
         )
-
     attempts = 1
     while True:
         sf = user.salesforce_account
@@ -475,44 +479,93 @@ def process_submit_resource_data(payload, context):
             and all_form_data.get("meeting_type") is not None
         ):
             emit_add_update_to_sf(str(main_form.id))
-        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-        success_view_data = {
-            "trigger_id": trigger_id,
-            "view_id": view_id,
-            "view": {
-                "type": "modal",
-                "title": {"type": "plain_text", "text": "Success"},
-                "blocks": get_block_set(
-                    "success_modal", {"message": message, "u": user.id, "form_id": form_id},
-                ),
-                "private_metadata": json.dumps(context),
-                "clear_on_close": True,
-            },
-        }
-        try:
-            slack_requests.generic_request(url, success_view_data, access_token=slack_access_token)
+        if type == "alert":
+            instance = AlertInstance.objects.get(id=context.get("alert_id"))
+            alert_instances = AlertInstance.objects.filter(
+                invocation=instance.invocation,
+                channel=context.get("channel_id"),
+                config_id=instance.config_id,
+            ).filter(completed=False)
+            alert_instance = alert_instances.first()
+            alert_template = alert_instance.template
+            text = alert_template.title
+            blocks = [
+                block_builders.header_block(f"{len(alert_instances)} results for workflow {text}"),
+            ]
+            alert_instances = custom_paginator(
+                alert_instances, page=int(context.get("current_page"))
+            )
+            for alert_instance in alert_instances.get("results", []):
+                blocks = [
+                    *blocks,
+                    *get_block_set(
+                        "alert_instance",
+                        {
+                            "instance_id": str(alert_instance.id),
+                            "current_page": int(context.get("current_page")),
+                        },
+                    ),
+                ]
+                alert_instance.rendered_text = alert_instance.render_text()
+                alert_instance.save()
+            if len(blocks):
+                blocks = [
+                    *blocks,
+                    *custom_paginator_block(
+                        alert_instances,
+                        instance.invocation,
+                        context.get("channel_id"),
+                        instance.config_id,
+                    ),
+                ]
 
-        except Exception as e:
-            logger.exception(
-                f"Failed To Update slack view from loading to success modal  {str(user.id)} email {user.email} {e}"
+            slack_requests.update_channel_message(
+                context.get("channel_id"),
+                context.get("message_ts"),
+                slack_access_token,
+                block_set=blocks,
             )
-            pass
-        try:
-            slack_requests.send_ephemeral_message(
-                user.slack_integration.channel,
-                user.organization.slack_integration.access_token,
-                user.slack_integration.slack_id,
-                text=text,
-                block_set=get_block_set(
-                    "success_modal", {"message": message, "u": user.id, "form_id": form_id}
-                ),
-            )
-        except Exception as e:
-            return logger.exception(
-                f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
-            )
+        else:
+            url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+            success_view_data = {
+                "trigger_id": trigger_id,
+                "view_id": view_id,
+                "view": {
+                    "type": "modal",
+                    "title": {"type": "plain_text", "text": "Success"},
+                    "blocks": get_block_set(
+                        "success_modal", {"message": message, "u": user.id, "form_id": form_id},
+                    ),
+                    "private_metadata": json.dumps(context),
+                    "clear_on_close": True,
+                },
+            }
+            try:
+                slack_requests.generic_request(
+                    url, success_view_data, access_token=slack_access_token
+                )
 
-    return {"response_action": "clear"}
+            except Exception as e:
+                logger.exception(
+                    f"Failed To Update slack view from loading to success modal  {str(user.id)} email {user.email} {e}"
+                )
+                pass
+            try:
+                slack_requests.send_ephemeral_message(
+                    user.slack_integration.channel,
+                    user.organization.slack_integration.access_token,
+                    user.slack_integration.slack_id,
+                    text=text,
+                    block_set=get_block_set(
+                        "success_modal", {"message": message, "u": user.id, "form_id": form_id}
+                    ),
+                )
+            except Exception as e:
+                return logger.exception(
+                    f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
+                )
+
+        return {"response_action": "clear"}
 
 
 @log_all_exceptions
@@ -1151,6 +1204,84 @@ def process_add_contacts_to_cadence(payload, context):
 @log_all_exceptions
 @slack_api_exceptions(rethrow=True)
 @processor(required_context=["u"])
+def process_add_contacts_to_sequence(payload, context):
+    meta_data = json.loads(payload["view"]["private_metadata"])
+    u = User.objects.get(id=context.get("u"))
+    sequence_id = payload["view"]["state"]["values"]["select_sequence"][
+        f"GET_SEQUENCE_OPTIONS?u={context.get('u')}"
+    ]["selected_option"]["value"]
+    trigger_id = payload["trigger_id"]
+    view_id = payload["view"]["id"]
+
+    org = u.organization
+    access_token = org.slack_integration.access_token
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    contacts = [
+        option["value"]
+        for option in payload["view"]["state"]["values"]["select_people"][
+            f"{slack_const.GET_PEOPLE_OPTIONS}?u={u.id}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}"
+        ]["selected_options"]
+    ]
+    loading_data = {
+        "trigger_id": trigger_id,
+        "view_id": view_id,
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Loading"},
+            "blocks": get_block_set(
+                "loading",
+                {"message": ":rocket: Putting contacts into your Cadence", "fill": True,},
+            ),
+        },
+    }
+    if len(contacts):
+        res = slack_requests.generic_request(url, loading_data, access_token=access_token)
+        success = 0
+        failed = 0
+        created = 0
+        for contact in contacts:
+            prospect_res = emit_add_sequence_state(contact, sequence_id)
+            if prospect_res["status"] == "Success":
+                success += 1
+            elif prospect_res["status"] == "Created":
+                success += 1
+                created += 1
+            else:
+                failed += 1
+        logger.info(
+            f"{success} out of {success + failed} added to sequence and {created} Prospects created in Outreach"
+        )
+        message = (
+            f"{success}/{success + failed} added to sequence ({created} new Prospects imported to Outreach)"
+            if created > 0
+            else f"{success}/{success + failed} added to sequence"
+        )
+        update_res = slack_requests.generic_request(
+            url,
+            {
+                "view_id": res["view"]["id"],
+                "view": {
+                    "type": "modal",
+                    "title": {"type": "plain_text", "text": "Success"},
+                    "blocks": [block_builders.simple_section(message)],
+                },
+            },
+            access_token=access_token,
+        )
+        return
+    else:
+        update_res = slack_requests.send_ephemeral_message(
+            u.slack_integration.channel,
+            access_token,
+            meta_data["slack_id"],
+            block_set=[block_builders.simple_section(f"No people associated for {resource_id}")],
+        )
+        return
+
+
+@log_all_exceptions
+@slack_api_exceptions(rethrow=True)
+@processor(required_context=["u"])
 def process_get_notes(payload, context):
     meta_data = json.loads(payload["view"]["private_metadata"])
     u = User.objects.get(id=context.get("u"))
@@ -1186,26 +1317,36 @@ def process_get_notes(payload, context):
             block_message += f"\nNotes:\n {note[2]}"
             note_blocks.append(block_builders.simple_section(block_message, "mrkdwn"))
             note_blocks.append({"type": "divider"})
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    loading_data = {
-        "trigger_id": trigger_id,
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    # loading_data = {
+    #     "trigger_id": trigger_id,
+    #     "view_id": view_id,
+    #     "view": {
+    #         "type": "modal",
+    #         "title": {"type": "plain_text", "text": "Loading"},
+    #         "blocks": get_block_set(
+    #             "loading",
+    #             {
+    #                 "message": ":notebook_with_decorative_cover: Putting your notes together",
+    #                 "fill": True,
+    #             },
+    #         ),
+    #     },
+    # }
+    data = {
+        "trigger_id": context.get("trigger_id"),
         "view_id": view_id,
         "view": {
             "type": "modal",
-            "title": {"type": "plain_text", "text": "Loading"},
-            "blocks": get_block_set(
-                "loading",
-                {
-                    "message": ":notebook_with_decorative_cover: Putting your notes together",
-                    "fill": True,
-                },
-            ),
+            "callback_id": "NONE",
+            "title": {"type": "plain_text", "text": "Notes"},
+            "blocks": note_blocks,
         },
     }
-    loading_res = slack_requests.generic_request(url, loading_data, access_token=access_token)
-    update_res = slack_requests.send_channel_message(
-        u.slack_integration.channel, access_token, block_set=note_blocks,
-    )
+    loading_res = slack_requests.generic_request(url, data, access_token=access_token)
+    # update_res = slack_requests.send_channel_message(
+    #     u.slack_integration.channel, access_token, block_set=note_blocks,
+    # )
     return
 
 
@@ -1268,6 +1409,7 @@ def handle_view_submission(payload):
         slack_const.COMMAND_CREATE_TASK: process_create_task,
         slack_const.ZOOM_MEETING__SCHEDULE_MEETING: process_schedule_meeting,
         slack_const.ADD_TO_CADENCE: process_add_contacts_to_cadence,
+        slack_const.ADD_TO_SEQUENCE: process_add_contacts_to_sequence,
         slack_const.GET_NOTES: process_get_notes,
         slack_const.PROCESS_SEND_RECAPS: process_send_recaps,
     }

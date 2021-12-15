@@ -81,6 +81,8 @@ class UserSerializer(serializers.ModelSerializer):
             "has_salesloft_integration",
             "gong_account",
             "has_gong_integration",
+            "outreach_account",
+            "has_outreach_integration",
             "has_zoom_integration",
             "has_salesforce_integration",
             "timezone",

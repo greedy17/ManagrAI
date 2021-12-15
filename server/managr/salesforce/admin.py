@@ -41,6 +41,13 @@ class CustomSyncFieldOperationAdmin(admin.ModelAdmin):
 
 class CustomFormInstanceInline(admin.StackedInline):
     model = OrgCustomSlackFormInstance
+    exclude = ["alert_instance_id"]
+    readonly_fields = [
+        "saved_data",
+        "previous_data",
+        "user",
+        "template",
+    ]
 
 
 class CustomMeetingWorkflow(admin.ModelAdmin):
@@ -52,6 +59,10 @@ class CustomMeetingWorkflow(admin.ModelAdmin):
         "meeting",
         "progress",
     )
+    readonly_fields = [
+        "user",
+        "meeting",
+    ]
     ordering = ("-datetime_created",)
 
 

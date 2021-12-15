@@ -419,7 +419,7 @@
           <div class="card__header">
             <img style="height: 1.5rem" src="@/assets/images/salesloft.svg" />
           </div>
-          <p class="card-text">Add Contacts to cadences</p>
+          <p class="card-text">Add Contacts to Cadences</p>
           <div class="card__body">
             <PulseLoadingSpinnerButton
               v-if="!hasSalesloftIntegration"
@@ -435,6 +435,33 @@
                 <div class="three-dots"></div>
                 <div class="dropdown">
                   <button @click="onRevoke('SALESLOFT')" class="revoke-button">revoke</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__header">
+            <img style="height: 1.5rem" src="@/assets/images/outreach.webp" />
+          </div>
+          <p class="card-text">Add Contacts to Sequences</p>
+          <div class="card__body">
+            <PulseLoadingSpinnerButton
+              v-if="!hasOutreachIntegration"
+              :disabled="hasOutreachIntegration"
+              @click="onGetAuthLink('OUTREACH')"
+              style="margin-left: 1rem; cursor: pointer"
+              class="orange_button"
+              text="Connect"
+              :loading="generatingToken && selectedIntegration == 'OUTREACH'"
+            ></PulseLoadingSpinnerButton>
+            <div v-else class="card__body">
+              <div class="dropdown-container" tabindex="1">
+                <div class="three-dots"></div>
+                <div class="dropdown">
+                  <button @click="onRevoke('OUTREACH')" class="revoke-button">revoke</button>
+                  <button @click="onGetAuthLink('OUTREACH')" class="plain-button">refresh</button>
                 </div>
               </div>
             </div>
@@ -542,6 +569,7 @@ import Nylas from '@/services/nylas'
 import Salesforce from '@/services/salesforce'
 import SalesloftAccount from '@/services/salesloft'
 import GongAccount from '@/services/gong'
+import OutreachAccount from '@/services/outreach'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import GoogleButton from '@/components/GoogleButton'
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
@@ -586,6 +614,11 @@ export default {
       this.integrated = !this.integrated
     },
     async onGetAuthLink(integration) {
+      integration === 'NYLAS'
+        ? confirm(
+            'You must check all permission boxes in order for Managr to successfully connect to your calendar!',
+          )
+        : ''
       this.generatingToken = true
       this.selectedIntegration = integration
       const modelClass = this.selectedIntegrationSwitcher
@@ -609,11 +642,13 @@ export default {
       }
     },
     async onIntegrateSlack() {
-      const confirmation = confirm(
-        'Integrating Managr to your slack workspace will request access to a channel (you can choose a new one or an existing one) we will post a message letting the members of that channel know they can now integrate their Slack accounts',
-      )
-      if (!confirmation) {
-        return
+      if (this.user.isAdmin) {
+        const confirmation = confirm(
+          'Integrating Managr to your slack workspace will request access to a channel (you can choose a new one or an existing one) we will post a message letting the members of that channel know they can now integrate their Slack accounts',
+        )
+        if (!confirmation) {
+          return
+        }
       }
       this.generatingToken = true
       if (!this.orgHasSlackIntegration) {
@@ -716,6 +751,11 @@ export default {
     hasGongIntegration() {
       return !!this.$store.state.user.gongAccount && this.$store.state.user.hasGongIntegration
     },
+    hasOutreachIntegration() {
+      return (
+        !!this.$store.state.user.outreachAccount && this.$store.state.user.hasOutreachIntegration
+      )
+    },
     hasSalesloftIntegration() {
       return (
         !!this.$store.state.user.salesloftAccount && this.$store.state.user.hasSalesloftIntegration
@@ -753,6 +793,8 @@ export default {
           return SalesloftAccount
         case 'GONG':
           return GongAccount
+        case 'OUTREACH':
+          return OutreachAccount
         default:
           return null
       }
@@ -892,6 +934,7 @@ export default {
     display: flex;
     align-items: flex-end;
     justify-content: flex-end;
+    margin-top: auto;
   }
   &__start {
     display: flex;

@@ -12,7 +12,7 @@ from managr.core.models import User
 from managr.opportunity.models import Opportunity, Lead
 from managr.organization.models import Organization, Account, ActionChoice
 from managr.salesforce.models import SObjectPicklist, SObjectField
-
+from managr.outreach.models import Sequence
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.utils import process_action_id, NO_OP, processor
 from managr.salesforce.adapter.exceptions import TokenExpired
@@ -250,6 +250,16 @@ def process_get_cadences(payload, context):
     }
 
 
+@processor(required_context=["u"])
+def process_get_sequences(payload, context):
+    user = User.objects.get(id=context["u"])
+    sequences = Sequence.objects.filter(owner=user.outreach_account)
+    value = payload["value"]
+    return {
+        "options": [l.as_slack_option for l in sequences.filter(name__icontains=value)[:50]],
+    }
+
+
 @processor(required_context=["resource_id", "resource_type"])
 def process_get_people(payload, context):
     type = context.get("resource_type")
@@ -285,10 +295,12 @@ def handle_block_suggestion(payload):
         slack_const.GET_LOCAL_RESOURCE_OPTIONS: process_get_local_resource_options,
         slack_const.GET_EXTERNAL_RELATIONSHIP_OPTIONS: process_get_external_relationship_options,
         slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS: process_get_local_resource_options,
+        slack_const.GET_NOTES: process_get_local_resource_options,
         slack_const.COMMAND_SUMMARY__GET_LOCAL_RESOURCE_OPTIONS: process_get_local_resource_options,
         slack_const.GET_PICKLIST_OPTIONS: process_get_picklist_options,
         slack_const.GET_EXTERNAL_PICKLIST_OPTIONS: process_get_external_picklist_options,
         slack_const.GET_CADENCE_OPTIONS: process_get_cadences,
+        slack_const.GET_SEQUENCE_OPTIONS: process_get_sequences,
         slack_const.GET_PEOPLE_OPTIONS: process_get_people,
         slack_const.GET_CALLS: process_get_calls,
     }

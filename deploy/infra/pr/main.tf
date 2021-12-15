@@ -126,6 +126,7 @@ data "template_file" "managr_app" {
     use_salesforce = title(var.app_config.use_salesforce)
     use_salesloft  = title(var.app_config.use_salesloft)
     use_gong       = title(var.app_config.use_gong)
+    use_outreach   = title(var.app_config.use_outreach)
   }
 }
 
@@ -289,10 +290,15 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     salesloftSecret       = var.app_config.salesloft_secret
     salesloftRedirectUri  = var.app_config.salesloft_redirect_uri
 
-    gongBaseUrl           = each.value.gong_base_url
-    gongClientId          = each.value.gong_client_id
-    gongSecret            = each.value.gong_secret
-    gongRedirectUri       = each.value.gong_redirect_uri
+    gongBaseUrl           = var.app_config.gong_base_url
+    gongClientId          = var.app_config.gong_client_id
+    gongSecret            = var.app_config.gong_secret
+    gongRedirectUri       = var.app_config.gong_redirect_uri
+
+    outreachBaseUrl       = var.app_config.outreach_base_url
+    outreachClientId      = var.app_config.outreach_client_id
+    outreachSecret        = var.app_config.outreach_secret
+    outreachRedirectUri   = var.app_config.outreach_redirect_uri
   })
 }
 

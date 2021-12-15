@@ -56,33 +56,37 @@ def check_for_time(tz, hour, minute):
     current = pytz.utc.localize(datetime.combine(datetime.today(), currenttime)).astimezone(
         user_timezone
     )
-    min = 00 if minute <= 30 else 30
-    return current >= current.replace(minute=min) and current <= current.replace(
-        hour=hour, minute=minute
+    min = 00 if minute >= 30 else 30
+    hr = hour - 1 if minute < 30 else hour
+    return current <= current.replace(hour=hour, minute=minute) and current >= current.replace(
+        hour=hr, minute=min
     )
 
 
 def check_for_uncompleted_meetings(user_id, org_level=False):
     user = User.objects.get(id=user_id)
-    if org_level:
-        users = User.objects.filter(
-            slack_integration__recap_receivers__contains=[user.slack_integration.slack_id]
-        )
-        not_completed = []
-        for user in users:
+    if hasattr(user, "slack_integration"):
+        if org_level:
+            users = User.objects.filter(
+                slack_integration__recap_receivers__contains=[user.slack_integration.slack_id]
+            )
+            not_completed = []
+            for user in users:
+                total_meetings = MeetingWorkflow.objects.filter(user=user.id).filter(
+                    datetime_created__contains=datetime.today().date()
+                )
+                user_not_completed = [
+                    meeting for meeting in total_meetings if meeting.progress == 0
+                ]
+                if len(user_not_completed):
+                    not_completed = [*not_completed, *user_not_completed]
+        else:
             total_meetings = MeetingWorkflow.objects.filter(user=user.id).filter(
                 datetime_created__contains=datetime.today().date()
             )
-            user_not_completed = [meeting for meeting in total_meetings if meeting.progress == 0]
-            if len(user_not_completed):
-                not_completed = [*not_completed, *user_not_completed]
-    else:
-        total_meetings = MeetingWorkflow.objects.filter(user=user.id).filter(
-            datetime_created__contains=datetime.today().date()
-        )
-        not_completed = [meeting for meeting in total_meetings if meeting.progress == 0]
-    if len(not_completed):
-        return {"status": True, "not_completed": len(not_completed)}
+            not_completed = [meeting for meeting in total_meetings if meeting.progress == 0]
+        if len(not_completed):
+            return {"status": True, "not_completed": len(not_completed)}
     return {"status": False}
 
 
@@ -96,42 +100,58 @@ def check_workflows_count(user_id):
 @background()
 def _process_send_workflow_reminder(user_id, workflow_count):
     user = User.objects.get(id=user_id)
-    access_token = user.organization.slack_integration.access_token
-    blocks = block_sets.get_block_set("workflow_reminder", {"workflow_count": workflow_count})
-    try:
-        slack_requests.send_channel_message(
-            user.slack_integration.channel,
-            access_token,
-            text="Workflow Reminder",
-            block_set=blocks,
-        )
-    except Exception as e:
-        logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
+    if hasattr(user, "slack_integration"):
+        access_token = user.organization.slack_integration.access_token
+        blocks = block_sets.get_block_set("workflow_reminder", {"workflow_count": workflow_count})
+
+        try:
+            slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                access_token,
+                text="Workflow Reminder",
+                block_set=blocks,
+            )
+        except Exception as e:
+            logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
+    else:
+        logger.exception(f"{user.email} does not have a slack account")
 
 
 @background()
 def _process_send_meeting_reminder(user_id, not_completed):
     user = User.objects.get(id=user_id)
-    access_token = user.organization.slack_integration.access_token
-    blocks = block_sets.get_block_set("meeting_reminder", {"not_completed": not_completed})
-    try:
-        slack_requests.send_channel_message(
-            user.slack_integration.channel, access_token, text="Meeting Reminder", block_set=blocks,
-        )
-    except Exception as e:
-        logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
+    if hasattr(user, "slack_integration"):
+        access_token = user.organization.slack_integration.access_token
+        blocks = block_sets.get_block_set("meeting_reminder", {"not_completed": not_completed})
+        try:
+            slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                access_token,
+                text="Meeting Reminder",
+                block_set=blocks,
+            )
+        except Exception as e:
+            logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
+    else:
+        logger.exception(f"{user.email} does not have a slack account")
 
 
 @background()
 def _process_send_manager_reminder(user_id, not_completed):
     user = User.objects.get(id=user_id)
-    access_token = user.organization.slack_integration.access_token
-    blocks = block_sets.get_block_set(
-        "manager_meeting_reminder", {"not_completed": not_completed, "name": user.full_name}
-    )
-    try:
-        slack_requests.send_channel_message(
-            user.slack_integration.channel, access_token, text="Meeting Reminder", block_set=blocks,
+    if hasattr(user, "slack_integration"):
+        access_token = user.organization.slack_integration.access_token
+        blocks = block_sets.get_block_set(
+            "manager_meeting_reminder", {"not_completed": not_completed, "name": user.full_name}
         )
-    except Exception as e:
-        logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
+        try:
+            slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                access_token,
+                text="Meeting Reminder",
+                block_set=blocks,
+            )
+        except Exception as e:
+            logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
+    else:
+        logger.exception(f"{user.email} does not have a slack account")

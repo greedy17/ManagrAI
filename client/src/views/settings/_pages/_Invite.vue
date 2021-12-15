@@ -161,7 +161,7 @@
             style="display: flex; align-items: flex-start"
             class="invite-list__section__item col"
           >
-            {{ member.firstName ? member.firstName : 'Name pending' }}
+            {{ member.firstName ? member.firstName : 'Pending' }}
             <p style="color: #beb5cc; font-size: 0.65rem; margin-top: 0.25rem">
               {{ member.email }}
             </p>
