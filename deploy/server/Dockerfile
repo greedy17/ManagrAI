@@ -102,7 +102,12 @@ ENV SECRET_KEY='secret123' \
   GONG_BASE_URL='' \
   GONG_CLIENT_ID='' \
   GONG_SECRET='' \
-  GONG_REDIRECT_URI=''
+  GONG_REDIRECT_URI='' \
+  USE_OUTREACH=False \
+  OUTREACH_BASE_URL='' \
+  OUTREACH_CLIENT_ID='' \
+  OUTREACH_SECRET='' \
+  OUTREACH_REDIRECT_URI=''
 
 # Set the name of the working directory inside the docker container
 WORKDIR /app

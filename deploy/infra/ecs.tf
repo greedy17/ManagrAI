@@ -84,6 +84,7 @@ data "template_file" "managr_app" {
     use_salesforce = title(each.value.use_salesforce)
     use_salesloft  = title(each.value.use_salesloft)
     use_gong       = title(each.value.use_gong)
+    use_outreach   = title(each.value.use_outreach)
   }
 }
 
@@ -131,6 +132,7 @@ data "template_file" "managr_app_scheduled_tasks" {
     use_salesforce = title(each.value.env.use_salesforce)
     use_salesloft  = title(each.value.env.use_salesloft)
     use_gong       = title(each.value.env.use_gong)
+    use_outreach   = title(each.value.env.use_outreach)
   }
 }
 
@@ -306,5 +308,10 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     gongClientId          = each.value.gong_client_id
     gongSecret            = each.value.gong_secret
     gongRedirectUri       = each.value.gong_redirect_uri
+
+    outreachBaseUrl       = each.value.outreach_base_url
+    outreachClientId      = each.value.outreach_client_id
+    outreachSecret        = each.value.outreach_secret
+    outreachRedirectUri   = each.value.outreach_redirect_uri
   })
 }

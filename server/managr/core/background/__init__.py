@@ -56,10 +56,10 @@ def check_for_time(tz, hour, minute):
     current = pytz.utc.localize(datetime.combine(datetime.today(), currenttime)).astimezone(
         user_timezone
     )
-    min = 00 if minute <= 30 else 30
-    logger.info(f"CHECK FOR TIME INFO: current time: {currenttime}, current local: {current}")
-    return current >= current.replace(minute=min) and current <= current.replace(
-        hour=hour, minute=minute
+    min = 00 if minute >= 30 else 30
+    hr = hour - 1 if minute < 30 else hour
+    return current <= current.replace(hour=hour, minute=minute) and current >= current.replace(
+        hour=hr, minute=min
     )
 
 

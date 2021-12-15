@@ -39,6 +39,7 @@ class CustomOpportunityAdmin(admin.ModelAdmin):
         "name",
         "last_edited",
     )
+    readonly_fields = ["contacts", "imported_by", "secondary_data", "account", "owner"]
 
 
 class CustomLeadAdmin(admin.ModelAdmin):

@@ -129,6 +129,12 @@ variable "app_config" {
     gong_client_id          = string
     gong_secret             = string
     gong_redirect_uri       = string
+
+    use_outreach            = bool
+    outreach_base_url       = string
+    outreach_client_id      = string
+    outreach_secret         = string
+    outreach_redirect_uri   = string
   })
 }
 

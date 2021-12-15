@@ -295,6 +295,7 @@ def handle_block_suggestion(payload):
         slack_const.GET_LOCAL_RESOURCE_OPTIONS: process_get_local_resource_options,
         slack_const.GET_EXTERNAL_RELATIONSHIP_OPTIONS: process_get_external_relationship_options,
         slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS: process_get_local_resource_options,
+        slack_const.GET_NOTES: process_get_local_resource_options,
         slack_const.COMMAND_SUMMARY__GET_LOCAL_RESOURCE_OPTIONS: process_get_local_resource_options,
         slack_const.GET_PICKLIST_OPTIONS: process_get_picklist_options,
         slack_const.GET_EXTERNAL_PICKLIST_OPTIONS: process_get_external_picklist_options,

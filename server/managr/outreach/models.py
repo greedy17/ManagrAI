@@ -269,7 +269,6 @@ class SequenceAdapter:
     def add_sequence_state(self, access_token, prospect_id, mailbox):
         headers = outreach_consts.OUTREACH_REQUEST_HEADERS(access_token)
         data = outreach_consts.OUTREACH_SEQUENCE_STATE_BODY(prospect_id, self.sequence_id, mailbox)
-        print(data)
         res = client.post(
             f"{outreach_consts.OUTREACH_BASE_URI}/sequenceStates",
             data=json.dumps(data),
@@ -444,7 +443,6 @@ class ProspectAdapter:
             headers=headers,
             data=json.dumps(data),
         )
-        print(res.json())
         return ProspectAdapter._handle_response(res)
 
 

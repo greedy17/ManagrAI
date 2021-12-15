@@ -3,6 +3,7 @@ from django.contrib import admin
 from managr.slack.models import OrganizationSlackIntegration
 
 from .models import (
+    OpportunityLineItem,
     Organization,
     Account,
     Contact,
@@ -58,6 +59,7 @@ class CustomContact(admin.ModelAdmin):
         "imported_by",
         "last_edited",
     )
+    readonly_fields = ["secondary_data", "imported_by", "account"]
 
 
 class CustomProduct2(admin.ModelAdmin):
@@ -86,6 +88,7 @@ admin.site.register(Account, CustomAccount)
 admin.site.register(Product2, CustomProduct2)
 admin.site.register(Pricebook2, CustomPricebook2)
 admin.site.register(PricebookEntry, CustomPricebookEntry)
+admin.site.register(OpportunityLineItem)
 admin.site.register(Contact, CustomContact)
 admin.site.register(ActionChoice)
 admin.site.register(Stage)

@@ -14,12 +14,6 @@
         </div>
       </router-link>
 
-      <!-- <div v-if="user" id="toolTip">
-        <p v-if="user.onboarding">
-          Onboarding complete! We'll take it from here. Feel free to activate the rest of the
-          workflows now or come back later.
-        </p>
-      </div> -->
       <div
         v-if="isOnboarding && user.activatedManagrConfigs.includes('Update Forecast')"
         style="margin-bottom: -0.5rem"
@@ -27,8 +21,8 @@
         id="toolTip"
       >
         <p>
-          Onboarding complete! We'll take it from here. Visit this tab to run, edit, or delete
-          workflows. Stay here to activate the rest.
+          Onboarding Complete! Visit the tab below to run, edit, or delete workflows. You can also
+          stay on this page to activate more worklows.
         </p>
         <div id="tailShadow"></div>
         <div id="tail1"></div>

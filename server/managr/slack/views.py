@@ -2,7 +2,7 @@ import json
 import logging
 from urllib.parse import urlencode
 import uuid
-
+import pdb
 from datetime import datetime
 from managr.utils import sites as site_utils
 
@@ -45,6 +45,7 @@ from managr.salesforce.models import SalesforceAuthAccountAdapter
 from managr.core.serializers import UserSerializer
 from managr.core.models import User
 from managr.api.decorators import slack_api_exceptions
+from managr.organization.models import Organization
 
 from .models import (
     OrganizationSlackIntegration,
@@ -488,8 +489,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
         """Handle POST action of the custom Slack form endpoint."""
         organization = request.user.organization
 
-        print("REQUEST.DATA:", request.data)
-
+        logger.info("REQUEST.DATA:", request.data)
         # Make updates - get or create custom_slack_form
         try:
             instance = organization.custom_slack_form
@@ -537,6 +537,9 @@ class SlackFormsViewSet(
             instance.fields.add(field, through_defaults={"order": i})
 
         instance.save()
+        if request.data["resource"] == "OpportunityLineItem":
+            org = Organization.objects.get(id=request.data["organization"])
+            org.update_has_settings("products")
         return Response(serializer.data)
 
     def update(self, request, *args, **kwargs):
@@ -1065,7 +1068,11 @@ def get_notes_command(request):
     user = slack.user
     access_token = user.organization.slack_integration.access_token
     trigger_id = request.data.get("trigger_id")
-    context = {"u": str(user.id), "slack_id": slack_id, "type": "command"}
+    context = {
+        "u": str(user.id),
+        "slack_id": slack_id,
+        "type": "command",
+    }
     data = {
         "trigger_id": trigger_id,
         "view": {
@@ -1073,7 +1080,6 @@ def get_notes_command(request):
             "callback_id": slack_const.GET_NOTES,
             "title": {"type": "plain_text", "text": "Choose opportunity"},
             "blocks": get_block_set("choose_opportunity", context=context),
-            "submit": {"type": "plain_text", "text": "Get Notes",},
             "private_metadata": json.dumps(context),
         },
     }
