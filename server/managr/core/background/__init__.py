@@ -57,7 +57,6 @@ def check_for_time(tz, hour, minute):
         user_timezone
     )
     min = 00 if minute <= 30 else 30
-    logger.info(f"CHECK FOR TIME INFO: current time: {currenttime}, current local: {current}")
     return current >= current.replace(minute=min) and current <= current.replace(
         hour=hour, minute=minute
     )
