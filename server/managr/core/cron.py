@@ -377,11 +377,8 @@ def check_reminders(user_id):
             )
             if check:
                 if key == core_consts.CALENDAR_REMINDER:
-                    try:
-                        user.nylas
-                    except NylasAuthAccount.DoesNotExist:
-                        return []
-                    _send_calendar_details(user_id)
+                    if hasattr(user, "nylas"):
+                        _send_calendar_details(user_id)
                 elif key == core_consts.WORKFLOW_REMINDER:
                     if datetime.datetime.today().weekday() == 4:
                         workflows = check_workflows_count(user.id)
@@ -398,8 +395,5 @@ def check_reminders(user_id):
                     meetings = check_for_uncompleted_meetings(user.id, True)
                     if meetings["status"]:
                         emit_process_send_manager_reminder(str(user.id), meetings["not_completed"])
-
-
-
 
     return
