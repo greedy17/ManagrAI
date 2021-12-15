@@ -4,9 +4,7 @@
       <h2 style="border-bottom: 3px solid #199e54; padding-bottom: 0.5rem; color: black">
         Products
       </h2>
-      <p style="color: #5d5e5e; margin-top: -0.5rem">
-        Add all the required Product fields in order to create them via Slack
-      </p>
+      <p style="color: #5d5e5e; margin-top: -0.5rem">Map your Product fields</p>
     </div>
 
     <div class="box__content--expanded">

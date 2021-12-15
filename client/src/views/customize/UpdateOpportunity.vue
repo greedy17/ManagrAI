@@ -74,6 +74,7 @@ export default {
     }
   },
   watch: {},
+
   async created() {
     try {
       this.allForms = await SlackOAuth.api.getOrgCustomForm()

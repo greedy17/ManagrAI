@@ -6,11 +6,8 @@
           Update
           <span style="color: #199e54">Forecast</span>
         </span>
-        <p v-if="userLevel === 'REP'" style="color: #3c3940; font-size: 1.1rem">
-          Select users and a Slack #channel for this workflow
-        </p>
-        <p style="color: #3c3940; font-size: 1.1rem" v-else>
-          Select the day (or date), users, and a Slack #channel for this workflow
+        <p style="color: #3c3940; font-size: 1.1rem">
+          View and update all Opportunities that are due to close but are not in Commit
         </p>
       </h2>
     </div>
@@ -28,7 +25,9 @@
             :errors="form.field.recurrenceDay.errors"
           >
             <div style="margin-bottom: 0.5rem" class="row__">
-              <label>Weekly</label>
+              <label :class="form.field.recurrenceFrequency.value == 'WEEKLY' ? 'green' : ''"
+                >Weekly</label
+              >
               <ToggleCheckBox
                 @input="
                   form.field.recurrenceFrequency.value == 'WEEKLY'
@@ -39,7 +38,9 @@
                 offColor="#199e54"
                 onColor="#199e54"
               />
-              <label>Monthly</label>
+              <label :class="form.field.recurrenceFrequency.value == 'MONTHLY' ? 'green' : ''"
+                >Monthly</label
+              >
             </div>
 
             <div v-if="form.field.recurrenceFrequency.value == 'WEEKLY'">
