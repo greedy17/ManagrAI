@@ -377,9 +377,11 @@ def check_reminders(user_id):
             )
             if check:
                 if key == core_consts.CALENDAR_REMINDER:
-                    processed_data = _process_calendar_details(str(user_id))
-                    if processed_data:
-                        meeting_prep(processed_data, user_id, send_slack=True)
+                    try:
+                        user.nylas
+                    except NylasAuthAccount.DoesNotExist:
+                        return []
+                    _send_calendar_details(user_id)
                 elif key == core_consts.WORKFLOW_REMINDER:
                     if datetime.datetime.today().weekday() == 4:
                         workflows = check_workflows_count(user.id)
