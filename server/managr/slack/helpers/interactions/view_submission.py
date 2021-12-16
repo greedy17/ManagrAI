@@ -529,7 +529,9 @@ def process_submit_resource_data(payload, context):
                 "view": {
                     "type": "modal",
                     "title": {"type": "plain_text", "text": "Success"},
-                    "blocks": get_block_set("success_text_block_set", {"message": message},),
+                    "blocks": get_block_set(
+                        "success_text_modal", {"message": "Update successful!"},
+                    ),
                     "private_metadata": json.dumps(context),
                     "clear_on_close": True,
                 },

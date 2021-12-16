@@ -103,7 +103,6 @@ def process_meeting_review(payload, context):
 
 @processor(required_context=["w"], action=slack_const.VIEWS_OPEN)
 def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPEN):
-    print(context)
     url = slack_const.SLACK_API_ROOT + action
     slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
     type = context.get("type", None)
@@ -752,7 +751,6 @@ def process_restart_flow(payload, context):
 def process_show_update_resource_form(payload, context):
     from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 
-    print(payload)
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
     is_update = payload.get("view", None)
