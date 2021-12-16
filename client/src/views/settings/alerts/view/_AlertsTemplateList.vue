@@ -50,7 +50,11 @@
             <h3>{{ alert.title.toUpperCase() }}</h3>
           </div>
           <div class="row">
-            <button @click.stop="onRunAlertTemplateNow(alert.id)" class="green_button">
+            <button
+              :disabled="clicked.includes(alert.id)"
+              @click.stop="onRunAlertTemplateNow(alert.id)"
+              class="green_button"
+            >
               Run now
             </button>
             <!-- <div class="centered">
@@ -277,6 +281,7 @@ export default {
       configArray: [],
       currentZoomChannel: '',
       currentRecapChannel: '',
+      clicked: [],
     }
   },
   async created() {
@@ -427,6 +432,7 @@ export default {
           type: 'success',
           timeout: 2000,
         })
+        this.clicked.push(id)
       } catch {
         this.$Alert.alert({
           message: 'There was an error removing your alert',
@@ -478,7 +484,10 @@ export default {
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
-
+button:disabled {
+  background-color: $panther-silver;
+  cursor: not-allowed;
+}
 ::v-deep .item-container__label {
   color: white;
   border: none;
