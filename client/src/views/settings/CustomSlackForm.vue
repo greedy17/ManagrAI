@@ -59,7 +59,7 @@
         <div v-if="resource === 'OpportunityLineItem'">
           <div v-if="!addedFieldNames.includes('PricebookEntryId')" class="centered field-border">
             <p style="margin-left: 0.5rem; font-weight: bold">
-              Pricebook <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+              PricebookEntry <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
             </p>
 
             <img
@@ -77,7 +77,7 @@
               "
               class="default_button bouncy"
             >
-              Pricebook
+              Pricebooks
             </button>
           </div>
 
