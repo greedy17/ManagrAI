@@ -126,7 +126,6 @@ def process_zoom_meeting_data(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     loading_view_data = {
         "trigger_id": trigger_id,
-        "view_id": view_id,
         "view": {
             "type": "modal",
             "title": {"type": "plain_text", "text": "Loading"},
@@ -249,7 +248,6 @@ def process_next_page_slack_commands_form(payload, context):
 @processor(required_context=["f"])
 def process_submit_resource_data(payload, context):
     # get context
-    print(context)
     has_error = False
     state = payload["view"]["state"]["values"]
     current_form_ids = context.get("f").split(",")
@@ -532,9 +530,7 @@ def process_submit_resource_data(payload, context):
                 "view": {
                     "type": "modal",
                     "title": {"type": "plain_text", "text": "Success"},
-                    "blocks": get_block_set(
-                        "success_modal", {"message": message, "u": user.id, "form_id": form_id},
-                    ),
+                    "blocks": get_block_set("success_text_block_set", {"message": message},),
                     "private_metadata": json.dumps(context),
                     "clear_on_close": True,
                 },
@@ -740,6 +736,11 @@ def process_update_meeting_contact(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     org = workflow.user.organization
     access_token = org.slack_integration.access_token
+    private_metadata = {
+        "original_message_channel": context.get("channel"),
+        "original_message_timestamp": context.get("timestamp"),
+        "w": context.get("w"),
+    }
     if check_contact_last_name(workflow.id):
         update_res = slack_requests.update_channel_message(
             context.get("channel"),
@@ -747,7 +748,7 @@ def process_update_meeting_contact(payload, context):
             access_token,
             block_set=get_block_set("initial_meeting_interaction", {"w": context.get("w")}),
         )
-    blocks = get_block_set("show_meeting_contacts", {"w": context.get("w")},)
+    blocks = get_block_set("show_meeting_contacts", private_metadata)
     data = {
         "trigger_id": trigger_id,
         "view_id": view_id,

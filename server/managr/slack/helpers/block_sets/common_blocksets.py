@@ -76,6 +76,13 @@ def success_modal_block_set(context):
 
 
 @block_set()
+def success_text_block_set(context):
+    message = context.get("message", ":clap: Success!")
+    blocks = [block_builders.simple_section(message, text_type="mrkdwn")]
+    return blocks
+
+
+@block_set()
 def error_modal_block_set(context):
     message = context.get("message", ":no_entry: Ugh-Ohhhh.. We've hit a snag!")
     show_image = context.get("show_image", True)
