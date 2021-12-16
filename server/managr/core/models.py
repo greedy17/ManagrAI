@@ -1,8 +1,15 @@
+import datetime
+import time
+from urllib.parse import urlencode
 import uuid
 import json
 import logging
 
+
 from urllib.error import HTTPError
+from dateutil import tz
+import pytz
+import requests
 
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
@@ -18,6 +25,7 @@ from managr.utils.client import HttpClient
 from managr.core import constants as core_consts
 from managr.organization import constants as org_consts
 from managr.slack.helpers import block_builders
+from managr.core.nylas.auth import convert_local_time_to_unix
 
 from .nylas.exceptions import NylasAPIError
 
@@ -428,8 +436,25 @@ class NylasAuthAccount(TimeStampModel):
                 "error_message": error_message,
             }
 
-            NylasAPIError(e)
+            NylasAPIError(kwargs)
         return data
+
+    def _get_calendar_data(self):
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json",
+        }
+        user_timezone = f"{self.user.timezone}"
+
+        starts_after = convert_local_time_to_unix(user_timezone, 12, 30)
+        ends_before = convert_local_time_to_unix(user_timezone, 23, 00)
+        # print(ends_before, "ends before")
+        query = dict({"starts_after": starts_after, "ends_before": ends_before})
+        params = urlencode(query)
+        events = requests.get(
+            f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.EVENT_POST}?{params}", headers=headers,
+        )
+        return self._handle_response(events)
 
 
 class NotificationQuerySet(models.QuerySet):
@@ -485,3 +510,39 @@ class Notification(TimeStampModel):
 
     class Meta:
         ordering = ["-notify_at"]
+
+
+class MeetingPrepQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.is_active:
+            return self.filter(user=user.id)
+
+
+class MeetingPrepInstance(TimeStampModel):
+    user = models.ForeignKey(
+        "core.User", on_delete=models.CASCADE, related_name="meeting_preps", null=True
+    )
+    participants = ArrayField(
+        JSONField(max_length=128, default=dict),
+        default=list,
+        blank=True,
+        null=True,
+        help_text="Json object of participants",
+    )
+    event_data = JSONField(max_length=128, default=dict)
+    resource_id = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text="The id of the related resource unopinionated",
+    )
+    resource_type = models.CharField(
+        max_length=255, null=True, blank=True, help_text="The class name of the resource"
+    )
+
+    objects = MeetingPrepQuerySet.as_manager()
+
+    class Meta:
+        ordering = ["-datetime_created"]
