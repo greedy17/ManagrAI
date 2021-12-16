@@ -34,6 +34,7 @@ import CreateLeads from '@/views/customize/CreateLeads'
 import ProfilePage from '@/views/user/ProfilePage'
 import CloseDateApproaching from '@/views/settings/alerts/create/templates/CloseDateApproaching'
 import CloseDatePassed from '@/views/settings/alerts/create/templates/CloseDatePassed'
+import NextStepDate from '@/views/settings/alerts/create/templates/NextStepDate'
 import DealRotting from '@/views/settings/alerts/create/templates/DealRotting'
 import UpdateForecast from '@/views/settings/alerts/create/templates/UpdateForecast'
 import LogZoom from '@/views/settings/alerts/create/templates/LogZoom'
@@ -164,6 +165,11 @@ export default new Router({
       path: '/close-date-passed',
       name: 'CloseDatePassed',
       component: CloseDatePassed,
+    },
+    {
+      path: '/next-step',
+      name: 'NextStep',
+      component: NextStepDate,
     },
     {
       path: '/close-date-approaching',

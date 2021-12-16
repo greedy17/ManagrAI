@@ -300,6 +300,62 @@
           </h4>
         </div>
       </div>
+
+      <div
+        :class="
+          !user.activatedManagrConfigs.includes('Update Forecast') && isOnboarding && !isAdmin
+            ? 'card__ onboarding'
+            : 'card__'
+        "
+      >
+        <div class="card__header">
+          <h3 style="font-size: 1.3rem">Next Step<span style="color: #ddad3c"> Due</span></h3>
+        </div>
+
+        <div class="row">
+          <img
+            style="height: 2.25rem; margin-right: 1rem"
+            src="@/assets/images/slackLogo.png"
+            alt=""
+          />
+          <img
+            style="height: 1.75rem; margin-right: 1rem"
+            src="@/assets/images/plusOne.png"
+            alt=""
+          />
+          <img
+            style="height: 2.25rem; margin-right: 1rem"
+            src="@/assets/images/salesforce.png"
+            alt=""
+          />
+        </div>
+
+        <div style="margin-top: 2rem">
+          <button
+            v-if="
+              hasSalesforceIntegration &&
+              hasSlackIntegration &&
+              !user.activatedManagrConfigs.includes('Next Step Due')
+            "
+            @click="goToNextStep"
+            class="orange_button"
+          >
+            Activate
+          </button>
+          <h4
+            style="margin-top: -0.5rem"
+            v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)"
+          >
+            Connect Slack & Salesforce to acivate
+          </h4>
+          <h4
+            style="margin-top: -0.5rem"
+            v-else-if="user.activatedManagrConfigs.includes('Close Date Approaching')"
+          >
+            Activated
+          </h4>
+        </div>
+      </div>
       <div
         v-if="user.userLevel === 'MANAGER'"
         :class="
@@ -449,6 +505,9 @@ export default {
     },
     goToZoomRecap() {
       this.$router.push({ name: 'ZoomRecap' })
+    },
+    goToNextStep() {
+      this.$router.push({ name: 'NextStep' })
     },
     getWorkflowIds(arr1, arr2) {
       return arr1.some((item) => arr2.includes(item))
