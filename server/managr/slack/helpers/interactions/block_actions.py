@@ -752,13 +752,12 @@ def process_restart_flow(payload, context):
 def process_show_update_resource_form(payload, context):
     from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 
+    print(payload)
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
     is_update = payload.get("view", None)
     url = f"{slack_const.SLACK_API_ROOT}{slack_const.VIEWS_UPDATE if is_update else slack_const.VIEWS_OPEN}"
-    trigger_id = payload["trigger_id"]
     loading_view_data = {
-        "trigger_id": trigger_id,
         "view": {
             "type": "modal",
             "title": {"type": "plain_text", "text": "Loading"},
@@ -770,6 +769,10 @@ def process_show_update_resource_form(payload, context):
             ),
         },
     }
+    if is_update:
+        loading_view_data["view_id"] = is_update["id"]
+    else:
+        loading_view_data["trigger_id"] = payload["trigger_id"]
     try:
         loading_res = slack_requests.generic_request(
             url, loading_view_data, access_token=access_token,
