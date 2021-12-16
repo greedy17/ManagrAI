@@ -160,8 +160,8 @@ def add_to_cadence_block_set(context):
 def meeting_contacts_block_set(context):
     # if this is a returning view it will also contain the selected contacts
     type = context.get("type", None)
-    channel = f"channel={context.get('original_message_channel')}"
-    timestamp = f"timestamp={context.get('original_message_timestamp')}"
+    channel = f"original_message_channel={context.get('original_message_channel')}"
+    timestamp = f"original_message_timestamp={context.get('original_message_timestamp')}"
 
     if type:
         block_sets = []

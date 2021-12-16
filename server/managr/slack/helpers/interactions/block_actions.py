@@ -103,6 +103,7 @@ def process_meeting_review(payload, context):
 
 @processor(required_context=["w"], action=slack_const.VIEWS_OPEN)
 def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPEN):
+    print(context)
     url = slack_const.SLACK_API_ROOT + action
     slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
     type = context.get("type", None)
@@ -119,10 +120,10 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
     private_metadata = {
         "original_message_channel": payload["channel"]["id"]
         if "channel" in payload
-        else context.get("channel"),
+        else context.get("original_message_channel"),
         "original_message_timestamp": payload["message"]["ts"]
         if "message" in payload
-        else context.get("timestamp"),
+        else context.get("original_message_channel"),
     }
     private_metadata.update(context)
     blocks = get_block_set("show_meeting_contacts", private_metadata)
@@ -183,8 +184,8 @@ def process_edit_meeting_contact(payload, context):
         "w": context.get("w"),
         "tracking_id": context.get("tracking_id"),
         "current_view_id": view_id,
-        "channel": context.get("channel"),
-        "timestamp": context.get("timestamp"),
+        "original_message_channel": context.get("original_message_channel"),
+        "original_message_timestamp": context.get("original_message_timestamp"),
     }
     if type:
         edit_block_context.update({"type": type})
@@ -472,8 +473,8 @@ def process_remove_contact_from_meeting(payload, context):
     meeting.save()
     if check_contact_last_name(workflow.id):
         update_res = slack_requests.update_channel_message(
-            context.get("channel"),
-            context.get("timestamp"),
+            context.get("original_message_channel"),
+            context.get("original_message_timestamp"),
             access_token,
             block_set=get_block_set("initial_meeting_interaction", {"w": context.get("w")}),
         )
