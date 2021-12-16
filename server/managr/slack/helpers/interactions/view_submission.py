@@ -126,7 +126,6 @@ def process_zoom_meeting_data(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     loading_view_data = {
         "trigger_id": trigger_id,
-        "view_id": view_id,
         "view": {
             "type": "modal",
             "title": {"type": "plain_text", "text": "Loading"},
