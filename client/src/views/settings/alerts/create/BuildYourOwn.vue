@@ -343,6 +343,7 @@
               </div>
 
               <div
+                v-if="user.userLevel == 'MANAGER'"
                 style="
                   display: flex;
                   flex-direction: column;
@@ -813,6 +814,15 @@ export default {
     },
   },
   methods: {
+    repsPipeline() {
+      if (this.user.userLevel == 'REP') {
+        this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
+        this.setPipelines({
+          fullName: 'MYSELF',
+          id: 'SELF',
+        })
+      }
+    },
     switchBounce() {
       this.templateBounce = !this.templateBounce
     },
@@ -1237,6 +1247,8 @@ export default {
   },
   beforeMount() {
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
+    this.repsPipeline()
+    this.alertTemplateForm.field.isActive.value = true
   },
 }
 </script>

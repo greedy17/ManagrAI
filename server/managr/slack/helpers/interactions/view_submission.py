@@ -121,13 +121,10 @@ def process_zoom_meeting_data(payload, context):
     user = workflow.user
     slack_access_token = user.organization.slack_integration.access_token
     view = payload["view"]
-
     trigger_id = payload["trigger_id"]
-    view_id = view["id"]
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     loading_view_data = {
         "trigger_id": trigger_id,
-        "view_id": view_id,
         "view": {
             "type": "modal",
             "title": {"type": "plain_text", "text": "Loading"},
@@ -250,7 +247,6 @@ def process_next_page_slack_commands_form(payload, context):
 @processor(required_context=["f"])
 def process_submit_resource_data(payload, context):
     # get context
-    print(context)
     has_error = False
     state = payload["view"]["state"]["values"]
     current_form_ids = context.get("f").split(",")
@@ -533,9 +529,7 @@ def process_submit_resource_data(payload, context):
                 "view": {
                     "type": "modal",
                     "title": {"type": "plain_text", "text": "Success"},
-                    "blocks": get_block_set(
-                        "success_modal", {"message": message, "u": user.id, "form_id": form_id},
-                    ),
+                    "blocks": get_block_set("success_text_block_set", {"message": message},),
                     "private_metadata": json.dumps(context),
                     "clear_on_close": True,
                 },
@@ -763,9 +757,6 @@ def process_update_meeting_contact(payload, context):
         "__has_changes": True,
     }
     if type:
-        print(adapter.as_dict)
-        # contact_model = Contact.objects.get(id=)
-        # serializer = ContactSerializer()
         part_index = None
         for index, participant in enumerate(workflow.participants):
             if participant["_tracking_id"] == new_contact["_tracking_id"]:
@@ -783,7 +774,6 @@ def process_update_meeting_contact(payload, context):
         show_meeting_context = {"w": context.get("w"), "type": workflow.resource_type}
         # return {"response_action": "clear"}
     else:
-
         # replace the contact in the participants list
         part_index = None
         for index, participant in enumerate(workflow.meeting.participants):
@@ -808,6 +798,7 @@ def process_update_meeting_contact(payload, context):
                 block_set=get_block_set("initial_meeting_interaction", {"w": context.get("w")}),
             )
     blocks = get_block_set("show_meeting_contacts", show_meeting_context,)
+    # replace the contact in the participants list
     data = {
         "trigger_id": trigger_id,
         "view_id": view_id,

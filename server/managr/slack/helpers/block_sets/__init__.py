@@ -39,6 +39,7 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "schedule_meeting": meeting_review_block_sets.schedule_meeting,
         "add_to_cadence": meeting_review_block_sets.add_to_cadence_block_set,
         "success_modal": common_blocksets.success_modal_block_set,
+        "success_text_modal": common_blocksets.success_text_block_set,
         "home_modal": common_blocksets.home_modal_block_set,
         "home_modal_generic": common_blocksets.home_modal_generic_block_set,
         "hour_options": common_blocksets.hour_options,

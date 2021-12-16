@@ -751,8 +751,32 @@ def process_restart_flow(payload, context):
 def process_show_update_resource_form(payload, context):
     from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 
+    user = User.objects.get(id=context.get("u"))
+    access_token = user.organization.slack_integration.access_token
     is_update = payload.get("view", None)
     url = f"{slack_const.SLACK_API_ROOT}{slack_const.VIEWS_UPDATE if is_update else slack_const.VIEWS_OPEN}"
+    trigger_id = payload["trigger_id"]
+    loading_view_data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Loading"},
+            "blocks": get_block_set(
+                "loading",
+                {
+                    "message": f"Salesforce is being a bit slow :sleeping:… please give it a few seconds or click 'refresh' above",
+                },
+            ),
+        },
+    }
+    try:
+        loading_res = slack_requests.generic_request(
+            url, loading_view_data, access_token=access_token,
+        )
+    except Exception as e:
+        return logger.exception(
+            f"Failed To Show Loading Screen for user  {str(user.id)} email {user.email} {e}"
+        )
     actions = payload["actions"]
     if actions[0]["type"] == "external_select":
         selected_option = actions[0]["selected_option"]["value"]
@@ -769,8 +793,7 @@ def process_show_update_resource_form(payload, context):
     resource_type = context.get("resource")
     pm = json.loads(payload.get("view", {}).get("private_metadata", "{}"))
     prev_form = pm.get("f", None)
-    user = User.objects.get(id=context.get("u"))
-    access_token = user.organization.slack_integration.access_token
+
     show_submit_button_if_fields_added = False
     has_stage_forms = False
     stage_form = None
@@ -853,7 +876,7 @@ def process_show_update_resource_form(payload, context):
         private_metadata.update({"alert_id": alert_id, "current_page": context.get("current_page")})
     private_metadata.update(context)
     data = {
-        "trigger_id": payload["trigger_id"],
+        "view_id": loading_res["view"]["id"],
         "view": {
             "type": "modal",
             "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
@@ -877,7 +900,9 @@ def process_show_update_resource_form(payload, context):
     if is_update:
         data["view_id"] = is_update.get("id")
 
-    slack_requests.generic_request(url, data, access_token=access_token)
+    slack_requests.generic_request(
+        slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE, data, access_token=access_token
+    )
 
 
 @processor()
