@@ -559,7 +559,7 @@ def _process_add_update_to_sf(form_id, *args):
         WhatId=resource.integration_id,
         ActivityDate=start_time.strftime("%Y-%m-%d"),
         Status="Completed",
-        TaskSubType="Call",
+        TaskSubType="Task",
     )
     attempts = 1
     while True:
