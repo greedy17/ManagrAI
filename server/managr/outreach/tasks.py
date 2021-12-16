@@ -145,7 +145,6 @@ def add_sequence_state(contact_id, sequence_id):
                         },
                     }
                 }
-                print(data)
                 create_res = ProspectAdapter.create_in_outreach(outreach_account.access_token, data)
                 process_prospect(create_res["data"])
                 prospect_id = create_res["data"]["id"]
