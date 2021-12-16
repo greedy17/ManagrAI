@@ -38,5 +38,9 @@ routes = {
         "model": org_models.PricebookEntry,
         "serializer": org_ser.PricebookEntrySerializer,
     },
+    sf_consts.RESOURCE_SYNC_OPPORTUNITYLINEITEM: {
+        "model": org_models.OpportunityLineItem,
+        "serializer": org_ser.OpportunityLineItemSerializer,
+    },
     USER_RESOURCE: {"model": core_models.User, "serializer": core_ser.UserSerializer,},
 }

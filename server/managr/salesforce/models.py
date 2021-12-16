@@ -253,7 +253,6 @@ class SObjectField(TimeStampModel, IntegrationModel):
                 action_query = f"{slack_consts.GET_EXTERNAL_RELATIONSHIP_OPTIONS}?u={user_id}&relationship={self.display_value_keys['api_name']}&fields={','.join(self.display_value_keys['name_fields'])}"
                 if self.api_name == "PricebookEntryId":
                     display_name = "Products"
-                print(self.api_name)
             return block_builders.external_select(
                 f"*{display_name}*",
                 action_query,

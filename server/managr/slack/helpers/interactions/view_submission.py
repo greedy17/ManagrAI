@@ -193,19 +193,19 @@ def process_zoom_meeting_data(payload, context):
     else:
         workflow.operations_list = ops
 
-    ts, channel = workflow.slack_interaction.split("|")
-    block_set = [
-        *get_block_set("loading", {"message": ":rocket: We are saving your data to salesforce..."}),
-    ]
-    try:
-        res = slack_requests.update_channel_message(
-            channel, ts, slack_access_token, block_set=block_set
-        )
-    except Exception as e:
-        return logger.exception(
-            f"Failed To Send Submit Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
+    # ts, channel = workflow.slack_interaction.split("|")
+    # block_set = [
+    #     *get_block_set("loading", {"message": ":rocket: We are saving your data to salesforce..."}),
+    # ]
+    # try:
+    #     res = slack_requests.update_channel_message(
+    #         channel, ts, slack_access_token, block_set=block_set
+    #     )
+    # except Exception as e:
+    #     return logger.exception(
+    #         f"Failed To Send Submit Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+    #     )
+    # workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
     workflow.save()
     workflow.begin_tasks()
     emit_meeting_workflow_tracker(str(workflow.id))

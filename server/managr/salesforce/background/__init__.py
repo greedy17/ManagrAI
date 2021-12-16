@@ -20,7 +20,7 @@ from managr.api.decorators import log_all_exceptions, sf_api_exceptions_wf
 from managr.api.emails import send_html_email
 
 from managr.core.models import User
-from managr.organization.models import Account, Stage, Contact, Organization
+from managr.organization.models import Account, Stage, Contact, Organization, PricebookEntry
 from managr.organization.serializers import AccountSerializer, StageSerializer
 from managr.opportunity.models import Opportunity, Lead
 from managr.opportunity.serializers import OpportunitySerializer
@@ -48,7 +48,13 @@ from ..serializers import (
     SObjectValidationSerializer,
     SObjectPicklistSerializer,
 )
-from ..adapter.models import AccountAdapter, OpportunityAdapter, ActivityAdapter, ContactAdapter
+from ..adapter.models import (
+    AccountAdapter,
+    OpportunityAdapter,
+    ActivityAdapter,
+    ContactAdapter,
+    OpportunityLineItemAdapter,
+)
 from ..adapter.exceptions import (
     TokenExpired,
     FieldValidationError,
@@ -470,53 +476,66 @@ def _process_update_resource_from_meeting(workflow_id, *args):
     return res
 
 
-@background(
-    schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
-)
+# @background(
+#     schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
+# )
 @sf_api_exceptions_wf("update_object_from_review")
 def _process_add_products_to_sf(workflow_id, *args):
     # get workflow
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    update_forms = workflow.forms.filter(
+        template__form_type__in=[
+            slack_consts.FORM_TYPE_UPDATE,
+            slack_consts.FORM_TYPE_STAGE_GATING,
+        ]
+    ).first()
+    opp = Opportunity.objects.get(id=update_forms.resource_id)
     user = workflow.user
+
     # collect forms for resource meeting_review and if stages any stages related forms
     product_form = workflow.forms.filter(template__resource="OpportunityLineItem").first()
+    entry = PricebookEntry.objects.get(integration_id=product_form.saved_data["PricebookEntryId"])
     update_form_ids = []
     # aggregate the data
-    data = dict({})
-
+    data = dict(OpportunityId=opp.integration_id, UnitPrice=entry.unit_price)
     update_form_ids.append(str(product_form.id))
     data = {**data, **product_form.saved_data}
-    print(data)
-    # attempts = 1
-    # while True:
-    #     sf = user.salesforce_account
-    #     try:
-    #         res = workflow.resource.create_in_salesforce(data)
-    #         attempts = 1
-    #         update_forms.update(is_submitted=True, submission_date=timezone.now())
-    #         break
-    #     except TokenExpired as e:
-    #         if attempts >= 5:
-    #             return logger.exception(
-    #                 f"Failed to update resource from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
-    #             )
-    #         else:
-    #             sleep = 1 * 2 ** attempts + random.uniform(0, 1)
-    #             time.sleep(sleep)
-    #             sf.regenerate_token()
-    #             attempts += 1
-    #     except UnableToUnlockRow as e:
-    #         if attempts >= 5:
-    #             logger.exception(
-    #                 f"Failed to update resource from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
-    #             )
-    #             raise e
-    #         else:
-    #             sleep = 1 * 2 ** attempts + random.uniform(0, 1)
-    #             time.sleep(sleep)
-    #             attempts += 1
-    #     except Exception as e:
-    #         raise e
+    sf = user.salesforce_account
+    adapter = sf.object_fields.filter(salesforce_object="OpportunityLineItem").values_list(
+        "api_name", flat=True
+    )
+    attempts = 1
+    while True:
+        sf = user.salesforce_account
+        try:
+            res = OpportunityLineItemAdapter.create(
+                data, sf.access_token, sf.instance_url, adapter, user.id,
+            )
+            attempts = 1
+            update_forms.update(is_submitted=True, submission_date=timezone.now())
+            break
+        except TokenExpired as e:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to update resource from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+                )
+            else:
+                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                time.sleep(sleep)
+                sf.regenerate_token()
+                attempts += 1
+        except UnableToUnlockRow as e:
+            if attempts >= 5:
+                logger.exception(
+                    f"Failed to update resource from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+                )
+                raise e
+            else:
+                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                time.sleep(sleep)
+                attempts += 1
+        except Exception as e:
+            raise e
     return res
 
 

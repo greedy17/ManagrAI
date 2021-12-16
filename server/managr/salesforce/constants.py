@@ -50,7 +50,6 @@ def SALESFORCE_RESOURCE_QUERY_URI(
 ):
     # make a set to remove duplicates
     fields = set(fields)
-    print(resource)
     url = f"{CUSTOM_BASE_URI}/query/?q=SELECT {','.join(fields)}"
     if len(childRelationshipFields):
         for rel, v in childRelationshipFields.items():
