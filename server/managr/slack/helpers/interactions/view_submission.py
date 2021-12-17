@@ -522,28 +522,6 @@ def process_submit_resource_data(payload, context):
                 block_set=blocks,
             )
         else:
-            url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-            success_view_data = {
-                "trigger_id": trigger_id,
-                "view_id": view_id,
-                "view": {
-                    "type": "modal",
-                    "title": {"type": "plain_text", "text": "Success"},
-                    "blocks": get_block_set("success_text_block_set", {"message": message},),
-                    "private_metadata": json.dumps(context),
-                    "clear_on_close": True,
-                },
-            }
-            try:
-                slack_requests.generic_request(
-                    url, success_view_data, access_token=slack_access_token
-                )
-
-            except Exception as e:
-                logger.exception(
-                    f"Failed To Update slack view from loading to success modal  {str(user.id)} email {user.email} {e}"
-                )
-                pass
             try:
                 slack_requests.send_ephemeral_message(
                     user.slack_integration.channel,

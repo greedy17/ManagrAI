@@ -249,7 +249,7 @@
           <p class="card-text">Add Contacts to Sequences</p>
           <div class="card__body">
             <PulseLoadingSpinnerButton
-              v-if="!hasOutreachIntegration && user.isAdmin"
+              v-if="!hasOutreachIntegration"
               :disabled="hasOutreachIntegration"
               @click="onGetAuthLink('OUTREACH')"
               style="margin-left: 1rem; cursor: pointer"
@@ -257,7 +257,7 @@
               text="Connect"
               :loading="generatingToken && selectedIntegration == 'OUTREACH'"
             ></PulseLoadingSpinnerButton>
-            <div v-else-if="hasOutreachIntegration">
+            <div v-else="hasOutreachIntegration">
               <img
                 src="@/assets/images/unplug.png"
                 :loading="generatingToken && selectedIntegration == 'OUTREACH'"
