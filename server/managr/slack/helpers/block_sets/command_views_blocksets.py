@@ -134,7 +134,12 @@ def alert_instance_block_set(context):
     if config and config.recipient_type == "SLACK_CHANNEL":
         in_channel = True
     if instance.form_instance.all().first():
-        form = OrgCustomSlackFormInstance.objects.get(id=instance.form_instance.all().first().id)
+        form = OrgCustomSlackFormInstance.objects.get(
+            id=instance.form_instance.all()
+            .exclude(template__resource="OpportunityLineItem")
+            .first()
+            .id
+        )
         message = f"Successfully updated *{form.resource_type}* _{form.resource_object.name}_"
         blocks = block_sets.get_block_set(
             "success_modal",

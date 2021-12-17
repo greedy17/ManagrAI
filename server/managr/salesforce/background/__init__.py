@@ -476,24 +476,27 @@ def _process_update_resource_from_meeting(workflow_id, *args):
     return res
 
 
-@background(
-    schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
-)
-@sf_api_exceptions_wf("update_object_from_review")
-def _process_add_products_to_sf(workflow_id, *args):
+# @background(
+#     schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
+# )
+@sf_api_exceptions_wf("add_call_log")
+def _process_add_products_to_sf(workflow_id, non_meeting=False, *args):
+    if non_meeting:
+        product_form = OrgCustomSlackFormInstance.objects.get(id=workflow_id)
+        opp = Opportunity.objects.get(id=product_form.resource_id)
+        user = product_form.user
     # get workflow
-    workflow = MeetingWorkflow.objects.get(id=workflow_id)
-    update_forms = workflow.forms.filter(
-        template__form_type__in=[
-            slack_consts.FORM_TYPE_UPDATE,
-            slack_consts.FORM_TYPE_STAGE_GATING,
-        ]
-    ).first()
-    opp = Opportunity.objects.get(id=update_forms.resource_id)
-    user = workflow.user
-
-    # collect forms for resource meeting_review and if stages any stages related forms
-    product_form = workflow.forms.filter(template__resource="OpportunityLineItem").first()
+    else:
+        workflow = MeetingWorkflow.objects.get(id=workflow_id)
+        update_forms = workflow.forms.filter(
+            template__form_type__in=[
+                slack_consts.FORM_TYPE_UPDATE,
+                slack_consts.FORM_TYPE_STAGE_GATING,
+            ]
+        ).first()
+        opp = Opportunity.objects.get(id=update_forms.resource_id)
+        user = workflow.user
+        product_form = workflow.forms.filter(template__resource="OpportunityLineItem").first()
     entry = PricebookEntry.objects.get(integration_id=product_form.saved_data["PricebookEntryId"])
     update_form_ids = []
     # aggregate the data
@@ -517,7 +520,10 @@ def _process_add_products_to_sf(workflow_id, *args):
             attempts = 1
             product_form.is_submitted = True
             product_form.submission_date = timezone.now()
-            workflow.save()
+            if non_meeting:
+                product_form.save()
+            else:
+                workflow.save()
             break
         except TokenExpired as e:
             if attempts >= 5:
