@@ -863,6 +863,9 @@ class SalesforceAuthAccount(TimeStampModel):
             PricebookEntry=self.object_fields.filter(
                 salesforce_object="PricebookEntry"
             ).values_list("api_name", flat=True),
+            OpportunityLineItem=self.object_fields.filter(
+                salesforce_object="OpportunityLineItem"
+            ).values_list("api_name", flat=True),
         )
         return SalesforceAuthAccountAdapter(**data)
 

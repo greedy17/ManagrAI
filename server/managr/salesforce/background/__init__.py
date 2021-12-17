@@ -476,9 +476,9 @@ def _process_update_resource_from_meeting(workflow_id, *args):
     return res
 
 
-# @background(
-#     schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
-# )
+@background(
+    schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
+)
 @sf_api_exceptions_wf("update_object_from_review")
 def _process_add_products_to_sf(workflow_id, *args):
     # get workflow
@@ -501,18 +501,23 @@ def _process_add_products_to_sf(workflow_id, *args):
     update_form_ids.append(str(product_form.id))
     data = {**data, **product_form.saved_data}
     sf = user.salesforce_account
-    adapter = sf.object_fields.filter(salesforce_object="OpportunityLineItem").values_list(
-        "api_name", flat=True
-    )
+    adapter = sf.adapter_class
+
     attempts = 1
     while True:
         sf = user.salesforce_account
         try:
             res = OpportunityLineItemAdapter.create(
-                data, sf.access_token, sf.instance_url, adapter, user.id,
+                data,
+                sf.access_token,
+                sf.instance_url,
+                adapter.object_fields.get("OpportunityLineItem", {}),
+                user.id,
             )
             attempts = 1
-            update_forms.update(is_submitted=True, submission_date=timezone.now())
+            product_form.is_submitted = True
+            product_form.submission_date = timezone.now()
+            workflow.save()
             break
         except TokenExpired as e:
             if attempts >= 5:

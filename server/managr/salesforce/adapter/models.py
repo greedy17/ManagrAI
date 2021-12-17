@@ -1320,19 +1320,27 @@ class OpportunityLineItemAdapter:
         self.total_price = kwargs.get("total_price", None)
         self.quantity = kwargs.get("quantity", None)
         self.product = kwargs.get("product", None)
-        self.pricebook = kwargs.get("pricebook", None)
+        self.pricebookentry = kwargs.get("pricebookentry", None)
         self.opportunity = kwargs.get("opportunity", None)
         self.imported_by = kwargs.get("imported_by", None)
         self.secondary_data = kwargs.get("secondary_data", None)
         self.integration_source = kwargs.get("integration_source", None)
         self.integration_id = kwargs.get("integration_id", None)
-        self.external_pricebook = kwargs.get("external_pricebook", None)
+        self.external_pricebookentry = kwargs.get("external_pricebookentry", None)
         self.external_product = kwargs.get("external_product", None)
         self.external_opportunity = kwargs.get("external_opportunity", None)
 
     integration_mapping = dict(
         # mapping of 'standard' data when sending to the SF API
         integration_id="Id",
+        name="Name",
+        description="Description",
+        external_opportunity="OpportunityId",
+        external_pricebookentry="PricebookEntryId",
+        external_product="Product2Id",
+        unit_price="UnitPrice",
+        total_price="TotalPrice",
+        quantity="Quantity",
     )
 
     @property
@@ -1376,7 +1384,6 @@ class OpportunityLineItemAdapter:
         """data : data to be passed, mapping: map managr fields to sf fields, object_fields: if a field is not in this list it cannot be pushed"""
         formatted_data = dict()
         for k, v in data.items():
-            print(k, v)
             key = mapping.get(k, None)
             if key:
                 formatted_data[key] = v
@@ -1384,12 +1391,10 @@ class OpportunityLineItemAdapter:
                 # TODO: add extra check here to only push creatable on creatable and updateable on updateable
                 if k in object_fields:
                     formatted_data[k] = v
-        print(formatted_data)
         return formatted_data
 
     @staticmethod
     def create(data, access_token, custom_base, object_fields, user_id):
-        print(object_fields)
         json_data = json.dumps(
             OpportunityLineItemAdapter.to_api(
                 data, OpportunityLineItemAdapter.integration_mapping, object_fields
@@ -1403,7 +1408,6 @@ class OpportunityLineItemAdapter:
             r = client.post(
                 url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
             )
-            print(r.json())
             # get the opp as well uses the same url as the write but with get
             r = SalesforceAuthAccountAdapter._handle_response(r)
             url = f"{url}{r['id']}"

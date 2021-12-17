@@ -276,10 +276,10 @@ class OpportunityLineItemSerializer(serializers.ModelSerializer):
             "integration_id",
             "imported_by",
             "description",
-            "external_pricebook",
+            "external_pricebookentry",
             "external_product",
             "external_opportunity",
-            "pricebook",
+            "pricebookentry",
             "product",
             "opportunity",
             "unit_price",
@@ -290,11 +290,11 @@ class OpportunityLineItemSerializer(serializers.ModelSerializer):
         extra_kwargs = {}
 
     def to_internal_value(self, data):
-        pricebook = data.get("external_pricebook", None)
+        pricebookentry = data.get("external_pricebookentry", None)
         product = data.get("external_product", None)
         opportunity = data.get("external_opportunity", None)
-        if pricebook:
-            pb = Pricebook2.objects.filter(integration_id=pricebook).first()
+        if pricebookentry:
+            pb = PricebookEntry.objects.filter(integration_id=pricebookentry).first()
             pb_id = pb.id if pb else pb
             data.update({"pricebook": pb_id})
         if product:

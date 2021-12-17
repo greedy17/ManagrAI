@@ -254,18 +254,26 @@ def process_next_page_slack_commands_form(payload, context):
 @processor(required_context=["f"])
 def process_add_products_form(payload, context):
     # get context
+    print(context)
+    print(payload)
     user = User.objects.get(slack_integration__slack_id=payload["user"]["id"])
     current_form_ids = context.get("f").split(",")
     view = payload["view"]
     state = view["state"]["values"]
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    type = context.get("type", None)
+    if type == "meeting":
+        workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+        callback_id = slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
+        product_form = workflow.forms.filter(template__resource="OpportunityLineItem").first()
+    else:
+        product_form = user.custom_slack_form_instances.get(id=context.get("product_form"))
+        callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
     current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
     # save the main form
     main_form = current_forms.filter(template__form_type__in=["UPDATE", "CREATE"]).first()
     main_form.save_form(state)
-    product_form = workflow.forms.filter(template__resource="OpportunityLineItem").first()
-    slack_access_token = user.organization.slack_integration.access_token
 
+    slack_access_token = user.organization.slack_integration.access_token
     # currently only for update
     blocks = []
     blocks.extend(product_form.generate_form())
@@ -280,7 +288,7 @@ def process_add_products_form(payload, context):
                 "submit": {"type": "plain_text", "text": "Submit"},
                 "blocks": blocks,
                 "private_metadata": view["private_metadata"],
-                "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
+                "callback_id": callback_id,
             },
         }
     return

@@ -576,9 +576,9 @@ class OpportunityLineItemQuerySet(models.QuerySet):
 
 class OpportunityLineItem(TimeStampModel, IntegrationModel):
     name = models.CharField(max_length=50)
-    description = models.CharField(max_length=255, blank=True)
-    external_pricebook = models.CharField(
-        max_length=255, blank=True, help_text="value from the integration"
+    description = models.CharField(max_length=255, blank=True, null=True)
+    external_pricebookentry = models.CharField(
+        max_length=255, blank=True, help_text="value from the integration", null=True
     )
     external_product = models.CharField(
         max_length=255, blank=True, help_text="value from the integration"
@@ -586,8 +586,11 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
     external_opportunity = models.CharField(
         max_length=255, blank=True, help_text="value from the integration"
     )
-    pricebook = models.ForeignKey(
-        "organization.Pricebook2", related_name="opportunity_line_item", on_delete=models.CASCADE,
+    pricebookentry = models.ForeignKey(
+        "organization.PricebookEntry",
+        related_name="opportunity_line_item",
+        on_delete=models.CASCADE,
+        null=True,
     )
     product = models.ForeignKey(
         "organization.Product2", related_name="opportunity_line_item", on_delete=models.CASCADE,
