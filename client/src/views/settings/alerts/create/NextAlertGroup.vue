@@ -22,7 +22,7 @@
         <NextAlertOperandRow
           @remove-operand="onRemoveOperand(i)"
           :resourceType="resourceType"
-          :form="alertOperand"
+          :form.sync="alertOperand"
         />
 
         <!-- <div class="add__remove" v-if="form.field.alertOperands.groups.length > 1">

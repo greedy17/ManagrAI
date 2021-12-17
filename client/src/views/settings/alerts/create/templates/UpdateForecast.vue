@@ -638,6 +638,7 @@ export default {
     },
     async onSave() {
       this.savingTemplate = true
+      console.log(this.alertTemplateForm)
       this.alertTemplateForm.validate()
       if (this.alertTemplateForm.isValid) {
         try {

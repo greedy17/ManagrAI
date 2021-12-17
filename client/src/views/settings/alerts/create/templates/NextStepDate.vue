@@ -21,24 +21,6 @@
           v-for="(form, i) in alertTemplateForm.field.alertConfig.groups"
         >
           <div
-            style="margin-top: 1rem"
-            class="delivery__row"
-            :errors="form.field.recurrenceDay.errors"
-          >
-            <!-- this.form.field.operandIdentifier.value = 'CloseDate' -->
-
-            <div
-              :key="index"
-              v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
-            >
-              <NextAlertGroup
-                :form="alertGroup"
-                :resourceType="alertTemplateForm.field.resourceType.value"
-              />
-            </div>
-          </div>
-
-          <div
             style="margin-top: 1rem; margin-left: 0.5rem"
             v-if="userLevel == 'MANAGER'"
             class="delivery__row"
@@ -185,6 +167,13 @@
         </div>
       </template>
     </div>
+
+    <!-- <div :key="index" v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups">
+      <NextAlertGroup
+        :form="alertGroup"
+        :resourceType="alertTemplateForm.field.resourceType.value"
+      />
+    </div> -->
 
     <div class="bottom_locked">
       <PulseLoadingSpinnerButton
@@ -558,6 +547,7 @@ export default {
     },
     async onSave() {
       this.savingTemplate = true
+      console.log(this.alertTemplateForm)
       this.alertTemplateForm.validate()
       if (this.alertTemplateForm.isValid) {
         try {
@@ -783,6 +773,10 @@ export default {
       'Hey  <strong>{ __Recipient.full_name }</strong>, your deal has an upcoming next step date of '
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceFrequency.value = 'WEEKLY'
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
+    this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDay.value = {
+      key: 'Monday',
+      value: '0',
+    }
     this.repsPipeline()
   },
 }
