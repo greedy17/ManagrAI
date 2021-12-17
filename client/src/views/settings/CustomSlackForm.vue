@@ -795,8 +795,11 @@
             <div class="white-background">
               <img src="@/assets/images/logo.png" style="height: 1.5rem" alt="" />
             </div>
-            <h3 v-if="resource !== 'OpportunityLineItem'">{{ lowerCase(formType, resource) }}</h3>
-            <h3 v-else>Product</h3>
+            <h3 v-if="resource !== 'OpportunityLineItem' && formType !== 'STAGE_GATING'">
+              {{ lowerCase(formType, resource) }}
+            </h3>
+            <h3 v-else-if="resource === 'OpportunityLineItem'">Product</h3>
+            <h3 v-else>Stage Specific</h3>
           </div>
 
           <div

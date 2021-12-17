@@ -182,6 +182,7 @@
                 type="text"
                 name="channel"
                 id="channel"
+                placeholder="Name your channel"
                 @input="logNewName(channelName)"
               />
 
@@ -189,7 +190,7 @@
                 <button
                   v-if="channelName"
                   @click="createChannel(channelName)"
-                  class="purple__button"
+                  class="purple__button bouncy"
                 >
                   Create Channel
                 </button>
@@ -877,7 +878,10 @@ export default {
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
-
+::placeholder {
+  color: $panther-silver;
+  font-size: 0.75rem;
+}
 ::v-deep .input-content {
   width: 12vw;
   background-color: white;
