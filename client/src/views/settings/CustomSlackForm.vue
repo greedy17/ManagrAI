@@ -19,10 +19,13 @@
     </div>
 
     <div class="opportunity__row">
-      <div class="collection_fields">
-        <div style="margin-bottom: -1rem">
+      <div :class="formType !== 'STAGE_GATING' ? 'collection_fields' : 'stage_fields'">
+        <div v-if="formType !== 'STAGE_GATING'" style="margin-bottom: -1rem">
           <div
-            v-if="requiredOpportunityFields.every((i) => addedFieldNames.includes(i))"
+            v-if="
+              requiredOpportunityFields.every((i) => addedFieldNames.includes(i)) ||
+              formType == 'STAGE_GATING'
+            "
             style="
               display: flex;
               align-items: center;
@@ -53,6 +56,48 @@
               />
               <p>SFDC fields you'll be updating</p>
             </div>
+          </div>
+        </div>
+
+        <div class="center" v-else>
+          <h2 style="margin-bottom: 0.5rem">Add Stage Specific Fields</h2>
+          <p style="margin-top: -0.25rem; color: #beb5cc">
+            Be sure to save changes before adding another stage!
+          </p>
+        </div>
+
+        <div v-if="formType === 'STAGE_GATING'">
+          <div class="center">
+            <button
+              v-if="!addingFields"
+              @click="
+                () => {
+                  addingFields = !addingFields
+                }
+              "
+              class="default_button bouncy"
+            >
+              Add Fields
+            </button>
+
+            <DropDownSearch
+              v-else
+              :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+              displayKey="referenceDisplayLabel"
+              valueKey="apiName"
+              nullDisplay="Search fields"
+              searchable
+              :loading="formFields.loadingNextPage"
+              :hasNext="!!formFields.pagination.hasNextPage"
+              v-model="nameValue"
+              @load-more="onFieldsNextPage"
+              @search-term="onSearchFields"
+              @input="
+                (e) => {
+                  onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+                }
+              "
+            />
           </div>
         </div>
 
@@ -109,7 +154,6 @@
               Product
             </button>
           </div> -->
-
           <div v-if="!addedFieldNames.includes('Quantity')" class="centered field-border">
             <p style="margin-left: 0.5rem; font-weight: bold">
               Quantity <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
@@ -298,7 +342,7 @@
           </div>
         </div>
 
-        <div v-if="resource === 'Opportunity'">
+        <div v-if="resource === 'Opportunity' && formType !== 'STAGE_GATING'">
           <div v-if="!addedFieldNames.includes('Name')" class="centered field-border">
             <p style="margin-left: 0.5rem; font-weight: bold">
               Name <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
@@ -443,7 +487,7 @@
                 <img
                   :class="unshownIds.includes(field.id) ? 'invisible' : ''"
                   src="@/assets/images/drag.png"
-                  style="height: 1.85rem; width: 2rem"
+                  style="height: 1.85rem; width: 2rem; cursor: grab"
                   alt=""
                 />
                 <p :class="unshownIds.includes(field.id) ? 'invisible' : ''">
@@ -482,8 +526,13 @@
           >
             x
           </div>
-          <h4>Recommended Fields:</h4>
-          <div v-if="resource === 'Opportunity'" class="recommendations">
+
+          <h4 v-if="formType !== 'STAGE_GATING'">Recommended Fields:</h4>
+          <h4 v-else>Previous Stage Fields:</h4>
+          <div
+            v-if="resource === 'Opportunity' && formType !== 'STAGE_GATING'"
+            class="recommendations"
+          >
             <p>Amount,</p>
             &nbsp;
             <p>Forecast Category,</p>
@@ -510,10 +559,34 @@
             &nbsp;
             <p>Phone</p>
           </div>
-          <div v-else class="recommendations">
+          <div v-else-if="resource === 'Account'" class="recommendations">
             <p>Account Type</p>
           </div>
+
+          <div v-if="formType === 'STAGE_GATING'">
+            <div v-if="!orderedStageForm.length">
+              <p style="font-weight: bold; color: #beb5cc; text-align: center">
+                Nothing here.. (o^^)o
+              </p>
+            </div>
+            <div :key="key" v-for="(form, key) in orderedStageForm">
+              <div style="margin-top: 1rem">
+                <i style="text-transform: uppercase; font-size: 12px; color: #beb5cc"
+                  >Fields from <strong>{{ form.stage }}</strong> stage</i
+                >
+              </div>
+              <div class="stages-list">
+                <div :key="key" v-for="(val, key) in form.fieldsRef">
+                  <ul>
+                    <li>{{ val.referenceDisplayLabel }}</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <DropDownSearch
+            v-if="formType !== 'STAGE_GATING'"
             :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
             displayKey="referenceDisplayLabel"
             valueKey="apiName"
@@ -550,9 +623,7 @@
 
         <div
           v-else-if="
-            resource === 'Contact' &&
-            !addingFields &&
-            addedFieldIds.includes('de1c5d78-d608-4435-95c5-a5af625666b3')
+            resource === 'Contact' && !addingFields && addedFieldNames.includes('LastName')
           "
           style="
             display: flex;
@@ -602,11 +673,7 @@
         </div>
 
         <div
-          v-else-if="
-            resource === 'Account' &&
-            !addingFields &&
-            addedFieldIds.includes('7b4ea5b0-7ba1-41b8-b398-1955461d9041')
-          "
+          v-else-if="resource === 'Account' && !addingFields && addedFieldNames.includes('Name')"
           style="
             display: flex;
             align-items: center;
@@ -629,7 +696,14 @@
 
         <div class="example--footer">
           <PulseLoadingSpinnerButton
-            v-if="resource === 'Opportunity' && !productSelected"
+            v-if="formType === 'STAGE_GATING'"
+            @click="onSave"
+            class="primary-button"
+            text="Save"
+            :loading="savingForm"
+          />
+          <PulseLoadingSpinnerButton
+            v-if="resource === 'Opportunity' && !productSelected && formType !== 'STAGE_GATING'"
             @click="onSave"
             class="primary-button"
             :class="
@@ -658,13 +732,11 @@
             @click="onSave"
             class="primary-button"
             :class="
-              !addedFieldIds.includes('de1c5d78-d608-4435-95c5-a5af625666b3')
-                ? 'primary-button'
-                : 'primary-button bouncy'
+              !addedFieldNames.includes('LastName') ? 'primary-button' : 'primary-button bouncy'
             "
             text="Save"
             :loading="savingForm"
-            :disabled="!addedFieldIds.includes('de1c5d78-d608-4435-95c5-a5af625666b3')"
+            :disabled="!addedFieldNames.includes('LastName')"
           />
 
           <PulseLoadingSpinnerButton
@@ -699,19 +771,18 @@
             v-if="resource === 'Account'"
             @click="onSave"
             class="primary-button"
-            :class="
-              !addedFieldIds.includes('7b4ea5b0-7ba1-41b8-b398-1955461d9041')
-                ? 'primary-button'
-                : 'primary-button bouncy'
-            "
+            :class="!addedFieldNames.includes('Name') ? 'primary-button' : 'primary-button bouncy'"
             text="Save"
             :loading="savingForm"
-            :disabled="!addedFieldIds.includes('7b4ea5b0-7ba1-41b8-b398-1955461d9041')"
+            :disabled="!addedFieldNames.includes('Name')"
           />
         </div>
       </div>
 
-      <div style="cursor: not-allowed" class="collection_fields">
+      <div
+        style="cursor: not-allowed"
+        :class="formType !== 'STAGE_GATING' ? 'collection_fields' : 'stage_fields'"
+      >
         <div
           style="
             display: flex;
@@ -724,8 +795,11 @@
             <div class="white-background">
               <img src="@/assets/images/logo.png" style="height: 1.5rem" alt="" />
             </div>
-            <h3 v-if="resource !== 'OpportunityLineItem'">{{ lowerCase(formType, resource) }}</h3>
-            <h3 v-else>Product</h3>
+            <h3 v-if="resource !== 'OpportunityLineItem' && formType !== 'STAGE_GATING'">
+              {{ lowerCase(formType, resource) }}
+            </h3>
+            <h3 v-else-if="resource === 'OpportunityLineItem'">Product</h3>
+            <h3 v-else>Stage Specific</h3>
           </div>
 
           <div
@@ -1322,6 +1396,10 @@ export default {
         .finally(() => {
           this.savingForm = false
         })
+
+      if (this.formType === 'STAGE_GATING') {
+        this.$router.go()
+      }
     },
   },
 }
@@ -1533,7 +1611,7 @@ export default {
   border: 1px solid $white;
   display: flex;
   align-items: center;
-  padding: 0.15rem;
+  padding: 0.25rem;
   border-radius: 0.1rem;
   height: 2.9rem;
   width: 100%;
@@ -1823,7 +1901,6 @@ img:hover {
   border-radius: 0.25rem;
   margin-left: 0.5rem;
   font-weight: bold;
-  opacity: 0.8;
   cursor: pointer;
 }
 .disabled {
@@ -1875,13 +1952,17 @@ img:hover {
   flex-direction: column;
   position: relative;
 }
-.collection__fields {
+.stage_fields {
   background-color: $panther;
-
-  margin: 1rem;
+  padding: 2rem 1rem;
+  margin: -1.5rem 1rem 0rem 0rem;
   border-radius: 0.5rem;
-  min-height: 60vh;
-  min-width: 26vw;
+  height: 66vh;
+  min-width: 28vw;
+  overflow-y: scroll;
+  display: flex;
+  flex-direction: column;
+  position: relative;
 }
 .fields_title {
   background-color: $panther;
