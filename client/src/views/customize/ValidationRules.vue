@@ -32,73 +32,14 @@
         />
       </div>
     </modal>
-    <modal name="add-stage-modal" heading="Select a Stage" height="auto" :scrollable="true">
-      <div class="modal-container">
-        <div v-if="!loadingStages" class="modal-container__box">
-          <div class="modal-container__box__header">
-            <h2 class="modal-container__box__title">Select a stage</h2>
-          </div>
-          <div class="modal-container__box__content">
-            <div class="box__content-select">
-              <DropDownSearch
-                :items.sync="stages"
-                v-model="selectedStage"
-                displayKey="label"
-                valueKey="value"
-                nullDisplay="Select a Stage"
-                searchable
-                local
-              />
-            </div>
-          </div>
 
-          <div class="modal-container__box__footer mar">
-            <div class="centered">
-              <span class="user-message" v-if="!stages.length">
-                <small>Can't see your stages?</small>
-              </span>
-              <span v-else class="user-message">
-                <small>Recently updated your stages?</small>
-              </span>
-              <PulseLoadingSpinnerButton
-                @click="() => refreshFormStages()"
-                :loading="false"
-                class="stage__button"
-                text="Refresh"
-              />
-            </div>
-            <div class="centered">
-              <button
-                style="margin-top: 1rem"
-                class="modal-container__box__button"
-                @click="
-                  () => {
-                    $modal.hide('add-stage-modal'),
-                      addForm(this.selectedStage),
-                      selectForm('Opportunity', 'STAGE_GATING', selectedStage)
-                  }
-                "
-                :disabled="!this.selectedStage"
-              >
-                Select
-              </button>
-            </div>
-          </div>
-        </div>
-        <div v-else>LOADING</div>
-      </div>
-    </modal>
     <h1
       v-if="selectedStage"
-      style="
-        color: black;
-        padding-bottom: 0.5rem;
-        border-bottom: 3px solid #199e54;
-        margin-top: -1rem;
-      "
+      style="color: black; padding-bottom: 0.5rem; border-bottom: 3px solid #199e54"
     >
       {{ selectedStage }}
     </h1>
+    <h2 style="color: black; font-weight: bold" v-else>Apply Additional fields to Stages</h2>
     <!-- <modal name="objects-modal" heading="Select a Stage">
       <div class="objects__">
         <img class="tooltip image" src="@/assets/images/toolTip.png" @click="toggleObjectsModal" />
@@ -132,6 +73,61 @@
         </h3>
       </div>
     </div> -->
+    <div v-if="selectingStage">
+      <div class="modal-container">
+        <div style="text-align: center">
+          <h2>Select a stage</h2>
+          <div class="centered">
+            <DropDownSearch
+              :items.sync="stages"
+              v-model="selectedStage"
+              displayKey="label"
+              valueKey="value"
+              nullDisplay="Select a Stage"
+              searchable
+              local
+            />
+          </div>
+        </div>
+        <div>
+          <div style="display: flex; justify-content: flex-end">
+            <button
+              :class="
+                !this.selectedStage
+                  ? 'modal-container__box__button'
+                  : 'modal-container__box__button bouncy'
+              "
+              @click="
+                () => {
+                  this.selectingStage = !this.selectingStage
+                  this.addingStage = !this.addingStage
+                  addForm(this.selectedStage),
+                    selectForm('Opportunity', 'STAGE_GATING', selectedStage)
+                }
+              "
+              :disabled="!this.selectedStage"
+            >
+              Select
+            </button>
+          </div>
+        </div>
+
+        <!-- <div class="centered">
+            <span class="user-message" v-if="!stages.length">
+              <small>Can't see your stages?</small>
+            </span>
+            <span v-else class="user-message">
+              <small>Recently updated your stages?</small>
+            </span>
+            <PulseLoadingSpinnerButton
+              @click="() => refreshFormStages()"
+              :loading="false"
+              class="stage__button"
+              text="Refresh"
+            />
+          </div> -->
+      </div>
+    </div>
 
     <div class="centered__stage">
       <!-- <div @click.prevent="toggleSelectedFormResource(resource)" class="box-updated__header">
@@ -206,13 +202,13 @@
       </template>
 
       <div
-        style="margin-top: 3rem"
-        v-if="stageDropDownOpen && resource == 'Opportunity'"
+        style="margin-top: 1rem"
+        v-if="!selectingStage && !addingStage && resource == 'Opportunity' && !selectedStage"
         class="stage__dropdown"
       >
         <div>
           <!-- <div v-if="selectedStage">{{ selectedStage }} Form</div> -->
-          <div class="stage__dropdown__header">Your Stage Specific Forms</div>
+          <div class="stage__dropdown__header">Saved Validation Rules</div>
           <div
             v-for="(form, i) in formStages"
             :key="i"
@@ -231,11 +227,13 @@
             >
               {{ form.stage }}
             </div>
-            <div class="stage__dropdown__stages__x" @click.prevent="deleteForm(form)">x</div>
+            <div class="stage__dropdown__stages__x" @click.prevent="deleteForm(form)">
+              <img src="@/assets/images/remove.png" style="height: 1rem" alt="" />
+            </div>
           </div>
         </div>
         <div style="display: flex; justify-content: center; margin-top: 1rem">
-          <button @click="onAddForm" class="modal-container__box__button">Add Form</button>
+          <button @click="onAddForm" class="modal-container__box__button">Add</button>
         </div>
       </div>
     </div>
@@ -287,6 +285,8 @@ export default {
       loading: false,
       formFields: CollectionManager.create({ ModelClass: SObjectField }),
       stageDropDownOpen: true,
+      selectingStage: false,
+      addingStage: false,
       isVisible: false,
       validations: CollectionManager.create({
         ModelClass: SObjectValidation,
@@ -490,7 +490,7 @@ export default {
     },
 
     async onAddForm() {
-      this.$modal.show('add-stage-modal')
+      this.selectingStage = !this.selectingStage
       this.loadingStages = true
       try {
         await this.listPicklists({ salesforceObject: this.Opportunity, picklistFor: 'StageName' })
@@ -550,6 +550,18 @@ export default {
 @import '@/styles/sidebars';
 @import '@/styles/mixins/buttons';
 @import '@/styles/buttons';
+
+@keyframes bounce {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-6px);
+  }
+}
+.bouncy {
+  animation: bounce 0.2s infinite alternate;
+}
 
 .container {
   margin-left: 12vw;
@@ -630,11 +642,13 @@ export default {
   font-size: 1.02rem;
 }
 .modal-container {
-  height: 100%;
+  min-height: 50vh;
+  width: 30vw;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   margin-top: 1rem;
-  border-radius: 0.25rem;
+  border-radius: 1rem;
   background-color: $panther;
   &__box {
     &__title {
@@ -645,19 +659,21 @@ export default {
 
     &__content {
       display: flex;
-
-      justify-content: center;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
       min-height: 20rem;
     }
     &__button {
       @include primary-button();
+      background-color: white;
+      color: $dark-green;
+      padding: 0.5rem 2rem;
+      margin: 1rem;
     }
-    &__footer {
-      display: flex;
-      padding: 1rem;
-
-      justify-content: space-between;
-      border-top: 2px solid $panther-silver;
+    &__button:hover {
+      color: $dark-green;
+      background-color: white;
     }
   }
 }
@@ -754,7 +770,6 @@ export default {
   align-items: flex-start;
   flex-direction: row;
   height: 100%;
-  margin-top: -1rem;
 }
 .small__stage__dropdown {
   padding: 6px 0 14px;
@@ -768,8 +783,8 @@ export default {
     position: relative;
   }
   &__dropdown {
-    height: 71vh;
-    min-width: 36vw;
+    min-height: 40vh;
+    min-width: 28vw;
     padding: 6px 0 14px;
     border-radius: 0.5rem;
     box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
@@ -779,23 +794,22 @@ export default {
     &__header {
       font-size: 1.25rem;
       padding: 0.5rem;
-      border-bottom: solid 2px #9e9ea6;
-
-      z-index: 10;
+      text-align: center;
     }
     &__stages {
       &__container {
         display: flex;
-
+        background-color: $dark-green;
         height: 2.5rem;
-        padding: 0.75rem;
+        padding: 1rem;
+        margin: 0.5rem;
+        border-radius: 0.5rem;
         font-size: 0.75rem;
         cursor: pointer;
         align-items: center;
 
         &--selected {
           color: white;
-          background-color: #{$dark-green};
         }
       }
       &__title {
@@ -809,7 +823,7 @@ export default {
         width: 100%;
       }
       &__title:hover {
-        color: $panther-silver;
+        color: $very-light-gray;
       }
       &__x {
         z-index: 1000;

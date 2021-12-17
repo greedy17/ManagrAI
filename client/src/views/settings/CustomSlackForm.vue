@@ -19,7 +19,7 @@
     </div>
 
     <div class="opportunity__row">
-      <div class="collection_fields">
+      <div :class="formType !== 'STAGE_GATING' ? 'collection_fields' : 'stage_fields'">
         <div v-if="formType !== 'STAGE_GATING'" style="margin-bottom: -1rem">
           <div
             v-if="
@@ -59,7 +59,7 @@
           </div>
         </div>
 
-        <div style="margin-bottom: 1rem" class="center" v-else>
+        <div class="center" v-else>
           <h2 style="margin-bottom: 0.5rem">Add Stage Specific Fields</h2>
           <p style="margin-top: -0.25rem; color: #beb5cc">
             Be sure to save changes before adding another stage!
@@ -779,7 +779,10 @@
         </div>
       </div>
 
-      <div v-if="formType !== 'STAGE_GATING'" style="cursor: not-allowed" class="collection_fields">
+      <div
+        style="cursor: not-allowed"
+        :class="formType !== 'STAGE_GATING' ? 'collection_fields' : 'stage_fields'"
+      >
         <div
           style="
             display: flex;
@@ -1946,13 +1949,17 @@ img:hover {
   flex-direction: column;
   position: relative;
 }
-.collection__fields {
+.stage_fields {
   background-color: $panther;
-
-  margin: 1rem;
+  padding: 2rem 1rem;
+  margin: -1.5rem 1rem 0rem 0rem;
   border-radius: 0.5rem;
-  min-height: 60vh;
-  min-width: 26vw;
+  height: 66vh;
+  min-width: 28vw;
+  overflow-y: scroll;
+  display: flex;
+  flex-direction: column;
+  position: relative;
 }
 .fields_title {
   background-color: $panther;
