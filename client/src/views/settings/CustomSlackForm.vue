@@ -183,7 +183,7 @@
             </button>
           </div>
 
-          <div v-if="!addedFieldNames.includes('Description')" class="centered field-border">
+          <div v-if="!addedFieldLabels.includes('Line Description')" class="centered field-border">
             <p style="margin-left: 0.5rem; font-weight: bold">
               Line Description <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
             </p>
@@ -197,7 +197,9 @@
               @click="
                 () => {
                   onAddField(
-                    this.formFields.list.filter((field) => field.apiName === 'Description')[0],
+                    this.formFields.list.filter(
+                      (field) => field.referenceDisplayLabel === 'Line Description',
+                    )[0],
                   )
                 }
               "
@@ -1166,6 +1168,11 @@ export default {
     addedFieldNames() {
       return this.addedFields.map((field) => {
         return field.apiName
+      })
+    },
+    addedFieldLabels() {
+      return this.addedFields.map((field) => {
+        return field.referenceDisplayLabel
       })
     },
     selectedFormResourceType() {
