@@ -5,9 +5,8 @@
         Create <span>Accounts</span>
       </h2>
       <p style="color: #5d5e5e; margin-top: -0.5rem">
-        Map the opportunity fields you’d like to update
+        Select the Fields you’d like to display when creating Accounts via Slack
       </p>
-      <p style="color: #beb5cc; font-weight: bold; margin-top: -0.5rem">*Optional</p>
     </div>
     <div class="box__content--expanded">
       <CustomSlackForm
@@ -272,7 +271,7 @@ export default {
 @import '@/styles/variables';
 
 .update_opportunity {
-  margin-top: 4rem;
+  margin-top: 2rem;
   color: white;
 }
 

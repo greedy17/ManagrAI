@@ -372,3 +372,10 @@ def get_report_data(account):
         "todays_failed_flows": todays_failed_flows,
         "latest_flow": latest_flow_data if latest_flow else None,
     }
+
+
+def get_products(account_id):
+    sf_account = SalesforceAuthAccount.objects.get(id=account_id)
+    sf_account.get_fields("Pricebooks2")
+    return
+

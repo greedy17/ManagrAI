@@ -65,15 +65,21 @@ def process_meeting_review(payload, context):
         "f": str(workflow.forms.filter(template__form_type="UPDATE").first().id),
         "type": "meeting",
     }
+    callback_id = (
+        slack_const.PROCESS_ADD_PRODUCTS_FORM
+        if organization.has_products
+        else slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
+    )
+    submit_text = "Add Products" if organization.has_products else "Update Salesforce"
     private_metadata.update(context)
     data = {
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
-            "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
+            "callback_id": callback_id,
             "title": {"type": "plain_text", "text": "Log Meeting"},
             "blocks": get_block_set("meeting_review_modal", context=context),
-            "submit": {"type": "plain_text", "text": "Update Salesforce"},
+            "submit": {"type": "plain_text", "text": submit_text},
             "private_metadata": json.dumps(private_metadata),
             "external_id": f"meeting_review_modal.{str(uuid.uuid4())}",
         },
@@ -817,6 +823,24 @@ def process_show_update_resource_form(payload, context):
                 template=template, resource_id=resource_id, user=user,
             )
         )
+        if user.organization.has_products:
+            product_template = (
+                OrgCustomSlackForm.objects.for_user(user)
+                .filter(Q(resource="OpportunityLineItem", form_type="CREATE"))
+                .first()
+            )
+            product_form = (
+                OrgCustomSlackFormInstance.objects.create(
+                    template=product_template,
+                    resource_id=resource_id,
+                    user=user,
+                    alert_instance_id=alert_id,
+                )
+                if alert_id
+                else OrgCustomSlackFormInstance.objects.create(
+                    template=product_template, resource_id=resource_id, user=user,
+                )
+            )
         if slack_form:
             current_stage = slack_form.resource_object.secondary_data.get("StageName")
             stage_template = (
@@ -874,6 +898,8 @@ def process_show_update_resource_form(payload, context):
         "channel_id": payload.get("container").get("channel_id"),
         "message_ts": payload.get("container").get("message_ts"),
     }
+    if product_form:
+        private_metadata.update({"product_form": str(product_form.id)})
     if alert_id:
         private_metadata.update({"alert_id": alert_id, "current_page": context.get("current_page")})
     private_metadata.update(context)
@@ -893,6 +919,9 @@ def process_show_update_resource_form(payload, context):
         if stage_form:
             submit_button_text = "Next"
             callback_id = slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE
+        elif user.organization.has_products and not stage_form:
+            submit_button_text = "Add Products"
+            callback_id = slack_const.PROCESS_ADD_PRODUCTS_FORM
         else:
             submit_button_text = "Update"
             callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
