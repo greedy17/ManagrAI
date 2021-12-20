@@ -249,7 +249,7 @@
           <p class="card-text">Add Contacts to Sequences</p>
           <div class="card__body">
             <PulseLoadingSpinnerButton
-              v-if="!hasOutreachIntegration && user.isAdmin"
+              v-if="!hasOutreachIntegration"
               :disabled="hasOutreachIntegration"
               @click="onGetAuthLink('OUTREACH')"
               style="margin-left: 1rem; cursor: pointer"
@@ -257,20 +257,15 @@
               text="Connect"
               :loading="generatingToken && selectedIntegration == 'OUTREACH'"
             ></PulseLoadingSpinnerButton>
-            <div v-else-if="hasOutreachIntegration && user.isAdmin">
-              <img
-                src="@/assets/images/unplug.png"
-                :loading="generatingToken && selectedIntegration == 'OUTREACH'"
-                @click="onRevoke('OUTREACH')"
-                style="height: 2rem; cursor: pointer"
-              />
-              <!-- <img
-              src="@/assets/images/refresh.png"
-              :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
-              style="height: 2rem; cursor: pointer"
-            /> -->
+            <div v-else class="card__body">
+              <div class="dropdown-container" tabindex="1">
+                <div class="three-dots"></div>
+                <div class="dropdown">
+                  <button @click="onRevoke('OUTREACH')" class="revoke-button">revoke</button>
+                  <button @click="onGetAuthLink('OUTREACH')" class="plain-button">refresh</button>
+                </div>
+              </div>
             </div>
-            <p v-else>Outreach is connected!</p>
           </div>
         </div>
       </div>

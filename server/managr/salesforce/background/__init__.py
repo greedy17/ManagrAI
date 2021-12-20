@@ -476,9 +476,9 @@ def _process_update_resource_from_meeting(workflow_id, *args):
     return res
 
 
-# @background(
-#     schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
-# )
+@background(
+    schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
+)
 @sf_api_exceptions_wf("add_call_log")
 def _process_add_products_to_sf(workflow_id, non_meeting=False, *args):
     if non_meeting:
@@ -560,10 +560,11 @@ def _process_add_call_to_sf(workflow_id, *args):
     if not hasattr(user, "salesforce_account"):
         return logger.exception("User does not have a salesforce account cannot push to sf")
     review_form = workflow.forms.filter(template__form_type=slack_consts.FORM_TYPE_UPDATE).first()
-
     user_timezone = user.zoom_account.timezone
     start_time = workflow.meeting.start_time
     end_time = workflow.meeting.end_time
+    print("Here")
+    print(review_form.update_source)
     formatted_start = (
         datetime.strftime(
             start_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p"
@@ -633,7 +634,6 @@ def _process_add_update_to_sf(form_id, *args):
         return logger.exception(f"User not found unable to log call {str(user.id)}")
     if not hasattr(user, "salesforce_account"):
         return logger.exception("User does not have a salesforce account cannot push to sf")
-
     start_time = form.submission_date
     data = dict(
         Subject=f"{form.saved_data.get('meeting_type')}",
@@ -641,7 +641,7 @@ def _process_add_update_to_sf(form_id, *args):
         WhatId=resource.integration_id,
         ActivityDate=start_time.strftime("%Y-%m-%d"),
         Status="Completed",
-        TaskSubType="Call",
+        TaskSubType="Task",
     )
     attempts = 1
     while True:
