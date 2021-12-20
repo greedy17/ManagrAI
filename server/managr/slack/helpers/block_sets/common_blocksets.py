@@ -425,7 +425,7 @@ def calendar_reminders_blockset(context):
             ),
         ),
     ]
-    if type and type is not "prep":
+    if type and type != "prep":
         blocks.append(
             block_builders.section_with_button_block(
                 "Change Opportunity",
@@ -461,5 +461,12 @@ def manager_meeting_reminder_block_set(context):
             "mrkdwn",
         )
     ]
+    return blocks
+
+
+@block_set
+def morning_digest_blockset(context):
+    blocks = []
+
     return blocks
 
