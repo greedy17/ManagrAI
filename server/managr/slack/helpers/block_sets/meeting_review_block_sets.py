@@ -487,18 +487,14 @@ def initial_meeting_interaction_block_set(context):
         ]
 
     action_blocks = []
-    if (
-        workflow.resource_type == slack_const.FORM_RESOURCE_OPPORTUNITY
-        or workflow.resource_type == slack_const.FORM_RESOURCE_ACCOUNT
-    ):
-        action_blocks.append(
-            block_builders.simple_button_block(
-                f"Update {workflow.resource_type} + Add Notes",
-                str(workflow.id),
-                action_id=slack_const.ZOOM_MEETING__INIT_REVIEW,
-                style="primary",
-            ),
-        )
+    action_blocks.append(
+        block_builders.simple_button_block(
+            f"Update {workflow.resource_type} + Add Notes",
+            str(workflow.id),
+            action_id=slack_const.ZOOM_MEETING__INIT_REVIEW,
+            style="primary",
+        ),
+    )
     if workflow.resource_type == slack_const.FORM_RESOURCE_LEAD:
         action_blocks.append(
             block_builders.simple_button_block(
