@@ -1301,19 +1301,14 @@ def process_add_contacts_to_sequence(payload, context):
             if created > 0
             else f"{success}/{success + failed} added to sequence"
         )
-        update_res = slack_requests.generic_request(
-            url,
-            {
-                "view_id": res["view"]["id"],
-                "view": {
-                    "type": "modal",
-                    "title": {"type": "plain_text", "text": "Success"},
-                    "blocks": [block_builders.simple_section(message)],
-                },
+        return {
+            "response_action": "update",
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Success"},
+                "blocks": [block_builders.simple_section(message)],
             },
-            access_token=access_token,
-        )
-        return
+        }
     else:
         update_res = slack_requests.send_ephemeral_message(
             u.slack_integration.channel,

@@ -898,8 +898,9 @@ def process_show_update_resource_form(payload, context):
         "channel_id": payload.get("container").get("channel_id"),
         "message_ts": payload.get("container").get("message_ts"),
     }
-    if product_form:
-        private_metadata.update({"product_form": str(product_form.id)})
+    if user.organization.has_products:
+        if product_form:
+            private_metadata.update({"product_form": str(product_form.id)})
     if alert_id:
         private_metadata.update({"alert_id": alert_id, "current_page": context.get("current_page")})
     private_metadata.update(context)
