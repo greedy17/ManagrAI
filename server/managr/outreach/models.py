@@ -119,6 +119,11 @@ class OutreachAccountAdapter:
         try:
             auth_data = cls.get_auth_token(code)
             user_data = cls.get_basic_user(auth_data["access_token"])
+            user_check = OutreachAccount.objects.filter(
+                outreach_id=user_data["meta"]["user"]["id"]
+            ).first()
+            if user_check:
+                return None
             mailbox = cls.get_mailbox(auth_data["access_token"], user_data["meta"]["user"]["id"])
             data = {}
             data["outreach_id"] = user_data["meta"]["user"]["id"]

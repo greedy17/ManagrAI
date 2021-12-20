@@ -22,10 +22,14 @@ class Command(BaseCommand):
             users = User.objects.filter(is_active=True)
             reminder_config = core_consts.REMINDERS()
             for user in users:
-                for key in reminder_config.keys():
-                    if key in user.reminders.keys():
-                        continue
-                    else:
-                        user.reminders[key] = True
-                user.save()
+                if user.reminders is None:
+                    user.reminders = core_consts.REMINDERS()
+                    user.save()
+                else:
+                    for key in reminder_config.keys():
+                        if key in user.reminders.keys():
+                            continue
+                        else:
+                            user.reminders[key] = True
+                    user.save()
             self.stdout.write(self.style.SUCCESS("Checking reminders for all users"),)
