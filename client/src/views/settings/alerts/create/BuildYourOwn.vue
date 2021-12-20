@@ -453,6 +453,7 @@
                     type="text"
                     name="channel"
                     id="channel"
+                    placeholder="Name your channel"
                     @input="logNewName(channelName)"
                   />
 
@@ -460,7 +461,7 @@
                     <button
                       v-if="channelName"
                       @click="createChannel(channelName)"
-                      class="purple__button"
+                      class="purple__button bouncy"
                     >
                       Create Channel
                     </button>
@@ -557,8 +558,11 @@
               align-items: center;
               flex-direction: column;
             "
-            class="collection"
+            class="collection__small"
           >
+            <h2>
+              {{ alertTemplateForm.field.title.value ? alertTemplateForm.field.title.value : '' }}
+            </h2>
             <FormField
               id="alert-title"
               v-model="alertTemplateForm.field.title.value"
@@ -566,7 +570,7 @@
               :errors="alertTemplateForm.field.title.errors"
               @blur="alertTemplateForm.field.title.validate()"
             />
-            <AlertSummary :form="alertTemplateForm" />
+            <!-- <AlertSummary :form="alertTemplateForm" /> -->
           </div>
         </template>
       </div>
@@ -1276,6 +1280,10 @@ export default {
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
+::placeholder {
+  color: $panther-silver;
+  font-size: 0.75rem;
+}
 .search__input {
   font-family: Lato-Regular, sans-serif;
   font-weight: normal;
@@ -1649,6 +1657,13 @@ export default {
 .collection {
   background-color: $panther;
   height: 60vh;
+  width: 30vw;
+  padding: 2rem;
+  border-radius: 0.33rem;
+}
+.collection__small {
+  background-color: $panther;
+  height: 30vh;
   width: 30vw;
   padding: 2rem;
   border-radius: 0.33rem;

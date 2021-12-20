@@ -56,6 +56,7 @@ import { Datetime } from 'vue-datetime'
 import 'vue-datetime/dist/vue-datetime.css'
 import vmodal from 'vue-js-modal'
 import VueClipboard from 'vue-clipboard2'
+import { Drag, Drop } from 'vue-drag-drop';
 
 Vue.config.productionTip = false
 
@@ -94,6 +95,8 @@ Vue.filter('pluralize', function (value, number) {
   return pluralize(value, number)
 })
 
+Vue.component('drag', Drag);
+Vue.component('drop', Drop);
 Vue.component('PageLoadingSVG', PageLoadingSVG)
 Vue.component('ComponentLoadingSVG', ComponentLoadingSVG)
 Vue.component('Modal', Modal)

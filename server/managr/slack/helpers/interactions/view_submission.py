@@ -51,6 +51,7 @@ from managr.salesforce.background import (
     _process_create_task,
     emit_meeting_workflow_tracker,
     emit_add_update_to_sf,
+    emit_add_products_to_sf,
     _send_recap,
 )
 from managr.slack.helpers.block_sets import get_block_set
@@ -151,10 +152,15 @@ def process_zoom_meeting_data(payload, context):
     state = view["state"]["values"]
     # if we had a next page the form data for the review was already saved
     forms = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING)
+    product_form = workflow.forms.filter(
+        template__resource=slack_const.FORM_RESOURCE_OPPORTUNITYLINEITEM
+    ).first()
     if len(forms):
         for form in forms:
             form.save_form(state)
     # otherwise we save the meeting review form
+    elif product_form:
+        product_form.save_form(state)
     else:
         form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
         form.update_source = "meeting"
@@ -169,6 +175,8 @@ def process_zoom_meeting_data(payload, context):
         f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}",
         # save meeting data
     ]
+    if product_form:
+        ops.append(f"{sf_consts.MEETING_REVIEW__ADD_PRODUCTS}.{str(workflow.id)}")
     for form in contact_forms:
         if form.template.form_type == slack_const.FORM_TYPE_CREATE:
             ops.append(
@@ -185,19 +193,19 @@ def process_zoom_meeting_data(payload, context):
     else:
         workflow.operations_list = ops
 
-    ts, channel = workflow.slack_interaction.split("|")
-    block_set = [
-        *get_block_set("loading", {"message": ":rocket: We are saving your data to salesforce..."}),
-    ]
-    try:
-        res = slack_requests.update_channel_message(
-            channel, ts, slack_access_token, block_set=block_set
-        )
-    except Exception as e:
-        return logger.exception(
-            f"Failed To Send Submit Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
+    # ts, channel = workflow.slack_interaction.split("|")
+    # block_set = [
+    #     *get_block_set("loading", {"message": ":rocket: We are saving your data to salesforce..."}),
+    # ]
+    # try:
+    #     res = slack_requests.update_channel_message(
+    #         channel, ts, slack_access_token, block_set=block_set
+    #     )
+    # except Exception as e:
+    #     return logger.exception(
+    #         f"Failed To Send Submit Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+    #     )
+    # workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
     workflow.save()
     workflow.begin_tasks()
     emit_meeting_workflow_tracker(str(workflow.id))
@@ -243,6 +251,52 @@ def process_next_page_slack_commands_form(payload, context):
 
 
 @log_all_exceptions
+@processor(required_context=["f"])
+def process_add_products_form(payload, context):
+    # get context
+    user = User.objects.get(slack_integration__slack_id=payload["user"]["id"])
+    current_form_ids = context.get("f").split(",")
+    view = payload["view"]
+    state = view["state"]["values"]
+    type = context.get("type", None)
+    private_metadata = json.loads(view["private_metadata"])
+    if type == "meeting":
+        workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+        callback_id = slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
+        product_form = workflow.forms.filter(template__resource="OpportunityLineItem").first()
+    else:
+        product_form = user.custom_slack_form_instances.get(id=context.get("product_form"))
+        callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
+        private_metadata.update({"product_form_id": str(product_form.id)})
+    current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
+    # save the main form
+    main_form = (
+        current_forms.filter(template__form_type__in=["UPDATE", "CREATE"])
+        .exclude(template__resource="OpportunityLineItem")
+        .first()
+    )
+    main_form.save_form(state)
+
+    # currently only for update
+    blocks = []
+    blocks.extend(product_form.generate_form())
+    if len(blocks):
+
+        return {
+            "response_action": "push",
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Add Products Form"},
+                "submit": {"type": "plain_text", "text": "Submit"},
+                "blocks": blocks,
+                "private_metadata": json.dumps(private_metadata),
+                "callback_id": callback_id,
+            },
+        }
+    return
+
+
+@log_all_exceptions
 @slack_api_exceptions(rethrow=True)
 @processor(required_context=["f"])
 def process_submit_resource_data(payload, context):
@@ -254,6 +308,7 @@ def process_submit_resource_data(payload, context):
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
     type = context.get("type")
+    product_form_id = context.get("product_form", None)
     external_id = payload.get("view", {}).get("external_id", None)
     try:
         view_type, __unique_id = external_id.split(".")
@@ -261,18 +316,26 @@ def process_submit_resource_data(payload, context):
         view_type = external_id
         pass
     current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
-    main_form = current_forms.filter(template__form_type__in=["UPDATE", "CREATE"]).first()
-    stage_forms = current_forms.exclude(template__form_type__in=["UPDATE", "CREATE"])
+    main_form = (
+        current_forms.filter(template__form_type__in=["UPDATE", "CREATE"])
+        .exclude(template__resource="OpportunityLineItem")
+        .first()
+    )
+    stage_forms = current_forms.exclude(template__form_type__in=["UPDATE", "CREATE"]).exclude(
+        template__resource="OpportunityLineItem"
+    )
     stage_form_data_collector = {}
     for form in stage_forms:
         form.update_source = type
         form.save_form(state)
         stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
-    if not len(stage_forms):
+    if not len(stage_forms) and not product_form_id:
         if main_form.template.form_type == "UPDATE":
             main_form.update_source = type
         main_form.save_form(state)
-
+    if product_form_id:
+        product_form = user.custom_slack_form_instances.get(id=product_form_id)
+        product_form.save_form(state)
     all_form_data = {**stage_form_data_collector, **main_form.saved_data}
     slack_access_token = user.organization.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
@@ -475,6 +538,8 @@ def process_submit_resource_data(payload, context):
             and all_form_data.get("meeting_type") is not None
         ):
             emit_add_update_to_sf(str(main_form.id))
+        if product_form_id:
+            emit_add_products_to_sf(str(product_form.id), True)
         if type == "alert":
             instance = AlertInstance.objects.get(id=context.get("alert_id"))
             alert_instances = AlertInstance.objects.filter(
@@ -552,7 +617,6 @@ def process_zoom_meeting_attach_resource(payload, context):
     user = workflow.user
     slack_access_token = user.organization.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-
     # get state - state contains the values based on the block_id
 
     data = {
@@ -563,7 +627,6 @@ def process_zoom_meeting_attach_resource(payload, context):
             "blocks": get_block_set("success_modal", {}),
         },
     }
-
     state_values = payload["view"]["state"]["values"]
     meeting_resource = context.get("resource")
     if context.get("action") == "EXISTING":
@@ -582,7 +645,7 @@ def process_zoom_meeting_attach_resource(payload, context):
         # check to see if it already has the create form added and save that instead
         main_form = (
             workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_CREATE,)
-            .exclude(template__resource="Contact")
+            .exclude(template__resource__in=["Contact", "OpportunityLineItem"])
             .first()
         )
         if main_form:
@@ -637,6 +700,15 @@ def process_zoom_meeting_attach_resource(payload, context):
             workflow.save()
 
     # clear old forms (except contact forms)
+    workflow.forms.exclude(
+        template__resource__in=[
+            slack_const.FORM_RESOURCE_CONTACT,
+            slack_const.FORM_RESOURCE_OPPORTUNITYLINEITEM,
+        ]
+    ).delete()
+    workflow.add_form(
+        meeting_resource, slack_const.FORM_TYPE_UPDATE,
+    )
     if type:
         ts = context.get("original_message_timestamp")
         channel = context.get("original_message_channel")
@@ -1385,6 +1457,7 @@ def handle_view_submission(payload):
         slack_const.ADD_TO_SEQUENCE: process_add_contacts_to_sequence,
         slack_const.GET_NOTES: process_get_notes,
         slack_const.PROCESS_SEND_RECAPS: process_send_recaps,
+        slack_const.PROCESS_ADD_PRODUCTS_FORM: process_add_products_form,
     }
 
     callback_id = payload["view"]["callback_id"]

@@ -47,11 +47,16 @@
               type="text"
               name="channel"
               id="channel"
+              placeholder="Name your channel"
               @input="logNewName(channelName)"
             />
 
             <div v-if="!channelCreated" v style="margin-top: 1.25rem">
-              <button v-if="channelName" @click="createChannel(channelName)" class="green__button">
+              <button
+                v-if="channelName"
+                @click="createChannel(channelName)"
+                class="green__button bouncy"
+              >
                 Create Channel
               </button>
               <button v-else class="disabled__button">Create Channel</button>
@@ -310,6 +315,10 @@ export default {
 }
 .bouncy {
   animation: bounce 0.2s infinite alternate;
+}
+::placeholder {
+  color: $panther-silver;
+  font-size: 0.75rem;
 }
 .logZoomPage {
   height: 100vh;
