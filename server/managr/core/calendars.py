@@ -83,9 +83,9 @@ def calendar_participants_from_zoom_meeting(zoom_meeting, user):
     #       we could get back a lot of events from multiple calendars, hence the limit here.
     nylas_response = nylas.events.where(**filters)
 
-    # Force-invoke the API call
+    # # Force-invoke the API call
     events = list(nylas_response)
-
+    # events = []
     logger.info(f"    Found {len(events)} event/s")
 
     # Narrow down results
