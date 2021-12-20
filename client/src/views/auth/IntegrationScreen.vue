@@ -257,13 +257,14 @@
               text="Connect"
               :loading="generatingToken && selectedIntegration == 'OUTREACH'"
             ></PulseLoadingSpinnerButton>
-            <div v-else="hasOutreachIntegration">
-              <img
-                src="@/assets/images/unplug.png"
-                :loading="generatingToken && selectedIntegration == 'OUTREACH'"
-                @click="onRevoke('OUTREACH')"
-                style="height: 2rem; cursor: pointer"
-              />
+            <div v-else class="card__body">
+              <div class="dropdown-container" tabindex="1">
+                <div class="three-dots"></div>
+                <div class="dropdown">
+                  <button @click="onRevoke('OUTREACH')" class="revoke-button">revoke</button>
+                  <button @click="onGetAuthLink('OUTREACH')" class="plain-button">refresh</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
