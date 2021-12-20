@@ -330,16 +330,16 @@ def _send_calendar_details(user_id):
             {"type": "divider"},
         ]
     # Loop thru processed_data and create block for each one
-    try:
-        slack_requests.send_channel_message(
-            user.slack_integration.channel,
-            user.organization.slack_integration.access_token,
-            text="Calendar: Meetings for Today",
-            block_set=blocks,
-        )
-    except Exception as e:
-        logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
-    return processed_data
+    if len(meetings):
+        try:
+            slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                text="Calendar: Meetings for Today",
+                block_set=blocks,
+            )
+        except Exception as e:
+            logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
 
 
 def _generate_notification_key_lapsed(num):
