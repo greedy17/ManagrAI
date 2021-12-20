@@ -10,7 +10,8 @@ from django.db.models import Q
 
 from managr.utils.sites import get_site_url
 from managr.core.models import User, Notification
-from managr.opportunity.models import Opportunity
+from managr.opportunity.models import Opportunity, Lead
+from managr.organization.models import Account
 from managr.zoom.models import ZoomMeeting
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce import constants as sf_consts
@@ -21,6 +22,8 @@ from managr.utils.misc import snake_to_space
 from managr.salesforce.routes import routes as form_routes
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.gong.models import GongCall
+from managr.core.models import NylasAuthAccount, User
+
 from managr.salesforce.adapter.exceptions import (
     TokenExpired,
     FieldValidationError,
@@ -29,6 +32,7 @@ from managr.salesforce.adapter.exceptions import (
     SFNotFoundError,
     InvalidRefreshToken,
 )
+from managr.core.models import MeetingPrepInstance
 
 logger = logging.getLogger("managr")
 
@@ -72,6 +76,13 @@ def success_modal_block_set(context):
             ),
         )
     ]
+    return blocks
+
+
+@block_set()
+def success_text_block_set(context):
+    message = context.get("message", ":clap: Success!")
+    blocks = [block_builders.simple_section(message, text_type="mrkdwn")]
     return blocks
 
 
@@ -371,6 +382,71 @@ def meeting_reminder_block_set(context):
             f"FYI you have {not_completed} {text} from today that still need to be logged!"
         )
     ]
+    return blocks
+
+
+@block_set()
+def calendar_reminders_blockset(context):
+    meeting = MeetingPrepInstance.objects.get(id=context.get("prep_id"))
+    data = meeting.event_data
+    title = data["title"]
+    unix_start_time = data["times"]["start_time"]
+    unix_end_time = data["times"]["end_time"]
+    gmt_start_time = datetime.utcfromtimestamp(int(unix_start_time)).strftime("%H:%M")
+    gmt = pytz.timezone("GMT")
+    eastern = pytz.timezone(meeting.user.timezone)
+
+    s = datetime.strptime(gmt_start_time, "%H:%M")
+    date_gmt = gmt.localize(s)
+
+    date_eastern = date_gmt.astimezone(eastern)
+    local_start_time = date_eastern.strftime("%r").strip("00").removesuffix(":00")
+    am_or_pm = date_eastern.strftime("%p")
+    short_local_start_time = local_start_time[:-6]
+    start_time = short_local_start_time + " " + am_or_pm
+    python_end_time = datetime.utcfromtimestamp(unix_end_time).strftime("%H:%M")
+    s = datetime.strptime(python_end_time, "%H:%M")
+    type = "prep" if meeting.resource_type is None else meeting.resource_type
+    if type == "Opportunity":
+        resource = Opportunity.objects.get(id=meeting.resource_id)
+    elif type == "Account":
+        resource = Account.objects.get(id=meeting.resource_id)
+    elif type == "Lead":
+        resource = Lead.objects.get(id=meeting.resource_id)
+    blocks = [
+        block_builders.section_with_button_block(
+            "Review Attendees",
+            section_text=f"{title}\n Starts at {start_time}\n Attendees: "
+            + str(len(meeting.participants)),
+            button_value=context.get("prep_id"),
+            action_id=action_with_params(
+                slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
+                params=[f"w={str(meeting.id)}", f"type={type}",],
+            ),
+        ),
+    ]
+    if type and type is not "prep":
+        blocks.append(
+            block_builders.section_with_button_block(
+                "Change Opportunity",
+                section_text=f"We mapped this meeting to: {type} {resource.name}",
+                button_value=f"type%{str(meeting.id)}",
+                block_id=f"type%{str(meeting.id)}",
+                action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
+            ),
+        )
+    else:
+        blocks.append(
+            block_builders.section_with_button_block(
+                "Map to Opportunity",
+                action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
+                section_text=f"We could not find an Opportuniy or Account to map this meeting to",
+                button_value=f"type%{str(meeting.id)}",
+                block_id=f"type%{str(meeting.id)}",
+                style="primary",
+            )
+        ),
+
     return blocks
 
 
