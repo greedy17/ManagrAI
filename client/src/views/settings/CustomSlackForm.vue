@@ -697,13 +697,22 @@
         </div>
 
         <div class="example--footer">
-          <PulseLoadingSpinnerButton
-            v-if="formType === 'STAGE_GATING'"
-            @click="onSave"
-            class="primary-button"
-            text="Save"
-            :loading="savingForm"
-          />
+          <div class="row__" v-if="formType === 'STAGE_GATING'">
+            <button
+              style="margin-right: 0.5rem; cursor: pointer"
+              @click="goToValidations"
+              class="disabled"
+            >
+              Cancel
+            </button>
+            <PulseLoadingSpinnerButton
+              @click="onSave"
+              class="primary-button"
+              text="Save"
+              :loading="savingForm"
+            />
+          </div>
+
           <PulseLoadingSpinnerButton
             v-if="resource === 'Opportunity' && !productSelected && formType !== 'STAGE_GATING'"
             @click="onSave"
@@ -1273,6 +1282,9 @@ export default {
     },
     goToUpdateOpp() {
       this.$router.push({ name: 'UpdateOpportunity' })
+    },
+    goToValidations() {
+      this.$router.go()
     },
     onRemoveField(field) {
       // remove from the array if  it exists
@@ -1912,8 +1924,9 @@ img:hover {
 }
 .disabled {
   padding: 0.5rem 1rem;
-  background-color: $panther-silver;
-  color: $panther;
+  min-width: 6rem;
+  background-color: $coral;
+  color: white;
   border: none;
   border-radius: 0.25rem;
   margin-left: 0.5rem;

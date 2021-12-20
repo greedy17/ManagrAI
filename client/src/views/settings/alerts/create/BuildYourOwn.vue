@@ -406,7 +406,7 @@
                       style="height: 1rem; margin-right: 0.25rem"
                       alt=""
                     />
-                    {{ item.length ? item : '' }}
+                    {{ checkInteger(item) }}
                   </p>
                 </div>
               </div>
@@ -836,6 +836,9 @@ export default {
         type: 'error',
         timeout: 2000,
       })
+    },
+    checkInteger(str) {
+      return /\d/.test(str) ? this.user.fullName : str
     },
     changeCreate() {
       this.create = !this.create
