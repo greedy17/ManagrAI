@@ -311,6 +311,8 @@ def _send_calendar_details(user_id):
     user = User.objects.get(id=user_id)
     processed_data = _process_calendar_details(user_id)
     if processed_data:
+        logger.info(f"Processing upcoming meetings for {user.email}")
+        logger.info(f"MEETING DATA: {processed_data}")
         # processed_data checks to see how many events exists
         blocks = [
             block_builders.header_block("Upcoming Meetings For Today!"),
