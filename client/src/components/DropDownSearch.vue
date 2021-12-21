@@ -63,6 +63,10 @@ export default {
   background-color: $dark-green;
 }
 
+::v-deep .tn-dropdown__options__option {
+  overflow-x: scroll;
+}
+
 ::v-deep .tn-dropdown__selection-container {
   @include base-font-styles();
   border-radius: 0.25rem;

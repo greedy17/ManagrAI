@@ -106,6 +106,45 @@
               :form="alertGroup"
               :resourceType="alertTemplateForm.field.resourceType.value"
             />
+
+            <p
+              v-if="
+                alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
+                  .operandIdentifier.value &&
+                (alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
+                  ._operandIdentifier.value.dataType === 'Date' ||
+                  alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
+                    ._operandIdentifier.value.dataType === 'DateTime')
+              "
+              class="fixed__center"
+            >
+              We'll alert you if the
+              {{
+                alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
+                  .operandIdentifier.value
+                  ? alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0]
+                      .field.operandIdentifier.value
+                  : '___'
+              }}
+              is
+              {{
+                alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
+                  .operandOperator.value
+                  ? alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0]
+                      .field._operandOperator.value.label
+                  : '___'
+              }}
+              {{
+                alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
+                  .operandValue.value
+                  ? positiveDay(
+                      alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0]
+                        .field.operandValue.value,
+                    )
+                  : '___'
+              }}
+            </p>
+
             <div class="fixed__right" v-if="alertTemplateForm.field.alertGroups.groups.length > 1">
               <button class="remove__group" @click="onRemoveAlertGroup(index)">
                 <img
@@ -818,6 +857,15 @@ export default {
     },
   },
   methods: {
+    positiveDay(num) {
+      if (num < 0) {
+        return (num *= -1) + ' days before your selected delivery day.'
+      } else if (num == 0) {
+        return ' the day of your selected delivery day.'
+      } else {
+        return num + ' days away from your selected delivery day.'
+      }
+    },
     repsPipeline() {
       if (this.user.userLevel == 'REP') {
         this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
@@ -1343,6 +1391,11 @@ export default {
 .fixed__right {
   align-self: flex-end;
   margin-top: -2rem;
+  border: 1px solid red;
+}
+.fixed__center {
+  align-self: center;
+  color: $panther-silver;
 }
 .message_titles {
   display: flex;

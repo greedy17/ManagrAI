@@ -126,34 +126,6 @@
             </button>
           </div>
 
-          <!-- <div v-if="!addedFieldNames.includes('Product2Id')" class="centered field-border">
-            <p style="margin-left: 0.5rem; font-weight: bold">
-              Product <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
-            </p>
-
-            <img
-              src="@/assets/images/unlinked.png"
-              alt=""
-              style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-            />
-
-            <button
-              @click="
-                () => {
-                  onAddField(
-                    this.formFields.list.filter((field) => field.apiName === 'Product2Id')[0],
-                  )
-                }
-              "
-              :class="
-                this.addedFieldNames.includes('PricebookEntryId')
-                  ? 'default_button bouncy'
-                  : 'default_button'
-              "
-            >
-              Product
-            </button>
-          </div> -->
           <div v-if="!addedFieldNames.includes('Quantity')" class="centered field-border">
             <p style="margin-left: 0.5rem; font-weight: bold">
               Quantity <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
@@ -461,7 +433,8 @@
                 "
               />
             </div>
-            <!-- <div v-if="productSelected">Save form to continue to products</div> -->
+
+            <div v-if="productSelected">Save form & continue</div>
           </div>
         </div>
 
@@ -652,6 +625,31 @@
 
         <div
           v-else-if="
+            resource === 'OpportunityLineItem' &&
+            requiredProductFields.every((i) => addedFieldNames.includes(i))
+          "
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            margin-top: 0.5rem;
+          "
+        >
+          <button
+            @click="
+              () => {
+                addingFields = !addingFields
+              }
+            "
+            class="default_button"
+          >
+            Add Fields
+          </button>
+        </div>
+
+        <div
+          v-else-if="
             resource === 'Lead' && requiredLeadFields.every((i) => addedFieldNames.includes(i))
           "
           style="
@@ -697,6 +695,14 @@
         </div>
 
         <div class="example--footer">
+          <button
+            v-if="formType !== 'STAGE_GATING'"
+            style="margin-right: 0.5rem; cursor: pointer"
+            @click="goBack"
+            class="disabled"
+          >
+            back
+          </button>
           <div class="row__" v-if="formType === 'STAGE_GATING'">
             <button
               style="margin-right: 0.5rem; cursor: pointer"
@@ -720,7 +726,7 @@
             :class="
               !requiredOpportunityFields.every((i) => addedFieldNames.includes(i))
                 ? 'primary-button'
-                : 'primary-button bouncy'
+                : 'primary-button'
             "
             text="Save"
             :loading="savingForm"
@@ -730,7 +736,7 @@
           <div v-if="resource === 'Opportunity' && productSelected">
             <button
               v-if="requiredOpportunityFields.every((i) => addedFieldNames.includes(i))"
-              class="save bouncy"
+              class="save"
               @click="goToProducts"
             >
               Save + Continue to products
@@ -742,9 +748,7 @@
             v-else-if="resource === 'Contact'"
             @click="onSave"
             class="primary-button"
-            :class="
-              !addedFieldNames.includes('LastName') ? 'primary-button' : 'primary-button bouncy'
-            "
+            :class="!addedFieldNames.includes('LastName') ? 'primary-button' : 'primary-button'"
             text="Save"
             :loading="savingForm"
             :disabled="!addedFieldNames.includes('LastName')"
@@ -757,7 +761,7 @@
             :class="
               !requiredProductFields.every((i) => addedFieldNames.includes(i))
                 ? 'primary-button'
-                : 'primary-button bouncy'
+                : 'primary-button'
             "
             text="Save"
             :loading="savingForm"
@@ -771,7 +775,7 @@
             :class="
               !requiredLeadFields.every((i) => addedFieldNames.includes(i))
                 ? 'primary-button'
-                : 'primary-button bouncy'
+                : 'primary-button '
             "
             text="Save"
             :loading="savingForm"
@@ -782,7 +786,7 @@
             v-if="resource === 'Account'"
             @click="onSave"
             class="primary-button"
-            :class="!addedFieldNames.includes('Name') ? 'primary-button' : 'primary-button bouncy'"
+            :class="!addedFieldNames.includes('Name') ? 'primary-button' : 'primary-button'"
             text="Save"
             :loading="savingForm"
             :disabled="!addedFieldNames.includes('Name')"
@@ -1199,6 +1203,9 @@ export default {
   created() {
     this.getActionChoices()
   },
+  mounted() {
+    console.log(this.customForm)
+  },
   async beforeCreate() {
     try {
       this.formFields = CollectionManager.create({
@@ -1273,7 +1280,9 @@ export default {
       }
       this.addedFields.push({ ...field, order: this.addedFields.length, includeInRecap: true })
     },
-
+    goBack() {
+      this.$router.push({ name: 'Required' })
+    },
     goToCustomize() {
       this.$router.push({ name: 'CustomizeLandingPage' })
     },
@@ -1411,13 +1420,15 @@ export default {
             message: 'Form Added Succesfully!',
             timeout: 2000,
           })
+          if (this.resource == 'OpportunityLineItem') {
+            this.$router.push({ name: 'Required' })
+          }
         })
         .finally(() => {
           this.savingForm = false
         })
 
       if (this.formType === 'STAGE_GATING') {
-        this.$router.go()
       }
     },
   },
