@@ -1957,13 +1957,14 @@ img:hover {
   height: 10%;
 }
 .example--footer {
+  background-color: $panther;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: flex-end;
   margin-top: auto;
   margin-bottom: -1rem;
   width: 100%;
-  height: 10%;
+  min-height: 5rem;
 }
 .example-text {
   position: absolute;
