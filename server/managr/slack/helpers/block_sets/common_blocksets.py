@@ -387,25 +387,19 @@ def meeting_reminder_block_set(context):
 
 @block_set()
 def calendar_reminders_blockset(context):
+    print(context)
     meeting = MeetingPrepInstance.objects.get(id=context.get("prep_id"))
+    user = User.objects.get(id=context.get("u"))
     data = meeting.event_data
     title = data["title"]
     unix_start_time = data["times"]["start_time"]
-    unix_end_time = data["times"]["end_time"]
-    gmt_start_time = datetime.utcfromtimestamp(int(unix_start_time)).strftime("%H:%M")
-    gmt = pytz.timezone("GMT")
-    eastern = pytz.timezone(meeting.user.timezone)
+    utc_time = datetime.utcfromtimestamp(int(unix_start_time))
+    tz = pytz.timezone(user.timezone)
+    local_start = utc_time.astimezone(tz).strftime("%I:%M")
 
-    s = datetime.strptime(gmt_start_time, "%H:%M")
-    date_gmt = gmt.localize(s)
+    am_or_pm = utc_time.astimezone(tz).strftime("%p")
 
-    date_eastern = date_gmt.astimezone(eastern)
-    local_start_time = date_eastern.strftime("%r").strip("00").removesuffix(":00")
-    am_or_pm = date_eastern.strftime("%p")
-    short_local_start_time = local_start_time[:-6]
-    start_time = short_local_start_time + " " + am_or_pm
-    python_end_time = datetime.utcfromtimestamp(unix_end_time).strftime("%H:%M")
-    s = datetime.strptime(python_end_time, "%H:%M")
+    start_time = local_start + " " + am_or_pm
     type = "prep" if meeting.resource_type is None else meeting.resource_type
     if type == "Opportunity":
         resource = Opportunity.objects.get(id=meeting.resource_id)

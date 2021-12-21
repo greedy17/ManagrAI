@@ -699,16 +699,16 @@ def process_zoom_meeting_attach_resource(payload, context):
 
             workflow.save()
 
-    # clear old forms (except contact forms)
-    workflow.forms.exclude(
-        template__resource__in=[
-            slack_const.FORM_RESOURCE_CONTACT,
-            slack_const.FORM_RESOURCE_OPPORTUNITYLINEITEM,
-        ]
-    ).delete()
-    workflow.add_form(
-        meeting_resource, slack_const.FORM_TYPE_UPDATE,
-    )
+            # clear old forms (except contact forms)
+            workflow.forms.exclude(
+                template__resource__in=[
+                    slack_const.FORM_RESOURCE_CONTACT,
+                    slack_const.FORM_RESOURCE_OPPORTUNITYLINEITEM,
+                ]
+            ).delete()
+            workflow.add_form(
+                meeting_resource, slack_const.FORM_TYPE_UPDATE,
+            )
     if type:
         ts = context.get("original_message_timestamp")
         channel = context.get("original_message_channel")
@@ -726,7 +726,9 @@ def process_zoom_meeting_attach_resource(payload, context):
         for meeting in meetings:
             blocks_set = [
                 *blocks_set,
-                *get_block_set("calendar_reminders_blockset", {"prep_id": str(meeting.id)}),
+                *get_block_set(
+                    "calendar_reminders_blockset", {"prep_id": str(meeting.id), "u": str(user.id)}
+                ),
                 {"type": "divider"},
             ]
     else:
