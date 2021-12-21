@@ -208,7 +208,9 @@
       >
         <div>
           <!-- <div v-if="selectedStage">{{ selectedStage }} Form</div> -->
-          <div class="stage__dropdown__header">Saved Validation Rules</div>
+          <div class="stage__dropdown__header">
+            {{ formStages.length ? 'Saved Validation Rules' : 'No Saved Validation Rules' }}
+          </div>
           <div
             v-for="(form, i) in formStages"
             :key="i"
