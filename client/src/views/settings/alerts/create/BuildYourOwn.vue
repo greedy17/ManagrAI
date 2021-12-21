@@ -114,7 +114,8 @@
                 (alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
                   ._operandIdentifier.value.dataType === 'Date' ||
                   alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
-                    ._operandIdentifier.value.dataType === 'DateTime')
+                    ._operandIdentifier.value.dataType === 'DateTime') &&
+                index == 0
               "
               class="fixed__center"
             >

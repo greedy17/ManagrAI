@@ -317,7 +317,7 @@
         </div>
 
         <div v-if="resource === 'Opportunity' && formType !== 'STAGE_GATING'">
-          <div v-if="!addedFieldNames.includes('Name')" class="centered field-border">
+          <div v-if="!addedFieldLabels.includes('Name')" class="centered field-border">
             <p style="margin-left: 0.5rem; font-weight: bold">
               Name <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
             </p>
@@ -331,7 +331,11 @@
             <button
               @click="
                 () => {
-                  onAddField(this.formFields.list.filter((field) => field.apiName === 'Name')[0])
+                  onAddField(
+                    this.formFields.list.filter(
+                      (field) => field.referenceDisplayLabel === 'Name',
+                    )[0],
+                  )
                 }
               "
               class="default_button bouncy"
@@ -434,7 +438,7 @@
               />
             </div>
 
-            <div v-if="productSelected">Save form & continue</div>
+            <div v-if="productSelected">Add products on the next page</div>
           </div>
         </div>
 
@@ -1031,7 +1035,7 @@ export default {
   data() {
     return {
       currentStageForm: null,
-      // formFields: {},
+      // formFields: CollectionManager.create({ ModelClass: SObjectField }),
       formFieldList: [],
       salesforceFields,
       customSlackFormConfig: [],
@@ -1204,7 +1208,7 @@ export default {
     this.getActionChoices()
   },
   mounted() {
-    console.log(this.customForm)
+    console.log(this.formFields)
   },
   async beforeCreate() {
     try {
@@ -1213,7 +1217,6 @@ export default {
         pagination: { size: 500 },
       })
       this.formFields.refresh()
-      console.log(this.formFields)
     } catch (e) {
       console.log(e)
     }
