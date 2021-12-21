@@ -608,6 +608,7 @@ def process_submit_resource_data(payload, context):
 @log_all_exceptions
 @processor(required_context=["w"])
 def process_zoom_meeting_attach_resource(payload, context):
+    print(context)
     type = context.get("type", None)
     workflow = (
         MeetingPrepInstance.objects.get(id=context.get("w"))
@@ -740,6 +741,7 @@ def process_zoom_meeting_attach_resource(payload, context):
         blocks_set = get_block_set("initial_meeting_interaction", {"w": context.get("w")})
 
     try:
+        print(channel, ts, slack_access_token, blocks_set)
         # update initial interaction workflow with new resource
         res = slack_requests.update_channel_message(
             channel, ts, slack_access_token, block_set=blocks_set
