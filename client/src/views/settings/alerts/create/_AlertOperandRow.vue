@@ -71,14 +71,11 @@
           @click="removeIdentifier"
           :class="form.field.operandIdentifier.value ? 'selected__item' : 'invisible'"
         >
-          <img
-            src="@/assets/images/remove.png"
-            style="height: 1rem; margin-right: 0.25rem"
-            alt=""
-          />
+          <img src="@/assets/images/remove.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
           {{ form.field.operandIdentifier.value }}
         </p>
       </div>
+
       <div
         v-if="!(selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME')"
         class="centered"
@@ -114,14 +111,11 @@
           @click="removeOperator"
           :class="form.field.operandOperator.value ? 'selected__item' : 'invisible'"
         >
-          <img
-            src="@/assets/images/remove.png"
-            style="height: 1rem; margin-right: 0.25rem"
-            alt=""
-          />
-          {{ form.field.operandOperator.value }}
+          <img src="@/assets/images/remove.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
+          {{ form.field._operandOperator.value ? form.field._operandOperator.value.label : '' }}
         </p>
       </div>
+
       <div class="alert-operand-row__value">
         <div
           class="centered"
@@ -160,7 +154,7 @@
           >
             <img
               src="@/assets/images/remove.png"
-              style="height: 1rem; margin-right: 0.25rem"
+              style="height: 1rem; margin-right: 0.5rem"
               alt=""
             />
             {{ form.field.operandValue.value }}
@@ -174,16 +168,6 @@
             v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'"
           >
             <p style="font-weight: bold">Select a value:</p>
-            <!-- <div :key="value" v-for="(key, value) in valueOpts">
-              <input
-                v-model="form.field.operandValue.value"
-                id="key"
-                :value="key.value"
-                type="radio"
-                @click="setOperand(key)"
-              />
-              <label for="key">{{ key.label }}</label>
-            </div> -->
 
             <FormField :errors="form.field.operandValue.errors">
               <template v-slot:input>
@@ -204,9 +188,119 @@
             </p>
           </div>
 
-          <div class="centered" style="flex-direction: column" v-else>
-            <div v-if="selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME'">
-              <div style="display: flex; align-items: center">
+          <div v-else>
+            <div
+              style="
+                display: flex;
+                flex-direction: row;
+                min-width: 34vw;
+                justify-content: space-between;
+                align-items: center;
+              "
+              v-if="selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME'"
+            >
+              <div style="text-align: center">
+                <p style="font-weight: bold">Select an operator:</p>
+                <!-- <div :key="value" v-for="(key, value) in operatorOpts">
+                <input
+                  v-model="form.field.operandOperator.value"
+                  id="key"
+                  :value="key.value"
+                  type="radio"
+                  @click="setOperator(key)"
+                />
+                <label for="key">{{ key.label }}</label>
+                </div> -->
+                <FormField :errors="form.field.operandOperator.errors">
+                  <template v-slot:input>
+                    <DropDownSearch
+                      :items.sync="operatorOpts"
+                      :itemsRef.sync="form.field._operandOperator.value"
+                      v-model="form.field.operandOperator.value"
+                      @input="form.field.operandOperator.validate()"
+                      displayKey="label"
+                      valueKey="value"
+                      nullDisplay="Select Operators"
+                      searchable
+                      local
+                    />
+                  </template>
+                </FormField>
+                <p
+                  style="margin-top: 2.25rem"
+                  @click="removeOperator"
+                  :class="form.field.operandOperator.value ? 'selected__item' : 'invisible'"
+                >
+                  <img
+                    src="@/assets/images/remove.png"
+                    style="height: 1rem; margin-right: 0.5rem"
+                    alt=""
+                  />
+                  {{
+                    form.field._operandOperator.value ? form.field._operandOperator.value.label : ''
+                  }}
+                </p>
+              </div>
+
+              <div>
+                <div
+                  class="centered"
+                  style="margin-bottom: 1rem; margin-top: 1rem; margin-left: -1.2rem"
+                >
+                  <label class="alert-operand-row__condition-label">days before</label>
+                  <ToggleCheckBox
+                    @input="toggleSelectedOperand"
+                    :value="MyOperand !== 'Negative'"
+                    offColor="#199e54"
+                    onColor="#199e54"
+                  />
+                  <label class="alert-operand-row__condition-label">days away</label>
+                </div>
+
+                <FormField v-if="MyOperand === 'Negative'" :errors="form.field.operandValue.errors">
+                  <template v-slot:input>
+                    <DropDownSearch
+                      :items.sync="NegativeDateValues"
+                      :itemsRef.sync="form.field._operandValue.value"
+                      v-model="form.field.operandValue.value"
+                      displayKey="label"
+                      valueKey="value"
+                      nullDisplay="Select # of days"
+                      searchable
+                      local
+                    />
+                  </template>
+                </FormField>
+
+                <FormField v-else :errors="form.field.operandValue.errors">
+                  <template v-slot:input>
+                    <DropDownSearch
+                      :items.sync="PositiveDateValues"
+                      :itemsRef.sync="form.field._operandValue.value"
+                      v-model="form.field.operandValue.value"
+                      displayKey="label"
+                      valueKey="value"
+                      nullDisplay="Select # of days"
+                      searchable
+                      local
+                    />
+                  </template>
+                </FormField>
+                <p
+                  style="margin-top: 2.25rem; width: 90%"
+                  :class="form.field.operandValue.value ? 'selected__item' : 'invisible'"
+                  @click="removeValue"
+                >
+                  <img
+                    src="@/assets/images/remove.png"
+                    style="height: 1rem; margin-right: 0.5rem"
+                    alt=""
+                  />
+                  {{ form.field.operandValue.value }}
+                </p>
+              </div>
+
+              <!-- <div style="display: flex; align-items: center">
                 <p>{{ form.field.operandIdentifier.value }} is:</p>
                 <div class="centered">
                   <label class="alert-operand-row__condition-label">In the past</label>
@@ -243,7 +337,7 @@
                   class="dayInput"
                   @click="setIdentifier"
                 />
-              </div>
+              </div> -->
             </div>
 
             <div class="centered" style="flex-direction: column" v-else>
@@ -330,12 +424,12 @@ export default {
       positiveOperand: false,
       MyOperand: 'Negative',
       intOpts: [
-        { label: '>= (Greater or Equal)', value: '>=' },
-        { label: '<= (Less or Equal)', value: '<=' },
-        { label: '< (Less)', value: '<' },
-        { label: '> (Greater)', value: '>' },
-        { label: '= (Equals)', value: '=' },
-        { label: '!= (Not Equals)', value: '!=' },
+        { label: 'Greater or equal to', value: '>=' },
+        { label: 'Less or equal to', value: '<=' },
+        { label: 'Less than', value: '<' },
+        { label: 'Greater than', value: '>' },
+        { label: 'Equal to', value: '=' },
+        { label: 'Not equal to', value: '!=' },
         // string based equality
       ],
       strOpts: [
@@ -354,6 +448,80 @@ export default {
         { label: '15 Days PRIOR TO alert day', value: '-15' },
         { label: 'Month  FROM alert day', value: '30' },
         { label: 'Month  PRIOR TO alert day', value: '-30' },
+      ],
+      NegativeDateValues: [
+        { label: 'Day of alert', value: '0' },
+        { label: 'A month before', value: '-30' },
+        { label: "Two month's before", value: '-60' },
+        { label: "Three month's before", value: '-90' },
+        { label: 'A week before', value: '-7' },
+        { label: "Two week's before", value: '-14' },
+        { label: '1 day before', value: '-1' },
+        { label: "2 day's before", value: '-2' },
+        { label: "3 day's before", value: '-3' },
+        { label: "4 day's before", value: '-4' },
+        { label: "5 day's before", value: '-5' },
+        { label: "6 day's before", value: '-6' },
+        { label: "7 day's before", value: '-7' },
+        { label: "8 day's before", value: '-8' },
+        { label: "9 day's before", value: '-9' },
+        { label: "10 day's before", value: '-10' },
+        { label: "11 day's before", value: '-11' },
+        { label: "12 day's before", value: '-12' },
+        { label: "13 day's before", value: '-13' },
+        { label: "14 day's before", value: '-14' },
+        { label: "15 day's before", value: '-15' },
+        { label: "16 day's before", value: '-16' },
+        { label: "17 day's before", value: '-17' },
+        { label: "18 day's before", value: '-18' },
+        { label: "19 day's before", value: '-19' },
+        { label: "20 day's before", value: '-20' },
+        { label: "21 day's before", value: '-21' },
+        { label: "22 day's before", value: '-22' },
+        { label: "23 day's before", value: '-23' },
+        { label: "24 day's before", value: '-24' },
+        { label: "25 day's before", value: '-25' },
+        { label: "26 day's before", value: '-26' },
+        { label: "27 day's before", value: '-27' },
+        { label: "28 day's before", value: '-28' },
+        { label: "29 day's before", value: '-29' },
+      ],
+      PositiveDateValues: [
+        { label: 'Day of alert', value: '0' },
+        { label: 'A month away', value: '30' },
+        { label: "Two month's away", value: '60' },
+        { label: "Three month's away", value: '90' },
+        { label: 'A week away', value: '7' },
+        { label: "Two week's away", value: '14' },
+        { label: '1 day away', value: '1' },
+        { label: "2 day's away", value: '2' },
+        { label: "3 day's away", value: '3' },
+        { label: "4 day's away", value: '4' },
+        { label: "5 day's away", value: '5' },
+        { label: "6 day's away", value: '6' },
+        { label: "7 day's away", value: '7' },
+        { label: "8 day's away", value: '8' },
+        { label: "9 day's away", value: '9' },
+        { label: "10 day's away", value: '10' },
+        { label: "11 day's away", value: '11' },
+        { label: "12 day's away", value: '12' },
+        { label: "13 day's away", value: '13' },
+        { label: "14 day's away", value: '14' },
+        { label: "15 day's away", value: '15' },
+        { label: "16 day's away", value: '16' },
+        { label: "17 day's away", value: '17' },
+        { label: "18 day's away", value: '18' },
+        { label: "19 day's away", value: '19' },
+        { label: "20 day's away", value: '20' },
+        { label: "21 day's away", value: '21' },
+        { label: "22 day's away", value: '22' },
+        { label: "23 day's away", value: '23' },
+        { label: "24 day's away", value: '24' },
+        { label: "25 day's away", value: '25' },
+        { label: "26 day's away", value: '26' },
+        { label: "27 day's away", value: '27' },
+        { label: "28 day's away", value: '28' },
+        { label: "29 day's away", value: '29' },
       ],
       booleanValueOpts: [
         { label: 'True', value: 'true' },
@@ -424,7 +592,7 @@ export default {
         : (this.selectedCondition = 'AND')
     },
     toggleSelectedOperand() {
-      this.form.field.operandValue.value = '0'
+      this.form.field.operandValue.value = ''
       this.MyOperand === 'Negative' ? (this.MyOperand = 'Positive') : (this.MyOperand = 'Negative')
     },
     async objectFieldNextPage() {
@@ -620,8 +788,9 @@ export default {
   align-items: center;
   justify-content: center;
   &-label {
-    @include muted-font();
     margin: 0 0.5rem;
+    font-size: 15px;
+    font-weight: bold;
   }
 }
 .alert-operand-row__date-range {
