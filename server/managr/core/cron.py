@@ -366,7 +366,7 @@ def revoke_tokens():
 
 
 @kronos.register("*/30 * * * *")
-def check_reminders(user_id):
+def check_upcomingmeetings(user_id):
     user = User.objects.get(id=user_id)
     for key in user.reminders.keys():
         if user.reminders[key]:
@@ -386,14 +386,27 @@ def check_reminders(user_id):
                             emit_process_send_workflow_reminder(
                                 str(user.id), workflows["workflow_count"]
                             )
-                elif key == core_consts.MEETING_REMINDER_REP:
-                    meetings = check_for_uncompleted_meetings(user.id)
-                    logger.info(f"UNCOMPLETED MEETINGS FOR {user.email}: {meetings}")
-                    if meetings["status"]:
-                        emit_process_send_meeting_reminder(str(user.id), meetings["not_completed"])
-                elif key == core_consts.MEETING_REMINDER_MANAGER and user.user_level == "Manager":
-                    meetings = check_for_uncompleted_meetings(user.id, True)
-                    if meetings["status"]:
-                        emit_process_send_manager_reminder(str(user.id), meetings["not_completed"])
+
 
     return
+
+def check_recapmeetings(user_id): 
+        user = User.objects.get(id=user_id)
+        for key in user.reminders.keys():
+            if user.reminders[key]:
+                check = check_for_time(
+                            user.timezone,
+                            core_consts.REMINDER_CONFIG[key]["HOUR"],
+                            core_consts.REMINDER_CONFIG[key]["MINUTE"],
+        )
+                if check:
+                    if key == core_consts.MEETING_REMINDER_REP:
+                        meetings = check_for_uncompleted_meetings(user.id)
+                        logger.info(f"UNCOMPLETED MEETINGS FOR {user.email}: {meetings}")
+                        if meetings["status"]:
+                            emit_process_send_meeting_reminder(str(user.id), meetings["not_completed"])
+                    elif key == core_consts.MEETING_REMINDER_MANAGER and user.user_level == "Manager":
+                        meetings = check_for_uncompleted_meetings(user.id, True)
+                        if meetings["status"]:
+                            emit_process_send_manager_reminder(str(user.id), meetings["not_completed"])
+        return 
