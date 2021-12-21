@@ -545,4 +545,4 @@ class MeetingPrepInstance(TimeStampModel):
     objects = MeetingPrepQuerySet.as_manager()
 
     class Meta:
-        ordering = ["-datetime_created"]
+        ordering = ["datetime_created"]

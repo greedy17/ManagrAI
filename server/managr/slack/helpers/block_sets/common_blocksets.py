@@ -387,7 +387,6 @@ def meeting_reminder_block_set(context):
 
 @block_set()
 def calendar_reminders_blockset(context):
-    print(context)
     meeting = MeetingPrepInstance.objects.get(id=context.get("prep_id"))
     user = User.objects.get(id=context.get("u"))
     data = meeting.event_data
@@ -423,7 +422,7 @@ def calendar_reminders_blockset(context):
         blocks.append(
             block_builders.section_with_button_block(
                 "Change Opportunity",
-                section_text=f"We mapped this meeting to: {type} {resource.name}",
+                section_text=f"We mapped this meeting to: *{type} {resource.name}*",
                 button_value=f"type%{str(meeting.id)}",
                 block_id=f"type%{str(meeting.id)}",
                 action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
