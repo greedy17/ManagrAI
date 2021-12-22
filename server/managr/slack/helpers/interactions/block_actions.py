@@ -415,7 +415,7 @@ def process_stage_selected_command_form(payload, context):
         stage_form = org.custom_slack_forms.filter(
             form_type=slack_const.FORM_TYPE_STAGE_GATING, stage=selected_value
         ).first()
-
+        print(stage_form)
         if stage_form:
             new_form = OrgCustomSlackFormInstance.objects.create(
                 user=user, template=stage_form, resource_id=main_form.resource_id
@@ -428,15 +428,18 @@ def process_stage_selected_command_form(payload, context):
     updated_view_title = view["title"]
     if len(added_form_ids):
         submit_button_message = "Next"
+        callback_id = slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE
+    elif not len(added_form_ids) and org.has_products:
+        submit_button_message = "Add Products"
+        callback_id = slack_const.PROCESS_ADD_PRODUCTS_FORM
     elif not len(added_form_ids) and main_form.template.form_type == "UPDATE":
         submit_button_message = "Update"
+        slack_const.COMMAND_FORMS__SUBMIT_FORM
+        callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
     elif not len(added_form_ids) and main_form.template.form_type == "CREATE":
         submit_button_message = "Create"
-    callback_id = (
-        slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE
-        if len(added_form_ids)
-        else slack_const.COMMAND_FORMS__SUBMIT_FORM
-    )
+        callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
+
     data = {
         "trigger_id": trigger_id,
         "view_id": view_id,
