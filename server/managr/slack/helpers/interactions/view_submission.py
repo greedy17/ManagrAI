@@ -23,7 +23,7 @@ from managr.salesforce.adapter.exceptions import (
 from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_paginator_block
 from managr.alerts.models import AlertInstance
-from managr.organization.models import Organization, Contact, Account
+from managr.organization.models import Organization, Contact, Account, OpportunityLineItem
 from managr.core.models import User, MeetingPrepInstance
 from managr.core.background import emit_create_calendar_event
 from managr.outreach.tasks import emit_add_sequence_state
@@ -275,6 +275,8 @@ def process_add_products_form(payload, context):
         .exclude(template__resource="OpportunityLineItem")
         .first()
     )
+    products = OpportunityLineItem.objects.filter(opportunity=main_form.resource_id)
+    print(products)
     main_form.save_form(state)
 
     # currently only for update

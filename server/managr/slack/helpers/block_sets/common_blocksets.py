@@ -1,4 +1,5 @@
 import pdb
+from urllib.parse import urlencode
 import pytz
 import uuid
 import logging
@@ -33,6 +34,7 @@ from managr.salesforce.adapter.exceptions import (
     InvalidRefreshToken,
 )
 from managr.core.models import MeetingPrepInstance
+from server.managr.organization.models import OpportunityLineItem
 
 logger = logging.getLogger("managr")
 
@@ -454,6 +456,22 @@ def manager_meeting_reminder_block_set(context):
             "mrkdwn",
         )
     ]
+    return blocks
+
+
+@block_set()
+def current_product_block_set(context):
+    opp_item = OpportunityLineItem.objects.get(id=context.get("opp_line_item_id"))
+    view_id = context.get("view_id")
+    text = f"{opp_item.product.name}\nQuantity: {opp_item.quantity}\nTotal Price: {opp_item.total_price}"
+    blocks = block_builders.section_with_button_block(
+        "Edit Product",
+        "EDIT_PRODUCT",
+        text,
+        action_id=action_with_params(
+            slack_const.PROCESS_SHOW_EDIT_PRODUCTS_FORM, params=[f"opp_item_id={str(opp_item.id)}"],
+        ),
+    )
     return blocks
 
 

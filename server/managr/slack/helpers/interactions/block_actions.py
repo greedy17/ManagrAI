@@ -43,6 +43,7 @@ from managr.api.decorators import slack_api_exceptions
 from managr.alerts.models import AlertTemplate, AlertInstance, AlertConfig
 from managr.gong.models import GongCall, GongAuthAccount
 from managr.gong.exceptions import InvalidRequest
+from server.managr.organization.models import OpportunityLineItem
 
 logger = logging.getLogger("managr")
 
@@ -808,7 +809,7 @@ def process_show_update_resource_form(payload, context):
     show_submit_button_if_fields_added = False
     has_stage_forms = False
     stage_form = None
-
+    current_products = None
     # HACK forms are generated with a helper fn currently stagename takes a special action id to update forms
     # we need to manually change this action_id
     if resource_id and not prev_form:
@@ -826,7 +827,7 @@ def process_show_update_resource_form(payload, context):
                 template=template, resource_id=resource_id, user=user,
             )
         )
-        if user.organization.has_products:
+        if user.organization.has_products and resource_type == "Opportunity":
             product_template = (
                 OrgCustomSlackForm.objects.for_user(user)
                 .filter(Q(resource="OpportunityLineItem", form_type="CREATE"))
@@ -843,6 +844,9 @@ def process_show_update_resource_form(payload, context):
                 else OrgCustomSlackFormInstance.objects.create(
                     template=product_template, resource_id=resource_id, user=user,
                 )
+            )
+            current_products = OpportunityLineItem.objects.filter(
+                opportunity=slack_form.resource_id
             )
         if slack_form:
             current_stage = slack_form.resource_object.secondary_data.get("StageName")
@@ -897,6 +901,12 @@ def process_show_update_resource_form(payload, context):
             block_builders.simple_section("Please re-select your salesforce resource to update")
         )
         show_submit_button_if_fields_added = False
+    if current_products:
+        for product in current_products:
+            product_block = get_block_set(
+                "current_product_blockset", {"opp_item_id": str(product.id)}
+            )
+            blocks.append(product_block)
     private_metadata = {
         "channel_id": payload.get("container").get("channel_id"),
         "message_ts": payload.get("container").get("message_ts"),
@@ -1836,6 +1846,11 @@ def process_send_recap_modal(payload, context):
         )
 
 
+@processor(required_context="opp_item_id")
+def process_show_edit_product_form(payload, context):
+    return
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -1871,6 +1886,7 @@ def handle_block_actions(payload):
         slack_const.GONG_CALL_RECORDING: process_get_call_recording,
         slack_const.MARK_COMPLETE: process_mark_complete,
         slack_const.PROCESS_SEND_RECAP_MODAL: process_send_recap_modal,
+        slack_const.PROCESS_SHOW_EDIT_PRODUCT_FORM: process_show_edit_product_form,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)
