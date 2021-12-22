@@ -11,7 +11,7 @@ from datetime import datetime, date, timedelta
 
 from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_paginator_block
-from managr.organization.models import Organization, Stage, Account
+from managr.organization.models import Organization, Stage, Account, OpportunityLineItem
 from managr.opportunity.models import Opportunity, Lead
 from managr.zoom.models import ZoomMeeting
 from managr.slack import constants as slack_const
@@ -28,7 +28,7 @@ from managr.slack.helpers.utils import (
 )
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
-from managr.slack.models import OrgCustomSlackFormInstance, UserSlackIntegration
+from managr.slack.models import OrgCustomSlackFormInstance, UserSlackIntegration, OrgCustomSlackForm
 from managr.salesforce.models import MeetingWorkflow
 from managr.core.models import User, MeetingPrepInstance
 from managr.salesforce.background import emit_meeting_workflow_tracker
@@ -43,7 +43,6 @@ from managr.api.decorators import slack_api_exceptions
 from managr.alerts.models import AlertTemplate, AlertInstance, AlertConfig
 from managr.gong.models import GongCall, GongAuthAccount
 from managr.gong.exceptions import InvalidRequest
-from server.managr.organization.models import OpportunityLineItem
 
 logger = logging.getLogger("managr")
 
@@ -772,7 +771,7 @@ def process_show_update_resource_form(payload, context):
             "blocks": get_block_set(
                 "loading",
                 {
-                    "message": f"Salesforce is being a bit slow :sleeping:… please give it a few seconds or click 'refresh' above",
+                    "message": f"Salesforce is being a bit slow :sleeping:… please give it a few seconds",
                 },
             ),
         },
@@ -904,7 +903,7 @@ def process_show_update_resource_form(payload, context):
     if current_products:
         for product in current_products:
             product_block = get_block_set(
-                "current_product_blockset", {"opp_item_id": str(product.id)}
+                "current_product_blockset", {"opp_item_id": str(product.id), "u": str(user.id)}
             )
             blocks.append(product_block)
     private_metadata = {
@@ -1846,9 +1845,31 @@ def process_send_recap_modal(payload, context):
         )
 
 
-@processor(required_context="opp_item_id")
+@processor(required_context="u")
 def process_show_edit_product_form(payload, context):
-    return
+    opp_item = OpportunityLineItem.objects.get(id=context.get("opp_item_id"))
+    slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
+    user = slack_account.user
+    blocks = get_block_set(
+        "edit_product_block_set", {"u": str(user.id), "opp_item_id": str(opp_item.id)}
+    )
+
+    data = {
+        "view_id": payload["view"]["id"],
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
+            "title": {"type": "plain_text", "text": "Edit Product"},
+            "blocks": blocks,
+            "submit": {"type": "plain_text", "text": "Submit"},
+        },
+    }
+
+    slack_requests.generic_request(
+        slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
+        data,
+        access_token=user.organization.slack_integration.access_token,
+    )
 
 
 def handle_block_actions(payload):

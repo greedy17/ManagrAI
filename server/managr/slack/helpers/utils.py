@@ -229,6 +229,7 @@ class processor:
 
     def __call__(self, f):
         def wrapped_f(payload, context, *args, **kwargs):
+            print(context)
             for prop in self.required_context:
                 if context.get(prop) is None:
                     raise ValueError(f"context missing: {prop}, in {f.__name__}")

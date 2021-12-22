@@ -12,7 +12,7 @@ from django.db.models import Q
 from managr.utils.sites import get_site_url
 from managr.core.models import User, Notification
 from managr.opportunity.models import Opportunity, Lead
-from managr.organization.models import Account
+from managr.organization.models import Account, OpportunityLineItem
 from managr.zoom.models import ZoomMeeting
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce import constants as sf_consts
@@ -34,7 +34,6 @@ from managr.salesforce.adapter.exceptions import (
     InvalidRefreshToken,
 )
 from managr.core.models import MeetingPrepInstance
-from server.managr.organization.models import OpportunityLineItem
 
 logger = logging.getLogger("managr")
 
@@ -461,18 +460,34 @@ def manager_meeting_reminder_block_set(context):
 
 @block_set()
 def current_product_block_set(context):
-    opp_item = OpportunityLineItem.objects.get(id=context.get("opp_line_item_id"))
-    view_id = context.get("view_id")
+    opp_item = OpportunityLineItem.objects.get(id=context.get("opp_item_id"))
     text = f"{opp_item.product.name}\nQuantity: {opp_item.quantity}\nTotal Price: {opp_item.total_price}"
     blocks = block_builders.section_with_button_block(
         "Edit Product",
         "EDIT_PRODUCT",
         text,
         action_id=action_with_params(
-            slack_const.PROCESS_SHOW_EDIT_PRODUCTS_FORM, params=[f"opp_item_id={str(opp_item.id)}"],
+            slack_const.PROCESS_SHOW_EDIT_PRODUCT_FORM,
+            params=[f"opp_item_id={str(opp_item.id)}", f"u={context.get('u')}"],
         ),
     )
     return blocks
+
+
+@block_set()
+def edit_product_block_set(context):
+    opp_item = OpportunityLineItem.objects.get(id=context.get("opp_item_id"))
+    user = User.objects.get(id=context.get("u"))
+    template = (
+        OrgCustomSlackForm.objects.for_user(user)
+        .filter(Q(resource="OpportunityLineItem", form_type="CREATE"))
+        .first()
+    )
+    slack_form = OrgCustomSlackFormInstance.objects.create(
+        template=template, resource_id=str(opp_item.id), user=user
+    )
+    form_blocks = slack_form.generate_form(opp_item.secondary_data)
+    return [*form_blocks]
 
 
 @block_set
