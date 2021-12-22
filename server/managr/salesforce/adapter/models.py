@@ -1416,3 +1416,20 @@ class OpportunityLineItemAdapter:
             r = SalesforceAuthAccountAdapter._handle_response(r)
             r = OpportunityLineItemAdapter.from_api(r, user_id)
             return r
+
+    @staticmethod
+    def update_opportunitylineitem(data, access_token, custom_base, salesforce_id, object_fields):
+        json_data = json.dumps(
+            OpportunityLineItemAdapter.to_api(
+                data, OpportunityLineItemAdapter.integration_mapping, object_fields
+            )
+        )
+        url = sf_consts.SALESFORCE_WRITE_URI(
+            custom_base, sf_consts.RESOURCE_SYNC_OPPORTUNITY, salesforce_id
+        )
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        with Client as client:
+            r = client.patch(
+                url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+            )
+            return SalesforceAuthAccountAdapter._handle_response(r)

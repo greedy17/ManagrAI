@@ -618,14 +618,15 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
         data["id"] = str(data["id"])
         return OpportunityLineItemAdapter(**data)
 
-    def update_in_salesforce(self, data):
-        if self.opportunity.owner and hasattr(self.opportunity.owner, "salesforce_account"):
-            token = self.owner.salesforce_account.access_token
-            base_url = self.owner.salesforce_account.instance_url
-            object_fields = self.owner.salesforce_account.object_fields.filter(
+    def update_in_salesforce(self, user_id, data):
+        user = User.objects.get(id=user_id)
+        if user and hasattr(user, "salesforce_account"):
+            token = user.salesforce_account.access_token
+            base_url = user.salesforce_account.instance_url
+            object_fields = user.salesforce_account.object_fields.filter(
                 salesforce_object="OpportunityLineItem"
             ).values_list("api_name", flat=True)
-            res = AccountAdapter.update_account(
+            res = OpportunityLineItemAdapter.update_opportunitylineitem(
                 data, token, base_url, self.integration_id, object_fields
             )
             self.is_stale = True
