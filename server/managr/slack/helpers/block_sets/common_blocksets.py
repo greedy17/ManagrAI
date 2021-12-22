@@ -459,7 +459,45 @@ def manager_meeting_reminder_block_set(context):
         block_builders.simple_section(
             f"Hey {name} your team still has *{not_completed} {text}* from today that needs to be logged.",
             "mrkdwn",
-        )
-    ]
+        )]
+    blocks.append(
+        block_builders.section_with_accessory_block(
+           accessory= {
+               "type": "multi_static_select",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "Select an item",
+					"emoji": True
+				},
+                "options": [
+                {
+                    "text": {
+                        "type": "plain_text",
+                        "text": "this is plain_text text",
+                        "emoji": True
+                    },
+                    "value": "value-0"
+                },
+                {
+                    "text": {
+                        "type": "plain_text",
+                        "text": "this is plain_text text",
+                        "emoji": True
+                    },
+                    "value": "value-1"
+                },
+                {
+                    "text": {
+                        "type": "plain_text",
+                        "text": "this is plain_text text",
+                        "emoji": True
+                    },
+                    "value": "value-2"
+					}
+				],
+				"action_id": "static_select-action"
+			}
+        ))
+        
     return blocks
 
