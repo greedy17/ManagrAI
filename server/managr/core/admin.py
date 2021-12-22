@@ -197,9 +197,9 @@ class CustomNylasAuthAccount(admin.ModelAdmin):
 
 
 class CustomMeetingPrepInstance(admin.ModelAdmin):
-    class Meta:
-        model = MeetingPrepInstance
-        fields = ("user", "datetime_created")
+    model = MeetingPrepInstance
+    list_display = ("user", "datetime_created")
+    ordering = ("-datetime_created",)
 
 
 admin.site.register(User, CustomUserAdmin)

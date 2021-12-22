@@ -3,6 +3,7 @@ from django.urls import resolve
 from django.forms.models import ModelChoiceField
 from . import models as slack_models
 from managr.salesforce import models as sf_models
+from django.db.models import Q
 
 
 class CustomFormFieldInline(admin.StackedInline):
@@ -15,7 +16,9 @@ class CustomFormFieldInline(admin.StackedInline):
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         parent = self.get_parent_object_from_request(request)
         if db_field.name == "field":
-            queryset = sf_models.SObjectField.objects.filter(salesforce_object=parent.resource)
+            queryset = sf_models.SObjectField.objects.filter(
+                Q(salesforce_object=parent.resource) | Q(is_public=True)
+            )
             return ModelChoiceField(queryset)
         return super(CustomFormField, self).formfield_for_foreignkey(db_field, request, **kwargs)
 

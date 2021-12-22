@@ -563,8 +563,6 @@ def _process_add_call_to_sf(workflow_id, *args):
     user_timezone = user.zoom_account.timezone
     start_time = workflow.meeting.start_time
     end_time = workflow.meeting.end_time
-    print("Here")
-    print(review_form.update_source)
     formatted_start = (
         datetime.strftime(
             start_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p"

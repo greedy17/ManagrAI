@@ -608,6 +608,7 @@ def process_submit_resource_data(payload, context):
 @log_all_exceptions
 @processor(required_context=["w"])
 def process_zoom_meeting_attach_resource(payload, context):
+    print(context)
     type = context.get("type", None)
     workflow = (
         MeetingPrepInstance.objects.get(id=context.get("w"))
@@ -699,16 +700,16 @@ def process_zoom_meeting_attach_resource(payload, context):
 
             workflow.save()
 
-    # clear old forms (except contact forms)
-    workflow.forms.exclude(
-        template__resource__in=[
-            slack_const.FORM_RESOURCE_CONTACT,
-            slack_const.FORM_RESOURCE_OPPORTUNITYLINEITEM,
-        ]
-    ).delete()
-    workflow.add_form(
-        meeting_resource, slack_const.FORM_TYPE_UPDATE,
-    )
+            # clear old forms (except contact forms)
+            workflow.forms.exclude(
+                template__resource__in=[
+                    slack_const.FORM_RESOURCE_CONTACT,
+                    slack_const.FORM_RESOURCE_OPPORTUNITYLINEITEM,
+                ]
+            ).delete()
+            workflow.add_form(
+                meeting_resource, slack_const.FORM_TYPE_UPDATE,
+            )
     if type:
         ts = context.get("original_message_timestamp")
         channel = context.get("original_message_channel")
@@ -726,7 +727,9 @@ def process_zoom_meeting_attach_resource(payload, context):
         for meeting in meetings:
             blocks_set = [
                 *blocks_set,
-                *get_block_set("calendar_reminders_blockset", {"prep_id": str(meeting.id)}),
+                *get_block_set(
+                    "calendar_reminders_blockset", {"prep_id": str(meeting.id), "u": str(user.id)}
+                ),
                 {"type": "divider"},
             ]
     else:
@@ -738,6 +741,7 @@ def process_zoom_meeting_attach_resource(payload, context):
         blocks_set = get_block_set("initial_meeting_interaction", {"w": context.get("w")})
 
     try:
+        print(channel, ts, slack_access_token, blocks_set)
         # update initial interaction workflow with new resource
         res = slack_requests.update_channel_message(
             channel, ts, slack_access_token, block_set=blocks_set
