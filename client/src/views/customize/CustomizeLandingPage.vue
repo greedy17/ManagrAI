@@ -5,7 +5,7 @@
         <h2 class="title">Field Mapping</h2>
       </div>
       <router-link exact-active-class="active" :to="{ name: 'Required' }">
-        <div :class="isOnboarding ? 'onboarding row' : 'row'">
+        <div class="row">
           <img
             src="@/assets/images/warning.png"
             style="height: 1rem; margin-right: 0.5rem"
