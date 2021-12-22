@@ -1485,7 +1485,7 @@ export default {
             message: 'Form Added Succesfully!',
             timeout: 2000,
           })
-          if (this.resource !== 'Opportunity' && this.formType !== 'CREATE') {
+          if (this.resource !== 'Opportunity' && this.formType !== 'UPATE') {
             this.$router.push({ name: 'Required' })
           }
         })
