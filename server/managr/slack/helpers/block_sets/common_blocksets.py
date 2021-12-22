@@ -33,6 +33,8 @@ from managr.salesforce.adapter.exceptions import (
     InvalidRefreshToken,
 )
 from managr.core.models import MeetingPrepInstance
+from managr.slack.helpers.block_sets.meeting_review_block_sets import schedule_zoom_meeting_modal
+from managr.slack.helpers.block_sets.command_views_blocksets import create_modal_block_set, command_create_task_interaction, create_add_to_cadence_block_set, choose_opportunity_block_set
 
 logger = logging.getLogger("managr")
 
@@ -373,16 +375,6 @@ def workflow_reminder_block_set(context):
     return blocks
 
 
-@block_set()
-def meeting_reminder_block_set(context):
-    not_completed = context.get("not_completed")
-    text = "meeting" if not_completed < 2 else "meetings"
-    blocks = [
-        block_builders.simple_section(
-            f"FYI you have {not_completed} {text} from today that still need to be logged!"
-        )
-    ]
-    return blocks
 
 
 @block_set()
@@ -449,6 +441,86 @@ def calendar_reminders_blockset(context):
 
     return blocks
 
+@block_set()
+def meeting_reminder_block_set(context):
+    not_completed = context.get("not_completed")
+    text = "meeting" if not_completed < 2 else "meetings"
+    blocks =  [
+        block_builders.header_block(
+		{
+			"type": "header",
+			"text": {
+				"type": "plain_text",
+				"text": "Afternoon Digest",
+				"emoji": True
+			}
+		}
+        )],
+    blocks.append(
+        block_builders.divider_block(
+            {
+                "type": "divider"
+            },
+        )),
+    blocks.append(
+        block_builders.simple_section(
+            f"FYI you have {not_completed} {text} from today that still need to be logged!"
+        ))
+    blocks.append(
+        block_builders.section_with_accessory_block(
+           accessory= {
+               "type": "multi_static_select",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "Select an item",
+					"emoji": True
+				},
+                "options": [
+                {
+                    "text": {
+                        "type": "plain_text",
+                        "text": "Create Opportunity",
+                        "emoji": True
+                    },
+                    "value": create_modal_block_set(context)
+                },
+                {
+                    "text": {
+                        "type": "plain_text",
+                        "text": "Update Opportunity",
+                        "emoji": True
+                    },
+                    "value": choose_opportunity_block_set(context)
+                },
+                {
+                    "text": {
+                        "type": "plain_text",
+                        "text": "Create Task",
+                        "emoji": True
+                    },
+                    "value": command_create_task_interaction(context)
+                },
+                {
+                    "text": {
+                        "type": "plain_text",
+                        "text": "Add to Sequence/Cadence",
+                        "emoji": True
+                    },
+                    "value": create_add_to_cadence_block_set(context)
+                },
+                {
+                    "text": {
+                        "type": "plain_text",
+                        "text": "Schedule Zoom Call",
+                        "emoji": True
+                    },
+                    "value": schedule_zoom_meeting_modal(context)
+					}
+				],
+				"action_id": "static_select-action"
+			}
+        ))
+    return blocks
 
 @block_set()
 def manager_meeting_reminder_block_set(context):
@@ -473,31 +545,47 @@ def manager_meeting_reminder_block_set(context):
                 {
                     "text": {
                         "type": "plain_text",
-                        "text": "this is plain_text text",
+                        "text": "Create Opportunity",
                         "emoji": True
                     },
-                    "value": "value-0"
+                    "value": create_modal_block_set(context)
                 },
                 {
                     "text": {
                         "type": "plain_text",
-                        "text": "this is plain_text text",
+                        "text": "Update Opportunity",
                         "emoji": True
                     },
-                    "value": "value-1"
+                    "value": choose_opportunity_block_set(context)
                 },
                 {
                     "text": {
                         "type": "plain_text",
-                        "text": "this is plain_text text",
+                        "text": "Create Task",
                         "emoji": True
                     },
-                    "value": "value-2"
+                    "value": command_create_task_interaction(context)
+                },
+                {
+                    "text": {
+                        "type": "plain_text",
+                        "text": "Add to Sequence/Cadence",
+                        "emoji": True
+                    },
+                    "value": create_add_to_cadence_block_set(context)
+                },
+                {
+                    "text": {
+                        "type": "plain_text",
+                        "text": "Schedule Zoom Call",
+                        "emoji": True
+                    },
+                    "value": schedule_zoom_meeting_modal(context)
 					}
 				],
 				"action_id": "static_select-action"
 			}
         ))
-        
+
     return blocks
 
