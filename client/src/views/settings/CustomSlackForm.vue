@@ -625,7 +625,7 @@
             searchable
             :loading="formFields.loadingNextPage"
             :hasNext="!!formFields.pagination.hasNextPage"
-            v-model="nameValue"
+            v-model="addingFieldValue"
             @load-more="onFieldsNextPage"
             @search-term="onSearchFields"
             @input="
@@ -1116,6 +1116,7 @@ export default {
       accountNameValue: '',
       statusValue: '',
       stageValue: '',
+      addingFieldValue: '',
       addingFields: false,
       productSelected: false,
       addingProducts: false,
@@ -1344,6 +1345,8 @@ export default {
         return
       }
       this.addedFields.push({ ...field, order: this.addedFields.length, includeInRecap: true })
+      this.formFields.filters = { salesforceObject: this.resource }
+      this.formFields.refresh()
     },
     goBack() {
       this.$router.push({ name: 'Required' })
