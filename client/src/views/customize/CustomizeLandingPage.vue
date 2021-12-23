@@ -1,146 +1,128 @@
 <template>
-  <div class="customizations">
-    <Modal style="margin-top: 4rem" ref="optionalModal">
-      <template v-slot:header>
-        <h2>Optional Forms</h2>
-      </template>
-
-      <template v-slot:body>
-        <div>
-          <p style="font-weight: bold; margin-bottom: 2rem">
-            Click on any of the links below to fill out the corresponding form:
-          </p>
-          <ul>
-            <router-link :to="{ name: 'SlackFormSettings' }"
-              >Stage <span style="font-weight: bold">Specific</span>
-            </router-link>
-            <router-link :to="{ name: 'CreateOpportunity' }"
-              >Create <span style="font-weight: bold">Opportunity</span>
-            </router-link>
-            <router-link :to="{ name: 'UpdateContacts' }"
-              >Update <span style="font-weight: bold">Contacts</span>
-            </router-link>
-            <router-link :to="{ name: 'CreateAccounts' }"
-              >Create <span style="font-weight: bold">Accounts</span>
-            </router-link>
-            <router-link :to="{ name: 'UpdateAccounts' }"
-              >Update <span style="font-weight: bold">Accounts</span>
-            </router-link>
-            <router-link :to="{ name: 'UpdateLeads' }"
-              >Update <span style="font-weight: bold">Leads</span>
-            </router-link>
-            <router-link :to="{ name: 'CreateLeads' }"
-              >Create <span style="font-weight: bold">Leads</span>
-            </router-link>
-          </ul>
-        </div>
-      </template>
-    </Modal>
-
-    <h2 style="color: black" class="title">Make updates to Salesforce from Slack</h2>
-    <p style="font-weight: bold; margin-top: -0.5rem; margin-bottom: 2rem; color: #5d5e5e">
-      Map your desired CRM fields to Managr.
-    </p>
-
-    <div class="customizations__cards">
-      <div class="card">
-        <div class="card__header">
-          <h2 class="title">Update <span>Opportunity</span></h2>
-          <button @click="goToUpdateOpp" class="green__button">View + Edit</button>
-        </div>
-        <div class="form_images">
-          <div style="margin-left: 2rem">
-            <img class="card-img" src="@/assets/images/salesforce.png" />
-            <img style="height: 2.5rem; margin-left: 1rem" src="@/assets/images/slackLogo.png" />
-          </div>
-          <!-- <p
-            style="
-              color: #199e54;
-              margin-right: 3rem;
-              font-weight: bold;
-              text-shadow: 0 0 20px #199e54;
-            "
-          >
-            Complete
-          </p> -->
-        </div>
+  <div>
+    <div class="sidenav sidenav__background">
+      <div style="margin-bottom: 2rem">
+        <h2 class="title">Field Mapping</h2>
       </div>
+      <router-link exact-active-class="active" :to="{ name: 'Required' }">
+        <div class="row">
+          <img
+            src="@/assets/images/warning.png"
+            style="height: 1rem; margin-right: 0.5rem"
+            alt=""
+          />
+          <h3>Required</h3>
+        </div>
+      </router-link>
 
-      <div class="card">
-        <div class="card__header">
-          <h2 class="title">Create <span>Contacts</span></h2>
-          <button @click="goToCreate" class="green__button">View + Edit</button>
+      <router-link exact-active-class="active" :to="{ name: 'Custom' }">
+        <div class="row">
+          <img
+            src="@/assets/images/optional.png"
+            style="height: 1.1rem; margin-right: 0.5rem"
+            alt=""
+          />
+          <h3>Optional</h3>
         </div>
-        <div class="form_images">
-          <div style="margin-left: 2rem">
-            <img class="card-img" src="@/assets/images/salesforce.png" />
-            <img style="height: 2.5rem; margin-left: 1rem" src="@/assets/images/slackLogo.png" />
-          </div>
-          <!-- <p
-            style="
-              color: #199e54;
-              margin-right: 3rem;
-              font-weight: bold;
-              text-shadow: 0 0 20px #199e54;
-            "
-          >
-            Complete
-          </p> -->
-        </div>
-      </div>
+      </router-link>
 
-      <div class="card">
-        <div class="card__header">
-          <h2 class="title">Optional Forms</h2>
-          <button @click="$refs.optionalModal.openModal()" class="green__button">View</button>
+      <router-link exact-active-class="active" :to="{ name: 'ValidationRules' }">
+        <div class="row">
+          <img src="@/assets/images/gavel.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
+          <h3>Validation Rules</h3>
         </div>
-        <div class="form_images">
-          <div style="margin-left: 2rem">
-            <p style="color: #beb5cc; margin-right: 3rem; font-weight: bold">
-              These forms are not required.
-            </p>
-          </div>
-        </div>
-      </div>
+      </router-link>
     </div>
 
-    <!-- <button v-if="user.isAdmin" class="slack-button">Continue</button> -->
-    <button @click="goToTemplates" class="slack-button">Activate Workflow Automations</button>
+    <router-view :key="$route.fullPath"></router-view>
   </div>
 </template>
 
 <script>
-import Modal from '@/components/Modal'
+import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePreview'
+import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { UserOnboardingForm } from '@/services/users/forms'
+import User from '@/services/users'
+import AlertTemplate, {
+  AlertGroupForm,
+  AlertTemplateForm,
+  AlertConfigForm,
+  AlertMessageTemplateForm,
+  AlertOperandForm,
+} from '@/services/alerts/'
 
 export default {
   name: 'CustomizeLandingPage',
   components: {
-    Modal,
+    SlackMessagePreview,
+    CollectionManager,
   },
   data() {
-    return {}
+    return {
+      templates: CollectionManager.create({ ModelClass: AlertTemplate }),
+      userOnboardingForm: new UserOnboardingForm({}),
+    }
+  },
+  async created() {
+    this.templates.refresh()
+  },
+  methods: {
+    handleUpdate() {
+      this.loading = true
+      User.api
+        .update(this.user.id, this.userOnboardingForm.value)
+        .then((response) => {
+          this.$store.dispatch('updateUser', User.fromAPI(response.data))
+        })
+        .catch((e) => {
+          console.log(e)
+        })
+      this.$router.push({ name: 'ListTemplates' })
+    },
+    alertsCount(num) {
+      let int = num
+      if (this.hasZoomChannel) {
+        int++
+      }
+      if (this.hasRecapChannel) {
+        int++
+      }
+      return int
+    },
+    onboardComplete() {
+      this.userOnboardingForm.field.onboarding.value = false
+      this.handleUpdate()
+    },
   },
   computed: {
-    orgHasSlackIntegration() {
-      return !!this.$store.state.user.organizationRef.slackIntegration
+    listLength() {
+      return this.templates.list.length
+    },
+    hasZoomChannel() {
+      if (this.hasSlack) {
+        return this.$store.state.user.slackAccount.zoomChannel
+      }
+    },
+    hasRecapChannel() {
+      if (this.hasSlack) {
+        return this.$store.state.user.slackAccount.recapChannel
+      }
+    },
+    hasSlack() {
+      return this.$store.state.user.slackAccount
+    },
+    isOnboarding() {
+      return this.$store.state.user.onboarding
+    },
+    isHome() {
+      return this.$route.name == 'alerts'
+    },
+    isAdmin() {
+      return this.$store.state.user.isAdmin
     },
     user() {
       return this.$store.state.user
     },
-  },
-  methods: {
-    goToUpdateOpp() {
-      this.$router.push({ name: 'UpdateOpportunity' })
-    },
-    goToCreate() {
-      this.$router.push({ name: 'CreateContacts' })
-    },
-    goToTemplates() {
-      this.$router.push({ name: 'ListTemplates' })
-    },
-    // handleShowOptional() {
-    //   this.showOptional = !this.showOptional
-    // },
   },
 }
 </script>
@@ -149,135 +131,126 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
-.customizations {
-  color: white;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 4rem;
-  &__cards {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+@keyframes bounce {
+  0% {
+    transform: translateY(0);
   }
-  &__subtitle {
-    font-size: 14px;
-    margin-bottom: 2rem;
+  100% {
+    transform: translateY(-6px);
   }
 }
-
-.card {
-  background-color: $panther;
-  border: none;
-  width: 30vw;
-  height: 25vh;
-  margin-right: 2rem;
-  margin-bottom: 2rem;
-  border-radius: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 3px 4px 7px black;
-  @media only screen and (min-width: 768px) {
-    flex: 1 0 24%;
-    min-width: 21rem;
-    max-width: 30rem;
-  }
-
-  &__header {
-    display: flex;
-    align-items: center;
-    flex-direction: row;
-    justify-content: space-evenly;
-    height: 5rem;
-  }
-
-  &__title {
-    margin: 0 0 0 1rem;
-  }
+.bouncy {
+  animation: bounce 0.2s infinite alternate;
+}
+.onboarding {
+  filter: blur(10px);
+}
+#toolTip {
+  position: relative;
 }
 
-.card-img {
-  width: 3.5rem;
-}
-
-.card-text {
-  font-size: 14px;
+#toolTip p {
+  color: $panther;
   font-weight: bold;
-  color: $panther-silver;
-  text-align: center;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border: 2px solid $dark-green;
+  -moz-border-radius: 5px;
+  -ie-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
 }
 
-.slack-button {
+#tailShadow {
+  position: absolute;
+  bottom: -8px;
+  left: 88px;
+  width: 0;
+  height: 0;
+  border: solid 2px $dark-green;
+  box-shadow: 0 0 10px 1px #555;
+}
+
+#tail1 {
+  position: absolute;
+  bottom: -20px;
+  left: 80px;
+  width: 0;
+  height: 0;
+  border-color: $dark-green transparent transparent transparent;
+  border-width: 10px;
+  border-style: solid;
+}
+
+#tail2 {
+  position: absolute;
+  bottom: -18px;
+  left: 80px;
+  width: 0;
+  height: 0;
+  border-color: #f9f9f9 transparent transparent transparent;
+  border-width: 10px;
+  border-style: solid;
+}
+
+.coming-soon {
+  @include muted-font(13px);
+}
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+.counter {
+  border: 2px solid white;
+  border-radius: 0.3rem;
+  padding: 0.1rem 0.3rem;
+  font-size: 0.75rem;
+}
+.sidenav {
+  height: 100%;
+  width: 18vw;
+  font-size: 0.85rem;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  background-color: $panther;
+  border: 2px solid $panther-silver;
+  border-radius: 0.25rem;
+  color: $panther-silver;
+  overflow-x: hidden;
+  padding-top: 20px;
   padding: 1rem;
   border-radius: 0.5rem;
-  font-size: 1.25rem;
-  font-weight: bold;
-  color: white;
-  background-color: $dark-green;
-  border: none;
-  cursor: pointer;
-
-  &--disabled {
-    background-color: $panther-silver !important;
-    color: $panther-gray;
-    height: 2.75rem;
-    width: 12rem;
-    border-radius: 0.5rem;
-    border: none;
-    margin: 0rem 0 2rem 0;
-    font-size: 1.25rem;
-    font-weight: bold;
-    cursor: not-allowed;
-  }
-}
-
-.green__button {
-  height: 2.5rem;
-  width: 8rem;
-  border-radius: 0.5rem;
-  font-size: 1.025rem;
-  font-weight: bold;
-  color: white;
-  background-color: $dark-green;
-  border: none;
-  cursor: pointer;
-}
-
-.form_images {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.title {
-  font-size: 22px;
 }
 a {
-  color: $dark-green;
   text-decoration: none;
-  margin-bottom: 0.75rem;
-  font-size: 1.1rem;
-  transition: all 0.5s;
+  font-weight: bold;
+  color: $panther-silver;
+  cursor: pointer;
 }
 a:hover {
-  transform: scale(1.025);
+  color: white;
+  cursor: pointer;
 }
-ul {
+.active div {
+  color: white;
+  background-color: $dark-green;
+  border-radius: 0.25rem;
+  padding: 0 0.3rem;
+  font-weight: bold;
+  margin-left: -0.35rem;
+}
+.title {
+  color: white;
+  font-weight: bold;
+}
+.row {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  flex-direction: row;
+  align-items: center;
 }
-
-// .optional_button {
-//   height: 2.75rem;
-//   width: 16rem;
-//   border: none;
-//   margin: 0rem 0 0.5rem 0;
-//   font-size: 1.05rem;
-//   font-weight: bold;
-//   color: $panther-silver;
-//   background: transparent;
-//   cursor: pointer;
-// }
 </style>
+

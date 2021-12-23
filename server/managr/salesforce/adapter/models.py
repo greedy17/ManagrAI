@@ -210,7 +210,11 @@ class SalesforceAuthAccountAdapter:
         return formatted_data
 
     def format_field_options(
-        self, sf_account_id, user_id, resource, res_data=[],
+        self,
+        sf_account_id,
+        user_id,
+        resource,
+        res_data=[],
     ):
         fields = res_data["fields"]
         ### REMOVE CLONESOURCE, OPPORTUNITYSCOREID ID THIS FIELD DOES NOT WORK IN QUERY
@@ -237,7 +241,10 @@ class SalesforceAuthAccountAdapter:
         return data
 
     def format_validation_rules(
-        self, sf_account_id, user_id, res_data=[],
+        self,
+        sf_account_id,
+        user_id,
+        res_data=[],
     ):
         records = res_data["records"]
         return list(
@@ -250,7 +257,11 @@ class SalesforceAuthAccountAdapter:
         )
 
     def format_picklist_values(
-        self, sf_account_id, user_id, resource, res_data=[],
+        self,
+        sf_account_id,
+        user_id,
+        resource,
+        res_data=[],
     ):
         fields = res_data["picklistFieldValues"]
         return list(
@@ -288,6 +299,10 @@ class SalesforceAuthAccountAdapter:
             sf_consts.RESOURCE_SYNC_CONTACT: True,
             sf_consts.RESOURCE_SYNC_LEAD: True,
             sf_consts.RESOURCE_SYNC_OPPORTUNITY: True,
+            sf_consts.RESOURCE_SYNC_PRODUCT2: True,
+            sf_consts.RESOURCE_SYNC_PRICEBOOK2: True,
+            sf_consts.RESOURCE_SYNC_PRICEBOOKENTRY: True,
+            sf_consts.RESOURCE_SYNC_OPPORTUNITYLINEITEM: True,
         }
         return SalesforceAuthAccountAdapter(**data)
 
@@ -304,14 +319,16 @@ class SalesforceAuthAccountAdapter:
                 data=data,
                 headers=sf_consts.AUTHENTICATION_HEADERS,
             )
-
+            print(res.json())
             return SalesforceAuthAccountAdapter._handle_response(res)
 
     def refresh(self):
         data = sf_consts.REAUTHENTICATION_BODY(self.refresh_token)
         with Client as client:
             res = client.post(
-                f"{sf_consts.REFRESH_URI}", data=data, headers=sf_consts.AUTHENTICATION_HEADERS,
+                f"{sf_consts.REFRESH_URI}",
+                data=data,
+                headers=sf_consts.AUTHENTICATION_HEADERS,
             )
 
             return SalesforceAuthAccountAdapter._handle_response(res)
@@ -321,7 +338,8 @@ class SalesforceAuthAccountAdapter:
         url = f"{self.instance_url}{sf_consts.SALESFORCE_FIELDS_URI(resource)}"
         with Client as client:
             res = client.get(
-                url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+                url,
+                headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
             )
             res = self._handle_response(res)
 
@@ -339,7 +357,8 @@ class SalesforceAuthAccountAdapter:
         url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
         with Client as client:
             res = client.get(
-                url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+                url,
+                headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
             )
             res = self._handle_response(res)
 
@@ -352,7 +371,8 @@ class SalesforceAuthAccountAdapter:
         url = f"{url}/StageName"
         with Client as client:
             res = client.get(
-                url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+                url,
+                headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
             )
             res = self._handle_response(res)
 
@@ -380,7 +400,8 @@ class SalesforceAuthAccountAdapter:
             url = f"{self.instance_url}{sf_consts.SF_DEFAULT_RECORD_ID(resource)}"
             with Client as client:
                 res = client.get(
-                    url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+                    url,
+                    headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
                 )
 
                 res = self._handle_response(res)
@@ -406,7 +427,8 @@ class SalesforceAuthAccountAdapter:
         url = f"{url}/{field_name}" if field_name else url
         with Client as client:
             res = client.get(
-                url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+                url,
+                headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
             )
             res = self._handle_response(res)
 
@@ -427,7 +449,8 @@ class SalesforceAuthAccountAdapter:
         url = f"{self.instance_url}{sf_consts.SALESFORCE_VALIDATION_QUERY(resource)}"
         with Client as client:
             res = client.get(
-                url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+                url,
+                headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
             )
             res = self._handle_response(res)
 
@@ -436,7 +459,7 @@ class SalesforceAuthAccountAdapter:
     def list_resource_data(self, resource, offset, *args, **kwargs):
         # add extra fields to query string
         extra_items = self.object_fields.get(resource)
-
+        print(f"Resource: {resource}, fields {extra_items}")
         from .routes import routes
 
         resource_class = routes.get(resource)
@@ -449,7 +472,8 @@ class SalesforceAuthAccountAdapter:
         logger.info(f"{url} was sent")
         with Client as client:
             res = client.get(
-                url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+                url,
+                headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
             )
             res = self._handle_response(res)
             saved_response = res
@@ -491,7 +515,8 @@ class SalesforceAuthAccountAdapter:
         url = f"{self.instance_url}{sf_consts.SALESFORCE_RESOURCE_QUERY_URI(self.salesforce_id, relationship, fields, additional_filters=[filter_query_string], limit=20 )}"
         with Client as client:
             res = client.get(
-                url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+                url,
+                headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
             )
             res = self._handle_response(res)
             # no need to format to any adapter
@@ -503,7 +528,8 @@ class SalesforceAuthAccountAdapter:
         url = f"{self.instance_url}{sf_consts.SALSFORCE_TASK_QUERY_URI(self.salesforce_id, sf_consts.SALESFORCE_RESOURCE_TASK,sf_consts.TASK_QUERY_FIELDS, additional_filters=additional_filters,limit=10)}"
         with Client as client:
             res = client.get(
-                url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+                url,
+                headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
             )
             res = self._handle_response(res)
             # no need to format to any adapter
@@ -516,14 +542,14 @@ class SalesforceAuthAccountAdapter:
                 f"{self.instance_url}{sf_consts.SF_COUNT_URI(resource, self.salesforce_id)}",
                 headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
             )
-
             return self._handle_response(res)
 
     def execute_alert_query(self, url, resource):
         """Handles alert requests to salesforce"""
         with Client as client:
             res = client.get(
-                url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+                url,
+                headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
             )
             res = self._handle_response(res)
 
@@ -628,7 +654,9 @@ class AccountAdapter:
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         with Client as client:
             r = client.patch(
-                url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+                url,
+                data=json_data,
+                headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
             )
             return SalesforceAuthAccountAdapter._handle_response(r)
 
@@ -641,7 +669,9 @@ class AccountAdapter:
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         with Client as client:
             r = client.post(
-                url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+                url,
+                data=json_data,
+                headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
             )
             # get the opp as well uses the same url as the write but with get
             r = SalesforceAuthAccountAdapter._handle_response(r)
@@ -740,7 +770,9 @@ class ContactAdapter:
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         with Client as client:
             res = client.post(
-                url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+                url,
+                data=json_data,
+                headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
             )
             res = SalesforceAuthAccountAdapter._handle_response(res)
 
@@ -761,7 +793,9 @@ class ContactAdapter:
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         with Client as client:
             r = client.patch(
-                url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+                url,
+                data=json_data,
+                headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
             )
             return SalesforceAuthAccountAdapter._handle_response(r)
 
@@ -853,7 +887,9 @@ class LeadAdapter:
         logger.info(f"REQUEST DATA: {json_data}")
         with Client as client:
             r = client.post(
-                url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+                url,
+                data=json_data,
+                headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
             )
 
             # get the opp as well uses the same url as the write but with get
@@ -877,7 +913,9 @@ class LeadAdapter:
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         with Client as client:
             r = client.patch(
-                url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+                url,
+                data=json_data,
+                headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
             )
             return SalesforceAuthAccountAdapter._handle_response(r)
 
@@ -1017,7 +1055,9 @@ class OpportunityAdapter:
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         with Client as client:
             r = client.patch(
-                url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+                url,
+                data=json_data,
+                headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
             )
             return SalesforceAuthAccountAdapter._handle_response(r)
 
@@ -1029,10 +1069,11 @@ class OpportunityAdapter:
         )
         url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.RESOURCE_SYNC_OPPORTUNITY, "")
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
-
         with Client as client:
             r = client.post(
-                url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+                url,
+                data=json_data,
+                headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
             )
             # get the opp as well uses the same url as the write but with get
             r = SalesforceAuthAccountAdapter._handle_response(r)
@@ -1053,7 +1094,9 @@ class OpportunityAdapter:
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         with Client as client:
             r = client.post(
-                url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+                url,
+                data=json_data,
+                headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
             )
             return SalesforceAuthAccountAdapter._handle_response(r)
 
@@ -1080,7 +1123,9 @@ class ActivityAdapter:
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         with Client as client:
             r = client.post(
-                url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+                url,
+                data=json_data,
+                headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
             )
             return SalesforceAuthAccountAdapter._handle_response(r)
 
@@ -1132,10 +1177,289 @@ class TaskAdapter:
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         with Client as client:
             r = client.post(
-                url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+                url,
+                data=json_data,
+                headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
             )
             return SalesforceAuthAccountAdapter._handle_response(r)
 
     @property
     def as_dict(self):
         return vars(self)
+
+
+class Pricebook2Adapter:
+    def __init__(self, **kwargs):
+        self.name = kwargs.get("name", None)
+        self.description = kwargs.get("description", None)
+        self.last_viewed_date = kwargs.get("last_viewed_date", None)
+        self.imported_by = kwargs.get("imported_by", None)
+        self.secondary_data = kwargs.get("secondary_data", None)
+        self.integration_source = kwargs.get("integration_source", None)
+        self.integration_id = kwargs.get("integration_id", None)
+        self.organization = kwargs.get("organization", None)
+
+    integration_mapping = dict(
+        # mapping of 'standard' data when sending to the SF API
+        integration_id="Id",
+        name="Name",
+        description="Description",
+        last_viewed_date="LastViewedDate",
+    )
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+    @staticmethod
+    def get_child_rels():
+        return {}
+
+    @staticmethod
+    def additional_filters():
+        """pass custom additional filters to the url"""
+        return ["AND IsDeleted = false"]
+
+    @staticmethod
+    def reverse_integration_mapping():
+        """mapping of 'standard' data when sending from the SF API"""
+        reverse = {}
+        for k, v in Pricebook2Adapter.integration_mapping.items():
+            reverse[v] = k
+        return reverse
+
+    @staticmethod
+    def from_api(data, user_id, *args, **kwargs):
+        formatted_data = dict()
+        mapping = Pricebook2Adapter.reverse_integration_mapping()
+        formatted_data = dict(secondary_data={})
+        for k, v in data.items():
+            if k in mapping:
+                formatted_data[mapping.get(k)] = v
+
+            formatted_data["secondary_data"][k] = v
+        formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_SALESFORCE
+        formatted_data["imported_by"] = str(user_id)
+
+        return Pricebook2Adapter(**formatted_data)
+
+
+class Product2Adapter:
+    def __init__(self, **kwargs):
+        self.name = kwargs.get("name", None)
+        self.description = kwargs.get("description", None)
+        self.imported_by = kwargs.get("imported_by", None)
+        self.secondary_data = kwargs.get("secondary_data", None)
+        self.integration_source = kwargs.get("integration_source", None)
+        self.integration_id = kwargs.get("integration_id", None)
+        self.organization = kwargs.get("organization", None)
+
+    integration_mapping = dict(
+        # mapping of 'standard' data when sending to the SF API
+        integration_id="Id",
+        name="Name",
+        description="Description",
+    )
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+    @staticmethod
+    def get_child_rels():
+        return {}
+
+    @staticmethod
+    def additional_filters():
+        """pass custom additional filters to the url"""
+        return ["AND IsDeleted = false"]
+
+    @staticmethod
+    def reverse_integration_mapping():
+        """mapping of 'standard' data when sending from the SF API"""
+        reverse = {}
+        for k, v in Product2Adapter.integration_mapping.items():
+            reverse[v] = k
+        return reverse
+
+    @staticmethod
+    def from_api(data, user_id, *args, **kwargs):
+        formatted_data = dict()
+        mapping = Product2Adapter.reverse_integration_mapping()
+        formatted_data = dict(secondary_data={})
+        for k, v in data.items():
+            if k in mapping:
+                formatted_data[mapping.get(k)] = v
+
+            formatted_data["secondary_data"][k] = v
+        formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_SALESFORCE
+        formatted_data["imported_by"] = str(user_id)
+
+        return Product2Adapter(**formatted_data)
+
+
+class PricebookEntryAdapter:
+    def __init__(self, **kwargs):
+        self.name = kwargs.get("name", None)
+        self.unit_price = kwargs.get("unit_price", None)
+        self.product = kwargs.get("product", None)
+        self.pricebook = kwargs.get("pricebook", None)
+        self.imported_by = kwargs.get("imported_by", None)
+        self.secondary_data = kwargs.get("secondary_data", None)
+        self.integration_source = kwargs.get("integration_source", None)
+        self.integration_id = kwargs.get("integration_id", None)
+        self.external_pricebook = kwargs.get("external_pricebook", None)
+        self.external_product = kwargs.get("external_product", None)
+
+    integration_mapping = dict(
+        # mapping of 'standard' data when sending to the SF API
+        integration_id="Id",
+        name="Name",
+        unit_price="UnitPrice",
+        external_product="Product2Id",
+        external_pricebook="Pricebook2Id",
+    )
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+    @staticmethod
+    def get_child_rels():
+        return {}
+
+    @staticmethod
+    def additional_filters():
+        """pass custom additional filters to the url"""
+        return ["AND IsDeleted = false"]
+
+    @staticmethod
+    def reverse_integration_mapping():
+        """mapping of 'standard' data when sending from the SF API"""
+        reverse = {}
+        for k, v in PricebookEntryAdapter.integration_mapping.items():
+            reverse[v] = k
+        return reverse
+
+    @staticmethod
+    def from_api(data, user_id, *args, **kwargs):
+        formatted_data = dict()
+        mapping = PricebookEntryAdapter.reverse_integration_mapping()
+        formatted_data = dict(secondary_data={})
+        for k, v in data.items():
+            if k in mapping:
+                formatted_data[mapping.get(k)] = v
+
+            formatted_data["secondary_data"][k] = v
+        formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_SALESFORCE
+        formatted_data["imported_by"] = str(user_id)
+
+        return PricebookEntryAdapter(**formatted_data)
+
+
+class OpportunityLineItemAdapter:
+    def __init__(self, **kwargs):
+        self.name = kwargs.get("name", None)
+        self.description = kwargs.get("description", None)
+        self.unit_price = kwargs.get("unit_price", None)
+        self.total_price = kwargs.get("total_price", None)
+        self.quantity = kwargs.get("quantity", None)
+        self.product = kwargs.get("product", None)
+        self.pricebookentry = kwargs.get("pricebookentry", None)
+        self.opportunity = kwargs.get("opportunity", None)
+        self.imported_by = kwargs.get("imported_by", None)
+        self.secondary_data = kwargs.get("secondary_data", None)
+        self.integration_source = kwargs.get("integration_source", None)
+        self.integration_id = kwargs.get("integration_id", None)
+        self.external_pricebookentry = kwargs.get("external_pricebookentry", None)
+        self.external_product = kwargs.get("external_product", None)
+        self.external_opportunity = kwargs.get("external_opportunity", None)
+
+    integration_mapping = dict(
+        # mapping of 'standard' data when sending to the SF API
+        integration_id="Id",
+        name="Name",
+        description="Description",
+        external_opportunity="OpportunityId",
+        external_pricebookentry="PricebookEntryId",
+        external_product="Product2Id",
+        unit_price="UnitPrice",
+        total_price="TotalPrice",
+        quantity="Quantity",
+    )
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+    @staticmethod
+    def get_child_rels():
+        return {}
+
+    @staticmethod
+    def additional_filters():
+        """pass custom additional filters to the url"""
+        return ["AND IsDeleted = false"]
+
+    @staticmethod
+    def reverse_integration_mapping():
+        """mapping of 'standard' data when sending from the SF API"""
+        reverse = {}
+        for k, v in OpportunityLineItemAdapter.integration_mapping.items():
+            reverse[v] = k
+        return reverse
+
+    @staticmethod
+    def from_api(data, user_id, *args, **kwargs):
+        formatted_data = dict()
+        mapping = OpportunityLineItemAdapter.reverse_integration_mapping()
+        formatted_data = dict(secondary_data={})
+        for k, v in data.items():
+            if k in mapping:
+                formatted_data[mapping.get(k)] = v
+
+            formatted_data["secondary_data"][k] = v
+        formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_SALESFORCE
+        formatted_data["imported_by"] = str(user_id)
+
+        return OpportunityLineItemAdapter(**formatted_data)
+
+    @staticmethod
+    def to_api(data, mapping, object_fields):
+        """data : data to be passed, mapping: map managr fields to sf fields, object_fields: if a field is not in this list it cannot be pushed"""
+        formatted_data = dict()
+        for k, v in data.items():
+            key = mapping.get(k, None)
+            if key:
+                formatted_data[key] = v
+            else:
+                # TODO: add extra check here to only push creatable on creatable and updateable on updateable
+                if k in object_fields:
+                    formatted_data[k] = v
+        return formatted_data
+
+    @staticmethod
+    def create(data, access_token, custom_base, object_fields, user_id):
+        json_data = json.dumps(
+            OpportunityLineItemAdapter.to_api(
+                data, OpportunityLineItemAdapter.integration_mapping, object_fields
+            )
+        )
+        url = sf_consts.SALESFORCE_WRITE_URI(
+            custom_base, sf_consts.RESOURCE_SYNC_OPPORTUNITYLINEITEM, ""
+        )
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        with Client as client:
+            r = client.post(
+                url,
+                data=json_data,
+                headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+            )
+            # get the opp as well uses the same url as the write but with get
+            r = SalesforceAuthAccountAdapter._handle_response(r)
+            url = f"{url}{r['id']}"
+            r = client.get(url, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header})
+
+            r = SalesforceAuthAccountAdapter._handle_response(r)
+            r = OpportunityLineItemAdapter.from_api(r, user_id)
+            return r

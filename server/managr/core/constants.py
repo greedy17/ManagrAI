@@ -2,6 +2,7 @@ from django.conf import settings
 
 from managr.utils.misc import get_site_url
 
+
 USE_NYLAS = settings.USE_NYLAS
 NYLAS_CLIENT_ID = settings.NYLAS_CLIENT_ID if USE_NYLAS else None
 NYLAS_CLIENT_SECRET = settings.NYLAS_CLIENT_SECRET if USE_NYLAS else None
@@ -13,7 +14,7 @@ EMAIL_AUTH_TOKEN_REVOKE_URI = "oauth/revoke"
 EMAIL_ACCOUNT_URI = "account"
 SEND_EMAIL_URI = "send"
 CALENDAR_URI = "calendars"
-EVENT_POST = "events?notify_participants=true"
+EVENT_POST = "events"
 
 
 # OAuth permission scopes to request from Nylas
@@ -164,11 +165,13 @@ NOTIFICATION_ACTION_CHOICES = (
 WORKFLOW_REMINDER = "WORKFLOW_REMINDER"
 MEETING_REMINDER_REP = "MEETING_REMINDER_REP"
 MEETING_REMINDER_MANAGER = "MEETING_REMINDER_MANAGER"
+CALENDAR_REMINDER = "CALENDAR_REMINDER"
 
 REMINDER_CONFIG = {
     WORKFLOW_REMINDER: {"HOUR": 16, "MINUTE": 30},
     MEETING_REMINDER_REP: {"HOUR": 17, "MINUTE": 00},
     MEETING_REMINDER_MANAGER: {"HOUR": 18, "MINUTE": 00},
+    CALENDAR_REMINDER: {"HOUR": 8, "MINUTE": 00},
 }
 
 
@@ -177,4 +180,5 @@ def REMINDERS():
         WORKFLOW_REMINDER: True,
         MEETING_REMINDER_REP: True,
         MEETING_REMINDER_MANAGER: True,
+        CALENDAR_REMINDER: True,
     }

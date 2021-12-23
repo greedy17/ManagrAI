@@ -31,6 +31,7 @@ import UpdateContacts from '@/views/customize/UpdateContacts'
 import UpdateAccounts from '@/views/customize/UpdateAccounts'
 import UpdateLeads from '@/views/customize/UpdateLeads'
 import CreateLeads from '@/views/customize/CreateLeads'
+import ProductForm from '@/views/customize/ProductForm'
 import ProfilePage from '@/views/user/ProfilePage'
 import CloseDateApproaching from '@/views/settings/alerts/create/templates/CloseDateApproaching'
 import CloseDatePassed from '@/views/settings/alerts/create/templates/CloseDatePassed'
@@ -39,6 +40,9 @@ import DealRotting from '@/views/settings/alerts/create/templates/DealRotting'
 import UpdateForecast from '@/views/settings/alerts/create/templates/UpdateForecast'
 import LogZoom from '@/views/settings/alerts/create/templates/LogZoom'
 import ZoomRecap from '@/views/settings/alerts/create/templates/ZoomRecap'
+import Custom from '@/views/customize/Custom'
+import ValidationRules from '@/views/customize/ValidationRules'
+import Required from '@/views/customize/Required'
 
 // TODO: We should keep this style guide page
 // import Styles from '@/views/settings/Styles'
@@ -137,6 +141,11 @@ export default new Router({
       component: CreateAccounts,
     },
     {
+      path: '/product-form',
+      name: 'ProductForm',
+      component: ProductForm,
+    },
+    {
       path: '/configure',
       name: 'Configure',
       component: Configure
@@ -150,11 +159,6 @@ export default new Router({
       path: '/update-opportunity',
       name: 'UpdateOpportunity',
       component: UpdateOpportunity
-    },
-    {
-      path: '/customize',
-      name: 'CustomizeLandingPage',
-      component: CustomizeLandingPage,
     },
     {
       path: '/create-opportunity',
@@ -195,6 +199,33 @@ export default new Router({
       path: '/recap-zoom-meetings',
       name: 'ZoomRecap',
       component: ZoomRecap,
+    },
+    {
+      path: '/map',
+      name: 'CustomizeLandingPage',
+      component: CustomizeLandingPage,
+      children: [
+        {
+          path: 'required',
+          name: 'Required',
+          component: Required,
+        },
+        {
+          path: 'validation',
+          name: 'ValidationRules',
+          component: ValidationRules,
+        },
+        {
+          path: 'custom',
+          name: 'Custom',
+          component: Custom,
+        },
+        // {
+        //   path: 'saved',
+        //   name: 'Saved',
+        //   component: Saved,
+        // },
+      ]
     },
     {
       path: '/alerts',

@@ -106,6 +106,46 @@
               :form="alertGroup"
               :resourceType="alertTemplateForm.field.resourceType.value"
             />
+
+            <p
+              v-if="
+                alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
+                  .operandIdentifier.value &&
+                (alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
+                  ._operandIdentifier.value.dataType === 'Date' ||
+                  alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
+                    ._operandIdentifier.value.dataType === 'DateTime') &&
+                index == 0
+              "
+              class="fixed__center"
+            >
+              We'll alert you when the
+              {{
+                alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
+                  .operandIdentifier.value
+                  ? alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0]
+                      .field.operandIdentifier.value
+                  : '___'
+              }}
+              is
+              {{
+                alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
+                  .operandOperator.value
+                  ? alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0]
+                      .field._operandOperator.value.label
+                  : '___'
+              }}
+              <span style="color: white">{{
+                alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
+                  .operandValue.value
+                  ? positiveDay(
+                      alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0]
+                        .field.operandValue.value,
+                    )
+                  : '___'
+              }}</span>
+            </p>
+
             <div class="fixed__right" v-if="alertTemplateForm.field.alertGroups.groups.length > 1">
               <button class="remove__group" @click="onRemoveAlertGroup(index)">
                 <img
@@ -343,10 +383,11 @@
               </div>
 
               <div
+                v-if="user.userLevel == 'MANAGER'"
                 style="
                   display: flex;
                   flex-direction: column;
-                  align-items: center;
+                  align-items: flex-start;
                   justify-content: space-evenly;
                   padding: 0.5rem;
                 "
@@ -406,7 +447,7 @@
                       style="height: 1rem; margin-right: 0.25rem"
                       alt=""
                     />
-                    {{ item.length ? item : '' }}
+                    {{ checkInteger(item) }}
                   </p>
                 </div>
               </div>
@@ -452,6 +493,7 @@
                     type="text"
                     name="channel"
                     id="channel"
+                    placeholder="Name your channel"
                     @input="logNewName(channelName)"
                   />
 
@@ -459,7 +501,7 @@
                     <button
                       v-if="channelName"
                       @click="createChannel(channelName)"
-                      class="purple__button"
+                      class="purple__button bouncy"
                     >
                       Create Channel
                     </button>
@@ -556,8 +598,11 @@
               align-items: center;
               flex-direction: column;
             "
-            class="collection"
+            class="collection__small"
           >
+            <h2>
+              {{ alertTemplateForm.field.title.value ? alertTemplateForm.field.title.value : '' }}
+            </h2>
             <FormField
               id="alert-title"
               v-model="alertTemplateForm.field.title.value"
@@ -565,7 +610,7 @@
               :errors="alertTemplateForm.field.title.errors"
               @blur="alertTemplateForm.field.title.validate()"
             />
-            <AlertSummary :form="alertTemplateForm" />
+            <!-- <AlertSummary :form="alertTemplateForm" /> -->
           </div>
         </template>
       </div>
@@ -813,6 +858,24 @@ export default {
     },
   },
   methods: {
+    positiveDay(num) {
+      if (num < 0) {
+        return (num *= -1) + ' days in the past.'
+      } else if (num == 0) {
+        return ' the day of your selected delivery day.'
+      } else {
+        return num + ' days in the future.'
+      }
+    },
+    repsPipeline() {
+      if (this.user.userLevel == 'REP') {
+        this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
+        this.setPipelines({
+          fullName: 'MYSELF',
+          id: 'SELF',
+        })
+      }
+    },
     switchBounce() {
       this.templateBounce = !this.templateBounce
     },
@@ -832,6 +895,9 @@ export default {
         type: 'error',
         timeout: 2000,
       })
+    },
+    checkInteger(str) {
+      return /\d/.test(str) ? this.user.fullName : str
     },
     changeCreate() {
       this.create = !this.create
@@ -1237,6 +1303,8 @@ export default {
   },
   beforeMount() {
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
+    this.repsPipeline()
+    this.alertTemplateForm.field.isActive.value = true
   },
 }
 </script>
@@ -1263,6 +1331,10 @@ export default {
 }
 .bouncy {
   animation: bounce 0.2s infinite alternate;
+}
+::placeholder {
+  color: $panther-silver;
+  font-size: 0.75rem;
 }
 .search__input {
   font-family: Lato-Regular, sans-serif;
@@ -1320,6 +1392,11 @@ export default {
 .fixed__right {
   align-self: flex-end;
   margin-top: -2rem;
+  border: 1px solid red;
+}
+.fixed__center {
+  align-self: center;
+  color: $panther-silver;
 }
 .message_titles {
   display: flex;
@@ -1637,6 +1714,13 @@ export default {
 .collection {
   background-color: $panther;
   height: 60vh;
+  width: 30vw;
+  padding: 2rem;
+  border-radius: 0.33rem;
+}
+.collection__small {
+  background-color: $panther;
+  height: 30vh;
   width: 30vw;
   padding: 2rem;
   border-radius: 0.33rem;

@@ -6,11 +6,9 @@
           Close Date
           <span style="color: #199e54">Approaching</span>
         </span>
-        <p v-if="userLevel === 'REP'" style="color: #3c3940; font-size: 1.1rem">
-          Select users and a Slack #channel for this workflow
-        </p>
-        <p style="color: #3c3940; font-size: 1.1rem" v-else>
-          Select the day (or date), users, and a Slack #channel for this workflow
+
+        <p style="color: #3c3940; font-size: 1.1rem">
+          View and update all Opportunities with an upcoming close date
         </p>
       </h2>
     </div>
@@ -28,7 +26,9 @@
             :errors="form.field.recurrenceDay.errors"
           >
             <div style="margin-bottom: 0.5rem" class="row__">
-              <label>Weekly</label>
+              <label :class="form.field.recurrenceFrequency.value == 'WEEKLY' ? 'green' : ''"
+                >Weekly</label
+              >
               <ToggleCheckBox
                 @input="
                   form.field.recurrenceFrequency.value == 'WEEKLY'
@@ -39,7 +39,9 @@
                 offColor="#199e54"
                 onColor="#199e54"
               />
-              <label>Monthly</label>
+              <label :class="form.field.recurrenceFrequency.value == 'MONTHLY' ? 'green' : ''"
+                >Monthly</label
+              >
             </div>
 
             <div v-if="form.field.recurrenceFrequency.value == 'WEEKLY'">
@@ -127,7 +129,7 @@
                   style="height: 1rem; margin-right: 0.25rem"
                   alt=""
                 />
-                {{ item.length ? item : '' }}
+                {{ item.length ? checkInteger(item) : '' }}
               </p>
             </div>
           </div>
@@ -174,6 +176,7 @@
                 type="text"
                 name="channel"
                 id="channel"
+                placeholder="Name your channel"
                 @input="logNewName(channelName)"
               />
 
@@ -181,7 +184,7 @@
                 <button
                   v-if="channelName"
                   @click="createChannel(channelName)"
-                  class="purple__button"
+                  class="purple__button bouncy"
                 >
                   Create Channel
                 </button>
@@ -419,6 +422,9 @@ export default {
     },
   },
   methods: {
+    checkInteger(str) {
+      return /\d/.test(str) ? this.user.fullName : str
+    },
     repsPipeline() {
       if (this.userLevel == 'REP') {
         this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
@@ -871,7 +877,10 @@ export default {
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
-
+::placeholder {
+  color: $panther-silver;
+  font-size: 0.75rem;
+}
 ::v-deep .multiselect__tags {
   min-width: 16vw;
   max-width: 20vw;
