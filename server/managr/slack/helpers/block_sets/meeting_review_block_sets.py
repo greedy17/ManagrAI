@@ -11,7 +11,7 @@ from django.db.models import Q
 from managr.utils.sites import get_site_url
 from managr.core.models import User, Notification, MeetingPrepInstance
 from managr.opportunity.models import Opportunity, Lead
-from managr.organization.models import Account, Contact
+from managr.organization.models import Account, Contact, OpportunityLineItem
 from managr.zoom.models import ZoomMeeting
 from managr.salesforce.models import MeetingWorkflow, SObjectField
 from managr.salesforce import constants as sf_consts
@@ -526,7 +526,18 @@ def initial_meeting_interaction_block_set(context):
 def meeting_review_modal_block_set(context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = workflow.user
+    print(user)
     slack_form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
+    if user.organization.has_products and slack_form.template.resource == "Opportunity":
+        product_template = (
+            OrgCustomSlackForm.objects.for_user(user)
+            .filter(Q(resource="OpportunityLineItem", form_type="CREATE"))
+            .first()
+        )
+        product_form = OrgCustomSlackFormInstance.objects.create(
+            template=product_template, resource_id=slack_form.resource_id, user=user,
+        )
+        current_products = OpportunityLineItem.objects.filter(opportunity=slack_form.resource_id)
 
     blocks = []
 
@@ -552,6 +563,37 @@ def meeting_review_modal_block_set(context):
 
     # make params here
 
+    if user.organization.has_products:
+        blocks.append(
+            block_builders.actions_block(
+                [
+                    block_builders.simple_button_block(
+                        "Add Product",
+                        "ADD_PRODUCT",
+                        action_id=action_with_params(
+                            slack_const.PROCESS_ADD_PRODUCTS_FORM,
+                            params=[
+                                f"f={str(slack_form.id)}",
+                                f"u={str(user.id)}",
+                                f"product_form={str(product_form.id)}",
+                            ],
+                        ),
+                    )
+                ],
+                block_id="ADD_PRODUCT_BUTTON",
+            ),
+        )
+        if current_products:
+            for product in current_products:
+                product_block = block_sets.get_block_set(
+                    "current_product_blockset",
+                    {
+                        "opp_item_id": str(product.id),
+                        "u": str(user.id),
+                        "main_form": str(slack_form.id),
+                    },
+                )
+                blocks.append(product_block)
     return blocks
 
 

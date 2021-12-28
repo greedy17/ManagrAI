@@ -23,7 +23,6 @@ class Command(BaseCommand):
             sobjects = getSobjectDefaults()
             for user in users:
                 if hasattr(user, "salesforce_account"):
-                    print(sobjects)
                     for key in sobjects.keys():
                         if key in user.salesforce_account.sobjects.keys():
                             continue

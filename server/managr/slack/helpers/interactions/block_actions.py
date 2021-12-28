@@ -11,7 +11,7 @@ from datetime import datetime, date, timedelta
 
 from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_paginator_block
-from managr.organization.models import Organization, Stage, Account
+from managr.organization.models import Organization, Stage, Account, OpportunityLineItem
 from managr.opportunity.models import Opportunity, Lead
 from managr.zoom.models import ZoomMeeting
 from managr.slack import constants as slack_const
@@ -25,10 +25,11 @@ from managr.slack.helpers.utils import (
     process_done_alert,
     generate_call_block,
     check_contact_last_name,
+    action_with_params,
 )
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
-from managr.slack.models import OrgCustomSlackFormInstance, UserSlackIntegration
+from managr.slack.models import OrgCustomSlackFormInstance, UserSlackIntegration, OrgCustomSlackForm
 from managr.salesforce.models import MeetingWorkflow
 from managr.core.models import User, MeetingPrepInstance
 from managr.salesforce.background import emit_meeting_workflow_tracker
@@ -65,21 +66,15 @@ def process_meeting_review(payload, context):
         "f": str(workflow.forms.filter(template__form_type="UPDATE").first().id),
         "type": "meeting",
     }
-    callback_id = (
-        slack_const.PROCESS_ADD_PRODUCTS_FORM
-        if organization.has_products
-        else slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
-    )
-    submit_text = "Add Products" if organization.has_products else "Update Salesforce"
     private_metadata.update(context)
     data = {
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
-            "callback_id": callback_id,
+            "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
             "title": {"type": "plain_text", "text": "Log Meeting"},
             "blocks": get_block_set("meeting_review_modal", context=context),
-            "submit": {"type": "plain_text", "text": submit_text},
+            "submit": {"type": "plain_text", "text": "Update Salesforce"},
             "private_metadata": json.dumps(private_metadata),
             "external_id": f"meeting_review_modal.{str(uuid.uuid4())}",
         },
@@ -415,7 +410,6 @@ def process_stage_selected_command_form(payload, context):
         stage_form = org.custom_slack_forms.filter(
             form_type=slack_const.FORM_TYPE_STAGE_GATING, stage=selected_value
         ).first()
-
         if stage_form:
             new_form = OrgCustomSlackFormInstance.objects.create(
                 user=user, template=stage_form, resource_id=main_form.resource_id
@@ -428,15 +422,18 @@ def process_stage_selected_command_form(payload, context):
     updated_view_title = view["title"]
     if len(added_form_ids):
         submit_button_message = "Next"
+        callback_id = slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE
+    elif not len(added_form_ids) and org.has_products:
+        submit_button_message = "Add Products"
+        callback_id = slack_const.PROCESS_ADD_PRODUCTS_FORM
     elif not len(added_form_ids) and main_form.template.form_type == "UPDATE":
         submit_button_message = "Update"
+        slack_const.COMMAND_FORMS__SUBMIT_FORM
+        callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
     elif not len(added_form_ids) and main_form.template.form_type == "CREATE":
         submit_button_message = "Create"
-    callback_id = (
-        slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE
-        if len(added_form_ids)
-        else slack_const.COMMAND_FORMS__SUBMIT_FORM
-    )
+        callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
+
     data = {
         "trigger_id": trigger_id,
         "view_id": view_id,
@@ -768,7 +765,7 @@ def process_show_update_resource_form(payload, context):
             "blocks": get_block_set(
                 "loading",
                 {
-                    "message": f"Salesforce is being a bit slow :sleeping:… please give it a few seconds or click 'refresh' above",
+                    "message": f"Salesforce is being a bit slow :sleeping:… please give it a few seconds",
                 },
             ),
         },
@@ -805,7 +802,7 @@ def process_show_update_resource_form(payload, context):
     show_submit_button_if_fields_added = False
     has_stage_forms = False
     stage_form = None
-
+    current_products = None
     # HACK forms are generated with a helper fn currently stagename takes a special action id to update forms
     # we need to manually change this action_id
     if resource_id and not prev_form:
@@ -823,7 +820,7 @@ def process_show_update_resource_form(payload, context):
                 template=template, resource_id=resource_id, user=user,
             )
         )
-        if user.organization.has_products:
+        if user.organization.has_products and resource_type == "Opportunity":
             product_template = (
                 OrgCustomSlackForm.objects.for_user(user)
                 .filter(Q(resource="OpportunityLineItem", form_type="CREATE"))
@@ -840,6 +837,9 @@ def process_show_update_resource_form(payload, context):
                 else OrgCustomSlackFormInstance.objects.create(
                     template=product_template, resource_id=resource_id, user=user,
                 )
+            )
+            current_products = OpportunityLineItem.objects.filter(
+                opportunity=slack_form.resource_id
             )
         if slack_form:
             current_stage = slack_form.resource_object.secondary_data.get("StageName")
@@ -859,7 +859,6 @@ def process_show_update_resource_form(payload, context):
     else:
         slack_form = user.custom_slack_form_instances.filter(id=prev_form).delete()
         slack_form = None
-
     blocks = get_block_set(
         "update_modal_block_set",
         context={**context, "resource_type": resource_type, "resource_id": resource_id},
@@ -901,9 +900,42 @@ def process_show_update_resource_form(payload, context):
     if user.organization.has_products:
         if product_form:
             private_metadata.update({"product_form": str(product_form.id)})
-    if alert_id:
-        private_metadata.update({"alert_id": alert_id, "current_page": context.get("current_page")})
     private_metadata.update(context)
+    if user.organization.has_products:
+        blocks.append(
+            block_builders.actions_block(
+                [
+                    block_builders.simple_button_block(
+                        "Add Product",
+                        "ADD_PRODUCT",
+                        action_id=action_with_params(
+                            slack_const.PROCESS_ADD_PRODUCTS_FORM,
+                            params=[
+                                f"f={str(slack_form.id)}",
+                                f"product_form={str(product_form.id)}",
+                            ],
+                        ),
+                    )
+                ],
+                block_id="ADD_PRODUCT_BUTTON",
+            ),
+        )
+    if current_products:
+        for product in current_products:
+            product_block = get_block_set(
+                "current_product_blockset",
+                {
+                    "opp_item_id": str(product.id),
+                    "u": str(user.id),
+                    "main_form": str(slack_form.id),
+                },
+            )
+            blocks.append(product_block)
+    if alert_id:
+        private_metadata.update(
+            {"alert_id": str(alert_id.id), "current_page": context.get("current_page")}
+        )
+
     data = {
         "view_id": loading_res["view"]["id"],
         "view": {
@@ -920,9 +952,6 @@ def process_show_update_resource_form(payload, context):
         if stage_form:
             submit_button_text = "Next"
             callback_id = slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE
-        elif user.organization.has_products and not stage_form:
-            submit_button_text = "Add Products"
-            callback_id = slack_const.PROCESS_ADD_PRODUCTS_FORM
         else:
             submit_button_text = "Update"
             callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
@@ -1833,6 +1862,87 @@ def process_send_recap_modal(payload, context):
         )
 
 
+@processor(required_context="u")
+def process_show_edit_product_form(payload, context):
+    opp_item = OpportunityLineItem.objects.get(id=context.get("opp_item_id"))
+    slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
+    user = slack_account.user
+    blocks = get_block_set(
+        "edit_product_block_set", {"u": str(user.id), "opp_item_id": str(opp_item.id)}
+    )
+
+    data = {
+        "trigger_id": payload["trigger_id"],
+        "view_id": payload["view"]["id"],
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.PROCESS_UPDATE_PRODUCT,
+            "title": {"type": "plain_text", "text": "Edit Product"},
+            "blocks": blocks,
+            "submit": {"type": "plain_text", "text": "Submit"},
+            "private_metadata": json.dumps(context),
+        },
+    }
+    try:
+        slack_requests.generic_request(
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH,
+            data,
+            access_token=user.organization.slack_integration.access_token,
+        )
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Product form with {str(opp_item.id)} email {user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Product form with {str(opp_item.id)} email {user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Product form with {str(opp_item.id)} email {user.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Generate Slack Product form with {str(user.id)} email {user.email} {e}"
+        )
+
+
+def process_add_products_form(payload, context):
+    user = User.objects.get(slack_integration__slack_id=payload["user"]["id"])
+    view = payload["view"]
+    private_metadata = json.loads(view["private_metadata"])
+    product_template = (
+        OrgCustomSlackForm.objects.for_user(user)
+        .filter(Q(resource="OpportunityLineItem", form_type="CREATE"))
+        .first()
+    )
+    product_form = OrgCustomSlackFormInstance.objects.create(template=product_template, user=user)
+    private_metadata.update(
+        {"product_form": str(product_form.id), "view_id": view["id"], "u": str(user.id)}
+    )
+    # currently only for update
+    blocks = []
+    blocks.extend(product_form.generate_form())
+    if len(blocks):
+        data = {
+            "trigger_id": payload["trigger_id"],
+            "view_id": view["id"],
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Add Products Form"},
+                "submit": {"type": "plain_text", "text": "Submit"},
+                "blocks": blocks,
+                "private_metadata": json.dumps(private_metadata),
+                "callback_id": slack_const.PROCESS_SUBMIT_PRODUCT,
+            },
+        }
+        slack_requests.generic_request(
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH,
+            data,
+            access_token=user.organization.slack_integration.access_token,
+        )
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -1868,6 +1978,8 @@ def handle_block_actions(payload):
         slack_const.GONG_CALL_RECORDING: process_get_call_recording,
         slack_const.MARK_COMPLETE: process_mark_complete,
         slack_const.PROCESS_SEND_RECAP_MODAL: process_send_recap_modal,
+        slack_const.PROCESS_SHOW_EDIT_PRODUCT_FORM: process_show_edit_product_form,
+        slack_const.PROCESS_ADD_PRODUCTS_FORM: process_add_products_form,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)
