@@ -66,123 +66,133 @@
           </p>
         </div>
 
-        <div v-if="formType === 'STAGE_GATING'">
-          <div class="center">
-            <button
-              v-if="!addingFields"
-              @click="
-                () => {
-                  addingFields = !addingFields
-                }
-              "
-              class="default_button bouncy"
-            >
-              Add Fields
-            </button>
+        <div>
+          <div v-if="formType === 'STAGE_GATING'">
+            <div class="center">
+              <button
+                v-if="!addingFields"
+                @click="
+                  () => {
+                    addingFields = !addingFields
+                  }
+                "
+                class="default_button bouncy"
+              >
+                Add Fields
+              </button>
 
-            <DropDownSearch
-              v-else
-              :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-              displayKey="referenceDisplayLabel"
-              valueKey="apiName"
-              nullDisplay="Search fields"
-              searchable
-              :loading="formFields.loadingNextPage"
-              :hasNext="!!formFields.pagination.hasNextPage"
-              v-model="nameValue"
-              @load-more="onFieldsNextPage"
-              @search-term="onSearchFields"
-              @input="
-                (e) => {
-                  onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
-                }
-              "
-            />
-          </div>
-        </div>
-
-        <div v-if="resource === 'OpportunityLineItem'">
-          <div v-if="!addedFieldNames.includes('PricebookEntryId')" class="centered field-border">
-            <p style="margin-left: 0.5rem; font-weight: bold">
-              PricebookEntry <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
-            </p>
-
-            <img
-              src="@/assets/images/unlinked.png"
-              alt=""
-              style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-            />
-            <button
-              @click="
-                () => {
-                  onAddField(
-                    this.formFields.list.filter((field) => field.apiName === 'PricebookEntryId')[0],
-                  )
-                }
-              "
-              class="default_button bouncy"
-            >
-              Pricebooks
-            </button>
+              <DropDownSearch
+                v-else
+                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+                displayKey="referenceDisplayLabel"
+                valueKey="apiName"
+                nullDisplay="Search fields"
+                searchable
+                :loading="formFields.loadingNextPage"
+                :hasNext="!!formFields.pagination.hasNextPage"
+                v-model="nameValue"
+                @load-more="onFieldsNextPage"
+                @search-term="onSearchFields"
+                @input="
+                  (e) => {
+                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+                  }
+                "
+              />
+            </div>
           </div>
 
-          <div v-if="!addedFieldNames.includes('Quantity')" class="centered field-border">
-            <p style="margin-left: 0.5rem; font-weight: bold">
-              Quantity <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
-            </p>
+          <div v-if="resource === 'OpportunityLineItem'">
+            <div v-if="!addedFieldNames.includes('PricebookEntryId')" class="centered field-border">
+              <p style="margin-left: 0.5rem; font-weight: bold">
+                PricebookEntry <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+              </p>
 
-            <img
-              src="@/assets/images/unlinked.png"
-              alt=""
-              style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-            />
+              <img
+                src="@/assets/images/unlinked.png"
+                alt=""
+                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+              />
+              <DropDownSearch
+                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+                displayKey="referenceDisplayLabel"
+                valueKey="apiName"
+                nullDisplay="Search fields"
+                searchable
+                :loading="formFields.loadingNextPage"
+                :hasNext="!!formFields.pagination.hasNextPage"
+                v-model="priceValue"
+                @load-more="onFieldsNextPage"
+                @search-term="onSearchFields"
+                @input="
+                  (e) => {
+                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+                  }
+                "
+              />
+            </div>
 
-            <button
-              @click="
-                () => {
-                  onAddField(
-                    this.formFields.list.filter((field) => field.apiName === 'Quantity')[0],
-                  )
-                }
-              "
-              :class="
-                this.addedFieldNames.includes('PricebookEntryId')
-                  ? 'default_button bouncy'
-                  : 'default_button'
-              "
+            <div v-if="!addedFieldNames.includes('Quantity')" class="centered field-border">
+              <p style="margin-left: 0.5rem; font-weight: bold">
+                Quantity <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+              </p>
+
+              <img
+                src="@/assets/images/unlinked.png"
+                alt=""
+                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+              />
+
+              <DropDownSearch
+                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+                displayKey="referenceDisplayLabel"
+                valueKey="apiName"
+                nullDisplay="Search fields"
+                searchable
+                :loading="formFields.loadingNextPage"
+                :hasNext="!!formFields.pagination.hasNextPage"
+                v-model="quantityValue"
+                @load-more="onFieldsNextPage"
+                @search-term="onSearchFields"
+                @input="
+                  (e) => {
+                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+                  }
+                "
+              />
+            </div>
+
+            <div
+              v-if="!addedFieldLabels.includes('Line Description')"
+              class="centered field-border"
             >
-              Quantity
-            </button>
-          </div>
+              <p style="margin-left: 0.5rem; font-weight: bold">
+                Line Description <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+              </p>
 
-          <div v-if="!addedFieldLabels.includes('Line Description')" class="centered field-border">
-            <p style="margin-left: 0.5rem; font-weight: bold">
-              Line Description <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
-            </p>
-
-            <img
-              src="@/assets/images/unlinked.png"
-              alt=""
-              style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-            />
-            <button
-              @click="
-                () => {
-                  onAddField(
-                    this.formFields.list.filter(
-                      (field) => field.referenceDisplayLabel === 'Line Description',
-                    )[0],
-                  )
-                }
-              "
-              :class="
-                this.addedFieldNames.includes('Quantity')
-                  ? 'default_button bouncy'
-                  : 'default_button'
-              "
-            >
-              Line Description
-            </button>
+              <img
+                src="@/assets/images/unlinked.png"
+                alt=""
+                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+              />
+              <DropDownSearch
+                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+                displayKey="referenceDisplayLabel"
+                valueKey="apiName"
+                nullDisplay="Search fields"
+                searchable
+                :loading="formFields.loadingNextPage"
+                :hasNext="!!formFields.pagination.hasNextPage"
+                v-model="lineValue"
+                @load-more="onFieldsNextPage"
+                @search-term="onSearchFields"
+                @input="
+                  (e) => {
+                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+                  }
+                "
+              />
+            </div>
           </div>
         </div>
 
@@ -198,18 +208,24 @@
               style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
             />
 
-            <button
-              @click="
-                () => {
-                  onAddField(
-                    this.formFields.list.filter((field) => field.apiName === 'LastName')[0],
-                  )
+            <DropDownSearch
+              v-if="!addedFieldNames.includes('LastName')"
+              :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+              displayKey="referenceDisplayLabel"
+              valueKey="apiName"
+              nullDisplay="Search fields"
+              searchable
+              :loading="formFields.loadingNextPage"
+              :hasNext="!!formFields.pagination.hasNextPage"
+              v-model="lastNameValue"
+              @load-more="onFieldsNextPage"
+              @search-term="onSearchFields"
+              @input="
+                (e) => {
+                  onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
                 }
               "
-              class="default_button bouncy"
-            >
-              Last Name
-            </button>
+            />
           </div>
         </div>
         <div v-if="resource === 'Lead'">
@@ -224,18 +240,24 @@
               style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
             />
 
-            <button
-              @click="
-                () => {
-                  onAddField(
-                    this.formFields.list.filter((field) => field.apiName === 'LastName')[0],
-                  )
+            <DropDownSearch
+              v-if="!addedFieldNames.includes('LastName')"
+              :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+              displayKey="referenceDisplayLabel"
+              valueKey="apiName"
+              nullDisplay="Search fields"
+              searchable
+              :loading="formFields.loadingNextPage"
+              :hasNext="!!formFields.pagination.hasNextPage"
+              v-model="leadLastNameValue"
+              @load-more="onFieldsNextPage"
+              @search-term="onSearchFields"
+              @input="
+                (e) => {
+                  onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
                 }
               "
-              class="default_button bouncy"
-            >
-              Last Name
-            </button>
+            />
           </div>
           <div v-if="!addedFieldNames.includes('Company')" class="centered field-border">
             <p style="margin-left: 0.5rem; font-weight: bold">
@@ -248,20 +270,24 @@
               style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
             />
 
-            <button
-              @click="
-                () => {
-                  onAddField(this.formFields.list.filter((field) => field.apiName === 'Company')[0])
+            <DropDownSearch
+              v-if="!addedFieldNames.includes('company')"
+              :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+              displayKey="referenceDisplayLabel"
+              valueKey="apiName"
+              nullDisplay="Search fields"
+              searchable
+              :loading="formFields.loadingNextPage"
+              :hasNext="!!formFields.pagination.hasNextPage"
+              v-model="companyValue"
+              @load-more="onFieldsNextPage"
+              @search-term="onSearchFields"
+              @input="
+                (e) => {
+                  onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
                 }
               "
-              :class="
-                this.addedFieldNames.includes('LastName')
-                  ? 'default_button bouncy'
-                  : 'default_button'
-              "
-            >
-              Company
-            </button>
+            />
           </div>
           <div v-if="!addedFieldNames.includes('Status')" class="centered field-border">
             <p style="margin-left: 0.5rem; font-weight: bold">
@@ -274,20 +300,23 @@
               style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
             />
 
-            <button
-              @click="
-                () => {
-                  onAddField(this.formFields.list.filter((field) => field.apiName === 'Status')[0])
+            <DropDownSearch
+              :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+              displayKey="referenceDisplayLabel"
+              valueKey="apiName"
+              nullDisplay="Search fields"
+              searchable
+              :loading="formFields.loadingNextPage"
+              :hasNext="!!formFields.pagination.hasNextPage"
+              v-model="statusValue"
+              @load-more="onFieldsNextPage"
+              @search-term="onSearchFields"
+              @input="
+                (e) => {
+                  onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
                 }
               "
-              :class="
-                this.addedFieldNames.includes('Company')
-                  ? 'default_button bouncy'
-                  : 'default_button'
-              "
-            >
-              Status
-            </button>
+            />
           </div>
         </div>
 
@@ -303,117 +332,144 @@
               style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
             />
 
-            <button
-              @click="
-                () => {
-                  onAddField(this.formFields.list.filter((field) => field.apiName === 'Name')[0])
+            <DropDownSearch
+              :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+              displayKey="referenceDisplayLabel"
+              valueKey="apiName"
+              nullDisplay="Search fields"
+              searchable
+              :loading="formFields.loadingNextPage"
+              :hasNext="!!formFields.pagination.hasNextPage"
+              v-model="accountNameValue"
+              @load-more="onFieldsNextPage"
+              @search-term="onSearchFields"
+              @input="
+                (e) => {
+                  onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
                 }
               "
-              class="default_button bouncy"
-            >
-              Account Name
-            </button>
+            />
           </div>
         </div>
 
         <div v-if="resource === 'Opportunity' && formType !== 'STAGE_GATING'">
-          <div v-if="!addedFieldNames.includes('Name')" class="centered field-border">
-            <p style="margin-left: 0.5rem; font-weight: bold">
-              Name <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
-            </p>
+          <div v-if="!addedFieldLabels.includes('Name')" class="centered field-border">
+            <div class="row__">
+              <p style="margin-left: 0.5rem; font-weight: bold">
+                Name <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+              </p>
 
-            <img
-              src="@/assets/images/unlinked.png"
-              alt=""
-              style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-            />
+              <img
+                src="@/assets/images/unlinked.png"
+                alt=""
+                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+              />
+            </div>
 
-            <button
-              @click="
-                () => {
-                  onAddField(this.formFields.list.filter((field) => field.apiName === 'Name')[0])
+            <DropDownSearch
+              :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+              displayKey="referenceDisplayLabel"
+              valueKey="apiName"
+              nullDisplay="Search fields"
+              searchable
+              :loading="formFields.loadingNextPage"
+              :hasNext="!!formFields.pagination.hasNextPage"
+              v-model="amountValue"
+              @load-more="onFieldsNextPage"
+              @search-term="onSearchFields"
+              @input="
+                (e) => {
+                  onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
                 }
               "
-              class="default_button bouncy"
-            >
-              Name
-            </button>
+            />
           </div>
 
           <div v-if="!addedFieldNames.includes('StageName')" class="centered field-border">
-            <p style="margin-left: 0.5rem; font-weight: bold">
-              Stage <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
-            </p>
+            <div class="row__">
+              <p style="margin-left: 0.5rem; font-weight: bold">
+                Stage <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+              </p>
 
-            <img
-              src="@/assets/images/unlinked.png"
-              alt=""
-              style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-            />
-            <button
-              @click="
-                () => {
-                  onAddField(
-                    this.formFields.list.filter((field) => field.apiName === 'StageName')[0],
-                  )
+              <img
+                src="@/assets/images/unlinked.png"
+                alt=""
+                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+              />
+            </div>
+            <DropDownSearch
+              v-if="!addedFieldNames.includes('StageName')"
+              :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+              displayKey="referenceDisplayLabel"
+              valueKey="apiName"
+              nullDisplay="Search fields"
+              searchable
+              :loading="formFields.loadingNextPage"
+              :hasNext="!!formFields.pagination.hasNextPage"
+              v-model="stageValue"
+              @load-more="onFieldsNextPage"
+              @search-term="onSearchFields"
+              @input="
+                (e) => {
+                  onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
                 }
               "
-              :class="
-                this.addedFieldNames.includes('Name') ? 'default_button bouncy' : 'default_button'
-              "
-            >
-              Stage
-            </button>
+            />
           </div>
 
           <div v-if="!addedFieldNames.includes('CloseDate')" class="centered field-border">
-            <p style="margin-left: 0.5rem; font-weight: bold">
-              Close Date <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
-            </p>
+            <div class="row__">
+              <p style="margin-left: 0.5rem; font-weight: bold">
+                Close Date <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+              </p>
 
-            <img
-              src="@/assets/images/unlinked.png"
-              alt=""
-              style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-            />
+              <img
+                src="@/assets/images/unlinked.png"
+                alt=""
+                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+              />
+            </div>
 
-            <button
-              @click="
-                () => {
-                  onAddField(
-                    this.formFields.list.filter((field) => field.apiName === 'CloseDate')[0],
-                  )
+            <DropDownSearch
+              :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+              displayKey="referenceDisplayLabel"
+              valueKey="apiName"
+              nullDisplay="Search fields"
+              searchable
+              :loading="formFields.loadingNextPage"
+              :hasNext="!!formFields.pagination.hasNextPage"
+              v-model="closeValue"
+              @load-more="onFieldsNextPage"
+              @search-term="onSearchFields"
+              @input="
+                (e) => {
+                  onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
                 }
               "
-              :class="
-                this.addedFieldNames.includes('StageName')
-                  ? 'default_button bouncy'
-                  : 'default_button'
-              "
-            >
-              Close Date
-            </button>
+            />
           </div>
 
           <div v-if="!this.addedFieldNames.includes('Amount')" class="centered field-border">
-            <div style="margin-left: 0.5rem" class="centered">
-              <label class="label">Amount</label>
-              <ToggleCheckBox
-                style="margin-left: 0.15rem; margin-right: 0.15rem"
-                :value="!productSelect"
-                @input="productSelect"
-                offColor="#199e54"
-                onColor="#199e54"
-              />
-              <label style="margin-right: 0.15rem" class="label">Products</label>
-            </div>
+            <div class="row__">
+              <div style="margin-left: 0.5rem" class="centered">
+                <label class="label">Amount</label>
+                <ToggleCheckBox
+                  style="margin-left: 0.15rem; margin-right: 0.15rem"
+                  :value="!productSelect"
+                  @input="productSelect"
+                  offColor="#199e54"
+                  onColor="#199e54"
+                />
+                <label style="margin-right: 0.15rem" class="label">Products</label>
+              </div>
 
-            <img
-              v-if="!productSelected"
-              src="@/assets/images/unlinked.png"
-              alt=""
-              style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-            />
+              <img
+                v-if="!productSelected"
+                src="@/assets/images/unlinked.png"
+                alt=""
+                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+              />
+            </div>
             <div v-if="!productSelected">
               <DropDownSearch
                 :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
@@ -434,7 +490,7 @@
               />
             </div>
 
-            <div v-if="productSelected">Save form & continue</div>
+            <div v-if="productSelected">Add products on the next page</div>
           </div>
         </div>
 
@@ -569,7 +625,7 @@
             searchable
             :loading="formFields.loadingNextPage"
             :hasNext="!!formFields.pagination.hasNextPage"
-            v-model="nameValue"
+            v-model="addingFieldValue"
             @load-more="onFieldsNextPage"
             @search-term="onSearchFields"
             @input="
@@ -741,7 +797,7 @@
             >
               Save + Continue to products
             </button>
-            <button v-else class="disabled">Save + Continue to products</button>
+            <button v-else class="disabled__">Save + Continue to products</button>
           </div>
 
           <PulseLoadingSpinnerButton
@@ -1031,7 +1087,7 @@ export default {
   data() {
     return {
       currentStageForm: null,
-      // formFields: {},
+      formFields: CollectionManager.create({ ModelClass: SObjectField }),
       formFieldList: [],
       salesforceFields,
       customSlackFormConfig: [],
@@ -1050,6 +1106,17 @@ export default {
       requiredLeadFields: ['LastName', 'Company', 'Status'],
       nameValue: '',
       amountValue: '',
+      closeValue: '',
+      priceValue: '',
+      quantityValue: '',
+      lineValue: '',
+      lastNameValue: '',
+      leadLastNameValue: '',
+      companyValue: '',
+      accountNameValue: '',
+      statusValue: '',
+      stageValue: '',
+      addingFieldValue: '',
       addingFields: false,
       productSelected: false,
       addingProducts: false,
@@ -1204,20 +1271,19 @@ export default {
     this.getActionChoices()
   },
   mounted() {
-    console.log(this.customForm)
+    console.log(this.formFields)
   },
-  async beforeCreate() {
-    try {
-      this.formFields = CollectionManager.create({
-        ModelClass: SObjectField,
-        pagination: { size: 500 },
-      })
-      this.formFields.refresh()
-      console.log(this.formFields)
-    } catch (e) {
-      console.log(e)
-    }
-  },
+  // async beforeCreate() {
+  //   try {
+  //     this.formFields = CollectionManager.create({
+  //       ModelClass: SObjectField,
+  //       pagination: { size: 500 },
+  //     })
+  //     this.formFields.refresh()
+  //   } catch (e) {
+  //     console.log(e)
+  //   }
+  // },
   methods: {
     goToProducts() {
       this.onSave()
@@ -1279,6 +1345,8 @@ export default {
         return
       }
       this.addedFields.push({ ...field, order: this.addedFields.length, includeInRecap: true })
+      this.formFields.filters = { salesforceObject: this.resource }
+      this.formFields.refresh()
     },
     goBack() {
       this.$router.push({ name: 'Required' })
@@ -1420,7 +1488,7 @@ export default {
             message: 'Form Added Succesfully!',
             timeout: 2000,
           })
-          if (this.resource == 'OpportunityLineItem') {
+          if (this.resource !== 'Opportunity' && this.formType !== 'UPATE') {
             this.$router.push({ name: 'Required' })
           }
         })
@@ -1429,6 +1497,7 @@ export default {
         })
 
       if (this.formType === 'STAGE_GATING') {
+        this.$router.go()
       }
     },
   },
@@ -1944,6 +2013,17 @@ img:hover {
   font-weight: bold;
   opacity: 0.8;
 }
+.disabled__ {
+  padding: 0.5rem 1rem;
+  min-width: 6rem;
+  background-color: $panther-silver;
+  color: $panther-gray;
+  border: none;
+  border-radius: 0.25rem;
+  margin-left: 0.5rem;
+  font-weight: bold;
+  opacity: 0.8;
+}
 .example-footer {
   border-top: 1px solid $panther-gray;
   display: flex;
@@ -1954,13 +2034,14 @@ img:hover {
   height: 10%;
 }
 .example--footer {
+  background-color: $panther;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: flex-end;
   margin-top: auto;
   margin-bottom: -1rem;
   width: 100%;
-  height: 10%;
+  min-height: 5rem;
 }
 .example-text {
   position: absolute;

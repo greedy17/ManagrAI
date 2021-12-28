@@ -114,11 +114,12 @@
                 (alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
                   ._operandIdentifier.value.dataType === 'Date' ||
                   alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
-                    ._operandIdentifier.value.dataType === 'DateTime')
+                    ._operandIdentifier.value.dataType === 'DateTime') &&
+                index == 0
               "
               class="fixed__center"
             >
-              We'll alert you if the
+              We'll alert you when the
               {{
                 alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
                   .operandIdentifier.value
@@ -134,7 +135,7 @@
                       .field._operandOperator.value.label
                   : '___'
               }}
-              {{
+              <span style="color: white">{{
                 alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
                   .operandValue.value
                   ? positiveDay(
@@ -142,7 +143,7 @@
                         .field.operandValue.value,
                     )
                   : '___'
-              }}
+              }}</span>
             </p>
 
             <div class="fixed__right" v-if="alertTemplateForm.field.alertGroups.groups.length > 1">
@@ -386,7 +387,7 @@
                 style="
                   display: flex;
                   flex-direction: column;
-                  align-items: center;
+                  align-items: flex-start;
                   justify-content: space-evenly;
                   padding: 0.5rem;
                 "
@@ -859,11 +860,11 @@ export default {
   methods: {
     positiveDay(num) {
       if (num < 0) {
-        return (num *= -1) + ' days before your selected delivery day.'
+        return (num *= -1) + ' days in the past.'
       } else if (num == 0) {
         return ' the day of your selected delivery day.'
       } else {
-        return num + ' days away from your selected delivery day.'
+        return num + ' days in the future.'
       }
     },
     repsPipeline() {

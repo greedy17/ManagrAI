@@ -195,7 +195,7 @@
                 flex-direction: row;
                 min-width: 34vw;
                 justify-content: space-between;
-                align-items: center;
+                align-items: flex-start;
               "
               v-if="selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME'"
             >
@@ -245,49 +245,46 @@
               <div>
                 <div
                   class="centered"
-                  style="margin-bottom: 1rem; margin-top: 1rem; margin-left: -1.2rem"
+                  style="margin-bottom: 0.8rem; margin-top: 0.75rem; margin-left: -1.5rem"
                 >
-                  <label class="alert-operand-row__condition-label">days before</label>
+                  <label class="alert-operand-row__condition-label">In the past</label>
                   <ToggleCheckBox
                     @input="toggleSelectedOperand"
                     :value="MyOperand !== 'Negative'"
                     offColor="#199e54"
                     onColor="#199e54"
                   />
-                  <label class="alert-operand-row__condition-label">days away</label>
+                  <label class="alert-operand-row__condition-label">In the future</label>
                 </div>
 
                 <FormField v-if="MyOperand === 'Negative'" :errors="form.field.operandValue.errors">
                   <template v-slot:input>
-                    <DropDownSearch
-                      :items.sync="NegativeDateValues"
-                      :itemsRef.sync="form.field._operandValue.value"
+                    <FormField
+                      @blur="form.field.operandValue.validate()"
                       v-model="form.field.operandValue.value"
-                      displayKey="label"
-                      valueKey="value"
-                      nullDisplay="Select # of days"
-                      searchable
-                      local
+                      :inputType="getInputType(form.field._operandIdentifier.value)"
+                      @input="
+                        (e) => {
+                          negVal(e)
+                        }
+                      "
+                      placeholder="Number of days"
                     />
                   </template>
                 </FormField>
 
                 <FormField v-else :errors="form.field.operandValue.errors">
                   <template v-slot:input>
-                    <DropDownSearch
-                      :items.sync="PositiveDateValues"
-                      :itemsRef.sync="form.field._operandValue.value"
+                    <FormField
+                      @blur="form.field.operandValue.validate()"
                       v-model="form.field.operandValue.value"
-                      displayKey="label"
-                      valueKey="value"
-                      nullDisplay="Select # of days"
-                      searchable
-                      local
+                      :inputType="getInputType(form.field._operandIdentifier.value)"
+                      placeholder="Number of days"
                     />
                   </template>
                 </FormField>
                 <p
-                  style="margin-top: 2.25rem; width: 90%"
+                  style="margin-top: -0.5rem; width: 90%"
                   :class="form.field.operandValue.value ? 'selected__item' : 'invisible'"
                   @click="removeValue"
                 >
@@ -425,9 +422,9 @@ export default {
       MyOperand: 'Negative',
       intOpts: [
         { label: 'Greater or equal to', value: '>=' },
+        { label: 'Greater than', value: '>' },
         { label: 'Less or equal to', value: '<=' },
         { label: 'Less than', value: '<' },
-        { label: 'Greater than', value: '>' },
         { label: 'Equal to', value: '=' },
         { label: 'Not equal to', value: '!=' },
         // string based equality
@@ -616,14 +613,13 @@ export default {
       }
     },
     negVal(val) {
-      let newVal = ''
-      if (val < 0) {
+      if (val <= 0) {
         val = val
       } else {
         val = val * -1
       }
-      newVal = -Math.abs(val).toString()
-      this.form.field.operandValue.value = newVal
+      this.form.field.operandValue.value = -Math.abs(val).toString()
+      console.log(this.form.field.operandValue.value)
     },
   },
   computed: {

@@ -134,7 +134,7 @@
                   style="height: 1rem; margin-right: 0.25rem"
                   alt=""
                 />
-                {{ item.length ? item : '' }}
+                {{ item.length ? checkInteger(item) : '' }}
               </p>
             </div>
           </div>
@@ -429,6 +429,9 @@ export default {
     },
   },
   methods: {
+    checkInteger(str) {
+      return /\d/.test(str) ? this.user.fullName : str
+    },
     repsPipeline() {
       if (this.userLevel == 'REP') {
         this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
