@@ -932,7 +932,9 @@ def process_show_update_resource_form(payload, context):
             )
             blocks.append(product_block)
     if alert_id:
-        private_metadata.update({"alert_id": alert_id, "current_page": context.get("current_page")})
+        private_metadata.update(
+            {"alert_id": str(alert_id.id), "current_page": context.get("current_page")}
+        )
 
     data = {
         "view_id": loading_res["view"]["id"],
