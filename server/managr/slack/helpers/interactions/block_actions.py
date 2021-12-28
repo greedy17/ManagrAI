@@ -66,21 +66,15 @@ def process_meeting_review(payload, context):
         "f": str(workflow.forms.filter(template__form_type="UPDATE").first().id),
         "type": "meeting",
     }
-    callback_id = (
-        slack_const.PROCESS_ADD_PRODUCTS_FORM
-        if organization.has_products
-        else slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
-    )
-    submit_text = "Add Products" if organization.has_products else "Update Salesforce"
     private_metadata.update(context)
     data = {
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
-            "callback_id": callback_id,
+            "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
             "title": {"type": "plain_text", "text": "Log Meeting"},
             "blocks": get_block_set("meeting_review_modal", context=context),
-            "submit": {"type": "plain_text", "text": submit_text},
+            "submit": {"type": "plain_text", "text": "Update Salesforce"},
             "private_metadata": json.dumps(private_metadata),
             "external_id": f"meeting_review_modal.{str(uuid.uuid4())}",
         },
@@ -1921,7 +1915,9 @@ def process_add_products_form(payload, context):
         .first()
     )
     product_form = OrgCustomSlackFormInstance.objects.create(template=product_template, user=user)
-    private_metadata.update({"product_form": str(product_form.id), "view_id": view["id"]})
+    private_metadata.update(
+        {"product_form": str(product_form.id), "view_id": view["id"], "u": str(user.id)}
+    )
     # currently only for update
     blocks = []
     blocks.extend(product_form.generate_form())

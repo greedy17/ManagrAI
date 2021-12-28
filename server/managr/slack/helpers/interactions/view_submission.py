@@ -1621,7 +1621,9 @@ def process_update_product(payload, context):
             "view": {
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Success"},
-                "blocks": get_block_set("success_text_modal"),
+                "blocks": get_block_set(
+                    "success_text_modal", {"message": "Successfully updated product"}
+                ),
             },
         }
         # try:
@@ -1644,6 +1646,7 @@ def process_update_product(payload, context):
 def process_submit_product(payload, context):
     # get context
     has_error = False
+    print(context)
     state = payload["view"]["state"]["values"]
     current_form_ids = context.get("f").split(",")
     user = User.objects.get(id=context.get("u"))
