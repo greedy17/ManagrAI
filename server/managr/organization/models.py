@@ -633,7 +633,8 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
             self.save()
             return res
 
-    def create_in_salesforce(self, data=None, user_id=None):
+    @staticmethod
+    def create_in_salesforce(data=None, user_id=None):
         user = User.objects.get(id=user_id)
         if user and hasattr(user, "salesforce_account"):
             token = user.salesforce_account.access_token
@@ -641,9 +642,7 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
             object_fields = user.salesforce_account.object_fields.filter(
                 salesforce_object="OpportunityLineItem"
             ).values_list("api_name", flat=True)
-            res = OpportunityLineItemAdapter.create(
-                data, token, base_url, self.integration_id, object_fields
-            )
+            res = OpportunityLineItemAdapter.create(data, token, base_url, object_fields, user_id)
             from managr.salesforce.routes import routes
 
             serializer = routes["OpportunityLineItem"]["serializer"](data=res.as_dict)

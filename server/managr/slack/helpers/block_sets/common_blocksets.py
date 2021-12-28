@@ -468,7 +468,11 @@ def current_product_block_set(context):
         text,
         action_id=action_with_params(
             slack_const.PROCESS_SHOW_EDIT_PRODUCT_FORM,
-            params=[f"opp_item_id={str(opp_item.id)}", f"u={context.get('u')}"],
+            params=[
+                f"opp_item_id={str(opp_item.id)}",
+                f"u={context.get('u')}",
+                f"main_form={context.get('main_form')}",
+            ],
         ),
     )
     return blocks

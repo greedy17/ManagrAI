@@ -1419,13 +1419,14 @@ class OpportunityLineItemAdapter:
 
     @staticmethod
     def update_opportunitylineitem(data, access_token, custom_base, salesforce_id, object_fields):
+        data.pop("PricebookEntryId")
         json_data = json.dumps(
             OpportunityLineItemAdapter.to_api(
                 data, OpportunityLineItemAdapter.integration_mapping, object_fields
             )
         )
         url = sf_consts.SALESFORCE_WRITE_URI(
-            custom_base, sf_consts.RESOURCE_SYNC_OPPORTUNITY, salesforce_id
+            custom_base, sf_consts.RESOURCE_SYNC_OPPORTUNITYLINEITEM, salesforce_id
         )
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         with Client as client:
