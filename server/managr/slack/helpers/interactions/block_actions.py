@@ -28,6 +28,7 @@ from managr.slack.helpers.utils import (
 )
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
+from managr.slack.helpers.interactions.commands import get_action
 from managr.slack.models import OrgCustomSlackFormInstance, UserSlackIntegration
 from managr.salesforce.models import MeetingWorkflow
 from managr.core.models import User, MeetingPrepInstance
@@ -1425,14 +1426,14 @@ def process_show_cadence_modal(payload, context):
     type = context.get("type", None)
     resource_name = (
         payload["view"]["state"]["values"]["select_existing"][
-            f"{slack_const.GET_USER_ACCOUNTS}?u={u.id}&type=command"
+            f"{slack_const.GET_USER_ACCOUNTS}?u={u.id}&type=command&system=salesloft"
         ]["selected_option"]["text"]["text"]
         if type == "command"
         else context.get("resource_name")
     )
     resource_id = (
         payload["view"]["state"]["values"]["select_existing"][
-            f"{slack_const.GET_USER_ACCOUNTS}?u={u.id}&type=command"
+            f"{slack_const.GET_USER_ACCOUNTS}?u={u.id}&type=command&system=salesloft"
         ]["selected_option"]["value"]
         if type == "command"
         else context.get("resource_id")
@@ -1445,13 +1446,14 @@ def process_show_cadence_modal(payload, context):
 
     org = u.organization
     private_metadata = {
-        "channel_id": meta_data["channel_id"] if type == "command" else payload["channel"]["id"],
-        "slack_id": meta_data["slack_id"] if type == "command" else payload["user"]["id"],
         "resource_name": resource_name,
         "resource_id": resource_id,
         "resource_type": resource_type,
     }
+    if type != "command":
+        private_metadata.update({"channel_id": payload["channel"]["id"]})
     private_metadata.update(context)
+
     data = {
         "trigger_id": trigger_id,
         "view": {
@@ -1500,14 +1502,14 @@ def process_show_sequence_modal(payload, context):
     type = context.get("type", None)
     resource_name = (
         payload["view"]["state"]["values"]["select_existing"][
-            f"{slack_const.GET_USER_ACCOUNTS}?u={u.id}&type=command"
+            f"{slack_const.GET_USER_ACCOUNTS}?u={u.id}&type=command&system=outreach"
         ]["selected_option"]["text"]["text"]
         if type == "command"
         else context.get("resource_name")
     )
     resource_id = (
         payload["view"]["state"]["values"]["select_existing"][
-            f"{slack_const.GET_USER_ACCOUNTS}?u={u.id}&type=command"
+            f"{slack_const.GET_USER_ACCOUNTS}?u={u.id}&type=command&system=outreach"
         ]["selected_option"]["value"]
         if type == "command"
         else context.get("resource_id")
@@ -1520,12 +1522,12 @@ def process_show_sequence_modal(payload, context):
 
     org = u.organization
     private_metadata = {
-        "channel_id": meta_data["channel_id"] if type == "command" else payload["channel"]["id"],
-        "slack_id": meta_data["slack_id"] if type == "command" else payload["user"]["id"],
         "resource_name": resource_name,
         "resource_id": resource_id,
         "resource_type": resource_type,
     }
+    if type != "command":
+        private_metadata.update({"channel_id": payload["channel"]["id"]})
     private_metadata.update(context)
     data = {
         "trigger_id": trigger_id,
@@ -1833,6 +1835,25 @@ def process_send_recap_modal(payload, context):
         )
 
 
+def process_show_engagement_modal(payload, context):
+    system = context.get("system", None)
+    if system == "outreach":
+        process_show_sequence_modal(payload, context)
+    else:
+        process_show_cadence_modal(payload, context)
+
+
+def process_managr_action(payload, context):
+    state = payload["view"]["state"]
+    command_value = state["values"]["select_action"][f"COMMAND_MANAGR_ACTION?u={context.get('u')}"][
+        "selected_option"
+    ]["value"]
+    data = {"view_id": payload["view"]["id"]}
+    data.update(context)
+    get_action(command_value, data)
+    return
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -1862,12 +1883,13 @@ def handle_block_actions(payload):
         slack_const.PAGINATE_ALERTS: process_paginate_alerts,
         slack_const.ADD_TO_CADENCE_MODAL: process_show_cadence_modal,
         slack_const.ADD_TO_SEQUENCE_MODAL: process_show_sequence_modal,
-        slack_const.GET_USER_ACCOUNTS: process_show_cadence_modal,
+        slack_const.GET_USER_ACCOUNTS: process_show_engagement_modal,
         slack_const.GET_NOTES: process_get_notes,
         slack_const.CALL_ERROR: process_call_error,
         slack_const.GONG_CALL_RECORDING: process_get_call_recording,
         slack_const.MARK_COMPLETE: process_mark_complete,
         slack_const.PROCESS_SEND_RECAP_MODAL: process_send_recap_modal,
+        slack_const.COMMAND_MANAGR_ACTION: process_managr_action,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)
