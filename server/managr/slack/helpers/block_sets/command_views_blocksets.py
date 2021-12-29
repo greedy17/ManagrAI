@@ -414,3 +414,16 @@ def actions_block_set(context):
         )
     ]
     return blocks
+
+
+@block_set(required_context=["u"])
+def command_select_resource_interaction(context):
+    user = User.objects.get(id=context.get("u"))
+    return [
+        block_builders.external_select(
+            f"*Search for an account*",
+            f"{slack_const.GET_USER_ACCOUNTS}?u={str(user.id)}&type={context.get('type')}&system={context.get('system')}",
+            block_id="select_existing",
+            placeholder="Type to search",
+        ),
+    ]

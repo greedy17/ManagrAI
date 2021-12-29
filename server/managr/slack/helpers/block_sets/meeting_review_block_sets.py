@@ -526,7 +526,6 @@ def initial_meeting_interaction_block_set(context):
 def meeting_review_modal_block_set(context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = workflow.user
-    print(user)
     slack_form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
     if user.organization.has_products and slack_form.template.resource == "Opportunity":
         product_template = (

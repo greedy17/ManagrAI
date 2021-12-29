@@ -29,12 +29,8 @@ from managr.slack.helpers.utils import (
 )
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
-<<<<<<< HEAD
 from managr.slack.helpers.interactions.commands import get_action
-from managr.slack.models import OrgCustomSlackFormInstance, UserSlackIntegration
-=======
 from managr.slack.models import OrgCustomSlackFormInstance, UserSlackIntegration, OrgCustomSlackForm
->>>>>>> develop
 from managr.salesforce.models import MeetingWorkflow
 from managr.core.models import User, MeetingPrepInstance
 from managr.salesforce.background import emit_meeting_workflow_tracker
@@ -1885,6 +1881,8 @@ def process_managr_action(payload, context):
     data.update(context)
     get_action(command_value, data)
     return
+
+
 @processor(required_context="u")
 def process_show_edit_product_form(payload, context):
     opp_item = OpportunityLineItem.objects.get(id=context.get("opp_item_id"))
@@ -1966,6 +1964,55 @@ def process_add_products_form(payload, context):
         )
 
 
+@processor(required_context="u")
+def process_add_create_form(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    resource_type = payload["view"]["state"]["values"]["ATTACH_RESOURCE_SECTION"][
+        f"COMMAND_FORMS__PROCESS_ADD_CREATE_FORM?u={context.get('u')}"
+    ]["selected_option"]["value"]
+    template = (
+        OrgCustomSlackForm.objects.for_user(user)
+        .filter(Q(resource=resource_type, form_type="CREATE"))
+        .first()
+    )
+    slack_form = OrgCustomSlackFormInstance.objects.create(template=template, user=user,)
+    if slack_form:
+        context = {"resource_type": resource_type, "f": str(slack_form.id), "u": str(user.id)}
+        blocks = get_block_set("create_modal", context,)
+        try:
+            index, block = block_finder("StageName", blocks)
+        except ValueError:
+            # did not find the block
+            block = None
+            pass
+
+        if block:
+            block = {
+                **block,
+                "accessory": {
+                    **block["accessory"],
+                    "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(user.id)}&f={str(slack_form.id)}",
+                },
+            }
+            blocks = [*blocks[:index], block, *blocks[index + 1 :]]
+        access_token = user.organization.slack_integration.access_token
+
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        data = {
+            "view_id": payload["view"]["id"],
+            "view": {
+                "type": "modal",
+                "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
+                "title": {"type": "plain_text", "text": f"Create {resource_type}"},
+                "blocks": blocks,
+                "submit": {"type": "plain_text", "text": "Create", "emoji": True},
+                "external_id": f"create_modal.{str(uuid.uuid4())}",
+            },
+        }
+
+        slack_requests.generic_request(url, data, access_token=access_token)
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -1988,6 +2035,7 @@ def handle_block_actions(payload):
         slack_const.ZOOM_MEETING__MEETING_DETAILS: process_meeting_details,
         slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS: process_show_update_resource_form,
         slack_const.COMMAND_FORMS__STAGE_SELECTED: process_stage_selected_command_form,
+        slack_const.COMMAND_FORMS__PROCESS_ADD_CREATE_FORM: process_add_create_form,
         slack_const.UPDATE_TASK_SELECTED_RESOURCE: process_resource_selected_for_task,
         slack_const.HOME_REQUEST_SLACK_INVITE: process_request_invite_from_home_tab,
         slack_const.RETURN_TO_FORM_MODAL: process_return_to_form_modal,

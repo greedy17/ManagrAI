@@ -10,6 +10,7 @@ from managr.slack import constants as slack_const
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import block_builders
+from managr.slack.helpers.utils import action_with_params
 
 logger = logging.getLogger("managr")
 
@@ -28,7 +29,6 @@ def update_resource(context):
                 "response_type": "ephemeral",
                 "text": "Sorry I cant find your managr account",
             }
-
         blocks = get_block_set("update_modal_block_set", {"u": str(user.id), "type": "command"},)
         access_token = user.organization.slack_integration.access_token
 
@@ -68,7 +68,9 @@ def create_resource(context):
                         slack_const.MEETING_RESOURCE_ATTACHMENT_OPTIONS,
                     )
                 ],
-                action_id="CREATE",
+                action_id=action_with_params(
+                    slack_const.COMMAND_FORMS__PROCESS_ADD_CREATE_FORM, [f"u={str(user.id)}"]
+                ),
                 block_id=slack_const.ZOOM_MEETING__ATTACH_RESOURCE_SECTION,
             ),
         ]
@@ -78,10 +80,8 @@ def create_resource(context):
             "view_id": str(context.get("view_id")),
             "view": {
                 "type": "modal",
-                "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
                 "title": {"type": "plain_text", "text": f"Create Resource"},
                 "blocks": blocks,
-                "submit": {"type": "plain_text", "text": "Create", "emoji": True},
                 "external_id": f"create_modal.{str(uuid.uuid4())}",
             },
         }
