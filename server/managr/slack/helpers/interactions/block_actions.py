@@ -1070,13 +1070,17 @@ def process_coming_soon(payload, context):
 
 @processor(required_context="u")
 def process_create_task(payload, context):
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    type = context.get("type", None)
+    url = (
+        slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        if type
+        else slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    )
     trigger_id = payload["trigger_id"]
     u = User.objects.get(id=context.get("u"))
     org = u.organization
 
     data = {
-        "trigger_id": trigger_id,
         "view": {
             "type": "modal",
             "callback_id": slack_const.COMMAND_CREATE_TASK,
@@ -1093,6 +1097,10 @@ def process_create_task(payload, context):
             "private_metadata": json.dumps(context),
         },
     }
+    if type == "command":
+        data["view_id"] = payload["view"]["id"]
+    else:
+        data["trigger_id"] = trigger_id
     try:
         slack_requests.generic_request(url, data, access_token=org.slack_integration.access_token)
     except InvalidBlocksException as e:

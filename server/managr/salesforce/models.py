@@ -943,12 +943,12 @@ class SalesforceAuthAccount(TimeStampModel):
     def get_fields(self, resource):
 
         fields, record_type_id = [*self.adapter_class.list_fields(resource).values()]
-
-        self.default_record_id = record_type_id
-        current_record_ids = self.default_record_ids if self.default_record_ids else {}
-        current_record_ids[resource] = record_type_id
-        self.default_record_ids = current_record_ids
-        self.save()
+        if fields and record_type_id:
+            self.default_record_id = record_type_id
+            current_record_ids = self.default_record_ids if self.default_record_ids else {}
+            current_record_ids[resource] = record_type_id
+            self.default_record_ids = current_record_ids
+            self.save()
         return fields
 
     def get_validations(self, resource):

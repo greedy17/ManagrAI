@@ -283,10 +283,11 @@ DEFAULT_PUBLIC_FORM_FIELDS = {
 NO_FORM_FIELDS = "NO_FORM_FIELDS"
 
 MANAGR_ACTIONS = [
+    ("UPDATE_RESOURCE", "Update Salesforce"),
+    ("GET_NOTES", "View Notes"),
+    ("CREATE_TASK", "Create Task"),
     ("LIST_TASKS", "List Tasks"),
-    ("UPDATE_RESOURCE", "Update Resource"),
     ("CREATE_RESOURCE", "Create Resource"),
-    ("GET_NOTES", "Get Notes"),
     ("SCHEDULE_MEETING", "Schedule Meeting"),
 ]
 

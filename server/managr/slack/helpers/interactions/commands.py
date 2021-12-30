@@ -80,7 +80,47 @@ def create_resource(context):
             "view_id": str(context.get("view_id")),
             "view": {
                 "type": "modal",
-                "title": {"type": "plain_text", "text": f"Create Resource"},
+                "title": {"type": "plain_text", "text": "Create Resource"},
+                "blocks": blocks,
+                "external_id": f"create_modal.{str(uuid.uuid4())}",
+            },
+        }
+
+        slack_requests.generic_request(url, data, access_token=access_token)
+
+
+def create_task(context):
+    # list of accepted commands for this fake endpoint
+    user = User.objects.get(id=context.get("u"))
+    if user.slack_integration:
+        slack = UserSlackIntegration.objects.filter(slack_id=user.slack_integration.id).first()
+        if not slack:
+            data = {
+                "response_type": "ephemeral",
+                "text": "Sorry I cant find your managr account",
+            }
+        blocks = [
+            block_builders.static_select(
+                "Pick a resource to create task for",
+                [
+                    *map(
+                        lambda resource: block_builders.option(resource, resource),
+                        slack_const.MEETING_RESOURCE_ATTACHMENT_OPTIONS,
+                    )
+                ],
+                action_id=action_with_params(
+                    slack_const.ZOOM_MEETING__CREATE_TASK, [f"u={str(user.id)}", "type=command"]
+                ),
+                block_id=slack_const.ZOOM_MEETING__ATTACH_RESOURCE_SECTION,
+            ),
+        ]
+        access_token = user.organization.slack_integration.access_token
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        data = {
+            "view_id": str(context.get("view_id")),
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Create Task"},
                 "blocks": blocks,
                 "external_id": f"create_modal.{str(uuid.uuid4())}",
             },
@@ -251,6 +291,7 @@ def get_action(action_name, context={}, *args, **kwargs):
         "UPDATE_RESOURCE": update_resource,
         "CREATE_RESOURCE": create_resource,
         "LIST_TASKS": list_tasks,
+        "CREATE_TASK": create_task,
         "GET_NOTES": get_notes_command,
         "SCHEDULE_MEETING": schedule_meeting,
         "ADD_SEQUENCE": add_to_sequence,
