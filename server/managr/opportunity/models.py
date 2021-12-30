@@ -96,7 +96,7 @@ class Opportunity(TimeStampModel, IntegrationModel):
     """
 
     name = models.CharField(max_length=255, blank=True, null=False)
-    amount = models.DecimalField(max_digits=13, decimal_places=2, default=0.00, null=True,)
+    amount = models.DecimalField(max_digits=13, decimal_places=5, default=0.00, null=True,)
     forecast_category = models.CharField(max_length=255, null=True)
 
     close_date = models.DateField(null=True)

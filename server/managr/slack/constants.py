@@ -284,7 +284,7 @@ NO_FORM_FIELDS = "NO_FORM_FIELDS"
 
 MANAGR_ACTIONS = [
     ("LIST_TASKS", "List Tasks"),
-    ("UPDATE_RESOURCE", "Update Resource"),
+    ("UPDATE_RESOURCE", "Update Salesforce"),
     ("CREATE_RESOURCE", "Create Resource"),
     ("GET_NOTES", "Get Notes"),
     ("SCHEDULE_MEETING", "Schedule Meeting"),
