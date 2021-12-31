@@ -1172,6 +1172,18 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
             ),
             style="primary",
         ),
+        block_builders.simple_button_block(
+            "View Notes",
+            "get_notes",
+            action_id=action_with_params(
+                slack_consts.GET_NOTES,
+                params=[
+                    f"u={str(user.id)}",
+                    f"resource_id={str(main_form.resource_id)}",
+                    "type=alert",
+                ],
+            ),
+        ),
     ]
     blocks.append(block_builders.actions_block(action_blocks))
     blocks.append(
