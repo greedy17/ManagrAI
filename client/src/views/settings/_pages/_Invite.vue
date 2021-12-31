@@ -10,13 +10,15 @@
       "
     >
       <form class="invite-form" @submit.prevent="handleInvite">
-        <h2 class="invite-form__title">Invite Users to Managr</h2>
-        <h2 class="invite-form__subtitle" style="color: #199e54">
+        <h2 class="invite-form__title">Invite Users via Slack</h2>
+        <h2 class="invite-form__subtitle" style="color: #beb5cc; margin-top: -6rem">
           {{ $store.state.user.organizationRef.name }}
         </h2>
-        <div style="display: flex; justify-content: center; flex-direction: column">
+        <div
+          style="display: flex; justify-content: center; flex-direction: column; margin-top: -3rem"
+        >
           <div>
-            <FormField>
+            <FormField label="Slack Users:">
               <template v-slot:input>
                 <DropDownSearch
                   :items.sync="slackMembers"
@@ -159,7 +161,7 @@
             style="display: flex; align-items: flex-start"
             class="invite-list__section__item col"
           >
-            {{ member.firstName ? member.firstName : 'Name pending' }}
+            {{ member.firstName ? member.firstName : 'Pending' }}
             <p style="color: #beb5cc; font-size: 0.65rem; margin-top: 0.25rem">
               {{ member.email }}
             </p>
@@ -329,6 +331,7 @@ export default {
         }
       } finally {
         this.loading = false
+        this.inviteOpen = !this.inviteOpen
       }
     },
     resetData() {
@@ -489,7 +492,6 @@ button {
     color: red;
   }
   &__title {
-    padding-bottom: 1rem;
     font-weight: bold;
     text-transform: uppercase;
     text-align: left;
@@ -498,6 +500,7 @@ button {
     display: flex;
     flex-direction: column;
     align-items: center;
+    margin-top: -4rem;
   }
 }
 .invite-form__organization {

@@ -11,7 +11,6 @@
       <template v-slot:tn-dropdown-option="{ option }">
         <slot name="tn-dropdown-option" :option="option"></slot>
       </template>
-      <img src="@/assets/images/dropdown.png" alt="" />
       <template v-if="$attrs.hasNext" v-slot:tn-dropdown__pagination>
         <div
           @click.stop="$emit('load-more')"
@@ -47,21 +46,25 @@ export default {
 ::v-deep .tn-dropdown__options__container {
   @include base-font-styles();
   border-radius: 0.25rem;
-  background-color: $panther;
+  background-color: white;
   border: 2px solid white;
-  color: $panther-silver;
-  margin-top: 1.5rem;
+  color: $panther;
+  margin-top: 0.25rem;
 }
 
 ::v-deep .tn-dropdown__options__container:hover,
 ::v-deep .tn-dropdown__selection-container:hover {
   border: 2px solid white;
-  color: $panther-silver;
+  color: $panther;
 }
 
 ::v-deep .tn-dropdown__options__option:hover {
   color: white;
-  background-color: $panther;
+  background-color: $dark-green;
+}
+
+::v-deep .tn-dropdown__options__option {
+  overflow-x: scroll;
 }
 
 ::v-deep .tn-dropdown__selection-container {
@@ -71,7 +74,7 @@ export default {
   box-sizing: border-box;
   line-height: 1.29;
   letter-spacing: 0.5px;
-  color: $panther-silver;
+  color: $panther;
 
   height: 2.5rem;
   background-color: white;
@@ -83,23 +86,32 @@ export default {
     &:focus {
       box-shadow: 0 0 0 0;
       background-color: white;
-      color: $panther-silver;
+      color: $panther;
     }
   }
+}
+::v-deep .tn-dropdown__selection-container:after {
+  position: absolute;
+  content: '';
+  top: 17px;
+  right: 1em;
+  width: 0;
+  height: 0;
+  border: 5px solid transparent;
+  border-color: rgb(173, 171, 171) transparent transparent transparent;
 }
 ::v-deep .tn-dropdown {
   width: 12vw;
 }
-
 ::v-deep .tn-dropdown__trigger-icon {
   margin-right: 0.25rem;
-  color: white;
+  color: $panther;
 }
 
 ::v-deep .tn-dropdown__selected-items--multi__item {
   font-size: 16px;
   background-color: white;
-  color: $panther-silver;
+  color: $panther;
   width: 100%;
   height: 100%;
   margin: 0;
@@ -122,5 +134,6 @@ export default {
 ::v-deep .tn-dropdown__selected-items__item-selection,
 ::v-deep .tn-dropdown__selected-items__item-selection--muted {
   color: $panther-silver;
+  font-size: 12px;
 }
 </style>

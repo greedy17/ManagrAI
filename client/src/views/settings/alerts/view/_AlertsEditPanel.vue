@@ -60,6 +60,15 @@
         <div v-if="selectedTab == 'GROUPS'">
           <div class="card-rows" v-for="(group, index) in alert.groupsRef" :key="index">
             <div class="group-card">
+              <div style="display: flex; justify-content: flex-end; width: 100%">
+                <img
+                  @click.stop="onRemoveAlertGroup(group.id, index)"
+                  style="height: 1.25rem; cursor: pointer"
+                  src="@/assets/images/remove.png"
+                  alt=""
+                />
+              </div>
+
               <div class="group-card__title">Workflow conditions group {{ index + 1 }}</div>
               <div>
                 <p
@@ -88,23 +97,15 @@
                     Add condition
                   </button>
                 </div>
-
-                <div style="display: flex; justify-content: flex-end; width: 100%">
-                  <div class="dropdown-container" tabindex="1">
-                    <div class="three-dots"></div>
-                    <div class="dropdown">
-                      <button class="add-button" @click="onShowGroupModal()">Add</button>
-                      <button
-                        class="revoke-button"
-                        @click.stop="onRemoveAlertGroup(group.id, index)"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
+
+            <img
+              src="@/assets/images/add.png"
+              style="height: 1.5rem; margin-bottom: 1rem; cursor: pointer"
+              alt=""
+              @click="onShowGroupModal()"
+            />
           </div>
         </div>
         <div v-if="selectedTab == 'MESSAGE'" class="alerts-template-list__content-message">
@@ -680,7 +681,7 @@ export default {
 .add-button {
   font-size: 0.75rem;
   font-weight: bold;
-  color: $dark-green;
+  color: white;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -721,7 +722,7 @@ export default {
 }
 .card-rows {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
@@ -730,7 +731,7 @@ export default {
 .group-card {
   border-radius: 0.75rem;
   background-color: $panther;
-  padding: 1rem;
+  padding: 1.2rem;
   width: 80%;
   margin-bottom: 2rem;
   color: $white;

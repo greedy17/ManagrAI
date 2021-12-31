@@ -74,12 +74,7 @@ body {
   margin: 0;
   min-height: 100vh;
   position: relative;
-  background-color: #f2fff8;
-}
-.grayscale {
-  filter: invert(100%);
-  opacity: 5%;
-  filter: brightness(0.25);
+  background-color: $white;
 }
 
 #app {

@@ -8,7 +8,7 @@
         </span>
       </h2>
       <p style="text-align: center; color: black; font-weight: bold">
-        Create or select a slack #channel to recieve your meeting recaps
+        Log meetings and save attendees right after the meeting ends
       </p>
     </div>
 
@@ -47,11 +47,16 @@
               type="text"
               name="channel"
               id="channel"
+              placeholder="Name your channel"
               @input="logNewName(channelName)"
             />
 
             <div v-if="!channelCreated" v style="margin-top: 1.25rem">
-              <button v-if="channelName" @click="createChannel(channelName)" class="green__button">
+              <button
+                v-if="channelName"
+                @click="createChannel(channelName)"
+                class="green__button bouncy"
+              >
                 Create Channel
               </button>
               <button v-else class="disabled__button">Create Channel</button>
@@ -166,13 +171,12 @@ export default {
       this.createdZoomChannel = ''
       this.zoomChannel = ''
       this.$router.push({ name: 'CreateNew' })
+      location.reload()
       this.$Alert.alert({
         type: 'success',
         message: 'Workflow saved successfully',
         timeout: 2000,
       })
-      this.$router.push({ name: 'CreateNew' })
-      location.reload()
     },
     removeZoomChannel() {
       this.zoomChannel = ''
@@ -311,6 +315,10 @@ export default {
 }
 .bouncy {
   animation: bounce 0.2s infinite alternate;
+}
+::placeholder {
+  color: $panther-silver;
+  font-size: 0.75rem;
 }
 .logZoomPage {
   height: 100vh;

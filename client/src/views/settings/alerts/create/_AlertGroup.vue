@@ -21,7 +21,7 @@
         <AlertOperandRow
           @remove-operand="onRemoveOperand(i)"
           :resourceType="resourceType"
-          :form.sync="alertOperand"
+          :form="alertOperand"
         />
         <div class="row__buttons">
           <button

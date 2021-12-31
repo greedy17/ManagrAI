@@ -44,7 +44,9 @@
     "v-mask": "^2.2.1",
     "v-tooltip": "^2.0.3",
     "vue": "^2.5.22",
+    "vue-clipboard2": "^0.3.3",
     "vue-datetime": "^1.0.0-beta.13",
+    "vue-drag-drop": "^1.1.4",
     "vue-js-modal": "^2.0.0-rc.6",
     "vue-multiselect": "^2.1.6",
     "vue-quill-editor": "^3.0.6",
@@ -53,6 +55,7 @@
     "vue-scrollto": "^2.17.1",
     "vue-template-compiler": "^2.6.10",
     "vue2-google-maps": "^0.10.7",
+    "vuedraggable": "^2.24.3",
     "vuex": "^3.1.0",
     "vuex-persistedstate": "^2.5.4",
     "weekstart": "^1.0.1"

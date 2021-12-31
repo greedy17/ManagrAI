@@ -16,10 +16,7 @@ from managr.slack.serializers import (
 )
 
 
-from .models import (
-    User,
-    NylasAuthAccount,
-)
+from .models import User, NylasAuthAccount, MeetingPrepInstance
 
 
 class NylasAuthAccountSerializer(serializers.ModelSerializer):
@@ -84,6 +81,8 @@ class UserSerializer(serializers.ModelSerializer):
             "has_salesloft_integration",
             "gong_account",
             "has_gong_integration",
+            "outreach_account",
+            "has_outreach_integration",
             "has_zoom_integration",
             "has_salesforce_integration",
             "timezone",
@@ -194,6 +193,12 @@ class UserInvitationSerializer(serializers.ModelSerializer):
             "organization": {"required": True},
         }
         read_only_fields = ("organization_ref",)
+
+
+class MeetingPrepInstanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MeetingPrepInstance
+        fields = ("user", "event_data", "participants", "resource_id", "resource_type")
 
 
 """

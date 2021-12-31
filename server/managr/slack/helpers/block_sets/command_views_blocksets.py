@@ -21,7 +21,7 @@ from managr.slack.helpers.utils import (
     map_fields_to_type,
     block_finder,
 )
-from managr.slack.helpers import block_builders
+from managr.slack.helpers import block_builders, block_sets
 from managr.utils.misc import snake_to_space
 from managr.salesforce.routes import routes as form_routes
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
@@ -48,7 +48,7 @@ def command_select_account_interaction(context):
     return [
         block_builders.external_select(
             f"*Search for an account*",
-            f"{slack_const.GET_USER_ACCOUNTS}?u={str(user.id)}&type={context.get('type')}",
+            f"{slack_const.GET_USER_ACCOUNTS}?u={str(user.id)}&type={context.get('type')}&system={context.get('system')}",
             block_id="select_existing",
             placeholder="Type to search",
         ),
@@ -133,71 +133,105 @@ def alert_instance_block_set(context):
     in_channel = False
     if config and config.recipient_type == "SLACK_CHANNEL":
         in_channel = True
-    blocks = [
-        block_builders.section_with_button_block(
-            "Mark as Complete",
-            "mark_complete",
-            instance.render_text(),
-            text_type="mrkdwn",
-            block_id=f"{instance.id}_text",
-            action_id=f"{slack_const.MARK_COMPLETE}?u={user.id}&page={context.get('current_page')}&instance_id={instance.id}",
-            style="danger",
-        ),
-    ]
-    action_blocks = [
-        block_builders.simple_button_block(
-            f"Update {instance.template.resource_type}",
-            instance.resource_id,
-            action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(resource_owner.id)}&resource={instance.template.resource_type}",
-            style="primary",
+    if instance.form_instance.all().first():
+        form = OrgCustomSlackFormInstance.objects.get(
+            id=instance.form_instance.all()
+            .exclude(template__resource="OpportunityLineItem")
+            .first()
+            .id
         )
-    ]
-    if instance.template.resource_type == "Opportunity":
-        action_blocks.append(
+        message = f"Successfully updated *{form.resource_type}* _{form.resource_object.name}_"
+        blocks = block_sets.get_block_set(
+            "success_modal",
+            {
+                "u": str(user.id),
+                "form_id": str(instance.form_instance.all().first().id),
+                "message": message,
+            },
+        )
+    else:
+        blocks = [
+            block_builders.section_with_button_block(
+                "Mark as Complete",
+                "mark_complete",
+                instance.render_text(),
+                text_type="mrkdwn",
+                block_id=f"{instance.id}_text",
+                action_id=f"{slack_const.MARK_COMPLETE}?u={user.id}&page={context.get('current_page',1)}&instance_id={instance.id}",
+                style="danger",
+            ),
+        ]
+        action_blocks = [
             block_builders.simple_button_block(
-                "Get Notes",
-                "get_notes",
-                action_id=action_with_params(
-                    slack_const.GET_NOTES,
-                    params=[
-                        f"u={str(user.id)}",
-                        f"resource_id={str(instance.resource_id)}",
-                        "type=alert",
-                    ],
-                ),
+                f"Update {instance.template.resource_type}",
+                instance.resource_id,
+                action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(resource_owner.id)}&resource={instance.template.resource_type}&alert_id={instance.id}&current_page={context.get('current_page',1)}",
+                style="primary",
             )
-        )
-        action_blocks.append(
-            block_builders.simple_button_block(
-                "Call Details",
-                "call_details",
-                action_id=action_with_params(
-                    slack_const.GONG_CALL_RECORDING,
-                    params=[
-                        f"u={str(user.id)}",
-                        f"resource_id={str(instance.resource_id)}",
-                        "type=alert",
-                    ],
-                ),
+        ]
+        if instance.template.resource_type == "Opportunity":
+            action_blocks.append(
+                block_builders.simple_button_block(
+                    "Get Notes",
+                    "get_notes",
+                    action_id=action_with_params(
+                        slack_const.GET_NOTES,
+                        params=[
+                            f"u={str(user.id)}",
+                            f"resource_id={str(instance.resource_id)}",
+                            "type=alert",
+                        ],
+                    ),
+                )
             )
-        )
-    if instance.template.resource_type != "Lead":
-        action_blocks.append(
-            block_builders.simple_button_block(
-                "Add to Cadence",
-                "add_to_cadence",
-                action_id=action_with_params(
-                    slack_const.ADD_TO_CADENCE_MODAL,
-                    params=[
-                        f"u={str(user.id)}",
-                        f"resource_id={str(instance.resource_id)}",
-                        f"resource_name={instance.resource.name}",
-                        f"resource_type={instance.template.resource_type}",
-                    ],
-                ),
+            action_blocks.append(
+                block_builders.simple_button_block(
+                    "Call Details",
+                    "call_details",
+                    action_id=action_with_params(
+                        slack_const.GONG_CALL_RECORDING,
+                        params=[
+                            f"u={str(user.id)}",
+                            f"resource_id={str(instance.resource_id)}",
+                            "type=alert",
+                        ],
+                    ),
+                )
             )
-        )
-    blocks.append(block_builders.actions_block(action_blocks))
+        if instance.template.resource_type != "Lead":
+            if hasattr(user, "outreach_account"):
+                action_blocks.append(
+                    block_builders.simple_button_block(
+                        "Add to Sequence",
+                        "add_to_sequence",
+                        action_id=action_with_params(
+                            slack_const.ADD_TO_SEQUENCE_MODAL,
+                            params=[
+                                f"u={str(user.id)}",
+                                f"resource_id={str(instance.resource_id)}",
+                                f"resource_name={instance.resource.name}",
+                                f"resource_type={instance.template.resource_type}",
+                            ],
+                        ),
+                    )
+                )
+            else:
+                action_blocks.append(
+                    block_builders.simple_button_block(
+                        "Add to Cadence",
+                        "add_to_cadence",
+                        action_id=action_with_params(
+                            slack_const.ADD_TO_CADENCE_MODAL,
+                            params=[
+                                f"u={str(user.id)}",
+                                f"resource_id={str(instance.resource_id)}",
+                                f"resource_name={instance.resource.name}",
+                                f"resource_type={instance.template.resource_type}",
+                            ],
+                        ),
+                    )
+                )
+        blocks.append(block_builders.actions_block(action_blocks))
     if in_channel or (user.id != resource_owner.id):
         blocks.append(
             block_builders.context_block(
@@ -326,15 +360,70 @@ def create_add_to_cadence_block_set(context):
 
 
 @block_set(required_context=["u"])
+def create_add_to_sequence_block_set(context):
+    user_id = context.get("u")
+    blocks = [
+        block_builders.external_select(
+            f"*Select Sequence:*",
+            f"{slack_const.GET_SEQUENCE_OPTIONS}?u={user_id}",
+            block_id="select_sequence",
+            placeholder="Type to search",
+        ),
+        block_builders.multi_external_select(
+            f"*Add Contacts from {context.get('resource_name')} to selected Sequence*:",
+            f"{slack_const.GET_PEOPLE_OPTIONS}?u={user_id}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}",
+            block_id="select_people",
+            placeholder="Type to search",
+        ),
+    ]
+    return blocks
+
+
+@block_set(required_context=["u"])
 def choose_opportunity_block_set(context):
     user_id = context.get("u")
     blocks = [
         block_builders.external_select(
             "Which opportunity would you like your notes for?",
-            f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={sf_consts.RESOURCE_SYNC_OPPORTUNITY}",
+            f"{slack_const.GET_NOTES}?u={user_id}&resource={sf_consts.RESOURCE_SYNC_OPPORTUNITY}",
             block_id="select_opp",
             placeholder="Type to search",
         )
     ]
     return blocks
 
+
+@block_set(required_context=["u"])
+def actions_block_set(context):
+    user = User.objects.get(id=context.get("u"))
+    user_id = context.get("u")
+    options = []
+    for action in slack_const.MANAGR_ACTIONS:
+        options.append(block_builders.option(action[1], action[0]))
+    if user.outreach_account:
+        options.append(block_builders.option("Add To Sequence", "ADD_SEQUENCE"))
+    if user.salesloft_account:
+        options.append(block_builders.option("Add To Cadence", "ADD_CADENCE"))
+    blocks = [
+        block_builders.static_select(
+            "What would you like to do?",
+            options,
+            f"{slack_const.COMMAND_MANAGR_ACTION}?u={user_id}",
+            block_id="select_action",
+            placeholder="Type to search",
+        )
+    ]
+    return blocks
+
+
+@block_set(required_context=["u"])
+def command_select_resource_interaction(context):
+    user = User.objects.get(id=context.get("u"))
+    return [
+        block_builders.external_select(
+            f"*Search for an account*",
+            f"{slack_const.GET_USER_ACCOUNTS}?u={str(user.id)}&type={context.get('type')}&system={context.get('system')}",
+            block_id="select_existing",
+            placeholder="Type to search",
+        ),
+    ]

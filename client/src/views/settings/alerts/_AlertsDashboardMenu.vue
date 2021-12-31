@@ -1,27 +1,18 @@
 <template>
   <div>
-    <div class="sidenav sidenav__background">
-      <div>
+    <div v-if="user.userLevel === 'REP'" class="sidenav sidenav__background">
+      <div style="margin-bottom: 2rem">
         <h2 class="title">Workflow Automations</h2>
       </div>
       <router-link exact-active-class="active" :to="{ name: 'CreateNew' }">
         <div :class="isOnboarding ? 'onboarding row' : 'row'">
           <img src="@/assets/images/trophy.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
           <h3 v-if="user.userLevel === 'REP'">
-            Popular Workflows <span style="margin-left: 0.25rem" class="counter">5</span>
-          </h3>
-          <h3 v-else>
-            Popular Workflows <span style="margin-left: 0.25rem" class="counter">6</span>
+            Popular<span style="margin-left: 0.5rem" class="counter">5</span>
           </h3>
         </div>
       </router-link>
 
-      <!-- <div v-if="user" id="toolTip">
-        <p v-if="user.onboarding">
-          Onboarding complete! We'll take it from here. Feel free to activate the rest of the
-          workflows now or come back later.
-        </p>
-      </div> -->
       <div
         v-if="isOnboarding && user.activatedManagrConfigs.includes('Update Forecast')"
         style="margin-bottom: -0.5rem"
@@ -29,15 +20,15 @@
         id="toolTip"
       >
         <p>
-          Onboarding complete! We'll take it from here. Visit this tab to run, edit, or delete
-          workflows. Stay here to activate the rest.
+          Onboarding Complete! Visit the tab below to run, edit, or delete workflows. You can also
+          stay on this page to activate more worklows.
         </p>
         <div id="tailShadow"></div>
         <div id="tail1"></div>
         <div id="tail2"></div>
       </div>
       <router-link
-        v-if="isOnboarding && !isAdmin"
+        v-if="isOnboarding"
         :class="
           isOnboarding && !user.activatedManagrConfigs.includes('Update Forecast')
             ? 'onboarding row'
@@ -49,7 +40,7 @@
         <div class="row">
           <img src="@/assets/images/star.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
           <h3 @click="onboardComplete">
-            Saved Workflows
+            Saved
             <span style="margin-left: 0.25rem" class="counter">{{
               alertsCount(templates.list.length)
             }}</span>
@@ -60,8 +51,8 @@
         <div class="row">
           <img src="@/assets/images/star.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
           <h3>
-            Saved Workflows
-            <span style="margin-left: 0.25rem" class="counter">{{
+            Saved
+            <span style="margin-left: 0.5rem" class="counter">{{
               alertsCount(templates.list.length)
             }}</span>
           </h3>
@@ -71,19 +62,50 @@
       <router-link exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
         <div :class="isOnboarding ? 'onboarding row' : 'row'">
           <img src="@/assets/images/build.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
-          <h3>Customized Workflows</h3>
+          <h3>Custom</h3>
         </div>
       </router-link>
 
-      <div>
-        <div :class="isOnboarding ? 'onboarding row' : 'row'" style="cursor: not-allowed">
-          <img
-            src="@/assets/images/analyze.png"
-            style="height: 1.25rem; margin-right: 0.5rem"
-            alt=""
-          />
-          <h3>Analyze <span class="coming-soon">coming soon</span></h3>
+      <div :class="isOnboarding ? 'onboarding row' : 'row'" style="cursor: not-allowed">
+        <img src="@/assets/images/org.png" style="height: 1.25rem; margin-right: 0.5rem" alt="" />
+        <h3>Shared Workflows<span class="coming-soon">coming soon</span></h3>
+      </div>
+    </div>
+
+    <div v-else class="sidenav sidenav__background">
+      <div style="margin-bottom: 2rem">
+        <h2 class="title">Workflow Automations</h2>
+      </div>
+      <router-link exact-active-class="active" :to="{ name: 'CreateNew' }">
+        <div class="row">
+          <img src="@/assets/images/trophy.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
+
+          <h3>Popular<span style="margin-left: 0.5rem" class="counter">6</span></h3>
         </div>
+      </router-link>
+
+      <router-link exact-active-class="active" :to="{ name: 'ListTemplates' }">
+        <div class="row">
+          <img src="@/assets/images/star.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
+          <h3>
+            Saved
+            <span style="margin-left: 0.5rem" class="counter">{{
+              alertsCount(templates.list.length)
+            }}</span>
+          </h3>
+        </div>
+      </router-link>
+
+      <router-link exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
+        <div class="row">
+          <img src="@/assets/images/build.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
+          <h3>Custom</h3>
+        </div>
+      </router-link>
+
+      <div class="row" style="cursor: not-allowed">
+        <img src="@/assets/images/org.png" style="height: 1.25rem; margin-right: 0.5rem" alt="" />
+        <h3>Shared Workflows<span class="coming-soon">coming soon</span></h3>
       </div>
     </div>
 

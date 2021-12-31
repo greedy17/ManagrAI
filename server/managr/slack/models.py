@@ -167,6 +167,7 @@ class OrgCustomSlackForm(TimeStampModel):
     config = JSONField(
         default=dict,
         help_text="The configuration object for this organization's custom Slack form.",
+        blank=True,
     )
     stage = models.CharField(
         max_length=255,
@@ -220,6 +221,9 @@ class OrgCustomSlackFormInstance(TimeStampModel):
     submission_date = models.DateTimeField(null=True, help_text="Date form was submitted")
     update_source = models.CharField(
         max_length=30, blank=True, help_text="On update forms, sets the source of the update"
+    )
+    alert_instance_id = models.ForeignKey(
+        "alerts.AlertInstance", models.SET_NULL, related_name="form_instance", null=True, blank=True
     )
     objects = OrgCustomSlackFormInstanceQuerySet.as_manager()
 
@@ -298,9 +302,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         user_fields = self.get_user_fields()
         form_values = self.generate_form_values(data)
         form_blocks = []
-        logger.info(user_fields)
         for field in user_fields:
-            logger.info(field)
             val = form_values.get(field.api_name, None)
             if field.is_public:
                 # pass in user as a kwarg

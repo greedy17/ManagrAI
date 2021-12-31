@@ -13,7 +13,7 @@
           "
           style="font-weight: bold; margin-top: -0.5rem; color: #5d5e5e"
         >
-          Managr utilizes a secure oAuth connection
+          Connect Managr to your favorite apps
         </p>
         <p v-else style="font-weight: bold; margin-top: -0.5rem; color: #5d5e5e">
           <span style="font-weight: 900">Step 1/2: </span> Connect all four apps
@@ -242,14 +242,40 @@
             </button>
           </div>
         </div>
+        <div v-if="!user.onboarding" class="card">
+          <div class="card__header">
+            <img style="height: 1.5rem" src="@/assets/images/outreach.webp" />
+          </div>
+          <p class="card-text">Add Contacts to Sequences</p>
+          <div class="card__body">
+            <PulseLoadingSpinnerButton
+              v-if="!hasOutreachIntegration"
+              :disabled="hasOutreachIntegration"
+              @click="onGetAuthLink('OUTREACH')"
+              style="margin-left: 1rem; cursor: pointer"
+              class="orange_button"
+              text="Connect"
+              :loading="generatingToken && selectedIntegration == 'OUTREACH'"
+            ></PulseLoadingSpinnerButton>
+            <div v-else class="card__body">
+              <div class="dropdown-container" tabindex="1">
+                <div class="three-dots"></div>
+                <div class="dropdown">
+                  <button @click="onRevoke('OUTREACH')" class="revoke-button">revoke</button>
+                  <button @click="onGetAuthLink('OUTREACH')" class="plain-button">refresh</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
     <div v-else>
-      <div style="text-align: center">
+      <div style="text-align: center; margin-bottom: 3rem">
         <h2 class="title">Welcome to Managr!</h2>
         <p style="font-weight: bold; margin-top: -0.5rem; color: #5d5e5e">
-          Managr utilizes a secure oAuth connection
+          Connect Managr to your favorite apps
         </p>
       </div>
 
@@ -260,7 +286,6 @@
               <img class="card-img" src="@/assets/images/salesforce.png" />
               <h2 class="card__title">Salesforce</h2>
             </div>
-            <p v-if="!hasSalesforceIntegration" class="card__required">REQUIRED</p>
           </div>
 
           <div>
@@ -276,13 +301,21 @@
               :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
               >Connect</PulseLoadingSpinnerButton
             >
-            <img
-              src="@/assets/images/unplug.png"
-              :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
-              @click="onRevoke('SALESFORCE')"
-              v-else
-              style="height: 2rem; cursor: pointer"
-            />
+
+            <div v-else class="card__body">
+              <div class="dropdown-container" tabindex="1">
+                <div class="three-dots"></div>
+                <div class="dropdown">
+                  <button
+                    :loading="generatingToken && selectedIntegration == 'ZOOM'"
+                    @click="onRevoke('SALESFORCE')"
+                    class="revoke-button"
+                  >
+                    revoke
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -292,7 +325,7 @@
               <img style="height: 3rem" src="@/assets/images/slackLogo.png" />
               <h2 class="card__title">Slack</h2>
             </div>
-            <p
+            <!-- <p
               v-if="
                 (!orgHasSlackIntegration && userCanIntegrateSlack) ||
                 (orgHasSlackIntegration && !hasSlackIntegration)
@@ -300,7 +333,7 @@
               class="card__required"
             >
               REQUIRED
-            </p>
+            </p> -->
           </div>
 
           <p class="card-text">Interact with Managr through Slack</p>
@@ -316,27 +349,27 @@
               :text="slackButtonMessage"
               :loading="generatingToken && selectedIntegration == 'SLACK'"
             ></PulseLoadingSpinnerButton>
-            <div v-else-if="hasSlackIntegration && orgHasSlackIntegration">
-              <img
-                src="@/assets/images/unplug.png"
-                :loading="generatingToken && selectedIntegration == 'SLACK'"
-                @click="onRevoke('SLACK')"
-                style="height: 2rem; cursor: pointer"
-              />
-              <img
-                src="@/assets/images/refresh.png"
-                v-if="userCanIntegrateSlack"
-                @click="onRefreshSlack"
-                :loading="generatingToken && selectedIntegration == 'SLACK'"
-                style="height: 2rem; cursor: pointer"
-              />
-              <!-- <PulseLoadingSpinnerButton
-              v-if="userCanIntegrateSlack"
-              @click="onRefreshSlack"
-              class="orange__button"
-              text="Refresh"
-              :loading="generatingToken && selectedIntegration == 'SLACK'"
-            ></PulseLoadingSpinnerButton> -->
+
+            <div v-else class="card__body">
+              <div class="dropdown-container" tabindex="1">
+                <div class="three-dots"></div>
+                <div class="dropdown">
+                  <button
+                    :loading="generatingToken && selectedIntegration == 'ZOOM'"
+                    @click="onRevoke('SLACK')"
+                    class="revoke-button"
+                  >
+                    revoke
+                  </button>
+                  <button
+                    :loading="generatingToken && selectedIntegration == 'ZOOM'"
+                    @click="onRefreshSlack"
+                    class="plain-button"
+                  >
+                    refresh
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -357,19 +390,14 @@
               text="Connect"
               :loading="generatingToken && selectedIntegration == 'ZOOM'"
             ></PulseLoadingSpinnerButton>
-            <div style="display: flex; justify-content: center" v-else>
-              <img
-                src="@/assets/images/unplug.png"
-                :loading="generatingToken && selectedIntegration == 'ZOOM'"
-                @click="onRevoke('ZOOM')"
-                style="height: 2rem; cursor: pointer"
-              />
-              <img
-                src="@/assets/images/refresh.png"
-                :loading="generatingToken && selectedIntegration == 'ZOOM'"
-                @click="onGetAuthLink('ZOOM')"
-                style="height: 2rem; cursor: pointer"
-              />
+            <div v-else class="card__body">
+              <div class="dropdown-container" tabindex="1">
+                <div class="three-dots"></div>
+                <div class="dropdown">
+                  <button @click="onRevoke('ZOOM')" class="revoke-button">revoke</button>
+                  <button @click="onGetAuthLink('ZOOM')" class="plain-button">refresh</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -395,13 +423,14 @@
               text="Connect"
               :loading="generatingToken && selectedIntegration == 'NYLAS'"
             ></PulseLoadingSpinnerButton>
-            <img
-              v-else
-              src="@/assets/images/unplug.png"
-              :loading="generatingToken && selectedIntegration == 'NYLAS'"
-              @click="onRevoke('NYLAS')"
-              style="height: 2rem; cursor: pointer"
-            />
+            <div v-else class="card__body">
+              <div class="dropdown-container" tabindex="1">
+                <div class="three-dots"></div>
+                <div class="dropdown">
+                  <button @click="onRevoke('NYLAS')" class="revoke-button">revoke</button>
+                </div>
+              </div>
+            </div>
           </div>
           <!-- <div style="margin-bottom: 0.5rem; width: 15rem">
           <GoogleButton
@@ -416,10 +445,10 @@
           <div class="card__header">
             <img style="height: 1.5rem" src="@/assets/images/salesloft.svg" />
           </div>
-          <p class="card-text">Add Contacts to cadences</p>
+          <p class="card-text">Add Contacts to Cadences</p>
           <div class="card__body">
             <PulseLoadingSpinnerButton
-              v-if="!hasSalesloftIntegration && user.isAdmin"
+              v-if="!hasSalesloftIntegration"
               :disabled="hasSalesloftIntegration"
               @click="onGetAuthLink('SALESLOFT')"
               style="margin-left: 1rem; cursor: pointer"
@@ -427,21 +456,41 @@
               text="Connect"
               :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
             ></PulseLoadingSpinnerButton>
-            <div v-else-if="hasSalesloftIntegration && user.isAdmin">
-              <img
-                src="@/assets/images/unplug.png"
-                :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
-                @click="onRevoke('SALESLOFT')"
-                style="height: 2rem; cursor: pointer"
-              />
-              <!-- <img
-              src="@/assets/images/refresh.png"
-              :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
-              style="height: 2rem; cursor: pointer"
-            /> -->
+            <div v-else-if="hasSalesloftIntegration" class="card__body">
+              <div class="dropdown-container" tabindex="1">
+                <div class="three-dots"></div>
+                <div class="dropdown">
+                  <button @click="onRevoke('SALESLOFT')" class="revoke-button">revoke</button>
+                </div>
+              </div>
             </div>
-            <p v-else-if="hasSalesloftIntegration && !user.isAdmin">Salesloft is connected!</p>
-            <p v-else>Contact your organization admin to add Salesloft</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__header">
+            <img style="height: 1.5rem" src="@/assets/images/outreach.webp" />
+          </div>
+          <p class="card-text">Add Contacts to Sequences</p>
+          <div class="card__body">
+            <PulseLoadingSpinnerButton
+              v-if="!hasOutreachIntegration"
+              :disabled="hasOutreachIntegration"
+              @click="onGetAuthLink('OUTREACH')"
+              style="margin-left: 1rem; cursor: pointer"
+              class="orange_button"
+              text="Connect"
+              :loading="generatingToken && selectedIntegration == 'OUTREACH'"
+            ></PulseLoadingSpinnerButton>
+            <div v-else class="card__body">
+              <div class="dropdown-container" tabindex="1">
+                <div class="three-dots"></div>
+                <div class="dropdown">
+                  <button @click="onRevoke('OUTREACH')" class="revoke-button">revoke</button>
+                  <button @click="onGetAuthLink('OUTREACH')" class="plain-button">refresh</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -477,16 +526,14 @@
               text="Connect"
               :loading="generatingToken && selectedIntegration == 'GONG'"
             ></PulseLoadingSpinnerButton>
-            <div v-else-if="hasGongIntegration && user.isAdmin">
-              <img
-                src="@/assets/images/unplug.png"
-                :loading="generatingToken && selectedIntegration == 'GONG'"
-                @click="onRevoke('GONG')"
-                style="height: 2rem; cursor: pointer"
-              />
+            <div v-else class="card__body">
+              <div class="dropdown-container" tabindex="1">
+                <div class="three-dots"></div>
+                <div class="dropdown">
+                  <button @click="onRevoke('GONG')" class="revoke-button">revoke</button>
+                </div>
+              </div>
             </div>
-            <p v-else-if="hasGongIntegration && !user.isAdmin">Gong is connected!</p>
-            <p v-else>Contact your organization admin to add Gong</p>
           </div>
         </div>
 
@@ -548,6 +595,7 @@ import Nylas from '@/services/nylas'
 import Salesforce from '@/services/salesforce'
 import SalesloftAccount from '@/services/salesloft'
 import GongAccount from '@/services/gong'
+import OutreachAccount from '@/services/outreach'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import GoogleButton from '@/components/GoogleButton'
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
@@ -592,6 +640,11 @@ export default {
       this.integrated = !this.integrated
     },
     async onGetAuthLink(integration) {
+      integration === 'NYLAS'
+        ? confirm(
+            'You must check all permission boxes in order for Managr to successfully connect to your calendar!',
+          )
+        : ''
       this.generatingToken = true
       this.selectedIntegration = integration
       const modelClass = this.selectedIntegrationSwitcher
@@ -615,11 +668,13 @@ export default {
       }
     },
     async onIntegrateSlack() {
-      const confirmation = confirm(
-        'Integrating Managr to your slack workspace will request access to a channel (you can choose a new one or an existing one) we will post a message letting the members of that channel know they can now integrate their Slack accounts',
-      )
-      if (!confirmation) {
-        return
+      if (this.user.isAdmin) {
+        const confirmation = confirm(
+          'Integrating Managr to your slack workspace will request access to a channel (you can choose a new one or an existing one) we will post a message letting the members of that channel know they can now integrate their Slack accounts',
+        )
+        if (!confirmation) {
+          return
+        }
       }
       this.generatingToken = true
       if (!this.orgHasSlackIntegration) {
@@ -722,6 +777,11 @@ export default {
     hasGongIntegration() {
       return !!this.$store.state.user.gongAccount && this.$store.state.user.hasGongIntegration
     },
+    hasOutreachIntegration() {
+      return (
+        !!this.$store.state.user.outreachAccount && this.$store.state.user.hasOutreachIntegration
+      )
+    },
     hasSalesloftIntegration() {
       return (
         !!this.$store.state.user.salesloftAccount && this.$store.state.user.hasSalesloftIntegration
@@ -759,6 +819,8 @@ export default {
           return SalesloftAccount
         case 'GONG':
           return GongAccount
+        case 'OUTREACH':
+          return OutreachAccount
         default:
           return null
       }
@@ -778,7 +840,6 @@ export default {
   },
   mounted() {
     console.log(this.user)
-    console.log(this.templates)
   },
 }
 </script>
@@ -814,7 +875,7 @@ export default {
   color: white;
   content: '\2026';
   font-size: 3rem;
-  padding: 0 5px;
+  padding-left: 6rem;
 }
 .dropdown {
   right: 10px;
@@ -869,9 +930,8 @@ export default {
 
 .card {
   background-color: $panther;
-  padding: 2rem;
+  padding: 2rem 2rem 0.5rem 2rem;
   border: none;
-  max-height: 30vh;
   margin-right: 1rem;
   margin-bottom: 2rem;
   border-radius: 0.5rem;
@@ -899,6 +959,7 @@ export default {
     display: flex;
     align-items: flex-end;
     justify-content: flex-end;
+    margin-top: auto;
   }
   &__start {
     display: flex;

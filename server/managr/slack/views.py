@@ -2,7 +2,7 @@ import json
 import logging
 from urllib.parse import urlencode
 import uuid
-
+import pdb
 from datetime import datetime
 from managr.utils import sites as site_utils
 
@@ -45,6 +45,7 @@ from managr.salesforce.models import SalesforceAuthAccountAdapter
 from managr.core.serializers import UserSerializer
 from managr.core.models import User
 from managr.api.decorators import slack_api_exceptions
+from managr.organization.models import Organization
 
 from .models import (
     OrganizationSlackIntegration,
@@ -488,8 +489,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
         """Handle POST action of the custom Slack form endpoint."""
         organization = request.user.organization
 
-        print("REQUEST.DATA:", request.data)
-
+        logger.info("REQUEST.DATA:", request.data)
         # Make updates - get or create custom_slack_form
         try:
             instance = organization.custom_slack_form
@@ -537,6 +537,9 @@ class SlackFormsViewSet(
             instance.fields.add(field, through_defaults={"order": i})
 
         instance.save()
+        if request.data["resource"] == "OpportunityLineItem":
+            org = Organization.objects.get(id=request.data["organization"])
+            org.update_has_settings("products")
         return Response(serializer.data)
 
     def update(self, request, *args, **kwargs):
@@ -1065,7 +1068,11 @@ def get_notes_command(request):
     user = slack.user
     access_token = user.organization.slack_integration.access_token
     trigger_id = request.data.get("trigger_id")
-    context = {"u": str(user.id), "slack_id": slack_id, "type": "command"}
+    context = {
+        "u": str(user.id),
+        "slack_id": slack_id,
+        "type": "command",
+    }
     data = {
         "trigger_id": trigger_id,
         "view": {
@@ -1073,7 +1080,41 @@ def get_notes_command(request):
             "callback_id": slack_const.GET_NOTES,
             "title": {"type": "plain_text", "text": "Choose opportunity"},
             "blocks": get_block_set("choose_opportunity", context=context),
-            "submit": {"type": "plain_text", "text": "Get Notes",},
+            "private_metadata": json.dumps(context),
+        },
+    }
+    slack_requests.generic_request(url, data, access_token=access_token)
+    return Response()
+
+
+@api_view(["post"])
+@permission_classes([permissions.AllowAny])
+@authentication_classes((slack_auth.SlackWebhookAuthentication,))
+def launch_action(request):
+    slack_id = request.data.get("user_id")
+    if slack_id:
+        slack = (
+            UserSlackIntegration.objects.filter(slack_id=slack_id).select_related("user").first()
+        )
+        if not slack:
+            return Response(
+                data={
+                    "response_type": "ephemeral",
+                    "text": "Sorry I cant find your managr account",
+                }
+            )
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    user = slack.user
+    access_token = user.organization.slack_integration.access_token
+    trigger_id = request.data.get("trigger_id")
+    context = {"u": str(user.id), "trigger_id": trigger_id}
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.COMMAND_MANAGR_ACTION,
+            "title": {"type": "plain_text", "text": "Managr Actions"},
+            "blocks": get_block_set("actions_block_set", context=context),
             "private_metadata": json.dumps(context),
         },
     }

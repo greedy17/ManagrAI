@@ -84,7 +84,8 @@ def authenticate(request):
         try:
             serializer.is_valid(raise_exception=True)
             serializer.save()
-        except IntegrityError:
+        except IntegrityError as e:
+            print(e)
             raise ValidationError(detail="An integration with this salesforce id already exists")
         # create sf sync object
 
