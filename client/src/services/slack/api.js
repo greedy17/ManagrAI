@@ -80,12 +80,12 @@ export default class SlackAPI {
   getOrgCustomForm(resource = null) {
     return this.client
       .get(SLACK_CUSTOM_FORM_ENDPOINT, { params: { resource } })
-      .then(response => response.data.results.map(res => this.cls.customSlackForm.fromAPI(res)))
+      .then(response => (response.data.results.map(res => this.cls.customSlackForm.fromAPI(res))))
       .catch(apiErrorHandler({ apiName: 'SlackAPI.postOrgCustomForm', enable400Alert: false }))
   }
 
   postOrgCustomForm(data) {
-    if (data.id.length) {
+    if (data.id && data.id.length) {
       return this.client
         .patch(SLACK_CUSTOM_FORM_ENDPOINT + data.id + '/', this.cls.customSlackForm.toAPI(data))
         .then(response => this.cls.customSlackForm.fromAPI(response.data))
@@ -124,7 +124,7 @@ export default class SlackAPI {
     return this.client
       .post(SLACK_LIST_USERS, { cursor: cursor })
       .then(response => response)
-      .catch(apiErrorHandler({ apiName: 'SlackAPI.slackUsers' }))
+      .catch(apiErrorHandler({ apiName: 'SlackAPI.listUsers' }))
   }
 
   async createChannel(data) {

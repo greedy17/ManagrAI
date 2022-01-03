@@ -13,7 +13,7 @@
           "
           style="font-weight: bold; margin-top: -0.5rem; color: #5d5e5e"
         >
-          Managr utilizes a secure oAuth connection
+          Connect Managr to your favorite apps
         </p>
         <p v-else style="font-weight: bold; margin-top: -0.5rem; color: #5d5e5e">
           <span style="font-weight: 900">Step 1/2: </span> Connect all four apps
@@ -242,6 +242,32 @@
             </button>
           </div>
         </div>
+        <div v-if="!user.onboarding" class="card">
+          <div class="card__header">
+            <img style="height: 1.5rem" src="@/assets/images/outreach.webp" />
+          </div>
+          <p class="card-text">Add Contacts to Sequences</p>
+          <div class="card__body">
+            <PulseLoadingSpinnerButton
+              v-if="!hasOutreachIntegration"
+              :disabled="hasOutreachIntegration"
+              @click="onGetAuthLink('OUTREACH')"
+              style="margin-left: 1rem; cursor: pointer"
+              class="orange_button"
+              text="Connect"
+              :loading="generatingToken && selectedIntegration == 'OUTREACH'"
+            ></PulseLoadingSpinnerButton>
+            <div v-else class="card__body">
+              <div class="dropdown-container" tabindex="1">
+                <div class="three-dots"></div>
+                <div class="dropdown">
+                  <button @click="onRevoke('OUTREACH')" class="revoke-button">revoke</button>
+                  <button @click="onGetAuthLink('OUTREACH')" class="plain-button">refresh</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -249,7 +275,7 @@
       <div style="text-align: center; margin-bottom: 3rem">
         <h2 class="title">Welcome to Managr!</h2>
         <p style="font-weight: bold; margin-top: -0.5rem; color: #5d5e5e">
-          Managr utilizes a secure oAuth connection
+          Connect Managr to your favorite apps
         </p>
       </div>
 
@@ -814,7 +840,6 @@ export default {
   },
   mounted() {
     console.log(this.user)
-    console.log(this.templates)
   },
 }
 </script>

@@ -11,8 +11,8 @@ from datetime import datetime, date, timedelta
 
 from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_paginator_block
-from managr.organization.models import Organization, Stage
-from managr.opportunity.models import Opportunity
+from managr.organization.models import Organization, Stage, Account, OpportunityLineItem
+from managr.opportunity.models import Opportunity, Lead
 from managr.zoom.models import ZoomMeeting
 from managr.slack import constants as slack_const
 from managr.opportunity import constants as opp_consts
@@ -25,12 +25,14 @@ from managr.slack.helpers.utils import (
     process_done_alert,
     generate_call_block,
     check_contact_last_name,
+    action_with_params,
 )
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
-from managr.slack.models import OrgCustomSlackFormInstance, UserSlackIntegration
+from managr.slack.helpers.interactions.commands import get_action
+from managr.slack.models import OrgCustomSlackFormInstance, UserSlackIntegration, OrgCustomSlackForm
 from managr.salesforce.models import MeetingWorkflow
-from managr.core.models import User
+from managr.core.models import User, MeetingPrepInstance
 from managr.salesforce.background import emit_meeting_workflow_tracker
 from managr.salesforce import constants as sf_consts
 from managr.slack.helpers.exceptions import (
@@ -104,9 +106,14 @@ def process_meeting_review(payload, context):
 @processor(required_context=["w"], action=slack_const.VIEWS_OPEN)
 def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPEN):
     url = slack_const.SLACK_API_ROOT + action
+    slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
+    type = context.get("type", None)
     trigger_id = payload["trigger_id"]
     # view_id = payload["view"]["id"]
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    if type:
+        workflow = MeetingPrepInstance.objects.get(id=context.get("w"))
+    else:
+        workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     org = workflow.user.organization
 
     access_token = org.slack_integration.access_token
@@ -114,13 +121,13 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
     private_metadata = {
         "original_message_channel": payload["channel"]["id"]
         if "channel" in payload
-        else context.get("channel"),
+        else context.get("original_message_channel"),
         "original_message_timestamp": payload["message"]["ts"]
         if "message" in payload
-        else context.get("timestamp"),
+        else context.get("original_message_channel"),
     }
     private_metadata.update(context)
-    blocks = get_block_set("show_meeting_contacts", private_metadata,)
+    blocks = get_block_set("show_meeting_contacts", private_metadata)
     data = {
         "trigger_id": trigger_id,
         # "view_id": view_id,
@@ -151,8 +158,9 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
         )
-    workflow.slack_view = res.get("view").get("id")
-    workflow.save()
+    if not type:
+        workflow.slack_view = res.get("view").get("id")
+        workflow.save()
 
 
 @processor()
@@ -160,9 +168,29 @@ def process_edit_meeting_contact(payload, context):
     trigger_id = payload["trigger_id"]
     view = payload["view"]
     view_id = view["id"]
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    meeting = workflow.meeting
-    org = meeting.zoom_account.user.organization
+    type = context.get("type", None)
+    if type:
+        workflow = MeetingPrepInstance.objects.get(id=context.get("w"))
+        org = workflow.user.organization
+    else:
+        workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+        meeting = workflow.meeting
+        org = meeting.zoom_account.user.organization
+    edit_block_context = {
+        "w": context.get("w"),
+        "tracking_id": context.get("tracking_id"),
+        "current_view_id": view_id,
+    }
+    private_metadata = {
+        "w": context.get("w"),
+        "tracking_id": context.get("tracking_id"),
+        "current_view_id": view_id,
+        "original_message_channel": context.get("original_message_channel"),
+        "original_message_timestamp": context.get("original_message_timestamp"),
+    }
+    if type:
+        edit_block_context.update({"type": type})
+        private_metadata.update({"type": type})
     access_token = org.slack_integration.access_token
     data = {
         "trigger_id": trigger_id,
@@ -171,24 +199,9 @@ def process_edit_meeting_contact(payload, context):
             "type": "modal",
             "title": {"type": "plain_text", "text": "Edit Contact"},
             "submit": {"type": "plain_text", "text": "Save"},
-            "blocks": get_block_set(
-                "edit_meeting_contacts",
-                {
-                    "w": context.get("w"),
-                    "tracking_id": context.get("tracking_id"),
-                    "current_view_id": view_id,
-                },
-            ),
+            "blocks": get_block_set("edit_meeting_contacts", edit_block_context),
             "callback_id": slack_const.ZOOM_MEETING__UPDATE_PARTICIPANT_DATA,
-            "private_metadata": json.dumps(
-                {
-                    "w": context.get("w"),
-                    "tracking_id": context.get("tracking_id"),
-                    "current_view_id": view_id,
-                    "channel": context.get("channel"),
-                    "timestamp": context.get("timestamp"),
-                }
-            ),
+            "private_metadata": json.dumps(private_metadata),
         },
     }
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH
@@ -398,7 +411,6 @@ def process_stage_selected_command_form(payload, context):
         stage_form = org.custom_slack_forms.filter(
             form_type=slack_const.FORM_TYPE_STAGE_GATING, stage=selected_value
         ).first()
-
         if stage_form:
             new_form = OrgCustomSlackFormInstance.objects.create(
                 user=user, template=stage_form, resource_id=main_form.resource_id
@@ -411,15 +423,18 @@ def process_stage_selected_command_form(payload, context):
     updated_view_title = view["title"]
     if len(added_form_ids):
         submit_button_message = "Next"
+        callback_id = slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE
+    elif not len(added_form_ids) and org.has_products:
+        submit_button_message = "Add Products"
+        callback_id = slack_const.PROCESS_ADD_PRODUCTS_FORM
     elif not len(added_form_ids) and main_form.template.form_type == "UPDATE":
         submit_button_message = "Update"
+        slack_const.COMMAND_FORMS__SUBMIT_FORM
+        callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
     elif not len(added_form_ids) and main_form.template.form_type == "CREATE":
         submit_button_message = "Create"
-    callback_id = (
-        slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE
-        if len(added_form_ids)
-        else slack_const.COMMAND_FORMS__SUBMIT_FORM
-    )
+        callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
+
     data = {
         "trigger_id": trigger_id,
         "view_id": view_id,
@@ -461,8 +476,8 @@ def process_remove_contact_from_meeting(payload, context):
     meeting.save()
     if check_contact_last_name(workflow.id):
         update_res = slack_requests.update_channel_message(
-            context.get("channel"),
-            context.get("timestamp"),
+            context.get("original_message_channel"),
+            context.get("original_message_timestamp"),
             access_token,
             block_set=get_block_set("initial_meeting_interaction", {"w": context.get("w")}),
         )
@@ -475,8 +490,11 @@ def process_meeting_selected_resource(payload, context):
     """opens a modal with the options to search or create"""
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
-
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    type = context.get("type", None)
+    if type:
+        workflow = MeetingPrepInstance.objects.get(id=context.get("w"))
+    else:
+        workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     select = payload["actions"][0]["selected_option"]
     selected_option = select["value"]
     organization = workflow.user.organization
@@ -490,7 +508,8 @@ def process_meeting_selected_resource(payload, context):
         "w": context.get("w"),
         "resource": str(selected_option),
     }
-
+    if type:
+        context.update({"type": type})
     private_metadata.update(context)
     data = {
         "trigger_id": trigger_id,
@@ -520,8 +539,9 @@ def process_meeting_selected_resource(payload, context):
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
         )
-    workflow.slack_view = res.get("view").get("id")
-    workflow.save()
+    if type is None:
+        workflow.slack_view = res.get("view").get("id")
+        workflow.save()
 
 
 @processor(required_context=[])
@@ -529,7 +549,11 @@ def process_meeting_selected_resource_option(payload, context):
     """depending on the selection on the meeting review form (create new) this will open a create form or an empty block set"""
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     workflow_id = json.loads(payload["view"]["private_metadata"])["w"]
-    workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    type = context.get("type", None)
+    if type:
+        workflow = MeetingPrepInstance.objects.get(id=workflow_id)
+    else:
+        workflow = MeetingWorkflow.objects.get(id=workflow_id)
     select = payload["actions"][0]["selected_option"]["value"]
     resource_type = context.get("resource")
     action = None
@@ -544,6 +568,8 @@ def process_meeting_selected_resource_option(payload, context):
         "w": workflow_id,
         "resource": resource_type,
     }
+    if type:
+        context.update({"type": type})
     if not action:
         blocks = [block_finder("select_existing", payload["view"]["blocks"])[1]]
         context["action"] = "EXISTING"
@@ -625,27 +651,42 @@ def process_meeting_selected_resource_option(payload, context):
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
         )
-    workflow.slack_view = res.get("view").get("id")
-    workflow.save()
+    if type is None:
+        workflow.slack_view = res.get("view").get("id")
+        workflow.save()
 
 
 @processor()
 def process_create_or_search_selected(payload, context):
     """attaches a drop down to the message block for selecting a resource type"""
     workflow_id = payload["actions"][0]["value"]
-    workflow = MeetingWorkflow.objects.get(id=workflow_id)
-    meeting = workflow.meeting
-
+    type = False
+    if "type" in workflow_id:
+        type = True
+        prep_id = workflow_id.split("%")[1]
+        workflow = MeetingPrepInstance.objects.get(id=prep_id)
+    else:
+        workflow = MeetingWorkflow.objects.get(id=workflow_id)
+        meeting = workflow.meeting
     organization = workflow.user.organization
     access_token = organization.slack_integration.access_token
     # get current blocks
     previous_blocks = payload["message"]["blocks"]
     # check if the dropdown option has been added already
     select_block = block_finder(slack_const.ZOOM_MEETING__ATTACH_RESOURCE_SECTION, previous_blocks)
-    if not select_block:
-        # create new block including the resource type
-        block_sets = get_block_set("attach_resource_interaction", {"w": workflow_id})
-        previous_blocks.insert(2, block_sets[0])
+    if type:
+        if select_block:
+            previous_blocks.pop(select_block[0])
+        prep_block = block_finder(workflow_id, previous_blocks)
+        block_sets = get_block_set(
+            "attach_resource_interaction", {"w": str(workflow.id), "type": "prep"}
+        )
+        previous_blocks.insert(prep_block[0], block_sets[0])
+    # create new block including the resource type
+    else:
+        if not select_block:
+            block_sets = get_block_set("attach_resource_interaction", {"w": workflow_id})
+            previous_blocks.insert(2, block_sets[0])
     try:
         res = slack_requests.update_channel_message(
             payload["channel"]["id"],
@@ -669,9 +710,9 @@ def process_create_or_search_selected(payload, context):
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
         )
-
-    workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
-    workflow.meeting.save()
+    if type is False:
+        workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
+        workflow.meeting.save()
 
 
 @processor()
@@ -714,8 +755,34 @@ def process_restart_flow(payload, context):
 def process_show_update_resource_form(payload, context):
     from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 
+    user = User.objects.get(id=context.get("u"))
+    access_token = user.organization.slack_integration.access_token
     is_update = payload.get("view", None)
     url = f"{slack_const.SLACK_API_ROOT}{slack_const.VIEWS_UPDATE if is_update else slack_const.VIEWS_OPEN}"
+    loading_view_data = {
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Loading"},
+            "blocks": get_block_set(
+                "loading",
+                {
+                    "message": f"Salesforce is being a bit slow :sleeping:… please give it a few seconds",
+                },
+            ),
+        },
+    }
+    if is_update:
+        loading_view_data["view_id"] = is_update["id"]
+    else:
+        loading_view_data["trigger_id"] = payload["trigger_id"]
+    try:
+        loading_res = slack_requests.generic_request(
+            url, loading_view_data, access_token=access_token,
+        )
+    except Exception as e:
+        return logger.exception(
+            f"Failed To Show Loading Screen for user  {str(user.id)} email {user.email} {e}"
+        )
     actions = payload["actions"]
     if actions[0]["type"] == "external_select":
         selected_option = actions[0]["selected_option"]["value"]
@@ -732,12 +799,11 @@ def process_show_update_resource_form(payload, context):
     resource_type = context.get("resource")
     pm = json.loads(payload.get("view", {}).get("private_metadata", "{}"))
     prev_form = pm.get("f", None)
-    user = User.objects.get(id=context.get("u"))
-    access_token = user.organization.slack_integration.access_token
+
     show_submit_button_if_fields_added = False
     has_stage_forms = False
     stage_form = None
-
+    current_products = None
     # HACK forms are generated with a helper fn currently stagename takes a special action id to update forms
     # we need to manually change this action_id
     if resource_id and not prev_form:
@@ -755,6 +821,27 @@ def process_show_update_resource_form(payload, context):
                 template=template, resource_id=resource_id, user=user,
             )
         )
+        if user.organization.has_products and resource_type == "Opportunity":
+            product_template = (
+                OrgCustomSlackForm.objects.for_user(user)
+                .filter(Q(resource="OpportunityLineItem", form_type="CREATE"))
+                .first()
+            )
+            product_form = (
+                OrgCustomSlackFormInstance.objects.create(
+                    template=product_template,
+                    resource_id=resource_id,
+                    user=user,
+                    alert_instance_id=alert_id,
+                )
+                if alert_id
+                else OrgCustomSlackFormInstance.objects.create(
+                    template=product_template, resource_id=resource_id, user=user,
+                )
+            )
+            current_products = OpportunityLineItem.objects.filter(
+                opportunity=slack_form.resource_id
+            )
         if slack_form:
             current_stage = slack_form.resource_object.secondary_data.get("StageName")
             stage_template = (
@@ -773,7 +860,6 @@ def process_show_update_resource_form(payload, context):
     else:
         slack_form = user.custom_slack_form_instances.filter(id=prev_form).delete()
         slack_form = None
-
     blocks = get_block_set(
         "update_modal_block_set",
         context={**context, "resource_type": resource_type, "resource_id": resource_id},
@@ -812,11 +898,47 @@ def process_show_update_resource_form(payload, context):
         "channel_id": payload.get("container").get("channel_id"),
         "message_ts": payload.get("container").get("message_ts"),
     }
-    if alert_id:
-        private_metadata.update({"alert_id": alert_id, "current_page": context.get("current_page")})
+    if user.organization.has_products:
+        if product_form:
+            private_metadata.update({"product_form": str(product_form.id)})
     private_metadata.update(context)
+    if user.organization.has_products:
+        blocks.append(
+            block_builders.actions_block(
+                [
+                    block_builders.simple_button_block(
+                        "Add Product",
+                        "ADD_PRODUCT",
+                        action_id=action_with_params(
+                            slack_const.PROCESS_ADD_PRODUCTS_FORM,
+                            params=[
+                                f"f={str(slack_form.id)}",
+                                f"product_form={str(product_form.id)}",
+                            ],
+                        ),
+                    )
+                ],
+                block_id="ADD_PRODUCT_BUTTON",
+            ),
+        )
+    if current_products:
+        for product in current_products:
+            product_block = get_block_set(
+                "current_product_blockset",
+                {
+                    "opp_item_id": str(product.id),
+                    "u": str(user.id),
+                    "main_form": str(slack_form.id),
+                },
+            )
+            blocks.append(product_block)
+    if alert_id:
+        private_metadata.update(
+            {"alert_id": str(alert_id.id), "current_page": context.get("current_page")}
+        )
+
     data = {
-        "trigger_id": payload["trigger_id"],
+        "view_id": loading_res["view"]["id"],
         "view": {
             "type": "modal",
             "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
@@ -840,7 +962,9 @@ def process_show_update_resource_form(payload, context):
     if is_update:
         data["view_id"] = is_update.get("id")
 
-    slack_requests.generic_request(url, data, access_token=access_token)
+    slack_requests.generic_request(
+        slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE, data, access_token=access_token
+    )
 
 
 @processor()
@@ -946,13 +1070,17 @@ def process_coming_soon(payload, context):
 
 @processor(required_context="u")
 def process_create_task(payload, context):
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    type = context.get("type", None)
+    url = (
+        slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        if type
+        else slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    )
     trigger_id = payload["trigger_id"]
     u = User.objects.get(id=context.get("u"))
     org = u.organization
 
     data = {
-        "trigger_id": trigger_id,
         "view": {
             "type": "modal",
             "callback_id": slack_const.COMMAND_CREATE_TASK,
@@ -969,6 +1097,10 @@ def process_create_task(payload, context):
             "private_metadata": json.dumps(context),
         },
     }
+    if type == "command":
+        data["view_id"] = payload["view"]["id"]
+    else:
+        data["trigger_id"] = trigger_id
     try:
         slack_requests.generic_request(url, data, access_token=org.slack_integration.access_token)
     except InvalidBlocksException as e:
@@ -1331,14 +1463,14 @@ def process_show_cadence_modal(payload, context):
     type = context.get("type", None)
     resource_name = (
         payload["view"]["state"]["values"]["select_existing"][
-            f"{slack_const.GET_USER_ACCOUNTS}?u={u.id}&type=command"
+            f"{slack_const.GET_USER_ACCOUNTS}?u={u.id}&type=command&system=salesloft"
         ]["selected_option"]["text"]["text"]
         if type == "command"
         else context.get("resource_name")
     )
     resource_id = (
         payload["view"]["state"]["values"]["select_existing"][
-            f"{slack_const.GET_USER_ACCOUNTS}?u={u.id}&type=command"
+            f"{slack_const.GET_USER_ACCOUNTS}?u={u.id}&type=command&system=salesloft"
         ]["selected_option"]["value"]
         if type == "command"
         else context.get("resource_id")
@@ -1351,13 +1483,14 @@ def process_show_cadence_modal(payload, context):
 
     org = u.organization
     private_metadata = {
-        "channel_id": meta_data["channel_id"] if type == "command" else payload["channel"]["id"],
-        "slack_id": meta_data["slack_id"] if type == "command" else payload["user"]["id"],
         "resource_name": resource_name,
         "resource_id": resource_id,
         "resource_type": resource_type,
     }
+    if type != "command":
+        private_metadata.update({"channel_id": payload["channel"]["id"]})
     private_metadata.update(context)
+
     data = {
         "trigger_id": trigger_id,
         "view": {
@@ -1406,14 +1539,14 @@ def process_show_sequence_modal(payload, context):
     type = context.get("type", None)
     resource_name = (
         payload["view"]["state"]["values"]["select_existing"][
-            f"{slack_const.GET_USER_ACCOUNTS}?u={u.id}&type=command"
+            f"{slack_const.GET_USER_ACCOUNTS}?u={u.id}&type=command&system=outreach"
         ]["selected_option"]["text"]["text"]
         if type == "command"
         else context.get("resource_name")
     )
     resource_id = (
         payload["view"]["state"]["values"]["select_existing"][
-            f"{slack_const.GET_USER_ACCOUNTS}?u={u.id}&type=command"
+            f"{slack_const.GET_USER_ACCOUNTS}?u={u.id}&type=command&system=outreach"
         ]["selected_option"]["value"]
         if type == "command"
         else context.get("resource_id")
@@ -1426,12 +1559,12 @@ def process_show_sequence_modal(payload, context):
 
     org = u.organization
     private_metadata = {
-        "channel_id": meta_data["channel_id"] if type == "command" else payload["channel"]["id"],
-        "slack_id": meta_data["slack_id"] if type == "command" else payload["user"]["id"],
         "resource_name": resource_name,
         "resource_id": resource_id,
         "resource_type": resource_type,
     }
+    if type != "command":
+        private_metadata.update({"channel_id": payload["channel"]["id"]})
     private_metadata.update(context)
     data = {
         "trigger_id": trigger_id,
@@ -1547,6 +1680,8 @@ def process_get_call_recording(payload, context):
     gong_auth = GongAuthAccount.objects.get(organization=user.organization)
     access_token = user.organization.slack_integration.access_token
     opp = Opportunity.objects.get(id=context.get("resource_id"))
+    if opp:
+        acc = Account.objects.filter(opportunities=opp.id)
     call = GongCall.objects.filter(crm_id=opp.secondary_data["Id"]).first()
     type = context.get("type", None)
     timestamp = datetime.fromtimestamp(float(payload["message"]["ts"]))
@@ -1557,7 +1692,7 @@ def process_get_call_recording(payload, context):
         curr_date_str = curr_date.isoformat() + "T01:00:00" + f"{user_tz[:3]}:{user_tz[3:]}"
         try:
             call_res = gong_auth.helper_class.check_for_current_call(curr_date_str)
-            call_details = generate_call_block(call_res, opp.secondary_data["Id"])
+            call_details = generate_call_block(call_res, [opp.integration_id, acc.integration_id])
             if call_details:
                 blocks = [*call_details]
             else:
@@ -1739,6 +1874,155 @@ def process_send_recap_modal(payload, context):
         )
 
 
+def process_show_engagement_modal(payload, context):
+    system = context.get("system", None)
+    if system == "outreach":
+        process_show_sequence_modal(payload, context)
+    else:
+        process_show_cadence_modal(payload, context)
+
+
+def process_managr_action(payload, context):
+    state = payload["view"]["state"]
+    command_value = state["values"]["select_action"][f"COMMAND_MANAGR_ACTION?u={context.get('u')}"][
+        "selected_option"
+    ]["value"]
+    data = {"view_id": payload["view"]["id"]}
+    data.update(context)
+    get_action(command_value, data)
+    return
+
+
+@processor(required_context="u")
+def process_show_edit_product_form(payload, context):
+    opp_item = OpportunityLineItem.objects.get(id=context.get("opp_item_id"))
+    slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
+    user = slack_account.user
+    blocks = get_block_set(
+        "edit_product_block_set", {"u": str(user.id), "opp_item_id": str(opp_item.id)}
+    )
+
+    data = {
+        "trigger_id": payload["trigger_id"],
+        "view_id": payload["view"]["id"],
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.PROCESS_UPDATE_PRODUCT,
+            "title": {"type": "plain_text", "text": "Edit Product"},
+            "blocks": blocks,
+            "submit": {"type": "plain_text", "text": "Submit"},
+            "private_metadata": json.dumps(context),
+        },
+    }
+    try:
+        slack_requests.generic_request(
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH,
+            data,
+            access_token=user.organization.slack_integration.access_token,
+        )
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Product form with {str(opp_item.id)} email {user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Product form with {str(opp_item.id)} email {user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Product form with {str(opp_item.id)} email {user.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Generate Slack Product form with {str(user.id)} email {user.email} {e}"
+        )
+
+
+def process_add_products_form(payload, context):
+    user = User.objects.get(slack_integration__slack_id=payload["user"]["id"])
+    view = payload["view"]
+    private_metadata = json.loads(view["private_metadata"])
+    product_template = (
+        OrgCustomSlackForm.objects.for_user(user)
+        .filter(Q(resource="OpportunityLineItem", form_type="CREATE"))
+        .first()
+    )
+    product_form = OrgCustomSlackFormInstance.objects.create(template=product_template, user=user)
+    private_metadata.update(
+        {"product_form": str(product_form.id), "view_id": view["id"], "u": str(user.id)}
+    )
+    # currently only for update
+    blocks = []
+    blocks.extend(product_form.generate_form())
+    if len(blocks):
+        data = {
+            "trigger_id": payload["trigger_id"],
+            "view_id": view["id"],
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Add Products Form"},
+                "submit": {"type": "plain_text", "text": "Submit"},
+                "blocks": blocks,
+                "private_metadata": json.dumps(private_metadata),
+                "callback_id": slack_const.PROCESS_SUBMIT_PRODUCT,
+            },
+        }
+        slack_requests.generic_request(
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH,
+            data,
+            access_token=user.organization.slack_integration.access_token,
+        )
+
+
+@processor(required_context="u")
+def process_add_create_form(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    resource_type = payload["view"]["state"]["values"]["ATTACH_RESOURCE_SECTION"][
+        f"COMMAND_FORMS__PROCESS_ADD_CREATE_FORM?u={context.get('u')}"
+    ]["selected_option"]["value"]
+    template = (
+        OrgCustomSlackForm.objects.for_user(user)
+        .filter(Q(resource=resource_type, form_type="CREATE"))
+        .first()
+    )
+    slack_form = OrgCustomSlackFormInstance.objects.create(template=template, user=user,)
+    if slack_form:
+        context = {"resource_type": resource_type, "f": str(slack_form.id), "u": str(user.id)}
+        blocks = get_block_set("create_modal", context,)
+        try:
+            index, block = block_finder("StageName", blocks)
+        except ValueError:
+            # did not find the block
+            block = None
+            pass
+
+        if block:
+            block = {
+                **block,
+                "accessory": {
+                    **block["accessory"],
+                    "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(user.id)}&f={str(slack_form.id)}",
+                },
+            }
+            blocks = [*blocks[:index], block, *blocks[index + 1 :]]
+        access_token = user.organization.slack_integration.access_token
+
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        data = {
+            "view_id": payload["view"]["id"],
+            "view": {
+                "type": "modal",
+                "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
+                "title": {"type": "plain_text", "text": f"Create {resource_type}"},
+                "blocks": blocks,
+                "submit": {"type": "plain_text", "text": "Create", "emoji": True},
+                "external_id": f"create_modal.{str(uuid.uuid4())}",
+            },
+        }
+
+        slack_requests.generic_request(url, data, access_token=access_token)
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -1761,6 +2045,7 @@ def handle_block_actions(payload):
         slack_const.ZOOM_MEETING__MEETING_DETAILS: process_meeting_details,
         slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS: process_show_update_resource_form,
         slack_const.COMMAND_FORMS__STAGE_SELECTED: process_stage_selected_command_form,
+        slack_const.COMMAND_FORMS__PROCESS_ADD_CREATE_FORM: process_add_create_form,
         slack_const.UPDATE_TASK_SELECTED_RESOURCE: process_resource_selected_for_task,
         slack_const.HOME_REQUEST_SLACK_INVITE: process_request_invite_from_home_tab,
         slack_const.RETURN_TO_FORM_MODAL: process_return_to_form_modal,
@@ -1768,12 +2053,15 @@ def handle_block_actions(payload):
         slack_const.PAGINATE_ALERTS: process_paginate_alerts,
         slack_const.ADD_TO_CADENCE_MODAL: process_show_cadence_modal,
         slack_const.ADD_TO_SEQUENCE_MODAL: process_show_sequence_modal,
-        slack_const.GET_USER_ACCOUNTS: process_show_cadence_modal,
+        slack_const.GET_USER_ACCOUNTS: process_show_engagement_modal,
         slack_const.GET_NOTES: process_get_notes,
         slack_const.CALL_ERROR: process_call_error,
         slack_const.GONG_CALL_RECORDING: process_get_call_recording,
         slack_const.MARK_COMPLETE: process_mark_complete,
         slack_const.PROCESS_SEND_RECAP_MODAL: process_send_recap_modal,
+        slack_const.COMMAND_MANAGR_ACTION: process_managr_action,
+        slack_const.PROCESS_SHOW_EDIT_PRODUCT_FORM: process_show_edit_product_form,
+        slack_const.PROCESS_ADD_PRODUCTS_FORM: process_add_products_form,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)

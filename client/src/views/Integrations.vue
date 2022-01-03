@@ -33,7 +33,6 @@
         ></PulseLoadingSpinnerButton>
       </div>
 
-
       <div class="card">
         <img class="card-img" src="@/assets/images/slack.svg" />
         <h3>Slack</h3>
@@ -55,6 +54,27 @@
           class="secondary-button"
           text="Revoke"
           :loading="generatingToken && selectedIntegration == 'SLACK'"
+        ></PulseLoadingSpinnerButton>
+      </div>
+
+       <div class="card">
+        <img class="card-img" src="@/assets/images/zoom_logo.svg" />
+        <h3>Zoom</h3>
+        <p class="card-text">Connect Zoom to sync meeting data with Managr.</p>
+        <PulseLoadingSpinnerButton
+          v-if="!hasZoomIntegration"
+          :disabled="hasZoomIntegration"
+          @click="onGetAuthLink('ZOOM')"
+          class="primary-button"
+          text="Connect"
+          :loading="generatingToken && selectedIntegration == 'ZOOM'"
+        ></PulseLoadingSpinnerButton>
+        <PulseLoadingSpinnerButton
+          text="Revoke"
+          :loading="generatingToken && selectedIntegration == 'ZOOM'"
+          v-else
+          @click="onRevoke('ZOOM')"
+          class="secondary-button"
         ></PulseLoadingSpinnerButton>
       </div>
 

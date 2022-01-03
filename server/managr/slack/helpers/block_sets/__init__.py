@@ -39,6 +39,7 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "schedule_meeting": meeting_review_block_sets.schedule_meeting,
         "add_to_cadence": meeting_review_block_sets.add_to_cadence_block_set,
         "success_modal": common_blocksets.success_modal_block_set,
+        "success_text_modal": common_blocksets.success_text_block_set,
         "home_modal": common_blocksets.home_modal_block_set,
         "home_modal_generic": common_blocksets.home_modal_generic_block_set,
         "hour_options": common_blocksets.hour_options,
@@ -62,5 +63,9 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "select_account": command_views_blocksets.command_select_account_interaction,
         "choose_opportunity": command_views_blocksets.choose_opportunity_block_set,
         "send_recap_block_set": meeting_review_block_sets.send_recap_block_set,
+        "calendar_reminders_blockset": common_blocksets.calendar_reminders_blockset,
+        "actions_block_set": command_views_blocksets.actions_block_set,
+        "current_product_blockset": common_blocksets.current_product_block_set,
+        "edit_product_block_set": common_blocksets.edit_product_block_set,
     }
     return switcher.get(set_name)(context, *args, **kwargs)

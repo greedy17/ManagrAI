@@ -78,7 +78,8 @@ export default {
     color: white;
     background-color: $panther;
     position: relative;
-    width: 30vw;
+    width: 40vw;
+    height: 60vh;
     margin: 50px auto;
     display: flex;
     flex-direction: column;
@@ -108,6 +109,7 @@ export default {
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    height: 60vh;
   }
   &__footer {
     padding: 10px 10px;
