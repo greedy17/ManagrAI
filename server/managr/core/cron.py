@@ -315,9 +315,18 @@ def _send_calendar_details(user_id):
     # processed_data checks to see how many events exists
 
     blocks = [
-        block_builders.header_block("Upcoming Meetings For Today!"),
+        block_builders.header_block("Morning Digest"),
         {"type": "divider"},
+        {
+        "type": "section",
+        "text": 
+            {
+            "type": "mrkdwn",
+            "text": '\033[1m'  + 'Upcoming Meetings'
+            }
+        },
     ]
+
     for event in processed_data:
         meeting_prep(event, user_id)
     meetings = MeetingPrepInstance.objects.filter(user=user.id).filter(
@@ -335,7 +344,7 @@ def _send_calendar_details(user_id):
             slack_requests.send_channel_message(
                 user.slack_integration.channel,
                 user.organization.slack_integration.access_token,
-                text="Calendar: Meetings for Today",
+                text= "Calendar: Meetings for Today",
                 block_set=blocks,
             )
         except Exception as e:
