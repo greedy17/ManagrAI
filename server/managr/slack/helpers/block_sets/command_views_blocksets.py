@@ -48,7 +48,7 @@ def command_select_account_interaction(context):
     return [
         block_builders.external_select(
             f"*Search for an account*",
-            f"{slack_const.GET_USER_ACCOUNTS}?u={str(user.id)}&type={context.get('type')}",
+            f"{slack_const.GET_USER_ACCOUNTS}?u={str(user.id)}&type={context.get('type')}&system={context.get('system')}",
             block_id="select_existing",
             placeholder="Type to search",
         ),
@@ -140,7 +140,7 @@ def alert_instance_block_set(context):
             .first()
             .id
         )
-        message = f"Successfully updated *{form.resource_type}* _{form.resource_object.name}_"
+        message = f":white_check_mark: Successfully updated *{form.resource_type}* _{form.resource_object.name}_"
         blocks = block_sets.get_block_set(
             "success_modal",
             {
@@ -392,3 +392,38 @@ def choose_opportunity_block_set(context):
     ]
     return blocks
 
+
+@block_set(required_context=["u"])
+def actions_block_set(context):
+    user = User.objects.get(id=context.get("u"))
+    user_id = context.get("u")
+    options = []
+    for action in slack_const.MANAGR_ACTIONS:
+        options.append(block_builders.option(action[1], action[0]))
+    if user.outreach_account:
+        options.append(block_builders.option("Add To Sequence", "ADD_SEQUENCE"))
+    if user.salesloft_account:
+        options.append(block_builders.option("Add To Cadence", "ADD_CADENCE"))
+    blocks = [
+        block_builders.static_select(
+            "What would you like to do?",
+            options,
+            f"{slack_const.COMMAND_MANAGR_ACTION}?u={user_id}",
+            block_id="select_action",
+            placeholder="Type to search",
+        )
+    ]
+    return blocks
+
+
+@block_set(required_context=["u"])
+def command_select_resource_interaction(context):
+    user = User.objects.get(id=context.get("u"))
+    return [
+        block_builders.external_select(
+            f"*Search for an account*",
+            f"{slack_const.GET_USER_ACCOUNTS}?u={str(user.id)}&type={context.get('type')}&system={context.get('system')}",
+            block_id="select_existing",
+            placeholder="Type to search",
+        ),
+    ]

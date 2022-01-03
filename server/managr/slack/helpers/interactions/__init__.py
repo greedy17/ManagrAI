@@ -30,3 +30,4 @@ def handle_interaction(payload):
         slack_const.VIEW_CLOSED: handle_view_closed,
     }
     return switcher.get(payload["type"], NO_OP)(payload)
+
