@@ -284,6 +284,9 @@ export default {
       clicked: [],
     }
   },
+  mounted() {
+    console.log(this.templates)
+  },
   async created() {
     this.templates.refresh()
     this.userConfigForm = new UserConfigForm({
@@ -300,7 +303,6 @@ export default {
         (channel) => channel.id === this.zoomChannel,
       )[0].name
     }
-    window.addEventListener('beforeunload', this.showLoader)
   },
   methods: {
     logChannels() {

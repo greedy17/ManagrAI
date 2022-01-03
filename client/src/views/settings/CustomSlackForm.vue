@@ -752,9 +752,17 @@
 
         <div class="example--footer">
           <button
-            v-if="formType !== 'STAGE_GATING'"
+            v-if="formType !== 'STAGE_GATING' && resource !== 'OpportunityLineItem'"
             style="margin-right: 0.5rem; cursor: pointer"
             @click="goBack"
+            class="disabled"
+          >
+            back
+          </button>
+          <button
+            v-if="resource === 'OpportunityLineItem'"
+            style="margin-right: 0.5rem; cursor: pointer"
+            @click="goToUpdateOpp"
             class="disabled"
           >
             back
