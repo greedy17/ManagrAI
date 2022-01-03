@@ -350,7 +350,7 @@
           </h4>
           <h4
             style="margin-top: -0.5rem"
-            v-else-if="user.activatedManagrConfigs.includes('Close Date Approaching')"
+            v-else-if="user.activatedManagrConfigs.includes('Next Step Due')"
           >
             Activated
           </h4>

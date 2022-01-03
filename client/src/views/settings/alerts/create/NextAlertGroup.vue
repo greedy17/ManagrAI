@@ -19,11 +19,21 @@
         v-for="(alertOperand, i) in form.field.alertOperands.groups"
         class="alert-group-row__operands__row rows"
       >
-        <NextAlertOperandRow
-          @remove-operand="onRemoveOperand(i)"
-          :resourceType="resourceType"
-          :form.sync="alertOperand"
-        />
+        <div :class="i > 0 ? 'visible' : ''">
+          <NextAlertOperandRow
+            @remove-operand="onRemoveOperand(i)"
+            :resourceType="resourceType"
+            :form.sync="alertOperand"
+          />
+        </div>
+
+        <!-- <div v-else>
+           <NextAlertOperandRow
+            @remove-operand="onRemoveOperand(i)"
+            :resourceType="resourceType"
+            :form.sync="alertOperand"
+          /> -->
+        </div>
 
         <!-- <div class="add__remove" v-if="form.field.alertOperands.groups.length > 1">
           <button
@@ -83,7 +93,6 @@ export default {
   data() {
     return {}
   },
-  watch: {},
   async created() {},
   methods: {
     addOperandForm() {
@@ -134,6 +143,10 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
+.visible {
+  visibility: hidden;
+  max-height: 1rem;
+}
 .btn {
   &--danger {
     @include button-danger();
