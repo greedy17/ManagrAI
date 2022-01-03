@@ -121,8 +121,6 @@ def _process_calendar_details(user_id):
     user = User.objects.get(id=user_id)
     events = user.nylas._get_calendar_data()
     processed_data = []
-    # print(events, "This is events")
-    # print(len(events), "events")
     for event in events:
         data = {}
         data["title"] = event.get("title", None)
@@ -330,12 +328,24 @@ def _send_calendar_details(user_id):
     meetings = MeetingPrepInstance.objects.filter(user=user.id).filter(invocation=invocation)
     for meeting in meetings:
         blocks = [
-            *blocks,
-            *block_sets.get_block_set("calendar_reminders_blockset", {"prep_id": str(meeting.id)}),
+            block_builders.header_block("Upcoming Meetings For Today!"),
             {"type": "divider"},
         ]
-    # Loop thru processed_data and create block for each one
-    if len(meetings):
+        for event in processed_data:
+            meeting_prep(event, user_id)
+        meetings = MeetingPrepInstance.objects.filter(user=user.id).filter(
+            datetime_created__gt=datetime.date.today()
+        )
+
+        for meeting in meetings:
+            blocks = [
+                *blocks,
+                *block_sets.get_block_set(
+                    "calendar_reminders_blockset", {"prep_id": str(meeting.id), "u": str(user.id)}
+                ),
+                {"type": "divider"},
+            ]
+        # Loop thru processed_data and create block for each one
         try:
             slack_requests.send_channel_message(
                 user.slack_integration.channel,
@@ -345,6 +355,8 @@ def _send_calendar_details(user_id):
             )
         except Exception as e:
             logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
+    else:
+        logger.info(f"No meeting for {user.email}")
 
 
 def _generate_notification_key_lapsed(num):

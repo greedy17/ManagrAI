@@ -167,6 +167,7 @@ class OrgCustomSlackForm(TimeStampModel):
     config = JSONField(
         default=dict,
         help_text="The configuration object for this organization's custom Slack form.",
+        blank=True,
     )
     stage = models.CharField(
         max_length=255,

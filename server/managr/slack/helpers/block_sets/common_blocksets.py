@@ -1,4 +1,5 @@
 import pdb
+from urllib.parse import urlencode
 import pytz
 import uuid
 import logging
@@ -11,7 +12,7 @@ from django.db.models import Q
 from managr.utils.sites import get_site_url
 from managr.core.models import User, Notification
 from managr.opportunity.models import Opportunity, Lead
-from managr.organization.models import Account
+from managr.organization.models import Account, OpportunityLineItem
 from managr.zoom.models import ZoomMeeting
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce import constants as sf_consts
@@ -388,24 +389,17 @@ def meeting_reminder_block_set(context):
 @block_set()
 def calendar_reminders_blockset(context):
     meeting = MeetingPrepInstance.objects.get(id=context.get("prep_id"))
+    user = User.objects.get(id=context.get("u"))
     data = meeting.event_data
     title = data["title"]
     unix_start_time = data["times"]["start_time"]
-    unix_end_time = data["times"]["end_time"]
-    gmt_start_time = datetime.utcfromtimestamp(int(unix_start_time)).strftime("%H:%M")
-    gmt = pytz.timezone("GMT")
-    eastern = pytz.timezone(meeting.user.timezone)
+    utc_time = datetime.utcfromtimestamp(int(unix_start_time))
+    tz = pytz.timezone(user.timezone)
+    local_start = utc_time.astimezone(tz).strftime("%I:%M")
 
-    s = datetime.strptime(gmt_start_time, "%H:%M")
-    date_gmt = gmt.localize(s)
+    am_or_pm = utc_time.astimezone(tz).strftime("%p")
 
-    date_eastern = date_gmt.astimezone(eastern)
-    local_start_time = date_eastern.strftime("%r").strip("00").removesuffix(":00")
-    am_or_pm = date_eastern.strftime("%p")
-    short_local_start_time = local_start_time[:-6]
-    start_time = short_local_start_time + " " + am_or_pm
-    python_end_time = datetime.utcfromtimestamp(unix_end_time).strftime("%H:%M")
-    s = datetime.strptime(python_end_time, "%H:%M")
+    start_time = local_start + " " + am_or_pm
     type = "prep" if meeting.resource_type is None else meeting.resource_type
     if type == "Opportunity":
         resource = Opportunity.objects.get(id=meeting.resource_id)
@@ -425,11 +419,11 @@ def calendar_reminders_blockset(context):
             ),
         ),
     ]
-    if type and type is not "prep":
+    if type and type != "prep":
         blocks.append(
             block_builders.section_with_button_block(
                 "Change Opportunity",
-                section_text=f"We mapped this meeting to: {type} {resource.name}",
+                section_text=f"We mapped this meeting to: *{type} {resource.name}*",
                 button_value=f"type%{str(meeting.id)}",
                 block_id=f"type%{str(meeting.id)}",
                 action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
@@ -471,5 +465,39 @@ def morning_digest_blockset(context):
 
     # Tasks with pagination
     # Alerts with run button
+
+
+def current_product_block_set(context):
+    opp_item = OpportunityLineItem.objects.get(id=context.get("opp_item_id"))
+    text = f"{opp_item.product.name}\nQuantity: {opp_item.quantity}\nTotal Price: {opp_item.total_price}"
+    blocks = block_builders.section_with_button_block(
+        "Edit Product",
+        "EDIT_PRODUCT",
+        text,
+        action_id=action_with_params(
+            slack_const.PROCESS_SHOW_EDIT_PRODUCT_FORM,
+            params=[
+                f"opp_item_id={str(opp_item.id)}",
+                f"u={context.get('u')}",
+                f"main_form={context.get('main_form')}",
+            ],
+        ),
+    )
     return blocks
+
+
+@block_set()
+def edit_product_block_set(context):
+    opp_item = OpportunityLineItem.objects.get(id=context.get("opp_item_id"))
+    user = User.objects.get(id=context.get("u"))
+    template = (
+        OrgCustomSlackForm.objects.for_user(user)
+        .filter(Q(resource="OpportunityLineItem", form_type="CREATE"))
+        .first()
+    )
+    slack_form = OrgCustomSlackFormInstance.objects.create(
+        template=template, resource_id=str(opp_item.id), user=user
+    )
+    form_blocks = slack_form.generate_form(opp_item.secondary_data)
+    return [*form_blocks]
 

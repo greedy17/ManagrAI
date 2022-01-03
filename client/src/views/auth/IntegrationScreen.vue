@@ -13,7 +13,7 @@
           "
           style="font-weight: bold; margin-top: -0.5rem; color: #5d5e5e"
         >
-          Managr utilizes a secure oAuth connection
+          Connect Managr to your favorite apps
         </p>
         <p v-else style="font-weight: bold; margin-top: -0.5rem; color: #5d5e5e">
           <span style="font-weight: 900">Step 1/2: </span> Connect all four apps
@@ -275,7 +275,7 @@
       <div style="text-align: center; margin-bottom: 3rem">
         <h2 class="title">Welcome to Managr!</h2>
         <p style="font-weight: bold; margin-top: -0.5rem; color: #5d5e5e">
-          Managr utilizes a secure oAuth connection
+          Connect Managr to your favorite apps
         </p>
       </div>
 
@@ -840,7 +840,6 @@ export default {
   },
   mounted() {
     console.log(this.user)
-    console.log(this.templates)
   },
 }
 </script>

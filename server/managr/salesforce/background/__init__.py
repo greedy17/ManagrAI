@@ -20,7 +20,7 @@ from managr.api.decorators import log_all_exceptions, sf_api_exceptions_wf
 from managr.api.emails import send_html_email
 
 from managr.core.models import User
-from managr.organization.models import Account, Stage, Contact, Organization
+from managr.organization.models import Account, Stage, Contact, Organization, PricebookEntry
 from managr.organization.serializers import AccountSerializer, StageSerializer
 from managr.opportunity.models import Opportunity, Lead
 from managr.opportunity.serializers import OpportunitySerializer
@@ -48,7 +48,13 @@ from ..serializers import (
     SObjectValidationSerializer,
     SObjectPicklistSerializer,
 )
-from ..adapter.models import AccountAdapter, OpportunityAdapter, ActivityAdapter, ContactAdapter
+from ..adapter.models import (
+    AccountAdapter,
+    OpportunityAdapter,
+    ActivityAdapter,
+    ContactAdapter,
+    OpportunityLineItemAdapter,
+)
 from ..adapter.exceptions import (
     TokenExpired,
     FieldValidationError,
@@ -113,6 +119,10 @@ def emit_sf_update_resource_from_meeting(workflow_id, *args):
     return _process_update_resource_from_meeting(workflow_id, *args)
 
 
+def emit_add_products_to_sf(workflow_id, *args):
+    return _process_add_products_to_sf(workflow_id, *args)
+
+
 def emit_generate_form_template(user_id):
     return _generate_form_template(user_id)
 
@@ -132,7 +142,6 @@ def _process_gen_next_sync(user_id, operations_list):
     user = User.objects.filter(id=user_id).first()
     if not user:
         return logger.exception(f"User not found sync operation not created {user_id}")
-
     return SFResourceSync.objects.create(
         user=user,
         operations_list=operations_list,
@@ -246,7 +255,6 @@ def _process_sobject_fields_sync(user_id, sync_id, resource):
     user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
     if not hasattr(user, "salesforce_account"):
         return
-
     attempts = 1
     while True:
         sf = user.salesforce_account
@@ -468,7 +476,81 @@ def _process_update_resource_from_meeting(workflow_id, *args):
     return res
 
 
-# @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
+@background(
+    schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
+)
+@sf_api_exceptions_wf("add_call_log")
+def _process_add_products_to_sf(workflow_id, non_meeting=False, *args):
+    if non_meeting:
+        product_form = OrgCustomSlackFormInstance.objects.get(id=workflow_id)
+        opp = Opportunity.objects.get(id=product_form.resource_id)
+        user = product_form.user
+    # get workflow
+    else:
+        workflow = MeetingWorkflow.objects.get(id=workflow_id)
+        update_forms = workflow.forms.filter(
+            template__form_type__in=[
+                slack_consts.FORM_TYPE_UPDATE,
+                slack_consts.FORM_TYPE_STAGE_GATING,
+            ]
+        ).first()
+        opp = Opportunity.objects.get(id=update_forms.resource_id)
+        user = workflow.user
+        product_form = workflow.forms.filter(template__resource="OpportunityLineItem").first()
+    entry = PricebookEntry.objects.get(integration_id=product_form.saved_data["PricebookEntryId"])
+    update_form_ids = []
+    # aggregate the data
+    data = dict(OpportunityId=opp.integration_id, UnitPrice=entry.unit_price)
+    update_form_ids.append(str(product_form.id))
+    data = {**data, **product_form.saved_data}
+    sf = user.salesforce_account
+    adapter = sf.adapter_class
+
+    attempts = 1
+    while True:
+        sf = user.salesforce_account
+        try:
+            res = OpportunityLineItemAdapter.create(
+                data,
+                sf.access_token,
+                sf.instance_url,
+                adapter.object_fields.get("OpportunityLineItem", {}),
+                user.id,
+            )
+            attempts = 1
+            product_form.is_submitted = True
+            product_form.submission_date = timezone.now()
+            if non_meeting:
+                product_form.save()
+            else:
+                workflow.save()
+            break
+        except TokenExpired as e:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to update resource from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+                )
+            else:
+                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                time.sleep(sleep)
+                sf.regenerate_token()
+                attempts += 1
+        except UnableToUnlockRow as e:
+            if attempts >= 5:
+                logger.exception(
+                    f"Failed to update resource from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+                )
+                raise e
+            else:
+                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                time.sleep(sleep)
+                attempts += 1
+        except Exception as e:
+            raise e
+    return res
+
+
+@background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
 @sf_api_exceptions_wf("add_call_log")
 def _process_add_call_to_sf(workflow_id, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
@@ -481,8 +563,6 @@ def _process_add_call_to_sf(workflow_id, *args):
     user_timezone = user.zoom_account.timezone
     start_time = workflow.meeting.start_time
     end_time = workflow.meeting.end_time
-    print("Here")
-    print(review_form.update_source)
     formatted_start = (
         datetime.strftime(
             start_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p"
@@ -502,7 +582,7 @@ def _process_add_call_to_sf(workflow_id, *args):
         WhatId=workflow.resource.integration_id,
         ActivityDate=workflow.meeting.start_time.strftime("%Y-%m-%d"),
         Status="Completed",
-        TaskSubType="Call",
+        TaskSubType="Task",
     )
     attempts = 1
     while True:
@@ -552,7 +632,6 @@ def _process_add_update_to_sf(form_id, *args):
         return logger.exception(f"User not found unable to log call {str(user.id)}")
     if not hasattr(user, "salesforce_account"):
         return logger.exception("User does not have a salesforce account cannot push to sf")
-    print("here")
     start_time = form.submission_date
     data = dict(
         Subject=f"{form.saved_data.get('meeting_type')}",

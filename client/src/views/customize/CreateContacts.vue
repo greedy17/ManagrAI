@@ -5,7 +5,7 @@
         Create <span>Contacts</span>
       </h2>
       <p style="color: #5d5e5e; margin-top: -0.5rem">
-        Map the opportunity fields you’d like to update
+        Select the Fields you’d like to display when creating Contacts via Slack
       </p>
     </div>
     <!-- <div style="text-align: center">
@@ -275,7 +275,7 @@ export default {
 @import '@/styles/variables';
 
 .update_opportunity {
-  margin-top: 4rem;
+  margin-top: 2rem;
   color: white;
 }
 

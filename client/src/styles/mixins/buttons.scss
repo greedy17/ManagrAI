@@ -71,8 +71,8 @@
 
 @mixin disabled-button-styles() {
   &:disabled {
-    background-color: $light-gray-blue;
-    color: $dark-gray-blue;
+    background-color: $panther-silver;
+    color: $panther-gray;
 
     &:hover {
       background-color: $light-gray-blue;
