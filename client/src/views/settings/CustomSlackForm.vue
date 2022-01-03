@@ -197,158 +197,231 @@
         </div>
 
         <div v-if="resource === 'Contact'">
-          <div v-if="!addedFieldNames.includes('LastName')" class="centered field-border">
-            <p style="margin-left: 0.5rem; font-weight: bold">
-              Last Name <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
-            </p>
+          <div v-if="formType === 'CREATE'">
+            <div v-if="!addedFieldNames.includes('LastName')" class="centered field-border">
+              <p style="margin-left: 0.5rem; font-weight: bold">
+                Last Name <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+              </p>
 
-            <img
-              src="@/assets/images/unlinked.png"
-              alt=""
-              style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-            />
+              <img
+                src="@/assets/images/unlinked.png"
+                alt=""
+                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+              />
 
-            <DropDownSearch
-              v-if="!addedFieldNames.includes('LastName')"
-              :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-              displayKey="referenceDisplayLabel"
-              valueKey="apiName"
-              nullDisplay="Search fields"
-              searchable
-              :loading="formFields.loadingNextPage"
-              :hasNext="!!formFields.pagination.hasNextPage"
-              v-model="lastNameValue"
-              @load-more="onFieldsNextPage"
-              @search-term="onSearchFields"
-              @input="
-                (e) => {
-                  onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+              <DropDownSearch
+                v-if="!addedFieldNames.includes('LastName')"
+                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+                displayKey="referenceDisplayLabel"
+                valueKey="apiName"
+                nullDisplay="Search fields"
+                searchable
+                :loading="formFields.loadingNextPage"
+                :hasNext="!!formFields.pagination.hasNextPage"
+                v-model="lastNameValue"
+                @load-more="onFieldsNextPage"
+                @search-term="onSearchFields"
+                @input="
+                  (e) => {
+                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+                  }
+                "
+              />
+            </div>
+          </div>
+
+          <div
+            v-else-if="!addingFields && formType === 'UPDATE'"
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              flex-direction: column;
+              margin-top: 0.5rem;
+            "
+          >
+            <button
+              @click="
+                () => {
+                  addingFields = !addingFields
                 }
               "
-            />
+              class="default_button"
+            >
+              Add Fields
+            </button>
           </div>
         </div>
+
         <div v-if="resource === 'Lead'">
-          <div v-if="!addedFieldNames.includes('LastName')" class="centered field-border">
-            <p style="margin-left: 0.5rem; font-weight: bold">
-              Last Name<span style="color: #fa646a; font-size: 0.75rem"> (required)</span>
-            </p>
+          <div v-if="formType === 'CREATE'">
+            <div v-if="!addedFieldNames.includes('LastName')" class="centered field-border">
+              <p style="margin-left: 0.5rem; font-weight: bold">
+                Last Name<span style="color: #fa646a; font-size: 0.75rem"> (required)</span>
+              </p>
 
-            <img
-              src="@/assets/images/unlinked.png"
-              alt=""
-              style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-            />
+              <img
+                src="@/assets/images/unlinked.png"
+                alt=""
+                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+              />
 
-            <DropDownSearch
-              v-if="!addedFieldNames.includes('LastName')"
-              :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-              displayKey="referenceDisplayLabel"
-              valueKey="apiName"
-              nullDisplay="Search fields"
-              searchable
-              :loading="formFields.loadingNextPage"
-              :hasNext="!!formFields.pagination.hasNextPage"
-              v-model="leadLastNameValue"
-              @load-more="onFieldsNextPage"
-              @search-term="onSearchFields"
-              @input="
-                (e) => {
-                  onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
-                }
-              "
-            />
+              <DropDownSearch
+                v-if="!addedFieldNames.includes('LastName')"
+                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+                displayKey="referenceDisplayLabel"
+                valueKey="apiName"
+                nullDisplay="Search fields"
+                searchable
+                :loading="formFields.loadingNextPage"
+                :hasNext="!!formFields.pagination.hasNextPage"
+                v-model="leadLastNameValue"
+                @load-more="onFieldsNextPage"
+                @search-term="onSearchFields"
+                @input="
+                  (e) => {
+                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+                  }
+                "
+              />
+            </div>
+            <div v-if="!addedFieldNames.includes('Company')" class="centered field-border">
+              <p style="margin-left: 0.5rem; font-weight: bold">
+                Company<span style="color: #fa646a; font-size: 0.75rem"> (required)</span>
+              </p>
+
+              <img
+                src="@/assets/images/unlinked.png"
+                alt=""
+                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+              />
+
+              <DropDownSearch
+                v-if="!addedFieldNames.includes('company')"
+                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+                displayKey="referenceDisplayLabel"
+                valueKey="apiName"
+                nullDisplay="Search fields"
+                searchable
+                :loading="formFields.loadingNextPage"
+                :hasNext="!!formFields.pagination.hasNextPage"
+                v-model="companyValue"
+                @load-more="onFieldsNextPage"
+                @search-term="onSearchFields"
+                @input="
+                  (e) => {
+                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+                  }
+                "
+              />
+            </div>
+            <div v-if="!addedFieldNames.includes('Status')" class="centered field-border">
+              <p style="margin-left: 0.5rem; font-weight: bold">
+                Status<span style="color: #fa646a; font-size: 0.75rem"> (required)</span>
+              </p>
+
+              <img
+                src="@/assets/images/unlinked.png"
+                alt=""
+                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+              />
+
+              <DropDownSearch
+                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+                displayKey="referenceDisplayLabel"
+                valueKey="apiName"
+                nullDisplay="Search fields"
+                searchable
+                :loading="formFields.loadingNextPage"
+                :hasNext="!!formFields.pagination.hasNextPage"
+                v-model="statusValue"
+                @load-more="onFieldsNextPage"
+                @search-term="onSearchFields"
+                @input="
+                  (e) => {
+                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+                  }
+                "
+              />
+            </div>
           </div>
-          <div v-if="!addedFieldNames.includes('Company')" class="centered field-border">
-            <p style="margin-left: 0.5rem; font-weight: bold">
-              Company<span style="color: #fa646a; font-size: 0.75rem"> (required)</span>
-            </p>
 
-            <img
-              src="@/assets/images/unlinked.png"
-              alt=""
-              style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-            />
-
-            <DropDownSearch
-              v-if="!addedFieldNames.includes('company')"
-              :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-              displayKey="referenceDisplayLabel"
-              valueKey="apiName"
-              nullDisplay="Search fields"
-              searchable
-              :loading="formFields.loadingNextPage"
-              :hasNext="!!formFields.pagination.hasNextPage"
-              v-model="companyValue"
-              @load-more="onFieldsNextPage"
-              @search-term="onSearchFields"
-              @input="
-                (e) => {
-                  onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+          <div
+            v-else-if="!addingFields && formType === 'UPDATE'"
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              flex-direction: column;
+              margin-top: 0.5rem;
+            "
+          >
+            <button
+              @click="
+                () => {
+                  addingFields = !addingFields
                 }
               "
-            />
-          </div>
-          <div v-if="!addedFieldNames.includes('Status')" class="centered field-border">
-            <p style="margin-left: 0.5rem; font-weight: bold">
-              Status<span style="color: #fa646a; font-size: 0.75rem"> (required)</span>
-            </p>
-
-            <img
-              src="@/assets/images/unlinked.png"
-              alt=""
-              style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-            />
-
-            <DropDownSearch
-              :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-              displayKey="referenceDisplayLabel"
-              valueKey="apiName"
-              nullDisplay="Search fields"
-              searchable
-              :loading="formFields.loadingNextPage"
-              :hasNext="!!formFields.pagination.hasNextPage"
-              v-model="statusValue"
-              @load-more="onFieldsNextPage"
-              @search-term="onSearchFields"
-              @input="
-                (e) => {
-                  onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
-                }
-              "
-            />
+              class="default_button"
+            >
+              Add Fields
+            </button>
           </div>
         </div>
 
         <div v-if="resource === 'Account'">
-          <div v-if="!addedFieldNames.includes('Name')" class="centered field-border">
-            <p style="margin-left: 0.5rem; font-weight: bold">
-              Account Name <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
-            </p>
+          <div v-if="formType === 'CREATE'">
+            <div v-if="!addedFieldNames.includes('Name')" class="centered field-border">
+              <p style="margin-left: 0.5rem; font-weight: bold">
+                Account Name <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+              </p>
 
-            <img
-              src="@/assets/images/unlinked.png"
-              alt=""
-              style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-            />
+              <img
+                src="@/assets/images/unlinked.png"
+                alt=""
+                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+              />
 
-            <DropDownSearch
-              :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-              displayKey="referenceDisplayLabel"
-              valueKey="apiName"
-              nullDisplay="Search fields"
-              searchable
-              :loading="formFields.loadingNextPage"
-              :hasNext="!!formFields.pagination.hasNextPage"
-              v-model="accountNameValue"
-              @load-more="onFieldsNextPage"
-              @search-term="onSearchFields"
-              @input="
-                (e) => {
-                  onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+              <DropDownSearch
+                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+                displayKey="referenceDisplayLabel"
+                valueKey="apiName"
+                nullDisplay="Search fields"
+                searchable
+                :loading="formFields.loadingNextPage"
+                :hasNext="!!formFields.pagination.hasNextPage"
+                v-model="accountNameValue"
+                @load-more="onFieldsNextPage"
+                @search-term="onSearchFields"
+                @input="
+                  (e) => {
+                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+                  }
+                "
+              />
+            </div>
+          </div>
+
+          <div
+            v-else-if="!addingFields && formType === 'UPDATE'"
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              flex-direction: column;
+              margin-top: 0.5rem;
+            "
+          >
+            <button
+              @click="
+                () => {
+                  addingFields = !addingFields
                 }
               "
-            />
+              class="default_button"
+            >
+              Add Fields
+            </button>
           </div>
         </div>
 
@@ -492,6 +565,28 @@
 
             <div v-if="productSelected">Add products on the next page</div>
           </div>
+
+          <!-- <div
+            v-else-if="!addingFields && formType === 'UPDATE'"
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              flex-direction: column;
+              margin-top: 0.5rem;
+            "
+          >
+            <button
+              @click="
+                () => {
+                  addingFields = !addingFields
+                }
+              "
+              class="default_button"
+            >
+              Add Fields
+            </button>
+          </div> -->
         </div>
 
         <draggable
@@ -565,6 +660,8 @@
             class="recommendations"
           >
             <p>Amount,</p>
+            &nbsp;
+            <p>Account,</p>
             &nbsp;
             <p>Forecast Category,</p>
             &nbsp;
@@ -640,7 +737,10 @@
           style="display: flex; align-items: center; justify-content: center"
         >
           <button
-            v-if="requiredOpportunityFields.every((i) => addedFieldNames.includes(i))"
+            v-if="
+              requiredOpportunityFields.every((i) => addedFieldNames.includes(i)) &&
+              formType === 'CREATE'
+            "
             @click="
               () => {
                 addingFields = !addingFields
@@ -654,7 +754,10 @@
 
         <div
           v-else-if="
-            resource === 'Contact' && !addingFields && addedFieldNames.includes('LastName')
+            resource === 'Contact' &&
+            !addingFields &&
+            addedFieldNames.includes('LastName') &&
+            formType === 'CREATE'
           "
           style="
             display: flex;
@@ -706,7 +809,9 @@
 
         <div
           v-else-if="
-            resource === 'Lead' && requiredLeadFields.every((i) => addedFieldNames.includes(i))
+            resource === 'Lead' &&
+            requiredLeadFields.every((i) => addedFieldNames.includes(i)) &&
+            formType === 'CREATE'
           "
           style="
             display: flex;
@@ -729,7 +834,12 @@
         </div>
 
         <div
-          v-else-if="resource === 'Account' && !addingFields && addedFieldNames.includes('Name')"
+          v-else-if="
+            resource === 'Account' &&
+            !addingFields &&
+            addedFieldNames.includes('Name') &&
+            formType === 'CREATE'
+          "
           style="
             display: flex;
             align-items: center;
@@ -752,7 +862,25 @@
 
         <div class="example--footer">
           <button
-            v-if="formType !== 'STAGE_GATING' && resource !== 'OpportunityLineItem'"
+            v-if="
+              formType !== 'STAGE_GATING' &&
+              resource !== 'OpportunityLineItem' &&
+              !(
+                (formType === 'UPDATE' && resource === 'Opportunity') ||
+                (formType === 'CREATE' && resource === 'Contact')
+              )
+            "
+            style="margin-right: 0.5rem; cursor: pointer"
+            @click="goToOptional"
+            class="disabled"
+          >
+            back
+          </button>
+          <button
+            v-if="
+              (formType === 'UPDATE' && resource === 'Opportunity') ||
+              (formType === 'CREATE' && resource === 'Contact')
+            "
             style="margin-right: 0.5rem; cursor: pointer"
             @click="goBack"
             class="disabled"
@@ -1358,6 +1486,9 @@ export default {
     },
     goBack() {
       this.$router.push({ name: 'Required' })
+    },
+    goToOptional() {
+      this.$router.push({ name: 'Custom' })
     },
     goToCustomize() {
       this.$router.push({ name: 'CustomizeLandingPage' })
