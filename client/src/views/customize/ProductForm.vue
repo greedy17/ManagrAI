@@ -11,15 +11,17 @@
       <CustomSlackForm
         :show-validations="showValidations"
         :formType="CREATE"
-        :customForm="{
-          config: {},
-          fields: [],
-          fields_ref: [],
-          form_type: 'CREATE',
-          organization: '',
-          resource: 'OpportunityLineItem',
-          stage: '',
-        }"
+        :customForm="
+          (this.selectedForm = {
+            config: {},
+            fields: [],
+            fields_ref: [],
+            form_type: 'CREATE',
+            organization: '',
+            resource: 'OpportunityLineItem',
+            stage: '',
+          })
+        "
         :resource="OPPORTUNITYLINEITEM"
         v-on:update:selectedForm="updateForm($event)"
         :loading="formFields.refreshing"
