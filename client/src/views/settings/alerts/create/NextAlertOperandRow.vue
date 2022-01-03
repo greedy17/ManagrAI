@@ -1,12 +1,12 @@
 <template>
   <div>
     <div>
-      <FormField :errors="form.field.operandIdentifier.errors">
+      <FormField>
         <template v-slot:input>
           <DropDownSearch
             :items="objectFields.list"
             :itemsRef.sync="form.field._operandIdentifier.value"
-            v-model="form.field.operandIdentifier.value"
+            v-model="identity"
             displayKey="referenceDisplayLabel"
             valueKey="apiName"
             nullDisplay="Search SFDC fields"
@@ -20,14 +20,33 @@
       </FormField>
     </div>
 
-    <!-- <div class="alert-operand-row__value">
+    <div class="alert-operand-row__value visible">
+      <FormField
+        v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'"
+        :errors="form.field.operandValue.errors"
+      >
+        <template v-slot:input>
+          <DropDownSearch
+            :items.sync="picklistOpts"
+            :itemsRef.sync="form.field._operandValue.value"
+            v-model="form.field.operandValue.value"
+            displayKey="label"
+            valueKey="value"
+            nullDisplay="Select a value"
+            searchable
+            local
+            v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'"
+          />
+        </template>
+      </FormField>
+      <template v-else>
         <FormField
-          v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'"
+          v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'"
           :errors="form.field.operandValue.errors"
         >
           <template v-slot:input>
             <DropDownSearch
-              :items.sync="picklistOpts"
+              :items.sync="valueOpts"
               :itemsRef.sync="form.field._operandValue.value"
               v-model="form.field.operandValue.value"
               displayKey="label"
@@ -35,72 +54,49 @@
               nullDisplay="Select a value"
               searchable
               local
-              v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'"
+              v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'"
             />
           </template>
         </FormField>
-        <template v-else>
+        <div v-else>
           <FormField
-            v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'"
+            @blur="form.field.operandValue.validate()"
             :errors="form.field.operandValue.errors"
-          >
-            <template v-slot:input>
-              <DropDownSearch
-                :items.sync="valueOpts"
-                :itemsRef.sync="form.field._operandValue.value"
-                v-model="form.field.operandValue.value"
-                displayKey="label"
-                valueKey="value"
-                nullDisplay="Select a value"
-                searchable
-                local
-                v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'"
+            v-model="form.field.operandValue.value"
+            :inputType="getInputType(form.field._operandIdentifier.value)"
+            large
+            bordered
+            placeholder="Enter a value"
+            v-if="!(selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME')"
+          />
+          <!-- <div v-if="selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME'" class="column">
+            <span class="row"
+              ><input
+                @click="setOperandDateValue(5)"
+                type="radio"
+                id="Approaching"
+                value="5"
+                v-model="operandDate"
               />
-            </template>
-          </FormField>
-          <div v-else>
-            <FormField
-              @blur="form.field.operandValue.validate()"
-              :errors="form.field.operandValue.errors"
-              v-model="form.field.operandValue.value"
-              :inputType="getInputType(form.field._operandIdentifier.value)"
-              large
-              bordered
-              placeholder="Enter a value"
-              v-if="!(selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME')"
-            />
-            <div
-              v-if="selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME'"
-              class="column"
-            >
-    
-              <span class="row"
-                ><input
-                  @click="setOperandDateValue(5)"
-                  type="radio"
-                  id="Approaching"
-                  value="5"
-                  v-model="operandDate"
-                />
-                <label for="Approaching"
-                  >{{ form.field.operandIdentifier.value }} is approaching.</label
-                >
-              </span>
+              <label for="Approaching"
+                >{{ form.field.operandIdentifier.value }} is approaching.</label
+              >
+            </span>
 
-              <span class="row"
-                ><input
-                  @click="setOperandDateValue(-1)"
-                  type="radio"
-                  id="passed"
-                  value="-1"
-                  v-model="operandDate"
-                />
-                <label for="passed">{{ form.field.operandIdentifier.value }} has passed.</label>
-              </span>
-            </div>
-          </div>
-        </template>
-      </div> -->
+            <span class="row"
+              ><input
+                @click="setOperandDateValue(-1)"
+                type="radio"
+                id="passed"
+                value="-1"
+                v-model="operandDate"
+              />
+              <label for="passed">{{ form.field.operandIdentifier.value }} has passed.</label>
+            </span>
+          </div> -->
+        </div>
+      </template>
+    </div>
   </div>
 </template>
 
@@ -118,7 +114,7 @@ import DropDownSearch from '@/components/DropDownSearch'
 /**
  * Services
  */
-import { AlertOperandForm } from '@/services/alerts/'
+import { AlertOperandForm, AlertGroupForm } from '@/services/alerts/'
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
 import {
   SObjectField,
@@ -162,8 +158,8 @@ export default {
       selectedOperandValueRef: null,
       picklistOpts: [],
       operandDate: '',
+      identity: '',
       NON_FIELD_ALERT_OPTS,
-
       intOpts: [
         { label: '>= (Greater or Equal)', value: '>=' },
         { label: '<= (Less or Equal)', value: '<=' },
@@ -216,6 +212,12 @@ export default {
         }
         this.objectFields.refresh()
       },
+    },
+    identity: function () {
+      this.form.field.operandIdentifier.value = this.identity
+      this.form.field._operandIdentifier.value = this.objectFields.list.filter(
+        (item) => item.apiName === this.identity,
+      )[0]
     },
   },
   async created() {
@@ -332,11 +334,11 @@ export default {
     if (this.form.field.operandOrder.value === 1) {
       this.form.field.operandOperator.value = '<='
       this.form.field._operandOperator.value = { label: '<= (Less or Equal)', value: '<=' }
-      this.form.field.operandValue.value = 5
+      this.form.field.operandValue.value = '5'
     } else if (this.form.field.operandOrder.value === 0) {
       this.form.field.operandOperator.value = '>'
       this.form.field._operandOperator.value = { label: '> (Greater)', value: '>' }
-      this.form.field.operandValue.value = 0
+      this.form.field.operandValue.value = '0'
     }
   },
 }
@@ -352,6 +354,10 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
+
+.visible {
+  visibility: hidden;
+}
 .btn {
   &--danger {
     @include button-danger();

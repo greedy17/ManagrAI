@@ -13,167 +13,180 @@
       </h2>
     </div>
 
-    <div style="margin-top: 4rem" v-if="pageNumber === 0" class="alert__column">
+    <div style="margin-top: 4rem" class="alert__column">
       <template>
-        <div
-          class="forecast__collection"
-          :key="i"
-          v-for="(form, i) in alertTemplateForm.field.alertConfig.groups"
-        >
+        <div class="forecast__collection">
           <div
-            style="margin-top: 1rem; margin-left: 0.5rem"
-            v-if="userLevel == 'MANAGER'"
             class="delivery__row"
+            :key="index"
+            v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
           >
-            <span style="margin-bottom: 0.5rem">Select Users</span>
+            <span style="margin-bottom: 0.5rem">Select Next Step Date</span>
+            <NextAlertGroup
+              :form="alertGroup"
+              :resourceType="alertTemplateForm.field.resourceType.value"
+            />
 
-            <FormField :errors="form.field.alertTargets.errors">
-              <template v-slot:input>
-                <DropDownSearch
-                  :items.sync="userTargetsOpts"
-                  :itemsRef.sync="form.field._alertTargets.value"
-                  v-model="form.field.alertTargets.value"
-                  @input="form.field.alertTargets.validate()"
-                  displayKey="fullName"
-                  valueKey="id"
-                  nullDisplay="Multi-select"
-                  searchable
-                  multi
-                  medium
-                  :loading="users.loadingNextPage"
-                  :hasNext="!!users.pagination.hasNextPage"
-                  @load-more="onUsersNextPage"
-                  @search-term="onSearchUsers"
-                />
-              </template>
-            </FormField>
-            <div class="items_height">
-              <p
-                :key="i"
-                v-for="(item, i) in form.field.alertTargets.value"
-                :class="form.field.alertTargets.value ? 'selected__item' : ''"
-                @click="removeItemFromTargetArray(item)"
-              >
-                <img
-                  src="@/assets/images/remove.png"
-                  style="height: 1rem; margin-right: 0.25rem"
-                  alt=""
-                />
-                {{ item.length ? item : '' }}
-              </p>
-            </div>
+            <p
+              style="margin-top: -1rem"
+              v-if="alertGroup.field.alertOperands.groups[0].field.operandIdentifier.value"
+              @click="removeIdentity"
+              :class="
+                alertGroup.field.alertOperands.groups[0].field.operandIdentifier.value
+                  ? 'selected__item'
+                  : 'visible'
+              "
+            >
+              <img
+                src="@/assets/images/remove.png"
+                style="height: 1rem; margin-right: 0.25rem"
+                alt=""
+              />
+              {{ alertGroup.field.alertOperands.groups[0].field.operandIdentifier.value }}
+            </p>
           </div>
 
           <div
-            style="
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: flex-start;
-              padding: 0.5rem;
-              margin-top: 0.5rem;
-            "
+            class="_row"
+            :key="i + 1"
+            v-for="(form, i) in alertTemplateForm.field.alertConfig.groups"
           >
-            <div v-if="!channelName" class="row__">
-              <label>Select #channel</label>
-              <ToggleCheckBox
-                style="margin: 0.25rem"
-                @input="changeCreate"
-                :value="create"
-                offColor="#199e54"
-                onColor="#199e54"
-              />
-              <label>Create #channel</label>
-            </div>
+            <div v-if="userLevel == 'MANAGER'" class="delivery__row">
+              <span style="margin-bottom: 0.5rem">Select Users</span>
 
-            <label v-else for="channel" style="font-weight: bold"
-              >Alert will send to
-              <span style="color: #199e54; font-size: 1.2rem">{{ channelName }}</span>
-              channel</label
-            >
-            <div
-              style="
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: flex-start;
-              "
-              v-if="create"
-            >
-              <input
-                v-model="channelName"
-                class="search__input"
-                type="text"
-                name="channel"
-                id="channel"
-                @input="logNewName(channelName)"
-              />
-
-              <div v-if="!channelCreated" v style="margin-top: 1.25rem">
-                <button
-                  v-if="channelName"
-                  @click="createChannel(channelName)"
-                  class="purple__button"
+              <FormField :errors="form.field.alertTargets.errors">
+                <template v-slot:input>
+                  <DropDownSearch
+                    :items.sync="userTargetsOpts"
+                    :itemsRef.sync="form.field._alertTargets.value"
+                    v-model="form.field.alertTargets.value"
+                    @input="form.field.alertTargets.validate()"
+                    displayKey="fullName"
+                    valueKey="id"
+                    nullDisplay="Multi-select"
+                    searchable
+                    multi
+                    medium
+                    :loading="users.loadingNextPage"
+                    :hasNext="!!users.pagination.hasNextPage"
+                    @load-more="onUsersNextPage"
+                    @search-term="onSearchUsers"
+                  />
+                </template>
+              </FormField>
+              <div style="margin-top: -0.75rem" class="items_height">
+                <p
+                  :key="i"
+                  v-for="(item, i) in form.field.alertTargets.value"
+                  :class="form.field.alertTargets.value ? 'selected__item' : ''"
+                  @click="removeItemFromTargetArray(item)"
                 >
-                  Create Channel
-                </button>
-                <button v-else class="disabled__button">Create Channel</button>
+                  <img
+                    src="@/assets/images/remove.png"
+                    style="height: 1rem; margin-right: 0.25rem"
+                    alt=""
+                  />
+                  {{ item.length ? checkInteger(item) : '' }}
+                </p>
               </div>
             </div>
 
-            <div v-else>
-              <FormField>
-                <template v-slot:input>
-                  <DropDownSearch
-                    :items.sync="userChannelOpts.channels"
-                    :itemsRef.sync="form.field._recipients.value"
-                    v-model="form.field.recipients.value"
-                    @input="form.field.recipients.validate()"
-                    displayKey="name"
-                    valueKey="id"
-                    nullDisplay="Channels"
-                    :hasNext="!!userChannelOpts.nextCursor"
-                    @load-more="listChannels(userChannelOpts.nextCursor)"
-                    searchable
-                    local
-                  >
-                    <template v-slot:tn-dropdown-option="{ option }">
-                      <img
-                        v-if="option.isPrivate == true"
-                        class="card-img"
-                        style="width: 1rem; height: 1rem; margin-right: 0.2rem"
-                        src="@/assets/images/lockAsset.png"
-                      />
-                      {{ option['name'] }}
-                    </template>
-                  </DropDownSearch>
-                </template>
-              </FormField>
-
-              <p
-                v-if="form.field.recipients.value.length > 0"
-                @click="removeTarget"
-                :class="form.field.recipients.value ? 'selected__item' : 'visible'"
-              >
-                <img
-                  src="@/assets/images/remove.png"
-                  style="height: 1rem; margin-right: 0.25rem"
-                  alt=""
+            <div class="delivery__row">
+              <div v-if="!channelName" class="row__">
+                <label>Select #channel</label>
+                <ToggleCheckBox
+                  style="margin: 0.25rem"
+                  @input="changeCreate"
+                  :value="create"
+                  offColor="#199e54"
+                  onColor="#199e54"
                 />
-                {{ form.field._recipients.value.name }}
-              </p>
+                <label>Create #channel</label>
+              </div>
+
+              <label v-else for="channel" style="font-weight: bold"
+                >Alert will send to
+                <span style="color: #199e54; font-size: 1.2rem">{{ channelName }}</span>
+                channel</label
+              >
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: flex-start;
+                  margin-top: -0.8rem;
+                "
+                v-if="create"
+              >
+                <input
+                  v-model="channelName"
+                  class="search__input"
+                  type="text"
+                  name="channel"
+                  id="channel"
+                  @input="logNewName(channelName)"
+                />
+
+                <div v-if="!channelCreated" style="margin-top: 0.75rem">
+                  <button
+                    v-if="channelName"
+                    @click="createChannel(channelName)"
+                    class="purple__button"
+                  >
+                    Create Channel
+                  </button>
+                  <button v-else class="disabled__button">Create Channel</button>
+                </div>
+              </div>
+
+              <div v-else>
+                <FormField>
+                  <template v-slot:input>
+                    <DropDownSearch
+                      :items.sync="userChannelOpts.channels"
+                      :itemsRef.sync="form.field._recipients.value"
+                      v-model="form.field.recipients.value"
+                      @input="form.field.recipients.validate()"
+                      displayKey="name"
+                      valueKey="id"
+                      nullDisplay="Channels"
+                      :hasNext="!!userChannelOpts.nextCursor"
+                      @load-more="listChannels(userChannelOpts.nextCursor)"
+                      searchable
+                      local
+                    >
+                      <template v-slot:tn-dropdown-option="{ option }">
+                        <img
+                          v-if="option.isPrivate == true"
+                          class="card-img"
+                          style="width: 1rem; height: 1rem; margin-right: 0.2rem"
+                          src="@/assets/images/lockAsset.png"
+                        />
+                        {{ option['name'] }}
+                      </template>
+                    </DropDownSearch>
+                  </template>
+                </FormField>
+
+                <p
+                  v-if="form.field.recipients.value.length > 0"
+                  @click="removeTarget"
+                  :class="form.field.recipients.value ? 'selected__item' : 'visible'"
+                >
+                  <img
+                    src="@/assets/images/remove.png"
+                    style="height: 1rem; margin-right: 0.25rem"
+                    alt=""
+                  />
+                  {{ form.field._recipients.value.name }}
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </template>
     </div>
-
-    <!-- <div :key="index" v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups">
-      <NextAlertGroup
-        :form="alertGroup"
-        :resourceType="alertTemplateForm.field.resourceType.value"
-      />
-    </div> -->
 
     <div class="bottom_locked">
       <PulseLoadingSpinnerButton
@@ -345,6 +358,9 @@ export default {
     },
   },
   methods: {
+    checkInteger(str) {
+      return /\d/.test(str) ? this.user.fullName : str
+    },
     handleUpdate() {
       this.loading = true
       console.log(this.userConfigForm.value)
@@ -393,6 +409,12 @@ export default {
         this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value.filter(
           (i) => i !== item,
         )
+    },
+    removeIdentity() {
+      this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field.operandIdentifier.value =
+        ''
+      this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field._operandIdentifier.value =
+        {}
     },
     onConvert(val) {
       let newVal = ''
@@ -770,14 +792,29 @@ export default {
     this.alertTemplateForm.field.title.value = 'Next Step Due'
     this.alertTemplateForm.field.isActive.value = true
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
-      'Hey  <strong>{ __Recipient.full_name }</strong>, your deal has an upcoming next step date of '
+      'Hey  <strong>{ __Recipient.full_name }</strong>, your deal has an upcoming next step date.'
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceFrequency.value = 'WEEKLY'
-    this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
+    this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = '0'
     this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDay.value = {
       key: 'Monday',
       value: '0',
     }
     this.repsPipeline()
+  },
+  updated() {
+    if (
+      this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
+        ._operandIdentifier.value
+    ) {
+      this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[1].field._operandIdentifier.value =
+        this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field._operandIdentifier.value
+      this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[1].field.operandIdentifier.value =
+        this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field.operandIdentifier.value
+    }
+    console.log(
+      this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[1].field
+        ._operandIdentifier.value,
+    )
   },
 }
 </script>
@@ -959,6 +996,14 @@ export default {
   flex-direction: row;
   align-items: center;
   justify-content: center;
+  width: 100%;
+}
+._row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-evenly;
+  width: 66%;
 }
 input {
   cursor: pointer;
@@ -1049,7 +1094,7 @@ input {
   background-color: $panther;
   border-radius: 0.75rem;
   width: 75vw;
-  padding: 2rem;
+  padding: 2rem 2rem 1rem 5rem;
   margin-bottom: 1rem;
 }
 .items_height {
@@ -1061,18 +1106,6 @@ input {
   overflow-y: scroll;
   max-height: 30vh;
   width: 80%;
-}
-.collection_fields {
-  background-color: $panther;
-  display: flex;
-  justify-content: center;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  height: 50vh;
-  width: 34vw;
-  box-shadow: 3px 4px 7px black;
-  margin-top: 1rem;
-  overflow-x: scroll;
 }
 .fields_title {
   background-color: $panther;

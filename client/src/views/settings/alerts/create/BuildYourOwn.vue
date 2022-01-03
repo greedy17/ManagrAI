@@ -1392,7 +1392,6 @@ export default {
 .fixed__right {
   align-self: flex-end;
   margin-top: -2rem;
-  border: 1px solid red;
 }
 .fixed__center {
   align-self: center;
