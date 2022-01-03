@@ -353,12 +353,3 @@ def get_random_no_update_message(topic):
     ]
     idx = random.randint(0, len(RANDOM_NO_CHANGE_RESPONSES) - 1)
     return RANDOM_NO_CHANGE_RESPONSES[idx]
-
-
-def custom_paginator_map(type):
-    if type == "alert":
-        return slack_consts.PAGINATE_ALERTS
-    elif type == "task":
-        return slack_consts.PAGINATE_TASKS
-    elif type == "meeting":
-        return slack_consts.PAGINATE_MEETINGS

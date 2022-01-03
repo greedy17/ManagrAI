@@ -132,7 +132,7 @@ def _process_calendar_details(user_id):
     return processed_data
 
 
-def meeting_prep(processed_data, user_id, send_slack=True):
+def meeting_prep(processed_data, user_id, invocation):
     def get_domain(email):
         """Parse domain out of an email"""
         return email[email.index("@") + 1 :]
@@ -299,7 +299,12 @@ def meeting_prep(processed_data, user_id, send_slack=True):
             contact["_form"] = str(form.id)
     event_data = processed_data
     processed_data.pop("participants")
-    data = {"user": user.id, "participants": meeting_contacts, "event_data": event_data}
+    data = {
+        "user": user.id,
+        "participants": meeting_contacts,
+        "event_data": event_data,
+        "invocation": invocation,
+    }
     if hasattr(meeting_resource_data, "resource_id"):
         data["resource_id"] = meeting_resource_data["resource_id"]
         data["resource_type"] = meeting_resource_data["resource_type"]
@@ -318,11 +323,11 @@ def _send_calendar_details(user_id):
         block_builders.header_block("Upcoming Meetings For Today!"),
         {"type": "divider"},
     ]
+    last_instance = MeetingPrepInstance.objects.filter(user=user).first()
+    invocation = last_instance.invocation + 1
     for event in processed_data:
-        meeting_prep(event, user_id)
-    meetings = MeetingPrepInstance.objects.filter(user=user.id).filter(
-        datetime_created__gt=datetime.date.today()
-    )
+        meeting_prep(event, user_id, invocation)
+    meetings = MeetingPrepInstance.objects.filter(user=user.id).filter(invocation=invocation)
     for meeting in meetings:
         blocks = [
             *blocks,

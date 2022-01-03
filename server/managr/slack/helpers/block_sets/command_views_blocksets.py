@@ -116,11 +116,39 @@ def custom_paginator_block(pagination_object, invocation, channel, config_id):
     return blocks
 
 
+def custom_meeting_paginator_block(pagination_object, invocation, channel):
+    next_page = pagination_object.get("next_page", None)
+    prev_page = pagination_object.get("previous_page", None)
+    blocks = []
+    button_blocks = []
+    page_context = {"invocation": invocation, "channel": channel}
+
+    if prev_page:
+        prev_page_button = block_builders.simple_button_block(
+            "Previous",
+            str(prev_page),
+            style="danger",
+            action_id=f"{slack_const.PAGINATE_MEETINGS}?{urlencode({**page_context,'new_page':int(prev_page)})}",
+        )
+        button_blocks.append(prev_page_button)
+    if next_page:
+        next_page_button = block_builders.simple_button_block(
+            "Next",
+            str(next_page),
+            action_id=f"{slack_const.PAGINATE_MEETINGS}?{urlencode({**page_context,'new_page':int(next_page)})}",
+        )
+        button_blocks.append(next_page_button)
+    if len(button_blocks):
+        blocks.append(block_builders.actions_block(button_blocks))
+
+    blocks.append(block_builders.context_block(f"Showing {pagination_object.get('page')}"))
+    return blocks
+
+
 @block_set(required_context=["instance_id"])
 def alert_instance_block_set(context):
     """
     Builds out the message based on the template the of the alert
-
     divider -
     message - alert template message
     divider

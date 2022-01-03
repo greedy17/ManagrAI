@@ -1342,6 +1342,58 @@ def process_paginate_alerts(payload, context):
     return
 
 
+@slack_api_exceptions(rethrow=True)
+@processor()
+def process_paginate_meetings(payload, context):
+    channel_id = payload.get("channel", {}).get("id", None)
+    ts = payload.get("message", {}).get("ts", None)
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    if not user:
+        return
+    access_token = user.organization.slack_integration.access_token
+    invocation = context.get("invocation")
+    channel = context.get("channel")
+    meeting_instances = MeetingPrepInstance.objects.filter(invocation=invocation).filter(
+        completed=False
+    )
+    meeting_instance = meeting_instances.first()
+    if not meeting_instances:
+        # check if the config was deleted
+        # config = AlertConfig.objects.filter(id=config_id).first()
+        # if not config:
+        #     error_blocks = get_block_set(
+        #         "error_modal",
+        #         {
+        #             "message": ":no_entry: The settings for these instances was deleted the data is no longer available"
+        #         },
+        #     )
+        #     slack_requests.update_channel_message(
+        #         channel_id, ts, access_token, text="Error", block_set=error_blocks
+        #     )
+        return
+
+    blocks = payload["view"]["blocks"]
+    meeting_instances = custom_paginator(
+        meeting_instances, count=1, page=int(context.get("new_page", 0))
+    )
+    paginate_results = meeting_instances.get("results", [])
+    if len(paginate_results):
+        current_instance = paginate_results[0]
+    blocks = [
+        *blocks,
+        *get_block_set("calendar_reminders_blockset", {"prep_id": str(current_instance.id),},),
+    ]
+    if len(blocks):
+        blocks = [
+            *blocks,
+            *custom_paginator_block(meeting_instances, invocation, channel),
+        ]
+    slack_requests.update_channel_message(channel_id, ts, access_token, block_set=blocks)
+
+    return
+
+
 @processor(required_context="u")
 def process_meeting_details(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN

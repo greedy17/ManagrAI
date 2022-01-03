@@ -541,7 +541,9 @@ class MeetingPrepInstance(TimeStampModel):
     resource_type = models.CharField(
         max_length=255, null=True, blank=True, help_text="The class name of the resource"
     )
-
+    invocation = models.PositiveIntegerField(
+        default=0, help_text="Keeps track of the number of times the meeting instance was called",
+    )
     objects = MeetingPrepQuerySet.as_manager()
 
     class Meta:
