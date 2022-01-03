@@ -8,6 +8,8 @@ from django.conf import settings
 import kronos
 import datetime
 
+from managr.utils.misc import custom_paginator
+from managr.slack.helpers.block_sets.command_views_blocksets import custom_paginator_block
 from django.utils import timezone
 from django.db.models import Q
 from rest_framework import serializers
@@ -326,37 +328,46 @@ def _send_calendar_details(user_id):
     for event in processed_data:
         meeting_prep(event, user_id, invocation)
     meetings = MeetingPrepInstance.objects.filter(user=user.id).filter(invocation=invocation)
-    for meeting in meetings:
-        blocks = [
-            block_builders.header_block("Upcoming Meetings For Today!"),
-            {"type": "divider"},
+    if meetings:
+        access_token = user.organization.slack_integration.access_token
+    meeting_instances = MeetingPrepInstance.objects.filter(invocation=invocation).filter(
+        completed=False
+    )
+    meeting_instances = custom_paginator(
+        meeting_instances, count=1, page=int(context.get("new_page", 0))
+    )
+    paginate_results = meeting_instances.get("results", [])
+    if len(paginate_results):
+        current_instance = paginate_results[0]
+        replace_blocks = [
+            *get_block_set("calendar_reminders_blockset", {"prep_id": str(current_instance.id),},),
+            *custom_paginator_block(meeting_instances, invocation, channel),
         ]
-        for event in processed_data:
-            meeting_prep(event, user_id)
-        meetings = MeetingPrepInstance.objects.filter(user=user.id).filter(
-            datetime_created__gt=datetime.date.today()
-        )
-
-        for meeting in meetings:
-            blocks = [
-                *blocks,
-                *block_sets.get_block_set(
-                    "calendar_reminders_blockset", {"prep_id": str(meeting.id), "u": str(user.id)}
-                ),
-                {"type": "divider"},
-            ]
-        # Loop thru processed_data and create block for each one
-        try:
-            slack_requests.send_channel_message(
-                user.slack_integration.channel,
-                user.organization.slack_integration.access_token,
-                text="Calendar: Meetings for Today",
-                block_set=blocks,
-            )
-        except Exception as e:
-            logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
+    #     for meeting in meetings:
+    #         blocks = [
+    #             *blocks,
+    #             *block_sets.get_block_set(
+    #                 "calendar_reminders_blockset", {"prep_id": str(meeting.id), "u": str(user.id)}
+    #             ),
+    #             {"type": "divider"},
+    #         ]
+    #     # Loop thru processed_data and create block for each one
+    #     try:
+    #         slack_requests.send_channel_message(
+    #             user.slack_integration.channel,
+    #             user.organization.slack_integration.access_token,
+    #             text="Calendar: Meetings for Today",
+    #             block_set=blocks,
+    #         )
+    #     except Exception as e:
+    #         logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
     else:
-        logger.info(f"No meeting for {user.email}")
+        logger.info(f"No meetings for {user.email}")
+
+
+def generate_morning_digest(user_id):
+    user = User.objects.get(id=user_id)
+    blocks = [block_builders.header_block("Morning Digest")]
 
 
 def _generate_notification_key_lapsed(num):

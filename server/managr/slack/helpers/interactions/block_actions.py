@@ -1426,7 +1426,7 @@ def process_paginate_meetings(payload, context):
         completed=False
     )
     meeting_instance = meeting_instances.first()
-    if not meeting_instances:
+    if not meeting_instance:
         # check if the config was deleted
         # config = AlertConfig.objects.filter(id=config_id).first()
         # if not config:
@@ -1440,7 +1440,7 @@ def process_paginate_meetings(payload, context):
         #         channel_id, ts, access_token, text="Error", block_set=error_blocks
         #     )
         return
-
+    # NOTE replace [3:8]
     blocks = payload["view"]["blocks"]
     meeting_instances = custom_paginator(
         meeting_instances, count=1, page=int(context.get("new_page", 0))
@@ -1448,17 +1448,14 @@ def process_paginate_meetings(payload, context):
     paginate_results = meeting_instances.get("results", [])
     if len(paginate_results):
         current_instance = paginate_results[0]
-    blocks = [
-        *blocks,
-        *get_block_set("calendar_reminders_blockset", {"prep_id": str(current_instance.id),},),
-    ]
-    if len(blocks):
-        blocks = [
-            *blocks,
+        replace_blocks = [
+            *get_block_set("calendar_reminders_blockset", {"prep_id": str(current_instance.id),},),
             *custom_paginator_block(meeting_instances, invocation, channel),
         ]
-    slack_requests.update_channel_message(channel_id, ts, access_token, block_set=blocks)
-
+        print(replace_blocks)
+        blocks[3:8] = replace_blocks
+        print(blocks)
+        slack_requests.update_channel_message(channel_id, ts, access_token, block_set=blocks)
     return
 
 
