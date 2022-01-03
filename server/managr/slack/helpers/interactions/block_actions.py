@@ -1680,6 +1680,8 @@ def process_get_call_recording(payload, context):
     gong_auth = GongAuthAccount.objects.get(organization=user.organization)
     access_token = user.organization.slack_integration.access_token
     opp = Opportunity.objects.get(id=context.get("resource_id"))
+    if opp:
+        acc = Account.objects.filter(opportunities=opp.id)
     call = GongCall.objects.filter(crm_id=opp.secondary_data["Id"]).first()
     type = context.get("type", None)
     timestamp = datetime.fromtimestamp(float(payload["message"]["ts"]))
@@ -1690,7 +1692,7 @@ def process_get_call_recording(payload, context):
         curr_date_str = curr_date.isoformat() + "T01:00:00" + f"{user_tz[:3]}:{user_tz[3:]}"
         try:
             call_res = gong_auth.helper_class.check_for_current_call(curr_date_str)
-            call_details = generate_call_block(call_res, opp.secondary_data["Id"])
+            call_details = generate_call_block(call_res, [opp.integration_id, acc.integration_id])
             if call_details:
                 blocks = [*call_details]
             else:

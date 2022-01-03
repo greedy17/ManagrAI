@@ -265,7 +265,7 @@ def generate_call_block(call_res, resource_id=None):
                 object["objectId"]
                 for inner_list in context_objects
                 for object in inner_list
-                if object["objectId"] == resource_id
+                if object["objectId"] in resource_id
             ]
             if len(object_ids):
                 call_data = call
