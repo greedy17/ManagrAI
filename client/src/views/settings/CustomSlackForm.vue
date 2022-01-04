@@ -528,7 +528,7 @@
                 <label class="label">Amount</label>
                 <ToggleCheckBox
                   style="margin-left: 0.15rem; margin-right: 0.15rem"
-                  :value="!productSelect"
+                  :value="productSelected"
                   @input="productSelect"
                   offColor="#199e54"
                   onColor="#199e54"
@@ -737,10 +737,7 @@
           style="display: flex; align-items: center; justify-content: center"
         >
           <button
-            v-if="
-              requiredOpportunityFields.every((i) => addedFieldNames.includes(i)) &&
-              formType === 'CREATE'
-            "
+            v-if="requiredOpportunityFields.every((i) => addedFieldNames.includes(i))"
             @click="
               () => {
                 addingFields = !addingFields
@@ -1405,9 +1402,6 @@ export default {
   },
   created() {
     this.getActionChoices()
-  },
-  mounted() {
-    console.log(this.formFields)
   },
   // async beforeCreate() {
   //   try {
