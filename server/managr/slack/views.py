@@ -683,6 +683,7 @@ def create_resource(request):
             .first()
         )
         slack_form = OrgCustomSlackFormInstance.objects.create(template=template, user=user,)
+
         if slack_form:
 
             context = {"resource_type": resource_type, "f": str(slack_form.id), "u": str(user.id)}
@@ -703,6 +704,33 @@ def create_resource(request):
                     },
                 }
                 blocks = [*blocks[:index], block, *blocks[index + 1 :]]
+            # if user.organization.has_products:
+            #     product_template = (
+            #         OrgCustomSlackForm.objects.for_user(user)
+            #         .filter(Q(resource="OpportunityLineItem", form_type="CREATE"))
+            #         .first()
+            #     )
+            #     product_form = OrgCustomSlackFormInstance.objects.create(
+            #         template=product_template, user=user,
+            #     )
+            #     blocks.append(
+            #         block_builders.actions_block(
+            #             [
+            #                 block_builders.simple_button_block(
+            #                     "Add Product",
+            #                     "ADD_PRODUCT",
+            #                     action_id=action_with_params(
+            #                         slack_const.PROCESS_ADD_PRODUCTS_FORM,
+            #                         params=[
+            #                             f"f={str(slack_form.id)}",
+            #                             f"product_form={str(product_form.id)}",
+            #                         ],
+            #                     ),
+            #                 )
+            #             ],
+            #             block_id="ADD_PRODUCT_BUTTON",
+            #         ),
+            #     )
             access_token = user.organization.slack_integration.access_token
 
             url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
