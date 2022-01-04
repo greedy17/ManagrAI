@@ -47,7 +47,7 @@
             v-model="alert.resourceType"
           /> -->
           <!-- <h3>{{ alert.resourceType }}</h3> -->
-          <div style="margin-top: 2rem">
+          <div v-if="!templateNames.includes(alert.title)" style="margin-top: 2rem">
             <span>Edit workflow title: </span>
             <FormField
               :id="`resource-title-${alert.id}`"
@@ -55,6 +55,13 @@
               @input="executeUpdateTemplate(templateTitleField)"
               v-model="templateTitleField.value"
             />
+          </div>
+          <div style="margin-top: 2rem">
+            <h2>{{ alert.title }}</h2>
+            <p class="even">
+              Cant edit templated alert titles &nbsp;
+              <img src="@/assets/images/exclamation.png" style="height: 1.2rem" alt="" />
+            </p>
           </div>
         </div>
         <div v-if="selectedTab == 'GROUPS'">
@@ -289,6 +296,13 @@ export default {
       selectedTab: TABS[0].key,
       savedChanges: false,
       savingInTab: false,
+      templateNames: [
+        'Close Date Passed',
+        'Close Date Approaching',
+        'Update Forecast',
+        'Deal Rotting',
+        'Upcoming Next Step',
+      ],
       fields: CollectionManager.create({ ModelClass: SObjectField }),
       recipientBindings: [
         { referenceDisplayLabel: 'Recipient Full Name', apiName: 'full_name' },
@@ -350,6 +364,9 @@ export default {
     },
   },
   methods: {
+    logAlert(i) {
+      console.log(i)
+    },
     onShowOperandModal(groupIndex) {
       let newForm = new AlertOperandForm({
         operandOrder: this.alert.groupsRef[groupIndex].operandsRef.length,
@@ -768,6 +785,14 @@ export default {
   color: $white;
   font-weight: bold;
   cursor: pointer;
+}
+.even {
+  color: #beb5cc;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  font-weight: bold;
+  cursor: not-allowed;
 }
 .remove-color {
   filter: invert(47%) sepia(73%) saturate(969%) hue-rotate(319deg) brightness(103%) contrast(96%);

@@ -3,8 +3,8 @@
     <div>
       <h2 style="font-weight: bold; text-align: center">
         <span style="color: black">
-          Next Step
-          <span style="color: #ddad3c">Due</span>
+          Upcoming
+          <span style="color: #ddad3c">Next Step</span>
         </span>
 
         <p style="color: #3c3940; font-size: 1.1rem">
@@ -121,6 +121,7 @@
               >
                 <input
                   v-model="channelName"
+                  placeholder="Name your Channel"
                   class="search__input"
                   type="text"
                   name="channel"
@@ -789,7 +790,7 @@ export default {
   },
   beforeMount() {
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
-    this.alertTemplateForm.field.title.value = 'Next Step Due'
+    this.alertTemplateForm.field.title.value = 'Upcoming Next Step'
     this.alertTemplateForm.field.isActive.value = true
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
       'Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has an upcoming Next Step Date due this week.'
@@ -838,6 +839,12 @@ export default {
     transform: translateY(-6px);
   }
 }
+
+::placeholder {
+  color: $panther-silver;
+  font-size: 0.75rem;
+}
+
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }

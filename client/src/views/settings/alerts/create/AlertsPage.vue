@@ -309,7 +309,7 @@
         "
       >
         <div class="card__header">
-          <h3 style="font-size: 1.3rem">Next Step<span style="color: #ddad3c"> Due</span></h3>
+          <h3 style="font-size: 1.3rem">Upcoming<span style="color: #ddad3c"> Next Step</span></h3>
         </div>
 
         <div class="row">
@@ -335,7 +335,7 @@
             v-if="
               hasSalesforceIntegration &&
               hasSlackIntegration &&
-              !user.activatedManagrConfigs.includes('Next Step Due')
+              !user.activatedManagrConfigs.includes('Upcoming Next Step')
             "
             @click="goToNextStep"
             class="orange_button"
@@ -350,7 +350,7 @@
           </h4>
           <h4
             style="margin-top: -0.5rem"
-            v-else-if="user.activatedManagrConfigs.includes('Next Step Due')"
+            v-else-if="user.activatedManagrConfigs.includes('Upcoming Next Step')"
           >
             Activated
           </h4>
