@@ -447,6 +447,10 @@ def generate_morning_digest(user_id):
         logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
 
 
+def generate_afternoon_digest(user_id):
+    return
+
+
 def _generate_notification_key_lapsed(num):
     if num == 1:
         return core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_LAPSED_EXPECTED_CLOSE_DATE_1_DAY
@@ -491,7 +495,21 @@ def check_reminders(user_id):
                             emit_process_send_workflow_reminder(
                                 str(user.id), workflows["workflow_count"]
                             )
-                elif key == core_consts.MEETING_REMINDER_REP:
+
+    return
+
+
+def check_recapmeetings(user_id):
+    user = User.objects.get(id=user_id)
+    for key in user.reminders.keys():
+        if user.reminders[key]:
+            check = check_for_time(
+                user.timezone,
+                core_consts.REMINDER_CONFIG[key]["HOUR"],
+                core_consts.REMINDER_CONFIG[key]["MINUTE"],
+            )
+            if check:
+                if key == core_consts.MEETING_REMINDER_REP:
                     meetings = check_for_uncompleted_meetings(user.id)
                     logger.info(f"UNCOMPLETED MEETINGS FOR {user.email}: {meetings}")
                     if meetings["status"]:
@@ -500,5 +518,5 @@ def check_reminders(user_id):
                     meetings = check_for_uncompleted_meetings(user.id, True)
                     if meetings["status"]:
                         emit_process_send_manager_reminder(str(user.id), meetings["not_completed"])
-
     return
+
