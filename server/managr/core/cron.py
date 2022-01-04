@@ -408,24 +408,28 @@ def process_get_task_list(user_id):
                 obj = user.imported_lead.filter(integration_id=t.who_id).first()
                 if obj:
                     resource = f"*{obj.name}*"
-            task_blocks.extend(
-                [
-                    block_builders.simple_section(
-                        f"{resource}, due _*{to_date_string(t.activity_date)}*_, {t.subject} `{t.status}`",
-                        "mrkdwn",
-                    ),
-                    block_builders.section_with_button_block(
-                        "View Task",
-                        "view_task",
-                        "_View task in salesforce_",
-                        url=f"{user.salesforce_account.instance_url}/lightning/r/Task/{t.id}/view",
-                    ),
-                    block_builders.divider_block(),
-                ]
-            )
-            task_blocks.extend(
-                custom_task_paginator_block(paged_tasks, user.slack_integration.channel)
-            )
+                task_blocks.extend(
+                    [
+                        block_builders.simple_section(
+                            f"{resource}, due _*{to_date_string(t.activity_date)}*_, {t.subject} `{t.status}`",
+                            "mrkdwn",
+                        ),
+                        block_builders.section_with_button_block(
+                            "View Task",
+                            "view_task",
+                            "_View task in salesforce_",
+                            url=f"{user.salesforce_account.instance_url}/lightning/r/Task/{t.id}/view",
+                        ),
+                        block_builders.divider_block(),
+                        ]
+                    )
+                task_blocks.extend(
+                    custom_task_paginator_block(paged_tasks, user.slack_integration.channel)
+                )
+            else:
+                task_blocks = [
+            block_builders.simple_section(f"You have no tasks due today :clap:", "mrkdwn"),
+        ]
         return task_blocks
 
 
@@ -449,6 +453,23 @@ def generate_morning_digest(user_id):
 
 
 def generate_afternoon_digest(user_id):
+    user = User.objects.get(id=user_id)
+    blocks = [
+        block_builders.simple_section("*Afternoon Digest* :coffee:", "mrkdwn"),
+        {"type": "divider"},
+    ]
+    meeting = _send_calendar_details(user_id)
+    tasks = process_get_task_list(user_id)
+    blocks = [*blocks, *meeting, {"type": "divider"}, *tasks, {"type": "divider"}]
+    try:
+        slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
+    except Exception as e:
+        logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
+
     return
 
 
@@ -522,8 +543,6 @@ def check_recapmeetings(user_id):
                         emit_process_send_manager_reminder(str(user.id), meetings["not_completed"])
     return
 
-<<<<<<< HEAD
-=======
 def check_recapmeetings(user_id): 
         user = User.objects.get(id=user_id)
         for key in user.reminders.keys():
@@ -545,4 +564,3 @@ def check_recapmeetings(user_id):
                         if meetings["status"]:
                             emit_process_send_manager_reminder(str(user.id), meetings["not_completed"])
         return 
->>>>>>> 7689c265217dafa0a76d8df0d32cfb2a0fc8c323

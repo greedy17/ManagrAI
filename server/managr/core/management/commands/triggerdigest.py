@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.core.management.base import BaseCommand, CommandError
 from managr.core.models import User
 from managr.core.cron import generate_morning_digest
+from managr.core.cron import generate_afternoon_digest
 
 
 class Command(BaseCommand):
@@ -20,6 +21,8 @@ class Command(BaseCommand):
             user = User.objects.filter(email=t).first()
             if time == "morning":
                 generate_morning_digest(str(user.id))
+            elif time == "afternoon":
+                generate_afternoon_digest(str(user.id))
             else:
                 return
             self.stdout.write(self.style.SUCCESS("Checking reminders for: {}".format(user.email,)),)
