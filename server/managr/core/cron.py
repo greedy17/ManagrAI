@@ -48,6 +48,7 @@ from managr.zoom import constants as zoom_consts
 from managr.slack import constants as slack_consts
 from managr.salesforce.models import MeetingWorkflow
 from managr.slack.helpers.block_builders import divider_block
+from managr.core.background import _process_send_meeting_reminder
 
 
 NOTIFICATION_TITLE_STALLED_IN_STAGE = "Opportunity Stalled in Stage"
@@ -322,7 +323,7 @@ def _send_calendar_details(user_id):
         "text": 
             {
             "type": "mrkdwn",
-            "text": '\033[1m'  + 'Upcoming Meetings'
+            "text": '*Upcoming Meetings*'
             }
         },
     ]
@@ -386,6 +387,7 @@ def check_upcomingmeetings(user_id):
             )
             if check:
                 if key == core_consts.CALENDAR_REMINDER:
+                    print(key)
                     if hasattr(user, "nylas"):
                         _send_calendar_details(user_id)
                 elif key == core_consts.WORKFLOW_REMINDER:
@@ -412,8 +414,9 @@ def check_recapmeetings(user_id):
                     if key == core_consts.MEETING_REMINDER_REP:
                         meetings = check_for_uncompleted_meetings(user.id)
                         logger.info(f"UNCOMPLETED MEETINGS FOR {user.email}: {meetings}")
-                        if meetings["status"]:
-                            emit_process_send_meeting_reminder(str(user.id), meetings["not_completed"])
+                        if meetings["status"] == False:
+                            _process_send_meeting_reminder(str(user.id), not_completed="True")
+                            print('test')
                     elif key == core_consts.MEETING_REMINDER_MANAGER and user.user_level == "Manager":
                         meetings = check_for_uncompleted_meetings(user.id, True)
                         if meetings["status"]:
