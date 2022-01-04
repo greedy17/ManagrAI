@@ -10,7 +10,10 @@ from django.utils import timezone
 from datetime import datetime, date, timedelta
 
 from managr.utils.misc import custom_paginator
-from managr.slack.helpers.block_sets.command_views_blocksets import custom_paginator_block
+from managr.slack.helpers.block_sets.command_views_blocksets import (
+    custom_paginator_block,
+    custom_meeting_paginator_block,
+)
 from managr.organization.models import Organization, Stage, Account, OpportunityLineItem
 from managr.opportunity.models import Opportunity, Lead
 from managr.zoom.models import ZoomMeeting
@@ -1413,6 +1416,7 @@ def process_paginate_alerts(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor()
 def process_paginate_meetings(payload, context):
+    print(payload)
     channel_id = payload.get("channel", {}).get("id", None)
     ts = payload.get("message", {}).get("ts", None)
     user_slack_id = payload.get("user", {}).get("id", None)
@@ -1422,9 +1426,7 @@ def process_paginate_meetings(payload, context):
     access_token = user.organization.slack_integration.access_token
     invocation = context.get("invocation")
     channel = context.get("channel")
-    meeting_instances = MeetingPrepInstance.objects.filter(invocation=invocation).filter(
-        completed=False
-    )
+    meeting_instances = MeetingPrepInstance.objects.filter(invocation=invocation)
     meeting_instance = meeting_instances.first()
     if not meeting_instance:
         # check if the config was deleted
@@ -1441,7 +1443,7 @@ def process_paginate_meetings(payload, context):
         #     )
         return
     # NOTE replace [3:8]
-    blocks = payload["view"]["blocks"]
+    blocks = payload["message"]["blocks"]
     meeting_instances = custom_paginator(
         meeting_instances, count=1, page=int(context.get("new_page", 0))
     )
@@ -1449,12 +1451,13 @@ def process_paginate_meetings(payload, context):
     if len(paginate_results):
         current_instance = paginate_results[0]
         replace_blocks = [
-            *get_block_set("calendar_reminders_blockset", {"prep_id": str(current_instance.id),},),
-            *custom_paginator_block(meeting_instances, invocation, channel),
+            *get_block_set(
+                "calendar_reminders_blockset",
+                {"prep_id": str(current_instance.id), "u": str(user.id)},
+            ),
+            *custom_meeting_paginator_block(meeting_instances, invocation, channel),
         ]
-        print(replace_blocks)
         blocks[3:8] = replace_blocks
-        print(blocks)
         slack_requests.update_channel_message(channel_id, ts, access_token, block_set=blocks)
     return
 
@@ -2098,6 +2101,7 @@ def handle_block_actions(payload):
         slack_const.RETURN_TO_FORM_MODAL: process_return_to_form_modal,
         slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL: process_check_is_owner,
         slack_const.PAGINATE_ALERTS: process_paginate_alerts,
+        slack_const.PAGINATE_MEETINGS: process_paginate_meetings,
         slack_const.ADD_TO_CADENCE_MODAL: process_show_cadence_modal,
         slack_const.ADD_TO_SEQUENCE_MODAL: process_show_sequence_modal,
         slack_const.GET_USER_ACCOUNTS: process_show_engagement_modal,
