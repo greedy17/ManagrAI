@@ -15,7 +15,7 @@ class Command(BaseCommand):
         if options["users"]:
             for t in options["users"]:
                 user = User.objects.filter(email=t).first()
-                check_upcomingmeetings(user.id)
+                # check_upcomingmeetings(user.id)
                 check_recapmeetings(user.id)
                 self.stdout.write(
                     self.style.SUCCESS("Checking reminders for: {}".format(user.email,)),
@@ -23,6 +23,6 @@ class Command(BaseCommand):
         else:
             users = User.objects.filter(is_active=True)
             for user in users:
-                check_upcomingmeetings(user.id)
+                # check_upcomingmeetings(user.id)
                 check_recapmeetings(user.id)
             self.stdout.write(self.style.SUCCESS("Checking reminders for all users"),)
