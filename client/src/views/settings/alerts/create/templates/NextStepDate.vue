@@ -3,257 +3,192 @@
     <div>
       <h2 style="font-weight: bold; text-align: center">
         <span style="color: black">
-          Update
-          <span style="color: #199e54">Forecast</span>
+          Upcoming
+          <span style="color: #ddad3c">Next Step</span>
         </span>
+
         <p style="color: #3c3940; font-size: 1.1rem">
-          View and update all Opportunities that are due to close but are not in Commit
+          View and update all Opportunities with Next Steps due this Week
         </p>
       </h2>
     </div>
 
-    <div style="margin-top: 4rem" v-if="pageNumber === 0" class="alert__column">
+    <div style="margin-top: 4rem" class="alert__column">
       <template>
-        <div
-          class="forecast__collection"
-          :key="i"
-          v-for="(form, i) in alertTemplateForm.field.alertConfig.groups"
-        >
+        <div class="forecast__collection">
           <div
-            style="margin-top: 1rem"
             class="delivery__row"
-            :errors="form.field.recurrenceDay.errors"
+            :key="index"
+            v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
           >
-            <div style="margin-bottom: 0.5rem" class="row__">
-              <label :class="form.field.recurrenceFrequency.value == 'WEEKLY' ? 'green' : ''"
-                >Weekly</label
-              >
-              <ToggleCheckBox
-                @input="
-                  form.field.recurrenceFrequency.value == 'WEEKLY'
-                    ? (form.field.recurrenceFrequency.value = 'MONTHLY')
-                    : (form.field.recurrenceFrequency.value = 'WEEKLY')
-                "
-                :value="form.field.recurrenceFrequency.value !== 'WEEKLY'"
-                offColor="#199e54"
-                onColor="#199e54"
-              />
-              <label :class="form.field.recurrenceFrequency.value == 'MONTHLY' ? 'green' : ''"
-                >Monthly</label
-              >
-            </div>
+            <span style="margin-bottom: 0.5rem">Select Next Step Date</span>
+            <NextAlertGroup
+              :form="alertGroup"
+              :resourceType="alertTemplateForm.field.resourceType.value"
+            />
 
-            <div v-if="form.field.recurrenceFrequency.value == 'WEEKLY'">
-              <FormField>
+            <p
+              style="margin-top: -1rem"
+              v-if="alertGroup.field.alertOperands.groups[0].field.operandIdentifier.value"
+              @click="removeIdentity"
+              :class="
+                alertGroup.field.alertOperands.groups[0].field.operandIdentifier.value
+                  ? 'selected__item'
+                  : 'visible'
+              "
+            >
+              <img
+                src="@/assets/images/remove.png"
+                style="height: 1rem; margin-right: 0.25rem"
+                alt=""
+              />
+              {{ alertGroup.field.alertOperands.groups[0].field.operandIdentifier.value }}
+            </p>
+          </div>
+
+          <div
+            class="_row"
+            :key="i + 1"
+            v-for="(form, i) in alertTemplateForm.field.alertConfig.groups"
+          >
+            <div v-if="userLevel == 'MANAGER'" class="delivery__row">
+              <span style="margin-bottom: 0.5rem">Select Users</span>
+
+              <FormField :errors="form.field.alertTargets.errors">
                 <template v-slot:input>
                   <DropDownSearch
-                    :items.sync="weeklyOpts"
-                    :itemsRef.sync="form.field._recurrenceDay.value"
-                    v-model="form.field.recurrenceDay.value"
-                    @input="form.field.recurrenceDay.validate()"
-                    displayKey="key"
-                    valueKey="value"
-                    nullDisplay="Select Day"
+                    :items.sync="userTargetsOpts"
+                    :itemsRef.sync="form.field._alertTargets.value"
+                    v-model="form.field.alertTargets.value"
+                    @input="form.field.alertTargets.validate()"
+                    displayKey="fullName"
+                    valueKey="id"
+                    nullDisplay="Multi-select"
                     searchable
-                    local
+                    multi
+                    medium
+                    :loading="users.loadingNextPage"
+                    :hasNext="!!users.pagination.hasNextPage"
+                    @load-more="onUsersNextPage"
+                    @search-term="onSearchUsers"
                   />
                 </template>
               </FormField>
-            </div>
-            <FormField
-              id="delivery"
-              v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
-              placeholder="Day of month"
-              @blur="form.field.recurrenceDay.validate()"
-              v-model="form.field.recurrenceDay.value"
-              small
-            />
-            <p
-              @click="removeDay"
-              v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
-              :class="form.field.recurrenceDay.value ? 'selected__item' : 'visible'"
-            >
-              <img
-                src="@/assets/images/remove.png"
-                style="height: 1rem; margin-right: 0.25rem"
-                alt=""
-              />
-              {{ form.field.recurrenceDay.value }}
-            </p>
-
-            <p
-              @click="removeDay"
-              v-else-if="form.field.recurrenceFrequency.value == 'WEEKLY'"
-              :class="form.field.recurrenceDay.value ? 'selected__item' : 'visible'"
-            >
-              <img
-                src="@/assets/images/remove.png"
-                style="height: 1rem; margin-right: 0.25rem"
-                alt=""
-              />
-              {{ onConvert(form.field.recurrenceDay.value) }}
-            </p>
-          </div>
-
-          <div
-            style="margin-top: 1rem; margin-left: 0.5rem"
-            v-if="userLevel == 'MANAGER'"
-            class="delivery__row"
-          >
-            <span style="margin-bottom: 0.5rem">Select Users</span>
-
-            <FormField :errors="form.field.alertTargets.errors">
-              <template v-slot:input>
-                <DropDownSearch
-                  :items.sync="userTargetsOpts"
-                  :itemsRef.sync="form.field._alertTargets.value"
-                  v-model="form.field.alertTargets.value"
-                  @input="form.field.alertTargets.validate()"
-                  displayKey="fullName"
-                  valueKey="id"
-                  nullDisplay="Pipelines"
-                  searchable
-                  multi
-                  medium
-                  :loading="users.loadingNextPage"
-                  :hasNext="!!users.pagination.hasNextPage"
-                  @load-more="onUsersNextPage"
-                  @search-term="onSearchUsers"
-                />
-              </template>
-            </FormField>
-            <div class="items_height">
-              <p
-                :key="i"
-                v-for="(item, i) in form.field.alertTargets.value"
-                :class="form.field.alertTargets.value ? 'selected__item' : ''"
-                @click="removeItemFromTargetArray(item)"
-              >
-                <img
-                  src="@/assets/images/remove.png"
-                  style="height: 1rem; margin-right: 0.25rem"
-                  alt=""
-                />
-                {{ item.length ? checkInteger(item) : '' }}
-              </p>
-            </div>
-          </div>
-
-          <div
-            style="
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: flex-start;
-              padding: 0.5rem;
-              margin-top: 0.5rem;
-            "
-          >
-            <div v-if="!channelName" class="row__">
-              <label>Select #channel</label>
-              <ToggleCheckBox
-                style="margin: 0.25rem"
-                @input="changeCreate"
-                :value="create"
-                offColor="#199e54"
-                onColor="#199e54"
-              />
-              <label>Create #channel</label>
-            </div>
-
-            <label v-else for="channel" style="font-weight: bold"
-              >Alert will send to
-              <span style="color: #199e54; font-size: 1.2rem">{{ channelName }}</span>
-              channel</label
-            >
-            <div
-              style="
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: flex-start;
-              "
-              v-if="create"
-            >
-              <input
-                v-model="channelName"
-                class="search__input"
-                type="text"
-                name="channel"
-                id="channel"
-                placeholder="Name your channel"
-                @input="logNewName(channelName)"
-              />
-
-              <div v-if="!channelCreated" v style="margin-top: 1.25rem">
-                <button
-                  v-if="channelName"
-                  @click="createChannel(channelName)"
-                  class="purple__button bouncy"
+              <div style="margin-top: -0.75rem" class="items_height">
+                <p
+                  :key="i"
+                  v-for="(item, i) in form.field.alertTargets.value"
+                  :class="form.field.alertTargets.value ? 'selected__item' : ''"
+                  @click="removeItemFromTargetArray(item)"
                 >
-                  Create Channel
-                </button>
-                <button v-else class="disabled__button">Create Channel</button>
+                  <img
+                    src="@/assets/images/remove.png"
+                    style="height: 1rem; margin-right: 0.25rem"
+                    alt=""
+                  />
+                  {{ item.length ? checkInteger(item) : '' }}
+                </p>
               </div>
             </div>
 
-            <div v-else>
-              <FormField>
-                <template v-slot:input>
-                  <DropDownSearch
-                    :items.sync="userChannelOpts.channels"
-                    :itemsRef.sync="form.field._recipients.value"
-                    v-model="form.field.recipients.value"
-                    @input="form.field.recipients.validate()"
-                    displayKey="name"
-                    valueKey="id"
-                    nullDisplay="Channels"
-                    :hasNext="!!userChannelOpts.nextCursor"
-                    @load-more="listChannels(userChannelOpts.nextCursor)"
-                    searchable
-                    local
-                  >
-                    <template v-slot:tn-dropdown-option="{ option }">
-                      <img
-                        v-if="option.isPrivate == true"
-                        class="card-img"
-                        style="width: 1rem; height: 1rem; margin-right: 0.2rem"
-                        src="@/assets/images/lockAsset.png"
-                      />
-                      {{ option['name'] }}
-                    </template>
-                  </DropDownSearch>
-                </template>
-              </FormField>
-
-              <p
-                v-if="form.field.recipients.value.length > 0"
-                @click="removeTarget"
-                :class="form.field.recipients.value ? 'selected__item' : 'visible'"
-              >
-                <img
-                  src="@/assets/images/remove.png"
-                  style="height: 1rem; margin-right: 0.25rem"
-                  alt=""
+            <div class="delivery__row">
+              <div v-if="!channelName" class="row__">
+                <label>Select #channel</label>
+                <ToggleCheckBox
+                  style="margin: 0.25rem"
+                  @input="changeCreate"
+                  :value="create"
+                  offColor="#199e54"
+                  onColor="#199e54"
                 />
-                {{ form.field._recipients.value.name }}
-              </p>
+                <label>Create #channel</label>
+              </div>
+
+              <label v-else for="channel" style="font-weight: bold"
+                >Alert will send to
+                <span style="color: #199e54; font-size: 1.2rem">{{ channelName }}</span>
+                channel</label
+              >
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: flex-start;
+                  margin-top: -0.8rem;
+                "
+                v-if="create"
+              >
+                <input
+                  v-model="channelName"
+                  placeholder="Name your Channel"
+                  class="search__input"
+                  type="text"
+                  name="channel"
+                  id="channel"
+                  @input="logNewName(channelName)"
+                />
+
+                <div v-if="!channelCreated" style="margin-top: 0.75rem">
+                  <button
+                    v-if="channelName"
+                    @click="createChannel(channelName)"
+                    class="purple__button"
+                  >
+                    Create Channel
+                  </button>
+                  <button v-else class="disabled__button">Create Channel</button>
+                </div>
+              </div>
+
+              <div v-else>
+                <FormField>
+                  <template v-slot:input>
+                    <DropDownSearch
+                      :items.sync="userChannelOpts.channels"
+                      :itemsRef.sync="form.field._recipients.value"
+                      v-model="form.field.recipients.value"
+                      @input="form.field.recipients.validate()"
+                      displayKey="name"
+                      valueKey="id"
+                      nullDisplay="Channels"
+                      :hasNext="!!userChannelOpts.nextCursor"
+                      @load-more="listChannels(userChannelOpts.nextCursor)"
+                      searchable
+                      local
+                    >
+                      <template v-slot:tn-dropdown-option="{ option }">
+                        <img
+                          v-if="option.isPrivate == true"
+                          class="card-img"
+                          style="width: 1rem; height: 1rem; margin-right: 0.2rem"
+                          src="@/assets/images/lockAsset.png"
+                        />
+                        {{ option['name'] }}
+                      </template>
+                    </DropDownSearch>
+                  </template>
+                </FormField>
+
+                <p
+                  v-if="form.field.recipients.value.length > 0"
+                  @click="removeTarget"
+                  :class="form.field.recipients.value ? 'selected__item' : 'visible'"
+                >
+                  <img
+                    src="@/assets/images/remove.png"
+                    style="height: 1rem; margin-right: 0.25rem"
+                    alt=""
+                  />
+                  {{ form.field._recipients.value.name }}
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </template>
     </div>
 
-    <div
-      :key="index"
-      v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
-      class="visible"
-    >
-      <ForecastAlertGroup
-        :form="alertGroup"
-        :resourceType="alertTemplateForm.field.resourceType.value"
-      />
-    </div>
     <div class="bottom_locked">
       <PulseLoadingSpinnerButton
         :loading="savingTemplate"
@@ -264,7 +199,7 @@
         "
         text="Activate alert"
         @click.stop="onSave"
-        :disabled="!alertTemplateForm.isValid || savingTemplate"
+        :disabled="!alertTemplateForm.isValid"
       />
     </div>
   </div>
@@ -284,7 +219,7 @@ import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 //Internal
 import FormField from '@/components/forms/FormField'
-import ForecastAlertGroup from '@/views/settings/alerts/create/ForecastAlertGroup'
+import NextAlertGroup from '@/views/settings/alerts/create/NextAlertGroup'
 import AlertSummary from '@/views/settings/alerts/create/_AlertSummary'
 import ListContainer from '@/components/ListContainer'
 import ListItem from '@/components/ListItem'
@@ -319,14 +254,14 @@ import {
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
-  name: 'UpdateForecast',
+  name: 'NextStep',
   components: {
     ExpandablePanel,
     DropDownSearch,
     ListContainer,
     ListItem,
     SlackMessagePreview,
-    ForecastAlertGroup,
+    NextAlertGroup,
     SlackNotificationTemplate,
     quillEditor,
     ToggleCheckBox,
@@ -340,21 +275,20 @@ export default {
     return {
       channelOpts: new SlackListResponse(),
       userChannelOpts: new SlackListResponse(),
-      create: true,
-      channelCreated: false,
       savingTemplate: false,
       listVisible: true,
       dropdownVisible: true,
-      createdChannel: false,
+      channelCreated: false,
+      create: true,
       NON_FIELD_ALERT_OPTS,
       stringRenderer,
-      OPPORTUNITY: 'Opportunity',
-      channelName: '',
       newChannel: {},
+      channelName: '',
+      OPPORTUNITY: 'Opportunity',
       operandDate: '',
-      recurrenceDay: '',
       searchQuery: '',
       searchText: '',
+      recurrenceDay: '',
       searchChannels: '',
       SOBJECTS_LIST,
       pageNumber: 0,
@@ -394,10 +328,6 @@ export default {
         { key: 'Saturday', value: '5' },
         { key: 'Sunday', value: '6' },
       ],
-      nameOptions: [
-        { key: 'Close Date Passed', value: 'Close Date Passed' },
-        { key: 'Close Date Approaching', value: 'Close Date Approaching' },
-      ],
     }
   },
   async created() {
@@ -432,15 +362,6 @@ export default {
     checkInteger(str) {
       return /\d/.test(str) ? this.user.fullName : str
     },
-    repsPipeline() {
-      if (this.userLevel == 'REP') {
-        this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
-        this.setPipelines({
-          fullName: 'MYSELF',
-          id: 'SELF',
-        })
-      }
-    },
     handleUpdate() {
       this.loading = true
       console.log(this.userConfigForm.value)
@@ -452,6 +373,24 @@ export default {
         .catch((e) => {
           console.log(e)
         })
+    },
+    changeCreate() {
+      this.create = !this.create
+      if (
+        this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value !==
+        'SLACK_CHANNEL'
+      ) {
+        this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value =
+          'SLACK_CHANNEL'
+      }
+    },
+    async listUserChannels(cursor = null) {
+      const res = await SlackOAuth.api.listUserChannels(cursor)
+      const results = new SlackListResponse({
+        channels: [...this.userChannelOpts.channels, ...res.channels],
+        responseMetadata: { nextCursor: res.nextCursor },
+      })
+      this.userChannelOpts = results
     },
     removeDay() {
       this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = ''
@@ -471,6 +410,12 @@ export default {
         this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value.filter(
           (i) => i !== item,
         )
+    },
+    removeIdentity() {
+      this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field.operandIdentifier.value =
+        ''
+      this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field._operandIdentifier.value =
+        {}
     },
     onConvert(val) {
       let newVal = ''
@@ -499,32 +444,6 @@ export default {
     },
     goToTemplates() {
       this.$router.push({ name: 'CreateNew' })
-    },
-    async listChannels(cursor = null) {
-      const res = await SlackOAuth.api.listChannels(cursor)
-      const results = new SlackListResponse({
-        channels: [...this.channelOpts.channels, ...res.channels],
-        responseMetadata: { nextCursor: res.nextCursor },
-      })
-      this.channelOpts = results
-    },
-    changeCreate() {
-      this.create = !this.create
-      if (
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value !==
-        'SLACK_CHANNEL'
-      ) {
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value =
-          'SLACK_CHANNEL'
-      }
-    },
-    async listUserChannels(cursor = null) {
-      const res = await SlackOAuth.api.listUserChannels(cursor)
-      const results = new SlackListResponse({
-        channels: [...this.userChannelOpts.channels, ...res.channels],
-        responseMetadata: { nextCursor: res.nextCursor },
-      })
-      this.userChannelOpts = results
     },
     async createChannel(name) {
       this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
@@ -614,6 +533,14 @@ export default {
       let new_str = ''
       new_str = str.replace(/\s+/g, '-').toLowerCase()
       this.channelName = new_str
+    },
+    async listChannels(cursor = null) {
+      const res = await SlackOAuth.api.listChannels(cursor)
+      const results = new SlackListResponse({
+        channels: [...this.channelOpts.channels, ...res.channels],
+        responseMetadata: { nextCursor: res.nextCursor },
+      })
+      this.channelOpts = results
     },
     recipientTypeToggle(value) {
       if (!this.user.slackRef) {
@@ -759,14 +686,17 @@ export default {
           '='
       }
     },
-    setRecurrenceDay(val) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = val
+    repsPipeline() {
+      if (this.userLevel == 'REP') {
+        this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
+        this.setPipelines({
+          fullName: 'MYSELF',
+          id: 'SELF',
+        })
+      }
     },
   },
   computed: {
-    userLevel() {
-      return this.$store.state.user.userLevel
-    },
     userTargetsOpts() {
       if (this.user.userLevel == 'MANAGER') {
         return [
@@ -846,6 +776,9 @@ export default {
     user() {
       return this.$store.state.user
     },
+    userLevel() {
+      return this.$store.state.user.userLevel
+    },
     selectedResourceType: {
       get() {
         return this.alertTemplateForm.field.resourceType.value
@@ -857,11 +790,32 @@ export default {
   },
   beforeMount() {
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
-    this.alertTemplateForm.field.title.value = 'Update Forecast'
+    this.alertTemplateForm.field.title.value = 'Upcoming Next Step'
     this.alertTemplateForm.field.isActive.value = true
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
-      'Please update the forecast for <strong>{ Opportunity.Name }</strong> ! it’s expected to close on <strong>{ Opportunity.CloseDate }</strong> and forecasted as <strong>{ Opportunity.ForecastCategoryName }</strong> - please either move to Commit or update the Close Date.  <BR></BR> <strong>Next Step</strong>: { Opportunity.NextStep }'
+      'Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has an upcoming Next Step Date due this week.'
+    this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceFrequency.value = 'WEEKLY'
+    this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = '0'
+    this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDay.value = {
+      key: 'Monday',
+      value: '0',
+    }
     this.repsPipeline()
+  },
+  updated() {
+    if (
+      this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
+        ._operandIdentifier.value
+    ) {
+      this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[1].field._operandIdentifier.value =
+        this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field._operandIdentifier.value
+      this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[1].field.operandIdentifier.value =
+        this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field.operandIdentifier.value
+    }
+    console.log(
+      this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[1].field
+        ._operandIdentifier.value,
+    )
   },
 }
 </script>
@@ -885,15 +839,15 @@ export default {
     transform: translateY(-6px);
   }
 }
-.bouncy {
-  animation: bounce 0.2s infinite alternate;
-}
 
 ::placeholder {
   color: $panther-silver;
   font-size: 0.75rem;
 }
 
+.bouncy {
+  animation: bounce 0.2s infinite alternate;
+}
 ::v-deep .input-content {
   width: 12vw;
   background-color: white;
@@ -906,6 +860,17 @@ export default {
 }
 .invisible {
   display: none;
+}
+.selected__item {
+  padding: 0.5rem;
+  border: 2px solid white;
+  border-radius: 0.3rem;
+  width: 100%;
+  text-align: center;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
 }
 .search__input {
   font-family: Lato-Regular, sans-serif;
@@ -920,9 +885,9 @@ export default {
   height: 2.5rem;
   background-color: white;
   border: 1px solid #5d5e5e;
-  margin-top: 1rem;
   width: 75%;
   text-align: center;
+  margin-top: 1rem;
   -webkit-box-shadow: 1px 4px 7px black;
   box-shadow: 1px 4px 7px black;
 }
@@ -1038,6 +1003,14 @@ export default {
   flex-direction: row;
   align-items: center;
   justify-content: center;
+  width: 100%;
+}
+._row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-evenly;
+  width: 66%;
 }
 input {
   cursor: pointer;
@@ -1112,7 +1085,7 @@ input {
   align-items: center;
   justify-content: center;
   margin-top: auto;
-  margin-bottom: 0.5rem;
+  margin-bottom: -2rem;
 }
 .delivery__row {
   display: flex;
@@ -1128,19 +1101,8 @@ input {
   background-color: $panther;
   border-radius: 0.75rem;
   width: 75vw;
-  padding: 2rem;
+  padding: 2rem 2rem 1rem 5rem;
   margin-bottom: 1rem;
-}
-.selected__item {
-  padding: 0.5rem;
-  border: 2px solid white;
-  border-radius: 0.3rem;
-  width: 100%;
-  text-align: center;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
 }
 .items_height {
   overflow-y: scroll;
@@ -1408,3 +1370,4 @@ textarea {
 //   background-color: $panther-silver;
 // }
 </style>
+

@@ -1164,15 +1164,34 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
         )
     action_blocks = [
         block_builders.simple_button_block(
-            "Call Details",
-            "call_details",
+            "View Notes",
+            "get_notes",
             action_id=action_with_params(
-                slack_consts.GONG_CALL_RECORDING,
-                params=[f"u={str(user.id)}", f"resource_id={main_form.resource_id}", "type=recap",],
+                slack_consts.GET_NOTES,
+                params=[
+                    f"u={str(user.id)}",
+                    f"resource_id={str(main_form.resource_id)}",
+                    "type=alert",
+                ],
             ),
-            style="primary",
         ),
     ]
+    if main_form.template.resource != "Lead":
+        action_blocks.append(
+            block_builders.simple_button_block(
+                "Call Details",
+                "call_details",
+                action_id=action_with_params(
+                    slack_consts.GONG_CALL_RECORDING,
+                    params=[
+                        f"u={str(user.id)}",
+                        f"resource_id={main_form.resource_id}",
+                        "type=recap",
+                    ],
+                ),
+                style="primary",
+            ),
+        )
     blocks.append(block_builders.actions_block(action_blocks))
     blocks.append(
         block_builders.context_block(f"{main_form.template.resource} owned by {user.full_name}")

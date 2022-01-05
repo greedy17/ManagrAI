@@ -197,7 +197,7 @@ def alert_instance_block_set(context):
             .first()
             .id
         )
-        message = f"Successfully updated *{form.resource_type}* _{form.resource_object.name}_"
+        message = f":white_check_mark: Successfully updated *{form.resource_type}* _{form.resource_object.name}_"
         blocks = block_sets.get_block_set(
             "success_modal",
             {
