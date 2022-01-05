@@ -93,7 +93,7 @@
 
             <div class="delivery__row">
               <div v-if="!channelName" class="row__">
-                <label>Select #channel</label>
+                <label :class="!create ? 'green' : ''">Select #channel</label>
                 <ToggleCheckBox
                   style="margin: 0.25rem"
                   @input="changeCreate"
@@ -101,7 +101,7 @@
                   offColor="#199e54"
                   onColor="#199e54"
                 />
-                <label>Create #channel</label>
+                <label :class="create ? 'green' : ''">Create #channel</label>
               </div>
 
               <label v-else for="channel" style="font-weight: bold"

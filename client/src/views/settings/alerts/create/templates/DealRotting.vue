@@ -37,6 +37,7 @@
                 :value="form.field.recurrenceFrequency.value !== 'WEEKLY'"
                 offColor="#199e54"
                 onColor="#199e54"
+                style="margin-left: 0.25rem; margin-right: 0.25rem"
               />
               <label :class="form.field.recurrenceFrequency.value == 'MONTHLY' ? 'green' : ''"
                 >Monthly</label
@@ -150,15 +151,15 @@
             "
           >
             <div v-if="!channelName" class="row__">
-              <label>Select #channel</label>
+              <label :class="!create ? 'green' : ''">Select #channel</label>
               <ToggleCheckBox
-                style="margin: 0.25rem"
+                style="margin-left: 0.25rem; margin-right: 0.25rem"
                 @input="changeCreate"
                 :value="create"
                 offColor="#199e54"
                 onColor="#199e54"
               />
-              <label>Create #channel</label>
+              <label :class="create ? 'green' : ''">Create #channel</label>
             </div>
 
             <label v-else for="channel" style="font-weight: bold"
@@ -197,7 +198,7 @@
               </div>
             </div>
 
-            <div v-else>
+            <div style="margin-top: 0.5rem" v-else>
               <FormField>
                 <template v-slot:input>
                   <DropDownSearch
