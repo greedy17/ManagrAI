@@ -1202,20 +1202,21 @@ def process_schedule_meeting(payload, context):
             zoom_res["join_url"],
             description,
         )
-        if type:
-            update_res = slack_requests.send_ephemeral_message(
-                u.slack_integration.channel,
-                access_token,
-                meta_data["slack_id"],
-                block_set=[block_builders.simple_section(f"Zoom meeting scheduled")],
-            )
-        else:
-            updated_message = slack_requests.update_channel_message(
-                meta_data["original_message_channel"],
-                meta_data["original_message_timestamp"],
-                access_token,
-                block_set=json.dumps(meta_data["current_block"]),
-            )
+        return {
+            "response_action": "update",
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Success"},
+                "blocks": [block_builders.simple_section("Zoom meeting succesffully scheduled")],
+            },
+        }
+        # else:
+        #     updated_message = slack_requests.update_channel_message(
+        #         meta_data["original_message_channel"],
+        #         meta_data["original_message_timestamp"],
+        #         access_token,
+        #         block_set=json.dumps(meta_data["current_block"]),
+        #     )
     except InvalidBlocksException as e:
         return logger.exception(
             f"Faild to update Zoom Schedule Meeting modal for user {u.email}, {e}"
@@ -1232,7 +1233,7 @@ def process_schedule_meeting(payload, context):
         return logger.exception(
             f"Faild to update Zoom Schedule Meeting modal for user {u.email}, {e}"
         )
-    return {}
+    return
 
 
 @log_all_exceptions
