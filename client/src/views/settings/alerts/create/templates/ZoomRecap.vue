@@ -75,7 +75,7 @@
 
         <div>
           <div style="margin-bottom: 0.5rem" v-if="!channelName" class="row">
-            <label>Select #channel</label>
+            <label :class="!create ? 'green' : ''">Select #channel</label>
             <ToggleCheckBox
               style="margin: 0.25rem"
               @input="changeCreate"
@@ -83,7 +83,7 @@
               offColor="#199e54"
               onColor="#199e54"
             />
-            <label>Create #channel</label>
+            <label :class="create ? 'green' : ''">Create #channel</label>
           </div>
 
           <label v-else for="channel" style="font-weight: bold"
@@ -508,6 +508,9 @@ export default {
   height: 2rem;
   font-weight: bold;
   font-size: 1.02rem;
+}
+.green {
+  color: $dark-green;
 }
 .disabled__button {
   display: flex;
