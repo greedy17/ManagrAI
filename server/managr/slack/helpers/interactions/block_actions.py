@@ -10,7 +10,10 @@ from django.utils import timezone
 from datetime import datetime, date, timedelta
 
 from managr.utils.misc import custom_paginator
-from managr.slack.helpers.block_sets.command_views_blocksets import custom_paginator_block
+from managr.slack.helpers.block_sets.command_views_blocksets import (
+    custom_paginator_block,
+    custom_meeting_paginator_block,
+)
 from managr.organization.models import Organization, Stage, Account, OpportunityLineItem
 from managr.opportunity.models import Opportunity, Lead
 from managr.zoom.models import ZoomMeeting
@@ -507,6 +510,7 @@ def process_meeting_selected_resource(payload, context):
     }
     if type:
         context.update({"type": type})
+
     private_metadata.update(context)
     data = {
         "trigger_id": trigger_id,
@@ -616,7 +620,11 @@ def process_meeting_selected_resource_option(payload, context):
         }
 
     else:
-        callback_id = slack_const.ZOOM_MEETING__SELECTED_RESOURCE
+        callback_id = (
+            slack_const.PROCESS_DIGEST_ATTACH_RESOURCE
+            if type
+            else slack_const.ZOOM_MEETING__SELECTED_RESOURCE
+        )
 
     data = {
         "view_id": payload["view"]["id"],
@@ -754,6 +762,7 @@ def process_show_update_resource_form(payload, context):
 
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
+
     is_update = payload.get("view", None)
     url = f"{slack_const.SLACK_API_ROOT}{slack_const.VIEWS_UPDATE if is_update else slack_const.VIEWS_OPEN}"
     loading_view_data = {
@@ -796,9 +805,7 @@ def process_show_update_resource_form(payload, context):
     resource_type = context.get("resource")
     pm = json.loads(payload.get("view", {}).get("private_metadata", "{}"))
     prev_form = pm.get("f", None)
-
     show_submit_button_if_fields_added = False
-    has_stage_forms = False
     stage_form = None
     product_form = None
     current_products = None
@@ -833,6 +840,9 @@ def process_show_update_resource_form(payload, context):
                 )
                 form_ids.append(str(stage_form.id))
             context.update({"f": ",".join(form_ids)})
+    else:
+        slack_form = user.custom_slack_form_instances.filter(id=prev_form).delete()
+        slack_form = None
     if user.organization.has_products and resource_type == "Opportunity":
         product_template = (
             OrgCustomSlackForm.objects.for_user(user)
@@ -852,9 +862,6 @@ def process_show_update_resource_form(payload, context):
             )
         )
         current_products = OpportunityLineItem.objects.filter(opportunity=slack_form.resource_id)
-    else:
-        slack_form = user.custom_slack_form_instances.filter(id=prev_form).delete()
-        slack_form = None
     blocks = get_block_set(
         "update_modal_block_set",
         context={**context, "resource_type": resource_type, "resource_id": resource_id},
@@ -893,11 +900,10 @@ def process_show_update_resource_form(payload, context):
         "channel_id": payload.get("container").get("channel_id"),
         "message_ts": payload.get("container").get("message_ts"),
     }
-    if user.organization.has_products:
-        if product_form:
-            private_metadata.update({"product_form": str(product_form.id)})
+    if user.organization.has_products and product_form is not None:
+        private_metadata.update({"product_form": str(product_form.id)})
     private_metadata.update(context)
-    if user.organization.has_products:
+    if user.organization.has_products and resource_type == "Opportunity":
         blocks.append(
             block_builders.actions_block(
                 [
@@ -916,17 +922,17 @@ def process_show_update_resource_form(payload, context):
                 block_id="ADD_PRODUCT_BUTTON",
             ),
         )
-    if current_products:
-        for product in current_products:
-            product_block = get_block_set(
-                "current_product_blockset",
-                {
-                    "opp_item_id": str(product.id),
-                    "u": str(user.id),
-                    "main_form": str(slack_form.id),
-                },
-            )
-            blocks.append(product_block)
+        if current_products:
+            for product in current_products:
+                product_block = get_block_set(
+                    "current_product_blockset",
+                    {
+                        "opp_item_id": str(product.id),
+                        "u": str(user.id),
+                        "main_form": str(slack_form.id),
+                    },
+                )
+                blocks.append(product_block)
     if alert_id:
         private_metadata.update(
             {"alert_id": str(alert_id.id), "current_page": context.get("current_page")}
@@ -1402,6 +1408,55 @@ def process_paginate_alerts(payload, context):
         channel_id, ts, access_token, text=alert_text, block_set=blocks
     )
 
+    return
+
+
+@slack_api_exceptions(rethrow=True)
+@processor()
+def process_paginate_meetings(payload, context):
+    print(payload)
+    channel_id = payload.get("channel", {}).get("id", None)
+    ts = payload.get("message", {}).get("ts", None)
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    if not user:
+        return
+    access_token = user.organization.slack_integration.access_token
+    invocation = context.get("invocation")
+    channel = context.get("channel")
+    meeting_instances = MeetingPrepInstance.objects.filter(invocation=invocation)
+    meeting_instance = meeting_instances.first()
+    if not meeting_instance:
+        # check if the config was deleted
+        # config = AlertConfig.objects.filter(id=config_id).first()
+        # if not config:
+        #     error_blocks = get_block_set(
+        #         "error_modal",
+        #         {
+        #             "message": ":no_entry: The settings for these instances was deleted the data is no longer available"
+        #         },
+        #     )
+        #     slack_requests.update_channel_message(
+        #         channel_id, ts, access_token, text="Error", block_set=error_blocks
+        #     )
+        return
+    # NOTE replace [3:8]
+    blocks = payload["message"]["blocks"]
+    meeting_instances = custom_paginator(
+        meeting_instances, count=1, page=int(context.get("new_page", 0))
+    )
+    paginate_results = meeting_instances.get("results", [])
+    if len(paginate_results):
+        current_instance = paginate_results[0]
+        replace_blocks = [
+            *get_block_set(
+                "calendar_reminders_blockset",
+                {"prep_id": str(current_instance.id), "u": str(user.id)},
+            ),
+            *custom_meeting_paginator_block(meeting_instances, invocation, channel),
+        ]
+        blocks[3:8] = replace_blocks
+        slack_requests.update_channel_message(channel_id, ts, access_token, block_set=blocks)
     return
 
 
@@ -2046,6 +2101,7 @@ def handle_block_actions(payload):
         slack_const.RETURN_TO_FORM_MODAL: process_return_to_form_modal,
         slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL: process_check_is_owner,
         slack_const.PAGINATE_ALERTS: process_paginate_alerts,
+        slack_const.PAGINATE_MEETINGS: process_paginate_meetings,
         slack_const.ADD_TO_CADENCE_MODAL: process_show_cadence_modal,
         slack_const.ADD_TO_SEQUENCE_MODAL: process_show_sequence_modal,
         slack_const.GET_USER_ACCOUNTS: process_show_engagement_modal,

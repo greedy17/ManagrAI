@@ -25,7 +25,7 @@
             class="delivery__row"
             :errors="form.field.recurrenceDay.errors"
           >
-            <div style="margin-bottom: 0.5rem" class="row__">
+            <div class="row__">
               <label :class="form.field.recurrenceFrequency.value == 'WEEKLY' ? 'green' : ''"
                 >Weekly</label
               >
@@ -38,13 +38,14 @@
                 :value="form.field.recurrenceFrequency.value !== 'WEEKLY'"
                 offColor="#199e54"
                 onColor="#199e54"
+                style="margin-left: 0.25rem; margin-right: 0.25rem"
               />
               <label :class="form.field.recurrenceFrequency.value == 'MONTHLY' ? 'green' : ''"
                 >Monthly</label
               >
             </div>
 
-            <div v-if="form.field.recurrenceFrequency.value == 'WEEKLY'">
+            <div style="margin-top: 0.5rem" v-if="form.field.recurrenceFrequency.value == 'WEEKLY'">
               <FormField>
                 <template v-slot:input>
                   <DropDownSearch
@@ -62,6 +63,7 @@
               </FormField>
             </div>
             <FormField
+              style="margin-top: 0.5rem"
               id="delivery"
               v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
               placeholder="Day of month"
@@ -151,15 +153,15 @@
             "
           >
             <div v-if="!channelName" class="row__">
-              <label>Select #channel</label>
+              <label :class="!create ? 'green' : ''">Select #channel</label>
               <ToggleCheckBox
-                style="margin: 0.25rem"
+                style="margin-left: 0.25rem; margin-right: 0.25rem"
                 @input="changeCreate"
                 :value="create"
                 offColor="#199e54"
                 onColor="#199e54"
               />
-              <label>Create #channel</label>
+              <label :class="create ? 'green' : ''">Create #channel</label>
             </div>
 
             <label v-else for="channel" style="font-weight: bold"
@@ -186,7 +188,7 @@
                 @input="logNewName(channelName)"
               />
 
-              <div v-if="!channelCreated" v style="margin-top: 1.25rem">
+              <div v-if="!channelCreated" style="margin-top: 1.25rem">
                 <button
                   v-if="channelName"
                   @click="createChannel(channelName)"
@@ -198,7 +200,7 @@
               </div>
             </div>
 
-            <div v-else>
+            <div style="margin-top: 0.5rem" v-else>
               <FormField>
                 <template v-slot:input>
                   <DropDownSearch
