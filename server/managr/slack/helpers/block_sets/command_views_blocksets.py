@@ -457,9 +457,9 @@ def actions_block_set(context):
     options = []
     for action in slack_const.MANAGR_ACTIONS:
         options.append(block_builders.option(action[1], action[0]))
-    if user.outreach_account:
+    if hasattr(user, "outreach_account"):
         options.append(block_builders.option("Add To Sequence", "ADD_SEQUENCE"))
-    if user.salesloft_account:
+    if hasattr(user, "salesloft_account"):
         options.append(block_builders.option("Add To Cadence", "ADD_CADENCE"))
     blocks = [
         block_builders.static_select(
