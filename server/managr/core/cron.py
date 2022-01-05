@@ -558,9 +558,9 @@ def check_reminders(user_id):
                 core_consts.REMINDER_CONFIG[key]["MINUTE"],
             )
             if check:
-                if key == core_consts.CALENDAR_REMINDER:
+                if key == core_consts.MORNING_DIGEST:
                     if hasattr(user, "nylas"):
-                        _send_calendar_details(user_id)
+                        generate_morning_digest(user_id)
                 elif key == core_consts.WORKFLOW_REMINDER:
                     if datetime.datetime.today().weekday() == 4:
                         workflows = check_workflows_count(user.id)
@@ -569,12 +569,7 @@ def check_reminders(user_id):
                                 str(user.id), workflows["workflow_count"]
                             )
                 elif key == core_consts.MEETING_REMINDER_REP:
-                    meetings = check_for_uncompleted_meetings(user.id)
-                    logger.info(f"UNCOMPLETED MEETINGS FOR {user.email}: {meetings}")
-                    if meetings["status"]:
-                        emit_process_send_meeting_reminder(str(user.id), meetings["not_completed"])
-                elif key == core_consts.MEETING_REMINDER_MANAGER and user.user_level == "Manager":
-                    meetings = check_for_uncompleted_meetings(user.id, True)
-                    if meetings["status"]:
-                        emit_process_send_manager_reminder(str(user.id), meetings["not_completed"])
+                    generate_afternoon_digest(user_id)
+                elif key == core_consts.MEETING_REMINDER_MANAGER:
+                    generate_afternoon_digest(user_id)
     return
