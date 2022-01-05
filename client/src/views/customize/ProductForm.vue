@@ -12,15 +12,9 @@
         :show-validations="showValidations"
         :formType="CREATE"
         :customForm="
-          (this.selectedForm = {
-            config: {},
-            fields: [],
-            fields_ref: [],
-            form_type: 'CREATE',
-            organization: '',
-            resource: 'OpportunityLineItem',
-            stage: '',
-          })
+          (this.selectedForm = this.allForms.find(
+            (f) => f.resource == OPPORTUNITYLINEITEM && f.formType == CREATE,
+          ))
         "
         :resource="OPPORTUNITYLINEITEM"
         v-on:update:selectedForm="updateForm($event)"

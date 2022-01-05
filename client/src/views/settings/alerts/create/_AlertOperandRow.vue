@@ -618,7 +618,9 @@ export default {
       } else {
         val = val * -1
       }
-      this.form.field.operandValue.value = -Math.abs(val).toString()
+      val < 0
+        ? (this.form.field.operandValue.value = -Math.abs(val).toString())
+        : (this.form.field.operandValue.value = '0')
       console.log(this.form.field.operandValue.value)
     },
   },
