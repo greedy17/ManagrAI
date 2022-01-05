@@ -54,6 +54,7 @@ from managr.slack import constants as slack_consts
 from managr.salesforce.models import MeetingWorkflow
 from managr.slack.helpers.block_builders import divider_block
 from managr.core.background import _process_send_meeting_reminder
+from managr.slack.helpers.block_sets.common_blocksets import meeting_reminder_block_set
 
 
 NOTIFICATION_TITLE_STALLED_IN_STAGE = "Opportunity Stalled in Stage"
@@ -454,23 +455,32 @@ def generate_morning_digest(user_id):
 
 def generate_afternoon_digest(user_id):
     user = User.objects.get(id=user_id)
-    blocks = [
-        block_builders.simple_section("*Afternoon Digest* :coffee:", "mrkdwn"),
-        {"type": "divider"},
-    ]
-    meeting = _send_calendar_details(user_id)
-    tasks = process_get_task_list(user_id)
-    blocks = [*blocks, *meeting, {"type": "divider"}, *tasks, {"type": "divider"}]
+#   check user_level for Rep 
+    if user.user_level == "Rep" and core_consts.MEETING_REMINDER_REP:
+        meetings = check_for_uncompleted_meetings(user.id)
+        logger.info(f"UNCOMPLETED MEETINGS FOR {user.email}: {meetings}")
+        if meetings["status"]:
+#   blockset 
+            blocks = block_sets.get_block_set("meeting_reminder")
+#   check user_level for manager       
+    elif user.user_level == "Manager" and core_consts.MEETING_REMINDER_MANAGER:
+        meetings = check_for_uncompleted_meetings(user.id, True)
+        if meetings["status"]:
+#   blockset 
+            blocks = block_sets.get_block_set("manager_meeting_reminder")
     try:
         slack_requests.send_channel_message(
             user.slack_integration.channel,
             user.organization.slack_integration.access_token,
-            block_set=blocks,
+            block_set= [
+                blocks,
+                block_sets.get_block_set("actions_block_set")
+                ],
         )
     except Exception as e:
         logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
 
-    return
+    return 
 
 
 def _generate_notification_key_lapsed(num):
@@ -508,7 +518,6 @@ def check_reminders(user_id):
             )
             if check:
                 if key == core_consts.CALENDAR_REMINDER:
-                    print(key)
                     if hasattr(user, "nylas"):
                         _send_calendar_details(user_id)
                 elif key == core_consts.WORKFLOW_REMINDER:
@@ -518,7 +527,15 @@ def check_reminders(user_id):
                             emit_process_send_workflow_reminder(
                                 str(user.id), workflows["workflow_count"]
                             )
-
+                elif key == core_consts.MEETING_REMINDER_REP:
+                    meetings = check_for_uncompleted_meetings(user.id)
+                    logger.info(f"UNCOMPLETED MEETINGS FOR {user.email}: {meetings}")
+                    if meetings["status"]:
+                        emit_process_send_meeting_reminder(str(user.id), meetings["not_completed"])
+                elif key == core_consts.MEETING_REMINDER_MANAGER and user.user_level == "Manager":
+                    meetings = check_for_uncompleted_meetings(user.id, True)
+                    if meetings["status"]:
+                        emit_process_send_manager_reminder(str(user.id), meetings["not_completed"])
     return
 
 
