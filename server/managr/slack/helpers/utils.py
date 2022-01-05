@@ -1,4 +1,5 @@
 import os
+import pytz
 import time
 import hmac
 import hashlib
@@ -12,6 +13,8 @@ import pdb
 from django.conf import settings
 from dateutil import parser
 
+from managr.alerts.models import AlertConfig
+from managr.core.models import User
 from managr.slack.models import UserSlackIntegration
 from managr.slack.helpers import block_builders, requests
 from managr.slack import constants as slack_consts
@@ -353,3 +356,50 @@ def get_random_no_update_message(topic):
     ]
     idx = random.randint(0, len(RANDOM_NO_CHANGE_RESPONSES) - 1)
     return RANDOM_NO_CHANGE_RESPONSES[idx]
+
+
+def check_for_time(tz, hour, minute):
+    user_timezone = pytz.timezone(tz)
+    currenttime = datetime.today().time()
+    current = pytz.utc.localize(datetime.combine(datetime.today(), currenttime)).astimezone(
+        user_timezone
+    )
+    min = 00 if minute >= 30 else 30
+    hr = hour - 1 if minute < 30 else hour
+    return current <= current.replace(hour=hour, minute=minute) and current >= current.replace(
+        hour=hr, minute=min
+    )
+
+
+def check_for_uncompleted_meetings(user_id, org_level=False):
+    user = User.objects.get(id=user_id)
+    if hasattr(user, "slack_integration"):
+        if org_level:
+            users = User.objects.filter(
+                slack_integration__recap_receivers__contains=[user.slack_integration.slack_id]
+            )
+            not_completed = []
+            for user in users:
+                total_meetings = MeetingWorkflow.objects.filter(user=user.id).filter(
+                    datetime_created__contains=datetime.today().date()
+                )
+                user_not_completed = [
+                    meeting for meeting in total_meetings if meeting.progress == 0
+                ]
+                if len(user_not_completed):
+                    not_completed = [*not_completed, *user_not_completed]
+        else:
+            total_meetings = MeetingWorkflow.objects.filter(user=user.id).filter(
+                datetime_created__contains=datetime.today().date()
+            )
+            not_completed = [meeting for meeting in total_meetings if meeting.progress == 0]
+        if len(not_completed):
+            return {"status": True, "not_completed": len(not_completed)}
+    return {"status": False}
+
+
+def check_workflows_count(user_id):
+    workflows = AlertConfig.objects.filter(template__user=user_id)
+    if len(workflows):
+        return {"status": True, "workflow_count": len(workflows)}
+    return {"status": False}

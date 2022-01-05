@@ -33,6 +33,7 @@ from managr.organization.models import (
 from managr.core.models import User, MeetingPrepInstance
 from managr.core.background import emit_create_calendar_event
 from managr.outreach.tasks import emit_add_sequence_state
+from managr.core.cron import generate_morning_digest
 from managr.opportunity.models import Opportunity
 from managr.zoom.models import ZoomMeeting
 from managr.salesforce.models import MeetingWorkflow
@@ -713,24 +714,22 @@ def process_zoom_meeting_attach_resource(payload, context):
     if type:
         ts = context.get("original_message_timestamp")
         channel = context.get("original_message_channel")
-        current_date = date.today()
-        current_day = current_date.day
-        previous_day = current_date.replace(day=current_day - 1)
-        next_day = current_date.replace(day=current_day + 1)
         meetings = MeetingPrepInstance.objects.filter(user=user.id).filter(
-            datetime_created__range=(previous_day, next_day)
+            invocation=workflow.invocation
         )
-        blocks_set = [
-            block_builders.header_block("Upcoming Meetings For Today!"),
-            {"type": "divider"},
-        ]
-        for meeting in meetings:
-            blocks_set = [
-                *blocks_set,
+        paged_meetings = custom_paginator(meetings, count=1)
+        paginate_results = paged_meetings.get("results", [])
+        if len(paginate_results):
+            current_instance = paginate_results[0]
+            blockset = [
+                *blocks,
                 *get_block_set(
-                    "calendar_reminders_blockset", {"prep_id": str(meeting.id), "u": str(user.id)}
+                    "calendar_reminders_blockset",
+                    {"prep_id": str(current_instance.id), "u": str(user.id)},
                 ),
-                {"type": "divider"},
+                *custom_meeting_paginator_block(
+                    paged_meetings, invocation, user.slack_integration.channel
+                ),
             ]
     else:
         ts, channel = workflow.slack_interaction.split("|")
@@ -741,7 +740,6 @@ def process_zoom_meeting_attach_resource(payload, context):
         blocks_set = get_block_set("initial_meeting_interaction", {"w": context.get("w")})
 
     try:
-        print(channel, ts, slack_access_token, blocks_set)
         # update initial interaction workflow with new resource
         res = slack_requests.update_channel_message(
             channel, ts, slack_access_token, block_set=blocks_set
@@ -771,6 +769,65 @@ def process_zoom_meeting_attach_resource(payload, context):
     workflow.slack_view = res.get("view").get("id")
     workflow.save()
     return {"response_action": "clear"}
+
+
+@log_all_exceptions
+@processor(required_context=["w"])
+def process_digest_attach_resource(payload, context):
+    workflow = MeetingPrepInstance.objects.get(id=context.get("w"))
+    user = workflow.user
+    slack_access_token = user.organization.slack_integration.access_token
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    # get state - state contains the values based on the block_id
+
+    data = {
+        "view_id": payload["view"]["id"],
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Success"},
+            "blocks": get_block_set("success_modal", {}),
+        },
+    }
+    state_values = payload["view"]["state"]["values"]
+    meeting_resource = context.get("resource")
+    # check to see if it already has the create form added and save that instead
+    selected_action = [
+        val.get("selected_option", {}).get("value", [])
+        for val in state_values["select_existing"].values()
+    ]
+    selected_action = selected_action[0] if len(selected_action) else None
+    workflow.resource_id = selected_action
+    workflow.resource_type = meeting_resource
+    workflow.save()
+
+    ts = context.get("original_message_timestamp")
+    channel = context.get("original_message_channel")
+
+    blocks_set = generate_morning_digest(user.id, workflow.invocation)
+    try:
+        # update initial interaction workflow with new resource
+        res = slack_requests.update_channel_message(
+            channel, ts, slack_access_token, block_set=blocks_set
+        )
+        res = slack_requests.generic_request(url, data, access_token=slack_access_token)
+
+    # add a message for user's if this failed
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Attach resource for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Attach resource for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Attach resource for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Attach resource for user {str(workflow.id)} email {workflow.user.email} {e}"
+        )
 
 
 @processor()
@@ -1847,6 +1904,7 @@ def handle_view_submission(payload):
         slack_const.ZOOM_MEETING__PROCESS_STAGE_NEXT_PAGE: process_stage_next_page,
         slack_const.ZOOM_MEETING__UPDATE_PARTICIPANT_DATA: process_update_meeting_contact,
         slack_const.ZOOM_MEETING__SAVE_CONTACTS: process_save_contact_data,
+        slack_const.PROCESS_DIGEST_ATTACH_RESOURCE: process_digest_attach_resource,
         slack_const.COMMAND_FORMS__SUBMIT_FORM: process_submit_resource_data,
         slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE: process_next_page_slack_commands_form,
         slack_const.COMMAND_CREATE_TASK: process_create_task,

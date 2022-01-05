@@ -8,6 +8,7 @@ import json
 from datetime import datetime
 
 from django.db.models import Q
+from rest_framework.decorators import action
 
 from managr.utils.sites import get_site_url
 from managr.core.models import User, Notification
@@ -35,7 +36,12 @@ from managr.salesforce.adapter.exceptions import (
 )
 from managr.core.models import MeetingPrepInstance
 from managr.slack.helpers.block_sets.meeting_review_block_sets import schedule_zoom_meeting_modal
-from managr.slack.helpers.block_sets.command_views_blocksets import create_modal_block_set, command_create_task_interaction, create_add_to_cadence_block_set, choose_opportunity_block_set
+from managr.slack.helpers.block_sets.command_views_blocksets import (
+    create_modal_block_set,
+    command_create_task_interaction,
+    create_add_to_cadence_block_set,
+    choose_opportunity_block_set,
+)
 
 logger = logging.getLogger("managr")
 
@@ -376,8 +382,6 @@ def workflow_reminder_block_set(context):
     return blocks
 
 
-
-
 @block_set()
 def calendar_reminders_blockset(context):
     meeting = MeetingPrepInstance.objects.get(id=context.get("prep_id"))
@@ -399,11 +403,13 @@ def calendar_reminders_blockset(context):
         resource = Account.objects.get(id=meeting.resource_id)
     elif type == "Lead":
         resource = Lead.objects.get(id=meeting.resource_id)
+    text = f"{title}\n Starts at {start_time}\n Attendees: " + str(len(meeting.participants))
+    if type and type != "prep":
+        text += f"\n *{type} {resource.name}*"
     blocks = [
         block_builders.section_with_button_block(
-            "Review Attendees",
-            section_text=f"{title}\n Starts at {start_time}\n Attendees: "
-            + str(len(meeting.participants)),
+            "View Attendees",
+            section_text=text,
             button_value=context.get("prep_id"),
             action_id=action_with_params(
                 slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
@@ -411,110 +417,54 @@ def calendar_reminders_blockset(context):
             ),
         ),
     ]
+    action_blocks = []
     if type and type != "prep":
-        blocks.append(
-            block_builders.section_with_button_block(
+        action_blocks.append(
+            block_builders.simple_button_block(
                 "Change Opportunity",
-                section_text=f"We mapped this meeting to: *{type} {resource.name}*",
-                button_value=f"type%{str(meeting.id)}",
-                block_id=f"type%{str(meeting.id)}",
+                f"type%{str(meeting.id)}",
                 action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
-            ),
+            )
         )
+        action_blocks.append(
+            block_builders.simple_button_block(
+                "View Notes",
+                "get_notes",
+                action_id=action_with_params(
+                    slack_const.GET_NOTES,
+                    params=[
+                        f"u={str(user.id)}",
+                        f"resource_id={str(meeting.resource_id)}",
+                        "type=alert",
+                    ],
+                ),
+            )
+        )
+
     else:
-        blocks.append(
-            block_builders.section_with_button_block(
+        action_blocks.append(
+            block_builders.simple_button_block(
                 "Map to Opportunity",
+                f"type%{str(meeting.id)}",
                 action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
-                section_text=f"We could not find an Opportuniy or Account to map this meeting to",
-                button_value=f"type%{str(meeting.id)}",
-                block_id=f"type%{str(meeting.id)}",
                 style="primary",
             )
         ),
-
+    blocks.append(block_builders.actions_block(action_blocks, block_id=f"type%{str(meeting.id)}",))
     return blocks
+
 
 @block_set()
 def meeting_reminder_block_set(context):
     not_completed = context.get("not_completed")
     text = "meeting" if not_completed < 2 else "meetings"
-    blocks =  [
-        block_builders.header_block(
-		{
-			"type": "header",
-			"text": {
-				"type": "plain_text",
-				"text": "Afternoon Digest",
-				"emoji": True
-			}
-		}
-        )],
-    blocks.append(
-        block_builders.divider_block(
-            {
-                "type": "divider"
-            },
-        )),
-    blocks.append(
+    blocks = [
         block_builders.simple_section(
             f"FYI you have {not_completed} {text} from today that still need to be logged!"
-        ))
-    blocks.append(
-        block_builders.section_with_accessory_block(
-           accessory= {
-               "type": "multi_static_select",
-				"placeholder": {
-					"type": "plain_text",
-					"text": "Select an item",
-					"emoji": True
-				},
-                "options": [
-                {
-                    "text": {
-                        "type": "plain_text",
-                        "text": "Create Opportunity",
-                        "emoji": True
-                    },
-                    "value": create_modal_block_set(context)
-                },
-                {
-                    "text": {
-                        "type": "plain_text",
-                        "text": "Update Opportunity",
-                        "emoji": True
-                    },
-                    "value": choose_opportunity_block_set(context)
-                },
-                {
-                    "text": {
-                        "type": "plain_text",
-                        "text": "Create Task",
-                        "emoji": True
-                    },
-                    "value": command_create_task_interaction(context)
-                },
-                {
-                    "text": {
-                        "type": "plain_text",
-                        "text": "Add to Sequence/Cadence",
-                        "emoji": True
-                    },
-                    "value": create_add_to_cadence_block_set(context)
-                },
-                {
-                    "text": {
-                        "type": "plain_text",
-                        "text": "Schedule Zoom Call",
-                        "emoji": True
-                    },
-                    "value": schedule_zoom_meeting_modal(context)
-					}
-				],
-				"action_id": "static_select-action"
-			}
-        ))
+        )
+    ]
     return blocks
+
 
 @block_set()
 def manager_meeting_reminder_block_set(context):
@@ -525,72 +475,9 @@ def manager_meeting_reminder_block_set(context):
         block_builders.simple_section(
             f"Hey {name} your team still has *{not_completed} {text}* from today that needs to be logged.",
             "mrkdwn",
-        )]
-    blocks.append(
-        block_builders.section_with_accessory_block(
-           accessory= {
-               "type": "multi_static_select",
-				"placeholder": {
-					"type": "plain_text",
-					"text": "Select an item",
-					"emoji": True
-				},
-                "options": [
-                {
-                    "text": {
-                        "type": "plain_text",
-                        "text": "Create Opportunity",
-                        "emoji": True
-                    },
-                    "value": create_modal_block_set(context)
-                },
-                {
-                    "text": {
-                        "type": "plain_text",
-                        "text": "Update Opportunity",
-                        "emoji": True
-                    },
-                    "value": choose_opportunity_block_set(context)
-                },
-                {
-                    "text": {
-                        "type": "plain_text",
-                        "text": "Create Task",
-                        "emoji": True
-                    },
-                    "value": command_create_task_interaction(context)
-                },
-                {
-                    "text": {
-                        "type": "plain_text",
-                        "text": "Add to Sequence/Cadence",
-                        "emoji": True
-                    },
-                    "value": create_add_to_cadence_block_set(context)
-                },
-                {
-                    "text": {
-                        "type": "plain_text",
-                        "text": "Schedule Zoom Call",
-                        "emoji": True
-                    },
-                    "value": schedule_zoom_meeting_modal(context)
-					}
-				],
-				"action_id": "static_select-action"
-			}
-        ))
-
+        )
+    ]
     return blocks
-
-
-@block_set()
-def morning_digest_blockset(context):
-    blocks = [block_builders.header_block("Morning Digest")]
-    # Morning meetings with pagination
-
-    # Tasks with pagination
-    # Alerts with run button
 
 
 def current_product_block_set(context):

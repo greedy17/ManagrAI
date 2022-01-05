@@ -15,8 +15,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write(self.style.SUCCESS("Time: {}".format(options["time"])))
         time = options["time"][0]
-        users = options["users"]
-        print(users)
         for t in options["users"]:
             user = User.objects.filter(email=t).first()
             if time == "morning":

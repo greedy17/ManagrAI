@@ -513,6 +513,7 @@ def process_meeting_selected_resource(payload, context):
     }
     if type:
         context.update({"type": type})
+
     private_metadata.update(context)
     data = {
         "trigger_id": trigger_id,
@@ -622,7 +623,11 @@ def process_meeting_selected_resource_option(payload, context):
         }
 
     else:
-        callback_id = slack_const.ZOOM_MEETING__SELECTED_RESOURCE
+        callback_id = (
+            slack_const.PROCESS_DIGEST_ATTACH_RESOURCE
+            if type
+            else slack_const.ZOOM_MEETING__SELECTED_RESOURCE
+        )
 
     data = {
         "view_id": payload["view"]["id"],
