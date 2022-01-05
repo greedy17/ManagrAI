@@ -424,9 +424,6 @@ def process_stage_selected_command_form(payload, context):
     if len(added_form_ids):
         submit_button_message = "Next"
         callback_id = slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE
-    elif not len(added_form_ids) and org.has_products:
-        submit_button_message = "Add Products"
-        callback_id = slack_const.PROCESS_ADD_PRODUCTS_FORM
     elif not len(added_form_ids) and main_form.template.form_type == "UPDATE":
         submit_button_message = "Update"
         slack_const.COMMAND_FORMS__SUBMIT_FORM
@@ -803,6 +800,7 @@ def process_show_update_resource_form(payload, context):
     show_submit_button_if_fields_added = False
     has_stage_forms = False
     stage_form = None
+    product_form = None
     current_products = None
     # HACK forms are generated with a helper fn currently stagename takes a special action id to update forms
     # we need to manually change this action_id
@@ -821,27 +819,6 @@ def process_show_update_resource_form(payload, context):
                 template=template, resource_id=resource_id, user=user,
             )
         )
-        if user.organization.has_products and resource_type == "Opportunity":
-            product_template = (
-                OrgCustomSlackForm.objects.for_user(user)
-                .filter(Q(resource="OpportunityLineItem", form_type="CREATE"))
-                .first()
-            )
-            product_form = (
-                OrgCustomSlackFormInstance.objects.create(
-                    template=product_template,
-                    resource_id=resource_id,
-                    user=user,
-                    alert_instance_id=alert_id,
-                )
-                if alert_id
-                else OrgCustomSlackFormInstance.objects.create(
-                    template=product_template, resource_id=resource_id, user=user,
-                )
-            )
-            current_products = OpportunityLineItem.objects.filter(
-                opportunity=slack_form.resource_id
-            )
         if slack_form:
             current_stage = slack_form.resource_object.secondary_data.get("StageName")
             stage_template = (
@@ -856,7 +833,25 @@ def process_show_update_resource_form(payload, context):
                 )
                 form_ids.append(str(stage_form.id))
             context.update({"f": ",".join(form_ids)})
-
+    if user.organization.has_products and resource_type == "Opportunity":
+        product_template = (
+            OrgCustomSlackForm.objects.for_user(user)
+            .filter(Q(resource="OpportunityLineItem", form_type="CREATE"))
+            .first()
+        )
+        product_form = (
+            OrgCustomSlackFormInstance.objects.create(
+                template=product_template,
+                resource_id=resource_id,
+                user=user,
+                alert_instance_id=alert_id,
+            )
+            if alert_id
+            else OrgCustomSlackFormInstance.objects.create(
+                template=product_template, resource_id=resource_id, user=user,
+            )
+        )
+        current_products = OpportunityLineItem.objects.filter(opportunity=slack_form.resource_id)
     else:
         slack_form = user.custom_slack_form_instances.filter(id=prev_form).delete()
         slack_form = None
