@@ -8,13 +8,18 @@ from django.conf import settings
 import kronos
 import datetime
 
+from managr.utils.misc import custom_paginator
+from managr.slack.helpers.block_sets.command_views_blocksets import (
+    custom_meeting_paginator_block,
+    custom_task_paginator_block,
+)
 from django.utils import timezone
 from django.db.models import Q
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from managr.slack.helpers import block_builders, block_sets
-
+from managr.alerts.models import AlertConfig
 from managr.core import constants as core_consts
 from managr.core.models import NylasAuthAccount, User, MeetingPrepInstance
 from managr.core.nylas.auth import revoke_access_token
@@ -48,6 +53,8 @@ from managr.zoom import constants as zoom_consts
 from managr.slack import constants as slack_consts
 from managr.salesforce.models import MeetingWorkflow
 from managr.slack.helpers.block_builders import divider_block
+from managr.core.background import _process_send_meeting_reminder
+from managr.slack.helpers.block_sets.common_blocksets import meeting_reminder_block_set
 
 
 NOTIFICATION_TITLE_STALLED_IN_STAGE = "Opportunity Stalled in Stage"
@@ -60,6 +67,13 @@ NOTIFICATION_TITLE_LAPSED_30 = "Opportunity expected close date lapsed by at lea
 
 
 logger = logging.getLogger("managr")
+
+
+def to_date_string(date):
+    if not date:
+        return "n/a"
+    d = datetime.datetime.strptime(date, "%Y-%m-%d")
+    return d.strftime("%a, %B %d, %Y")
 
 
 def _check_days_lead_expected_close_lapsed(lead_expected_close_date):
@@ -130,7 +144,7 @@ def _process_calendar_details(user_id):
     return processed_data
 
 
-def meeting_prep(processed_data, user_id, send_slack=True):
+def meeting_prep(processed_data, user_id, invocation):
     def get_domain(email):
         """Parse domain out of an email"""
         return email[email.index("@") + 1 :]
@@ -297,7 +311,12 @@ def meeting_prep(processed_data, user_id, send_slack=True):
             contact["_form"] = str(form.id)
     event_data = processed_data
     processed_data.pop("participants")
-    data = {"user": user.id, "participants": meeting_contacts, "event_data": event_data}
+    data = {
+        "user": user.id,
+        "participants": meeting_contacts,
+        "event_data": event_data,
+        "invocation": invocation,
+    }
     if hasattr(meeting_resource_data, "resource_id"):
         data["resource_id"] = meeting_resource_data["resource_id"]
         data["resource_type"] = meeting_resource_data["resource_type"]
@@ -307,43 +326,202 @@ def meeting_prep(processed_data, user_id, send_slack=True):
     return
 
 
-def _send_calendar_details(user_id):
+def _send_calendar_details(user_id, invocation=None):
     user = User.objects.get(id=user_id)
     processed_data = _process_calendar_details(user_id)
-    if processed_data:
-        logger.info(f"Processing upcoming meetings for {user.email}")
-        logger.info(f"MEETING DATA: {processed_data}")
-        # processed_data checks to see how many events exists
-        blocks = [
-            block_builders.header_block("Upcoming Meetings For Today!"),
-            {"type": "divider"},
-        ]
-        for event in processed_data:
-            meeting_prep(event, user_id)
-        meetings = MeetingPrepInstance.objects.filter(user=user.id).filter(
-            datetime_created__gt=datetime.date.today()
+    # processed_data checks to see how many events exists
+    current_invocation = invocation
+    blocks = [
+        block_builders.simple_section(":calendar: *Meetings Today* ", "mrkdwn"),
+        # {"type": "divider"},
+    ]
+    if invocation:
+        meetings = MeetingPrepInstance.objects.filter(user=user.id).filter(invocation=invocation)
+    else:
+        last_instance = (
+            MeetingPrepInstance.objects.filter(user=user).order_by("-datetime_created").first()
         )
-
-        for meeting in meetings:
+        current_invocation = last_instance.invocation + 1
+        for event in processed_data:
+            meeting_prep(event, user_id, current_invocation)
+        meetings = MeetingPrepInstance.objects.filter(user=user.id).filter(
+            invocation=current_invocation
+        )
+    if meetings:
+        meeting_instances = MeetingPrepInstance.objects.filter(invocation=current_invocation)
+        paged_meetings = custom_paginator(meeting_instances, count=1)
+        paginate_results = paged_meetings.get("results", [])
+        if len(paginate_results):
+            current_instance = paginate_results[0]
             blocks = [
                 *blocks,
-                *block_sets.get_block_set(
-                    "calendar_reminders_blockset", {"prep_id": str(meeting.id), "u": str(user.id)}
+                *get_block_set(
+                    "calendar_reminders_blockset",
+                    {"prep_id": str(current_instance.id), "u": str(user.id)},
                 ),
-                {"type": "divider"},
+                *custom_meeting_paginator_block(
+                    paged_meetings, current_invocation, user.slack_integration.channel
+                ),
             ]
-        # Loop thru processed_data and create block for each one
+            #     for meeting in meetings:
+            #         blocks = [
+            #             *blocks,
+            #             *block_sets.get_block_set(
+            #                 "calendar_reminders_blockset", {"prep_id": str(meeting.id), "u": str(user.id)}
+            #             ),
+            #             {"type": "divider"},
+            #         ]
+            #     # Loop thru processed_data and create block for each one
+            # try:
+            #     slack_requests.send_channel_message(
+            #         user.slack_integration.channel,
+            #         user.organization.slack_integration.access_token,
+            #         text="Calendar: Meetings for Today",
+            #         block_set=blocks,
+            #     )
+            # except Exception as e:
+            #     logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
+            return blocks
+        else:
+            logger.info(f"No meetings for {user.email}")
+
+
+def process_get_task_list(user_id):
+    user = User.objects.get(id=user_id)
+    tasks = user.salesforce_account.adapter_class.list_tasks()
+    paged_tasks = custom_paginator(tasks, count=3)
+    results = paged_tasks.get("results", [])
+    if results:
+        task_blocks = [
+            block_builders.simple_section(
+                f":white_check_mark: *Upcoming Tasks: {len(tasks)}*", "mrkdwn"
+            ),
+        ]
+        for t in tasks:
+            resource = "_salesforce object n/a_"
+            # get the resource if it is what_id is for account/opp
+            # get the resource if it is who_id is for lead
+            resource_type = None
+            if t.what_id:
+                # first check for opp
+                obj = user.imported_opportunity.filter(integration_id=t.what_id).first()
+                resource_type = "Opportunity"
+                if not obj:
+                    obj = user.imported_account.filter(integration_id=t.what_id).first()
+                    resource_type = "Account"
+                if obj:
+                    resource = f"*{obj.name}*"
+
+            elif t.who_id:
+                obj = user.imported_lead.filter(integration_id=t.who_id).first()
+                if obj:
+                    resource = f"*{obj.name}*"
+            task_blocks.extend(
+                [
+                    block_builders.section_with_button_block(
+                        "View Task",
+                        "view_task",
+                        f"{resource}, due _*{to_date_string(t.activity_date)}*_, {t.subject} `{t.status}`",
+                        url=f"{user.salesforce_account.instance_url}/lightning/r/Task/{t.id}/view",
+                    ),
+                ]
+            )
+            task_blocks.extend(
+                custom_task_paginator_block(paged_tasks, user.slack_integration.channel)
+            )
+    else:
+        task_blocks = [
+            block_builders.simple_section("You have no tasks due today :clap:", "mrkdwn"),
+        ]
+    return task_blocks
+
+
+def process_current_alert_list(user_id):
+    user = User.objects.get(id=user_id)
+    configs = AlertConfig.objects.filter(
+        Q(template__user__is_active=True, template__is_active=True)
+        & Q(
+            Q(recurrence_frequency="WEEKLY", recurrence_day=timezone.now().weekday())
+            | Q(recurrence_frequency="MONTHLY", recurrence_day=timezone.now().day)
+        )
+    )
+    alert_blocks = [
+        block_builders.simple_section(f":bell: *Pipeline Monitor*", "mrkdwn"),
+    ]
+    if configs:
+        for config in configs:
+            channel_info = slack_requests.get_channel_info(
+                user.organization.slack_integration.access_token, user_id, config.recipients[0]
+            )
+            name = channel_info.get("channel").get("name")
+            alert_blocks = [
+                *alert_blocks,
+                block_builders.simple_section(f"{config.template.title}: #{name}", "mrkdwn"),
+            ]
+    else:
+        alert_blocks.append(
+            block_builders.simple_section("Your pipeline look good today :thumbsup: ", "mrkdwn")
+        )
+    return alert_blocks
+
+
+def generate_morning_digest(user_id, invocation=None):
+    user = User.objects.get(id=user_id)
+    blocks = [
+        block_builders.simple_section("*Morning Digest* :coffee:", "mrkdwn"),
+        {"type": "divider"},
+    ]
+    alerts = process_current_alert_list(user_id)
+    meeting = _send_calendar_details(user_id, invocation)
+    tasks = process_get_task_list(user_id)
+    blocks = [*blocks, *meeting, {"type": "divider"}, *tasks, {"type": "divider"}, *alerts]
+    if invocation is None:
         try:
             slack_requests.send_channel_message(
                 user.slack_integration.channel,
                 user.organization.slack_integration.access_token,
-                text="Calendar: Meetings for Today",
                 block_set=blocks,
             )
         except Exception as e:
             logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
     else:
-        logger.info(f"No meeting for {user.email}")
+        return blocks
+
+
+def generate_afternoon_digest(user_id):
+    user = User.objects.get(id=user_id)
+    #   check user_level for manager
+    if user.user_level == "Manager":
+        meetings = check_for_uncompleted_meetings(user.id, True)
+        if meetings["status"]:
+            #   blockset
+            meeting = block_sets.get_block_set(
+                "manager_meeting_reminder",
+                {"u": str(user.id), "not_completed": meetings["not_completed"]},
+            )
+    else:
+        meetings = check_for_uncompleted_meetings(user.id)
+        logger.info(f"UNCOMPLETED MEETINGS FOR {user.email}: {meetings}")
+        if meetings["status"]:
+            #   blockset
+            meeting = block_sets.get_block_set(
+                "meeting_reminder", {"u": str(user.id), "not_completed": meetings["not_completed"]}
+            )
+    actions = block_sets.get_block_set("actions_block_set", {"u": str(user.id)})
+    try:
+        slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            block_set=[
+                block_builders.simple_section("*Afternoon Digest* :beer:", "mrkdwn"),
+                {"type": "divider"},
+                *meeting,
+                {"type": "divider"},
+                *actions,
+            ],
+        )
+    except Exception as e:
+        logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
 
 
 def _generate_notification_key_lapsed(num):
@@ -380,9 +558,9 @@ def check_reminders(user_id):
                 core_consts.REMINDER_CONFIG[key]["MINUTE"],
             )
             if check:
-                if key == core_consts.CALENDAR_REMINDER:
+                if key == core_consts.MORNING_DIGEST:
                     if hasattr(user, "nylas"):
-                        _send_calendar_details(user_id)
+                        generate_morning_digest(user_id)
                 elif key == core_consts.WORKFLOW_REMINDER:
                     if datetime.datetime.today().weekday() == 4:
                         workflows = check_workflows_count(user.id)
@@ -391,13 +569,7 @@ def check_reminders(user_id):
                                 str(user.id), workflows["workflow_count"]
                             )
                 elif key == core_consts.MEETING_REMINDER_REP:
-                    meetings = check_for_uncompleted_meetings(user.id)
-                    logger.info(f"UNCOMPLETED MEETINGS FOR {user.email}: {meetings}")
-                    if meetings["status"]:
-                        emit_process_send_meeting_reminder(str(user.id), meetings["not_completed"])
-                elif key == core_consts.MEETING_REMINDER_MANAGER and user.user_level == "Manager":
-                    meetings = check_for_uncompleted_meetings(user.id, True)
-                    if meetings["status"]:
-                        emit_process_send_manager_reminder(str(user.id), meetings["not_completed"])
-
+                    generate_afternoon_digest(user_id)
+                elif key == core_consts.MEETING_REMINDER_MANAGER:
+                    generate_afternoon_digest(user_id)
     return
