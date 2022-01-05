@@ -468,17 +468,17 @@ def generate_afternoon_digest(user_id):
         if meetings["status"]:
 #   blockset 
             blocks = block_sets.get_block_set("manager_meeting_reminder")
-    try:
-        slack_requests.send_channel_message(
-            user.slack_integration.channel,
-            user.organization.slack_integration.access_token,
-            block_set= [
-                blocks,
-                block_sets.get_block_set("actions_block_set")
-                ],
-        )
-    except Exception as e:
-        logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
+        try:
+            slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                block_set= [
+                    *blocks,
+                    block_sets.get_block_set("actions_block_set")
+                    ],
+            )
+        except Exception as e:
+            logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
 
     return 
 
