@@ -19,6 +19,8 @@ class Command(BaseCommand):
             user = User.objects.filter(email=t).first()
             if time == "morning":
                 generate_morning_digest(str(user.id))
+            elif time == "afternoon":
+                generate_afternoon_digest(str(user.id))
             else:
                 generate_afternoon_digest(str(user.id))
             self.stdout.write(self.style.SUCCESS("Checking reminders for: {}".format(user.email,)),)
