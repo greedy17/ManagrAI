@@ -381,9 +381,9 @@ def _send_calendar_details(user_id, invocation=None):
             #     )
             # except Exception as e:
             #     logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
-            return blocks
         else:
-            logger.info(f"No meetings for {user.email}")
+            blocks.append(block_builders.simple_section("No meetings scheduled!"))
+        return blocks
 
 
 def process_get_task_list(user_id):
@@ -474,6 +474,7 @@ def generate_morning_digest(user_id, invocation=None):
     alerts = process_current_alert_list(user_id)
     meeting = _send_calendar_details(user_id, invocation)
     tasks = process_get_task_list(user_id)
+    logger.info(f"MORNING DIGEST: ALERTS: {alerts} | MEETINGS: {meeting} | TASKS: {tasks}")
     blocks = [*blocks, *meeting, {"type": "divider"}, *tasks, {"type": "divider"}, *alerts]
     if invocation is None:
         try:
