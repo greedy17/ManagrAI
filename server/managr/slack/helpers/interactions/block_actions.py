@@ -762,6 +762,7 @@ def process_show_update_resource_form(payload, context):
 
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
+
     is_update = payload.get("view", None)
     url = f"{slack_const.SLACK_API_ROOT}{slack_const.VIEWS_UPDATE if is_update else slack_const.VIEWS_OPEN}"
     loading_view_data = {
@@ -804,9 +805,7 @@ def process_show_update_resource_form(payload, context):
     resource_type = context.get("resource")
     pm = json.loads(payload.get("view", {}).get("private_metadata", "{}"))
     prev_form = pm.get("f", None)
-
     show_submit_button_if_fields_added = False
-    has_stage_forms = False
     stage_form = None
     product_form = None
     current_products = None
@@ -841,6 +840,9 @@ def process_show_update_resource_form(payload, context):
                 )
                 form_ids.append(str(stage_form.id))
             context.update({"f": ",".join(form_ids)})
+    else:
+        slack_form = user.custom_slack_form_instances.filter(id=prev_form).delete()
+        slack_form = None
     if user.organization.has_products and resource_type == "Opportunity":
         product_template = (
             OrgCustomSlackForm.objects.for_user(user)
@@ -860,9 +862,6 @@ def process_show_update_resource_form(payload, context):
             )
         )
         current_products = OpportunityLineItem.objects.filter(opportunity=slack_form.resource_id)
-    else:
-        slack_form = user.custom_slack_form_instances.filter(id=prev_form).delete()
-        slack_form = None
     blocks = get_block_set(
         "update_modal_block_set",
         context={**context, "resource_type": resource_type, "resource_id": resource_id},
@@ -901,11 +900,10 @@ def process_show_update_resource_form(payload, context):
         "channel_id": payload.get("container").get("channel_id"),
         "message_ts": payload.get("container").get("message_ts"),
     }
-    if user.organization.has_products:
-        if product_form:
-            private_metadata.update({"product_form": str(product_form.id)})
+    if user.organization.has_products and product_form is not None:
+        private_metadata.update({"product_form": str(product_form.id)})
     private_metadata.update(context)
-    if user.organization.has_products:
+    if user.organization.has_products and resource_type == "Opportunity":
         blocks.append(
             block_builders.actions_block(
                 [
@@ -924,17 +922,17 @@ def process_show_update_resource_form(payload, context):
                 block_id="ADD_PRODUCT_BUTTON",
             ),
         )
-    if current_products:
-        for product in current_products:
-            product_block = get_block_set(
-                "current_product_blockset",
-                {
-                    "opp_item_id": str(product.id),
-                    "u": str(user.id),
-                    "main_form": str(slack_form.id),
-                },
-            )
-            blocks.append(product_block)
+        if current_products:
+            for product in current_products:
+                product_block = get_block_set(
+                    "current_product_blockset",
+                    {
+                        "opp_item_id": str(product.id),
+                        "u": str(user.id),
+                        "main_form": str(slack_form.id),
+                    },
+                )
+                blocks.append(product_block)
     if alert_id:
         private_metadata.update(
             {"alert_id": str(alert_id.id), "current_page": context.get("current_page")}
