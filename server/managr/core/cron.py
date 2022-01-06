@@ -500,19 +500,21 @@ def generate_afternoon_digest(user_id):
     if user.user_level == "Manager":
         meetings = check_for_uncompleted_meetings(user.id, True)
         if meetings["status"]:
-            #   blockset
             meeting = block_sets.get_block_set(
                 "manager_meeting_reminder",
                 {"u": str(user.id), "not_completed": meetings["not_completed"]},
             )
+        else:
+            meeting = [block_builders.simple_section("You've completed all your meetings today! :clap:", "mrkdwn")]
     else:
         meetings = check_for_uncompleted_meetings(user.id)
         logger.info(f"UNCOMPLETED MEETINGS FOR {user.email}: {meetings}")
         if meetings["status"]:
-            #   blockset
             meeting = block_sets.get_block_set(
                 "meeting_reminder", {"u": str(user.id), "not_completed": meetings["not_completed"]}
             )
+        else:
+            meeting = [block_builders.simple_section("You've completed all your meetings today! :clap:", "mrkdwn")]
     actions = block_sets.get_block_set("actions_block_set", {"u": str(user.id)})
     try:
         slack_requests.send_channel_message(
