@@ -543,6 +543,13 @@ class MeetingPrepInstance(TimeStampModel):
     invocation = models.PositiveIntegerField(
         default=0, help_text="Keeps track of the number of times the meeting instance was called",
     )
+    form = models.OneToOneField(
+        "slack.OrgCustomSlackFormInstance",
+        on_delete=models.CASCADE,
+        related_name="meeting_prep_instance",
+        null=True,
+        blank=True,
+    )
     objects = MeetingPrepQuerySet.as_manager()
 
     class Meta:
