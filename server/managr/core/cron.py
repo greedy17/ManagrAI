@@ -199,7 +199,6 @@ def meeting_prep(processed_data, user_id, invocation):
             memo[p.get("email")] = len(participants)
             participants.append(p)
 
-    # print(p)
     # If the user has their calendar connected through Nylas, find a
     # matching meeting and gather unique participant emails.
     # calendar_participants = calendar_participants_from_zoom_meeting(meeting, user)
@@ -505,7 +504,11 @@ def generate_afternoon_digest(user_id):
                 {"u": str(user.id), "not_completed": meetings["not_completed"]},
             )
         else:
-            meeting = [block_builders.simple_section("You've completed all your meetings today! :clap:", "mrkdwn")]
+            meeting = [
+                block_builders.simple_section(
+                    "You've completed all your meetings today! :clap:", "mrkdwn"
+                )
+            ]
     else:
         meetings = check_for_uncompleted_meetings(user.id)
         logger.info(f"UNCOMPLETED MEETINGS FOR {user.email}: {meetings}")
@@ -514,7 +517,11 @@ def generate_afternoon_digest(user_id):
                 "meeting_reminder", {"u": str(user.id), "not_completed": meetings["not_completed"]}
             )
         else:
-            meeting = [block_builders.simple_section("You've completed all your meetings today! :clap:", "mrkdwn")]
+            meeting = [
+                block_builders.simple_section(
+                    "You've completed all your meetings today! :clap:", "mrkdwn"
+                )
+            ]
     actions = block_sets.get_block_set("actions_block_set", {"u": str(user.id)})
     try:
         slack_requests.send_channel_message(

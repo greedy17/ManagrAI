@@ -1932,7 +1932,8 @@ def process_show_engagement_modal(payload, context):
 
 
 def process_managr_action(payload, context):
-    if hasattr(payload, "view"):
+    view = payload.get("view", None)
+    if view:
         state = payload["view"]["state"]
         data = {"view_id": payload["view"]["id"]}
     else:
