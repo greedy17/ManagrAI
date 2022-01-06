@@ -463,7 +463,7 @@ def actions_block_set(context):
         options.append(block_builders.option("Add To Cadence", "ADD_CADENCE"))
     blocks = [
         block_builders.static_select(
-            "What would you like to do?",
+            ':male_genie: Anything else you need to get done today?',
             options,
             f"{slack_const.COMMAND_MANAGR_ACTION}?u={user_id}",
             block_id="select_action",
