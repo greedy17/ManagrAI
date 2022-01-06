@@ -451,7 +451,7 @@ def process_current_alert_list(user_id):
         )
     )
     alert_blocks = [
-        block_builders.simple_section(f":bell: *Pipeline Monitor*", "mrkdwn"),
+        block_builders.simple_section(f":eyes: *Pipeline Monitor*", "mrkdwn"),
     ]
     if configs:
         for config in configs:
