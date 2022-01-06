@@ -1414,7 +1414,6 @@ def process_paginate_alerts(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor()
 def process_paginate_meetings(payload, context):
-    print(payload)
     channel_id = payload.get("channel", {}).get("id", None)
     ts = payload.get("message", {}).get("ts", None)
     user_slack_id = payload.get("user", {}).get("id", None)
@@ -1933,11 +1932,16 @@ def process_show_engagement_modal(payload, context):
 
 
 def process_managr_action(payload, context):
-    state = payload["view"]["state"]
+    view = payload.get("view", None)
+    if view:
+        state = payload["view"]["state"]
+        data = {"view_id": payload["view"]["id"]}
+    else:
+        state = payload["state"]
+        data = {"trigger_id": payload["trigger_id"]}
     command_value = state["values"]["select_action"][f"COMMAND_MANAGR_ACTION?u={context.get('u')}"][
         "selected_option"
     ]["value"]
-    data = {"view_id": payload["view"]["id"]}
     data.update(context)
     get_action(command_value, data)
     return

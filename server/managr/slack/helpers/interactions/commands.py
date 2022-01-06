@@ -31,10 +31,13 @@ def update_resource(context):
             }
         blocks = get_block_set("update_modal_block_set", {"u": str(user.id), "type": "command"},)
         access_token = user.organization.slack_integration.access_token
-
-        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        view_id = context.get("view_id", None)
+        url = (
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+            if view_id
+            else slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+        )
         data = {
-            "view_id": str(context.get("view_id")),
             "view": {
                 "type": "modal",
                 "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
@@ -45,7 +48,10 @@ def update_resource(context):
                 "external_id": f"update_modal_block_set.{str(uuid.uuid4())}",
             },
         }
-        logger.info(f"BLOCKS FROM UPDATE --{data}")
+        if view_id:
+            data["view_id"] = view_id
+        else:
+            data["trigger_id"] = context.get("trigger_id")
         slack_requests.generic_request(url, data, access_token=access_token)
 
 
@@ -75,9 +81,13 @@ def create_resource(context):
             ),
         ]
         access_token = user.organization.slack_integration.access_token
-        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        view_id = context.get("view_id", None)
+        url = (
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+            if view_id
+            else slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+        )
         data = {
-            "view_id": str(context.get("view_id")),
             "view": {
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Create Resource"},
@@ -85,7 +95,10 @@ def create_resource(context):
                 "external_id": f"create_modal.{str(uuid.uuid4())}",
             },
         }
-
+        if view_id:
+            data["view_id"] = view_id
+        else:
+            data["trigger_id"] = context.get("trigger_id")
         slack_requests.generic_request(url, data, access_token=access_token)
 
 
@@ -115,9 +128,13 @@ def create_task(context):
             ),
         ]
         access_token = user.organization.slack_integration.access_token
-        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        view_id = context.get("view_id", None)
+        url = (
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+            if view_id
+            else slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+        )
         data = {
-            "view_id": str(context.get("view_id")),
             "view": {
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Create Task"},
@@ -125,7 +142,10 @@ def create_task(context):
                 "external_id": f"create_modal.{str(uuid.uuid4())}",
             },
         }
-
+        if view_id:
+            data["view_id"] = view_id
+        else:
+            data["trigger_id"] = context.get("trigger_id")
         slack_requests.generic_request(url, data, access_token=access_token)
 
 
@@ -149,16 +169,23 @@ def list_tasks(context):
     # Pulls tasks from Salesforce
     blocks = get_block_set("tasks_list", {"u": str(user.id)})
     access_token = user.organization.slack_integration.access_token
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    success_blocks = block_builders.simple_section("Successfully got tasks for today")
     data = {
-        "view_id": str(context.get("view_id")),
         "view": {
             "type": "modal",
             "title": {"type": "plain_text", "text": "Success"},
-            "blocks": [success_blocks],
+            "blocks": blocks,
         },
     }
+    view_id = context.get("view_id", None)
+    url = (
+        slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        if view_id
+        else slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    )
+    if view_id:
+        data["view_id"] = view_id
+    else:
+        data["trigger_id"] = context.get("trigger_id")
     try:
         res = slack_requests.generic_request(url, data, access_token=access_token)
         slack_requests.send_ephemeral_message(
@@ -177,7 +204,6 @@ def get_notes_command(context):
         ).first()
         if not slack:
             return
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     user = slack.user
     access_token = user.organization.slack_integration.access_token
     block_context = {
@@ -185,8 +211,13 @@ def get_notes_command(context):
         "type": "command",
     }
     blocks = get_block_set("choose_opportunity", context=block_context)
+    view_id = context.get("view_id", None)
+    url = (
+        slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        if view_id
+        else slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    )
     data = {
-        "view_id": str(context.get("view_id")),
         "view": {
             "type": "modal",
             "callback_id": slack_const.GET_NOTES,
@@ -195,6 +226,10 @@ def get_notes_command(context):
             "private_metadata": json.dumps(context),
         },
     }
+    if view_id:
+        data["view_id"] = view_id
+    else:
+        data["trigger_id"] = context.get("trigger_id")
     return slack_requests.generic_request(url, data, access_token=access_token)
 
 
@@ -206,10 +241,14 @@ def schedule_meeting(context):
         ).first()
         if not slack:
             return
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    view_id = context.get("view_id", None)
+    url = (
+        slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        if view_id
+        else slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    )
     access_token = user.organization.slack_integration.access_token
     data = {
-        "view_id": str(context.get("view_id")),
         "view": {
             "type": "modal",
             "callback_id": slack_const.ZOOM_MEETING__SCHEDULE_MEETING,
@@ -219,6 +258,10 @@ def schedule_meeting(context):
             "private_metadata": json.dumps(context),
         },
     }
+    if view_id:
+        data["view_id"] = view_id
+    else:
+        data["trigger_id"] = context.get("trigger_id")
     slack_requests.generic_request(url, data, access_token=access_token)
     return
 
@@ -236,13 +279,17 @@ def add_to_sequence(context):
     )
     access_token = user.organization.slack_integration.access_token
 
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    view_id = context.get("view_id", None)
+    url = (
+        slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        if view_id
+        else slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    )
     private_metadata = {
         "resource_type": "Account",
     }
 
     data = {
-        "view_id": str(context.get("view_id")),
         "view": {
             "type": "modal",
             "callback_id": slack_const.ADD_TO_SEQUENCE,
@@ -251,6 +298,10 @@ def add_to_sequence(context):
             "private_metadata": json.dumps(private_metadata),
         },
     }
+    if view_id:
+        data["view_id"] = view_id
+    else:
+        data["trigger_id"] = context.get("trigger_id")
     slack_requests.generic_request(url, data, access_token=access_token)
 
 
@@ -267,13 +318,17 @@ def add_to_cadence(context):
     )
     access_token = user.organization.slack_integration.access_token
 
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    view_id = context.get("view_id", None)
+    url = (
+        slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        if view_id
+        else slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    )
     private_metadata = {
         "resource_type": "Account",
     }
 
     data = {
-        "view_id": str(context.get("view_id")),
         "view": {
             "type": "modal",
             "callback_id": slack_const.ADD_TO_CADENCE,
@@ -282,6 +337,10 @@ def add_to_cadence(context):
             "private_metadata": json.dumps(private_metadata),
         },
     }
+    if view_id:
+        data["view_id"] = view_id
+    else:
+        data["trigger_id"] = context.get("trigger_id")
     slack_requests.generic_request(url, data, access_token=access_token)
 
 

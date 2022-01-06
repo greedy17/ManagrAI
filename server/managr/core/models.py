@@ -448,7 +448,6 @@ class NylasAuthAccount(TimeStampModel):
 
         starts_after = convert_local_time_to_unix(user_timezone, 12, 30)
         ends_before = convert_local_time_to_unix(user_timezone, 23, 00)
-        # print(ends_before, "ends before")
         query = dict({"starts_after": starts_after, "ends_before": ends_before})
         params = urlencode(query)
         events = requests.get(
@@ -543,6 +542,13 @@ class MeetingPrepInstance(TimeStampModel):
     )
     invocation = models.PositiveIntegerField(
         default=0, help_text="Keeps track of the number of times the meeting instance was called",
+    )
+    form = models.OneToOneField(
+        "slack.OrgCustomSlackFormInstance",
+        on_delete=models.CASCADE,
+        related_name="meeting_prep_instance",
+        null=True,
+        blank=True,
     )
     objects = MeetingPrepQuerySet.as_manager()
 
