@@ -134,14 +134,17 @@ def _send_slack_int_email(user):
 def _process_calendar_details(user_id):
     user = User.objects.get(id=user_id)
     events = user.nylas._get_calendar_data()
-    processed_data = []
-    for event in events:
-        data = {}
-        data["title"] = event.get("title", None)
-        data["participants"] = event.get("participants", None)
-        data["times"] = event.get("when", None)
-        processed_data.append(data)
-    return processed_data
+    if events:
+        processed_data = []
+        for event in events:
+            data = {}
+            data["title"] = event.get("title", None)
+            data["participants"] = event.get("participants", None)
+            data["times"] = event.get("when", None)
+            processed_data.append(data)
+        return processed_data
+    else:
+        return None
 
 
 def meeting_prep(processed_data, user_id, invocation):
@@ -329,61 +332,64 @@ def meeting_prep(processed_data, user_id, invocation):
 def _send_calendar_details(user_id, invocation=None):
     user = User.objects.get(id=user_id)
     processed_data = _process_calendar_details(user_id)
-    # processed_data checks to see how many events exists
     current_invocation = invocation
     blocks = [
         block_builders.simple_section(":calendar: *Meetings Today* ", "mrkdwn"),
         # {"type": "divider"},
     ]
-    if invocation:
-        meetings = MeetingPrepInstance.objects.filter(user=user.id).filter(invocation=invocation)
-    else:
-        last_instance = (
-            MeetingPrepInstance.objects.filter(user=user).order_by("-datetime_created").first()
-        )
-        current_invocation = last_instance.invocation + 1
-        for event in processed_data:
-            meeting_prep(event, user_id, current_invocation)
-        meetings = MeetingPrepInstance.objects.filter(user=user.id).filter(
-            invocation=current_invocation
-        )
-    if meetings:
-        meeting_instances = MeetingPrepInstance.objects.filter(invocation=current_invocation)
-        paged_meetings = custom_paginator(meeting_instances, count=1)
-        paginate_results = paged_meetings.get("results", [])
-        if len(paginate_results):
-            current_instance = paginate_results[0]
-            blocks = [
-                *blocks,
-                *get_block_set(
-                    "calendar_reminders_blockset",
-                    {"prep_id": str(current_instance.id), "u": str(user.id)},
-                ),
-                *custom_meeting_paginator_block(
-                    paged_meetings, current_invocation, user.slack_integration.channel
-                ),
-            ]
-            #     for meeting in meetings:
-            #         blocks = [
-            #             *blocks,
-            #             *block_sets.get_block_set(
-            #                 "calendar_reminders_blockset", {"prep_id": str(meeting.id), "u": str(user.id)}
-            #             ),
-            #             {"type": "divider"},
-            #         ]
-            #     # Loop thru processed_data and create block for each one
-            # try:
-            #     slack_requests.send_channel_message(
-            #         user.slack_integration.channel,
-            #         user.organization.slack_integration.access_token,
-            #         text="Calendar: Meetings for Today",
-            #         block_set=blocks,
-            #     )
-            # except Exception as e:
-            #     logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
+    if processed_data is not None:
+        # processed_data checks to see how many events exists
+        if invocation:
+            meetings = MeetingPrepInstance.objects.filter(user=user.id).filter(
+                invocation=invocation
+            )
         else:
-            blocks.append(block_builders.simple_section("No meetings scheduled!"))
-        return blocks
+            last_instance = (
+                MeetingPrepInstance.objects.filter(user=user).order_by("-datetime_created").first()
+            )
+            current_invocation = last_instance.invocation + 1
+            for event in processed_data:
+                meeting_prep(event, user_id, current_invocation)
+            meetings = MeetingPrepInstance.objects.filter(user=user.id).filter(
+                invocation=current_invocation
+            )
+        if meetings:
+            meeting_instances = MeetingPrepInstance.objects.filter(invocation=current_invocation)
+            paged_meetings = custom_paginator(meeting_instances, count=1)
+            paginate_results = paged_meetings.get("results", [])
+            if len(paginate_results):
+                current_instance = paginate_results[0]
+                blocks = [
+                    *blocks,
+                    *get_block_set(
+                        "calendar_reminders_blockset",
+                        {"prep_id": str(current_instance.id), "u": str(user.id)},
+                    ),
+                    *custom_meeting_paginator_block(
+                        paged_meetings, current_invocation, user.slack_integration.channel
+                    ),
+                ]
+                #     for meeting in meetings:
+                #         blocks = [
+                #             *blocks,
+                #             *block_sets.get_block_set(
+                #                 "calendar_reminders_blockset", {"prep_id": str(meeting.id), "u": str(user.id)}
+                #             ),
+                #             {"type": "divider"},
+                #         ]
+                #     # Loop thru processed_data and create block for each one
+                # try:
+                #     slack_requests.send_channel_message(
+                #         user.slack_integration.channel,
+                #         user.organization.slack_integration.access_token,
+                #         text="Calendar: Meetings for Today",
+                #         block_set=blocks,
+                #     )
+                # except Exception as e:
+                #     logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
+    else:
+        blocks.append(block_builders.simple_section("No meetings scheduled!"))
+    return blocks
 
 
 def process_get_task_list(user_id):
@@ -474,7 +480,6 @@ def generate_morning_digest(user_id, invocation=None):
     alerts = process_current_alert_list(user_id)
     meeting = _send_calendar_details(user_id, invocation)
     tasks = process_get_task_list(user_id)
-    logger.info(f"MORNING DIGEST: ALERTS: {alerts} | MEETINGS: {meeting} | TASKS: {tasks}")
     blocks = [*blocks, *meeting, {"type": "divider"}, *tasks, {"type": "divider"}, *alerts]
     if invocation is None:
         try:

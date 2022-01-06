@@ -308,7 +308,6 @@ class SalesforceAuthAccountAdapter:
                 data=data,
                 headers=sf_consts.AUTHENTICATION_HEADERS,
             )
-            print(res.json())
             return SalesforceAuthAccountAdapter._handle_response(res)
 
     def refresh(self):
