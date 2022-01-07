@@ -319,7 +319,8 @@ def meeting_prep(processed_data, user_id, invocation):
         "event_data": event_data,
         "invocation": invocation,
     }
-    if hasattr(meeting_resource_data, "resource_id"):
+    resource_check = meeting_resource_data.get("resource_id", None)
+    if resource_check:
         data["resource_id"] = meeting_resource_data["resource_id"]
         data["resource_type"] = meeting_resource_data["resource_type"]
     serializer = MeetingPrepInstanceSerializer(data=data)

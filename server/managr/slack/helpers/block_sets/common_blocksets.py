@@ -395,7 +395,6 @@ def calendar_reminders_blockset(context):
     local_start = utc_time.astimezone(tz).strftime("%I:%M")
 
     am_or_pm = utc_time.astimezone(tz).strftime("%p")
-
     start_time = local_start + " " + am_or_pm
     type = "prep" if meeting.resource_type is None else meeting.resource_type
     if type == "Opportunity":
