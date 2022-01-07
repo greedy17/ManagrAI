@@ -20,6 +20,7 @@ from managr.salesforce import constants as sf_consts
 from managr.slack import constants as slack_const
 from managr.slack.helpers.utils import action_with_params, block_set, map_fields_to_type
 from managr.slack.helpers import block_builders
+from managr.slack.helpers import requests as slack_requests
 from managr.utils.misc import snake_to_space
 from managr.salesforce.routes import routes as form_routes
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
@@ -456,11 +457,17 @@ def calendar_reminders_blockset(context):
 
 @block_set()
 def meeting_reminder_block_set(context):
+    user = User.objects.get(id=context.get("u"))
     not_completed = context.get("not_completed")
+    channel_info = slack_requests.get_channel_info(
+        user.organization.slack_integration.access_token, user.slack_integration.zoom_channel
+    )
+    name = channel_info.get("channel").get("name")
     text = "meeting" if not_completed < 2 else "meetings"
     blocks = [
         block_builders.simple_section(
-            f"FYI you have {not_completed} {text} from today that still need to be logged!"
+            f"FYI you have {not_completed} {text} from today that still need to be logged here: #{name}",
+            "mrkdwn",
         )
     ]
     return blocks
@@ -473,7 +480,7 @@ def manager_meeting_reminder_block_set(context):
     text = "meeting" if not_completed < 2 else "meetings"
     blocks = [
         block_builders.simple_section(
-            f"Hey {name} your team still has *{not_completed} {text}* from today that needs to be logged.",
+            f"Hey {name} your team still has *{not_completed} {text}* from today that needs to be logged",
             "mrkdwn",
         )
     ]
