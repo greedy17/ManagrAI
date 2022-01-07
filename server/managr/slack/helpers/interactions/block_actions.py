@@ -1995,16 +1995,17 @@ def process_show_edit_product_form(payload, context):
 def process_add_products_form(payload, context):
     user = User.objects.get(slack_integration__slack_id=payload["user"]["id"])
     view = payload["view"]
+    state = view["state"]["values"]
     private_metadata = json.loads(view["private_metadata"])
+    main_form = OrgCustomSlackFormInstance.objects.get(id=context.get("f"))
+    main_form.save_form(state)
     product_template = (
         OrgCustomSlackForm.objects.for_user(user)
         .filter(Q(resource="OpportunityLineItem", form_type="CREATE"))
         .first()
     )
     product_form = OrgCustomSlackFormInstance.objects.create(template=product_template, user=user)
-    private_metadata.update(
-        {"product_form": str(product_form.id), "view_id": view["id"], "u": str(user.id)}
-    )
+    private_metadata.update({"view_id": view["id"]})
     # currently only for update
     blocks = []
     blocks.extend(product_form.generate_form())
