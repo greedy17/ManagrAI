@@ -499,10 +499,19 @@ def generate_afternoon_digest(user_id):
     if user.user_level == "Manager":
         meetings = check_for_uncompleted_meetings(user.id, True)
         if meetings["status"]:
-            meeting = block_sets.get_block_set(
-                "manager_meeting_reminder",
-                {"u": str(user.id), "not_completed": meetings["not_completed"]},
-            )
+            slack_id = meetings['slack_id']
+            paged_meetings = custom_paginator(meetings, count=1)
+            paginate_results = paged_meetings.get("results", [])
+            if len(paginate_results):
+                meeting = [block_sets.get_block_set(
+                    "manager_meeting_reminder",
+                    {"u": str(user.id), "not_completed": meetings["not_completed"], 'slack_id': slack_id},
+                ),
+                *custom_meeting_paginator_block(
+                        paged_meetings, user.slack_integration.channel
+                    ),
+                ]
+        
         else:
             meeting = [
                 block_builders.simple_section(

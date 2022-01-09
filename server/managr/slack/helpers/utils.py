@@ -19,6 +19,7 @@ from managr.slack.models import UserSlackIntegration
 from managr.slack.helpers import block_builders, requests
 from managr.slack import constants as slack_consts
 from managr.salesforce.models import MeetingWorkflow
+from managr.slack.models import OrgCustomSlackFormInstance
 
 logger = logging.getLogger("managr")
 
@@ -378,6 +379,7 @@ def check_for_uncompleted_meetings(user_id, org_level=False):
             users = User.objects.filter(
                 slack_integration__recap_receivers__contains=[user.slack_integration.slack_id]
             )
+            slack_id = OrgCustomSlackFormInstance.objects.get(id=users.get("_form"))
             not_completed = []
             for user in users:
                 total_meetings = MeetingWorkflow.objects.filter(user=user.id).filter(
@@ -392,10 +394,11 @@ def check_for_uncompleted_meetings(user_id, org_level=False):
             total_meetings = MeetingWorkflow.objects.filter(user=user.id).filter(
                 datetime_created__contains=datetime.today().date()
             )
+            slack_id = OrgCustomSlackFormInstance.objects.get(id=user.get("_form"))
             not_completed = [meeting for meeting in total_meetings if meeting.progress == 0]
         if len(not_completed):
             return {"status": True, "not_completed": len(not_completed)}
-    return {"status": False}
+    return {"status": False, 'slack_id': slack_id}
 
 
 def check_workflows_count(user_id):
