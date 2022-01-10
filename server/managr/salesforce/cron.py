@@ -242,7 +242,7 @@ def queue_stale_sf_data_for_delete(cutoff=1440):
                     f"skipping clear field data (resources only) for user {user.email} with id {str(user.id)} because the latest resource flow was not successful"
                 )
                 resource_items.extend(
-                    ["opportunity", "account", "contact", "lead",]
+                    ["opportunity", "account", "contact", "lead", "opportunitylineitem"]
                 )
             else:
                 resource_items.extend(
@@ -254,11 +254,11 @@ def queue_stale_sf_data_for_delete(cutoff=1440):
                         "account",
                         "contact",
                         "lead",
+                        "opportunitylineitem",
                     ]
                 )
 
             for r in resource_items:
-
                 try:
                     qs = getattr(user, f"imported_{r}").filter(last_edited__lt=cutoff)
                     resource_count = qs.count()

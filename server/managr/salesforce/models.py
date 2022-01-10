@@ -694,7 +694,6 @@ class MeetingWorkflow(SFSyncOperation):
             operation_name, param = op.split(".")
             operation = self.operations_map.get(operation_name)
             params = param.split(",")
-
             # determine the operation and its param and get event emitter
             t = operation(params[0], params[1:])
             if self.operations:
