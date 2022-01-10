@@ -25,13 +25,7 @@ from .models import (
 class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
-        fields = (
-            "name",
-            "photo",
-            "state",
-            "is_trial",
-            "slack_integration",
-        )
+        fields = ("name", "photo", "state", "is_trial", "slack_integration", "has_products")
 
 
 class ActionChoiceSerializer(serializers.ModelSerializer):

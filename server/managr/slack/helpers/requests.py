@@ -239,7 +239,7 @@ def list_user_channels(access_token, user, limit=100, cursor=None, types=[]):
     return generic_request(url, None, access_token=access_token)
 
 
-def get_channel_info(access_token, user, channel_id):
+def get_channel_info(access_token, channel_id):
     q = dict(channel=channel_id)
     url = slack_const.SLACK_API_ROOT + slack_const.CONVERSATIONS_INFO
     url += "?" + urlencode(q)
