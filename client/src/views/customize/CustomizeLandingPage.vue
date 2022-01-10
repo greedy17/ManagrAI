@@ -1,8 +1,17 @@
 <template>
   <div>
-    <div class="sidenav sidenav__background">
-      <div style="margin-bottom: 2rem">
+    <div class="sidenav">
+      <div
+        style="
+          margin-bottom: 1rem;
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: flex-start;
+        "
+      >
         <h2 class="title">Field Mapping</h2>
+        <!-- <img src="@/assets/images/map.png" style="height: 1.5rem" alt="" /> -->
       </div>
       <router-link exact-active-class="active" :to="{ name: 'Required' }">
         <div class="row">
@@ -172,6 +181,11 @@ export default {
   box-shadow: 0 0 10px 1px #555;
 }
 
+img {
+  filter: invert(90%);
+  margin-left: 0.5rem;
+}
+
 #tail1 {
   position: absolute;
   bottom: -20px;
@@ -214,43 +228,61 @@ export default {
   width: 18vw;
   font-size: 0.85rem;
   position: fixed;
-  z-index: 1;
   left: 0;
-  background-color: $panther;
-  border: 2px solid $panther-silver;
-  border-radius: 0.25rem;
+  background-color: #fafbfc;
+  border-right: 3px solid $soft-gray;
   color: $panther-silver;
   overflow-x: hidden;
-  padding-top: 20px;
   padding: 1rem;
-  border-radius: 0.5rem;
+  margin-top: -1rem;
 }
 a {
   text-decoration: none;
   font-weight: bold;
-  color: $panther-silver;
+  color: $base-gray;
   cursor: pointer;
 }
 a:hover {
-  color: white;
+  border-radius: 0.2rem;
   cursor: pointer;
 }
 .active div {
-  color: white;
-  background-color: $dark-green;
-  border-radius: 0.25rem;
-  padding: 0 0.3rem;
+  color: $darker-green;
+  background-color: $lighter-green;
+  border-radius: 0.3rem;
   font-weight: bold;
-  margin-left: -0.35rem;
+  position: relative;
+}
+.active div:after {
+  content: '';
+  background: $darker-green;
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0;
+  height: 60%;
+  width: 2px;
+}
+.active img {
+  filter: none;
 }
 .title {
-  color: white;
+  color: $base-gray;
   font-weight: bold;
 }
 .row {
   display: flex;
   flex-direction: row;
   align-items: center;
+  margin-top: 0.1rem;
+  margin-bottom: 0.1rem;
+}
+.row:hover {
+  background-color: $lighter-green;
+  color: $darker-green;
+  border-radius: 0.3rem;
+  img {
+    filter: none;
+  }
 }
 </style>
 

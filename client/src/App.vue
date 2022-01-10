@@ -74,7 +74,7 @@ body {
   margin: 0;
   min-height: 100vh;
   position: relative;
-  background-color: $white;
+  background-color: $off-white;
 }
 
 #app {

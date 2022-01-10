@@ -1,13 +1,11 @@
 <template>
   <div class="alerts-page">
     <div v-if="isOnboarding && !isAdmin" class="col">
-      <h2 style="color: black; margin-top: -0.5rem" class="title">Popular Workflow Automations</h2>
-      <p style="color: black; margin-top: -0.5rem" class="sub__">
-        Step 2/2: Activate at least 3 workflows
-      </p>
+      <h2 class="title">Popular Workflow Automations</h2>
+      <p style="margin-top: -0.5rem" class="sub__">Step 2/2: Activate at least 3 workflows</p>
     </div>
     <div v-else class="col">
-      <h2 style="color: black; margin-top: -0.5rem" class="title">Popular Workflow Automations</h2>
+      <h2 class="title">Popular Workflow Automations</h2>
       <p style="color: #5d5e5e" class="sub__">Activate the workflows that are relevant to you</p>
     </div>
 
@@ -21,6 +19,7 @@
           <img
             style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/plusOne.png"
+            class="filter-plus"
             alt=""
           />
           <img
@@ -52,6 +51,7 @@
           <img
             style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/plusOne.png"
+            class="filter-plus"
             alt=""
           />
           <img
@@ -95,6 +95,7 @@
           <img
             style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/plusOne.png"
+            class="filter-plus"
             alt=""
           />
           <img
@@ -151,6 +152,7 @@
           <img
             style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/plusOne.png"
+            class="filter-plus"
             alt=""
           />
           <img
@@ -207,6 +209,7 @@
           <img
             style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/plusOne.png"
+            class="filter-plus"
             alt=""
           />
           <img
@@ -265,6 +268,7 @@
           <img
             style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/plusOne.png"
+            class="filter-plus"
             alt=""
           />
           <img
@@ -321,6 +325,7 @@
           <img
             style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/plusOne.png"
+            class="filter-plus"
             alt=""
           />
           <img
@@ -372,6 +377,7 @@
           <img
             style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/plusOne.png"
+            class="filter-plus"
             alt=""
           />
           <img
@@ -685,6 +691,7 @@ textarea {
 .alerts-page {
   margin-left: 14vw;
   margin-top: 4rem;
+  color: $base-gray;
   &__previous-step {
     @include muted-font(12);
   }
@@ -714,11 +721,11 @@ textarea {
   flex-direction: row;
   justify-content: space-evenly;
   align-items: center;
-  margin-top: 2rem;
   flex-wrap: wrap;
+  padding: 0.5rem;
 }
 .card__ {
-  background-color: $panther;
+  background-color: $white;
   border: none;
   width: 20vw;
   padding: 1.25rem;
@@ -728,8 +735,7 @@ textarea {
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 3px 4px 7px black;
-  color: white;
+  box-shadow: 3px 4px 7px $very-light-gray;
   // @media only screen and (min-width: 768px) {
   //   flex: 1 0 24%;
   //   min-width: 21rem;
@@ -759,6 +765,9 @@ textarea {
   &-remove {
     justify-self: end;
   }
+}
+.filter-plus {
+  filter: invert(90%);
 }
 .btn {
   &--danger {
@@ -824,6 +833,8 @@ textarea {
   color: $panther-silver;
 }
 .title {
+  color: $base-gray;
+  font-weight: 900;
 }
 .group {
   display: flex;

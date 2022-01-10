@@ -1,6 +1,6 @@
 <template>
   <div class="customizations">
-    <h2 style="color: black" class="title">Required Field Mapping</h2>
+    <h2 style="color: 4d4e4c" class="title">Required Field Mapping</h2>
     <p style="font-weight: bold; margin-top: -0.5rem; margin-bottom: 2rem; color: #5d5e5e">
       Map Slack fields to the corresponding SFDC fields.
     </p>
@@ -11,9 +11,10 @@
           <h3 class="title">Update <span style="color: #199e54">Opportunity</span></h3>
           <div style="margin-left: 1rem; display: flex; flex-direction: row">
             <img class="card-img" src="@/assets/images/salesforce.png" />
-            <img style="height: 2rem; margin-left: 1rem" src="@/assets/images/slackLogo.png" />
+            <img style="height: 1.5rem; margin-left: 1rem" src="@/assets/images/slackLogo.png" />
           </div>
         </div>
+        <!-- <img class="back-logo" src="@/assets/images/logo.png" /> -->
         <div class="center">
           <button @click="goToUpdateOpp" class="green__button">View + Edit</button>
         </div>
@@ -24,9 +25,10 @@
           <h2 class="title">Create <span style="color: #5f8cff">Contacts</span></h2>
           <div style="margin-left: 1rem; display: flex; flex-direction: row">
             <img class="card-img" src="@/assets/images/salesforce.png" />
-            <img style="height: 2rem; margin-left: 1rem" src="@/assets/images/slackLogo.png" />
+            <img style="height: 1.5rem; margin-left: 1rem" src="@/assets/images/slackLogo.png" />
           </div>
         </div>
+        <!-- <img class="back-logo" src="@/assets/images/logo.png" /> -->
         <div class="center">
           <button @click="goToCreate" class="green__button">View + Edit</button>
         </div>
@@ -76,7 +78,7 @@ export default {
 @import '@/styles/buttons';
 
 .customizations {
-  color: white;
+  color: $base-gray;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -86,6 +88,8 @@ export default {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
+    padding: 1rem;
+    border-radius: 0.5rem;
   }
   &__subtitle {
     font-size: 14px;
@@ -94,7 +98,7 @@ export default {
 }
 
 .card {
-  background-color: $panther;
+  background-color: white;
   border: none;
   min-width: 24vw;
   max-width: 44vw;
@@ -104,7 +108,7 @@ export default {
   border-radius: 0.5rem;
   display: flex;
   flex-direction: column;
-  box-shadow: 3px 4px 7px black;
+  box-shadow: 3px 4px 7px $very-light-gray;
   @media only screen and (min-width: 768px) {
     flex: 1 0 24%;
     min-width: 21rem;
@@ -125,7 +129,7 @@ export default {
 }
 
 .card-img {
-  width: 2.5rem;
+  width: 1.75rem;
 }
 
 .card-text {
@@ -134,7 +138,14 @@ export default {
   color: $panther-silver;
   text-align: center;
 }
-
+.back-logo {
+  position: absolute;
+  opacity: 0.06;
+  filter: alpha(opacity=50);
+  height: 28%;
+  margin-top: -1.5rem;
+  margin-left: -2rem;
+}
 .slack-button {
   padding: 1rem;
   border-radius: 0.5rem;

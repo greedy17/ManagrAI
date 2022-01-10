@@ -1,10 +1,10 @@
 <template>
   <div class="update_opportunity">
     <div class="opportunity_title">
-      <h2 style="border-bottom: 3px solid #199e54; padding-bottom: 0.5rem; color: black">
-        Update <span>Opportunity</span>
-      </h2>
-      <p style="color: #5d5e5e; margin-top: -0.5rem">
+      <h3 style="border-bottom: 3px solid #199e54; padding-bottom: 0.5rem">
+        Update <span>Opportunity :</span>
+      </h3>
+      <p style="color: #5d5e5e; margin-top: -0.5rem; font-size: 0.95rem">
         Select the Opportunity fields you’d like to display and update via Slack
       </p>
     </div>
@@ -274,16 +274,21 @@ export default {
 
 .update_opportunity {
   margin-top: 2rem;
-  color: white;
+  color: $base-gray;
 }
 
 .opportunity_title {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  padding-left: 14vw;
+  margin-bottom: -1rem;
+  margin-top: 4rem;
 }
-
+h3 {
+  font-size: 1.35rem;
+}
 .step {
   color: $panther-silver;
   padding: 0.25rem;

@@ -2,7 +2,7 @@
   <div class="alerts-template-list">
     <Modal v-if="deleteOpen" dimmed>
       <div class="delete_modal">
-        <h2 style="color: white">Delete Alert</h2>
+        <h2>Delete Workflow</h2>
         <div>
           <p>This action cannot be undone, are you sure ?</p>
           <div class="center">
@@ -41,7 +41,7 @@
           <div>
             <AlertsEditPanel :alert="currentAlert" />
           </div>
-          <button style="margin-bottom: 1rem" class="no__button" @click="closeEdit">Done</button>
+          <button style="margin-bottom: 1.5rem" class="yes__button" @click="closeEdit">Done</button>
         </div>
       </div>
       <div class="alert_cards" v-if="editing">
@@ -64,7 +64,7 @@
             </div> -->
           </div>
           <div class="row__start">
-            <p style="margin: 0.5rem 0.5rem">Schedule</p>
+            <p style="margin: 0.5rem 0.5rem">Schedule:</p>
             <div class="row__">
               <p style="margin-right: 0.25rem">OFF</p>
               <ToggleCheckBox
@@ -80,12 +80,27 @@
               <img
                 @click="makeAlertCurrent(alert)"
                 src="@/assets/images/settings.png"
-                style="height: 1.5rem; cursor: pointer"
+                style="
+                  height: 1.5rem;
+                  cursor: pointer;
+                  margin-right: 0.5rem;
+                  box-shadow: 1.5px 1px 2px #fafafa;
+                  border: none;
+                  border-radius: 50%;
+                  padding: 0.2rem;
+                "
               />
 
               <img
                 src="@/assets/images/whitetrash.png"
-                style="height: 1.5rem; cursor: pointer"
+                style="
+                  height: 1.5rem;
+                  cursor: pointer;
+                  box-shadow: 1.5px 1px 2px #fafafa;
+                  border: none;
+                  border-radius: 50%;
+                  padding: 0.2rem;
+                "
                 @click="deleteClosed(alert.id)"
               />
             </div>
@@ -550,22 +565,22 @@ button:disabled {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: $panther;
+  background-color: $white;
+  color: $base-gray;
   border-radius: 0.5rem;
-  color: white;
   height: 28vh;
 }
 .edit__modal {
-  background-color: $panther;
+  background-color: white;
+  box-shadow: 3px 4px 7px $very-light-gray;
   border-radius: 1rem;
-  color: white;
+  color: $base-gray;
   height: 70vh;
-  width: 100vw;
+  overflow: scroll;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-direction: column;
-  overflow: scroll;
 }
 
 .yes__button {
@@ -581,7 +596,7 @@ button:disabled {
 }
 .no__button {
   width: 8vw;
-  background-color: $panther-gray;
+  background-color: $very-light-gray;
   border: none;
   border-radius: 0.25rem;
   color: white;
@@ -604,6 +619,7 @@ button:disabled {
 .alerts-template-list {
   margin-left: 18vw;
   margin-top: 4rem;
+  color: $base-gray;
   &__header {
     display: flex;
 
@@ -624,7 +640,7 @@ button:disabled {
   flex-wrap: wrap;
 }
 .card__ {
-  background-color: $panther;
+  background-color: white;
   border: none;
   min-width: 24vw;
   max-width: 44vw;
@@ -635,8 +651,8 @@ button:disabled {
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 3px 4px 7px black;
-  color: white;
+  box-shadow: 3px 4px 7px $very-light-gray;
+  color: $base-gray;
 
   &header {
     display: flex;
@@ -645,7 +661,6 @@ button:disabled {
     height: 3rem;
     font-weight: bold;
     margin-bottom: 1rem;
-    color: white;
   }
 }
 .icon {
@@ -653,6 +668,9 @@ button:disabled {
   cursor: pointer;
   width: 20px;
   height: 30px;
+}
+img {
+  filter: invert(90%);
 }
 .pink {
   color: $candy;
@@ -675,13 +693,14 @@ a {
   align-items: center;
   justify-content: center;
   margin: 0 0.5rem 0 0.5rem;
-  color: $panther-silver;
+  color: $base-gray;
+  font-weight: 900;
 }
 .row__two {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  margin-top: 1rem;
+  margin: 1rem;
   width: 100%;
 }
 .row__start {

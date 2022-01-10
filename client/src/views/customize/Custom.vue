@@ -12,9 +12,10 @@
         <div class="card__header">
           <h3>Create <span style="color: #199e54">Opportunity</span></h3>
         </div>
+
         <div class="row">
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -22,9 +23,10 @@
             style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/plusOne.png"
             alt=""
+            id="plus"
           />
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
@@ -44,9 +46,10 @@
         <div class="card__header">
           <h3>Update <span style="color: #5f8cff">Contacts</span></h3>
         </div>
+
         <div class="row">
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -54,9 +57,10 @@
             style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/plusOne.png"
             alt=""
+            id="plus"
           />
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
@@ -75,9 +79,10 @@
         <div class="card__header">
           <h3>Create <span style="color: #ddad3c">Lead</span></h3>
         </div>
+
         <div class="row">
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -85,9 +90,10 @@
             style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/plusOne.png"
             alt=""
+            id="plus"
           />
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
@@ -106,19 +112,21 @@
         <div class="card__header">
           <h3>Update <span style="color: #ddad3c">Lead</span></h3>
         </div>
+
         <div class="row">
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
           <img
             style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/plusOne.png"
+            id="plus"
             alt=""
           />
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
@@ -137,9 +145,10 @@
         <div class="card__header">
           <h3>Create <span style="color: #fa646a">Account</span></h3>
         </div>
+
         <div class="row">
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -147,9 +156,10 @@
             style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/plusOne.png"
             alt=""
+            id="plus"
           />
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
@@ -168,9 +178,10 @@
         <div class="card__header">
           <h3>Update <span style="color: #fa646a">Account</span></h3>
         </div>
+
         <div class="row">
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -178,9 +189,10 @@
             style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/plusOne.png"
             alt=""
+            id="plus"
           />
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
@@ -239,6 +251,9 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+#plus {
+  filter: invert(90%);
+}
 .activate-button {
   background-color: $dark-green;
   color: white;
@@ -262,8 +277,16 @@ export default {
   margin-top: 1rem;
   flex-wrap: wrap;
 }
+// .back-logo {
+//   position: absolute;
+//   opacity: 0.06;
+//   filter: alpha(opacity=50);
+//   height: 20%;
+//   margin-top: 2rem;
+//   margin-right: -10rem;
+// }
 .card__ {
-  background-color: $panther;
+  background-color: $white;
   border: none;
   width: 20vw;
   padding: 1.25rem;
@@ -273,8 +296,8 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 3px 4px 7px black;
-  color: white;
+  box-shadow: 3px 4px 7px $very-light-gray;
+  color: $base-gray;
   // @media only screen and (min-width: 768px) {
   //   flex: 1 0 24%;
   //   min-width: 21rem;
