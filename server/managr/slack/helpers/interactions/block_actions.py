@@ -1166,7 +1166,8 @@ def process_check_is_owner(payload, context):
     # CHECK_IS_OWNER
     slack_id = payload.get("user", {}).get("id")
     user_id = context.get("u")
-    context.update({"type": "alert"})
+    type = context.get("type", None)
+    context.update({"type": type})
     user_slack = UserSlackIntegration.objects.filter(slack_id=slack_id).first()
     if user_slack and str(user_slack.user.id) == user_id:
         return process_show_update_resource_form(payload, context)
@@ -1414,7 +1415,6 @@ def process_paginate_alerts(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor()
 def process_paginate_meetings(payload, context):
-    print(payload)
     channel_id = payload.get("channel", {}).get("id", None)
     ts = payload.get("message", {}).get("ts", None)
     user_slack_id = payload.get("user", {}).get("id", None)
@@ -1451,7 +1451,11 @@ def process_paginate_meetings(payload, context):
         replace_blocks = [
             *get_block_set(
                 "calendar_reminders_blockset",
-                {"prep_id": str(current_instance.id), "u": str(user.id)},
+                {
+                    "prep_id": str(current_instance.id),
+                    "u": str(user.id),
+                    "current_page": context.get("new_page", 1),
+                },
             ),
             *custom_meeting_paginator_block(meeting_instances, invocation, channel),
         ]
@@ -1933,11 +1937,16 @@ def process_show_engagement_modal(payload, context):
 
 
 def process_managr_action(payload, context):
-    state = payload["view"]["state"]
+    view = payload.get("view", None)
+    if view:
+        state = payload["view"]["state"]
+        data = {"view_id": payload["view"]["id"]}
+    else:
+        state = payload["state"]
+        data = {"trigger_id": payload["trigger_id"]}
     command_value = state["values"]["select_action"][f"COMMAND_MANAGR_ACTION?u={context.get('u')}"][
         "selected_option"
     ]["value"]
-    data = {"view_id": payload["view"]["id"]}
     data.update(context)
     get_action(command_value, data)
     return
@@ -1991,16 +2000,17 @@ def process_show_edit_product_form(payload, context):
 def process_add_products_form(payload, context):
     user = User.objects.get(slack_integration__slack_id=payload["user"]["id"])
     view = payload["view"]
+    state = view["state"]["values"]
     private_metadata = json.loads(view["private_metadata"])
+    main_form = OrgCustomSlackFormInstance.objects.get(id=context.get("f"))
+    main_form.save_form(state)
     product_template = (
         OrgCustomSlackForm.objects.for_user(user)
         .filter(Q(resource="OpportunityLineItem", form_type="CREATE"))
         .first()
     )
     product_form = OrgCustomSlackFormInstance.objects.create(template=product_template, user=user)
-    private_metadata.update(
-        {"product_form": str(product_form.id), "view_id": view["id"], "u": str(user.id)}
-    )
+    private_metadata.update({"view_id": view["id"]})
     # currently only for update
     blocks = []
     blocks.extend(product_form.generate_form())

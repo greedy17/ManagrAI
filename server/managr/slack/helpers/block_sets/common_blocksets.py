@@ -20,6 +20,7 @@ from managr.salesforce import constants as sf_consts
 from managr.slack import constants as slack_const
 from managr.slack.helpers.utils import action_with_params, block_set, map_fields_to_type
 from managr.slack.helpers import block_builders
+from managr.slack.helpers import requests as slack_requests
 from managr.utils.misc import snake_to_space
 from managr.salesforce.routes import routes as form_routes
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
@@ -394,7 +395,6 @@ def calendar_reminders_blockset(context):
     local_start = utc_time.astimezone(tz).strftime("%I:%M")
 
     am_or_pm = utc_time.astimezone(tz).strftime("%p")
-
     start_time = local_start + " " + am_or_pm
     type = "prep" if meeting.resource_type is None else meeting.resource_type
     if type == "Opportunity":
@@ -421,7 +421,15 @@ def calendar_reminders_blockset(context):
     if type and type != "prep":
         action_blocks.append(
             block_builders.simple_button_block(
-                "Change Opportunity",
+                f"Update {type}",
+                meeting.resource_id,
+                action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(user.id)}&resource={type}&current_page={context.get('current_page',1)}&type=prep",
+                style="primary",
+            )
+        )
+        action_blocks.append(
+            block_builders.simple_button_block(
+                f"Change {type}",
                 f"type%{str(meeting.id)}",
                 action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
             )
@@ -456,11 +464,17 @@ def calendar_reminders_blockset(context):
 
 @block_set()
 def meeting_reminder_block_set(context):
+    user = User.objects.get(id=context.get("u"))
     not_completed = context.get("not_completed")
+    channel_info = slack_requests.get_channel_info(
+        user.organization.slack_integration.access_token, user.slack_integration.zoom_channel
+    )
+    name = channel_info.get("channel").get("name")
     text = "meeting" if not_completed < 2 else "meetings"
     blocks = [
         block_builders.simple_section(
-            f"FYI you have {not_completed} {text} from today that still need to be logged!"
+            f"FYI you have {not_completed} {text} from today that still need to be logged here: #{name}",
+            "mrkdwn",
         )
     ]
     return blocks
@@ -473,7 +487,7 @@ def manager_meeting_reminder_block_set(context):
     text = "meeting" if not_completed < 2 else "meetings"
     blocks = [
         block_builders.simple_section(
-            f"Hey {name} your team still has *{not_completed} {text}* from today that needs to be logged.",
+            f"Hey {name} your team still has *{not_completed} {text}* from today that needs to be logged",
             "mrkdwn",
         )
     ]
