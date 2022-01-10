@@ -147,7 +147,7 @@ def _process_calendar_details(user_id):
         return None
 
 
-def meeting_prep(processed_data, user_id, invocation):
+def meeting_prep(processed_data, user_id, invocation=1):
     def get_domain(email):
         """Parse domain out of an email"""
         return email[email.index("@") + 1 :]
@@ -348,7 +348,7 @@ def _send_calendar_details(
             last_instance = (
                 MeetingPrepInstance.objects.filter(user=user).order_by("-datetime_created").first()
             )
-            current_invocation = last_instance.invocation + 1
+            current_invocation = last_instance.invocation + 1 if last_instance else 1
             for event in processed_data:
                 meeting_prep(event, user_id, current_invocation)
             meetings = MeetingPrepInstance.objects.filter(user=user.id).filter(
