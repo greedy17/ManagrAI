@@ -182,8 +182,6 @@ def process_zoom_meeting_data(payload, context):
         f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}",
         # save meeting data
     ]
-    if product_form:
-        ops.append(f"{sf_consts.MEETING_REVIEW__ADD_PRODUCTS}.{str(workflow.id)}")
     for form in contact_forms:
         if form.template.form_type == slack_const.FORM_TYPE_CREATE:
             ops.append(

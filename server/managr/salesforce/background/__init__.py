@@ -20,7 +20,14 @@ from managr.api.decorators import log_all_exceptions, sf_api_exceptions_wf
 from managr.api.emails import send_html_email
 
 from managr.core.models import User
-from managr.organization.models import Account, Stage, Contact, Organization, PricebookEntry
+from managr.organization.models import (
+    Account,
+    Stage,
+    Contact,
+    Organization,
+    PricebookEntry,
+    OpportunityLineItem,
+)
 from managr.organization.serializers import AccountSerializer, StageSerializer
 from managr.opportunity.models import Opportunity, Lead
 from managr.opportunity.serializers import OpportunitySerializer
@@ -1076,7 +1083,9 @@ def check_for_display_value(field, value):
 @background(schedule=0)
 @slack_api_exceptions(rethrow=True)
 def _send_recap(form_ids, send_to_data=None, manager_recap=False):
-    submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
+    submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
+        template__resource="OpportunityLineItem"
+    )
     main_form = submitted_forms.filter(
         template__form_type__in=["CREATE", "UPDATE", "MEETING_REVIEW"]
     ).first()
@@ -1162,6 +1171,17 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
         blocks.insert(
             0, block_builders.header_block(f"Recap for new {main_form.template.resource}"),
         )
+    if user.organization.has_products and main_form.template.resource == "Opportunity":
+        current_products = OpportunityLineItem.objects.filter(opportunity=main_form.resource_id)
+        if current_products:
+            blocks.append(block_builders.simple_section("*Current Products:*", "mrkdwn"))
+            for product in current_products:
+                blocks.append(
+                    block_builders.simple_section(
+                        f"*{product.name}*- QTY:{product.quantity} / Total Price: ${product.total_price}\n",
+                        "mrkdwn",
+                    )
+                )
     action_blocks = [
         block_builders.simple_button_block(
             "View Notes",
@@ -1171,7 +1191,7 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
                 params=[
                     f"u={str(user.id)}",
                     f"resource_id={str(main_form.resource_id)}",
-                    "type=alert",
+                    f"type={main_form.template.resource}",
                 ],
             ),
         ),

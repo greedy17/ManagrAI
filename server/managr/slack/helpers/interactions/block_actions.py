@@ -1669,12 +1669,17 @@ def process_get_notes(payload, context):
     access_token = org.slack_integration.access_token
     resource_id = (
         context.get("resource_id", None)
-        if type
+        if type != "command"
         else payload["view"]["state"]["values"]["select_opp"][
-            f"GET_NOTES?u={u.id}&resource=Opportunity"
+            f"GET_NOTES?u={u.id}&resource=Opportunity&type=command"
         ]["selected_option"]["value"]
     )
-    opportunity = Opportunity.objects.get(id=resource_id)
+    if type == "Opportunity" or type == "command":
+        resource = Opportunity.objects.get(id=resource_id)
+    elif type == "Account":
+        resource = Account.objects.get(id=context.get("resource_id"))
+    elif type == "Lead":
+        resource = Lead.objects.get(id=context.get("resource_id"))
     note_data = (
         OrgCustomSlackFormInstance.objects.filter(resource_id=resource_id)
         .filter(is_submitted=True)
@@ -1687,10 +1692,10 @@ def process_get_notes(payload, context):
         )
     )
     note_blocks = [
-        block_builders.header_block(f"Notes for {opportunity.name}")
+        block_builders.header_block(f"Notes for {resource.name}")
         if note_data
         else block_builders.header_block(
-            f"No notes for {opportunity.name}, start leaving notes! :smiley:"
+            f"No notes for {resource.name}, start leaving notes! :smiley:"
         )
     ]
     if note_data:
@@ -1715,7 +1720,7 @@ def process_get_notes(payload, context):
             "blocks": note_blocks,
         },
     }
-    if type == "alert":
+    if type != "command":
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     else:
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
