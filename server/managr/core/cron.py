@@ -378,7 +378,12 @@ def _send_calendar_details(
 
 def process_get_task_list(user_id):
     user = User.objects.get(id=user_id)
-    tasks = user.salesforce_account.adapter_class.list_tasks()
+    try:
+        tasks = user.salesforce_account.adapter_class.list_tasks()
+    except Exception as e:
+        return [
+            block_builders.simple_section(f"There was an issue with Salesforce: {e}", "mrkdwn"),
+        ]
     paged_tasks = custom_paginator(tasks, count=3)
     results = paged_tasks.get("results", [])
     if results:

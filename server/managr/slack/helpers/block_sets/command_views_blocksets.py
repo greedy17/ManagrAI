@@ -438,11 +438,12 @@ def create_add_to_sequence_block_set(context):
 
 @block_set(required_context=["u"])
 def choose_opportunity_block_set(context):
-    user_id = context.get("u")
+    user_id = context.get("u", None)
+    type = context.get("type")
     blocks = [
         block_builders.external_select(
             "Which opportunity would you like your notes for?",
-            f"{slack_const.GET_NOTES}?u={user_id}&resource={sf_consts.RESOURCE_SYNC_OPPORTUNITY}",
+            f"{slack_const.GET_NOTES}?u={user_id}&resource={sf_consts.RESOURCE_SYNC_OPPORTUNITY}&type={type}",
             block_id="select_opp",
             placeholder="Type to search",
         )
@@ -463,7 +464,7 @@ def actions_block_set(context):
         options.append(block_builders.option("Add To Cadence", "ADD_CADENCE"))
     blocks = [
         block_builders.static_select(
-            ':male_genie: Need to get stuff done?  Select an action:',
+            ":male_genie: Need to get stuff done?  Select an action:",
             options,
             f"{slack_const.COMMAND_MANAGR_ACTION}?u={user_id}",
             block_id="select_action",
