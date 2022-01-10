@@ -92,6 +92,7 @@ def create_resource(context):
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Create New"},
                 "blocks": blocks,
+                "private_metadata": json.dumps({"type": "command"}),
                 "external_id": f"create_modal.{str(uuid.uuid4())}",
             },
         }

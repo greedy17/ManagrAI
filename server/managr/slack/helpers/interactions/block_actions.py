@@ -466,11 +466,13 @@ def process_remove_contact_from_meeting(payload, context):
     meeting = workflow.meeting
     org = workflow.user.organization
     access_token = org.slack_integration.access_token
+    print(workflow.forms.all())
     for i, part in enumerate(meeting.participants):
         if part["_tracking_id"] == context.get("tracking_id"):
             # remove its form if it exists
             if part["_form"] not in [None, ""]:
                 workflow.forms.filter(id=part["_form"]).delete()
+            print(workflow.forms.all())
             del meeting.participants[i]
             break
     meeting.save()
@@ -2052,7 +2054,12 @@ def process_add_create_form(payload, context):
     )
     slack_form = OrgCustomSlackFormInstance.objects.create(template=template, user=user,)
     if slack_form:
-        context = {"resource_type": resource_type, "f": str(slack_form.id), "u": str(user.id)}
+        context = {
+            "resource_type": resource_type,
+            "f": str(slack_form.id),
+            "u": str(user.id),
+            "type": "command",
+        }
         blocks = get_block_set("create_modal", context,)
         try:
             index, block = block_finder("StageName", blocks)
