@@ -1166,7 +1166,8 @@ def process_check_is_owner(payload, context):
     # CHECK_IS_OWNER
     slack_id = payload.get("user", {}).get("id")
     user_id = context.get("u")
-    context.update({"type": "alert"})
+    type = context.get("type", None)
+    context.update({"type": type})
     user_slack = UserSlackIntegration.objects.filter(slack_id=slack_id).first()
     if user_slack and str(user_slack.user.id) == user_id:
         return process_show_update_resource_form(payload, context)
@@ -1450,7 +1451,11 @@ def process_paginate_meetings(payload, context):
         replace_blocks = [
             *get_block_set(
                 "calendar_reminders_blockset",
-                {"prep_id": str(current_instance.id), "u": str(user.id)},
+                {
+                    "prep_id": str(current_instance.id),
+                    "u": str(user.id),
+                    "current_page": context.get("new_page", 1),
+                },
             ),
             *custom_meeting_paginator_block(meeting_instances, invocation, channel),
         ]

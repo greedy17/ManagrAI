@@ -329,7 +329,9 @@ def meeting_prep(processed_data, user_id, invocation):
     return
 
 
-def _send_calendar_details(user_id, invocation=None):
+def _send_calendar_details(
+    user_id, page, invocation=None,
+):
     user = User.objects.get(id=user_id)
     processed_data = _process_calendar_details(user_id)
     current_invocation = invocation
@@ -355,7 +357,7 @@ def _send_calendar_details(user_id, invocation=None):
             )
         if meetings:
             meeting_instances = MeetingPrepInstance.objects.filter(invocation=current_invocation)
-            paged_meetings = custom_paginator(meeting_instances, count=1)
+            paged_meetings = custom_paginator(meeting_instances, count=1, page=page)
             paginate_results = paged_meetings.get("results", [])
             if len(paginate_results):
                 current_instance = paginate_results[0]
@@ -369,24 +371,6 @@ def _send_calendar_details(user_id, invocation=None):
                         paged_meetings, current_invocation, user.slack_integration.channel
                     ),
                 ]
-                #     for meeting in meetings:
-                #         blocks = [
-                #             *blocks,
-                #             *block_sets.get_block_set(
-                #                 "calendar_reminders_blockset", {"prep_id": str(meeting.id), "u": str(user.id)}
-                #             ),
-                #             {"type": "divider"},
-                #         ]
-                #     # Loop thru processed_data and create block for each one
-                # try:
-                #     slack_requests.send_channel_message(
-                #         user.slack_integration.channel,
-                #         user.organization.slack_integration.access_token,
-                #         text="Calendar: Meetings for Today",
-                #         block_set=blocks,
-                #     )
-                # except Exception as e:
-                #     logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
     else:
         blocks.append(block_builders.simple_section("No meetings scheduled!"))
     return blocks
@@ -457,7 +441,7 @@ def process_current_alert_list(user_id):
     if configs:
         for config in configs:
             channel_info = slack_requests.get_channel_info(
-                user.organization.slack_integration.access_token, user_id, config.recipients[0]
+                user.organization.slack_integration.access_token, config.recipients[0]
             )
             name = channel_info.get("channel").get("name")
             alert_blocks = [
@@ -471,14 +455,14 @@ def process_current_alert_list(user_id):
     return alert_blocks
 
 
-def generate_morning_digest(user_id, invocation=None):
+def generate_morning_digest(user_id, invocation=None, page=1):
     user = User.objects.get(id=user_id)
     blocks = [
         block_builders.simple_section("*Morning Digest* :coffee:", "mrkdwn"),
         {"type": "divider"},
     ]
     alerts = process_current_alert_list(user_id)
-    meeting = _send_calendar_details(user_id, invocation)
+    meeting = _send_calendar_details(user_id, page, invocation)
     tasks = process_get_task_list(user_id)
     blocks = [*blocks, *meeting, {"type": "divider"}, *tasks, {"type": "divider"}, *alerts]
     if invocation is None:
