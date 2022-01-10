@@ -5,12 +5,62 @@
         <h3 class="title">Workflow Automations</h3>
         <h5 style="margin-top: -0.65rem; color: #9b9b9b">Where Salesforce meets Slack</h5>
       </div>
-      <router-link exact-active-class="active" :to="{ name: 'CreateNew' }">
+
+      <router-link
+        v-if="user.userLevel !== 'MANAGER'"
+        exact-active-class="active"
+        :to="{ name: 'CreateNew' }"
+      >
         <div :class="isOnboarding ? 'onboarding row' : 'row'">
           <img src="@/assets/images/trophy.png" style="height: 1.3rem; margin-right: 1rem" alt="" />
           <h5 v-if="user.userLevel === 'REP'">Popular</h5>
         </div>
       </router-link>
+
+      <div v-else>
+        <div
+          @click="isPopular()"
+          style="cursor: pointer"
+          :class="isOnboarding ? 'onboarding row' : 'row'"
+        >
+          <img src="@/assets/images/trophy.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
+
+          <h3>Popular</h3>
+          <img
+            src="@/assets/images/dropdown.png"
+            style="height: 1.25rem; margin-top: 0.25rem"
+            alt=""
+          />
+        </div>
+
+        <div v-if="popular" style="margin-left: 1rem; margin-top: -0.75rem" class="col">
+          <router-link exact-active-class="active" :to="{ name: 'RealTime' }">
+            <div :class="isOnboarding ? 'onboarding row' : 'row'">
+              <img
+                src="@/assets/images/bolt.png"
+                style="height: 0.9rem; margin-right: 0.25rem"
+                alt=""
+              />
+              <h5>Instant Updates</h5>
+            </div>
+          </router-link>
+          <router-link
+            style="margin-top: -2rem"
+            exact-active-class="active"
+            :to="{ name: 'CreateNew' }"
+          >
+            <div style="margin-top: -1rem" :class="isOnboarding ? 'onboarding row' : 'row'">
+              <img
+                src="@/assets/images/org.png"
+                style="height: 0.8rem; margin-right: 0.25rem"
+                alt=""
+              />
+
+              <h5>Pipeline Management.</h5>
+            </div>
+          </router-link>
+        </div>
+      </div>
 
       <div
         v-if="isOnboarding && user.activatedManagrConfigs.includes('Update Forecast')"
@@ -76,13 +126,47 @@
         <h3 class="title">Workflow Automations</h3>
         <h5 style="margin-top: -0.65rem; color: #9b9b9b">Let us do the work for you</h5>
       </div>
-      <router-link exact-active-class="active" :to="{ name: 'CreateNew' }">
-        <div class="row">
-          <img src="@/assets/images/trophy.png" style="height: 1.3rem; margin-right: 1rem" alt="" />
 
-          <h5>Popular</h5>
+      <div>
+        <div @click="isPopular()" style="cursor: pointer" class="row">
+          <img src="@/assets/images/trophy.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
+
+          <h3>Popular</h3>
+          <img
+            src="@/assets/images/dropdown.png"
+            style="height: 1.25rem; margin-top: 0.25rem"
+            alt=""
+          />
         </div>
-      </router-link>
+
+        <div v-if="popular" style="margin-left: 1rem; margin-top: -0.75rem" class="col">
+          <router-link exact-active-class="active" :to="{ name: 'RealTime' }">
+            <div style="height: 2.25rem" class="row">
+              <img
+                src="@/assets/images/bolt.png"
+                style="height: 0.9rem; margin-right: 0.25rem"
+                alt=""
+              />
+              <h5>Instant Updates</h5>
+            </div>
+          </router-link>
+          <router-link
+            style="margin-top: -2rem"
+            exact-active-class="active"
+            :to="{ name: 'CreateNew' }"
+          >
+            <div style="margin-top: -0.25rem; height: 2.25rem" class="row">
+              <img
+                src="@/assets/images/org.png"
+                style="height: 0.8rem; margin-right: 0.25rem"
+                alt=""
+              />
+
+              <h5>Pipeline Management.</h5>
+            </div>
+          </router-link>
+        </div>
+      </div>
 
       <router-link exact-active-class="active" :to="{ name: 'ListTemplates' }">
         <div class="row">
@@ -137,6 +221,7 @@ export default {
       templates: CollectionManager.create({ ModelClass: AlertTemplate }),
       userOnboardingForm: new UserOnboardingForm({}),
       test: true,
+      popular: true,
     }
   },
   async created() {
@@ -168,6 +253,9 @@ export default {
     onboardComplete() {
       this.userOnboardingForm.field.onboarding.value = false
       this.handleUpdate()
+    },
+    isPopular() {
+      this.popular = !this.popular
     },
   },
   computed: {

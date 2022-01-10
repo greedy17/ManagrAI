@@ -1,119 +1,46 @@
 <template>
   <div class="alerts-page">
-    <div v-if="isOnboarding && !isAdmin" class="col">
-      <h2 class="title">Popular Workflow Automations</h2>
-      <p style="margin-top: -0.5rem" class="sub__">Step 2/2: Activate at least 3 workflows</p>
-    </div>
-    <div v-else class="col">
-      <h2 class="title">Popular Workflow Automations</h2>
+    <div class="spacer"></div>
+    <div class="col">
+      <h2 style="color: black; margin-top: -0.5rem" class="title">Instant Updates</h2>
       <p style="color: #5d5e5e" class="sub__">Activate the workflows that are relevant to you</p>
     </div>
 
     <div class="alert_cards">
-      <div v-if="user.userLevel !== 'MANAGER'" class="card__">
+      <div class="card__">
         <div class="card__header">
-          <h3>Log <span style="color: #5f8cff">Meetings</span></h3>
-        </div>
-        <div class="row">
-          <img style="height: 2rem; margin-right: 0.5rem" src="@/assets/images/zoom.png" alt="" />
-          <img
-            style="height: 1.65rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
-            class="filter-plus"
-            alt=""
-          />
-          <img
-            style="height: 2rem; margin-right: 0.5rem"
-            src="@/assets/images/gmailCal.png"
-            alt=""
-          />
-        </div>
-        <div style="margin-top: 2rem">
-          <button
-            v-if="hasZoomIntegration && !hasZoomChannel"
-            @click="goToLogZoom"
-            :class="!isAdmin && isOnboarding ? 'orange_button bouncy' : 'orange_button'"
-          >
-            Activate
-          </button>
-          <h4 style="margin-top: -0.5rem" v-else-if="!hasZoomIntegration">
-            Connect Zoom in order to activate
-          </h4>
-          <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="hasZoomChannel">Activated</p>
-        </div>
-      </div>
-      <div v-else class="card__">
-        <div class="card__header">
-          <h3>Meeting<span style="color: #5f8cff"> Recaps</span></h3>
-        </div>
-        <div class="row">
-          <img style="height: 2rem; margin-right: 0.5rem" src="@/assets/images/zoom.png" alt="" />
-          <img
-            style="height: 1.65rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
-            class="filter-plus"
-            alt=""
-          />
-          <img
-            style="height: 2rem; margin-right: 0.5rem"
-            src="@/assets/images/gmailCal.png"
-            alt=""
-          />
-        </div>
-        <div style="margin-top: 2rem">
-          <button
-            v-if="hasZoomIntegration && hasSlackIntegration && !recapChannel"
-            @click="goToZoomRecap"
-            :class="!isAdmin && isOnboarding ? 'orange_button bouncy' : 'orange_button'"
-          >
-            Activate
-          </button>
-          <h4 style="margin-top: -0.5rem" v-else-if="!(hasZoomIntegration && hasSlackIntegration)">
-            Connect Zoom and Calendar in order to activate
-          </h4>
-          <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="recapChannel">Activated</p>
-        </div>
-      </div>
-
-      <div
-        :class="
-          !(hasZoomChannel || recapChannel) && isOnboarding && !isAdmin
-            ? 'onboarding card__'
-            : 'card__'
-        "
-      >
-        <div class="card__header">
-          <h3>Close Date <span style="color: #fa646a">Passed</span></h3>
+          <h3>Meeting <span style="color: #5f8cff">Logged</span></h3>
         </div>
 
         <div class="row">
           <img
-            style="height: 2rem; margin-right: 0.5rem"
+            style="height: 2.25rem; margin-right: 0.5rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
           <img
-            style="height: 1.65rem; margin-right: 0.5rem"
+            style="height: 1.75rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
-            class="filter-plus"
             alt=""
           />
           <img
-            style="height: 2rem; margin-right: 0.5rem"
-            src="@/assets/images/salesforce.png"
+            style="height: 2.25rem; margin-right: 0.5rem"
+            src="@/assets/images/zoom.png"
             alt=""
           />
+          <img
+            style="height: 1.75rem; margin-right: 0.5rem"
+            src="@/assets/images/plusOne.png"
+            alt=""
+          />
+          <img style="height: 2.25rem" src="@/assets/images/gmailCal.png" alt="" />
         </div>
 
-        <div style="margin-top: 2rem">
-          <button
-            v-if="
-              hasSalesforceIntegration &&
-              hasSlackIntegration &&
-              !user.activatedManagrConfigs.includes('Close Date Passed')
-            "
-            @click="goToCloseDatePassed"
-            :class="!isAdmin && isOnboarding ? 'orange_button bouncy' : 'orange_button'"
+        <div style="margin-top: 0.5rem">
+          <!-- <button
+            v-if="hasSalesforceIntegration && hasSlackIntegration"
+            @click="goToStageAdvanced"
+            class="orange_button"
           >
             Activate
           </button>
@@ -128,105 +55,38 @@
             v-else-if="user.activatedManagrConfigs.includes('Close Date Passed')"
           >
             Activated
-          </h4>
+          </h4> -->
+          <p style="">Coming Soon</p>
         </div>
       </div>
 
-      <div
-        :class="
-          !user.activatedManagrConfigs.includes('Close Date Passed') && isOnboarding && !isAdmin
-            ? 'card__ onboarding'
-            : 'card__'
-        "
-      >
+      <div class="card__">
         <div class="card__header">
-          <h3>Update <span style="color: #199e54">Forecast</span></h3>
+          <h3>Deal <span style="color: #d8789f">Movement</span></h3>
         </div>
 
         <div class="row">
           <img
-            style="height: 2rem; margin-right: 0.5rem"
+            style="height: 2.25rem; margin-right: 1rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
           <img
-            style="height: 1.65rem; margin-right: 0.5rem"
+            style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/plusOne.png"
-            class="filter-plus"
             alt=""
           />
           <img
-            style="height: 2rem; margin-right: 0.5rem"
+            style="height: 2.25rem; margin-right: 1rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
         </div>
 
-        <div style="margin-top: 2rem">
-          <button
-            v-if="
-              hasSalesforceIntegration &&
-              hasSlackIntegration &&
-              !user.activatedManagrConfigs.includes('Update Forecast')
-            "
-            @click="goToUpdateForecast"
-            :class="!isAdmin && isOnboarding ? 'orange_button bouncy' : 'orange_button'"
-          >
-            Activate
-          </button>
-          <h4
-            style="margin-top: -0.5rem"
-            v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)"
-          >
-            Connect Slack & Salesforce to acivate
-          </h4>
-          <h4
-            style="margin-top: -0.5rem"
-            v-else-if="user.activatedManagrConfigs.includes('Update Forecast')"
-          >
-            Activated
-          </h4>
-        </div>
-      </div>
-
-      <div
-        :class="
-          !user.activatedManagrConfigs.includes('Update Forecast') && isOnboarding && !isAdmin
-            ? 'card__ onboarding'
-            : 'card__'
-        "
-      >
-        <div class="card__header">
-          <h3>Deal <span style="color: #fa646a">Rotting</span></h3>
-        </div>
-
-        <div class="row">
-          <img
-            style="height: 2rem; margin-right: 0.5rem"
-            src="@/assets/images/slackLogo.png"
-            alt=""
-          />
-          <img
-            style="height: 1.65rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
-            class="filter-plus"
-            alt=""
-          />
-          <img
-            style="height: 2rem; margin-right: 0.5rem"
-            src="@/assets/images/salesforce.png"
-            alt=""
-          />
-        </div>
-
-        <div style="margin-top: 2rem">
-          <button
-            v-if="
-              hasSalesforceIntegration &&
-              hasSlackIntegration &&
-              !user.activatedManagrConfigs.includes('Deal Rotting')
-            "
-            @click="goToDealRotting"
+        <div style="margin-top: 0.5rem">
+          <!-- <button
+            v-if="hasSalesforceIntegration && hasSlackIntegration"
+            @click="goToStageAdvanced"
             class="orange_button"
           >
             Activate
@@ -239,51 +99,41 @@
           </h4>
           <h4
             style="margin-top: -0.5rem"
-            v-else-if="user.activatedManagrConfigs.includes('Deal Rotting')"
+            v-else-if="user.activatedManagrConfigs.includes('Close Date Passed')"
           >
             Activated
-          </h4>
+          </h4> -->
+          <p style="">Coming Soon</p>
         </div>
       </div>
 
-      <div
-        :class="
-          !user.activatedManagrConfigs.includes('Update Forecast') && isOnboarding && !isAdmin
-            ? 'card__ onboarding'
-            : 'card__'
-        "
-      >
+      <div class="card__">
         <div class="card__header">
-          <h3>Close Date<span style="color: #199e54"> Approaching</span></h3>
+          <h3>Closed <span style="color: #199e54">Won</span></h3>
         </div>
 
         <div class="row">
           <img
-            style="height: 2rem; margin-right: 0.5rem"
+            style="height: 2.25rem; margin-right: 1rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
           <img
-            style="height: 1.65rem; margin-right: 0.5rem"
+            style="height: 1.75rem; margin-right: 1rem"
             src="@/assets/images/plusOne.png"
-            class="filter-plus"
             alt=""
           />
           <img
-            style="height: 2rem; margin-right: 0.5rem"
+            style="height: 2.25rem; margin-right: 1rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
         </div>
 
-        <div style="margin-top: 2rem">
-          <button
-            v-if="
-              hasSalesforceIntegration &&
-              hasSlackIntegration &&
-              !user.activatedManagrConfigs.includes('Close Date Approaching')
-            "
-            @click="goToCloseDateApproaching"
+        <div style="margin-top: 0.5rem">
+          <!-- <button
+            v-if="hasSalesforceIntegration && hasSlackIntegration"
+            @click="goToStageAdvanced"
             class="orange_button"
           >
             Activate
@@ -296,106 +146,11 @@
           </h4>
           <h4
             style="margin-top: -0.5rem"
-            v-else-if="user.activatedManagrConfigs.includes('Close Date Approaching')"
+            v-else-if="user.activatedManagrConfigs.includes('Close Date Passed')"
           >
             Activated
-          </h4>
-        </div>
-      </div>
-
-      <div
-        :class="
-          !user.activatedManagrConfigs.includes('Update Forecast') && isOnboarding && !isAdmin
-            ? 'card__ onboarding'
-            : 'card__'
-        "
-      >
-        <div class="card__header">
-          <h3>Upcoming<span style="color: #ddad3c"> Next Step</span></h3>
-        </div>
-
-        <div class="row">
-          <img
-            style="height: 2rem; margin-right: 0.5rem"
-            src="@/assets/images/slackLogo.png"
-            alt=""
-          />
-          <img
-            style="height: 1.65rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
-            class="filter-plus"
-            alt=""
-          />
-          <img
-            style="height: 2rem; margin-right: 0.5rem"
-            src="@/assets/images/salesforce.png"
-            alt=""
-          />
-        </div>
-
-        <div style="margin-top: 2rem">
-          <button
-            v-if="
-              hasSalesforceIntegration &&
-              hasSlackIntegration &&
-              !user.activatedManagrConfigs.includes('Upcoming Next Step')
-            "
-            @click="goToNextStep"
-            class="orange_button"
-          >
-            Activate
-          </button>
-          <h4
-            style="margin-top: -0.5rem"
-            v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)"
-          >
-            Connect Slack & Salesforce to acivate
-          </h4>
-          <h4
-            style="margin-top: -0.5rem"
-            v-else-if="user.activatedManagrConfigs.includes('Upcoming Next Step')"
-          >
-            Activated
-          </h4>
-        </div>
-      </div>
-      <div
-        v-if="user.userLevel === 'MANAGER'"
-        :class="
-          !user.activatedManagrConfigs.includes('Update Forecast') && isOnboarding && !isAdmin
-            ? 'card__ onboarding'
-            : 'card__'
-        "
-      >
-        <div class="card__header">
-          <h3>Log <span style="color: #5f8cff">Meetings</span></h3>
-        </div>
-        <div class="row">
-          <img style="height: 2rem; margin-right: 0.5rem" src="@/assets/images/zoom.png" alt="" />
-          <img
-            style="height: 1.65rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
-            class="filter-plus"
-            alt=""
-          />
-          <img
-            style="height: 2rem; margin-right: 0.5rem"
-            src="@/assets/images/gmailCal.png"
-            alt=""
-          />
-        </div>
-        <div style="margin-top: 2rem">
-          <button
-            v-if="hasZoomIntegration && !hasZoomChannel"
-            @click="goToLogZoom"
-            class="orange_button"
-          >
-            Activate
-          </button>
-          <h4 style="margin-top: -0.5rem" v-else-if="!hasZoomIntegration">
-            Connect Zoom in order to activate
-          </h4>
-          <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="hasZoomChannel">Activated</p>
+          </h4> -->
+          <p style="">Coming Soon</p>
         </div>
       </div>
     </div>
@@ -450,7 +205,7 @@ import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 
 export default {
-  name: 'AlertsPage',
+  name: 'RealTime',
   components: {
     ExpandablePanel,
     DropDownSearch,
@@ -498,6 +253,12 @@ export default {
     goToCloseDatePassed() {
       this.$router.push({ name: 'CloseDatePassed' })
     },
+    goToStageAdvanced() {
+      this.$router.push({ name: 'StageAdvanced' })
+    },
+    goToMeetingLogged() {
+      this.$router.push({ name: 'MeetingLogged' })
+    },
     goToDealRotting() {
       this.$router.push({ name: 'DealRotting' })
     },
@@ -520,7 +281,7 @@ export default {
   computed: {
     workFlowIds() {
       let arr = []
-      for (let i = 0; i < this.templates.list.length; i++) {
+      for (let i = 0; i < this.templates.list.length; i) {
         arr.push(this.templates.list[i].id)
       }
       return arr
@@ -673,9 +434,6 @@ export default {
 textarea {
   @extend .textarea;
 }
-h3 {
-  font-size: 1.1rem;
-}
 .box__header {
   &__status {
     display: flex;
@@ -692,7 +450,6 @@ h3 {
 .alerts-page {
   margin-left: 14vw;
   margin-top: 3.5rem;
-  color: $base-gray;
   &__previous-step {
     @include muted-font(12);
   }
@@ -722,11 +479,11 @@ h3 {
   flex-direction: row;
   justify-content: space-evenly;
   align-items: center;
+  margin-top: 2rem;
   flex-wrap: wrap;
-  padding: 0.5rem;
 }
 .card__ {
-  background-color: $white;
+  background-color: $panther;
   border: none;
   width: 20vw;
   padding: 1.25rem;
@@ -736,7 +493,8 @@ h3 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 3px 4px 7px $very-light-gray;
+  box-shadow: 3px 4px 7px black;
+  color: white;
   // @media only screen and (min-width: 768px) {
   //   flex: 1 0 24%;
   //   min-width: 21rem;
@@ -766,9 +524,6 @@ h3 {
   &-remove {
     justify-self: end;
   }
-}
-.filter-plus {
-  filter: invert(90%);
 }
 .btn {
   &--danger {
@@ -834,8 +589,6 @@ h3 {
   color: $panther-silver;
 }
 .title {
-  color: $base-gray;
-  font-weight: 900;
 }
 .group {
   display: flex;
@@ -849,6 +602,7 @@ h3 {
   flex-direction: column;
   align-items: flex-start;
   margin-left: 0.75rem;
+  margin-top: 1rem;
 }
 .row {
   display: flex;
@@ -880,6 +634,9 @@ h3 {
 }
 .space {
   margin-bottom: 0.5rem;
+}
+.spacer {
+  height: 0.5rem;
 }
 .add__group {
   display: flex;
@@ -930,10 +687,10 @@ input {
   background-color: $dark-green;
   color: white;
   font-weight: bold;
-  font-size: 15px;
-  border-radius: 0.33rem;
+  font-size: 16px;
+  border-radius: 0.5rem;
   border: 2px solid $dark-green;
-  padding: 0.25rem 1.25rem;
+  padding: 0.25rem 1.5rem;
   cursor: pointer;
 }
 .cs__button {
