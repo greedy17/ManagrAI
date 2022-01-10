@@ -450,7 +450,9 @@ def _process_update_resource_from_meeting(workflow_id, *args):
         try:
             res = workflow.resource.update_in_salesforce(data)
             attempts = 1
-            update_forms.update(is_submitted=True, submission_date=timezone.now())
+            update_forms.update(
+                is_submitted=True, submission_date=timezone.now(), update_source="meeting"
+            )
             break
         except TokenExpired as e:
             if attempts >= 5:
@@ -697,6 +699,7 @@ def _process_create_new_contacts(workflow_id, *args):
         # if it is an opp we create a contact role as well
         logger.info(f"FORM {form}")
         data = form.saved_data
+        print(data)
         if not data:
             # try and collect whatever data we have
             contact = dict(
@@ -724,7 +727,9 @@ def _process_create_new_contacts(workflow_id, *args):
                 )
                 attempts = 1
                 form.is_submitted = True
+                form.update_source = "meeting"
                 form.submission_date = timezone.now()
+                form.save()
                 break
             except TokenExpired as e:
                 if attempts >= 5:
@@ -820,7 +825,9 @@ def _process_update_contacts(workflow_id, *args):
                     )
                     attempts = 1
                     form.is_submitted = True
+                    form.update_source = "meeting"
                     form.submission_date = timezone.now()
+                    form.save()
                     break
                 except TokenExpired as e:
                     if attempts >= 5:

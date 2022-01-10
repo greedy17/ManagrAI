@@ -686,7 +686,12 @@ def create_resource(request):
 
         if slack_form:
 
-            context = {"resource_type": resource_type, "f": str(slack_form.id), "u": str(user.id)}
+            context = {
+                "resource_type": resource_type,
+                "f": str(slack_form.id),
+                "u": str(user.id),
+                "type": "command",
+            }
             blocks = get_block_set("create_modal", context,)
             try:
                 index, block = block_finder("StageName", blocks)
