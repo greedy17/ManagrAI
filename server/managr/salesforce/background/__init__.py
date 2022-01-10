@@ -1076,7 +1076,9 @@ def check_for_display_value(field, value):
 @background(schedule=0)
 @slack_api_exceptions(rethrow=True)
 def _send_recap(form_ids, send_to_data=None, manager_recap=False):
-    submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
+    submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
+        template__resource="OpportunityLineItem"
+    )
     main_form = submitted_forms.filter(
         template__form_type__in=["CREATE", "UPDATE", "MEETING_REVIEW"]
     ).first()
@@ -1171,7 +1173,7 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
                 params=[
                     f"u={str(user.id)}",
                     f"resource_id={str(main_form.resource_id)}",
-                    "type=alert",
+                    f"type={main_form.template.resource}",
                 ],
             ),
         ),

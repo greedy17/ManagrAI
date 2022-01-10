@@ -199,12 +199,7 @@ def alert_instance_block_set(context):
         )
         message = f":white_check_mark: Successfully updated *{form.resource_type}* _{form.resource_object.name}_"
         blocks = block_sets.get_block_set(
-            "success_modal",
-            {
-                "u": str(user.id),
-                "form_id": str(instance.form_instance.all().first().id),
-                "message": message,
-            },
+            "success_modal", {"u": str(user.id), "form_id": str(form.id), "message": message,},
         )
     else:
         blocks = [
@@ -222,7 +217,7 @@ def alert_instance_block_set(context):
             block_builders.simple_button_block(
                 f"Update {instance.template.resource_type}",
                 instance.resource_id,
-                action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(resource_owner.id)}&resource={instance.template.resource_type}&alert_id={instance.id}&current_page={context.get('current_page',1)}",
+                action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(resource_owner.id)}&resource={instance.template.resource_type}&alert_id={instance.id}&current_page={context.get('current_page',1)}&type=alert",
                 style="primary",
             )
         ]
@@ -236,7 +231,7 @@ def alert_instance_block_set(context):
                         params=[
                             f"u={str(user.id)}",
                             f"resource_id={str(instance.resource_id)}",
-                            "type=alert",
+                            f"type={instance.template.resource_type}",
                         ],
                     ),
                 )

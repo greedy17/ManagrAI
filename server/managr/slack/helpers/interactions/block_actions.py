@@ -1663,7 +1663,6 @@ def process_show_sequence_modal(payload, context):
 
 @processor(required_context="u")
 def process_get_notes(payload, context):
-    print(payload)
     u = User.objects.get(id=context.get("u"))
     type = context.get("type", None)
     org = u.organization

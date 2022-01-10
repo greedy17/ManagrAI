@@ -235,7 +235,6 @@ def meeting_prep(processed_data, user_id, invocation):
         for index, participant in enumerate(participants):
             if participant["email"] == contact.email or participant["email"] == User.email:
                 del participants[index]
-        # print(meeting_contacts, "This is meeting contacts")
     new_contacts = list(
         filter(
             lambda x: len(x.get("secondary_data", dict())) or x.get("email"),
