@@ -35,18 +35,12 @@
 
     <h3
       v-if="selectedStage"
-      style="
-        padding-bottom: 0.5rem;
-        border-bottom: 3px solid #199e54;
-        font-size: 1.65rem;
-        display: flex;
-        justify-content: flex-start;
-      "
+      style="padding-bottom: 0.5rem; border-bottom: 3px solid #199e54; font-size: 1.65rem"
     >
       {{ selectedStage }}
     </h3>
+    <h2 v-else>Apply additional fields to stages</h2>
 
-    <h2 style="font-weight: bold" v-else>Apply Additional fields to Stages</h2>
     <!-- <modal name="objects-modal" heading="Select a Stage">
       <div class="objects__">
         <img class="tooltip image" src="@/assets/images/toolTip.png" @click="toggleObjectsModal" />
@@ -822,7 +816,7 @@ export default {
         height: 2.5rem;
         padding: 1rem;
         margin: 0.5rem;
-        border-radius: 0.5rem;
+        border-radius: 0.33rem;
         font-size: 0.75rem;
         cursor: pointer;
         align-items: center;

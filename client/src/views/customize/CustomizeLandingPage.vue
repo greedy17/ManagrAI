@@ -4,23 +4,24 @@
       <div
         style="
           margin-bottom: 1rem;
+          margin-left: 0.5rem;
           display: flex;
-          flex-direction: row;
-          align-items: center;
+          flex-direction: column;
           justify-content: flex-start;
         "
       >
-        <h2 class="title">Field Mapping</h2>
         <!-- <img src="@/assets/images/map.png" style="height: 1.5rem" alt="" /> -->
+        <h2 class="title">Field Mapping</h2>
+        <h5 style="margin-top: -0.5rem">Where Salesforce meets Slack</h5>
       </div>
       <router-link exact-active-class="active" :to="{ name: 'Required' }">
         <div class="row">
           <img
             src="@/assets/images/warning.png"
-            style="height: 1rem; margin-right: 0.5rem"
+            style="height: 1.25rem; margin-right: 1rem"
             alt=""
           />
-          <h3>Required</h3>
+          <h4>Required</h4>
         </div>
       </router-link>
 
@@ -28,17 +29,17 @@
         <div class="row">
           <img
             src="@/assets/images/optional.png"
-            style="height: 1.1rem; margin-right: 0.5rem"
+            style="height: 1.25rem; margin-right: 1rem"
             alt=""
           />
-          <h3>Optional</h3>
+          <h4>Optional</h4>
         </div>
       </router-link>
 
       <router-link exact-active-class="active" :to="{ name: 'ValidationRules' }">
         <div class="row">
-          <img src="@/assets/images/gavel.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
-          <h3>Validation Rules</h3>
+          <img src="@/assets/images/gavel.png" style="height: 1.25rem; margin-right: 1rem" alt="" />
+          <h4>Validation Rules</h4>
         </div>
       </router-link>
     </div>
@@ -231,7 +232,7 @@ img {
   left: 0;
   background-color: #fafbfc;
   border-right: 3px solid $soft-gray;
-  color: $panther-silver;
+  color: $gray;
   overflow-x: hidden;
   padding: 1rem;
   margin-top: -1rem;
@@ -275,6 +276,7 @@ a:hover {
   align-items: center;
   margin-top: 0.1rem;
   margin-bottom: 0.1rem;
+  height: 3rem;
 }
 .row:hover {
   background-color: $lighter-green;

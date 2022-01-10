@@ -1,6 +1,6 @@
 <template>
   <div class="customizations">
-    <div style="display: flex; align-items: center; flex-direction: column">
+    <div style="display: flex; align-items: flex-start; margin-left: 10vw; flex-direction: column">
       <h2 style="color: black">Optional Field Mapping</h2>
       <p style="color: #5d5e5e; margin-top: -0.5rem" class="sub__">
         Map Slack fields to the corresponding SFDC fields.
@@ -15,23 +15,23 @@
 
         <div class="row">
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
             alt=""
             id="plus"
           />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
         </div>
-        <div style="margin-top: 2rem">
+        <div style="margin-top: 1.5rem">
           <router-link :to="{ name: 'CreateOpportunity' }">
             <button class="activate-button">View + Edit</button>
           </router-link>
@@ -49,23 +49,23 @@
 
         <div class="row">
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
             alt=""
             id="plus"
           />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
         </div>
-        <div style="margin-top: 2rem">
+        <div style="margin-top: 1.5rem">
           <router-link :to="{ name: 'UpdateContacts' }">
             <button class="activate-button">View + Edit</button>
           </router-link>
@@ -82,23 +82,23 @@
 
         <div class="row">
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
             alt=""
             id="plus"
           />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
         </div>
-        <div style="margin-top: 2rem">
+        <div style="margin-top: 1.5rem">
           <router-link :to="{ name: 'CreateLeads' }">
             <button class="activate-button">View + Edit</button>
           </router-link>
@@ -115,23 +115,23 @@
 
         <div class="row">
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
             id="plus"
             alt=""
           />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
         </div>
-        <div style="margin-top: 2rem">
+        <div style="margin-top: 1.5rem">
           <router-link :to="{ name: 'UpdateLeads' }">
             <button class="activate-button">View + Edit</button>
           </router-link>
@@ -148,23 +148,23 @@
 
         <div class="row">
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
             alt=""
             id="plus"
           />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
         </div>
-        <div style="margin-top: 2rem">
+        <div style="margin-top: 1.5rem">
           <router-link :to="{ name: 'CreateAccounts' }">
             <button class="activate-button">View + Edit</button>
           </router-link>
@@ -181,23 +181,23 @@
 
         <div class="row">
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
             alt=""
             id="plus"
           />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
         </div>
-        <div style="margin-top: 2rem">
+        <div style="margin-top: 1.5rem">
           <router-link :to="{ name: 'UpdateAccounts' }">
             <button class="activate-button">View + Edit</button>
           </router-link>
@@ -258,10 +258,10 @@ export default {
   background-color: $dark-green;
   color: white;
   font-weight: bold;
-  font-size: 16px;
-  border-radius: 0.5rem;
-  border: 2px solid $dark-green;
-  padding: 0.25rem 1.5rem;
+  font-size: 14px;
+  border: none;
+  border-radius: 0.33rem;
+  padding: 0.5rem 1rem;
   cursor: pointer;
 }
 .customizations {
@@ -277,6 +277,7 @@ export default {
   margin-top: 1rem;
   flex-wrap: wrap;
 }
+
 // .back-logo {
 //   position: absolute;
 //   opacity: 0.06;
@@ -290,7 +291,7 @@ export default {
   border: none;
   width: 20vw;
   padding: 1.25rem;
-  margin-right: 1rem;
+  margin-right: 1.25rem;
   margin-bottom: 2rem;
   border-radius: 0.5rem;
   display: flex;
@@ -303,7 +304,9 @@ export default {
   //   min-width: 21rem;
   //   max-width: 30rem;
   // }
-
+  h3 {
+    font-size: 1.2rem;
+  }
   &header {
     display: flex;
     justify-content: center;

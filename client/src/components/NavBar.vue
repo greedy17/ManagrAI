@@ -2,8 +2,7 @@
   <div>
     <nav id="nav" v-if="userIsLoggedIn">
       <div class="logo">
-        <img style="height: 1.5rem" src="@/assets/images/logo.png" />
-        <div>managr</div>
+        <img style="height: 3rem" src="@/assets/images/logo.png" />
       </div>
 
       <div class="left" ref="user-menu-icon">
@@ -239,8 +238,7 @@ export default {
 @import '@/styles/mixins/utils';
 
 nav {
-  height: 4rem;
-  font-size: 0.95rem;
+  height: 3.5rem;
   font-weight: 900;
   display: flex;
   flex-flow: row;
@@ -251,15 +249,14 @@ nav {
   z-index: 200;
   width: 100vw;
   color: $base-gray;
-  padding: 0.75rem 0 0.5rem 0;
+  padding: 0.25rem 0 0.5rem 0;
   border-bottom: 3px solid $soft-gray;
-
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
 .logo {
   margin-left: 1.5rem;
-  margin-right: 3rem;
+  margin-right: 2.25rem;
   display: flex;
   flex-direction: row;
   align-items: flex-end;
@@ -267,7 +264,7 @@ nav {
   cursor: pointer;
   font-weight: 400;
   font-size: 1.5rem;
-  padding: 0.5rem;
+  padding: 0.75rem;
 }
 
 .links {
@@ -389,8 +386,9 @@ ul {
 li {
   display: inline;
   text-align: center;
-  font-weight: bold;
-  margin-right: 2rem;
+  font-weight: 900;
+  margin-right: 1rem;
+  font-size: 14px;
 }
 
 .profile {
@@ -409,7 +407,7 @@ a {
   text-decoration: none;
   font-weight: bold;
   color: $base-gray;
-  padding: 0.75rem;
+  padding: 0.5rem;
 }
 
 a:hover {

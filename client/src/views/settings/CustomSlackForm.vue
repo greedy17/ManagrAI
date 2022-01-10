@@ -522,10 +522,10 @@
             />
           </div>
 
-          <div v-if="!this.addedFieldNames.includes('Amount')" class="centered field-border">
+          <div v-if="!userHasProducts" class="centered field-border">
             <div class="row__">
               <div style="margin-left: 0.5rem" class="centered">
-                <label class="label">Amount</label>
+                <label :class="!productSelected ? 'green' : 'label'">Amount</label>
                 <ToggleCheckBox
                   style="margin-left: 0.15rem; margin-right: 0.15rem"
                   :value="productSelected"
@@ -533,15 +533,11 @@
                   offColor="#199e54"
                   onColor="#199e54"
                 />
-                <label style="margin-right: 0.15rem" class="label">Products</label>
+                <label style="margin-right: 0.15rem" :class="productSelected ? 'green' : 'label'"
+                  >Products</label
+                >
               </div>
-
-              <img
-                v-if="!productSelected"
-                src="@/assets/images/unlinked.png"
-                alt=""
-                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-              />
+              <p style="font-size: 12px; color: #9b9b9b; margin-left: 0.5rem">{Optional}</p>
             </div>
             <div v-if="!productSelected">
               <DropDownSearch
@@ -564,6 +560,9 @@
             </div>
 
             <div v-if="productSelected">Add products on the next page</div>
+          </div>
+          <div v-else class="centered field-border">
+            <p>Need to edit your Product form ? Save & continue.</p>
           </div>
 
           <!-- <div
@@ -911,7 +910,12 @@
           </div>
 
           <PulseLoadingSpinnerButton
-            v-if="resource === 'Opportunity' && !productSelected && formType === 'UPDATE'"
+            v-if="
+              resource === 'Opportunity' &&
+              !productSelected &&
+              !userHasProducts &&
+              formType === 'UPDATE'
+            "
             @click="onSave"
             class="primary-button"
             :class="
@@ -931,7 +935,7 @@
             :loading="savingForm"
           />
 
-          <div v-if="resource === 'Opportunity' && productSelected">
+          <div v-if="resource === 'Opportunity' && (productSelected || userHasProducts)">
             <button
               v-if="requiredOpportunityFields.every((i) => addedFieldNames.includes(i))"
               class="save"
@@ -1153,7 +1157,7 @@
           </div>
         </div>
         <div class="example-footer">
-          <div style="margin-top: 2rem">
+          <div style="margin-top: 1rem">
             <button class="close">Close</button>
             <button class="save">Update</button>
           </div>
@@ -1418,6 +1422,12 @@ export default {
         'fae88a10-53cc-470e-86ec-32376c041893',
       ]
     },
+    user() {
+      return this.$store.state.user
+    },
+    userHasProducts() {
+      return this.$store.state.user.organizationRef.hasProducts
+    },
   },
   created() {
     this.getActionChoices()
@@ -1675,7 +1685,12 @@ export default {
   }
 }
 .label {
-  font-size: 0.95rem;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+.green {
+  color: $dark-green;
+  font-size: 0.85rem;
   font-weight: bold;
 }
 .or_button {
@@ -2187,7 +2202,7 @@ img:hover {
   opacity: 0.8;
 }
 .example-footer {
-  border-top: 1px solid $panther-gray;
+  border-top: 1px solid $very-light-gray;
   display: flex;
   align-items: center;
   justify-content: flex-end;

@@ -15,15 +15,15 @@
           <h3>Log <span style="color: #5f8cff">Meetings</span></h3>
         </div>
         <div class="row">
-          <img style="height: 2.25rem; margin-right: 1rem" src="@/assets/images/zoom.png" alt="" />
+          <img style="height: 2rem; margin-right: 0.5rem" src="@/assets/images/zoom.png" alt="" />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.65rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
             class="filter-plus"
             alt=""
           />
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 2rem; margin-right: 0.5rem"
             src="@/assets/images/gmailCal.png"
             alt=""
           />
@@ -47,15 +47,15 @@
           <h3>Meeting<span style="color: #5f8cff"> Recaps</span></h3>
         </div>
         <div class="row">
-          <img style="height: 2.25rem; margin-right: 1rem" src="@/assets/images/zoom.png" alt="" />
+          <img style="height: 2rem; margin-right: 0.5rem" src="@/assets/images/zoom.png" alt="" />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.65rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
             class="filter-plus"
             alt=""
           />
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 2rem; margin-right: 0.5rem"
             src="@/assets/images/gmailCal.png"
             alt=""
           />
@@ -88,18 +88,18 @@
 
         <div class="row">
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 2rem; margin-right: 0.5rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.65rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
             class="filter-plus"
             alt=""
           />
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 2rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -145,18 +145,18 @@
 
         <div class="row">
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 2rem; margin-right: 0.5rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.65rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
             class="filter-plus"
             alt=""
           />
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 2rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -202,18 +202,18 @@
 
         <div class="row">
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 2rem; margin-right: 0.5rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.65rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
             class="filter-plus"
             alt=""
           />
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 2rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -254,25 +254,23 @@
         "
       >
         <div class="card__header">
-          <h3 style="font-size: 1.3rem">
-            Close Date<span style="color: #199e54"> Approaching</span>
-          </h3>
+          <h3>Close Date<span style="color: #199e54"> Approaching</span></h3>
         </div>
 
         <div class="row">
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 2rem; margin-right: 0.5rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.65rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
             class="filter-plus"
             alt=""
           />
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 2rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -313,23 +311,23 @@
         "
       >
         <div class="card__header">
-          <h3 style="font-size: 1.3rem">Upcoming<span style="color: #ddad3c"> Next Step</span></h3>
+          <h3>Upcoming<span style="color: #ddad3c"> Next Step</span></h3>
         </div>
 
         <div class="row">
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 2rem; margin-right: 0.5rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.65rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
             class="filter-plus"
             alt=""
           />
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 2rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -373,15 +371,15 @@
           <h3>Log <span style="color: #5f8cff">Meetings</span></h3>
         </div>
         <div class="row">
-          <img style="height: 2.25rem; margin-right: 1rem" src="@/assets/images/zoom.png" alt="" />
+          <img style="height: 2rem; margin-right: 0.5rem" src="@/assets/images/zoom.png" alt="" />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.65rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
             class="filter-plus"
             alt=""
           />
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 2rem; margin-right: 0.5rem"
             src="@/assets/images/gmailCal.png"
             alt=""
           />
@@ -675,6 +673,9 @@ export default {
 textarea {
   @extend .textarea;
 }
+h3 {
+  font-size: 1.1rem;
+}
 .box__header {
   &__status {
     display: flex;
@@ -846,8 +847,8 @@ textarea {
 .col {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  color: white;
+  align-items: flex-start;
+  margin-left: 0.75rem;
 }
 .row {
   display: flex;
@@ -929,10 +930,10 @@ input {
   background-color: $dark-green;
   color: white;
   font-weight: bold;
-  font-size: 16px;
-  border-radius: 0.5rem;
+  font-size: 15px;
+  border-radius: 0.33rem;
   border: 2px solid $dark-green;
-  padding: 0.25rem 1.5rem;
+  padding: 0.25rem 1.25rem;
   cursor: pointer;
 }
 .cs__button {

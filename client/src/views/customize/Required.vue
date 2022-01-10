@@ -1,9 +1,19 @@
 <template>
   <div class="customizations">
-    <h2 style="color: 4d4e4c" class="title">Required Field Mapping</h2>
-    <p style="font-weight: bold; margin-top: -0.5rem; margin-bottom: 2rem; color: #5d5e5e">
-      Map Slack fields to the corresponding SFDC fields.
-    </p>
+    <div style="width: 61%">
+      <h2 style="color: 4d4e4c">Required Field Mapping</h2>
+      <p
+        style="
+          font-weight: bold;
+          margin-top: -0.5rem;
+          margin-bottom: 2rem;
+          color: #5d5e5e;
+          font-size: 0.975rem;
+        "
+      >
+        Map Slack fields to the corresponding SFDC fields.
+      </p>
+    </div>
 
     <div class="customizations__cards">
       <div class="card">
@@ -82,7 +92,7 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 4rem;
+  margin-top: 3.5rem;
   margin-left: 18vw;
   &__cards {
     display: flex;
@@ -171,10 +181,9 @@ export default {
 }
 
 .green__button {
-  height: 2.5rem;
-  width: 8rem;
-  border-radius: 0.5rem;
-  font-size: 1.025rem;
+  border-radius: 0.33rem;
+  padding: 0.5rem 1rem;
+  font-size: 15px;
   font-weight: bold;
   color: white;
   background-color: $dark-green;
@@ -190,7 +199,7 @@ export default {
 }
 
 .title {
-  font-size: 22px;
+  font-size: 21px;
 }
 a {
   color: $dark-green;

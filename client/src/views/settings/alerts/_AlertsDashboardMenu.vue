@@ -1,17 +1,14 @@
 <template>
   <div>
-    <div v-if="user.userLevel === 'REP'" class="sidenav">
-      <div style="margin-bottom: 2rem">
-        <h2 class="title">Workflow Automations</h2>
+    <div v-if="!isAdmin" class="sidenav">
+      <div style="margin-bottom: 2rem; margin-left: 0.5rem">
+        <h3 class="title">Workflow Automations</h3>
+        <h5 style="margin-top: -0.65rem; color: #9b9b9b">Where Salesforce meets Slack</h5>
       </div>
       <router-link exact-active-class="active" :to="{ name: 'CreateNew' }">
         <div :class="isOnboarding ? 'onboarding row' : 'row'">
-          <img
-            src="@/assets/images/trophy.png"
-            style="height: 1.3rem; margin-right: 0.5rem"
-            alt=""
-          />
-          <h3 v-if="user.userLevel === 'REP'">Popular</h3>
+          <img src="@/assets/images/trophy.png" style="height: 1.3rem; margin-right: 1rem" alt="" />
+          <h5 v-if="user.userLevel === 'REP'">Popular</h5>
         </div>
       </router-link>
 
@@ -40,86 +37,75 @@
         :to="{ name: 'ListTemplates' }"
       >
         <div class="row">
-          <img src="@/assets/images/star.png" style="height: 1.3rem; margin-right: 0.5rem" alt="" />
-          <h3 @click="onboardComplete">
+          <img src="@/assets/images/star.png" style="height: 1.3rem; margin-right: 1rem" alt="" />
+          <h5 @click="onboardComplete">
             Saved
             <span style="margin-left: 0.25rem" class="counter">{{
               alertsCount(templates.list.length)
             }}</span>
-          </h3>
+          </h5>
         </div>
       </router-link>
       <router-link v-else exact-active-class="active" :to="{ name: 'ListTemplates' }">
         <div class="row">
-          <img src="@/assets/images/star.png" style="height: 1.3rem; margin-right: 0.5rem" alt="" />
-          <h3>
+          <img src="@/assets/images/star.png" style="height: 1.3rem; margin-right: 1rem" alt="" />
+          <h5>
             Saved
             <span style="margin-left: 0.5rem" class="counter">{{
               alertsCount(templates.list.length)
             }}</span>
-          </h3>
+          </h5>
         </div>
       </router-link>
 
       <router-link exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
         <div :class="isOnboarding ? 'onboarding row' : 'row'">
-          <img
-            src="@/assets/images/build.png"
-            style="height: 1.3rem; margin-right: 0.5rem"
-            alt=""
-          />
-          <h3>Custom</h3>
+          <img src="@/assets/images/build.png" style="height: 1.3rem; margin-right: 1rem" alt="" />
+          <h5>Custom</h5>
         </div>
       </router-link>
 
       <div :class="isOnboarding ? 'onboarding row' : 'row'" style="cursor: not-allowed">
-        <img src="@/assets/images/org.png" style="height: 1.4rem; margin-right: 0.5rem" alt="" />
-        <h3>Shared<span class="coming-soon">coming soon</span></h3>
+        <img src="@/assets/images/org.png" style="height: 1.4rem; margin-right: 1rem" alt="" />
+        <h5>Shared<span class="coming-soon">coming soon</span></h5>
       </div>
     </div>
 
-    <div v-if="test" class="sidenav sidenav__background">
-      <div style="margin-bottom: 2rem">
-        <h2 class="title">Workflow Automations</h2>
+    <div v-else class="sidenav sidenav__background">
+      <div style="margin-bottom: 2rem; margin-left: 0.5rem">
+        <h3 class="title">Workflow Automations</h3>
+        <h5 style="margin-top: -0.65rem; color: #9b9b9b">Let us do the work for you</h5>
       </div>
       <router-link exact-active-class="active" :to="{ name: 'CreateNew' }">
         <div class="row">
-          <img
-            src="@/assets/images/trophy.png"
-            style="height: 1.3rem; margin-right: 0.5rem"
-            alt=""
-          />
+          <img src="@/assets/images/trophy.png" style="height: 1.3rem; margin-right: 1rem" alt="" />
 
-          <h3>Popular</h3>
+          <h5>Popular</h5>
         </div>
       </router-link>
 
       <router-link exact-active-class="active" :to="{ name: 'ListTemplates' }">
         <div class="row">
-          <img src="@/assets/images/star.png" style="height: 1.3rem; margin-right: 0.5rem" alt="" />
-          <h3>
+          <img src="@/assets/images/star.png" style="height: 1.3rem; margin-right: 1rem" alt="" />
+          <h5>
             Saved
             <span style="margin-left: 0.5rem" class="counter">{{
               alertsCount(templates.list.length)
             }}</span>
-          </h3>
+          </h5>
         </div>
       </router-link>
 
       <router-link exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
         <div class="row">
-          <img
-            src="@/assets/images/build.png"
-            style="height: 1.3rem; margin-right: 0.5rem"
-            alt=""
-          />
-          <h3>Custom</h3>
+          <img src="@/assets/images/build.png" style="height: 1.3rem; margin-right: 1rem" alt="" />
+          <h5>Custom</h5>
         </div>
       </router-link>
 
       <div class="row" style="cursor: not-allowed">
-        <img src="@/assets/images/org.png" style="height: 1.4rem; margin-right: 0.5rem" alt="" />
-        <h3>Shared<span class="coming-soon">coming soon</span></h3>
+        <img src="@/assets/images/org.png" style="height: 1.4rem; margin-right: 1rem" alt="" />
+        <h5>Shared<span class="coming-soon">coming soon</span></h5>
       </div>
     </div>
 
@@ -261,7 +247,13 @@ export default {
   border: solid 2px $dark-green;
   box-shadow: 0 0 10px 1px #555;
 }
-
+h3 {
+  font-size: 1.2rem;
+}
+h5 {
+  font-size: 0.8rem;
+  font-weight: 700px;
+}
 #tail1 {
   position: absolute;
   bottom: -20px;
@@ -367,6 +359,7 @@ a:hover span {
 .row {
   display: flex;
   flex-direction: row;
+  height: 3rem;
   align-items: center;
   margin-top: 0.1rem;
   margin-bottom: 0.1rem;
