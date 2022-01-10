@@ -483,7 +483,7 @@ textarea {
   flex-wrap: wrap;
 }
 .card__ {
-  background-color: $panther;
+  background-color: $white;
   border: none;
   width: 20vw;
   padding: 1.25rem;
@@ -493,8 +493,7 @@ textarea {
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 3px 4px 7px black;
-  color: white;
+  box-shadow: 3px 4px 7px $very-light-gray;
   // @media only screen and (min-width: 768px) {
   //   flex: 1 0 24%;
   //   min-width: 21rem;

@@ -127,7 +127,7 @@
         <h5 style="margin-top: -0.65rem; color: #9b9b9b">Let us do the work for you</h5>
       </div>
 
-      <div>
+      <div style="background-color: #cff8e2; border-radius: 0.3rem; margin-bottom: 0.25rem">
         <div @click="isPopular()" style="cursor: pointer" class="row">
           <img src="@/assets/images/trophy.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
 
@@ -139,15 +139,15 @@
           />
         </div>
 
-        <div v-if="popular" style="margin-left: 1rem; margin-top: -0.75rem" class="col">
+        <div v-if="popular" style="margin-top: -0.25rem" class="col">
           <router-link exact-active-class="active" :to="{ name: 'RealTime' }">
             <div style="height: 2.25rem" class="row">
               <img
                 src="@/assets/images/bolt.png"
-                style="height: 0.9rem; margin-right: 0.25rem"
+                style="height: 0.9rem; margin-right: 0.25rem; margin-left: 1rem"
                 alt=""
               />
-              <h5>Instant Updates</h5>
+              <h5 style="margin-left: 1rem">Instant Updates</h5>
             </div>
           </router-link>
           <router-link
@@ -158,11 +158,11 @@
             <div style="margin-top: -0.25rem; height: 2.25rem" class="row">
               <img
                 src="@/assets/images/org.png"
-                style="height: 0.8rem; margin-right: 0.25rem"
+                style="height: 0.8rem; margin-right: 0.25rem; margin-left: 1rem"
                 alt=""
               />
 
-              <h5>Pipeline Management.</h5>
+              <h5 style="margin-left: 1rem">Pipeline Management.</h5>
             </div>
           </router-link>
         </div>
