@@ -1313,4 +1313,3 @@ def remove_field(org_id, form_field):
             else:
                 field.forms.first().delete()
     return
-

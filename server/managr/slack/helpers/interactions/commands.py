@@ -67,7 +67,7 @@ def create_resource(context):
             }
         blocks = [
             block_builders.static_select(
-                "Pick a resource to create",
+                "Create a new...",
                 [
                     *map(
                         lambda resource: block_builders.option(resource, resource),
@@ -90,7 +90,7 @@ def create_resource(context):
         data = {
             "view": {
                 "type": "modal",
-                "title": {"type": "plain_text", "text": "Create Resource"},
+                "title": {"type": "plain_text", "text": "Create New"},
                 "blocks": blocks,
                 "external_id": f"create_modal.{str(uuid.uuid4())}",
             },

@@ -5,7 +5,7 @@ from datetime import datetime, date
 import logging
 import uuid
 import time
-
+from django.db.models import Q
 
 from django.http import JsonResponse
 from django.utils import timezone
@@ -331,6 +331,11 @@ def process_submit_resource_data(payload, context):
     stage_forms = current_forms.exclude(template__form_type__in=["UPDATE", "CREATE"]).exclude(
         template__resource="OpportunityLineItem"
     )
+    if main_form.template.resource == "Opportunity":
+        current_products = OpportunityLineItem.objects.filter(opportunity=main_form.resource_id)
+        for product in current_products:
+            product.is_stale = True
+            product.save()
     stage_form_data_collector = {}
     for form in stage_forms:
         form.update_source = type
@@ -582,6 +587,25 @@ def process_submit_resource_data(payload, context):
                     ),
                 ]
 
+            slack_requests.update_channel_message(
+                context.get("channel_id"),
+                context.get("message_ts"),
+                slack_access_token,
+                block_set=blocks,
+            )
+        elif type == "prep":
+            last_instance = (
+                MeetingPrepInstance.objects.filter(user=user).order_by("-datetime_created").first()
+            )
+            prep_instance = MeetingPrepInstance.objects.filter(
+                Q(invocation=last_instance.invocation) & Q(resource_id=main_form.resource_id)
+            ).first()
+            if prep_instance:
+                prep_instance.form = main_form
+                prep_instance.save()
+            blocks = generate_morning_digest(
+                user.id, last_instance.invocation, context.get("current_page")
+            )
             slack_requests.update_channel_message(
                 context.get("channel_id"),
                 context.get("message_ts"),
