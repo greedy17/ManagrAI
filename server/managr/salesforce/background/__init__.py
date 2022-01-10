@@ -20,7 +20,14 @@ from managr.api.decorators import log_all_exceptions, sf_api_exceptions_wf
 from managr.api.emails import send_html_email
 
 from managr.core.models import User
-from managr.organization.models import Account, Stage, Contact, Organization, PricebookEntry
+from managr.organization.models import (
+    Account,
+    Stage,
+    Contact,
+    Organization,
+    PricebookEntry,
+    OpportunityLineItem,
+)
 from managr.organization.serializers import AccountSerializer, StageSerializer
 from managr.opportunity.models import Opportunity, Lead
 from managr.opportunity.serializers import OpportunitySerializer
@@ -1164,6 +1171,17 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
         blocks.insert(
             0, block_builders.header_block(f"Recap for new {main_form.template.resource}"),
         )
+    if user.organization.has_products and main_form.template.resource == "Opportunity":
+        current_products = OpportunityLineItem.objects.filter(opportunity=main_form.resource_id)
+        if current_products:
+            blocks.append(block_builders.simple_section("*Current Products:*", "mrkdwn"))
+            for product in current_products:
+                blocks.append(
+                    block_builders.simple_section(
+                        f"*{product.name}*- QTY:{product.quantity} / Total Price: ${product.total_price}\n",
+                        "mrkdwn",
+                    )
+                )
     action_blocks = [
         block_builders.simple_button_block(
             "View Notes",
