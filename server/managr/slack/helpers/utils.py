@@ -379,7 +379,7 @@ def check_for_uncompleted_meetings(user_id, org_level=False):
             users = User.objects.filter(
                 slack_integration__recap_receivers__contains=[user.slack_integration.slack_id]
             )
-            slack_id = OrgCustomSlackFormInstance.objects.get(id=users.get("_form"))
+            slack_id = OrgCustomSlackFormInstance.objects.get(id=user.slack_integration.slack_id)
             not_completed = []
             for user in users:
                 total_meetings = MeetingWorkflow.objects.filter(user=user.id).filter(
@@ -394,7 +394,7 @@ def check_for_uncompleted_meetings(user_id, org_level=False):
             total_meetings = MeetingWorkflow.objects.filter(user=user.id).filter(
                 datetime_created__contains=datetime.today().date()
             )
-            slack_id = OrgCustomSlackFormInstance.objects.get(id=user.get("_form"))
+            slack_id = OrgCustomSlackFormInstance.objects.get(id=user.slack_integration.slack_id)
             not_completed = [meeting for meeting in total_meetings if meeting.progress == 0]
         if len(not_completed):
             return {"status": True, "not_completed": len(not_completed)}
