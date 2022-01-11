@@ -199,12 +199,7 @@ def alert_instance_block_set(context):
         )
         message = f":white_check_mark: Successfully updated *{form.resource_type}* _{form.resource_object.name}_"
         blocks = block_sets.get_block_set(
-            "success_modal",
-            {
-                "u": str(user.id),
-                "form_id": str(instance.form_instance.all().first().id),
-                "message": message,
-            },
+            "success_modal", {"u": str(user.id), "form_id": str(form.id), "message": message,},
         )
     else:
         blocks = [
@@ -222,7 +217,7 @@ def alert_instance_block_set(context):
             block_builders.simple_button_block(
                 f"Update {instance.template.resource_type}",
                 instance.resource_id,
-                action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(resource_owner.id)}&resource={instance.template.resource_type}&alert_id={instance.id}&current_page={context.get('current_page',1)}",
+                action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(resource_owner.id)}&resource={instance.template.resource_type}&alert_id={instance.id}&current_page={context.get('current_page',1)}&type=alert",
                 style="primary",
             )
         ]
@@ -236,7 +231,7 @@ def alert_instance_block_set(context):
                         params=[
                             f"u={str(user.id)}",
                             f"resource_id={str(instance.resource_id)}",
-                            "type=alert",
+                            f"type={instance.template.resource_type}",
                         ],
                     ),
                 )
@@ -438,11 +433,12 @@ def create_add_to_sequence_block_set(context):
 
 @block_set(required_context=["u"])
 def choose_opportunity_block_set(context):
-    user_id = context.get("u")
+    user_id = context.get("u", None)
+    type = context.get("type")
     blocks = [
         block_builders.external_select(
             "Which opportunity would you like your notes for?",
-            f"{slack_const.GET_NOTES}?u={user_id}&resource={sf_consts.RESOURCE_SYNC_OPPORTUNITY}",
+            f"{slack_const.GET_NOTES}?u={user_id}&resource={sf_consts.RESOURCE_SYNC_OPPORTUNITY}&type={type}",
             block_id="select_opp",
             placeholder="Type to search",
         )
@@ -463,7 +459,7 @@ def actions_block_set(context):
         options.append(block_builders.option("Add To Cadence", "ADD_CADENCE"))
     blocks = [
         block_builders.static_select(
-            ':male_genie: Need to get stuff done?  Select an action:',
+            ":male_genie: Need to get stuff done?  Select an action:",
             options,
             f"{slack_const.COMMAND_MANAGR_ACTION}?u={user_id}",
             block_id="select_action",

@@ -159,15 +159,10 @@ def process_zoom_meeting_data(payload, context):
     state = view["state"]["values"]
     # if we had a next page the form data for the review was already saved
     forms = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING)
-    product_form = workflow.forms.filter(
-        template__resource=slack_const.FORM_RESOURCE_OPPORTUNITYLINEITEM
-    ).first()
     if len(forms):
         for form in forms:
             form.save_form(state)
     # otherwise we save the meeting review form
-    elif product_form:
-        product_form.save_form(state)
     else:
         form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
         form.update_source = "meeting"
@@ -182,8 +177,6 @@ def process_zoom_meeting_data(payload, context):
         f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}",
         # save meeting data
     ]
-    if product_form:
-        ops.append(f"{sf_consts.MEETING_REVIEW__ADD_PRODUCTS}.{str(workflow.id)}")
     for form in contact_forms:
         if form.template.form_type == slack_const.FORM_TYPE_CREATE:
             ops.append(

@@ -466,11 +466,13 @@ def process_remove_contact_from_meeting(payload, context):
     meeting = workflow.meeting
     org = workflow.user.organization
     access_token = org.slack_integration.access_token
+    print(workflow.forms.all())
     for i, part in enumerate(meeting.participants):
         if part["_tracking_id"] == context.get("tracking_id"):
             # remove its form if it exists
             if part["_form"] not in [None, ""]:
                 workflow.forms.filter(id=part["_form"]).delete()
+            print(workflow.forms.all())
             del meeting.participants[i]
             break
     meeting.save()
@@ -1669,12 +1671,17 @@ def process_get_notes(payload, context):
     access_token = org.slack_integration.access_token
     resource_id = (
         context.get("resource_id", None)
-        if type
+        if type != "command"
         else payload["view"]["state"]["values"]["select_opp"][
-            f"GET_NOTES?u={u.id}&resource=Opportunity"
+            f"GET_NOTES?u={u.id}&resource=Opportunity&type=command"
         ]["selected_option"]["value"]
     )
-    opportunity = Opportunity.objects.get(id=resource_id)
+    if type == "Opportunity" or type == "command":
+        resource = Opportunity.objects.get(id=resource_id)
+    elif type == "Account":
+        resource = Account.objects.get(id=context.get("resource_id"))
+    elif type == "Lead":
+        resource = Lead.objects.get(id=context.get("resource_id"))
     note_data = (
         OrgCustomSlackFormInstance.objects.filter(resource_id=resource_id)
         .filter(is_submitted=True)
@@ -1687,10 +1694,10 @@ def process_get_notes(payload, context):
         )
     )
     note_blocks = [
-        block_builders.header_block(f"Notes for {opportunity.name}")
+        block_builders.header_block(f"Notes for {resource.name}")
         if note_data
         else block_builders.header_block(
-            f"No notes for {opportunity.name}, start leaving notes! :smiley:"
+            f"No notes for {resource.name}, start leaving notes! :smiley:"
         )
     ]
     if note_data:
@@ -1715,7 +1722,7 @@ def process_get_notes(payload, context):
             "blocks": note_blocks,
         },
     }
-    if type == "alert":
+    if type != "command":
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     else:
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
@@ -2047,7 +2054,12 @@ def process_add_create_form(payload, context):
     )
     slack_form = OrgCustomSlackFormInstance.objects.create(template=template, user=user,)
     if slack_form:
-        context = {"resource_type": resource_type, "f": str(slack_form.id), "u": str(user.id)}
+        context = {
+            "resource_type": resource_type,
+            "f": str(slack_form.id),
+            "u": str(user.id),
+            "type": "command",
+        }
         blocks = get_block_set("create_modal", context,)
         try:
             index, block = block_finder("StageName", blocks)

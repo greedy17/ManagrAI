@@ -147,7 +147,7 @@ def _process_calendar_details(user_id):
         return None
 
 
-def meeting_prep(processed_data, user_id, invocation):
+def meeting_prep(processed_data, user_id, invocation=1):
     def get_domain(email):
         """Parse domain out of an email"""
         return email[email.index("@") + 1 :]
@@ -235,7 +235,6 @@ def meeting_prep(processed_data, user_id, invocation):
         for index, participant in enumerate(participants):
             if participant["email"] == contact.email or participant["email"] == User.email:
                 del participants[index]
-        # print(meeting_contacts, "This is meeting contacts")
     new_contacts = list(
         filter(
             lambda x: len(x.get("secondary_data", dict())) or x.get("email"),
@@ -349,7 +348,7 @@ def _send_calendar_details(
             last_instance = (
                 MeetingPrepInstance.objects.filter(user=user).order_by("-datetime_created").first()
             )
-            current_invocation = last_instance.invocation + 1
+            current_invocation = last_instance.invocation + 1 if last_instance else 1
             for event in processed_data:
                 meeting_prep(event, user_id, current_invocation)
             meetings = MeetingPrepInstance.objects.filter(user=user.id).filter(
@@ -378,7 +377,12 @@ def _send_calendar_details(
 
 def process_get_task_list(user_id):
     user = User.objects.get(id=user_id)
-    tasks = user.salesforce_account.adapter_class.list_tasks()
+    try:
+        tasks = user.salesforce_account.adapter_class.list_tasks()
+    except Exception as e:
+        return [
+            block_builders.simple_section(f"There was an issue with Salesforce: {e}", "mrkdwn"),
+        ]
     paged_tasks = custom_paginator(tasks, count=3)
     results = paged_tasks.get("results", [])
     if results:

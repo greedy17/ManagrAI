@@ -443,7 +443,7 @@ def calendar_reminders_blockset(context):
                     params=[
                         f"u={str(user.id)}",
                         f"resource_id={str(meeting.resource_id)}",
-                        "type=alert",
+                        f"type={type}",
                     ],
                 ),
             )
