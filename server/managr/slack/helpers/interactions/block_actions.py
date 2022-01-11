@@ -289,6 +289,8 @@ def process_edit_meeting_contact(payload, context):
 
 @processor(required_context=[])
 def process_stage_selected(payload, context):
+    print(payload)
+    print(context)
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     workflow = MeetingWorkflow.objects.filter(id=context.get("w")).first()
     user = workflow.user

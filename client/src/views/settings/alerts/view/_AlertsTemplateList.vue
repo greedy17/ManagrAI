@@ -50,8 +50,8 @@
       </div>
       <div class="alert_cards" v-if="editing">
         <div :key="i" v-for="(alert, i) in templates.list" class="card__">
-          <div :data-key="alert.id" class="card__header">
-            <h3>{{ alert.title.toUpperCase() }}</h3>
+          <div :data-key="alert.id">
+            <h3 class="card__header">{{ alert.title.toUpperCase() }}</h3>
           </div>
           <div class="row">
             <button
@@ -636,7 +636,7 @@ a {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  margin-top: 1rem;
+  margin-top: 0.25rem;
   width: 100%;
 }
 .green_button {

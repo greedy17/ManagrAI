@@ -82,6 +82,8 @@ logger = logging.getLogger("managr")
 @processor(required_context=["w", "form_type"])
 def process_stage_next_page(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    print("STAGE RELATED:", context)
+    print(payload)
     view = payload["view"]
     # if there are additional stage gating forms aggregate them and push them in 1 view
     # save current data to its form we will close all views at the end
@@ -302,7 +304,7 @@ def process_add_products_form(payload, context):
 @processor(required_context=["f"])
 def process_submit_resource_data(payload, context):
     # get context
-    print(context)
+    print("SUBMIT CONTEXT:", context)
     has_error = False
     state = payload["view"]["state"]["values"]
     current_form_ids = context.get("f").split(",")
@@ -550,7 +552,6 @@ def process_submit_resource_data(payload, context):
                 channel=context.get("channel_id"),
                 config_id=instance.config_id,
             ).filter(completed=False)
-            logger.info(f"SUBMIT FORM ALERT INSTANCES: {alert_instances}")
             alert_instance = alert_instances.first()
             text = instance.template.title
             blocks = [
@@ -628,7 +629,7 @@ def process_submit_resource_data(payload, context):
                     f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
                 )
 
-            return {"response_action": "clear"}
+    return {"response_action": "clear"}
 
 
 @log_all_exceptions

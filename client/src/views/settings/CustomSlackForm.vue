@@ -80,25 +80,6 @@
               >
                 Add Fields
               </button>
-
-              <DropDownSearch
-                v-else
-                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-                displayKey="referenceDisplayLabel"
-                valueKey="apiName"
-                nullDisplay="Search fields"
-                searchable
-                :loading="formFields.loadingNextPage"
-                :hasNext="!!formFields.pagination.hasNextPage"
-                v-model="nameValue"
-                @load-more="onFieldsNextPage"
-                @search-term="onSearchFields"
-                @input="
-                  (e) => {
-                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
-                  }
-                "
-              />
             </div>
           </div>
 
@@ -655,7 +636,39 @@
           </div>
 
           <h4 v-if="formType !== 'STAGE_GATING'">Recommended Fields:</h4>
-          <h4 v-else>Previous Stage Fields:</h4>
+          <div v-else>
+            <div
+              style="
+                background-color: #efeff5;
+                width: 50%;
+                height: 3rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 0.3rem;
+              "
+            >
+              <DropDownSearch
+                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+                displayKey="referenceDisplayLabel"
+                valueKey="apiName"
+                nullDisplay="Search fields"
+                searchable
+                :loading="formFields.loadingNextPage"
+                :hasNext="!!formFields.pagination.hasNextPage"
+                v-model="nameValue"
+                @load-more="onFieldsNextPage"
+                @search-term="onSearchFields"
+                @input="
+                  (e) => {
+                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+                  }
+                "
+              />
+            </div>
+
+            <h4>Previous Stage Fields:</h4>
+          </div>
           <div
             v-if="resource === 'Opportunity' && formType !== 'STAGE_GATING'"
             class="recommendations"
@@ -939,7 +952,8 @@
             v-if="
               resource === 'Opportunity' &&
               (productSelected || userHasProducts) &&
-              formType !== 'CREATE'
+              formType !== 'CREATE' &&
+              formType !== 'STAGE_GATING'
             "
           >
             <button
