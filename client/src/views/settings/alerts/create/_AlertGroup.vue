@@ -141,7 +141,8 @@ export default {
 }
 .plus_button {
   border: none;
-  background-color: white;
+  box-shadow: 3px 4px 7px $very-light-gray;
+  background-color: transparent;
   border-radius: 50%;
   padding: 0.25rem;
   display: flex;

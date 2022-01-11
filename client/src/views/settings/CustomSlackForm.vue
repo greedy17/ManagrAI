@@ -34,23 +34,23 @@
               margin-bottom: 3rem;
             "
           >
-            <img src="@/assets/images/slackLogo.png" style="height: 2.5rem" alt="" />
+            <img src="@/assets/images/slackLogo.png" style="height: 1.75rem" alt="" />
             <img
               class="filtered-green"
               src="@/assets/images/link.png"
               alt=""
-              style="height: 1.25rem; margin-left: 0.35rem; margin-right: 0.35rem"
+              style="height: 1rem; margin-left: 0.5rem; margin-right: 0.5rem"
             />
-            <img src="@/assets/images/salesforce.png" style="height: 2.5rem" alt="" />
+            <img src="@/assets/images/salesforce.png" style="height: 1.75rem" alt="" />
           </div>
           <div v-else style="margin-bottom: 1rem; margin-top: -1rem" class="row">
             <div style="margin-right: 2rem" class="center">
-              <img style="height: 2rem" src="@/assets/images/slackLogo.png" alt="" />
+              <img style="height: 1.5rem" src="@/assets/images/slackLogo.png" alt="" />
               <p>Fields you'll see in slack</p>
             </div>
             <div class="center">
               <img
-                style="width: 2.5rem; height: 2rem"
+                style="width: 2.5rem; height: 1.75rem"
                 src="@/assets/images/salesforce.png"
                 alt=""
               />
@@ -522,10 +522,10 @@
             />
           </div>
 
-          <div v-if="!this.addedFieldNames.includes('Amount')" class="centered field-border">
+          <div v-if="!userHasProducts" class="centered field-border">
             <div class="row__">
               <div style="margin-left: 0.5rem" class="centered">
-                <label class="label">Amount</label>
+                <label :class="!productSelected ? 'green' : 'label'">Amount</label>
                 <ToggleCheckBox
                   style="margin-left: 0.15rem; margin-right: 0.15rem"
                   :value="productSelected"
@@ -533,15 +533,11 @@
                   offColor="#199e54"
                   onColor="#199e54"
                 />
-                <label style="margin-right: 0.15rem" class="label">Products</label>
+                <label style="margin-right: 0.15rem" :class="productSelected ? 'green' : 'label'"
+                  >Products</label
+                >
               </div>
-
-              <img
-                v-if="!productSelected"
-                src="@/assets/images/unlinked.png"
-                alt=""
-                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-              />
+              <p style="font-size: 12px; color: #9b9b9b; margin-left: 0.5rem">{Optional}</p>
             </div>
             <div v-if="!productSelected">
               <DropDownSearch
@@ -564,6 +560,9 @@
             </div>
 
             <div v-if="productSelected">Add products on the next page</div>
+          </div>
+          <div v-else class="centered field-border">
+            <p>Need to edit your Product form ? Save & continue.</p>
           </div>
 
           <!-- <div
@@ -613,6 +612,7 @@
                 <img
                   :class="unshownIds.includes(field.id) ? 'invisible' : ''"
                   src="@/assets/images/drag.png"
+                  id="drag"
                   style="height: 1.85rem; width: 2rem; cursor: grab"
                   alt=""
                 />
@@ -631,6 +631,7 @@
                 src="@/assets/images/remove.png"
                 style="height: 1.25rem; margin-right: 0.2rem"
                 alt=""
+                id="remove"
                 :class="unshownIds.includes(field.id) ? 'invisible' : ''"
                 @click="
                   () => {
@@ -909,7 +910,12 @@
           </div>
 
           <PulseLoadingSpinnerButton
-            v-if="resource === 'Opportunity' && !productSelected && formType !== 'STAGE_GATING'"
+            v-if="
+              resource === 'Opportunity' &&
+              !productSelected &&
+              !userHasProducts &&
+              formType === 'UPDATE'
+            "
             @click="onSave"
             class="primary-button"
             :class="
@@ -921,8 +927,15 @@
             :loading="savingForm"
             :disabled="!requiredOpportunityFields.every((i) => addedFieldNames.includes(i))"
           />
+          <PulseLoadingSpinnerButton
+            v-if="resource === 'Opportunity' && !productSelected && formType === 'CREATE'"
+            @click="onSave"
+            class="primary-button"
+            text="Save"
+            :loading="savingForm"
+          />
 
-          <div v-if="resource === 'Opportunity' && productSelected">
+          <div v-if="resource === 'Opportunity' && (productSelected || userHasProducts)">
             <button
               v-if="requiredOpportunityFields.every((i) => addedFieldNames.includes(i))"
               class="save"
@@ -934,13 +947,19 @@
           </div>
 
           <PulseLoadingSpinnerButton
-            v-else-if="resource === 'Contact'"
+            v-else-if="resource === 'Contact' && formType === 'CREATE'"
             @click="onSave"
             class="primary-button"
-            :class="!addedFieldNames.includes('LastName') ? 'primary-button' : 'primary-button'"
             text="Save"
             :loading="savingForm"
             :disabled="!addedFieldNames.includes('LastName')"
+          />
+          <PulseLoadingSpinnerButton
+            v-else-if="resource === 'Contact' && formType === 'UPDATE'"
+            @click="onSave"
+            class="primary-button"
+            text="Save"
+            :loading="savingForm"
           />
 
           <PulseLoadingSpinnerButton
@@ -958,19 +977,13 @@
           />
 
           <PulseLoadingSpinnerButton
-            v-if="resource === 'Lead'"
+            v-if="resource === 'Lead' || resource === 'Account'"
             @click="onSave"
             class="primary-button"
-            :class="
-              !requiredLeadFields.every((i) => addedFieldNames.includes(i))
-                ? 'primary-button'
-                : 'primary-button '
-            "
             text="Save"
             :loading="savingForm"
-            :disabled="!requiredLeadFields.every((i) => addedFieldNames.includes(i))"
           />
-
+          <!-- 
           <PulseLoadingSpinnerButton
             v-if="resource === 'Account'"
             @click="onSave"
@@ -979,7 +992,7 @@
             text="Save"
             :loading="savingForm"
             :disabled="!addedFieldNames.includes('Name')"
-          />
+          /> -->
         </div>
       </div>
 
@@ -1007,10 +1020,20 @@
           </div>
 
           <div
-            style="display: flex; flex-direction: row; align-items: center; justify-content: center"
+            style="
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              justify-content: center;
+              filter: invert(90%);
+            "
           >
             <img src="@/assets/images/share.png" style="height: 1.2rem" alt="" />
-            <img src="@/assets/images/clear.png" style="height: 1.2rem" alt="" />
+            <img
+              src="@/assets/images/clear.png"
+              style="height: 1.3rem; margin-left: 0.2rem"
+              alt=""
+            />
           </div>
         </div>
 
@@ -1023,7 +1046,7 @@
             id=""
             cols="30"
             rows="2"
-            style="width: 100%; border-radius: 0.25rem; background-color: #3c3940; color: #aaaaaa"
+            style="width: 100%; border-radius: 0.25rem"
           >
 “Meeting Subject goes here” (lives in Tasks)
           </textarea>
@@ -1036,7 +1059,7 @@
             id=""
             cols="30"
             rows="4"
-            style="width: 100%; border-radius: 0.25rem; background-color: #3c3940; color: #aaaaaa"
+            style="width: 100%; border-radius: 0.25rem"
           >
 “Meeting Notes go here” (lives in Tasks)
           </textarea>
@@ -1060,7 +1083,7 @@
               id=""
               cols="30"
               rows="2"
-              style="width: 100%; border-radius: 0.25rem; background-color: #3c3940"
+              style="width: 100%; border-radius: 0.25rem"
             >
             </textarea>
           </div>
@@ -1134,7 +1157,7 @@
           </div>
         </div>
         <div class="example-footer">
-          <div style="margin-top: 2rem">
+          <div style="margin-top: 1rem">
             <button class="close">Close</button>
             <button class="save">Update</button>
           </div>
@@ -1399,6 +1422,12 @@ export default {
         'fae88a10-53cc-470e-86ec-32376c041893',
       ]
     },
+    user() {
+      return this.$store.state.user
+    },
+    userHasProducts() {
+      return this.$store.state.user.organizationRef.hasProducts
+    },
   },
   created() {
     this.getActionChoices()
@@ -1656,7 +1685,12 @@ export default {
   }
 }
 .label {
-  font-size: 0.95rem;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+.green {
+  color: $dark-green;
+  font-size: 0.85rem;
   font-weight: bold;
 }
 .or_button {
@@ -1673,8 +1707,8 @@ export default {
   border-radius: 0.2rem;
   border: none;
   cursor: pointer;
-  color: $dark-green;
-  background: white;
+  color: $white;
+  background: $dark-green;
 }
 .name_button {
   font-size: 0px;
@@ -1766,6 +1800,7 @@ export default {
   padding: 0.25rem 0.5rem 1rem 0.25rem;
   border-radius: 0.25rem;
   margin-top: 0.5rem;
+  color: white;
 }
 .recommendations {
   display: flex;
@@ -1792,8 +1827,7 @@ export default {
   animation: bounce 0.2s infinite alternate;
 }
 .drop {
-  background-color: $panther;
-  border: 1px solid $panther-gray;
+  border: 2px solid $soft-gray;
   border-radius: 0.25rem;
   color: $panther-silver;
   padding: 0.25rem 0.5rem;
@@ -1809,20 +1843,23 @@ export default {
   margin-right: 0.5rem;
 }
 ::v-deep .tn-dropdown__selection-container {
-  height: 2rem;
-
+  height: 2.5rem;
   box-shadow: none;
+  background-color: $soft-gray;
+  border-radius: 0.3rem;
+  margin-top: -0.15rem;
+  border: 1px solid $soft-gray;
 }
-::v-deep .tn-dropdown__selection-container:after {
-  position: absolute;
-  content: '';
-  top: 12px;
-  right: 1em;
-  width: 0;
-  height: 0;
-  border: 5px solid transparent;
-  border-color: rgb(173, 171, 171) transparent transparent transparent;
-}
+// ::v-deep .tn-dropdown__selection-container:after {
+//   position: absolute;
+//   content: '';
+//   top: 12px;
+//   right: 1em;
+//   width: 0;
+//   height: 0;
+//   border: 5px solid transparent;
+//   border-color: rgb(173, 171, 171) transparent transparent transparent;
+// }
 .invisible {
   display: none;
 }
@@ -1839,12 +1876,19 @@ export default {
 .filtered-green {
   filter: invert(39%) sepia(96%) saturate(373%) hue-rotate(94deg) brightness(104%) contrast(94%);
 }
+#drag {
+  filter: invert(60%);
+}
+#remove {
+  filter: invert(60%);
+}
 .field-border {
-  border: 1px solid $white;
+  box-shadow: 1px 1px 4px 1px $very-light-gray;
+  margin-bottom: 0.25rem;
   display: flex;
   align-items: center;
   padding: 0.25rem;
-  border-radius: 0.1rem;
+  border-radius: 0.2rem;
   height: 2.9rem;
   width: 100%;
 }
@@ -1898,7 +1942,7 @@ export default {
   display: flex;
   flex-direction: column;
   position: relative;
-
+  color: $base-gray;
   &__sf-fields,
   &__sf-validations {
     margin-right: 2rem;
@@ -2119,8 +2163,8 @@ img:hover {
 .close {
   padding: 0.5rem 1rem;
   background: transparent;
-  color: white;
-  border: 1px solid $panther-gray;
+  color: $panther-gray;
+  border: 2px solid $soft-gray;
   border-radius: 0.25rem;
   font-weight: bold;
   opacity: 0.8;
@@ -2138,8 +2182,8 @@ img:hover {
 .disabled {
   padding: 0.5rem 1rem;
   min-width: 6rem;
-  background-color: $coral;
-  color: white;
+  background-color: $very-light-gray;
+  color: $panther-gray;
   border: none;
   border-radius: 0.25rem;
   margin-left: 0.5rem;
@@ -2149,7 +2193,7 @@ img:hover {
 .disabled__ {
   padding: 0.5rem 1rem;
   min-width: 6rem;
-  background-color: $panther-silver;
+  background-color: $very-light-gray;
   color: $panther-gray;
   border: none;
   border-radius: 0.25rem;
@@ -2158,7 +2202,7 @@ img:hover {
   opacity: 0.8;
 }
 .example-footer {
-  border-top: 1px solid $panther-gray;
+  border-top: 1px solid $very-light-gray;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -2167,7 +2211,7 @@ img:hover {
   height: 10%;
 }
 .example--footer {
-  background-color: $panther;
+  background-color: $white;
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;
@@ -2186,28 +2230,30 @@ img:hover {
   transform: rotate(-45deg);
 }
 .collection_fields {
-  background-color: $panther;
+  background-color: $white;
   padding: 2rem 1rem;
   margin: 1rem;
   border-radius: 0.5rem;
-  height: 71vh;
-  min-width: 36vw;
+  height: 64vh;
+  min-width: 34vw;
   overflow-y: scroll;
   display: flex;
   flex-direction: column;
   position: relative;
+  box-shadow: 3px 4px 7px $very-light-gray;
 }
 .stage_fields {
-  background-color: $panther;
+  background-color: $white;
   padding: 2rem 1rem;
   margin: -1.5rem 1rem 0rem 0rem;
   border-radius: 0.5rem;
-  height: 66vh;
+  height: 64vh;
   min-width: 28vw;
   overflow-y: scroll;
   display: flex;
   flex-direction: column;
   position: relative;
+  box-shadow: 3px 4px 7px $very-light-gray;
 }
 .fields_title {
   background-color: $panther;
@@ -2242,7 +2288,7 @@ img:hover {
 }
 ::-webkit-scrollbar-thumb {
   border-radius: 2px;
-  background-color: $panther-gray;
+  background-color: $soft-gray;
 }
 .popular_fields {
   font-weight: bold;

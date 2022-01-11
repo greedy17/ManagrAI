@@ -709,9 +709,11 @@ export default {
 }
 ::v-deep .input-form {
   width: 6rem;
-  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.5);
+  box-shadow: 3px 4px 7px $very-light-gray;
 }
-
+img {
+  filter: invert(90%);
+}
 ::v-deep .collection-search .collection-search__form .collection-search__input .search__input {
   font-family: Lato-Regular, sans-serif;
   font-weight: normal;
@@ -843,7 +845,8 @@ export default {
 }
 .selected__item {
   padding: 0.5rem;
-  border: 2px solid white;
+
+  box-shadow: 3px 4px 7px $very-light-gray;
   border-radius: 0.3rem;
   width: 100%;
   text-align: center;

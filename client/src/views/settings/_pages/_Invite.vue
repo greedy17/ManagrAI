@@ -11,14 +11,15 @@
     >
       <form class="invite-form" @submit.prevent="handleInvite">
         <h2 class="invite-form__title">Invite Users via Slack</h2>
-        <h2 class="invite-form__subtitle" style="color: #beb5cc; margin-top: -6rem">
+        <h2 class="invite-form__subtitle" style="color: #199e54; margin-top: -4rem">
           {{ $store.state.user.organizationRef.name }}
         </h2>
         <div
           style="display: flex; justify-content: center; flex-direction: column; margin-top: -3rem"
         >
-          <div>
-            <FormField label="Slack Users:">
+          <div style="display: flex; align-items: flex-start; flex-direction: column">
+            <p style="margin-left: -2.2rem">Slack Users:</p>
+            <FormField>
               <template v-slot:input>
                 <DropDownSearch
                   :items.sync="slackMembers"
@@ -33,14 +34,17 @@
               </template>
             </FormField>
           </div>
-          <div>
-            <FormField :errors="userInviteForm.field.userLevel.errors" label="User Level:">
+          <div style="display: flex; align-items: flex-start; flex-direction: column">
+            <p style="margin-left: -2.2rem">User Level:</p>
+            <FormField>
               <template v-slot:input>
-                <DropDownSelect
-                  :items="userTypes"
+                <DropDownSearch
+                  :items.sync="userTypes"
                   v-model="userInviteForm.field.userLevel.value"
                   nullDisplay="Select user level"
-                  :itemsRef="userTypes"
+                  local
+                  searchable
+                  valueKey="value"
                   @input="userInviteForm.field.userLevel.validate()"
                 />
               </template>
@@ -84,7 +88,7 @@
     <div class="invite-list__container">
       <div class="key">
         <div class="left-key">
-          <h2 style="color: #beb5cc">The {{ $store.state.user.organizationRef.name }} Team:</h2>
+          <h2>The {{ $store.state.user.organizationRef.name }} Team:</h2>
         </div>
         <div class="right-key">
           <p class="complete">Complete</p>
@@ -120,8 +124,9 @@
       </div>
 
       <div class="invite-list__section__container">
+        <img class="back-logo" src="@/assets/images/logo.png" />
         <div
-          style="display: flex; align-items: flex-start; color: #f2fff8"
+          style="display: flex; align-items: flex-start; color: #199e54"
           class="invite-list__section__item col"
         >
           {{ user.fullName }}
@@ -385,22 +390,29 @@ export default {
   border-bottom: 2.9px solid $dark-green;
   border-radius: 10%;
   margin-right: 0.5rem;
-  color: $panther-silver;
+  color: $base-gray;
 }
 .incomplete {
   border-bottom: 2px solid $coral;
-  color: $panther-silver;
+  color: $base-gray;
   border-radius: 10%;
 }
-
+.back-logo {
+  position: absolute;
+  opacity: 0.06;
+  filter: alpha(opacity=50);
+  height: 28%;
+  margin-top: -7rem;
+  margin-left: -2rem;
+}
 ::v-deep .tn-dropdown__selection-container {
-  width: 16rem;
-  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.5);
+  box-shadow: 3px 4px 7px $very-light-gray;
+  border: none;
 }
 
-::v-deep .tn-dropdown__options__container {
-  width: 16rem;
-}
+// ::v-deep .tn-dropdown__options__container {
+//   width: 16rem;
+// }
 
 ::v-deep .tn-dropdown__selected-items__item-selection {
   color: $panther;
@@ -433,16 +445,16 @@ Override dropdown select input field
 ::v-deep .tn-dropdown__selection-container {
   border-radius: 4px;
   background-color: $white;
-  border: 1px solid #eaebed;
-  box-sizing: border-box;
+  border: none;
   line-height: 1.29;
   letter-spacing: 0.5px;
-  width: 22vw;
+  min-width: 17vw;
   height: 6vh;
   color: $panther;
+  margin-left: -2.2rem;
 }
 ::v-deep .tn-dropdown__options__option {
-  color: $panther-silver;
+  color: $base-gray;
   font-weight: bold;
 }
 form,
@@ -481,7 +493,8 @@ button {
   align-items: center;
   // justify-content: center;
   flex-direction: column;
-  background-color: $panther;
+  background-color: white;
+  color: $base-gray;
   > .form_field {
     flex: 0 0 auto;
   }
@@ -493,7 +506,6 @@ button {
   }
   &__title {
     font-weight: bold;
-    text-transform: uppercase;
     text-align: left;
   }
   &__actions {
@@ -516,12 +528,13 @@ button {
     margin-bottom: 2rem;
   }
   &__container {
-    background-color: $panther;
+    background-color: $white;
     border: none;
+    color: $base-gray;
     min-width: 60vw;
     padding: 1.5rem 0rem 1.5rem 1rem;
     border-radius: 5px;
-    box-shadow: 0 5px 10px 0 black;
+    box-shadow: 3px 4px 7px $very-light-gray;
     display: flex;
     align-items: flex-start;
     flex-direction: column;

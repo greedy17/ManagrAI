@@ -1,17 +1,27 @@
 <template>
   <div>
-    <div class="sidenav sidenav__background">
-      <div style="margin-bottom: 2rem">
+    <div class="sidenav">
+      <div
+        style="
+          margin-bottom: 1rem;
+          margin-left: 0.5rem;
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-start;
+        "
+      >
+        <!-- <img src="@/assets/images/map.png" style="height: 1.5rem" alt="" /> -->
         <h2 class="title">Field Mapping</h2>
+        <h5 style="margin-top: -0.5rem">Where Salesforce meets Slack</h5>
       </div>
       <router-link exact-active-class="active" :to="{ name: 'Required' }">
         <div class="row">
           <img
             src="@/assets/images/warning.png"
-            style="height: 1rem; margin-right: 0.5rem"
+            style="height: 1.25rem; margin-right: 1rem"
             alt=""
           />
-          <h3>Required</h3>
+          <h4>Required</h4>
         </div>
       </router-link>
 
@@ -19,17 +29,17 @@
         <div class="row">
           <img
             src="@/assets/images/optional.png"
-            style="height: 1.1rem; margin-right: 0.5rem"
+            style="height: 1.25rem; margin-right: 1rem"
             alt=""
           />
-          <h3>Optional</h3>
+          <h4>Optional</h4>
         </div>
       </router-link>
 
       <router-link exact-active-class="active" :to="{ name: 'ValidationRules' }">
         <div class="row">
-          <img src="@/assets/images/gavel.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
-          <h3>Validation Rules</h3>
+          <img src="@/assets/images/gavel.png" style="height: 1.25rem; margin-right: 1rem" alt="" />
+          <h4>Validation Rules</h4>
         </div>
       </router-link>
     </div>
@@ -172,6 +182,11 @@ export default {
   box-shadow: 0 0 10px 1px #555;
 }
 
+img {
+  filter: invert(90%);
+  margin-left: 0.5rem;
+}
+
 #tail1 {
   position: absolute;
   bottom: -20px;
@@ -214,43 +229,62 @@ export default {
   width: 18vw;
   font-size: 0.85rem;
   position: fixed;
-  z-index: 1;
   left: 0;
-  background-color: $panther;
-  border: 2px solid $panther-silver;
-  border-radius: 0.25rem;
-  color: $panther-silver;
+  background-color: #fafbfc;
+  border-right: 3px solid $soft-gray;
+  color: $gray;
   overflow-x: hidden;
-  padding-top: 20px;
   padding: 1rem;
-  border-radius: 0.5rem;
+  margin-top: -1rem;
 }
 a {
   text-decoration: none;
   font-weight: bold;
-  color: $panther-silver;
+  color: $base-gray;
   cursor: pointer;
 }
 a:hover {
-  color: white;
+  border-radius: 0.2rem;
   cursor: pointer;
 }
 .active div {
-  color: white;
-  background-color: $dark-green;
-  border-radius: 0.25rem;
-  padding: 0 0.3rem;
+  color: $darker-green;
+  background-color: $lighter-green;
+  border-radius: 0.3rem;
   font-weight: bold;
-  margin-left: -0.35rem;
+  position: relative;
+}
+.active div:after {
+  content: '';
+  background: $darker-green;
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0;
+  height: 60%;
+  width: 2px;
+}
+.active img {
+  filter: none;
 }
 .title {
-  color: white;
+  color: $base-gray;
   font-weight: bold;
 }
 .row {
   display: flex;
   flex-direction: row;
   align-items: center;
+  margin-top: 0.1rem;
+  margin-bottom: 0.1rem;
+  height: 3rem;
+}
+.row:hover {
+  background-color: $lighter-green;
+  color: $darker-green;
+  border-radius: 0.3rem;
+  img {
+    filter: none;
+  }
 }
 </style>
 

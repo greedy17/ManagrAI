@@ -2,7 +2,7 @@
   <div class="alerts-template-list">
     <Modal v-if="deleteOpen" dimmed>
       <div class="delete_modal">
-        <h2 style="color: white">Delete Alert</h2>
+        <h2>Delete Workflow</h2>
         <div>
           <p>This action cannot be undone, are you sure ?</p>
           <div class="center">
@@ -12,11 +12,15 @@
         </div>
       </div>
     </Modal>
+    <div class="spacer"></div>
 
-    <div class="col">
+    <div>
       <h2 v-if="!editing" class="titles">Edit your Workflow Automation</h2>
       <h2 @click="logChannels" v-else class="titles">Saved Workflow Automations</h2>
-      <p class="center" style="font-weight: bold; color: #5d5e5e; margin-top: -0.5rem">
+      <p
+        class="center"
+        style="font-weight: bold; color: #5d5e5e; margin-top: -0.5rem; font-size: 0.95rem"
+      >
         Edit, Run, and Schedule your saved Automations
       </p>
       <div v-if="!alertsCount(templates.list.length)">
@@ -35,13 +39,16 @@
         <p style="font-weight: bold; color: #5d5e5e; text-align: center">Nothing here.. (o^^)o</p>
       </div>
     </div>
-    <template v-if="!templates.isLoading && alertsCount(templates.list.length)">
+    <template
+      style="margin-top: -1rem"
+      v-if="!templates.isLoading && alertsCount(templates.list.length)"
+    >
       <div class="middle" v-if="!editing">
         <div class="edit__modal">
           <div>
             <AlertsEditPanel :alert="currentAlert" />
           </div>
-          <button style="margin-bottom: 1rem" class="no__button" @click="closeEdit">Done</button>
+          <button style="margin-bottom: 1.5rem" class="yes__button" @click="closeEdit">Done</button>
         </div>
       </div>
       <div class="alert_cards" v-if="editing">
@@ -64,28 +71,43 @@
             </div> -->
           </div>
           <div class="row__start">
-            <p style="margin: 0.5rem 0.5rem">Schedule</p>
+            <p style="margin: 0.5rem 0.5rem">Schedule:</p>
             <div class="row__">
-              <p style="margin-right: 0.25rem">OFF</p>
+              <p style="margin-right: 0.25rem; font-size: 0.8rem">OFF</p>
               <ToggleCheckBox
                 @input="onToggleAlert(alert.id, alert.isActive)"
                 v-model="alert.isActive"
                 offColor="#aaaaaa"
                 onColor="#199e54"
               />
-              <p style="margin-left: 0.25rem">ON</p>
+              <p style="margin-left: 0.25rem; font-size: 0.8rem">ON</p>
             </div>
 
             <div class="row__two">
               <img
                 @click="makeAlertCurrent(alert)"
                 src="@/assets/images/settings.png"
-                style="height: 1.5rem; cursor: pointer"
+                style="
+                  height: 1.5rem;
+                  cursor: pointer;
+                  margin-right: 0.5rem;
+                  box-shadow: 1.5px 1px 2px #fafafa;
+                  border: none;
+                  border-radius: 50%;
+                  padding: 0.2rem;
+                "
               />
 
               <img
                 src="@/assets/images/whitetrash.png"
-                style="height: 1.5rem; cursor: pointer"
+                style="
+                  height: 1.5rem;
+                  cursor: pointer;
+                  box-shadow: 1.5px 1px 2px #fafafa;
+                  border: none;
+                  border-radius: 50%;
+                  padding: 0.2rem;
+                "
                 @click="deleteClosed(alert.id)"
               />
             </div>
@@ -125,100 +147,7 @@
             </p>
           </div>
         </div>
-
-        <!-- <div v-if="user.isAdmin">
-          <div class="card__ keep-activating" v-if="alertsCount(templates.list.length) == 1">
-            <h3 style="color: #fa646a" class="card__header">
-              Only {{ alertsCount(templates.list.length) }} workflow active
-            </h3>
-            <p style="margin-top: -1rem; font-size: 0.85rem">
-              We recommend at least 3 to get the most out of Managr
-            </p>
-            <span class="centered"
-              ><button @click="goToTemplates" class="bouncy activate-button">
-                Activate more workflows
-              </button></span
-            >
-          </div>
-          <div class="card__ keep-activating__" v-if="alertsCount(templates.list.length) == 2">
-            <h3 style="color: #ddad3c" class="card__header">
-              So close... {{ alertsCount(templates.list.length) }} workflows active
-            </h3>
-            <p style="margin-top: -1rem; font-size: 0.85rem">
-              Activate at least one more to get the most out of Managr
-            </p>
-            <span class="centered"
-              ><button @click="goToTemplates" class="bouncy activate-button">
-                Activate one more
-              </button></span
-            >
-          </div>
-          <div
-            :class="isHiding ? 'invisible' : 'card__ done-activating'"
-            v-if="alertsCount(templates.list.length) >= 3"
-          >
-            <h3 style="color: #199e54" class="card__header">Onboarding Complete</h3>
-            <p style="margin-top: -1rem; font-size: 0.95rem">We'll take it from here.</p>
-            <p style="margin-top: -0.75rem; font-size: 0.95rem">
-              Come back anytime to add more workflows
-            </p>
-          </div>
-        </div> -->
       </div>
-
-      <!-- <ExpandablePanel :key="i" v-for="(alert, i) in templates.list">
-        <template v-slot:panel-header="{ classes, expand }">
-          <div :data-key="alert.id" @click="expand" :class="classes">
-            <span class="alerts-template-list__header-item alerts-template-list__header-item--main"
-              >{{ alert.title }} <img src="@/assets/images/edit.png" style="height: 1rem" alt=""
-            /></span>
-            <span
-              @click.stop="onRunAlertTemplateNow(alert.id)"
-              class="alerts-template-list__header-item alerts-template-list__header-item"
-            >
-              <svg class="icon" fill="black" viewBox="0 0 30 30">
-                <use xlink:href="@/assets/images/loop.svg#loop" />
-              </svg>
-            </span>
-
-            <span class="alerts-template-list__header-item alerts-template-list__header-item">
-              <ToggleCheckBox
-                @input="onToggleAlert(alert.id, alert.isActive)"
-                v-model="alert.isActive"
-                offColor="#aaaaaa"
-                onColor="#199e54"
-                @click="
-                  () => {
-                    console.log('log')
-                  }
-                "
-              />
-            </span>
-
-            <span
-              class="alerts-template-list__header-item alerts-template-list__header-item"
-              @click.stop="onDeleteTemplate(alert.id)"
-            >
-              <svg class="icon" fill="black" viewBox="0 0 30 30">
-                <use xlink:href="@/assets/images/remove.svg#remove" />
-              </svg>
-            </span>
-            <span
-              @click.stop="onTest(alert.id)"
-              class="alerts-template-list__header-item alerts-template-list__header-item"
-            >
-              <svg class="icon" fill="black" viewBox="0 0 30 30">
-                <use xlink:href="@/assets/images/loop.svg#loop" />
-              </svg>
-            </span>
-          </div>
-        </template>
-        <template slot="panel-content">
-          <div>
-            <AlertsEditPanel :alert="alert" />
-          </div>
-        </template>
-      </ExpandablePanel> -->
     </template>
   </div>
 </template>
@@ -486,6 +415,12 @@ export default {
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
+.spacer {
+  height: 0.5rem;
+}
+h2 {
+  font-size: 1.4rem;
+}
 button:disabled {
   background-color: $panther-silver;
   cursor: not-allowed;
@@ -550,22 +485,22 @@ button:disabled {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: $panther;
+  background-color: $white;
+  color: $base-gray;
   border-radius: 0.5rem;
-  color: white;
   height: 28vh;
 }
 .edit__modal {
-  background-color: $panther;
+  background-color: white;
+  box-shadow: 3px 4px 7px $very-light-gray;
   border-radius: 1rem;
-  color: white;
+  color: $base-gray;
   height: 70vh;
-  width: 100vw;
+  overflow: scroll;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-direction: column;
-  overflow: scroll;
 }
 
 .yes__button {
@@ -581,7 +516,7 @@ button:disabled {
 }
 .no__button {
   width: 8vw;
-  background-color: $panther-gray;
+  background-color: $very-light-gray;
   border: none;
   border-radius: 0.25rem;
   color: white;
@@ -603,7 +538,8 @@ button:disabled {
 }
 .alerts-template-list {
   margin-left: 18vw;
-  margin-top: 4rem;
+  margin-top: 3.5rem;
+  color: $base-gray;
   &__header {
     display: flex;
 
@@ -624,7 +560,7 @@ button:disabled {
   flex-wrap: wrap;
 }
 .card__ {
-  background-color: $panther;
+  background-color: white;
   border: none;
   min-width: 24vw;
   max-width: 44vw;
@@ -635,17 +571,17 @@ button:disabled {
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 3px 4px 7px black;
-  color: white;
+  box-shadow: 3px 4px 7px $very-light-gray;
+  color: $base-gray;
 
   &header {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 3rem;
-    font-weight: bold;
+    font-weight: 900px;
     margin-bottom: 1rem;
-    color: white;
+    font-size: 0.875rem;
   }
 }
 .icon {
@@ -653,6 +589,9 @@ button:disabled {
   cursor: pointer;
   width: 20px;
   height: 30px;
+}
+img {
+  filter: invert(90%);
 }
 .pink {
   color: $candy;
@@ -675,13 +614,14 @@ a {
   align-items: center;
   justify-content: center;
   margin: 0 0.5rem 0 0.5rem;
-  color: $panther-silver;
+  color: $base-gray;
+  font-weight: 900;
 }
 .row__two {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  margin-top: 1rem;
+  margin: 1rem;
   width: 100%;
 }
 .row__start {

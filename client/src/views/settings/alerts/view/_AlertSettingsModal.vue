@@ -106,6 +106,7 @@
         >
           <input
             v-model="channelName"
+            placeholder="Channel name"
             class="search__input"
             type="text"
             name="channel"
@@ -513,6 +514,10 @@ export default {
   height: 22vh;
   overflow-y: scroll;
 }
+::placeholder {
+  color: $panther-silver;
+  font-size: 0.75rem;
+}
 .search__input {
   font-family: Lato-Regular, sans-serif;
   font-weight: normal;
@@ -528,8 +533,7 @@ export default {
   border: none;
   // padding: 0 0 0 1rem;
   margin-top: 1rem;
-  -webkit-box-shadow: 1px 4px 7px black;
-  box-shadow: 1px 4px 7px black;
+  box-shadow: 3px 4px 7px $very-light-gray;
 }
 .btn {
   &--danger {
@@ -551,20 +555,20 @@ export default {
   overflow-y: scroll;
   height: 100%;
   max-height: 100%;
-  background-color: $panther;
-  color: white;
+  background-color: $white;
+  color: $base-gray;
   font-family: $bold-font-family;
 }
 ::v-deep .dropdown-search {
   margin: 1rem 0rem;
 }
 .alerts-page__settings {
+  color: $base-gray;
   margin: 2rem;
   &__frequency {
     display: flex;
     align-items: center;
     &-label {
-      color: $panther-silver;
       font-size: 0.75rem;
       margin: 0 0.5rem;
     }
@@ -621,7 +625,7 @@ export default {
   text-indent: none;
   border-style: none;
   letter-spacing: 0.03rem;
-  background-color: $panther-silver;
+  background-color: $very-light-gray;
   color: $panther-gray;
   cursor: not-allowed;
   height: 2rem;

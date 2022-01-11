@@ -112,12 +112,14 @@ export default {
     @include --icon();
   }
 }
+
 .alert-operand-modal {
   padding: 2rem;
   height: 100%;
   overflow-y: scroll;
-  background-color: $panther;
-  color: white;
+  background-color: $white;
+  border-radius: 0.5rem;
+  color: $base-gray;
   font-weight: bold;
   max-height: 100%;
   width: 100%;

@@ -6,13 +6,13 @@
         <h2>Log in to Managr</h2>
         <p class="enter-email">Please enter your email and password</p>
       </div>
-      <!-- <label for="email">Enter your Email</label> -->
+      <!-- <label for="email">Email</label> -->
       <FormField
         labelRelation="email"
         @input="execCheckEmail"
         :disabled="showPassword"
         v-model="loginForm.field.email.value"
-        placeholder=""
+        placeholder="email"
         :errors="loginForm.field.email.errors"
         name="email"
         id="email"
@@ -159,6 +159,7 @@ h2 {
   font-weight: bold;
   text-align: center;
 }
+
 .login-page {
   padding: 2rem 2rem;
   display: flex;
@@ -171,16 +172,21 @@ h2 {
     padding: 0rem;
   }
 }
+::v-deep .form-field__input {
+  margin-left: 0.2rem;
+}
+
 .login-page__form {
-  background-color: $panther;
-  border-radius: 1rem;
+  background-color: $white;
+  border-radius: 0.5rem;
   width: 30vw;
   margin-top: 1rem;
-  box-shadow: 3px 4px 7px black;
+  box-shadow: 4px 5px 9px $very-light-gray;
   display: flex;
   flex-flow: column;
   align-items: center;
   justify-content: center;
+  color: $base-gray;
 
   @media only screen and (max-width: 768px) {
     /* For mobile phones: */
@@ -216,7 +222,7 @@ button {
 
 a {
   text-decoration: none;
-  color: $panther-silver;
+  color: $gray;
 }
 
 label {
@@ -241,7 +247,7 @@ label {
 .enter-email {
   @include muted-font();
   margin-top: -0.5rem;
-  color: $panther-silver;
+  color: $gray;
 }
 img {
   height: 80px;

@@ -40,6 +40,7 @@ import DealRotting from '@/views/settings/alerts/create/templates/DealRotting'
 import UpdateForecast from '@/views/settings/alerts/create/templates/UpdateForecast'
 import LogZoom from '@/views/settings/alerts/create/templates/LogZoom'
 import ZoomRecap from '@/views/settings/alerts/create/templates/ZoomRecap'
+import RealTime from '@/views/settings/alerts/create/templates/RealTime'
 import Custom from '@/views/customize/Custom'
 import ValidationRules from '@/views/customize/ValidationRules'
 import Required from '@/views/customize/Required'
@@ -253,6 +254,11 @@ export default new Router({
             import(
               /* webpackChunkName: "settings" */ '../views/settings/alerts/view/_AlertsTemplateList'
             ),
+        },
+        {
+          path: '/real-time',
+          name: 'RealTime',
+          component: RealTime,
         },
       ],
     },
