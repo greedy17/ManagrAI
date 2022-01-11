@@ -908,13 +908,14 @@ export default {
   overflow: scroll;
   &__item {
     padding: 1rem 3rem;
+    margin: 0.25rem;
     border-bottom: none;
     color: #bcbcc1;
     font-weight: normal;
     cursor: pointer;
     &--active {
       padding: 1rem 3rem;
-      color: $dark-green;
+      color: $darker-green;
       background-color: $lighter-green;
       border-radius: 0.4rem;
       font-weight: 900;
@@ -922,13 +923,18 @@ export default {
     }
     &--active:after {
       content: '';
-      background: $dark-green;
+      background: $darker-green;
       position: absolute;
       bottom: 0.75rem;
       left: 0;
       height: 50%;
-      width: 2px;
+      width: 3px;
     }
+  }
+  &__item:hover {
+    background-color: $lighter-green;
+    color: $darker-green;
+    border-radius: 0.4rem;
   }
   &__group {
     display: flex;

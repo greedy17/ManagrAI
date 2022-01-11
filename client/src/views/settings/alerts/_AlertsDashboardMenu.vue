@@ -12,7 +12,11 @@
         :to="{ name: 'CreateNew' }"
       >
         <div :class="isOnboarding ? 'onboarding row' : 'row'">
-          <img src="@/assets/images/trophy.png" style="height: 1.3rem; margin-right: 1rem" alt="" />
+          <img
+            src="@/assets/images/trophy.png"
+            style="height: 1.3rem; margin-right: 1rem; padding-left: 0.5rem"
+            alt=""
+          />
           <h5 v-if="user.userLevel === 'REP'">Popular</h5>
         </div>
       </router-link>
@@ -33,7 +37,7 @@
           />
         </div>
 
-        <div v-if="popular" style="margin-left: 1rem; margin-top: -0.75rem" class="col">
+        <div v-if="popular" style="margin-left: 1.5rem; margin-top: -0.75rem" class="col">
           <router-link exact-active-class="active" :to="{ name: 'RealTime' }">
             <div :class="isOnboarding ? 'onboarding row' : 'row'">
               <img
@@ -87,7 +91,11 @@
         :to="{ name: 'ListTemplates' }"
       >
         <div class="row">
-          <img src="@/assets/images/star.png" style="height: 1.3rem; margin-right: 1rem" alt="" />
+          <img
+            src="@/assets/images/star.png"
+            style="height: 1.3rem; margin-right: 1rem; padding-left: 0.5rem"
+            alt=""
+          />
           <h5 @click="onboardComplete">
             Saved
             <span style="margin-left: 0.25rem" class="counter">{{
@@ -98,7 +106,11 @@
       </router-link>
       <router-link v-else exact-active-class="active" :to="{ name: 'ListTemplates' }">
         <div class="row">
-          <img src="@/assets/images/star.png" style="height: 1.3rem; margin-right: 1rem" alt="" />
+          <img
+            src="@/assets/images/star.png"
+            style="height: 1.3rem; margin-right: 1rem; padding-left: 0.5rem"
+            alt=""
+          />
           <h5>
             Saved
             <span style="margin-left: 0.5rem" class="counter">{{
@@ -110,13 +122,21 @@
 
       <router-link exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
         <div :class="isOnboarding ? 'onboarding row' : 'row'">
-          <img src="@/assets/images/build.png" style="height: 1.2rem; margin-right: 1rem" alt="" />
+          <img
+            src="@/assets/images/build.png"
+            style="height: 1.2rem; margin-right: 1rem; padding-left: 0.5rem"
+            alt=""
+          />
           <h5>Custom</h5>
         </div>
       </router-link>
 
       <div :class="isOnboarding ? 'onboarding row' : 'row'" style="cursor: not-allowed">
-        <img src="@/assets/images/sharing.png" style="height: 1.3rem; margin-right: 1rem" alt="" />
+        <img
+          src="@/assets/images/sharing.png"
+          style="height: 1.3rem; margin-right: 1rem; padding-left: 0.5rem"
+          alt=""
+        />
         <h5>Shared<span class="coming-soon">coming soon</span></h5>
       </div>
     </div>
@@ -170,7 +190,11 @@
 
       <router-link exact-active-class="active" :to="{ name: 'ListTemplates' }">
         <div class="row">
-          <img src="@/assets/images/star.png" style="height: 1.3rem; margin-right: 1rem" alt="" />
+          <img
+            src="@/assets/images/star.png"
+            style="height: 1.3rem; margin-right: 1rem; padding-left: 0.5rem"
+            alt=""
+          />
           <h5>
             Saved
             <span style="margin-left: 0.5rem" class="counter">{{
@@ -182,13 +206,21 @@
 
       <router-link exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
         <div class="row">
-          <img src="@/assets/images/build.png" style="height: 1.2rem; margin-right: 1rem" alt="" />
+          <img
+            src="@/assets/images/build.png"
+            style="height: 1.2rem; margin-right: 1rem; padding-left: 0.5rem"
+            alt=""
+          />
           <h5>Custom</h5>
         </div>
       </router-link>
 
       <div class="row" style="cursor: not-allowed">
-        <img src="@/assets/images/sharing.png" style="height: 1.3rem; margin-right: 1rem" alt="" />
+        <img
+          src="@/assets/images/sharing.png"
+          style="height: 1.3rem; margin-right: 1rem; padding-left: 0.5rem"
+          alt=""
+        />
         <h5>Shared<span class="coming-soon">coming soon</span></h5>
       </div>
     </div>
@@ -416,10 +448,10 @@ a:hover {
   content: '';
   background: $darker-green;
   position: absolute;
-  bottom: 0.5rem;
+  bottom: 0.65rem;
   left: 0;
-  height: 60%;
-  width: 2px;
+  height: 50%;
+  width: 3px;
 }
 a:hover div {
   background-color: $lighter-green;

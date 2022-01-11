@@ -931,7 +931,7 @@ export default {
     border-radius: 0.4rem;
     padding: 1rem 4rem;
     width: 94vw;
-    margin-top: -1rem;
+    margin-top: -2rem;
   }
   &__subtitle {
     font-size: 14px;
