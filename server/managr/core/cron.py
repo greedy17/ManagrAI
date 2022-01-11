@@ -341,9 +341,7 @@ def _send_calendar_details(
     if processed_data is not None:
         # processed_data checks to see how many events exists
         if invocation:
-            meetings = MeetingPrepInstance.objects.filter(user=user.id).filter(
-                invocation=invocation
-            )
+            meetings = MeetingPrepInstance.objects.filter(user=user).filter(invocation=invocation)
         else:
             last_instance = (
                 MeetingPrepInstance.objects.filter(user=user).order_by("-datetime_created").first()
@@ -351,12 +349,11 @@ def _send_calendar_details(
             current_invocation = last_instance.invocation + 1 if last_instance else 1
             for event in processed_data:
                 meeting_prep(event, user_id, current_invocation)
-            meetings = MeetingPrepInstance.objects.filter(user=user.id).filter(
+            meetings = MeetingPrepInstance.objects.filter(user=user).filter(
                 invocation=current_invocation
             )
         if meetings:
-            meeting_instances = MeetingPrepInstance.objects.filter(invocation=current_invocation)
-            paged_meetings = custom_paginator(meeting_instances, count=1, page=page)
+            paged_meetings = custom_paginator(meetings, count=1, page=page)
             paginate_results = paged_meetings.get("results", [])
             if len(paginate_results):
                 current_instance = paginate_results[0]
