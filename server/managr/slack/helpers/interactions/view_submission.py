@@ -302,6 +302,7 @@ def process_add_products_form(payload, context):
 @processor(required_context=["f"])
 def process_submit_resource_data(payload, context):
     # get context
+    print(context)
     has_error = False
     state = payload["view"]["state"]["values"]
     current_form_ids = context.get("f").split(",")
@@ -532,7 +533,7 @@ def process_submit_resource_data(payload, context):
 
         else:
             text = f"Managr updated {main_form.resource_type}"
-            message = f"Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
+            message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
         if len(user.slack_integration.recap_receivers) and type == "meeting":
             _send_recap(current_form_ids, None, True)
         if (
@@ -547,39 +548,43 @@ def process_submit_resource_data(payload, context):
                 channel=context.get("channel_id"),
                 config_id=instance.config_id,
             ).filter(completed=False)
+            logger.info(f"SUBMIT FORM ALERT INSTANCES: {alert_instances}")
             alert_instance = alert_instances.first()
-            alert_template = alert_instance.template
-            text = alert_template.title
+            text = instance.title
             blocks = [
                 block_builders.header_block(f"{len(alert_instances)} results for workflow {text}"),
             ]
-            alert_instances = custom_paginator(
-                alert_instances, page=int(context.get("current_page"))
-            )
-            for alert_instance in alert_instances.get("results", []):
-                blocks = [
-                    *blocks,
-                    *get_block_set(
-                        "alert_instance",
-                        {
-                            "instance_id": str(alert_instance.id),
-                            "current_page": int(context.get("current_page")),
-                        },
-                    ),
-                ]
-                alert_instance.rendered_text = alert_instance.render_text()
-                alert_instance.save()
-            if len(blocks):
-                blocks = [
-                    *blocks,
-                    *custom_paginator_block(
-                        alert_instances,
-                        instance.invocation,
-                        context.get("channel_id"),
-                        instance.config_id,
-                    ),
-                ]
-
+            if alert_instance:
+                alert_instances = custom_paginator(
+                    alert_instances, page=int(context.get("current_page"))
+                )
+                for alert_instance in alert_instances.get("results", []):
+                    blocks = [
+                        *blocks,
+                        *get_block_set(
+                            "alert_instance",
+                            {
+                                "instance_id": str(alert_instance.id),
+                                "current_page": int(context.get("current_page")),
+                            },
+                        ),
+                    ]
+                    alert_instance.rendered_text = alert_instance.render_text()
+                    alert_instance.save()
+                if len(blocks):
+                    blocks = [
+                        *blocks,
+                        *custom_paginator_block(
+                            alert_instances,
+                            instance.invocation,
+                            context.get("channel_id"),
+                            instance.config_id,
+                        ),
+                    ]
+            else:
+                blocks.append(
+                    block_builders.simple_section("You're all finished with this workflow!")
+                )
             slack_requests.update_channel_message(
                 context.get("channel_id"),
                 context.get("message_ts"),
@@ -1645,7 +1650,7 @@ def process_update_product(payload, context):
     product_form.submission_date = timezone.now()
     product_form.save()
     text = "Success"
-    message = "Successfully updated product"
+    message = ":white_check_mark: Successfully updated product"
     if type == "alert":
         instance = AlertInstance.objects.get(id=context.get("alert_id"))
         alert_instances = AlertInstance.objects.filter(

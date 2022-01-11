@@ -400,7 +400,7 @@ class Pricebook2QuerySet(models.QuerySet):
 
 class Pricebook2(TimeStampModel, IntegrationModel):
     name = models.CharField(max_length=100)
-    description = models.TextField(max_length=225)
+    description = models.TextField(max_length=225, null=True, blank=True)
     last_viewed_date = models.DateTimeField(null=True)
     organization = models.ForeignKey(
         "organization.Organization", on_delete=models.CASCADE, related_name="pricebooks", null=True
@@ -467,7 +467,7 @@ class Product2QuerySet(models.QuerySet):
 
 class Product2(TimeStampModel, IntegrationModel):
     name = models.CharField(max_length=50)
-    description = models.TextField(max_length=225)
+    description = models.TextField(max_length=225, null=True, blank=True)
     secondary_data = JSONField(
         default=dict,
         null=True,
