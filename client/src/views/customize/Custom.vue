@@ -1,7 +1,7 @@
 <template>
   <div class="customizations">
     <div style="display: flex; align-items: flex-start; margin-left: 10vw; flex-direction: column">
-      <h2 style="color: black">Optional Field Mapping</h2>
+      <h2 style="color: #4d4e4c">Optional Actions</h2>
       <p style="color: #5d5e5e; margin-top: -0.5rem" class="sub__">
         Map Slack fields to the corresponding SFDC fields.
       </p>
@@ -266,7 +266,7 @@ export default {
 }
 .customizations {
   margin-left: 14vw;
-  margin-top: 4rem;
+  margin-top: 3.5rem;
 }
 
 .alert_cards {
