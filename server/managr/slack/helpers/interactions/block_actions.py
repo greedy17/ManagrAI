@@ -466,13 +466,11 @@ def process_remove_contact_from_meeting(payload, context):
     meeting = workflow.meeting
     org = workflow.user.organization
     access_token = org.slack_integration.access_token
-    print(workflow.forms.all())
     for i, part in enumerate(meeting.participants):
         if part["_tracking_id"] == context.get("tracking_id"):
             # remove its form if it exists
             if part["_form"] not in [None, ""]:
                 workflow.forms.filter(id=part["_form"]).delete()
-            print(workflow.forms.all())
             del meeting.participants[i]
             break
     meeting.save()
@@ -1417,6 +1415,7 @@ def process_paginate_alerts(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor()
 def process_paginate_meetings(payload, context):
+    print(payload)
     channel_id = payload.get("channel", {}).get("id", None)
     ts = payload.get("message", {}).get("ts", None)
     user_slack_id = payload.get("user", {}).get("id", None)
@@ -1429,18 +1428,6 @@ def process_paginate_meetings(payload, context):
     meeting_instances = MeetingPrepInstance.objects.filter(invocation=invocation)
     meeting_instance = meeting_instances.first()
     if not meeting_instance:
-        # check if the config was deleted
-        # config = AlertConfig.objects.filter(id=config_id).first()
-        # if not config:
-        #     error_blocks = get_block_set(
-        #         "error_modal",
-        #         {
-        #             "message": ":no_entry: The settings for these instances was deleted the data is no longer available"
-        #         },
-        #     )
-        #     slack_requests.update_channel_message(
-        #         channel_id, ts, access_token, text="Error", block_set=error_blocks
-        #     )
         return
     # NOTE replace [3:8]
     blocks = payload["message"]["blocks"]
@@ -1461,7 +1448,7 @@ def process_paginate_meetings(payload, context):
             ),
             *custom_meeting_paginator_block(meeting_instances, invocation, channel),
         ]
-        blocks[3:8] = replace_blocks
+        blocks[3:7] = replace_blocks
         slack_requests.update_channel_message(channel_id, ts, access_token, block_set=blocks)
     return
 
