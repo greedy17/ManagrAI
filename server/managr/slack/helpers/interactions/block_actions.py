@@ -760,6 +760,7 @@ def process_restart_flow(payload, context):
 def process_show_update_resource_form(payload, context):
     from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 
+    print(context)
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
 
@@ -1724,10 +1725,21 @@ def process_get_call_recording(payload, context):
     user_timezone = pytz.timezone(user.timezone)
     gong_auth = GongAuthAccount.objects.get(organization=user.organization)
     access_token = user.organization.slack_integration.access_token
-    opp = Opportunity.objects.get(id=context.get("resource_id"))
-    if opp:
-        acc = Account.objects.filter(opportunities=opp.id)
-    call = GongCall.objects.filter(crm_id=opp.secondary_data["Id"]).first()
+    resource_ids = []
+    resource = None
+    opps = Opportunity.objects.filter(id=context.get("resource_id"))
+    if opps:
+        resource_ids.append(opps.first().integration_id)
+        acc = Account.objects.filter(opportunities__in=[opps.first().id]).first()
+        resource = opps.first()
+        if acc:
+            resource_ids.append(acc.integration_id)
+    else:
+        accs = Account.objects.filter(context.get("resource_id"))
+        if accs:
+            resource_ids.append(accs.first().integration_id)
+            resource = accs.first()
+    call = GongCall.objects.filter(crm_id=resource.secondary_data["Id"]).first()
     type = context.get("type", None)
     timestamp = datetime.fromtimestamp(float(payload["message"]["ts"]))
     current = pytz.utc.localize(timestamp).astimezone(user_timezone).date()
@@ -1737,7 +1749,7 @@ def process_get_call_recording(payload, context):
         curr_date_str = curr_date.isoformat() + "T01:00:00" + f"{user_tz[:3]}:{user_tz[3:]}"
         try:
             call_res = gong_auth.helper_class.check_for_current_call(curr_date_str)
-            call_details = generate_call_block(call_res, [opp.integration_id, acc.integration_id])
+            call_details = generate_call_block(call_res, resource_ids)
             if call_details:
                 blocks = [*call_details]
             else:

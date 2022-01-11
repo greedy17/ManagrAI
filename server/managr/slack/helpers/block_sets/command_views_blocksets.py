@@ -321,7 +321,7 @@ def update_modal_block_set(context, *args, **kwargs):
                 block_builders.option("Lead", "Lead"),
                 block_builders.option("Contact", "Contact"),
             ],
-            action_id=f"{slack_const.UPDATE_TASK_SELECTED_RESOURCE}?u={user_id}",
+            action_id=f"{slack_const.UPDATE_TASK_SELECTED_RESOURCE}?u={user_id}&type={type}",
             block_id="managr_task_related_to_resource",
             initial_option=block_builders.option(resource_type, resource_type)
             if resource_type

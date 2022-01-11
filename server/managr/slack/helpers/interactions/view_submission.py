@@ -333,11 +333,13 @@ def process_submit_resource_data(payload, context):
     stage_form_data_collector = {}
     for form in stage_forms:
         form.update_source = type
+        form.is_submitted = True
         form.save_form(state)
         stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
     if not len(stage_forms):
         if main_form.template.form_type == "UPDATE":
             main_form.update_source = type
+            main_form.is_submitted = True
         main_form.save_form(state)
     all_form_data = {**stage_form_data_collector, **main_form.saved_data}
     slack_access_token = user.organization.slack_integration.access_token
@@ -550,7 +552,7 @@ def process_submit_resource_data(payload, context):
             ).filter(completed=False)
             logger.info(f"SUBMIT FORM ALERT INSTANCES: {alert_instances}")
             alert_instance = alert_instances.first()
-            text = instance.title
+            text = instance.template.title
             blocks = [
                 block_builders.header_block(f"{len(alert_instances)} results for workflow {text}"),
             ]

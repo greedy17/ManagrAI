@@ -467,6 +467,7 @@ def generate_morning_digest(user_id, invocation=None, page=1):
     ]
     alerts = process_current_alert_list(user_id)
     meeting = _send_calendar_details(user_id, page, invocation)
+    logger.info(f"MORNING MEETINGS: {meeting}")
     tasks = process_get_task_list(user_id)
     blocks = [*blocks, *meeting, {"type": "divider"}, *tasks, {"type": "divider"}, *alerts]
     if invocation is None:

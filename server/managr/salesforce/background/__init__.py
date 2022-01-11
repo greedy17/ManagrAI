@@ -591,7 +591,7 @@ def _process_add_call_to_sf(workflow_id, *args):
         WhatId=workflow.resource.integration_id,
         ActivityDate=workflow.meeting.start_time.strftime("%Y-%m-%d"),
         Status="Completed",
-        TaskSubType="Task",
+        TaskSubType="Call",
     )
     attempts = 1
     while True:
