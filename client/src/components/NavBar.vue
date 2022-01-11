@@ -240,7 +240,7 @@ export default {
 @import '@/styles/mixins/utils';
 
 nav {
-  height: 3.5rem;
+  height: 4rem;
   font-weight: 900;
   display: flex;
   flex-flow: row;
@@ -251,7 +251,7 @@ nav {
   z-index: 200;
   width: 100vw;
   color: $base-gray;
-  padding: 0.25rem 0 0.5rem 0;
+  padding: 0.25rem 0 1rem 0;
   border-bottom: 3px solid $soft-gray;
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
@@ -407,7 +407,7 @@ img {
 }
 a {
   text-decoration: none;
-  font-weight: bold;
+  font-weight: 900;
   color: $base-gray;
   padding: 0.5rem;
 }
@@ -428,6 +428,6 @@ a:hover {
   border-bottom: 3px solid $dark-green;
   color: $dark-green;
   font-weight: 900;
-  padding-bottom: 0.5rem;
+  padding-bottom: 1rem;
 }
 </style>

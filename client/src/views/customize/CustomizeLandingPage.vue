@@ -258,10 +258,10 @@ a:hover {
   content: '';
   background: $darker-green;
   position: absolute;
-  bottom: 0.5rem;
+  bottom: 0.65rem;
   left: 0;
-  height: 60%;
-  width: 2px;
+  height: 50%;
+  width: 3px;
 }
 .active img {
   filter: none;
@@ -276,6 +276,7 @@ a:hover {
   align-items: center;
   margin-top: 0.1rem;
   margin-bottom: 0.1rem;
+  padding-left: 0.5rem;
   height: 3rem;
 }
 .row:hover {
