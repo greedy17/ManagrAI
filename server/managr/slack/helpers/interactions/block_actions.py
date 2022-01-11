@@ -900,8 +900,6 @@ def process_show_update_resource_form(payload, context):
         "channel_id": payload.get("container").get("channel_id"),
         "message_ts": payload.get("container").get("message_ts"),
     }
-    if user.organization.has_products and product_form is not None:
-        private_metadata.update({"product_form": str(product_form.id)})
     private_metadata.update(context)
     if user.organization.has_products and resource_type == "Opportunity":
         blocks.append(
@@ -1415,7 +1413,6 @@ def process_paginate_alerts(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor()
 def process_paginate_meetings(payload, context):
-    print(payload)
     channel_id = payload.get("channel", {}).get("id", None)
     ts = payload.get("message", {}).get("ts", None)
     user_slack_id = payload.get("user", {}).get("id", None)
