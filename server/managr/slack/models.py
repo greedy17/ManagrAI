@@ -220,7 +220,10 @@ class OrgCustomSlackFormInstance(TimeStampModel):
     )
     submission_date = models.DateTimeField(null=True, help_text="Date form was submitted")
     update_source = models.CharField(
-        max_length=30, blank=True, help_text="On update forms, sets the source of the update"
+        max_length=30,
+        blank=True,
+        null=True,
+        help_text="On update forms, sets the source of the update",
     )
     alert_instance_id = models.ForeignKey(
         "alerts.AlertInstance", models.SET_NULL, related_name="form_instance", null=True, blank=True

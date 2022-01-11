@@ -20,7 +20,14 @@ from managr.api.decorators import log_all_exceptions, sf_api_exceptions_wf
 from managr.api.emails import send_html_email
 
 from managr.core.models import User
-from managr.organization.models import Account, Stage, Contact, Organization, PricebookEntry
+from managr.organization.models import (
+    Account,
+    Stage,
+    Contact,
+    Organization,
+    PricebookEntry,
+    OpportunityLineItem,
+)
 from managr.organization.serializers import AccountSerializer, StageSerializer
 from managr.opportunity.models import Opportunity, Lead
 from managr.opportunity.serializers import OpportunitySerializer
@@ -443,7 +450,9 @@ def _process_update_resource_from_meeting(workflow_id, *args):
         try:
             res = workflow.resource.update_in_salesforce(data)
             attempts = 1
-            update_forms.update(is_submitted=True, submission_date=timezone.now())
+            update_forms.update(
+                is_submitted=True, submission_date=timezone.now(), update_source="meeting"
+            )
             break
         except TokenExpired as e:
             if attempts >= 5:
@@ -582,7 +591,7 @@ def _process_add_call_to_sf(workflow_id, *args):
         WhatId=workflow.resource.integration_id,
         ActivityDate=workflow.meeting.start_time.strftime("%Y-%m-%d"),
         Status="Completed",
-        TaskSubType="Task",
+        TaskSubType="Call",
     )
     attempts = 1
     while True:
@@ -690,6 +699,7 @@ def _process_create_new_contacts(workflow_id, *args):
         # if it is an opp we create a contact role as well
         logger.info(f"FORM {form}")
         data = form.saved_data
+        print(data)
         if not data:
             # try and collect whatever data we have
             contact = dict(
@@ -717,7 +727,9 @@ def _process_create_new_contacts(workflow_id, *args):
                 )
                 attempts = 1
                 form.is_submitted = True
+                form.update_source = "meeting"
                 form.submission_date = timezone.now()
+                form.save()
                 break
             except TokenExpired as e:
                 if attempts >= 5:
@@ -813,7 +825,9 @@ def _process_update_contacts(workflow_id, *args):
                     )
                     attempts = 1
                     form.is_submitted = True
+                    form.update_source = "meeting"
                     form.submission_date = timezone.now()
+                    form.save()
                     break
                 except TokenExpired as e:
                     if attempts >= 5:
@@ -1076,7 +1090,9 @@ def check_for_display_value(field, value):
 @background(schedule=0)
 @slack_api_exceptions(rethrow=True)
 def _send_recap(form_ids, send_to_data=None, manager_recap=False):
-    submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
+    submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
+        template__resource="OpportunityLineItem"
+    )
     main_form = submitted_forms.filter(
         template__form_type__in=["CREATE", "UPDATE", "MEETING_REVIEW"]
     ).first()
@@ -1162,6 +1178,17 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
         blocks.insert(
             0, block_builders.header_block(f"Recap for new {main_form.template.resource}"),
         )
+    if user.organization.has_products and main_form.template.resource == "Opportunity":
+        current_products = OpportunityLineItem.objects.filter(opportunity=main_form.resource_id)
+        if current_products:
+            blocks.append(block_builders.simple_section("*Current Products:*", "mrkdwn"))
+            for product in current_products:
+                blocks.append(
+                    block_builders.simple_section(
+                        f"*{product.name}*- QTY:{product.quantity} / Total Price: ${product.total_price}\n",
+                        "mrkdwn",
+                    )
+                )
     action_blocks = [
         block_builders.simple_button_block(
             "View Notes",
@@ -1171,7 +1198,7 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
                 params=[
                     f"u={str(user.id)}",
                     f"resource_id={str(main_form.resource_id)}",
-                    "type=alert",
+                    f"type={main_form.template.resource}",
                 ],
             ),
         ),

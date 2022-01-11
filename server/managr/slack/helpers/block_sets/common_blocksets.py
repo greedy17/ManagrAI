@@ -72,7 +72,7 @@ def loading_block_set(context):
 
 @block_set()
 def success_modal_block_set(context):
-    message = context.get("message", ":clap: Success!")
+    message = context.get("message", ":white_check_mark: Success!")
     user = context.get("u")
     form_id = context.get("form_id")
     blocks = [
@@ -443,7 +443,7 @@ def calendar_reminders_blockset(context):
                     params=[
                         f"u={str(user.id)}",
                         f"resource_id={str(meeting.resource_id)}",
-                        "type=alert",
+                        f"type={type}",
                     ],
                 ),
             )

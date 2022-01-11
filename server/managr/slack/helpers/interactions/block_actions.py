@@ -760,6 +760,7 @@ def process_restart_flow(payload, context):
 def process_show_update_resource_form(payload, context):
     from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 
+    print(context)
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
 
@@ -900,8 +901,6 @@ def process_show_update_resource_form(payload, context):
         "channel_id": payload.get("container").get("channel_id"),
         "message_ts": payload.get("container").get("message_ts"),
     }
-    if user.organization.has_products and product_form is not None:
-        private_metadata.update({"product_form": str(product_form.id)})
     private_metadata.update(context)
     if user.organization.has_products and resource_type == "Opportunity":
         blocks.append(
@@ -1427,18 +1426,6 @@ def process_paginate_meetings(payload, context):
     meeting_instances = MeetingPrepInstance.objects.filter(invocation=invocation)
     meeting_instance = meeting_instances.first()
     if not meeting_instance:
-        # check if the config was deleted
-        # config = AlertConfig.objects.filter(id=config_id).first()
-        # if not config:
-        #     error_blocks = get_block_set(
-        #         "error_modal",
-        #         {
-        #             "message": ":no_entry: The settings for these instances was deleted the data is no longer available"
-        #         },
-        #     )
-        #     slack_requests.update_channel_message(
-        #         channel_id, ts, access_token, text="Error", block_set=error_blocks
-        #     )
         return
     # NOTE replace [3:8]
     blocks = payload["message"]["blocks"]
@@ -1459,7 +1446,7 @@ def process_paginate_meetings(payload, context):
             ),
             *custom_meeting_paginator_block(meeting_instances, invocation, channel),
         ]
-        blocks[3:8] = replace_blocks
+        blocks[3:7] = replace_blocks
         slack_requests.update_channel_message(channel_id, ts, access_token, block_set=blocks)
     return
 
@@ -1669,12 +1656,17 @@ def process_get_notes(payload, context):
     access_token = org.slack_integration.access_token
     resource_id = (
         context.get("resource_id", None)
-        if type
+        if type != "command"
         else payload["view"]["state"]["values"]["select_opp"][
-            f"GET_NOTES?u={u.id}&resource=Opportunity"
+            f"GET_NOTES?u={u.id}&resource=Opportunity&type=command"
         ]["selected_option"]["value"]
     )
-    opportunity = Opportunity.objects.get(id=resource_id)
+    if type == "Opportunity" or type == "command":
+        resource = Opportunity.objects.get(id=resource_id)
+    elif type == "Account":
+        resource = Account.objects.get(id=context.get("resource_id"))
+    elif type == "Lead":
+        resource = Lead.objects.get(id=context.get("resource_id"))
     note_data = (
         OrgCustomSlackFormInstance.objects.filter(resource_id=resource_id)
         .filter(is_submitted=True)
@@ -1687,10 +1679,10 @@ def process_get_notes(payload, context):
         )
     )
     note_blocks = [
-        block_builders.header_block(f"Notes for {opportunity.name}")
+        block_builders.header_block(f"Notes for {resource.name}")
         if note_data
         else block_builders.header_block(
-            f"No notes for {opportunity.name}, start leaving notes! :smiley:"
+            f"No notes for {resource.name}, start leaving notes! :smiley:"
         )
     ]
     if note_data:
@@ -1715,7 +1707,7 @@ def process_get_notes(payload, context):
             "blocks": note_blocks,
         },
     }
-    if type == "alert":
+    if type != "command":
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     else:
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
@@ -1733,10 +1725,21 @@ def process_get_call_recording(payload, context):
     user_timezone = pytz.timezone(user.timezone)
     gong_auth = GongAuthAccount.objects.get(organization=user.organization)
     access_token = user.organization.slack_integration.access_token
-    opp = Opportunity.objects.get(id=context.get("resource_id"))
-    if opp:
-        acc = Account.objects.filter(opportunities=opp.id)
-    call = GongCall.objects.filter(crm_id=opp.secondary_data["Id"]).first()
+    resource_ids = []
+    resource = None
+    opps = Opportunity.objects.filter(id=context.get("resource_id"))
+    if opps:
+        resource_ids.append(opps.first().integration_id)
+        acc = Account.objects.filter(opportunities__in=[opps.first().id]).first()
+        resource = opps.first()
+        if acc:
+            resource_ids.append(acc.integration_id)
+    else:
+        accs = Account.objects.filter(context.get("resource_id"))
+        if accs:
+            resource_ids.append(accs.first().integration_id)
+            resource = accs.first()
+    call = GongCall.objects.filter(crm_id=resource.secondary_data["Id"]).first()
     type = context.get("type", None)
     timestamp = datetime.fromtimestamp(float(payload["message"]["ts"]))
     current = pytz.utc.localize(timestamp).astimezone(user_timezone).date()
@@ -1746,7 +1749,7 @@ def process_get_call_recording(payload, context):
         curr_date_str = curr_date.isoformat() + "T01:00:00" + f"{user_tz[:3]}:{user_tz[3:]}"
         try:
             call_res = gong_auth.helper_class.check_for_current_call(curr_date_str)
-            call_details = generate_call_block(call_res, [opp.integration_id, acc.integration_id])
+            call_details = generate_call_block(call_res, resource_ids)
             if call_details:
                 blocks = [*call_details]
             else:
@@ -2047,7 +2050,12 @@ def process_add_create_form(payload, context):
     )
     slack_form = OrgCustomSlackFormInstance.objects.create(template=template, user=user,)
     if slack_form:
-        context = {"resource_type": resource_type, "f": str(slack_form.id), "u": str(user.id)}
+        context = {
+            "resource_type": resource_type,
+            "f": str(slack_form.id),
+            "u": str(user.id),
+            "type": "command",
+        }
         blocks = get_block_set("create_modal", context,)
         try:
             index, block = block_finder("StageName", blocks)
