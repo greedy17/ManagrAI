@@ -14,7 +14,9 @@
               </router-link>
             </li>
             <li>
-              <router-link exact-active-class="active" :to="{ name: 'Required' }">Map </router-link>
+              <router-link exact-active-class="active" :to="{ name: 'Required' }"
+                >Actions</router-link
+              >
             </li>
             <li>
               <router-link active-class="active" :to="{ name: 'ListTemplates' }"

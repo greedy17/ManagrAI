@@ -11,7 +11,7 @@
         "
       >
         <!-- <img src="@/assets/images/map.png" style="height: 1.5rem" alt="" /> -->
-        <h2 class="title">Field Mapping</h2>
+        <h2 class="title">Manage Actions</h2>
         <h5 style="margin-top: -0.5rem">Where Salesforce meets Slack</h5>
       </div>
       <router-link exact-active-class="active" :to="{ name: 'Required' }">

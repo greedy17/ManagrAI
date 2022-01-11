@@ -1,7 +1,7 @@
 <template>
   <div class="customizations">
     <div style="width: 61%">
-      <h2 style="color: 4d4e4c">Required Field Mapping</h2>
+      <h2 style="color: 4d4e4c">Required Actions</h2>
       <p
         style="
           font-weight: bold;
@@ -19,12 +19,18 @@
       <div class="card">
         <div class="card__header">
           <h3 class="title">Update <span style="color: #199e54">Opportunity</span></h3>
-          <div style="margin-left: 1rem; display: flex; flex-direction: row">
-            <img class="card-img" src="@/assets/images/salesforce.png" />
-            <img style="height: 1.5rem; margin-left: 1rem" src="@/assets/images/slackLogo.png" />
-          </div>
         </div>
         <!-- <img class="back-logo" src="@/assets/images/logo.png" /> -->
+        <div class="card__body">
+          <img style="margin-right: 0.5rem" class="card-img" src="@/assets/images/salesforce.png" />
+          <img
+            style="height: 1.5rem; margin-right: 0.5rem; filter: invert(60%)"
+            src="@/assets/images/plusOne.png"
+            alt=""
+            id="plus"
+          />
+          <img style="height: 1.5rem" src="@/assets/images/slackLogo.png" />
+        </div>
         <div class="center">
           <button @click="goToUpdateOpp" class="green__button">View + Edit</button>
         </div>
@@ -33,12 +39,18 @@
       <div class="card">
         <div class="card__header">
           <h2 class="title">Create <span style="color: #5f8cff">Contacts</span></h2>
-          <div style="margin-left: 1rem; display: flex; flex-direction: row">
-            <img class="card-img" src="@/assets/images/salesforce.png" />
-            <img style="height: 1.5rem; margin-left: 1rem" src="@/assets/images/slackLogo.png" />
-          </div>
         </div>
         <!-- <img class="back-logo" src="@/assets/images/logo.png" /> -->
+        <div class="card__body">
+          <img style="margin-right: 0.5rem" class="card-img" src="@/assets/images/salesforce.png" />
+          <img
+            style="height: 1.5rem; margin-right: 0.5rem; filter: invert(60%)"
+            src="@/assets/images/plusOne.png"
+            alt=""
+            id="plus"
+          />
+          <img style="height: 1.5rem" src="@/assets/images/slackLogo.png" />
+        </div>
         <div class="center">
           <button @click="goToCreate" class="green__button">View + Edit</button>
         </div>
@@ -130,9 +142,15 @@ export default {
     align-items: center;
     flex-direction: row;
     justify-content: space-evenly;
-    height: 5rem;
+    height: 3rem;
   }
-
+  &__body {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin: 0.5rem 0 1.25rem 0;
+  }
   &__title {
     margin: 0 0 0 1rem;
   }

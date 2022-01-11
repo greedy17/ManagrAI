@@ -10,7 +10,7 @@
     </div>
 
     <div class="alert_cards">
-      <div v-if="user.userLevel !== 'MANAGER'" class="card__">
+      <div class="card__">
         <div class="card__header">
           <h3>Log <span style="color: #5f8cff">Meetings</span></h3>
         </div>
@@ -40,38 +40,6 @@
             Connect Zoom in order to activate
           </h4>
           <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="hasZoomChannel">Activated</p>
-        </div>
-      </div>
-      <div v-else class="card__">
-        <div class="card__header">
-          <h3>Meeting<span style="color: #5f8cff"> Recaps</span></h3>
-        </div>
-        <div class="row">
-          <img style="height: 2rem; margin-right: 0.5rem" src="@/assets/images/zoom.png" alt="" />
-          <img
-            style="height: 1.65rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
-            class="filter-plus"
-            alt=""
-          />
-          <img
-            style="height: 2rem; margin-right: 0.5rem"
-            src="@/assets/images/gmailCal.png"
-            alt=""
-          />
-        </div>
-        <div style="margin-top: 2rem">
-          <button
-            v-if="hasZoomIntegration && hasSlackIntegration && !recapChannel"
-            @click="goToZoomRecap"
-            :class="!isAdmin && isOnboarding ? 'orange_button bouncy' : 'orange_button'"
-          >
-            Activate
-          </button>
-          <h4 style="margin-top: -0.5rem" v-else-if="!(hasZoomIntegration && hasSlackIntegration)">
-            Connect Zoom and Calendar in order to activate
-          </h4>
-          <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="recapChannel">Activated</p>
         </div>
       </div>
 
@@ -357,45 +325,6 @@
           >
             Activated
           </h4>
-        </div>
-      </div>
-      <div
-        v-if="user.userLevel === 'MANAGER'"
-        :class="
-          !user.activatedManagrConfigs.includes('Update Forecast') && isOnboarding && !isAdmin
-            ? 'card__ onboarding'
-            : 'card__'
-        "
-      >
-        <div class="card__header">
-          <h3>Log <span style="color: #5f8cff">Meetings</span></h3>
-        </div>
-        <div class="row">
-          <img style="height: 2rem; margin-right: 0.5rem" src="@/assets/images/zoom.png" alt="" />
-          <img
-            style="height: 1.65rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
-            class="filter-plus"
-            alt=""
-          />
-          <img
-            style="height: 2rem; margin-right: 0.5rem"
-            src="@/assets/images/gmailCal.png"
-            alt=""
-          />
-        </div>
-        <div style="margin-top: 2rem">
-          <button
-            v-if="hasZoomIntegration && !hasZoomChannel"
-            @click="goToLogZoom"
-            class="orange_button"
-          >
-            Activate
-          </button>
-          <h4 style="margin-top: -0.5rem" v-else-if="!hasZoomIntegration">
-            Connect Zoom in order to activate
-          </h4>
-          <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="hasZoomChannel">Activated</p>
         </div>
       </div>
     </div>
@@ -731,7 +660,7 @@ h3 {
   width: 20vw;
   padding: 1.25rem;
   margin-right: 1.25rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   border-radius: 0.5rem;
   display: flex;
   flex-direction: column;

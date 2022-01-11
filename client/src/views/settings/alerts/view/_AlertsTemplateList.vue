@@ -14,13 +14,10 @@
     </Modal>
     <div class="spacer"></div>
 
-    <div>
+    <div class="center__">
       <h2 v-if="!editing" class="titles">Edit your Workflow Automation</h2>
       <h2 @click="logChannels" v-else class="titles">Saved Workflow Automations</h2>
-      <p
-        class="center"
-        style="font-weight: bold; color: #5d5e5e; margin-top: -0.5rem; font-size: 0.95rem"
-      >
+      <p style="font-weight: bold; color: #5d5e5e; margin-top: -0.5rem; font-size: 0.95rem">
         Edit, Run, and Schedule your saved Automations
       </p>
       <div v-if="!alertsCount(templates.list.length)">
@@ -254,8 +251,12 @@ export default {
         })
     },
     alertsCount(num) {
-      if (this.zoomChannel) {
+      if (this.zoomChannel && !this.hasRecapChannel) {
         return num + 1
+      } else if (this.hasRecapChannel && !this.zoomChannel) {
+        return num + 1
+      } else if (this.hasRecapChannel && this.zoomChannel) {
+        return num + 2
       } else {
         return num
       }
@@ -416,7 +417,7 @@ export default {
   animation: bounce 0.2s infinite alternate;
 }
 .spacer {
-  height: 0.5rem;
+  height: 0.75rem;
 }
 h2 {
   font-size: 1.4rem;
@@ -450,7 +451,6 @@ button:disabled {
 .titles {
   color: black;
   font-weight: bold;
-  text-align: center;
 }
 .alert-links {
   color: #199e54;
@@ -559,6 +559,14 @@ button:disabled {
   margin-top: 2rem;
   flex-wrap: wrap;
 }
+// .centered__cards {
+//   display: flex;
+//   flex-direction: row;
+//   justify-content: space-evenly;
+//   align-items: center;
+//   margin-top: 2rem;
+//   flex-wrap: wrap;
+// }
 .card__ {
   background-color: white;
   border: none;
@@ -670,6 +678,12 @@ a {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+.center__ {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
 }
 .centered {
   display: flex;
