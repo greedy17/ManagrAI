@@ -417,9 +417,7 @@ def process_get_task_list(user_id):
                     ),
                 ]
             )
-            task_blocks.extend(
-                custom_task_paginator_block(paged_tasks, user.slack_integration.channel)
-            )
+        task_blocks.extend(custom_task_paginator_block(paged_tasks, user.slack_integration.channel))
     else:
         task_blocks = [
             block_builders.simple_section("You have no tasks due today :clap:", "mrkdwn"),
