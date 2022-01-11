@@ -1816,7 +1816,7 @@ textarea {
   height: 88vh;
   color: $base-gray;
   margin-left: 18vw;
-  margin-top: 4rem;
+  margin-top: 3.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;

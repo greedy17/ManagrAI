@@ -56,7 +56,7 @@
                 alt=""
               />
 
-              <h5>Pipeline Management.</h5>
+              <h5>Pipeline Management</h5>
             </div>
           </router-link>
         </div>
@@ -110,13 +110,13 @@
 
       <router-link exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
         <div :class="isOnboarding ? 'onboarding row' : 'row'">
-          <img src="@/assets/images/build.png" style="height: 1.3rem; margin-right: 1rem" alt="" />
+          <img src="@/assets/images/build.png" style="height: 1.2rem; margin-right: 1rem" alt="" />
           <h5>Custom</h5>
         </div>
       </router-link>
 
       <div :class="isOnboarding ? 'onboarding row' : 'row'" style="cursor: not-allowed">
-        <img src="@/assets/images/org.png" style="height: 1.4rem; margin-right: 1rem" alt="" />
+        <img src="@/assets/images/sharing.png" style="height: 1.3rem; margin-right: 1rem" alt="" />
         <h5>Shared<span class="coming-soon">coming soon</span></h5>
       </div>
     </div>
@@ -162,7 +162,7 @@
                 alt=""
               />
 
-              <h5 style="margin-left: 1rem">Pipeline Management.</h5>
+              <h5 style="margin-left: 1rem">Pipeline Management</h5>
             </div>
           </router-link>
         </div>
@@ -182,13 +182,13 @@
 
       <router-link exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
         <div class="row">
-          <img src="@/assets/images/build.png" style="height: 1.3rem; margin-right: 1rem" alt="" />
+          <img src="@/assets/images/build.png" style="height: 1.2rem; margin-right: 1rem" alt="" />
           <h5>Custom</h5>
         </div>
       </router-link>
 
       <div class="row" style="cursor: not-allowed">
-        <img src="@/assets/images/org.png" style="height: 1.4rem; margin-right: 1rem" alt="" />
+        <img src="@/assets/images/sharing.png" style="height: 1.3rem; margin-right: 1rem" alt="" />
         <h5>Shared<span class="coming-soon">coming soon</span></h5>
       </div>
     </div>

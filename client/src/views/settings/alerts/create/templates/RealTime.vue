@@ -9,54 +9,34 @@
     <div class="alert_cards">
       <div class="card__">
         <div class="card__header">
-          <h3>Meeting <span style="color: #5f8cff">Logged</span></h3>
+          <h3>Meeting<span style="color: #5f8cff"> Recaps</span></h3>
         </div>
-
         <div class="row">
+          <img style="height: 2rem; margin-right: 0.5rem" src="@/assets/images/zoom.png" alt="" />
           <img
-            style="height: 2.25rem; margin-right: 0.5rem"
-            src="@/assets/images/slackLogo.png"
-            alt=""
-          />
-          <img
-            style="height: 1.75rem; margin-right: 0.5rem"
+            style="height: 1.65rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
+            class="filter-plus"
             alt=""
           />
           <img
-            style="height: 2.25rem; margin-right: 0.5rem"
-            src="@/assets/images/zoom.png"
+            style="height: 2rem; margin-right: 0.5rem"
+            src="@/assets/images/gmailCal.png"
             alt=""
           />
-          <img
-            style="height: 1.75rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
-            alt=""
-          />
-          <img style="height: 2.25rem" src="@/assets/images/gmailCal.png" alt="" />
         </div>
-
-        <div style="margin-top: 0.5rem">
-          <!-- <button
-            v-if="hasSalesforceIntegration && hasSlackIntegration"
-            @click="goToStageAdvanced"
-            class="orange_button"
+        <div style="margin-top: 2rem">
+          <button
+            v-if="hasZoomIntegration && hasSlackIntegration && !recapChannel"
+            @click="goToZoomRecap"
+            :class="!isAdmin && isOnboarding ? 'orange_button bouncy' : 'orange_button'"
           >
             Activate
           </button>
-          <h4
-            style="margin-top: -0.5rem"
-            v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)"
-          >
-            Connect Slack & Salesforce to acivate
+          <h4 style="margin-top: -0.5rem" v-else-if="!(hasZoomIntegration && hasSlackIntegration)">
+            Connect Zoom and Calendar in order to activate
           </h4>
-          <h4
-            style="margin-top: -0.5rem"
-            v-else-if="user.activatedManagrConfigs.includes('Close Date Passed')"
-          >
-            Activated
-          </h4> -->
-          <p style="">Coming Soon</p>
+          <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="recapChannel">Activated</p>
         </div>
       </div>
 
@@ -72,7 +52,7 @@
             alt=""
           />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.75rem; margin-right: 1rem; filter: invert(60%)"
             src="@/assets/images/plusOne.png"
             alt=""
           />
@@ -119,7 +99,7 @@
             alt=""
           />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.75rem; margin-right: 1rem; filter: invert(60%)"
             src="@/assets/images/plusOne.png"
             alt=""
           />

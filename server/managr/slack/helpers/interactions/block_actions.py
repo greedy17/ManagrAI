@@ -1423,7 +1423,9 @@ def process_paginate_meetings(payload, context):
     access_token = user.organization.slack_integration.access_token
     invocation = context.get("invocation")
     channel = context.get("channel")
-    meeting_instances = MeetingPrepInstance.objects.filter(invocation=invocation)
+    meeting_instances = MeetingPrepInstance.objects.filter(user=user.id).filter(
+        invocation=invocation
+    )
     meeting_instance = meeting_instances.first()
     if not meeting_instance:
         return

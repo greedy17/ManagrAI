@@ -577,7 +577,7 @@ export default {
 }
 .container {
   margin-left: 12vw;
-  margin-top: 4rem;
+  margin-top: 3.5rem;
   color: $base-gray;
   display: flex;
   align-items: center;

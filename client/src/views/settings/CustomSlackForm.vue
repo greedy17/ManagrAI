@@ -935,7 +935,13 @@
             :loading="savingForm"
           />
 
-          <div v-if="resource === 'Opportunity' && (productSelected || userHasProducts)">
+          <div
+            v-if="
+              resource === 'Opportunity' &&
+              (productSelected || userHasProducts) &&
+              formType !== 'CREATE'
+            "
+          >
             <button
               v-if="requiredOpportunityFields.every((i) => addedFieldNames.includes(i))"
               class="save"
