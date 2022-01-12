@@ -1206,7 +1206,7 @@ def process_resource_selected_for_task(payload, context):
     org = u.organization
     selected_value = None
     # if this is coming from the create form delete the old form
-    form_id = context.get("f")
+    form_id = context.get("f", None)
     if form_id:
         OrgCustomSlackFormInstance.objects.get(id=form_id).delete()
     if len(payload["actions"]):
@@ -1722,8 +1722,23 @@ def process_get_notes(payload, context):
 
 @processor(required_context="u")
 def process_get_call_recording(payload, context):
-    trigger_id = payload["trigger_id"]
+    resource_id = context.get("resource_id", None)
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    view_id = None
+    if resource_id is None:
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        timestamp = datetime.fromtimestamp(float(payload["actions"][0]["action_ts"]))
+        view_id = payload["view"]["id"]
+        resource_type = payload["view"]["state"]["values"]["managr_task_related_to_resource"][
+            f"UPDATE_TASK_SELECTED_RESOURCE?u={context.get('u')}"
+        ]["selected_option"]["value"]
+        resource_id = payload["view"]["state"]["values"]["select_existing"][
+            f"GONG_CALL_RECORDING?u={context.get('u')}&resource={resource_type}"
+        ]["selected_option"]["value"]
+    else:
+        timestamp = datetime.fromtimestamp(float(payload["message"]["ts"]))
+    trigger_id = payload["trigger_id"]
+
     user = User.objects.get(id=context.get("u"))
     user_tz = datetime.now(pytz.timezone(user.timezone)).strftime("%z")
     user_timezone = pytz.timezone(user.timezone)
@@ -1731,7 +1746,7 @@ def process_get_call_recording(payload, context):
     access_token = user.organization.slack_integration.access_token
     resource_ids = []
     resource = None
-    opps = Opportunity.objects.filter(id=context.get("resource_id"))
+    opps = Opportunity.objects.filter(id=resource_id)
     if opps:
         resource_ids.append(opps.first().integration_id)
         acc = Account.objects.filter(opportunities__in=[opps.first().id]).first()
@@ -1739,13 +1754,12 @@ def process_get_call_recording(payload, context):
         if acc:
             resource_ids.append(acc.integration_id)
     else:
-        accs = Account.objects.filter(context.get("resource_id"))
+        accs = Account.objects.filter(id=resource_id)
         if accs:
             resource_ids.append(accs.first().integration_id)
             resource = accs.first()
     call = GongCall.objects.filter(crm_id=resource.secondary_data["Id"]).first()
     type = context.get("type", None)
-    timestamp = datetime.fromtimestamp(float(payload["message"]["ts"]))
     current = pytz.utc.localize(timestamp).astimezone(user_timezone).date()
     blocks = []
     if type == "recap" and datetime.now().date() == current:
@@ -1799,13 +1813,16 @@ def process_get_call_recording(payload, context):
                 ),
             ]
     modal_data = {
-        "trigger_id": trigger_id,
         "view": {
             "type": "modal",
             "title": {"type": "plain_text", "text": "Call Details"},
             "blocks": blocks,
         },
     }
+    if view_id:
+        modal_data["view_id"] = view_id
+    else:
+        modal_data["trigger_id"] = trigger_id
     try:
         res = slack_requests.generic_request(url, modal_data, access_token=access_token)
     except Exception as e:
