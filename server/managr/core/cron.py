@@ -586,8 +586,8 @@ def check_reminders(user_id):
                             emit_process_send_workflow_reminder(
                                 str(user.id), workflows["workflow_count"]
                             )
-                elif key == core_consts.MEETING_REMINDER_REP:
+                elif key == core_consts.AFTERNOON_DIGEST_REP:
                     generate_afternoon_digest(user_id)
-                elif key == core_consts.MEETING_REMINDER_MANAGER:
+                elif key == core_consts.AFTERNOON_DIGEST_MANAGER:
                     generate_afternoon_digest(user_id)
     return
