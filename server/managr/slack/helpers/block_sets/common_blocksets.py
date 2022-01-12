@@ -1,4 +1,5 @@
 import pdb
+from urllib.parse import urlencode
 import pytz
 import uuid
 import logging
@@ -7,17 +8,19 @@ import json
 from datetime import datetime
 
 from django.db.models import Q
+from rest_framework.decorators import action
 
 from managr.utils.sites import get_site_url
 from managr.core.models import User, Notification
 from managr.opportunity.models import Opportunity, Lead
-from managr.organization.models import Account
+from managr.organization.models import Account, OpportunityLineItem
 from managr.zoom.models import ZoomMeeting
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce import constants as sf_consts
 from managr.slack import constants as slack_const
 from managr.slack.helpers.utils import action_with_params, block_set, map_fields_to_type
 from managr.slack.helpers import block_builders
+from managr.slack.helpers import requests as slack_requests
 from managr.utils.misc import snake_to_space
 from managr.salesforce.routes import routes as form_routes
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
@@ -33,6 +36,13 @@ from managr.salesforce.adapter.exceptions import (
     InvalidRefreshToken,
 )
 from managr.core.models import MeetingPrepInstance
+from managr.slack.helpers.block_sets.meeting_review_block_sets import schedule_zoom_meeting_modal
+from managr.slack.helpers.block_sets.command_views_blocksets import (
+    create_modal_block_set,
+    command_create_task_interaction,
+    create_add_to_cadence_block_set,
+    choose_opportunity_block_set,
+)
 
 logger = logging.getLogger("managr")
 
@@ -62,7 +72,7 @@ def loading_block_set(context):
 
 @block_set()
 def success_modal_block_set(context):
-    message = context.get("message", ":clap: Success!")
+    message = context.get("message", ":white_check_mark: Success!")
     user = context.get("u")
     form_id = context.get("form_id")
     blocks = [
@@ -374,38 +384,18 @@ def workflow_reminder_block_set(context):
 
 
 @block_set()
-def meeting_reminder_block_set(context):
-    not_completed = context.get("not_completed")
-    text = "meeting" if not_completed < 2 else "meetings"
-    blocks = [
-        block_builders.simple_section(
-            f"FYI you have {not_completed} {text} from today that still need to be logged!"
-        )
-    ]
-    return blocks
-
-
-@block_set()
 def calendar_reminders_blockset(context):
     meeting = MeetingPrepInstance.objects.get(id=context.get("prep_id"))
+    user = User.objects.get(id=context.get("u"))
     data = meeting.event_data
     title = data["title"]
     unix_start_time = data["times"]["start_time"]
-    unix_end_time = data["times"]["end_time"]
-    gmt_start_time = datetime.utcfromtimestamp(int(unix_start_time)).strftime("%H:%M")
-    gmt = pytz.timezone("GMT")
-    eastern = pytz.timezone(meeting.user.timezone)
+    utc_time = datetime.utcfromtimestamp(int(unix_start_time))
+    tz = pytz.timezone(user.timezone)
+    local_start = utc_time.astimezone(tz).strftime("%I:%M")
 
-    s = datetime.strptime(gmt_start_time, "%H:%M")
-    date_gmt = gmt.localize(s)
-
-    date_eastern = date_gmt.astimezone(eastern)
-    local_start_time = date_eastern.strftime("%r").strip("00").removesuffix(":00")
-    am_or_pm = date_eastern.strftime("%p")
-    short_local_start_time = local_start_time[:-6]
-    start_time = short_local_start_time + " " + am_or_pm
-    python_end_time = datetime.utcfromtimestamp(unix_end_time).strftime("%H:%M")
-    s = datetime.strptime(python_end_time, "%H:%M")
+    am_or_pm = utc_time.astimezone(tz).strftime("%p")
+    start_time = local_start + " " + am_or_pm
     type = "prep" if meeting.resource_type is None else meeting.resource_type
     if type == "Opportunity":
         resource = Opportunity.objects.get(id=meeting.resource_id)
@@ -413,11 +403,13 @@ def calendar_reminders_blockset(context):
         resource = Account.objects.get(id=meeting.resource_id)
     elif type == "Lead":
         resource = Lead.objects.get(id=meeting.resource_id)
+    text = f"{title}\n Starts at {start_time}\n Attendees: " + str(len(meeting.participants))
+    if type and type != "prep":
+        text += f"\n *{type} {resource.name}*"
     blocks = [
         block_builders.section_with_button_block(
-            "Review Attendees",
-            section_text=f"{title}\n Starts at {start_time}\n Attendees: "
-            + str(len(meeting.participants)),
+            "View Attendees",
+            section_text=text,
             button_value=context.get("prep_id"),
             action_id=action_with_params(
                 slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
@@ -425,28 +417,66 @@ def calendar_reminders_blockset(context):
             ),
         ),
     ]
-    if type and type is not "prep":
-        blocks.append(
-            block_builders.section_with_button_block(
-                "Change Opportunity",
-                section_text=f"We mapped this meeting to: {type} {resource.name}",
-                button_value=f"type%{str(meeting.id)}",
-                block_id=f"type%{str(meeting.id)}",
-                action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
-            ),
+    action_blocks = []
+    if type and type != "prep":
+        action_blocks.append(
+            block_builders.simple_button_block(
+                f"Update {type}",
+                meeting.resource_id,
+                action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(user.id)}&resource={type}&current_page={context.get('current_page',1)}&type=prep",
+                style="primary",
+            )
         )
-    else:
-        blocks.append(
-            block_builders.section_with_button_block(
-                "Map to Opportunity",
+        action_blocks.append(
+            block_builders.simple_button_block(
+                f"Change {type}",
+                f"type%{str(meeting.id)}",
                 action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
-                section_text=f"We could not find an Opportuniy or Account to map this meeting to",
-                button_value=f"type%{str(meeting.id)}",
-                block_id=f"type%{str(meeting.id)}",
+            )
+        )
+        action_blocks.append(
+            block_builders.simple_button_block(
+                "View Notes",
+                "get_notes",
+                action_id=action_with_params(
+                    slack_const.GET_NOTES,
+                    params=[
+                        f"u={str(user.id)}",
+                        f"resource_id={str(meeting.resource_id)}",
+                        f"type={type}",
+                    ],
+                ),
+            )
+        )
+
+    else:
+        action_blocks.append(
+            block_builders.simple_button_block(
+                "Map to Opportunity",
+                f"type%{str(meeting.id)}",
+                action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
                 style="primary",
             )
         ),
+    blocks.append(block_builders.actions_block(action_blocks, block_id=f"type%{str(meeting.id)}",))
+    return blocks
 
+
+@block_set()
+def meeting_reminder_block_set(context):
+    user = User.objects.get(id=context.get("u"))
+    not_completed = context.get("not_completed")
+    channel_info = slack_requests.get_channel_info(
+        user.organization.slack_integration.access_token, user.slack_integration.zoom_channel
+    )
+    name = channel_info.get("channel").get("name")
+    text = "meeting" if not_completed < 2 else "meetings"
+    blocks = [
+        block_builders.simple_section(
+            f"FYI you have {not_completed} {text} from today that still need to be logged here: #{name}",
+            "mrkdwn",
+        )
+    ]
     return blocks
 
 
@@ -457,9 +487,44 @@ def manager_meeting_reminder_block_set(context):
     text = "meeting" if not_completed < 2 else "meetings"
     blocks = [
         block_builders.simple_section(
-            f"Hey {name} your team still has *{not_completed} {text}* from today that needs to be logged.",
+            f"Hey {name} your team still has *{not_completed} {text}* from today that needs to be logged",
             "mrkdwn",
         )
     ]
     return blocks
+
+
+def current_product_block_set(context):
+    opp_item = OpportunityLineItem.objects.get(id=context.get("opp_item_id"))
+    text = f"{opp_item.product.name}\nQuantity: {opp_item.quantity}\nTotal Price: {opp_item.total_price}"
+    blocks = block_builders.section_with_button_block(
+        "Edit Product",
+        "EDIT_PRODUCT",
+        text,
+        action_id=action_with_params(
+            slack_const.PROCESS_SHOW_EDIT_PRODUCT_FORM,
+            params=[
+                f"opp_item_id={str(opp_item.id)}",
+                f"u={context.get('u')}",
+                f"main_form={context.get('main_form')}",
+            ],
+        ),
+    )
+    return blocks
+
+
+@block_set()
+def edit_product_block_set(context):
+    opp_item = OpportunityLineItem.objects.get(id=context.get("opp_item_id"))
+    user = User.objects.get(id=context.get("u"))
+    template = (
+        OrgCustomSlackForm.objects.for_user(user)
+        .filter(Q(resource="OpportunityLineItem", form_type="CREATE"))
+        .first()
+    )
+    slack_form = OrgCustomSlackFormInstance.objects.create(
+        template=template, resource_id=str(opp_item.id), user=user
+    )
+    form_blocks = slack_form.generate_form(opp_item.secondary_data)
+    return [*form_blocks]
 

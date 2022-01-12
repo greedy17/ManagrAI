@@ -11,7 +11,6 @@ from managr.alerts.models import AlertConfig
 from managr.slack.helpers import block_builders, block_sets
 from managr.slack.helpers import requests as slack_requests
 from managr.salesforce.models import MeetingWorkflow
-
 from ..models import User
 
 logger = logging.getLogger("managr")

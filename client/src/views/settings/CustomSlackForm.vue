@@ -1,90 +1,5 @@
 <template>
   <div class="slack-form-builder">
-    <Modal ref="modalName">
-      <template v-slot:header>
-        <p>Search for these fields & add them to your slack form</p>
-      </template>
-
-      <template v-slot:body>
-        <div>
-          <p style="color: #ff7649; font-weight: bold">Required:</p>
-          <ul>
-            <li>"Name"</li>
-            <li>"Stage"</li>
-            <li>"Close Date"</li>
-          </ul>
-        </div>
-        <p style="color: #5f8cff">Suggested:</p>
-        <ul>
-          <li>"Amount" or "MRR"</li>
-          <li>"Forecast Category"</li>
-          <li>"Next Step"</li>
-          <li>"Next Step Date"</li>
-        </ul>
-      </template>
-    </Modal>
-    <Modal ref="ContactModal">
-      <template v-slot:header>
-        <p>Search for these fields & add them to your slack form</p>
-      </template>
-
-      <template v-slot:body>
-        <div>
-          <p style="color: #ff7649; font-weight: bold">Required:</p>
-          <ul>
-            <li>"Last Name"</li>
-          </ul>
-        </div>
-        <p style="color: #5f8cff">Suggested:</p>
-        <ul>
-          <li>"First Name"</li>
-          <li>"Title"</li>
-          <li>"Email"</li>
-          <li>"Phone"</li>
-          <li>"Account Name"</li>
-        </ul>
-      </template>
-    </Modal>
-    <Modal ref="AccountModal">
-      <template v-slot:header>
-        <p>Search for these fields & add them to your slack form</p>
-      </template>
-
-      <template v-slot:body>
-        <div>
-          <p style="color: #ff7649; font-weight: bold">Required:</p>
-          <ul>
-            <li>"Name"</li>
-          </ul>
-        </div>
-        <p style="color: #5f8cff">Suggested:</p>
-        <ul>
-          <li>"Type"</li>
-        </ul>
-      </template>
-    </Modal>
-    <Modal ref="LeadModal">
-      <template v-slot:header>
-        <p>Search for these fields & add them to your slack form</p>
-      </template>
-
-      <template v-slot:body>
-        <div>
-          <p style="color: #ff7649; font-weight: bold">Required:</p>
-          <ul>
-            <li>"Last name"</li>
-          </ul>
-        </div>
-        <p style="color: #5f8cff">Suggested:</p>
-        <ul>
-          <li>"Title"</li>
-          <li>"Phone"</li>
-          <li>"Email"</li>
-          <li>"Company Name"</li>
-          <li>"Status"</li>
-        </ul>
-      </template>
-    </Modal>
     <div>
       <div class="slack-from-builder__sf-validations">
         <template v-if="showValidations">
@@ -104,86 +19,698 @@
     </div>
 
     <div class="opportunity__row">
-      <div class="opportunity__column">
-        <div class="fields_title" style="text-align: center">1. Select your fields</div>
-
-        <div class="collection_fields">
-          <div>
-            <p v-if="resource == OPPORTUNITY" class="popular_fields">
-              These
-              <span @click="$refs.modalName.openModal()" class="popularModal">fields</span> are the
-              most popular
-            </p>
-            <p v-else-if="resource == CONTACT" class="popular_fields">
-              These
-              <span @click="$refs.ContactModal.openModal()" class="popularModal">fields</span> are
-              the most popular
-            </p>
-            <p v-else-if="resource == ACCOUNT" class="popular_fields">
-              These
-              <span @click="$refs.AccountModal.openModal()" class="popularModal">fields</span> are
-              the most popular
-            </p>
-            <p v-else class="popular_fields">
-              These
-              <span @click="$refs.LeadModal.openModal()" class="popularModal">fields</span> are the
-              most popular
-            </p>
-          </div>
-          <CollectionSearch
-            :collection="formFields"
-            itemDisplayKey="referenceDisplayLabel"
-            :showSubmitBtn="false"
-            @onClickItem="
-              (e) => {
-                onAddField(e)
-              }
-            "
-            @onSearch="
-              () => {
-                formFields.pagination = new Pagination()
-              }
-            "
-          >
-            <template v-slot:item="{ result }">
-              <div class="slack-form-builder__container">
-                <CheckBox :checked="addedFieldIds.includes(result.id)" />
-                <div class="slack-form-builder__sf-field">
-                  {{ result['referenceDisplayLabel'] }}
-                </div>
-              </div>
-            </template>
-          </CollectionSearch>
+      <div :class="formType !== 'STAGE_GATING' ? 'collection_fields' : 'stage_fields'">
+        <div v-if="formType !== 'STAGE_GATING'" style="margin-bottom: -1rem">
           <div
-            class="paginator__container"
-            v-if="formFields.pagination.next || formFields.pagination.previous"
+            v-if="
+              requiredOpportunityFields.every((i) => addedFieldNames.includes(i)) ||
+              formType == 'STAGE_GATING'
+            "
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              flex-direction: row;
+              margin-bottom: 3rem;
+            "
           >
-            <div class="paginator__text">View More</div>
-
-            <Paginator
-              :pagination="formFields.pagination"
-              @next-page="nextPage"
-              @previous-page="previousPage"
-              :loading="formFields.loadingNextPage"
-              arrows
-              size="small"
-              class="paginator"
+            <img src="@/assets/images/slackLogo.png" style="height: 1.75rem" alt="" />
+            <img
+              class="filtered-green"
+              src="@/assets/images/link.png"
+              alt=""
+              style="height: 1rem; margin-left: 0.5rem; margin-right: 0.5rem"
             />
+            <img src="@/assets/images/salesforce.png" style="height: 1.75rem" alt="" />
+          </div>
+          <div v-else style="margin-bottom: 1rem; margin-top: -1rem" class="row">
+            <div style="margin-right: 2rem" class="center">
+              <img style="height: 1.5rem" src="@/assets/images/slackLogo.png" alt="" />
+              <p>Fields you'll see in slack</p>
+            </div>
+            <div class="center">
+              <img
+                style="width: 2.5rem; height: 1.75rem"
+                src="@/assets/images/salesforce.png"
+                alt=""
+              />
+              <p>SFDC fields you'll be updating</p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="opportunity__column" v-if="customForm">
-        <div class="fields_title" style="text-align: center">2. Re-order</div>
-        <div class="slack-form-builder__form">
-          <h2 style="text-align: center; margin-bottom: 1rem">Slack form</h2>
+        <div class="center" v-else>
+          <h2 style="margin-bottom: 0.5rem">Add Stage Specific Fields</h2>
+          <p style="margin-top: -0.25rem; color: #beb5cc">
+            Be sure to save changes before adding another stage!
+          </p>
+        </div>
 
-          <div class="slack-form-builder__form-meta" v-if="customForm.stage">
-            <!-- <h5 style="margin-top: -0.5rem">Previous stage specific forms</h5> -->
-            <h5 style="margin-top: -0.5rem" v-if="!orderedStageForm.length">
-              This is your first stage specific form
-            </h5>
+        <div>
+          <div v-if="formType === 'STAGE_GATING'">
+            <div class="center">
+              <button
+                v-if="!addingFields"
+                @click="
+                  () => {
+                    addingFields = !addingFields
+                  }
+                "
+                class="default_button bouncy"
+              >
+                Add Fields
+              </button>
+            </div>
+          </div>
 
+          <div v-if="resource === 'OpportunityLineItem'">
+            <div v-if="!addedFieldNames.includes('PricebookEntryId')" class="centered field-border">
+              <p style="margin-left: 0.5rem; font-weight: bold">
+                PricebookEntry <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+              </p>
+
+              <img
+                src="@/assets/images/unlinked.png"
+                alt=""
+                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+              />
+              <DropDownSearch
+                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+                displayKey="referenceDisplayLabel"
+                valueKey="apiName"
+                nullDisplay="Search fields"
+                searchable
+                :loading="formFields.loadingNextPage"
+                :hasNext="!!formFields.pagination.hasNextPage"
+                v-model="priceValue"
+                @load-more="onFieldsNextPage"
+                @search-term="onSearchFields"
+                @input="
+                  (e) => {
+                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+                  }
+                "
+              />
+            </div>
+
+            <div v-if="!addedFieldNames.includes('Quantity')" class="centered field-border">
+              <p style="margin-left: 0.5rem; font-weight: bold">
+                Quantity <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+              </p>
+
+              <img
+                src="@/assets/images/unlinked.png"
+                alt=""
+                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+              />
+
+              <DropDownSearch
+                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+                displayKey="referenceDisplayLabel"
+                valueKey="apiName"
+                nullDisplay="Search fields"
+                searchable
+                :loading="formFields.loadingNextPage"
+                :hasNext="!!formFields.pagination.hasNextPage"
+                v-model="quantityValue"
+                @load-more="onFieldsNextPage"
+                @search-term="onSearchFields"
+                @input="
+                  (e) => {
+                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+                  }
+                "
+              />
+            </div>
+
+            <div
+              v-if="!addedFieldLabels.includes('Line Description')"
+              class="centered field-border"
+            >
+              <p style="margin-left: 0.5rem; font-weight: bold">
+                Line Description <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+              </p>
+
+              <img
+                src="@/assets/images/unlinked.png"
+                alt=""
+                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+              />
+              <DropDownSearch
+                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+                displayKey="referenceDisplayLabel"
+                valueKey="apiName"
+                nullDisplay="Search fields"
+                searchable
+                :loading="formFields.loadingNextPage"
+                :hasNext="!!formFields.pagination.hasNextPage"
+                v-model="lineValue"
+                @load-more="onFieldsNextPage"
+                @search-term="onSearchFields"
+                @input="
+                  (e) => {
+                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+                  }
+                "
+              />
+            </div>
+          </div>
+        </div>
+
+        <div v-if="resource === 'Contact'">
+          <div v-if="formType === 'CREATE'">
+            <div v-if="!addedFieldNames.includes('LastName')" class="centered field-border">
+              <p style="margin-left: 0.5rem; font-weight: bold">
+                Last Name <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+              </p>
+
+              <img
+                src="@/assets/images/unlinked.png"
+                alt=""
+                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+              />
+
+              <DropDownSearch
+                v-if="!addedFieldNames.includes('LastName')"
+                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+                displayKey="referenceDisplayLabel"
+                valueKey="apiName"
+                nullDisplay="Search fields"
+                searchable
+                :loading="formFields.loadingNextPage"
+                :hasNext="!!formFields.pagination.hasNextPage"
+                v-model="lastNameValue"
+                @load-more="onFieldsNextPage"
+                @search-term="onSearchFields"
+                @input="
+                  (e) => {
+                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+                  }
+                "
+              />
+            </div>
+          </div>
+
+          <div
+            v-else-if="!addingFields && formType === 'UPDATE'"
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              flex-direction: column;
+              margin-top: 0.5rem;
+            "
+          >
+            <button
+              @click="
+                () => {
+                  addingFields = !addingFields
+                }
+              "
+              class="default_button"
+            >
+              Add Fields
+            </button>
+          </div>
+        </div>
+
+        <div v-if="resource === 'Lead'">
+          <div v-if="formType === 'CREATE'">
+            <div v-if="!addedFieldNames.includes('LastName')" class="centered field-border">
+              <p style="margin-left: 0.5rem; font-weight: bold">
+                Last Name<span style="color: #fa646a; font-size: 0.75rem"> (required)</span>
+              </p>
+
+              <img
+                src="@/assets/images/unlinked.png"
+                alt=""
+                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+              />
+
+              <DropDownSearch
+                v-if="!addedFieldNames.includes('LastName')"
+                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+                displayKey="referenceDisplayLabel"
+                valueKey="apiName"
+                nullDisplay="Search fields"
+                searchable
+                :loading="formFields.loadingNextPage"
+                :hasNext="!!formFields.pagination.hasNextPage"
+                v-model="leadLastNameValue"
+                @load-more="onFieldsNextPage"
+                @search-term="onSearchFields"
+                @input="
+                  (e) => {
+                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+                  }
+                "
+              />
+            </div>
+            <div v-if="!addedFieldNames.includes('Company')" class="centered field-border">
+              <p style="margin-left: 0.5rem; font-weight: bold">
+                Company<span style="color: #fa646a; font-size: 0.75rem"> (required)</span>
+              </p>
+
+              <img
+                src="@/assets/images/unlinked.png"
+                alt=""
+                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+              />
+
+              <DropDownSearch
+                v-if="!addedFieldNames.includes('company')"
+                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+                displayKey="referenceDisplayLabel"
+                valueKey="apiName"
+                nullDisplay="Search fields"
+                searchable
+                :loading="formFields.loadingNextPage"
+                :hasNext="!!formFields.pagination.hasNextPage"
+                v-model="companyValue"
+                @load-more="onFieldsNextPage"
+                @search-term="onSearchFields"
+                @input="
+                  (e) => {
+                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+                  }
+                "
+              />
+            </div>
+            <div v-if="!addedFieldNames.includes('Status')" class="centered field-border">
+              <p style="margin-left: 0.5rem; font-weight: bold">
+                Status<span style="color: #fa646a; font-size: 0.75rem"> (required)</span>
+              </p>
+
+              <img
+                src="@/assets/images/unlinked.png"
+                alt=""
+                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+              />
+
+              <DropDownSearch
+                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+                displayKey="referenceDisplayLabel"
+                valueKey="apiName"
+                nullDisplay="Search fields"
+                searchable
+                :loading="formFields.loadingNextPage"
+                :hasNext="!!formFields.pagination.hasNextPage"
+                v-model="statusValue"
+                @load-more="onFieldsNextPage"
+                @search-term="onSearchFields"
+                @input="
+                  (e) => {
+                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+                  }
+                "
+              />
+            </div>
+          </div>
+
+          <div
+            v-else-if="!addingFields && formType === 'UPDATE'"
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              flex-direction: column;
+              margin-top: 0.5rem;
+            "
+          >
+            <button
+              @click="
+                () => {
+                  addingFields = !addingFields
+                }
+              "
+              class="default_button"
+            >
+              Add Fields
+            </button>
+          </div>
+        </div>
+
+        <div v-if="resource === 'Account'">
+          <div v-if="formType === 'CREATE'">
+            <div v-if="!addedFieldNames.includes('Name')" class="centered field-border">
+              <p style="margin-left: 0.5rem; font-weight: bold">
+                Account Name <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+              </p>
+
+              <img
+                src="@/assets/images/unlinked.png"
+                alt=""
+                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+              />
+
+              <DropDownSearch
+                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+                displayKey="referenceDisplayLabel"
+                valueKey="apiName"
+                nullDisplay="Search fields"
+                searchable
+                :loading="formFields.loadingNextPage"
+                :hasNext="!!formFields.pagination.hasNextPage"
+                v-model="accountNameValue"
+                @load-more="onFieldsNextPage"
+                @search-term="onSearchFields"
+                @input="
+                  (e) => {
+                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+                  }
+                "
+              />
+            </div>
+          </div>
+
+          <div
+            v-else-if="!addingFields && formType === 'UPDATE'"
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              flex-direction: column;
+              margin-top: 0.5rem;
+            "
+          >
+            <button
+              @click="
+                () => {
+                  addingFields = !addingFields
+                }
+              "
+              class="default_button"
+            >
+              Add Fields
+            </button>
+          </div>
+        </div>
+
+        <div v-if="resource === 'Opportunity' && formType !== 'STAGE_GATING'">
+          <div v-if="!addedFieldLabels.includes('Name')" class="centered field-border">
+            <div class="row__">
+              <p style="margin-left: 0.5rem; font-weight: bold">
+                Name <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+              </p>
+
+              <img
+                src="@/assets/images/unlinked.png"
+                alt=""
+                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+              />
+            </div>
+
+            <DropDownSearch
+              :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+              displayKey="referenceDisplayLabel"
+              valueKey="apiName"
+              nullDisplay="Search fields"
+              searchable
+              :loading="formFields.loadingNextPage"
+              :hasNext="!!formFields.pagination.hasNextPage"
+              v-model="amountValue"
+              @load-more="onFieldsNextPage"
+              @search-term="onSearchFields"
+              @input="
+                (e) => {
+                  onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+                }
+              "
+            />
+          </div>
+
+          <div v-if="!addedFieldNames.includes('StageName')" class="centered field-border">
+            <div class="row__">
+              <p style="margin-left: 0.5rem; font-weight: bold">
+                Stage <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+              </p>
+
+              <img
+                src="@/assets/images/unlinked.png"
+                alt=""
+                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+              />
+            </div>
+            <DropDownSearch
+              v-if="!addedFieldNames.includes('StageName')"
+              :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+              displayKey="referenceDisplayLabel"
+              valueKey="apiName"
+              nullDisplay="Search fields"
+              searchable
+              :loading="formFields.loadingNextPage"
+              :hasNext="!!formFields.pagination.hasNextPage"
+              v-model="stageValue"
+              @load-more="onFieldsNextPage"
+              @search-term="onSearchFields"
+              @input="
+                (e) => {
+                  onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+                }
+              "
+            />
+          </div>
+
+          <div v-if="!addedFieldNames.includes('CloseDate')" class="centered field-border">
+            <div class="row__">
+              <p style="margin-left: 0.5rem; font-weight: bold">
+                Close Date <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+              </p>
+
+              <img
+                src="@/assets/images/unlinked.png"
+                alt=""
+                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
+              />
+            </div>
+
+            <DropDownSearch
+              :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+              displayKey="referenceDisplayLabel"
+              valueKey="apiName"
+              nullDisplay="Search fields"
+              searchable
+              :loading="formFields.loadingNextPage"
+              :hasNext="!!formFields.pagination.hasNextPage"
+              v-model="closeValue"
+              @load-more="onFieldsNextPage"
+              @search-term="onSearchFields"
+              @input="
+                (e) => {
+                  onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+                }
+              "
+            />
+          </div>
+
+          <div v-if="!userHasProducts" class="centered field-border">
+            <div class="row__">
+              <div style="margin-left: 0.5rem" class="centered">
+                <label :class="!productSelected ? 'green' : 'label'">Amount</label>
+                <ToggleCheckBox
+                  style="margin-left: 0.15rem; margin-right: 0.15rem"
+                  :value="productSelected"
+                  @input="productSelect"
+                  offColor="#199e54"
+                  onColor="#199e54"
+                />
+                <label style="margin-right: 0.15rem" :class="productSelected ? 'green' : 'label'"
+                  >Products</label
+                >
+              </div>
+              <p style="font-size: 12px; color: #9b9b9b; margin-left: 0.5rem">{Optional}</p>
+            </div>
+            <div v-if="!productSelected">
+              <DropDownSearch
+                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+                displayKey="referenceDisplayLabel"
+                valueKey="apiName"
+                nullDisplay="Search fields"
+                searchable
+                :loading="formFields.loadingNextPage"
+                :hasNext="!!formFields.pagination.hasNextPage"
+                v-model="amountValue"
+                @load-more="onFieldsNextPage"
+                @search-term="onSearchFields"
+                @input="
+                  (e) => {
+                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+                  }
+                "
+              />
+            </div>
+
+            <div v-if="productSelected">Add products on the next page</div>
+          </div>
+          <div v-else class="centered field-border">
+            <p>Need to edit your Product form ? Save & continue.</p>
+          </div>
+
+          <!-- <div
+            v-else-if="!addingFields && formType === 'UPDATE'"
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              flex-direction: column;
+              margin-top: 0.5rem;
+            "
+          >
+            <button
+              @click="
+                () => {
+                  addingFields = !addingFields
+                }
+              "
+              class="default_button"
+            >
+              Add Fields
+            </button>
+          </div> -->
+        </div>
+
+        <draggable
+          style="margin-top: 1rem"
+          v-model="addedFields"
+          group="fields"
+          @start="drag = true"
+          @end="drag = false"
+        >
+          <div
+            style="display: flex; flex-direction: row"
+            v-for="field in addedFields"
+            :key="field.id"
+          >
+            <div :class="unshownIds.includes(field.id) ? 'invisible' : 'centered field-border'">
+              <div
+                style="
+                  display: flex;
+                  flex-direction: row;
+                  align-items: center;
+                  margin-left: -0.5rem;
+                "
+              >
+                <img
+                  :class="unshownIds.includes(field.id) ? 'invisible' : ''"
+                  src="@/assets/images/drag.png"
+                  id="drag"
+                  style="height: 1.85rem; width: 2rem; cursor: grab"
+                  alt=""
+                />
+                <p :class="unshownIds.includes(field.id) ? 'invisible' : ''">
+                  {{ field.referenceDisplayLabel }}
+                </p>
+                <img
+                  class="filtered-green"
+                  src="@/assets/images/link.png"
+                  alt=""
+                  style="height: 1rem; margin-left: 0.5rem"
+                />
+              </div>
+
+              <img
+                src="@/assets/images/remove.png"
+                style="height: 1.25rem; margin-right: 0.2rem"
+                alt=""
+                id="remove"
+                :class="unshownIds.includes(field.id) ? 'invisible' : ''"
+                @click="
+                  () => {
+                    onRemoveField(field)
+                  }
+                "
+              />
+            </div>
+          </div>
+        </draggable>
+        <div class="recommend" v-if="addingFields">
+          <div
+            @click="
+              () => {
+                addingFields = !addingFields
+              }
+            "
+            style="font-weight: bold; display: flex; justify-content: flex-end; cursor: pointer"
+          >
+            x
+          </div>
+
+          <h4 v-if="formType !== 'STAGE_GATING'">Recommended Fields:</h4>
+          <div v-else>
+            <div
+              style="
+                background-color: #efeff5;
+                width: 50%;
+                height: 3rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 0.3rem;
+              "
+            >
+              <DropDownSearch
+                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+                displayKey="referenceDisplayLabel"
+                valueKey="apiName"
+                nullDisplay="Search fields"
+                searchable
+                :loading="formFields.loadingNextPage"
+                :hasNext="!!formFields.pagination.hasNextPage"
+                v-model="nameValue"
+                @load-more="onFieldsNextPage"
+                @search-term="onSearchFields"
+                @input="
+                  (e) => {
+                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+                  }
+                "
+              />
+            </div>
+
+            <h4>Previous Stage Fields:</h4>
+          </div>
+          <div
+            v-if="resource === 'Opportunity' && formType !== 'STAGE_GATING'"
+            class="recommendations"
+          >
+            <p>Amount,</p>
+            &nbsp;
+            <p>Account,</p>
+            &nbsp;
+            <p>Forecast Category,</p>
+            &nbsp;
+            <p>Next Step,</p>
+            &nbsp;
+            <p>Next Step Date</p>
+          </div>
+          <div v-else-if="resource === 'Contact'" class="recommendations">
+            <p>First Name,</p>
+            &nbsp;
+            <p>Title,</p>
+            &nbsp;
+            <p>Email,</p>
+            &nbsp;
+            <p>Phone,</p>
+            &nbsp;
+            <p>Account Name</p>
+          </div>
+          <div v-else-if="resource === 'Lead'" class="recommendations">
+            <p>Title,</p>
+            &nbsp;
+            <p>Email,</p>
+            &nbsp;
+            <p>Phone</p>
+          </div>
+          <div v-else-if="resource === 'Account'" class="recommendations">
+            <p>Account Type</p>
+          </div>
+
+          <div v-if="formType === 'STAGE_GATING'">
+            <div v-if="!orderedStageForm.length">
+              <p style="font-weight: bold; color: #beb5cc; text-align: center">
+                Nothing here.. (o^^)o
+              </p>
+            </div>
             <div :key="key" v-for="(form, key) in orderedStageForm">
               <div style="margin-top: 1rem">
                 <i style="text-transform: uppercase; font-size: 12px; color: #beb5cc"
@@ -196,237 +723,466 @@
                     <li>{{ val.referenceDisplayLabel }}</li>
                   </ul>
                 </div>
-                <!-- <ListContainer horizontal>
-                  <template v-slot:list>
-                    <ListItem
-                      @item-selected="onAddField(val)"
-                      :key="key"
-                      v-for="(val, key) in form.fieldsRef"
-                      :item="val.referenceDisplayLabel"
-                      :active="addedFieldIds.includes(val.id)"
-                      showIcon
-                    />
-                  </template>
-                </ListContainer> -->
               </div>
             </div>
           </div>
 
-          <!-- <div v-if="customForm.formType == 'CREATE' || customForm.stage" class="recap">
-            <h5>Include in recap</h5>
-          </div> -->
-
-          <div v-for="(field, index) in [...addedFields]" :key="field.apiName" class="form-field">
-            <!-- <div
-              v-if="
-                field.id === '6407b7a1-a877-44e2-979d-1effafec5035' ||
-                field.id === '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' ||
-                field.id === 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' ||
-                field.id === 'fae88a10-53cc-470e-86ec-32376c041893' ||
-                field.id === 'fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed'
-              "
-              class="form-field__label"
-            >
-              {{ field.referenceDisplayLabel }}
-            </div> -->
-            <div style="display: flex; width: 100%">
-              <div class="form-field__left">
-                <!-- <div
-                  v-if="field.id === '6407b7a1-a877-44e2-979d-1effafec5035'"
-                  class="form-field__body"
-                >
-                  {{ 'Update title and meeting subject' }}
-                </div>
-
-                <div
-                  v-if="field.id === '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'"
-                  class="form-field__body"
-                >
-                  {{ 'Logs the rep’s comments about the meeting' }}
-                </div>
-
-                <div
-                  v-if="field.id === 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d'"
-                  class="form-field__body"
-                >
-                  {{ 'Gives the reps the option to send a recap to leadership' }}
-                </div>
-                <div
-                  v-if="field.id === 'fae88a10-53cc-470e-86ec-32376c041893'"
-                  class="form-field__body"
-                >
-                  {{ 'Gives the reps the option to send themselves a recap' }}
-                </div> -->
-                <img
-                  v-if="canRemoveField(field)"
-                  style="height: 1rem; margin-right: 0.5rem"
-                  src="@/assets/images/remove.png"
-                  @click="() => onRemoveField(field)"
-                />
-
-                <div
-                  class="form-field__label"
-                  v-if="
-                    field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
-                    field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
-                    field.id !== 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' &&
-                    field.id !== 'fae88a10-53cc-470e-86ec-32376c041893' &&
-                    field.id !== 'fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed'
-                  "
-                >
-                  {{ field.referenceDisplayLabel }}
-                </div>
-              </div>
-
-              <div class="form-field__middle orange">
-                {{ field.required ? 'required' : '' }}
-              </div>
-              <div class="form-field__right">
-                <div
-                  v-if="
-                    field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
-                    field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
-                    field.id !== 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' &&
-                    field.id !== 'fae88a10-53cc-470e-86ec-32376c041893' &&
-                    field.id !== 'fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed'
-                  "
-                  class="form-field__btn"
-                  @click="() => onMoveFieldUp(field, index)"
-                >
-                  <img src="@/assets/images/upArrow.png" />
-                </div>
-                <div
-                  v-if="
-                    field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
-                    field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
-                    field.id !== 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d' &&
-                    field.id !== 'fae88a10-53cc-470e-86ec-32376c041893' &&
-                    field.id !== 'fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed'
-                  "
-                  class="form-field__btn"
-                  @click="() => onMoveFieldDown(field, index)"
-                >
-                  <img src="@/assets/images/downArrow.png" />
-                </div>
-                <!-- <div
-                  v-if="
-                    customForm.formType == 'CREATE' ||
-                    customForm.formType == 'MEETING_REVIEW' ||
-                    customForm.stage
-                  "
-                  class="form-field__right"
-                  @click="field.includeInRecap = !field.includeInRecap"
-                >
-                  <CheckBox :checked="field.includeInRecap" />
-                  <h5 class="space">
-                    <small
-                      ><i>{{
-                        customForm.stage ? ' (only available for create forms)' : ''
-                      }}</i></small
-                    >
-                  </h5>
-                </div> -->
-              </div>
-            </div>
-            <!-- <div style="display: flex; align-items: center">
-              <input
-                v-if="field.id === '6407b7a1-a877-44e2-979d-1effafec5035'"
-                placeholder="Enter Meeting Type"
-                class="meeting-type"
-                v-model="meetingType"
-                @keypress="updateMeeting"
-              />
-              <small v-if="meetingType.length" style="margin-left: 1rem">Press Enter to Save</small>
-            </div>  -->
-
-            <!-- <div
-              v-if="field.id === '6407b7a1-a877-44e2-979d-1effafec5035' && actionChoices.length"
-              class="meeting-type__list"
-            >
-              <template v-if="!loadingMeetingTypes">
-                <ListContainer horizontal>
-                  <template v-slot:list>
-                    <ListItem
-                      @item-selected="removeMeetingType(val.id)"
-                      :key="key"
-                      v-for="(val, key) in actionChoices"
-                      :item="val.title"
-                      :active="true"
-                      showIcon
-                    />
-                  </template>
-                </ListContainer>
-              </template>
-              <template v-else>
-                <PulseLoadingSpinner :loading="loadingMeetingTypes" />
-              </template>
-            </div> -->
-          </div>
+          <DropDownSearch
+            v-if="formType !== 'STAGE_GATING'"
+            :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+            displayKey="referenceDisplayLabel"
+            valueKey="apiName"
+            nullDisplay="Search fields"
+            searchable
+            :loading="formFields.loadingNextPage"
+            :hasNext="!!formFields.pagination.hasNextPage"
+            v-model="addingFieldValue"
+            @load-more="onFieldsNextPage"
+            @search-term="onSearchFields"
+            @input="
+              (e) => {
+                onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+              }
+            "
+          />
         </div>
-      </div>
+        <div
+          v-if="resource === 'Opportunity'"
+          style="display: flex; align-items: center; justify-content: center"
+        >
+          <button
+            v-if="requiredOpportunityFields.every((i) => addedFieldNames.includes(i))"
+            @click="
+              () => {
+                addingFields = !addingFields
+              }
+            "
+            class="default_button"
+          >
+            Add Fields
+          </button>
+        </div>
 
-      <div class="opportunity__column">
-        <div class="fields_title" style="text-align: center">3. Save</div>
+        <div
+          v-else-if="
+            resource === 'Contact' &&
+            !addingFields &&
+            addedFieldNames.includes('LastName') &&
+            formType === 'CREATE'
+          "
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            margin-top: 0.5rem;
+          "
+        >
+          <button
+            @click="
+              () => {
+                addingFields = !addingFields
+              }
+            "
+            class="default_button"
+          >
+            Add Fields
+          </button>
+          <span style="color: #beb5cc; font-size: 0.85rem; margin-top: 0.25rem"
+            >(Recommended!)</span
+          >
+        </div>
 
-        <div class="collection_fields">
-          <div class="save-button">
-            <button @click="goToCustomize" class="back__button">
-              <img src="@/assets/images/back.png" style="height: 1.2rem" alt="" />
-              back
+        <div
+          v-else-if="
+            resource === 'OpportunityLineItem' &&
+            requiredProductFields.every((i) => addedFieldNames.includes(i))
+          "
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            margin-top: 0.5rem;
+          "
+        >
+          <button
+            @click="
+              () => {
+                addingFields = !addingFields
+              }
+            "
+            class="default_button"
+          >
+            Add Fields
+          </button>
+        </div>
+
+        <div
+          v-else-if="
+            resource === 'Lead' &&
+            requiredLeadFields.every((i) => addedFieldNames.includes(i)) &&
+            formType === 'CREATE'
+          "
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            margin-top: 0.5rem;
+          "
+        >
+          <button
+            @click="
+              () => {
+                addingFields = !addingFields
+              }
+            "
+            class="default_button"
+          >
+            Add Fields
+          </button>
+        </div>
+
+        <div
+          v-else-if="
+            resource === 'Account' &&
+            !addingFields &&
+            addedFieldNames.includes('Name') &&
+            formType === 'CREATE'
+          "
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            margin-top: 0.5rem;
+          "
+        >
+          <button
+            @click="
+              () => {
+                addingFields = !addingFields
+              }
+            "
+            class="default_button"
+          >
+            Add Fields
+          </button>
+        </div>
+
+        <div class="example--footer">
+          <button
+            v-if="
+              formType !== 'STAGE_GATING' &&
+              resource !== 'OpportunityLineItem' &&
+              !(
+                (formType === 'UPDATE' && resource === 'Opportunity') ||
+                (formType === 'CREATE' && resource === 'Contact')
+              )
+            "
+            style="margin-right: 0.5rem; cursor: pointer"
+            @click="goToOptional"
+            class="disabled"
+          >
+            back
+          </button>
+          <button
+            v-if="
+              (formType === 'UPDATE' && resource === 'Opportunity') ||
+              (formType === 'CREATE' && resource === 'Contact')
+            "
+            style="margin-right: 0.5rem; cursor: pointer"
+            @click="goBack"
+            class="disabled"
+          >
+            back
+          </button>
+          <button
+            v-if="resource === 'OpportunityLineItem'"
+            style="margin-right: 0.5rem; cursor: pointer"
+            @click="goToUpdateOpp"
+            class="disabled"
+          >
+            back
+          </button>
+          <div class="row__" v-if="formType === 'STAGE_GATING'">
+            <button
+              style="margin-right: 0.5rem; cursor: pointer"
+              @click="goToValidations"
+              class="disabled"
+            >
+              Cancel
             </button>
-          </div>
-
-          <div class="save-button">
             <PulseLoadingSpinnerButton
               @click="onSave"
               class="primary-button"
               text="Save"
               :loading="savingForm"
-              :disabled="!$store.state.user.isAdmin"
             />
           </div>
 
-          <!-- <div v-if="formType == 'UPDATE' && resource == OPPORTUNITY" class="save-button">
-            <button @click="goToContacts" v-if="canContinue" class="continue__button">
-              Continue
-            </button>
-            <button v-else class="cant__continue">Continue</button>
-          </div> -->
-          <div class="save-button" style="flex-direction: column; align-items: center">
-            <button @click="goToCustomize" v-if="canContinue" class="continue__button">
-              Continue
-            </button>
-            <button v-else class="cant__continue">Continue</button>
-          </div>
-        </div>
-      </div>
-      <!-- <div class="form-header">
-          <div class="save-button">
-            <PulseLoadingSpinnerButton
-              @click="onSave"
-              class="primary-button"
-              text="Save"
-              :loading="savingForm"
-              :disabled="!$store.state.user.isAdmin"
-            />
-          </div>
-          <div class="heading">
-            <h2>
-              {{ customForm.stage ? `${customForm.stage} Stage` : `${resource} Slack Form` }}
-            </h2>
-            <p class="muted">Add fields that you’d like to update using Slack</p>
-          </div>
-        </div> -->
-      <!-- <div>
-          <div class="save-button">
           <PulseLoadingSpinnerButton
+            v-if="
+              resource === 'Opportunity' &&
+              !productSelected &&
+              !userHasProducts &&
+              formType === 'UPDATE'
+            "
+            @click="onSave"
+            class="primary-button"
+            :class="
+              !requiredOpportunityFields.every((i) => addedFieldNames.includes(i))
+                ? 'primary-button'
+                : 'primary-button'
+            "
+            text="Save"
+            :loading="savingForm"
+            :disabled="!requiredOpportunityFields.every((i) => addedFieldNames.includes(i))"
+          />
+          <PulseLoadingSpinnerButton
+            v-if="resource === 'Opportunity' && !productSelected && formType === 'CREATE'"
             @click="onSave"
             class="primary-button"
             text="Save"
             :loading="savingForm"
-            :disabled="!$store.state.user.isAdmin"
           />
-        </div> -->
+
+          <div
+            v-if="
+              resource === 'Opportunity' &&
+              (productSelected || userHasProducts) &&
+              formType !== 'CREATE' &&
+              formType !== 'STAGE_GATING'
+            "
+          >
+            <button
+              v-if="requiredOpportunityFields.every((i) => addedFieldNames.includes(i))"
+              class="save"
+              @click="goToProducts"
+            >
+              Save + Continue to products
+            </button>
+            <button v-else class="disabled__">Save + Continue to products</button>
+          </div>
+
+          <PulseLoadingSpinnerButton
+            v-else-if="resource === 'Contact' && formType === 'CREATE'"
+            @click="onSave"
+            class="primary-button"
+            text="Save"
+            :loading="savingForm"
+            :disabled="!addedFieldNames.includes('LastName')"
+          />
+          <PulseLoadingSpinnerButton
+            v-else-if="resource === 'Contact' && formType === 'UPDATE'"
+            @click="onSave"
+            class="primary-button"
+            text="Save"
+            :loading="savingForm"
+          />
+
+          <PulseLoadingSpinnerButton
+            v-if="resource === 'OpportunityLineItem'"
+            @click="onSave"
+            class="primary-button"
+            :class="
+              !requiredProductFields.every((i) => addedFieldNames.includes(i))
+                ? 'primary-button'
+                : 'primary-button'
+            "
+            text="Save"
+            :loading="savingForm"
+            :disabled="!requiredProductFields.every((i) => addedFieldNames.includes(i))"
+          />
+
+          <PulseLoadingSpinnerButton
+            v-if="resource === 'Lead' || resource === 'Account'"
+            @click="onSave"
+            class="primary-button"
+            text="Save"
+            :loading="savingForm"
+          />
+          <!-- 
+          <PulseLoadingSpinnerButton
+            v-if="resource === 'Account'"
+            @click="onSave"
+            class="primary-button"
+            :class="!addedFieldNames.includes('Name') ? 'primary-button' : 'primary-button'"
+            text="Save"
+            :loading="savingForm"
+            :disabled="!addedFieldNames.includes('Name')"
+          /> -->
+        </div>
+      </div>
+
+      <div
+        style="cursor: not-allowed"
+        :class="formType !== 'STAGE_GATING' ? 'collection_fields' : 'stage_fields'"
+      >
+        <div
+          style="
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            margin-top: -2rem;
+          "
+        >
+          <div style="display: flex; flex-direction: row; align-items: center">
+            <div class="white-background">
+              <img src="@/assets/images/logo.png" style="height: 1.5rem" alt="" />
+            </div>
+            <h3 v-if="resource !== 'OpportunityLineItem' && formType !== 'STAGE_GATING'">
+              {{ lowerCase(formType, resource) }}
+            </h3>
+            <h3 v-else-if="resource === 'OpportunityLineItem'">Product</h3>
+            <h3 v-else>Stage Specific</h3>
+          </div>
+
+          <div
+            style="
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              justify-content: center;
+              filter: invert(90%);
+            "
+          >
+            <img src="@/assets/images/share.png" style="height: 1.2rem" alt="" />
+            <img
+              src="@/assets/images/clear.png"
+              style="height: 1.3rem; margin-left: 0.2rem"
+              alt=""
+            />
+          </div>
+        </div>
+
+        <h1 class="example-text">SLACK PREVIEW</h1>
+        <div v-if="resource !== 'OpportunityLineItem'">
+          <p>Note Subject <span style="color: #beb5cc">(optional)</span></p>
+          <textarea
+            disabled
+            name=""
+            id=""
+            cols="30"
+            rows="2"
+            style="width: 100%; border-radius: 0.25rem"
+          >
+“Meeting Subject goes here” (lives in Tasks)
+          </textarea>
+        </div>
+        <div v-if="resource !== 'OpportunityLineItem'">
+          <p>Notes <span style="color: #beb5cc">(optional)</span></p>
+          <textarea
+            disabled
+            name=""
+            id=""
+            cols="30"
+            rows="4"
+            style="width: 100%; border-radius: 0.25rem"
+          >
+“Meeting Notes go here” (lives in Tasks)
+          </textarea>
+        </div>
+        <div v-for="field in addedFields" :key="field.id">
+          <!-- <p>{{ field.dataType }}</p> -->
+          <div
+            v-if="
+              field.dataType === 'String' ||
+              field.dataType === 'Currency' ||
+              field.dataType === 'TextArea'
+            "
+          >
+            <p :class="unshownIds.includes(field.id) ? 'invisible' : ''">
+              {{ field.referenceDisplayLabel }}
+            </p>
+            <textarea
+              disabled
+              :class="unshownIds.includes(field.id) ? 'invisible' : ''"
+              name=""
+              id=""
+              cols="30"
+              rows="2"
+              style="width: 100%; border-radius: 0.25rem"
+            >
+            </textarea>
+          </div>
+          <div
+            class="drop-row"
+            v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'"
+          >
+            <p :class="unshownIds.includes(field.id) ? 'invisible' : ''">
+              {{ field.referenceDisplayLabel }}
+            </p>
+            <select
+              :class="unshownIds.includes(field.id) ? 'invisible' : 'drop'"
+              disabled
+              name="select"
+              id=""
+            >
+              <option value="select">Select</option>
+            </select>
+          </div>
+          <div class="drop-row" v-else-if="field.dataType === 'Date'">
+            <p :class="unshownIds.includes(field.id) ? 'invisible' : ''">
+              {{ field.referenceDisplayLabel }}
+            </p>
+            <input
+              :class="unshownIds.includes(field.id) ? 'invisible' : 'drop'"
+              type="date"
+              id="start"
+              name="trip-start"
+              value="0000-00-00"
+              disabled
+            />
+          </div>
+          <div class="drop-row" v-else-if="field.dataType === 'DateTime'">
+            <p :class="unshownIds.includes(field.id) ? 'invisible' : ''">
+              {{ field.referenceDisplayLabel }}
+            </p>
+            <input
+              :class="unshownIds.includes(field.id) ? 'invisible' : 'drop'"
+              type="datetime-local"
+              id="start"
+              name="trip-start"
+              value="0000-00-00"
+              disabled
+            />
+          </div>
+          <div
+            class="drop-row"
+            v-else-if="field.dataType === 'Phone' || field.dataType === 'Reference'"
+          >
+            <p :class="unshownIds.includes(field.id) ? 'invisible' : ''">
+              {{ field.referenceDisplayLabel }}
+            </p>
+            <input
+              :class="unshownIds.includes(field.id) ? 'invisible' : 'drop'"
+              type="text"
+              disabled
+            />
+          </div>
+          <div
+            class="drop-row"
+            v-else-if="field.dataType === 'Phone' || field.dataType === 'Double'"
+          >
+            <p :class="unshownIds.includes(field.id) ? 'invisible' : ''">
+              {{ field.referenceDisplayLabel }}
+            </p>
+            <input
+              :class="unshownIds.includes(field.id) ? 'invisible' : 'drop'"
+              type="number"
+              disabled
+            />
+          </div>
+        </div>
+        <div class="example-footer">
+          <div style="margin-top: 1rem">
+            <button class="close">Close</button>
+            <button class="save">Update</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -441,8 +1197,13 @@ import Modal from '@/components/Modal'
 
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
 import CollectionSearch from '@thinknimble/collection-search'
+import DropDownSearch from '@/components/DropDownSearch'
+import Multiselect from 'vue-multiselect'
+import CustomDropDown from '@/components/CustomDropDown'
 import Paginator from '@thinknimble/paginator'
 import ActionChoice from '@/services/action-choices'
+import draggable from 'vuedraggable'
+import ToggleCheckBox from '@thinknimble/togglecheckbox'
 
 import SlackOAuth, { salesforceFields } from '@/services/slack'
 import { SObjectField, SObjectValidations, SObjectPicklist } from '@/services/salesforce'
@@ -460,6 +1221,11 @@ export default {
     ListItem,
     ListContainer,
     Modal,
+    DropDownSearch,
+    CustomDropDown,
+    Multiselect,
+    draggable,
+    ToggleCheckBox,
   },
   props: {
     stageForms: {
@@ -498,6 +1264,7 @@ export default {
     return {
       currentStageForm: null,
       formFields: CollectionManager.create({ ModelClass: SObjectField }),
+      formFieldList: [],
       salesforceFields,
       customSlackFormConfig: [],
       formHasChanges: false,
@@ -510,7 +1277,25 @@ export default {
       actionChoices: [],
       loadingMeetingTypes: false,
       requiredFields: [],
-      canContinue: false,
+      requiredProductFields: ['PricebookEntryId', 'Quantity', 'Description'],
+      requiredOpportunityFields: ['Name', 'StageName', 'CloseDate'],
+      requiredLeadFields: ['LastName', 'Company', 'Status'],
+      nameValue: '',
+      amountValue: '',
+      closeValue: '',
+      priceValue: '',
+      quantityValue: '',
+      lineValue: '',
+      lastNameValue: '',
+      leadLastNameValue: '',
+      companyValue: '',
+      accountNameValue: '',
+      statusValue: '',
+      stageValue: '',
+      addingFieldValue: '',
+      addingFields: false,
+      productSelected: false,
+      addingProducts: false,
     }
   },
   watch: {
@@ -518,7 +1303,7 @@ export default {
       immediate: true,
       deep: true,
       handler(val) {
-        if (val && val.fields) {
+        if (val && val.fields.length) {
           this.addedFields = [...val.fieldsRef]
           if (this.formType == 'UPDATE') {
             let currentFormFields = this.addedFields.map((field) => {
@@ -613,6 +1398,7 @@ export default {
       },
     },
   },
+
   computed: {
     orderedStageForm() {
       let forms = []
@@ -635,14 +1421,63 @@ export default {
         return field.id
       })
     },
+    addedFieldNames() {
+      return this.addedFields.map((field) => {
+        return field.apiName
+      })
+    },
+    addedFieldLabels() {
+      return this.addedFields.map((field) => {
+        return field.referenceDisplayLabel
+      })
+    },
     selectedFormResourceType() {
       return `${this.formType}.${this.resource}`
+    },
+    unshownIds() {
+      return [
+        '6407b7a1-a877-44e2-979d-1effafec5035',
+        '0bb152b5-aac1-4ee0-9c25-51ae98d55af1',
+        'e286d1d5-5447-47e6-ad55-5f54fdd2b00d',
+        'fae88a10-53cc-470e-86ec-32376c041893',
+      ]
+    },
+    user() {
+      return this.$store.state.user
+    },
+    userHasProducts() {
+      return this.$store.state.user.organizationRef.hasProducts
     },
   },
   created() {
     this.getActionChoices()
   },
+  // async beforeCreate() {
+  //   try {
+  //     this.formFields = CollectionManager.create({
+  //       ModelClass: SObjectField,
+  //       pagination: { size: 500 },
+  //     })
+  //     this.formFields.refresh()
+  //   } catch (e) {
+  //     console.log(e)
+  //   }
+  // },
   methods: {
+    goToProducts() {
+      this.onSave()
+      this.$router.push({ name: 'ProductForm' })
+    },
+    lowerCase(word1, word2) {
+      return (word1 + ' ' + word2)
+        .toLowerCase()
+        .split(' ')
+        .map((s) => s.charAt(0).toUpperCase() + s.substring(1))
+        .join(' ')
+    },
+    productSelect() {
+      this.productSelected = !this.productSelected
+    },
     getActionChoices() {
       this.loadingMeetingTypes = true
       const action = ActionChoice.api
@@ -652,6 +1487,18 @@ export default {
         })
         .finally((this.loadingMeetingTypes = false))
     },
+    async onSearchFields(v) {
+      this.formFields.pagination = new Pagination()
+      this.formFields.filters = {
+        ...this.formFields.filters,
+        search: v,
+      }
+      await this.formFields.refresh()
+    },
+    async onFieldsNextPage() {
+      await this.formFields.addNextPage()
+    },
+
     nextPage() {
       this.formFields.nextPage()
     },
@@ -677,8 +1524,15 @@ export default {
         return
       }
       this.addedFields.push({ ...field, order: this.addedFields.length, includeInRecap: true })
+      this.formFields.filters = { salesforceObject: this.resource }
+      this.formFields.refresh()
     },
-
+    goBack() {
+      this.$router.push({ name: 'Required' })
+    },
+    goToOptional() {
+      this.$router.push({ name: 'Custom' })
+    },
     goToCustomize() {
       this.$router.push({ name: 'CustomizeLandingPage' })
     },
@@ -687,6 +1541,9 @@ export default {
     },
     goToUpdateOpp() {
       this.$router.push({ name: 'UpdateOpportunity' })
+    },
+    goToValidations() {
+      this.$router.go()
     },
     onRemoveField(field) {
       // remove from the array if  it exists
@@ -798,6 +1655,7 @@ export default {
       let fields = new Set([...this.addedFields.map((f) => f.id)])
       fields = Array.from(fields).filter((f) => !this.removedFields.map((f) => f.id).includes(f))
       let fields_ref = this.addedFields.filter((f) => fields.includes(f.id))
+
       SlackOAuth.api
         .postOrgCustomForm({
           ...this.customForm,
@@ -807,11 +1665,22 @@ export default {
         })
         .then((res) => {
           this.$emit('update:selectedForm', res)
+          this.$Alert.alert({
+            type: 'success',
+            message: 'Form Added Succesfully!',
+            timeout: 2000,
+          })
+          if (this.resource !== 'Opportunity' && this.formType !== 'UPATE') {
+            this.$router.push({ name: 'Required' })
+          }
         })
         .finally(() => {
           this.savingForm = false
-          this.canContinue = true
         })
+
+      if (this.formType === 'STAGE_GATING') {
+        this.$router.go()
+      }
     },
   },
 }
@@ -826,6 +1695,245 @@ export default {
 @import '@/styles/sidebars';
 @import '@/styles/mixins/buttons';
 @import '@/styles/buttons';
+
+@keyframes bounce {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-6px);
+  }
+}
+.label {
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+.green {
+  color: $dark-green;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+.or_button {
+  background: transparent;
+  border: none;
+  color: white;
+  padding-bottom: 0.25rem;
+  margin-left: 0.25rem;
+}
+.default_button {
+  font-weight: bold;
+  padding: 0.3rem 0.75rem;
+  margin-top: 0.5rem;
+  border-radius: 0.2rem;
+  border: none;
+  cursor: pointer;
+  color: $white;
+  background: $dark-green;
+}
+.name_button {
+  font-size: 0px;
+  font-weight: bold;
+  padding: 0.3rem 0.75rem;
+  margin-top: 0.5rem;
+  border-radius: 0.2rem;
+  border: none;
+  cursor: pointer;
+  color: white;
+  background: transparent;
+  animation: bounce 0.2s infinite alternate;
+}
+.name_button::after {
+  font-size: 14px;
+}
+
+.name_button::after {
+  content: 'Name';
+}
+.name_button:hover::after {
+  content: 'Add Name';
+}
+.name_button:hover {
+  background-color: white;
+  color: $dark-green !important;
+}
+.stage_button {
+  font-size: 0px;
+  font-weight: bold;
+  padding: 0.3rem 0.75rem;
+  margin-top: 0.5rem;
+  border-radius: 0.2rem;
+  border: none;
+  cursor: pointer;
+  color: white;
+  background: transparent;
+  animation: bounce 0.2s infinite alternate;
+}
+.stage_button::after {
+  font-size: 14px;
+}
+.stage_button::after {
+  content: 'Stage';
+}
+.stage_button:hover::after {
+  content: 'Add Stage';
+}
+.stage_button:hover {
+  background-color: white;
+  color: $dark-green !important;
+}
+.closeDate_button {
+  font-size: 0px;
+  font-weight: bold;
+  padding: 0.3rem 0.75rem;
+  margin-top: 0.5rem;
+  border-radius: 0.2rem;
+  border: none;
+  cursor: pointer;
+  color: white;
+  background: transparent;
+  animation: bounce 0.2s infinite alternate;
+}
+.closeDate_button::after {
+  font-size: 14px;
+}
+
+.closeDate_button::after {
+  content: 'Close Date';
+}
+.closeDate_button:hover::after {
+  content: 'Add Close Date';
+}
+.closeDate_button:hover {
+  background-color: white;
+  color: $dark-green !important;
+}
+.remove-field {
+  border: 1px solid white;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.1rem;
+}
+.recommend {
+  background-color: $panther-gray;
+  padding: 0.25rem 0.5rem 1rem 0.25rem;
+  border-radius: 0.25rem;
+  margin-top: 0.5rem;
+  color: white;
+}
+.recommendations {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  font-size: 0.9rem;
+  margin-top: -1rem;
+  color: $panther-silver;
+}
+.margin-top {
+  margin-top: 8rem;
+}
+.field_button {
+  padding: 0.3rem 0.75rem;
+  margin-top: 0.5rem;
+  border-radius: 0.2rem;
+  border: none;
+  cursor: pointer;
+  color: $dark-green;
+  background-color: white;
+  font-weight: bold;
+}
+.bouncy {
+  animation: bounce 0.2s infinite alternate;
+}
+.drop {
+  border: 2px solid $soft-gray;
+  border-radius: 0.25rem;
+  color: $panther-silver;
+  padding: 0.25rem 0.5rem;
+  max-height: 2rem;
+}
+.app {
+  background-color: $panther-gray;
+  color: $panther-silver;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  padding: 2px;
+  margin-left: 0.2rem;
+  margin-right: 0.5rem;
+}
+::v-deep .tn-dropdown__selection-container {
+  height: 2.5rem;
+  box-shadow: none;
+  background-color: $soft-gray;
+  border-radius: 0.3rem;
+  margin-top: -0.15rem;
+  border: 1px solid $soft-gray;
+}
+// ::v-deep .tn-dropdown__selection-container:after {
+//   position: absolute;
+//   content: '';
+//   top: 12px;
+//   right: 1em;
+//   width: 0;
+//   height: 0;
+//   border: 5px solid transparent;
+//   border-color: rgb(173, 171, 171) transparent transparent transparent;
+// }
+.invisible {
+  display: none;
+}
+.white-background {
+  background-color: white;
+  border-radius: 0.25rem;
+  height: 1.7rem;
+  width: 1.7rem;
+  margin-right: 0.25rem;
+}
+.tn-dropdown__selected-items__item-selection--muted {
+  font-size: 10px;
+}
+.filtered-green {
+  filter: invert(39%) sepia(96%) saturate(373%) hue-rotate(94deg) brightness(104%) contrast(94%);
+}
+#drag {
+  filter: invert(60%);
+}
+#remove {
+  filter: invert(60%);
+}
+.field-border {
+  box-shadow: 1px 1px 4px 1px $very-light-gray;
+  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  padding: 0.25rem;
+  border-radius: 0.2rem;
+  height: 2.9rem;
+  width: 100%;
+}
+.option {
+  font-weight: bold;
+  background: transparent;
+  color: white;
+  padding-bottom: 0.15rem;
+  border: none;
+  border-bottom: 2px solid $dark-green;
+  cursor: pointer;
+}
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  font-size: 0.85rem;
+}
+.centered {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: row;
+}
 .slack-form-builder
   ::v-deep
   .collection-search
@@ -854,7 +1962,7 @@ export default {
   display: flex;
   flex-direction: column;
   position: relative;
-
+  color: $base-gray;
   &__sf-fields,
   &__sf-validations {
     margin-right: 2rem;
@@ -943,7 +2051,12 @@ export default {
     justify-content: flex-end;
   }
 }
-
+.fields {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
 .form-field {
   background-color: $panther;
   margin-top: 0.5rem;
@@ -1019,12 +2132,12 @@ export default {
 .save-button {
   display: flex;
   justify-content: center;
-  padding-top: 1rem;
+  padding-top: 4rem;
   padding-bottom: 1rem;
 }
 
 .primary-button {
-  width: 10rem;
+  width: 6rem;
 }
 
 .field-title {
@@ -1067,14 +2180,100 @@ h2 {
 img:hover {
   cursor: pointer;
 }
+.close {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  color: $panther-gray;
+  border: 2px solid $soft-gray;
+  border-radius: 0.25rem;
+  font-weight: bold;
+  opacity: 0.8;
+}
+.save {
+  padding: 0.5rem 1rem;
+  background-color: $dark-green;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  margin-left: 0.5rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+.disabled {
+  padding: 0.5rem 1rem;
+  min-width: 6rem;
+  background-color: $very-light-gray;
+  color: $panther-gray;
+  border: none;
+  border-radius: 0.25rem;
+  margin-left: 0.5rem;
+  font-weight: bold;
+  opacity: 0.8;
+}
+.disabled__ {
+  padding: 0.5rem 1rem;
+  min-width: 6rem;
+  background-color: $very-light-gray;
+  color: $panther-gray;
+  border: none;
+  border-radius: 0.25rem;
+  margin-left: 0.5rem;
+  font-weight: bold;
+  opacity: 0.8;
+}
+.example-footer {
+  border-top: 1px solid $very-light-gray;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: auto;
+  width: 100%;
+  height: 10%;
+}
+.example--footer {
+  background-color: $white;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  margin-top: auto;
+  margin-bottom: -1rem;
+  width: 100%;
+  min-height: 5rem;
+}
+.example-text {
+  position: absolute;
+  bottom: 180px;
+  left: 50px;
+  opacity: 0.05;
+  filter: alpha(opacity=50);
+  font-size: 3.5rem;
+  transform: rotate(-45deg);
+}
 .collection_fields {
-  background-color: $panther;
-  padding: 1rem;
+  background-color: $white;
+  padding: 2rem 1rem;
+  margin: 1rem;
   border-radius: 0.5rem;
-  height: 54vh;
-  width: 26vw;
+  height: 64vh;
+  min-width: 34vw;
   overflow-y: scroll;
-  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 3px 4px 7px $very-light-gray;
+}
+.stage_fields {
+  background-color: $white;
+  padding: 2rem 1rem;
+  margin: -1.5rem 1rem 0rem 0rem;
+  border-radius: 0.5rem;
+  height: 64vh;
+  min-width: 28vw;
+  overflow-y: scroll;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 3px 4px 7px $very-light-gray;
 }
 .fields_title {
   background-color: $panther;
@@ -1099,9 +2298,7 @@ img:hover {
   justify-content: center;
   align-items: center;
 }
-.orange {
-  color: $panther-orange;
-}
+
 .required__fields {
   color: $panther-orange;
 }
@@ -1111,7 +2308,7 @@ img:hover {
 }
 ::-webkit-scrollbar-thumb {
   border-radius: 2px;
-  background-color: $dark-green;
+  background-color: $soft-gray;
 }
 .popular_fields {
   font-weight: bold;
@@ -1190,5 +2387,22 @@ img:hover {
   flex-wrap: wrap;
   justify-content: center;
   color: $panther-gold;
+}
+.row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+.row__ {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+.drop-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
 }
 </style>

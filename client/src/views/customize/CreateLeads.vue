@@ -2,12 +2,11 @@
   <div class="update_opportunity">
     <div class="opportunity_title">
       <h2 style="border-bottom: 3px solid #199e54; padding-bottom: 0.5rem; color: black">
-        Create <span>Leads</span>
+        Create <span>Leads :</span>
       </h2>
-      <p style="color: #5d5e5e; margin-top: -0.5rem">
-        Map the opportunity fields you’d like to update
+      <p style="color: #5d5e5e; margin-top: -0.5rem; font-size: 0.95rem">
+        Select the Fields you’d like to display when creating Leads via Slack
       </p>
-      <p style="color: #beb5cc; font-weight: bold; margin-top: -0.5rem">*Optional</p>
     </div>
     <div class="box__content--expanded">
       <CustomSlackForm
@@ -307,7 +306,7 @@ export default {
 @import '@/styles/variables';
 
 .update_opportunity {
-  margin-top: 4rem;
+  margin-top: 2rem;
   color: white;
 }
 
@@ -315,7 +314,13 @@ export default {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  padding-left: 14vw;
+  margin-bottom: -1rem;
+  margin-top: 4rem;
+}
+h3 {
+  font-size: 1.35rem;
 }
 
 .step {

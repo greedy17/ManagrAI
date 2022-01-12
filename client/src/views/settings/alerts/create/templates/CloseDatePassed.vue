@@ -1,21 +1,16 @@
 <template>
   <div class="alerts-page">
-    <div>
-      <h2 style="font-weight: bold; text-align: center">
-        <span style="color: black">
+    <div style="display: flex; align-item: flex-start; flex-direction: column; margin-left: 12vw">
+      <h2>
+        <span>
           Close Date
           <span style="color: #fa646a">Passed</span>
         </span>
-        <p v-if="userLevel === 'REP'" style="color: #3c3940; font-size: 1.1rem">
-          Select users and a Slack #channel for this workflow
-        </p>
-        <p style="color: #3c3940; font-size: 1.1rem" v-else>
-          Select the day (or date), users, and a Slack #channel for this workflow
-        </p>
       </h2>
+      <p style="margin-top: -0.5rem">View and update all Opportunities with a passed close date</p>
     </div>
 
-    <div style="margin-top: 4rem" v-if="pageNumber === 0" class="alert__column">
+    <div style="margin-top: 1rem" v-if="pageNumber === 0" class="alert__column">
       <template>
         <div
           class="forecast__collection"
@@ -27,8 +22,10 @@
             class="delivery__row"
             :errors="form.field.recurrenceDay.errors"
           >
-            <div style="margin-bottom: 0.5rem" class="row__">
-              <label>Weekly</label>
+            <div class="row__">
+              <label :class="form.field.recurrenceFrequency.value == 'WEEKLY' ? 'green' : ''"
+                >Weekly</label
+              >
               <ToggleCheckBox
                 @input="
                   form.field.recurrenceFrequency.value == 'WEEKLY'
@@ -36,13 +33,16 @@
                     : (form.field.recurrenceFrequency.value = 'WEEKLY')
                 "
                 :value="form.field.recurrenceFrequency.value !== 'WEEKLY'"
-                offColor="#199e54"
-                onColor="#199e54"
+                offColor="#fa646a"
+                onColor="#fa646a"
+                style="margin-left: 0.25rem; margin-right: 0.25rem"
               />
-              <label>Monthly</label>
+              <label :class="form.field.recurrenceFrequency.value == 'MONTHLY' ? 'green' : ''"
+                >Monthly</label
+              >
             </div>
 
-            <div v-if="form.field.recurrenceFrequency.value == 'WEEKLY'">
+            <div style="margin-top: 0.5rem" v-if="form.field.recurrenceFrequency.value == 'WEEKLY'">
               <FormField>
                 <template v-slot:input>
                   <DropDownSearch
@@ -60,6 +60,7 @@
               </FormField>
             </div>
             <FormField
+              style="margin-top: 0.5rem"
               id="delivery"
               v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
               placeholder="Day of month"
@@ -133,7 +134,7 @@
                   style="height: 1rem; margin-right: 0.25rem"
                   alt=""
                 />
-                {{ item.length ? item : '' }}
+                {{ item.length ? checkInteger(item) : '' }}
               </p>
             </div>
           </div>
@@ -149,20 +150,20 @@
             "
           >
             <div v-if="!channelName" class="row__">
-              <label>Select #channel</label>
+              <label :class="!create ? 'green' : ''">Select #channel</label>
               <ToggleCheckBox
-                style="margin: 0.25rem"
+                style="margin-left: 0.25rem; margin-right: 0.25rem"
                 @input="changeCreate"
                 :value="create"
-                offColor="#199e54"
-                onColor="#199e54"
+                offColor="#fa646a"
+                onColor="#fa646a"
               />
-              <label>Create #channel</label>
+              <label :class="create ? 'green' : ''">Create #channel</label>
             </div>
 
             <label v-else for="channel" style="font-weight: bold"
               >Alert will send to
-              <span style="color: #199e54; font-size: 1.2rem">{{ channelName }}</span>
+              <span style="color: #fa646a; font-size: 1.2rem">{{ channelName }}</span>
               channel</label
             >
             <div
@@ -180,14 +181,15 @@
                 type="text"
                 name="channel"
                 id="channel"
+                placeholder="Name your channel"
                 @input="logNewName(channelName)"
               />
 
-              <div v-if="!channelCreated" v style="margin-top: 1.25rem">
+              <div v-if="!channelCreated" style="margin-top: 1.25rem">
                 <button
                   v-if="channelName"
                   @click="createChannel(channelName)"
-                  class="purple__button"
+                  class="purple__button bouncy"
                 >
                   Create Channel
                 </button>
@@ -195,7 +197,7 @@
               </div>
             </div>
 
-            <div v-else>
+            <div style="margin-top: 0.5rem" v-else>
               <FormField>
                 <template v-slot:input>
                   <DropDownSearch
@@ -423,6 +425,9 @@ export default {
     },
   },
   methods: {
+    checkInteger(str) {
+      return /\d/.test(str) ? this.user.fullName : str
+    },
     repsPipeline() {
       if (this.userLevel == 'REP') {
         this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
@@ -875,7 +880,10 @@ export default {
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
-
+::placeholder {
+  color: $panther-silver;
+  font-size: 0.75rem;
+}
 ::v-deep .input-content {
   width: 12vw;
   background-color: white;
@@ -914,12 +922,11 @@ export default {
   color: #4d4e4c;
   height: 2.5rem;
   background-color: white;
-  border: 1px solid #5d5e5e;
+  border: none;
   width: 70%;
   // padding: 0 0 0 1rem;
   margin: 1rem;
-  -webkit-box-shadow: 1px 4px 7px black;
-  box-shadow: 1px 4px 7px black;
+  box-shadow: 3px 4px 7px $very-light-gray;
 }
 .channels_height {
   height: 22vh;
@@ -992,7 +999,7 @@ export default {
   text-indent: none;
   border-style: none;
   letter-spacing: 0.03rem;
-  background-color: $panther-silver;
+  background-color: $soft-gray;
   color: $panther-gray;
   cursor: not-allowed;
   height: 2rem;
@@ -1119,7 +1126,9 @@ input {
   align-items: flex-start;
   justify-content: space-evenly;
   flex-direction: row;
-  background-color: $panther;
+  background-color: $white;
+  box-shadow: 3px 4px 7px $very-light-gray;
+  color: $base-gray;
   border-radius: 0.75rem;
   width: 75vw;
   padding: 2rem;
@@ -1166,7 +1175,7 @@ textarea {
 }
 .alerts-page {
   height: 100vh;
-  color: white;
+  color: $base-gray;
   margin-top: 4rem;
   &__previous-step {
     @include muted-font(12);
@@ -1199,36 +1208,12 @@ textarea {
   align-items: center;
   margin-top: 2rem;
 }
-.card__ {
-  background-color: $panther;
-  border: none;
-  width: 10rem;
-  height: 20vh;
-  margin-right: 1rem;
-  margin-bottom: 2rem;
-  border-radius: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-shadow: 3px 4px 7px black;
-  color: white;
-  @media only screen and (min-width: 768px) {
-    flex: 1 0 24%;
-    min-width: 21rem;
-    max-width: 30rem;
-  }
 
-  &header {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 5rem;
-  }
-}
 .alerts-page__settings {
   display: flex;
   align-items: center;
   justify-content: space-evenly;
+  color: $base-gray;
 
   &__frequency {
     display: flex;
@@ -1271,7 +1256,7 @@ textarea {
   // width: 40rem;
 }
 .green {
-  color: $dark-green;
+  color: #fa646a;
 }
 .red {
   color: red;
@@ -1385,11 +1370,14 @@ textarea {
 .selected__item {
   padding: 0.5rem 1.2rem;
   background-color: transparent;
-  border: 3px solid white;
-  color: white;
+  border: none;
+  box-shadow: 3px 4px 7px $very-light-gray;
   border-radius: 0.3rem;
-  width: 100%;
+  width: 96%;
   text-align: center;
+}
+img {
+  filter: invert(60%);
 }
 .items_height {
   overflow-y: scroll;

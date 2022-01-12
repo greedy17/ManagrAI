@@ -2,7 +2,7 @@ import json
 import logging
 from urllib.parse import urlencode
 import uuid
-
+import pdb
 from datetime import datetime
 from managr.utils import sites as site_utils
 
@@ -45,7 +45,8 @@ from managr.salesforce.models import SalesforceAuthAccountAdapter
 from managr.core.serializers import UserSerializer
 from managr.core.models import User
 from managr.api.decorators import slack_api_exceptions
-
+from managr.organization.models import Organization
+from managr.core.cron import generate_afternoon_digest, generate_morning_digest
 from .models import (
     OrganizationSlackIntegration,
     UserSlackIntegration,
@@ -488,8 +489,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
         """Handle POST action of the custom Slack form endpoint."""
         organization = request.user.organization
 
-        print("REQUEST.DATA:", request.data)
-
+        logger.info("REQUEST.DATA:", request.data)
         # Make updates - get or create custom_slack_form
         try:
             instance = organization.custom_slack_form
@@ -537,6 +537,9 @@ class SlackFormsViewSet(
             instance.fields.add(field, through_defaults={"order": i})
 
         instance.save()
+        if request.data["resource"] == "OpportunityLineItem":
+            org = Organization.objects.get(id=request.data["organization"])
+            org.update_has_settings("products")
         return Response(serializer.data)
 
     def update(self, request, *args, **kwargs):
@@ -680,9 +683,15 @@ def create_resource(request):
             .first()
         )
         slack_form = OrgCustomSlackFormInstance.objects.create(template=template, user=user,)
+
         if slack_form:
 
-            context = {"resource_type": resource_type, "f": str(slack_form.id), "u": str(user.id)}
+            context = {
+                "resource_type": resource_type,
+                "f": str(slack_form.id),
+                "u": str(user.id),
+                "type": "command",
+            }
             blocks = get_block_set("create_modal", context,)
             try:
                 index, block = block_finder("StageName", blocks)
@@ -700,6 +709,33 @@ def create_resource(request):
                     },
                 }
                 blocks = [*blocks[:index], block, *blocks[index + 1 :]]
+            # if user.organization.has_products:
+            #     product_template = (
+            #         OrgCustomSlackForm.objects.for_user(user)
+            #         .filter(Q(resource="OpportunityLineItem", form_type="CREATE"))
+            #         .first()
+            #     )
+            #     product_form = OrgCustomSlackFormInstance.objects.create(
+            #         template=product_template, user=user,
+            #     )
+            #     blocks.append(
+            #         block_builders.actions_block(
+            #             [
+            #                 block_builders.simple_button_block(
+            #                     "Add Product",
+            #                     "ADD_PRODUCT",
+            #                     action_id=action_with_params(
+            #                         slack_const.PROCESS_ADD_PRODUCTS_FORM,
+            #                         params=[
+            #                             f"f={str(slack_form.id)}",
+            #                             f"product_form={str(product_form.id)}",
+            #                         ],
+            #                     ),
+            #                 )
+            #             ],
+            #             block_id="ADD_PRODUCT_BUTTON",
+            #         ),
+            #     )
             access_token = user.organization.slack_integration.access_token
 
             url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
@@ -1081,4 +1117,90 @@ def get_notes_command(request):
         },
     }
     slack_requests.generic_request(url, data, access_token=access_token)
+    return Response()
+
+
+@api_view(["post"])
+@permission_classes([permissions.AllowAny])
+@authentication_classes((slack_auth.SlackWebhookAuthentication,))
+def launch_action(request):
+    slack_id = request.data.get("user_id")
+    if slack_id:
+        slack = (
+            UserSlackIntegration.objects.filter(slack_id=slack_id).select_related("user").first()
+        )
+        if not slack:
+            return Response(
+                data={
+                    "response_type": "ephemeral",
+                    "text": "Sorry I cant find your managr account",
+                }
+            )
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    user = slack.user
+    access_token = user.organization.slack_integration.access_token
+    trigger_id = request.data.get("trigger_id")
+    context = {"u": str(user.id), "trigger_id": trigger_id}
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.COMMAND_MANAGR_ACTION,
+            "title": {"type": "plain_text", "text": "Managr Actions"},
+            "blocks": get_block_set("actions_block_set", context=context),
+            "private_metadata": json.dumps(context),
+        },
+    }
+    slack_requests.generic_request(url, data, access_token=access_token)
+    return Response()
+
+
+@api_view(["post"])
+@authentication_classes((slack_auth.SlackWebhookAuthentication,))
+@permission_classes([permissions.AllowAny])
+@slack_api_exceptions(
+    return_opt=Response(data={"response_type": "ephemeral", "text": "Oh-Ohh an error occured",}),
+)
+def launch_digest(request):
+
+    # list of accepted commands for this fake endpoint
+    allowed_commands = ["morning", "afternoon"]
+    slack_id = request.data.get("user_id", None)
+
+    if slack_id:
+        slack = (
+            UserSlackIntegration.objects.filter(slack_id=slack_id).select_related("user").first()
+        )
+        if not slack:
+            return Response(
+                data={
+                    "response_type": "ephemeral",
+                    "text": "Sorry I cant find your managr account",
+                }
+            )
+    user = slack.user
+    text = request.data.get("text", "")
+    if len(text):
+        command_params = text.split(" ")
+    else:
+        command_params = []
+    time = None
+    if len(command_params):
+        if command_params[0] not in allowed_commands:
+            return Response(
+                data={
+                    "response_type": "ephemeral",
+                    "text": "Sorry I don't know that : {},only allowed{}".format(
+                        command_params[0], allowed_commands
+                    ),
+                }
+            )
+        time = command_params[0]
+    else:
+        time = "morning"
+    if time == "morning":
+        generate_morning_digest(user.id)
+    else:
+        generate_afternoon_digest(user.id)
+
     return Response()

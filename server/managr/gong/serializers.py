@@ -33,6 +33,7 @@ class GongAccountSerializer(serializers.ModelSerializer):
 class GongCallSerializer(serializers.ModelSerializer):
     crm = serializers.CharField(required=False, allow_null=True)
     crm_id = serializers.CharField(required=False, allow_null=True)
+    acc_crm_id = serializers.CharField(required=False, allow_null=True)
     client_id = serializers.CharField(required=False, allow_null=True)
     client_system = serializers.CharField(required=False, allow_null=True)
 
@@ -44,6 +45,7 @@ class GongCallSerializer(serializers.ModelSerializer):
             "gong_id",
             "crm",
             "crm_id",
+            "acc_crm_id",
             "client_id",
             "client_system",
             "scheduled_date",

@@ -48,7 +48,7 @@ def command_select_account_interaction(context):
     return [
         block_builders.external_select(
             f"*Search for an account*",
-            f"{slack_const.GET_USER_ACCOUNTS}?u={str(user.id)}&type={context.get('type')}",
+            f"{slack_const.GET_USER_ACCOUNTS}?u={str(user.id)}&type={context.get('type')}&system={context.get('system')}",
             block_id="select_existing",
             placeholder="Type to search",
         ),
@@ -116,11 +116,68 @@ def custom_paginator_block(pagination_object, invocation, channel, config_id):
     return blocks
 
 
+def custom_meeting_paginator_block(pagination_object, invocation, channel):
+    next_page = pagination_object.get("next_page", None)
+    prev_page = pagination_object.get("previous_page", None)
+    blocks = []
+    button_blocks = []
+    page_context = {"invocation": invocation, "channel": channel}
+
+    if prev_page:
+        prev_page_button = block_builders.simple_button_block(
+            "Previous",
+            str(prev_page),
+            style="danger",
+            action_id=f"{slack_const.PAGINATE_MEETINGS}?{urlencode({**page_context,'new_page':int(prev_page)})}",
+        )
+        button_blocks.append(prev_page_button)
+    if next_page:
+        next_page_button = block_builders.simple_button_block(
+            "Next",
+            str(next_page),
+            action_id=f"{slack_const.PAGINATE_MEETINGS}?{urlencode({**page_context,'new_page':int(next_page)})}",
+        )
+        button_blocks.append(next_page_button)
+    if len(button_blocks):
+        blocks.append(block_builders.actions_block(button_blocks))
+
+    blocks.append(block_builders.context_block(f"Showing {pagination_object.get('page')}"))
+    return blocks
+
+
+def custom_task_paginator_block(pagination_object, channel):
+    next_page = pagination_object.get("next_page", None)
+    prev_page = pagination_object.get("previous_page", None)
+    blocks = []
+    button_blocks = []
+    page_context = {"channel": channel}
+
+    if prev_page:
+        prev_page_button = block_builders.simple_button_block(
+            "Previous",
+            str(prev_page),
+            style="danger",
+            action_id=f"{slack_const.PAGINATE_TASKS}?{urlencode({**page_context,'new_page':int(prev_page)})}",
+        )
+        button_blocks.append(prev_page_button)
+    if next_page:
+        next_page_button = block_builders.simple_button_block(
+            "Next",
+            str(next_page),
+            action_id=f"{slack_const.PAGINATE_TASKS}?{urlencode({**page_context,'new_page':int(next_page)})}",
+        )
+        button_blocks.append(next_page_button)
+    if len(button_blocks):
+        blocks.append(block_builders.actions_block(button_blocks))
+
+    blocks.append(block_builders.context_block(f"Showing {pagination_object.get('page')}"))
+    return blocks
+
+
 @block_set(required_context=["instance_id"])
 def alert_instance_block_set(context):
     """
     Builds out the message based on the template the of the alert
-
     divider -
     message - alert template message
     divider
@@ -134,15 +191,15 @@ def alert_instance_block_set(context):
     if config and config.recipient_type == "SLACK_CHANNEL":
         in_channel = True
     if instance.form_instance.all().first():
-        form = OrgCustomSlackFormInstance.objects.get(id=instance.form_instance.all().first().id)
-        message = f"Successfully updated *{form.resource_type}* _{form.resource_object.name}_"
+        form = OrgCustomSlackFormInstance.objects.get(
+            id=instance.form_instance.all()
+            .exclude(template__resource="OpportunityLineItem")
+            .first()
+            .id
+        )
+        message = f":white_check_mark: Successfully updated *{form.resource_type}* _{form.resource_object.name}_"
         blocks = block_sets.get_block_set(
-            "success_modal",
-            {
-                "u": str(user.id),
-                "form_id": str(instance.form_instance.all().first().id),
-                "message": message,
-            },
+            "success_modal", {"u": str(user.id), "form_id": str(form.id), "message": message,},
         )
     else:
         blocks = [
@@ -160,7 +217,7 @@ def alert_instance_block_set(context):
             block_builders.simple_button_block(
                 f"Update {instance.template.resource_type}",
                 instance.resource_id,
-                action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(resource_owner.id)}&resource={instance.template.resource_type}&alert_id={instance.id}&current_page={context.get('current_page',1)}",
+                action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(resource_owner.id)}&resource={instance.template.resource_type}&alert_id={instance.id}&current_page={context.get('current_page',1)}&type=alert",
                 style="primary",
             )
         ]
@@ -174,7 +231,7 @@ def alert_instance_block_set(context):
                         params=[
                             f"u={str(user.id)}",
                             f"resource_id={str(instance.resource_id)}",
-                            "type=alert",
+                            f"type={instance.template.resource_type}",
                         ],
                     ),
                 )
@@ -376,14 +433,90 @@ def create_add_to_sequence_block_set(context):
 
 @block_set(required_context=["u"])
 def choose_opportunity_block_set(context):
-    user_id = context.get("u")
+    user_id = context.get("u", None)
+    type = context.get("type")
     blocks = [
         block_builders.external_select(
             "Which opportunity would you like your notes for?",
-            f"{slack_const.GET_NOTES}?u={user_id}&resource={sf_consts.RESOURCE_SYNC_OPPORTUNITY}",
+            f"{slack_const.GET_NOTES}?u={user_id}&resource={sf_consts.RESOURCE_SYNC_OPPORTUNITY}&type={type}",
             block_id="select_opp",
             placeholder="Type to search",
         )
     ]
     return blocks
 
+
+@block_set(required_context=["u"])
+def actions_block_set(context):
+    user = User.objects.get(id=context.get("u"))
+    user_id = context.get("u")
+    options = []
+    for action in slack_const.MANAGR_ACTIONS:
+        options.append(block_builders.option(action[1], action[0]))
+    if hasattr(user, "outreach_account"):
+        options.append(block_builders.option("Add To Sequence", "ADD_SEQUENCE"))
+    if hasattr(user, "salesloft_account"):
+        options.append(block_builders.option("Add To Cadence", "ADD_CADENCE"))
+    if hasattr(user, "gong_account"):
+        options.append(block_builders.option("Call Recording", "CALL_RECORDING"))
+    blocks = [
+        block_builders.static_select(
+            ":male_genie: Need to get stuff done?  Select an action:",
+            options,
+            f"{slack_const.COMMAND_MANAGR_ACTION}?u={user_id}",
+            block_id="select_action",
+            placeholder="Type to search",
+        )
+    ]
+    return blocks
+
+
+@block_set(required_context=["u"])
+def command_select_resource_interaction(context):
+    user = User.objects.get(id=context.get("u"))
+    return [
+        block_builders.external_select(
+            f"*Search for an account*",
+            f"{slack_const.GET_USER_ACCOUNTS}?u={str(user.id)}&type={context.get('type')}&system={context.get('system')}",
+            block_id="select_existing",
+            placeholder="Type to search",
+        ),
+    ]
+
+
+@block_set(required_context=["u"])
+def pick_resource_modal_block_set(context, *args, **kwargs):
+    """Shows a modal to update a resource"""
+    print(context)
+    resource_type = context.get("resource_type", None)
+    resource_id = context.get("resource_id", None)
+    user_id = context.get("u")
+
+    blocks = []
+    blocks.append(
+        block_builders.static_select(
+            "Related to type",
+            [
+                block_builders.option("Opportunity", "Opportunity"),
+                block_builders.option("Account", "Account"),
+            ],
+            action_id=f"{slack_const.UPDATE_TASK_SELECTED_RESOURCE}?u={user_id}",
+            block_id="managr_task_related_to_resource",
+            initial_option=block_builders.option(resource_type, resource_type)
+            if resource_type
+            else None,
+        )
+    )
+    if (not resource_id and resource_type) or (resource_id and resource_type):
+        blocks.append(
+            block_builders.external_select(
+                f"*Search for an {context.get('resource_type')}*",
+                f"{slack_const.GONG_CALL_RECORDING}?u={user_id}&resource={resource_type}",
+                block_id="select_existing",
+                placeholder="Type to search",
+                initial_option=block_builders.option(resource_id, resource_id)
+                if resource_id
+                else None,
+            ),
+        )
+    return blocks

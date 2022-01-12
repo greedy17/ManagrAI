@@ -2,14 +2,21 @@
   <div class="alerts-page">
     <Modal style="margin-top: 8rem" ref="templateModal">
       <template v-slot:header>
-        <h2 style="color: white">Popular Message Template</h2>
+        <h2 style="color: #4d4e4c">Popular Message Template</h2>
       </template>
 
       <template v-slot:body>
         <div>
           <div style="display: flex; flex-direction: row">
             <textarea
-              style="height: 3rem; width: 90%; font-size: 0.75rem; margin-right: 0.25rem"
+              style="
+                height: 3rem;
+                width: 90%;
+                font-size: 0.75rem;
+                margin-right: 0.25rem;
+                border: none;
+                box-shadow: 3px 4px 7px #c2c4ca;
+              "
               name=""
               id=""
               cols="20"
@@ -19,12 +26,12 @@
           </textarea
             >
             <button
-              style="background-color: #3c3940; border: none; cursor: pointer"
+              style="border: none; border: none; cursor: pointer; background: transparent"
               v-clipboard:copy="message"
               v-clipboard:success="onCopy"
               v-clipboard:error="onError"
             >
-              <img src="@/assets/images/copy.png" style="height: 1rem" alt="" />
+              <img src="@/assets/images/copy.png" style="height: 1.25rem" alt="" />
             </button>
           </div>
         </div>
@@ -106,6 +113,46 @@
               :form="alertGroup"
               :resourceType="alertTemplateForm.field.resourceType.value"
             />
+
+            <p
+              v-if="
+                alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
+                  .operandIdentifier.value &&
+                (alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
+                  ._operandIdentifier.value.dataType === 'Date' ||
+                  alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
+                    ._operandIdentifier.value.dataType === 'DateTime') &&
+                index == 0
+              "
+              class="fixed__center"
+            >
+              We'll alert you when the
+              {{
+                alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
+                  .operandIdentifier.value
+                  ? alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0]
+                      .field.operandIdentifier.value
+                  : '___'
+              }}
+              is
+              {{
+                alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
+                  .operandOperator.value
+                  ? alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0]
+                      .field._operandOperator.value.label
+                  : '___'
+              }}
+              <span style="color: #4d4e4c">{{
+                alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
+                  .operandValue.value
+                  ? positiveDay(
+                      alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0]
+                        .field.operandValue.value,
+                    )
+                  : '___'
+              }}</span>
+            </p>
+
             <div class="fixed__right" v-if="alertTemplateForm.field.alertGroups.groups.length > 1">
               <button class="remove__group" @click="onRemoveAlertGroup(index)">
                 <img
@@ -160,7 +207,7 @@
             <p
               :class="templateBounce ? 'bouncy' : ''"
               @click="$refs.templateModal.openModal(), switchBounce()"
-              style="cursor: pointer; border-bottom: 2px solid #199e54"
+              style="cursor: pointer; border-bottom: 3px solid #199e54"
             >
               Popular Template
             </p>
@@ -347,7 +394,7 @@
                 style="
                   display: flex;
                   flex-direction: column;
-                  align-items: center;
+                  align-items: flex-start;
                   justify-content: space-evenly;
                   padding: 0.5rem;
                 "
@@ -407,7 +454,7 @@
                       style="height: 1rem; margin-right: 0.25rem"
                       alt=""
                     />
-                    {{ item.length ? item : '' }}
+                    {{ checkInteger(item) }}
                   </p>
                 </div>
               </div>
@@ -453,6 +500,7 @@
                     type="text"
                     name="channel"
                     id="channel"
+                    placeholder="Name your channel"
                     @input="logNewName(channelName)"
                   />
 
@@ -460,7 +508,7 @@
                     <button
                       v-if="channelName"
                       @click="createChannel(channelName)"
-                      class="purple__button"
+                      class="purple__button bouncy"
                     >
                       Create Channel
                     </button>
@@ -518,7 +566,7 @@
 
       <div class="alert__column" v-if="pageNumber === 3">
         <h2 style="text-align: center; color: black; font-weight: bold">
-          Name your Alert, Review, and Save
+          Name and save your workflow
         </h2>
         <div
           style="margin: auto; text-align: center; width: 65%; margin-bottom: 1rem"
@@ -557,16 +605,19 @@
               align-items: center;
               flex-direction: column;
             "
-            class="collection"
+            class="collection__small"
           >
+            <h2>
+              {{ alertTemplateForm.field.title.value ? alertTemplateForm.field.title.value : '' }}
+            </h2>
             <FormField
               id="alert-title"
               v-model="alertTemplateForm.field.title.value"
-              placeholder="Name your alert"
+              placeholder="Name your workflow"
               :errors="alertTemplateForm.field.title.errors"
               @blur="alertTemplateForm.field.title.validate()"
             />
-            <AlertSummary :form="alertTemplateForm" />
+            <!-- <AlertSummary :form="alertTemplateForm" /> -->
           </div>
         </template>
       </div>
@@ -814,6 +865,15 @@ export default {
     },
   },
   methods: {
+    positiveDay(num) {
+      if (num < 0) {
+        return (num *= -1) + ' days in the past.'
+      } else if (num == 0) {
+        return ' the day of your selected delivery day.'
+      } else {
+        return num + ' days in the future.'
+      }
+    },
     repsPipeline() {
       if (this.user.userLevel == 'REP') {
         this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
@@ -842,6 +902,9 @@ export default {
         type: 'error',
         timeout: 2000,
       })
+    },
+    checkInteger(str) {
+      return /\d/.test(str) ? this.user.fullName : str
     },
     changeCreate() {
       this.create = !this.create
@@ -1276,6 +1339,10 @@ export default {
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
+::placeholder {
+  color: $panther-silver;
+  font-size: 0.75rem;
+}
 .search__input {
   font-family: Lato-Regular, sans-serif;
   font-weight: normal;
@@ -1288,12 +1355,11 @@ export default {
   letter-spacing: 0.5px;
   height: 2.5rem;
   background-color: white;
-  border: 1px solid #5d5e5e;
+  border: none;
   width: 70%;
   // padding: 0 0 0 1rem;
 
-  -webkit-box-shadow: 1px 4px 7px black;
-  box-shadow: 1px 4px 7px black;
+  box-shadow: 3px 4px 7px $very-light-gray;
 }
 .bottom_locked {
   display: flex;
@@ -1322,16 +1388,24 @@ export default {
 }
 .remove__group {
   padding: 0.25rem;
+  border: none;
+  box-shadow: 3px 4px 7px $very-light-gray;
+  background-color: transparent;
   border-radius: 0.25rem;
-  border: 2px solid $panther-gray;
-  background-color: $panther-gray;
   display: flex;
   align-items: center;
   cursor: pointer;
 }
+button img {
+  filter: invert(90%);
+}
 .fixed__right {
   align-self: flex-end;
   margin-top: -2rem;
+}
+.fixed__center {
+  align-self: center;
+  color: $panther-silver;
 }
 .message_titles {
   display: flex;
@@ -1363,12 +1437,13 @@ export default {
 }
 ::v-deep .ql-container.ql-snow {
   border-radius: 0.3rem;
-  border: 3px solid $panther-silver;
+  box-shadow: 3px 4px 7px $very-light-gray;
+  border: none;
 }
 ::v-deep .ql-toolbar.ql-snow {
   border-radius: 0.3rem;
-  border: 3px solid $panther-silver;
-  border-bottom: 2px solid $panther-silver;
+  border: none;
+  box-shadow: 3px 4px 7px $very-light-gray;
   background-color: white;
   margin-bottom: 0.1rem;
 }
@@ -1388,6 +1463,8 @@ export default {
   width: 12vw;
   background-color: white;
   color: $panther;
+  box-shadow: 3px 4px 7px $very-light-gray;
+  border: none;
 }
 ::v-deep .input-form__large {
   width: 12vw;
@@ -1397,12 +1474,11 @@ export default {
 ::v-deep .collection-search .collection-search__form .collection-search__input .search__input {
   @include input-field();
   height: 2.5rem;
-  background-color: $panther-silver;
-  border: 1px solid $panther-gray;
+  border: none;
   width: 10rem;
   padding: 0 0 0 1rem;
   margin: 1rem;
-  box-shadow: 1px 4px 7px black;
+  box-shadow: 3px 4px 7px $very-light-gray;
 }
 
 .filtered {
@@ -1576,21 +1652,22 @@ export default {
   align-items: space-evenly;
   justify-content: center;
   flex-direction: column;
-  background-color: $panther;
+  background-color: $white;
   border-radius: 0.75rem;
-
+  box-shadow: 3px 4px 7px $very-light-gray;
   width: 75vw;
   padding: 2rem;
   margin-bottom: 1rem;
 }
 .collection__ {
-  background-color: $panther;
+  background-color: $white;
   width: 75vw;
   padding: 2rem;
   border-radius: 0.75rem;
+  box-shadow: 3px 4px 7px $very-light-gray;
 }
 .option__collection {
-  background-color: $panther;
+  background-color: $white;
   justify-content: center;
   border-radius: 0.5rem;
   height: 34vh;
@@ -1598,7 +1675,7 @@ export default {
   padding: 1rem;
 }
 .collection_fields {
-  background-color: $panther;
+  background-color: $white;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1610,10 +1687,10 @@ export default {
   overflow-x: scroll;
 }
 .collection__fields {
-  background-color: $panther;
+  background-color: $white;
+  box-shadow: 3px 4px 7px $very-light-gray;
   display: flex;
   justify-content: space-evenly;
-
   flex-direction: row;
   padding: 1rem;
   border-radius: 0.5rem;
@@ -1621,12 +1698,11 @@ export default {
   width: 70vw;
 }
 .collection__fields__ {
-  background-color: $panther;
+  background-color: $white;
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: row;
-
   border-radius: 0.5rem;
   height: 50vh;
   width: 30vw;
@@ -1647,8 +1723,16 @@ export default {
   }
 }
 .collection {
-  background-color: $panther;
+  background-color: $white;
   height: 60vh;
+  width: 30vw;
+  padding: 2rem;
+  border-radius: 0.33rem;
+}
+.collection__small {
+  background-color: $white;
+  box-shadow: 3px 4px 7px $very-light-gray;
+  height: 30vh;
   width: 30vw;
   padding: 2rem;
   border-radius: 0.33rem;
@@ -1685,7 +1769,8 @@ export default {
 // }
 .plus_button {
   border: none;
-  background-color: $panther-silver;
+  box-shadow: 3px 4px 7px $very-light-gray;
+  background-color: transparent;
   border-radius: 50%;
   padding: 0.25rem;
   display: flex;
@@ -1729,9 +1814,9 @@ textarea {
 }
 .alerts-page {
   height: 88vh;
-  color: white;
+  color: $base-gray;
   margin-left: 18vw;
-  margin-top: 4rem;
+  margin-top: 3.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1766,32 +1851,7 @@ textarea {
   align-items: center;
   margin-top: 2rem;
 }
-.card__ {
-  background-color: $panther;
-  border: none;
-  width: 10rem;
-  min-height: 25vh;
-  margin-right: 1rem;
-  margin-bottom: 2rem;
-  border-radius: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-shadow: 3px 4px 7px black;
-  color: white;
-  @media only screen and (min-width: 768px) {
-    flex: 1 0 24%;
-    min-width: 21rem;
-    max-width: 30rem;
-  }
 
-  &header {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 5rem;
-  }
-}
 .alerts-page__settings {
   display: flex;
   align-items: center;
@@ -2042,7 +2102,7 @@ input {
   text-indent: none;
   border-style: none;
   letter-spacing: 0.03rem;
-  background-color: $panther-silver;
+  background-color: $very-light-gray;
   color: $panther-gray;
   cursor: not-allowed;
   height: 2rem;
@@ -2082,7 +2142,7 @@ input {
 }
 .selected__item {
   padding: 0.5rem;
-  border: 2px solid white;
+  box-shadow: 3px 4px 7px $very-light-gray;
   border-radius: 0.3rem;
   width: 100%;
   text-align: center;
@@ -2090,6 +2150,9 @@ input {
   display: flex;
   align-items: center;
   justify-content: flex-start;
+}
+.selected__item img {
+  filter: invert(90%);
 }
 .visible {
   display: none;

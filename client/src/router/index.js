@@ -31,13 +31,19 @@ import UpdateContacts from '@/views/customize/UpdateContacts'
 import UpdateAccounts from '@/views/customize/UpdateAccounts'
 import UpdateLeads from '@/views/customize/UpdateLeads'
 import CreateLeads from '@/views/customize/CreateLeads'
+import ProductForm from '@/views/customize/ProductForm'
 import ProfilePage from '@/views/user/ProfilePage'
 import CloseDateApproaching from '@/views/settings/alerts/create/templates/CloseDateApproaching'
 import CloseDatePassed from '@/views/settings/alerts/create/templates/CloseDatePassed'
+import NextStepDate from '@/views/settings/alerts/create/templates/NextStepDate'
 import DealRotting from '@/views/settings/alerts/create/templates/DealRotting'
 import UpdateForecast from '@/views/settings/alerts/create/templates/UpdateForecast'
 import LogZoom from '@/views/settings/alerts/create/templates/LogZoom'
 import ZoomRecap from '@/views/settings/alerts/create/templates/ZoomRecap'
+import RealTime from '@/views/settings/alerts/create/templates/RealTime'
+import Custom from '@/views/customize/Custom'
+import ValidationRules from '@/views/customize/ValidationRules'
+import Required from '@/views/customize/Required'
 
 // TODO: We should keep this style guide page
 // import Styles from '@/views/settings/Styles'
@@ -136,6 +142,11 @@ export default new Router({
       component: CreateAccounts,
     },
     {
+      path: '/product-form',
+      name: 'ProductForm',
+      component: ProductForm,
+    },
+    {
       path: '/configure',
       name: 'Configure',
       component: Configure
@@ -151,11 +162,6 @@ export default new Router({
       component: UpdateOpportunity
     },
     {
-      path: '/customize',
-      name: 'CustomizeLandingPage',
-      component: CustomizeLandingPage,
-    },
-    {
       path: '/create-opportunity',
       name: 'CreateOpportunity',
       component: CreateOpportunity,
@@ -164,6 +170,11 @@ export default new Router({
       path: '/close-date-passed',
       name: 'CloseDatePassed',
       component: CloseDatePassed,
+    },
+    {
+      path: '/next-step',
+      name: 'NextStep',
+      component: NextStepDate,
     },
     {
       path: '/close-date-approaching',
@@ -191,6 +202,33 @@ export default new Router({
       component: ZoomRecap,
     },
     {
+      path: '/map',
+      name: 'CustomizeLandingPage',
+      component: CustomizeLandingPage,
+      children: [
+        {
+          path: 'required',
+          name: 'Required',
+          component: Required,
+        },
+        {
+          path: 'validation',
+          name: 'ValidationRules',
+          component: ValidationRules,
+        },
+        {
+          path: 'custom',
+          name: 'Custom',
+          component: Custom,
+        },
+        // {
+        //   path: 'saved',
+        //   name: 'Saved',
+        //   component: Saved,
+        // },
+      ]
+    },
+    {
       path: '/alerts',
       name: 'alerts',
       component: () =>
@@ -216,6 +254,11 @@ export default new Router({
             import(
               /* webpackChunkName: "settings" */ '../views/settings/alerts/view/_AlertsTemplateList'
             ),
+        },
+        {
+          path: '/real-time',
+          name: 'RealTime',
+          component: RealTime,
         },
       ],
     },

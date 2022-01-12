@@ -17,15 +17,13 @@ class Command(BaseCommand):
         if options["users"]:
             for t in options["users"]:
                 user = User.objects.filter(email=t).first()
-                if not hasattr(user, "nylas_account"):
+                if not hasattr(user, "nylas"):
                     self.stdout.write(
                         self.style.ERROR(
                             "User does not have a nylas account {}".format(user.email,)
                         )
                     )
-                auth_id = str(user.nylas_account.auth_account.id)
-
-                _send_calendar_details(auth_id)
+                _send_calendar_details(user.id)
                 self.stdout.write(
                     self.style.SUCCESS(
                         "Successfully initiated nylas sync for the user {}".format(user.email,)

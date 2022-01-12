@@ -33,6 +33,9 @@ REMOVE_OWNER_ID = {
     "User",
     "RecordType",
     "Pricebook2",
+    "Product2",
+    "PricebookEntry",
+    "OpportunityLineItem",
 }
 
 
@@ -92,9 +95,36 @@ def SALSFORCE_TASK_QUERY_URI(
     return f"{url} order by ActivityDate limit {limit}"
 
 
+def SALESFORCE_PRODUCT_QUERY_URI(
+    owner_id,
+    resource,
+    fields,
+    childRelationshipFields=[],
+    additional_filters=[],
+    limit=SALESFORCE_QUERY_LIMIT,
+):
+    # make a set to remove duplicates
+    fields = set(fields)
+    url = f"{CUSTOM_BASE_URI}/query/?q=SELECT {','.join(fields)}"
+    if len(childRelationshipFields):
+        for rel, v in childRelationshipFields.items():
+            url += f", (SELECT {','.join(v['fields'])} FROM {rel} {' '.join(v['attrs'])})"
+    url = f"{url} FROM {resource} WHERE OwnerId = '{owner_id}'"
+    if len(additional_filters):
+        for f in additional_filters:
+            url = f"{url} {f} "
+
+    return f"{url} order by ActivityDate limit {limit}"
+
+
 def SF_COUNT_URI(resource, owner_id):
     url = f"{CUSTOM_BASE_URI}/query/?q=SELECT COUNT () from {resource}"
-    if owner_id:
+    if owner_id and resource not in [
+        "Product2",
+        "Pricebook2",
+        "PricebookEntry",
+        "OpportunityLineItem",
+    ]:
         url = f"{url} WHERE OwnerId = '{owner_id}'"
     return url
 
@@ -150,6 +180,10 @@ RESOURCE_SYNC_ACCOUNT = "Account"
 RESOURCE_SYNC_OPPORTUNITY = "Opportunity"
 RESOURCE_SYNC_CONTACT = "Contact"
 RESOURCE_SYNC_LEAD = "Lead"
+RESOURCE_SYNC_PRODUCT2 = "Product2"
+RESOURCE_SYNC_PRICEBOOK2 = "Pricebook2"
+RESOURCE_SYNC_PRICEBOOKENTRY = "PricebookEntry"
+RESOURCE_SYNC_OPPORTUNITYLINEITEM = "OpportunityLineItem"
 
 
 SALESFORCE_RESOURCE_TASK = "Task"
@@ -241,6 +275,7 @@ MEETING_REVIEW__UPDATE_RESOURCE = "MEETING_REVIEW_UPDATE_RESOURCE"
 MEETING_REVIEW__CREATE_CONTACTS = "MEETING_REVIEW_CREATE_CONTACTS"
 MEETING_REVIEW__UPDATE_CONTACTS = "MEETING_REVIEW_UPDATE_CONTACTS"
 MEETING_REVIEW__SAVE_CALL_LOG = "MEETING_REVIEW_SAVE_CALL_LOG"
+MEETING_REVIEW__ADD_PRODUCTS = "MEETING_REVIEW__ADD_PRODUCTS"
 
 MEETING_REVIEW_OPP_PUBLIC_FIELD_IDS = [
     "6407b7a1-a877-44e2-979d-1effafec5035",

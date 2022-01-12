@@ -10,6 +10,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("-u", "--users", nargs="+", type=str)
+        parser.add_argument("-t", "--total", action="store_true")
 
     def handle(self, *args, **options):
         if options["users"]:
@@ -25,6 +26,9 @@ class Command(BaseCommand):
                 if user.reminders is None:
                     user.reminders = core_consts.REMINDERS()
                     user.save()
+                elif options["total"]:
+                    user.reminders = core_consts.REMINDERS()
+                    user.save()
                 else:
                     for key in reminder_config.keys():
                         if key in user.reminders.keys():
@@ -32,4 +36,4 @@ class Command(BaseCommand):
                         else:
                             user.reminders[key] = True
                     user.save()
-            self.stdout.write(self.style.SUCCESS("Checking reminders for all users"),)
+            self.stdout.write(self.style.SUCCESS("Refreshing reminders"),)

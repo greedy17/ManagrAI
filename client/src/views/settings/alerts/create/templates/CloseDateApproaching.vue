@@ -1,18 +1,15 @@
 <template>
   <div class="alerts-page">
-    <div>
-      <h2 style="font-weight: bold; text-align: center">
-        <span style="color: black">
+    <div style="display: flex; align-item: flex-start; flex-direction: column; margin-left: 12vw">
+      <h2>
+        <span>
           Close Date
           <span style="color: #199e54">Approaching</span>
         </span>
-        <p v-if="userLevel === 'REP'" style="color: #3c3940; font-size: 1.1rem">
-          Select users and a Slack #channel for this workflow
-        </p>
-        <p style="color: #3c3940; font-size: 1.1rem" v-else>
-          Select the day (or date), users, and a Slack #channel for this workflow
-        </p>
       </h2>
+      <p style="margin-top: -0.5rem">
+        View and update all Opportunities with an upcoming close date
+      </p>
     </div>
 
     <div v-if="pageNumber === 0" class="alert__column">
@@ -28,7 +25,9 @@
             :errors="form.field.recurrenceDay.errors"
           >
             <div style="margin-bottom: 0.5rem" class="row__">
-              <label>Weekly</label>
+              <label :class="form.field.recurrenceFrequency.value == 'WEEKLY' ? 'green' : ''"
+                >Weekly</label
+              >
               <ToggleCheckBox
                 @input="
                   form.field.recurrenceFrequency.value == 'WEEKLY'
@@ -38,8 +37,11 @@
                 :value="form.field.recurrenceFrequency.value !== 'WEEKLY'"
                 offColor="#199e54"
                 onColor="#199e54"
+                style="margin-left: 0.25rem; margin-right: 0.25rem"
               />
-              <label>Monthly</label>
+              <label :class="form.field.recurrenceFrequency.value == 'MONTHLY' ? 'green' : ''"
+                >Monthly</label
+              >
             </div>
 
             <div v-if="form.field.recurrenceFrequency.value == 'WEEKLY'">
@@ -127,7 +129,7 @@
                   style="height: 1rem; margin-right: 0.25rem"
                   alt=""
                 />
-                {{ item.length ? item : '' }}
+                {{ item.length ? checkInteger(item) : '' }}
               </p>
             </div>
           </div>
@@ -143,15 +145,15 @@
             "
           >
             <div v-if="!channelName" class="row__">
-              <label>Select #channel</label>
+              <label :class="!create ? 'green' : ''">Select #channel</label>
               <ToggleCheckBox
-                style="margin: 0.25rem"
+                style="margin-left: 0.25rem; margin-right: 0.25rem"
                 @input="changeCreate"
                 :value="create"
                 offColor="#199e54"
                 onColor="#199e54"
               />
-              <label>Create #channel</label>
+              <label :class="create ? 'green' : ''">Create #channel</label>
             </div>
 
             <label v-else for="channel" style="font-weight: bold"
@@ -174,6 +176,7 @@
                 type="text"
                 name="channel"
                 id="channel"
+                placeholder="Name your channel"
                 @input="logNewName(channelName)"
               />
 
@@ -181,7 +184,7 @@
                 <button
                   v-if="channelName"
                   @click="createChannel(channelName)"
-                  class="purple__button"
+                  class="purple__button bouncy"
                 >
                   Create Channel
                 </button>
@@ -189,7 +192,7 @@
               </div>
             </div>
 
-            <div v-else>
+            <div style="margin-top: 0.5rem" v-else>
               <FormField>
                 <template v-slot:input>
                   <DropDownSearch
@@ -419,6 +422,9 @@ export default {
     },
   },
   methods: {
+    checkInteger(str) {
+      return /\d/.test(str) ? this.user.fullName : str
+    },
     repsPipeline() {
       if (this.userLevel == 'REP') {
         this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
@@ -871,7 +877,10 @@ export default {
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
-
+::placeholder {
+  color: $panther-silver;
+  font-size: 0.75rem;
+}
 ::v-deep .multiselect__tags {
   min-width: 16vw;
   max-width: 20vw;
@@ -901,12 +910,11 @@ export default {
   color: #4d4e4c;
   height: 2.5rem;
   background-color: white;
-  border: 1px solid #5d5e5e;
+  border: none;
   width: 75%;
   margin-top: 1rem;
   text-align: center;
-  -webkit-box-shadow: 1px 4px 7px black;
-  box-shadow: 1px 4px 7px black;
+  box-shadow: 3px 4px 7px $very-light-gray;
 }
 .channels_height {
   height: 22vh;
@@ -979,7 +987,7 @@ export default {
   text-indent: none;
   border-style: none;
   letter-spacing: 0.03rem;
-  background-color: $panther-silver;
+  background-color: $soft-gray;
   color: $panther-gray;
   cursor: not-allowed;
   height: 2rem;
@@ -1082,7 +1090,7 @@ input {
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  margin-top: 4rem;
+  margin-top: 1rem;
 }
 .alert__row {
   display: flex;
@@ -1108,7 +1116,8 @@ input {
   align-items: flex-start;
   justify-content: space-evenly;
   flex-direction: row;
-  background-color: $panther;
+  background-color: $white;
+  box-shadow: 3px 4px 7px $very-light-gray;
   border-radius: 0.75rem;
   width: 75vw;
   padding: 2rem;
@@ -1116,14 +1125,18 @@ input {
 }
 .selected__item {
   padding: 0.5rem;
-  border: 2px solid white;
+  border: none;
+  box-shadow: 3px 4px 7px $very-light-gray;
   border-radius: 0.3rem;
-  width: 100%;
+  width: 96%;
   text-align: center;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: flex-start;
+}
+img {
+  filter: invert(60%);
 }
 .items_height {
   overflow-y: scroll;
@@ -1176,7 +1189,7 @@ textarea {
 }
 .alerts-page {
   height: 100vh;
-  color: white;
+  color: $base-gray;
   margin-top: 4rem;
   &__previous-step {
     @include muted-font(12);

@@ -1,30 +1,29 @@
 <template>
-  <div :key="hasZoomChannel && recapChannel" class="alerts-page">
-    <div v-if="!isOnboarding" class="col">
-      <h2 style="color: black; margin-top: -0.5rem" class="title">Popular Workflow Automations</h2>
-      <p style="color: #5d5e5e" class="sub__">Activate the workflows that are relevant to you</p>
+  <div class="alerts-page">
+    <div v-if="isOnboarding && !isAdmin" class="col">
+      <h2 class="title">Popular Workflow Automations</h2>
+      <p style="margin-top: -0.5rem" class="sub__">Step 2/2: Activate at least 3 workflows</p>
     </div>
     <div v-else class="col">
-      <h2 style="color: black; margin-top: -0.5rem" class="title">Popular Workflow Automations</h2>
-      <p style="color: black; margin-top: -0.5rem" class="sub__">
-        Step 2/2: Activate at least 3 workflows
-      </p>
+      <h2 class="title">Popular Workflow Automations</h2>
+      <p style="color: #5d5e5e" class="sub__">Activate the workflows that are relevant to you</p>
     </div>
 
     <div class="alert_cards">
-      <div v-if="user.userLevel !== 'MANAGER'" class="card__">
+      <div class="card__">
         <div class="card__header">
           <h3>Log <span style="color: #5f8cff">Meetings</span></h3>
         </div>
         <div class="row">
-          <img style="height: 2.25rem; margin-right: 1rem" src="@/assets/images/zoom.png" alt="" />
+          <img style="height: 2rem; margin-right: 0.5rem" src="@/assets/images/zoom.png" alt="" />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.65rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
+            class="filter-plus"
             alt=""
           />
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 2rem; margin-right: 0.5rem"
             src="@/assets/images/gmailCal.png"
             alt=""
           />
@@ -43,37 +42,6 @@
           <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="hasZoomChannel">Activated</p>
         </div>
       </div>
-      <div v-else class="card__">
-        <div class="card__header">
-          <h3>Meeting<span style="color: #5f8cff"> Recaps</span></h3>
-        </div>
-        <div class="row">
-          <img style="height: 2.25rem; margin-right: 1rem" src="@/assets/images/zoom.png" alt="" />
-          <img
-            style="height: 1.75rem; margin-right: 1rem"
-            src="@/assets/images/plusOne.png"
-            alt=""
-          />
-          <img
-            style="height: 2.25rem; margin-right: 1rem"
-            src="@/assets/images/gmailCal.png"
-            alt=""
-          />
-        </div>
-        <div style="margin-top: 2rem">
-          <button
-            v-if="hasZoomIntegration && hasSlackIntegration && !recapChannel"
-            @click="goToZoomRecap"
-            :class="!isAdmin && isOnboarding ? 'orange_button bouncy' : 'orange_button'"
-          >
-            Activate
-          </button>
-          <h4 style="margin-top: -0.5rem" v-else-if="!(hasZoomIntegration && hasSlackIntegration)">
-            Connect Zoom and Calendar in order to activate
-          </h4>
-          <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="recapChannel">Activated</p>
-        </div>
-      </div>
 
       <div
         :class="
@@ -88,17 +56,18 @@
 
         <div class="row">
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 2rem; margin-right: 0.5rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.65rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
+            class="filter-plus"
             alt=""
           />
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 2rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -144,17 +113,18 @@
 
         <div class="row">
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 2rem; margin-right: 0.5rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.65rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
+            class="filter-plus"
             alt=""
           />
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 2rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -200,17 +170,18 @@
 
         <div class="row">
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 2rem; margin-right: 0.5rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.65rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
+            class="filter-plus"
             alt=""
           />
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 2rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -251,24 +222,23 @@
         "
       >
         <div class="card__header">
-          <h3 style="font-size: 1.3rem">
-            Close Date<span style="color: #199e54"> Approaching</span>
-          </h3>
+          <h3>Close Date<span style="color: #199e54"> Approaching</span></h3>
         </div>
 
         <div class="row">
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 2rem; margin-right: 0.5rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
+            style="height: 1.65rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
+            class="filter-plus"
             alt=""
           />
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 2rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -300,8 +270,8 @@
           </h4>
         </div>
       </div>
+
       <div
-        v-if="user.userLevel === 'MANAGER'"
         :class="
           !user.activatedManagrConfigs.includes('Update Forecast') && isOnboarding && !isAdmin
             ? 'card__ onboarding'
@@ -309,33 +279,52 @@
         "
       >
         <div class="card__header">
-          <h3>Log <span style="color: #5f8cff">Meetings</span></h3>
+          <h3>Upcoming<span style="color: #ddad3c"> Next Step</span></h3>
         </div>
+
         <div class="row">
-          <img style="height: 2.25rem; margin-right: 1rem" src="@/assets/images/zoom.png" alt="" />
           <img
-            style="height: 1.75rem; margin-right: 1rem"
-            src="@/assets/images/plusOne.png"
+            style="height: 2rem; margin-right: 0.5rem"
+            src="@/assets/images/slackLogo.png"
             alt=""
           />
           <img
-            style="height: 2.25rem; margin-right: 1rem"
-            src="@/assets/images/gmailCal.png"
+            style="height: 1.65rem; margin-right: 0.5rem"
+            src="@/assets/images/plusOne.png"
+            class="filter-plus"
+            alt=""
+          />
+          <img
+            style="height: 2rem; margin-right: 0.5rem"
+            src="@/assets/images/salesforce.png"
             alt=""
           />
         </div>
+
         <div style="margin-top: 2rem">
           <button
-            v-if="hasZoomIntegration && !hasZoomChannel"
-            @click="goToLogZoom"
+            v-if="
+              hasSalesforceIntegration &&
+              hasSlackIntegration &&
+              !user.activatedManagrConfigs.includes('Upcoming Next Step')
+            "
+            @click="goToNextStep"
             class="orange_button"
           >
             Activate
           </button>
-          <h4 style="margin-top: -0.5rem" v-else-if="!hasZoomIntegration">
-            Connect Zoom in order to activate
+          <h4
+            style="margin-top: -0.5rem"
+            v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)"
+          >
+            Connect Slack & Salesforce to acivate
           </h4>
-          <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="hasZoomChannel">Activated</p>
+          <h4
+            style="margin-top: -0.5rem"
+            v-else-if="user.activatedManagrConfigs.includes('Upcoming Next Step')"
+          >
+            Activated
+          </h4>
         </div>
       </div>
     </div>
@@ -449,6 +438,9 @@ export default {
     },
     goToZoomRecap() {
       this.$router.push({ name: 'ZoomRecap' })
+    },
+    goToNextStep() {
+      this.$router.push({ name: 'NextStep' })
     },
     getWorkflowIds(arr1, arr2) {
       return arr1.some((item) => arr2.includes(item))
@@ -610,6 +602,9 @@ export default {
 textarea {
   @extend .textarea;
 }
+h3 {
+  font-size: 1.1rem;
+}
 .box__header {
   &__status {
     display: flex;
@@ -625,7 +620,8 @@ textarea {
 }
 .alerts-page {
   margin-left: 14vw;
-  margin-top: 4rem;
+  margin-top: 3.5rem;
+  color: $base-gray;
   &__previous-step {
     @include muted-font(12);
   }
@@ -655,22 +651,21 @@ textarea {
   flex-direction: row;
   justify-content: space-evenly;
   align-items: center;
-  margin-top: 2rem;
   flex-wrap: wrap;
+  padding: 0.5rem;
 }
 .card__ {
-  background-color: $panther;
+  background-color: $white;
   border: none;
   width: 20vw;
   padding: 1.25rem;
   margin-right: 1.25rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   border-radius: 0.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 3px 4px 7px black;
-  color: white;
+  box-shadow: 3px 4px 7px $very-light-gray;
   // @media only screen and (min-width: 768px) {
   //   flex: 1 0 24%;
   //   min-width: 21rem;
@@ -700,6 +695,9 @@ textarea {
   &-remove {
     justify-self: end;
   }
+}
+.filter-plus {
+  filter: invert(90%);
 }
 .btn {
   &--danger {
@@ -765,6 +763,8 @@ textarea {
   color: $panther-silver;
 }
 .title {
+  color: $base-gray;
+  font-weight: 900;
 }
 .group {
   display: flex;
@@ -776,8 +776,8 @@ textarea {
 .col {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  color: white;
+  align-items: flex-start;
+  margin-left: 0.75rem;
 }
 .row {
   display: flex;
@@ -859,10 +859,10 @@ input {
   background-color: $dark-green;
   color: white;
   font-weight: bold;
-  font-size: 16px;
-  border-radius: 0.5rem;
+  font-size: 15px;
+  border-radius: 0.33rem;
   border: 2px solid $dark-green;
-  padding: 0.25rem 1.5rem;
+  padding: 0.25rem 1.25rem;
   cursor: pointer;
 }
 .cs__button {

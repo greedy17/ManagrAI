@@ -45,6 +45,10 @@ def getSobjectDefaults():
         sf_consts.RESOURCE_SYNC_CONTACT: True,
         sf_consts.RESOURCE_SYNC_LEAD: True,
         sf_consts.RESOURCE_SYNC_OPPORTUNITY: True,
+        sf_consts.RESOURCE_SYNC_PRODUCT2: True,
+        sf_consts.RESOURCE_SYNC_PRICEBOOK2: True,
+        sf_consts.RESOURCE_SYNC_PRICEBOOKENTRY: True,
+        sf_consts.RESOURCE_SYNC_OPPORTUNITYLINEITEM: True,
     }
 
 
@@ -225,6 +229,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
 
         elif self.data_type == "Reference":
             # temporarily using id as display value need to sync display value as part of data
+            display_name = self.reference_display_label
             initial_option = block_builders.option(value, value) if value else None
             if self.is_public and not self.allow_multiple:
                 user_id = str(kwargs.get("user").id)
@@ -246,8 +251,10 @@ class SObjectField(TimeStampModel, IntegrationModel):
             else:
                 user_id = str(self.salesforce_account.user.id)
                 action_query = f"{slack_consts.GET_EXTERNAL_RELATIONSHIP_OPTIONS}?u={user_id}&relationship={self.display_value_keys['api_name']}&fields={','.join(self.display_value_keys['name_fields'])}"
+                if self.api_name == "PricebookEntryId":
+                    display_name = "Products"
             return block_builders.external_select(
-                f"*{self.reference_display_label}*",
+                f"*{display_name}*",
                 action_query,
                 block_id=self.api_name,
                 initial_option=initial_option,
@@ -615,7 +622,10 @@ class SFObjectFieldsOperation(SFSyncOperation):
 
 class MeetingWorkflow(SFSyncOperation):
 
-    meeting = models.OneToOneField("zoom.ZoomMeeting", models.CASCADE, related_name="workflow")
+    meeting = models.OneToOneField(
+        "zoom.ZoomMeeting", models.CASCADE, related_name="workflow", null=True, blank=True
+    )
+    # meeting = models.OneToOneField("core.Meeting", models.CASCADE, related_name="workflow", null=True, blank=True)
 
     resource_id = models.CharField(
         max_length=255,
@@ -666,6 +676,7 @@ class MeetingWorkflow(SFSyncOperation):
             emit_update_contacts,
             emit_create_new_contacts,
             emit_sf_update_resource_from_meeting,
+            emit_add_products_to_sf,
         )
 
         return {
@@ -673,6 +684,7 @@ class MeetingWorkflow(SFSyncOperation):
             sf_consts.MEETING_REVIEW__UPDATE_CONTACTS: emit_update_contacts,
             sf_consts.MEETING_REVIEW__CREATE_CONTACTS: emit_create_new_contacts,
             sf_consts.MEETING_REVIEW__SAVE_CALL_LOG: emit_add_call_to_sf,
+            sf_consts.MEETING_REVIEW__ADD_PRODUCTS: emit_add_products_to_sf,
         }
 
     def begin_tasks(self, attempts=1):
@@ -682,7 +694,6 @@ class MeetingWorkflow(SFSyncOperation):
             operation_name, param = op.split(".")
             operation = self.operations_map.get(operation_name)
             params = param.split(",")
-
             # determine the operation and its param and get event emitter
             t = operation(params[0], params[1:])
             if self.operations:
@@ -699,6 +710,10 @@ class MeetingWorkflow(SFSyncOperation):
 
         if self.resource and self.resource != slack_consts.FORM_RESOURCE_LEAD:
             self.add_form(self.resource_type, slack_consts.FORM_TYPE_UPDATE)
+            if self.user.organization.has_products:
+                self.add_form(
+                    slack_consts.FORM_RESOURCE_OPPORTUNITYLINEITEM, slack_consts.FORM_TYPE_CREATE
+                )
         if not now:
             return emit_kick_off_slack_interaction(str(self.user.id), str(self.id))
             # used for testing a fake meeting
@@ -813,7 +828,6 @@ class SalesforceAuthAccount(TimeStampModel):
         max_length=1000,
         blank=True,
     )
-
     is_busy = models.BooleanField(default=False)
 
     class Meta:
@@ -842,6 +856,18 @@ class SalesforceAuthAccount(TimeStampModel):
             Lead=self.object_fields.filter(salesforce_object="Lead").values_list(
                 "api_name", flat=True
             ),
+            Product2=self.object_fields.filter(salesforce_object="Product2").values_list(
+                "api_name", flat=True
+            ),
+            Pricebook2=self.object_fields.filter(salesforce_object="Pricebook2").values_list(
+                "api_name", flat=True
+            ),
+            PricebookEntry=self.object_fields.filter(
+                salesforce_object="PricebookEntry"
+            ).values_list("api_name", flat=True),
+            OpportunityLineItem=self.object_fields.filter(
+                salesforce_object="OpportunityLineItem"
+            ).values_list("api_name", flat=True),
         )
         return SalesforceAuthAccountAdapter(**data)
 
@@ -919,12 +945,12 @@ class SalesforceAuthAccount(TimeStampModel):
     def get_fields(self, resource):
 
         fields, record_type_id = [*self.adapter_class.list_fields(resource).values()]
-
-        self.default_record_id = record_type_id
-        current_record_ids = self.default_record_ids if self.default_record_ids else {}
-        current_record_ids[resource] = record_type_id
-        self.default_record_ids = current_record_ids
-        self.save()
+        if fields and record_type_id:
+            self.default_record_id = record_type_id
+            current_record_ids = self.default_record_ids if self.default_record_ids else {}
+            current_record_ids[resource] = record_type_id
+            self.default_record_ids = current_record_ids
+            self.save()
         return fields
 
     def get_validations(self, resource):
@@ -1004,3 +1030,4 @@ class SalesforceAuthAccount(TimeStampModel):
 
     def delete(self, *args, **kwargs):
         return super().delete(*args, **kwargs)
+

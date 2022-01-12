@@ -448,8 +448,13 @@ class NylasAuthAccount(TimeStampModel):
 
         starts_after = convert_local_time_to_unix(user_timezone, 12, 30)
         ends_before = convert_local_time_to_unix(user_timezone, 23, 00)
-        # print(ends_before, "ends before")
-        query = dict({"starts_after": starts_after, "ends_before": ends_before})
+        query = dict(
+            {
+                "starts_after": starts_after,
+                "ends_before": ends_before,
+                "calendar_id": self.event_calendar_id,
+            }
+        )
         params = urlencode(query)
         events = requests.get(
             f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.EVENT_POST}?{params}", headers=headers,
@@ -541,8 +546,17 @@ class MeetingPrepInstance(TimeStampModel):
     resource_type = models.CharField(
         max_length=255, null=True, blank=True, help_text="The class name of the resource"
     )
-
+    invocation = models.PositiveIntegerField(
+        default=0, help_text="Keeps track of the number of times the meeting instance was called",
+    )
+    form = models.OneToOneField(
+        "slack.OrgCustomSlackFormInstance",
+        on_delete=models.CASCADE,
+        related_name="meeting_prep_instance",
+        null=True,
+        blank=True,
+    )
     objects = MeetingPrepQuerySet.as_manager()
 
     class Meta:
-        ordering = ["-datetime_created"]
+        ordering = ["datetime_created"]
