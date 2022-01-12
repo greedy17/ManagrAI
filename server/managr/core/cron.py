@@ -542,18 +542,6 @@ def generate_afternoon_digest(user_id):
         logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
 
 
-def _generate_notification_key_lapsed(num):
-    if num == 1:
-        return core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_LAPSED_EXPECTED_CLOSE_DATE_1_DAY
-    if num == 14:
-        return core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_LAPSED_EXPECTED_CLOSE_DATE_14_DAYS
-    if num == 30:
-        return core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_LAPSED_EXPECTED_CLOSE_DATE_30_DAYS
-
-    # its not ideal that we are checking against a string, but since these are loaded from the fixture
-    # we can assume they will be the same
-
-
 @kronos.register("0 0 * * *")
 def revoke_tokens():
     expire = timezone.now() + datetime.timedelta(days=5)
