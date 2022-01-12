@@ -5,7 +5,6 @@ export const ACCOUNT_EXEC = 'ACCOUNT_EXEC'
 export const ACCOUNT_MANAGER = 'ACCOUNT MANAGER'
 export const OPERATIONS = 'OPERATIONS'
 export const ENABLEMENT = 'ENABLEMENT'
-export const SDR = 'SDR'
 export const ROLE_CHOICES = [
   { key: LEADERSHIP, name: 'Leadership' },
   { key: FRONTLINE_MANAGER, name: 'Frontline Manager' },
@@ -13,7 +12,6 @@ export const ROLE_CHOICES = [
   { key: ACCOUNT_MANAGER, name: 'Account Manager' },
   { key: OPERATIONS, name: 'Operations' },
   { key: ENABLEMENT, name: 'Enablement' },
-  { key: SDR, name: 'SDR' },
 ]
 export const roles = {
   LEADERSHIP,
@@ -22,16 +20,17 @@ export const roles = {
   ACCOUNT_MANAGER,
   OPERATIONS,
   ENABLEMENT,
-  SDR,
   ROLE_CHOICES,
 }
 
 // User types
 export const MANAGER = 'MANAGER'
 export const REP = 'REP'
+export const SDR = 'SDR'
 export const INTEGRATION = 'INTEGRATION'
 export const types = {
   MANAGER,
   REP,
+  SDR,
   INTEGRATION,
 }

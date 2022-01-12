@@ -8,6 +8,7 @@
           $emit('cancel'), resetData()
         }
       "
+      width="36"
     >
       <form class="invite-form" @submit.prevent="handleInvite">
         <h2 class="invite-form__title">Invite Users via Slack</h2>
@@ -171,8 +172,26 @@
               {{ member.email }}
             </p>
           </div>
-          <div style="display: flex; align-items: flex-start" class="invite-list__section__item">
-            {{ member.userLevel == 'MANAGER' ? 'Manager' : 'Rep' }}
+          <div
+            v-if="member.userLevel == 'MANAGER'"
+            style="display: flex; align-items: flex-start"
+            class="invite-list__section__item"
+          >
+            Manager
+          </div>
+          <div
+            v-else-if="member.userLevel == 'SDR'"
+            style="display: flex; align-items: flex-start"
+            class="invite-list__section__item"
+          >
+            SDR
+          </div>
+          <div
+            v-else-if="member.userLevel == 'REP'"
+            style="display: flex; align-items: flex-start"
+            class="invite-list__section__item"
+          >
+            REP
           </div>
           <div style="display: flex; align-items: flex-start" class="invite-list__section__item">
             {{ member.isActive ? 'Registered' : 'Pending..' }}
@@ -410,9 +429,10 @@ export default {
   border: none;
 }
 
-// ::v-deep .tn-dropdown__options__container {
-//   width: 16rem;
-// }
+::v-deep .tn-dropdown__options__container {
+  width: 17vw;
+  margin-left: -2.2rem;
+}
 
 ::v-deep .tn-dropdown__selected-items__item-selection {
   color: $panther;
@@ -443,20 +463,13 @@ Override dropdown select input field
 .dropdown {
 }
 ::v-deep .tn-dropdown__selection-container {
-  border-radius: 4px;
-  background-color: $white;
-  border: none;
-  line-height: 1.29;
-  letter-spacing: 0.5px;
   min-width: 17vw;
-  height: 6vh;
-  color: $panther;
   margin-left: -2.2rem;
 }
-::v-deep .tn-dropdown__options__option {
-  color: $base-gray;
-  font-weight: bold;
-}
+// ::v-deep .tn-dropdown__options__option {
+//   color: $base-gray;
+//   font-weight: bold;
+// }
 form,
 .success-prompt {
   //   margin-top: 3.125rem;

@@ -321,7 +321,7 @@ def update_modal_block_set(context, *args, **kwargs):
                 block_builders.option("Lead", "Lead"),
                 block_builders.option("Contact", "Contact"),
             ],
-            action_id=f"{slack_const.UPDATE_TASK_SELECTED_RESOURCE}?u={user_id}&type={type}",
+            action_id=f"{slack_const.UPDATE_TASK_SELECTED_RESOURCE}?u={user_id}",
             block_id="managr_task_related_to_resource",
             initial_option=block_builders.option(resource_type, resource_type)
             if resource_type
@@ -457,6 +457,8 @@ def actions_block_set(context):
         options.append(block_builders.option("Add To Sequence", "ADD_SEQUENCE"))
     if hasattr(user, "salesloft_account"):
         options.append(block_builders.option("Add To Cadence", "ADD_CADENCE"))
+    if hasattr(user, "gong_account"):
+        options.append(block_builders.option("Call Recording", "CALL_RECORDING"))
     blocks = [
         block_builders.static_select(
             ":male_genie: Need to get stuff done?  Select an action:",
@@ -480,3 +482,41 @@ def command_select_resource_interaction(context):
             placeholder="Type to search",
         ),
     ]
+
+
+@block_set(required_context=["u"])
+def pick_resource_modal_block_set(context, *args, **kwargs):
+    """Shows a modal to update a resource"""
+    print(context)
+    resource_type = context.get("resource_type", None)
+    resource_id = context.get("resource_id", None)
+    user_id = context.get("u")
+
+    blocks = []
+    blocks.append(
+        block_builders.static_select(
+            "Related to type",
+            [
+                block_builders.option("Opportunity", "Opportunity"),
+                block_builders.option("Account", "Account"),
+            ],
+            action_id=f"{slack_const.UPDATE_TASK_SELECTED_RESOURCE}?u={user_id}",
+            block_id="managr_task_related_to_resource",
+            initial_option=block_builders.option(resource_type, resource_type)
+            if resource_type
+            else None,
+        )
+    )
+    if (not resource_id and resource_type) or (resource_id and resource_type):
+        blocks.append(
+            block_builders.external_select(
+                f"*Search for an {context.get('resource_type')}*",
+                f"{slack_const.GONG_CALL_RECORDING}?u={user_id}&resource={resource_type}",
+                block_id="select_existing",
+                placeholder="Type to search",
+                initial_option=block_builders.option(resource_id, resource_id)
+                if resource_id
+                else None,
+            ),
+        )
+    return blocks
