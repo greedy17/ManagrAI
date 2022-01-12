@@ -208,6 +208,7 @@ export default {
       currentZoomChannel: '',
       currentRecapChannel: '',
       clicked: [],
+      pageLoaded: false,
     }
   },
   mounted() {

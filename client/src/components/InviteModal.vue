@@ -108,7 +108,6 @@ export default {
   display: flex;
   flex-flow: column;
   box-sizing: border-box;
-  height: auto;
   border-radius: 10px;
 }
 
