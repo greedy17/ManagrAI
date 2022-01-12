@@ -141,7 +141,9 @@ def custom_meeting_paginator_block(pagination_object, invocation, channel):
     if len(button_blocks):
         blocks.append(block_builders.actions_block(button_blocks))
 
-    blocks.append(block_builders.context_block(f"Showing {pagination_object.get('page')}"))
+    blocks.append(
+        block_builders.context_block(f"Showing {pagination_object.get('page')}", "mrkdwn")
+    )
     return blocks
 
 
@@ -170,7 +172,9 @@ def custom_task_paginator_block(pagination_object, channel):
     if len(button_blocks):
         blocks.append(block_builders.actions_block(button_blocks))
 
-    blocks.append(block_builders.context_block(f"Showing {pagination_object.get('page')}"))
+    blocks.append(
+        block_builders.context_block(f"Showing {pagination_object.get('page')}", "mrkdwn")
+    )
     return blocks
 
 

@@ -44,6 +44,7 @@ from managr.slack.helpers.exceptions import (
     InvalidBlocksException,
     InvalidAccessToken,
 )
+from managr.core.cron import process_get_task_list
 from managr.api.decorators import slack_api_exceptions
 from managr.alerts.models import AlertTemplate, AlertInstance, AlertConfig
 from managr.gong.models import GongCall, GongAuthAccount
@@ -289,8 +290,6 @@ def process_edit_meeting_contact(payload, context):
 
 @processor(required_context=[])
 def process_stage_selected(payload, context):
-    print(payload)
-    print(context)
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     workflow = MeetingWorkflow.objects.filter(id=context.get("w")).first()
     user = workflow.user
@@ -762,7 +761,6 @@ def process_restart_flow(payload, context):
 def process_show_update_resource_form(payload, context):
     from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 
-    print(context)
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
 
@@ -1101,6 +1099,7 @@ def process_create_task(payload, context):
     }
     if type == "command":
         data["view_id"] = payload["view"]["id"]
+        data["view"]["external_id"] = f"create_task_modal.{str(uuid.uuid4())}"
     else:
         data["trigger_id"] = trigger_id
     try:
@@ -1199,7 +1198,6 @@ def process_check_is_owner(payload, context):
 
 @processor(required_context="u")
 def process_resource_selected_for_task(payload, context):
-
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     trigger_id = payload["trigger_id"]
     u = User.objects.get(id=context.get("u"))
@@ -1219,7 +1217,6 @@ def process_resource_selected_for_task(payload, context):
         view_type, __unique_id = external_id.split(".")
     except ValueError:
         pass
-
     data = {
         "trigger_id": trigger_id,
         "view_id": payload.get("view").get("id"),
@@ -1452,6 +1449,27 @@ def process_paginate_meetings(payload, context):
         ]
         blocks[3:7] = replace_blocks
         slack_requests.update_channel_message(channel_id, ts, access_token, block_set=blocks)
+    return
+
+
+@slack_api_exceptions(rethrow=True)
+@processor()
+def process_paginate_tasks(payload, context):
+    channel_id = payload.get("channel", {}).get("id", None)
+    ts = payload.get("message", {}).get("ts", None)
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    if not user:
+        return
+    access_token = user.organization.slack_integration.access_token
+    channel = context.get("channel")
+    # NOTE replace [3:8]
+    blocks = payload["message"]["blocks"]
+    header_index, header_block = block_finder("task_header", blocks)
+    divider_index, divider_block = block_finder("task_divider", blocks)
+    replace_blocks = process_get_task_list(user.id, page=int(context.get("new_page", 0)))
+    blocks[header_index:divider_index] = replace_blocks
+    slack_requests.update_channel_message(channel_id, ts, access_token, block_set=blocks)
     return
 
 
@@ -2141,6 +2159,7 @@ def handle_block_actions(payload):
         slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL: process_check_is_owner,
         slack_const.PAGINATE_ALERTS: process_paginate_alerts,
         slack_const.PAGINATE_MEETINGS: process_paginate_meetings,
+        slack_const.PAGINATE_TASKS: process_paginate_tasks,
         slack_const.ADD_TO_CADENCE_MODAL: process_show_cadence_modal,
         slack_const.ADD_TO_SEQUENCE_MODAL: process_show_sequence_modal,
         slack_const.GET_USER_ACCOUNTS: process_show_engagement_modal,
