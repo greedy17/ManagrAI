@@ -456,10 +456,15 @@ class NylasAuthAccount(TimeStampModel):
             }
         )
         params = urlencode(query)
-        events = requests.get(
-            f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.EVENT_POST}?{params}", headers=headers,
-        )
-        return self._handle_response(events)
+        try:
+            events = requests.get(
+                f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.EVENT_POST}?{params}",
+                headers=headers,
+            )
+            return self._handle_response(events)
+        except Exception as e:
+            logger.info(f"Nylas api exception: {e}")
+            return e
 
 
 class NotificationQuerySet(models.QuerySet):
