@@ -15,7 +15,12 @@ from background_task.models import CompletedTask
 from rest_framework.response import Response
 
 from managr.salesloft import constants as sl_consts
-from managr.salesloft.background import emit_sync_slaccounts, emit_sync_people, emit_sync_cadences, emit_sync_accounts
+from managr.salesloft.background import (
+    emit_sync_slaccounts,
+    emit_sync_people,
+    emit_sync_cadences,
+    emit_sync_accounts,
+)
 from managr.salesloft.models import SalesloftAuthAccount
 from managr.core.models import User
 
@@ -39,20 +44,24 @@ def queue_account_sl_syncs(auth_account=None):
 
 
 def sync_helper(auth_id):
-    sync_steps = [emit_sync_accounts,emit_sync_slaccounts, emit_sync_people, emit_sync_cadences]
+    sync_steps = [emit_sync_accounts, emit_sync_slaccounts, emit_sync_people, emit_sync_cadences]
     sl_account = SalesloftAuthAccount.objects.get(id=auth_id)
     v_name = uuid.uuid4()
     for step in sync_steps:
         attempts = 1
         sync_step = step(str(sl_account.id), f"{step.__name__}_{v_name}")
         while True:
-            if attempts >= 20:
+            if attempts >= 10:
                 break
             try:
-                task = CompletedTask.objects.filter(verbose_name=f"{step.__name__}_{v_name}")
+                task = CompletedTask.objects.filter(verbose_name=sync_step.verbose_name)
                 if task:
                     break
+                else:
+                    attempts += 1
+                    continue
             except Exception as e:
+                logger.exception(f"Salesloft sync helper: {e}")
                 attempts += 1
                 continue
     return
