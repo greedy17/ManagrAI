@@ -133,19 +133,21 @@ def _send_slack_int_email(user):
 
 def _process_calendar_details(user_id):
     user = User.objects.get(id=user_id)
-    events = user.nylas._get_calendar_data()
-    if events:
-        processed_data = []
-        for event in events:
-            data = {}
-            data["title"] = event.get("title", None)
-            data["participants"] = event.get("participants", None)
-            data["times"] = event.get("when", None)
-            data['conferencing']['provider'] = event.get('provider', None)
-            processed_data.append(data)
-        return processed_data
-    else:
-        return None
+    try:
+        events = user.nylas._get_calendar_data()
+        if events:
+            processed_data = []
+            for event in events:
+                data = {}
+                data["title"] = event.get("title", None)
+                data["participants"] = event.get("participants", None)
+                data["times"] = event.get("when", None)
+                processed_data.append(data)
+            return processed_data
+        else:
+            return None
+    except Exception as e:
+        return dict({"status": "error"})
 
 
 def meeting_prep(processed_data, user_id, invocation=1):
