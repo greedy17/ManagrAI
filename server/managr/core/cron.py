@@ -337,16 +337,13 @@ def _send_calendar_details(
     user = User.objects.get(id=user_id)
     processed_data = _process_calendar_details(user_id)
     current_invocation = invocation
-    blocks = [
-        block_builders.simple_section(":calendar: *Meetings Today* ", "mrkdwn"),
-        # {"type": "divider"},
-    ]
     if processed_data is not None and "status" in processed_data:
-        blocks.append(
+        blocks = [
+            block_builders.simple_section(":calendar: *Meetings Today* ", "mrkdwn"),
             block_builders.simple_section(
                 "There was an error retreiving your calendar events :exclamation:", "mrkdwn"
-            )
-        )
+            ),
+        ]
         return blocks
     if processed_data is not None:
         # processed_data checks to see how many events exists
@@ -368,7 +365,9 @@ def _send_calendar_details(
             if len(paginate_results):
                 current_instance = paginate_results[0]
                 blocks = [
-                    *blocks,
+                    block_builders.simple_section(
+                        f":calendar: {len(meetings)} *Meetings Today* ", "mrkdwn"
+                    ),
                     *get_block_set(
                         "calendar_reminders_blockset",
                         {"prep_id": str(current_instance.id), "u": str(user.id)},
@@ -378,7 +377,10 @@ def _send_calendar_details(
                     ),
                 ]
     else:
-        blocks.append(block_builders.simple_section("No meetings scheduled!"))
+        blocks = [
+            block_builders.simple_section(":calendar: *Meetings Today* ", "mrkdwn"),
+            block_builders.simple_section("No meetings scheduled!"),
+        ]
     return blocks
 
 

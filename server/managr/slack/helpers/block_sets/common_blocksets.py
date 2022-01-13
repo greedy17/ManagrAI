@@ -396,13 +396,16 @@ def calendar_reminders_blockset(context):
 
     am_or_pm = utc_time.astimezone(tz).strftime("%p")
     start_time = local_start + " " + am_or_pm
-    type = meeting.resource_type if hasattr(meeting, "resource_type") else "prep"
+    type = meeting.resource_type if meeting.resource_type is not None else "prep"
+    logger.info(f"DIGEST INFO: {type}")
     if type == "Opportunity":
         resource = Opportunity.objects.get(id=meeting.resource_id)
     elif type == "Account":
         resource = Account.objects.get(id=meeting.resource_id)
     elif type == "Lead":
         resource = Lead.objects.get(id=meeting.resource_id)
+    else:
+        resource = None
     text = f"{title}\n Starts at {start_time}\n Attendees: " + str(len(meeting.participants))
     if type != "prep":
         text += f"\n *{type} {resource.name}*"
