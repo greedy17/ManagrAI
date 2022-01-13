@@ -1,25 +1,16 @@
 <template>
   <div class="logZoomPage">
-    <div>
-      <h2 style="font-weight: bold; text-align: center">
-        <span style="color: black">
+    <div style="display: flex; align-item: flex-start; flex-direction: column; margin-left: 19vw">
+      <h2>
+        <span>
           Meeting
           <span style="color: #5f8cff"> Recaps</span>
         </span>
       </h2>
-      <p style="text-align: center; color: black; font-weight: bold; margin-top: -0.5rem">
-        Recieve meeting recaps from essential team members
-      </p>
+      <p style="margin-top: -0.5rem">Recieve meeting recaps from essential team members</p>
     </div>
 
     <div style="flex-direction: column" class="centered">
-      <!-- <div class="card">
-        <div :key="value" v-for="(key, value) in userTargetsOpts">
-          <label for="key">{{ key.fullName }}</label>
-          <input id="key" type="radio" />
-        </div>
-      </div> -->
-
       <div class="card">
         <div
           style="
@@ -27,21 +18,11 @@
             align-items: center;
             justify-content: center;
             flex-direction: column;
-            margin-top: -2rem;
+            margin-top: -0.6rem;
           "
         >
           <p style="text-align: center; font-weight: bold">Select Users</p>
           <div>
-            <!-- <multiselect
-              :close-on-select="false"
-              deselectLabel="remove"
-              :multiple="true"
-              placeholder="select pipelines"
-              selectLabel=""
-              v-model="pipelines"
-              :options="userList"
-              label="fullName"
-            ></multiselect> -->
             <DropDownSearch
               @input="checkIds"
               :items.sync="userList"
@@ -80,15 +61,15 @@
               style="margin: 0.25rem"
               @input="changeCreate"
               :value="create"
-              offColor="#199e54"
-              onColor="#199e54"
+              offColor="#5f8cff"
+              onColor="#5f8cff"
             />
             <label :class="create ? 'green' : ''">Create #channel</label>
           </div>
 
           <label v-else for="channel" style="font-weight: bold"
             >Alerts will send to
-            <span style="color: #199e54; font-size: 1.2rem">{{ channelName }}</span>
+            <span style="color: #5f8cff; font-size: 1.2rem">{{ channelName }}</span>
             channel</label
           >
           <div
@@ -454,8 +435,7 @@ export default {
 ::v-deep .multiselect__tags {
   min-width: 16vw;
   max-width: 20vw;
-  -webkit-box-shadow: 1px 4px 7px black;
-  box-shadow: 1px 4px 7px black;
+  box-shadow: 3px 4px 7px $very-light-gray;
 }
 
 .items_height {
@@ -466,20 +446,22 @@ export default {
 
 .logZoomPage {
   height: 100vh;
-  color: white;
+  color: $base-gray;
   margin-top: 5rem;
 }
 .card {
   display: flex;
   justify-content: space-evenly;
-  align-items: center;
+  align-items: flex-start;
   width: 60vw;
   padding: 3rem;
-  background-color: $panther;
+  background-color: $white;
   border-radius: 0.5rem;
+  box-shadow: 3px 4px 7px $very-light-gray;
+  color: $base-gray;
 }
 .centered {
-  margin-top: 4rem;
+  margin-top: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -510,7 +492,7 @@ export default {
   font-size: 1.02rem;
 }
 .green {
-  color: $dark-green;
+  color: #5f8cff;
 }
 .disabled__button {
   display: flex;
@@ -523,7 +505,7 @@ export default {
   text-indent: none;
   border-style: none;
   letter-spacing: 0.03rem;
-  background-color: $panther-silver;
+  background-color: $soft-gray;
   color: $panther-gray;
   cursor: not-allowed;
   height: 2rem;
@@ -532,15 +514,15 @@ export default {
   font-size: 1.02rem;
 }
 input {
-  -webkit-box-shadow: 1px 4px 7px black;
-  box-shadow: 1px 4px 7px black;
+  box-shadow: 3px 4px 7px $very-light-gray;
   border: 1px solid white;
   border-radius: 0.25rem;
   margin-top: 0.5rem;
 }
 .selected__item {
   padding: 0.5rem 1.5rem;
-  border: 2px solid white;
+  border: none;
+  box-shadow: 3px 4px 7px $very-light-gray;
   border-radius: 0.3rem;
   cursor: pointer;
   display: flex;
@@ -549,13 +531,17 @@ input {
 }
 .selected__items {
   padding: 0.5rem 1.5rem;
-  width: 100%;
-  border: 2px solid white;
+  width: 96%;
+  border: none;
   border-radius: 0.3rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 3px 4px 7px $very-light-gray;
+}
+img {
+  filter: invert(60%);
 }
 .visible {
   display: none;

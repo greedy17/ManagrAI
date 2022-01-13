@@ -1,17 +1,70 @@
 <template>
   <div>
-    <div v-if="user.userLevel === 'REP'" class="sidenav sidenav__background">
-      <div style="margin-bottom: 2rem">
-        <h2 class="title">Workflow Automations</h2>
+    <div v-if="!isAdmin" class="sidenav">
+      <div style="margin-bottom: 2rem; margin-left: 0.5rem">
+        <h3 class="title">Workflow Automations</h3>
+        <h5 style="margin-top: -0.65rem; color: #9b9b9b">Where Salesforce meets Slack</h5>
       </div>
-      <router-link exact-active-class="active" :to="{ name: 'CreateNew' }">
+
+      <router-link
+        v-if="user.userLevel !== 'MANAGER'"
+        exact-active-class="active"
+        :to="{ name: 'CreateNew' }"
+      >
         <div :class="isOnboarding ? 'onboarding row' : 'row'">
-          <img src="@/assets/images/trophy.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
-          <h3 v-if="user.userLevel === 'REP'">
-            Popular<span style="margin-left: 0.5rem" class="counter">6</span>
-          </h3>
+          <img
+            src="@/assets/images/trophy.png"
+            style="height: 1.3rem; margin-right: 1rem; padding-left: 0.5rem"
+            alt=""
+          />
+          <h5 v-if="user.userLevel === 'REP'">Popular</h5>
         </div>
       </router-link>
+
+      <div v-else>
+        <div
+          @click="isPopular()"
+          style="cursor: pointer"
+          :class="isOnboarding ? 'onboarding row' : 'row'"
+        >
+          <img src="@/assets/images/trophy.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
+
+          <h3>Popular</h3>
+          <img
+            src="@/assets/images/dropdown.png"
+            style="height: 1.25rem; margin-top: 0.25rem"
+            alt=""
+          />
+        </div>
+
+        <div v-if="popular" style="margin-left: 1.5rem; margin-top: -0.75rem" class="col">
+          <router-link exact-active-class="active" :to="{ name: 'RealTime' }">
+            <div :class="isOnboarding ? 'onboarding row' : 'row'">
+              <img
+                src="@/assets/images/bolt.png"
+                style="height: 0.9rem; margin-right: 0.25rem"
+                alt=""
+              />
+              <h5>Instant Updates</h5>
+            </div>
+          </router-link>
+          <router-link
+            style="margin-top: -2rem"
+            exact-active-class="active"
+            :to="{ name: 'CreateNew' }"
+          >
+            <div style="margin-top: -1rem" :class="isOnboarding ? 'onboarding row' : 'row'">
+              <img
+                src="@/assets/images/org.png"
+                style="height: 0.8rem; margin-right: 0.25rem"
+                alt=""
+              />
+
+              <h5>Pipeline Management</h5>
+            </div>
+          </router-link>
+        </div>
+      </div>
 
       <div
         v-if="isOnboarding && user.activatedManagrConfigs.includes('Update Forecast')"
@@ -38,74 +91,137 @@
         :to="{ name: 'ListTemplates' }"
       >
         <div class="row">
-          <img src="@/assets/images/star.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
-          <h3 @click="onboardComplete">
+          <img
+            src="@/assets/images/star.png"
+            style="height: 1.3rem; margin-right: 1rem; padding-left: 0.5rem"
+            alt=""
+          />
+          <h5 @click="onboardComplete">
             Saved
             <span style="margin-left: 0.25rem" class="counter">{{
               alertsCount(templates.list.length)
             }}</span>
-          </h3>
+          </h5>
         </div>
       </router-link>
       <router-link v-else exact-active-class="active" :to="{ name: 'ListTemplates' }">
         <div class="row">
-          <img src="@/assets/images/star.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
-          <h3>
+          <img
+            src="@/assets/images/star.png"
+            style="height: 1.3rem; margin-right: 1rem; padding-left: 0.5rem"
+            alt=""
+          />
+          <h5>
             Saved
             <span style="margin-left: 0.5rem" class="counter">{{
               alertsCount(templates.list.length)
             }}</span>
-          </h3>
+          </h5>
         </div>
       </router-link>
 
       <router-link exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
         <div :class="isOnboarding ? 'onboarding row' : 'row'">
-          <img src="@/assets/images/build.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
-          <h3>Custom</h3>
+          <img
+            src="@/assets/images/build.png"
+            style="height: 1.2rem; margin-right: 1rem; padding-left: 0.5rem"
+            alt=""
+          />
+          <h5>Custom</h5>
         </div>
       </router-link>
 
       <div :class="isOnboarding ? 'onboarding row' : 'row'" style="cursor: not-allowed">
-        <img src="@/assets/images/org.png" style="height: 1.25rem; margin-right: 0.5rem" alt="" />
-        <h3>Shared<span class="coming-soon">coming soon</span></h3>
+        <img
+          src="@/assets/images/sharing.png"
+          style="height: 1.3rem; margin-right: 1rem; padding-left: 0.5rem"
+          alt=""
+        />
+        <h5>Shared<span class="coming-soon">coming soon</span></h5>
       </div>
     </div>
 
     <div v-else class="sidenav sidenav__background">
-      <div style="margin-bottom: 2rem">
-        <h2 class="title">Workflow Automations</h2>
+      <div style="margin-bottom: 2rem; margin-left: 0.5rem">
+        <h3 class="title">Workflow Automations</h3>
+        <h5 style="margin-top: -0.65rem; color: #9b9b9b">Let us do the work for you</h5>
       </div>
-      <router-link exact-active-class="active" :to="{ name: 'CreateNew' }">
-        <div class="row">
+
+      <div style="background-color: #cff8e2; border-radius: 0.3rem; margin-bottom: 0.25rem">
+        <div @click="isPopular()" style="cursor: pointer" class="row">
           <img src="@/assets/images/trophy.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
 
-          <h3>Popular<span style="margin-left: 0.5rem" class="counter">7</span></h3>
+          <h3>Popular</h3>
+          <img
+            src="@/assets/images/dropdown.png"
+            style="height: 1.25rem; margin-top: 0.25rem"
+            alt=""
+          />
         </div>
-      </router-link>
+
+        <div v-if="popular" style="margin-top: -0.25rem" class="col">
+          <router-link exact-active-class="active" :to="{ name: 'RealTime' }">
+            <div style="height: 2.25rem" class="row">
+              <img
+                src="@/assets/images/bolt.png"
+                style="height: 0.9rem; margin-right: 0.25rem; margin-left: 1rem"
+                alt=""
+              />
+              <h5 style="margin-left: 1rem">Instant Updates</h5>
+            </div>
+          </router-link>
+          <router-link
+            style="margin-top: -2rem"
+            exact-active-class="active"
+            :to="{ name: 'CreateNew' }"
+          >
+            <div style="margin-top: -0.25rem; height: 2.25rem" class="row">
+              <img
+                src="@/assets/images/org.png"
+                style="height: 0.8rem; margin-right: 0.25rem; margin-left: 1rem"
+                alt=""
+              />
+
+              <h5 style="margin-left: 1rem">Pipeline Management</h5>
+            </div>
+          </router-link>
+        </div>
+      </div>
 
       <router-link exact-active-class="active" :to="{ name: 'ListTemplates' }">
         <div class="row">
-          <img src="@/assets/images/star.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
-          <h3>
+          <img
+            src="@/assets/images/star.png"
+            style="height: 1.3rem; margin-right: 1rem; padding-left: 0.5rem"
+            alt=""
+          />
+          <h5>
             Saved
             <span style="margin-left: 0.5rem" class="counter">{{
               alertsCount(templates.list.length)
             }}</span>
-          </h3>
+          </h5>
         </div>
       </router-link>
 
       <router-link exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
         <div class="row">
-          <img src="@/assets/images/build.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
-          <h3>Custom</h3>
+          <img
+            src="@/assets/images/build.png"
+            style="height: 1.2rem; margin-right: 1rem; padding-left: 0.5rem"
+            alt=""
+          />
+          <h5>Custom</h5>
         </div>
       </router-link>
 
       <div class="row" style="cursor: not-allowed">
-        <img src="@/assets/images/org.png" style="height: 1.25rem; margin-right: 0.5rem" alt="" />
-        <h3>Shared<span class="coming-soon">coming soon</span></h3>
+        <img
+          src="@/assets/images/sharing.png"
+          style="height: 1.3rem; margin-right: 1rem; padding-left: 0.5rem"
+          alt=""
+        />
+        <h5>Shared<span class="coming-soon">coming soon</span></h5>
       </div>
     </div>
 
@@ -136,6 +252,8 @@ export default {
     return {
       templates: CollectionManager.create({ ModelClass: AlertTemplate }),
       userOnboardingForm: new UserOnboardingForm({}),
+      test: true,
+      popular: true,
     }
   },
   async created() {
@@ -167,6 +285,9 @@ export default {
     onboardComplete() {
       this.userOnboardingForm.field.onboarding.value = false
       this.handleUpdate()
+    },
+    isPopular() {
+      this.popular = !this.popular
     },
   },
   computed: {
@@ -246,7 +367,13 @@ export default {
   border: solid 2px $dark-green;
   box-shadow: 0 0 10px 1px #555;
 }
-
+h3 {
+  font-size: 1.2rem;
+}
+h5 {
+  font-size: 0.8rem;
+  font-weight: 700px;
+}
 #tail1 {
   position: absolute;
   bottom: -20px;
@@ -268,7 +395,10 @@ export default {
   border-width: 10px;
   border-style: solid;
 }
-
+img {
+  filter: invert(90%);
+  margin-left: 0.5rem;
+}
 .coming-soon {
   @include muted-font(13px);
 }
@@ -279,52 +409,79 @@ export default {
   flex-direction: column;
 }
 .counter {
-  border: 2px solid white;
+  border: 2px solid $base-gray;
   border-radius: 0.3rem;
   padding: 0.1rem 0.3rem;
   font-size: 0.75rem;
+  color: $base-gray;
 }
 .sidenav {
   height: 100%;
   width: 18vw;
   font-size: 0.85rem;
   position: fixed;
-  z-index: 1;
   left: 0;
-  background-color: $panther;
-  border: 2px solid $panther-silver;
-  border-radius: 0.25rem;
-  color: $panther-silver;
+  background-color: #fafbfc;
+  border-right: 3px solid $soft-gray;
+  color: $base-gray;
   overflow-x: hidden;
-  padding-top: 20px;
   padding: 1rem;
-  border-radius: 0.5rem;
+  margin-top: -1rem;
 }
 a {
   text-decoration: none;
-  font-weight: bold;
-  color: $panther-silver;
+  color: $base-gray;
   cursor: pointer;
 }
 a:hover {
-  color: white;
+  border-radius: 0.2rem;
   cursor: pointer;
 }
 .active div {
-  color: white;
-  background-color: $dark-green;
-  border-radius: 0.25rem;
-  padding: 0 0.3rem;
+  color: $darker-green;
+  background-color: $lighter-green;
+  border-radius: 0.3rem;
   font-weight: bold;
-  margin-left: -0.35rem;
+  position: relative;
+}
+.active div:after {
+  content: '';
+  background: $darker-green;
+  position: absolute;
+  bottom: 0.65rem;
+  left: 0;
+  height: 50%;
+  width: 3px;
+}
+a:hover div {
+  background-color: $lighter-green;
+  color: $darker-green;
+  border-radius: 0.3rem;
+  img {
+    filter: none;
+  }
+}
+a:hover span {
+  border-color: $darker-green;
+  color: $darker-green;
+}
+.active img {
+  filter: none;
+}
+.active span {
+  border-color: $darker-green;
+  color: $darker-green;
 }
 .title {
-  color: white;
+  color: $base-gray;
   font-weight: bold;
 }
 .row {
   display: flex;
   flex-direction: row;
+  height: 3rem;
   align-items: center;
+  margin-top: 0.1rem;
+  margin-bottom: 0.1rem;
 }
 </style>

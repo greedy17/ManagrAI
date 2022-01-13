@@ -83,12 +83,18 @@ class CustomPricebookEntry(admin.ModelAdmin):
     list_display = ("name", "pricebook")
 
 
+class CustomOpportunityLineItem(admin.ModelAdmin):
+    model = OpportunityLineItem
+    list_display = ("name", "opportunity")
+    list_filter = ("opportunity__owner",)
+
+
 admin.site.register(Organization, CustomOrganization)
 admin.site.register(Account, CustomAccount)
 admin.site.register(Product2, CustomProduct2)
 admin.site.register(Pricebook2, CustomPricebook2)
 admin.site.register(PricebookEntry, CustomPricebookEntry)
-admin.site.register(OpportunityLineItem)
+admin.site.register(OpportunityLineItem, CustomOpportunityLineItem)
 admin.site.register(Contact, CustomContact)
 admin.site.register(ActionChoice)
 admin.site.register(Stage)

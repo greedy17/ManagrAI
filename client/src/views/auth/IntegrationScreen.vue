@@ -1,23 +1,26 @@
 <template>
   <div class="integrations">
     <div v-if="!user.isAdmin">
-      <div style="text-align: center">
-        <h2 class="title">Welcome to Managr!</h2>
-        <p
-          v-if="
-            (!(!orgHasSlackIntegration && userCanIntegrateSlack) ||
-              (orgHasSlackIntegration && !hasSlackIntegration)) &&
-            hasNylasIntegration &&
-            hasZoomIntegration &&
-            hasSalesforceIntegration
-          "
-          style="font-weight: bold; margin-top: -0.5rem; color: #5d5e5e"
-        >
-          Connect Managr to your favorite apps
-        </p>
-        <p v-else style="font-weight: bold; margin-top: -0.5rem; color: #5d5e5e">
-          <span style="font-weight: 900">Step 1/2: </span> Connect all four apps
-        </p>
+      <div>
+        <div class="welcome">
+          <h1>Hi, {{ user.fullName }}</h1>
+
+          <div style="margin-top: -1.5rem" class="row">
+            <div
+              v-if="
+                (!(!orgHasSlackIntegration && userCanIntegrateSlack) ||
+                  (orgHasSlackIntegration && !hasSlackIntegration)) &&
+                hasNylasIntegration &&
+                hasZoomIntegration &&
+                hasSalesforceIntegration
+              "
+              style="margin-top: 1rem; margin-right: 1rem"
+            >
+              Connect managr to your favorite apps
+            </div>
+            <div v-else>Step 1/2. Connect the four required apps.</div>
+          </div>
+        </div>
       </div>
 
       <div class="integrations__cards">
@@ -272,11 +275,14 @@
     </div>
 
     <div v-else>
-      <div style="text-align: center; margin-bottom: 3rem">
-        <h2 class="title">Welcome to Managr!</h2>
-        <p style="font-weight: bold; margin-top: -0.5rem; color: #5d5e5e">
-          Connect Managr to your favorite apps
-        </p>
+      <div class="welcome">
+        <h1>Hi, {{ user.fullName }}</h1>
+
+        <div style="margin-top: -1.5rem" class="row">
+          <div style="margin-top: 1rem; margin-right: 1rem">
+            Connect managr to your favorite apps
+          </div>
+        </div>
       </div>
 
       <div class="integrations__cards">
@@ -443,7 +449,7 @@
 
         <div class="card">
           <div class="card__header">
-            <img style="height: 1.5rem" src="@/assets/images/salesloft.svg" />
+            <img class="filter-loft" style="height: 1.5rem" src="@/assets/images/salesloft.svg" />
           </div>
           <p class="card-text">Add Contacts to Cadences</p>
           <div class="card__body">
@@ -572,7 +578,7 @@
       </div>
     </div>
 
-    <img class="lock" src="@/assets/images/blackLock.png" />
+    <img style="margin-top: 1rem" class="lock" src="@/assets/images/blackLock.png" />
     <p class="privacy"><strong>SOC2</strong> certified, and <strong>GDPR</strong> compliant</p>
     <!-- <p>
       <a href="https://managr.ai/terms-of-service" target="_blank">Terms of Service</a>
@@ -856,7 +862,12 @@ export default {
     transform: translateY(-6px);
   }
 }
-
+.filter-loft {
+  filter: invert(40%) sepia(96%) brightness(101%) contrast(82%);
+}
+.filtered-green {
+  filter: invert(39%) sepia(96%) saturate(373%) hue-rotate(94deg) brightness(104%) contrast(94%);
+}
 .dot {
   filter: invert(40%) sepia(96%) saturate(431%) hue-rotate(94deg) brightness(101%) contrast(82%);
   height: 0.4rem;
@@ -872,16 +883,16 @@ export default {
 }
 .three-dots:after {
   cursor: pointer;
-  color: white;
+  color: $base-gray;
   content: '\2026';
   font-size: 3rem;
   padding-left: 6rem;
 }
 .dropdown {
   right: 10px;
-  box-shadow: 0px 0px 1px 3px $night-rider;
+  box-shadow: 0px 0px 1px 3px $soft-gray;
   border-radius: 0.25rem;
-  background-color: $panther;
+  background-color: $soft-gray;
   outline: none;
   opacity: 0;
   z-index: -1;
@@ -889,7 +900,14 @@ export default {
   transition: opacity 0.1s, z-index 0.1s, max-height 5s;
   padding: 0.2rem;
 }
-
+.logo-bg {
+  background-color: transparent;
+  border: none;
+  border-radius: 50%;
+  box-shadow: 3px 4px 7px $very-light-gray;
+  padding-right: 0.2rem;
+  margin-right: 0.75rem;
+}
 .dropdown-container:focus {
   outline: none;
 }
@@ -901,15 +919,19 @@ export default {
   transition: opacity 0.2s, z-index 0.2s, max-height 0.2s;
 }
 .integrations {
-  color: white;
+  color: $base-gray;
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 2rem;
+  margin-top: 1.5rem;
   &__cards {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
+    border-radius: 0.4rem;
+    padding: 1rem 4rem;
+    width: 94vw;
+    margin-top: -2rem;
   }
   &__subtitle {
     font-size: 14px;
@@ -927,17 +949,21 @@ export default {
   align-items: center;
   justify-content: space-between;
 }
-
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .card {
-  background-color: $panther;
-  padding: 2rem 2rem 0.5rem 2rem;
+  background-color: $white;
+  padding: 1rem 2rem 0.5rem 2rem;
   border: none;
   margin-right: 1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   border-radius: 0.5rem;
   display: flex;
   flex-direction: column;
-  box-shadow: 3px 4px 7px black;
+  box-shadow: 4px 5px 9px $very-light-gray;
   @media only screen and (min-width: 768px) {
     flex: 1 0 24%;
     min-width: 21rem;
@@ -980,7 +1006,7 @@ export default {
     font-weight: bold;
     padding: 0.5rem;
     border-radius: 0.5rem;
-    text-shadow: 0.85px 0.4px 0.3px black;
+    // text-shadow: 0.85px 0.4px 0.3px ;
   }
 }
 
@@ -998,7 +1024,7 @@ export default {
 .card-text {
   font-size: 14px;
   font-weight: bold;
-  color: $panther-silver;
+  color: $panther-gray;
   text-align: center;
 }
 
@@ -1024,7 +1050,7 @@ export default {
 .plain-button {
   font-size: 1.05rem;
   font-weight: bold;
-  color: white;
+  color: $base-gray;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -1058,7 +1084,7 @@ export default {
 
 .privacy {
   font-family: #{$bold-font-family};
-  color: black;
+  color: $base-gray;
   font-size: 16px;
 }
 
@@ -1079,7 +1105,10 @@ export default {
 }
 .title {
   font-weight: bold;
-  color: black;
+  color: $base-gray;
+}
+.col {
+  flex-direction: column;
 }
 a {
   text-decoration: none;
@@ -1106,14 +1135,28 @@ a {
   background: transparent;
   border: none;
 }
-
+.welcome {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  margin: 1rem 5rem;
+  margin-bottom: 2rem;
+}
+.back-logo {
+  position: absolute;
+  opacity: 0.06;
+  filter: alpha(opacity=50);
+  height: 28%;
+  margin-top: -1.5rem;
+  margin-left: -2rem;
+}
 .orange_button {
   color: white;
   background-color: $dark-green;
-  border-radius: 0.5rem;
-  padding: 0.5rem 1.5rem;
-  font-weight: bold;
-  font-size: 1rem;
+  border-radius: 0.33rem;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  font-size: 14px;
   border: none;
   transition: all 0.25s;
   cursor: pointer;

@@ -1,18 +1,18 @@
 <template>
   <div class="alerts-page">
-    <div>
-      <h2 style="font-weight: bold; text-align: center">
-        <span style="color: black">
+    <div style="display: flex; align-item: flex-start; flex-direction: column; margin-left: 12vw">
+      <h2>
+        <span>
           Update
           <span style="color: #199e54">Forecast</span>
         </span>
-        <p style="color: #3c3940; font-size: 1.1rem">
-          View and update all Opportunities that are due to close but are not in Commit
-        </p>
       </h2>
+      <p style="margin-top: -0.5rem">
+        View and update all Opportunities that are due to close but are not in Commit
+      </p>
     </div>
 
-    <div style="margin-top: 4rem" v-if="pageNumber === 0" class="alert__column">
+    <div style="margin-top: 1rem" v-if="pageNumber === 0" class="alert__column">
       <template>
         <div
           class="forecast__collection"
@@ -920,12 +920,11 @@ export default {
   letter-spacing: 0.5px;
   height: 2.5rem;
   background-color: white;
-  border: 1px solid #5d5e5e;
+  border: none;
   margin-top: 1rem;
   width: 75%;
   text-align: center;
-  -webkit-box-shadow: 1px 4px 7px black;
-  box-shadow: 1px 4px 7px black;
+  box-shadow: 3px 4px 7px $very-light-gray;
 }
 .channels_height {
   height: 22vh;
@@ -998,7 +997,7 @@ export default {
   text-indent: none;
   border-style: none;
   letter-spacing: 0.03rem;
-  background-color: $panther-silver;
+  background-color: $soft-gray;
   color: $panther-gray;
   cursor: not-allowed;
   height: 2rem;
@@ -1126,7 +1125,8 @@ input {
   align-items: flex-start;
   justify-content: space-evenly;
   flex-direction: row;
-  background-color: $panther;
+  background-color: $white;
+  box-shadow: 3px 4px 7px $very-light-gray;
   border-radius: 0.75rem;
   width: 75vw;
   padding: 2rem;
@@ -1134,14 +1134,18 @@ input {
 }
 .selected__item {
   padding: 0.5rem;
-  border: 2px solid white;
+  border: none;
+  box-shadow: 3px 4px 7px $very-light-gray;
   border-radius: 0.3rem;
-  width: 100%;
+  width: 96%;
   text-align: center;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: flex-start;
+}
+img {
+  filter: invert(60%);
 }
 .items_height {
   overflow-y: scroll;
@@ -1182,7 +1186,7 @@ textarea {
 }
 .alerts-page {
   height: 100vh;
-  color: white;
+  color: $base-gray;
   margin-top: 4rem;
   &__previous-step {
     @include muted-font(12);

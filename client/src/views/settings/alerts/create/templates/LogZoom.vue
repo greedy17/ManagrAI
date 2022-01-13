@@ -1,13 +1,21 @@
 <template>
   <div class="logZoomPage">
-    <div>
-      <h2 style="font-weight: bold; text-align: center">
-        <span style="color: black">
+    <div
+      style="
+        display: flex;
+        align-item: flex-start;
+        flex-direction: column;
+        width: 33vw;
+        margin-left: 1.25rem;
+      "
+    >
+      <h2>
+        <span>
           Log
           <span style="color: #5f8cff"> Meetings</span>
         </span>
       </h2>
-      <p style="text-align: center; color: black; font-weight: bold">
+      <p style="margin-top: -0.5rem">
         Log meetings and save attendees right after the meeting ends
       </p>
     </div>
@@ -21,15 +29,15 @@
               style="margin: 0.25rem"
               @input="changeCreate"
               :value="create"
-              offColor="#199e54"
-              onColor="#199e54"
+              offColor="#5f8cff"
+              onColor="#5f8cff"
             />
             <label :class="create ? 'green' : ''">Create #channel</label>
           </div>
 
           <label v-else for="channel" style="font-weight: bold"
             >Alerts will send to
-            <span style="color: #199e54; font-size: 1.2rem">{{ channelName }}</span>
+            <span style="color: #5f8cff; font-size: 1.2rem">{{ channelName }}</span>
             channel</label
           >
           <div
@@ -316,9 +324,11 @@ export default {
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
-
+img {
+  filter: invert(70%);
+}
 .green {
-  color: $dark-green;
+  color: #5f8cff;
 }
 ::placeholder {
   color: $panther-silver;
@@ -326,14 +336,18 @@ export default {
 }
 .logZoomPage {
   height: 100vh;
-  color: white;
+  color: $base-gray;
   margin-top: 4rem;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
 }
 .card {
   width: 450px;
   height: 225px;
-  background-color: $panther;
+  background-color: $white;
   border-radius: 0.5rem;
+  box-shadow: 3px 4px 7px $very-light-gray;
 }
 .centered {
   margin-top: 4rem;
@@ -380,7 +394,7 @@ export default {
   text-indent: none;
   border-style: none;
   letter-spacing: 0.03rem;
-  background-color: $panther-silver;
+  background-color: $soft-gray;
   color: $panther-gray;
   cursor: not-allowed;
   height: 2rem;
@@ -389,15 +403,15 @@ export default {
   font-size: 1.02rem;
 }
 input {
-  -webkit-box-shadow: 1px 4px 7px black;
-  box-shadow: 1px 4px 7px black;
+  box-shadow: 3px 4px 7px $very-light-gray;
   border: 1px solid white;
   border-radius: 0.25rem;
   margin-top: 0.5rem;
 }
 .selected__item {
   padding: 0.5rem 1.5rem;
-  border: 2px solid white;
+  border: none;
+  box-shadow: 3px 4px 7px $very-light-gray;
   border-radius: 0.3rem;
   cursor: pointer;
   display: flex;

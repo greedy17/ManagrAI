@@ -47,8 +47,8 @@
             v-model="alert.resourceType"
           /> -->
           <!-- <h3>{{ alert.resourceType }}</h3> -->
-          <div v-if="!templateNames.includes(alert.title)" style="margin-top: 2rem">
-            <span>Edit workflow title: </span>
+          <div v-if="!templateNames.includes(alert.title)" style="margin: 2rem">
+            <h3>Edit workflow title:</h3>
             <FormField
               :id="`resource-title-${alert.id}`"
               :errors="templateTitleField.errors"
@@ -56,7 +56,7 @@
               v-model="templateTitleField.value"
             />
           </div>
-          <div style="margin-top: 2rem">
+          <div v-else style="margin: 2rem">
             <h2>{{ alert.title }}</h2>
             <p class="even">
               Cant edit templated alert titles &nbsp;
@@ -70,7 +70,7 @@
               <div style="display: flex; justify-content: flex-end; width: 100%">
                 <img
                   @click.stop="onRemoveAlertGroup(group.id, index)"
-                  style="height: 1.25rem; cursor: pointer"
+                  style="height: 1.25rem; cursor: pointer; filter: invert(90%)"
                   src="@/assets/images/remove.png"
                   alt=""
                 />
@@ -118,8 +118,8 @@
         <div v-if="selectedTab == 'MESSAGE'" class="alerts-template-list__content-message">
           <div class="alerts-template-list__content-message__form">
             <div class="alerts-template-list__content-message__form-body">
-              <div style="margin-bottom: -1rem">
-                <h4>Edit your worflow message:</h4>
+              <div>
+                <h3>Edit your worflow message:</h3>
               </div>
               <FormField :errors="messageTemplateForm.field.body.errors">
                 <template v-slot:input>
@@ -136,31 +136,23 @@
                 </template>
               </FormField>
             </div>
-
-            <DropDownSearch
-              :items="fields.list"
-              @input="bindText(`${alert.resourceType}.${$event}`)"
-              displayKey="referenceDisplayLabel"
-              valueKey="apiName"
-              nullDisplay="Select a field"
-              searchable
-              :hasNext="!!fields.pagination.hasNextPage"
-              @load-more="fieldNextPage"
-              @search-term="onSearchFields"
-              auto
-              class="left"
-            />
-            <!-- <ListContainer horizontal>
-                <template v-slot:list>
-                  <ListItem
-                    :key="key"
-                    v-for="(val, key) in recipientBindings"
-                    :item="val.referenceDisplayLabel"
-                    :active="true"
-                    @item-selected="bindText(`__Recipient.${val.apiName}`)"
-                  />
-                </template>
-              </ListContainer> -->
+            <div
+              style="display: flex; align-items: flex-start; flex-direction: column; width: 100%"
+            >
+              <h3>Add CRM fields:</h3>
+              <DropDownSearch
+                :items="fields.list"
+                @input="bindText(`${alert.resourceType}.${$event}`)"
+                displayKey="referenceDisplayLabel"
+                valueKey="apiName"
+                nullDisplay="Search fields"
+                searchable
+                :hasNext="!!fields.pagination.hasNextPage"
+                @load-more="fieldNextPage"
+                @search-term="onSearchFields"
+                auto
+              />
+            </div>
           </div>
           <!-- <div
             class="alerts-template-list__content-message__preview"
@@ -747,13 +739,13 @@ export default {
 }
 .group-card {
   border-radius: 0.75rem;
-  background-color: $panther;
+  background-color: $white;
   padding: 1.2rem;
-  width: 80%;
+  width: 58%;
   margin-bottom: 2rem;
-  color: $white;
+  color: $base-gray;
   font-size: 0.85rem;
-  box-shadow: 3px 4px 14px black;
+  box-shadow: 3px 4px 7px $very-light-gray;
   transition: all 0.2s;
 
   &__title {
@@ -782,7 +774,6 @@ export default {
   display: flex;
   flex-direction: row;
   align-items: center;
-  color: $white;
   font-weight: bold;
   cursor: pointer;
 }
@@ -817,14 +808,16 @@ export default {
   color: $panther;
 }
 ::v-deep .ql-container.ql-snow {
-  border-radius: 0.25rem;
-  border: 3px solid $panther-silver;
+  border-radius: 0.2rem;
+  border: none;
+  box-shadow: 3px 4px 7px $very-light-gray;
 }
 ::v-deep .ql-toolbar.ql-snow {
-  border-radius: 0.5rem;
-  border: 3px solid $panther-silver;
-  border-bottom: 1px solid black;
+  border-radius: 0.1rem;
   background-color: white;
+  box-shadow: 3px 4px 7px $very-light-gray;
+  border: none;
+  width: 20rem;
 }
 ::v-deep .ql-blank.ql-editor {
   background-color: white;
@@ -833,6 +826,7 @@ export default {
 ::v-deep .ql-container {
   background-color: white;
   color: $panther;
+  width: 20rem;
 }
 .message__box {
   margin-bottom: 2rem;
@@ -891,17 +885,16 @@ export default {
   margin-left: -0.1rem;
 }
 ::v-deep .input-content {
-  background-color: white;
   border: none;
   font-weight: bold;
+  box-shadow: 3px 4px 7px $very-light-gray;
   color: $panther;
 }
 ::v-deep .input-content:focus {
-  background-color: $panther-silver;
-  box-shadow: 2px 4px 7px black;
+  box-shadow: 3px 4px 7px $very-light-gray;
   border: none;
   font-weight: bold;
-  color: white;
+  color: $base-gray;
 }
 ::v-deep .ls-container__list--horizontal {
   background-color: transparent;
@@ -911,19 +904,37 @@ export default {
 }
 .tab__header-items {
   display: flex;
-  padding: 0.25rem 0 0;
-
+  padding: 0.5rem 1rem;
+  overflow: scroll;
   &__item {
-    padding: 1rem 2rem;
+    padding: 1rem 3rem;
+    margin: 0.25rem;
     border-bottom: none;
     color: #bcbcc1;
     font-weight: normal;
     cursor: pointer;
     &--active {
-      padding: 1rem 2rem;
-      color: white;
-      border-bottom: 2px solid white;
+      padding: 1rem 3rem;
+      color: $darker-green;
+      background-color: $lighter-green;
+      border-radius: 0.4rem;
+      font-weight: 900;
+      position: relative;
     }
+    &--active:after {
+      content: '';
+      background: $darker-green;
+      position: absolute;
+      bottom: 0.75rem;
+      left: 0;
+      height: 50%;
+      width: 3px;
+    }
+  }
+  &__item:hover {
+    background-color: $lighter-green;
+    color: $darker-green;
+    border-radius: 0.4rem;
   }
   &__group {
     display: flex;
@@ -956,10 +967,14 @@ export default {
   padding: 0.25rem 0 0;
 }
 .alerts-template-list__content-message {
-  display: flex;
-  justify-content: space-evenly;
+  margin-left: 2rem;
+  padding-left: 0.5rem;
+  height: 100%;
   &__form {
-    width: 30rem;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    height: 100%;
   }
   &__preview {
   }

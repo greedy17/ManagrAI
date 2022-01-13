@@ -1,6 +1,7 @@
 <template>
   <div class="profile-page">
     <div class="profile-page__form">
+      <img class="back-logo" src="@/assets/images/logo.png" />
       <FormField
         v-model="profileForm.field.firstName.value"
         placeholder="First Name"
@@ -29,13 +30,16 @@
           />
         </template>
       </FormField>
-      <PulseLoadingSpinnerButton
-        @click="handleUpdate"
-        class="update-button"
-        text="Update"
-        :loading="loading"
-        >Update</PulseLoadingSpinnerButton
-      >
+
+      <div style="width: 100%; display: flex; justify-content: flex-end; flex-direction: row">
+        <PulseLoadingSpinnerButton
+          @click="handleUpdate"
+          class="update-button"
+          text="Update"
+          :loading="loading"
+          >Update</PulseLoadingSpinnerButton
+        >
+      </div>
     </div>
   </div>
 </template>
@@ -125,6 +129,19 @@ export default {
     padding: 0rem;
   }
 }
+::v-deep .input-content {
+  box-shadow: 0px 2px 3px $very-light-gray;
+  border: none;
+}
+::v-deep .tn-dropdown__selection-container {
+  background: transparent;
+  border: none;
+}
+::v-deep .tn-input {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
 .profile-page__form {
   @include standard-border();
   position: relative;
@@ -134,10 +151,11 @@ export default {
   width: 31.25rem;
   min-height: 15rem;
   height: auto;
-  background-color: $panther;
+  background-color: $white;
+  box-shadow: 3px 4px 7px $very-light-gray;
   border: none;
   border-radius: 0.5rem;
-  color: white;
+  color: $base-gray;
   display: flex;
   flex-flow: column;
   align-items: center;
@@ -157,11 +175,8 @@ export default {
   color: white;
   margin-top: 1.25rem;
   height: 2.5rem;
-  width: 16.2rem;
+  width: 6rem;
   font-size: 14px;
-}
-.update-button:hover {
-  background-color: white;
 }
 button {
   @include primary-button();
@@ -169,5 +184,13 @@ button {
   height: 2.5rem;
   width: 19rem;
   font-size: 14px;
+}
+.back-logo {
+  position: absolute;
+  opacity: 0.06;
+  filter: alpha(opacity=50);
+  height: 90%;
+  margin-top: -1.5rem;
+  margin-left: -2rem;
 }
 </style>

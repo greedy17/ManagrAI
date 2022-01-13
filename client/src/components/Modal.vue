@@ -64,8 +64,8 @@ export default {
   left: 0;
   z-index: 9;
   &__backdrop {
-    backdrop-filter: blur(2px);
-    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(6px);
+    background-color: rgba(0, 0, 0, 0);
     position: fixed;
     top: 0;
     right: 0;
@@ -76,7 +76,8 @@ export default {
   &__dialog {
     $bold-font-family: Lato-Bold;
     color: white;
-    background-color: $panther;
+    background-color: $white;
+    box-shadow: 3px 4px 7px $very-light-gray;
     position: relative;
     width: 40vw;
     height: 60vh;
@@ -93,8 +94,10 @@ export default {
   &__close {
     width: 24px;
     height: 24px;
-    background-color: $panther-gray;
+    background-color: $off-white;
     color: $panther-silver;
+
+    border: none;
   }
   &__header {
     padding: 8px 20px 4px;

@@ -44,6 +44,7 @@ from managr.slack.helpers.exceptions import (
     InvalidBlocksException,
     InvalidAccessToken,
 )
+from managr.core.cron import process_get_task_list
 from managr.api.decorators import slack_api_exceptions
 from managr.alerts.models import AlertTemplate, AlertInstance, AlertConfig
 from managr.gong.models import GongCall, GongAuthAccount
@@ -466,13 +467,11 @@ def process_remove_contact_from_meeting(payload, context):
     meeting = workflow.meeting
     org = workflow.user.organization
     access_token = org.slack_integration.access_token
-    print(workflow.forms.all())
     for i, part in enumerate(meeting.participants):
         if part["_tracking_id"] == context.get("tracking_id"):
             # remove its form if it exists
             if part["_form"] not in [None, ""]:
                 workflow.forms.filter(id=part["_form"]).delete()
-            print(workflow.forms.all())
             del meeting.participants[i]
             break
     meeting.save()
@@ -902,8 +901,6 @@ def process_show_update_resource_form(payload, context):
         "channel_id": payload.get("container").get("channel_id"),
         "message_ts": payload.get("container").get("message_ts"),
     }
-    if user.organization.has_products and product_form is not None:
-        private_metadata.update({"product_form": str(product_form.id)})
     private_metadata.update(context)
     if user.organization.has_products and resource_type == "Opportunity":
         blocks.append(
@@ -1102,6 +1099,7 @@ def process_create_task(payload, context):
     }
     if type == "command":
         data["view_id"] = payload["view"]["id"]
+        data["view"]["external_id"] = f"create_task_modal.{str(uuid.uuid4())}"
     else:
         data["trigger_id"] = trigger_id
     try:
@@ -1200,14 +1198,13 @@ def process_check_is_owner(payload, context):
 
 @processor(required_context="u")
 def process_resource_selected_for_task(payload, context):
-
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     trigger_id = payload["trigger_id"]
     u = User.objects.get(id=context.get("u"))
     org = u.organization
     selected_value = None
     # if this is coming from the create form delete the old form
-    form_id = context.get("f")
+    form_id = context.get("f", None)
     if form_id:
         OrgCustomSlackFormInstance.objects.get(id=form_id).delete()
     if len(payload["actions"]):
@@ -1220,7 +1217,6 @@ def process_resource_selected_for_task(payload, context):
         view_type, __unique_id = external_id.split(".")
     except ValueError:
         pass
-
     data = {
         "trigger_id": trigger_id,
         "view_id": payload.get("view").get("id"),
@@ -1426,21 +1422,11 @@ def process_paginate_meetings(payload, context):
     access_token = user.organization.slack_integration.access_token
     invocation = context.get("invocation")
     channel = context.get("channel")
-    meeting_instances = MeetingPrepInstance.objects.filter(invocation=invocation)
+    meeting_instances = MeetingPrepInstance.objects.filter(user=user.id).filter(
+        invocation=invocation
+    )
     meeting_instance = meeting_instances.first()
     if not meeting_instance:
-        # check if the config was deleted
-        # config = AlertConfig.objects.filter(id=config_id).first()
-        # if not config:
-        #     error_blocks = get_block_set(
-        #         "error_modal",
-        #         {
-        #             "message": ":no_entry: The settings for these instances was deleted the data is no longer available"
-        #         },
-        #     )
-        #     slack_requests.update_channel_message(
-        #         channel_id, ts, access_token, text="Error", block_set=error_blocks
-        #     )
         return
     # NOTE replace [3:8]
     blocks = payload["message"]["blocks"]
@@ -1461,8 +1447,29 @@ def process_paginate_meetings(payload, context):
             ),
             *custom_meeting_paginator_block(meeting_instances, invocation, channel),
         ]
-        blocks[3:8] = replace_blocks
+        blocks[3:7] = replace_blocks
         slack_requests.update_channel_message(channel_id, ts, access_token, block_set=blocks)
+    return
+
+
+@slack_api_exceptions(rethrow=True)
+@processor()
+def process_paginate_tasks(payload, context):
+    channel_id = payload.get("channel", {}).get("id", None)
+    ts = payload.get("message", {}).get("ts", None)
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    if not user:
+        return
+    access_token = user.organization.slack_integration.access_token
+    channel = context.get("channel")
+    # NOTE replace [3:8]
+    blocks = payload["message"]["blocks"]
+    header_index, header_block = block_finder("task_header", blocks)
+    divider_index, divider_block = block_finder("task_divider", blocks)
+    replace_blocks = process_get_task_list(user.id, page=int(context.get("new_page", 0)))
+    blocks[header_index:divider_index] = replace_blocks
+    slack_requests.update_channel_message(channel_id, ts, access_token, block_set=blocks)
     return
 
 
@@ -1733,19 +1740,44 @@ def process_get_notes(payload, context):
 
 @processor(required_context="u")
 def process_get_call_recording(payload, context):
-    trigger_id = payload["trigger_id"]
+    resource_id = context.get("resource_id", None)
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    view_id = None
+    if resource_id is None:
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        timestamp = datetime.fromtimestamp(float(payload["actions"][0]["action_ts"]))
+        view_id = payload["view"]["id"]
+        resource_type = payload["view"]["state"]["values"]["managr_task_related_to_resource"][
+            f"UPDATE_TASK_SELECTED_RESOURCE?u={context.get('u')}"
+        ]["selected_option"]["value"]
+        resource_id = payload["view"]["state"]["values"]["select_existing"][
+            f"GONG_CALL_RECORDING?u={context.get('u')}&resource={resource_type}"
+        ]["selected_option"]["value"]
+    else:
+        timestamp = datetime.fromtimestamp(float(payload["message"]["ts"]))
+    trigger_id = payload["trigger_id"]
+
     user = User.objects.get(id=context.get("u"))
     user_tz = datetime.now(pytz.timezone(user.timezone)).strftime("%z")
     user_timezone = pytz.timezone(user.timezone)
     gong_auth = GongAuthAccount.objects.get(organization=user.organization)
     access_token = user.organization.slack_integration.access_token
-    opp = Opportunity.objects.get(id=context.get("resource_id"))
-    if opp:
-        acc = Account.objects.filter(opportunities=opp.id)
-    call = GongCall.objects.filter(crm_id=opp.secondary_data["Id"]).first()
+    resource_ids = []
+    resource = None
+    opps = Opportunity.objects.filter(id=resource_id)
+    if opps:
+        resource_ids.append(opps.first().integration_id)
+        acc = Account.objects.filter(opportunities__in=[opps.first().id]).first()
+        resource = opps.first()
+        if acc:
+            resource_ids.append(acc.integration_id)
+    else:
+        accs = Account.objects.filter(id=resource_id)
+        if accs:
+            resource_ids.append(accs.first().integration_id)
+            resource = accs.first()
+    call = GongCall.objects.filter(crm_id=resource.secondary_data["Id"]).first()
     type = context.get("type", None)
-    timestamp = datetime.fromtimestamp(float(payload["message"]["ts"]))
     current = pytz.utc.localize(timestamp).astimezone(user_timezone).date()
     blocks = []
     if type == "recap" and datetime.now().date() == current:
@@ -1753,7 +1785,7 @@ def process_get_call_recording(payload, context):
         curr_date_str = curr_date.isoformat() + "T01:00:00" + f"{user_tz[:3]}:{user_tz[3:]}"
         try:
             call_res = gong_auth.helper_class.check_for_current_call(curr_date_str)
-            call_details = generate_call_block(call_res, [opp.integration_id, acc.integration_id])
+            call_details = generate_call_block(call_res, resource_ids)
             if call_details:
                 blocks = [*call_details]
             else:
@@ -1799,13 +1831,16 @@ def process_get_call_recording(payload, context):
                 ),
             ]
     modal_data = {
-        "trigger_id": trigger_id,
         "view": {
             "type": "modal",
             "title": {"type": "plain_text", "text": "Call Details"},
             "blocks": blocks,
         },
     }
+    if view_id:
+        modal_data["view_id"] = view_id
+    else:
+        modal_data["trigger_id"] = trigger_id
     try:
         res = slack_requests.generic_request(url, modal_data, access_token=access_token)
     except Exception as e:
@@ -2124,6 +2159,7 @@ def handle_block_actions(payload):
         slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL: process_check_is_owner,
         slack_const.PAGINATE_ALERTS: process_paginate_alerts,
         slack_const.PAGINATE_MEETINGS: process_paginate_meetings,
+        slack_const.PAGINATE_TASKS: process_paginate_tasks,
         slack_const.ADD_TO_CADENCE_MODAL: process_show_cadence_modal,
         slack_const.ADD_TO_SEQUENCE_MODAL: process_show_sequence_modal,
         slack_const.GET_USER_ACCOUNTS: process_show_engagement_modal,

@@ -62,7 +62,7 @@
   color: $white;
   fill: $white;
   &:hover {
-    background-color: $silver;
+    background-color: $very-light-gray;
     color: $main-font-gray;
     box-shadow: 1px 1px 5px -1px $coral, -1px -1px 5px -1px $coral;
     fill: $coral;
@@ -71,7 +71,7 @@
 
 @mixin disabled-button-styles() {
   &:disabled {
-    background-color: $panther-silver;
+    background-color: $very-light-gray;
     color: $panther-gray;
 
     &:hover {

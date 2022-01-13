@@ -343,12 +343,17 @@ def _send_calendar_details(
         block_builders.simple_section(":calendar: *Meetings Today* ", "mrkdwn"),
         # {"type": "divider"},
     ]
+    if "status" in processed_data:
+        blocks.append(
+            block_builders.simple_section(
+                "There was an error retreiving your calendar events :exclamation:", "mrkdwn"
+            )
+        )
+        return blocks
     if processed_data is not None:
         # processed_data checks to see how many events exists
         if invocation:
-            meetings = MeetingPrepInstance.objects.filter(user=user.id).filter(
-                invocation=invocation
-            )
+            meetings = MeetingPrepInstance.objects.filter(user=user).filter(invocation=invocation)
         else:
             last_instance = (
                 MeetingPrepInstance.objects.filter(user=user).order_by("-datetime_created").first()
@@ -356,12 +361,11 @@ def _send_calendar_details(
             current_invocation = last_instance.invocation + 1 if last_instance else 1
             for event in processed_data:
                 meeting_prep(event, user_id, current_invocation)
-            meetings = MeetingPrepInstance.objects.filter(user=user.id).filter(
+            meetings = MeetingPrepInstance.objects.filter(user=user).filter(
                 invocation=current_invocation
             )
         if meetings:
-            meeting_instances = MeetingPrepInstance.objects.filter(invocation=current_invocation)
-            paged_meetings = custom_paginator(meeting_instances, count=1, page=page)
+            paged_meetings = custom_paginator(meetings, count=1, page=page)
             paginate_results = paged_meetings.get("results", [])
             if len(paginate_results):
                 current_instance = paginate_results[0]
@@ -380,7 +384,7 @@ def _send_calendar_details(
     return blocks
 
 
-def process_get_task_list(user_id):
+def process_get_task_list(user_id, page=1):
     user = User.objects.get(id=user_id)
     try:
         tasks = user.salesforce_account.adapter_class.list_tasks()
@@ -388,15 +392,17 @@ def process_get_task_list(user_id):
         return [
             block_builders.simple_section(f"There was an issue with Salesforce: {e}", "mrkdwn"),
         ]
-    paged_tasks = custom_paginator(tasks, count=3)
+    paged_tasks = custom_paginator(tasks, count=3, page=page)
     results = paged_tasks.get("results", [])
     if results:
         task_blocks = [
             block_builders.simple_section(
-                f":white_check_mark: *Upcoming Tasks: {len(tasks)}*", "mrkdwn"
+                f":white_check_mark: *Upcoming Tasks: {len(tasks)}*",
+                "mrkdwn",
+                block_id="task_header",
             ),
         ]
-        for t in tasks:
+        for t in results:
             resource = "_salesforce object n/a_"
             # get the resource if it is what_id is for account/opp
             # get the resource if it is who_id is for lead
@@ -425,9 +431,7 @@ def process_get_task_list(user_id):
                     ),
                 ]
             )
-            task_blocks.extend(
-                custom_task_paginator_block(paged_tasks, user.slack_integration.channel)
-            )
+        task_blocks.extend(custom_task_paginator_block(paged_tasks, user.slack_integration.channel))
     else:
         task_blocks = [
             block_builders.simple_section("You have no tasks due today :clap:", "mrkdwn"),
@@ -473,7 +477,14 @@ def generate_morning_digest(user_id, invocation=None, page=1):
     alerts = process_current_alert_list(user_id)
     meeting = _send_calendar_details(user_id, page, invocation)
     tasks = process_get_task_list(user_id)
-    blocks = [*blocks, *meeting, {"type": "divider"}, *tasks, {"type": "divider"}, *alerts]
+    blocks = [
+        *blocks,
+        *meeting,
+        {"type": "divider"},
+        *tasks,
+        {"type": "divider", "block_id": "task_divider"},
+        *alerts,
+    ]
     if invocation is None:
         try:
             slack_requests.send_channel_message(
@@ -568,18 +579,6 @@ def generate_afternoon_digest(user_id):
         logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
 
 
-def _generate_notification_key_lapsed(num):
-    if num == 1:
-        return core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_LAPSED_EXPECTED_CLOSE_DATE_1_DAY
-    if num == 14:
-        return core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_LAPSED_EXPECTED_CLOSE_DATE_14_DAYS
-    if num == 30:
-        return core_consts.NOTIFICATION_OPTION_KEY_OPPORTUNITY_LAPSED_EXPECTED_CLOSE_DATE_30_DAYS
-
-    # its not ideal that we are checking against a string, but since these are loaded from the fixture
-    # we can assume they will be the same
-
-
 @kronos.register("0 0 * * *")
 def revoke_tokens():
     expire = timezone.now() + datetime.timedelta(days=5)
@@ -612,8 +611,8 @@ def check_reminders(user_id):
                             emit_process_send_workflow_reminder(
                                 str(user.id), workflows["workflow_count"]
                             )
-                elif key == core_consts.MEETING_REMINDER_REP:
+                elif key == core_consts.AFTERNOON_DIGEST_REP:
                     generate_afternoon_digest(user_id)
-                elif key == core_consts.MEETING_REMINDER_MANAGER:
+                elif key == core_consts.AFTERNOON_DIGEST_MANAGER:
                     generate_afternoon_digest(user_id)
     return
