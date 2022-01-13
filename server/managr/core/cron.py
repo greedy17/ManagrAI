@@ -500,7 +500,7 @@ def generate_morning_digest(user_id, invocation=None, page=1):
 def process_uncompleted_meeting(user_id, meetings):
     user = User.objects.get(id=user_id)
     meetings = check_for_uncompleted_meetings(user.id, True)
-    total_meetings = meetings
+    total_meetings = meetings['not_completed']
     paged_tasks = custom_paginator((total_meetings), count=3)
     results = paged_tasks.get("results", [])
     if results:
@@ -512,9 +512,10 @@ def process_uncompleted_meeting(user_id, meetings):
             # text += ", "
         
             task_blocks = [
-                block_builders.simple_section(
-                    f" *Uncompleted Meetings*: {uncompleted_meeting_name}", "mrkdwn"
-                ),
+                block_builders.simple_section(":calendar: *Non-Zoom Meetings*", "mrkdwn"),
+            ]
+            task_blocks = [
+                *task_blocks, block_builders.simple_section(f"{uncompleted_meeting_name}")
             ]
             task_blocks.extend(
                 custom_task_paginator_block(paged_tasks, user.slack_integration.channel)
@@ -566,7 +567,7 @@ def generate_afternoon_digest(user_id):
         logger.info(f"UNCOMPLETED MEETINGS FOR {user.email}: {meetings}")
         if meetings["status"]:
             meeting = block_sets.get_block_set(
-                "meeting_reminder", {"u": str(user.id), "not_completed": meetings}
+                "meeting_reminder", {"u": str(user.id), "not_completed": meetings['not_completed']}
             )
         else:
             meeting = [

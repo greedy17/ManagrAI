@@ -74,6 +74,8 @@ def check_for_uncompleted_meetings(user_id, org_level=False):
                 total_meetings = MeetingWorkflow.objects.filter(user=user.id).filter(
                     datetime_created__contains=datetime.today().date()
                 )
+                test_meetings = MeetingWorkflow.objects.filter(user=user.id)
+                print(test_meetings, "this is total meetings")
                 user_not_completed = [
                     meeting for meeting in total_meetings if meeting.progress == 0
                 ]

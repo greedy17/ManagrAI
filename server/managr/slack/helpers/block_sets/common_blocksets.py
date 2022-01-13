@@ -473,7 +473,7 @@ def meeting_reminder_block_set(context):
     text = "meeting" if len(not_completed) < 2 else "meetings"
     blocks = [
         block_builders.simple_section(
-            f"FYI you have {len(not_completed)} {text} from today that still need to be logged here: #{name}",
+            f"FYI you have {len(not_completed)} {text} from today that still need to be logged",
             "mrkdwn",
         )
     ]
