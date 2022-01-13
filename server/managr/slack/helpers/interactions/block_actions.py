@@ -1798,10 +1798,12 @@ def process_get_call_recording(payload, context):
                         )
                     )
                 else:
+                    logger.info("Gong call recap without call")
                     blocks = [
                         block_builders.simple_section("No call associated with this opportunity")
                     ]
-        except InvalidRequest:
+        except InvalidRequest as e:
+            logger.exception(f"Gong invalid request: {e}")
             if call:
                 call_res = call.helper_class.get_call_details(call.auth_account.access_token)
                 call_details = generate_call_block(call_res)
@@ -1824,6 +1826,7 @@ def process_get_call_recording(payload, context):
             call_details = generate_call_block(call_res)
             blocks = [*call_details]
         else:
+            logger.info("Gong details from non recap")
             blocks = [
                 block_builders.simple_section("No call associated with this opportunity*"),
                 block_builders.context_block(
