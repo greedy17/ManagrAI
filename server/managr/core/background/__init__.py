@@ -85,7 +85,7 @@ def check_for_uncompleted_meetings(user_id, org_level=False):
             )
             not_completed = [meeting for meeting in total_meetings if meeting.progress == 0]
         if len(not_completed):
-            return {"status": True, "not_completed": len(not_completed)}
+            return {"status": True, "not_completed": not_completed}
     return {"status": False}
 
 

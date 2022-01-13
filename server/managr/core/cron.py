@@ -133,7 +133,6 @@ def _send_slack_int_email(user):
 
 def _process_calendar_details(user_id):
     user = User.objects.get(id=user_id)
-<<<<<<< Updated upstream
     events = user.nylas._get_calendar_data()
     if events:
         processed_data = []
@@ -146,23 +145,8 @@ def _process_calendar_details(user_id):
         return processed_data
     else:
         return None
-=======
-    try:
-        events = user.nylas._get_calendar_data()
-        if events:
-            processed_data = []
-            for event in events:
-                data = {}
-                data["title"] = event.get("title", None)
-                data["participants"] = event.get("participants", None)
-                data["times"] = event.get("when", None)
-                processed_data.append(data)
-            return processed_data
-        else:
-            return None
-    except Exception as e:
-        return dict({"status": "error"})
->>>>>>> Stashed changes
+
+
 
 
 def meeting_prep(processed_data, user_id, invocation=1):
@@ -329,6 +313,8 @@ def meeting_prep(processed_data, user_id, invocation=1):
             contact_forms.append(form)
             contact["_form"] = str(form.id)
     event_data = processed_data
+    event_data['provider'] = processed_data['conferencing']['provider']
+    print(processed_data['provider'], "This is provider")
     processed_data.pop("participants")
     data = {
         "user": user.id,
@@ -511,12 +497,45 @@ def generate_morning_digest(user_id, invocation=None, page=1):
         return blocks
 
 
+def process_uncompleted_meeting(user_id, meetings):
+    user = User.objects.get(id=user_id)
+    meetings = check_for_uncompleted_meetings(user.id, True)
+    total_meetings = meetings
+    paged_tasks = custom_paginator((total_meetings), count=3)
+    results = paged_tasks.get("results", [])
+    if results:
+        uncompleted_meetings = ''
+        for t in results:
+            uncompleted_meetings = t
+            uncompleted_meetings = str(t).split(',')
+            uncompleted_meeting_name = uncompleted_meetings[1]
+            # text += ", "
+        
+            task_blocks = [
+                block_builders.simple_section(
+                    f" *Uncompleted Meetings*: {uncompleted_meeting_name}", "mrkdwn"
+                ),
+            ]
+            task_blocks.extend(
+                custom_task_paginator_block(paged_tasks, user.slack_integration.channel)
+            )
+    else:
+        task_blocks = [
+            block_builders.simple_section("You have no tasks due today :clap:", "mrkdwn"),
+        ]
+                    
+    # if meetings["status"]:
+    #        message = [block_builders.simple_section("This is {meetings}", "mrkdwn")]
+    return task_blocks
+
+
 def generate_afternoon_digest(user_id):
     user = User.objects.get(id=user_id)
     #   check user_level for manager
     if user.user_level == "Manager":
         meetings = check_for_uncompleted_meetings(user.id, True)
         if meetings["status"]:
+
             slack_id = meetings['slack_id']
             paged_meetings = custom_paginator(meetings, count=1)
             paginate_results = paged_meetings.get("results", [])
@@ -530,6 +549,12 @@ def generate_afternoon_digest(user_id):
                     ),
                 ]
         
+
+            meeting = block_sets.get_block_set(
+                "manager_meeting_reminder",
+                {"u": str(user.id), "not_completed": meetings},
+            )
+
         else:
             meeting = [
                 block_builders.simple_section(
@@ -541,7 +566,7 @@ def generate_afternoon_digest(user_id):
         logger.info(f"UNCOMPLETED MEETINGS FOR {user.email}: {meetings}")
         if meetings["status"]:
             meeting = block_sets.get_block_set(
-                "meeting_reminder", {"u": str(user.id), "not_completed": meetings["not_completed"]}
+                "meeting_reminder", {"u": str(user.id), "not_completed": meetings}
             )
         else:
             meeting = [
@@ -550,6 +575,7 @@ def generate_afternoon_digest(user_id):
                 )
             ]
     actions = block_sets.get_block_set("actions_block_set", {"u": str(user.id)})
+    message = process_uncompleted_meeting(user_id, meetings)
     try:
         slack_requests.send_channel_message(
             user.slack_integration.channel,
@@ -558,6 +584,8 @@ def generate_afternoon_digest(user_id):
                 block_builders.simple_section("*Afternoon Digest* :beer:", "mrkdwn"),
                 {"type": "divider"},
                 *meeting,
+                {"type": "divider"},
+                *message,
                 {"type": "divider"},
                 *actions,
             ],
