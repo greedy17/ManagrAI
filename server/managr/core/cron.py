@@ -338,16 +338,13 @@ def _send_calendar_details(
     user = User.objects.get(id=user_id)
     processed_data = _process_calendar_details(user_id)
     current_invocation = invocation
-    blocks = [
-        block_builders.simple_section(":calendar: *Meetings Today* ", "mrkdwn"),
-        # {"type": "divider"},
-    ]
-    if "status" in processed_data:
-        blocks.append(
+    if processed_data is not None and "status" in processed_data:
+        blocks = [
+            block_builders.simple_section(":calendar: *Meetings Today* ", "mrkdwn"),
             block_builders.simple_section(
                 "There was an error retreiving your calendar events :exclamation:", "mrkdwn"
-            )
-        )
+            ),
+        ]
         return blocks
     if processed_data is not None:
         # processed_data checks to see how many events exists
@@ -369,7 +366,9 @@ def _send_calendar_details(
             if len(paginate_results):
                 current_instance = paginate_results[0]
                 blocks = [
-                    *blocks,
+                    block_builders.simple_section(
+                        f":calendar: {len(meetings)} *Meetings Today* ", "mrkdwn"
+                    ),
                     *get_block_set(
                         "calendar_reminders_blockset",
                         {"prep_id": str(current_instance.id), "u": str(user.id)},
@@ -379,7 +378,10 @@ def _send_calendar_details(
                     ),
                 ]
     else:
-        blocks.append(block_builders.simple_section("No meetings scheduled!"))
+        blocks = [
+            block_builders.simple_section(":calendar: *Meetings Today* ", "mrkdwn"),
+            block_builders.simple_section("No meetings scheduled!"),
+        ]
     return blocks
 
 
@@ -388,8 +390,9 @@ def process_get_task_list(user_id, page=1):
     try:
         tasks = user.salesforce_account.adapter_class.list_tasks()
     except Exception as e:
+        logger.exception(f"Morning digest tasks error: {e}")
         return [
-            block_builders.simple_section(f"There was an issue with Salesforce: {e}", "mrkdwn"),
+            block_builders.simple_section(f"There was an issue retreiving your tasks", "mrkdwn"),
         ]
     paged_tasks = custom_paginator(tasks, count=3, page=page)
     results = paged_tasks.get("results", [])
@@ -442,10 +445,6 @@ def process_current_alert_list(user_id):
     user = User.objects.get(id=user_id)
     configs = AlertConfig.objects.filter(
         Q(template__user__is_active=True, template__is_active=True)
-        & Q(
-            Q(recurrence_frequency="WEEKLY", recurrence_day=timezone.now().weekday())
-            | Q(recurrence_frequency="MONTHLY", recurrence_day=timezone.now().day)
-        )
     )
     alert_blocks = [
         block_builders.simple_section(f":eyes: *Pipeline Monitor*", "mrkdwn"),
@@ -533,7 +532,7 @@ def process_uncompleted_meeting(user_id, meetings):
 def generate_afternoon_digest(user_id):
     user = User.objects.get(id=user_id)
     #   check user_level for manager
-    if user.user_level == "Manager":
+    if user.user_level == "MANAGER":
         meetings = check_for_uncompleted_meetings(user.id, True)
         if meetings["status"]:
 
@@ -627,8 +626,8 @@ def check_reminders(user_id):
                             emit_process_send_workflow_reminder(
                                 str(user.id), workflows["workflow_count"]
                             )
-                elif key == core_consts.AFTERNOON_DIGEST_REP:
+                elif key == core_consts.AFTERNOON_DIGEST_REP and user.user_level != "MANAGER":
                     generate_afternoon_digest(user_id)
-                elif key == core_consts.AFTERNOON_DIGEST_MANAGER:
+                elif key == core_consts.AFTERNOON_DIGEST_MANAGER and user.user_level == "MANAGER":
                     generate_afternoon_digest(user_id)
     return
