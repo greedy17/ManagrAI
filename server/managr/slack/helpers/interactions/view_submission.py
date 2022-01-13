@@ -1156,7 +1156,11 @@ def process_create_task(payload, context):
         "view": {
             "type": "modal",
             "title": {"type": "plain_text", "text": "Task Created"},
-            "blocks": [*get_block_set("success_modal"),],
+            "blocks": [
+                block_builders.simple_section(
+                    ":white_check_mark: Successfully created task!", "mrkdwn"
+                )
+            ],
         },
     }
 
