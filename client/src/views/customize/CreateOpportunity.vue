@@ -1,10 +1,10 @@
 <template>
   <div class="update_opportunity">
     <div class="opportunity_title">
-      <h2 style="border-bottom: 3px solid #199e54; padding-bottom: 0.5rem; color: black">
-        Create <span>Opportunity</span>
-      </h2>
-      <p style="color: #5d5e5e; margin-top: -0.5rem">
+      <h3 style="border-bottom: 3px solid #199e54; padding-bottom: 0.5rem; color: black">
+        Create <span>Opportunity :</span>
+      </h3>
+      <p style="color: #5d5e5e; margin-top: -0.5rem; font-size: 0.95rem">
         Select the Fields you’d like to display when creating Opportunities via Slack
       </p>
     </div>
@@ -279,7 +279,13 @@ export default {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  padding-left: 14vw;
+  margin-bottom: -1rem;
+  margin-top: 4rem;
+}
+h3 {
+  font-size: 1.35rem;
 }
 
 .step {

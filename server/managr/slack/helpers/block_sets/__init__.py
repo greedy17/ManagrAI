@@ -67,5 +67,6 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "actions_block_set": command_views_blocksets.actions_block_set,
         "current_product_blockset": common_blocksets.current_product_block_set,
         "edit_product_block_set": common_blocksets.edit_product_block_set,
+        "pick_resource_modal_block_set": command_views_blocksets.pick_resource_modal_block_set,
     }
     return switcher.get(set_name)(context, *args, **kwargs)

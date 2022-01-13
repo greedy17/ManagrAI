@@ -317,6 +317,7 @@ class GongCallAdapter:
         self.auth_account = kwargs.get("auth_account", None)
         self.crm = kwargs.get("crm", None)
         self.crm_id = kwargs.get("crm_id", None)
+        self.acc_crm_id = kwargs.get("acc_crm_id", None)
         self.gong_id = kwargs.get("gong_id", None)
         self.client_id = kwargs.get("client_id", None)
         self.client_system = kwargs.get("client_system", None)
@@ -361,11 +362,18 @@ class GongCallAdapter:
             if len(context_data)
             else {}
         )
+        acc_data = (
+            [d for d in context_data[0].get("objects") if d["objectType"] == "Account"]
+            if len(context_data)
+            else {}
+        )
         opp = opp_data[0] if len(opp_data) else None
+        acc = acc_data[0] if len(acc_data) else None
         data = {}
         data["auth_account"] = auth_account.id
         data["crm"] = context_data[0].get("system", None) if len(context_data) else None
         data["crm_id"] = opp.get("objectId") if opp else None
+        data["acc_crm_id"] = acc.get("objectId") if acc else None
         data["gong_id"] = meta_data.get("id")
         data["client_id"] = meta_data.get("clientUniqueId", None)
         data["client_system"] = meta_data.get("system", None)
@@ -414,6 +422,7 @@ class GongCall(TimeStampModel):
         "GongAuthAccount", related_name="calls", on_delete=models.CASCADE, blank=True, null=True,
     )
     crm_id = models.CharField(max_length=100, null=True)
+    acc_crm_id = models.CharField(max_length=100, null=True)
     crm = models.CharField(max_length=50, null=True)
     gong_id = models.CharField(max_length=30, null=True)
     client_system = models.CharField(max_length=50, null=True)

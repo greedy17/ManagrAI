@@ -198,7 +198,7 @@ class CustomNylasAuthAccount(admin.ModelAdmin):
 
 class CustomMeetingPrepInstance(admin.ModelAdmin):
     model = MeetingPrepInstance
-    list_display = ("user", "datetime_created")
+    list_display = ("user", "event_data", "datetime_created")
     ordering = ("-datetime_created",)
 
 

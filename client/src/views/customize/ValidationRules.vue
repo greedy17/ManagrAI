@@ -33,13 +33,14 @@
       </div>
     </modal>
 
-    <h1
+    <h3
       v-if="selectedStage"
-      style="color: black; padding-bottom: 0.5rem; border-bottom: 3px solid #199e54"
+      style="padding-bottom: 0.5rem; border-bottom: 3px solid #199e54; font-size: 1.65rem"
     >
       {{ selectedStage }}
-    </h1>
-    <h2 style="color: black; font-weight: bold" v-else>Apply Additional fields to Stages</h2>
+    </h3>
+    <h2 v-else>Apply additional fields to stages</h2>
+
     <!-- <modal name="objects-modal" heading="Select a Stage">
       <div class="objects__">
         <img class="tooltip image" src="@/assets/images/toolTip.png" @click="toggleObjectsModal" />
@@ -76,7 +77,7 @@
     <div v-if="selectingStage">
       <div class="modal-container">
         <div style="text-align: center">
-          <h2>Select a stage</h2>
+          <h3>Select a stage</h3>
           <div class="centered">
             <DropDownSearch
               :items.sync="stages"
@@ -225,10 +226,12 @@
           >
             <div
               class="stage__dropdown__stages__title"
+              style="color: white"
               @click="selectForm('Opportunity', 'STAGE_GATING', form.stage)"
             >
               {{ form.stage }}
             </div>
+
             <div class="stage__dropdown__stages__x" @click.prevent="deleteForm(form)">
               <img src="@/assets/images/remove.png" style="height: 1rem" alt="" />
             </div>
@@ -564,11 +567,18 @@ export default {
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
-
+.back-logo {
+  position: absolute;
+  opacity: 0.06;
+  filter: alpha(opacity=50);
+  height: 36%;
+  margin-left: -2rem;
+  margin-top: 10rem;
+}
 .container {
   margin-left: 12vw;
-  margin-top: 4rem;
-  color: white;
+  margin-top: 3.5rem;
+  color: $base-gray;
   display: flex;
   align-items: center;
   flex-direction: column;
@@ -626,6 +636,9 @@ export default {
   background-color: $panther;
   border-radius: 0.25rem;
 }
+::v-deep .tn-dropdown__selection-container {
+  box-shadow: 0 5px 10px 0 $very-light-gray;
+}
 .stage__button {
   display: flex;
   align-items: center;
@@ -651,7 +664,9 @@ export default {
   justify-content: space-between;
   margin-top: 1rem;
   border-radius: 1rem;
-  background-color: $panther;
+  background-color: $white;
+  color: $base-gray;
+  box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
   &__box {
     &__title {
       text-align: center;
@@ -668,14 +683,10 @@ export default {
     }
     &__button {
       @include primary-button();
-      background-color: white;
-      color: $dark-green;
+      background-color: $dark-green;
+      color: $white;
       padding: 0.5rem 2rem;
       margin: 1rem;
-    }
-    &__button:hover {
-      color: $dark-green;
-      background-color: white;
     }
   }
 }
@@ -777,7 +788,7 @@ export default {
   padding: 6px 0 14px;
   border-radius: 0.5rem;
   box-shadow: 0 5px 10px 10px rgba(0, 0, 0, 0.5);
-  background-color: $panther;
+  background-color: $white;
   overflow-y: scroll;
 }
 .stage {
@@ -790,7 +801,7 @@ export default {
     padding: 6px 0 14px;
     border-radius: 0.5rem;
     box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
-    background-color: $panther;
+    background-color: $white;
     overflow-y: scroll;
 
     &__header {
@@ -805,7 +816,7 @@ export default {
         height: 2.5rem;
         padding: 1rem;
         margin: 0.5rem;
-        border-radius: 0.5rem;
+        border-radius: 0.33rem;
         font-size: 0.75rem;
         cursor: pointer;
         align-items: center;

@@ -82,6 +82,8 @@ logger = logging.getLogger("managr")
 @processor(required_context=["w", "form_type"])
 def process_stage_next_page(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    print("STAGE RELATED:", context)
+    print(payload)
     view = payload["view"]
     # if there are additional stage gating forms aggregate them and push them in 1 view
     # save current data to its form we will close all views at the end
@@ -302,6 +304,7 @@ def process_add_products_form(payload, context):
 @processor(required_context=["f"])
 def process_submit_resource_data(payload, context):
     # get context
+    print("SUBMIT CONTEXT:", context)
     has_error = False
     state = payload["view"]["state"]["values"]
     current_form_ids = context.get("f").split(",")
@@ -332,11 +335,13 @@ def process_submit_resource_data(payload, context):
     stage_form_data_collector = {}
     for form in stage_forms:
         form.update_source = type
+        form.is_submitted = True
         form.save_form(state)
         stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
     if not len(stage_forms):
         if main_form.template.form_type == "UPDATE":
             main_form.update_source = type
+            main_form.is_submitted = True
         main_form.save_form(state)
     all_form_data = {**stage_form_data_collector, **main_form.saved_data}
     slack_access_token = user.organization.slack_integration.access_token
@@ -532,7 +537,7 @@ def process_submit_resource_data(payload, context):
 
         else:
             text = f"Managr updated {main_form.resource_type}"
-            message = f"Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
+            message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
         if len(user.slack_integration.recap_receivers) and type == "meeting":
             _send_recap(current_form_ids, None, True)
         if (
@@ -548,38 +553,41 @@ def process_submit_resource_data(payload, context):
                 config_id=instance.config_id,
             ).filter(completed=False)
             alert_instance = alert_instances.first()
-            alert_template = alert_instance.template
-            text = alert_template.title
+            text = instance.template.title
             blocks = [
                 block_builders.header_block(f"{len(alert_instances)} results for workflow {text}"),
             ]
-            alert_instances = custom_paginator(
-                alert_instances, page=int(context.get("current_page"))
-            )
-            for alert_instance in alert_instances.get("results", []):
-                blocks = [
-                    *blocks,
-                    *get_block_set(
-                        "alert_instance",
-                        {
-                            "instance_id": str(alert_instance.id),
-                            "current_page": int(context.get("current_page")),
-                        },
-                    ),
-                ]
-                alert_instance.rendered_text = alert_instance.render_text()
-                alert_instance.save()
-            if len(blocks):
-                blocks = [
-                    *blocks,
-                    *custom_paginator_block(
-                        alert_instances,
-                        instance.invocation,
-                        context.get("channel_id"),
-                        instance.config_id,
-                    ),
-                ]
-
+            if alert_instance:
+                alert_instances = custom_paginator(
+                    alert_instances, page=int(context.get("current_page"))
+                )
+                for alert_instance in alert_instances.get("results", []):
+                    blocks = [
+                        *blocks,
+                        *get_block_set(
+                            "alert_instance",
+                            {
+                                "instance_id": str(alert_instance.id),
+                                "current_page": int(context.get("current_page")),
+                            },
+                        ),
+                    ]
+                    alert_instance.rendered_text = alert_instance.render_text()
+                    alert_instance.save()
+                if len(blocks):
+                    blocks = [
+                        *blocks,
+                        *custom_paginator_block(
+                            alert_instances,
+                            instance.invocation,
+                            context.get("channel_id"),
+                            instance.config_id,
+                        ),
+                    ]
+            else:
+                blocks.append(
+                    block_builders.simple_section("You're all finished with this workflow!")
+                )
             slack_requests.update_channel_message(
                 context.get("channel_id"),
                 context.get("message_ts"),
@@ -621,7 +629,7 @@ def process_submit_resource_data(payload, context):
                     f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
                 )
 
-            return {"response_action": "clear"}
+    return {"response_action": "clear"}
 
 
 @log_all_exceptions
@@ -1224,16 +1232,9 @@ def process_schedule_meeting(payload, context):
             "view": {
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Success"},
-                "blocks": [block_builders.simple_section("Zoom meeting succesffully scheduled")],
+                "blocks": [block_builders.simple_section("Zoom meeting successfully scheduled")],
             },
         }
-        # else:
-        #     updated_message = slack_requests.update_channel_message(
-        #         meta_data["original_message_channel"],
-        #         meta_data["original_message_timestamp"],
-        #         access_token,
-        #         block_set=json.dumps(meta_data["current_block"]),
-        #     )
     except InvalidBlocksException as e:
         return logger.exception(
             f"Faild to update Zoom Schedule Meeting modal for user {u.email}, {e}"
@@ -1645,7 +1646,7 @@ def process_update_product(payload, context):
     product_form.submission_date = timezone.now()
     product_form.save()
     text = "Success"
-    message = "Successfully updated product"
+    message = ":white_check_mark: Successfully updated product"
     if type == "alert":
         instance = AlertInstance.objects.get(id=context.get("alert_id"))
         alert_instances = AlertInstance.objects.filter(

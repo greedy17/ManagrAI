@@ -345,6 +345,39 @@ def add_to_cadence(context):
     slack_requests.generic_request(url, data, access_token=access_token)
 
 
+def call_recording(context):
+    user = User.objects.get(id=context.get("u"))
+    if user.slack_integration:
+        slack = UserSlackIntegration.objects.filter(
+            slack_id=user.slack_integration.slack_id
+        ).first()
+        if not slack:
+            return
+    blocks = get_block_set("pick_resource_modal_block_set", {"u": str(user.id)},)
+    access_token = user.organization.slack_integration.access_token
+
+    view_id = context.get("view_id", None)
+    url = (
+        slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        if view_id
+        else slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    )
+
+    data = {
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Call Recording"},
+            "blocks": blocks,
+            "external_id": f"pick_resource_modal_block_set.{str(uuid.uuid4())}",
+        },
+    }
+    if view_id:
+        data["view_id"] = view_id
+    else:
+        data["trigger_id"] = context.get("trigger_id")
+    slack_requests.generic_request(url, data, access_token=access_token)
+
+
 def get_action(action_name, context={}, *args, **kwargs):
 
     switcher = {
@@ -356,5 +389,6 @@ def get_action(action_name, context={}, *args, **kwargs):
         "SCHEDULE_MEETING": schedule_meeting,
         "ADD_SEQUENCE": add_to_sequence,
         "ADD_CADENCE": add_to_cadence,
+        "CALL_RECORDING": call_recording,
     }
     return switcher.get(action_name)(context, *args, **kwargs)

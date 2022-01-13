@@ -14,7 +14,9 @@
               </router-link>
             </li>
             <li>
-              <router-link exact-active-class="active" :to="{ name: 'Required' }">Map </router-link>
+              <router-link exact-active-class="active" :to="{ name: 'Required' }"
+                >Actions</router-link
+              >
             </li>
             <li>
               <router-link active-class="active" :to="{ name: 'ListTemplates' }"
@@ -85,7 +87,7 @@
 
       <div v-if="!isAdmin && !user.onboarding" class="right">
         <div class="tooltip">
-          <img style="height: 1.5rem" src="@/assets/images/blackhelp.png" class="tooltip__icon" />
+          <img style="height: 1rem" src="@/assets/images/blackhelp.png" class="tooltip__icon" />
           <div class="tooltip__popup">
             <div class="tooltip__popup__bold">Having issues?</div>
             <div class="tip">Email Us: support@mymanagr.com</div>
@@ -111,28 +113,20 @@
 
       <div v-else-if="isAdmin" class="right">
         <div class="tooltip">
-          <img style="height: 1.5rem" src="@/assets/images/blackhelp.png" class="tooltip__icon" />
+          <img style="height: 1.3rem" src="@/assets/images/blackhelp.png" class="tooltip__icon" />
           <div class="tooltip__popup">
             <div class="tooltip__popup__bold">Having issues?</div>
             <div class="tip">Email Us: support@mymanagr.com</div>
           </div>
         </div>
 
-        <div>
-          <router-link :to="{ name: 'ProfilePage' }"
-            ><img src="@/assets/images/profile.png" style="height: 1.5rem" alt=""
-          /></router-link>
-        </div>
+        <router-link :to="{ name: 'ProfilePage' }"
+          ><img src="@/assets/images/profile.png" style="height: 1.3rem" alt=""
+        /></router-link>
 
-        <div>
-          <router-link :to="{ name: 'Login' }"
-            ><img
-              @click="logOut"
-              src="@/assets/images/blacklogout.png"
-              alt=""
-              style="height: 1.5rem"
-          /></router-link>
-        </div>
+        <router-link :to="{ name: 'Login' }"
+          ><img @click="logOut" src="@/assets/images/blacklogout.png" alt="" style="height: 1.3rem"
+        /></router-link>
       </div>
     </nav>
   </div>
@@ -247,6 +241,7 @@ export default {
 
 nav {
   height: 4rem;
+  font-weight: 900;
   display: flex;
   flex-flow: row;
   align-items: center;
@@ -255,24 +250,23 @@ nav {
   left: 0;
   z-index: 200;
   width: 100vw;
-  background-color: $white;
-  // box-shadow: 1px 4px 7px rgba(0, 0, 0, 0.2);
+  color: $base-gray;
+  padding: 0.25rem 0 1rem 0;
+  border-bottom: 3px solid $soft-gray;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
 }
-
 .logo {
-  @include disable-text-select();
   margin-left: 1.5rem;
-  margin-right: 2rem;
+  margin-right: 2.25rem;
   display: flex;
-  align-items: center;
-
-  &:hover {
-    cursor: pointer;
-  }
-
-  img {
-    height: 10rem;
-  }
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: 400;
+  font-size: 1.5rem;
+  padding: 0.75rem;
 }
 
 .links {
@@ -367,16 +361,16 @@ nav {
     padding: 13px 21px;
     border-radius: 5px;
     box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
-    border: solid 2px $panther-gray;
-    background-color: $panther;
-    color: white;
+    border: solid 2px $off-white;
+    background-color: $off-white;
+    color: $base-gray;
     position: absolute;
     top: -5px;
     right: 105%;
 
     &__bold {
       font-family: #{$bold-font-family};
-      color: $panther-silver;
+      color: $panther;
     }
   }
 }
@@ -393,11 +387,12 @@ ul {
 
 li {
   display: inline;
-  padding: 1rem;
   text-align: center;
-  font-weight: bold;
-  margin-top: 1rem;
+  font-weight: 900;
+  margin-right: 1rem;
+  font-size: 14px;
 }
+
 .profile {
   border: 3px solid black;
   border-radius: 50%;
@@ -412,20 +407,27 @@ img {
 }
 a {
   text-decoration: none;
-  font-weight: bold;
-  color: $black;
+  font-weight: 900;
+  color: $base-gray;
+  padding: 0.5rem;
 }
 
 a:hover {
-  filter: opacity(60%);
+  color: $off-white;
+  background-color: $lighter-green;
+  border-radius: 0.2rem;
+
+  img {
+    filter: invert(100%);
+  }
 }
 .mar {
   margin-top: 1rem;
 }
 .active {
   border-bottom: 3px solid $dark-green;
-  font-weight: bold;
-  padding-bottom: 0.5rem;
-  color: black;
+  color: $dark-green;
+  font-weight: 900;
+  padding-bottom: 1rem;
 }
 </style>
