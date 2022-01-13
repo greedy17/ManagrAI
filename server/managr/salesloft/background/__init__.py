@@ -34,13 +34,15 @@ from ..helpers.class_functions import (
     sync_current_slaccount_page,
     sync_current_person_page,
     sync_current_cadence_page,
-    sync_current_account_page
+    sync_current_account_page,
 )
 
 logger = logging.getLogger("managr")
 
+
 def emit_sync_accounts(auth_account_id, verbose_name):
     return sync_accounts(auth_account_id, verbose_name=verbose_name)
+
 
 def emit_sync_cadences(auth_account_id, verbose_name):
     return sync_cadences(auth_account_id, verbose_name=verbose_name)
@@ -87,7 +89,10 @@ def sync_accounts(auth_account_id):
             else:
                 auth_account.regenerate_token()
                 attempts += 1
+        except Exception as e:
+            return logger.exception(f"Salesloft account exception: {e}")
     return logger.info(f"Synced {success}/{success+failed} users for {auth_account}")
+
 
 @background()
 def sync_cadences(auth_account_id):
@@ -118,6 +123,8 @@ def sync_cadences(auth_account_id):
             else:
                 auth_account.regenerate_token()
                 attempts += 1
+        except Exception as e:
+            return logger.exception(f"Salesloft cadence exception: {e}")
     return logger.info(f"Synced {success}/{success+failed} cadences for {auth_account}")
 
 
@@ -150,6 +157,8 @@ def sync_slaccounts(auth_account_id):
             else:
                 auth_account.regenerate_token()
                 attempts += 1
+        except Exception as e:
+            return logger.exception(f"Salesloft slaccount exception: {e}")
     return logger.info(f"Synced {success}/{success+failed} accounts for {auth_account}")
 
 
@@ -182,6 +191,8 @@ def sync_people(auth_account_id):
             else:
                 auth_account.regenerate_token()
                 attempts += 1
+        except Exception as e:
+            return logger.exception(f"Salesloft people exception: {e}")
     return logger.info(f"Synced {success}/{success+failed} people for {auth_account}")
 
 
@@ -224,6 +235,9 @@ def add_cadence_membership(person_id, cadence_id):
             return {"status": "Failed"}
         except ValidationError as e:
             logger.exception(f"Error adding cadence: {e}")
+            return {"status": "Failed"}
+        except Exception as e:
+            logger.exception(f"Exception adding cadence: {e}")
             return {"status": "Failed"}
     logger.info(f"Person with id {people_id} added to cadence {cadence.id}")
     if created:
