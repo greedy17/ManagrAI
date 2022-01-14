@@ -530,4 +530,3 @@ def edit_product_block_set(context):
     )
     form_blocks = slack_form.generate_form(opp_item.secondary_data)
     return [*form_blocks]
-

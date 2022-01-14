@@ -36,7 +36,7 @@ from managr.slack.helpers.interactions.commands import get_action
 from managr.slack.models import OrgCustomSlackFormInstance, UserSlackIntegration, OrgCustomSlackForm
 from managr.salesforce.models import MeetingWorkflow
 from managr.core.models import User, MeetingPrepInstance
-from managr.salesforce.background import emit_meeting_workflow_tracker
+from managr.salesforce.background import emit_meeting_workflow_tracker, check_for_display_value
 from managr.salesforce import constants as sf_consts
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
@@ -2133,6 +2133,160 @@ def process_add_create_form(payload, context):
         slack_requests.generic_request(url, data, access_token=access_token)
 
 
+@processor(required_context="u")
+def process_view_recap(payload, context):
+    form_id_str = context.get("form_ids")
+    form_ids = form_id_str.split(".")
+    submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
+        template__resource="OpportunityLineItem"
+    )
+    main_form = submitted_forms.filter(
+        template__form_type__in=["CREATE", "UPDATE", "MEETING_REVIEW"]
+    ).first()
+    user = main_form.user
+    old_data = dict()
+    if main_form.template.form_type == "UPDATE" or main_form.template.form_type == "MEETING_REVIEW":
+        for additional_stage_form in submitted_forms:
+            old_data = {**old_data, **additional_stage_form.previous_data}
+    new_data = dict()
+    form_fields = None
+    for form in submitted_forms:
+        new_data = {**new_data, **form.saved_data}
+        if form_fields:
+            form_fields = form_fields | form.template.formfield_set.filter(include_in_recap=True)
+        else:
+            form_fields = form.template.formfield_set.filter(include_in_recap=True)
+
+    blocks = []
+
+    message_string_for_recap = ""
+    for key, new_value in new_data.items():
+        field = form_fields.filter(field__api_name=key).first()
+        if not field:
+            continue
+        field_label = field.field.reference_display_label
+        if main_form.template.form_type == "UPDATE":
+            # Only sends values for fields that have been updated
+            # all fields on update form are included by default users cannot edit
+            if new_value:
+                if field.field.is_public and field.field.data_type == "String":
+                    new_value = check_for_display_value(field.field, new_value)
+                    message_string_for_recap += f"\n*{field_label}:* {new_value}"
+            if key in old_data:
+                if str(old_data.get(key)) != str(new_value):
+                    old_value = old_data.get(key)
+                    if field.field.is_public and field.field.data_type == "Reference":
+                        old_value = check_for_display_value(field.field, old_value)
+                        new_value = check_for_display_value(field.field, new_value)
+
+                    message_string_for_recap += (
+                        f"\n*{field_label}:* ~{old_data.get(key)}~ :arrow_right: {new_value}"
+                    )
+        elif main_form.template.form_type == "MEETING_REVIEW":
+            old_value = old_data.get(key)
+            if key in old_data and str(old_value) != str(new_value):
+
+                if field.field.is_public and field.field.data_type == "Reference":
+                    old_value = check_for_display_value(field.field, old_value)
+                    new_value = check_for_display_value(field.field, new_value)
+                message_string_for_recap += (
+                    f"\n*{field_label}:* ~{old_value}~ :arrow_right: {new_value}"
+                )
+            else:
+                if field.field.is_public and field.field.data_type == "Reference":
+                    new_value = check_for_display_value(field.field, new_value)
+                message_string_for_recap += f"\n*{field_label}:* {new_value}"
+
+        elif main_form.template.form_type == "CREATE":
+
+            if new_value:
+                if field.field.is_public and field.field.data_type == "Reference":
+                    new_value = check_for_display_value(field.field, new_value)
+                message_string_for_recap += f"\n*{field_label}:* {new_value}"
+    if not len(message_string_for_recap):
+        message_string_for_recap = "No Data to show from form"
+
+    blocks.append(block_builders.simple_section(message_string_for_recap, "mrkdwn"))
+    if user.organization.has_products and main_form.template.resource == "Opportunity":
+        current_products = OpportunityLineItem.objects.filter(opportunity=main_form.resource_id)
+        if current_products:
+            blocks.append(block_builders.simple_section("*Current Products:*", "mrkdwn"))
+            for product in current_products:
+                blocks.append(
+                    block_builders.simple_section(
+                        f"*{product.name}*- QTY:{product.quantity} / Total Price: ${product.total_price}\n",
+                        "mrkdwn",
+                    )
+                )
+    action_blocks = [
+        block_builders.simple_button_block(
+            "View Notes",
+            "get_notes",
+            action_id=action_with_params(
+                slack_const.GET_NOTES,
+                params=[
+                    f"u={str(user.id)}",
+                    f"resource_id={str(main_form.resource_id)}",
+                    f"type={main_form.template.resource}",
+                ],
+            ),
+        ),
+    ]
+    if main_form.template.resource != "Lead":
+        action_blocks.append(
+            block_builders.simple_button_block(
+                "Call Details",
+                "call_details",
+                action_id=action_with_params(
+                    slack_const.GONG_CALL_RECORDING,
+                    params=[
+                        f"u={str(user.id)}",
+                        f"resource_id={main_form.resource_id}",
+                        "type=recap",
+                    ],
+                ),
+                style="primary",
+            ),
+        )
+    blocks.append(block_builders.actions_block(action_blocks))
+    blocks.append(
+        block_builders.context_block(f"{main_form.template.resource} owned by {user.full_name}")
+    )
+
+    data = {
+        "trigger_id": payload["trigger_id"],
+        "view": {
+            "type": "modal",
+            "callback_id": "None",
+            "title": {"type": "plain_text", "text": "Meeting Recap"},
+            "blocks": blocks,
+        },
+    }
+    try:
+        slack_requests.generic_request(
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN,
+            data,
+            access_token=user.organization.slack_integration.access_token,
+        )
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Product form with {str(opp_item.id)} email {user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Product form with {str(opp_item.id)} email {user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Product form with {str(opp_item.id)} email {user.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Generate Slack Product form with {str(user.id)} email {user.email} {e}"
+        )
+    return
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -2174,6 +2328,7 @@ def handle_block_actions(payload):
         slack_const.COMMAND_MANAGR_ACTION: process_managr_action,
         slack_const.PROCESS_SHOW_EDIT_PRODUCT_FORM: process_show_edit_product_form,
         slack_const.PROCESS_ADD_PRODUCTS_FORM: process_add_products_form,
+        slack_const.VIEW_RECAP: process_view_recap,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)
