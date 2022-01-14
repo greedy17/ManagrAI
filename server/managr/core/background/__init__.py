@@ -11,7 +11,7 @@ from managr.alerts.models import AlertConfig
 from managr.slack.helpers import block_builders, block_sets
 from managr.slack.helpers import requests as slack_requests
 from managr.salesforce.models import MeetingWorkflow
-from ..models import User
+from ..models import MeetingPrepInstance, User
 
 logger = logging.getLogger("managr")
 
@@ -72,14 +72,23 @@ def check_for_uncompleted_meetings(user_id, org_level=False):
             not_completed = []
             for user in users:
                 total_meetings = MeetingWorkflow.objects.filter(user=user.id).filter(
-                    datetime_created__contains=datetime.today().date()
+                    datetime_created__contains=datetime.today().date(),
                 )
+                last_instance = MeetingPrepInstance.objects.filter(user=user).order_by("-datetime_created").first()
+                # MeetingWorkflow Queryset 
+                # MeetingPrepInstance with last invocation 
+
+                # non_zoom = MeetingPrepInstance.objects.filter([meeting in meetings if meeting.event_data['type'] != "zoom"])
+                print(last_instance, "this is the meeting prep")
+
                 user_not_completed = [
                     meeting for meeting in total_meetings if meeting.progress == 0
                 ]
+
                 if len(user_not_completed):
                     not_completed = [*not_completed, *user_not_completed]
         else:
+            # This will be for the reps 
             total_meetings = MeetingWorkflow.objects.filter(user=user.id).filter(
                 datetime_created__contains=datetime.today().date()
             )

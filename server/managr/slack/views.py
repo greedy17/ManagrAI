@@ -543,7 +543,6 @@ class SlackFormsViewSet(
         return Response(serializer.data)
 
     def update(self, request, *args, **kwargs):
-
         data = self.request.data
         fields = data.pop("fields", [])
         fields_ref = data.pop("fields_ref", [])

@@ -540,6 +540,7 @@ def generate_afternoon_digest(user_id):
             # slack_id = meetings['slack_id']
             total_meetings = meetings['not_completed']
             paged_meetings = custom_paginator((total_meetings), count=1)
+            print(paged_meetings, "This is paged meetings")
             paginate_results = paged_meetings.get("results", [])
             if (paginate_results):
                 meeting = [block_sets.get_block_set(

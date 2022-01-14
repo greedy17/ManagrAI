@@ -593,10 +593,18 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
         null=True,
     )
     product = models.ForeignKey(
-        "organization.Product2", related_name="opportunity_line_item", on_delete=models.CASCADE,
+        "organization.Product2",
+        related_name="opportunity_line_item",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
     )
     opportunity = models.ForeignKey(
-        "opportunity.Opportunity", related_name="opportunity_line_item", on_delete=models.CASCADE,
+        "opportunity.Opportunity",
+        related_name="opportunity_line_item",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
     )
     unit_price = models.DecimalField(max_digits=13, decimal_places=2, default=0.00, null=True,)
     quantity = models.DecimalField(max_digits=13, decimal_places=2, default=0.00, null=True,)

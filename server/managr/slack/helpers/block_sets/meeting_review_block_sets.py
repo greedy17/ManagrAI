@@ -404,12 +404,19 @@ def initial_meeting_interaction_block_set(context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     # check the resource attached to this meeting
     resource = workflow.resource
+
     meeting = workflow.meeting
-    workflow_id_param = "w=" + context.get("w")
-    contact_check = check_contact_last_name(context.get("w"))
     user_timezone = meeting.zoom_account.timezone
     start_time = meeting.start_time
     end_time = meeting.end_time
+
+    # non_zoom_meeting= workflow.non_zoom_meeting
+    # user_timezone = non_zoom_meeting.zoom_account.timezone
+    # start_time = non_zoom_meeting.start_time
+    # end_time = non_zoom_meeting.end_time
+
+    workflow_id_param = "w=" + context.get("w")
+    contact_check = check_contact_last_name(context.get("w"))
     formatted_start = (
         datetime.strftime(
             start_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p"
