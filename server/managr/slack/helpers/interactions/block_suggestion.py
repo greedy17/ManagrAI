@@ -283,6 +283,26 @@ def process_get_calls(payload, context):
     return {"options": [l.slack_option for l in calls]}
 
 
+def process_get_sobject_list(payload, context):
+    user = User.objects.get(id=context["u"])
+    add_opt = context.get("add_option", None)
+    value = payload["value"]
+    sobject = context.get("resource_type")
+    if sobject == "Opportunity":
+        sobject_value = user.opportunities
+    elif sobject == "Account":
+        sobject_value = user.accounts
+    elif sobject == "Lead":
+        sobject_value = user.leads
+    options = [l.as_slack_option for l in sobject_value.filter(name__icontains=value)[:50]]
+    if add_opt:
+        options.insert(0, add_opt)
+    print(options)
+    return {
+        "options": options,
+    }
+
+
 def handle_block_suggestion(payload):
     """
     This takes place when a select_field requires data from Managr
@@ -305,6 +325,7 @@ def handle_block_suggestion(payload):
         slack_const.GET_SEQUENCE_OPTIONS: process_get_sequences,
         slack_const.GET_PEOPLE_OPTIONS: process_get_people,
         slack_const.GET_CALLS: process_get_calls,
+        slack_const.GET_SOBJECT_LIST: process_get_sobject_list,
     }
     action_query_string = payload["action_id"]
     processed_string = process_action_id(action_query_string)

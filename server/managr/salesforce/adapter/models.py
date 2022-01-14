@@ -885,6 +885,18 @@ class LeadAdapter:
             )
             return SalesforceAuthAccountAdapter._handle_response(r)
 
+    @staticmethod
+    def convert_lead(access_token, custom_base, data):
+        opp_name = data["opportunity_name"] if "opportunity_name" in data else None
+        account_id = data["account_id"] if "opportunity_name" in data else None
+        url = custom_base + sf_consts.SALESFORCE_SOAP_URI
+        body = sf_consts.CONVERT_LEAD_BODY(
+            access_token, data["lead_id"], data["status"], opp_name, account_id
+        )
+        with Client as client:
+            r = client.post(url, data=body, headers=sf_consts.SALESFORCE_LEAD_CONVERT_HEADER,)
+            return SalesforceAuthAccountAdapter._handle_response(r)
+
     @property
     def as_dict(self):
         return vars(self)

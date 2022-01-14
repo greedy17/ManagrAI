@@ -501,7 +501,8 @@ def initial_meeting_interaction_block_set(context):
                 "Convert Lead",
                 str(workflow.id),
                 action_id=action_with_params(
-                    slack_const.ZOOM_MEETING__CONVERT_LEAD, params=[f"u={str(workflow.user.id)}"]
+                    slack_const.ZOOM_MEETING__CONVERT_LEAD,
+                    params=[f"u={str(workflow.user.id)}&w={str(workflow.id)}"],
                 ),
                 style="primary",
             ),
@@ -902,3 +903,25 @@ def send_recap_block_set(context):
         ),
     ]
     return blocks
+
+
+@block_set(required_context=["u"])
+def convert_lead_block_set(context):
+    status = SObjectField.objects.filter(Q(salesforce_object="Lead") & Q(api_name="Status")).first()
+    if status:
+        status_options = status.to_slack_field()
+    blocks = [
+        block_builders.input_block("Opportunity Name", block_id="opportunity_name"),
+        status_options,
+        block_builders.external_select(
+            "Attach to an Account*",
+            f"{slack_const.GET_SOBJECT_LIST}?u={context.get('u')}&resource_type=Account&add_option={block_builders.option('Auto Create', 'None')}",
+            block_builders.option("Auto Create", "None"),
+            block_id="account_select",
+        ),
+        block_builders.context_block(
+            "*Salesforce will automatically create an account with based off the Contact's company if not selected"
+        ),
+    ]
+    return blocks
+

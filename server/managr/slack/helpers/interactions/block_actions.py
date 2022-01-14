@@ -2042,6 +2042,48 @@ def process_show_edit_product_form(payload, context):
         )
 
 
+@processor(required_context="u")
+def process_show_convert_lead_form(payload, context):
+    slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
+    user = slack_account.user
+    blocks = get_block_set("convert_lead_block_set", {"u": str(user.id)})
+
+    data = {
+        "trigger_id": payload["trigger_id"],
+        "view": {
+            "type": "modal",
+            "callback_id": "None",
+            "title": {"type": "plain_text", "text": "Convert Lead"},
+            "blocks": blocks,
+            "submit": {"type": "plain_text", "text": "Convert"},
+            "private_metadata": json.dumps(context),
+        },
+    }
+    try:
+        slack_requests.generic_request(
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN,
+            data,
+            access_token=user.organization.slack_integration.access_token,
+        )
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Product form with {str(opp_item.id)} email {user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Product form with {str(opp_item.id)} email {user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Product form with {str(opp_item.id)} email {user.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Generate Slack Product form with {str(user.id)} email {user.email} {e}"
+        )
+    return
+
+
 def process_add_products_form(payload, context):
     user = User.objects.get(slack_integration__slack_id=payload["user"]["id"])
     view = payload["view"]
@@ -2151,7 +2193,7 @@ def handle_block_actions(payload):
         slack_const.ZOOM_MEETING__INIT_REVIEW: process_meeting_review,
         slack_const.ZOOM_MEETING__STAGE_SELECTED: process_stage_selected,
         slack_const.ZOOM_MEETING__CREATE_TASK: process_create_task,
-        slack_const.ZOOM_MEETING__CONVERT_LEAD: process_coming_soon,
+        slack_const.ZOOM_MEETING__CONVERT_LEAD: process_show_convert_lead_form,
         slack_const.ZOOM_MEETING__MEETING_DETAILS: process_meeting_details,
         slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS: process_show_update_resource_form,
         slack_const.COMMAND_FORMS__STAGE_SELECTED: process_stage_selected_command_form,

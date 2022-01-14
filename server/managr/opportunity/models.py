@@ -77,6 +77,16 @@ class Lead(TimeStampModel, IntegrationModel):
             self.save()
             return res
 
+    def convert_in_salesforce(self, data):
+        if self.owner and hasattr(self.owner, "salesforce_account"):
+            token = self.owner.salesforce_account.access_token
+            base_url = self.owner.salesforce_account.instance_url
+
+            res = LeadAdapter.convert_lead(data, token, base_url, self.integration_id)
+            self.is_stale = True
+            self.save()
+            return res
+
 
 class OpportunityQuerySet(models.QuerySet):
     def for_user(self, user):
