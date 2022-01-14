@@ -442,9 +442,7 @@ def process_get_task_list(user_id, page=1):
 
 def process_current_alert_list(user_id):
     user = User.objects.get(id=user_id)
-    configs = AlertConfig.objects.filter(
-        Q(template__user__is_active=True, template__is_active=True)
-    )
+    configs = AlertConfig.objects.filter(Q(template__user__=user.id, template__is_active=True))
     alert_blocks = [
         block_builders.simple_section(f":eyes: *Pipeline Monitor*", "mrkdwn"),
     ]

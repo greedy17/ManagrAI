@@ -2159,7 +2159,6 @@ def process_view_recap(payload, context):
             form_fields = form_fields | form.template.formfield_set.filter(include_in_recap=True)
         else:
             form_fields = form.template.formfield_set.filter(include_in_recap=True)
-
     blocks = []
 
     message_string_for_recap = ""
@@ -2171,10 +2170,6 @@ def process_view_recap(payload, context):
         if main_form.template.form_type == "UPDATE":
             # Only sends values for fields that have been updated
             # all fields on update form are included by default users cannot edit
-            if new_value:
-                if field.field.is_public and field.field.data_type == "String":
-                    new_value = check_for_display_value(field.field, new_value)
-                    message_string_for_recap += f"\n*{field_label}:* {new_value}"
             if key in old_data:
                 if str(old_data.get(key)) != str(new_value):
                     old_value = old_data.get(key)
