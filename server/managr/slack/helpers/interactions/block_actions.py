@@ -36,7 +36,7 @@ from managr.slack.helpers.interactions.commands import get_action
 from managr.slack.models import OrgCustomSlackFormInstance, UserSlackIntegration, OrgCustomSlackForm
 from managr.salesforce.models import MeetingWorkflow
 from managr.core.models import User, MeetingPrepInstance
-from managr.salesforce.background import emit_meeting_workflow_tracker
+from managr.salesforce.background import emit_meeting_workflow_tracker, check_for_display_value
 from managr.salesforce import constants as sf_consts
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
@@ -44,6 +44,7 @@ from managr.slack.helpers.exceptions import (
     InvalidBlocksException,
     InvalidAccessToken,
 )
+from managr.core.cron import process_get_task_list
 from managr.api.decorators import slack_api_exceptions
 from managr.alerts.models import AlertTemplate, AlertInstance, AlertConfig
 from managr.gong.models import GongCall, GongAuthAccount
@@ -289,8 +290,6 @@ def process_edit_meeting_contact(payload, context):
 
 @processor(required_context=[])
 def process_stage_selected(payload, context):
-    print(payload)
-    print(context)
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     workflow = MeetingWorkflow.objects.filter(id=context.get("w")).first()
     user = workflow.user
@@ -762,7 +761,6 @@ def process_restart_flow(payload, context):
 def process_show_update_resource_form(payload, context):
     from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 
-    print(context)
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
 
@@ -1101,6 +1099,7 @@ def process_create_task(payload, context):
     }
     if type == "command":
         data["view_id"] = payload["view"]["id"]
+        data["view"]["external_id"] = f"create_task_modal.{str(uuid.uuid4())}"
     else:
         data["trigger_id"] = trigger_id
     try:
@@ -1199,7 +1198,6 @@ def process_check_is_owner(payload, context):
 
 @processor(required_context="u")
 def process_resource_selected_for_task(payload, context):
-
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     trigger_id = payload["trigger_id"]
     u = User.objects.get(id=context.get("u"))
@@ -1219,7 +1217,6 @@ def process_resource_selected_for_task(payload, context):
         view_type, __unique_id = external_id.split(".")
     except ValueError:
         pass
-
     data = {
         "trigger_id": trigger_id,
         "view_id": payload.get("view").get("id"),
@@ -1452,6 +1449,27 @@ def process_paginate_meetings(payload, context):
         ]
         blocks[3:7] = replace_blocks
         slack_requests.update_channel_message(channel_id, ts, access_token, block_set=blocks)
+    return
+
+
+@slack_api_exceptions(rethrow=True)
+@processor()
+def process_paginate_tasks(payload, context):
+    channel_id = payload.get("channel", {}).get("id", None)
+    ts = payload.get("message", {}).get("ts", None)
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    if not user:
+        return
+    access_token = user.organization.slack_integration.access_token
+    channel = context.get("channel")
+    # NOTE replace [3:8]
+    blocks = payload["message"]["blocks"]
+    header_index, header_block = block_finder("task_header", blocks)
+    divider_index, divider_block = block_finder("task_divider", blocks)
+    replace_blocks = process_get_task_list(user.id, page=int(context.get("new_page", 0)))
+    blocks[header_index:divider_index] = replace_blocks
+    slack_requests.update_channel_message(channel_id, ts, access_token, block_set=blocks)
     return
 
 
@@ -1704,6 +1722,7 @@ def process_get_notes(payload, context):
     trigger_id = payload["trigger_id"]
     data = {
         "trigger_id": trigger_id,
+        "view_id": payload["container"]["view_id"],
         "view": {
             "type": "modal",
             "callback_id": "NONE",
@@ -1712,21 +1731,22 @@ def process_get_notes(payload, context):
         },
     }
     if type != "command":
-        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH
     else:
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-        data["view_id"] = payload["container"]["view_id"]
     slack_requests.generic_request(url, data, access_token=access_token)
     return
 
 
 @processor(required_context="u")
 def process_get_call_recording(payload, context):
+    print(payload)
+    print(context)
+    type = context.get("type", None)
     resource_id = context.get("resource_id", None)
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     view_id = None
-    if resource_id is None:
-        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    if resource_id is None and type != "recap":
         timestamp = datetime.fromtimestamp(float(payload["actions"][0]["action_ts"]))
         view_id = payload["view"]["id"]
         resource_type = payload["view"]["state"]["values"]["managr_task_related_to_resource"][
@@ -1736,7 +1756,9 @@ def process_get_call_recording(payload, context):
             f"GONG_CALL_RECORDING?u={context.get('u')}&resource={resource_type}"
         ]["selected_option"]["value"]
     else:
-        timestamp = datetime.fromtimestamp(float(payload["message"]["ts"]))
+        view_id = payload["view"]["id"]
+        resource_type = context.get("resource_type")
+        timestamp = datetime.fromtimestamp(float(payload["actions"][0]["action_ts"]))
     trigger_id = payload["trigger_id"]
 
     user = User.objects.get(id=context.get("u"))
@@ -1759,7 +1781,6 @@ def process_get_call_recording(payload, context):
             resource_ids.append(accs.first().integration_id)
             resource = accs.first()
     call = GongCall.objects.filter(crm_id=resource.secondary_data["Id"]).first()
-    type = context.get("type", None)
     current = pytz.utc.localize(timestamp).astimezone(user_timezone).date()
     blocks = []
     if type == "recap" and datetime.now().date() == current:
@@ -1780,10 +1801,12 @@ def process_get_call_recording(payload, context):
                         )
                     )
                 else:
+                    logger.info("Gong call recap without call")
                     blocks = [
                         block_builders.simple_section("No call associated with this opportunity")
                     ]
-        except InvalidRequest:
+        except InvalidRequest as e:
+            logger.exception(f"Gong invalid request: {e}")
             if call:
                 call_res = call.helper_class.get_call_details(call.auth_account.access_token)
                 call_details = generate_call_block(call_res)
@@ -1806,6 +1829,7 @@ def process_get_call_recording(payload, context):
             call_details = generate_call_block(call_res)
             blocks = [*call_details]
         else:
+            logger.info("Gong details from non recap")
             blocks = [
                 block_builders.simple_section("No call associated with this opportunity*"),
                 block_builders.context_block(
@@ -2112,6 +2136,156 @@ def process_add_create_form(payload, context):
         slack_requests.generic_request(url, data, access_token=access_token)
 
 
+@processor(required_context="u")
+def process_view_recap(payload, context):
+    form_id_str = context.get("form_ids")
+    form_ids = form_id_str.split(".")
+    submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
+        template__resource="OpportunityLineItem"
+    )
+    main_form = submitted_forms.filter(
+        template__form_type__in=["CREATE", "UPDATE", "MEETING_REVIEW"]
+    ).first()
+    user = main_form.user
+    old_data = dict()
+    if main_form.template.form_type == "UPDATE" or main_form.template.form_type == "MEETING_REVIEW":
+        for additional_stage_form in submitted_forms:
+            old_data = {**old_data, **additional_stage_form.previous_data}
+    new_data = dict()
+    form_fields = None
+    for form in submitted_forms:
+        new_data = {**new_data, **form.saved_data}
+        if form_fields:
+            form_fields = form_fields | form.template.formfield_set.filter(include_in_recap=True)
+        else:
+            form_fields = form.template.formfield_set.filter(include_in_recap=True)
+    blocks = []
+
+    message_string_for_recap = ""
+    for key, new_value in new_data.items():
+        field = form_fields.filter(field__api_name=key).first()
+        if not field:
+            continue
+        field_label = field.field.reference_display_label
+        if main_form.template.form_type == "UPDATE":
+            # Only sends values for fields that have been updated
+            # all fields on update form are included by default users cannot edit
+            if key in old_data:
+                if str(old_data.get(key)) != str(new_value):
+                    old_value = old_data.get(key)
+                    if field.field.is_public and field.field.data_type == "Reference":
+                        old_value = check_for_display_value(field.field, old_value)
+                        new_value = check_for_display_value(field.field, new_value)
+
+                    message_string_for_recap += (
+                        f"\n*{field_label}:* ~{old_data.get(key)}~ :arrow_right: {new_value}"
+                    )
+        elif main_form.template.form_type == "MEETING_REVIEW":
+            old_value = old_data.get(key)
+            if key in old_data and str(old_value) != str(new_value):
+
+                if field.field.is_public and field.field.data_type == "Reference":
+                    old_value = check_for_display_value(field.field, old_value)
+                    new_value = check_for_display_value(field.field, new_value)
+                message_string_for_recap += (
+                    f"\n*{field_label}:* ~{old_value}~ :arrow_right: {new_value}"
+                )
+            else:
+                if field.field.is_public and field.field.data_type == "Reference":
+                    new_value = check_for_display_value(field.field, new_value)
+                message_string_for_recap += f"\n*{field_label}:* {new_value}"
+
+        elif main_form.template.form_type == "CREATE":
+
+            if new_value:
+                if field.field.is_public and field.field.data_type == "Reference":
+                    new_value = check_for_display_value(field.field, new_value)
+                message_string_for_recap += f"\n*{field_label}:* {new_value}"
+    if not len(message_string_for_recap):
+        message_string_for_recap = "No Data to show from form"
+
+    blocks.append(block_builders.simple_section(message_string_for_recap, "mrkdwn"))
+    if user.organization.has_products and main_form.template.resource == "Opportunity":
+        current_products = OpportunityLineItem.objects.filter(opportunity=main_form.resource_id)
+        if current_products:
+            blocks.append(block_builders.simple_section("*Current Products:*", "mrkdwn"))
+            for product in current_products:
+                blocks.append(
+                    block_builders.simple_section(
+                        f"*{product.name}*- QTY:{product.quantity} / Total Price: ${product.total_price}\n",
+                        "mrkdwn",
+                    )
+                )
+    action_blocks = [
+        block_builders.simple_button_block(
+            "View Notes",
+            "get_notes",
+            action_id=action_with_params(
+                slack_const.GET_NOTES,
+                params=[
+                    f"u={str(user.id)}",
+                    f"resource_id={str(main_form.resource_id)}",
+                    f"type={main_form.template.resource}",
+                ],
+            ),
+        ),
+    ]
+    if main_form.template.resource != "Lead":
+        action_blocks.append(
+            block_builders.simple_button_block(
+                "Call Details",
+                "call_details",
+                action_id=action_with_params(
+                    slack_const.GONG_CALL_RECORDING,
+                    params=[
+                        f"u={str(user.id)}",
+                        f"resource_id={main_form.resource_id}",
+                        f"resource_type={main_form.template.resource}",
+                        "type=recap",
+                    ],
+                ),
+                style="primary",
+            ),
+        )
+    blocks.append(block_builders.actions_block(action_blocks))
+    blocks.append(
+        block_builders.context_block(f"{main_form.template.resource} owned by {user.full_name}")
+    )
+
+    data = {
+        "trigger_id": payload["trigger_id"],
+        "view": {
+            "type": "modal",
+            "callback_id": "None",
+            "title": {"type": "plain_text", "text": "Meeting Recap"},
+            "blocks": blocks,
+        },
+    }
+    try:
+        slack_requests.generic_request(
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN,
+            data,
+            access_token=user.organization.slack_integration.access_token,
+        )
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Product form with {str(opp_item.id)} email {user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Product form with {str(opp_item.id)} email {user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Product form with {str(opp_item.id)} email {user.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Generate Slack Product form with {str(user.id)} email {user.email} {e}"
+        )
+    return
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -2141,6 +2315,7 @@ def handle_block_actions(payload):
         slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL: process_check_is_owner,
         slack_const.PAGINATE_ALERTS: process_paginate_alerts,
         slack_const.PAGINATE_MEETINGS: process_paginate_meetings,
+        slack_const.PAGINATE_TASKS: process_paginate_tasks,
         slack_const.ADD_TO_CADENCE_MODAL: process_show_cadence_modal,
         slack_const.ADD_TO_SEQUENCE_MODAL: process_show_sequence_modal,
         slack_const.GET_USER_ACCOUNTS: process_show_engagement_modal,
@@ -2152,6 +2327,7 @@ def handle_block_actions(payload):
         slack_const.COMMAND_MANAGR_ACTION: process_managr_action,
         slack_const.PROCESS_SHOW_EDIT_PRODUCT_FORM: process_show_edit_product_form,
         slack_const.PROCESS_ADD_PRODUCTS_FORM: process_add_products_form,
+        slack_const.VIEW_RECAP: process_view_recap,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)

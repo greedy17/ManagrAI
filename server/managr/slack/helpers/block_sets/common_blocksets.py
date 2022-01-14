@@ -396,15 +396,18 @@ def calendar_reminders_blockset(context):
 
     am_or_pm = utc_time.astimezone(tz).strftime("%p")
     start_time = local_start + " " + am_or_pm
-    type = "prep" if meeting.resource_type is None else meeting.resource_type
+    type = meeting.resource_type if meeting.resource_type is not None else "prep"
+    logger.info(f"DIGEST INFO: {type}")
     if type == "Opportunity":
         resource = Opportunity.objects.get(id=meeting.resource_id)
     elif type == "Account":
         resource = Account.objects.get(id=meeting.resource_id)
     elif type == "Lead":
         resource = Lead.objects.get(id=meeting.resource_id)
+    else:
+        resource = None
     text = f"{title}\n Starts at {start_time}\n Attendees: " + str(len(meeting.participants))
-    if type and type != "prep":
+    if type != "prep":
         text += f"\n *{type} {resource.name}*"
     blocks = [
         block_builders.section_with_button_block(
@@ -421,7 +424,7 @@ def calendar_reminders_blockset(context):
     if type and type != "prep":
         action_blocks.append(
             block_builders.simple_button_block(
-                f"Update {type}",
+                f"Update {type} + Notes",
                 meeting.resource_id,
                 action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(user.id)}&resource={type}&current_page={context.get('current_page',1)}&type=prep",
                 style="primary",
@@ -527,4 +530,3 @@ def edit_product_block_set(context):
     )
     form_blocks = slack_form.generate_form(opp_item.secondary_data)
     return [*form_blocks]
-
