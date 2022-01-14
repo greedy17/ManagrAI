@@ -1722,6 +1722,7 @@ def process_get_notes(payload, context):
     trigger_id = payload["trigger_id"]
     data = {
         "trigger_id": trigger_id,
+        "view_id": payload["container"]["view_id"],
         "view": {
             "type": "modal",
             "callback_id": "NONE",
@@ -1730,21 +1731,22 @@ def process_get_notes(payload, context):
         },
     }
     if type != "command":
-        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH
     else:
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-        data["view_id"] = payload["container"]["view_id"]
     slack_requests.generic_request(url, data, access_token=access_token)
     return
 
 
 @processor(required_context="u")
 def process_get_call_recording(payload, context):
+    print(payload)
+    print(context)
+    type = context.get("type", None)
     resource_id = context.get("resource_id", None)
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     view_id = None
-    if resource_id is None:
-        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    if resource_id is None and type != "recap":
         timestamp = datetime.fromtimestamp(float(payload["actions"][0]["action_ts"]))
         view_id = payload["view"]["id"]
         resource_type = payload["view"]["state"]["values"]["managr_task_related_to_resource"][
@@ -1754,7 +1756,9 @@ def process_get_call_recording(payload, context):
             f"GONG_CALL_RECORDING?u={context.get('u')}&resource={resource_type}"
         ]["selected_option"]["value"]
     else:
-        timestamp = datetime.fromtimestamp(float(payload["message"]["ts"]))
+        view_id = payload["view"]["id"]
+        resource_type = context.get("resource_type")
+        timestamp = datetime.fromtimestamp(float(payload["actions"][0]["action_ts"]))
     trigger_id = payload["trigger_id"]
 
     user = User.objects.get(id=context.get("u"))
@@ -1777,7 +1781,6 @@ def process_get_call_recording(payload, context):
             resource_ids.append(accs.first().integration_id)
             resource = accs.first()
     call = GongCall.objects.filter(crm_id=resource.secondary_data["Id"]).first()
-    type = context.get("type", None)
     current = pytz.utc.localize(timestamp).astimezone(user_timezone).date()
     blocks = []
     if type == "recap" and datetime.now().date() == current:
@@ -2242,6 +2245,7 @@ def process_view_recap(payload, context):
                     params=[
                         f"u={str(user.id)}",
                         f"resource_id={main_form.resource_id}",
+                        f"resource_type={main_form.template.resource}",
                         "type=recap",
                     ],
                 ),

@@ -1655,7 +1655,7 @@ export default {
       let fields = new Set([...this.addedFields.map((f) => f.id)])
       fields = Array.from(fields).filter((f) => !this.removedFields.map((f) => f.id).includes(f))
       let fields_ref = this.addedFields.filter((f) => fields.includes(f.id))
-
+      console.log(this.customForm)
       SlackOAuth.api
         .postOrgCustomForm({
           ...this.customForm,
