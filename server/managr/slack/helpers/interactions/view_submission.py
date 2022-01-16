@@ -1726,6 +1726,7 @@ def process_update_product(payload, context):
 def process_submit_product(payload, context):
     # get context
     has_error = False
+    logger.info(f"SUBMIT PRODUCT CONTEXT: {context}")
     state = payload["view"]["state"]["values"]
     current_form_ids = context.get("f").split(",")
     user = User.objects.get(id=context.get("u"))

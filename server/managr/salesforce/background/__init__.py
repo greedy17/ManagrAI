@@ -1114,12 +1114,15 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
     send_summ_to_channels = send_to_data.get("channels", None) if send_to_data else None
     resource_name = main_form.resource_object.name if main_form.resource_object.name else ""
     slack_access_token = user.organization.slack_integration.access_token
+    title = (
+        "*Meeting Recap* :zap:" if manager_recap else f"*{main_form.template.resource} Recap* :zap:"
+    )
     blocks = [
-        block_builders.simple_section("*Meeting recap* :zap:", "mrkdwn"),
+        block_builders.simple_section(title, "mrkdwn"),
         block_builders.section_with_button_block(
             "View Recap",
             "recap",
-            f"_{main_form.template.resource}_ {resource_name}",
+            f"_{main_form.template.resource}_ *{resource_name}*",
             action_id=action_with_params(
                 slack_consts.VIEW_RECAP,
                 params=[f"u={str(user.id)}", f"form_ids={'.'.join(form_ids)}"],

@@ -2052,13 +2052,20 @@ def process_add_products_form(payload, context):
     private_metadata = json.loads(view["private_metadata"])
     main_form = OrgCustomSlackFormInstance.objects.get(id=context.get("f"))
     main_form.save_form(state)
-    product_template = (
-        OrgCustomSlackForm.objects.for_user(user)
-        .filter(Q(resource="OpportunityLineItem", form_type="CREATE"))
-        .first()
+    product_form = context.get("product_form", None)
+    if product_form is None:
+        product_template = (
+            OrgCustomSlackForm.objects.for_user(user)
+            .filter(Q(resource="OpportunityLineItem", form_type="CREATE"))
+            .first()
+        )
+
+        product_form = OrgCustomSlackFormInstance.objects.create(
+            template=product_template, user=user
+        )
+    private_metadata.update(
+        {**context, "view_id": view["id"], "product_form": str(product_form.id)}
     )
-    product_form = OrgCustomSlackFormInstance.objects.create(template=product_template, user=user)
-    private_metadata.update({"view_id": view["id"]})
     # currently only for update
     blocks = []
     blocks.extend(product_form.generate_form())
@@ -2248,9 +2255,6 @@ def process_view_recap(payload, context):
             ),
         )
     blocks.append(block_builders.actions_block(action_blocks))
-    blocks.append(
-        block_builders.context_block(f"{main_form.template.resource} owned by {user.full_name}")
-    )
 
     data = {
         "trigger_id": payload["trigger_id"],
