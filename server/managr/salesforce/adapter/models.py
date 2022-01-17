@@ -1058,6 +1058,18 @@ class OpportunityAdapter:
             )
             return SalesforceAuthAccountAdapter._handle_response(r)
 
+    @staticmethod
+    def get_current_values(integration_id, access_token, custom_base, user_id):
+        url = sf_consts.SALESFORCE_WRITE_URI(
+            custom_base, sf_consts.RESOURCE_SYNC_OPPORTUNITY, integration_id
+        )
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        with Client as client:
+            r = client.get(url, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},)
+            r = SalesforceAuthAccountAdapter._handle_response(r)
+            r = OpportunityAdapter.from_api(r, user_id)
+            return r
+
     @property
     def as_dict(self):
         return vars(self)
