@@ -261,6 +261,7 @@ def queue_stale_sf_data_for_delete(cutoff=1440):
             for r in resource_items:
                 try:
                     qs = getattr(user, f"imported_{r}").filter(last_edited__lt=cutoff)
+                    print(qs)
                     resource_count = qs.count()
 
                     if resource_count and resource_count <= 500:

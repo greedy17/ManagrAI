@@ -348,13 +348,15 @@ def update_modal_block_set(context, *args, **kwargs):
 
     if main_form:
         slack_form = main_form
-        try:
-            resource = Opportunity.objects.get(id=resource_id)
-            res = resource.get_current_values()
-            print(res.forecast_category, res.close_date)
-        except Exception as e:
-            print(e)
-        form_blocks = slack_form.generate_form(res.__dict__)
+        # try:
+        #     resource = Opportunity.objects.get(id=resource_id)
+        #     res = resource.get_current_values()
+        #     res_dict = res.__dict__
+        #     form_blocks = slack_form.generate_form(res_dict)
+        #     blocks = [*form_blocks]
+        # except Exception as e:
+        # print(e)
+        form_blocks = slack_form.generate_form(slack_form.saved_data)
         if len(form_blocks):
             blocks = [*form_blocks]
         else:

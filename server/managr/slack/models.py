@@ -289,7 +289,10 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                         return logger.exception(
                             f"Failed to find the resource with id {self.resource_id} of model {self.resource_type}, to generate form for the user, the resource was most likely removed"
                         )
-                    form_values = self.resource_object.secondary_data
+                    # form_values = self.resource_object.secondary_data
+                    current = self.resource_object.get_current_values()
+                    print(current.secondary_data)
+                    form_values = current.secondary_data
                 else:
                     form_values = {}
         return form_values
@@ -307,6 +310,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         # get all fields that belong to the user based on the template fields
         user_fields = self.get_user_fields()
         form_values = self.generate_form_values(data)
+        print(form_values)
         form_blocks = []
         for field in user_fields:
             val = form_values.get(field.api_name, None)
