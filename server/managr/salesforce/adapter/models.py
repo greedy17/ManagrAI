@@ -1397,7 +1397,7 @@ class OpportunityLineItemAdapter:
         json_data = json.dumps(
             OpportunityLineItemAdapter.to_api(
                 data, OpportunityLineItemAdapter.integration_mapping, object_fields
-            )
+            ),
         )
         url = sf_consts.SALESFORCE_WRITE_URI(
             custom_base, sf_consts.RESOURCE_SYNC_OPPORTUNITYLINEITEM, ""

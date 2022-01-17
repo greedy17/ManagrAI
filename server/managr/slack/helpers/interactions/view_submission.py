@@ -1772,7 +1772,7 @@ def process_submit_product(payload, context):
             product_data = {
                 **product_form.saved_data,
                 "OpportunityId": opp.integration_id,
-                "UnitPrice": entry.unit_price,
+                "UnitPrice": str(entry.unit_price),
             }
             resource = OpportunityLineItem.create_in_salesforce(product_data, context.get("u"))
             product_form.is_submitted = True
