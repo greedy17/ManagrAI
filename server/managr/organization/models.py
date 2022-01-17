@@ -466,7 +466,7 @@ class Product2QuerySet(models.QuerySet):
 
 
 class Product2(TimeStampModel, IntegrationModel):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=150)
     description = models.TextField(max_length=225, null=True, blank=True)
     secondary_data = JSONField(
         default=dict,
