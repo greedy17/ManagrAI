@@ -1674,6 +1674,7 @@ def process_show_sequence_modal(payload, context):
 def process_get_notes(payload, context):
     u = User.objects.get(id=context.get("u"))
     type = context.get("type", None)
+    resource_type = context.get("resource_type", None)
     org = u.organization
     access_token = org.slack_integration.access_token
     resource_id = (
@@ -1683,11 +1684,11 @@ def process_get_notes(payload, context):
             f"GET_NOTES?u={u.id}&resource=Opportunity&type=command"
         ]["selected_option"]["value"]
     )
-    if type == "Opportunity" or type == "command":
+    if resource_type == "Opportunity":
         resource = Opportunity.objects.get(id=resource_id)
-    elif type == "Account":
+    elif resource_type == "Account":
         resource = Account.objects.get(id=context.get("resource_id"))
-    elif type == "Lead":
+    elif resource_type == "Lead":
         resource = Lead.objects.get(id=context.get("resource_id"))
     note_data = (
         OrgCustomSlackFormInstance.objects.filter(resource_id=resource_id)
@@ -1722,7 +1723,6 @@ def process_get_notes(payload, context):
     trigger_id = payload["trigger_id"]
     data = {
         "trigger_id": trigger_id,
-        "view_id": payload["container"]["view_id"],
         "view": {
             "type": "modal",
             "callback_id": "NONE",
@@ -1730,9 +1730,13 @@ def process_get_notes(payload, context):
             "blocks": note_blocks,
         },
     }
-    if type != "command":
+    if type == "alert":
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    elif type != "command" and type != "alert":
+        data["view_id"] = payload["container"]["view_id"]
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH
     else:
+        data["view_id"] = payload["container"]["view_id"]
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     slack_requests.generic_request(url, data, access_token=access_token)
     return
@@ -1755,6 +1759,10 @@ def process_get_call_recording(payload, context):
         resource_id = payload["view"]["state"]["values"]["select_existing"][
             f"GONG_CALL_RECORDING?u={context.get('u')}&resource={resource_type}"
         ]["selected_option"]["value"]
+    elif type == "alert":
+        trigger_id = payload["trigger_id"]
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+        timestamp = datetime.fromtimestamp(float(payload["actions"][0]["action_ts"]))
     else:
         view_id = payload["view"]["id"]
         resource_type = context.get("resource_type")
@@ -2064,7 +2072,6 @@ def process_add_products_form(payload, context):
     else:
         product_form = OrgCustomSlackFormInstance.objects.get(id=product_form_id)
     private_metadata.update({**context, "view_id": view["id"], "product_form": product_form_id})
-    logger.info(f"ADD PRODUCT FORM: ")
     # currently only for update
     blocks = []
     blocks.extend(product_form.generate_form())

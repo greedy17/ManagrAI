@@ -219,7 +219,7 @@ def alert_instance_block_set(context):
         ]
         action_blocks = [
             block_builders.simple_button_block(
-                f"Update {instance.template.resource_type}",
+                f"Update {instance.template.resource_type} + Notes",
                 instance.resource_id,
                 action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(resource_owner.id)}&resource={instance.template.resource_type}&alert_id={instance.id}&current_page={context.get('current_page',1)}&type=alert",
                 style="primary",
@@ -235,7 +235,8 @@ def alert_instance_block_set(context):
                         params=[
                             f"u={str(user.id)}",
                             f"resource_id={str(instance.resource_id)}",
-                            f"type={instance.template.resource_type}",
+                            f"resource_type={instance.template.resource_type}",
+                            "type=alert",
                         ],
                     ),
                 )
