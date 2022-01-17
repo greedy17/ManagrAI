@@ -15,7 +15,6 @@ class CustomFormFieldInline(admin.StackedInline):
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         parent = self.get_parent_object_from_request(request)
-        print(parent)
         if parent:
             if db_field.name == "field":
                 queryset = sf_models.SObjectField.objects.filter(

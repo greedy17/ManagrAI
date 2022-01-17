@@ -83,7 +83,6 @@ logger = logging.getLogger("managr")
 def process_stage_next_page(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     print("STAGE RELATED:", context)
-    print(payload)
     view = payload["view"]
     # if there are additional stage gating forms aggregate them and push them in 1 view
     # save current data to its form we will close all views at the end

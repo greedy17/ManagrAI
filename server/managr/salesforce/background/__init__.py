@@ -699,7 +699,6 @@ def _process_create_new_contacts(workflow_id, *args):
         # if it is an opp we create a contact role as well
         logger.info(f"FORM {form}")
         data = form.saved_data
-        print(data)
         if not data:
             # try and collect whatever data we have
             contact = dict(

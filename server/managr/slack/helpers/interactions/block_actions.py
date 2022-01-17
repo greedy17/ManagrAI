@@ -1744,8 +1744,6 @@ def process_get_notes(payload, context):
 
 @processor(required_context="u")
 def process_get_call_recording(payload, context):
-    print(payload)
-    print(context)
     type = context.get("type", None)
     resource_id = context.get("resource_id", None)
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
