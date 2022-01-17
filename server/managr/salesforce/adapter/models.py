@@ -308,7 +308,6 @@ class SalesforceAuthAccountAdapter:
                 data=data,
                 headers=sf_consts.AUTHENTICATION_HEADERS,
             )
-            print(res)
             return SalesforceAuthAccountAdapter._handle_response(res)
 
     def refresh(self):
@@ -382,7 +381,6 @@ class SalesforceAuthAccountAdapter:
             # TODO: Take this one level up and save the record id so we only have to do this once
 
             url = f"{self.instance_url}{sf_consts.SF_DEFAULT_RECORD_ID(resource)}"
-            print(url)
             with Client as client:
                 res = client.get(
                     url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
