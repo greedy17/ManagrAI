@@ -59,6 +59,13 @@ def sync_outreach_sequences(outreach_account_id):
             else:
                 outreach_account.regenerate_token()
                 attempts += 1
+        except Exception as e:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to sync outreach sequences for account {outreach_account.user.email}, error: {e}"
+                )
+            else:
+                attempts += 1
     return logger.info(
         f"Synced {success}/{success+failed} outreach sequences for {outreach_account.user.email}"
     )
@@ -81,10 +88,17 @@ def sync_outreach_accounts(outreach_account_id):
         except TokenExpired:
             if attempts >= 5:
                 return logger.exception(
-                    f"Failed to sync outreach sequences for account {outreach_account.user.email}"
+                    f"Failed to sync outreach accounts for account {outreach_account.user.email}"
                 )
             else:
                 outreach_account.regenerate_token()
+                attempts += 1
+        except Exception as e:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to sync outreach accounts for account {outreach_account.user.email}, error: {e}"
+                )
+            else:
                 attempts += 1
     return logger.info(
         f"Synced {success}/{success+failed} accounts for {outreach_account.user.email}"
@@ -112,6 +126,13 @@ def sync_outreach_prospects(outreach_account_id):
                 )
             else:
                 outreach_account.regenerate_token()
+                attempts += 1
+        except Exception as e:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to sync outreach prospects for account {outreach_account.user.email}, error: {e}"
+                )
+            else:
                 attempts += 1
     return logger.info(f"Synced {success}/{success+failed} prospects for {outreach_account}")
 

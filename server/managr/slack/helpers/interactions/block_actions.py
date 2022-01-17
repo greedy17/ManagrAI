@@ -2072,6 +2072,7 @@ def process_add_products_form(payload, context):
     private_metadata.update({**context, "view_id": view["id"], "product_form": product_form_id})
     # currently only for update
     blocks = []
+    print(product_form)
     blocks.extend(product_form.generate_form())
     if len(blocks):
         data = {
