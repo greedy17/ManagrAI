@@ -66,7 +66,7 @@ def get_salesloft_authentication(request):
     serializer.is_valid(raise_exception=True)
     serializer.save()
     admin_account = SalesloftAuthAccount.objects.filter(admin=request.user).first()
-    queue_account_sl_syncs(admin_account.id)
+    queue_account_sl_syncs(str(admin_account.id))
     return Response(data={"success": True})
 
 

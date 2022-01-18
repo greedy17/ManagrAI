@@ -63,7 +63,7 @@ def get_outreach_authentication(request):
     serializer.is_valid(raise_exception=True)
     serializer.save()
     outreach_acc = OutreachAccount.objects.filter(user=request.user).first()
-    queue_outreach_sync(outreach_acc.id)
+    queue_outreach_sync(str(outreach_acc.id))
     return Response(data={"success": True})
 
 
