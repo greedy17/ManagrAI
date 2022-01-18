@@ -21,7 +21,7 @@
         </div>
       </router-link>
 
-      <div v-else>
+      <div style="background-color: #ebfcf3; border-radius: 0.3rem; margin-bottom: 0.25rem" v-else>
         <div
           @click="isPopular()"
           style="cursor: pointer"
@@ -147,7 +147,7 @@
         <h5 style="margin-top: -0.65rem; color: #9b9b9b">Let us do the work for you</h5>
       </div>
 
-      <div style="background-color: #cff8e2; border-radius: 0.3rem; margin-bottom: 0.25rem">
+      <div style="background-color: #ebfcf3; border-radius: 0.3rem; margin-bottom: 0.25rem">
         <div @click="isPopular()" style="cursor: pointer" class="row">
           <img src="@/assets/images/trophy.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
 

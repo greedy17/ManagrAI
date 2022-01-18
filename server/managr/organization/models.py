@@ -466,7 +466,7 @@ class Product2QuerySet(models.QuerySet):
 
 
 class Product2(TimeStampModel, IntegrationModel):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=150)
     description = models.TextField(max_length=225, null=True, blank=True)
     secondary_data = JSONField(
         default=dict,
@@ -532,8 +532,8 @@ class PricebookEntryQuerySet(models.QuerySet):
 
 
 class PricebookEntry(TimeStampModel, IntegrationModel):
-    name = models.CharField(max_length=50)
-    unit_price = models.IntegerField(null=True)
+    name = models.CharField(max_length=150)
+    unit_price = models.DecimalField(max_digits=30, decimal_places=15, default=0.00, null=True,)
     external_pricebook = models.CharField(
         max_length=255, blank=True, help_text="value from the integration"
     )
@@ -575,7 +575,7 @@ class OpportunityLineItemQuerySet(models.QuerySet):
 
 
 class OpportunityLineItem(TimeStampModel, IntegrationModel):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=150)
     description = models.CharField(max_length=255, blank=True, null=True)
     external_pricebookentry = models.CharField(
         max_length=255, blank=True, help_text="value from the integration", null=True
@@ -593,14 +593,22 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
         null=True,
     )
     product = models.ForeignKey(
-        "organization.Product2", related_name="opportunity_line_item", on_delete=models.CASCADE,
+        "organization.Product2",
+        related_name="opportunity_line_item",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
     )
     opportunity = models.ForeignKey(
-        "opportunity.Opportunity", related_name="opportunity_line_item", on_delete=models.CASCADE,
+        "opportunity.Opportunity",
+        related_name="opportunity_line_item",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
     )
-    unit_price = models.DecimalField(max_digits=13, decimal_places=2, default=0.00, null=True,)
+    unit_price = models.DecimalField(max_digits=30, decimal_places=15, default=0.00, null=True,)
     quantity = models.DecimalField(max_digits=13, decimal_places=2, default=0.00, null=True,)
-    total_price = models.DecimalField(max_digits=13, decimal_places=2, default=0.00, null=True,)
+    total_price = models.DecimalField(max_digits=30, decimal_places=15, default=0.00, null=True,)
     secondary_data = JSONField(
         default=dict,
         null=True,
