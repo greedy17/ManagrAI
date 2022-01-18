@@ -366,7 +366,7 @@ def _send_calendar_details(
                 current_instance = paginate_results[0]
                 blocks = [
                     block_builders.simple_section(
-                        f":calendar: {len(meetings)} *Meetings Today* ", "mrkdwn"
+                        f":calendar: *Meetings Today*: {len(meetings)}", "mrkdwn"
                     ),
                     *get_block_set(
                         "calendar_reminders_blockset",
@@ -378,7 +378,7 @@ def _send_calendar_details(
                 ]
     else:
         blocks = [
-            block_builders.simple_section(":calendar: *Meetings Today* ", "mrkdwn"),
+            block_builders.simple_section(":calendar: *Meetings Today*: 0", "mrkdwn"),
             block_builders.simple_section("No meetings scheduled!"),
         ]
     return blocks
@@ -435,16 +435,14 @@ def process_get_task_list(user_id, page=1):
         task_blocks.extend(custom_task_paginator_block(paged_tasks, user.slack_integration.channel))
     else:
         task_blocks = [
-            block_builders.simple_section("You have no tasks due today :clap:", "mrkdwn"),
+            block_builders.simple_section("You have no upcoming tasks :clap:", "mrkdwn"),
         ]
     return task_blocks
 
 
 def process_current_alert_list(user_id):
     user = User.objects.get(id=user_id)
-    configs = AlertConfig.objects.filter(
-        Q(template__user__is_active=True, template__is_active=True)
-    )
+    configs = AlertConfig.objects.filter(Q(template__user=user.id, template__is_active=True))
     alert_blocks = [
         block_builders.simple_section(f":eyes: *Pipeline Monitor*", "mrkdwn"),
     ]

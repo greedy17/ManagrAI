@@ -499,7 +499,7 @@ def manager_meeting_reminder_block_set(context):
 
 def current_product_block_set(context):
     opp_item = OpportunityLineItem.objects.get(id=context.get("opp_item_id"))
-    text = f"{opp_item.product.name}\nQuantity: {opp_item.quantity}\nTotal Price: {opp_item.total_price}"
+    text = f"{opp_item.product.name}\nQuantity: {opp_item.quantity}\nTotal Price: {round(opp_item.total_price,2)}"
     blocks = block_builders.section_with_button_block(
         "Edit Product",
         "EDIT_PRODUCT",
@@ -530,4 +530,3 @@ def edit_product_block_set(context):
     )
     form_blocks = slack_form.generate_form(opp_item.secondary_data)
     return [*form_blocks]
-

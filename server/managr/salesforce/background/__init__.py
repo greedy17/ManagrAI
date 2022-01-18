@@ -699,7 +699,6 @@ def _process_create_new_contacts(workflow_id, *args):
         # if it is an opp we create a contact role as well
         logger.info(f"FORM {form}")
         data = form.saved_data
-        print(data)
         if not data:
             # try and collect whatever data we have
             contact = dict(
@@ -1112,117 +1111,132 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
     send_summ_to_leadership = send_to_data.get("leadership", None) if send_to_data else None
     send_summ_to_reps = send_to_data.get("reps", None) if send_to_data else None
     send_summ_to_channels = send_to_data.get("channels", None) if send_to_data else None
-
+    resource_name = main_form.resource_object.name if main_form.resource_object.name else ""
     slack_access_token = user.organization.slack_integration.access_token
-    blocks = []
-
-    message_string_for_recap = ""
-    for key, new_value in new_data.items():
-        field = form_fields.filter(field__api_name=key).first()
-        if not field:
-            continue
-        field_label = field.field.reference_display_label
-        if main_form.template.form_type == "UPDATE":
-            # Only sends values for fields that have been updated
-            # all fields on update form are included by default users cannot edit
-            if new_value:
-                if field.field.is_public and field.field.data_type == "String":
-                    new_value = check_for_display_value(field.field, new_value)
-                    message_string_for_recap += f"\n*{field_label}:* {new_value}"
-            if key in old_data:
-                if str(old_data.get(key)) != str(new_value):
-                    old_value = old_data.get(key)
-                    if field.field.is_public and field.field.data_type == "Reference":
-                        old_value = check_for_display_value(field.field, old_value)
-                        new_value = check_for_display_value(field.field, new_value)
-
-                    message_string_for_recap += (
-                        f"\n*{field_label}:* ~{old_data.get(key)}~ :arrow_right: {new_value}"
-                    )
-        elif main_form.template.form_type == "MEETING_REVIEW":
-            old_value = old_data.get(key)
-            if key in old_data and str(old_value) != str(new_value):
-
-                if field.field.is_public and field.field.data_type == "Reference":
-                    old_value = check_for_display_value(field.field, old_value)
-                    new_value = check_for_display_value(field.field, new_value)
-                message_string_for_recap += (
-                    f"\n*{field_label}:* ~{old_value}~ :arrow_right: {new_value}"
-                )
-            else:
-                if field.field.is_public and field.field.data_type == "Reference":
-                    new_value = check_for_display_value(field.field, new_value)
-                message_string_for_recap += f"\n*{field_label}:* {new_value}"
-
-        elif main_form.template.form_type == "CREATE":
-
-            if new_value:
-                if field.field.is_public and field.field.data_type == "Reference":
-                    new_value = check_for_display_value(field.field, new_value)
-                message_string_for_recap += f"\n*{field_label}:* {new_value}"
-    if not len(message_string_for_recap):
-        message_string_for_recap = "No Data to show from form"
-
-    blocks.append(block_builders.simple_section(message_string_for_recap, "mrkdwn"))
-    if main_form.template.form_type == "UPDATE":
-        resource_name = main_form.resource_object.name if main_form.resource_object.name else ""
-        text = (
-            f"Meeting recap for {main_form.template.resource} {main_form.template.form_type.lower()} {resource_name}"
-            if manager_recap
-            else f"Recap for {main_form.template.resource} {main_form.template.form_type.lower()} {resource_name}"
-        )
-        blocks.insert(
-            0, block_builders.header_block(text),
-        )
-    else:
-        blocks.insert(
-            0, block_builders.header_block(f"Recap for new {main_form.template.resource}"),
-        )
-    if user.organization.has_products and main_form.template.resource == "Opportunity":
-        current_products = OpportunityLineItem.objects.filter(opportunity=main_form.resource_id)
-        if current_products:
-            blocks.append(block_builders.simple_section("*Current Products:*", "mrkdwn"))
-            for product in current_products:
-                blocks.append(
-                    block_builders.simple_section(
-                        f"*{product.name}*- QTY:{product.quantity} / Total Price: ${product.total_price}\n",
-                        "mrkdwn",
-                    )
-                )
-    action_blocks = [
-        block_builders.simple_button_block(
-            "View Notes",
-            "get_notes",
+    title = (
+        "*Meeting Recap* :zap:" if manager_recap else f"*{main_form.template.resource} Recap* :zap:"
+    )
+    blocks = [
+        block_builders.simple_section(title, "mrkdwn"),
+        block_builders.section_with_button_block(
+            "View Recap",
+            "recap",
+            f"_{main_form.template.resource}_ *{resource_name}*",
             action_id=action_with_params(
-                slack_consts.GET_NOTES,
-                params=[
-                    f"u={str(user.id)}",
-                    f"resource_id={str(main_form.resource_id)}",
-                    f"type={main_form.template.resource}",
-                ],
+                slack_consts.VIEW_RECAP,
+                params=[f"u={str(user.id)}", f"form_ids={'.'.join(form_ids)}"],
             ),
         ),
+        block_builders.context_block(f"{main_form.template.resource} owned by {user.full_name}"),
     ]
-    if main_form.template.resource != "Lead":
-        action_blocks.append(
-            block_builders.simple_button_block(
-                "Call Details",
-                "call_details",
-                action_id=action_with_params(
-                    slack_consts.GONG_CALL_RECORDING,
-                    params=[
-                        f"u={str(user.id)}",
-                        f"resource_id={main_form.resource_id}",
-                        "type=recap",
-                    ],
-                ),
-                style="primary",
-            ),
-        )
-    blocks.append(block_builders.actions_block(action_blocks))
-    blocks.append(
-        block_builders.context_block(f"{main_form.template.resource} owned by {user.full_name}")
-    )
+
+    # message_string_for_recap = ""
+    # for key, new_value in new_data.items():
+    #     field = form_fields.filter(field__api_name=key).first()
+    #     if not field:
+    #         continue
+    #     field_label = field.field.reference_display_label
+    #     if main_form.template.form_type == "UPDATE":
+    #         # Only sends values for fields that have been updated
+    #         # all fields on update form are included by default users cannot edit
+    #         if new_value:
+    #             if field.field.is_public and field.field.data_type == "String":
+    #                 new_value = check_for_display_value(field.field, new_value)
+    #                 message_string_for_recap += f"\n*{field_label}:* {new_value}"
+    #         if key in old_data:
+    #             if str(old_data.get(key)) != str(new_value):
+    #                 old_value = old_data.get(key)
+    #                 if field.field.is_public and field.field.data_type == "Reference":
+    #                     old_value = check_for_display_value(field.field, old_value)
+    #                     new_value = check_for_display_value(field.field, new_value)
+
+    #                 message_string_for_recap += (
+    #                     f"\n*{field_label}:* ~{old_data.get(key)}~ :arrow_right: {new_value}"
+    #                 )
+    #     elif main_form.template.form_type == "MEETING_REVIEW":
+    #         old_value = old_data.get(key)
+    #         if key in old_data and str(old_value) != str(new_value):
+
+    #             if field.field.is_public and field.field.data_type == "Reference":
+    #                 old_value = check_for_display_value(field.field, old_value)
+    #                 new_value = check_for_display_value(field.field, new_value)
+    #             message_string_for_recap += (
+    #                 f"\n*{field_label}:* ~{old_value}~ :arrow_right: {new_value}"
+    #             )
+    #         else:
+    #             if field.field.is_public and field.field.data_type == "Reference":
+    #                 new_value = check_for_display_value(field.field, new_value)
+    #             message_string_for_recap += f"\n*{field_label}:* {new_value}"
+
+    #     elif main_form.template.form_type == "CREATE":
+
+    #         if new_value:
+    #             if field.field.is_public and field.field.data_type == "Reference":
+    #                 new_value = check_for_display_value(field.field, new_value)
+    #             message_string_for_recap += f"\n*{field_label}:* {new_value}"
+    # if not len(message_string_for_recap):
+    #     message_string_for_recap = "No Data to show from form"
+
+    # blocks.append(block_builders.simple_section(message_string_for_recap, "mrkdwn"))
+    # if main_form.template.form_type == "UPDATE":
+    #     resource_name = main_form.resource_object.name if main_form.resource_object.name else ""
+    #     text = (
+    #         f"Meeting recap for {main_form.template.resource} {main_form.template.form_type.lower()} {resource_name}"
+    #         if manager_recap
+    #         else f"Recap for {main_form.template.resource} {main_form.template.form_type.lower()} {resource_name}"
+    #     )
+    #     blocks.insert(
+    #         0, block_builders.header_block(text),
+    #     )
+    # else:
+    #     blocks.insert(
+    #         0, block_builders.header_block(f"Recap for new {main_form.template.resource}"),
+    #     )
+    # if user.organization.has_products and main_form.template.resource == "Opportunity":
+    #     current_products = OpportunityLineItem.objects.filter(opportunity=main_form.resource_id)
+    #     if current_products:
+    #         blocks.append(block_builders.simple_section("*Current Products:*", "mrkdwn"))
+    #         for product in current_products:
+    #             blocks.append(
+    #                 block_builders.simple_section(
+    #                     f"*{product.name}*- QTY:{product.quantity} / Total Price: ${product.total_price}\n",
+    #                     "mrkdwn",
+    #                 )
+    #             )
+    # action_blocks = [
+    #     block_builders.simple_button_block(
+    #         "View Notes",
+    #         "get_notes",
+    #         action_id=action_with_params(
+    #             slack_consts.GET_NOTES,
+    #             params=[
+    #                 f"u={str(user.id)}",
+    #                 f"resource_id={str(main_form.resource_id)}",
+    #                 f"type={main_form.template.resource}",
+    #             ],
+    #         ),
+    #     ),
+    # ]
+    # if main_form.template.resource != "Lead":
+    #     action_blocks.append(
+    #         block_builders.simple_button_block(
+    #             "Call Details",
+    #             "call_details",
+    #             action_id=action_with_params(
+    #                 slack_consts.GONG_CALL_RECORDING,
+    #                 params=[
+    #                     f"u={str(user.id)}",
+    #                     f"resource_id={main_form.resource_id}",
+    #                     "type=recap",
+    #                 ],
+    #             ),
+    #             style="primary",
+    #         ),
+    #     )
+    # blocks.append(block_builders.actions_block(action_blocks))
+    # blocks.append(
+    #     block_builders.context_block(f"{main_form.template.resource} owned by {user.full_name}")
+    # )
     if manager_recap:
         user_channel_list = UserSlackIntegration.objects.filter(
             slack_id__in=user.slack_integration.recap_receivers
