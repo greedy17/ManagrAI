@@ -1721,6 +1721,8 @@ def process_submit_product(payload, context):
     # get context
     state = payload["view"]["state"]["values"]
     current_form_ids = context.get("f").split(",")
+    has_error = False
+    blocks = None
     user = User.objects.get(id=context.get("u"))
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
@@ -1772,8 +1774,14 @@ def process_submit_product(payload, context):
             product_data = {
                 **product_form.saved_data,
                 "OpportunityId": opp.integration_id,
-                "UnitPrice": str(entry.unit_price),
             }
+            if "UnitPrice" not in product_form.saved_data:
+                product_data["UnitPrice"] = str(entry.unit_price)
+            if (
+                "UnitPrice" in product_form.saved_data
+                and product_form.saved_data["UnitPrice"] is None
+            ):
+                product_data["UnitPrice"] = str(entry.unit_price)
             resource = OpportunityLineItem.create_in_salesforce(product_data, context.get("u"))
             product_form.is_submitted = True
             product_form.submission_date = timezone.now()
@@ -1854,6 +1862,56 @@ def process_submit_product(payload, context):
             else:
                 time.sleep(2)
                 attempts += 1
+        except Exception as e:
+            if attempts >= 5:
+                logger.exception(
+                    f"Failed to Update data for user {str(user.id)} after {attempts} tries because of connection error"
+                )
+                has_error = True
+                blocks = get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh we had an unexpected error please try again: {e}"
+                    },
+                )
+                break
+            else:
+                time.sleep(2)
+                attempts += 1
+    if has_error:
+        blocks = [
+            *blocks,
+            block_builders.actions_block(
+                [
+                    block_builders.simple_button_block(
+                        "return to form",
+                        product_form_id,
+                        style="primary",
+                        action_id=slack_const.RETURN_TO_FORM_MODAL,
+                    )
+                ]
+            ),
+        ]
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        error_view_data = {
+            "trigger_id": trigger_id,
+            "view_id": view_id,
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Error"},
+                "blocks": blocks,
+                "private_metadata": json.dumps(context),
+                "external_id": f"{'add_product'}.{str(uuid.uuid4())}",
+            },
+        }
+        try:
+            return slack_requests.generic_request(
+                url, error_view_data, access_token=slack_access_token
+            )
+        except Exception as e:
+            return logger.exception(
+                f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
+            )
     blocks = get_block_set(
         "update_modal_block_set",
         context={
