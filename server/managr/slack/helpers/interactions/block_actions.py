@@ -560,7 +560,6 @@ def process_meeting_selected_resource_option(payload, context):
     resource_type = context.get("resource")
     action = None
     external_id = ""
-
     try:
         action, resource_type = select.split(".")
     except ValueError:
@@ -1672,9 +1671,10 @@ def process_show_sequence_modal(payload, context):
 
 @processor(required_context="u")
 def process_get_notes(payload, context):
+    print(context)
     u = User.objects.get(id=context.get("u"))
     type = context.get("type", None)
-    resource_type = context.get("resource_type", None)
+    resource_type = context.get("resource_type", "Opportunity")
     org = u.organization
     access_token = org.slack_integration.access_token
     resource_id = (
