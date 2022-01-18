@@ -68,6 +68,7 @@ class CustomProduct2(admin.ModelAdmin):
         "name",
         "description",
     )
+    list_filter = ("organization",)
 
 
 class CustomPricebook2(admin.ModelAdmin):
@@ -76,11 +77,13 @@ class CustomPricebook2(admin.ModelAdmin):
         "name",
         "description",
     )
+    list_filter = ("organization",)
 
 
 class CustomPricebookEntry(admin.ModelAdmin):
     model = PricebookEntry
     list_display = ("name", "pricebook")
+    list_filter = ("pricebook__organization",)
 
 
 class CustomOpportunityLineItem(admin.ModelAdmin):
