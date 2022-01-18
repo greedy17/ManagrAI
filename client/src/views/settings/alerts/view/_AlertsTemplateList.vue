@@ -70,14 +70,24 @@
           <div class="row__start">
             <p style="margin: 0.5rem 0.5rem">Schedule:</p>
             <div class="row__">
-              <p style="margin-right: 0.25rem; font-size: 0.8rem">OFF</p>
+              <p
+                :class="!alert.isActive ? 'green' : ''"
+                style="margin-right: 0.25rem; font-size: 0.8rem"
+              >
+                OFF
+              </p>
               <ToggleCheckBox
                 @input="onToggleAlert(alert.id, alert.isActive)"
                 v-model="alert.isActive"
                 offColor="#aaaaaa"
                 onColor="#199e54"
               />
-              <p style="margin-left: 0.25rem; font-size: 0.8rem">ON</p>
+              <p
+                :class="alert.isActive ? 'green' : ''"
+                style="margin-left: 0.25rem; font-size: 0.8rem"
+              >
+                ON
+              </p>
             </div>
 
             <div class="row__two">
@@ -649,6 +659,9 @@ a {
   font-size: 16px;
   border: none;
   cursor: pointer;
+}
+.green {
+  color: $dark-green;
 }
 .delete_button {
   color: $panther-orange;
