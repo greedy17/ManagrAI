@@ -1311,6 +1311,8 @@ export default {
   beforeMount() {
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
     this.repsPipeline()
+  },
+  updated() {
     this.alertTemplateForm.field.isActive.value = true
   },
 }
