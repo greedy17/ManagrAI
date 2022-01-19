@@ -548,8 +548,9 @@ def _process_send_manager_reminder(user_id, not_completed):
     user = User.objects.get(id=user_id)
     if hasattr(user, "slack_integration"):
         access_token = user.organization.slack_integration.access_token
+        name = user.first_name if hasattr(user, "first_name") else user.full_name
         blocks = block_sets.get_block_set(
-            "manager_meeting_reminder", {"not_completed": not_completed, "name": user.full_name}
+            "manager_meeting_reminder", {"not_completed": not_completed, "name": name}
         )
         try:
             slack_requests.send_channel_message(
@@ -602,13 +603,10 @@ def generate_afternoon_digest(user_id):
     if user.user_level == "MANAGER":
         meetings = check_for_uncompleted_meetings(user.id, True)
         if meetings["status"]:
+            name = user.first_name if hasattr(user, "first_name") else user.full_name
             meeting = block_sets.get_block_set(
                 "manager_meeting_reminder",
-                {
-                    "u": str(user.id),
-                    "not_completed": meetings["not_completed"],
-                    "name": user.first_name,
-                },
+                {"u": str(user.id), "not_completed": meetings["not_completed"], "name": name,},
             )
         else:
             meeting = [

@@ -1731,7 +1731,7 @@ def process_get_notes(payload, context):
     ]
     if note_data:
         for note in note_data:
-            date = note[0].date()
+            date = note[0].date() if note[0] is not None else " "
             current_stage = note[3]
             previous_stage = note[4]
             block_message = f"*{date} - {note[1]}*\n"
@@ -1751,9 +1751,9 @@ def process_get_notes(payload, context):
             "blocks": note_blocks,
         },
     }
-    if type == "alert":
+    if type in ["alert", "prep"]:
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
-    elif type != "command" and type != "alert":
+    elif type == "recap":
         data["view_id"] = payload["container"]["view_id"]
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH
     else:
@@ -2294,7 +2294,8 @@ def process_view_recap(payload, context):
                 params=[
                     f"u={str(user.id)}",
                     f"resource_id={str(main_form.resource_id)}",
-                    f"type={main_form.template.resource}",
+                    "type=recap",
+                    f"resource_type={main_form.template.resource}",
                 ],
             ),
         ),
