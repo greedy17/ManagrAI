@@ -1,6 +1,4 @@
-import json
 import logging
-import random
 import re
 from typing import Any
 import uuid
@@ -15,8 +13,6 @@ from managr.slack.helpers.block_sets.command_views_blocksets import (
 )
 from django.utils import timezone
 from django.db.models import Q
-from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 
 from managr.slack.helpers import block_builders, block_sets
 from managr.alerts.models import AlertConfig
@@ -335,7 +331,17 @@ def _send_calendar_details(
     user_id, page, invocation=None,
 ):
     user = User.objects.get(id=user_id)
-    processed_data = _process_calendar_details(user_id)
+    try:
+        processed_data = _process_calendar_details(user_id)
+    except Exception as e:
+        logger.exception("MORNING DIGEST ERROR IN SEND CALENDAR DETAILS: {e}")
+        blocks = [
+            block_builders.simple_section(":calendar: *Meetings Today* ", "mrkdwn"),
+            block_builders.simple_section(
+                "There was an error retreiving your calendar events :exclamation:", "mrkdwn"
+            ),
+        ]
+        return blocks
     current_invocation = invocation
     if processed_data is not None and "status" in processed_data:
         blocks = [
@@ -386,23 +392,30 @@ def _send_calendar_details(
 
 def process_get_task_list(user_id, page=1):
     user = User.objects.get(id=user_id)
+    task_blocks = []
     try:
         tasks = user.salesforce_account.adapter_class.list_tasks()
     except Exception as e:
         logger.exception(f"Morning digest tasks error: {e}")
-        return [
-            block_builders.simple_section(f"There was an issue retreiving your tasks", "mrkdwn"),
-        ]
+        task_blocks.extend(
+            [
+                block_builders.simple_section(
+                    ":white_check_mark: *Upcoming Tasks*", "mrkdwn", block_id="task_header",
+                ),
+                block_builders.simple_section("There was an issue retreiving your tasks", "mrkdwn"),
+            ]
+        )
+        return task_blocks
     paged_tasks = custom_paginator(tasks, count=3, page=page)
     results = paged_tasks.get("results", [])
     if results:
-        task_blocks = [
+        task_blocks.append(
             block_builders.simple_section(
                 f":white_check_mark: *Upcoming Tasks: {len(tasks)}*",
                 "mrkdwn",
                 block_id="task_header",
             ),
-        ]
+        )
         for t in results:
             resource = "_salesforce object n/a_"
             # get the resource if it is what_id is for account/opp
@@ -488,7 +501,7 @@ def generate_morning_digest(user_id, invocation=None, page=1):
                 block_set=blocks,
             )
         except Exception as e:
-            logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
+            logger.exception(f"Failed to send morning digest message to {user.email} due to {e}")
     else:
         return blocks
 

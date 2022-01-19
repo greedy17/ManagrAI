@@ -94,6 +94,16 @@ class SalesloftAuthAdapter:
         data["token_generated_date"] = timezone.now()
         return cls(**data)
 
+    def get_me(self):
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json",
+        }
+        res = client.get(
+            f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.ME}?", headers=headers,
+        )
+        return SalesloftAuthAdapter._handle_response(res)
+
     def get_users(self, page=1):
         headers = {
             "Authorization": f"Bearer {self.access_token}",

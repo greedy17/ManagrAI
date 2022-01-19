@@ -1,36 +1,25 @@
 import logging
-import json
-import re
-import pytz
 import uuid
+import time
 import random
-from datetime import datetime
-from urllib.parse import urlencode
 
 from django.conf import settings
-from django.db.models import Q
-
 from background_task import background
 from rest_framework.exceptions import ValidationError
 
 from ..exceptions import TokenExpired, InvalidRequest
 from ..models import (
     SalesloftAuthAccount,
-    SalesloftAccount,
-    SalesloftAccountAdapter,
-    SLAccountAdapter,
     SLAccount,
-    CadenceAdapter,
     Cadence,
     People,
     PeopleAdapter,
 )
 from managr.organization.models import Contact
+from background_task.models import CompletedTask
 
 from ..helpers.class_functions import (
-    process_cadence,
     process_person,
-    process_slaccount,
     sync_current_slaccount_page,
     sync_current_person_page,
     sync_current_cadence_page,
@@ -243,3 +232,41 @@ def add_cadence_membership(person_id, cadence_id):
     if created:
         return {"status": "Created"}
     return {"status": "Success"}
+
+
+@background()
+def sync_helper(auth_id):
+    sync_steps = [emit_sync_accounts, emit_sync_slaccounts, emit_sync_people, emit_sync_cadences]
+    sl_account = SalesloftAuthAccount.objects.get(id=auth_id)
+    v_name = str(uuid.uuid4())
+    has_error = False
+    current_task = None
+    for step in sync_steps:
+        if has_error:
+            logger.exception(f"SALESLOFT SYNC ERROR ON TASK: {current_task}")
+            break
+        logger.info(f"Scheduling task {step} for {sl_account}")
+        attempts = 1
+        sync_step = step(str(sl_account.id), f"{step.__name__}_{v_name}")
+        current_task = sync_step.verbose_name
+        while True:
+            if attempts >= 10:
+                has_error = True
+                break
+            try:
+                task = (
+                    CompletedTask.objects.filter(task_hash=sync_step.task_hash)
+                    .order_by("-run_at")
+                    .first()
+                )
+                if task and task.verbose_name == f"{step.__name__}_{v_name}":
+                    logger.info(f"COMPLETED SALESLOFT SYNC TASK:{task}")
+                    break
+                else:
+                    attempts += 1
+                    sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                    time.sleep(sleep)
+            except Exception as e:
+                logger.exception(f"Salesloft sync helper: {e}")
+                attempts += 1
+    return

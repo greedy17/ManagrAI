@@ -48,6 +48,7 @@ class CustomFormInstanceInline(admin.StackedInline):
         "user",
         "template",
     ]
+    extra = 0
 
 
 class CustomMeetingWorkflow(admin.ModelAdmin):
@@ -59,10 +60,7 @@ class CustomMeetingWorkflow(admin.ModelAdmin):
         "meeting",
         "progress",
     )
-    readonly_fields = [
-        "user",
-        "meeting",
-    ]
+    readonly_fields = ["user", "meeting", "non_zoom_meeting"]
     ordering = ("-datetime_created",)
 
 

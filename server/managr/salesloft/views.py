@@ -36,8 +36,9 @@ from .models import (
     SalesloftAccount,
     SalesloftAccountAdapter,
 )
+from .helpers.class_functions import process_account
 from .serializers import SalesloftAuthSerializer, SalesloftAccountSerializer
-from .cron import sync_helper
+from .cron import queue_account_sl_syncs
 
 # Create your views here.
 logger = logging.getLogger("managr")
@@ -66,7 +67,9 @@ def get_salesloft_authentication(request):
     serializer.is_valid(raise_exception=True)
     serializer.save()
     admin_account = SalesloftAuthAccount.objects.filter(admin=request.user).first()
-    sync_helper(admin_account.id)
+    me_info = admin_account.helper_class.get_me()
+    process_account(me_info["data"], str(admin_account.id))
+    queue_account_sl_syncs(str(admin_account.id))
     return Response(data={"success": True})
 
 
