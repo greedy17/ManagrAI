@@ -655,6 +655,18 @@ class AccountAdapter:
             r = AccountAdapter.from_api(r, user_id)
             return r
 
+    @staticmethod
+    def get_current_values(integration_id, access_token, custom_base, user_id):
+        url = sf_consts.SALESFORCE_WRITE_URI(
+            custom_base, sf_consts.RESOURCE_SYNC_ACCOUNT, integration_id
+        )
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        with Client as client:
+            r = client.get(url, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},)
+            r = SalesforceAuthAccountAdapter._handle_response(r)
+            r = AccountAdapter.from_api(r, user_id)
+            return r
+
 
 class ContactAdapter:
     def __init__(self, **kwargs):
@@ -771,6 +783,18 @@ class ContactAdapter:
     def as_dict(self):
         return vars(self)
 
+    @staticmethod
+    def get_current_values(integration_id, access_token, custom_base, user_id):
+        url = sf_consts.SALESFORCE_WRITE_URI(
+            custom_base, sf_consts.RESOURCE_SYNC_CONTACT, integration_id
+        )
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        with Client as client:
+            r = client.get(url, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},)
+            r = SalesforceAuthAccountAdapter._handle_response(r)
+            r = ContactAdapter.from_api(r, user_id)
+            return r
+
 
 class LeadAdapter:
     def __init__(self, **kwargs):
@@ -886,6 +910,18 @@ class LeadAdapter:
     @property
     def as_dict(self):
         return vars(self)
+
+    @staticmethod
+    def get_current_values(integration_id, access_token, custom_base, user_id):
+        url = sf_consts.SALESFORCE_WRITE_URI(
+            custom_base, sf_consts.RESOURCE_SYNC_LEAD, integration_id
+        )
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        with Client as client:
+            r = client.get(url, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},)
+            r = SalesforceAuthAccountAdapter._handle_response(r)
+            r = LeadAdapter.from_api(r, user_id)
+            return r
 
 
 class OpportunityAdapter:
@@ -1445,3 +1481,15 @@ class OpportunityLineItemAdapter:
                 url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
             )
             return SalesforceAuthAccountAdapter._handle_response(r)
+
+    @staticmethod
+    def get_current_values(integration_id, access_token, custom_base, user_id):
+        url = sf_consts.SALESFORCE_WRITE_URI(
+            custom_base, sf_consts.RESOURCE_SYNC_OPPORTUNITYLINEITEM, integration_id
+        )
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        with Client as client:
+            r = client.get(url, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},)
+            r = SalesforceAuthAccountAdapter._handle_response(r)
+            r = OpportunityLineItemAdapter.from_api(r, user_id)
+            return r
