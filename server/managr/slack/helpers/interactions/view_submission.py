@@ -84,7 +84,6 @@ logger = logging.getLogger("managr")
 def process_stage_next_page(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     print("STAGE RELATED:", context)
-    print(payload)
     view = payload["view"]
     # if there are additional stage gating forms aggregate them and push them in 1 view
     # save current data to its form we will close all views at the end
@@ -305,7 +304,6 @@ def process_add_products_form(payload, context):
 @processor(required_context=["f"])
 def process_submit_resource_data(payload, context):
     # get context
-    print("SUBMIT CONTEXT:", context)
     has_error = False
     state = payload["view"]["state"]["values"]
     current_form_ids = context.get("f").split(",")
@@ -328,11 +326,6 @@ def process_submit_resource_data(payload, context):
     stage_forms = current_forms.exclude(template__form_type__in=["UPDATE", "CREATE"]).exclude(
         template__resource="OpportunityLineItem"
     )
-    if main_form.template.resource == "Opportunity":
-        current_products = OpportunityLineItem.objects.filter(opportunity=main_form.resource_id)
-        for product in current_products:
-            product.is_stale = True
-            product.save()
     stage_form_data_collector = {}
     for form in stage_forms:
         form.update_source = type
@@ -1649,6 +1642,7 @@ def process_update_product(payload, context):
     pm = json.loads(payload["view"]["private_metadata"])
     product_form.is_submitted = True
     product_form.submission_date = timezone.now()
+    product_form.update_source = type
     product_form.save()
     text = "Success"
     message = ":white_check_mark: Successfully updated product"
@@ -1726,7 +1720,6 @@ def process_update_product(payload, context):
 @processor(required_context=["f"])
 def process_submit_product(payload, context):
     # get context
-    has_error = False
     state = payload["view"]["state"]["values"]
     current_form_ids = context.get("f").split(",")
     user = User.objects.get(id=context.get("u"))
@@ -1780,9 +1773,13 @@ def process_submit_product(payload, context):
             product_data = {
                 **product_form.saved_data,
                 "OpportunityId": opp.integration_id,
-                "UnitPrice": entry.unit_price,
+                "UnitPrice": str(entry.unit_price),
             }
             resource = OpportunityLineItem.create_in_salesforce(product_data, context.get("u"))
+            product_form.is_submitted = True
+            product_form.submission_date = timezone.now()
+            product_form.update_source = context.get("type")
+            product_form.save()
             break
         except FieldValidationError as e:
             has_error = True

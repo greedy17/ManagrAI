@@ -503,7 +503,7 @@
             />
           </div>
 
-          <div v-if="!userHasProducts" class="centered field-border">
+          <div v-if="!userHasProducts && formType !== 'CREATE'" class="centered field-border">
             <div class="row__">
               <div style="margin-left: 0.5rem" class="centered">
                 <label :class="!productSelected ? 'green' : 'label'">Amount</label>
@@ -542,7 +542,7 @@
 
             <div v-if="productSelected">Add products on the next page</div>
           </div>
-          <div v-else class="centered field-border">
+          <div v-else-if="userHasProducts && formType !== 'CREATE'" class="centered field-border">
             <p>Need to edit your Product form ? Save & continue.</p>
           </div>
 
@@ -1655,7 +1655,7 @@ export default {
       let fields = new Set([...this.addedFields.map((f) => f.id)])
       fields = Array.from(fields).filter((f) => !this.removedFields.map((f) => f.id).includes(f))
       let fields_ref = this.addedFields.filter((f) => fields.includes(f.id))
-
+      console.log(this.customForm)
       SlackOAuth.api
         .postOrgCustomForm({
           ...this.customForm,
@@ -1862,13 +1862,12 @@ export default {
   margin-left: 0.2rem;
   margin-right: 0.5rem;
 }
+::v-deep .tn-dropdown__options__option {
+  padding-top: 0.375rem;
+}
 ::v-deep .tn-dropdown__selection-container {
   height: 2.5rem;
   box-shadow: none;
-  background-color: $soft-gray;
-  border-radius: 0.3rem;
-  margin-top: -0.15rem;
-  border: 1px solid $soft-gray;
 }
 // ::v-deep .tn-dropdown__selection-container:after {
 //   position: absolute;
@@ -1907,9 +1906,9 @@ export default {
   margin-bottom: 0.25rem;
   display: flex;
   align-items: center;
-  padding: 0.25rem;
+  padding: 0.3rem;
   border-radius: 0.2rem;
-  height: 2.9rem;
+  height: 3rem;
   width: 100%;
 }
 .option {

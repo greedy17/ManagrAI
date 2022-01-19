@@ -36,6 +36,21 @@
             >
             </DropDownSearch>
           </div>
+          <!-- <div class="items_height">
+              <p
+                :key="i"
+                v-for="(item, i) in form.field.alertTargets.value"
+                :class="form.field.alertTargets.value ? 'selected__item' : ''"
+                @click="removeItemFromTargetArray(item)"
+              >
+                <img
+                  src="@/assets/images/remove.png"
+                  style="height: 1rem; margin-right: 0.25rem"
+                  alt=""
+                />
+                {{ item.length ? checkInteger(item) : '' }}
+              </p>
+            </div> -->
           <div v-if="userIds.length > 0" class="items_height">
             <p
               :key="item"
@@ -239,6 +254,15 @@ export default {
     //   }, [])
     //   console.log(this.pipelines)
     // },
+    removeItemFromTargetArray(item) {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value =
+        this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.filter(
+          (i) => i !== item,
+        )
+    },
+    checkInteger(str) {
+      return /\d/.test(str) ? this.user.fullName : str
+    },
     removeUser(id) {
       this.userIds = this.userIds.filter((i) => i !== id)
     },
@@ -254,7 +278,7 @@ export default {
       this.createdZoomChannel = ''
       this.recapChannel = ''
       this.$router.push({ name: 'CreateNew' })
-      location.reload()
+      // location.reload()
       this.$Alert.alert({
         type: 'success',
         message: 'Workflow saved successfully',
@@ -276,7 +300,7 @@ export default {
       return this.userChannelOpts.channels.filter((channel) => channel.id == id)[0].name
     },
     getUserName(id) {
-      return this.userList.filter((user) => user.id == id)[0].fullName
+      return this.userTargetsOpts.filter((user) => user.id == id)[0].fullName
     },
     async listUserChannels(cursor = null) {
       const res = await SlackOAuth.api.listUserChannels(cursor)
