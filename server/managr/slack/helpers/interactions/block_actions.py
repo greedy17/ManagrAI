@@ -2077,6 +2077,27 @@ def process_add_products_form(payload, context):
     view = payload["view"]
     state = view["state"]["values"]
     private_metadata = json.loads(view["private_metadata"])
+    loading_view_data = {
+        "trigger_id": payload["trigger_id"],
+        "view_id": view["id"],
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Loading"},
+            "blocks": get_block_set(
+                "loading", {"message": f"Putting together your form...:file_cabinet: ",},
+            ),
+        },
+    }
+    try:
+        loading_res = slack_requests.generic_request(
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH,
+            loading_view_data,
+            access_token=user.organization.slack_integration.access_token,
+        )
+    except Exception as e:
+        return logger.exception(
+            f"Failed To Show Loading Screen for user  {str(user.id)} email {user.email} {e}"
+        )
     main_form = OrgCustomSlackFormInstance.objects.get(id=context.get("f"))
     main_form.save_form(state)
     product_form_id = context.get("product_form", None)
@@ -2090,14 +2111,15 @@ def process_add_products_form(payload, context):
         product_form_id = str(product_form.id)
     else:
         product_form = OrgCustomSlackFormInstance.objects.get(id=product_form_id)
-    private_metadata.update({**context, "view_id": view["id"], "product_form": product_form_id})
+    private_metadata.update(
+        {**context, "view_id": loading_res["view"]["id"], "product_form": product_form_id}
+    )
     # currently only for update
     blocks = []
     blocks.extend(product_form.generate_form())
     if len(blocks):
         data = {
-            "trigger_id": payload["trigger_id"],
-            "view_id": view["id"],
+            "view_id": loading_res["view"]["id"],
             "view": {
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Add Products Form"},
@@ -2107,10 +2129,25 @@ def process_add_products_form(payload, context):
                 "callback_id": slack_const.PROCESS_SUBMIT_PRODUCT,
             },
         }
+    else:
+        data = {
+            "view_id": loading_res["view"]["id"],
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Product Form error"},
+                "blocks": block_builders.simple_section("Failed to generate your products form"),
+                "private_metadata": json.dumps(private_metadata),
+            },
+        }
+    try:
         slack_requests.generic_request(
-            slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH,
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
             data,
             access_token=user.organization.slack_integration.access_token,
+        )
+    except Exception as e:
+        return logger.exception(
+            f"Failed to show product form for user {str(user.id)} email {user.email} {e}"
         )
 
 
