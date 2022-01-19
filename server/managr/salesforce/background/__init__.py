@@ -1176,7 +1176,6 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
                 .distinct()
                 .select_related("slack_integration")
             )
-
         if send_summ_to_reps is not None:
             query = Q(id__in=send_summ_to_reps)
             user_list.extend(
@@ -1185,7 +1184,7 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
                 .distinct()
                 .select_related("slack_integration")
             )
-
+        logger.info(f"USERS LIST RECAP: {user_list}")
         for u in user_list:
             if hasattr(u, "slack_integration"):
                 try:
