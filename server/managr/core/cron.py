@@ -511,15 +511,16 @@ def generate_afternoon_digest(user_id):
     #   check user_level for manager
     if user.user_level == "MANAGER":
         meetings = check_for_uncompleted_meetings(user.id, True)
+        name = user.first_name if hasattr(user, "first_name") else user.full_name
         if meetings["status"]:
             meeting = block_sets.get_block_set(
                 "manager_meeting_reminder",
-                {"u": str(user.id), "not_completed": meetings["not_completed"]},
+                {"u": str(user.id), "not_completed": meetings["not_completed"], "name": name},
             )
         else:
             meeting = [
                 block_builders.simple_section(
-                    "You've completed all your meetings today! :clap:", "mrkdwn"
+                    "Your team has logged all of their meetings today! :clap:", "mrkdwn"
                 )
             ]
     else:

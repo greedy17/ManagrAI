@@ -3,7 +3,7 @@ import pytz
 import math
 import logging
 import json
-
+from collections import OrderedDict
 from functools import reduce
 
 from datetime import datetime
@@ -40,16 +40,18 @@ logger = logging.getLogger("managr")
 
 
 def getSobjectDefaults():
-    return {
-        sf_consts.RESOURCE_SYNC_ACCOUNT: True,
-        sf_consts.RESOURCE_SYNC_CONTACT: True,
-        sf_consts.RESOURCE_SYNC_LEAD: True,
-        sf_consts.RESOURCE_SYNC_OPPORTUNITY: True,
-        sf_consts.RESOURCE_SYNC_PRODUCT2: True,
-        sf_consts.RESOURCE_SYNC_PRICEBOOK2: True,
-        sf_consts.RESOURCE_SYNC_PRICEBOOKENTRY: True,
-        sf_consts.RESOURCE_SYNC_OPPORTUNITYLINEITEM: True,
-    }
+    return OrderedDict(
+        {
+            sf_consts.RESOURCE_SYNC_ACCOUNT: True,
+            sf_consts.RESOURCE_SYNC_CONTACT: True,
+            sf_consts.RESOURCE_SYNC_LEAD: True,
+            sf_consts.RESOURCE_SYNC_OPPORTUNITY: True,
+            sf_consts.RESOURCE_SYNC_PRICEBOOK2: True,
+            sf_consts.RESOURCE_SYNC_PRODUCT2: True,
+            sf_consts.RESOURCE_SYNC_PRICEBOOKENTRY: True,
+            sf_consts.RESOURCE_SYNC_OPPORTUNITYLINEITEM: True,
+        }
+    )
 
 
 class ArrayLength(models.Func):
@@ -858,10 +860,10 @@ class SalesforceAuthAccount(TimeStampModel):
             Lead=self.object_fields.filter(salesforce_object="Lead").values_list(
                 "api_name", flat=True
             ),
-            Product2=self.object_fields.filter(salesforce_object="Product2").values_list(
+            Pricebook2=self.object_fields.filter(salesforce_object="Pricebook2").values_list(
                 "api_name", flat=True
             ),
-            Pricebook2=self.object_fields.filter(salesforce_object="Pricebook2").values_list(
+            Product2=self.object_fields.filter(salesforce_object="Product2").values_list(
                 "api_name", flat=True
             ),
             PricebookEntry=self.object_fields.filter(

@@ -1166,11 +1166,11 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
                 )
                 continue
     else:
-        query = Q()
+        query = None
         user_list = []
         if send_summ_to_leadership is not None:
-            query |= Q(user_level="MANAGER", id__in=send_summ_to_leadership)
-            user_list |= (
+            query = Q(user_level="MANAGER", id__in=send_summ_to_leadership)
+            user_list.extend(
                 user.organization.users.filter(query)
                 .filter(is_active=True)
                 .distinct()
@@ -1178,8 +1178,8 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
             )
 
         if send_summ_to_reps is not None:
-            query |= Q(id__in=send_summ_to_reps)
-            user_list |= (
+            query = Q(id__in=send_summ_to_reps)
+            user_list.extend(
                 user.organization.users.filter(query)
                 .filter(is_active=True)
                 .distinct()
