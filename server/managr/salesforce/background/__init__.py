@@ -1188,30 +1188,32 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
         for u in user_list:
             if hasattr(u, "slack_integration"):
                 try:
-                    slack_requests.send_channel_message(
+                    r = slack_requests.send_channel_message(
                         u.slack_integration.channel,
                         slack_access_token,
                         text=f"Recap {main_form.template.resource}",
                         block_set=blocks,
                     )
+                    logger.info(f"SEND RECAP RESPONSE: {r}")
                 except Exception as e:
                     logger.exception(f"Failed to send recap to {u.email} due to {e}")
                     continue
         if send_summ_to_channels is not None:
             for channel in send_summ_to_channels:
                 try:
-                    slack_requests.send_channel_message(
+                    r = slack_requests.send_channel_message(
                         channel,
                         slack_access_token,
                         text=f"Recap {main_form.template.resource}",
                         block_set=blocks,
                     )
+                    logger.info(f"SEND RECAP CHANNEL RESPONSE: {r}")
                 except CannotSendToChannel:
                     try:
                         slack_requests.send_channel_message(
                             user.slack_integration.channel,
                             slack_access_token,
-                            text=f"Failed to send recap to channel",
+                            text="Failed to send recap to channel",
                             block_set=[
                                 block_builders.simple_section(
                                     f"Unable to send recap to one of the channels you selected, please add <@{user.organization.slack_integration.bot_user_id}> to the channel _*<#{channel}>*_",
