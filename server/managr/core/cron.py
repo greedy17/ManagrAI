@@ -323,30 +323,26 @@ def meeting_prep(processed_data, user_id, invocation=1, send_slack=True):
     resource_check = meeting_resource_data.get("resource_id", None)
     provider = processed_data.get('provider')
     
-    serializer = MeetingPrepInstanceSerializer(data=data)
-    serializer.is_valid(raise_exception=True)
-    serializer.save()
     # Conditional Check for Zoom meeting or Non-Zoom Meeting
-    if provider != None:
-        print('Google Meet')
-        workflow = MeetingPrepInstance.objects.create(
+    if provider != None and provider != 'zoom':
+        print('This is a non zoom meeting')
+        #  Google Meet (Non-Zoom)
+        meeting_workflow = MeetingPrepInstance.objects.create(
         user=user,
-        meeting=serializer.instance,
-        operation_type=zoom_consts.MEETING_REVIEW_OPERATION,
         **meeting_resource_data,
-            )
-        workflow.forms.set(contact_forms)
+        )
         if send_slack:
-        # sends false only for Mike testing
-            workflow.begin_communication()
-        return workflow
+            meeting_workflow
+        return meeting_workflow
     else:
-        print('None')
+        # Zoom meeting
         if resource_check:
             data["resource_id"] = meeting_resource_data["resource_id"]
             data["resource_type"] = meeting_resource_data["resource_type"]
 
-
+        serializer = MeetingPrepInstanceSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
     return
 
 

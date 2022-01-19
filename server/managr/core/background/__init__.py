@@ -573,7 +573,7 @@ def _process_send_manager_reminder(user_id, not_completed):
         logger.exception(f"{user.email} does not have a slack account")
 
 
-@background()
+@background(schedule=0)
 def generate_morning_digest(user_id, invocation=None, page=1):
     user = User.objects.get(id=user_id)
     blocks = [
@@ -604,7 +604,7 @@ def generate_morning_digest(user_id, invocation=None, page=1):
         return blocks
 
 
-@background()
+@background(schedule=0)
 def generate_afternoon_digest(user_id):
     user = User.objects.get(id=user_id)
     #   check user_level for manager
