@@ -141,7 +141,9 @@ def _process_calendar_details(user_id):
             data["title"] = event.get("title", None)
             data['owner'] = event.get('owner', None)
             data["participants"] = event.get("participants", None)
-            data['conferencing'] = event.get('conferencing')
+            conferencing = event.get('conferencing', None)
+            if conferencing:
+                data['provider'] = conferencing['provider']
             data["times"] = event.get("when", None)
             processed_data.append(data)
         return processed_data
@@ -150,7 +152,7 @@ def _process_calendar_details(user_id):
 
 
 
-def meeting_prep(processed_data, user_id, invocation=1):
+def meeting_prep(processed_data, user_id, invocation=1, send_slack=True):
     def get_domain(email):
         """Parse domain out of an email"""
         return email[email.index("@") + 1 :]
@@ -323,17 +325,32 @@ def meeting_prep(processed_data, user_id, invocation=1):
         "invocation": invocation,
     }
     resource_check = meeting_resource_data.get("resource_id", None)
-
-    # if processed_data['provider'] != 'Zoom':
-    # MeetingWorkflow.objects.create()
-    if resource_check:
-        data["resource_id"] = meeting_resource_data["resource_id"]
-        data["resource_type"] = meeting_resource_data["resource_type"]
+    provider = processed_data.get('provider')
+    
     serializer = MeetingPrepInstanceSerializer(data=data)
     serializer.is_valid(raise_exception=True)
     serializer.save()
-    # else:
-    #     return 'you have a Zoom meeting'
+    # Conditional Check for Zoom meeting or Non-Zoom Meeting
+    if provider != None:
+        print('Google Meet')
+        workflow = MeetingPrepInstance.objects.create(
+        user=user,
+        meeting=serializer.instance,
+        operation_type=zoom_consts.MEETING_REVIEW_OPERATION,
+        **meeting_resource_data,
+            )
+        workflow.forms.set(contact_forms)
+        if send_slack:
+        # sends false only for Mike testing
+            workflow.begin_communication()
+        return workflow
+    else:
+        print('None')
+        if resource_check:
+            data["resource_id"] = meeting_resource_data["resource_id"]
+            data["resource_type"] = meeting_resource_data["resource_type"]
+
+
     return
 
 
