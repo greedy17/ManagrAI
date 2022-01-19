@@ -139,13 +139,14 @@ def _process_calendar_details(user_id):
         for event in events:
             data = {}
             data["title"] = event.get("title", None)
+            data['owner'] = event.get('owner', None)
             data["participants"] = event.get("participants", None)
+            data['conferencing'] = event.get('conferencing')
             data["times"] = event.get("when", None)
             processed_data.append(data)
         return processed_data
     else:
         return None
-
 
 
 
@@ -313,8 +314,7 @@ def meeting_prep(processed_data, user_id, invocation=1):
             contact_forms.append(form)
             contact["_form"] = str(form.id)
     event_data = processed_data
-    event_data['provider'] = processed_data['conferencing']['provider']
-    print(processed_data['provider'], "This is provider")
+    # print(processed_data, "This is processed Data")
     processed_data.pop("participants")
     data = {
         "user": user.id,
@@ -323,12 +323,17 @@ def meeting_prep(processed_data, user_id, invocation=1):
         "invocation": invocation,
     }
     resource_check = meeting_resource_data.get("resource_id", None)
+
+    # if processed_data['provider'] != 'Zoom':
+    # MeetingWorkflow.objects.create()
     if resource_check:
         data["resource_id"] = meeting_resource_data["resource_id"]
         data["resource_type"] = meeting_resource_data["resource_type"]
     serializer = MeetingPrepInstanceSerializer(data=data)
     serializer.is_valid(raise_exception=True)
     serializer.save()
+    # else:
+    #     return 'you have a Zoom meeting'
     return
 
 

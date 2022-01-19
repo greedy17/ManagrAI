@@ -446,19 +446,19 @@ class NylasAuthAccount(TimeStampModel):
         }
         user_timezone = f"{self.user.timezone}"
 
-        starts_after = convert_local_time_to_unix(user_timezone, 12, 30)
-        ends_before = convert_local_time_to_unix(user_timezone, 23, 00)
-        query = dict(
-            {
-                "starts_after": starts_after,
-                "ends_before": ends_before,
-                "calendar_id": self.event_calendar_id,
-            }
-        )
-        params = urlencode(query)
+        # starts_after = convert_local_time_to_unix(user_timezone, 12, 30)
+        # ends_before = convert_local_time_to_unix(user_timezone, 23, 00)
+        # query = dict(
+        #     {
+        #         "starts_after": starts_after,
+        #         "ends_before": ends_before,
+        #         "calendar_id": self.event_calendar_id,
+        #     }
+        # )
+        # params = urlencode(query)
         try:
             events = requests.get(
-                f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.EVENT_POST}?{params}",
+                f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.EVENT_POST}",
                 headers=headers,
             )
             return self._handle_response(events)
