@@ -18,6 +18,7 @@ from managr.organization.models import ActionChoice
 from managr.organization.models import Stage
 from managr.opportunity import constants as opp_consts
 from managr.salesforce.adapter.models import ActivityAdapter
+from managr.core.background import emit_generate_morning_digest, emit_generate_afternoon_digest
 
 
 from . import constants as zoom_consts
@@ -158,6 +159,30 @@ class ZoomAuthAccount(TimeStampModel):
                     t.save()
 
         return super(ZoomAuthAccount, self).save(*args, **kwargs)
+
+def afternoon_digest_scheduler(self):
+    if self.access_token:
+        decoded = jwt.decode(
+        self.access_token, algorithms="HS512", options={"verify_signature": False}
+    )
+    exp = decoded["exp"]
+    expiration = datetime.fromtimestamp(exp) - timezone.timedelta(minutes=10)
+
+    t = emit_generate_afternoon_digest(str(self.id), expiration.strftime("%Y-%m-%dT%H:%M"))
+    self.refresh_token_task = str(t.id)
+
+def morning_digest_scheduler(self):
+    if self.access_token:
+        decoded = jwt.decode(
+        self.access_token, algorithms="HS512", options={"verify_signature": False}
+    )
+    exp = decoded["exp"]
+    expiration = datetime.fromtimestamp(exp) - timezone.timedelta(minutes=10)
+    
+
+    t = emit_generate_morning_digest(str(self.id), expiration.strftime("%Y-%m-%dT%H:%M"))
+    self.refresh_token_task = str(t.id)
+
 
 
 class ZoomMeetingQuerySet(models.QuerySet):

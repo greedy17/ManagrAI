@@ -1,7 +1,8 @@
 import logging
+import jwt
 import pytz
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 import re
 from background_task import background
 from django.db.models import Q
@@ -91,6 +92,31 @@ def _process_create_calendar_event(
         return res
     except Exception as e:
         logger.info(f"Nylas warning {e}")
+
+
+def afternoon_digest_scheduler(self):
+    if self.access_token:
+        decoded = jwt.decode(
+        self.access_token, algorithms="HS512", options={"verify_signature": False}
+    )
+    exp = decoded["exp"]
+    expiration = datetime.fromtimestamp(exp) - timezone.timedelta(minutes=10)
+
+    t = emit_generate_afternoon_digest(str(self.id), expiration.strftime("%Y-%m-%dT%H:%M"))
+    self.refresh_token_task = str(t.id)
+
+def morning_digest_scheduler(self):
+    if self.access_token:
+        decoded = jwt.decode(
+        self.access_token, algorithms="HS512", options={"verify_signature": False}
+    )
+    exp = decoded["exp"]
+    expiration = datetime.fromtimestamp(exp) - timezone.timedelta(minutes=10)
+    
+
+    t = emit_generate_morning_digest(str(self.id), expiration.strftime("%Y-%m-%dT%H:%M"))
+    self.refresh_token_task = str(t.id)
+
 
 
 def check_for_time(tz, hour, minute):
