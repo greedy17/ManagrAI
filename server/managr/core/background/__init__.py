@@ -132,7 +132,7 @@ def check_for_uncompleted_meetings(user_id, org_level=False):
 def to_date_string(date):
     if not date:
         return "n/a"
-    d = datetime.datetime.strptime(date, "%Y-%m-%d")
+    d = datetime.strptime(date, "%Y-%m-%d")
     return d.strftime("%a, %B %d, %Y")
 
 
@@ -604,12 +604,16 @@ def generate_afternoon_digest(user_id):
         if meetings["status"]:
             meeting = block_sets.get_block_set(
                 "manager_meeting_reminder",
-                {"u": str(user.id), "not_completed": meetings["not_completed"]},
+                {
+                    "u": str(user.id),
+                    "not_completed": meetings["not_completed"],
+                    "name": user.first_name,
+                },
             )
         else:
             meeting = [
                 block_builders.simple_section(
-                    "You've completed all your meetings today! :clap:", "mrkdwn"
+                    "Your team has logged all of their meetings today! :clap:", "mrkdwn"
                 )
             ]
     else:
@@ -658,7 +662,7 @@ def check_reminders(user_id):
                         user_id, f"morning-digest-{user.email}-{str(uuid.uuid4())}"
                     )
                 elif key == core_consts.WORKFLOW_REMINDER:
-                    if datetime.datetime.today().weekday() == 4:
+                    if datetime.today().weekday() == 4:
                         workflows = check_workflows_count(user.id)
                         if workflows["status"] and workflows["workflow_count"] <= 2:
                             emit_process_send_workflow_reminder(
