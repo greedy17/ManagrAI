@@ -2042,11 +2042,10 @@ def process_managr_action(payload, context):
 
 @processor(required_context="u")
 def process_show_edit_product_form(payload, context):
-    opp_item = OpportunityLineItem.objects.get(id=context.get("opp_item_id"))
     slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
     user = slack_account.user
     blocks = get_block_set(
-        "edit_product_block_set", {"u": str(user.id), "opp_item_id": str(opp_item.id)}
+        "edit_product_block_set", {"u": str(user.id), "opp_item_id": context.get("opp_item_id")}
     )
 
     data = {

@@ -283,10 +283,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         if data:
             form_values = data
         else:
-            if (
-                self.template.form_type != slack_consts.FORM_TYPE_CREATE
-                or self.template.resource == slack_consts.FORM_RESOURCE_OPPORTUNITYLINEITEM
-            ):
+            if self.template.form_type != slack_consts.FORM_TYPE_CREATE:
                 if self.resource_id:
                     if not self.resource_object:
                         return logger.exception(

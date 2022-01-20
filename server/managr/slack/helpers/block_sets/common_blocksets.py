@@ -519,15 +519,15 @@ def current_product_block_set(context):
 
 @block_set()
 def edit_product_block_set(context):
-    opp_item = OpportunityLineItem.objects.get(id=context.get("opp_item_id"))
+    opp_item = OpportunityLineItem.objects.get(integration_id=context.get("opp_item_id"))
     user = User.objects.get(id=context.get("u"))
     template = (
         OrgCustomSlackForm.objects.for_user(user)
-        .filter(Q(resource="OpportunityLineItem", form_type="CREATE"))
+        .filter(Q(resource="OpportunityLineItem", form_type="UPDATE"))
         .first()
     )
     slack_form = OrgCustomSlackFormInstance.objects.create(
         template=template, resource_id=str(opp_item.id), user=user
     )
-    form_blocks = slack_form.generate_form(opp_item.secondary_data)
+    form_blocks = slack_form.generate_form()
     return [*form_blocks]
