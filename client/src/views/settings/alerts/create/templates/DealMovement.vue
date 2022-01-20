@@ -1,137 +1,12 @@
 <template>
   <div class="alerts-page">
-    <div class="spacer"></div>
     <div class="col">
-      <h2 style="color: black; margin-top: -0.5rem" class="title">Instant Updates</h2>
-      <p style="color: #5d5e5e" class="sub__">Activate the workflows that are relevant to you</p>
+      <h2 style="color: black; margin-top: -0.5rem" class="title">Deal Movement</h2>
+      <p style="color: #5d5e5e" class="sub__">Activate workflows related to deal movement</p>
     </div>
 
-    <div class="alert_cards">
-      <div class="card__">
-        <div class="card__header">
-          <h3>Meeting<span style="color: #5f8cff"> Recaps</span></h3>
-        </div>
-        <div class="row">
-          <img style="height: 2rem; margin-right: 0.5rem" src="@/assets/images/zoom.png" alt="" />
-          <img
-            style="height: 1.65rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
-            class="filter-plus"
-            alt=""
-          />
-          <img
-            style="height: 2rem; margin-right: 0.5rem"
-            src="@/assets/images/gmailCal.png"
-            alt=""
-          />
-        </div>
-        <div style="margin-top: 2rem">
-          <button
-            v-if="hasZoomIntegration && hasSlackIntegration && !recapChannel"
-            @click="goToZoomRecap"
-            :class="!isAdmin && isOnboarding ? 'orange_button bouncy' : 'orange_button'"
-          >
-            Activate
-          </button>
-          <h4 style="margin-top: -0.5rem" v-else-if="!(hasZoomIntegration && hasSlackIntegration)">
-            Connect Zoom and Calendar in order to activate
-          </h4>
-          <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="recapChannel">Activated</p>
-        </div>
-      </div>
-
-      <div class="card__">
-        <div class="card__header">
-          <h3>Deal <span style="color: #d8789f">Movement</span></h3>
-        </div>
-
-        <div class="row">
-          <img
-            style="height: 2.25rem; margin-right: 1rem"
-            src="@/assets/images/slackLogo.png"
-            alt=""
-          />
-          <img
-            style="height: 1.75rem; margin-right: 1rem; filter: invert(60%)"
-            src="@/assets/images/plusOne.png"
-            alt=""
-          />
-          <img
-            style="height: 2.25rem; margin-right: 1rem"
-            src="@/assets/images/salesforce.png"
-            alt=""
-          />
-        </div>
-
-        <div style="margin-top: 2rem">
-          <button
-            v-if="hasSalesforceIntegration && hasSlackIntegration"
-            @click="goToStageAdvanced"
-            class="orange_button"
-          >
-            Activate
-          </button>
-          <!-- <h4
-            style="margin-top: -0.5rem"
-            v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)"
-          >
-            Connect Slack & Salesforce to acivate
-          </h4>
-          <h4
-            style="margin-top: -0.5rem"
-            v-else-if="user.activatedManagrConfigs.includes('Close Date Passed')"
-          >
-            Activated
-          </h4> -->
-        </div>
-      </div>
-
-      <div class="card__">
-        <div class="card__header">
-          <h3>Closed <span style="color: #199e54">Won</span></h3>
-        </div>
-
-        <div class="row">
-          <img
-            style="height: 2.25rem; margin-right: 1rem"
-            src="@/assets/images/slackLogo.png"
-            alt=""
-          />
-          <img
-            style="height: 1.75rem; margin-right: 1rem; filter: invert(60%)"
-            src="@/assets/images/plusOne.png"
-            alt=""
-          />
-          <img
-            style="height: 2.25rem; margin-right: 1rem"
-            src="@/assets/images/salesforce.png"
-            alt=""
-          />
-        </div>
-
-        <div style="margin-top: 0.5rem">
-          <!-- <button
-            v-if="hasSalesforceIntegration && hasSlackIntegration"
-            @click="goToStageAdvanced"
-            class="orange_button"
-          >
-            Activate
-          </button>
-          <h4
-            style="margin-top: -0.5rem"
-            v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)"
-          >
-            Connect Slack & Salesforce to acivate
-          </h4>
-          <h4
-            style="margin-top: -0.5rem"
-            v-else-if="user.activatedManagrConfigs.includes('Close Date Passed')"
-          >
-            Activated
-          </h4> -->
-          <p style="">Coming Soon</p>
-        </div>
-      </div>
+    <div class="forecast__collection">
+      <p>testing...</p>
     </div>
   </div>
 </template>
@@ -184,7 +59,7 @@ import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 
 export default {
-  name: 'RealTime',
+  name: 'DealMovement',
   components: {
     ExpandablePanel,
     DropDownSearch,
@@ -233,7 +108,7 @@ export default {
       this.$router.push({ name: 'CloseDatePassed' })
     },
     goToStageAdvanced() {
-      this.$router.push({ name: 'DealMovement' })
+      this.$router.push({ name: 'StageAdvanced' })
     },
     goToMeetingLogged() {
       this.$router.push({ name: 'MeetingLogged' })
@@ -392,6 +267,18 @@ export default {
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
+.forecast__collection {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-evenly;
+  flex-direction: row;
+  background-color: $white;
+  box-shadow: 3px 4px 7px $very-light-gray;
+  border-radius: 0.75rem;
+  width: 75vw;
+  padding: 2rem;
+  margin-bottom: 1rem;
+}
 .onboarding {
   filter: blur(10px);
 }
@@ -428,7 +315,7 @@ textarea {
 }
 .alerts-page {
   margin-left: 14vw;
-  margin-top: 3.5rem;
+  margin-top: 4.5rem;
   &__previous-step {
     @include muted-font(12);
   }

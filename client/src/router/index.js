@@ -202,6 +202,12 @@ export default new Router({
       component: ZoomRecap,
     },
     {
+      path: '/deal-movement',
+      name: 'DealMovement',
+      component: () =>
+        import(/* webpackChunkName: "settings" */ '../views/settings/alerts/create/templates/DealMovement'),
+    },
+    {
       path: '/map',
       name: 'CustomizeLandingPage',
       component: CustomizeLandingPage,
