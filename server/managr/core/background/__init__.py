@@ -53,10 +53,8 @@ def emit_process_send_manager_reminder(user_id, not_completed):
     return _process_send_manager_reminder(user_id, not_completed)
 
 
-def emit_generate_morning_digest(user_id, verbose_name, schedule):
-    # schedule can be seconds int or datetime string
-    schedule = datetime.strptime(schedule, "%Y-%m-%dT%H:%M")
-    return generate_morning_digest(user_id, verbose_name=verbose_name, schedule=schedule)
+def emit_generate_morning_digest(user_id, verbose_name):
+    return generate_morning_digest(user_id, verbose_name=verbose_name)
 
 
 def emit_generate_afternoon_digest(user_id, verbose_name, schedule):

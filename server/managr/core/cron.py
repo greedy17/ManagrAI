@@ -325,14 +325,21 @@ def meeting_prep(processed_data, user_id, invocation=1, send_slack=True):
     
     # Conditional Check for Zoom meeting or Non-Zoom Meeting
     if provider != [None,'zoom']:
-        print('This is a non zoom meeting')
-        #  Google Meet (Non-Zoom)
-        meeting_workflow = MeetingPrepInstance.objects.create(
+        # Google Meet (Non-Zoom)
+        # Create MeetingPrepInstance Not MeetingWorkflow 
+        meeting_workflow = MeetingWorkflow.objects.create(
         user=user,
         **meeting_resource_data,
         )
-        # You are not creating a meeting prep instance, 
-        return meeting_workflow
+        workflow_id = meeting_workflow.id 
+        def emit_non_zoom_meetings(workflow_id, schedule):
+            non_zoom_workflow_id = str(workflow_id)
+            schedule = datetime.strptime(schedule, "%Y-%m-%dT%H:%M")
+            return non_zoom_meeting(non_zoom_workflow_id, schedule=schedule)
+        
+        # Get MeetingWorkflow ID from meeting_workflow 
+        # Create emit function for scheduling
+        # which return another emit function for sending meeting message 
     else:
         # Zoom meeting
         if resource_check:
@@ -342,7 +349,7 @@ def meeting_prep(processed_data, user_id, invocation=1, send_slack=True):
         serializer = MeetingPrepInstanceSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-    return
+    return 
 
 
 def _send_calendar_details(

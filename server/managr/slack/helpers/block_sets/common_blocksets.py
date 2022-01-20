@@ -500,11 +500,7 @@ def manager_meeting_reminder_block_set(context):
     text = "meeting" if len(not_completed) < 2 else "meetings"
     blocks = [
         block_builders.simple_section(
-<<<<<<< HEAD
-            f"Hey {name}, your team still has *{not_completed} {text}* from today that needs to be logged",
-=======
             f"Hey {name} your team still has *{len(not_completed)} {text}* from today that needs to be logged",
->>>>>>> bugfix/MGR-1496
             "mrkdwn",
         )
     ]
