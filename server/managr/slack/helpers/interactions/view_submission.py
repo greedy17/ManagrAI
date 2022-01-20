@@ -1723,7 +1723,6 @@ def process_submit_product(payload, context):
         .exclude(template__resource="OpportunityLineItem")
         .first()
     )
-
     if product_form_id:
         product_form = user.custom_slack_form_instances.get(id=product_form_id)
         product_form.save_form(state)
@@ -1912,7 +1911,12 @@ def process_submit_product(payload, context):
             "resource_id": main_form.resource_id,
         },
     )
-    current_products = OpportunityLineItem.objects.filter(opportunity=main_form.resource_id)
+    # current_products = OpportunityLineItem.objects.filter(opportunity=main_form.resource_id)
+    current_products = user.salesforce_account.list_resource_data(
+        "OpportunityLineItem",
+        0,
+        filter=["AND IsDeleted = false", f"AND OpportunityId = '{opp.integration_id}'"],
+    )
     blocks.append(
         block_builders.actions_block(
             [
@@ -1933,7 +1937,13 @@ def process_submit_product(payload, context):
             product_block = get_block_set(
                 "current_product_blockset",
                 {
-                    "opp_item_id": str(product.id),
+                    "opp_item_id": product.integration_id,
+                    # "opp_item_id": str(product.id),
+                    "product_data": {
+                        "name": product.name,
+                        "quantity": product.quantity,
+                        "total": product.total_price,
+                    },
                     "u": str(user.id),
                     "main_form": str(main_form.id),
                 },
