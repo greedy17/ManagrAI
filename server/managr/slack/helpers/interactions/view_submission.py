@@ -74,6 +74,7 @@ from managr.slack.helpers.exceptions import (
 )
 from managr.api.decorators import slack_api_exceptions
 from managr.organization.serializers import ContactSerializer
+from managr.slack.helpers.block_sets.command_views_blocksets import custom_meeting_paginator_block
 
 logger = logging.getLogger("managr")
 

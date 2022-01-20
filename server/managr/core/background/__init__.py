@@ -1,7 +1,8 @@
 import logging
+import jwt
 import pytz
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 import re
 from background_task import background
 from django.db.models import Q
@@ -52,12 +53,16 @@ def emit_process_send_manager_reminder(user_id, not_completed):
     return _process_send_manager_reminder(user_id, not_completed)
 
 
-def emit_generate_morning_digest(user_id, verbose_name):
-    return generate_morning_digest(user_id, verbose_name=verbose_name)
+def emit_generate_morning_digest(user_id, verbose_name, schedule):
+    # schedule can be seconds int or datetime string
+    schedule = datetime.strptime(schedule, "%Y-%m-%dT%H:%M")
+    return generate_morning_digest(user_id, verbose_name=verbose_name, schedule=schedule)
 
 
-def emit_generate_afternoon_digest(user_id, verbose_name):
-    return generate_afternoon_digest(user_id, verbose_name=verbose_name)
+def emit_generate_afternoon_digest(user_id, verbose_name, schedule):
+    # schedule can be seconds int or datetime string
+    schedule = datetime.strptime(schedule, "%Y-%m-%dT%H:%M")
+    return generate_afternoon_digest(user_id, verbose_name=verbose_name, schedule=schedule)
 
 
 def emit_check_reminders(user_id, verbose_name):
@@ -89,6 +94,31 @@ def _process_create_calendar_event(
         logger.info(f"Nylas warning {e}")
 
 
+def afternoon_digest_scheduler(self):
+    if self.access_token:
+        decoded = jwt.decode(
+        self.access_token, algorithms="HS512", options={"verify_signature": False}
+    )
+    exp = decoded["exp"]
+    expiration = datetime.fromtimestamp(exp) - timezone.timedelta(minutes=10)
+
+    t = emit_generate_afternoon_digest(str(self.id), expiration.strftime("%Y-%m-%dT%H:%M"))
+    self.refresh_token_task = str(t.id)
+
+def morning_digest_scheduler(self):
+    if self.access_token:
+        decoded = jwt.decode(
+        self.access_token, algorithms="HS512", options={"verify_signature": False}
+    )
+    exp = decoded["exp"]
+    expiration = datetime.fromtimestamp(exp) - timezone.timedelta(minutes=10)
+    
+
+    t = emit_generate_morning_digest(str(self.id), expiration.strftime("%Y-%m-%dT%H:%M"))
+    self.refresh_token_task = str(t.id)
+
+
+
 def check_for_time(tz, hour, minute):
     user_timezone = pytz.timezone(tz)
     currenttime = datetime.today().time()
@@ -112,20 +142,29 @@ def check_for_uncompleted_meetings(user_id, org_level=False):
             not_completed = []
             for user in users:
                 total_meetings = MeetingWorkflow.objects.filter(user=user.id).filter(
-                    datetime_created__contains=datetime.today().date()
+                    datetime_created__contains=datetime.today().date(),
                 )
+                last_instance = MeetingPrepInstance.objects.filter(user=user).order_by("-datetime_created").first()
+                # MeetingWorkflow Queryset 
+                # MeetingPrepInstance with last invocation 
+
+                # non_zoom = MeetingPrepInstance.objects.filter([meeting in meetings if meeting.event_data['type'] != "zoom"])
+                print(last_instance, "this is the meeting prep")
+
                 user_not_completed = [
                     meeting for meeting in total_meetings if meeting.progress == 0
                 ]
+
                 if len(user_not_completed):
                     not_completed = [*not_completed, *user_not_completed]
         else:
+            # This will be for the reps 
             total_meetings = MeetingWorkflow.objects.filter(user=user.id).filter(
                 datetime_created__contains=datetime.today().date()
             )
             not_completed = [meeting for meeting in total_meetings if meeting.progress == 0]
         if len(not_completed):
-            return {"status": True, "not_completed": len(not_completed)}
+            return {"status": True, "not_completed": not_completed}
     return {"status": False}
 
 
@@ -565,7 +604,7 @@ def _process_send_manager_reminder(user_id, not_completed):
         logger.exception(f"{user.email} does not have a slack account")
 
 
-@background()
+@background(schedule=0)
 def generate_morning_digest(user_id, invocation=None, page=1):
     user = User.objects.get(id=user_id)
     blocks = [
@@ -596,7 +635,7 @@ def generate_morning_digest(user_id, invocation=None, page=1):
         return blocks
 
 
-@background()
+@background(schedule=0)
 def generate_afternoon_digest(user_id):
     user = User.objects.get(id=user_id)
     #   check user_level for manager

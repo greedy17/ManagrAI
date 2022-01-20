@@ -55,6 +55,7 @@ logger = logging.getLogger("managr")
 
 @processor()
 def process_meeting_review(payload, context):
+    print(payload, context)
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
     workflow_id = payload["actions"][0]["value"]
