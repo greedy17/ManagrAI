@@ -1699,23 +1699,9 @@ def process_update_product(payload, context):
             "view": {
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Success"},
-                "blocks": get_block_set(
-                    "success_text_modal", {"message": "Successfully updated product"}
-                ),
+                "blocks": get_block_set("success_text_modal", {"message": message}),
             },
         }
-        # try:
-        #     slack_requests.send_ephemeral_message(
-        #         user.slack_integration.channel,
-        #         user.organization.slack_integration.access_token,
-        #         user.slack_integration.slack_id,
-        #         text=text,
-        #         block_set=get_block_set("success_text_modal"),
-        #     )
-        # except Exception as e:
-        #     return logger.exception(
-        #         f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
-        #     )
 
 
 @log_all_exceptions

@@ -1,5 +1,6 @@
 import json
 import pdb
+import resource
 import uuid
 import logging
 import pytz
@@ -861,7 +862,13 @@ def process_show_update_resource_form(payload, context):
                 template=product_template, resource_id=resource_id, user=user,
             )
         )
-        current_products = OpportunityLineItem.objects.filter(opportunity=slack_form.resource_id)
+        opp = Opportunity.objects.get(id=resource_id)
+        current_products = user.salesforce_account.list_resource_data(
+            "OpportunityLineItem",
+            0,
+            filter=["AND IsDeleted = false", f"AND OpportunityId = '{opp.integration_id}'"],
+        )
+        # current_products = OpportunityLineItem.objects.filter(opportunity=slack_form.resource_id)
     blocks = get_block_set(
         "update_modal_block_set",
         context={**context, "resource_type": resource_type, "resource_id": resource_id},
@@ -925,7 +932,13 @@ def process_show_update_resource_form(payload, context):
                 product_block = get_block_set(
                     "current_product_blockset",
                     {
-                        "opp_item_id": str(product.id),
+                        "opp_item_id": product.integration_id,
+                        # "opp_item_id": str(product.id),
+                        "product_data": {
+                            "name": product.name,
+                            "quantity": product.quantity,
+                            "total": product.total_price,
+                        },
                         "u": str(user.id),
                         "main_form": str(slack_form.id),
                     },
@@ -2029,11 +2042,10 @@ def process_managr_action(payload, context):
 
 @processor(required_context="u")
 def process_show_edit_product_form(payload, context):
-    opp_item = OpportunityLineItem.objects.get(id=context.get("opp_item_id"))
     slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
     user = slack_account.user
     blocks = get_block_set(
-        "edit_product_block_set", {"u": str(user.id), "opp_item_id": str(opp_item.id)}
+        "edit_product_block_set", {"u": str(user.id), "opp_item_id": context.get("opp_item_id")}
     )
 
     data = {
