@@ -503,7 +503,7 @@
             />
           </div>
 
-          <div v-if="!userHasProducts" class="centered field-border">
+          <div v-if="!userHasProducts && formType !== 'CREATE'" class="centered field-border">
             <div class="row__">
               <div style="margin-left: 0.5rem" class="centered">
                 <label :class="!productSelected ? 'green' : 'label'">Amount</label>

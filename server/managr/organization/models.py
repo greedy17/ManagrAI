@@ -412,7 +412,7 @@ class Pricebook2QuerySet(models.QuerySet):
 
 class Pricebook2(TimeStampModel, IntegrationModel):
     name = models.CharField(max_length=100)
-    description = models.TextField(max_length=225, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
     last_viewed_date = models.DateTimeField(null=True)
     organization = models.ForeignKey(
         "organization.Organization", on_delete=models.CASCADE, related_name="pricebooks", null=True
@@ -478,8 +478,8 @@ class Product2QuerySet(models.QuerySet):
 
 
 class Product2(TimeStampModel, IntegrationModel):
-    name = models.CharField(max_length=50)
-    description = models.TextField(max_length=225, null=True, blank=True)
+    name = models.CharField(max_length=150)
+    description = models.TextField(null=True, blank=True)
     secondary_data = JSONField(
         default=dict,
         null=True,
@@ -588,7 +588,7 @@ class OpportunityLineItemQuerySet(models.QuerySet):
 
 class OpportunityLineItem(TimeStampModel, IntegrationModel):
     name = models.CharField(max_length=150)
-    description = models.CharField(max_length=255, blank=True, null=True)
+    description = models.TextField(null=True, blank=True)
     external_pricebookentry = models.CharField(
         max_length=255, blank=True, help_text="value from the integration", null=True
     )

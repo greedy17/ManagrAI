@@ -817,7 +817,7 @@ export default {
   background-color: white;
   box-shadow: 3px 4px 7px $very-light-gray;
   border: none;
-  width: 20rem;
+  width: 24rem;
 }
 ::v-deep .ql-blank.ql-editor {
   background-color: white;
@@ -826,7 +826,9 @@ export default {
 ::v-deep .ql-container {
   background-color: white;
   color: $panther;
-  width: 20rem;
+  width: 24rem;
+  min-height: 10rem;
+  overflow: scroll;
 }
 .message__box {
   margin-bottom: 2rem;
@@ -986,4 +988,14 @@ export default {
   display: flex;
   align-items: center;
 }
+// ::-webkit-scrollbar {
+//   background-color: $panther;
+//   -webkit-appearance: none;
+//   width: 4px;
+//   height: 100%;
+// }
+// ::-webkit-scrollbar-thumb {
+//   border-radius: 2px;
+//   background-color: $panther-silver;
+// }
 </style>

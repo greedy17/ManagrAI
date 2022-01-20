@@ -10,6 +10,7 @@ from managr.outreach.tasks import (
     emit_sync_outreach_sequences,
 )
 from managr.outreach.models import OutreachAccount
+from managr.outreach.background import sync_helper
 
 logger = logging.getLogger("managr")
 
@@ -17,35 +18,36 @@ logger = logging.getLogger("managr")
 @kronos.register("0 * * * *")
 def queue_outreach_sync(account_id=None):
     if account_id:
+        logger.info(f"Started outreach sync for {account_id}")
         sync_helper(account_id)
     else:
         outreach_accounts = OutreachAccount.objects.all()
         for account in outreach_accounts:
-            sync_helper(account.id)
             logger.info(f"Started outreach sync for {account.user.email}")
+            sync_helper(account.id)
             continue
     return
 
 
-def sync_helper(auth_id):
-    sync_steps = [
-        emit_sync_outreach_sequences,
-        emit_sync_outreach_accounts,
-        emit_sync_outreach_prospects,
-    ]
-    outreach_account = OutreachAccount.objects.get(id=auth_id)
-    v_name = str(outreach_account.id)
-    for step in sync_steps:
-        attempts = 1
-        step(str(outreach_account.id), f"{step.__name__}_{v_name}")
-        while True:
-            if attempts >= 20:
-                break
-            try:
-                task = CompletedTask.objects.filter(verbose_name=f"{step.__name__}_{v_name}")
-                if task:
-                    break
-            except Exception:
-                attempts += 1
-                continue
-    return
+# def sync_helper(auth_id):
+#     sync_steps = [
+#         emit_sync_outreach_sequences,
+#         emit_sync_outreach_accounts,
+#         emit_sync_outreach_prospects,
+#     ]
+#     outreach_account = OutreachAccount.objects.get(id=auth_id)
+#     v_name = str(outreach_account.id)
+#     for step in sync_steps:
+#         attempts = 1
+#         step(str(outreach_account.id), f"{step.__name__}_{v_name}")
+#         while True:
+#             if attempts >= 20:
+#                 break
+#             try:
+#                 task = CompletedTask.objects.filter(verbose_name=f"{step.__name__}_{v_name}")
+#                 if task:
+#                     break
+#             except Exception:
+#                 attempts += 1
+#                 continue
+#     return

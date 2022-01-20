@@ -18,7 +18,8 @@ class CustomFormFieldInline(admin.StackedInline):
         if parent:
             if db_field.name == "field":
                 queryset = sf_models.SObjectField.objects.filter(
-                    Q(salesforce_object=parent.resource) | Q(is_public=True)
+                    Q(salesforce_account__user__organization=parent.organization)
+                    & Q(Q(salesforce_object=parent.resource) | Q(is_public=True))
                 )
                 return ModelChoiceField(queryset)
         else:
@@ -31,6 +32,7 @@ class CustomFormFieldInline(admin.StackedInline):
         "field",
         "order",
     )
+    extra = 0
 
 
 class CustomFormField(admin.ModelAdmin):
@@ -47,6 +49,7 @@ class CustomOrgSlackForms(admin.ModelAdmin):
     model = slack_models.OrgCustomSlackForm
     inlines = (CustomFormFieldInline,)
     list_filter = ("organization",)
+    readonly_fields = ["organization"]
 
 
 class CustomOrgSlackFormsInstance(admin.ModelAdmin):
