@@ -39,7 +39,7 @@
     >
       {{ selectedStage }}
     </h3>
-    <h2 v-else>Apply additional fields to stages</h2>
+    <h2 v-else-if="!selectedStage && !showLoader">Apply additional fields to stages</h2>
 
     <!-- <modal name="objects-modal" heading="Select a Stage">
       <div class="objects__">
@@ -91,7 +91,24 @@
           </div>
         </div>
         <div>
-          <div style="display: flex; justify-content: flex-end">
+          <div style="display: flex; justify-content: flex-end; align-items: center">
+            <div
+              style="
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                margin-right: -1rem;
+              "
+            >
+              <p style="font-size: 11px">Dont see your stages ? Try refreshing</p>
+              <PulseLoadingSpinnerButton
+                @click="() => refreshFormStages()"
+                :loading="loadingStages"
+                class="modal-container__box__button"
+                text="Refresh"
+              />
+            </div>
+
             <button
               :class="
                 !this.selectedStage
@@ -130,7 +147,7 @@
       </div>
     </div>
 
-    <div class="centered__stage">
+    <div :key="route_name_key" class="centered__stage">
       <!-- <div @click.prevent="toggleSelectedFormResource(resource)" class="box-updated__header">
             <span class="box-updated__title">
               {{ resource }}
@@ -202,19 +219,33 @@
         </div>
       </template>
 
+      <div class="invert center-loader" v-if="showLoader">
+        <img src="@/assets/images/loading-gif.gif" class="invert" style="height: 8rem" alt="" />
+      </div>
+      <!-- <div class="center-loader" v-if="showLoader">
+        
+        <div class="dot-flashing"></div>
+      </div> -->
+
       <div
         style="margin-top: 1rem"
-        v-if="!selectingStage && !addingStage && resource == 'Opportunity' && !selectedStage"
+        v-if="
+          !selectingStage &&
+          !addingStage &&
+          resource == 'Opportunity' &&
+          !selectedStage &&
+          !showLoader
+        "
         class="stage__dropdown"
       >
         <div>
           <!-- <div v-if="selectedStage">{{ selectedStage }} Form</div> -->
           <div class="stage__dropdown__header">
-            {{ formStages.length ? 'Saved Validation Rules' : 'No Saved Validation Rules' }}
+            {{ formLength ? 'Saved Validation Rules' : 'No Saved Validation Rules' }}
           </div>
           <div
-            v-for="(form, i) in formStages"
-            :key="i"
+            v-for="form in formStages"
+            :key="form.stage"
             class="stage__dropdown__stages__container"
             :class="{
               'stage__dropdown__stages__container--selected':
@@ -284,6 +315,7 @@ export default {
       selectedFormFields: [],
       stages: [],
       loadingStages: false,
+      showLoader: true,
       formType: null,
       search: '',
       fieldParam: null,
@@ -325,16 +357,24 @@ export default {
     selectedFormType() {
       return this.selectedForm ? this.selectedForm.formType : null
     },
-
     currentStagesWithForms() {
       return this.formStages.map((sf) => sf.stage)
     },
+    formLength() {
+      return this.formStages.length
+    },
+    route_name_key() {
+      return this.$route.path + '/' + this.language
+    },
   },
   methods: {
+    logForm(i) {
+      console.log(i)
+    },
     async refreshFormStages() {
+      this.loadingStages = true
       try {
         const res = await SObjectPicklist.api.getStagePicklistValues()
-
         if (res.status == 200) {
           this.$Alert.alert({
             type: 'success',
@@ -451,19 +491,18 @@ export default {
         SlackOAuth.api
           .delete(id)
           .then(async (res) => {
-            this.$Alert.alert({
-              type: 'success',
-
-              message: 'Form deleted successfully',
-
-              timeout: 2000,
-            })
-
             const forms = this.formsByType.filter((f) => {
               return f.id !== form.id
             })
-            this.fallForms = [...forms]
+            this.allForms = [...forms]
+            this.logForm(form)
+            // this.$Alert.alert({
+            //   type: 'success',
 
+            //   message: 'Form successfully removed',
+
+            //   timeout: 2000,
+            // })
             this.$router.go()
           })
 
@@ -543,6 +582,11 @@ export default {
     this.resource = 'Opportunity'
     this.formType = 'STAGE_GATING'
   },
+  mounted() {
+    setTimeout(() => {
+      this.showLoader = false
+    }, 1000)
+  },
 }
 </script>
 
@@ -566,6 +610,66 @@ export default {
 }
 .bouncy {
   animation: bounce 0.2s infinite alternate;
+}
+.dot-flashing {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  background-color: $dark-green;
+  color: $dark-green;
+  animation: dotFlashing 1s infinite linear alternate;
+  animation-delay: 0.5s;
+}
+
+.dot-flashing::before,
+.dot-flashing::after {
+  content: '';
+  display: inline-block;
+  position: absolute;
+  top: 0;
+}
+
+.dot-flashing::before {
+  left: -15px;
+  width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  background-color: $dark-green;
+  color: $dark-green;
+  animation: dotFlashing 1s infinite alternate;
+  animation-delay: 0s;
+}
+
+.dot-flashing::after {
+  left: 15px;
+  width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  background-color: $dark-green;
+  color: $dark-green;
+  animation: dotFlashing 1s infinite alternate;
+  animation-delay: 1s;
+}
+
+@keyframes dotFlashing {
+  0% {
+    background-color: $dark-green;
+  }
+  50%,
+  100% {
+    background-color: $lighter-green;
+  }
+}
+.center-loader {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  height: 60vh;
+}
+.invert {
+  filter: invert(99%);
 }
 .back-logo {
   position: absolute;
@@ -685,7 +789,7 @@ export default {
       @include primary-button();
       background-color: $dark-green;
       color: $white;
-      padding: 0.5rem 2rem;
+      padding: 0.5rem 1rem;
       margin: 1rem;
     }
   }
