@@ -14,7 +14,6 @@ from managr.utils.sites import get_site_url
 from managr.core.models import User, Notification
 from managr.opportunity.models import Opportunity, Lead
 from managr.organization.models import Account, OpportunityLineItem
-from managr.zoom.models import ZoomMeeting
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce import constants as sf_consts
 from managr.slack import constants as slack_const

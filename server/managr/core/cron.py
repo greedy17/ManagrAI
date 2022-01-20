@@ -48,9 +48,8 @@ from managr.zoom.serializers import ZoomMeetingSerializer
 from managr.zoom import constants as zoom_consts
 from managr.slack import constants as slack_consts
 from managr.salesforce.models import MeetingWorkflow
-from managr.slack.helpers.block_builders import divider_block
-from managr.core.background import _process_send_meeting_reminder
-from managr.slack.helpers.block_sets.common_blocksets import meeting_reminder_block_set
+from managr.core.background import emit_non_zoom_meetings
+from managr.core.background import non_zoom_meeting_message
 
 
 NOTIFICATION_TITLE_STALLED_IN_STAGE = "Opportunity Stalled in Stage"
@@ -322,34 +321,38 @@ def meeting_prep(processed_data, user_id, invocation=1, send_slack=True):
     }
     resource_check = meeting_resource_data.get("resource_id", None)
     provider = processed_data.get('provider')
+     
+    if resource_check:
+        data["resource_id"] = meeting_resource_data["resource_id"]
+        data["resource_type"] = meeting_resource_data["resource_type"]
+
+    # Creates Meeting Prep Instance 
+    serializer = MeetingPrepInstanceSerializer(data=data)
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
     
     # Conditional Check for Zoom meeting or Non-Zoom Meeting
     if provider != [None,'zoom']:
         # Google Meet (Non-Zoom)
-        # Create MeetingPrepInstance Not MeetingWorkflow 
         meeting_workflow = MeetingWorkflow.objects.create(
         user=user,
-        **meeting_resource_data,
-        )
-        workflow_id = meeting_workflow.id 
-        def emit_non_zoom_meetings(workflow_id, schedule):
-            non_zoom_workflow_id = str(workflow_id)
-            schedule = datetime.strptime(schedule, "%Y-%m-%dT%H:%M")
-            return non_zoom_meeting(non_zoom_workflow_id, schedule=schedule)
-        
-        # Get MeetingWorkflow ID from meeting_workflow 
-        # Create emit function for scheduling
-        # which return another emit function for sending meeting message 
-    else:
-        # Zoom meeting
-        if resource_check:
-            data["resource_id"] = meeting_resource_data["resource_id"]
-            data["resource_type"] = meeting_resource_data["resource_type"]
 
-        serializer = MeetingPrepInstanceSerializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-    return 
+        )
+
+        # Get MeetingWorkflow ID from meeting_workflow 
+        # Create emit function for scheduling (Moved to background/_init_)
+        # Call emit function and pass in MeetingWorkflow ID as argument
+        # Scheduler func will take timezone and convert it to UTC
+        # You can also include end times
+        # Message func will take those values and send slack message 
+
+        non_zoom_end_times = processed_data.get('times').get('end_time')
+        workflow_id = meeting_workflow.id 
+        user_tz = user.timezone
+        emit_non_zoom_meetings(workflow_id, user_tz, non_zoom_end_times)
+        
+    else:
+        return 
 
 
 def _send_calendar_details(

@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 import re
 from background_task import background
 from django.db.models import Q
+from django.utils import timezone
 
 from managr.alerts.models import AlertConfig
 from managr.core.models import User, MeetingPrepInstance
@@ -57,14 +58,27 @@ def emit_generate_morning_digest(user_id, verbose_name):
     return generate_morning_digest(user_id, verbose_name=verbose_name)
 
 
-def emit_generate_afternoon_digest(user_id, verbose_name, schedule):
-    # schedule can be seconds int or datetime string
-    schedule = datetime.strptime(schedule, "%Y-%m-%dT%H:%M")
-    return generate_afternoon_digest(user_id, verbose_name=verbose_name, schedule=schedule)
+def emit_generate_afternoon_digest(user_id, verbose_name ):
+    return generate_afternoon_digest(user_id, verbose_name=verbose_name)
 
 
 def emit_check_reminders(user_id, verbose_name):
     return check_reminders(user_id, verbose_name=verbose_name)
+
+# Functions for Scheduling Meeting 
+# Take local time and convert to UTC time 
+def emit_non_zoom_meetings(workflow_id, user_tz, non_zoom_end_times):
+    non_zoom_workflow_id = str(workflow_id)  
+    user_7am_naive = timezone.now().replace(
+        hour=7, minute=0, second=0, microsecond=0, tzinfo=None
+    )
+    user_7am = timezone.make_aware(user_7am_naive, timezone=pytz.timezone(user_tz))
+    utc_time_from_user_7_am = user_7am.astimezone(pytz.timezone("UTC"))
+    return non_zoom_meeting_message(utc_time_from_user_7_am, non_zoom_end_times)
+
+def non_zoom_meeting_message(utc_time_from_user_7_am, non_zoom_end_times):
+    print(f'This is the timezone {utc_time_from_user_7_am}')
+    print(f"This is end times {non_zoom_end_times}")
 
 
 #########################################################

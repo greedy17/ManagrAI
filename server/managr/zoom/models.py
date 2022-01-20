@@ -18,7 +18,6 @@ from managr.organization.models import ActionChoice
 from managr.organization.models import Stage
 from managr.opportunity import constants as opp_consts
 from managr.salesforce.adapter.models import ActivityAdapter
-from managr.core.background import emit_generate_morning_digest, emit_generate_afternoon_digest
 
 
 from . import constants as zoom_consts
