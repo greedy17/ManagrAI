@@ -324,15 +324,14 @@ def meeting_prep(processed_data, user_id, invocation=1, send_slack=True):
     provider = processed_data.get('provider')
     
     # Conditional Check for Zoom meeting or Non-Zoom Meeting
-    if provider != None and provider != 'zoom':
+    if provider != [None,'zoom']:
         print('This is a non zoom meeting')
         #  Google Meet (Non-Zoom)
         meeting_workflow = MeetingPrepInstance.objects.create(
         user=user,
         **meeting_resource_data,
         )
-        if send_slack:
-            meeting_workflow
+        # You are not creating a meeting prep instance, 
         return meeting_workflow
     else:
         # Zoom meeting

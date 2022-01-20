@@ -405,10 +405,18 @@ def initial_meeting_interaction_block_set(context):
     # check the resource attached to this meeting
     resource = workflow.resource
 
-    meeting = workflow.meeting
-    user_timezone = meeting.zoom_account.timezone
-    start_time = meeting.start_time
-    end_time = meeting.end_time
+  # If else meeting if has attribute workflow, meeting or else workflow.meeting
+    if hasattr(workflow, 'meeting'):
+        meeting = workflow.non_zoom_meeting
+        user_timezone = workflow.non_zoom_meeting.timezone
+        start_time = meeting.non_zoom_meeting.start_time
+        end_time = meeting.non_zoom_meeting.end_time
+
+    else:
+        meeting = workflow.meeting
+        user_timezone = meeting.zoom_account.timezone
+        start_time = meeting.start_time
+        end_time = meeting.end_time
 
     # non_zoom_meeting= workflow.non_zoom_meeting
     # user_timezone = non_zoom_meeting.zoom_account.timezone
