@@ -329,12 +329,14 @@ def process_submit_resource_data(payload, context):
     for form in stage_forms:
         form.update_source = type
         form.is_submitted = True
+        form.submission_date = timezone.now()
         form.save_form(state)
         stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
     if not len(stage_forms):
         if main_form.template.form_type == "UPDATE":
             main_form.update_source = type
             main_form.is_submitted = True
+            main_form.submission_date = timezone.now()
         main_form.save_form(state)
     all_form_data = {**stage_form_data_collector, **main_form.saved_data}
     slack_access_token = user.organization.slack_integration.access_token
@@ -540,6 +542,8 @@ def process_submit_resource_data(payload, context):
             emit_add_update_to_sf(str(main_form.id))
         if type == "alert":
             instance = AlertInstance.objects.get(id=context.get("alert_id"))
+            main_form.alert_instance_id = instance
+            main_form.save()
             alert_instances = AlertInstance.objects.filter(
                 invocation=instance.invocation,
                 channel=context.get("channel_id"),

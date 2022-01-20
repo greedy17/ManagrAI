@@ -4,7 +4,7 @@ import requests
 from datetime import datetime
 import os.path
 import logging
-
+from collections import OrderedDict
 from urllib.parse import urlencode, quote_plus, urlparse
 from requests.exceptions import HTTPError
 from django.contrib.postgres.fields import JSONField
@@ -283,16 +283,18 @@ class SalesforceAuthAccountAdapter:
             data["salesforce_account"] = None
 
         data["user"] = user_id
-        data["sobjects"] = {
-            sf_consts.RESOURCE_SYNC_ACCOUNT: True,
-            sf_consts.RESOURCE_SYNC_CONTACT: True,
-            sf_consts.RESOURCE_SYNC_LEAD: True,
-            sf_consts.RESOURCE_SYNC_OPPORTUNITY: True,
-            sf_consts.RESOURCE_SYNC_PRODUCT2: True,
-            sf_consts.RESOURCE_SYNC_PRICEBOOK2: True,
-            sf_consts.RESOURCE_SYNC_PRICEBOOKENTRY: True,
-            sf_consts.RESOURCE_SYNC_OPPORTUNITYLINEITEM: True,
-        }
+        data["sobjects"] = OrderedDict(
+            {
+                sf_consts.RESOURCE_SYNC_ACCOUNT: True,
+                sf_consts.RESOURCE_SYNC_CONTACT: True,
+                sf_consts.RESOURCE_SYNC_LEAD: True,
+                sf_consts.RESOURCE_SYNC_OPPORTUNITY: True,
+                sf_consts.RESOURCE_SYNC_PRODUCT2: True,
+                sf_consts.RESOURCE_SYNC_PRICEBOOK2: True,
+                sf_consts.RESOURCE_SYNC_PRICEBOOKENTRY: True,
+                sf_consts.RESOURCE_SYNC_OPPORTUNITYLINEITEM: True,
+            }
+        )
         return SalesforceAuthAccountAdapter(**data)
 
     @staticmethod
@@ -439,7 +441,6 @@ class SalesforceAuthAccountAdapter:
     def list_resource_data(self, resource, offset, *args, **kwargs):
         # add extra fields to query string
         extra_items = self.object_fields.get(resource)
-        print(f"Resource: {resource}, fields {extra_items}")
         from .routes import routes
 
         resource_class = routes.get(resource)
