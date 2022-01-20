@@ -143,7 +143,7 @@
               />
             </div>
 
-            <div
+            <!-- <div
               v-if="!addedFieldLabels.includes('Line Description')"
               class="centered field-border"
             >
@@ -173,7 +173,7 @@
                   }
                 "
               />
-            </div>
+            </div> -->
           </div>
         </div>
 
@@ -637,35 +637,23 @@
 
           <h4 v-if="formType !== 'STAGE_GATING'">Recommended Fields:</h4>
           <div v-else>
-            <div
-              style="
-                background-color: #efeff5;
-                width: 50%;
-                height: 3rem;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 0.3rem;
+            <DropDownSearch
+              :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+              displayKey="referenceDisplayLabel"
+              valueKey="apiName"
+              nullDisplay="Search fields"
+              searchable
+              :loading="formFields.loadingNextPage"
+              :hasNext="!!formFields.pagination.hasNextPage"
+              v-model="nameValue"
+              @load-more="onFieldsNextPage"
+              @search-term="onSearchFields"
+              @input="
+                (e) => {
+                  onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
+                }
               "
-            >
-              <DropDownSearch
-                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-                displayKey="referenceDisplayLabel"
-                valueKey="apiName"
-                nullDisplay="Search fields"
-                searchable
-                :loading="formFields.loadingNextPage"
-                :hasNext="!!formFields.pagination.hasNextPage"
-                v-model="nameValue"
-                @load-more="onFieldsNextPage"
-                @search-term="onSearchFields"
-                @input="
-                  (e) => {
-                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
-                  }
-                "
-              />
-            </div>
+            />
 
             <h4>Previous Stage Fields:</h4>
           </div>
@@ -703,6 +691,9 @@
           </div>
           <div v-else-if="resource === 'Account'" class="recommendations">
             <p>Account Type</p>
+          </div>
+          <div v-else-if="resource === 'OpportunityLineItem'" class="recommendations">
+            <p>Line Description</p>
           </div>
 
           <div v-if="formType === 'STAGE_GATING'">
@@ -1277,7 +1268,7 @@ export default {
       actionChoices: [],
       loadingMeetingTypes: false,
       requiredFields: [],
-      requiredProductFields: ['PricebookEntryId', 'Quantity', 'Description'],
+      requiredProductFields: ['PricebookEntryId', 'Quantity'],
       requiredOpportunityFields: ['Name', 'StageName', 'CloseDate'],
       requiredLeadFields: ['LastName', 'Company', 'Status'],
       nameValue: '',
@@ -1543,7 +1534,7 @@ export default {
       this.$router.push({ name: 'UpdateOpportunity' })
     },
     goToValidations() {
-      this.$router.go()
+      this.$router.push({ name: 'ValidationRules' })
     },
     onRemoveField(field) {
       // remove from the array if  it exists
@@ -1704,6 +1695,17 @@ export default {
     transform: translateY(-6px);
   }
 }
+
+.center-loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+.invert {
+  filter: invert(99%);
+}
+
 .label {
   font-size: 0.85rem;
   font-weight: bold;
@@ -1867,7 +1869,7 @@ export default {
 }
 ::v-deep .tn-dropdown__selection-container {
   height: 2.5rem;
-  box-shadow: none;
+  box-shadow: none !important;
 }
 // ::v-deep .tn-dropdown__selection-container:after {
 //   position: absolute;

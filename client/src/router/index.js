@@ -258,7 +258,10 @@ export default new Router({
         {
           path: '/real-time',
           name: 'RealTime',
-          component: RealTime,
+          component: () =>
+            import(
+            /* webpackChunkName: "settings" */ '../views/settings/alerts/create/templates/RealTime'
+            ),
         },
       ],
     },
