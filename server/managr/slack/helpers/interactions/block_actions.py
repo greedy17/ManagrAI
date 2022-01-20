@@ -560,7 +560,6 @@ def process_meeting_selected_resource_option(payload, context):
     resource_type = context.get("resource")
     action = None
     external_id = ""
-
     try:
         action, resource_type = select.split(".")
     except ValueError:
@@ -1258,7 +1257,6 @@ def process_return_to_form_modal(payload, context):
     """if an error occurs on create/update commands when the return button is clicked regen form"""
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     pm = json.loads(payload["view"]["private_metadata"])
-
     from_workflow = pm.get("w", False) not in [None, False]
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
@@ -1268,7 +1266,11 @@ def process_return_to_form_modal(payload, context):
         selected_option = actions[0]["value"]
     else:
         selected_option = None
-
+    external_id = payload.get("view", {}).get("external_id", None)
+    try:
+        view_type, __unique_id = external_id.split(".")
+    except ValueError:
+        pass
     main_form = OrgCustomSlackFormInstance.objects.filter(id=selected_option).first()
     resource_id = None
     resource_type = main_form.template.resource
@@ -1277,11 +1279,7 @@ def process_return_to_form_modal(payload, context):
     user = main_form.user
     organization = user.organization
     slack_access_token = organization.slack_integration.access_token
-    external_id = payload.get("view", {}).get("external_id", None)
-    try:
-        view_type, __unique_id = external_id.split(".")
-    except ValueError:
-        pass
+
     view_context = {
         **context,
         "resource_type": resource_type,
@@ -1292,6 +1290,29 @@ def process_return_to_form_modal(payload, context):
     if from_workflow:
         view_context["w"] = pm.get("w")
         view_context["resource"] = resource_type
+    if view_type == "add_product":
+        blocks = main_form.generate_form()
+        if len(blocks):
+            data = {
+                "trigger_id": trigger_id,
+                "view_id": view_id,
+                "view": {
+                    "type": "modal",
+                    "title": {"type": "plain_text", "text": "Add Products Form"},
+                    "submit": {"type": "plain_text", "text": "Submit"},
+                    "blocks": blocks,
+                    "private_metadata": json.dumps(pm),
+                    "callback_id": slack_const.PROCESS_SUBMIT_PRODUCT,
+                },
+            }
+        try:
+            slack_requests.generic_request(url, data, access_token=slack_access_token)
+        except Exception as e:
+            # exception will only be thrown for caught errors using decorator
+            return logger.exception(
+                f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
+            )
+        return
     form_blocks = get_block_set(view_type, view_context)
     if main_form and not from_workflow:
         try:
@@ -1674,7 +1695,7 @@ def process_show_sequence_modal(payload, context):
 def process_get_notes(payload, context):
     u = User.objects.get(id=context.get("u"))
     type = context.get("type", None)
-    resource_type = context.get("resource_type", None)
+    resource_type = context.get("resource_type", "Opportunity")
     org = u.organization
     access_token = org.slack_integration.access_token
     resource_id = (
@@ -1710,7 +1731,7 @@ def process_get_notes(payload, context):
     ]
     if note_data:
         for note in note_data:
-            date = note[0].date()
+            date = note[0].date() if note[0] is not None else " "
             current_stage = note[3]
             previous_stage = note[4]
             block_message = f"*{date} - {note[1]}*\n"
@@ -1730,9 +1751,9 @@ def process_get_notes(payload, context):
             "blocks": note_blocks,
         },
     }
-    if type == "alert":
+    if type in ["alert", "prep"]:
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
-    elif type != "command" and type != "alert":
+    elif type == "recap":
         data["view_id"] = payload["container"]["view_id"]
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH
     else:
@@ -2056,6 +2077,27 @@ def process_add_products_form(payload, context):
     view = payload["view"]
     state = view["state"]["values"]
     private_metadata = json.loads(view["private_metadata"])
+    loading_view_data = {
+        "trigger_id": payload["trigger_id"],
+        "view_id": view["id"],
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Loading"},
+            "blocks": get_block_set(
+                "loading", {"message": f"Putting together your form...:file_cabinet: ",},
+            ),
+        },
+    }
+    try:
+        loading_res = slack_requests.generic_request(
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH,
+            loading_view_data,
+            access_token=user.organization.slack_integration.access_token,
+        )
+    except Exception as e:
+        return logger.exception(
+            f"Failed To Show Loading Screen for user  {str(user.id)} email {user.email} {e}"
+        )
     main_form = OrgCustomSlackFormInstance.objects.get(id=context.get("f"))
     main_form.save_form(state)
     product_form_id = context.get("product_form", None)
@@ -2069,15 +2111,15 @@ def process_add_products_form(payload, context):
         product_form_id = str(product_form.id)
     else:
         product_form = OrgCustomSlackFormInstance.objects.get(id=product_form_id)
-    private_metadata.update({**context, "view_id": view["id"], "product_form": product_form_id})
+    private_metadata.update(
+        {**context, "view_id": loading_res["view"]["id"], "product_form": product_form_id}
+    )
     # currently only for update
     blocks = []
-    print(product_form)
     blocks.extend(product_form.generate_form())
     if len(blocks):
         data = {
-            "trigger_id": payload["trigger_id"],
-            "view_id": view["id"],
+            "view_id": loading_res["view"]["id"],
             "view": {
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Add Products Form"},
@@ -2087,10 +2129,25 @@ def process_add_products_form(payload, context):
                 "callback_id": slack_const.PROCESS_SUBMIT_PRODUCT,
             },
         }
+    else:
+        data = {
+            "view_id": loading_res["view"]["id"],
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Product Form error"},
+                "blocks": block_builders.simple_section("Failed to generate your products form"),
+                "private_metadata": json.dumps(private_metadata),
+            },
+        }
+    try:
         slack_requests.generic_request(
-            slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH,
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
             data,
             access_token=user.organization.slack_integration.access_token,
+        )
+    except Exception as e:
+        return logger.exception(
+            f"Failed to show product form for user {str(user.id)} email {user.email} {e}"
         )
 
 
@@ -2224,7 +2281,7 @@ def process_view_recap(payload, context):
             for product in current_products:
                 blocks.append(
                     block_builders.simple_section(
-                        f"*{product.name}*- QTY:{product.quantity} / Total Price: ${product.total_price}\n",
+                        f"*{product.name}*- QTY:{product.quantity} / Total Price: ${round(product.total_price,2)}\n",
                         "mrkdwn",
                     )
                 )
@@ -2237,7 +2294,8 @@ def process_view_recap(payload, context):
                 params=[
                     f"u={str(user.id)}",
                     f"resource_id={str(main_form.resource_id)}",
-                    f"type={main_form.template.resource}",
+                    "type=recap",
+                    f"resource_type={main_form.template.resource}",
                 ],
             ),
         ),

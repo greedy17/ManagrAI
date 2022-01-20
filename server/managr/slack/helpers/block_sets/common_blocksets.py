@@ -397,7 +397,6 @@ def calendar_reminders_blockset(context):
     am_or_pm = utc_time.astimezone(tz).strftime("%p")
     start_time = local_start + " " + am_or_pm
     type = meeting.resource_type if meeting.resource_type is not None else "prep"
-    logger.info(f"DIGEST INFO: {type}")
     if type == "Opportunity":
         resource = Opportunity.objects.get(id=meeting.resource_id)
     elif type == "Account":
@@ -446,7 +445,8 @@ def calendar_reminders_blockset(context):
                     params=[
                         f"u={str(user.id)}",
                         f"resource_id={str(meeting.resource_id)}",
-                        f"type={type}",
+                        f"resource_type={type}",
+                        "type=prep",
                     ],
                 ),
             )
@@ -490,7 +490,7 @@ def manager_meeting_reminder_block_set(context):
     text = "meeting" if not_completed < 2 else "meetings"
     blocks = [
         block_builders.simple_section(
-            f"Hey {name} your team still has *{not_completed} {text}* from today that needs to be logged",
+            f"Hey {name}, your team still has *{not_completed} {text}* from today that needs to be logged",
             "mrkdwn",
         )
     ]

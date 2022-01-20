@@ -562,7 +562,7 @@ def meeting_review_modal_block_set(context):
 
     # make params here
 
-    if user.organization.has_products:
+    if user.organization.has_products and slack_form.template.resource == "Opportunity":
         blocks.append(
             block_builders.actions_block(
                 [

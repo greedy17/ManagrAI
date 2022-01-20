@@ -132,7 +132,7 @@ def check_for_uncompleted_meetings(user_id, org_level=False):
 def to_date_string(date):
     if not date:
         return "n/a"
-    d = datetime.datetime.strptime(date, "%Y-%m-%d")
+    d = datetime.strptime(date, "%Y-%m-%d")
     return d.strftime("%a, %B %d, %Y")
 
 
@@ -548,8 +548,9 @@ def _process_send_manager_reminder(user_id, not_completed):
     user = User.objects.get(id=user_id)
     if hasattr(user, "slack_integration"):
         access_token = user.organization.slack_integration.access_token
+        name = user.first_name if hasattr(user, "first_name") else user.full_name
         blocks = block_sets.get_block_set(
-            "manager_meeting_reminder", {"not_completed": not_completed, "name": user.full_name}
+            "manager_meeting_reminder", {"not_completed": not_completed, "name": name}
         )
         try:
             slack_requests.send_channel_message(
@@ -602,14 +603,15 @@ def generate_afternoon_digest(user_id):
     if user.user_level == "MANAGER":
         meetings = check_for_uncompleted_meetings(user.id, True)
         if meetings["status"]:
+            name = user.first_name if hasattr(user, "first_name") else user.full_name
             meeting = block_sets.get_block_set(
                 "manager_meeting_reminder",
-                {"u": str(user.id), "not_completed": meetings["not_completed"]},
+                {"u": str(user.id), "not_completed": meetings["not_completed"], "name": name,},
             )
         else:
             meeting = [
                 block_builders.simple_section(
-                    "You've completed all your meetings today! :clap:", "mrkdwn"
+                    "Your team has logged all of their meetings today! :clap:", "mrkdwn"
                 )
             ]
     else:
@@ -658,7 +660,7 @@ def check_reminders(user_id):
                         user_id, f"morning-digest-{user.email}-{str(uuid.uuid4())}"
                     )
                 elif key == core_consts.WORKFLOW_REMINDER:
-                    if datetime.datetime.today().weekday() == 4:
+                    if datetime.today().weekday() == 4:
                         workflows = check_workflows_count(user.id)
                         if workflows["status"] and workflows["workflow_count"] <= 2:
                             emit_process_send_workflow_reminder(
