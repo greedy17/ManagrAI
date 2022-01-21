@@ -1939,7 +1939,7 @@ def process_submit_product(payload, context):
         )
         blocks.append(
             block_builders.simple_section(
-                "We had an error retreiving your products :exclamation:", "mrkdwn"
+                "There was an error retreiving your products :exclamation:", "mrkdwn"
             )
         )
 
@@ -1979,6 +1979,19 @@ def process_submit_product(payload, context):
         data,
         access_token=user.organization.slack_integration.access_token,
     )
+
+    return {
+        "response_action": "update",
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Product Created"},
+            "blocks": [
+                block_builders.simple_section(
+                    ":white_check_mark: Successfully created product!", "mrkdwn"
+                )
+            ],
+        },
+    }
 
 
 def handle_view_submission(payload):
