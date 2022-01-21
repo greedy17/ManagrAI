@@ -1911,12 +1911,6 @@ def process_submit_product(payload, context):
             "resource_id": main_form.resource_id,
         },
     )
-    # current_products = OpportunityLineItem.objects.filter(opportunity=main_form.resource_id)
-    current_products = user.salesforce_account.list_resource_data(
-        "OpportunityLineItem",
-        0,
-        filter=["AND IsDeleted = false", f"AND OpportunityId = '{opp.integration_id}'"],
-    )
     blocks.append(
         block_builders.actions_block(
             [
@@ -1932,6 +1926,23 @@ def process_submit_product(payload, context):
             block_id="ADD_PRODUCT_BUTTON",
         ),
     )
+    # current_products = OpportunityLineItem.objects.filter(opportunity=main_form.resource_id)
+    try:
+        current_products = user.salesforce_account.list_resource_data(
+            "OpportunityLineItem",
+            0,
+            filter=["AND IsDeleted = false", f"AND OpportunityId = '{opp.integration_id}'"],
+        )
+    except Exception as e:
+        logger.exception(
+            f"Error retreiving products for user {user.email} during submit product refresh: {e}"
+        )
+        blocks.append(
+            block_builders.simple_section(
+                "We had an error retreiving your products :exclamation:", "mrkdwn"
+            )
+        )
+
     if current_products:
         for product in current_products:
             product_block = get_block_set(

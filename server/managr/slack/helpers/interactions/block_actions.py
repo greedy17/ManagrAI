@@ -63,6 +63,27 @@ def process_meeting_review(payload, context):
     meeting = workflow.meeting
     organization = meeting.zoom_account.user.organization
     access_token = organization.slack_integration.access_token
+    loading_view_data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Loading"},
+            "blocks": get_block_set(
+                "loading",
+                {
+                    "message": f"Salesforce is being a bit slow :sleeping:… please give it a few seconds",
+                },
+            ),
+        },
+    }
+    try:
+        loading_res = slack_requests.generic_request(
+            url, loading_view_data, access_token=access_token,
+        )
+    except Exception as e:
+        return logger.exception(
+            f"Failed To Show Loading Screen for user  {str(user.id)} email {user.email} {e}"
+        )
     private_metadata = {
         "original_message_channel": payload["channel"]["id"],
         "original_message_timestamp": payload["message"]["ts"],
@@ -74,7 +95,7 @@ def process_meeting_review(payload, context):
     }
     private_metadata.update(context)
     data = {
-        "trigger_id": trigger_id,
+        "view_id": loading_res["view"]["id"],
         "view": {
             "type": "modal",
             "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
@@ -86,7 +107,9 @@ def process_meeting_review(payload, context):
         },
     }
     try:
-        res = slack_requests.generic_request(url, data, access_token=access_token)
+        res = slack_requests.generic_request(
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE, data, access_token=access_token
+        )
     except InvalidBlocksException as e:
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
@@ -809,7 +832,6 @@ def process_show_update_resource_form(payload, context):
     show_submit_button_if_fields_added = False
     stage_form = None
     product_form = None
-    current_products = None
     # HACK forms are generated with a helper fn currently stagename takes a special action id to update forms
     # we need to manually change this action_id
     if resource_id and not prev_form:
@@ -2123,9 +2145,7 @@ def process_add_products_form(payload, context):
         product_form_id = str(product_form.id)
     else:
         product_form = OrgCustomSlackFormInstance.objects.get(id=product_form_id)
-    private_metadata.update(
-        {**context, "view_id": loading_res["view"]["id"], "product_form": product_form_id}
-    )
+    private_metadata.update({**context, "view_id": view["id"], "product_form": product_form_id})
     # currently only for update
     blocks = []
     blocks.extend(product_form.generate_form())
