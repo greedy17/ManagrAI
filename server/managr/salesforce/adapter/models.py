@@ -483,7 +483,6 @@ class SalesforceAuthAccountAdapter:
             return res
 
     def list_relationship_data(self, relationship, fields, value, *args, **kwargs):
-
         # build the filter query from the name fields and value
         filter_query = ""
         for index, f in enumerate(fields):

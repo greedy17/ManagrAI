@@ -1527,6 +1527,12 @@ def process_update_product(payload, context):
     product_form = user.custom_slack_form_instances.filter(
         template__resource="OpportunityLineItem"
     ).first()
+    opp_line_item = OpportunityLineItem.objects.filter(id=product_form.resource_id).first()
+    if (
+        "HasSchedule" in opp_line_item.secondary_data
+        and opp_line_item.secondary_data["HasSchedule"]
+    ):
+        state.pop("Quantity")
     product_form.save_form(state)
     slack_access_token = user.organization.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH

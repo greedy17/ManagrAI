@@ -2306,17 +2306,6 @@ def process_view_recap(payload, context):
         message_string_for_recap = "No Data to show from form"
 
     blocks.append(block_builders.simple_section(message_string_for_recap, "mrkdwn"))
-    if user.organization.has_products and main_form.template.resource == "Opportunity":
-        current_products = OpportunityLineItem.objects.filter(opportunity=main_form.resource_id)
-        if current_products:
-            blocks.append(block_builders.simple_section("*Current Products:*", "mrkdwn"))
-            for product in current_products:
-                blocks.append(
-                    block_builders.simple_section(
-                        f"*{product.name}*- QTY:{product.quantity} / Total Price: ${round(product.total_price,2)}\n",
-                        "mrkdwn",
-                    )
-                )
     action_blocks = [
         block_builders.simple_button_block(
             "View Notes",
