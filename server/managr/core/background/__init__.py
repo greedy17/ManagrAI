@@ -69,11 +69,11 @@ def emit_check_reminders(user_id, verbose_name):
     return check_reminders(user_id, verbose_name=verbose_name)
 
 # Functions for Scheduling Meeting 
-def emit_non_zoom_meetings(workflow_id, user_tz, non_zoom_end_times):
-    return non_zoom_meeting_message(user_tz,workflow_id, non_zoom_end_times)
+def emit_non_zoom_meetings(workflow_id, user_id, user_tz, non_zoom_end_times):
+    return non_zoom_meeting_message(user_tz, user_id, workflow_id, non_zoom_end_times)
 
 @background()
-def non_zoom_meeting_message(user_tz, workflow_id, non_zoom_end_times):
+def non_zoom_meeting_message(user_tz, user_id, workflow_id, non_zoom_end_times):
     # Convert Non-Zoom Meeting from UNIX time to UTC 
     unix_time = datetime.utcfromtimestamp(int(non_zoom_end_times))
     tz = pytz.timezone("UTC")
@@ -81,7 +81,6 @@ def non_zoom_meeting_message(user_tz, workflow_id, non_zoom_end_times):
     print(local_end, "this is utc time")
 
     # Convert their 7am local time to UTC 
-    user_tz = user_tz.timezone
     user_7am_naive = timezone.now().replace(
         hour=7, minute=0, second=0, microsecond=0, tzinfo=None
     )
@@ -96,12 +95,8 @@ def non_zoom_meeting_message(user_tz, workflow_id, non_zoom_end_times):
     seconds = a_timedelta.total_seconds()
     print(seconds, "this is the difference in seconds")
 
-    # Convert seconds back to UTC Time and get new time
-    new_time = datetime.fromtimestamp(seconds).strftime("%H:%M:%S")
-    print(new_time, "this is the new time")
-
    # Use time difference in UTC to schedule realtime meeting alert  
-    return emit_kick_off_slack_interaction(user_tz, workflow_id, schedule=new_time)
+    return emit_kick_off_slack_interaction(user_id, workflow_id, schedule=seconds)
 
 
 
