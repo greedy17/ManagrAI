@@ -1527,6 +1527,12 @@ def process_update_product(payload, context):
     product_form = user.custom_slack_form_instances.filter(
         template__resource="OpportunityLineItem"
     ).first()
+    opp_line_item = OpportunityLineItem.objects.filter(id=product_form.resource_id).first()
+    if (
+        "HasSchedule" in opp_line_item.secondary_data
+        and opp_line_item.secondary_data["HasSchedule"]
+    ):
+        state.pop("Quantity")
     product_form.save_form(state)
     slack_access_token = user.organization.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH
@@ -1911,12 +1917,6 @@ def process_submit_product(payload, context):
             "resource_id": main_form.resource_id,
         },
     )
-    # current_products = OpportunityLineItem.objects.filter(opportunity=main_form.resource_id)
-    current_products = user.salesforce_account.list_resource_data(
-        "OpportunityLineItem",
-        0,
-        filter=["AND IsDeleted = false", f"AND OpportunityId = '{opp.integration_id}'"],
-    )
     blocks.append(
         block_builders.actions_block(
             [
@@ -1932,6 +1932,23 @@ def process_submit_product(payload, context):
             block_id="ADD_PRODUCT_BUTTON",
         ),
     )
+    # current_products = OpportunityLineItem.objects.filter(opportunity=main_form.resource_id)
+    try:
+        current_products = user.salesforce_account.list_resource_data(
+            "OpportunityLineItem",
+            0,
+            filter=["AND IsDeleted = false", f"AND OpportunityId = '{opp.integration_id}'"],
+        )
+    except Exception as e:
+        logger.exception(
+            f"Error retreiving products for user {user.email} during submit product refresh: {e}"
+        )
+        blocks.append(
+            block_builders.simple_section(
+                "There was an error retreiving your products :exclamation:", "mrkdwn"
+            )
+        )
+
     if current_products:
         for product in current_products:
             product_block = get_block_set(
@@ -1968,6 +1985,19 @@ def process_submit_product(payload, context):
         data,
         access_token=user.organization.slack_integration.access_token,
     )
+
+    return {
+        "response_action": "update",
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Product Created"},
+            "blocks": [
+                block_builders.simple_section(
+                    ":white_check_mark: Successfully created product!", "mrkdwn"
+                )
+            ],
+        },
+    }
 
 
 def handle_view_submission(payload):
