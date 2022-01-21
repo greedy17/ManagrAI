@@ -1,5 +1,5 @@
 import logging
-
+from django.conf import settings
 from django.db import models
 from django.db.models.constraints import UniqueConstraint
 from django.contrib.postgres.fields import JSONField, ArrayField
@@ -289,7 +289,11 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                         return logger.exception(
                             f"Failed to find the resource with id {self.resource_id} of model {self.resource_type}, to generate form for the user, the resource was most likely removed"
                         )
-                    form_values = self.resource_object.secondary_data
+                    if settings.IN_DEV or settings.IN_STAGING:
+                        current = self.resource_object.get_current_values()
+                        form_values = current.secondary_data
+                    else:
+                        form_values = self.resource_object.secondary_data
                 else:
                     form_values = {}
         return form_values
