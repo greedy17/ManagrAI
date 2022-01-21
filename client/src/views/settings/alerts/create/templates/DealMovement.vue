@@ -5,9 +5,48 @@
       <p style="color: #5d5e5e" class="sub__">Activate workflows related to deal movement</p>
     </div>
 
-    <div class="forecast__collection">
-      <p>testing...</p>
+    <div class="row">
+      <div class="stage-item">
+        <p>Stage Advanced</p>
+        <button class="plus_button" @click="onAdvancing">
+          <img src="@/assets/images/add.svg" class="filtered" alt="" />
+        </button>
+      </div>
+
+      <div class="stage-item">
+        <p>Moved to Commit</p>
+        <button class="plus_button" @click="onAdvancing">
+          <img src="@/assets/images/add.svg" class="filtered" alt="" />
+        </button>
+      </div>
+
+      <div class="stage-item">
+        <p>Close Date Pushed</p>
+        <button class="plus_button" @click="onAdvancing">
+          <img src="@/assets/images/add.svg" class="filtered" alt="" />
+        </button>
+      </div>
+
+      <div class="stage-item">
+        <p>Update Deal Room</p>
+        <button class="plus_button" @click="onAdvancing">
+          <img src="@/assets/images/add.svg" class="filtered" alt="" />
+        </button>
+      </div>
     </div>
+
+    <div v-if="!advancing" style="margin-top: 10%">
+      <h1 class="bouncy" style="color: #5d5e5e; font-weight: bold; text-align: center">0</h1>
+      <h6 style="font-weight: bold; color: #5d5e5e; text-align: center">
+        Nothing here, add a workflow to get started.. (o^^)o
+      </h6>
+    </div>
+
+    <transition name="fade">
+      <div v-if="advancing" class="forecast__collection">
+        <h4>Testing Stage Advanced</h4>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -81,6 +120,7 @@ export default {
       savingTemplate: false,
       listVisible: true,
       dropdownVisible: true,
+      advancing: false,
       NON_FIELD_ALERT_OPTS,
       stringRenderer,
       SOBJECTS_LIST,
@@ -95,6 +135,9 @@ export default {
     this.templates.refresh()
   },
   methods: {
+    onAdvancing() {
+      this.advancing = !this.advancing
+    },
     showList() {
       this.listVisible = !this.listVisible
     },
@@ -267,6 +310,13 @@ export default {
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s;
+}
+.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+  opacity: 0;
+}
 .forecast__collection {
   display: flex;
   align-items: flex-start;
@@ -275,12 +325,21 @@ export default {
   background-color: $white;
   box-shadow: 3px 4px 7px $very-light-gray;
   border-radius: 0.75rem;
-  width: 75vw;
+  width: 96vw;
   padding: 2rem;
   margin-bottom: 1rem;
 }
-.onboarding {
-  filter: blur(10px);
+.plus_button {
+  border: none;
+  // box-shadow: 3px 4px 2px $very-light-gray;
+  background-color: transparent;
+  border-radius: 50%;
+  padding: 0.2rem;
+  margin-left: 0.25rem;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: bold;
 }
 .dot {
   filter: invert(40%) sepia(96%) saturate(431%) hue-rotate(94deg) brightness(101%) contrast(82%);
@@ -314,7 +373,6 @@ textarea {
   }
 }
 .alerts-page {
-  margin-left: 14vw;
   margin-top: 4.5rem;
   &__previous-step {
     @include muted-font(12);
@@ -373,22 +431,18 @@ textarea {
     height: 3rem;
   }
 }
-.alerts-page__settings {
+.stage-item {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  justify-content: space-evenly;
-
-  &__frequency {
-    display: flex;
-    align-items: center;
-    &-label {
-      @include muted-font();
-      margin: 0 0.5rem;
-    }
-  }
-  &-remove {
-    justify-self: end;
-  }
+  justify-content: center;
+  padding: 0rem 0.75rem;
+  margin-right: 1rem;
+  box-shadow: 3px 2px 2px $very-light-gray;
+  border-radius: 7px;
+  color: $base-gray;
+  cursor: pointer;
+  font-size: 12px;
 }
 .btn {
   &--danger {
@@ -449,7 +503,7 @@ textarea {
   margin-left: 0.5rem;
 }
 .sub__ {
-  font-size: 16px;
+  font-size: 13px;
   margin-top: -0.5rem;
   color: $panther-silver;
 }
@@ -472,9 +526,12 @@ textarea {
 .row {
   display: flex;
   flex-direction: row;
-  justify-content: center;
-  align-items: space-evenly;
-  margin-top: 1rem;
+  justify-content: flex-start;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0rem;
+  border-bottom: 2px solid $soft-gray;
+  width: 98vw;
 }
 .row_ {
   display: flex;

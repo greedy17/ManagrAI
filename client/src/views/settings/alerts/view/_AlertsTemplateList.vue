@@ -15,9 +15,20 @@
     <div class="spacer"></div>
 
     <div class="center__">
-      <h2 v-if="!editing" class="titles">Edit your Workflow Automation</h2>
-      <h2 @click="logChannels" v-else class="titles">Saved Workflow Automations</h2>
-      <p style="font-weight: bold; color: #5d5e5e; margin-top: -0.5rem; font-size: 0.95rem">
+      <h2 v-if="!editing" :class="templates.refreshing ? 'loading-title titles' : 'titles'">
+        Edit your Workflow Automation
+      </h2>
+      <h2
+        @click="logChannels"
+        v-else
+        :class="templates.refreshing ? 'loading-title titles' : 'titles'"
+      >
+        Saved Workflow Automations
+      </h2>
+      <p
+        :class="templates.refreshing ? 'loading-title titles' : ''"
+        style="font-weight: bold; color: #5d5e5e; margin-top: -0.5rem; font-size: 0.95rem"
+      >
         Edit, Run, and Schedule your saved Automations
       </p>
       <div v-if="!alertsCount(templates.list.length)">
@@ -38,7 +49,7 @@
     </div>
     <template
       style="margin-top: -1rem"
-      v-if="!templates.isLoading && alertsCount(templates.list.length)"
+      v-if="!templates.refreshing && alertsCount(templates.list.length)"
     >
       <transition name="fade">
         <div class="middle" v-if="!editing">
@@ -163,6 +174,14 @@
         </div>
       </transition>
     </template>
+
+    <!-- <div class="center-loader" v-else>
+      <div class="dot-flashing"></div>
+    </div> -->
+
+    <div class="invert center-loader" v-else>
+      <img src="@/assets/images/loading-gif.gif" class="invert" style="height: 8rem" alt="" />
+    </div>
   </div>
 </template>
 
@@ -228,9 +247,11 @@ export default {
       pageLoaded: false,
     }
   },
-  mounted() {
-    console.log(this.templates)
-  },
+  // mounted() {
+  //   setTimeout(() => {
+  //     this.showLoader = false
+  //   }, 2000)
+  // },
   async created() {
     this.templates.refresh()
     this.userConfigForm = new UserConfigForm({
@@ -279,9 +300,6 @@ export default {
         return num
       }
     },
-    logTemplates() {
-      console.log(this.templates.list)
-    },
     goToLogZoom() {
       this.$router.push({ name: 'LogZoom' })
     },
@@ -306,7 +324,7 @@ export default {
       this.deleteOpen === false ? (this.deleteOpen = true) : (this.deleteOpen = false)
     },
     closeEdit() {
-      this.$router.go()
+      this.editing = !this.editing
     },
     async listUserChannels(cursor = null) {
       const res = await SlackOAuth.api.listUserChannels(cursor)
@@ -442,6 +460,58 @@ export default {
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
+
+.dot-flashing {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  background-color: $dark-green;
+  color: $dark-green;
+  animation: dotFlashing 1s infinite linear alternate;
+  animation-delay: 0.5s;
+}
+
+.dot-flashing::before,
+.dot-flashing::after {
+  content: '';
+  display: inline-block;
+  position: absolute;
+  top: 0;
+}
+
+.dot-flashing::before {
+  left: -15px;
+  width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  background-color: $dark-green;
+  color: $dark-green;
+  animation: dotFlashing 1s infinite alternate;
+  animation-delay: 0s;
+}
+
+.dot-flashing::after {
+  left: 15px;
+  width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  background-color: $dark-green;
+  color: $dark-green;
+  animation: dotFlashing 1s infinite alternate;
+  animation-delay: 1s;
+}
+
+@keyframes dotFlashing {
+  0% {
+    background-color: $dark-green;
+  }
+  50%,
+  100% {
+    background-color: $lighter-green;
+  }
+}
+
 .spacer {
   height: 0.75rem;
 }
@@ -475,7 +545,7 @@ button:disabled {
   outline: 2px solid $dark-green;
 }
 .titles {
-  color: black;
+  color: $base-gray;
   font-weight: bold;
 }
 .alert-links {
@@ -596,7 +666,7 @@ button:disabled {
 .card__ {
   background-color: white;
   border: none;
-  min-width: 24vw;
+  min-width: 22vw;
   max-width: 44vw;
   min-height: 25vh;
   margin-right: 1rem;
@@ -720,7 +790,19 @@ a {
   justify-content: center;
   align-items: center;
 }
+.center-loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60vh;
+}
+.invert {
+  filter: invert(99%);
+}
 .invisible {
+  display: none;
+}
+.loading-title {
   display: none;
 }
 // ::-webkit-scrollbar {

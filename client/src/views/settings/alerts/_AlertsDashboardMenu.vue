@@ -24,12 +24,12 @@
       <div style="background-color: #ebfcf3; border-radius: 0.3rem; margin-bottom: 0.25rem" v-else>
         <div
           @click="isPopular()"
-          style="cursor: pointer"
+          style="cursor: pointer; margin-left: 0.5rem"
           :class="isOnboarding ? 'onboarding row' : 'row'"
         >
-          <img src="@/assets/images/trophy.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
+          <img src="@/assets/images/trophy.png" style="height: 1.3rem; margin-right: 1rem" alt="" />
 
-          <h3>Popular</h3>
+          <h5>Popular</h5>
           <img
             src="@/assets/images/dropdown.png"
             style="height: 1.25rem; margin-top: 0.25rem"
@@ -37,7 +37,7 @@
           />
         </div>
 
-        <div v-if="popular" style="margin-left: 1.5rem; margin-top: -0.75rem" class="col">
+        <div v-if="popular" style="margin-left: 2.5rem; margin-top: -0.75rem" class="col">
           <router-link exact-active-class="active" :to="{ name: 'RealTime' }">
             <div :class="isOnboarding ? 'onboarding row' : 'row'">
               <img
@@ -98,7 +98,7 @@
           />
           <h5 @click="onboardComplete">
             Saved
-            <span style="margin-left: 0.25rem" class="counter">{{
+            <span style="margin-left: 0.5rem" class="counter">{{
               alertsCount(templates.list.length)
             }}</span>
           </h5>
@@ -131,14 +131,14 @@
         </div>
       </router-link>
 
-      <div :class="isOnboarding ? 'onboarding row' : 'row'" style="cursor: not-allowed">
+      <!-- <div :class="isOnboarding ? 'onboarding row' : 'row'" style="cursor: not-allowed">
         <img
           src="@/assets/images/sharing.png"
           style="height: 1.3rem; margin-right: 1rem; padding-left: 0.5rem"
           alt=""
         />
         <h5>Shared<span class="coming-soon">coming soon</span></h5>
-      </div>
+      </div> -->
     </div>
 
     <div v-else class="sidenav sidenav__background">
@@ -148,10 +148,10 @@
       </div>
 
       <div style="background-color: #ebfcf3; border-radius: 0.3rem; margin-bottom: 0.25rem">
-        <div @click="isPopular()" style="cursor: pointer" class="row">
-          <img src="@/assets/images/trophy.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
+        <div @click="isPopular()" style="cursor: pointer; margin-left: 0.5rem" class="row">
+          <img src="@/assets/images/trophy.png" style="height: 1.3rem; margin-right: 1rem" alt="" />
 
-          <h3>Popular</h3>
+          <h5>Popular</h5>
           <img
             src="@/assets/images/dropdown.png"
             style="height: 1.25rem; margin-top: 0.25rem"
@@ -164,7 +164,7 @@
             <div style="height: 2.25rem" class="row">
               <img
                 src="@/assets/images/bolt.png"
-                style="height: 0.9rem; margin-right: 0.25rem; margin-left: 1rem"
+                style="height: 0.9rem; margin-right: 0.25rem; margin-left: 1.75rem"
                 alt=""
               />
               <h5 style="margin-left: 1rem">Instant Updates</h5>
@@ -178,7 +178,7 @@
             <div style="margin-top: -0.25rem; height: 2.25rem" class="row">
               <img
                 src="@/assets/images/org.png"
-                style="height: 0.8rem; margin-right: 0.25rem; margin-left: 1rem"
+                style="height: 0.8rem; margin-right: 0.25rem; margin-left: 1.75rem"
                 alt=""
               />
 
@@ -215,14 +215,14 @@
         </div>
       </router-link>
 
-      <div class="row" style="cursor: not-allowed">
+      <!-- <div class="row" style="cursor: not-allowed">
         <img
           src="@/assets/images/sharing.png"
           style="height: 1.3rem; margin-right: 1rem; padding-left: 0.5rem"
           alt=""
         />
         <h5>Shared<span class="coming-soon">coming soon</span></h5>
-      </div>
+      </div> -->
     </div>
 
     <router-view :key="$route.fullPath"></router-view>

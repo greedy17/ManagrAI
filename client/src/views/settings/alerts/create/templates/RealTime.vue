@@ -64,25 +64,21 @@
         </div>
 
         <div style="margin-top: 2rem">
-          <button
+          <!-- <button
             v-if="hasSalesforceIntegration && hasSlackIntegration"
             @click="goToStageAdvanced"
             class="orange_button"
           >
             Activate
-          </button>
+          </button> -->
+
           <!-- <h4
             style="margin-top: -0.5rem"
             v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)"
           >
             Connect Slack & Salesforce to acivate
-          </h4>
-          <h4
-            style="margin-top: -0.5rem"
-            v-else-if="user.activatedManagrConfigs.includes('Close Date Passed')"
-          >
-            Activated
           </h4> -->
+          <h4 style="margin-top: -0.5rem">Coming Soon</h4>
         </div>
       </div>
 
