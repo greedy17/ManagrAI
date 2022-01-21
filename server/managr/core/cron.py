@@ -333,18 +333,12 @@ def meeting_prep(processed_data, user_id, invocation=1, send_slack=True):
     # Conditional Check for Zoom meeting or Non-Zoom Meeting
     if provider != [None,'zoom']:
         # Google Meet (Non-Zoom)
-
         meeting_workflow = MeetingWorkflow.objects.create(
         # non_zoom_meeting=serializer.data.get('event_data'),
         user=user,
         )
 
-        # Call emit function and pass in MeetingWorkflow ID, user_tz, and non_zoom_end_times
-        # - Scheduler func will take timezone and convert it to UTC
-        # - You can also have end times
-
-        # Message func will take those values and send slack message 
-
+        # Sending end_times, workflow_id, and user values to emit function 
         non_zoom_end_times = processed_data.get('times').get('end_time')
         workflow_id = meeting_workflow.id
         user_tz = user

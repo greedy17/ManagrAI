@@ -1,4 +1,5 @@
 import logging
+from turtle import back
 import jwt
 import pytz
 import uuid
@@ -68,18 +69,16 @@ def emit_check_reminders(user_id, verbose_name):
     return check_reminders(user_id, verbose_name=verbose_name)
 
 # Functions for Scheduling Meeting 
-# Take local time and convert to UTC time 
 def emit_non_zoom_meetings(workflow_id, user_tz, non_zoom_end_times):
     return non_zoom_meeting_message(user_tz,workflow_id, non_zoom_end_times)
 
+@background()
 def non_zoom_meeting_message(user_tz, workflow_id, non_zoom_end_times):
-
     # Convert Non-Zoom Meeting from UNIX time to UTC 
     unix_time = datetime.utcfromtimestamp(int(non_zoom_end_times))
     tz = pytz.timezone("UTC")
     local_end = unix_time.astimezone(tz).strftime("%H:%M:%S")
     print(local_end, "this is utc time")
-
 
     # Convert their 7am local time to UTC 
     user_tz = user_tz.timezone
@@ -102,7 +101,7 @@ def non_zoom_meeting_message(user_tz, workflow_id, non_zoom_end_times):
     print(new_time, "this is the new time")
 
    # Use time difference in UTC to schedule realtime meeting alert  
-    emit_kick_off_slack_interaction(user_tz, workflow_id, schedule=new_time)
+    return emit_kick_off_slack_interaction(user_tz, workflow_id, schedule=new_time)
 
 
 
