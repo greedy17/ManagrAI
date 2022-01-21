@@ -2,7 +2,7 @@ import logging
 import jwt
 import pytz
 import uuid
-from datetime import datetime, timezone
+from datetime import  datetime, timezone
 import re
 from background_task import background
 from django.db.models import Q
@@ -27,6 +27,8 @@ from managr.organization.models import Account
 from managr.opportunity.models import Lead, Opportunity
 from managr.zoom.background import _split_first_name, _split_last_name
 from managr.utils.misc import custom_paginator
+from managr.zoom.background import emit_kick_off_slack_interaction
+# from managr.slack.helpers.block_sets.meeting_review_block_sets import _initial_interaction_message
 
 logger = logging.getLogger("managr")
 
@@ -68,17 +70,40 @@ def emit_check_reminders(user_id, verbose_name):
 # Functions for Scheduling Meeting 
 # Take local time and convert to UTC time 
 def emit_non_zoom_meetings(workflow_id, user_tz, non_zoom_end_times):
-    non_zoom_workflow_id = str(workflow_id)  
+    return non_zoom_meeting_message(user_tz,workflow_id, non_zoom_end_times)
+
+def non_zoom_meeting_message(user_tz, workflow_id, non_zoom_end_times):
+
+    # Convert Non-Zoom Meeting from UNIX time to UTC 
+    unix_time = datetime.utcfromtimestamp(int(non_zoom_end_times))
+    tz = pytz.timezone("UTC")
+    local_end = unix_time.astimezone(tz).strftime("%H:%M:%S")
+    print(local_end, "this is utc time")
+
+
+    # Convert their 7am local time to UTC 
+    user_tz = user_tz.timezone
     user_7am_naive = timezone.now().replace(
         hour=7, minute=0, second=0, microsecond=0, tzinfo=None
     )
     user_7am = timezone.make_aware(user_7am_naive, timezone=pytz.timezone(user_tz))
-    utc_time_from_user_7_am = user_7am.astimezone(pytz.timezone("UTC"))
-    return non_zoom_meeting_message(utc_time_from_user_7_am, non_zoom_end_times)
+    utc_time_from_user_7_am = user_7am.astimezone(pytz.timezone("UTC")).strftime("%H:%M:%S")
+    print(utc_time_from_user_7_am, "this is their local 7am in UTC")
 
-def non_zoom_meeting_message(utc_time_from_user_7_am, non_zoom_end_times):
-    print(f'This is the timezone {utc_time_from_user_7_am}')
-    print(f"This is end times {non_zoom_end_times}")
+    # Convert UTC time to seconds and get difference
+    date_time = datetime.strptime(local_end, "%H:%M:%S")
+    date_time2 = datetime.strptime(utc_time_from_user_7_am, "%H:%M:%S")
+    a_timedelta = date_time - date_time2
+    seconds = a_timedelta.total_seconds()
+    print(seconds, "this is the difference in seconds")
+
+    # Convert seconds back to UTC Time and get new time
+    new_time = datetime.fromtimestamp(seconds).strftime("%H:%M:%S")
+    print(new_time, "this is the new time")
+
+   # Use time difference in UTC to schedule realtime meeting alert  
+    emit_kick_off_slack_interaction(user_tz, workflow_id, schedule=new_time)
+
 
 
 #########################################################

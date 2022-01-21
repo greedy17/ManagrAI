@@ -35,7 +35,6 @@ from managr.slack import constants as slack_const
 
 from managr.zoom.models import ZoomMeeting
 from managr.zoom.utils import score_meeting
-from managr.slack.helpers.block_sets.meeting_review_block_sets import _initial_interaction_message
 from managr.organization.models import Contact
 from managr.salesforce.adapter.models import ContactAdapter
 from managr.zoom.background import _split_first_name, _split_last_name
@@ -334,22 +333,22 @@ def meeting_prep(processed_data, user_id, invocation=1, send_slack=True):
     # Conditional Check for Zoom meeting or Non-Zoom Meeting
     if provider != [None,'zoom']:
         # Google Meet (Non-Zoom)
-        meeting_workflow = MeetingWorkflow.objects.create(
-        user=user,
 
+        meeting_workflow = MeetingWorkflow.objects.create(
+        # non_zoom_meeting=serializer.data.get('event_data'),
+        user=user,
         )
 
-        # Get MeetingWorkflow ID from meeting_workflow 
-        # Create emit function for scheduling (Moved to background/_init_)
-        # Call emit function and pass in MeetingWorkflow ID as argument
-        # Scheduler func will take timezone and convert it to UTC
-        # You can also include end times
+        # Call emit function and pass in MeetingWorkflow ID, user_tz, and non_zoom_end_times
+        # - Scheduler func will take timezone and convert it to UTC
+        # - You can also have end times
+
         # Message func will take those values and send slack message 
 
         non_zoom_end_times = processed_data.get('times').get('end_time')
-        workflow_id = meeting_workflow.id 
-        user_tz = user.timezone
-        emit_non_zoom_meetings(workflow_id, user_tz, non_zoom_end_times)
+        workflow_id = meeting_workflow.id
+        user_tz = user
+        return emit_non_zoom_meetings(workflow_id, user_tz, non_zoom_end_times)
         
     else:
         return 
