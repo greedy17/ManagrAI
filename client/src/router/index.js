@@ -44,6 +44,7 @@ import RealTime from '@/views/settings/alerts/create/templates/RealTime'
 import Custom from '@/views/customize/Custom'
 import ValidationRules from '@/views/customize/ValidationRules'
 import Required from '@/views/customize/Required'
+import Pipelines from '@/views/Pipelines'
 
 // TODO: We should keep this style guide page
 // import Styles from '@/views/settings/Styles'
@@ -200,6 +201,17 @@ export default new Router({
       path: '/recap-zoom-meetings',
       name: 'ZoomRecap',
       component: ZoomRecap,
+    },
+    {
+      path: '/pipelines',
+      name: 'Pipelines',
+      component: Pipelines,
+    },
+    {
+      path: '/deal-movement',
+      name: 'DealMovement',
+      component: () =>
+        import(/* webpackChunkName: "settings" */ '../views/settings/alerts/create/templates/DealMovement'),
     },
     {
       path: '/map',

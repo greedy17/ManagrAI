@@ -47,122 +47,132 @@
         <p style="font-weight: bold; color: #5d5e5e; text-align: center">Nothing here.. (o^^)o</p>
       </div>
     </div>
-    <template style="margin-top: -1rem" v-if="!templates.refreshing">
-      <div class="middle" v-if="!editing">
-        <div class="edit__modal">
-          <div>
-            <AlertsEditPanel :alert="currentAlert" />
-          </div>
-          <button style="margin-bottom: 1.5rem" class="yes__button" @click="closeEdit">Done</button>
-        </div>
-      </div>
-      <div class="alert_cards" v-if="!templates.refreshing">
-        <div :key="i" v-for="(alert, i) in templates.list" class="card__">
-          <div :data-key="alert.id">
-            <h3 class="card__header">{{ alert.title.toUpperCase() }}</h3>
-          </div>
-          <div class="row">
-            <button
-              :disabled="clicked.includes(alert.id)"
-              @click.stop="onRunAlertTemplateNow(alert.id)"
-              class="green_button"
-            >
-              Run now
+    <template
+      style="margin-top: -1rem"
+      v-if="!templates.refreshing && alertsCount(templates.list.length)"
+    >
+      <transition name="fade">
+        <div class="middle" v-if="!editing">
+          <div class="edit__modal">
+            <div>
+              <AlertsEditPanel :alert="currentAlert" />
+            </div>
+            <button style="margin-bottom: 1.5rem" class="yes__button" @click="closeEdit">
+              Done
             </button>
-            <!-- <div class="centered">
+          </div>
+        </div>
+      </transition>
+
+      <transition name="fade">
+        <div class="alert_cards" v-if="editing">
+          <div :key="i" v-for="(alert, i) in templates.list" class="card__">
+            <div :data-key="alert.id">
+              <h3 class="card__header">{{ alert.title.toUpperCase() }}</h3>
+            </div>
+            <div class="row">
+              <button
+                :disabled="clicked.includes(alert.id)"
+                @click.stop="onRunAlertTemplateNow(alert.id)"
+                class="green_button"
+              >
+                Run now
+              </button>
+              <!-- <div class="centered">
               <button @click="onTest(alert.id)" class="test-button">Test Alert</button>
 
               <p style="margin-left: 0.5rem">Results: {{ alert.instances.length }}</p>
             </div> -->
-          </div>
-          <div class="row__start">
-            <!-- <p style="margin: 0.5rem 0.5rem">Schedule:</p> -->
-            <div class="row__">
-              <p
-                :class="!alert.isActive ? 'green' : ''"
-                style="margin-right: 0.25rem; font-size: 0.8rem"
-              >
-                OFF
-              </p>
-              <ToggleCheckBox
-                @input="onToggleAlert(alert.id, alert.isActive)"
-                v-model="alert.isActive"
-                offColor="#aaaaaa"
-                onColor="#199e54"
-              />
-              <p
-                :class="alert.isActive ? 'green' : ''"
-                style="margin-left: 0.25rem; font-size: 0.8rem"
-              >
-                ON
-              </p>
+            </div>
+            <div class="row__start">
+              <p style="margin: 0.5rem 0.5rem">Schedule:</p>
+              <div class="row__">
+                <p
+                  :class="!alert.isActive ? 'green' : ''"
+                  style="margin-right: 0.25rem; font-size: 0.8rem"
+                >
+                  OFF
+                </p>
+                <ToggleCheckBox
+                  @input="onToggleAlert(alert.id, alert.isActive)"
+                  v-model="alert.isActive"
+                  offColor="#aaaaaa"
+                  onColor="#199e54"
+                />
+                <p
+                  :class="alert.isActive ? 'green' : ''"
+                  style="margin-left: 0.25rem; font-size: 0.8rem"
+                >
+                  ON
+                </p>
+              </div>
+
+              <div class="row__two">
+                <img
+                  @click="makeAlertCurrent(alert)"
+                  src="@/assets/images/settings.png"
+                  style="
+                    height: 1.5rem;
+                    cursor: pointer;
+                    margin-right: 0.5rem;
+                    box-shadow: 1.5px 1px 2px #fafafa;
+                    border: none;
+                    border-radius: 50%;
+                    padding: 0.2rem;
+                  "
+                />
+
+                <img
+                  src="@/assets/images/whitetrash.png"
+                  style="
+                    height: 1.5rem;
+                    cursor: pointer;
+                    box-shadow: 1.5px 1px 2px #fafafa;
+                    border: none;
+                    border-radius: 50%;
+                    padding: 0.2rem;
+                  "
+                  @click="deleteClosed(alert.id)"
+                />
+              </div>
             </div>
 
-            <div class="row__two">
-              <img
-                @click="makeAlertCurrent(alert)"
-                src="@/assets/images/settings.png"
-                style="
-                  height: 1.5rem;
-                  cursor: pointer;
-                  margin-right: 0.5rem;
-                  box-shadow: 1.5px 1px 2px #fafafa;
-                  border: none;
-                  border-radius: 50%;
-                  padding: 0.2rem;
-                "
-              />
-
-              <img
-                src="@/assets/images/whitetrash.png"
-                style="
-                  height: 1.5rem;
-                  cursor: pointer;
-                  box-shadow: 1.5px 1px 2px #fafafa;
-                  border: none;
-                  border-radius: 50%;
-                  padding: 0.2rem;
-                "
-                @click="deleteClosed(alert.id)"
-              />
-            </div>
+            <template slot="panel-content">
+              <div>
+                <AlertsEditPanel :alert="alert" />
+              </div>
+            </template>
           </div>
-
-          <template slot="panel-content">
+          <div v-if="zoomChannel" class="card__">
+            <h3 class="card__header">LOG MEETINGS</h3>
+            <div class="row">
+              <button @click="goToLogZoom" class="green_button">Change Channel</button>
+            </div>
             <div>
-              <AlertsEditPanel :alert="alert" />
+              <p>
+                Current channel:
+                <span style="font-weight: bold; color: #199e54">{{
+                  currentZoomChannel.toUpperCase()
+                }}</span>
+              </p>
             </div>
-          </template>
-        </div>
-        <div v-if="zoomChannel" class="card__">
-          <h3 class="card__header">LOG MEETINGS</h3>
-          <div class="row">
-            <button @click="goToLogZoom" class="green_button">Change Channel</button>
           </div>
-          <div>
-            <p>
-              Current channel:
-              <span style="font-weight: bold; color: #199e54">{{
-                currentZoomChannel.toUpperCase()
-              }}</span>
-            </p>
-          </div>
-        </div>
-        <div v-if="hasRecapChannel && userLevel !== 'REP'" class="card__">
-          <h3 class="card__header">MEETING RECAPS</h3>
-          <div class="row">
-            <button @click="goToRecap" class="green_button">Change Channel/Pipelines</button>
-          </div>
-          <div>
-            <p>
-              Current channel:
-              <span style="font-weight: bold; color: #199e54">{{
-                currentRecapChannel.toUpperCase()
-              }}</span>
-            </p>
+          <div v-if="hasRecapChannel && userLevel !== 'REP'" class="card__">
+            <h3 class="card__header">MEETING RECAPS</h3>
+            <div class="row">
+              <button @click="goToRecap" class="green_button">Change Channel/Pipelines</button>
+            </div>
+            <div>
+              <p>
+                Current channel:
+                <span style="font-weight: bold; color: #199e54">{{
+                  currentRecapChannel.toUpperCase()
+                }}</span>
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      </transition>
     </template>
 
     <!-- <div class="center-loader" v-else>
@@ -439,6 +449,14 @@ export default {
     transform: translateY(-6px);
   }
 }
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s;
+}
+.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+  opacity: 0;
+}
+
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }

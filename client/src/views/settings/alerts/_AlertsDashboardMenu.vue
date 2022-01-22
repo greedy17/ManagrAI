@@ -131,14 +131,14 @@
         </div>
       </router-link>
 
-      <div :class="isOnboarding ? 'onboarding row' : 'row'" style="cursor: not-allowed">
+      <!-- <div :class="isOnboarding ? 'onboarding row' : 'row'" style="cursor: not-allowed">
         <img
           src="@/assets/images/sharing.png"
           style="height: 1.3rem; margin-right: 1rem; padding-left: 0.5rem"
           alt=""
         />
         <h5>Shared<span class="coming-soon">coming soon</span></h5>
-      </div>
+      </div> -->
     </div>
 
     <div v-else class="sidenav sidenav__background">
@@ -215,14 +215,14 @@
         </div>
       </router-link>
 
-      <div class="row" style="cursor: not-allowed">
+      <!-- <div class="row" style="cursor: not-allowed">
         <img
           src="@/assets/images/sharing.png"
           style="height: 1.3rem; margin-right: 1rem; padding-left: 0.5rem"
           alt=""
         />
         <h5>Shared<span class="coming-soon">coming soon</span></h5>
-      </div>
+      </div> -->
     </div>
 
     <router-view :key="$route.fullPath"></router-view>
