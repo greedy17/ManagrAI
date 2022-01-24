@@ -390,12 +390,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
 @background(schedule=0)
 def _kick_off_slack_interaction(user_id, managr_meeting_id):
     # get meeting
-    workflow = MeetingWorkflow.objects.filter(id=managr_meeting_id.first())
-    if not workflow:
-        return LOGGER(
-            f"Function wrapped in sfw logger but cannot find workflow"
-        )
-    print(workflow, "this is workflow")
+    workflow = MeetingWorkflow.objects.filter(id=managr_meeting_id).first()
     if workflow:
         # get user
         user = workflow.user
