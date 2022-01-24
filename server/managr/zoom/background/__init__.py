@@ -29,6 +29,7 @@ from managr.salesforce.models import MeetingWorkflow
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.slack import constants as slack_consts
 from managr.api import constants as api_consts
+from managr.api.decorators import LOGGER
 
 from .. import constants as zoom_consts
 from ..zoom_helper.exceptions import TokenExpired, AccountSubscriptionLevel
@@ -389,7 +390,11 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
 @background(schedule=0)
 def _kick_off_slack_interaction(user_id, managr_meeting_id):
     # get meeting
-    workflow = MeetingWorkflow.objects.filter(id=managr_meeting_id).first()
+    workflow = MeetingWorkflow.objects.filter(id=managr_meeting_id.first())
+    if not workflow:
+        return LOGGER(
+            f"Function wrapped in sfw logger but cannot find workflow"
+        )
     print(workflow, "this is workflow")
     if workflow:
         # get user

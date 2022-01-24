@@ -330,12 +330,15 @@ def meeting_prep(processed_data, user_id, invocation=1, send_slack=True):
     serializer.is_valid(raise_exception=True)
     serializer.save()
     
+    meeting_prep_instance = (
+        MeetingPrepInstance.objects.filter(user=user).order_by('-datetime_created').first()
+    )
+
     # Conditional Check for Zoom meeting or Non-Zoom Meeting
     if provider != [None,'zoom']:
         # Google Meet (Non-Zoom)
         meeting_workflow = MeetingWorkflow.objects.create(
-        # non_zoom_meeting=serializer.data.get('event_data'),
-        user=user,
+        non_zoom_meeting=meeting_prep_instance, user=user,
         )
 
         # Sending end_times, workflow_id, and user values to emit function 
@@ -343,11 +346,8 @@ def meeting_prep(processed_data, user_id, invocation=1, send_slack=True):
         workflow_id = str(meeting_workflow.id)
         user_id = str(user.id)
         user_tz = str(user.timezone)
-        print(user_id, "This is user id")
         return emit_non_zoom_meetings(workflow_id, user_id, user_tz, non_zoom_end_times)
-        
-    else:
-        return 
+
 
 
 def _send_calendar_details(
