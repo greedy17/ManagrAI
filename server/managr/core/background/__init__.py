@@ -8,6 +8,7 @@ import re
 from background_task import background
 from django.db.models import Q
 from django.utils import timezone
+from pytz import UnknownTimeZoneError
 
 from managr.alerts.models import AlertConfig
 from managr.core.models import User, MeetingPrepInstance
@@ -70,10 +71,10 @@ def emit_check_reminders(user_id, verbose_name):
 
 # Functions for Scheduling Meeting 
 def emit_non_zoom_meetings(workflow_id, user_id, user_tz, non_zoom_end_times):
-    return non_zoom_meeting_message(user_tz, user_id, workflow_id, non_zoom_end_times)
+    return non_zoom_meeting_message(workflow_id, user_id, user_tz, non_zoom_end_times)
 
 @background()
-def non_zoom_meeting_message(user_tz, user_id, workflow_id, non_zoom_end_times):
+def non_zoom_meeting_message(workflow_id, user_id, user_tz, non_zoom_end_times):
     # Convert Non-Zoom Meeting from UNIX time to UTC 
     unix_time = datetime.utcfromtimestamp(int(non_zoom_end_times))
     tz = pytz.timezone("UTC")
@@ -84,7 +85,8 @@ def non_zoom_meeting_message(user_tz, user_id, workflow_id, non_zoom_end_times):
     user_7am_naive = timezone.now().replace(
         hour=7, minute=0, second=0, microsecond=0, tzinfo=None
     )
-    user_7am = timezone.make_aware(user_7am_naive, timezone=pytz.timezone(user_tz))
+    print(user_tz, "this is the time zone")
+    user_7am = timezone.make_aware(user_7am_naive, timezone=pytz.timezone('US/Eastern'))
     utc_time_from_user_7_am = user_7am.astimezone(pytz.timezone("UTC")).strftime("%H:%M:%S")
     print(utc_time_from_user_7_am, "this is their local 7am in UTC")
 
@@ -94,7 +96,7 @@ def non_zoom_meeting_message(user_tz, user_id, workflow_id, non_zoom_end_times):
     time_now = datetime.now()
     a_timedelta = date_time - time_now
     seconds = a_timedelta.total_seconds()
-    print(seconds, "this is the difference in seconds")
+    print(abs(seconds), "this is the difference in seconds")
 
    # Use time difference in UTC to schedule realtime meeting alert  
     return emit_kick_off_slack_interaction(user_id, workflow_id, schedule=seconds)

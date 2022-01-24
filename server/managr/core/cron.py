@@ -343,7 +343,8 @@ def meeting_prep(processed_data, user_id, invocation=1, send_slack=True):
         workflow_id = str(meeting_workflow.id)
         user_id = str(user.id)
         user_tz = str(user.timezone)
-        return emit_non_zoom_meetings(workflow_id, user_tz, user_id, non_zoom_end_times)
+        print(user_id, "This is user id")
+        return emit_non_zoom_meetings(workflow_id, user_id, user_tz, non_zoom_end_times)
         
     else:
         return 
