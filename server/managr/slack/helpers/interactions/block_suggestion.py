@@ -288,16 +288,22 @@ def process_get_sobject_list(payload, context):
     add_opt = context.get("add_option", None)
     value = payload["value"]
     sobject = context.get("resource_type")
+    print(sobject)
     if sobject == "Opportunity":
-        sobject_value = user.opportunities
+        sobject_value = user.owned_opportunities
     elif sobject == "Account":
         sobject_value = user.accounts
     elif sobject == "Lead":
-        sobject_value = user.leads
-    options = [l.as_slack_option for l in sobject_value.filter(name__icontains=value)[:50]]
+        sobject_value = user.owned_leads
+    elif sobject == "Contact":
+        sobject_value = user.contacts
+    options = (
+        [l.as_slack_option for l in sobject_value.filter(email__icontains=value)[:50]]
+        if sobject == "Contact"
+        else [l.as_slack_option for l in sobject_value.filter(name__icontains=value)[:50]]
+    )
     if add_opt:
         options.insert(0, add_opt)
-    print(options)
     return {
         "options": options,
     }

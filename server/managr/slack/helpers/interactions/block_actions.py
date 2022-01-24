@@ -1,7 +1,4 @@
 import json
-from os import access
-import pdb
-import resource
 import uuid
 import logging
 import pytz
@@ -9,7 +6,7 @@ from urllib.parse import urlencode
 
 from django.db.models import Q
 from django.utils import timezone
-from datetime import datetime, date, timedelta
+from datetime import datetime, date
 
 from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import (
@@ -2223,7 +2220,7 @@ def process_add_products_form(payload, context):
         }
     else:
         data = {
-            "view_id": loading_res["view"]["id"],
+            "view_id": loading_view_data["view"]["id"],
             "view": {
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Product Form error"},
@@ -2436,6 +2433,69 @@ def process_view_recap(payload, context):
     return
 
 
+@processor(required_context="u")
+def process_lead_input_switch(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    access_token = user.organization.slack_integration.access_token
+    actions = payload["actions"][0]
+    blocks = payload["view"]["blocks"]
+    try:
+        selected_options = actions["selected_options"][0]["value"]
+    except IndexError:
+        selected_options = None
+    block_id = actions["block_id"]
+    to_change_input = context.get("input")
+    input_id = f"{to_change_input}_NAME_INPUT"
+    index, action_block = block_finder(input_id, blocks)
+    if selected_options:
+        block = block_builders.external_select(
+            f"Choose your {to_change_input}",
+            action_with_params(
+                slack_const.GET_SOBJECT_LIST,
+                params=[f"u={str(user.id)}", f"resource_type={to_change_input}"],
+            ),
+            block_id=input_id,
+        )
+    else:
+        block = block_builders.input_block(
+            f"{to_change_input} Name", block_id=input_id, action_id=f"{to_change_input}_input",
+        )
+
+    blocks[index] = block
+    data = {
+        "view_id": payload["view"]["id"],
+        "view": {
+            "type": "modal",
+            "callback_id": "None",
+            "title": {"type": "plain_text", "text": "Convert Lead"},
+            "blocks": blocks,
+            "submit": {"type": "plain_text", "text": "Convert"},
+            "private_metadata": json.dumps(context),
+        },
+    }
+    try:
+        slack_requests.generic_request(
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE, data, access_token=access_token,
+        )
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Product form with {str(opp_item.id)} email {user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Product form with {str(opp_item.id)} email {user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Product form with {str(opp_item.id)} email {user.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Generate Slack Product form with {str(user.id)} email {user.email} {e}"
+        )
+    return
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -2478,6 +2538,7 @@ def handle_block_actions(payload):
         slack_const.PROCESS_SHOW_EDIT_PRODUCT_FORM: process_show_edit_product_form,
         slack_const.PROCESS_ADD_PRODUCTS_FORM: process_add_products_form,
         slack_const.VIEW_RECAP: process_view_recap,
+        slack_const.PROCESS_LEAD_INPUT_SWITCH: process_lead_input_switch,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)

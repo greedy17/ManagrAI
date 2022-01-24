@@ -925,16 +925,64 @@ def convert_lead_block_set(context):
     if status:
         status_options = status.to_slack_field()
     blocks = [
-        block_builders.input_block("Opportunity Name", block_id="opportunity_name"),
-        status_options,
-        block_builders.external_select(
-            "Attach to an Account*",
-            f"{slack_const.GET_SOBJECT_LIST}?u={context.get('u')}&resource_type=Account&add_option={block_builders.option('Auto Create', 'None')}",
-            block_builders.option("Auto Create", "None"),
-            block_id="account_select",
+        block_builders.input_block("Create New", block_id="Opportunity_NAME_INPUT"),
+        block_builders.actions_block(
+            [
+                block_builders.checkbox_input(
+                    [
+                        block_builders.checkbox_option(
+                            "Choose existing Opportunity", "EXISTING_OPPORTUNITY",
+                        )
+                    ],
+                    action_id=action_with_params(
+                        slack_const.PROCESS_LEAD_INPUT_SWITCH,
+                        params=[f"u={context.get('u')}", "input=Opportunity"],
+                    ),
+                )
+            ],
+            "LEAD_CHECKBOX_OPPORTUNITY",
         ),
+        block_builders.divider_block(),
+        block_builders.input_block("Account Name", block_id="Account_NAME_INPUT"),
+        block_builders.actions_block(
+            [
+                block_builders.checkbox_input(
+                    [
+                        block_builders.checkbox_option(
+                            "Choose existing Account", "EXISTING_ACCOUNT",
+                        )
+                    ],
+                    action_id=action_with_params(
+                        slack_const.PROCESS_LEAD_INPUT_SWITCH,
+                        params=[f"u={context.get('u')}", "input=Account"],
+                    ),
+                )
+            ],
+            "LEAD_CHECKBOX_ACCOUNT",
+        ),
+        block_builders.divider_block(),
+        block_builders.input_block("Contact Name", block_id="Contact_NAME_INPUT"),
+        block_builders.actions_block(
+            [
+                block_builders.checkbox_input(
+                    [
+                        block_builders.checkbox_option(
+                            "Choose existing Contact", "EXISTING_CONTACT",
+                        )
+                    ],
+                    action_id=action_with_params(
+                        slack_const.PROCESS_LEAD_INPUT_SWITCH,
+                        params=[f"u={context.get('u')}", "input=Contact"],
+                    ),
+                )
+            ],
+            "LEAD_CHECKBOX_CONTACT",
+        ),
+        block_builders.divider_block(),
+        status_options,
         block_builders.context_block(
-            "*Salesforce will automatically create an account with based off the Contact's company if not selected"
+            "* _Salesforce will automatically create an Account and Opportunity based off the Contact's company and new contact based off of the Lead information if nothing is entered_",
+            "mrkdwn",
         ),
     ]
     return blocks
