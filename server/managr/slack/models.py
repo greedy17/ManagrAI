@@ -6,7 +6,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
 
 from managr.salesforce.models import SObjectField
-
+from managr.salesforce.adapter.exceptions import TokenExpired, InvalidRefreshToken
 
 from . import constants as slack_consts
 
@@ -289,11 +289,27 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                         return logger.exception(
                             f"Failed to find the resource with id {self.resource_id} of model {self.resource_type}, to generate form for the user, the resource was most likely removed"
                         )
-                    if settings.IN_DEV or settings.IN_STAGING:
-                        current = self.resource_object.get_current_values()
-                        form_values = current.secondary_data
-                    else:
-                        form_values = self.resource_object.secondary_data
+                    attempts = 1
+                    while True:
+                        try:
+                            current = self.resource_object.get_current_values()
+                            form_values = current.secondary_data
+                            break
+                        except TokenExpired:
+                            if attempts >= 5:
+                                logger.exception("Failed pull current data")
+                                form_values = self.resource_object.secondary_data
+                                break
+                            else:
+                                try:
+                                    self.user.salesforce_account.regenerate_token()
+                                    attempts += 1
+                                except InvalidRefreshToken:
+                                    logger.exception(
+                                        f"Failed pull current data for user {str(self.user.id)} after not being able to refresh their token"
+                                    )
+                                    form_values = self.resource_object.secondary_data
+                                    break
                 else:
                     form_values = {}
         return form_values
