@@ -204,6 +204,12 @@ class Account(TimeStampModel, IntegrationModel):
             serializer.save()
             return serializer.instance
 
+    def get_current_values(self, *args, **kwargs):
+        integration_id = self.integration_id
+        token = self.owner.salesforce_account.access_token
+        base_url = self.owner.salesforce_account.instance_url
+        return AccountAdapter.get_current_values(integration_id, token, base_url, self.owner.id)
+
 
 class ContactQuerySet(models.QuerySet):
     def for_user(self, user):
@@ -292,6 +298,12 @@ class Contact(TimeStampModel, IntegrationModel):
             self.is_stale = True
             self.save()
             return res
+
+    def get_current_values(self, *args, **kwargs):
+        integration_id = self.integration_id
+        token = self.owner.salesforce_account.access_token
+        base_url = self.owner.salesforce_account.instance_url
+        return ContactAdapter.get_current_values(integration_id, token, base_url, self.owner.id)
 
     @property
     def as_slack_option(self):
@@ -657,3 +669,12 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return serializer.instance
+
+    def get_current_values(self, *args, **kwargs):
+        integration_id = self.integration_id
+        token = self.opportunity.owner.salesforce_account.access_token
+        base_url = self.opportunity.owner.salesforce_account.instance_url
+        return OpportunityLineItemAdapter.get_current_values(
+            integration_id, token, base_url, self.opportunity.owner.id
+        )
+

@@ -297,7 +297,7 @@ class OpportunityLineItemSerializer(serializers.ModelSerializer):
         if pricebookentry:
             pb = PricebookEntry.objects.filter(integration_id=pricebookentry).first()
             pb_id = pb.id if pb else pb
-            data.update({"pricebook": pb_id})
+            data.update({"pricebookentry": pb_id})
         if product:
             prod = Product2.objects.filter(integration_id=product).first()
             prod = prod.id if prod else prod

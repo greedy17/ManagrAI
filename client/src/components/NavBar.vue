@@ -28,6 +28,11 @@
                 >Team</router-link
               >
             </li>
+            <li>
+              <router-link exact-active-class="active" :to="{ name: 'Pipelines' }"
+                >Pipeline <span>(coming soon)</span></router-link
+              >
+            </li>
           </ul>
         </div>
 
@@ -60,6 +65,11 @@
                 >Team</router-link
               >
             </li>
+            <li>
+              <router-link exact-active-class="active" :to="{ name: 'Pipelines' }"
+                >Pipeline <span>(coming soon)</span></router-link
+              >
+            </li>
           </ul>
         </div>
 
@@ -80,6 +90,11 @@
               <router-link active-class="active" :to="{ name: 'ListTemplates' }"
                 >Workflows
               </router-link>
+            </li>
+            <li>
+              <router-link exact-active-class="active" :to="{ name: 'Pipelines' }"
+                >Pipeline <span>(coming soon)</span></router-link
+              >
             </li>
           </ul>
         </div>
@@ -239,6 +254,10 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/mixins/utils';
 
+span {
+  font-size: 10px;
+  color: $dark-green;
+}
 nav {
   height: 4rem;
   font-weight: 900;

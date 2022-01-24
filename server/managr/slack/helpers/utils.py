@@ -1,21 +1,14 @@
-import os
 import pytz
-import time
 import hmac
 import hashlib
-import binascii
 import logging
 import random
 import datetime
-
-import pdb
-
 from django.conf import settings
 from dateutil import parser
 
 from managr.alerts.models import AlertConfig
 from managr.core.models import User
-from managr.slack.models import UserSlackIntegration
 from managr.slack.helpers import block_builders, requests
 from managr.slack import constants as slack_consts
 from managr.salesforce.models import MeetingWorkflow
@@ -403,3 +396,38 @@ def check_workflows_count(user_id):
     if len(workflows):
         return {"status": True, "workflow_count": len(workflows)}
     return {"status": False}
+
+
+def send_loading_screen(access_token, message, view_type, user_id, trigger_id=None, view_id=None):
+    loading_view_data = {
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Loading"},
+            "blocks": [
+                block_builders.section_with_accessory_block(
+                    f"*{message}*",
+                    block_builders.simple_image_block(
+                        "https://managr-images.s3.amazonaws.com/slack/logo_loading.gif",
+                        "Loading...",
+                    ),
+                )
+            ],
+        },
+    }
+    if view_type == "open":
+        view = slack_consts.VIEWS_OPEN
+        loading_view_data["trigger_id"] = trigger_id
+        if view_id is not None:
+            loading_view_data["view_id"] = view_id
+    else:
+        view = slack_consts.VIEWS_PUSH
+        loading_view_data["view_id"] = view_id
+        if trigger_id is not None:
+            loading_view_data["trigger_id"] = trigger_id
+    try:
+        loading_res = requests.generic_request(
+            slack_consts.SLACK_API_ROOT + view, loading_view_data, access_token=access_token,
+        )
+    except Exception as e:
+        return logger.exception(f"Failed To Show Loading Screen for user {user_id} {e}")
+    return loading_res

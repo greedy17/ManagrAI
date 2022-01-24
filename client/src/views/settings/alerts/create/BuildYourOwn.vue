@@ -301,7 +301,9 @@
                 "
               >
                 <div class="row__">
-                  <label>Weekly</label>
+                  <label :class="form.field.recurrenceFrequency.value == 'WEEKLY' ? 'green' : ''"
+                    >Weekly</label
+                  >
                   <ToggleCheckBox
                     style="margin: 0.25rem"
                     @input="
@@ -313,7 +315,9 @@
                     offColor="#199e54"
                     onColor="#199e54"
                   />
-                  <label>Monthly</label>
+                  <label :class="form.field.recurrenceFrequency.value == 'MONTHLY' ? 'green' : ''"
+                    >Monthly</label
+                  >
                 </div>
 
                 <div>
@@ -469,7 +473,7 @@
                 "
               >
                 <div v-if="!channelName" class="row__">
-                  <label>Select #channel</label>
+                  <label :class="!create ? 'green' : ''">Select #channel</label>
                   <ToggleCheckBox
                     style="margin: 0.25rem"
                     @input="changeCreate"
@@ -477,7 +481,7 @@
                     offColor="#199e54"
                     onColor="#199e54"
                   />
-                  <label>Create #channel</label>
+                  <label :class="create ? 'green' : ''">Create #channel</label>
                 </div>
 
                 <label v-else for="channel" style="font-weight: bold"
@@ -1897,6 +1901,9 @@ textarea {
 }
 .gray {
   color: $gray;
+}
+.green {
+  color: $dark-green;
 }
 .slate {
   color: $slate-gray;

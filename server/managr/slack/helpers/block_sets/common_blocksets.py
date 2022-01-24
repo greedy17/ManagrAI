@@ -498,8 +498,9 @@ def manager_meeting_reminder_block_set(context):
 
 
 def current_product_block_set(context):
-    opp_item = OpportunityLineItem.objects.get(id=context.get("opp_item_id"))
-    text = f"{opp_item.product.name}\nQuantity: {opp_item.quantity}\nTotal Price: {round(opp_item.total_price,2)}"
+    opp_item_id = context.get("opp_item_id")
+    data = context.get("product_data")
+    text = f"{data['name']}\nQuantity: {data['quantity']}\nTotal Price: {round(data['total'],2)}"
     blocks = block_builders.section_with_button_block(
         "Edit Product",
         "EDIT_PRODUCT",
@@ -507,7 +508,7 @@ def current_product_block_set(context):
         action_id=action_with_params(
             slack_const.PROCESS_SHOW_EDIT_PRODUCT_FORM,
             params=[
-                f"opp_item_id={str(opp_item.id)}",
+                f"opp_item_id={opp_item_id}",
                 f"u={context.get('u')}",
                 f"main_form={context.get('main_form')}",
             ],
@@ -518,15 +519,15 @@ def current_product_block_set(context):
 
 @block_set()
 def edit_product_block_set(context):
-    opp_item = OpportunityLineItem.objects.get(id=context.get("opp_item_id"))
+    opp_item = OpportunityLineItem.objects.get(integration_id=context.get("opp_item_id"))
     user = User.objects.get(id=context.get("u"))
     template = (
         OrgCustomSlackForm.objects.for_user(user)
-        .filter(Q(resource="OpportunityLineItem", form_type="CREATE"))
+        .filter(Q(resource="OpportunityLineItem", form_type="UPDATE"))
         .first()
     )
     slack_form = OrgCustomSlackFormInstance.objects.create(
         template=template, resource_id=str(opp_item.id), user=user
     )
-    form_blocks = slack_form.generate_form(opp_item.secondary_data)
+    form_blocks = slack_form.generate_form()
     return [*form_blocks]

@@ -77,6 +77,12 @@ class Lead(TimeStampModel, IntegrationModel):
             self.save()
             return res
 
+    def get_current_values(self, *args, **kwargs):
+        integration_id = self.integration_id
+        token = self.owner.salesforce_account.access_token
+        base_url = self.owner.salesforce_account.instance_url
+        return LeadAdapter.get_current_values(integration_id, token, base_url, self.owner.id)
+
 
 class OpportunityQuerySet(models.QuerySet):
     def for_user(self, user):
@@ -213,3 +219,10 @@ class Opportunity(TimeStampModel, IntegrationModel):
         if obj:
             raise ResourceAlreadyImported()
         return super(Opportunity, self).save(*args, **kwargs)
+
+    def get_current_values(self, *args, **kwargs):
+        integration_id = self.integration_id
+        token = self.owner.salesforce_account.access_token
+        base_url = self.owner.salesforce_account.instance_url
+        return OpportunityAdapter.get_current_values(integration_id, token, base_url, self.owner.id)
+

@@ -1,134 +1,52 @@
 <template>
   <div class="alerts-page">
-    <div class="spacer"></div>
     <div class="col">
-      <h2 style="color: black; margin-top: -0.5rem" class="title">Instant Updates</h2>
-      <p style="color: #5d5e5e" class="sub__">Activate the workflows that are relevant to you</p>
+      <h2 style="color: black; margin-top: -0.5rem" class="title">Deal Movement</h2>
+      <p style="color: #5d5e5e" class="sub__">Activate workflows related to deal movement</p>
     </div>
 
-    <div class="alert_cards">
-      <div class="card__">
-        <div class="card__header">
-          <h3>Meeting<span style="color: #5f8cff"> Recaps</span></h3>
-        </div>
-        <div class="row">
-          <img style="height: 2rem; margin-right: 0.5rem" src="@/assets/images/zoom.png" alt="" />
-          <img
-            style="height: 1.65rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
-            class="filter-plus"
-            alt=""
-          />
-          <img
-            style="height: 2rem; margin-right: 0.5rem"
-            src="@/assets/images/gmailCal.png"
-            alt=""
-          />
-        </div>
-        <div style="margin-top: 2rem">
-          <button
-            v-if="hasZoomIntegration && hasSlackIntegration && !recapChannel"
-            @click="goToZoomRecap"
-            :class="!isAdmin && isOnboarding ? 'orange_button bouncy' : 'orange_button'"
-          >
-            Activate
-          </button>
-          <h4 style="margin-top: -0.5rem" v-else-if="!(hasZoomIntegration && hasSlackIntegration)">
-            Connect Zoom and Calendar in order to activate
-          </h4>
-          <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="recapChannel">Activated</p>
-        </div>
+    <div class="row">
+      <div class="stage-item">
+        <p>Stage Advanced</p>
+        <button class="plus_button" @click="onAdvancing">
+          <img src="@/assets/images/add.svg" class="filtered" alt="" />
+        </button>
       </div>
 
-      <div class="card__">
-        <div class="card__header">
-          <h3>Deal <span style="color: #d8789f">Movement</span></h3>
-        </div>
-
-        <div class="row">
-          <img
-            style="height: 2.25rem; margin-right: 1rem"
-            src="@/assets/images/slackLogo.png"
-            alt=""
-          />
-          <img
-            style="height: 1.75rem; margin-right: 1rem; filter: invert(60%)"
-            src="@/assets/images/plusOne.png"
-            alt=""
-          />
-          <img
-            style="height: 2.25rem; margin-right: 1rem"
-            src="@/assets/images/salesforce.png"
-            alt=""
-          />
-        </div>
-
-        <div style="margin-top: 2rem">
-          <!-- <button
-            v-if="hasSalesforceIntegration && hasSlackIntegration"
-            @click="goToStageAdvanced"
-            class="orange_button"
-          >
-            Activate
-          </button> -->
-
-          <!-- <h4
-            style="margin-top: -0.5rem"
-            v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)"
-          >
-            Connect Slack & Salesforce to acivate
-          </h4> -->
-          <h4 style="margin-top: -0.5rem">Coming Soon</h4>
-        </div>
+      <div class="stage-item">
+        <p>Moved to Commit</p>
+        <button class="plus_button" @click="onAdvancing">
+          <img src="@/assets/images/add.svg" class="filtered" alt="" />
+        </button>
       </div>
 
-      <div class="card__">
-        <div class="card__header">
-          <h3>Closed <span style="color: #199e54">Won</span></h3>
-        </div>
+      <div class="stage-item">
+        <p>Close Date Pushed</p>
+        <button class="plus_button" @click="onAdvancing">
+          <img src="@/assets/images/add.svg" class="filtered" alt="" />
+        </button>
+      </div>
 
-        <div class="row">
-          <img
-            style="height: 2.25rem; margin-right: 1rem"
-            src="@/assets/images/slackLogo.png"
-            alt=""
-          />
-          <img
-            style="height: 1.75rem; margin-right: 1rem; filter: invert(60%)"
-            src="@/assets/images/plusOne.png"
-            alt=""
-          />
-          <img
-            style="height: 2.25rem; margin-right: 1rem"
-            src="@/assets/images/salesforce.png"
-            alt=""
-          />
-        </div>
-
-        <div style="margin-top: 0.5rem">
-          <!-- <button
-            v-if="hasSalesforceIntegration && hasSlackIntegration"
-            @click="goToStageAdvanced"
-            class="orange_button"
-          >
-            Activate
-          </button>
-          <h4
-            style="margin-top: -0.5rem"
-            v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)"
-          >
-            Connect Slack & Salesforce to acivate
-          </h4>
-          <h4
-            style="margin-top: -0.5rem"
-            v-else-if="user.activatedManagrConfigs.includes('Close Date Passed')"
-          >
-            Activated
-          </h4> -->
-          <p style="">Coming Soon</p>
-        </div>
+      <div class="stage-item">
+        <p>Update Deal Room</p>
+        <button class="plus_button" @click="onAdvancing">
+          <img src="@/assets/images/add.svg" class="filtered" alt="" />
+        </button>
       </div>
     </div>
+
+    <div v-if="!advancing" style="margin-top: 10%">
+      <h1 class="bouncy" style="color: #5d5e5e; font-weight: bold; text-align: center">0</h1>
+      <h6 style="font-weight: bold; color: #5d5e5e; text-align: center">
+        Nothing here, add a workflow to get started.. (o^^)o
+      </h6>
+    </div>
+
+    <transition name="fade">
+      <div v-if="advancing" class="forecast__collection">
+        <h4>Testing Stage Advanced</h4>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -180,7 +98,7 @@ import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 
 export default {
-  name: 'RealTime',
+  name: 'DealMovement',
   components: {
     ExpandablePanel,
     DropDownSearch,
@@ -202,6 +120,7 @@ export default {
       savingTemplate: false,
       listVisible: true,
       dropdownVisible: true,
+      advancing: false,
       NON_FIELD_ALERT_OPTS,
       stringRenderer,
       SOBJECTS_LIST,
@@ -216,6 +135,9 @@ export default {
     this.templates.refresh()
   },
   methods: {
+    onAdvancing() {
+      this.advancing = !this.advancing
+    },
     showList() {
       this.listVisible = !this.listVisible
     },
@@ -229,7 +151,7 @@ export default {
       this.$router.push({ name: 'CloseDatePassed' })
     },
     goToStageAdvanced() {
-      this.$router.push({ name: 'DealMovement' })
+      this.$router.push({ name: 'StageAdvanced' })
     },
     goToMeetingLogged() {
       this.$router.push({ name: 'MeetingLogged' })
@@ -388,8 +310,36 @@ export default {
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
-.onboarding {
-  filter: blur(10px);
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s;
+}
+.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+  opacity: 0;
+}
+.forecast__collection {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-evenly;
+  flex-direction: row;
+  background-color: $white;
+  box-shadow: 3px 4px 7px $very-light-gray;
+  border-radius: 0.75rem;
+  width: 96vw;
+  padding: 2rem;
+  margin-bottom: 1rem;
+}
+.plus_button {
+  border: none;
+  // box-shadow: 3px 4px 2px $very-light-gray;
+  background-color: transparent;
+  border-radius: 50%;
+  padding: 0.2rem;
+  margin-left: 0.25rem;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: bold;
 }
 .dot {
   filter: invert(40%) sepia(96%) saturate(431%) hue-rotate(94deg) brightness(101%) contrast(82%);
@@ -423,8 +373,7 @@ textarea {
   }
 }
 .alerts-page {
-  margin-left: 14vw;
-  margin-top: 3.5rem;
+  margin-top: 4.5rem;
   &__previous-step {
     @include muted-font(12);
   }
@@ -482,22 +431,18 @@ textarea {
     height: 3rem;
   }
 }
-.alerts-page__settings {
+.stage-item {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  justify-content: space-evenly;
-
-  &__frequency {
-    display: flex;
-    align-items: center;
-    &-label {
-      @include muted-font();
-      margin: 0 0.5rem;
-    }
-  }
-  &-remove {
-    justify-self: end;
-  }
+  justify-content: center;
+  padding: 0rem 0.75rem;
+  margin-right: 1rem;
+  box-shadow: 3px 2px 2px $very-light-gray;
+  border-radius: 7px;
+  color: $base-gray;
+  cursor: pointer;
+  font-size: 12px;
 }
 .btn {
   &--danger {
@@ -558,7 +503,7 @@ textarea {
   margin-left: 0.5rem;
 }
 .sub__ {
-  font-size: 16px;
+  font-size: 13px;
   margin-top: -0.5rem;
   color: $panther-silver;
 }
@@ -581,9 +526,12 @@ textarea {
 .row {
   display: flex;
   flex-direction: row;
-  justify-content: center;
-  align-items: space-evenly;
-  margin-top: 1rem;
+  justify-content: flex-start;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0rem;
+  border-bottom: 2px solid $soft-gray;
+  width: 98vw;
 }
 .row_ {
   display: flex;
