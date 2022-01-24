@@ -65,8 +65,8 @@ def emit_process_past_zoom_meeting(user_id, meeting_uuid, send_slack=True):
     return _get_past_zoom_meeting_details(user_id, meeting_uuid, send_slack)
 
 
-def emit_kick_off_slack_interaction(user_id, managr_meeting_id):
-    return _kick_off_slack_interaction(user_id, managr_meeting_id)
+def emit_kick_off_slack_interaction(user_id, managr_meeting_id, schedule=0):
+    return _kick_off_slack_interaction(user_id, managr_meeting_id, schedule=schedule)
 
 
 def emit_send_meeting_summary(workflow_id):
@@ -390,6 +390,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
 def _kick_off_slack_interaction(user_id, managr_meeting_id):
     # get meeting
     workflow = MeetingWorkflow.objects.filter(id=managr_meeting_id).first()
+    print(workflow, "this is workflow")
     if workflow:
         # get user
         user = workflow.user

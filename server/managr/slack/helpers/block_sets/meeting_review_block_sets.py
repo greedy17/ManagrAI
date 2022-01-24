@@ -402,15 +402,15 @@ def edit_meeting_contacts_block_set(context):
 def initial_meeting_interaction_block_set(context):
     # get the meeting
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    print(workflow, "this is workflow")
     # check the resource attached to this meeting
     resource = workflow.resource
-
+    
   # If else meeting if has attribute workflow, meeting or else workflow.meeting
     if hasattr(workflow, 'meeting'):
         meeting = workflow.non_zoom_meeting
-        user_timezone = workflow.non_zoom_meeting.timezone
-        start_time = meeting.non_zoom_meeting.start_time
-        end_time = meeting.non_zoom_meeting.end_time
+        start_time = meeting.times.start_time
+        end_time = meeting.times.end_time
 
     else:
         meeting = workflow.meeting

@@ -96,7 +96,8 @@ def non_zoom_meeting_message(workflow_id, user_id, user_tz, non_zoom_end_times):
     time_now = datetime.now()
     a_timedelta = date_time - time_now
     seconds = a_timedelta.total_seconds()
-    print(abs(seconds), "this is the difference in seconds")
+    seconds = abs(int(seconds))
+    print(seconds, "this is the difference in seconds")
 
    # Use time difference in UTC to schedule realtime meeting alert  
     return emit_kick_off_slack_interaction(user_id, workflow_id, schedule=seconds)
