@@ -537,8 +537,16 @@ def meeting_review_modal_block_set(context):
         product_form = OrgCustomSlackFormInstance.objects.create(
             template=product_template, resource_id=slack_form.resource_id, user=user,
         )
-        current_products = OpportunityLineItem.objects.filter(opportunity=slack_form.resource_id)
-
+        # current_products = OpportunityLineItem.objects.filter(opportunity=slack_form.resource_id)
+        opp = Opportunity.objects.get(id=slack_form.resource_id)
+        try:
+            current_products = user.salesforce_account.list_resource_data(
+                "OpportunityLineItem",
+                0,
+                filter=["AND IsDeleted = false", f"AND OpportunityId = '{opp.integration_id}'"],
+            )
+        except Exception as e:
+            print(e)
     blocks = []
 
     # additional validations
@@ -563,7 +571,7 @@ def meeting_review_modal_block_set(context):
 
     # make params here
 
-    if user.organization.has_products:
+    if user.organization.has_products and slack_form.template.resource == "Opportunity":
         blocks.append(
             block_builders.actions_block(
                 [
@@ -588,7 +596,13 @@ def meeting_review_modal_block_set(context):
                 product_block = block_sets.get_block_set(
                     "current_product_blockset",
                     {
-                        "opp_item_id": str(product.id),
+                        "opp_item_id": product.integration_id,
+                        # "opp_item_id": str(product.id),
+                        "product_data": {
+                            "name": product.name,
+                            "quantity": product.quantity,
+                            "total": product.total_price,
+                        },
                         "u": str(user.id),
                         "main_form": str(slack_form.id),
                     },

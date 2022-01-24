@@ -83,7 +83,6 @@ logger = logging.getLogger("managr")
 def process_stage_next_page(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     print("STAGE RELATED:", context)
-    print(payload)
     view = payload["view"]
     # if there are additional stage gating forms aggregate them and push them in 1 view
     # save current data to its form we will close all views at the end
@@ -304,7 +303,6 @@ def process_add_products_form(payload, context):
 @processor(required_context=["f"])
 def process_submit_resource_data(payload, context):
     # get context
-    print("SUBMIT CONTEXT:", context)
     has_error = False
     state = payload["view"]["state"]["values"]
     current_form_ids = context.get("f").split(",")
@@ -327,21 +325,18 @@ def process_submit_resource_data(payload, context):
     stage_forms = current_forms.exclude(template__form_type__in=["UPDATE", "CREATE"]).exclude(
         template__resource="OpportunityLineItem"
     )
-    if main_form.template.resource == "Opportunity":
-        current_products = OpportunityLineItem.objects.filter(opportunity=main_form.resource_id)
-        for product in current_products:
-            product.is_stale = True
-            product.save()
     stage_form_data_collector = {}
     for form in stage_forms:
         form.update_source = type
         form.is_submitted = True
+        form.submission_date = timezone.now()
         form.save_form(state)
         stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
     if not len(stage_forms):
         if main_form.template.form_type == "UPDATE":
             main_form.update_source = type
             main_form.is_submitted = True
+            main_form.submission_date = timezone.now()
         main_form.save_form(state)
     all_form_data = {**stage_form_data_collector, **main_form.saved_data}
     slack_access_token = user.organization.slack_integration.access_token
@@ -547,6 +542,8 @@ def process_submit_resource_data(payload, context):
             emit_add_update_to_sf(str(main_form.id))
         if type == "alert":
             instance = AlertInstance.objects.get(id=context.get("alert_id"))
+            main_form.alert_instance_id = instance
+            main_form.save()
             alert_instances = AlertInstance.objects.filter(
                 invocation=instance.invocation,
                 channel=context.get("channel_id"),
@@ -1530,6 +1527,12 @@ def process_update_product(payload, context):
     product_form = user.custom_slack_form_instances.filter(
         template__resource="OpportunityLineItem"
     ).first()
+    opp_line_item = OpportunityLineItem.objects.filter(id=product_form.resource_id).first()
+    if (
+        "HasSchedule" in opp_line_item.secondary_data
+        and opp_line_item.secondary_data["HasSchedule"]
+    ):
+        state.pop("Quantity")
     product_form.save_form(state)
     slack_access_token = user.organization.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH
@@ -1648,6 +1651,7 @@ def process_update_product(payload, context):
     pm = json.loads(payload["view"]["private_metadata"])
     product_form.is_submitted = True
     product_form.submission_date = timezone.now()
+    product_form.update_source = type
     product_form.save()
     text = "Success"
     message = ":white_check_mark: Successfully updated product"
@@ -1701,23 +1705,9 @@ def process_update_product(payload, context):
             "view": {
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Success"},
-                "blocks": get_block_set(
-                    "success_text_modal", {"message": "Successfully updated product"}
-                ),
+                "blocks": get_block_set("success_text_modal", {"message": message}),
             },
         }
-        # try:
-        #     slack_requests.send_ephemeral_message(
-        #         user.slack_integration.channel,
-        #         user.organization.slack_integration.access_token,
-        #         user.slack_integration.slack_id,
-        #         text=text,
-        #         block_set=get_block_set("success_text_modal"),
-        #     )
-        # except Exception as e:
-        #     return logger.exception(
-        #         f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
-        #     )
 
 
 @log_all_exceptions
@@ -1725,9 +1715,10 @@ def process_update_product(payload, context):
 @processor(required_context=["f"])
 def process_submit_product(payload, context):
     # get context
-    has_error = False
     state = payload["view"]["state"]["values"]
     current_form_ids = context.get("f").split(",")
+    has_error = False
+    blocks = None
     user = User.objects.get(id=context.get("u"))
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
@@ -1738,7 +1729,6 @@ def process_submit_product(payload, context):
         .exclude(template__resource="OpportunityLineItem")
         .first()
     )
-
     if product_form_id:
         product_form = user.custom_slack_form_instances.get(id=product_form_id)
         product_form.save_form(state)
@@ -1779,9 +1769,19 @@ def process_submit_product(payload, context):
             product_data = {
                 **product_form.saved_data,
                 "OpportunityId": opp.integration_id,
-                "UnitPrice": entry.unit_price,
             }
+            if "UnitPrice" not in product_form.saved_data:
+                product_data["UnitPrice"] = str(entry.unit_price)
+            if (
+                "UnitPrice" in product_form.saved_data
+                and product_form.saved_data["UnitPrice"] is None
+            ):
+                product_data["UnitPrice"] = str(entry.unit_price)
             resource = OpportunityLineItem.create_in_salesforce(product_data, context.get("u"))
+            product_form.is_submitted = True
+            product_form.submission_date = timezone.now()
+            product_form.update_source = context.get("type")
+            product_form.save()
             break
         except FieldValidationError as e:
             has_error = True
@@ -1857,6 +1857,56 @@ def process_submit_product(payload, context):
             else:
                 time.sleep(2)
                 attempts += 1
+        except Exception as e:
+            if attempts >= 5:
+                logger.exception(
+                    f"Failed to Update data for user {str(user.id)} after {attempts} tries because of connection error"
+                )
+                has_error = True
+                blocks = get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh we had an unexpected error please try again: {e}"
+                    },
+                )
+                break
+            else:
+                time.sleep(2)
+                attempts += 1
+    if has_error:
+        blocks = [
+            *blocks,
+            block_builders.actions_block(
+                [
+                    block_builders.simple_button_block(
+                        "return to form",
+                        product_form_id,
+                        style="primary",
+                        action_id=slack_const.RETURN_TO_FORM_MODAL,
+                    )
+                ]
+            ),
+        ]
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        error_view_data = {
+            "trigger_id": trigger_id,
+            "view_id": view_id,
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Error"},
+                "blocks": blocks,
+                "private_metadata": json.dumps(context),
+                "external_id": f"{'add_product'}.{str(uuid.uuid4())}",
+            },
+        }
+        try:
+            return slack_requests.generic_request(
+                url, error_view_data, access_token=slack_access_token
+            )
+        except Exception as e:
+            return logger.exception(
+                f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
+            )
     blocks = get_block_set(
         "update_modal_block_set",
         context={
@@ -1867,7 +1917,6 @@ def process_submit_product(payload, context):
             "resource_id": main_form.resource_id,
         },
     )
-    current_products = OpportunityLineItem.objects.filter(opportunity=main_form.resource_id)
     blocks.append(
         block_builders.actions_block(
             [
@@ -1883,12 +1932,35 @@ def process_submit_product(payload, context):
             block_id="ADD_PRODUCT_BUTTON",
         ),
     )
+    # current_products = OpportunityLineItem.objects.filter(opportunity=main_form.resource_id)
+    try:
+        current_products = user.salesforce_account.list_resource_data(
+            "OpportunityLineItem",
+            0,
+            filter=["AND IsDeleted = false", f"AND OpportunityId = '{opp.integration_id}'"],
+        )
+    except Exception as e:
+        logger.exception(
+            f"Error retreiving products for user {user.email} during submit product refresh: {e}"
+        )
+        blocks.append(
+            block_builders.simple_section(
+                "There was an error retreiving your products :exclamation:", "mrkdwn"
+            )
+        )
+
     if current_products:
         for product in current_products:
             product_block = get_block_set(
                 "current_product_blockset",
                 {
-                    "opp_item_id": str(product.id),
+                    "opp_item_id": product.integration_id,
+                    # "opp_item_id": str(product.id),
+                    "product_data": {
+                        "name": product.name,
+                        "quantity": product.quantity,
+                        "total": product.total_price,
+                    },
                     "u": str(user.id),
                     "main_form": str(main_form.id),
                 },
@@ -1913,6 +1985,19 @@ def process_submit_product(payload, context):
         data,
         access_token=user.organization.slack_integration.access_token,
     )
+
+    return {
+        "response_action": "update",
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Product Created"},
+            "blocks": [
+                block_builders.simple_section(
+                    ":white_check_mark: Successfully created product!", "mrkdwn"
+                )
+            ],
+        },
+    }
 
 
 def handle_view_submission(payload):

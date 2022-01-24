@@ -397,7 +397,6 @@ def calendar_reminders_blockset(context):
     am_or_pm = utc_time.astimezone(tz).strftime("%p")
     start_time = local_start + " " + am_or_pm
     type = meeting.resource_type if meeting.resource_type is not None else "prep"
-    logger.info(f"DIGEST INFO: {type}")
     if type == "Opportunity":
         resource = Opportunity.objects.get(id=meeting.resource_id)
     elif type == "Account":
@@ -446,7 +445,8 @@ def calendar_reminders_blockset(context):
                     params=[
                         f"u={str(user.id)}",
                         f"resource_id={str(meeting.resource_id)}",
-                        f"type={type}",
+                        f"resource_type={type}",
+                        "type=prep",
                     ],
                 ),
             )
@@ -490,7 +490,7 @@ def manager_meeting_reminder_block_set(context):
     text = "meeting" if not_completed < 2 else "meetings"
     blocks = [
         block_builders.simple_section(
-            f"Hey {name} your team still has *{not_completed} {text}* from today that needs to be logged",
+            f"Hey {name}, your team still has *{not_completed} {text}* from today that needs to be logged",
             "mrkdwn",
         )
     ]
@@ -498,8 +498,9 @@ def manager_meeting_reminder_block_set(context):
 
 
 def current_product_block_set(context):
-    opp_item = OpportunityLineItem.objects.get(id=context.get("opp_item_id"))
-    text = f"{opp_item.product.name}\nQuantity: {opp_item.quantity}\nTotal Price: {opp_item.total_price}"
+    opp_item_id = context.get("opp_item_id")
+    data = context.get("product_data")
+    text = f"{data['name']}\nQuantity: {data['quantity']}\nTotal Price: {round(data['total'],2)}"
     blocks = block_builders.section_with_button_block(
         "Edit Product",
         "EDIT_PRODUCT",
@@ -507,7 +508,7 @@ def current_product_block_set(context):
         action_id=action_with_params(
             slack_const.PROCESS_SHOW_EDIT_PRODUCT_FORM,
             params=[
-                f"opp_item_id={str(opp_item.id)}",
+                f"opp_item_id={opp_item_id}",
                 f"u={context.get('u')}",
                 f"main_form={context.get('main_form')}",
             ],
@@ -518,16 +519,15 @@ def current_product_block_set(context):
 
 @block_set()
 def edit_product_block_set(context):
-    opp_item = OpportunityLineItem.objects.get(id=context.get("opp_item_id"))
+    opp_item = OpportunityLineItem.objects.get(integration_id=context.get("opp_item_id"))
     user = User.objects.get(id=context.get("u"))
     template = (
         OrgCustomSlackForm.objects.for_user(user)
-        .filter(Q(resource="OpportunityLineItem", form_type="CREATE"))
+        .filter(Q(resource="OpportunityLineItem", form_type="UPDATE"))
         .first()
     )
     slack_form = OrgCustomSlackFormInstance.objects.create(
         template=template, resource_id=str(opp_item.id), user=user
     )
-    form_blocks = slack_form.generate_form(opp_item.secondary_data)
+    form_blocks = slack_form.generate_form()
     return [*form_blocks]
-

@@ -15,9 +15,20 @@
     <div class="spacer"></div>
 
     <div class="center__">
-      <h2 v-if="!editing" class="titles">Edit your Workflow Automation</h2>
-      <h2 @click="logChannels" v-else class="titles">Saved Workflow Automations</h2>
-      <p style="font-weight: bold; color: #5d5e5e; margin-top: -0.5rem; font-size: 0.95rem">
+      <h2 v-if="!editing" :class="templates.refreshing ? 'loading-title titles' : 'titles'">
+        Edit your Workflow Automation
+      </h2>
+      <h2
+        @click="logChannels"
+        v-else
+        :class="templates.refreshing ? 'loading-title titles' : 'titles'"
+      >
+        Saved Workflow Automations
+      </h2>
+      <p
+        :class="templates.refreshing ? 'loading-title titles' : ''"
+        style="font-weight: bold; color: #5d5e5e; margin-top: -0.5rem; font-size: 0.95rem"
+      >
         Edit, Run, and Schedule your saved Automations
       </p>
       <div v-if="!alertsCount(templates.list.length)">
@@ -38,114 +49,139 @@
     </div>
     <template
       style="margin-top: -1rem"
-      v-if="!templates.isLoading && alertsCount(templates.list.length)"
+      v-if="!templates.refreshing && alertsCount(templates.list.length)"
     >
-      <div class="middle" v-if="!editing">
-        <div class="edit__modal">
-          <div>
-            <AlertsEditPanel :alert="currentAlert" />
-          </div>
-          <button style="margin-bottom: 1.5rem" class="yes__button" @click="closeEdit">Done</button>
-        </div>
-      </div>
-      <div class="alert_cards" v-if="editing">
-        <div :key="i" v-for="(alert, i) in templates.list" class="card__">
-          <div :data-key="alert.id">
-            <h3 class="card__header">{{ alert.title.toUpperCase() }}</h3>
-          </div>
-          <div class="row">
-            <button
-              :disabled="clicked.includes(alert.id)"
-              @click.stop="onRunAlertTemplateNow(alert.id)"
-              class="green_button"
-            >
-              Run now
+      <transition name="fade">
+        <div class="middle" v-if="!editing">
+          <div class="edit__modal">
+            <div>
+              <AlertsEditPanel :alert="currentAlert" />
+            </div>
+            <button style="margin-bottom: 1.5rem" class="yes__button" @click="closeEdit">
+              Done
             </button>
-            <!-- <div class="centered">
+          </div>
+        </div>
+      </transition>
+
+      <transition name="fade">
+        <div class="alert_cards" v-if="editing">
+          <div :key="i" v-for="(alert, i) in templates.list" class="card__">
+            <div :data-key="alert.id">
+              <h3 class="card__header">{{ alert.title.toUpperCase() }}</h3>
+            </div>
+            <div class="row">
+              <button
+                :disabled="clicked.includes(alert.id)"
+                @click.stop="onRunAlertTemplateNow(alert.id)"
+                class="green_button"
+              >
+                Run now
+              </button>
+              <!-- <div class="centered">
               <button @click="onTest(alert.id)" class="test-button">Test Alert</button>
 
               <p style="margin-left: 0.5rem">Results: {{ alert.instances.length }}</p>
             </div> -->
-          </div>
-          <div class="row__start">
-            <p style="margin: 0.5rem 0.5rem">Schedule:</p>
-            <div class="row__">
-              <p style="margin-right: 0.25rem; font-size: 0.8rem">OFF</p>
-              <ToggleCheckBox
-                @input="onToggleAlert(alert.id, alert.isActive)"
-                v-model="alert.isActive"
-                offColor="#aaaaaa"
-                onColor="#199e54"
-              />
-              <p style="margin-left: 0.25rem; font-size: 0.8rem">ON</p>
+            </div>
+            <div class="row__start">
+              <p style="margin: 0.5rem 0.5rem">Schedule:</p>
+              <div class="row__">
+                <p
+                  :class="!alert.isActive ? 'green' : ''"
+                  style="margin-right: 0.25rem; font-size: 0.8rem"
+                >
+                  OFF
+                </p>
+                <ToggleCheckBox
+                  @input="onToggleAlert(alert.id, alert.isActive)"
+                  v-model="alert.isActive"
+                  offColor="#aaaaaa"
+                  onColor="#199e54"
+                />
+                <p
+                  :class="alert.isActive ? 'green' : ''"
+                  style="margin-left: 0.25rem; font-size: 0.8rem"
+                >
+                  ON
+                </p>
+              </div>
+
+              <div class="row__two">
+                <img
+                  @click="makeAlertCurrent(alert)"
+                  src="@/assets/images/settings.png"
+                  style="
+                    height: 1.5rem;
+                    cursor: pointer;
+                    margin-right: 0.5rem;
+                    box-shadow: 1.5px 1px 2px #fafafa;
+                    border: none;
+                    border-radius: 50%;
+                    padding: 0.2rem;
+                  "
+                />
+
+                <img
+                  src="@/assets/images/whitetrash.png"
+                  style="
+                    height: 1.5rem;
+                    cursor: pointer;
+                    box-shadow: 1.5px 1px 2px #fafafa;
+                    border: none;
+                    border-radius: 50%;
+                    padding: 0.2rem;
+                  "
+                  @click="deleteClosed(alert.id)"
+                />
+              </div>
             </div>
 
-            <div class="row__two">
-              <img
-                @click="makeAlertCurrent(alert)"
-                src="@/assets/images/settings.png"
-                style="
-                  height: 1.5rem;
-                  cursor: pointer;
-                  margin-right: 0.5rem;
-                  box-shadow: 1.5px 1px 2px #fafafa;
-                  border: none;
-                  border-radius: 50%;
-                  padding: 0.2rem;
-                "
-              />
-
-              <img
-                src="@/assets/images/whitetrash.png"
-                style="
-                  height: 1.5rem;
-                  cursor: pointer;
-                  box-shadow: 1.5px 1px 2px #fafafa;
-                  border: none;
-                  border-radius: 50%;
-                  padding: 0.2rem;
-                "
-                @click="deleteClosed(alert.id)"
-              />
-            </div>
+            <template slot="panel-content">
+              <div>
+                <AlertsEditPanel :alert="alert" />
+              </div>
+            </template>
           </div>
-
-          <template slot="panel-content">
+          <div v-if="zoomChannel" class="card__">
+            <h3 class="card__header">LOG MEETINGS</h3>
+            <div class="row">
+              <button @click="goToLogZoom" class="green_button">Change Channel</button>
+            </div>
             <div>
-              <AlertsEditPanel :alert="alert" />
+              <p>
+                Current channel:
+                <span style="font-weight: bold; color: #199e54">{{
+                  currentZoomChannel.toUpperCase()
+                }}</span>
+              </p>
             </div>
-          </template>
-        </div>
-        <div v-if="zoomChannel" class="card__">
-          <h3 class="card__header">LOG MEETINGS</h3>
-          <div class="row">
-            <button @click="goToLogZoom" class="green_button">Change Channel</button>
           </div>
-          <div>
-            <p>
-              Current channel:
-              <span style="font-weight: bold; color: #199e54">{{
-                currentZoomChannel.toUpperCase()
-              }}</span>
-            </p>
-          </div>
-        </div>
-        <div v-if="hasRecapChannel && userLevel !== 'REP'" class="card__">
-          <h3 class="card__header">MEETING RECAPS</h3>
-          <div class="row">
-            <button @click="goToRecap" class="green_button">Change Channel/Pipelines</button>
-          </div>
-          <div>
-            <p>
-              Current channel:
-              <span style="font-weight: bold; color: #199e54">{{
-                currentRecapChannel.toUpperCase()
-              }}</span>
-            </p>
+          <div v-if="hasRecapChannel && userLevel !== 'REP'" class="card__">
+            <h3 class="card__header">MEETING RECAPS</h3>
+            <div class="row">
+              <button @click="goToRecap" class="green_button">Change Channel/Pipelines</button>
+            </div>
+            <div>
+              <p>
+                Current channel:
+                <span style="font-weight: bold; color: #199e54">{{
+                  currentRecapChannel.toUpperCase()
+                }}</span>
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      </transition>
     </template>
+
+    <!-- <div class="center-loader" v-else>
+      <div class="dot-flashing"></div>
+    </div> -->
+
+    <div class="invert center-loader" v-else>
+      <img src="@/assets/images/loading-gif.gif" class="invert" style="height: 8rem" alt="" />
+    </div>
   </div>
 </template>
 
@@ -211,9 +247,11 @@ export default {
       pageLoaded: false,
     }
   },
-  mounted() {
-    console.log(this.templates)
-  },
+  // mounted() {
+  //   setTimeout(() => {
+  //     this.showLoader = false
+  //   }, 2000)
+  // },
   async created() {
     this.templates.refresh()
     this.userConfigForm = new UserConfigForm({
@@ -262,9 +300,6 @@ export default {
         return num
       }
     },
-    logTemplates() {
-      console.log(this.templates.list)
-    },
     goToLogZoom() {
       this.$router.push({ name: 'LogZoom' })
     },
@@ -289,7 +324,7 @@ export default {
       this.deleteOpen === false ? (this.deleteOpen = true) : (this.deleteOpen = false)
     },
     closeEdit() {
-      this.$router.go()
+      this.editing = !this.editing
     },
     async listUserChannels(cursor = null) {
       const res = await SlackOAuth.api.listUserChannels(cursor)
@@ -414,9 +449,69 @@ export default {
     transform: translateY(-6px);
   }
 }
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s;
+}
+.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+  opacity: 0;
+}
+
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
+
+.dot-flashing {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  background-color: $dark-green;
+  color: $dark-green;
+  animation: dotFlashing 1s infinite linear alternate;
+  animation-delay: 0.5s;
+}
+
+.dot-flashing::before,
+.dot-flashing::after {
+  content: '';
+  display: inline-block;
+  position: absolute;
+  top: 0;
+}
+
+.dot-flashing::before {
+  left: -15px;
+  width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  background-color: $dark-green;
+  color: $dark-green;
+  animation: dotFlashing 1s infinite alternate;
+  animation-delay: 0s;
+}
+
+.dot-flashing::after {
+  left: 15px;
+  width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  background-color: $dark-green;
+  color: $dark-green;
+  animation: dotFlashing 1s infinite alternate;
+  animation-delay: 1s;
+}
+
+@keyframes dotFlashing {
+  0% {
+    background-color: $dark-green;
+  }
+  50%,
+  100% {
+    background-color: $lighter-green;
+  }
+}
+
 .spacer {
   height: 0.75rem;
 }
@@ -450,7 +545,7 @@ button:disabled {
   outline: 2px solid $dark-green;
 }
 .titles {
-  color: black;
+  color: $base-gray;
   font-weight: bold;
 }
 .alert-links {
@@ -571,7 +666,7 @@ button:disabled {
 .card__ {
   background-color: white;
   border: none;
-  min-width: 24vw;
+  min-width: 22vw;
   max-width: 44vw;
   min-height: 25vh;
   margin-right: 1rem;
@@ -650,6 +745,9 @@ a {
   border: none;
   cursor: pointer;
 }
+.green {
+  color: $dark-green;
+}
 .delete_button {
   color: $panther-orange;
   border: none;
@@ -692,7 +790,19 @@ a {
   justify-content: center;
   align-items: center;
 }
+.center-loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60vh;
+}
+.invert {
+  filter: invert(99%);
+}
 .invisible {
+  display: none;
+}
+.loading-title {
   display: none;
 }
 // ::-webkit-scrollbar {

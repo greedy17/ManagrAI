@@ -16,6 +16,7 @@ CADENCE = lambda id: f"cadences/{id}.json"
 ACCOUNTS = "accounts.json"
 PEOPLE = "people.json"
 ADD_TO_CADENCE = "cadence_memberships.json"
+ME = "me.json"
 
 if settings.USE_SALESLOFT:
 

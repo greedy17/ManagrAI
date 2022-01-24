@@ -7,7 +7,7 @@
       <p style="color: #5d5e5e; margin-top: -0.5rem">Map your Product fields</p>
     </div>
 
-    <div class="box__content--expanded">
+    <div v-if="userHasProducts" class="box__content--expanded">
       <CustomSlackForm
         :show-validations="showValidations"
         :formType="CREATE"
@@ -16,6 +16,26 @@
             (f) => f.resource == OPPORTUNITYLINEITEM && f.formType == CREATE,
           ))
         "
+        :resource="OPPORTUNITYLINEITEM"
+        v-on:update:selectedForm="updateForm($event)"
+        :loading="formFields.refreshing"
+        :stageForms="formStages"
+      />
+    </div>
+
+    <div v-else class="box__content--expanded">
+      <CustomSlackForm
+        :show-validations="showValidations"
+        :formType="CREATE"
+        :customForm="{
+          config: {},
+          fields: [],
+          fields_ref: [],
+          form_type: CREATE,
+          organization: '',
+          resource: OPPORTUNITYLINEITEM,
+          stage: '',
+        }"
         :resource="OPPORTUNITYLINEITEM"
         v-on:update:selectedForm="updateForm($event)"
         :loading="formFields.refreshing"
@@ -94,9 +114,11 @@ export default {
     selectedFormType() {
       return this.selectedForm ? this.selectedForm.formType : null
     },
-
     currentStagesWithForms() {
       return this.formStages.map((sf) => sf.stage)
+    },
+    userHasProducts() {
+      return this.$store.state.user.organizationRef.hasProducts
     },
   },
 

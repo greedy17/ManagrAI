@@ -537,19 +537,14 @@ class SlackFormsViewSet(
             instance.fields.add(field, through_defaults={"order": i})
 
         instance.save()
-        if request.data["resource"] == "OpportunityLineItem":
-            org = Organization.objects.get(id=request.data["organization"])
-            org.update_has_settings("products")
         return Response(serializer.data)
 
     def update(self, request, *args, **kwargs):
-
         data = self.request.data
         fields = data.pop("fields", [])
         fields_ref = data.pop("fields_ref", [])
         data.update({"organization": self.request.user.organization_id})
         serializer = self.get_serializer(data=data, instance=self.get_object())
-
         serializer.is_valid(raise_exception=True)
         serializer.save()
         instance = serializer.instance
@@ -560,7 +555,23 @@ class SlackFormsViewSet(
                 through_defaults={"order": i, "include_in_recap": field["includeInRecap"]},
             )
         instance.save()
-
+        if data["resource"] == "OpportunityLineItem":
+            org = Organization.objects.get(id=request.data["organization"])
+            form = OrgCustomSlackForm.objects.filter(
+                organization=self.request.user.organization_id,
+                resource="OpportunityLineItem",
+                form_type="UPDATE",
+            ).first()
+            org.update_has_settings("products")
+            update_data = data
+            update_data["form_type"] = "UPDATE"
+            update_serializer = self.get_serializer(data=update_data, instance=form)
+            update_serializer.is_valid(raise_exception=True)
+            update_serializer.save()
+            instance = update_serializer.instance
+            instance.fields.clear()
+            for i, field in enumerate(fields):
+                instance.fields.add(field, through_defaults={"order": i})
         return Response(serializer.data)
 
 
@@ -709,33 +720,6 @@ def create_resource(request):
                     },
                 }
                 blocks = [*blocks[:index], block, *blocks[index + 1 :]]
-            # if user.organization.has_products:
-            #     product_template = (
-            #         OrgCustomSlackForm.objects.for_user(user)
-            #         .filter(Q(resource="OpportunityLineItem", form_type="CREATE"))
-            #         .first()
-            #     )
-            #     product_form = OrgCustomSlackFormInstance.objects.create(
-            #         template=product_template, user=user,
-            #     )
-            #     blocks.append(
-            #         block_builders.actions_block(
-            #             [
-            #                 block_builders.simple_button_block(
-            #                     "Add Product",
-            #                     "ADD_PRODUCT",
-            #                     action_id=action_with_params(
-            #                         slack_const.PROCESS_ADD_PRODUCTS_FORM,
-            #                         params=[
-            #                             f"f={str(slack_form.id)}",
-            #                             f"product_form={str(product_form.id)}",
-            #                         ],
-            #                     ),
-            #                 )
-            #             ],
-            #             block_id="ADD_PRODUCT_BUTTON",
-            #         ),
-            #     )
             access_token = user.organization.slack_integration.access_token
 
             url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
