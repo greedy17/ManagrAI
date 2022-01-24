@@ -2458,7 +2458,10 @@ def process_lead_input_switch(payload, context):
         )
     else:
         block = block_builders.input_block(
-            f"{to_change_input} Name", block_id=input_id, action_id=f"{to_change_input}_input",
+            f"Create New",
+            block_id=input_id,
+            action_id=f"{to_change_input}_input",
+            placeholder=f"New {to_change_input}",
         )
 
     blocks[index] = block
