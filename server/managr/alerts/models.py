@@ -499,7 +499,6 @@ class AlertInstance(TimeStampModel):
                     continue
                 if k == self.template.resource_type and hasattr(self.user, "salesforce_account"):
                     # if field does not exist set to strike through field with N/A
-                    print(v)
                     # binding_map[binding] = self.resource.secondary_data.get(v, "~None~")
                     binding_map[binding] = current_values.secondary_data.get(v, "~None~")
                     # if field value is None or blank set to empty or no value

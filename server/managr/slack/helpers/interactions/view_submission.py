@@ -194,19 +194,19 @@ def process_zoom_meeting_data(payload, context):
     else:
         workflow.operations_list = ops
 
-    # ts, channel = workflow.slack_interaction.split("|")
-    # block_set = [
-    #     *get_block_set("loading", {"message": ":rocket: We are saving your data to salesforce..."}),
-    # ]
-    # try:
-    #     res = slack_requests.update_channel_message(
-    #         channel, ts, slack_access_token, block_set=block_set
-    #     )
-    # except Exception as e:
-    #     return logger.exception(
-    #         f"Failed To Send Submit Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-    #     )
-    # workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
+    ts, channel = workflow.slack_interaction.split("|")
+    block_set = [
+        *get_block_set("loading", {"message": ":rocket: We are saving your data to salesforce..."}),
+    ]
+    try:
+        res = slack_requests.update_channel_message(
+            channel, ts, slack_access_token, block_set=block_set
+        )
+    except Exception as e:
+        return logger.exception(
+            f"Failed To Send Submit Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
     workflow.save()
     workflow.begin_tasks()
     emit_meeting_workflow_tracker(str(workflow.id))
@@ -1717,6 +1717,10 @@ def process_submit_product(payload, context):
     # get context
     state = payload["view"]["state"]["values"]
     current_form_ids = context.get("f").split(",")
+    type = context.get("type", None)
+    workflow_id = context.get("w", None)
+    if workflow_id:
+        workflow = MeetingWorkflow.objects.get(id=workflow_id)
     has_error = False
     blocks = None
     user = User.objects.get(id=context.get("u"))
@@ -1907,65 +1911,81 @@ def process_submit_product(payload, context):
             return logger.exception(
                 f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
             )
-    blocks = get_block_set(
-        "update_modal_block_set",
-        context={
-            "type": context.get("type"),
-            "f": context.get("f"),
-            "u": context.get("u"),
-            "resource_type": main_form.template.resource,
-            "resource_id": main_form.resource_id,
-        },
+    blocks = (
+        get_block_set(
+            "update_modal_block_set",
+            context={
+                "type": context.get("type"),
+                "f": context.get("f"),
+                "u": context.get("u"),
+                "resource_type": main_form.template.resource,
+                "resource_id": main_form.resource_id,
+            },
+        )
+        if type == "command"
+        else get_block_set(
+            "meeting_review_modal",
+            context={
+                "w": workflow_id,
+                "f": str(workflow.forms.filter(template__form_type="UPDATE").first().id),
+                "type": "meeting",
+            },
+        )
     )
-    blocks.append(
-        block_builders.actions_block(
-            [
-                block_builders.simple_button_block(
-                    "Add Product",
-                    "ADD_PRODUCT",
-                    action_id=action_with_params(
-                        slack_const.PROCESS_ADD_PRODUCTS_FORM,
-                        params=[f"f={str(main_form.id)}", f"product_form={str(product_form.id)}",],
-                    ),
-                )
-            ],
-            block_id="ADD_PRODUCT_BUTTON",
-        ),
-    )
-    # current_products = OpportunityLineItem.objects.filter(opportunity=main_form.resource_id)
-    try:
-        current_products = user.salesforce_account.list_resource_data(
-            "OpportunityLineItem",
-            0,
-            filter=["AND IsDeleted = false", f"AND OpportunityId = '{opp.integration_id}'"],
-        )
-    except Exception as e:
-        logger.exception(
-            f"Error retreiving products for user {user.email} during submit product refresh: {e}"
-        )
-        blocks.append(
-            block_builders.simple_section(
-                "There was an error retreiving your products :exclamation:", "mrkdwn"
-            )
-        )
+    params = [
+        f"f={str(main_form.id)}",
+        f"product_form={str(product_form.id)}",
+        f"type={type}",
+    ]
+    if workflow_id:
+        params.append(f"w={workflow_id}")
 
-    if current_products:
-        for product in current_products:
-            product_block = get_block_set(
-                "current_product_blockset",
-                {
-                    "opp_item_id": product.integration_id,
-                    # "opp_item_id": str(product.id),
-                    "product_data": {
-                        "name": product.name,
-                        "quantity": product.quantity,
-                        "total": product.total_price,
-                    },
-                    "u": str(user.id),
-                    "main_form": str(main_form.id),
-                },
+    if type != "meeting":
+        blocks.append(
+            block_builders.actions_block(
+                [
+                    block_builders.simple_button_block(
+                        "Add Product",
+                        "ADD_PRODUCT",
+                        action_id=action_with_params(
+                            slack_const.PROCESS_ADD_PRODUCTS_FORM, params=params,
+                        ),
+                    )
+                ],
+                block_id="ADD_PRODUCT_BUTTON",
+            ),
+        )
+        try:
+            current_products = user.salesforce_account.list_resource_data(
+                "OpportunityLineItem",
+                0,
+                filter=["AND IsDeleted = false", f"AND OpportunityId = '{opp.integration_id}'"],
             )
-            blocks.append(product_block)
+        except Exception as e:
+            logger.exception(
+                f"Error retreiving products for user {user.email} during submit product refresh: {e}"
+            )
+            blocks.append(
+                block_builders.simple_section(
+                    "There was an error retreiving your products :exclamation:", "mrkdwn"
+                )
+            )
+        if current_products:
+            for product in current_products:
+                product_block = get_block_set(
+                    "current_product_blockset",
+                    {
+                        "opp_item_id": product.integration_id,
+                        "product_data": {
+                            "name": product.name,
+                            "quantity": product.quantity,
+                            "total": product.total_price,
+                        },
+                        "u": str(user.id),
+                        "main_form": str(main_form.id),
+                    },
+                )
+                blocks.append(product_block)
     data = {
         "view_id": context.get("view_id"),
         "view": {

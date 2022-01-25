@@ -582,7 +582,9 @@ def meeting_review_modal_block_set(context):
                             params=[
                                 f"f={str(slack_form.id)}",
                                 f"u={str(user.id)}",
+                                f"w={str(workflow.id)}",
                                 f"product_form={str(product_form.id)}",
+                                "type=meeting",
                             ],
                         ),
                     )
@@ -596,7 +598,6 @@ def meeting_review_modal_block_set(context):
                     "current_product_blockset",
                     {
                         "opp_item_id": product.integration_id,
-                        # "opp_item_id": str(product.id),
                         "product_data": {
                             "name": product.name,
                             "quantity": product.quantity,
