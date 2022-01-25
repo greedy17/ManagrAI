@@ -288,7 +288,6 @@ def process_get_sobject_list(payload, context):
     add_opt = context.get("add_option", None)
     value = payload["value"]
     sobject = context.get("resource_type")
-    print(sobject)
     if sobject == "Opportunity":
         sobject_value = user.owned_opportunities
     elif sobject == "Account":

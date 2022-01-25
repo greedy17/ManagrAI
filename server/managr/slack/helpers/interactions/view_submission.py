@@ -1,4 +1,5 @@
 import json
+from lib2to3.pytree import convert
 import pdb
 import pytz
 from datetime import datetime, date
@@ -34,7 +35,7 @@ from managr.core.models import User, MeetingPrepInstance
 from managr.core.background import emit_create_calendar_event
 from managr.outreach.tasks import emit_add_sequence_state
 from managr.core.cron import generate_morning_digest
-from managr.opportunity.models import Opportunity
+from managr.opportunity.models import Opportunity, Lead
 from managr.zoom.models import ZoomMeeting
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce import constants as sf_consts
@@ -2000,6 +2001,46 @@ def process_submit_product(payload, context):
     }
 
 
+@log_all_exceptions
+@slack_api_exceptions(rethrow=True)
+@processor(required_context=["w"])
+def process_convert_lead(payload, context):
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    state = payload["view"]["state"]["values"]
+    convert_data = {}
+    sobjects = ["Opportunity", "Account", "Contact"]
+    for object in sobjects:
+        if "plain_input" in state[f"{object}_NAME_INPUT"]:
+            value = state[f"{object}_NAME_INPUT"]["plain_input"]["value"]
+        elif (
+            state[f"{object}_NAME_INPUT"][
+                f"GET_SOBJECT_LIST?u={context.get('u')}&resource_type={object}"
+            ]["selected_option"]
+            is None
+        ):
+            value = None
+        else:
+            value = state[f"{object}_NAME_INPUT"][
+                f"GET_SOBJECT_LIST?u={context.get('u')}&resource_type={object}"
+            ]["selected_option"]["value"]
+
+        if value is not None:
+            datakey = (
+                f"{object.lower()}Name"
+                if "plain_input" in state[f"{object}_NAME_INPUT"]
+                else f"{object.lower()}Id"
+            )
+            convert_data[datakey] = value
+    convert_data["convertedStatus"] = list(state["Status"].values())[0]["selected_option"]["value"]
+    owner_id = list(state["RECORD_OWNER"].values())[0]["selected_option"]["value"]
+    assigned_owner = User.objects.get(id=owner_id)
+    convert_data["ownerId"] = assigned_owner.salesforce_account.salesforce_id
+    lead = Lead.objects.get(id=workflow.resource_id)
+    convert_data["leadId"] = lead.integration_id
+    lead.convert_in_salesforce(convert_data)
+    return
+
+
 def handle_view_submission(payload):
     """
     This takes place when a modal's Submit button is clicked.
@@ -2023,6 +2064,7 @@ def handle_view_submission(payload):
         slack_const.PROCESS_ADD_PRODUCTS_FORM: process_add_products_form,
         slack_const.PROCESS_UPDATE_PRODUCT: process_update_product,
         slack_const.PROCESS_SUBMIT_PRODUCT: process_submit_product,
+        slack_const.ZOOM_MEETING__CONVERT_LEAD: process_convert_lead,
     }
 
     callback_id = payload["view"]["callback_id"]

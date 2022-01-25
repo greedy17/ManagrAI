@@ -8,14 +8,15 @@ from collections import OrderedDict
 from urllib.parse import urlencode, quote_plus, urlparse
 from requests.exceptions import HTTPError
 from django.contrib.postgres.fields import JSONField
-
+from managr.salesforce.utils import XmlDictConfig
 from managr.utils.client import HttpClient, Client
 from managr.utils.misc import object_to_snake_case
 from managr.organization import constants as org_consts
 from managr.api.decorators import log_all_exceptions
 from managr.slack.helpers import block_builders
+from xml.etree import cElementTree as ElementTree
 
-from .exceptions import CustomAPIException, UnableToUnlockRow
+from .exceptions import CustomAPIException, CustomXMLException
 from .. import constants as sf_consts
 
 logger = logging.getLogger("managr")
@@ -182,6 +183,45 @@ class SalesforceAuthAccountAdapter:
             }
 
             CustomAPIException(HTTPError(kwargs), fn_name)
+        return data
+
+    @staticmethod
+    def _handle_xml_response(response, fn_name=None):
+
+        if not hasattr(response, "status_code"):
+            raise ValueError
+
+        elif response.status_code >= 200 and response.status_code < 300:
+            if response.status_code == 204:
+                return {}
+            try:
+                convert = ElementTree.XML(response.content)
+                data = XmlDictConfig(convert)
+                print(data)
+                print(convert)
+            except Exception as e:
+                CustomAPIException(e, fn_name)
+        else:
+            convert = ElementTree.XML(response.content)
+            data = XmlDictConfig(convert)
+            print(data)
+            print(convert)
+            status_code = response.status_code
+            error_data = data["soapenv:Envelope"]["soapenv:Body"]["soapenv:Fault"]
+            error_code = None
+            if status_code == 400:
+                error_param = error_data["faultcode"]
+                error_message = error_data["faultstring"]
+            else:
+                error_param = error_data["faultcode"]
+                error_message = error_data["faultstring"]
+            kwargs = {
+                "status_code": status_code,
+                "error_code": error_code,
+                "error_param": error_param,
+                "error_message": error_message,
+            }
+            CustomXMLException(HTTPError(kwargs), fn_name)
         return data
 
     @classmethod
@@ -911,16 +951,12 @@ class LeadAdapter:
             return SalesforceAuthAccountAdapter._handle_response(r)
 
     @staticmethod
-    def convert_lead(access_token, custom_base, data):
-        opp_name = data["opportunity_name"] if "opportunity_name" in data else None
-        account_id = data["account_id"] if "opportunity_name" in data else None
-        url = custom_base + sf_consts.SALESFORCE_SOAP_URI
-        body = sf_consts.CONVERT_LEAD_BODY(
-            access_token, data["lead_id"], data["status"], opp_name, account_id
-        )
+    def convert_lead(data, token, base_url):
+        url = base_url + sf_consts.SALESFORCE_SOAP_URI
+        body = sf_consts.CONVERT_LEAD_BODY(token, data)
         with Client as client:
             r = client.post(url, data=body, headers=sf_consts.SALESFORCE_LEAD_CONVERT_HEADER,)
-            return SalesforceAuthAccountAdapter._handle_response(r)
+            return SalesforceAuthAccountAdapter._handle_xml_response(r)
 
     @property
     def as_dict(self):

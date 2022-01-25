@@ -940,7 +940,11 @@ def convert_lead_block_set(context):
                     ],
                     action_id=action_with_params(
                         slack_const.PROCESS_LEAD_INPUT_SWITCH,
-                        params=[f"u={context.get('u')}", "input=Opportunity"],
+                        params=[
+                            f"u={context.get('u')}",
+                            "input=Opportunity",
+                            f"w={context.get('w')}",
+                        ],
                     ),
                 )
             ],
@@ -960,7 +964,7 @@ def convert_lead_block_set(context):
                     ],
                     action_id=action_with_params(
                         slack_const.PROCESS_LEAD_INPUT_SWITCH,
-                        params=[f"u={context.get('u')}", "input=Account"],
+                        params=[f"u={context.get('u')}", "input=Account", f"w={context.get('w')}"],
                     ),
                 )
             ],
@@ -980,7 +984,7 @@ def convert_lead_block_set(context):
                     ],
                     action_id=action_with_params(
                         slack_const.PROCESS_LEAD_INPUT_SWITCH,
-                        params=[f"u={context.get('u')}", "input=Contact"],
+                        params=[f"u={context.get('u')}", "input=Contact", f"w={context.get('w')}"],
                     ),
                 )
             ],

@@ -108,7 +108,6 @@ def process_meeting_review(payload, context):
         res = slack_requests.generic_request(
             slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE, data, access_token=access_token
         )
-        print(res)
     except InvalidBlocksException as e:
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
@@ -2138,13 +2137,13 @@ def process_show_edit_product_form(payload, context):
 def process_show_convert_lead_form(payload, context):
     slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
     user = slack_account.user
-    blocks = get_block_set("convert_lead_block_set", {"u": str(user.id)})
+    blocks = get_block_set("convert_lead_block_set", {"u": str(user.id), "w": context.get("w")})
 
     data = {
         "trigger_id": payload["trigger_id"],
         "view": {
             "type": "modal",
-            "callback_id": "None",
+            "callback_id": slack_const.ZOOM_MEETING__CONVERT_LEAD,
             "title": {"type": "plain_text", "text": "Convert Lead"},
             "blocks": blocks,
             "submit": {"type": "plain_text", "text": "Convert"},
@@ -2452,16 +2451,13 @@ def process_lead_input_switch(payload, context):
             f"Choose your {to_change_input}",
             action_with_params(
                 slack_const.GET_SOBJECT_LIST,
-                params=[f"u={str(user.id)}", f"resource_type={to_change_input}"],
+                params=[f"u={str(user.id)}", f"resource_type={to_change_input}",],
             ),
             block_id=input_id,
         )
     else:
         block = block_builders.input_block(
-            f"Create New",
-            block_id=input_id,
-            action_id=f"{to_change_input}_input",
-            placeholder=f"New {to_change_input}",
+            f"Create New", block_id=input_id, placeholder=f"New {to_change_input}",
         )
 
     blocks[index] = block
@@ -2469,7 +2465,7 @@ def process_lead_input_switch(payload, context):
         "view_id": payload["view"]["id"],
         "view": {
             "type": "modal",
-            "callback_id": "None",
+            "callback_id": slack_const.ZOOM_MEETING__CONVERT_LEAD,
             "title": {"type": "plain_text", "text": "Convert Lead"},
             "blocks": blocks,
             "submit": {"type": "plain_text", "text": "Convert"},

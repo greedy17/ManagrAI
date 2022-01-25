@@ -135,32 +135,30 @@ def SF_DEFAULT_RECORD_ID(resource):
     return url
 
 
-def CONVERT_LEAD_BODY(access_token, lead_id, status, opportunity_name=None, account_id=None):
-    result = f"""
-        <tns:leadId>{lead_id}</tns:leadId>
-        <tns:convertedStatus>{status}</tns:convertedStatus>
-        """
-    if opportunity_name:
-        result += f"<tns:opportunityName>{opportunity_name}</tns:opportunityName>"
-    if account_id:
-        result += f"<tns:accountId>{account_id}</tns:accountId>"
+def CONVERT_LEAD_BODY(access_token, data):
+    result = ""
+    count = 0
+    for key in data.keys():
+        count += 1
+        result += f"<tns:{key}>{data[key]}</tns:{key}>"
+        if count != len(data.keys()):
+            result += "\n"
 
-    body = f"""
-        <?xml version="1.0" encoding="UTF-8"?>
-        <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ens="urn:sobject.partner.soap.sforce.com" xmlns:fns="urn:fault.partner.soap.sforce.com" xmlns:tns="urn:partner.soap.sforce.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-        <soap:Header>
-            <tns:SessionHeader>
-                <sessionId>{access_token}</sessionId>
-            </tns:SessionHeader>
-        </soap:Header>
-        <soap:Body>
-            <tns:convertLead>
-                <tns:leadConverts>
-                    {result}
-                </tns:leadConverts>
-            </tns:convertLead>
-        </soap:Body>
-        </soap:Envelope>"""
+    body = f"""<?xml version="1.0" encoding="UTF-8"?>
+    <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ens="urn:sobject.partner.soap.sforce.com" xmlns:fns="urn:fault.partner.soap.sforce.com" xmlns:tns="urn:partner.soap.sforce.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <soap:Header>
+    <tns:SessionHeader>
+    <sessionId>{access_token}</sessionId>
+    </tns:SessionHeader>
+    </soap:Header>
+    <soap:Body>
+    <tns:convertLead>
+    <tns:leadConverts>
+    {result}
+    </tns:leadConverts>
+    </tns:convertLead>
+    </soap:Body>
+    </soap:Envelope>"""
     return body
 
 
