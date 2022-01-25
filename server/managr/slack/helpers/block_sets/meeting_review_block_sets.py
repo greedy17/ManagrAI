@@ -406,31 +406,36 @@ def initial_meeting_interaction_block_set(context):
     resource = workflow.resource
     
   # If else meeting if has attribute workflow, meeting or else workflow.meeting
-    if hasattr(workflow, 'meeting'):
+    if workflow.meeting:
+        meeting_type = 'zoom'
         meeting = workflow.meeting
         user_timezone = meeting.zoom_account.timezone
         start_time = meeting.start_time
         end_time = meeting.end_time
 
     else:
+        meeting_type = 'non-zoom'
         meeting = workflow.non_zoom_meeting
         event_data = meeting.event_data
         start_time = event_data['times']['start_time']
         end_time = event_data['times']['end_time']
 
+    
     workflow_id_param = "w=" + context.get("w")
-    contact_check = check_contact_last_name(context.get("w"))
+    contact_check = check_contact_last_name(context.get("w"), meeting_type)
     formatted_start = (
-        datetime.strftime(
-            start_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p"
-        )
-        if start_time
-        else start_time
+        # datetime.strftime(
+        #     start_time.astimezone(pytz.timezone()), "%a, %B, %Y %I:%M %p"
+        # )
+        # if start_time
+        # else start_time
+        start_time
     )
     formatted_end = (
-        datetime.strftime(end_time.astimezone(pytz.timezone(user_timezone)), "%I:%M %p")
-        if end_time
-        else end_time
+        # datetime.strftime(end_time.astimezone(pytz.timezone()), "%I:%M %p")
+        # if end_time
+        # else end_time
+        end_time
     )
 
     if workflow.resource_type:
@@ -473,7 +478,7 @@ def initial_meeting_interaction_block_set(context):
             block_builders.section_with_button_block(
                 change_opp_button,
                 str(workflow.id),
-                f":calendar: Meeting {meeting.topic} was mapped to: _{workflow.resource_type}_ *{workflow.resource.name}*",
+                f":calendar: Meeting {event_data['title']} was mapped to: _{workflow.resource_type}_ *{workflow.resource.name}*",
                 action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
             ),
         ]
@@ -488,7 +493,7 @@ def initial_meeting_interaction_block_set(context):
             ),
             {"type": "divider"},
             block_builders.section_with_accessory_block(
-                f":calendar: *{meeting.topic}*\n{formatted_start} - {formatted_end}\n Attendees: {meeting.participants_count}",
+                f":calendar: *{event_data['title']}*\n{formatted_start} - {formatted_end}\n Attendees: ",
                 block_builders.simple_image_block(
                     "https://managr-images.s3.amazonaws.com/slack/logo_loading.gif", "Managr Logo"
                 ),

@@ -390,6 +390,7 @@ def meeting_prep(processed_data, user_id, invocation=1):
             contact_forms.append(form)
             contact["_form"] = str(form.id)
     event_data = processed_data
+    print(event_data)
     processed_data.pop("participants")
     data = {
         "user": user.id,

@@ -326,15 +326,18 @@ def generate_call_block(call_res, resource_id=None):
     return blocks
 
 
-def check_contact_last_name(meeting_id):
+def check_contact_last_name(meeting_id, meeting_type):
     workflow = MeetingWorkflow.objects.get(id=meeting_id)
-    meeting = workflow.meeting
-    contacts = meeting.participants
-    for contact in contacts:
-        contactData = contact.get("secondary_data")
-        if not contactData["LastName"]:
-            return False
-    return True
+    meeting = workflow.meeting if meeting_type == 'zoom' else workflow.non_zoom_meeting
+    if meeting:
+        contacts = meeting.participants
+        for contact in contacts:
+            contactData = contact.get("secondary_data")
+            if not contactData["LastName"]:
+                return False
+        return True
+    else: 
+        pass 
 
 
 def get_random_update_message(topic):

@@ -407,7 +407,7 @@ def _kick_off_slack_interaction(user_id, managr_meeting_id):
                 res = slack_requests.send_channel_message(
                     user_slack_channel,
                     slack_org_access_token,
-                    text=f"Your Meeting just ended {workflow.meeting.topic}",
+                    text=f"Your Meeting just ended",
                     block_set=block_set,
                 )
             except InvalidBlocksException as e:

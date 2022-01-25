@@ -310,7 +310,6 @@ def meeting_prep(processed_data, user_id, invocation=1, send_slack=True):
             contact_forms.append(form)
             contact["_form"] = str(form.id)
     event_data = processed_data
-    # print(processed_data, "This is processed Data")
     processed_data.pop("participants")
     data = {
         "user": user.id,
@@ -334,6 +333,8 @@ def meeting_prep(processed_data, user_id, invocation=1, send_slack=True):
         MeetingPrepInstance.objects.filter(user=user).order_by('-datetime_created').first()
     )
 
+    print(event_data, "This is event data")
+
     # Conditional Check for Zoom meeting or Non-Zoom Meeting
     if provider != [None,'zoom']:
         # Google Meet (Non-Zoom)
@@ -346,7 +347,6 @@ def meeting_prep(processed_data, user_id, invocation=1, send_slack=True):
         workflow_id = str(meeting_workflow.id)
         user_id = str(user.id)
         user_tz = str(user.timezone)
-        print(non_zoom_end_times, "this is end times")
         return emit_non_zoom_meetings(workflow_id, user_id, user_tz, non_zoom_end_times)
 
 
