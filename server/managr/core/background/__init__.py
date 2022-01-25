@@ -92,9 +92,9 @@ def non_zoom_meeting_message(workflow_id, user_id, user_tz, non_zoom_end_times):
 
     # Convert UTC time to seconds and get difference
     date_time = datetime.strptime(local_end, "%H:%M:%S")
-    # date_time2 = datetime.strptime(utc_time_from_user_7_am, "%H:%M:%S")
-    time_now = datetime.now()
-    a_timedelta = date_time - time_now
+    date_time2 = datetime.strptime(utc_time_from_user_7_am, "%H:%M:%S")
+    # time_now = datetime.now()
+    a_timedelta = date_time - date_time2
     seconds = a_timedelta.total_seconds()
     seconds = int(seconds)
     print(seconds, "this is the difference in seconds")

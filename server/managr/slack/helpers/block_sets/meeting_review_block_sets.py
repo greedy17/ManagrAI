@@ -455,7 +455,7 @@ def initial_meeting_interaction_block_set(context):
                 str(workflow.id),
                 title_section_text,
                 action_id=action_with_params(
-                    slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,]
+                    slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[f"w={str(meeting.id)}"]
                 ),
             )
         else:
@@ -464,7 +464,7 @@ def initial_meeting_interaction_block_set(context):
                 str(workflow.id),
                 title_section_text,
                 action_id=action_with_params(
-                    slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[workflow_id_param,]
+                    slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS, params=[f"w={str(meeting.id)}"]
                 ),
                 style="danger",
             )
