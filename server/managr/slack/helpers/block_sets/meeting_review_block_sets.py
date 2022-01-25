@@ -1,4 +1,5 @@
 import pdb
+from time import strftime
 import pytz
 import uuid
 import json
@@ -416,23 +417,24 @@ def initial_meeting_interaction_block_set(context):
     else:
         meeting_type = 'non-zoom'
         meeting = workflow.non_zoom_meeting
+        participants = meeting.participants
         event_data = meeting.event_data
         start_time = event_data['times']['start_time']
         end_time = event_data['times']['end_time']
-
+        
     
     workflow_id_param = "w=" + context.get("w")
     contact_check = check_contact_last_name(context.get("w"), meeting_type)
     formatted_start = (
         # datetime.strftime(
-        #     start_time.astimezone(pytz.timezone()), "%a, %B, %Y %I:%M %p"
+        #     start_time.astimezone(pytz.timezone(meeting.user.timezone)), "%a, %B, %Y %I:%M %p"
         # )
         # if start_time
         # else start_time
         start_time
     )
     formatted_end = (
-        # datetime.strftime(end_time.astimezone(pytz.timezone()), "%I:%M %p")
+        # datetime.strftime(end_time.astimezone(pytz.timezone(meeting.user.timezone)), "%I:%M %p")
         # if end_time
         # else end_time
         end_time
@@ -493,7 +495,7 @@ def initial_meeting_interaction_block_set(context):
             ),
             {"type": "divider"},
             block_builders.section_with_accessory_block(
-                f":calendar: *{event_data['title']}*\n{formatted_start} - {formatted_end}\n Attendees: ",
+                f":calendar: *{event_data['title']}*\n{formatted_start} - {formatted_end}\n Attendees: {len(participants)} ",
                 block_builders.simple_image_block(
                     "https://managr-images.s3.amazonaws.com/slack/logo_loading.gif", "Managr Logo"
                 ),
