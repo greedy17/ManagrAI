@@ -419,26 +419,25 @@ def initial_meeting_interaction_block_set(context):
         meeting = workflow.non_zoom_meeting
         participants = meeting.participants
         event_data = meeting.event_data
+        user_tz = meeting.user.timezone
         start_time = event_data['times']['start_time']
         end_time = event_data['times']['end_time']
         
-    
     workflow_id_param = "w=" + context.get("w")
     contact_check = check_contact_last_name(context.get("w"), meeting_type)
-    formatted_start = (
-        # datetime.strftime(
-        #     start_time.astimezone(pytz.timezone(meeting.user.timezone)), "%a, %B, %Y %I:%M %p"
-        # )
-        # if start_time
-        # else start_time
-        start_time
-    )
-    formatted_end = (
-        # datetime.strftime(end_time.astimezone(pytz.timezone(meeting.user.timezone)), "%I:%M %p")
-        # if end_time
-        # else end_time
-        end_time
-    )
+
+    unix_time = datetime.utcfromtimestamp(int(start_time))
+    tz = pytz.timezone(user_tz)
+    am_or_pm = unix_time.astimezone(tz).strftime("%I:%M %p")
+    start_time = " " + am_or_pm
+    formatted_start = start_time
+    
+    unix_time = datetime.utcfromtimestamp(int(end_time))
+    tz = pytz.timezone(user_tz)
+    am_or_pm = unix_time.astimezone(tz).strftime("%I:%M %p")
+    end_time = " " + am_or_pm
+    formatted_end = end_time
+    
 
     if workflow.resource_type:
         title_section_text = (

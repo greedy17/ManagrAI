@@ -333,7 +333,6 @@ def meeting_prep(processed_data, user_id, invocation=1, send_slack=True):
         MeetingPrepInstance.objects.filter(user=user).order_by('-datetime_created').first()
     )
 
-    print(event_data, "This is event data")
 
     # Conditional Check for Zoom meeting or Non-Zoom Meeting
     if provider != [None,'zoom']:
