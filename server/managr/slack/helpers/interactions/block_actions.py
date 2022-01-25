@@ -957,7 +957,9 @@ def process_show_update_resource_form(payload, context):
                             slack_const.PROCESS_ADD_PRODUCTS_FORM,
                             params=[
                                 f"f={str(slack_form.id)}",
+                                f"u={str(user.id)}",
                                 f"product_form={str(product_form.id)}",
+                                "type=command",
                             ],
                         ),
                     )
@@ -2183,7 +2185,7 @@ def process_add_products_form(payload, context):
         }
     else:
         data = {
-            "view_id": loading_res["view"]["id"],
+            "view_id": loading_view_data["view"]["id"],
             "view": {
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Product Form error"},
