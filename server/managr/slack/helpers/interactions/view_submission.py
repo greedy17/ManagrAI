@@ -130,10 +130,9 @@ def process_zoom_meeting_data(payload, context):
     user = workflow.user
     slack_access_token = user.organization.slack_integration.access_token
     view = payload["view"]
-    trigger_id = payload["trigger_id"]
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     loading_view_data = {
-        "trigger_id": trigger_id,
+        "view_id": view["id"],
         "view": {
             "type": "modal",
             "title": {"type": "plain_text", "text": "Loading"},
@@ -203,9 +202,10 @@ def process_zoom_meeting_data(payload, context):
             channel, ts, slack_access_token, block_set=block_set
         )
     except Exception as e:
-        return logger.exception(
+        logger.exception(
             f"Failed To Send Submit Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
         )
+        return {"response_action": "clear"}
     workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
     workflow.save()
     workflow.begin_tasks()

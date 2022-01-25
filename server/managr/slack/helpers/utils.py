@@ -428,6 +428,8 @@ def send_loading_screen(access_token, message, view_type, user_id, trigger_id=No
         loading_res = requests.generic_request(
             slack_consts.SLACK_API_ROOT + view, loading_view_data, access_token=access_token,
         )
+        return loading_res
     except Exception as e:
-        return logger.exception(f"Failed To Show Loading Screen for user {user_id} {e}")
-    return loading_res
+        logger.exception(f"Failed To Show Loading Screen for user {user_id} {e}")
+        return e
+
