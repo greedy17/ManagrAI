@@ -111,7 +111,6 @@ def process_meeting_review(payload, context):
         res = slack_requests.generic_request(
             slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE, data, access_token=access_token
         )
-        print(res)
     except InvalidBlocksException as e:
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
@@ -146,14 +145,16 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     org = workflow.user.organization
     access_token = org.slack_integration.access_token
-    loading_view_data = send_loading_screen(
-        access_token,
-        "Gathering attendee info...",
-        view_type,
-        str(workflow.user.id),
-        trigger_id,
-        view_id,
-    )
+    refresh = context.get("tracking_id", None)
+    if refresh is None:
+        loading_view_data = send_loading_screen(
+            access_token,
+            "Gathering attendee info...",
+            view_type,
+            str(workflow.user.id),
+            trigger_id,
+            view_id,
+        )
     private_metadata = {
         "original_message_channel": payload["channel"]["id"]
         if "channel" in payload
@@ -164,8 +165,9 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
     }
     private_metadata.update(context)
     blocks = get_block_set("show_meeting_contacts", private_metadata)
+    view_id = loading_view_data["view"]["id"] if refresh is None else payload["view"]["id"]
     data = {
-        "view_id": loading_view_data["view"]["id"],
+        "view_id": view_id,
         "view": {
             "type": "modal",
             "title": {"type": "plain_text", "text": "Contacts"},
