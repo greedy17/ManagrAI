@@ -134,6 +134,7 @@ def process_meeting_review(payload, context):
 
 @processor(required_context=["w"], action=slack_const.VIEWS_OPEN)
 def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPEN):
+    print(f"CONTEXT FROM SHOW MEETING CONTACTS: {context}")
     view_id = payload["view"]["id"] if action == slack_const.VIEWS_UPDATE else None
     view_type = "open" if action == slack_const.VIEWS_OPEN else "push"
     slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
@@ -165,6 +166,7 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
     }
     private_metadata.update(context)
     blocks = get_block_set("show_meeting_contacts", private_metadata)
+    print(blocks)
     view_id = loading_view_data["view"]["id"] if refresh is None else payload["view"]["id"]
     data = {
         "view_id": view_id,
@@ -175,6 +177,7 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
             "private_metadata": json.dumps(private_metadata),
         },
     }
+    print(data)
     try:
         res = slack_requests.generic_request(
             slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE, data, access_token=access_token
