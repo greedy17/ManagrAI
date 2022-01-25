@@ -134,7 +134,6 @@ def process_meeting_review(payload, context):
 
 @processor(required_context=["w"], action=slack_const.VIEWS_OPEN)
 def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPEN):
-    print(context)
     view_id = payload["view"]["id"] if action == slack_const.VIEWS_UPDATE else None
     view_type = "open" if action == slack_const.VIEWS_OPEN else "push"
     slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
