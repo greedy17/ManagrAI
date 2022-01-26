@@ -197,3 +197,19 @@ class AlertOperandViewSet(
             return alert_serializers.AlertOperandWriteSerializer
 
         return self.serializer_class
+
+
+class RealTimeAlertViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        print(data)
+        return Response()
