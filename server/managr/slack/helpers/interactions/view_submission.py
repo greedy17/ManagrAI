@@ -48,6 +48,7 @@ from managr.slack.helpers.utils import (
     processor,
     block_finder,
     check_contact_last_name,
+    send_loading_screen,
 )
 from managr.salesforce.adapter.models import ContactAdapter, OpportunityAdapter, TaskAdapter
 from managr.zoom import constants as zoom_consts
@@ -139,7 +140,7 @@ def process_zoom_meeting_data(payload, context):
             "blocks": get_block_set(
                 "loading",
                 {
-                    "message": ":exclamation: SFDC is currently a bit slow :zany_face:, please wait a few seconds and click 'try again'",
+                    "message": ":exclamation: Please wait a few seconds :zany_face:, then click '*try again*'",
                     "fill": True,
                 },
             ),
@@ -147,7 +148,7 @@ def process_zoom_meeting_data(payload, context):
         },
     }
     try:
-        res = slack_requests.generic_request(
+        loading_res = slack_requests.generic_request(
             url, loading_view_data, access_token=slack_access_token
         )
     except Exception as e:
@@ -210,8 +211,24 @@ def process_zoom_meeting_data(payload, context):
     workflow.save()
     workflow.begin_tasks()
     emit_meeting_workflow_tracker(str(workflow.id))
-
-    return {"response_action": "clear"}
+    update_view = {
+        "view_id": loading_res["view"]["id"],
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Success"},
+            "blocks": [
+                block_builders.simple_section(
+                    f":white_check_mark: Successfully updated {workflow.resource_type} :clap:",
+                    "mrkdwn",
+                )
+            ],
+        },
+    }
+    slack_requests.generic_request(
+        slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
+        update_view,
+        user.organization.slack_integration.access_token,
+    )
 
 
 @log_all_exceptions
@@ -350,7 +367,7 @@ def process_submit_resource_data(payload, context):
             "blocks": get_block_set(
                 "loading",
                 {
-                    "message": ":exclamation: SFDC is currently a bit slow :zany_face:, please wait a few seconds and click 'try again'",
+                    "message": ":exclamation: Please wait a few seconds :zany_face:, then click '*try again*'",
                     "fill": True,
                 },
             ),
@@ -517,7 +534,6 @@ def process_submit_resource_data(payload, context):
             slack_requests.generic_request(
                 url, select_resource_view_data, access_token=slack_access_token
             )
-            return {"response_action": "clear"}
         except Exception as e:
             return logger.exception(
                 f"Failed To Update the view for the workflow {str(user.id)} email {user.email} {e}"
@@ -592,7 +608,6 @@ def process_submit_resource_data(payload, context):
                 slack_access_token,
                 block_set=blocks,
             )
-            return {"response_action": "clear"}
         elif type == "prep":
             last_instance = (
                 MeetingPrepInstance.objects.filter(user=user).order_by("-datetime_created").first()
@@ -612,7 +627,6 @@ def process_submit_resource_data(payload, context):
                 slack_access_token,
                 block_set=blocks,
             )
-            return {"response_action": "clear"}
         else:
             try:
                 slack_requests.send_ephemeral_message(
@@ -624,28 +638,30 @@ def process_submit_resource_data(payload, context):
                         "success_modal", {"message": message, "u": user.id, "form_id": form_id}
                     ),
                 )
-                update_view = {
-                    "view_id": res["view"]["id"],
-                    "view": {
-                        "type": "modal",
-                        "title": {"type": "plain_text", "text": "Success"},
-                        "blocks": [
-                            block_builders.simple_section(
-                                f"Successfully updated {main_form.template.resource}", "mrkdwn"
-                            )
-                        ],
-                    },
-                }
-                slack_requests.generic_request(
-                    slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
-                    update_view,
-                    user.organization.slack_integration.access_token,
-                )
+
             except Exception as e:
                 logger.exception(
                     f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
                 )
                 return {"response_action": "clear"}
+    update_view = {
+        "view_id": res["view"]["id"],
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Success"},
+            "blocks": [
+                block_builders.simple_section(
+                    f":white_check_mark: Successfully updated {main_form.template.resource} :clap:",
+                    "mrkdwn",
+                )
+            ],
+        },
+    }
+    slack_requests.generic_request(
+        slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
+        update_view,
+        user.organization.slack_integration.access_token,
+    )
 
 
 @log_all_exceptions
@@ -1766,7 +1782,7 @@ def process_submit_product(payload, context):
             "blocks": get_block_set(
                 "loading",
                 {
-                    "message": ":exclamation: SFDC is currently a bit slow :zany_face:, please wait a few seconds and click 'try again'",
+                    "message": ":exclamation: Please wait a few seconds :zany_face:, then click '*try again*'",
                     "fill": True,
                 },
             ),
