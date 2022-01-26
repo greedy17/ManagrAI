@@ -1001,6 +1001,14 @@ class SalesforceAuthAccount(TimeStampModel):
                     )
                     # re raise error for bg task to also handle
                     raise e
+            except TokenExpired:
+                if attempts >= 5:
+                    return logger.exception(
+                        f"Failed to retrieve resource data for user {str(self.user.id)}-{self.user.email} after {attempts} tries"
+                    )
+                else:
+                    self.regenerate_token()
+                    attempts += 1
         return
 
     def get_stage_picklist_values(self, resource):
