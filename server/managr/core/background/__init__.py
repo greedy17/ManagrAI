@@ -490,7 +490,7 @@ def process_current_alert_list(user_id):
                     user.organization.slack_integration.access_token, config.recipients[0]
                 )
                 name = channel_info.get("channel").get("name")
-                text += f": {name}"
+                text += f": #{name}"
             alert_blocks = [
                 *alert_blocks,
                 block_builders.simple_section(text, "mrkdwn"),

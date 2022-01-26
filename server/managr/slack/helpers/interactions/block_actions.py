@@ -179,6 +179,7 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
         res = slack_requests.generic_request(
             slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE, data, access_token=access_token
         )
+        print(res)
     except InvalidBlocksException as e:
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
@@ -195,6 +196,8 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
         )
+    except Exception as e:
+        return logger.exception(f"Failed to send message for {e}")
     if not type:
         workflow.slack_view = res.get("view").get("id")
         workflow.save()
@@ -957,7 +960,9 @@ def process_show_update_resource_form(payload, context):
                             slack_const.PROCESS_ADD_PRODUCTS_FORM,
                             params=[
                                 f"f={str(slack_form.id)}",
+                                f"u={str(user.id)}",
                                 f"product_form={str(product_form.id)}",
+                                "type=command",
                             ],
                         ),
                     )
@@ -2183,7 +2188,7 @@ def process_add_products_form(payload, context):
         }
     else:
         data = {
-            "view_id": loading_res["view"]["id"],
+            "view_id": loading_view_data["view"]["id"],
             "view": {
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Product Form error"},
