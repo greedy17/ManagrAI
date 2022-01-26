@@ -411,7 +411,9 @@ def send_loading_screen(access_token, message, view_type, user_id, trigger_id=No
                         "Loading...",
                     ),
                 ),
-                block_builders.context_block("* _Close and retry if your loading screen is stuck_"),
+                block_builders.context_block(
+                    "* _After a few seconds click Close and try again_", "mrkdwn"
+                ),
             ],
         },
     }
@@ -420,6 +422,11 @@ def send_loading_screen(access_token, message, view_type, user_id, trigger_id=No
         loading_view_data["trigger_id"] = trigger_id
         if view_id is not None:
             loading_view_data["view_id"] = view_id
+    elif view_type == "update":
+        view = slack_consts.VIEWS_UPDATE
+        loading_view_data["view_id"] = view_id
+        if trigger_id is not None:
+            loading_view_data["trigger_id"] = trigger_id
     else:
         view = slack_consts.VIEWS_PUSH
         loading_view_data["view_id"] = view_id
