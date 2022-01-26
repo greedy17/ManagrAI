@@ -218,7 +218,7 @@ def process_zoom_meeting_data(payload, context):
             "title": {"type": "plain_text", "text": "Success"},
             "blocks": [
                 block_builders.simple_section(
-                    f":white_check_mark: Successfully updated {workflow.resource_type} :clap:",
+                    f":white_check_mark: Successfully updated {workflow.resource_type}, you can close this window :clap:",
                     "mrkdwn",
                 )
             ],
@@ -651,7 +651,7 @@ def process_submit_resource_data(payload, context):
             "title": {"type": "plain_text", "text": "Success"},
             "blocks": [
                 block_builders.simple_section(
-                    f":white_check_mark: Successfully updated {main_form.template.resource} :clap:",
+                    f":white_check_mark: Successfully updated {main_form.template.resource}, you can close this window :clap:",
                     "mrkdwn",
                 )
             ],
