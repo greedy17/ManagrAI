@@ -150,8 +150,6 @@ class SalesforceAuthAccountAdapter:
 
     @staticmethod
     def _handle_response(response, fn_name=None):
-        print(response.status_code)
-        print(response.json())
         if not hasattr(response, "status_code"):
             raise ValueError
 
