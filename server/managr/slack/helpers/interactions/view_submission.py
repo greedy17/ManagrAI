@@ -139,7 +139,7 @@ def process_zoom_meeting_data(payload, context):
             "blocks": get_block_set(
                 "loading",
                 {
-                    "message": ":exclamation:Please *DO NOT* close this window :exclamation:... SFDC is currently a bit slow :zany_face:",
+                    "message": ":exclamation: SFDC is currently a bit slow :zany_face:, click try again if needed ",
                     "fill": True,
                 },
             ),
@@ -350,7 +350,7 @@ def process_submit_resource_data(payload, context):
             "blocks": get_block_set(
                 "loading",
                 {
-                    "message": ":exclamation:Please *DO NOT* close this window :exclamation:... SFDC is currently a bit slow :zany_face:",
+                    "message": ":exclamation: SFDC is currently a bit slow :zany_face:, click try again if needed ",
                     "fill": True,
                 },
             ),
@@ -514,9 +514,10 @@ def process_submit_resource_data(payload, context):
             },
         }
         try:
-            return slack_requests.generic_request(
+            slack_requests.generic_request(
                 url, select_resource_view_data, access_token=slack_access_token
             )
+            return {"response_action": "clear"}
         except Exception as e:
             return logger.exception(
                 f"Failed To Update the view for the workflow {str(user.id)} email {user.email} {e}"
@@ -591,6 +592,7 @@ def process_submit_resource_data(payload, context):
                 slack_access_token,
                 block_set=blocks,
             )
+            return {"response_action": "clear"}
         elif type == "prep":
             last_instance = (
                 MeetingPrepInstance.objects.filter(user=user).order_by("-datetime_created").first()
@@ -610,6 +612,7 @@ def process_submit_resource_data(payload, context):
                 slack_access_token,
                 block_set=blocks,
             )
+            return {"response_action": "clear"}
         else:
             try:
                 slack_requests.send_ephemeral_message(
@@ -621,12 +624,12 @@ def process_submit_resource_data(payload, context):
                         "success_modal", {"message": message, "u": user.id, "form_id": form_id}
                     ),
                 )
+                return {"response_action": "clear"}
             except Exception as e:
-                return logger.exception(
+                logger.exception(
                     f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
                 )
-
-    return {"response_action": "clear"}
+                return {"response_action": "clear"}
 
 
 @log_all_exceptions
@@ -1747,7 +1750,7 @@ def process_submit_product(payload, context):
             "blocks": get_block_set(
                 "loading",
                 {
-                    "message": ":exclamation:Please *DO NOT* close this window :exclamation:... SFDC is currently a bit slow :zany_face:",
+                    "message": ":exclamation: SFDC is currently a bit slow :zany_face:, click try again if needed ",
                     "fill": True,
                 },
             ),
