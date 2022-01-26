@@ -139,7 +139,7 @@ def process_zoom_meeting_data(payload, context):
             "blocks": get_block_set(
                 "loading",
                 {
-                    "message": ":exclamation: SFDC is currently a bit slow :zany_face:, click try again if needed ",
+                    "message": ":exclamation: SFDC is currently a bit slow :zany_face:, please wait a few seconds and click 'try again'",
                     "fill": True,
                 },
             ),
@@ -350,7 +350,7 @@ def process_submit_resource_data(payload, context):
             "blocks": get_block_set(
                 "loading",
                 {
-                    "message": ":exclamation: SFDC is currently a bit slow :zany_face:, click try again if needed ",
+                    "message": ":exclamation: SFDC is currently a bit slow :zany_face:, please wait a few seconds and click 'try again'",
                     "fill": True,
                 },
             ),
@@ -624,7 +624,23 @@ def process_submit_resource_data(payload, context):
                         "success_modal", {"message": message, "u": user.id, "form_id": form_id}
                     ),
                 )
-                return {"response_action": "clear"}
+                update_view = {
+                    "view_id": res["view"]["id"],
+                    "view": {
+                        "type": "modal",
+                        "title": {"type": "plain_text", "text": "Success"},
+                        "blocks": [
+                            block_builders.simple_section(
+                                f"Successfully updated {main_form.template.resource}", "mrkdwn"
+                            )
+                        ],
+                    },
+                }
+                slack_requests.generic_request(
+                    slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
+                    update_view,
+                    user.organization.slack_integration.access_token,
+                )
             except Exception as e:
                 logger.exception(
                     f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
@@ -1750,7 +1766,7 @@ def process_submit_product(payload, context):
             "blocks": get_block_set(
                 "loading",
                 {
-                    "message": ":exclamation: SFDC is currently a bit slow :zany_face:, click try again if needed ",
+                    "message": ":exclamation: SFDC is currently a bit slow :zany_face:, please wait a few seconds and click 'try again'",
                     "fill": True,
                 },
             ),
