@@ -410,7 +410,8 @@ def send_loading_screen(access_token, message, view_type, user_id, trigger_id=No
                         "https://managr-images.s3.amazonaws.com/slack/logo_loading.gif",
                         "Loading...",
                     ),
-                )
+                ),
+                block_builders.context_block("* _Close and retry if your loading screen is stuck_"),
             ],
         },
     }
