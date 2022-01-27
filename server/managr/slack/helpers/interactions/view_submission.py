@@ -2037,7 +2037,10 @@ def process_convert_lead(payload, context):
     convert_data["ownerId"] = assigned_owner.salesforce_account.salesforce_id
     lead = Lead.objects.get(id=workflow.resource_id)
     convert_data["leadId"] = lead.integration_id
-    lead.convert_in_salesforce(convert_data)
+    try:
+        lead.convert_in_salesforce(convert_data)
+    except Exception as e:
+        print(e)
     return
 
 

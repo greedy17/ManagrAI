@@ -8,7 +8,7 @@ from collections import OrderedDict
 from urllib.parse import urlencode, quote_plus, urlparse
 from requests.exceptions import HTTPError
 from django.contrib.postgres.fields import JSONField
-from managr.salesforce.utils import XmlDictConfig
+from managr.salesforce.utils import process_xml_dict
 from managr.utils.client import HttpClient, Client
 from managr.utils.misc import object_to_snake_case
 from managr.organization import constants as org_consts
@@ -187,7 +187,6 @@ class SalesforceAuthAccountAdapter:
 
     @staticmethod
     def _handle_xml_response(response, fn_name=None):
-
         if not hasattr(response, "status_code"):
             raise ValueError
 
@@ -195,19 +194,14 @@ class SalesforceAuthAccountAdapter:
             if response.status_code == 204:
                 return {}
             try:
-                convert = ElementTree.XML(response.content)
-                data = XmlDictConfig(convert)
-                print(data)
-                print(convert)
+                xmldict = process_xml_dict(response.content)
+                print(xmldict)
             except Exception as e:
                 CustomAPIException(e, fn_name)
         else:
-            convert = ElementTree.XML(response.content)
-            data = XmlDictConfig(convert)
-            print(data)
-            print(convert)
+            xmldict = process_xml_dict(response.content)
             status_code = response.status_code
-            error_data = data["soapenv:Envelope"]["soapenv:Body"]["soapenv:Fault"]
+            error_data = xmldict["error_data"]
             error_code = None
             if status_code == 400:
                 error_param = error_data["faultcode"]
@@ -222,7 +216,7 @@ class SalesforceAuthAccountAdapter:
                 "error_message": error_message,
             }
             CustomXMLException(HTTPError(kwargs), fn_name)
-        return data
+        return xmldict
 
     @classmethod
     def create_account(cls, code, user_id):

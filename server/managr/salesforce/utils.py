@@ -1,3 +1,6 @@
+from xml.etree import cElementTree as ElementTree
+
+
 class XmlListConfig(list):
     def __init__(self, aList):
         for element in aList:
@@ -62,26 +65,13 @@ class XmlDictConfig(dict):
                 self.update({element.tag: element.text})
 
 
-from collections import defaultdict
-from xml.etree import cElementTree as ET
-
-
-def xml2dict(t):
-    d = {t.tag: {} if t.attrib else None}
-    children = list(t)
-    if children:
-        dd = defaultdict(list)
-        for dc in map(dd, children):
-            for k, v in dc.items():
-                dd[k].append(v)
-        d = {t.tag: {k: v[0] if len(v) == 1 else v for k, v in dd.items()}}
-    if t.attrib:
-        d[t.tag].update(("@" + k, v) for k, v in t.attrib.items())
-    if t.text:
-        text = t.text.strip()
-        if children or t.attrib:
-            if text:
-                d[t.tag]["#text"] = text
-        else:
-            d[t.tag] = text
-    return d
+def process_xml_dict(xml_response):
+    convert = ElementTree.XML(xml_response)
+    xmldict = XmlDictConfig(convert)
+    body_key = "{http://schemas.xmlsoap.org/soap/envelope/}Body"
+    fault_key = "{http://schemas.xmlsoap.org/soap/envelope/}Fault"
+    processed_dict = {}
+    body = xmldict[body_key]
+    if fault_key in body:
+        processed_dict["error_data"] = body[fault_key]
+    return processed_dict

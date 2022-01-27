@@ -187,7 +187,6 @@ class CustomXMLException:
         self.raise_error()
 
     def raise_error(self):
-        print(self.param)
         # if an invalid Basic auth is sent the response is still a 200 success
         if self.error_class_name == "XMLError":
             logger.error(f"An error occured with a salesforce integration, {self.fn_name}")
