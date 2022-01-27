@@ -484,18 +484,16 @@ def process_current_alert_list(user_id):
     ]
     if configs:
         for config in configs:
-            if config.recipients[0] in ["SELF", "OWNER"]:
-                channel_info = slack_requests.get_channel_info(
-                    user.organization.slack_integration.access_token, user.slack_integration.channel
-                )
-            else:
+            text = f"{config.template.title}"
+            if config.recipients[0] not in ["SELF", "OWNER"]:
                 channel_info = slack_requests.get_channel_info(
                     user.organization.slack_integration.access_token, config.recipients[0]
                 )
-            name = channel_info.get("channel").get("name")
+                name = channel_info.get("channel").get("name")
+                text += f": #{name}"
             alert_blocks = [
                 *alert_blocks,
-                block_builders.simple_section(f"{config.template.title}: #{name}", "mrkdwn"),
+                block_builders.simple_section(text, "mrkdwn"),
             ]
     else:
         alert_blocks.append(

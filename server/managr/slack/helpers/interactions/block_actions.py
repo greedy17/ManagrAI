@@ -54,34 +54,19 @@ logger = logging.getLogger("managr")
 
 @processor()
 def process_meeting_review(payload, context):
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
     workflow_id = payload["actions"][0]["value"]
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     meeting = workflow.meeting
     organization = meeting.zoom_account.user.organization
     access_token = organization.slack_integration.access_token
-    loading_view_data = {
-        "trigger_id": trigger_id,
-        "view": {
-            "type": "modal",
-            "title": {"type": "plain_text", "text": "Loading"},
-            "blocks": get_block_set(
-                "loading",
-                {
-                    "message": f"Salesforce is being a bit slow :sleeping:… please give it a few seconds",
-                },
-            ),
-        },
-    }
-    try:
-        loading_res = slack_requests.generic_request(
-            url, loading_view_data, access_token=access_token,
-        )
-    except Exception as e:
-        return logger.exception(
-            f"Failed To Show Loading Screen for user  {str(workflow.user.id)} email {workflow.user.email} {e}"
-        )
+    loading_view_data = send_loading_screen(
+        access_token,
+        "Salesforce is being a bit slow :sleeping:… please give it a few seconds",
+        "open",
+        str(workflow.user.id),
+        trigger_id,
+    )
     private_metadata = {
         "original_message_channel": payload["channel"]["id"],
         "original_message_timestamp": payload["message"]["ts"],
@@ -93,7 +78,7 @@ def process_meeting_review(payload, context):
     }
     private_metadata.update(context)
     data = {
-        "view_id": loading_res["view"]["id"],
+        "view_id": loading_view_data["view"]["id"],
         "view": {
             "type": "modal",
             "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
@@ -142,14 +127,16 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     org = workflow.user.organization
     access_token = org.slack_integration.access_token
-    loading_view_data = send_loading_screen(
-        access_token,
-        "Gathering attendee info...",
-        view_type,
-        str(workflow.user.id),
-        trigger_id,
-        view_id,
-    )
+    refresh = context.get("tracking_id", None)
+    if refresh is None:
+        loading_view_data = send_loading_screen(
+            access_token,
+            "Gathering attendee info...",
+            view_type,
+            str(workflow.user.id),
+            trigger_id,
+            view_id,
+        )
     private_metadata = {
         "original_message_channel": payload["channel"]["id"]
         if "channel" in payload
@@ -160,8 +147,9 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
     }
     private_metadata.update(context)
     blocks = get_block_set("show_meeting_contacts", private_metadata)
+    view_id = loading_view_data["view"]["id"] if refresh is None else payload["view"]["id"]
     data = {
-        "view_id": loading_view_data["view"]["id"],
+        "view_id": view_id,
         "view": {
             "type": "modal",
             "title": {"type": "plain_text", "text": "Contacts"},
@@ -173,6 +161,7 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
         res = slack_requests.generic_request(
             slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE, data, access_token=access_token
         )
+        print(res)
     except InvalidBlocksException as e:
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
@@ -189,6 +178,8 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
         )
+    except Exception as e:
+        return logger.exception(f"Failed to send message for {e}")
     if not type:
         workflow.slack_view = res.get("view").get("id")
         workflow.save()
@@ -796,33 +787,18 @@ def process_show_update_resource_form(payload, context):
 
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
-
     is_update = payload.get("view", None)
-    url = f"{slack_const.SLACK_API_ROOT}{slack_const.VIEWS_UPDATE if is_update else slack_const.VIEWS_OPEN}"
-    loading_view_data = {
-        "view": {
-            "type": "modal",
-            "title": {"type": "plain_text", "text": "Loading"},
-            "blocks": get_block_set(
-                "loading",
-                {
-                    "message": f"Salesforce is being a bit slow :sleeping:… please give it a few seconds",
-                },
-            ),
-        },
-    }
-    if is_update:
-        loading_view_data["view_id"] = is_update["id"]
-    else:
-        loading_view_data["trigger_id"] = payload["trigger_id"]
-    try:
-        loading_res = slack_requests.generic_request(
-            url, loading_view_data, access_token=access_token,
-        )
-    except Exception as e:
-        return logger.exception(
-            f"Failed To Show Loading Screen for user  {str(user.id)} email {user.email} {e}"
-        )
+    view_type = "update" if is_update else "open"
+    view_id = is_update["id"] if is_update else None
+    trigger_id = payload["trigger_id"]
+    loading_view_data = send_loading_screen(
+        access_token,
+        "Salesforce is being a bit slow :sleeping:… please give it a few seconds",
+        view_type,
+        str(user.id),
+        trigger_id,
+        view_id,
+    )
     actions = payload["actions"]
     if actions[0]["type"] == "external_select":
         selected_option = actions[0]["selected_option"]["value"]
@@ -951,7 +927,9 @@ def process_show_update_resource_form(payload, context):
                             slack_const.PROCESS_ADD_PRODUCTS_FORM,
                             params=[
                                 f"f={str(slack_form.id)}",
+                                f"u={str(user.id)}",
                                 f"product_form={str(product_form.id)}",
+                                "type=command",
                             ],
                         ),
                     )
@@ -982,7 +960,7 @@ def process_show_update_resource_form(payload, context):
         )
 
     data = {
-        "view_id": loading_res["view"]["id"],
+        "view_id": loading_view_data["view"]["id"],
         "view": {
             "type": "modal",
             "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
@@ -1004,7 +982,7 @@ def process_show_update_resource_form(payload, context):
         data["view"]["submit"] = {"type": "plain_text", "text": submit_button_text, "emoji": True}
         data["view"]["callback_id"] = callback_id
     if is_update:
-        data["view_id"] = is_update.get("id")
+        data["view_id"] = loading_view_data["view"]["id"]
 
     slack_requests.generic_request(
         slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE, data, access_token=access_token

@@ -509,8 +509,8 @@ def current_product_block_set(context):
             slack_const.PROCESS_SHOW_EDIT_PRODUCT_FORM,
             params=[
                 f"opp_item_id={opp_item_id}",
-                f"u={context.get('u')}",
                 f"main_form={context.get('main_form')}",
+                f"u={context.get('u')}",
             ],
         ),
     )
