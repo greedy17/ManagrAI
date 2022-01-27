@@ -187,6 +187,7 @@ class SalesforceAuthAccountAdapter:
 
     @staticmethod
     def _handle_xml_response(response, fn_name=None):
+        print(response.status_code)
         if not hasattr(response, "status_code"):
             raise ValueError
 

@@ -1,4 +1,12 @@
+from os import remove
 from xml.etree import cElementTree as ElementTree
+
+SALESFORCE_BODY_TAG = "{http://schemas.xmlsoap.org/soap/envelope/}Body"
+SALESFORCE_FAULT_TAG = "{http://schemas.xmlsoap.org/soap/envelope/}Fault"
+SALESFORCE_INNER_TAG = "{urn:partner.soap.sforce.com}"
+SALESFORCE_SUCCESS_TAG = "{urn:partner.soap.sforce.com}convertLeadResponse"
+SALESFORCE_RESULT_TAG = "{urn:partner.soap.sforce.com}result"
+SALESFORCE_BOOLEAN_TAG = "{http://www.w3.org/2001/XMLSchema-instance}nil"
 
 
 class XmlListConfig(list):
@@ -65,13 +73,33 @@ class XmlDictConfig(dict):
                 self.update({element.tag: element.text})
 
 
+def remove_tags(dictionary, custom_tag=None, previous_key=None):
+    cleaned_object = {}
+    for key in list(dictionary.keys()):
+        if SALESFORCE_INNER_TAG in key:
+            new_key = key.replace(SALESFORCE_INNER_TAG, "")
+        elif SALESFORCE_BOOLEAN_TAG in key:
+            return dictionary[key]
+        else:
+            new_key = key.replace(custom_tag, "")
+        if isinstance(dictionary[key], dict):
+            cleaned_object[new_key] = remove_tags(dictionary[key], previous_key=new_key)
+        else:
+            cleaned_object[new_key] = dictionary[key]
+    return cleaned_object
+
+
 def process_xml_dict(xml_response):
     convert = ElementTree.XML(xml_response)
     xmldict = XmlDictConfig(convert)
-    body_key = "{http://schemas.xmlsoap.org/soap/envelope/}Body"
-    fault_key = "{http://schemas.xmlsoap.org/soap/envelope/}Fault"
     processed_dict = {}
-    body = xmldict[body_key]
-    if fault_key in body:
-        processed_dict["error_data"] = body[fault_key]
+    body = xmldict[SALESFORCE_BODY_TAG]
+    if SALESFORCE_FAULT_TAG in body:
+        processed_dict["error_data"] = body[SALESFORCE_FAULT_TAG]
+    else:
+        body_keys = list(body.keys())
+        success_key = body_keys[0].replace(SALESFORCE_INNER_TAG, "")
+        result_key = list(body[SALESFORCE_SUCCESS_TAG].keys())[0].replace(SALESFORCE_INNER_TAG, "")
+        result_dict = remove_tags(body[SALESFORCE_SUCCESS_TAG][SALESFORCE_RESULT_TAG])
+        processed_dict[success_key] = {result_key: result_dict}
     return processed_dict
