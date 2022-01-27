@@ -1,52 +1,126 @@
 <template>
   <div class="alerts-page">
-    <div class="col">
+    <div v-if="!showLoader" class="col">
       <h2 style="color: black; margin-top: -0.5rem" class="title">Deal Movement</h2>
       <p style="color: #5d5e5e" class="sub__">Activate workflows related to deal movement</p>
     </div>
 
-    <div class="row">
+    <div class="invert center-loader" v-if="showLoader">
+      <img src="@/assets/images/loading-gif.gif" class="invert" style="height: 8rem" alt="" />
+    </div>
+
+    <div v-if="!showLoader" class="row">
       <div class="stage-item">
         <p>Stage Advanced</p>
         <button class="plus_button" @click="onAdvancing">
-          <img src="@/assets/images/add.svg" class="filtered" alt="" />
+          <img src="@/assets/images/add.svg" alt="" />
         </button>
       </div>
 
-      <div class="stage-item">
+      <div v-if="!configs.includes('Moved to commit')" @click="onCommit" class="stage-item">
         <p>Moved to Commit</p>
-        <button class="plus_button" @click="onAdvancing">
-          <img src="@/assets/images/add.svg" class="filtered" alt="" />
+        <button class="plus_button">
+          <img src="@/assets/images/add.svg" alt="" />
+        </button>
+      </div>
+      <div v-else class="added-item">
+        <p>Moved to Commit</p>
+        <button style="cursor: auto" class="plus_button">
+          <img src="@/assets/images/configCheck.png" class="filtered" alt="" />
         </button>
       </div>
 
-      <div class="stage-item">
+      <div v-if="!configs.includes('Close date pushed')" @click="onPushing" class="stage-item">
         <p>Close Date Pushed</p>
-        <button class="plus_button" @click="onAdvancing">
-          <img src="@/assets/images/add.svg" class="filtered" alt="" />
+        <button class="plus_button">
+          <img src="@/assets/images/add.svg" alt="" />
+        </button>
+      </div>
+      <div v-else class="added-item">
+        <p>Close Date Pushed</p>
+        <button style="cursor: auto" class="plus_button">
+          <img src="@/assets/images/configCheck.png" class="filtered" alt="" />
         </button>
       </div>
 
-      <div class="stage-item">
+      <!-- <div class="stage-item">
         <p>Update Deal Room</p>
         <button class="plus_button" @click="onAdvancing">
           <img src="@/assets/images/add.svg" class="filtered" alt="" />
         </button>
-      </div>
+      </div> -->
     </div>
 
-    <div v-if="!advancing" style="margin-top: 10%">
+    <div
+      v-if="
+        !configs.includes('Moved to commit') &&
+        !configs.includes('Close date pushed') &&
+        !commit &&
+        !showLoader &&
+        !pushing &&
+        !advancing
+      "
+      style="margin-top: 10%"
+    >
       <h1 class="bouncy" style="color: #5d5e5e; font-weight: bold; text-align: center">0</h1>
       <h6 style="font-weight: bold; color: #5d5e5e; text-align: center">
         Nothing here, add a workflow to get started.. (o^^)o
       </h6>
     </div>
 
-    <transition name="fade">
-      <div v-if="advancing" class="forecast__collection">
-        <h4>Testing Stage Advanced</h4>
+    <div v-if="!showLoader" class="alert-row">
+      <div v-if="configs.includes('Moved to commit')" class="added-collection">
+        <div class="added-collection__header">
+          <p class="title">Moved to commit</p>
+          <span class="active">active</span>
+        </div>
+        <section class="added-collection__body">
+          <p>Get alerted when your team has a deal that moves to commit.</p>
+        </section>
+        <section class="added-collection__footer">
+          <div class="edit" @click="goToSaved">
+            <img
+              src="@/assets/images/edit.png"
+              style="height: 1rem; filter: brightness(40%)"
+              alt=""
+            />
+          </div>
+        </section>
       </div>
-    </transition>
+      <div v-if="configs.includes('Close date pushed')" class="added-collection">
+        <div class="added-collection__header">
+          <p class="title">Close date pushed</p>
+          <span class="active">active</span>
+        </div>
+        <section class="added-collection__body">
+          <p>Get alerted when your team has a Close Date that's pushed into a new month.</p>
+        </section>
+        <section class="added-collection__footer">
+          <div class="edit" @click="goToSaved">
+            <img
+              src="@/assets/images/edit.png"
+              style="height: 1rem; filter: brightness(40%)"
+              alt=""
+            />
+          </div>
+        </section>
+      </div>
+      <transition name="fade">
+        <div v-if="commit && !configs.includes('Moved to commit')">
+          <MovedToCommit></MovedToCommit>
+        </div>
+      </transition>
+      <transition name="fade">
+        <div v-if="advancing">
+          <StageAdvanced></StageAdvanced>
+        </div>
+      </transition>
+      <transition name="fade">
+        <div v-if="pushing && !configs.includes('Close date pushed')">
+          <CloseDatePushed></CloseDatePushed>
+        </div>
+      </transition>
+    </div>
   </div>
 </template>
 
@@ -73,6 +147,9 @@ import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePrev
 import DropDownSearch from '@/components/DropDownSearch'
 import ExpandablePanel from '@/components/ExpandablePanel'
 import Modal from '@/components/Modal'
+import MovedToCommit from '@/views/settings/alerts/create/templates/MovedToCommit'
+import CloseDatePushed from '@/views/settings/alerts/create/templates/CloseDatePushed'
+import StageAdvanced from '@/views/settings/alerts/create/templates/StageAdvanced'
 
 /**
  * Services
@@ -113,6 +190,9 @@ export default {
     AlertSummary,
     PulseLoadingSpinnerButton,
     Modal,
+    MovedToCommit,
+    CloseDatePushed,
+    StageAdvanced,
   },
   data() {
     return {
@@ -121,6 +201,9 @@ export default {
       listVisible: true,
       dropdownVisible: true,
       advancing: false,
+      commit: false,
+      pushing: false,
+      showLoader: true,
       NON_FIELD_ALERT_OPTS,
       stringRenderer,
       SOBJECTS_LIST,
@@ -137,6 +220,12 @@ export default {
   methods: {
     onAdvancing() {
       this.advancing = !this.advancing
+    },
+    onCommit() {
+      this.commit = !this.commit
+    },
+    onPushing() {
+      this.pushing = !this.pushing
     },
     showList() {
       this.listVisible = !this.listVisible
@@ -171,9 +260,17 @@ export default {
     goToNextStep() {
       this.$router.push({ name: 'NextStep' })
     },
+    goToSaved() {
+      this.$router.push({ name: 'ListTemplates' })
+    },
     getWorkflowIds(arr1, arr2) {
       return arr1.some((item) => arr2.includes(item))
     },
+  },
+  mounted() {
+    setTimeout(() => {
+      this.showLoader = false
+    }, 400)
   },
   computed: {
     workFlowIds() {
@@ -261,6 +358,9 @@ export default {
     user() {
       return this.$store.state.user
     },
+    configs() {
+      return this.$store.state.user.activatedManagrConfigs
+    },
     isAdmin() {
       return this.$store.state.user.isAdmin
     },
@@ -281,9 +381,6 @@ export default {
         this.alertTemplateForm.field.resourceType.value = val
       },
     },
-  },
-  mounted() {
-    console.log(this.user)
   },
 }
 </script>
@@ -310,12 +407,25 @@ export default {
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
+h4 {
+  font-size: 14px;
+}
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.5s;
 }
 .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
   opacity: 0;
+}
+.invert {
+  filter: invert(99%);
+}
+.center-loader {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  height: 60vh;
 }
 .forecast__collection {
   display: flex;
@@ -325,9 +435,23 @@ export default {
   background-color: $white;
   box-shadow: 3px 4px 7px $very-light-gray;
   border-radius: 0.75rem;
-  width: 96vw;
   padding: 2rem;
   margin-bottom: 1rem;
+}
+.edit {
+  border: none;
+  box-shadow: 1px 1px 1px $very-light-gray;
+  background-color: transparent;
+  border-radius: 50%;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.edit:hover {
+  transform: scale(1.1);
+  box-shadow: 2px 3px 4px $very-light-gray;
 }
 .plus_button {
   border: none;
@@ -371,6 +495,16 @@ textarea {
       fill: $dark-green;
     }
   }
+}
+.alert-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  // align-items:
+}
+.filtered {
+  filter: invert(33%) sepia(52%) saturate(2452%) hue-rotate(130deg) brightness(68%) contrast(80%);
+  height: 1.2rem;
 }
 .alerts-page {
   margin-top: 4.5rem;
@@ -443,6 +577,57 @@ textarea {
   color: $base-gray;
   cursor: pointer;
   font-size: 12px;
+}
+.added-collection {
+  background-color: white;
+  box-shadow: 2px 2px 3px $very-light-gray;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-top: 2.5rem;
+  max-width: 20vw;
+  max-height: 27vh;
+  margin-right: 5vw;
+  &__header {
+    max-height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    border-bottom: 3px solid $soft-gray;
+  }
+  &__body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+  }
+  &__footer {
+    display: flex;
+    align-items: flex-end;
+    height: 3rem;
+    justify-content: flex-end;
+  }
+}
+.added-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 0rem 0.75rem;
+  margin-right: 1rem;
+  box-shadow: 1px 1px 1px $very-light-gray;
+  border-radius: 7px;
+  color: $base-gray;
+  font-size: 12px;
+  cursor: not-allowed;
+}
+.active {
+  background-color: $lighter-green;
+  border-radius: 0.33rem;
+  border: none;
+  padding: 0.25rem;
+  font-size: 10px;
+  margin-left: 0.5rem;
+  color: white;
 }
 .btn {
   &--danger {
@@ -528,7 +713,6 @@ textarea {
   flex-direction: row;
   justify-content: flex-start;
   align-items: flex-start;
-  margin-bottom: 1rem;
   padding: 0.5rem 0rem;
   border-bottom: 2px solid $soft-gray;
   width: 98vw;

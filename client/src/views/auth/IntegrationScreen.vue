@@ -1141,6 +1141,9 @@ a {
   flex-direction: column;
   margin: 1rem 5rem;
   margin-bottom: 2rem;
+  // @media only screen and (max-width: 1250px) {
+  //   margin-left: 15%;
+  // }
 }
 .back-logo {
   position: absolute;

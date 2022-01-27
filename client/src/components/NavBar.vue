@@ -410,6 +410,20 @@ li {
   font-weight: 900;
   margin-right: 1rem;
   font-size: 14px;
+  @media only screen and (max-width: 800px) {
+    margin-right: 0.5rem;
+    font-size: 11px;
+  }
+  @media only screen and (max-width: 700px) {
+    margin-right: 0.25rem;
+    font-size: 10px;
+  }
+}
+
+@media only screen and (max-width: 768px) {
+  img {
+    height: 0.5rem;
+  }
 }
 
 .profile {

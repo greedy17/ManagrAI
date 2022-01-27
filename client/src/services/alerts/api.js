@@ -152,3 +152,26 @@ export class AlertGroupAPI extends ModelAPI {
     }
   }
 }
+
+export class RealTimeAPI extends ModelAPI {
+  static ENDPOINT = 'alerts/real-time/'
+  static FILTERS_MAP = {
+    page: ApiFilter.create({ key: 'page' }),
+    pageSize: ApiFilter.create({ key: 'page_size' }),
+  }
+  get client() {
+    return apiClient()
+  }
+
+  async createRealTimeAlert(data) {
+    const d = objectToSnakeCase(data)
+
+    try {
+      const res = await this.client.post(RealTimeAPI.ENDPOINT, d)
+      return this.cls.fromAPI(res.data)
+    } catch (e) {
+      apiErrorHandler({ apiName: 'RealTimeAPI.createRealTimeAlert' })(e)
+    }
+  }
+
+}
