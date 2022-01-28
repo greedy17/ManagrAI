@@ -425,7 +425,7 @@ def calendar_reminders_blockset(context):
             block_builders.simple_button_block(
                 f"Update {type} + Notes",
                 meeting.resource_id,
-                action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(user.id)}&resource={type}&current_page={context.get('current_page',1)}&type=prep",
+                action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(user.id)}&resource={type}&current_page={context.get('current_page',1)}&type=prep&prep_id={str(meeting.id)}",
                 style="primary",
             )
         )

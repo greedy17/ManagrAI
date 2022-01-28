@@ -528,21 +528,14 @@ def meeting_review_modal_block_set(context):
     user = workflow.user
     slack_form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
     if user.organization.has_products and slack_form.template.resource == "Opportunity":
-        product_template = (
-            OrgCustomSlackForm.objects.for_user(user)
-            .filter(Q(resource="OpportunityLineItem", form_type="CREATE"))
-            .first()
-        )
-        product_form = OrgCustomSlackFormInstance.objects.create(
-            template=product_template, resource_id=slack_form.resource_id, user=user,
-        )
-        # current_products = OpportunityLineItem.objects.filter(opportunity=slack_form.resource_id)
-        opp = Opportunity.objects.get(id=slack_form.resource_id)
         try:
             current_products = user.salesforce_account.list_resource_data(
                 "OpportunityLineItem",
                 0,
-                filter=["AND IsDeleted = false", f"AND OpportunityId = '{opp.integration_id}'"],
+                filter=[
+                    "AND IsDeleted = false",
+                    f"AND OpportunityId = '{slack_form.resource_object.integration_id}'",
+                ],
             )
         except Exception as e:
             print(e)
@@ -583,7 +576,6 @@ def meeting_review_modal_block_set(context):
                                 f"f={str(slack_form.id)}",
                                 f"u={str(user.id)}",
                                 f"w={str(workflow.id)}",
-                                f"product_form={str(product_form.id)}",
                                 "type=meeting",
                             ],
                         ),
