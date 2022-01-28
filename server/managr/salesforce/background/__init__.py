@@ -677,6 +677,14 @@ def _process_add_update_to_sf(form_id, *args):
                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 attempts += 1
+        except Exception as e:
+            if attempts >= 5:
+                logger.info(f"Add update to SF exception: {e}")
+                raise e
+            else:
+                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                time.sleep(sleep)
+                attempts += 1
     return
 
 
@@ -694,6 +702,7 @@ def _process_create_new_contacts(workflow_id, *args):
     if not len(args):
         return
     contact_forms = workflow.forms.filter(id__in=args[0])
+
     for form in contact_forms:
         # if the resource is an account we set it to that account
         # if it is an opp we create a contact role as well
@@ -1036,6 +1045,7 @@ def _process_workflow_tracker(workflow_id):
             task = CompletedTask.objects.filter(task_hash=task_hash).count()
             if task:
                 workflow.completed_operations.append(task_hash)
+                workflow.save()
 
 
 @background(schedule=0)
