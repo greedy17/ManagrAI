@@ -211,5 +211,7 @@ class RealTimeAlertViewSet(
 
     def create(self, request, *args, **kwargs):
         data = request.data
+        user = data.user
         print(data)
-        return Response()
+        print(user)
+        return Response(data, user)
