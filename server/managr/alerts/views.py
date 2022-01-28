@@ -37,6 +37,7 @@ from .background import emit_init_alert, _process_check_alert
 
 from . import models as alert_models
 from . import serializers as alert_serializers
+from managr.core.models import User
 
 # Create your views here.
 
@@ -211,7 +212,19 @@ class RealTimeAlertViewSet(
 
     def create(self, request, *args, **kwargs):
         data = request.data
-        user = data.user
         print(data)
-        print(user)
-        return Response(data, user)
+        manager = User.objects.get(id=data.get("user"))
+        config = data.get("config")
+        title = data.get("title")
+        pipelines = data.get("pipelines")
+        config["recipients"] = {str(manager.id): data.get("recipients")}
+        users = User.objects.filter(id__in=pipelines)
+        for user in users:
+            configs = user.slack_integration.realtime_alert_configs
+            if title in configs:
+                if str(manager.id) not in configs[title].get("recipients"):
+                    config[title]["recipients"][str(manager.id)] = data.get("recipients")
+            else:
+                configs[title] = config
+            user.slack_integration.save()
+        # return Response(data, user)
