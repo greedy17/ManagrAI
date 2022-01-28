@@ -15,7 +15,6 @@ from managr.organization import constants as org_consts
 from managr.api.decorators import log_all_exceptions
 from managr.slack.helpers import block_builders
 from xml.etree import cElementTree as ElementTree
-
 from .exceptions import CustomAPIException, CustomXMLException
 from .. import constants as sf_consts
 
@@ -187,7 +186,6 @@ class SalesforceAuthAccountAdapter:
 
     @staticmethod
     def _handle_xml_response(response, fn_name=None):
-        print(response.status_code)
         if not hasattr(response, "status_code"):
             raise ValueError
 
@@ -196,7 +194,6 @@ class SalesforceAuthAccountAdapter:
                 return {}
             try:
                 xmldict = process_xml_dict(response.content)
-                print(xmldict)
             except Exception as e:
                 CustomAPIException(e, fn_name)
         else:
@@ -946,12 +943,28 @@ class LeadAdapter:
             return SalesforceAuthAccountAdapter._handle_response(r)
 
     @staticmethod
-    def convert_lead(data, token, base_url):
+    def convert_lead(data, token, base_url, user_id):
         url = base_url + sf_consts.SALESFORCE_SOAP_URI
         body = sf_consts.CONVERT_LEAD_BODY(token, data)
         with Client as client:
             r = client.post(url, data=body, headers=sf_consts.SALESFORCE_LEAD_CONVERT_HEADER,)
-            return SalesforceAuthAccountAdapter._handle_xml_response(r)
+            res = SalesforceAuthAccountAdapter._handle_xml_response(r)
+            success_check = res.get("convertLeadResponse", None)
+            if success_check and success_check.get("result").get("success") == "true":
+                from managr.salesforce.routes import routes as serializer_routes
+                from managr.salesforce.adapter.routes import routes as adapter_routes
+
+                for object in ["Account", "Opportunity", "Contact"]:
+                    current_value = adapter_routes[object].get_current_values(
+                        res["convertLeadResponse"]["result"][f"{object.lower()}Id"],
+                        token,
+                        base_url,
+                        user_id,
+                    )
+                    serializer = serializer_routes[object]["serializer"](data=current_value.as_dict)
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save()
+                return {"success": True}
 
     @property
     def as_dict(self):

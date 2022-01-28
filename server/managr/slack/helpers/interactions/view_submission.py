@@ -75,7 +75,6 @@ from managr.slack.helpers.exceptions import (
     InvalidAccessToken,
 )
 from managr.api.decorators import slack_api_exceptions
-from managr.organization.serializers import ContactSerializer
 
 logger = logging.getLogger("managr")
 
@@ -2061,7 +2060,16 @@ def process_submit_product(payload, context):
 @processor(required_context=["w"])
 def process_convert_lead(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    user = workflow.user
     state = payload["view"]["state"]["values"]
+    loading_view_data = send_loading_screen(
+        user.organization.slack_integration.access_token,
+        "Converting your Lead :rocket:",
+        "update",
+        str(user.id),
+        payload["trigger_id"],
+        payload["view"]["id"],
+    )
     convert_data = {}
     sobjects = ["Opportunity", "Account", "Contact"]
     for object in sobjects:
@@ -2093,7 +2101,26 @@ def process_convert_lead(payload, context):
     lead = Lead.objects.get(id=workflow.resource_id)
     convert_data["leadId"] = lead.integration_id
     try:
-        lead.convert_in_salesforce(convert_data)
+        res = lead.convert_in_salesforce(convert_data)
+        if res["success"]:
+            success_data = {
+                "view_id": loading_view_data["view"]["id"],
+                "view": {
+                    "type": "modal",
+                    "title": {"type": "plain_text", "text": "Lead Converted"},
+                    "blocks": [
+                        block_builders.simple_section(
+                            ":white_check_mark: Your Lead was successfully converted :clap:",
+                            "mrkdwn",
+                        )
+                    ],
+                },
+            }
+            slack_requests.generic_request(
+                slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
+                success_data,
+                access_token=user.organization.slack_integration.access_token,
+            )
     except Exception as e:
         print(e)
     return
