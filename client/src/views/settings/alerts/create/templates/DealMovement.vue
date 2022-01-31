@@ -17,7 +17,7 @@
         </button>
       </div>
 
-      <div v-if="!configs.includes('Moved to commit')" @click="onCommit" class="stage-item">
+      <div v-if="hasCommitConfig !== 'Moved to Commit'" @click="onCommit" class="stage-item">
         <p>Moved to Commit</p>
         <button class="plus_button">
           <img src="@/assets/images/add.svg" alt="" />
@@ -53,12 +53,7 @@
 
     <div
       v-if="
-        !configs.includes('Moved to commit') &&
-        !configs.includes('Close date pushed') &&
-        !commit &&
-        !showLoader &&
-        !pushing &&
-        !advancing
+        hasCommitConfig !== 'Moved to Commit' && !commit && !showLoader && !pushing && !advancing
       "
       style="margin-top: 10%"
     >
@@ -69,7 +64,7 @@
     </div>
 
     <div v-if="!showLoader" class="alert-row">
-      <div v-if="configs.includes('Moved to commit')" class="added-collection">
+      <div v-if="hasCommitConfig === 'Moved to Commit'" class="added-collection">
         <div class="added-collection__header">
           <p class="title">Moved to commit</p>
           <span class="active">active</span>
@@ -105,9 +100,9 @@
           </div>
         </section>
       </div>
-      <!-- v-if="commit && !configs.includes('Moved to commit')" -->
+
       <transition name="fade">
-        <div>
+        <div v-if="hasCommitConfig !== 'Moved to Commit' && commit">
           <MovedToCommit></MovedToCommit>
         </div>
       </transition>
@@ -274,6 +269,9 @@ export default {
     }, 400)
   },
   computed: {
+    hasCommitConfig() {
+      return this.$store.state.user.slackAccount.realtimeAlertConfigs.null.title
+    },
     workFlowIds() {
       let arr = []
       for (let i = 0; i < this.templates.list.length; i) {

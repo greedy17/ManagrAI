@@ -89,7 +89,7 @@
                 <template v-slot:input>
                   <DropDownSearch
                     :items.sync="userChannelOpts.channels"
-                    v-model="realTimeAlertForm.field.config.groups[0].recipients.value"
+                    v-model="realTimeAlertForm.field.recipients.value"
                     displayKey="name"
                     valueKey="id"
                     nullDisplay="Channels"
@@ -115,14 +115,9 @@
           <div v-if="realTimeAlertForm.isValid" class="centered__">
             <PulseLoadingSpinnerButton
               :loading="savingTemplate"
-              :class="
-                !realTimeAlertForm.isValid || savingTemplate
-                  ? 'disabled__button'
-                  : 'purple__button bouncy'
-              "
+              class="purple__button bouncy"
               text="Activate alert"
               @click.stop="onSave"
-              :disabled="!realTimeAlertForm.isValid"
             />
           </div>
         </div>
@@ -199,7 +194,7 @@ export default {
       dropdownVisible: true,
       channelCreated: false,
       create: true,
-      realTimeAlertRecipient: [],
+      realTimeAlertRecipient: '',
       NON_FIELD_ALERT_OPTS,
       stringRenderer,
       newChannel: {},
@@ -322,7 +317,7 @@ export default {
     async createChannel(name) {
       const res = await SlackOAuth.api.createChannel(name)
       if (res.channel) {
-        this.realTimeAlertForm.field.config.groups[0].recipients.value = res.channel.id
+        this.realTimeAlertForm.field.recipients.value = res.channel.id
         this.channelCreated = !this.channelCreated
       } else {
         console.log(res.error)
@@ -417,18 +412,18 @@ export default {
 
     async onSave() {
       this.savingTemplate = true
-      console.log(this.realTimeAlertForm.value)
       try {
         const res = await RealTime.api.createRealTimeAlert({
           ...this.realTimeAlertForm.toAPI,
           user: this.$store.state.user.id,
+          config: {
+            isActive: true,
+            title: 'Moved to Commit',
+            operator: '=',
+            value: 'commit',
+          },
         })
-        console.log(res)
-        this.$Alert.alert({
-          message: 'Workflow saved succcessfully!',
-          timeout: 2000,
-          type: 'success',
-        })
+        this.$router.go()
       } catch (e) {
         this.$Alert.alert({
           message: 'An error occured saving template',
@@ -557,8 +552,6 @@ export default {
   beforeMount() {
     this.realTimeAlertForm.field.apiName.value = 'ForecastCategoryName'
     this.realTimeAlertForm.field.resourceType.value = 'Opportunity'
-    this.realTimeAlertForm.field.config.groups[0].title.value = 'Moved to Commit'
-    // console.log(this.realTimeAlertForm)
   },
 }
 </script>

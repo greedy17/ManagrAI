@@ -132,22 +132,20 @@ export class RealTimeAlertForm extends Form {
   static resourceType = new FormField({ validators: [new RequiredValidator()] })
   static pipelines = new FormField({ validators: [new RequiredValidator()], value: [] })
   static apiName = new FormField({ validators: [new RequiredValidator()] })
-  static config = new FormArray({
-    name: 'config',
-    groups: [new RealTimeAlertConfigForm()],
-  })
+  static recipients = new FormField({ validators: [new RequiredValidator()], value: [] })
 
   get toAPI() {
     let val = this.value
 
     return {
       resourceType: val.resourceType,
+      recipients: val.recipients,
       pipelines: val.pipelines,
       apiName: val.apiName,
-      newConfigs: this.field.config.groups.map(g => g.toAPI),
     }
   }
 }
+
 export class AlertTemplateForm extends Form {
   static title = new FormField({ validators: [new RequiredValidator()] })
   static resourceType = new FormField({ validators: [new RequiredValidator()] })

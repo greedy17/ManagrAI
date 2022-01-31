@@ -111,5 +111,5 @@ export class RealTime extends Model {
   static apiName = new fields.CharField()
   static resourceType = new fields.CharField({})
   static pipelines = new fields.ArrayField({ type: new fields.CharField() })
-  static newConfigs = new fields.ModelField({ ModelClass: Config, many: true })
+  static recipients = new fields.ArrayField({ type: new fields.CharField() })
 }

@@ -249,4 +249,4 @@ class RealTimeAlertViewSet(
             else:
                 configs[title] = config
             user.slack_integration.save()
-        # return Response(data, user)
+        return Response({"status": "success"})
