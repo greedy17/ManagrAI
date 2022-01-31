@@ -1134,6 +1134,7 @@ class ActivityAdapter:
             r = client.post(
                 url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
             )
+            print(r.json())
             return SalesforceAuthAccountAdapter._handle_response(r)
 
 
