@@ -1719,10 +1719,9 @@ def process_submit_product(payload, context):
             ):
                 product_data["UnitPrice"] = str(entry.unit_price)
             resource = OpportunityLineItem.create_in_salesforce(product_data, context.get("u"))
-            product_form.is_submitted = True
-            product_form.submission_date = timezone.now()
-            product_form.update_source = context.get("type")
-            product_form.save()
+            product_form.update(
+                is_submitted=True, submission_date=timezone.now(), update_source=context.get("type")
+            )
             break
         except FieldValidationError as e:
             has_error = True
