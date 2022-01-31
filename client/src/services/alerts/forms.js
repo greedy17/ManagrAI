@@ -111,30 +111,40 @@ export class AlertMessageTemplateForm extends Form {
   // static notificationText = new FormField({ validators: [new RequiredValidator()] })
   static body = new FormField({ validators: [new RequiredValidator()] })
 }
-export class RealTimeAlertForm extends Form {
-  static title = new FormField({ validators: [new RequiredValidator()] })
-  static resourceType = new FormField({ validators: [new RequiredValidator()] })
-  static isActive = new FormField({ value: false })
-  static recipients = new FormField({ validators: [new RequiredValidator()], value: [] })
-  static pipelines = new FormField({ validators: [new RequiredValidator()], value: [] })
-  static config = new FormField({})
+
+export class RealTimeAlertConfigForm extends Form {
+  title = new FormField({ validators: [new RequiredValidator()] })
+  isActive = new FormField({ value: true })
+  recipients = new FormField({ validators: [new RequiredValidator()], value: [] })
 
   get toAPI() {
-    // let recipients = this.value.recipients
-
-    // if (!Array.isArray(recipients)) {
-    //   recipients = [recipients]
-    // }
-
     let val = this.value
 
     return {
       title: val.title,
       isActive: val.isActive,
+      recipients: val.recipients
+    }
+  }
+}
+
+export class RealTimeAlertForm extends Form {
+  static resourceType = new FormField({ validators: [new RequiredValidator()] })
+  static pipelines = new FormField({ validators: [new RequiredValidator()], value: [] })
+  static apiName = new FormField({ validators: [new RequiredValidator()] })
+  static config = new FormArray({
+    name: 'config',
+    groups: [new RealTimeAlertConfigForm()],
+  })
+
+  get toAPI() {
+    let val = this.value
+
+    return {
       resourceType: val.resourceType,
-      recipients: val.recipients,
       pipelines: val.pipelines,
-      config: val.config,
+      apiName: val.apiName,
+      newConfigs: this.field.config.groups.map(g => g.toAPI),
     }
   }
 }

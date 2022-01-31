@@ -89,8 +89,7 @@
                 <template v-slot:input>
                   <DropDownSearch
                     :items.sync="userChannelOpts.channels"
-                    v-model="realTimeAlertForm.field.recipients.value"
-                    @input="realTimeAlertForm.field.recipients.validate()"
+                    v-model="realTimeAlertForm.field.config.groups[0].recipients.value"
                     displayKey="name"
                     valueKey="id"
                     nullDisplay="Channels"
@@ -200,6 +199,7 @@ export default {
       dropdownVisible: true,
       channelCreated: false,
       create: true,
+      realTimeAlertRecipient: [],
       NON_FIELD_ALERT_OPTS,
       stringRenderer,
       newChannel: {},
@@ -322,7 +322,7 @@ export default {
     async createChannel(name) {
       const res = await SlackOAuth.api.createChannel(name)
       if (res.channel) {
-        this.realTimeAlertForm.field.recipients.value = res.channel.id
+        this.realTimeAlertForm.field.config.groups[0].recipients.value = res.channel.id
         this.channelCreated = !this.channelCreated
       } else {
         console.log(res.error)
@@ -417,16 +417,13 @@ export default {
 
     async onSave() {
       this.savingTemplate = true
-      // this.realTimeAlertForm.validate()
-      console.log(this.realTimeAlertForm.toAPI)
+      console.log(this.realTimeAlertForm.value)
       try {
         const res = await RealTime.api.createRealTimeAlert({
           ...this.realTimeAlertForm.toAPI,
           user: this.$store.state.user.id,
         })
         console.log(res)
-        this.userConfigForm.field.activatedManagrConfigs.value.push('Moved to commit')
-        this.handleUpdate()
         this.$Alert.alert({
           message: 'Workflow saved succcessfully!',
           timeout: 2000,
@@ -479,17 +476,6 @@ export default {
     showDropDown() {
       this.dropdownVisible = !this.dropdownVisible
     },
-    // setAlertValues(date, name) {
-    //   this.alertTemplateForm.field.title = name
-    //   this.alertTemplateForm.alertGroups.groups[0].fields.alertOperands.groups[0].fields.operandValue.value =
-    //     date
-    //   this.alertTemplateForm.alertGroups.groups[0].fields.alertOperands.groups[0].fields.operandOperator.value =
-    //     '<='
-    //   if (date >= 0) {
-    //     this.alertGroups.groups[0].fields.alertOperands.groups[0].fields.field.operandOperator.value =
-    //       '='
-    //   }
-    // },
   },
   computed: {
     userTargetsOpts() {
@@ -561,13 +547,6 @@ export default {
     selection() {
       return this.editor.selection.lastRange
     },
-    // alertObj() {
-    //   return {
-    //     title: this.formValue.title,
-    //     message: this.formValue.alertMessages[0].body,
-    //     resourceType: this.selectedResourceType,
-    //   }
-    // },
     user() {
       return this.$store.state.user
     },
@@ -576,10 +555,10 @@ export default {
     },
   },
   beforeMount() {
-    this.realTimeAlertForm.field.config.value = { value: 'test' }
+    this.realTimeAlertForm.field.apiName.value = 'ForecastCategoryName'
     this.realTimeAlertForm.field.resourceType.value = 'Opportunity'
-    this.realTimeAlertForm.field.title.value = 'Moved to commit'
-    this.realTimeAlertForm.field.isActive.value = true
+    this.realTimeAlertForm.field.config.groups[0].title.value = 'Moved to Commit'
+    // console.log(this.realTimeAlertForm)
   },
 }
 </script>

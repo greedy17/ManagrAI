@@ -105,8 +105,9 @@
           </div>
         </section>
       </div>
+      <!-- v-if="commit && !configs.includes('Moved to commit')" -->
       <transition name="fade">
-        <div v-if="commit && !configs.includes('Moved to commit')">
+        <div>
           <MovedToCommit></MovedToCommit>
         </div>
       </transition>

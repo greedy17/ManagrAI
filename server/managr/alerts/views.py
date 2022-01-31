@@ -121,6 +121,22 @@ class AlertMessageTemplateViewSet(
         return alert_models.AlertMessageTemplate.objects.for_user(self.request.user)
 
 
+class RealTimeAlertConfigViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        print(data)
+        return Response(data)
+
+
 class AlertConfigViewSet(
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,

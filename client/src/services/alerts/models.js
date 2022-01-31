@@ -7,6 +7,7 @@ import AlertTemplateAPI, {
   AlertConfigAPI,
   AlertGroupAPI,
   RealTimeAPI,
+  RealTimeAlertConfigAPI,
 } from './api'
 
 export class AlertTemplateRef extends Model {
@@ -98,12 +99,17 @@ export default class AlertTemplate extends AlertTemplateRef {
   static configs = new fields.ArrayField({ type: new fields.CharField() })
   static instances = new fields.ArrayField({ type: new fields.CharField() })
 }
-export class RealTime extends Model {
-  static api = RealTimeAPI.create(RealTime)
+export class Config extends Model {
+  static api = new RealTimeAlertConfigAPI(Config)
   static title = new fields.CharField()
-  static resourceType = new fields.CharField({})
   static isActive = new fields.BooleanField({ default: true })
   static recipients = new fields.ArrayField({ type: new fields.CharField() })
+}
+
+export class RealTime extends Model {
+  static api = RealTimeAPI.create(RealTime)
+  static apiName = new fields.CharField()
+  static resourceType = new fields.CharField({})
   static pipelines = new fields.ArrayField({ type: new fields.CharField() })
-  static config = new fields.CharField({})
+  static newConfigs = new fields.ModelField({ ModelClass: Config, many: true })
 }

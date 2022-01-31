@@ -5,6 +5,7 @@ import {
   AlertOperandForm,
   AlertMessageTemplateForm,
   RealTimeAlertForm,
+  RealTimeAlertConfigForm
 } from './forms'
 import AlertTemplate, {
   AlertMessageTemplate,
@@ -12,6 +13,7 @@ import AlertTemplate, {
   AlertConfig,
   AlertGroup,
   RealTime,
+  Config,
 } from './models'
 export default AlertTemplate
 export {
@@ -25,5 +27,7 @@ export {
   AlertConfig,
   AlertGroup,
   RealTime,
-  RealTimeAlertForm
+  RealTimeAlertForm,
+  RealTimeAlertConfigForm,
+  Config,
 }
