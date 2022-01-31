@@ -344,7 +344,7 @@ def process_submit_resource_data(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     loading_view_data = send_loading_screen(
         slack_access_token,
-        ":exclamation: Please wait a few seconds :zany_face:, then click '*try again*'",
+        ":exclamation: Please wait a few seconds :zany_face:, then click *'try again'*",
         "update",
         str(user.id),
         trigger_id,
@@ -2004,9 +2004,12 @@ def process_submit_alert_resource_data(payload, context):
                     "title": {"type": "plain_text", "text": "Success"},
                     "blocks": [
                         block_builders.simple_section(
-                            f":white_check_mark: Successfully updated {main_form.template.resource}",
+                            f":white_check_mark: Successfully updated {main_form.resource_type} :clap:",
                             "mrkdwn",
-                        )
+                        ),
+                        block_builders.context_block(
+                            "*Disregard the red banner message, you can safely Close this window."
+                        ),
                     ],
                 },
             }
