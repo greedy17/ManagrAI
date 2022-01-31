@@ -454,6 +454,7 @@ def process_submit_resource_data(payload, context):
                     ]
                 ),
             ]
+        new_context = {**context, "type": "command"}
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
         error_view_data = {
             "trigger_id": trigger_id,
@@ -462,7 +463,7 @@ def process_submit_resource_data(payload, context):
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Error"},
                 "blocks": blocks,
-                "private_metadata": json.dumps(context),
+                "private_metadata": json.dumps(new_context),
                 "external_id": f"{view_type}.{str(uuid.uuid4())}",
             },
         }
@@ -1480,6 +1481,10 @@ def process_update_product(payload, context):
             resource = product_form.resource_object.update_in_salesforce(
                 str(user.id), product_form.saved_data
             )
+            product_form.is_submitted = True
+            product_form.submission_date = timezone.now()
+            product_form.update_source = type
+            product_form.save()
             break
         except FieldValidationError as e:
             has_error = True
@@ -1575,6 +1580,7 @@ def process_update_product(payload, context):
                 "title": {"type": "plain_text", "text": "Error"},
                 "blocks": blocks,
                 "private_metadata": json.dumps(context),
+                "external_id": f"{'update_product'}.{str(uuid.uuid4())}",
             },
         }
         try:
@@ -1585,66 +1591,15 @@ def process_update_product(payload, context):
             return logger.exception(
                 f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
             )
-    pm = json.loads(payload["view"]["private_metadata"])
-    product_form.is_submitted = True
-    product_form.submission_date = timezone.now()
-    product_form.update_source = type
-    product_form.save()
-    text = "Success"
     message = ":white_check_mark: Successfully updated product"
-    if type == "alert":
-        instance = AlertInstance.objects.get(id=context.get("alert_id"))
-        alert_instances = AlertInstance.objects.filter(
-            invocation=instance.invocation,
-            channel=context.get("channel_id"),
-            config_id=instance.config_id,
-        ).filter(completed=False)
-        alert_instance = alert_instances.first()
-        alert_template = alert_instance.template
-        text = alert_template.title
-        blocks = [
-            block_builders.header_block(f"{len(alert_instances)} results for workflow {text}"),
-        ]
-        alert_instances = custom_paginator(alert_instances, page=int(context.get("current_page")))
-        for alert_instance in alert_instances.get("results", []):
-            blocks = [
-                *blocks,
-                *get_block_set(
-                    "alert_instance",
-                    {
-                        "instance_id": str(alert_instance.id),
-                        "current_page": int(context.get("current_page")),
-                    },
-                ),
-            ]
-            alert_instance.rendered_text = alert_instance.render_text()
-            alert_instance.save()
-        if len(blocks):
-            blocks = [
-                *blocks,
-                *custom_paginator_block(
-                    alert_instances,
-                    instance.invocation,
-                    context.get("channel_id"),
-                    instance.config_id,
-                ),
-            ]
-
-        slack_requests.update_channel_message(
-            context.get("channel_id"),
-            context.get("message_ts"),
-            slack_access_token,
-            block_set=blocks,
-        )
-    else:
-        return {
-            "response_action": "update",
-            "view": {
-                "type": "modal",
-                "title": {"type": "plain_text", "text": "Success"},
-                "blocks": get_block_set("success_text_modal", {"message": message}),
-            },
-        }
+    return {
+        "response_action": "update",
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Success"},
+            "blocks": get_block_set("success_text_modal", {"message": message}),
+        },
+    }
 
 
 @log_all_exceptions
@@ -2111,6 +2066,7 @@ def process_submit_alert_resource_data(payload, context):
                     ]
                 ),
             ]
+        new_context = {**context, "type": "alert"}
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
         error_view_data = {
             "trigger_id": trigger_id,
@@ -2119,7 +2075,7 @@ def process_submit_alert_resource_data(payload, context):
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Error"},
                 "blocks": blocks,
-                "private_metadata": json.dumps(context),
+                "private_metadata": json.dumps(new_context),
                 "external_id": f"{view_type}.{str(uuid.uuid4())}",
             },
         }
@@ -2316,6 +2272,7 @@ def process_submit_digest_resource_data(payload, context):
                     ]
                 ),
             ]
+        new_context = {**context, "type": "digest"}
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
         error_view_data = {
             "trigger_id": trigger_id,
@@ -2324,7 +2281,7 @@ def process_submit_digest_resource_data(payload, context):
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Error"},
                 "blocks": blocks,
-                "private_metadata": json.dumps(context),
+                "private_metadata": json.dumps(new_context),
                 "external_id": f"{view_type}.{str(uuid.uuid4())}",
             },
         }

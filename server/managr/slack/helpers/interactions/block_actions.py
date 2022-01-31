@@ -1429,6 +1429,7 @@ def process_return_to_form_modal(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     pm = json.loads(payload["view"]["private_metadata"])
     from_workflow = pm.get("w", False) not in [None, False]
+
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
     actions = payload["actions"]
@@ -1450,7 +1451,7 @@ def process_return_to_form_modal(payload, context):
     user = main_form.user
     organization = user.organization
     slack_access_token = organization.slack_integration.access_token
-
+    context.pop("type", None)
     view_context = {
         **context,
         "resource_type": resource_type,
@@ -1461,19 +1462,25 @@ def process_return_to_form_modal(payload, context):
     if from_workflow:
         view_context["w"] = pm.get("w")
         view_context["resource"] = resource_type
-    if view_type == "add_product":
+    if view_type == "add_product" or view_type == "update_product":
         blocks = main_form.generate_form()
+        if view_type == "add_product":
+            title = "Add Product"
+            callback_id = slack_const.PROCESS_SUBMIT_PRODUCT
+        else:
+            title = "Edit Product"
+            callback_id = slack_const.PROCESS_UPDATE_PRODUCT
         if len(blocks):
             data = {
                 "trigger_id": trigger_id,
                 "view_id": view_id,
                 "view": {
                     "type": "modal",
-                    "title": {"type": "plain_text", "text": "Add Products Form"},
+                    "title": {"type": "plain_text", "text": title},
                     "submit": {"type": "plain_text", "text": "Submit"},
                     "blocks": blocks,
                     "private_metadata": json.dumps(pm),
-                    "callback_id": slack_const.PROCESS_SUBMIT_PRODUCT,
+                    "callback_id": callback_id,
                 },
             }
         try:
@@ -1514,6 +1521,12 @@ def process_return_to_form_modal(payload, context):
         if view_type == "update_modal_block_set"
         else f"Create {resource_type}"
     )
+    if type == "alert":
+        callback_id = slack_const.PROCESS_SUBMIT_ALERT_RESOURCE_DATA
+    elif type == "digest":
+        callback_id = slack_const.PROCESS_SUBMIT_DIGEST_RESOURCE_DATA
+    else:
+        callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
     submit_text = "Update" if view_type == "update_modal_block_set" else "Create"
 
     private_metadata.update(view_context)
@@ -1522,7 +1535,7 @@ def process_return_to_form_modal(payload, context):
         "view_id": view_id,
         "view": {
             "type": "modal",
-            "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
+            "callback_id": callback_id,
             "title": {"type": "plain_text", "text": title_text,},
             "blocks": form_blocks,
             "submit": {"type": "plain_text", "text": submit_text, "emoji": True},
