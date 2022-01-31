@@ -227,9 +227,15 @@ class RealTimeAlertViewSet(
     permission_classes = (permissions.IsAuthenticated,)
 
     def create(self, request, *args, **kwargs):
+        from managr.salesforce.models import SObjectField
+
         data = request.data
         print(data)
         manager = User.objects.get(id=data.get("user"))
+        api_name = data.get("api_name", None)
+        if api_name:
+            field = SObjectField.objects.get(api_name=api_name)
+            print(field)
         config = data.get("config")
         title = data.get("title")
         pipelines = data.get("pipelines")
