@@ -419,7 +419,7 @@ export default {
           config: {
             isActive: true,
             title: 'Moved to Commit',
-            operator: '=',
+            operator: '==',
             value: 'commit',
           },
         })
