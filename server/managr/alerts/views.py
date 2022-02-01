@@ -230,23 +230,22 @@ class RealTimeAlertViewSet(
         from managr.salesforce.models import SObjectField
 
         data = request.data
-        print(data)
         manager = User.objects.get(id=data.get("user"))
         api_name = data.get("api_name", None)
         if api_name:
             field = SObjectField.objects.get(api_name=api_name)
-            print(field)
-        config = data.get("config")
-        title = data.get("title")
-        pipelines = data.get("pipelines")
-        config["recipients"] = {str(manager.id): data.get("recipients")}
-        users = User.objects.filter(id__in=pipelines)
-        for user in users:
-            configs = user.slack_integration.realtime_alert_configs
-            if title in configs:
-                if str(manager.id) not in configs[title].get("recipients"):
-                    config[title]["recipients"][str(manager.id)] = data.get("recipients")
-            else:
-                configs[title] = config
-            user.slack_integration.save()
+            config = data.get("config")
+            pipelines = data.get("pipelines")
+            config["recipients"] = {str(manager.id): data.get("recipients")}
+            users = User.objects.filter(id__in=pipelines)
+            for user in users:
+                configs = user.slack_integration.realtime_alert_configs
+                if str(field.id) in configs:
+                    if str(manager.id) not in configs[str(field.id)].get("recipients"):
+                        config[str(field.id)]["recipients"][str(manager.id)] = data.get(
+                            "recipients"
+                        )
+                else:
+                    configs[str(field.id)] = config
+                user.slack_integration.save()
         return Response({"status": "success"})
