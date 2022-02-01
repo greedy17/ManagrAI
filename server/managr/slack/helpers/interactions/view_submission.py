@@ -577,6 +577,7 @@ def process_zoom_meeting_attach_resource(payload, context):
         else MeetingWorkflow.objects.get(id=context.get("w"))
     )
     user = workflow.user
+    pm = json.loads(payload["view"]["private_metadata"])
     slack_access_token = user.organization.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     # get state - state contains the values based on the block_id
@@ -1461,6 +1462,8 @@ def process_update_product(payload, context):
     user = User.objects.get(id=context.get("u"))
     view_id = payload["view"]["id"]
     type = context.get("type", None)
+    pm = json.loads(payload["view"]["private_metadata"])
+
     main_form = OrgCustomSlackFormInstance.objects.get(id=context.get("main_form"))
     product_form = user.custom_slack_form_instances.filter(
         template__resource="OpportunityLineItem"
@@ -1579,7 +1582,7 @@ def process_update_product(payload, context):
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Error"},
                 "blocks": blocks,
-                "private_metadata": json.dumps(context),
+                "private_metadata": json.dumps(pm),
                 "external_id": f"{'update_product'}.{str(uuid.uuid4())}",
             },
         }
@@ -1615,6 +1618,7 @@ def process_submit_product(payload, context):
         workflow = MeetingWorkflow.objects.get(id=workflow_id)
     has_error = False
     blocks = None
+    pm = json.loads(payload["view"]["private_metadata"])
     user = User.objects.get(id=context.get("u"))
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
@@ -1674,9 +1678,10 @@ def process_submit_product(payload, context):
             ):
                 product_data["UnitPrice"] = str(entry.unit_price)
             resource = OpportunityLineItem.create_in_salesforce(product_data, context.get("u"))
-            product_form.update(
-                is_submitted=True, submission_date=timezone.now(), update_source=context.get("type")
-            )
+            product_form.is_submitted = True
+            product_form.submission_date = timezone.now()
+            product_form.update_source = context.get("type")
+            product_form.save()
             break
         except FieldValidationError as e:
             has_error = True
@@ -1790,7 +1795,7 @@ def process_submit_product(payload, context):
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Error"},
                 "blocks": blocks,
-                "private_metadata": json.dumps(context),
+                "private_metadata": json.dumps(pm),
                 "external_id": f"{'add_product'}.{str(uuid.uuid4())}",
             },
         }

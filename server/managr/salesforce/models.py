@@ -255,7 +255,6 @@ class SObjectField(TimeStampModel, IntegrationModel):
             ):
                 user_id = str(kwargs.get("user").id)
                 resource = self.relationship_name
-                print(kwargs)
                 action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}&field_id={self.id}&pricebook={kwargs.get('Pricebook2Id')}"
                 return block_builders.external_select(
                     "*Products*", action_query, block_id=self.api_name, initial_option=None,

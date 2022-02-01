@@ -581,7 +581,7 @@ class PricebookEntry(TimeStampModel, IntegrationModel):
 
     @property
     def as_slack_option(self):
-        return block_builders.option(self.name, str(self.id))
+        return block_builders.option(self.name, str(self.integration_id))
 
 
 class OpportunityLineItemQuerySet(models.QuerySet):
