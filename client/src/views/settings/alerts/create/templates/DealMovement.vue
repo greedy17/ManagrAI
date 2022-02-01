@@ -101,17 +101,18 @@
           </div>
         </section>
       </div> -->
+      <transition name="fade">
+        <div v-if="advancing">
+          <StageAdvanced></StageAdvanced>
+        </div>
+      </transition>
 
       <transition name="fade">
         <div v-if="commit">
           <MovedToCommit></MovedToCommit>
         </div>
       </transition>
-      <transition name="fade">
-        <div v-if="advancing">
-          <StageAdvanced></StageAdvanced>
-        </div>
-      </transition>
+
       <transition name="fade">
         <div v-if="pushing && !configs.includes('Close date pushed')">
           <CloseDatePushed></CloseDatePushed>
