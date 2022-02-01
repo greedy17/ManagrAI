@@ -17,36 +17,29 @@
         </button>
       </div>
 
-      <div v-if="hasCommitConfig !== 'Moved to Commit'" @click="onCommit" class="stage-item">
+      <div @click="onCommit" class="stage-item">
         <p>Moved to Commit</p>
         <button class="plus_button">
           <img src="@/assets/images/add.svg" alt="" />
         </button>
       </div>
-      <div v-else class="added-item">
+      <!-- <div v-else class="added-item">
         <p>Moved to Commit</p>
         <button style="cursor: auto" class="plus_button">
           <img src="@/assets/images/configCheck.png" class="filtered" alt="" />
         </button>
-      </div>
+      </div> -->
 
-      <div v-if="!configs.includes('Close date pushed')" @click="onPushing" class="stage-item">
+      <div @click="onPushing" class="stage-item">
         <p>Close Date Pushed</p>
         <button class="plus_button">
           <img src="@/assets/images/add.svg" alt="" />
         </button>
       </div>
-      <div v-else class="added-item">
+      <!-- <div v-else class="added-item">
         <p>Close Date Pushed</p>
         <button style="cursor: auto" class="plus_button">
           <img src="@/assets/images/configCheck.png" class="filtered" alt="" />
-        </button>
-      </div>
-
-      <!-- <div class="stage-item">
-        <p>Update Deal Room</p>
-        <button class="plus_button" @click="onAdvancing">
-          <img src="@/assets/images/add.svg" class="filtered" alt="" />
         </button>
       </div> -->
     </div>
