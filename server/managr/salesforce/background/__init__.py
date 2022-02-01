@@ -645,11 +645,14 @@ def _process_add_update_to_sf(form_id, *args):
     data = dict(
         Subject=f"{form.saved_data.get('meeting_type')}",
         Description=f"{form.saved_data.get('meeting_comments')}",
-        WhatId=resource.integration_id,
         ActivityDate=start_time.strftime("%Y-%m-%d"),
         Status="Completed",
         TaskSubType="Task",
     )
+    if form.resource_type in ["Account", "Opportunity"]:
+        data["WhatId"] = (resource.integration_id,)
+    else:
+        data["WhoId"] = resource.integration_id
     attempts = 1
     while True:
         sf = user.salesforce_account

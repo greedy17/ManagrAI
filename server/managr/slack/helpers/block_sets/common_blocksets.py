@@ -53,7 +53,7 @@ def loading_block_set(context):
     fill = context.get("fill", False)
     if fill:
         blocks = [
-            block_builders.simple_section(f"*{message}*", "mrkdwn"),
+            block_builders.simple_section(f"{message}", "mrkdwn"),
             block_builders.simple_image_block(
                 "https://managr-images.s3.amazonaws.com/slack/logo_loading.gif", "Loading..."
             ),

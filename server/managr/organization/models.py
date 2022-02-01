@@ -429,6 +429,10 @@ class Pricebook2(TimeStampModel, IntegrationModel):
         ordering = ["-datetime_created"]
 
     @property
+    def as_slack_option(self):
+        return block_builders.option(self.name, str(self.id))
+
+    @property
     def adapter_class(self):
         data = self.__dict__
         data["id"] = str(data["id"])
@@ -574,6 +578,10 @@ class PricebookEntry(TimeStampModel, IntegrationModel):
         data = self.__dict__
         data["id"] = str(data["id"])
         return PricebookEntryAdapter(**data)
+
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.name, str(self.id))
 
 
 class OpportunityLineItemQuerySet(models.QuerySet):

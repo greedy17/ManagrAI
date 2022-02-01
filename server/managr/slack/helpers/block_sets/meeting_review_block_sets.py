@@ -564,6 +564,14 @@ def meeting_review_modal_block_set(context):
     # make params here
 
     if user.organization.has_products and slack_form.template.resource == "Opportunity":
+        params = [
+            f"f={str(slack_form.id)}",
+            f"u={str(user.id)}",
+            f"w={str(workflow.id)}",
+            "type=meeting",
+        ]
+        if slack_form.resource_object.secondary_data["Pricebook2Id"]:
+            params.append(f"pricebook={slack_form.resource_object.secondary_data['Pricebook2Id']}")
         blocks.append(
             block_builders.actions_block(
                 [
@@ -571,13 +579,7 @@ def meeting_review_modal_block_set(context):
                         "Add Product",
                         "ADD_PRODUCT",
                         action_id=action_with_params(
-                            slack_const.PROCESS_ADD_PRODUCTS_FORM,
-                            params=[
-                                f"f={str(slack_form.id)}",
-                                f"u={str(user.id)}",
-                                f"w={str(workflow.id)}",
-                                "type=meeting",
-                            ],
+                            slack_const.PROCESS_ADD_PRODUCTS_FORM, params=params,
                         ),
                     )
                 ],
