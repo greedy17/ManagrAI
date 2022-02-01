@@ -1,14 +1,14 @@
 import logging
-from turtle import back
+
 import jwt
 import pytz
 import uuid
-from datetime import  datetime, timezone
+from datetime import datetime, timezone
 import re
 from background_task import background
 from django.db.models import Q
 from django.utils import timezone
-from pytz import UnknownTimeZoneError
+
 
 from managr.alerts.models import AlertConfig
 from managr.core.models import User, MeetingPrepInstance
@@ -30,6 +30,7 @@ from managr.opportunity.models import Lead, Opportunity
 from managr.zoom.background import _split_first_name, _split_last_name
 from managr.utils.misc import custom_paginator
 from managr.zoom.background import emit_kick_off_slack_interaction
+
 # from managr.slack.helpers.block_sets.meeting_review_block_sets import _initial_interaction_message
 
 logger = logging.getLogger("managr")
@@ -62,47 +63,47 @@ def emit_generate_morning_digest(user_id, verbose_name):
     return generate_morning_digest(user_id, verbose_name=verbose_name)
 
 
-def emit_generate_afternoon_digest(user_id, verbose_name ):
+def emit_generate_afternoon_digest(user_id, verbose_name):
     return generate_afternoon_digest(user_id, verbose_name=verbose_name)
 
 
 def emit_check_reminders(user_id, verbose_name):
     return check_reminders(user_id, verbose_name=verbose_name)
 
-# Functions for Scheduling Meeting 
+
+# Functions for Scheduling Meeting
 def emit_non_zoom_meetings(workflow_id, user_id, user_tz, non_zoom_end_times):
     return non_zoom_meeting_message(workflow_id, user_id, user_tz, non_zoom_end_times)
 
+
 @background()
 def non_zoom_meeting_message(workflow_id, user_id, user_tz, non_zoom_end_times):
-    # Convert Non-Zoom Meeting from UNIX time to UTC 
+    # Convert Non-Zoom Meeting from UNIX time to UTC
+    print(non_zoom_end_times)
     unix_time = datetime.utcfromtimestamp(int(non_zoom_end_times))
     tz = pytz.timezone("UTC")
-    local_end = unix_time.astimezone(tz).strftime("%H:%M:%S")
-    print(local_end, "this is utc time")
+    local_end = unix_time.astimezone(tz)
 
-    # Convert their 7am local time to UTC 
-    user_7am_naive = timezone.now().replace(
-        hour=7, minute=0, second=0, microsecond=0, tzinfo=None
-    )
-    print(user_tz, "this is the time zone")
-    user_7am = timezone.make_aware(user_7am_naive, timezone=pytz.timezone('US/Eastern'))
-    utc_time_from_user_7_am = user_7am.astimezone(pytz.timezone("UTC")).strftime("%H:%M:%S")
-    print(utc_time_from_user_7_am, "this is their local 7am in UTC")
-
+    # Convert their 7am local time to UTC
+    # user_7am_naive = timezone.now()
+    # user_7am = timezone.make_aware(user_7am_naive, timezone=pytz.timezone(user_tz))
+    current_time = datetime.now()
+    utc_time_from_user_7_am = current_time.astimezone(pytz.timezone("UTC"))
+    print(local_end, utc_time_from_user_7_am)
     # Convert UTC time to seconds and get difference
-    date_time = datetime.strptime(local_end, "%H:%M:%S")
-    date_time2 = datetime.strptime(utc_time_from_user_7_am, "%H:%M:%S")
+    # date_time = datetime.strptime(local_end, "%H:%M:%S")
+    # print(date_time)
+    # date_time2 = datetime.strptime(utc_time_from_user_7_am, "%H:%M:%S")
+    # print(date_time2)
     # time_now = datetime.now()
-    a_timedelta = date_time - date_time2
-    seconds = a_timedelta.total_seconds()
+    # a_timedelta = date_time - date_time2
+    time_difference = local_end - utc_time_from_user_7_am
+    print(time_difference)
+    # seconds = a_timedelta.total_seconds()
+    seconds = time_difference.total_seconds()
     seconds = int(seconds)
-    print(seconds, "this is the difference in seconds")
-    
-    print(workflow_id, "this is workflow")
-   # Use time difference in UTC to schedule realtime meeting alert  
+    # Use time difference in UTC to schedule realtime meeting alert
     return emit_kick_off_slack_interaction(user_id, workflow_id, schedule=seconds)
-
 
 
 #########################################################
@@ -133,26 +134,25 @@ def _process_create_calendar_event(
 def afternoon_digest_scheduler(self):
     if self.access_token:
         decoded = jwt.decode(
-        self.access_token, algorithms="HS512", options={"verify_signature": False}
-    )
+            self.access_token, algorithms="HS512", options={"verify_signature": False}
+        )
     exp = decoded["exp"]
     expiration = datetime.fromtimestamp(exp) - timezone.timedelta(minutes=10)
 
     t = emit_generate_afternoon_digest(str(self.id), expiration.strftime("%Y-%m-%dT%H:%M"))
     self.refresh_token_task = str(t.id)
 
+
 def morning_digest_scheduler(self):
     if self.access_token:
         decoded = jwt.decode(
-        self.access_token, algorithms="HS512", options={"verify_signature": False}
-    )
+            self.access_token, algorithms="HS512", options={"verify_signature": False}
+        )
     exp = decoded["exp"]
     expiration = datetime.fromtimestamp(exp) - timezone.timedelta(minutes=10)
-    
 
     t = emit_generate_morning_digest(str(self.id), expiration.strftime("%Y-%m-%dT%H:%M"))
     self.refresh_token_task = str(t.id)
-
 
 
 def check_for_time(tz, hour, minute):
@@ -180,13 +180,6 @@ def check_for_uncompleted_meetings(user_id, org_level=False):
                 total_meetings = MeetingWorkflow.objects.filter(user=user.id).filter(
                     datetime_created__contains=datetime.today().date(),
                 )
-                last_instance = MeetingPrepInstance.objects.filter(user=user).order_by("-datetime_created").first()
-                # MeetingWorkflow Queryset 
-                # MeetingPrepInstance with last invocation 
-
-                # non_zoom = MeetingPrepInstance.objects.filter([meeting in meetings if meeting.event_data['type'] != "zoom"])
-                print(last_instance, "this is the meeting prep")
-
                 user_not_completed = [
                     meeting for meeting in total_meetings if meeting.progress == 0
                 ]
@@ -194,7 +187,7 @@ def check_for_uncompleted_meetings(user_id, org_level=False):
                 if len(user_not_completed):
                     not_completed = [*not_completed, *user_not_completed]
         else:
-            # This will be for the reps 
+            # This will be for the reps
             total_meetings = MeetingWorkflow.objects.filter(user=user.id).filter(
                 datetime_created__contains=datetime.today().date()
             )
@@ -390,7 +383,6 @@ def meeting_prep(processed_data, user_id, invocation=1):
             contact_forms.append(form)
             contact["_form"] = str(form.id)
     event_data = processed_data
-    print(event_data)
     processed_data.pop("participants")
     data = {
         "user": user.id,
@@ -399,13 +391,34 @@ def meeting_prep(processed_data, user_id, invocation=1):
         "invocation": invocation,
     }
     resource_check = meeting_resource_data.get("resource_id", None)
+    provider = processed_data.get("provider")
+
     if resource_check:
         data["resource_id"] = meeting_resource_data["resource_id"]
         data["resource_type"] = meeting_resource_data["resource_type"]
+
+    # Creates Meeting Prep Instance
     serializer = MeetingPrepInstanceSerializer(data=data)
     serializer.is_valid(raise_exception=True)
     serializer.save()
-    return
+
+    meeting_prep_instance = (
+        MeetingPrepInstance.objects.filter(user=user).order_by("-datetime_created").first()
+    )
+
+    # Conditional Check for Zoom meeting or Non-Zoom Meeting
+    if provider != [None, "zoom"]:
+        # Google Meet (Non-Zoom)
+        meeting_workflow = MeetingWorkflow.objects.create(
+            non_zoom_meeting=meeting_prep_instance, user=user,
+        )
+
+        # Sending end_times, workflow_id, and user values to emit function
+        non_zoom_end_times = processed_data.get("times").get("end_time")
+        workflow_id = str(meeting_workflow.id)
+        user_id = str(user.id)
+        user_tz = str(user.timezone)
+        return emit_non_zoom_meetings(workflow_id, user_id, user_tz, non_zoom_end_times)
 
 
 def _send_calendar_details(
