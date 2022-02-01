@@ -8,7 +8,6 @@
           $emit('cancel'), resetData()
         }
       "
-      width="36"
     >
       <form class="invite-form" @submit.prevent="handleInvite">
         <h2 class="invite-form__title">Invite Users via Slack</h2>
@@ -288,6 +287,7 @@ export default {
     async listUsers(cursor = null) {
       const res = await SlackOAuth.api.listUsers(cursor)
       this.slackMembers = res.data.members.filter((member) => member.deleted == false)
+      console.log(this.slackMembers)
     },
     onConfirmSlackInvite() {
       if (!this.userInviteForm.field.slackInvite.value) {

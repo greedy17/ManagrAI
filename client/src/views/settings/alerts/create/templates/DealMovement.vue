@@ -51,7 +51,7 @@
       </div> -->
     </div>
 
-    <div
+    <!-- <div
       v-if="
         hasCommitConfig !== 'Moved to Commit' && !commit && !showLoader && !pushing && !advancing
       "
@@ -61,10 +61,10 @@
       <h6 style="font-weight: bold; color: #5d5e5e; text-align: center">
         Nothing here, add a workflow to get started.. (o^^)o
       </h6>
-    </div>
+    </div> -->
 
     <div v-if="!showLoader" class="alert-row">
-      <div v-if="hasCommitConfig === 'Moved to Commit'" class="added-collection">
+      <!-- <div class="added-collection">
         <div class="added-collection__header">
           <p class="title">Moved to commit</p>
           <span class="active">active</span>
@@ -82,7 +82,8 @@
           </div>
         </section>
       </div>
-      <div v-if="configs.includes('Close date pushed')" class="added-collection">
+
+      <div class="added-collection">
         <div class="added-collection__header">
           <p class="title">Close date pushed</p>
           <span class="active">active</span>
@@ -99,10 +100,10 @@
             />
           </div>
         </section>
-      </div>
+      </div> -->
 
       <transition name="fade">
-        <div v-if="hasCommitConfig !== 'Moved to Commit' && commit">
+        <div v-if="commit">
           <MovedToCommit></MovedToCommit>
         </div>
       </transition>

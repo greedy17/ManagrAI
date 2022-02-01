@@ -1,108 +1,17 @@
 <template>
   <div class="alerts-page">
-    <!-- <div style="display: flex; align-item: flex-start; flex-direction: column; margin-left: 12vw">
-      <h2>
-        <span>
-          Moved
-          <span style="color: #fa646a">to Commit</span>
-        </span>
-      </h2>
-      <p style="margin-top: -0.5rem">
-        View and update all Opportunities that havent been worked in 30 days
-      </p>
-    </div> -->
-
     <div v-if="pageNumber === 0" class="alert__column">
       <template>
-        <div
-          class="forecast__collection"
-          :key="i"
-          v-for="(form, i) in alertTemplateForm.field.alertConfig.groups"
-        >
-          <div class="delivery__row" :errors="form.field.recurrenceDay.errors">
-            <div class="row__">
-              <label :class="form.field.recurrenceFrequency.value == 'WEEKLY' ? 'green' : ''"
-                >Weekly</label
-              >
-              <ToggleCheckBox
-                @input="
-                  form.field.recurrenceFrequency.value == 'WEEKLY'
-                    ? (form.field.recurrenceFrequency.value = 'MONTHLY')
-                    : (form.field.recurrenceFrequency.value = 'WEEKLY')
-                "
-                :value="form.field.recurrenceFrequency.value !== 'WEEKLY'"
-                offColor="#199e54"
-                onColor="#199e54"
-                style="margin-left: 0.25rem; margin-right: 0.25rem"
-              />
-              <label :class="form.field.recurrenceFrequency.value == 'MONTHLY' ? 'green' : ''"
-                >Monthly:</label
-              >
-            </div>
-
-            <div v-if="form.field.recurrenceFrequency.value == 'WEEKLY'">
-              <FormField>
-                <template v-slot:input>
-                  <DropDownSearch
-                    :items.sync="weeklyOpts"
-                    :itemsRef.sync="form.field._recurrenceDay.value"
-                    v-model="form.field.recurrenceDay.value"
-                    @input="form.field.recurrenceDay.validate()"
-                    displayKey="key"
-                    valueKey="value"
-                    nullDisplay="Select Day"
-                    searchable
-                    local
-                  />
-                </template>
-              </FormField>
-            </div>
-            <FormField
-              id="delivery"
-              v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
-              placeholder="Day of month"
-              @blur="form.field.recurrenceDay.validate()"
-              v-model="form.field.recurrenceDay.value"
-              small
-            />
-            <!-- <p
-              @click="removeDay"
-              v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
-              :class="form.field.recurrenceDay.value ? 'selected__item' : 'visible'"
-            >
-              <img
-                src="@/assets/images/remove.png"
-                style="height: 1rem; margin-right: 0.25rem"
-                alt=""
-              />
-              {{ form.field.recurrenceDay.value }}
-            </p> -->
-
-            <!-- <p
-              @click="removeDay"
-              v-else-if="form.field.recurrenceFrequency.value == 'WEEKLY'"
-              :class="form.field.recurrenceDay.value ? 'selected__item' : 'visible'"
-            >
-              <img
-                src="@/assets/images/remove.png"
-                style="height: 1rem; margin-right: 0.25rem"
-                alt=""
-              />
-              {{ onConvert(form.field.recurrenceDay.value) }}
-            </p> -->
-            <p class="visible"></p>
-          </div>
-
+        <div class="forecast__collection">
           <div v-if="userLevel == 'MANAGER'" style="margin-top: -1.5rem" class="delivery__row">
             <span style="margin-bottom: 0.5rem">Select Users:</span>
 
-            <FormField :errors="form.field.alertTargets.errors">
+            <FormField>
               <template v-slot:input>
                 <DropDownSearch
                   :items.sync="userTargetsOpts"
-                  :itemsRef.sync="form.field._alertTargets.value"
-                  v-model="form.field.alertTargets.value"
-                  @input="form.field.alertTargets.validate()"
+                  v-model="realTimeAlertForm.field.pipelines.value"
+                  @input="realTimeAlertForm.field.pipelines.validate()"
                   displayKey="fullName"
                   valueKey="id"
                   nullDisplay="Multi-select"
@@ -116,21 +25,19 @@
                 />
               </template>
             </FormField>
-            <!-- <div class="items_height">
-              <p
-                :key="i"
-                v-for="(item, i) in form.field.alertTargets.value"
-                :class="form.field.alertTargets.value ? 'selected__item' : ''"
-                @click="removeItemFromTargetArray(item)"
-              >
-                <img
-                  src="@/assets/images/remove.png"
-                  style="height: 1rem; margin-right: 0.25rem"
-                  alt=""
-                />
-                {{ item.length ? checkInteger(item) : '' }}
-              </p>
-            </div> -->
+          </div>
+
+          <div style="margin-bottom: 1.5rem" class="delivery__row">
+            <span style="margin-bottom: 0.5rem">Select Stage</span>
+            <DropDownSearch
+              :items.sync="stages"
+              v-model="advancedStage"
+              displayKey="label"
+              valueKey="value"
+              nullDisplay="Select a Stage"
+              searchable
+              local
+            />
           </div>
 
           <div
@@ -195,9 +102,7 @@
                 <template v-slot:input>
                   <DropDownSearch
                     :items.sync="userChannelOpts.channels"
-                    :itemsRef.sync="form.field._recipients.value"
-                    v-model="form.field.recipients.value"
-                    @input="form.field.recipients.validate()"
+                    v-model="realTimeAlertForm.field.recipients.value"
                     displayKey="name"
                     valueKey="id"
                     nullDisplay="Channels"
@@ -218,32 +123,14 @@
                   </DropDownSearch>
                 </template>
               </FormField>
-
-              <!-- <p
-                v-if="form.field.recipients.value.length > 0"
-                @click="removeTarget"
-                :class="form.field.recipients.value ? 'selected__item' : 'visible'"
-              >
-                <img
-                  src="@/assets/images/remove.png"
-                  style="height: 1rem; margin-right: 0.25rem"
-                  alt=""
-                />
-                {{ form.field._recipients.value.name }}
-              </p> -->
             </div>
           </div>
-          <div v-if="alertTemplateForm.isValid" class="centered__">
+          <div v-if="realTimeAlertForm.isValid" class="centered__">
             <PulseLoadingSpinnerButton
               :loading="savingTemplate"
-              :class="
-                !alertTemplateForm.isValid || savingTemplate
-                  ? 'disabled__button'
-                  : 'purple__button bouncy'
-              "
+              class="purple__button bouncy"
               text="Activate alert"
               @click.stop="onSave"
-              :disabled="!alertTemplateForm.isValid"
             />
           </div>
         </div>
@@ -254,31 +141,6 @@
         <p>Recieve alerts when your stages advance</p>
       </div>
     </div>
-
-    <div
-      :key="index"
-      v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
-      class="visible"
-    >
-      <CommitAlertGroup
-        :form="alertGroup"
-        :resourceType="alertTemplateForm.field.resourceType.value"
-      />
-    </div>
-
-    <!-- <div class="bottom_locked">
-      <PulseLoadingSpinnerButton
-        :loading="savingTemplate"
-        :class="
-          !alertTemplateForm.isValid || savingTemplate
-            ? 'disabled__button'
-            : 'purple__button bouncy'
-        "
-        text="Activate alert"
-        @click.stop="onSave"
-        :disabled="!alertTemplateForm.isValid"
-      />
-    </div> -->
   </div>
 </template>
 
@@ -312,21 +174,14 @@ import { UserConfigForm } from '@/services/users/forms'
  * Services
  */
 
-import AlertTemplate, {
-  AlertGroupForm,
-  AlertTemplateForm,
-  AlertConfigForm,
-  AlertMessageTemplateForm,
-  AlertOperandForm,
-} from '@/services/alerts/'
+import { RealTimeAlertForm, RealTime } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
 import {
   SObjectField,
-  SObjectValidations,
-  SObjectPicklist,
   NON_FIELD_ALERT_OPTS,
   SOBJECTS_LIST,
+  SObjectPicklist,
 } from '@/services/salesforce'
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
@@ -348,14 +203,6 @@ export default {
     Modal,
     SmartAlertTemplateBuilder,
   },
-  props: {
-    title: String,
-    likes: Number,
-    isPublished: Boolean,
-    commentIds: Array,
-    author: Object,
-    callback: Function,
-  },
   data() {
     return {
       channelOpts: new SlackListResponse(),
@@ -365,6 +212,7 @@ export default {
       dropdownVisible: true,
       channelCreated: false,
       create: true,
+      realTimeAlertRecipient: '',
       NON_FIELD_ALERT_OPTS,
       stringRenderer,
       newChannel: {},
@@ -372,14 +220,17 @@ export default {
       OPPORTUNITY: 'Opportunity',
       operandDate: '',
       searchQuery: '',
+      advancedStage: '',
       searchText: '',
       recurrenceDay: '',
       searchChannels: '',
       SOBJECTS_LIST,
       pageNumber: 0,
       configName: '',
+      stages: [],
+      allForms: [],
       userConfigForm: new UserConfigForm({}),
-      alertTemplateForm: new AlertTemplateForm(),
+      realTimeAlertForm: new RealTimeAlertForm(),
       selectedBindings: [],
       fields: CollectionManager.create({ ModelClass: SObjectField }),
       users: CollectionManager.create({ ModelClass: User }),
@@ -426,22 +277,16 @@ export default {
     this.userConfigForm = new UserConfigForm({
       activatedManagrConfigs: this.user.activatedManagrConfigs,
     })
-  },
-  watch: {
-    selectedResourceType: {
-      immediate: true,
-      async handler(val, prev) {
-        if (prev && val !== prev) {
-          this.alertTemplateForm = this.alertTemplateForm.reset()
-          this.selectedResourceType = val
-        }
-        if (this.selectedResourceType) {
-          this.fields.filters.salesforceObject = this.selectedResourceType
-          this.fields.filters.page = 1
-          await this.fields.refresh()
-        }
-      },
-    },
+    try {
+      this.allForms = await SlackOAuth.api.getOrgCustomForm()
+      await this.listPicklists({
+        salesforceObject: this.Opportunity,
+        picklistFor: 'StageName',
+      })
+    } catch (error) {
+      console.log(error)
+    }
+    this.getStageForms()
   },
   methods: {
     checkInteger(str) {
@@ -461,13 +306,6 @@ export default {
     },
     changeCreate() {
       this.create = !this.create
-      if (
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value !==
-        'SLACK_CHANNEL'
-      ) {
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value =
-          'SLACK_CHANNEL'
-      }
     },
     async listUserChannels(cursor = null) {
       const res = await SlackOAuth.api.listUserChannels(cursor)
@@ -476,25 +314,6 @@ export default {
         responseMetadata: { nextCursor: res.nextCursor },
       })
       this.userChannelOpts = results
-    },
-    removeDay() {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = ''
-    },
-    removeTarget() {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = []
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = []
-    },
-    removeItemFromTargetArray(item) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value =
-        this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.filter(
-          (i) => i !== item,
-        )
-    },
-    removeItemFromRecipientArray(item) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value.filter(
-          (i) => i !== item,
-        )
     },
     onConvert(val) {
       let newVal = ''
@@ -525,11 +344,9 @@ export default {
       this.$router.push({ name: 'CreateNew' })
     },
     async createChannel(name) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
       const res = await SlackOAuth.api.createChannel(name)
       if (res.channel) {
-        this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = res.channel
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = res.channel.id
+        this.realTimeAlertForm.field.recipients.value = res.channel.id
         this.channelCreated = !this.channelCreated
       } else {
         console.log(res.error)
@@ -621,57 +438,29 @@ export default {
       })
       this.channelOpts = results
     },
-    recipientTypeToggle(value) {
-      if (!this.user.slackRef) {
-        this.$Alert.alert({ type: 'error', message: 'Slack Not Integrated', timeout: 2000 })
-        return 'USER_LEVEL'
-      }
-      if (value == 'USER_LEVEL') {
-        return 'SLACK_CHANNEL'
-      } else if (value == 'SLACK_CHANNEL') {
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = []
-        this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = []
-        return 'USER_LEVEL'
-      }
-      return value
-    },
-    setRecipients(obj) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value.push(obj)
-    },
-    setRecipient(obj) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = obj
-    },
-    setDay(obj) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDay.value = obj
-    },
-    setPipelines(obj) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._alertTargets.value.push(obj)
-    },
+
     async onSave() {
       this.savingTemplate = true
-      this.alertTemplateForm.validate()
-      if (this.alertTemplateForm.isValid) {
-        try {
-          const res = await AlertTemplate.api.createAlertTemplate({
-            ...this.alertTemplateForm.toAPI,
-            user: this.$store.state.user.id,
-          })
-          this.userConfigForm.field.activatedManagrConfigs.value.push(res.title)
-          this.handleUpdate()
-          this.$Alert.alert({
-            message: 'Workflow saved succcessfully!',
-            timeout: 2000,
-            type: 'success',
-          })
-        } catch (e) {
-          this.$Alert.alert({
-            message: 'An error occured saving template',
-            timeout: 2000,
-            type: 'error',
-          })
-        } finally {
-          this.savingTemplate = false
-        }
+      try {
+        const res = await RealTime.api.createRealTimeAlert({
+          ...this.realTimeAlertForm.toAPI,
+          user: this.$store.state.user.id,
+          config: {
+            isActive: true,
+            title: 'Stage Advanced',
+            operator: '==',
+            value: this.advancedStage,
+          },
+        })
+        console.log(res)
+      } catch (e) {
+        this.$Alert.alert({
+          message: 'An error occured saving template',
+          timeout: 2000,
+          type: 'error',
+        })
+      } finally {
+        this.savingTemplate = false
       }
     },
     bindText(val) {
@@ -682,48 +471,7 @@ export default {
       }
       this.editor.insertText(start, `{ ${val} }`)
     },
-    onAddAlertGroup() {
-      // length determines order
-      const order = this.alertTemplateForm.field.alertGroups.groups.length
-      if (order >= 3) {
-        this.$Alert.alert({ message: 'You can only add 3 groups', timeout: 2000 })
-        return
-      }
-      // set next order
 
-      this.alertTemplateForm.addToArray('alertGroups', new AlertGroupForm())
-      this.alertTemplateForm.field.alertGroups.groups[order].field.groupOrder.value = order
-    },
-    onAddAlertSetting() {
-      if (this.alertTemplateForm.field.alertConfig.groups.length >= 3) {
-        this.$Alert.alert({ message: 'You can only add 3 configurations', timeout: 2000 })
-        return
-      }
-      this.alertTemplateForm.addToArray('alertConfig', new AlertConfigForm())
-    },
-    onRemoveAlertGroup(i) {
-      // get order and update options
-
-      if (this.alertTemplateForm.field.alertGroups.groups.length - 1 <= 0) {
-        return
-      }
-
-      const order = this.alertTemplateForm.field.alertGroups.groups[i].field.groupOrder.value
-
-      this.alertTemplateForm.removeFromArray('alertGroups', i)
-
-      let greaterThan = this.alertTemplateForm.field.alertGroups.groups.slice(i)
-
-      greaterThan.forEach((el, index) => {
-        el.field.groupOrder.value = order + index
-      })
-    },
-    onRemoveSetting(i) {
-      if (this.alertTemplateForm.field.alertConfig.groups.length - 1 <= 0) {
-        return
-      }
-      this.alertTemplateForm.removeFromArray('alertConfig', i)
-    },
     async onSearchFields(v) {
       this.fields.pagination = new Pagination()
       this.fields.filters = {
@@ -752,24 +500,29 @@ export default {
     showDropDown() {
       this.dropdownVisible = !this.dropdownVisible
     },
-    setAlertValues(date, name) {
-      this.alertTemplateForm.field.title = name
-      this.alertTemplateForm.alertGroups.groups[0].fields.alertOperands.groups[0].fields.operandValue.value =
-        date
-      this.alertTemplateForm.alertGroups.groups[0].fields.alertOperands.groups[0].fields.operandOperator.value =
-        '<='
-      if (date >= 0) {
-        this.alertGroups.groups[0].fields.alertOperands.groups[0].fields.field.operandOperator.value =
-          '='
-      }
+    getStageForms() {
+      // users can only create one form for the stage orderd by stage
+      let forms = []
+      this.stages.forEach((s) => {
+        this.allForms
+          .filter((f) => f.formType == this.STAGE_GATING)
+          .forEach((sf) => {
+            if (sf.stage == s.value) {
+              forms.push(sf)
+            }
+          })
+      })
+
+      this.formStages = [...forms]
     },
-    repsPipeline() {
-      if (this.userLevel == 'REP') {
-        this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
-        this.setPipelines({
-          fullName: 'MYSELF',
-          id: 'SELF',
-        })
+
+    async listPicklists(query_params = {}) {
+      try {
+        const res = await SObjectPicklist.api.listPicklists(query_params)
+
+        this.stages = res.length ? res[0]['values'] : []
+      } catch (e) {
+        console.log(e)
       }
     },
   },
@@ -843,35 +596,16 @@ export default {
     selection() {
       return this.editor.selection.lastRange
     },
-    alertObj() {
-      return {
-        title: this.formValue.title,
-        message: this.formValue.alertMessages[0].body,
-        resourceType: this.selectedResourceType,
-      }
-    },
     user() {
       return this.$store.state.user
     },
     userLevel() {
       return this.$store.state.user.userLevel
     },
-    selectedResourceType: {
-      get() {
-        return this.alertTemplateForm.field.resourceType.value
-      },
-      set(val) {
-        this.alertTemplateForm.field.resourceType.value = val
-      },
-    },
   },
   beforeMount() {
-    this.alertTemplateForm.field.resourceType.value = 'Opportunity'
-    this.alertTemplateForm.field.title.value = 'Moved to commit'
-    this.alertTemplateForm.field.isActive.value = true
-    this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
-      'Hey  <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong>, hasnt been touched since <strong>{ Opportunity.LastActivityDate }</strong>'
-    this.repsPipeline()
+    this.realTimeAlertForm.field.apiName.value = 'StageName'
+    this.realTimeAlertForm.field.resourceType.value = 'Opportunity'
   },
 }
 </script>

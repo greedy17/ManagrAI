@@ -423,7 +423,7 @@ export default {
             value: 'commit',
           },
         })
-        this.$router.go()
+        console.log(res)
       } catch (e) {
         this.$Alert.alert({
           message: 'An error occured saving template',
