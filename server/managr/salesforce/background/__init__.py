@@ -650,7 +650,7 @@ def _process_add_update_to_sf(form_id, *args):
         TaskSubType="Task",
     )
     if form.resource_type in ["Account", "Opportunity"]:
-        data["WhatId"] = (resource.integration_id,)
+        data["WhatId"] = resource.integration_id
     else:
         data["WhoId"] = resource.integration_id
     attempts = 1

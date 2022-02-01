@@ -1,22 +1,25 @@
 import json
-from os import access
-import pdb
-import resource
 import uuid
 import logging
 import pytz
-from urllib.parse import urlencode
 
 from django.db.models import Q
 from django.utils import timezone
-from datetime import datetime, date, timedelta
+from datetime import datetime, date
 
 from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import (
     custom_paginator_block,
     custom_meeting_paginator_block,
 )
-from managr.organization.models import Organization, Stage, Account, OpportunityLineItem, Pricebook2
+from managr.organization.models import (
+    Organization,
+    Stage,
+    Account,
+    OpportunityLineItem,
+    Pricebook2,
+    PricebookEntry,
+)
 from managr.opportunity.models import Opportunity, Lead
 from managr.zoom.models import ZoomMeeting
 from managr.slack import constants as slack_const
@@ -831,7 +834,6 @@ def process_show_edit_product_form(payload, context):
 
 
 def process_add_products_form(payload, context):
-    print(context)
     user = User.objects.get(slack_integration__slack_id=payload["user"]["id"])
     view = payload["view"]
     state = view["state"]["values"]
@@ -1444,10 +1446,9 @@ def process_resource_selected_for_task(payload, context):
 @processor()
 def process_return_to_form_modal(payload, context):
     """if an error occurs on create/update commands when the return button is clicked regen form"""
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     pm = json.loads(payload["view"]["private_metadata"])
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     from_workflow = pm.get("w", False) not in [None, False]
-
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
     actions = payload["actions"]
@@ -1481,13 +1482,21 @@ def process_return_to_form_modal(payload, context):
         view_context["w"] = pm.get("w")
         view_context["resource"] = resource_type
     if view_type == "add_product" or view_type == "update_product":
-        blocks = main_form.generate_form()
+        product_id = pm.get("product_form")
+        product_form = OrgCustomSlackFormInstance.objects.get(id=product_id)
         if view_type == "add_product":
+            pricebookentry = PricebookEntry.objects.get(
+                integration_id=product_form.saved_data["PricebookEntryId"]
+            )
+            blocks = main_form.generate_form(
+                product_form.saved_data, Pricebook2Id=pricebookentry.pricebook.integration_id
+            )
             title = "Add Product"
             callback_id = slack_const.PROCESS_SUBMIT_PRODUCT
         else:
             title = "Edit Product"
             callback_id = slack_const.PROCESS_UPDATE_PRODUCT
+            blocks = main_form.generate_form(product_form.saved_data)
         if len(blocks):
             data = {
                 "trigger_id": trigger_id,
