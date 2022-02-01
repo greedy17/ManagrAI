@@ -302,9 +302,9 @@ export default {
         responseMetadata: { nextCursor: res.nextCursor },
       })
       this.slackMembers = results
-      console.log(res)
-      console.log(results)
-      console.log(this.slackMembers)
+      // console.log(res)
+      // console.log(results)
+      // console.log(this.slackMembers)
     },
     onConfirmSlackInvite() {
       if (!this.userInviteForm.field.slackInvite.value) {
