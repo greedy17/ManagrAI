@@ -9,7 +9,7 @@
             <FormField>
               <template v-slot:input>
                 <DropDownSearch
-                  :items.sync="userTargetsOpts"
+                  :items.sync="userList"
                   v-model="realTimeAlertForm.field.pipelines.value"
                   @input="realTimeAlertForm.field.pipelines.validate()"
                   displayKey="fullName"
@@ -18,10 +18,6 @@
                   searchable
                   multi
                   medium
-                  :loading="users.loadingNextPage"
-                  :hasNext="!!users.pagination.hasNextPage"
-                  @load-more="onUsersNextPage"
-                  @search-term="onSearchUsers"
                 />
               </template>
             </FormField>
@@ -234,6 +230,7 @@ export default {
       selectedBindings: [],
       fields: CollectionManager.create({ ModelClass: SObjectField }),
       users: CollectionManager.create({ ModelClass: User }),
+      userList: [],
       recipientBindings: [
         { referenceDisplayLabel: 'Recipient Full Name', apiName: 'full_name' },
         { referenceDisplayLabel: 'Recipient First Name', apiName: 'first_name' },
@@ -273,6 +270,7 @@ export default {
     }
     if (this.user.userLevel == 'MANAGER') {
       await this.users.refresh()
+      this.userList = this.users.list
     }
     this.userConfigForm = new UserConfigForm({
       activatedManagrConfigs: this.user.activatedManagrConfigs,
