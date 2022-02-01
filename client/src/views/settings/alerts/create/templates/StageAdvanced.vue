@@ -27,7 +27,7 @@
             </FormField>
           </div>
 
-          <div style="margin-bottom: 1.5rem" class="delivery__row">
+          <div style="margin-bottom: 2.5rem; margin-top: 0.5rem" class="delivery__row">
             <span style="margin-bottom: 0.5rem">Select Stage</span>
             <DropDownSearch
               :items.sync="stages"
@@ -886,7 +886,7 @@ input {
   background-color: white;
   box-shadow: 3px 4px 7px $very-light-gray;
   border-radius: 0.75rem;
-  padding: 2rem;
+  padding: 3rem 2rem;
   margin-top: -3rem;
 }
 .items_height {

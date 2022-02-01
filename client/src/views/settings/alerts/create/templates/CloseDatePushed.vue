@@ -33,7 +33,7 @@
               flex-direction: column;
               align-items: center;
               justify-content: flex-start;
-              margin-top: 0.5rem;
+              margin-top: 1.5rem;
             "
           >
             <div v-if="!channelName" class="row__">
@@ -832,7 +832,7 @@ input {
   background-color: white;
   box-shadow: 3px 4px 7px $very-light-gray;
   border-radius: 0.75rem;
-  padding: 2rem;
+  padding: 3rem 2rem;
   margin-top: -3rem;
 }
 .items_height {
