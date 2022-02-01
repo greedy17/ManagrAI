@@ -1,7 +1,7 @@
 <template>
   <div class="alerts-page">
     <div v-if="!showLoader" class="col">
-      <h2 style="color: black; margin-top: -0.5rem" class="title">Deal Movement</h2>
+      <h2 @click="log" style="color: black; margin-top: -0.5rem" class="title">Deal Movement</h2>
       <p style="color: #5d5e5e" class="sub__">Activate workflows related to deal movement</p>
     </div>
 
@@ -10,43 +10,55 @@
     </div>
 
     <div v-if="!showLoader" class="row">
-      <div class="stage-item">
+      <div v-if="!advancedConfigActive" class="stage-item">
         <p>Stage Advanced</p>
         <button class="plus_button" @click="onAdvancing">
           <img src="@/assets/images/add.svg" alt="" />
         </button>
       </div>
+      <div v-else class="added-item">
+        <p>Stage Advanced</p>
+        <button style="cursor: auto" class="plus_button">
+          <img src="@/assets/images/configCheck.png" class="filtered" alt="" />
+        </button>
+      </div>
 
-      <div @click="onCommit" class="stage-item">
+      <div v-if="!commitConfigActive" @click="onCommit" class="stage-item">
         <p>Moved to Commit</p>
         <button class="plus_button">
           <img src="@/assets/images/add.svg" alt="" />
         </button>
       </div>
-      <!-- <div v-else class="added-item">
+      <div v-else class="added-item">
         <p>Moved to Commit</p>
         <button style="cursor: auto" class="plus_button">
           <img src="@/assets/images/configCheck.png" class="filtered" alt="" />
         </button>
-      </div> -->
+      </div>
 
-      <div @click="onPushing" class="stage-item">
+      <div v-if="!pushedConfigActive" @click="onPushing" class="stage-item">
         <p>Close Date Pushed</p>
         <button class="plus_button">
           <img src="@/assets/images/add.svg" alt="" />
         </button>
       </div>
-      <!-- <div v-else class="added-item">
+      <div v-else class="added-item">
         <p>Close Date Pushed</p>
         <button style="cursor: auto" class="plus_button">
           <img src="@/assets/images/configCheck.png" class="filtered" alt="" />
         </button>
-      </div> -->
+      </div>
     </div>
 
-    <!-- <div
+    <div
       v-if="
-        hasCommitConfig !== 'Moved to Commit' && !commit && !showLoader && !pushing && !advancing
+        !pushedConfigActive &&
+        !advancedConfigActive &&
+        !commitConfigActive &&
+        !commit &&
+        !pushing &&
+        !advancing &&
+        !showLoader
       "
       style="margin-top: 10%"
     >
@@ -54,19 +66,19 @@
       <h6 style="font-weight: bold; color: #5d5e5e; text-align: center">
         Nothing here, add a workflow to get started.. (o^^)o
       </h6>
-    </div> -->
+    </div>
 
     <div v-if="!showLoader" class="alert-row">
-      <!-- <div class="added-collection">
+      <div v-if="advancedConfigActive && !advancing" class="added-collection">
         <div class="added-collection__header">
-          <p class="title">Moved to commit</p>
+          <p class="title">Close date Advanced</p>
           <span class="active">active</span>
         </div>
         <section class="added-collection__body">
-          <p>Get alerted when your team has a deal that moves to commit.</p>
+          <p>Recieve alerts when deals advances to your selected stage</p>
         </section>
         <section class="added-collection__footer">
-          <div class="edit" @click="goToSaved">
+          <div class="edit" @click="onAdvancing">
             <img
               src="@/assets/images/edit.png"
               style="height: 1rem; filter: brightness(40%)"
@@ -76,16 +88,16 @@
         </section>
       </div>
 
-      <div class="added-collection">
+      <div v-if="commitConfigActive && !commit" class="added-collection">
         <div class="added-collection__header">
-          <p class="title">Close date pushed</p>
+          <p class="title">Moved to Commit</p>
           <span class="active">active</span>
         </div>
         <section class="added-collection__body">
-          <p>Get alerted when your team has a Close Date that's pushed into a new month.</p>
+          <p>Recieve alerts when deals move to commit.</p>
         </section>
         <section class="added-collection__footer">
-          <div class="edit" @click="goToSaved">
+          <div class="edit" @click="onCommit">
             <img
               src="@/assets/images/edit.png"
               style="height: 1rem; filter: brightness(40%)"
@@ -93,7 +105,27 @@
             />
           </div>
         </section>
-      </div> -->
+      </div>
+
+      <div v-if="pushedConfigActive && !pushing" class="added-collection">
+        <div class="added-collection__header">
+          <p class="title">Close date pushed</p>
+          <span class="active">active</span>
+        </div>
+        <section class="added-collection__body">
+          <p>Recieve alerts when Close Date's are pushed into a new month.</p>
+        </section>
+        <section class="added-collection__footer">
+          <div class="edit" @click="onPushing">
+            <img
+              src="@/assets/images/edit.png"
+              style="height: 1rem; filter: brightness(40%)"
+              alt=""
+            />
+          </div>
+        </section>
+      </div>
+
       <transition name="fade">
         <div v-if="advancing">
           <StageAdvanced></StageAdvanced>
@@ -107,7 +139,7 @@
       </transition>
 
       <transition name="fade">
-        <div v-if="pushing && !configs.includes('Close date pushed')">
+        <div v-if="pushing">
           <CloseDatePushed></CloseDatePushed>
         </div>
       </transition>
@@ -209,6 +241,12 @@ export default {
     this.templates.refresh()
   },
   methods: {
+    log() {
+      console.log(this.realtimeConfigs)
+      console.log(this.commitConfigActive)
+      console.log(this.advancedConfigActive)
+      console.log(this.pushedConfigActive)
+    },
     onAdvancing() {
       this.advancing = !this.advancing
     },
@@ -264,8 +302,29 @@ export default {
     }, 400)
   },
   computed: {
-    hasCommitConfig() {
-      return this.$store.state.user.slackAccount.realtimeAlertConfigs.null.title
+    realtimeConfigs() {
+      return Object.values(this.$store.state.user.slackAccount.realtimeAlertConfigs)
+    },
+    commitConfigActive() {
+      for (let i = 0; i < this.realtimeConfigs.length; i++) {
+        if (this.realtimeConfigs[i].title === 'Moved to Commit') {
+          return true
+        }
+      }
+    },
+    advancedConfigActive() {
+      for (let i = 0; i < this.realtimeConfigs.length; i++) {
+        if (this.realtimeConfigs[i].title === 'Stage Advanced') {
+          return true
+        }
+      }
+    },
+    pushedConfigActive() {
+      for (let i = 0; i < this.realtimeConfigs.length; i++) {
+        if (this.realtimeConfigs[i].title === 'Close date pushed') {
+          return true
+        }
+      }
     },
     workFlowIds() {
       let arr = []

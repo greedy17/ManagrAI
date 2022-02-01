@@ -134,7 +134,7 @@
 
       <div class="description">
         <h4 class="title">Stage Advanced</h4>
-        <p>Recieve alerts when your stages advance</p>
+        <p>Recieve alerts when deals advances to your selected stage</p>
       </div>
     </div>
   </div>
@@ -448,9 +448,10 @@ export default {
             title: 'Stage Advanced',
             operator: '==',
             value: this.advancedStage,
+            dataType: 'string',
           },
         })
-        console.log(res)
+        this.$router.go()
       } catch (e) {
         this.$Alert.alert({
           message: 'An error occured saving template',

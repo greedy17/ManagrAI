@@ -121,7 +121,7 @@
 
       <div class="description">
         <h4 class="title">Moved to commit</h4>
-        <p>Get alerted when your team has a deal that moves to commit.</p>
+        <p>Recieve alerts when deals move to commit.</p>
       </div>
     </div>
   </div>
@@ -419,9 +419,10 @@ export default {
             title: 'Moved to Commit',
             operator: '==',
             value: 'commit',
+            dataType: 'string',
           },
         })
-        console.log(res)
+        this.$router.go()
       } catch (e) {
         this.$Alert.alert({
           message: 'An error occured saving template',

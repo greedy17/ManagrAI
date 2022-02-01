@@ -121,7 +121,7 @@
 
       <div class="description">
         <h4 class="title">Close date pushed</h4>
-        <p>Get alerted when your team has a Close Date that's pushed into a new month.</p>
+        <p>Recieve alerts when Close Date's are pushed into a new month.</p>
       </div>
     </div>
   </div>
@@ -416,12 +416,13 @@ export default {
           user: this.$store.state.user.id,
           config: {
             isActive: true,
-            title: 'Closed date pushed',
+            title: 'Close date pushed',
             operator: '!=',
             value: null,
+            dataType: 'date',
           },
         })
-        console.log(res)
+        this.$router.go()
       } catch (e) {
         this.$Alert.alert({
           message: 'An error occured saving template',
