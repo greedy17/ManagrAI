@@ -451,7 +451,6 @@ class SalesforceAuthAccountAdapter:
         )
         limit = kwargs.pop("limit", sf_consts.SALESFORCE_QUERY_LIMIT)
         url = f"{self.instance_url}{sf_consts.SALESFORCE_RESOURCE_QUERY_URI(self.salesforce_id, resource, extra_items, relationships, limit=limit, additional_filters=additional_filters)}"
-        print(url)
         if offset:
             url = f"{url} offset {offset}"
         logger.info(f"{url} was sent")
@@ -496,7 +495,6 @@ class SalesforceAuthAccountAdapter:
         # always retreive id
         fields.insert(0, "Id")
         url = f"{self.instance_url}{sf_consts.SALESFORCE_RESOURCE_QUERY_URI(self.salesforce_id, relationship, fields, additional_filters=[filter_query_string], limit=20 )}"
-        print(url)
         with Client as client:
             res = client.get(
                 url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
