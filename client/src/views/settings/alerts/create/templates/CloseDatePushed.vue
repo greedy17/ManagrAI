@@ -420,7 +420,7 @@ export default {
             isActive: true,
             title: 'Closed date pushed',
             operator: '!=',
-            value: 'current close date value',
+            value: null,
           },
         })
         console.log(res)
