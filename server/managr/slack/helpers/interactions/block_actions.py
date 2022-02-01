@@ -16,7 +16,7 @@ from managr.slack.helpers.block_sets.command_views_blocksets import (
     custom_paginator_block,
     custom_meeting_paginator_block,
 )
-from managr.organization.models import Organization, Stage, Account, OpportunityLineItem
+from managr.organization.models import Organization, Stage, Account, OpportunityLineItem, Pricebook2
 from managr.opportunity.models import Opportunity, Lead
 from managr.zoom.models import ZoomMeeting
 from managr.slack import constants as slack_const
@@ -831,9 +831,11 @@ def process_show_edit_product_form(payload, context):
 
 
 def process_add_products_form(payload, context):
+    print(context)
     user = User.objects.get(slack_integration__slack_id=payload["user"]["id"])
     view = payload["view"]
     state = view["state"]["values"]
+    pricebook = context.get("pricebook", None)
     private_metadata = json.loads(view["private_metadata"])
     loading_view_data = send_loading_screen(
         user.organization.slack_integration.access_token,
@@ -859,7 +861,21 @@ def process_add_products_form(payload, context):
     private_metadata.update({**context, "view_id": view["id"], "product_form": product_form_id})
     # currently only for update
     blocks = []
-    blocks.extend(product_form.generate_form())
+    if pricebook is None:
+        blocks.append(
+            block_builders.external_select(
+                f"*Pricebook*",
+                action_with_params(
+                    slack_const.GET_PRICEBOOK_ENTRY_OPTIONS,
+                    params=[f"org={str(user.organization.id)}", f"product_form={product_form_id}"],
+                ),
+                block_id="PRICEBOOKS",
+                initial_option=None,
+            )
+        )
+        blocks.extend(product_form.generate_form())
+    else:
+        blocks.extend(product_form.generate_form(Pricebook2Id=f"{pricebook}"))
     if len(blocks):
         data = {
             "view_id": loading_view_data["view"]["id"],
@@ -1134,6 +1150,13 @@ def process_show_update_resource_form(payload, context):
         )
         show_submit_button_if_fields_added = False
     if user.organization.has_products and resource_type == "Opportunity":
+        params = [
+            f"f={str(slack_form.id)}",
+            f"u={str(user.id)}",
+            "type=command",
+        ]
+        if slack_form.resource_object.secondary_data["Pricebook2Id"]:
+            params.append(f"pricebook={slack_form.resource_object.secondary_data['Pricebook2Id']}")
         blocks.append(
             block_builders.actions_block(
                 [
@@ -1141,12 +1164,7 @@ def process_show_update_resource_form(payload, context):
                         "Add Product",
                         "ADD_PRODUCT",
                         action_id=action_with_params(
-                            slack_const.PROCESS_ADD_PRODUCTS_FORM,
-                            params=[
-                                f"f={str(slack_form.id)}",
-                                f"u={str(user.id)}",
-                                "type=command",
-                            ],
+                            slack_const.PROCESS_ADD_PRODUCTS_FORM, params=params,
                         ),
                     )
                 ],
@@ -2134,6 +2152,13 @@ def process_show_alert_update_resource_form(payload, context):
     }
     private_metadata.update(context)
     if user.organization.has_products and resource_type == "Opportunity":
+        params = [
+            f"f={str(slack_form.id)}",
+            f"u={str(user.id)}",
+            "type=command",
+        ]
+        if slack_form.resource_object.secondary_data["Pricebook2Id"]:
+            params.append(f"pricebook={slack_form.resource_object.secondary_data['Pricebook2Id']}")
         blocks.append(
             block_builders.actions_block(
                 [
@@ -2420,6 +2445,13 @@ def process_show_digest_update_resource_form(payload, context):
     }
     private_metadata.update(context)
     if user.organization.has_products and resource_type == "Opportunity":
+        params = [
+            f"f={str(slack_form.id)}",
+            f"u={str(user.id)}",
+            "type=command",
+        ]
+        if slack_form.resource_object.secondary_data["Pricebook2Id"]:
+            params.append(f"pricebook={slack_form.resource_object.secondary_data['Pricebook2Id']}")
         blocks.append(
             block_builders.actions_block(
                 [
@@ -2681,6 +2713,46 @@ def process_view_recap(payload, context):
     return
 
 
+def process_pricebook_selected(payload, context):
+    view = payload["view"]
+    state = view["state"]
+    private_metadata = json.loads(view["private_metadata"])
+    org = Organization.objects.get(id=context.get("org"))
+    current_value = state["values"]["PRICEBOOKS"][
+        f"GET_PRICEBOOK_ENTRY_OPTIONS?org={context.get('org')}&product_form={context.get('product_form')}"
+    ]["selected_option"]["value"]
+    pricebook = Pricebook2.objects.get(id=current_value)
+    product_form = OrgCustomSlackFormInstance.objects.get(id=context.get("product_form"))
+    blocks = []
+    blocks.extend(product_form.generate_form(Pricebook2Id=f"{pricebook.integration_id}"))
+    data = {
+        "view_id": view["id"],
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Add Products Form"},
+            "submit": {"type": "plain_text", "text": "Submit"},
+            "blocks": blocks,
+            "private_metadata": json.dumps(private_metadata),
+            "callback_id": slack_const.PROCESS_SUBMIT_PRODUCT,
+        },
+    }
+    try:
+        slack_requests.generic_request(
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
+            data,
+            access_token=org.slack_integration.access_token,
+        )
+    except InvalidBlocksException as e:
+        return logger.exception(f"Failed To Generate Slack Product form with {str(org.id)} {e}")
+    except InvalidBlocksFormatException as e:
+        return logger.exception(f"Failed To Generate Slack Product form with {str(org.id)} {e}")
+    except UnHandeledBlocksException as e:
+        return logger.exception(f"Failed To Generate Slack Product form with {str(org.id)} {e}")
+    except InvalidAccessToken as e:
+        return logger.exception(f"Failed To Generate Slack Product form with {e}")
+    return
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -2725,6 +2797,7 @@ def handle_block_actions(payload):
         slack_const.PROCESS_SHOW_EDIT_PRODUCT_FORM: process_show_edit_product_form,
         slack_const.PROCESS_ADD_PRODUCTS_FORM: process_add_products_form,
         slack_const.VIEW_RECAP: process_view_recap,
+        slack_const.GET_PRICEBOOK_ENTRY_OPTIONS: process_pricebook_selected,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)

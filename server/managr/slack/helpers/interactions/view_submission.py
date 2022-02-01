@@ -1828,6 +1828,8 @@ def process_submit_product(payload, context):
         f"product_form={str(product_form.id)}",
         f"type={type}",
     ]
+    if main_form.resource_object.secondary_data["Pricebook2Id"]:
+        params.append(f"pricebook={main_form.resource_object.secondary_data['Pricebook2Id']}")
     if workflow_id:
         params.append(f"w={workflow_id}")
 
