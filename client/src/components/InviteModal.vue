@@ -46,7 +46,7 @@ export default {
     },
     width: {
       type: Number,
-      default: 60,
+      default: 36,
     },
     includeMargin: {
       type: Boolean,

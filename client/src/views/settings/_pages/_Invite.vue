@@ -8,7 +8,6 @@
           $emit('cancel'), resetData()
         }
       "
-      width="36"
     >
       <form class="invite-form" @submit.prevent="handleInvite">
         <h2 class="invite-form__title">Invite Users via Slack</h2>
@@ -23,11 +22,13 @@
             <FormField>
               <template v-slot:input>
                 <DropDownSearch
-                  :items.sync="slackMembers"
+                  :items.sync="slackMembers.members"
                   v-model="userInviteForm.field.slackId.value"
-                  displayKey="real_name"
+                  displayKey="realName"
                   valueKey="id"
                   nullDisplay="Search Users"
+                  :hasNext="!!slackMembers.nextCursor"
+                  @load-more="listUsers(slackMembers.nextCursor)"
                   searchable
                   local
                 >
@@ -127,16 +128,22 @@
       <div class="invite-list__section__container">
         <img class="back-logo" src="@/assets/images/logo.png" />
         <div
-          style="display: flex; align-items: flex-start; color: #199e54"
+          style="display: flex; align-items: flex-start; color: #199e54; font-size: 13px"
           class="invite-list__section__item col"
         >
           {{ user.fullName }}
           <p style="color: #beb5cc; font-size: 0.65rem; margin-top: 0.25rem">{{ user.email }}</p>
         </div>
-        <div style="display: flex; align-items: flex-start" class="invite-list__section__item">
+        <div
+          style="display: flex; align-items: flex-start; font-size: 13px"
+          class="invite-list__section__item"
+        >
           {{ user.userLevel == 'MANAGER' ? 'Team Leader(You)' : 'Rep(You)' }}
         </div>
-        <div style="display: flex; align-items: flex-start" class="invite-list__section__item">
+        <div
+          style="display: flex; align-items: flex-start; font-size: 13px"
+          class="invite-list__section__item"
+        >
           Registered
         </div>
 
@@ -145,16 +152,16 @@
           class="invite-list__section__item invite-list__status"
         >
           <span :class="user.slackRef ? 'active' : 'inactive'">
-            <img src="@/assets/images/slackLogo.png" style="height: 1rem" alt="" />
+            <img src="@/assets/images/slackLogo.png" style="height: 0.8rem" alt="" />
           </span>
           <span :class="user.hasSalesforceIntegration ? 'active' : 'inactive'">
-            <img src="@/assets/images/salesforce.png" style="height: 1rem" alt="" />
+            <img src="@/assets/images/salesforce.png" style="height: 0.8rem" alt="" />
           </span>
           <span :class="user.hasZoomIntegration ? 'active' : 'inactive'">
-            <img src="@/assets/images/zoom.png" alt="" style="height: 1rem" />
+            <img src="@/assets/images/zoom.png" alt="" style="height: 0.8rem" />
           </span>
           <span :class="user.nylasRef ? 'active' : 'inactive'">
-            <img src="@/assets/images/gmailCal.png" alt="" style="height: 1rem" />
+            <img src="@/assets/images/gmailCal.png" alt="" style="height: 0.8rem" />
           </span>
         </div>
         <!-- <div style="color: white" class="invite-list__section__item invite-list__status">
@@ -164,7 +171,7 @@
       <div v-for="member in team.list" :key="member.id" class="invite-list__section__container">
         <template v-if="member.id !== user.id">
           <div
-            style="display: flex; align-items: flex-start"
+            style="display: flex; align-items: flex-start; font-size: 13px"
             class="invite-list__section__item col"
           >
             {{ member.firstName ? member.firstName : 'Pending' }}
@@ -174,26 +181,29 @@
           </div>
           <div
             v-if="member.userLevel == 'MANAGER'"
-            style="display: flex; align-items: flex-start"
+            style="display: flex; align-items: flex-start; font-size: 13px"
             class="invite-list__section__item"
           >
             Manager
           </div>
           <div
             v-else-if="member.userLevel == 'SDR'"
-            style="display: flex; align-items: flex-start"
+            style="display: flex; align-items: flex-start; font-size: 13px"
             class="invite-list__section__item"
           >
             SDR
           </div>
           <div
             v-else-if="member.userLevel == 'REP'"
-            style="display: flex; align-items: flex-start"
+            style="display: flex; align-items: flex-start; font-size: 13px"
             class="invite-list__section__item"
           >
             REP
           </div>
-          <div style="display: flex; align-items: flex-start" class="invite-list__section__item">
+          <div
+            style="display: flex; align-items: flex-start; font-size: 13px"
+            class="invite-list__section__item"
+          >
             {{ member.isActive ? 'Registered' : 'Pending..' }}
           </div>
           <div
@@ -201,16 +211,16 @@
             class="invite-list__section__item invite-list__status"
           >
             <span :class="member.slackRef ? 'active' : 'inactive'">
-              <img src="@/assets/images/slackLogo.png" style="height: 1rem" alt="" />
+              <img src="@/assets/images/slackLogo.png" style="height: 0.8rem" alt="" />
             </span>
             <span :class="member.hasSalesforceIntegration ? 'active' : 'inactive'">
-              <img src="@/assets/images/salesforce.png" style="height: 1rem" alt="" />
+              <img src="@/assets/images/salesforce.png" style="height: 0.8rem" alt="" />
             </span>
             <span :class="member.hasZoomIntegration ? 'active' : 'inactive'">
-              <img src="@/assets/images/zoom.png" alt="" style="height: 1rem" />
+              <img src="@/assets/images/zoom.png" alt="" style="height: 0.8rem" />
             </span>
             <span :class="member.nylasRef ? 'active' : 'inactive'">
-              <img src="@/assets/images/gmailCal.png" alt="" style="height: 1rem" />
+              <img src="@/assets/images/gmailCal.png" alt="" style="height: 0.8rem" />
             </span>
           </div>
           <!-- <div class="invite-list__section__item invite-list__status">
@@ -232,7 +242,7 @@ import Button from '@thinknimble/button'
 import CheckBox from '@/components/CheckBoxUpdated'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import FormField from '@/components/forms/FormField'
-import SlackOAuth, { SlackListResponse } from '@/services/slack'
+import SlackOAuth, { SlackUserList } from '@/services/slack'
 import DropDownSearch from '@/components/DropDownSearch'
 export default {
   name: 'Invite',
@@ -256,7 +266,7 @@ export default {
       organization: null,
       organizations: CollectionManager.create({ ModelClass: Organization }),
       organizationRef: null,
-      slackMembers: [],
+      slackMembers: new SlackUserList(),
       inviteRecipient: '',
       selectedUserType: User.types.REP,
       userTypes: [
@@ -287,7 +297,14 @@ export default {
     },
     async listUsers(cursor = null) {
       const res = await SlackOAuth.api.listUsers(cursor)
-      this.slackMembers = res.data.members.filter((member) => member.deleted == false)
+      const results = new SlackUserList({
+        members: [...this.slackMembers.members, ...res.members],
+        responseMetadata: { nextCursor: res.nextCursor },
+      })
+      this.slackMembers = results
+      console.log(res)
+      console.log(results)
+      console.log(this.slackMembers)
     },
     onConfirmSlackInvite() {
       if (!this.userInviteForm.field.slackInvite.value) {
@@ -383,7 +400,8 @@ export default {
   flex-direction: column;
 }
 .section-header {
-  font-size: 1.2rem;
+  font-size: 15px;
+  font-weight: bold;
 }
 .key {
   display: flex;
