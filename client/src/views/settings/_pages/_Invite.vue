@@ -349,7 +349,7 @@ export default {
       }
       // check form data for this request
       try {
-        this.userInviteForm.field.email.value = this.slackMembers.filter(
+        this.userInviteForm.field.email.value = this.slackMembers.members.filter(
           (member) => member.id == this.userInviteForm.field.slackId.value,
         )[0].profile.email
         const res = await User.api.invite(this.userInviteForm.value)
