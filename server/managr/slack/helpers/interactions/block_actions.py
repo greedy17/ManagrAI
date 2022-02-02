@@ -177,8 +177,7 @@ def process_edit_meeting_contact(payload, context):
         org = workflow.user.organization
     else:
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-        meeting = workflow.meeting
-        org = meeting.zoom_account.user.organization
+        org = workflow.user.organization
     edit_block_context = {
         "w": context.get("w"),
         "tracking_id": context.get("tracking_id"),

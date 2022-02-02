@@ -577,10 +577,10 @@ def _process_add_call_to_sf(workflow_id, *args):
     else:
         user_timezone = user.timezone
         start_time = datetime.utcfromtimestamp(
-            int(workflow.non_zoom_meeting["event_data"]["times"]["start_time"])
+            int(workflow.non_zoom_meeting.event_data["times"]["start_time"])
         )
         end_time = datetime.utcfromtimestamp(
-            int(workflow.non_zoom_meeting["event_data"]["times"]["end_time"])
+            int(workflow.non_zoom_meeting.event_data["times"]["end_time"])
         )
     formatted_start = (
         datetime.strftime(

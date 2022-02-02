@@ -177,7 +177,7 @@ def meeting_contacts_block_set(context):
             {"type": "divider"},
         ]
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-        meeting = workflow.meeting
+        meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
         contacts = meeting.participants
         sf_account = workflow.user.salesforce_account
     # list contacts we already had from sf
@@ -340,7 +340,7 @@ def edit_meeting_contacts_block_set(context):
         )
     else:
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-        meeting = workflow.meeting
+        meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
         contact = dict(
             *filter(
                 lambda contact: contact["_tracking_id"] == context.get("tracking_id"),
@@ -369,11 +369,8 @@ def edit_meeting_contacts_block_set(context):
                 user=user, template=template, workflow=workflow
             )
     else:
-        slack_form = (
-            OrgCustomSlackFormInstance.objects.get(id=contact.get("_form"))
-            if type
-            else workflow.forms.filter(id=contact.get("_form")).first()
-        )
+        slack_form = OrgCustomSlackFormInstance.objects.get(id=contact.get("_form"))
+
     if not slack_form:
         return [
             block_builders.simple_section(
@@ -428,8 +425,8 @@ def initial_meeting_interaction_block_set(context):
     else:
         meeting_type = "non-zoom"
         meeting = workflow.non_zoom_meeting
-        title = meeting["event_data"]["title"]
         event_data = meeting.event_data
+        title = event_data["title"]
         user_tz = meeting.user.timezone
         start_time = event_data["times"]["start_time"]
         end_time = event_data["times"]["end_time"]
@@ -742,11 +739,12 @@ def create_modal_block_set(context, *args, **kwargs):
 def disregard_meeting_review_block_set(context, *args, **kwargs):
     """Shows a modal to create/select a resource"""
     w = MeetingWorkflow.objects.get(id=context.get("w"))
+    topic = w.meeting.topic if w.meeting else w.non_zoom_meeting.event_data["title"]
     blocks = [
         block_builders.section_with_button_block(
             "Review",
             str(w.id),
-            f":thumbsup: okay, you can always come back to review *{w.meeting.topic}* :calendar:",
+            f":thumbsup: okay, you can always come back to review *{topic}* :calendar:",
             action_id=slack_const.ZOOM_MEETING__RESTART_MEETING_FLOW,
         )
     ]
@@ -758,7 +756,7 @@ def disregard_meeting_review_block_set(context, *args, **kwargs):
 def final_meeting_interaction_block_set(context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
-    topic = meeting.topic if workflow.meeting else meeting["event_data"]["title"]
+    topic = meeting.topic if workflow.meeting else meeting.event_data["title"]
     meeting_form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
     meet_type = meeting_form.saved_data.get("meeting_type", None)
     text = (
@@ -789,7 +787,7 @@ def no_changes_interaction_block_set(context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
 
     meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
-    topic = meeting.topic if workflow.meeting else meeting["event_data"]["title"]
+    topic = meeting.topic if workflow.meeting else meeting.event_data["title"]
     blocks = [
         block_builders.simple_section(
             f":+1: Got it! No updated needed for meeting *{topic}* ", "mrkdwn",

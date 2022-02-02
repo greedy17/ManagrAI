@@ -169,9 +169,14 @@ def process_zoom_meeting_data(payload, context):
         form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
         form.update_source = "meeting"
         form.save_form(state)
-
-    contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
-
+    if workflow.meeting:
+        contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
+    else:
+        contact_ids = [
+            participant["_form"] for participant in workflow.non_zoom_meeting.participants
+        ]
+        contact_forms = OrgCustomSlackFormInstance.objects.filter(id__in=contact_ids)
+    print(contact_forms)
     ops = [
         # update
         f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}",
@@ -195,19 +200,19 @@ def process_zoom_meeting_data(payload, context):
     else:
         workflow.operations_list = ops
 
-    # ts, channel = workflow.slack_interaction.split("|")
-    # block_set = [
-    #     *get_block_set("loading", {"message": ":rocket: We are saving your data to salesforce..."}),
-    # ]
-    # try:
-    #     res = slack_requests.update_channel_message(
-    #         channel, ts, slack_access_token, block_set=block_set
-    #     )
-    # except Exception as e:
-    #     return logger.exception(
-    #         f"Failed To Send Submit Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-    #     )
-    # workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
+    ts, channel = workflow.slack_interaction.split("|")
+    block_set = [
+        *get_block_set("loading", {"message": ":rocket: We are saving your data to salesforce..."}),
+    ]
+    try:
+        res = slack_requests.update_channel_message(
+            channel, ts, slack_access_token, block_set=block_set
+        )
+    except Exception as e:
+        return logger.exception(
+            f"Failed To Send Submit Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
     workflow.save()
     workflow.begin_tasks()
     emit_meeting_workflow_tracker(str(workflow.id))
@@ -875,7 +880,11 @@ def process_update_meeting_contact(payload, context):
                 meeting.participants,
             )
         )
-        form = workflow.forms.get(id=contact["_form"])
+        form = (
+            workflow.forms.get(id=contact["_form"])
+            if workflow.meeting
+            else OrgCustomSlackFormInstance.objects.get(id=contact.get("_form"))
+        )
     form.save_form(state)
     user_id = workflow.user.id if type else workflow.user_id
     # reconstruct the current data with the updated data
