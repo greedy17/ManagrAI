@@ -654,11 +654,14 @@ def _process_add_update_to_sf(form_id, *args):
     data = dict(
         Subject=f"{form.saved_data.get('meeting_type')}",
         Description=f"{form.saved_data.get('meeting_comments')}",
-        WhatId=resource.integration_id,
         ActivityDate=start_time.strftime("%Y-%m-%d"),
         Status="Completed",
         TaskSubType="Task",
     )
+    if form.resource_type in ["Account", "Opportunity"]:
+        data["WhatId"] = resource.integration_id
+    else:
+        data["WhoId"] = resource.integration_id
     attempts = 1
     while True:
         sf = user.salesforce_account
@@ -686,6 +689,14 @@ def _process_add_update_to_sf(form_id, *args):
                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 attempts += 1
+        except Exception as e:
+            if attempts >= 5:
+                logger.info(f"Add update to SF exception: {e}")
+                raise e
+            else:
+                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                time.sleep(sleep)
+                attempts += 1
     return
 
 
@@ -703,6 +714,7 @@ def _process_create_new_contacts(workflow_id, *args):
     if not len(args):
         return
     contact_forms = workflow.forms.filter(id__in=args[0])
+
     for form in contact_forms:
         # if the resource is an account we set it to that account
         # if it is an opp we create a contact role as well
@@ -1042,6 +1054,7 @@ def _process_workflow_tracker(workflow_id):
             task = CompletedTask.objects.filter(task_hash=task_hash).count()
             if task:
                 workflow.completed_operations.append(task_hash)
+                workflow.save()
 
 
 @background(schedule=0)

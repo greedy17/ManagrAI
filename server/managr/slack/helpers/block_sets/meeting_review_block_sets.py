@@ -551,16 +551,17 @@ def meeting_review_modal_block_set(context):
     user = workflow.user
     slack_form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
     if user.organization.has_products and slack_form.template.resource == "Opportunity":
-        product_template = (
-            OrgCustomSlackForm.objects.for_user(user)
-            .filter(Q(resource="OpportunityLineItem", form_type="CREATE"))
-            .first()
-        )
-        product_form = OrgCustomSlackFormInstance.objects.create(
-            template=product_template, resource_id=slack_form.resource_id, user=user,
-        )
-        current_products = OpportunityLineItem.objects.filter(opportunity=slack_form.resource_id)
-
+        try:
+            current_products = user.salesforce_account.list_resource_data(
+                "OpportunityLineItem",
+                0,
+                filter=[
+                    "AND IsDeleted = false",
+                    f"AND OpportunityId = '{slack_form.resource_object.integration_id}'",
+                ],
+            )
+        except Exception as e:
+            print(e)
     blocks = []
 
     # additional validations
@@ -586,6 +587,14 @@ def meeting_review_modal_block_set(context):
     # make params here
 
     if user.organization.has_products and slack_form.template.resource == "Opportunity":
+        params = [
+            f"f={str(slack_form.id)}",
+            f"u={str(user.id)}",
+            f"w={str(workflow.id)}",
+            "type=meeting",
+        ]
+        if slack_form.resource_object.secondary_data["Pricebook2Id"]:
+            params.append(f"pricebook={slack_form.resource_object.secondary_data['Pricebook2Id']}")
         blocks.append(
             block_builders.actions_block(
                 [
@@ -593,12 +602,7 @@ def meeting_review_modal_block_set(context):
                         "Add Product",
                         "ADD_PRODUCT",
                         action_id=action_with_params(
-                            slack_const.PROCESS_ADD_PRODUCTS_FORM,
-                            params=[
-                                f"f={str(slack_form.id)}",
-                                f"u={str(user.id)}",
-                                f"product_form={str(product_form.id)}",
-                            ],
+                            slack_const.PROCESS_ADD_PRODUCTS_FORM, params=params,
                         ),
                     )
                 ],
@@ -610,7 +614,12 @@ def meeting_review_modal_block_set(context):
                 product_block = block_sets.get_block_set(
                     "current_product_blockset",
                     {
-                        "opp_item_id": str(product.id),
+                        "opp_item_id": product.integration_id,
+                        "product_data": {
+                            "name": product.name,
+                            "quantity": product.quantity,
+                            "total": product.total_price,
+                        },
                         "u": str(user.id),
                         "main_form": str(slack_form.id),
                     },

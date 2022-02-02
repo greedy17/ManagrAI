@@ -322,6 +322,8 @@ class SlackViewSet(viewsets.GenericViewSet,):
         organization_slack = request.user.organization.slack_integration
         if organization_slack:
             users = slack_requests.list_users(organization_slack.access_token, cursor=cursor)
+            filtered_members = [member for member in users["members"] if member["deleted"] is False]
+            users["members"] = filtered_members
         else:
             users = {"users": [], "response_metadata": {}}
         return Response(status=status.HTTP_200_OK, data=users)
@@ -537,9 +539,6 @@ class SlackFormsViewSet(
             instance.fields.add(field, through_defaults={"order": i})
 
         instance.save()
-        if request.data["resource"] == "OpportunityLineItem":
-            org = Organization.objects.get(id=request.data["organization"])
-            org.update_has_settings("products")
         return Response(serializer.data)
 
     def update(self, request, *args, **kwargs):
@@ -548,7 +547,6 @@ class SlackFormsViewSet(
         fields_ref = data.pop("fields_ref", [])
         data.update({"organization": self.request.user.organization_id})
         serializer = self.get_serializer(data=data, instance=self.get_object())
-
         serializer.is_valid(raise_exception=True)
         serializer.save()
         instance = serializer.instance
@@ -559,7 +557,23 @@ class SlackFormsViewSet(
                 through_defaults={"order": i, "include_in_recap": field["includeInRecap"]},
             )
         instance.save()
-
+        if data["resource"] == "OpportunityLineItem":
+            org = Organization.objects.get(id=request.data["organization"])
+            form = OrgCustomSlackForm.objects.filter(
+                organization=self.request.user.organization_id,
+                resource="OpportunityLineItem",
+                form_type="UPDATE",
+            ).first()
+            org.update_has_settings("products")
+            update_data = data
+            update_data["form_type"] = "UPDATE"
+            update_serializer = self.get_serializer(data=update_data, instance=form)
+            update_serializer.is_valid(raise_exception=True)
+            update_serializer.save()
+            instance = update_serializer.instance
+            instance.fields.clear()
+            for i, field in enumerate(fields):
+                instance.fields.add(field, through_defaults={"order": i})
         return Response(serializer.data)
 
 
