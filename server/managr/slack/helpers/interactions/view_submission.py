@@ -75,6 +75,7 @@ from managr.slack.helpers.exceptions import (
 )
 from managr.api.decorators import slack_api_exceptions
 from managr.organization.serializers import ContactSerializer
+from managr.slack.helpers.block_sets.command_views_blocksets import custom_meeting_paginator_block
 
 logger = logging.getLogger("managr")
 
@@ -167,9 +168,14 @@ def process_zoom_meeting_data(payload, context):
     else:
         form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
         form.save_form(state)
-
-    contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
-
+    if workflow.meeting:
+        contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
+    else:
+        contact_ids = [
+            participant["_form"] for participant in workflow.non_zoom_meeting.participants
+        ]
+        contact_forms = OrgCustomSlackFormInstance.objects.filter(id__in=contact_ids)
+    print(contact_forms)
     ops = [
         # update
         f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}",
@@ -344,7 +350,7 @@ def process_submit_resource_data(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     loading_view_data = send_loading_screen(
         slack_access_token,
-        ":exclamation: Please wait a few seconds :zany_face:, then click '*try again*'",
+        ":exclamation: Please wait a few seconds :zany_face:, then click *'try again'*",
         "update",
         str(user.id),
         trigger_id,
@@ -454,6 +460,7 @@ def process_submit_resource_data(payload, context):
                     ]
                 ),
             ]
+        new_context = {**context, "type": "command"}
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
         error_view_data = {
             "trigger_id": trigger_id,
@@ -462,7 +469,7 @@ def process_submit_resource_data(payload, context):
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Error"},
                 "blocks": blocks,
-                "private_metadata": json.dumps(context),
+                "private_metadata": json.dumps(new_context),
                 "external_id": f"{view_type}.{str(uuid.uuid4())}",
             },
         }
@@ -576,6 +583,7 @@ def process_zoom_meeting_attach_resource(payload, context):
         else MeetingWorkflow.objects.get(id=context.get("w"))
     )
     user = workflow.user
+    pm = json.loads(payload["view"]["private_metadata"])
     slack_access_token = user.organization.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     # get state - state contains the values based on the block_id
@@ -804,13 +812,18 @@ def process_update_meeting_contact(payload, context):
         form = OrgCustomSlackFormInstance.objects.get(id=contact["_form"])
     else:
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+        meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
         contact = dict(
             *filter(
                 lambda contact: contact["_tracking_id"] == context.get("tracking_id"),
-                workflow.meeting.participants,
+                meeting.participants,
             )
         )
-        form = workflow.forms.get(id=contact["_form"])
+        form = (
+            workflow.forms.get(id=contact["_form"])
+            if workflow.meeting
+            else OrgCustomSlackFormInstance.objects.get(id=contact.get("_form"))
+        )
     form.save_form(state)
     user_id = workflow.user.id if type else workflow.user_id
     # reconstruct the current data with the updated data
@@ -846,16 +859,16 @@ def process_update_meeting_contact(payload, context):
     else:
         # replace the contact in the participants list
         part_index = None
-        for index, participant in enumerate(workflow.meeting.participants):
+        for index, participant in enumerate(meeting.participants):
             if participant["_tracking_id"] == new_contact["_tracking_id"]:
                 part_index = index
                 break
-        workflow.meeting.participants = [
-            *workflow.meeting.participants[:part_index],
+        meeting.participants = [
+            *meeting.participants[:part_index],
             new_contact,
-            *workflow.meeting.participants[part_index + 1 :],
+            *meeting.participants[part_index + 1 :],
         ]
-        workflow.meeting.save()
+        meeting.save()
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
         org = workflow.user.organization
         access_token = org.slack_integration.access_token
@@ -864,7 +877,8 @@ def process_update_meeting_contact(payload, context):
             "original_message_channel": context.get("original_message_channel"),
             "original_message_timestamp": context.get("original_message_timestamp"),
         }
-        if check_contact_last_name(workflow.id):
+        meeting_type = "zoom" if workflow.meeting else "non-zoom"
+        if check_contact_last_name(workflow.id, meeting_type):
             update_res = slack_requests.update_channel_message(
                 context.get("original_message_channel"),
                 context.get("original_message_timestamp"),
@@ -1460,6 +1474,8 @@ def process_update_product(payload, context):
     user = User.objects.get(id=context.get("u"))
     view_id = payload["view"]["id"]
     type = context.get("type", None)
+    pm = json.loads(payload["view"]["private_metadata"])
+
     main_form = OrgCustomSlackFormInstance.objects.get(id=context.get("main_form"))
     product_form = user.custom_slack_form_instances.filter(
         template__resource="OpportunityLineItem"
@@ -1480,6 +1496,10 @@ def process_update_product(payload, context):
             resource = product_form.resource_object.update_in_salesforce(
                 str(user.id), product_form.saved_data
             )
+            product_form.is_submitted = True
+            product_form.submission_date = timezone.now()
+            product_form.update_source = type
+            product_form.save()
             break
         except FieldValidationError as e:
             has_error = True
@@ -1574,7 +1594,8 @@ def process_update_product(payload, context):
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Error"},
                 "blocks": blocks,
-                "private_metadata": json.dumps(context),
+                "private_metadata": json.dumps(pm),
+                "external_id": f"{'update_product'}.{str(uuid.uuid4())}",
             },
         }
         try:
@@ -1585,66 +1606,15 @@ def process_update_product(payload, context):
             return logger.exception(
                 f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
             )
-    pm = json.loads(payload["view"]["private_metadata"])
-    product_form.is_submitted = True
-    product_form.submission_date = timezone.now()
-    product_form.update_source = type
-    product_form.save()
-    text = "Success"
     message = ":white_check_mark: Successfully updated product"
-    if type == "alert":
-        instance = AlertInstance.objects.get(id=context.get("alert_id"))
-        alert_instances = AlertInstance.objects.filter(
-            invocation=instance.invocation,
-            channel=context.get("channel_id"),
-            config_id=instance.config_id,
-        ).filter(completed=False)
-        alert_instance = alert_instances.first()
-        alert_template = alert_instance.template
-        text = alert_template.title
-        blocks = [
-            block_builders.header_block(f"{len(alert_instances)} results for workflow {text}"),
-        ]
-        alert_instances = custom_paginator(alert_instances, page=int(context.get("current_page")))
-        for alert_instance in alert_instances.get("results", []):
-            blocks = [
-                *blocks,
-                *get_block_set(
-                    "alert_instance",
-                    {
-                        "instance_id": str(alert_instance.id),
-                        "current_page": int(context.get("current_page")),
-                    },
-                ),
-            ]
-            alert_instance.rendered_text = alert_instance.render_text()
-            alert_instance.save()
-        if len(blocks):
-            blocks = [
-                *blocks,
-                *custom_paginator_block(
-                    alert_instances,
-                    instance.invocation,
-                    context.get("channel_id"),
-                    instance.config_id,
-                ),
-            ]
-
-        slack_requests.update_channel_message(
-            context.get("channel_id"),
-            context.get("message_ts"),
-            slack_access_token,
-            block_set=blocks,
-        )
-    else:
-        return {
-            "response_action": "update",
-            "view": {
-                "type": "modal",
-                "title": {"type": "plain_text", "text": "Success"},
-                "blocks": get_block_set("success_text_modal", {"message": message}),
-            },
-        }
+    return {
+        "response_action": "update",
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Success"},
+            "blocks": get_block_set("success_text_modal", {"message": message}),
+        },
+    }
 
 
 @log_all_exceptions
@@ -1660,6 +1630,7 @@ def process_submit_product(payload, context):
         workflow = MeetingWorkflow.objects.get(id=workflow_id)
     has_error = False
     blocks = None
+    pm = json.loads(payload["view"]["private_metadata"])
     user = User.objects.get(id=context.get("u"))
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
@@ -1836,7 +1807,7 @@ def process_submit_product(payload, context):
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Error"},
                 "blocks": blocks,
-                "private_metadata": json.dumps(context),
+                "private_metadata": json.dumps(pm),
                 "external_id": f"{'add_product'}.{str(uuid.uuid4())}",
             },
         }
@@ -1874,6 +1845,8 @@ def process_submit_product(payload, context):
         f"product_form={str(product_form.id)}",
         f"type={type}",
     ]
+    if main_form.resource_object.secondary_data["Pricebook2Id"]:
+        params.append(f"pricebook={main_form.resource_object.secondary_data['Pricebook2Id']}")
     if workflow_id:
         params.append(f"w={workflow_id}")
 
@@ -2005,9 +1978,12 @@ def process_submit_alert_resource_data(payload, context):
                     "title": {"type": "plain_text", "text": "Success"},
                     "blocks": [
                         block_builders.simple_section(
-                            f":white_check_mark: Successfully updated {main_form.template.resource}",
+                            f":white_check_mark: Successfully updated {main_form.resource_type} :clap:",
                             "mrkdwn",
-                        )
+                        ),
+                        block_builders.context_block(
+                            "*Disregard the red banner message, you can safely Close this window."
+                        ),
                     ],
                 },
             }
@@ -2109,6 +2085,7 @@ def process_submit_alert_resource_data(payload, context):
                     ]
                 ),
             ]
+        new_context = {**context, "type": "alert"}
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
         error_view_data = {
             "trigger_id": trigger_id,
@@ -2117,7 +2094,7 @@ def process_submit_alert_resource_data(payload, context):
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Error"},
                 "blocks": blocks,
-                "private_metadata": json.dumps(context),
+                "private_metadata": json.dumps(new_context),
                 "external_id": f"{view_type}.{str(uuid.uuid4())}",
             },
         }
@@ -2314,6 +2291,7 @@ def process_submit_digest_resource_data(payload, context):
                     ]
                 ),
             ]
+        new_context = {**context, "type": "digest"}
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
         error_view_data = {
             "trigger_id": trigger_id,
@@ -2322,7 +2300,7 @@ def process_submit_digest_resource_data(payload, context):
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Error"},
                 "blocks": blocks,
-                "private_metadata": json.dumps(context),
+                "private_metadata": json.dumps(new_context),
                 "external_id": f"{view_type}.{str(uuid.uuid4())}",
             },
         }
