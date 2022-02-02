@@ -213,22 +213,22 @@ def check_workflows_count(user_id):
 
 def _process_calendar_details(user_id):
     user = User.objects.get(id=user_id)
-    try:
-        events = user.nylas._get_calendar_data()
-        if events:
-            processed_data = []
-            for event in events:
-                data = {}
-                data["title"] = event.get("title", None)
-                data["participants"] = event.get("participants", None)
-                data["times"] = event.get("when", None)
-                processed_data.append(data)
-            return processed_data
-        else:
-            return None
-    except Exception as e:
-        logger.exception(f"_PROCESS_CALENDAR_DETAILS ERROR: {e}")
-        return dict({"status": "error"})
+    events = user.nylas._get_calendar_data()
+    if events:
+        processed_data = []
+        for event in events:
+            data = {}
+            data["title"] = event.get("title", None)
+            data["owner"] = event.get("owner", None)
+            data["participants"] = event.get("participants", None)
+            conferencing = event.get("conferencing", None)
+            if conferencing:
+                data["provider"] = conferencing["provider"]
+            data["times"] = event.get("when", None)
+            processed_data.append(data)
+        return processed_data
+    else:
+        return None
 
 
 def meeting_prep(processed_data, user_id, invocation=1):

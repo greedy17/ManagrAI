@@ -868,10 +868,11 @@ def process_update_meeting_contact(payload, context):
         form = OrgCustomSlackFormInstance.objects.get(id=contact["_form"])
     else:
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+        meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
         contact = dict(
             *filter(
                 lambda contact: contact["_tracking_id"] == context.get("tracking_id"),
-                workflow.meeting.participants,
+                meeting.participants,
             )
         )
         form = workflow.forms.get(id=contact["_form"])
@@ -910,16 +911,16 @@ def process_update_meeting_contact(payload, context):
     else:
         # replace the contact in the participants list
         part_index = None
-        for index, participant in enumerate(workflow.meeting.participants):
+        for index, participant in enumerate(meeting.participants):
             if participant["_tracking_id"] == new_contact["_tracking_id"]:
                 part_index = index
                 break
-        workflow.meeting.participants = [
-            *workflow.meeting.participants[:part_index],
+        meeting.participants = [
+            *meeting.participants[:part_index],
             new_contact,
-            *workflow.meeting.participants[part_index + 1 :],
+            *meeting.participants[part_index + 1 :],
         ]
-        workflow.meeting.save()
+        meeting.save()
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
         org = workflow.user.organization
         access_token = org.slack_integration.access_token
@@ -928,7 +929,8 @@ def process_update_meeting_contact(payload, context):
             "original_message_channel": context.get("original_message_channel"),
             "original_message_timestamp": context.get("original_message_timestamp"),
         }
-        if check_contact_last_name(workflow.id):
+        meeting_type = "zoom" if workflow.meeting else "non-zoom"
+        if check_contact_last_name(workflow.id, meeting_type):
             update_res = slack_requests.update_channel_message(
                 context.get("original_message_channel"),
                 context.get("original_message_timestamp"),
