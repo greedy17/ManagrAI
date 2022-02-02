@@ -14,7 +14,6 @@ from managr.utils.sites import get_site_url
 from managr.core.models import User, Notification
 from managr.opportunity.models import Opportunity, Lead
 from managr.organization.models import Account, OpportunityLineItem
-from managr.zoom.models import ZoomMeeting
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce import constants as sf_consts
 from managr.slack import constants as slack_const
@@ -473,24 +472,34 @@ def meeting_reminder_block_set(context):
         user.organization.slack_integration.access_token, user.slack_integration.zoom_channel
     )
     name = channel_info.get("channel").get("name")
-    text = "meeting" if not_completed < 2 else "meetings"
+    text = "meeting" if len(not_completed) < 2 else "meetings"
     blocks = [
         block_builders.simple_section(
-            f"FYI you have {not_completed} {text} from today that still need to be logged here: #{name}",
+            f"FYI you have {len(not_completed)} {text} from today that still need to be logged",
             "mrkdwn",
         )
     ]
     return blocks
 
+@block_set()
+def message_meeting_block_set():
+    message = 'this is a test'
+    blocks = [
+        block_builders.simple_section(
+            f"This is a {message}",
+            "mrkdwn",
+        )
+    ]
+    return blocks
 
 @block_set()
 def manager_meeting_reminder_block_set(context):
     not_completed = context.get("not_completed")
     name = context.get("name")
-    text = "meeting" if not_completed < 2 else "meetings"
+    text = "meeting" if len(not_completed) < 2 else "meetings"
     blocks = [
         block_builders.simple_section(
-            f"Hey {name}, your team still has *{not_completed} {text}* from today that needs to be logged",
+            f"Hey {name} your team still has *{len(not_completed)} {text}* from today that needs to be logged",
             "mrkdwn",
         )
     ]
