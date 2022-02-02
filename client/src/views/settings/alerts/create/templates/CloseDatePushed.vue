@@ -418,7 +418,7 @@ export default {
             isActive: true,
             title: 'Close date pushed',
             operator: '!=',
-            value: null,
+            value: 1,
             dataType: 'date',
           },
         })
