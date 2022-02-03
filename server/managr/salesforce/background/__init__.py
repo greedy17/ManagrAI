@@ -1233,9 +1233,9 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
 
 
 def create_alert_string(operator, data_type, config_value, saved_value, old_value, title):
-    alert_string = f"{title} Update"
+    alert_string = f"{title}"
     if operator == "==":
-        if data_type == "string" and saved_value == config_value:
+        if data_type == "string" and saved_value == config_value and saved_value != old_value:
             return alert_string
     elif operator == "<=":
         return
@@ -1246,13 +1246,15 @@ def create_alert_string(operator, data_type, config_value, saved_value, old_valu
             return alert_string
         elif (
             data_type == "date"
-            and datetime.datetime.strptime(saved_value, "%Y-%m-%d").month
-            != datetime.datetime.strptime(old_value, "%Y-%m-%d").month
+            and datetime.strptime(saved_value, "%Y-%m-%d").month
+            != datetime.strptime(old_value, "%Y-%m-%d").month
         ):
             return alert_string
     return None
 
 
+@background(schedule=0)
+@slack_api_exceptions(rethrow=True)
 def _send_instant_alert(form_ids):
     submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
         template__resource="OpportunityLineItem"
@@ -1264,29 +1266,93 @@ def _send_instant_alert(form_ids):
         SObjectField.objects.filter(id__in=configs.keys()).values("id", "api_name")
     )
     resource_data = main_form.resource_object.secondary_data
-    print(resource_data)
-    print(sobject_fields)
-    alert_string = None
+    resource_name = main_form.resource_object.name if main_form.resource_object.name else ""
+
     old_data = dict()
+
     if main_form.template.form_type == "UPDATE":
         for additional_stage_form in submitted_forms:
             old_data = {**old_data, **additional_stage_form.previous_data}
     new_data = dict()
     for form in submitted_forms:
         new_data = {**new_data, **form.saved_data}
+    users_list = {}
     for field in sobject_fields:
         api_name = field["api_name"]
         if api_name in new_data.keys():
-            for object in configs[str(field["id"])]:
-                create_alert_string(
+            for object in configs[str(field["id"])].values():
+                value_check = create_alert_string(
                     object["operator"],
                     object["data_type"],
-                    object["config_value"],
+                    object["value"],
                     new_data[api_name],
                     resource_data[api_name],
                     object["title"],
                 )
-    return
+                if value_check:
+                    recipients = object["recipients"]
+                    for key in recipients.keys():
+                        channel = recipients[key]
+                        if recipients[key] in users_list.keys():
+                            users_list[channel]["text"] += f", _{value_check}_"
+                        else:
+                            users_list[channel] = {
+                                "text": f":zap: *Instant Update:* _{value_check}_",
+                                "id": key,
+                            }
+    if len(users_list):
+        add_blocks = [
+            block_builders.section_with_button_block(
+                "View Recap",
+                "recap",
+                f"_{main_form.template.resource}_ *{resource_name}*",
+                action_id=action_with_params(
+                    slack_consts.VIEW_RECAP,
+                    params=[f"u={str(user.id)}", f"form_ids={'.'.join(form_ids)}"],
+                ),
+            ),
+            block_builders.context_block(
+                f"{main_form.template.resource} owned by {user.full_name}"
+            ),
+        ]
+        for key in users_list:
+            blocks = [
+                block_builders.simple_section(users_list[key]["text"], "mrkdwn"),
+                *add_blocks,
+            ]
+            user = User.objects.get(id=users_list[key]["id"])
+            try:
+                slack_requests.send_channel_message(
+                    key,
+                    user.organization.slack_integration.access_token,
+                    text=f"Recap {main_form.template.resource}",
+                    block_set=blocks,
+                )
+            except CannotSendToChannel:
+                try:
+                    slack_requests.send_channel_message(
+                        key,
+                        user.organization.slack_integration.access_token,
+                        text="Failed to send recap to channel",
+                        block_set=[
+                            block_builders.simple_section(
+                                f"Unable to send recap to one of the channels you selected, please add <@{user.organization.slack_integration.bot_user_id}> to the channel _*<#{channel}>*_",
+                                "mrkdwn",
+                            )
+                        ],
+                    )
+                    continue
+                except Exception as e:
+                    logger.exception(
+                        f"Failed to send error message to user informing them of channel issue to {user.email} due to {e}"
+                    )
+                    continue
+            except Exception as e:
+                logger.exception(
+                    f"Failed to send recap to channel for user {user.email} due to {e}"
+                )
+                continue
+        return
 
 
 def remove_field(org_id, form_field):

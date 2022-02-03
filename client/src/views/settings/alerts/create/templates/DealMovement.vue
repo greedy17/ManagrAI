@@ -109,7 +109,7 @@
 
       <div v-if="pushedConfigActive && !pushing" class="added-collection">
         <div class="added-collection__header">
-          <p class="title">Close date pushed</p>
+          <p class="title">Close Date Pushed</p>
           <span class="active">active</span>
         </div>
         <section class="added-collection__body">

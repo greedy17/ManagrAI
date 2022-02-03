@@ -120,7 +120,7 @@
       </template>
 
       <div class="description">
-        <h4 class="title">Close date pushed</h4>
+        <h4 class="title">Close Date Pushed</h4>
         <p>Recieve alerts when Close Date's are pushed into a new month.</p>
       </div>
     </div>
@@ -416,7 +416,7 @@ export default {
           user: this.$store.state.user.id,
           config: {
             isActive: true,
-            title: 'Close date pushed',
+            title: 'Close Date Pushed',
             operator: '!=',
             value: 1,
             dataType: 'date',

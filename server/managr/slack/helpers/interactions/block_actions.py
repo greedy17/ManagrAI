@@ -2260,7 +2260,6 @@ def process_view_recap(payload, context):
         else:
             form_fields = form.template.formfield_set.filter(include_in_recap=True)
     blocks = []
-
     message_string_for_recap = ""
     for key, new_value in new_data.items():
         field = form_fields.filter(field__api_name=key).first()
