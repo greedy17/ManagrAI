@@ -1,6 +1,7 @@
 import base64
 import datetime
 import time
+import unittest
 import pytz
 import requests
 from requests.exceptions import HTTPError

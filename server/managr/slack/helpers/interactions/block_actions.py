@@ -68,8 +68,7 @@ def process_meeting_review(payload, context):
     trigger_id = payload["trigger_id"]
     workflow_id = payload["actions"][0]["value"]
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
-    meeting = workflow.meeting
-    organization = meeting.zoom_account.user.organization
+    organization = workflow.user.organization
     access_token = organization.slack_integration.access_token
     loading_view_data = send_loading_screen(
         access_token,
@@ -206,8 +205,7 @@ def process_edit_meeting_contact(payload, context):
         org = workflow.user.organization
     else:
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-        meeting = workflow.meeting
-        org = meeting.zoom_account.user.organization
+        org = workflow.user.organization
     access_token = org.slack_integration.access_token
     loading_view_data = send_loading_screen(
         access_token,
@@ -492,7 +490,8 @@ def process_no_changes_made(payload, context):
 @processor(required_context=["w", "tracking_id"])
 def process_remove_contact_from_meeting(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    meeting = workflow.meeting
+    meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
+    type = "zoom" if workflow.meeting else "non-zoom"
     org = workflow.user.organization
     access_token = org.slack_integration.access_token
     for i, part in enumerate(meeting.participants):
@@ -503,7 +502,7 @@ def process_remove_contact_from_meeting(payload, context):
             del meeting.participants[i]
             break
     meeting.save()
-    if check_contact_last_name(workflow.id):
+    if check_contact_last_name(workflow.id, type):
         update_res = slack_requests.update_channel_message(
             context.get("original_message_channel"),
             context.get("original_message_timestamp"),
@@ -700,7 +699,6 @@ def process_create_or_search_selected(payload, context):
         workflow = MeetingPrepInstance.objects.get(id=prep_id)
     else:
         workflow = MeetingWorkflow.objects.get(id=workflow_id)
-        meeting = workflow.meeting
     organization = workflow.user.organization
     access_token = organization.slack_integration.access_token
     # get current blocks
@@ -745,7 +743,7 @@ def process_create_or_search_selected(payload, context):
         )
     if type is False:
         workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
-        workflow.meeting.save()
+        workflow.save()
 
 
 @processor()
@@ -2611,7 +2609,6 @@ def process_view_recap(payload, context):
         else:
             form_fields = form.template.formfield_set.filter(include_in_recap=True)
     blocks = []
-
     message_string_for_recap = ""
     for key, new_value in new_data.items():
         field = form_fields.filter(field__api_name=key).first()

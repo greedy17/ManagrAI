@@ -110,7 +110,7 @@
               <div class="row__two">
                 <img
                   @click="makeAlertCurrent(alert)"
-                  src="@/assets/images/settings.png"
+                  src="@/assets/images/edit.png"
                   style="
                     height: 1.5rem;
                     cursor: pointer;
@@ -179,7 +179,10 @@
       <div class="dot-flashing"></div>
     </div> -->
 
-    <div class="invert center-loader" v-else>
+    <div
+      class="invert center-loader"
+      v-if="templates.refreshing && alertsCount(templates.list.length)"
+    >
       <img src="@/assets/images/loading-gif.gif" class="invert" style="height: 8rem" alt="" />
     </div>
   </div>
