@@ -1092,12 +1092,10 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
     submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
         template__resource="OpportunityLineItem"
     )
-    main_form = submitted_forms.filter(
-        template__form_type__in=["CREATE", "UPDATE", "MEETING_REVIEW"]
-    ).first()
+    main_form = submitted_forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
     user = main_form.user
     old_data = dict()
-    if main_form.template.form_type == "UPDATE" or main_form.template.form_type == "MEETING_REVIEW":
+    if main_form.template.form_type == "UPDATE":
         for additional_stage_form in submitted_forms:
             old_data = {**old_data, **additional_stage_form.previous_data}
     new_data = dict()
@@ -1232,6 +1230,63 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
                         f"Failed to send recap to channel for user {user.email} due to {e}"
                     )
                     continue
+
+
+def create_alert_string(operator, data_type, config_value, saved_value, old_value, title):
+    alert_string = f"{title} Update"
+    if operator == "==":
+        if data_type == "string" and saved_value == config_value:
+            return alert_string
+    elif operator == "<=":
+        return
+    elif operator == ">=":
+        return
+    elif operator == "!=":
+        if data_type == "string" and saved_value != config_value:
+            return alert_string
+        elif (
+            data_type == "date"
+            and datetime.datetime.strptime(saved_value, "%Y-%m-%d").month
+            != datetime.datetime.strptime(old_value, "%Y-%m-%d").month
+        ):
+            return alert_string
+    return None
+
+
+def _send_instant_alert(form_ids):
+    submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
+        template__resource="OpportunityLineItem"
+    )
+    main_form = submitted_forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
+    user = main_form.user
+    configs = user.slack_integration.realtime_alert_configs
+    sobject_fields = list(
+        SObjectField.objects.filter(id__in=configs.keys()).values("id", "api_name")
+    )
+    resource_data = main_form.resource_object.secondary_data
+    print(resource_data)
+    print(sobject_fields)
+    alert_string = None
+    old_data = dict()
+    if main_form.template.form_type == "UPDATE":
+        for additional_stage_form in submitted_forms:
+            old_data = {**old_data, **additional_stage_form.previous_data}
+    new_data = dict()
+    for form in submitted_forms:
+        new_data = {**new_data, **form.saved_data}
+    for field in sobject_fields:
+        api_name = field["api_name"]
+        if api_name in new_data.keys():
+            for object in configs[str(field["id"])]:
+                create_alert_string(
+                    object["operator"],
+                    object["data_type"],
+                    object["config_value"],
+                    new_data[api_name],
+                    resource_data[api_name],
+                    object["title"],
+                )
+    return
 
 
 def remove_field(org_id, form_field):

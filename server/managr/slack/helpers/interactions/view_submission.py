@@ -1,15 +1,10 @@
 import json
-import pdb
-import pytz
-from datetime import datetime, date
 import logging
 import uuid
 import time
 from django.db.models import Q
 
-from django.http import JsonResponse
 from django.utils import timezone
-from rest_framework.response import Response
 
 
 from managr.api.decorators import log_all_exceptions
@@ -24,9 +19,7 @@ from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_paginator_block
 from managr.alerts.models import AlertInstance
 from managr.organization.models import (
-    Organization,
     Contact,
-    Account,
     OpportunityLineItem,
     PricebookEntry,
 )
@@ -35,7 +28,6 @@ from managr.core.background import emit_create_calendar_event
 from managr.outreach.tasks import emit_add_sequence_state
 from managr.core.cron import generate_morning_digest
 from managr.opportunity.models import Opportunity
-from managr.zoom.models import ZoomMeeting
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce import constants as sf_consts
 from managr.slack import constants as slack_const
@@ -50,8 +42,7 @@ from managr.slack.helpers.utils import (
     check_contact_last_name,
     send_loading_screen,
 )
-from managr.salesforce.adapter.models import ContactAdapter, OpportunityAdapter, TaskAdapter
-from managr.zoom import constants as zoom_consts
+from managr.salesforce.adapter.models import ContactAdapter
 from managr.salesforce.routes import routes as model_routes
 from managr.salesforce.adapter.routes import routes as adapter_routes
 from managr.salesforce.background import (
@@ -61,6 +52,7 @@ from managr.salesforce.background import (
     emit_add_update_to_sf,
     emit_add_products_to_sf,
     _send_recap,
+    _send_instant_alert,
 )
 from managr.slack.helpers.block_sets import get_block_set
 from managr.salesloft.models import People
@@ -74,7 +66,6 @@ from managr.slack.helpers.exceptions import (
     InvalidAccessToken,
 )
 from managr.api.decorators import slack_api_exceptions
-from managr.organization.serializers import ContactSerializer
 
 logger = logging.getLogger("managr")
 
@@ -552,6 +543,8 @@ def process_submit_resource_data(payload, context):
             message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
         if len(user.slack_integration.recap_receivers) and type == "meeting":
             _send_recap(current_form_ids, None, True)
+        if len(user.slack_integration.realtime_alert_configs):
+            _send_instant_alert(current_form_ids)
         if (
             all_form_data.get("meeting_comments") is not None
             and all_form_data.get("meeting_type") is not None
