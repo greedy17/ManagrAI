@@ -1,105 +1,222 @@
 <template>
   <div class="pipelines">
-    <!-- <div class="pipelines__preview">
-      <h1>Hi, {{ user.fullName }}</h1>
-      <div style="margin-top: -2rem">
-        <h5>
-          This is where you can manage your pipeline. All changes will auto sync back to Salesforce
+    <header class="flex-row-spread">
+      <div>
+        <h2>Hey, {{ user.fullName }}</h2>
+        <h5 class="sub-heading">
+          This is where you can manage your pipeline. All updates will auto sync back to Salesforce
         </h5>
       </div>
-    </div> -->
 
-    <div class="pipelines__center">
       <div>
-        <div class="spacer"></div>
-        <span style="color: #45a16f">Update your pipeline faster</span>
-        <h1>Coming Soon.</h1>
-        <p style="margin-top: -1rem">
-          Email us at mike@mymanagr.com if you have any feedback or questions.
-        </p>
-        <!-- <div class="connection">
-          <img style="height: 2rem" src="@/assets/images/logo.png" />
+        <button class="pipe-button">
+          <img src="@/assets/images/refresh.png" class="invert" style="height: 1rem" alt="" />
+        </button>
+      </div>
+    </header>
+
+    <section style="margin-top: -0.5rem" class="flex-row-spread">
+      <div v-if="noSelection" class="flex-row">
+        <DropDownSelect
+          :items="opportunities"
+          valueKey="key"
+          displayKey="name"
+          nullDisplay="Opportunities"
+        />
+
+        <button class="pipe-button">
           <img
-            class="filtered-green"
-            src="@/assets/images/link.png"
+            src="@/assets/images/list.png"
+            style="height: 1rem; margin-right: 0.25rem"
             alt=""
-            style="height: 1rem; margin-left: 0.5rem"
-          />
+          />select a list
+        </button>
+        <button class="add-button">
           <img
-            style="height: 1.5rem; margin-right: 0.5rem"
-            src="@/assets/images/salesforce.png"
+            src="@/assets/images/plusOne.png"
+            style="height: 1rem; margin-right: 0.25rem"
             alt=""
-          />
-        </div> -->
+          />filter
+        </button>
+        <h6>Results: <span class="resNum">5</span></h6>
       </div>
 
-      <div class="preview-border">
-        <img
-          src="@/assets/images/pipeline.png"
-          style="height: 70vh; width: 50vw; margin-left: 0.5rem"
-          alt=""
-        />
+      <div class="flex-row">
+        <div class="search-bar">
+          <input type="search" placeholder="search" />
+          <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
+        </div>
+
+        <button class="add-button">
+          <img src="@/assets/images/plusOne.png" style="height: 1rem" alt="" />
+        </button>
       </div>
-    </div>
+    </section>
+
+    <section>
+      <table>
+        <tr>
+          <td>Name</td>
+          <td>Stage</td>
+          <td>Forecast Category</td>
+          <td>Amount</td>
+          <td>Next Step</td>
+          <td>Close Date</td>
+          <td>Last Activity</td>
+        </tr>
+
+        <tr>
+          <td></td>
+        </tr>
+      </table>
+    </section>
   </div>
 </template>
 
 <script>
+import DropDownSelect from '@thinknimble/dropdownselect'
+
 export default {
   name: 'Pipelines',
+  components: {
+    DropDownSelect,
+  },
   data() {
-    return {}
+    return {
+      noSelection: true,
+      opportunities: ['test'],
+    }
   },
   computed: {
     user() {
       return this.$store.state.user
     },
   },
+  methods: {},
 }
 </script>
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
-// @import '@/styles/buttons';
+@import '@/styles/buttons';
 
+::placeholder {
+  color: $mid-gray;
+}
+::v-deep .tn-dropdown__selection-container:after {
+  position: absolute;
+  content: '';
+  top: 12px;
+  right: 1em;
+  width: 0;
+  height: 0;
+  border: 5px solid transparent;
+  border-color: $base-gray transparent transparent transparent;
+}
+::v-deep .tn-dropdown__selection-container {
+  width: 12vw;
+  height: 4vh;
+  border: none;
+  box-shadow: 1px 2px 3px $very-light-gray;
+  padding: 0.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+::v-deep .tn-dropdown--medium {
+  display: flex;
+  justify-content: center;
+  width: 12vw;
+  height: 4vh;
+  margin-right: 1rem;
+}
+::v-deep .tn-dropdown__selected-items__item-selection--muted {
+  color: $base-gray;
+}
+::v-deep .tn-dropdown__options__option--selected {
+  color: $base-gray;
+  background-color: white;
+  border-radius: 0.25rem;
+}
+input[type='search'] {
+  border: none;
+  background-color: transparent;
+  padding: 4px;
+  margin: 0;
+}
+input[type='search']:focus {
+  outline: none;
+}
+p {
+  font-size: 13px;
+}
+header,
+section {
+  margin: 0;
+  padding: 0px 10px;
+}
+.flex-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+.flex-row-spread {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
 .pipelines {
   margin-top: 3rem;
   color: $base-gray;
-
-  &__preview {
-    display: flex;
-    align-items: flex-start;
-    flex-direction: column;
-    margin: 1rem 3rem;
-    z-index: 2;
-  }
-  &__center {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-evenly;
-  }
 }
-
-.preview-border {
-  box-shadow: 4px 5px 9px $very-light-gray;
-  background-color: white;
-  margin-top: 2rem;
-  border-radius: 0.5rem;
-  width: 51vw;
+.invert {
+  filter: invert(80%);
 }
-.spacer {
-  height: 20vh;
+.sub-heading {
+  color: $mid-gray;
+  margin-top: -2vh;
 }
-p {
-  font-size: 14px;
+.pipe-button {
+  display: flex;
+  align-items: center;
+  box-shadow: 1px 2px 3px $very-light-gray;
+  border: none;
+  margin: 0 0.5rem 0 0;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.2rem;
+  background-color: transparent;
+  color: $base-gray;
+  cursor: pointer;
 }
-h1 {
-  margin-top: -1px;
-  margin-left: -0.1rem;
-  font-size: 38px;
+.add-button {
+  display: flex;
+  align-items: center;
+  border: none;
+  box-shadow: 1px 2px 3px $very-light-gray;
+  margin: 0 0.5rem 0 0;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.2rem;
+  background-color: $dark-green;
+  cursor: pointer;
+  color: white;
 }
-// .overlay {
-//   position: fixed; /* Sit on top of the page content */ /* Hidden by default */
-//   z-index: 2; /* Specify a stack order in case you're using a different order for other el background-color: rgba(0, 0, 0, 0.5); /* Black background with opacity */
-// }
+.resNum {
+  color: black;
+  font-weight: bold;
+}
+.search-bar {
+  height: 4vh;
+  box-shadow: 1px 2px 3px $very-light-gray;
+  border: none;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: 5px;
+  margin-right: 0.5rem;
+}
 </style>
