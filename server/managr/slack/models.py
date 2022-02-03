@@ -122,7 +122,15 @@ class UserSlackIntegration(TimeStampModel):
     recap_channel = models.CharField(
         max_length=255, null=True, blank=True, help_text="Channel for recaps to be sent",
     )
-    recap_receivers = ArrayField(models.CharField(max_length=255), default=list, blank=True,)
+    recap_receivers = ArrayField(
+        models.CharField(max_length=255),
+        default=list,
+        blank=True,
+        help_text="Manager's slack id's who want a recap from this user",
+    )
+    realtime_alert_configs = JSONField(
+        default=dict, help_text="Object for all real time alert settings", blank=True,
+    )
 
     objects = UserSlackIntegrationQuerySet.as_manager()
 
