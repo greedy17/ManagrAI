@@ -71,7 +71,7 @@
     <div v-if="!showLoader" class="alert-row">
       <div v-if="advancedConfigActive && !advancing" class="added-collection">
         <div class="added-collection__header">
-          <p class="title">Close date Advanced</p>
+          <p class="title">Stage Advanced</p>
           <span class="active">active</span>
         </div>
         <section class="added-collection__body">
@@ -243,9 +243,6 @@ export default {
   methods: {
     log() {
       console.log(this.realtimeConfigs)
-      console.log(this.commitConfigActive)
-      console.log(this.advancedConfigActive)
-      console.log(this.pushedConfigActive)
     },
     onAdvancing() {
       this.advancing = !this.advancing
@@ -307,21 +304,21 @@ export default {
     },
     commitConfigActive() {
       for (let i = 0; i < this.realtimeConfigs.length; i++) {
-        if (this.realtimeConfigs[i].title === 'Moved to Commit') {
+        if (this.realtimeConfigs[i]['Moved to Commit']) {
           return true
         }
       }
     },
     advancedConfigActive() {
       for (let i = 0; i < this.realtimeConfigs.length; i++) {
-        if (this.realtimeConfigs[i].title === 'Stage Advanced') {
+        if (this.realtimeConfigs[i]['Stage Advanced']) {
           return true
         }
       }
     },
     pushedConfigActive() {
       for (let i = 0; i < this.realtimeConfigs.length; i++) {
-        if (this.realtimeConfigs[i].title === 'Close date pushed') {
+        if (this.realtimeConfigs[i]['Close date pushed']) {
           return true
         }
       }
