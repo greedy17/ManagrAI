@@ -27,15 +27,13 @@
         </div>
         <div style="margin-top: 2rem">
           <button
-            v-if="hasZoomIntegration && hasSlackIntegration && !recapChannel"
+            v-if="hasSlackIntegration && !recapChannel"
             @click="goToZoomRecap"
-            :class="!isAdmin && isOnboarding ? 'orange_button bouncy' : 'orange_button'"
+            class="orange_button"
           >
             Activate
           </button>
-          <h4 style="margin-top: -0.5rem" v-else-if="!(hasZoomIntegration && hasSlackIntegration)">
-            Connect Zoom and Calendar in order to activate
-          </h4>
+
           <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="recapChannel">Activated</p>
         </div>
       </div>

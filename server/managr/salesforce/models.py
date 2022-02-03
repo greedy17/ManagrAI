@@ -165,7 +165,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
             return self.relationship_name
         return self.label
 
-    def to_slack_field(self, value=None, **kwargs):
+    def to_slack_field(self, value=None, *args, **kwargs):
         if self.data_type == "Picklist":
             # stage has a special function so we add the action param can only use one action_id so serving this statically for now
             action_id = None
@@ -249,12 +249,19 @@ class SObjectField(TimeStampModel, IntegrationModel):
                     block_id=self.api_name,
                     initial_options=None,
                 )
-
+            elif (
+                self.api_name == "PricebookEntryId"
+                and self.salesforce_object == "OpportunityLineItem"
+            ):
+                user_id = str(kwargs.get("user").id)
+                resource = self.relationship_name
+                action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}&field_id={self.id}&pricebook={kwargs.get('Pricebook2Id')}"
+                return block_builders.external_select(
+                    "*Products*", action_query, block_id=self.api_name, initial_option=None,
+                )
             else:
                 user_id = str(self.salesforce_account.user.id)
                 action_query = f"{slack_consts.GET_EXTERNAL_RELATIONSHIP_OPTIONS}?u={user_id}&relationship={self.display_value_keys['api_name']}&fields={','.join(self.display_value_keys['name_fields'])}"
-                if self.api_name == "PricebookEntryId":
-                    display_name = "Products"
             return block_builders.external_select(
                 f"*{display_name}*",
                 action_query,
@@ -714,10 +721,7 @@ class MeetingWorkflow(SFSyncOperation):
 
         if self.resource and self.resource != slack_consts.FORM_RESOURCE_LEAD:
             self.add_form(self.resource_type, slack_consts.FORM_TYPE_UPDATE)
-            if self.user.organization.has_products:
-                self.add_form(
-                    slack_consts.FORM_RESOURCE_OPPORTUNITYLINEITEM, slack_consts.FORM_TYPE_CREATE
-                )
+
         if not now:
             return emit_kick_off_slack_interaction(str(self.user.id), str(self.id))
             # used for testing a fake meeting

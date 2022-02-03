@@ -10,7 +10,6 @@ from django.db.models import Q
 from managr.utils.sites import get_site_url
 from managr.core.models import User, Notification
 from managr.opportunity.models import Opportunity
-from managr.zoom.models import ZoomMeeting
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce import constants as sf_consts
 from managr.slack import constants as slack_const

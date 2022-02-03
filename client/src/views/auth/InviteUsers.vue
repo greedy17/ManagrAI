@@ -1,10 +1,14 @@
 <template>
   <div class="invite-users">
-    <h2 style="font-size: 1.5rem; color: black">Manage Your Team</h2>
+    <h2 style="font-size: 1.5rem; color: #4d4e4c">Manage Your Team</h2>
 
     <button class="invite_button" type="submit" @click="handleInvite">
       Invite Member
-      <img style="height: 1rem; margin-left: 0.2rem" src="@/assets/images/slackLogo.png" alt="" />
+      <img
+        style="height: 0.8rem; margin-left: 0.25rem"
+        src="@/assets/images/slackLogo.png"
+        alt=""
+      />
     </button>
     <Invite class="invite-users__inviter" :inviteOpen="inviteOpen" @cancel="handleCancel" />
 
@@ -98,14 +102,13 @@ h2 {
 }
 
 .invite_button {
-  color: $white;
-  background-color: $dark-green;
-  width: 12.5vw;
-  height: 6vh;
+  color: $dark-green;
+  background-color: white;
   border-radius: 0.25rem;
-  padding: 0.5rem;
-  font-weight: bold;
-  font-size: 16px;
+  box-shadow: 2px 2px 3px $very-light-gray;
+  padding: 0.75rem;
+  font-weight: bolder;
+  font-size: 14px;
   border: none;
 }
 

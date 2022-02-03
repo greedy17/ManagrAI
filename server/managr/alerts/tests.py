@@ -716,14 +716,14 @@ class UserTestCase(TestCase):
 
         conf_1 = alert_models.AlertConfig.objects.create(
             recipient_type="USER_LEVEL",
-            recurrence_day=27,
+            recurrence_day=24,
             recurrence_frequency="MONTHLY",
             recipients=["SELF"],
             template=template,
         )
         adapter_class = adapter_routes.get(template.resource_type, None)
         additional_filters = adapter_class.additional_filters()
-        current_date_filter = f"AND ((CloseDate > {datetime.datetime(day=29,month=timezone.now().month,year=timezone.now().year).strftime('%Y-%m-%d')}))"
+        current_date_filter = f"AND ((CloseDate > {datetime.datetime(day=26,month=timezone.now().month,year=timezone.now().year).strftime('%Y-%m-%d')}))"
         expected = f"{self.sf_account.instance_url}{sf_consts.CUSTOM_BASE_URI}/query/?q=SELECT Id FROM Opportunity WHERE OwnerId = '{self.sf_account.salesforce_id}' {' '.join(additional_filters)} {current_date_filter} order by LastModifiedDate DESC limit {sf_consts.SALESFORCE_QUERY_LIMIT}"
         self.assertEqual(template.url_str(template.user, conf_1.id), expected)
 

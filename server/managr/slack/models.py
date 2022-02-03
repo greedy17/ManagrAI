@@ -322,7 +322,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                     form_values = {}
         return form_values
 
-    def generate_form(self, data=None):
+    def generate_form(self, data=None, *args, **kwargs):
         """
         Collects all the fields
         and creates them into an object
@@ -349,7 +349,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                     form_blocks.append(generated_field)
             else:
                 generated_field = field.to_slack_field(
-                    val, user=self.user, resource=self.resource_type,
+                    val, user=self.user, resource=self.resource_type, *args, **kwargs
                 )
                 if isinstance(generated_field, list):
                     form_blocks.extend(generated_field)
