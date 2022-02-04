@@ -397,7 +397,7 @@ def meeting_prep(processed_data, user_id, invocation=1):
     )
 
     # Conditional Check for Zoom meeting or Non-Zoom Meeting
-    if provider != [None, "Zoom Meeting"]:
+    if provider not in [None, "Zoom Meeting"]:
         # Google Meet (Non-Zoom)
         meeting_workflow = MeetingWorkflow.objects.create(
             non_zoom_meeting=meeting_prep_instance, user=user,

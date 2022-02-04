@@ -2659,6 +2659,8 @@ def process_show_edit_product_form(payload, context):
 
 @processor(required_context="u")
 def process_show_convert_lead_form(payload, context):
+    print(context)
+    print(payload)
     slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
     user = slack_account.user
     blocks = get_block_set("convert_lead_block_set", {"u": str(user.id), "w": context.get("w")})
