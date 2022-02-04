@@ -4,7 +4,7 @@ import json
 from faker import Faker
 from urllib.parse import urlencode, unquote
 from datetime import datetime
-
+from .routes import routes
 
 from django.http import HttpResponse
 from django.utils import timezone
@@ -234,3 +234,16 @@ class SObjectPicklistViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         serializer.save()
 
         return Response()
+
+
+class SalesforceSObjectViewSet(
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+):
+    def get_queryset(self):
+        query = routes[self.request.sobject]["model"].objects.all()
+        return query
