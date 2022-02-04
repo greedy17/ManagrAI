@@ -569,9 +569,19 @@ def _process_add_call_to_sf(workflow_id, *args):
     if not hasattr(user, "salesforce_account"):
         return logger.exception("User does not have a salesforce account cannot push to sf")
     review_form = workflow.forms.filter(template__form_type=slack_consts.FORM_TYPE_UPDATE).first()
-    user_timezone = user.zoom_account.timezone
-    start_time = workflow.meeting.start_time
-    end_time = workflow.meeting.end_time
+    if workflow.meeting:
+        user_timezone = user.zoom_account.timezone
+        start_time = workflow.meeting.start_time
+        end_time = workflow.meeting.end_time
+
+    else:
+        user_timezone = user.timezone
+        start_time = datetime.utcfromtimestamp(
+            int(workflow.non_zoom_meeting.event_data["times"]["start_time"])
+        )
+        end_time = datetime.utcfromtimestamp(
+            int(workflow.non_zoom_meeting.event_data["times"]["end_time"])
+        )
     formatted_start = (
         datetime.strftime(
             start_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p"
@@ -584,12 +594,11 @@ def _process_add_call_to_sf(workflow_id, *args):
         if end_time
         else end_time
     )
-
     data = dict(
         Subject=f"Zoom Meeting - {review_form.saved_data.get('meeting_type')}",
         Description=f"{review_form.saved_data.get('meeting_comments')}, this meeting started on {formatted_start} and ended on {formatted_end} ",
         WhatId=workflow.resource.integration_id,
-        ActivityDate=workflow.meeting.start_time.strftime("%Y-%m-%d"),
+        ActivityDate=start_time.strftime("%Y-%m-%d"),
         Status="Completed",
         TaskSubType="Call",
     )
@@ -645,11 +654,14 @@ def _process_add_update_to_sf(form_id, *args):
     data = dict(
         Subject=f"{form.saved_data.get('meeting_type')}",
         Description=f"{form.saved_data.get('meeting_comments')}",
-        WhatId=resource.integration_id,
         ActivityDate=start_time.strftime("%Y-%m-%d"),
         Status="Completed",
         TaskSubType="Task",
     )
+    if form.resource_type in ["Account", "Opportunity"]:
+        data["WhatId"] = resource.integration_id
+    else:
+        data["WhoId"] = resource.integration_id
     attempts = 1
     while True:
         sf = user.salesforce_account
@@ -677,6 +689,14 @@ def _process_add_update_to_sf(form_id, *args):
                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 attempts += 1
+        except Exception as e:
+            if attempts >= 5:
+                logger.info(f"Add update to SF exception: {e}")
+                raise e
+            else:
+                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                time.sleep(sleep)
+                attempts += 1
     return
 
 
@@ -689,11 +709,12 @@ def _process_create_new_contacts(workflow_id, *args):
         return logger.exception(f"User not found unable to log call {str(user.id)}")
     if not hasattr(user, "salesforce_account"):
         return logger.exception("User does not have a salesforce account cannot push to sf")
-
+    meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
     attempts = 1
     if not len(args):
         return
     contact_forms = workflow.forms.filter(id__in=args[0])
+
     for form in contact_forms:
         # if the resource is an account we set it to that account
         # if it is an opp we create a contact role as well
@@ -702,10 +723,7 @@ def _process_create_new_contacts(workflow_id, *args):
         if not data:
             # try and collect whatever data we have
             contact = dict(
-                *filter(
-                    lambda contact: contact.get("_form") == str(form.id),
-                    workflow.meeting.participants,
-                )
+                *filter(lambda contact: contact.get("_form") == str(form.id), meeting.participants,)
             )
             if contact:
                 form.save_form(contact.get("secondary_data", {}), from_slack_object=False)
@@ -1036,6 +1054,7 @@ def _process_workflow_tracker(workflow_id):
             task = CompletedTask.objects.filter(task_hash=task_hash).count()
             if task:
                 workflow.completed_operations.append(task_hash)
+                workflow.save()
 
 
 @background(schedule=0)
@@ -1092,12 +1111,11 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
     submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
         template__resource="OpportunityLineItem"
     )
-    main_form = submitted_forms.filter(
-        template__form_type__in=["CREATE", "UPDATE", "MEETING_REVIEW"]
-    ).first()
+    main_form = submitted_forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
+    print(main_form)
     user = main_form.user
     old_data = dict()
-    if main_form.template.form_type == "UPDATE" or main_form.template.form_type == "MEETING_REVIEW":
+    if main_form.template.form_type == "UPDATE":
         for additional_stage_form in submitted_forms:
             old_data = {**old_data, **additional_stage_form.previous_data}
     new_data = dict()
@@ -1232,6 +1250,129 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
                         f"Failed to send recap to channel for user {user.email} due to {e}"
                     )
                     continue
+
+
+def create_alert_string(operator, data_type, config_value, saved_value, old_value, title):
+    alert_string = f"{title}"
+    if operator == "==":
+        if data_type == "string" and saved_value == config_value and saved_value != old_value:
+            return alert_string
+    elif operator == "<=":
+        return
+    elif operator == ">=":
+        return
+    elif operator == "!=":
+        if data_type == "string" and saved_value != config_value:
+            return alert_string
+        elif (
+            data_type == "date"
+            and datetime.strptime(saved_value, "%Y-%m-%d").month
+            != datetime.strptime(old_value, "%Y-%m-%d").month
+        ):
+            return alert_string
+    return None
+
+
+@background(schedule=0)
+@slack_api_exceptions(rethrow=True)
+def _send_instant_alert(form_ids):
+    submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
+        template__resource="OpportunityLineItem"
+    )
+    main_form = submitted_forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
+    user = main_form.user
+    configs = user.slack_integration.realtime_alert_configs
+    sobject_fields = list(
+        SObjectField.objects.filter(id__in=configs.keys()).values("id", "api_name")
+    )
+    resource_data = main_form.resource_object.secondary_data
+    resource_name = main_form.resource_object.name if main_form.resource_object.name else ""
+
+    old_data = dict()
+
+    if main_form.template.form_type == "UPDATE":
+        for additional_stage_form in submitted_forms:
+            old_data = {**old_data, **additional_stage_form.previous_data}
+    new_data = dict()
+    for form in submitted_forms:
+        new_data = {**new_data, **form.saved_data}
+    users_list = {}
+    for field in sobject_fields:
+        api_name = field["api_name"]
+        if api_name in new_data.keys():
+            for object in configs[str(field["id"])].values():
+                value_check = create_alert_string(
+                    object["operator"],
+                    object["data_type"],
+                    object["value"],
+                    new_data[api_name],
+                    resource_data[api_name],
+                    object["title"],
+                )
+                if value_check:
+                    recipients = object["recipients"]
+                    for key in recipients.keys():
+                        channel = recipients[key]
+                        if recipients[key] in users_list.keys():
+                            users_list[channel]["text"] += f", _{value_check}_"
+                        else:
+                            users_list[channel] = {
+                                "text": f":zap: *Instant Update:* _{value_check}_",
+                                "id": key,
+                            }
+    if len(users_list):
+        add_blocks = [
+            block_builders.section_with_button_block(
+                "View Recap",
+                "recap",
+                f"_{main_form.template.resource}_ *{resource_name}*",
+                action_id=action_with_params(
+                    slack_consts.VIEW_RECAP,
+                    params=[f"u={str(user.id)}", f"form_ids={'.'.join(form_ids)}"],
+                ),
+            ),
+            block_builders.context_block(
+                f"{main_form.template.resource} owned by {user.full_name}"
+            ),
+        ]
+        for key in users_list:
+            blocks = [
+                block_builders.simple_section(users_list[key]["text"], "mrkdwn"),
+                *add_blocks,
+            ]
+            user = User.objects.get(id=users_list[key]["id"])
+            try:
+                slack_requests.send_channel_message(
+                    key,
+                    user.organization.slack_integration.access_token,
+                    text=f"Recap {main_form.template.resource}",
+                    block_set=blocks,
+                )
+            except CannotSendToChannel:
+                try:
+                    slack_requests.send_channel_message(
+                        key,
+                        user.organization.slack_integration.access_token,
+                        text="Failed to send recap to channel",
+                        block_set=[
+                            block_builders.simple_section(
+                                f"Unable to send recap to one of the channels you selected, please add <@{user.organization.slack_integration.bot_user_id}> to the channel _*<#{channel}>*_",
+                                "mrkdwn",
+                            )
+                        ],
+                    )
+                    continue
+                except Exception as e:
+                    logger.exception(
+                        f"Failed to send error message to user informing them of channel issue to {user.email} due to {e}"
+                    )
+                    continue
+            except Exception as e:
+                logger.exception(
+                    f"Failed to send recap to channel for user {user.email} due to {e}"
+                )
+                continue
+        return
 
 
 def remove_field(org_id, form_field):

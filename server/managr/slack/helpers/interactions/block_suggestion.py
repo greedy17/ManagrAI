@@ -10,7 +10,13 @@ from managr.salesforce import constants as sf_consts
 from managr.gong.models import GongCall
 from managr.core.models import User
 from managr.opportunity.models import Opportunity, Lead
-from managr.organization.models import Organization, Account, ActionChoice
+from managr.organization.models import (
+    Organization,
+    Account,
+    ActionChoice,
+    Pricebook2,
+    PricebookEntry,
+)
 from managr.salesforce.models import SObjectPicklist, SObjectField
 from managr.outreach.models import Sequence
 from managr.slack.helpers import block_builders
@@ -134,6 +140,21 @@ def process_get_local_resource_options(payload, context):
                     l.as_slack_option
                     for l in user.organization.action_choices.filter(title__icontains=value)[:50]
                 ],
+            ],
+        }
+    elif resource == slack_const.SLACK_ACTION_RESOURCE_PRICEBOOKENTRY:
+        pricebook = context.get("pricebook", None)
+        if pricebook != "None":
+            pricebookentries = PricebookEntry.objects.filter(pricebook__integration_id=pricebook)
+        else:
+            pricebookentries = PricebookEntry.objects.filter(
+                pricebook__organization=user.organization
+            )
+
+        return {
+            "options": [
+                *additional_opts,
+                *[l.as_slack_option for l in pricebookentries.filter(name__icontains=value)[:50]],
             ],
         }
     elif resource == slack_const.SLACK_ACTION_RESOURCE_USER:
@@ -308,6 +329,14 @@ def process_get_sobject_list(payload, context):
     }
 
 
+def process_get_pricebook_entry_options(payload, context):
+    value = payload["value"]
+    pricebooks = Pricebook2.objects.filter(organization=context.get("org"))
+    return {
+        "options": [l.as_slack_option for l in pricebooks.filter(name__icontains=value)[:50]],
+    }
+
+
 def handle_block_suggestion(payload):
     """
     This takes place when a select_field requires data from Managr
@@ -331,6 +360,7 @@ def handle_block_suggestion(payload):
         slack_const.GET_PEOPLE_OPTIONS: process_get_people,
         slack_const.GET_CALLS: process_get_calls,
         slack_const.GET_SOBJECT_LIST: process_get_sobject_list,
+        slack_const.GET_PRICEBOOK_ENTRY_OPTIONS: process_get_pricebook_entry_options,
     }
     action_query_string = payload["action_id"]
     processed_string = process_action_id(action_query_string)

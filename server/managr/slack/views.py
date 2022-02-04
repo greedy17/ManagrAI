@@ -322,6 +322,8 @@ class SlackViewSet(viewsets.GenericViewSet,):
         organization_slack = request.user.organization.slack_integration
         if organization_slack:
             users = slack_requests.list_users(organization_slack.access_token, cursor=cursor)
+            filtered_members = [member for member in users["members"] if member["deleted"] is False]
+            users["members"] = filtered_members
         else:
             users = {"users": [], "response_metadata": {}}
         return Response(status=status.HTTP_200_OK, data=users)

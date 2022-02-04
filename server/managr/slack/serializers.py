@@ -93,6 +93,7 @@ class UserFrontEndSlackIntegrationSerializer(serializers.ModelSerializer):
             "recap_channel",
             "recap_receivers",
             "recap_receivers_ref",
+            "realtime_alert_configs",
         )
 
     def get_recap_receivers(self, instance):

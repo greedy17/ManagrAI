@@ -98,6 +98,26 @@ export class AlertOperandAPI extends ModelAPI {
     }
   }
 }
+export class RealTimeAlertConfigAPI extends ModelAPI {
+  static ENDPOINT = 'alerts/real-time-configs/'
+  static FILTERS_MAP = {
+    page: ApiFilter.create({ key: 'page' }),
+    pageSize: ApiFilter.create({ key: 'page_size' }),
+  }
+  get client() {
+    return apiClient()
+  }
+
+  async createConfig(data) {
+    let formData = objectToSnakeCase(data)
+    try {
+      const res = await this.client.post(`${RealTimeAlertConfigAPI.ENDPOINT}`, formData)
+      return this.cls.fromAPI(res.data)
+    } catch (e) {
+      apiErrorHandler({ apiName: 'RealTimeAlertConfigAPI.createConfig' })(e)
+    }
+  }
+}
 export class AlertConfigAPI extends ModelAPI {
   static ENDPOINT = 'alerts/configs/'
   static FILTERS_MAP = {
@@ -151,4 +171,27 @@ export class AlertGroupAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'AlertGroupAPI.delete' })(e)
     }
   }
+}
+
+export class RealTimeAPI extends ModelAPI {
+  static ENDPOINT = 'alerts/real-time/'
+  static FILTERS_MAP = {
+    page: ApiFilter.create({ key: 'page' }),
+    pageSize: ApiFilter.create({ key: 'page_size' }),
+  }
+  get client() {
+    return apiClient()
+  }
+
+  async createRealTimeAlert(data) {
+    const d = objectToSnakeCase(data)
+
+    try {
+      const res = await this.client.post(RealTimeAPI.ENDPOINT, d)
+      return this.cls.fromAPI(res.data)
+    } catch (e) {
+      apiErrorHandler({ apiName: 'RealTimeAPI.createRealTimeAlert' })(e)
+    }
+  }
+
 }

@@ -86,6 +86,21 @@ class Lead(TimeStampModel, IntegrationModel):
             self.save()
             return res
 
+    def create_in_salesforce(self, data=None, user_id=None):
+        if self.owner and hasattr(self.owner, "salesforce_account"):
+            token = self.owner.salesforce_account.access_token
+            base_url = self.owner.salesforce_account.instance_url
+            object_fields = self.owner.salesforce_account.object_fields.filter(
+                salesforce_object="Lead"
+            ).values_list("api_name", flat=True)
+            res = LeadAdapter.create(data, token, base_url, self.integration_id, object_fields)
+            from managr.salesforce.routes import routes
+
+            serializer = routes["Lead"]["serializer"](data=res.as_dict)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return serializer.instance
+
     def get_current_values(self, *args, **kwargs):
         integration_id = self.integration_id
         token = self.owner.salesforce_account.access_token

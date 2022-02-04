@@ -35,7 +35,6 @@ from managr.slack import constants as slack_const
 
 from managr.zoom.models import ZoomMeeting
 from managr.zoom.utils import score_meeting
-from managr.slack.helpers.block_sets.meeting_review_block_sets import _initial_interaction_message
 from managr.organization.models import Contact
 from managr.salesforce.adapter.models import ContactAdapter
 from managr.zoom.background import _split_first_name, _split_last_name
@@ -48,9 +47,8 @@ from managr.zoom.serializers import ZoomMeetingSerializer
 from managr.zoom import constants as zoom_consts
 from managr.slack import constants as slack_consts
 from managr.salesforce.models import MeetingWorkflow
-from managr.slack.helpers.block_builders import divider_block
-from managr.core.background import _process_send_meeting_reminder
-from managr.slack.helpers.block_sets.common_blocksets import meeting_reminder_block_set
+from managr.core.background import emit_non_zoom_meetings
+from managr.core.background import non_zoom_meeting_message
 
 
 NOTIFICATION_TITLE_STALLED_IN_STAGE = "Opportunity Stalled in Stage"
@@ -129,24 +127,26 @@ def _send_slack_int_email(user):
 
 def _process_calendar_details(user_id):
     user = User.objects.get(id=user_id)
-    try:
-        events = user.nylas._get_calendar_data()
-        if events:
-            processed_data = []
-            for event in events:
-                data = {}
-                data["title"] = event.get("title", None)
-                data["participants"] = event.get("participants", None)
-                data["times"] = event.get("when", None)
-                processed_data.append(data)
-            return processed_data
-        else:
-            return None
-    except Exception as e:
-        return dict({"status": "error"})
+    events = user.nylas._get_calendar_data()
+    if events:
+        processed_data = []
+        for event in events:
+            data = {}
+            data["title"] = event.get("title", None)
+            data['owner'] = event.get('owner', None)
+            data["participants"] = event.get("participants", None)
+            conferencing = event.get('conferencing', None)
+            if conferencing:
+                data['provider'] = conferencing['provider']
+            data["times"] = event.get("when", None)
+            processed_data.append(data)
+        return processed_data
+    else:
+        return None
 
 
-def meeting_prep(processed_data, user_id, invocation=1):
+
+def meeting_prep(processed_data, user_id, invocation=1, send_slack=True):
     def get_domain(email):
         """Parse domain out of an email"""
         return email[email.index("@") + 1 :]
@@ -318,13 +318,36 @@ def meeting_prep(processed_data, user_id, invocation=1):
         "invocation": invocation,
     }
     resource_check = meeting_resource_data.get("resource_id", None)
+    provider = processed_data.get('provider')
+     
     if resource_check:
         data["resource_id"] = meeting_resource_data["resource_id"]
         data["resource_type"] = meeting_resource_data["resource_type"]
+
+    # Creates Meeting Prep Instance 
     serializer = MeetingPrepInstanceSerializer(data=data)
     serializer.is_valid(raise_exception=True)
     serializer.save()
-    return
+    
+    meeting_prep_instance = (
+        MeetingPrepInstance.objects.filter(user=user).order_by('-datetime_created').first()
+    )
+
+
+    # Conditional Check for Zoom meeting or Non-Zoom Meeting
+    if provider != [None,'zoom']:
+        # Google Meet (Non-Zoom)
+        meeting_workflow = MeetingWorkflow.objects.create(
+        non_zoom_meeting=meeting_prep_instance, user=user,
+        )
+
+        # Sending end_times, workflow_id, and user values to emit function 
+        non_zoom_end_times = processed_data.get('times').get('end_time')
+        workflow_id = str(meeting_workflow.id)
+        user_id = str(user.id)
+        user_tz = str(user.timezone)
+        return emit_non_zoom_meetings(workflow_id, user_id, user_tz, non_zoom_end_times)
+
 
 
 def _send_calendar_details(
@@ -506,6 +529,41 @@ def generate_morning_digest(user_id, invocation=None, page=1):
         return blocks
 
 
+def process_uncompleted_meeting(user_id, meetings):
+    user = User.objects.get(id=user_id)
+    meetings = check_for_uncompleted_meetings(user.id, True)
+    print(meetings, "this is meetings")
+    total_meetings = meetings['not_completed']
+    print(total_meetings, "this is total meetings")
+    paged_tasks = custom_paginator((total_meetings), count=1)
+    results = paged_tasks.get("results", [])
+    if results:
+        uncompleted_meetings = ''
+        for t in results:
+            uncompleted_meetings = t
+            uncompleted_meetings = str(t).split(',')
+            uncompleted_meeting_name = uncompleted_meetings[1]
+            # text += ", "
+        
+            task_blocks = [
+                block_builders.simple_section(":calendar: *Non-Zoom Meetings*", "mrkdwn"),
+            ]
+            task_blocks = [
+                *task_blocks, block_builders.simple_section(f"{uncompleted_meeting_name}")
+            ]
+            task_blocks.extend(
+                custom_task_paginator_block(paged_tasks, user.slack_integration.channel)
+            )
+    else:
+        task_blocks = [
+            block_builders.simple_section("You have no tasks due today :clap:", "mrkdwn"),
+        ]
+                    
+    # if meetings["status"]:
+    #        message = [block_builders.simple_section("This is {meetings}", "mrkdwn")]
+    return task_blocks
+
+
 def generate_afternoon_digest(user_id):
     user = User.objects.get(id=user_id)
     #   check user_level for manager
@@ -513,10 +571,26 @@ def generate_afternoon_digest(user_id):
         meetings = check_for_uncompleted_meetings(user.id, True)
         name = user.first_name if hasattr(user, "first_name") else user.full_name
         if meetings["status"]:
+            # slack_id = meetings['slack_id']
+            total_meetings = meetings['not_completed']
+            paged_meetings = custom_paginator((total_meetings), count=1)
+            print(paged_meetings, "This is paged meetings")
+            paginate_results = paged_meetings.get("results", [])
+            if (paginate_results):
+                meeting = [block_sets.get_block_set(
+                    "manager_meeting_reminder",
+                    {"u": str(user.id), "not_completed": meetings["not_completed"]},
+                ),
+                ]
+                meeting.extend(custom_task_paginator_block(paged_meetings, user.slack_integration.channel))
+
+        
+
             meeting = block_sets.get_block_set(
                 "manager_meeting_reminder",
-                {"u": str(user.id), "not_completed": meetings["not_completed"], "name": name},
+                {"u": str(user.id), "not_completed": meetings},
             )
+
         else:
             meeting = [
                 block_builders.simple_section(
@@ -528,7 +602,7 @@ def generate_afternoon_digest(user_id):
         logger.info(f"UNCOMPLETED MEETINGS FOR {user.email}: {meetings}")
         if meetings["status"]:
             meeting = block_sets.get_block_set(
-                "meeting_reminder", {"u": str(user.id), "not_completed": meetings["not_completed"]}
+                "meeting_reminder", {"u": str(user.id), "not_completed": meetings['not_completed']}
             )
         else:
             meeting = [
@@ -537,6 +611,7 @@ def generate_afternoon_digest(user_id):
                 )
             ]
     actions = block_sets.get_block_set("actions_block_set", {"u": str(user.id)})
+    message = process_uncompleted_meeting(user_id, meetings)
     try:
         slack_requests.send_channel_message(
             user.slack_integration.channel,
@@ -545,6 +620,8 @@ def generate_afternoon_digest(user_id):
                 block_builders.simple_section("*Afternoon Digest* :beer:", "mrkdwn"),
                 {"type": "divider"},
                 *meeting,
+                {"type": "divider"},
+                *message,
                 {"type": "divider"},
                 *actions,
             ],

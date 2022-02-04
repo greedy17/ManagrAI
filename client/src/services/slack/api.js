@@ -1,7 +1,7 @@
 import { apiClient, apiErrorHandler } from '@/services/api'
 import { objectToCamelCase, objectToSnakeCase } from '@/services/utils'
 import User from '@/services/users'
-import { SlackListResponse } from '.'
+import { SlackListResponse, SlackUserList } from '.'
 
 const TEST_CHANNEL_ENDPOINT = '/slack/test-channel/'
 const TEST_DM_ENDPOINT = '/slack/test-dm/'
@@ -123,7 +123,9 @@ export default class SlackAPI {
   async listUsers(cursor) {
     return this.client
       .post(SLACK_LIST_USERS, { cursor: cursor })
-      .then(response => response)
+      .then(response => {
+        return SlackUserList.fromAPI(response.data)
+      })
       .catch(apiErrorHandler({ apiName: 'SlackAPI.listUsers' }))
   }
 
