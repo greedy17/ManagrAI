@@ -161,7 +161,7 @@ router.register("accounts", organization_views.AccountViewSet, "accounts")
 router.register("contacts", organization_views.ContactViewSet, "contacts")
 router.register("action-choices", organization_views.ActionChoiceViewSet, "action-choices")
 router.register("salesforce/fields", sf_views.SObjectFieldViewSet, "salesforce-fields")
-router.register("salesforce/resource", sf_views.SalesforceSObjectViewSet, "salesforce-resource")
+router.register("salesforce/sobject", sf_views.SalesforceSObjectViewSet, "salesforce-sobject")
 router.register("salesforce/public-fields", sf_views.PublicSObjectFieldViewSet, "public-fields")
 router.register(
     "salesforce/validations", sf_views.SObjectValidationViewSet, "salesforce-validation"
