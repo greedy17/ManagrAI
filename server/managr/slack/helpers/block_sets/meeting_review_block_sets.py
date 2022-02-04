@@ -971,8 +971,8 @@ def convert_lead_block_set(context):
             "LEAD_CHECKBOX_OPPORTUNITY",
         ),
         block_builders.divider_block(),
-        block_builders.input_block(
-            "Create New", block_id="Account_NAME_INPUT", placeholder="New Account Name"
+        block_builders.simple_section(
+            "Create new Account based off your Lead's company", block_id="Account_NAME_INPUT"
         ),
         block_builders.actions_block(
             [
@@ -991,8 +991,8 @@ def convert_lead_block_set(context):
             "LEAD_CHECKBOX_ACCOUNT",
         ),
         block_builders.divider_block(),
-        block_builders.input_block(
-            "Create New", block_id="Contact_NAME_INPUT", placeholder="New Contact Name"
+        block_builders.simple_section(
+            "Create new Contact based off your Lead information", block_id="Contact_NAME_INPUT"
         ),
         block_builders.actions_block(
             [
@@ -1023,10 +1023,6 @@ def convert_lead_block_set(context):
             ),
             block_id="RECORD_OWNER",
             initial_option=user_option,
-        ),
-        block_builders.context_block(
-            "* _Salesforce will automatically create an Account and Opportunity based off the Contact's company and new contact based off of the Lead information if nothing is entered_",
-            "mrkdwn",
         ),
     ]
     return blocks

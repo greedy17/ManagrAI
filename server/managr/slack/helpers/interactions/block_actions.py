@@ -2545,11 +2545,6 @@ def process_send_recap_modal(payload, context):
         access_token, "Loading users and channels", "open", str(user.id), trigger_id
     )
     type = context.get("type")
-    if type == "meeting":
-        workflow = MeetingWorkflow.objects.get(id=context.get("workflow_id"))
-        params = {"u": context.get("u"), "workflow_id": workflow.id}
-    else:
-        params = {"u": context.get("u"), "form_id": context.get("form_id")}
 
     data = {
         "view_id": loading_data["view"]["id"],
@@ -2557,14 +2552,13 @@ def process_send_recap_modal(payload, context):
             "type": "modal",
             "callback_id": slack_const.PROCESS_SEND_RECAPS,
             "title": {"type": "plain_text", "text": "Send Recaps"},
-            "blocks": get_block_set("send_recap_block_set", params),
+            "blocks": get_block_set("send_recap_block_set", {"u": context.get("u")}),
             "submit": {"type": "plain_text", "text": "Send"},
             "private_metadata": json.dumps(context),
         },
     }
     try:
         res = slack_requests.generic_request(url, data, access_token=access_token)
-        print(res)
     except InvalidBlocksException as e:
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
@@ -2581,6 +2575,7 @@ def process_send_recap_modal(payload, context):
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user with workflow {str(user.id)} email {user.email} {e}"
         )
+    return
 
 
 def process_show_engagement_modal(payload, context):
@@ -2659,12 +2654,14 @@ def process_show_edit_product_form(payload, context):
 
 @processor(required_context="u")
 def process_show_convert_lead_form(payload, context):
-    print(context)
-    print(payload)
     slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
     user = slack_account.user
     blocks = get_block_set("convert_lead_block_set", {"u": str(user.id), "w": context.get("w")})
-
+    private_metadata = {
+        **context,
+        "original_message_channel": payload["channel"]["id"],
+        "original_message_timestamp": payload["message"]["ts"],
+    }
     data = {
         "trigger_id": payload["trigger_id"],
         "view": {
@@ -2673,7 +2670,7 @@ def process_show_convert_lead_form(payload, context):
             "title": {"type": "plain_text", "text": "Convert Lead"},
             "blocks": blocks,
             "submit": {"type": "plain_text", "text": "Convert"},
-            "private_metadata": json.dumps(context),
+            "private_metadata": json.dumps(private_metadata),
         },
     }
     try:
@@ -2927,9 +2924,17 @@ def process_lead_input_switch(payload, context):
             block_id=input_id,
         )
     else:
-        block = block_builders.input_block(
-            f"Create New", block_id=input_id, placeholder=f"New {to_change_input}",
-        )
+        if to_change_input in ["Account", "Contact"]:
+            text = (
+                "Create new Account based off your Lead's company"
+                if to_change_input == "Account"
+                else "Create new Contact based off your Lead information"
+            )
+            block = block_builders.simple_section(text, block_id=input_id)
+        else:
+            block = block_builders.input_block(
+                f"Create New", block_id=input_id, placeholder=f"New {to_change_input}",
+            )
 
     blocks[index] = block
     data = {

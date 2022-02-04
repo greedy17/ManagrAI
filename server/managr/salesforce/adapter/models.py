@@ -950,10 +950,12 @@ class LeadAdapter:
             r = client.post(url, data=body, headers=sf_consts.SALESFORCE_LEAD_CONVERT_HEADER,)
             res = SalesforceAuthAccountAdapter._handle_xml_response(r)
             success_check = res.get("convertLeadResponse", None)
+            print(res)
             if success_check and success_check.get("result").get("success") == "true":
                 from managr.salesforce.routes import routes as serializer_routes
                 from managr.salesforce.adapter.routes import routes as adapter_routes
 
+                new_objects = {}
                 for object in ["Account", "Opportunity", "Contact"]:
                     current_value = adapter_routes[object].get_current_values(
                         res["convertLeadResponse"]["result"][f"{object.lower()}Id"],
@@ -964,7 +966,12 @@ class LeadAdapter:
                     serializer = serializer_routes[object]["serializer"](data=current_value.as_dict)
                     serializer.is_valid(raise_exception=True)
                     serializer.save()
-                return {"success": True}
+                    print(res["convertLeadResponse"]["result"])
+                    new_objects[object] = res["convertLeadResponse"]["result"][
+                        f"{object.lower()}Id"
+                    ]
+                new_objects["sucess":True]
+                return new_objects
 
     @property
     def as_dict(self):

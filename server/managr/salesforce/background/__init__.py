@@ -1112,7 +1112,6 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
         template__resource="OpportunityLineItem"
     )
     main_form = submitted_forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
-    print(main_form)
     user = main_form.user
     old_data = dict()
     if main_form.template.form_type == "UPDATE":

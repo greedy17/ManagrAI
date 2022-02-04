@@ -1930,8 +1930,10 @@ def process_submit_product(payload, context):
 @processor(required_context=["w"])
 def process_convert_lead(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    pm = json.loads(payload["view"]["private_metadata"])
     user = workflow.user
     state = payload["view"]["state"]["values"]
+    print(state)
     loading_view_data = send_loading_screen(
         user.organization.slack_integration.access_token,
         "Converting your Lead :rocket:",
@@ -1943,27 +1945,28 @@ def process_convert_lead(payload, context):
     convert_data = {}
     sobjects = ["Opportunity", "Account", "Contact"]
     for object in sobjects:
-        if "plain_input" in state[f"{object}_NAME_INPUT"]:
-            value = state[f"{object}_NAME_INPUT"]["plain_input"]["value"]
-        elif (
-            state[f"{object}_NAME_INPUT"][
-                f"GET_SOBJECT_LIST?u={context.get('u')}&resource_type={object}"
-            ]["selected_option"]
-            is None
-        ):
-            value = None
-        else:
-            value = state[f"{object}_NAME_INPUT"][
-                f"GET_SOBJECT_LIST?u={context.get('u')}&resource_type={object}"
-            ]["selected_option"]["value"]
+        if f"{object}_NAME_INPUT" in state:
+            if "plain_input" in state[f"{object}_NAME_INPUT"]:
+                value = state[f"{object}_NAME_INPUT"]["plain_input"]["value"]
+            elif (
+                state[f"{object}_NAME_INPUT"][
+                    f"GET_SOBJECT_LIST?u={context.get('u')}&resource_type={object}"
+                ]["selected_option"]
+                is None
+            ):
+                value = None
+            else:
+                value = state[f"{object}_NAME_INPUT"][
+                    f"GET_SOBJECT_LIST?u={context.get('u')}&resource_type={object}"
+                ]["selected_option"]["value"]
 
-        if value is not None:
-            datakey = (
-                f"{object.lower()}Name"
-                if "plain_input" in state[f"{object}_NAME_INPUT"]
-                else f"{object.lower()}Id"
-            )
-            convert_data[datakey] = value
+            if value is not None:
+                datakey = (
+                    f"{object.lower()}Name"
+                    if "plain_input" in state[f"{object}_NAME_INPUT"]
+                    else f"{object.lower()}Id"
+                )
+                convert_data[datakey] = value
     convert_data["convertedStatus"] = list(state["Status"].values())[0]["selected_option"]["value"]
     owner_id = list(state["RECORD_OWNER"].values())[0]["selected_option"]["value"]
     assigned_owner = User.objects.get(id=owner_id)
@@ -1991,6 +1994,30 @@ def process_convert_lead(payload, context):
                 success_data,
                 access_token=user.organization.slack_integration.access_token,
             )
+            update_blocks = [
+                block_builders.section_with_button_block(
+                    "Send Recap",
+                    "SEND_RECAP",
+                    f"You've successfully convert your Lead {lead.name}",
+                    action_id=action_with_params(
+                        slack_const.PROCESS_SEND_RECAP_MODAL,
+                        params=[
+                            f"u={str(workflow.user.id)}",
+                            f"workflow_id={str(workflow.id)}",
+                            f"account={res['Account']}",
+                            f"opportunity={res['Opportunity']}",
+                            f"contact={res['Contact']}",
+                        ],
+                    ),
+                )
+            ]
+        slack_requests.update_channel_message(
+            context.get("channel_id"),
+            context.get("message_ts"),
+            access_token=user.organization.slack_integration.access_token,
+            block_set=update_blocks,
+        )
+        return {"response_action": "clear"}
     except Exception as e:
         print(e)
     return

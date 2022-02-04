@@ -92,7 +92,7 @@ def remove_tags(dictionary, custom_tag=None, previous_key=None):
 def process_xml_dict(xml_response):
     convert = ElementTree.XML(xml_response)
     xmldict = XmlDictConfig(convert)
-    processed_dict = {}
+    processed_dict = dict()
     body = xmldict[SALESFORCE_BODY_TAG]
     if SALESFORCE_FAULT_TAG in body:
         processed_dict["error_data"] = body[SALESFORCE_FAULT_TAG]

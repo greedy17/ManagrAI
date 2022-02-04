@@ -230,10 +230,13 @@ class RealTimeAlertViewSet(
         from managr.salesforce.models import SObjectField
 
         data = request.data
+        print(data)
         manager = User.objects.get(id=data.get("user"))
         api_name = data.get("api_name", None)
         if api_name:
-            field = SObjectField.objects.get(api_name=api_name)
+            field = SObjectField.objects.filter(salesforce_object=data.get("resource")).filter(
+                api_name=api_name
+            )
             current_config = data.get("config")
             pipelines = data.get("pipelines")
             current_config["recipients"] = {str(manager.id): data.get("recipients")}
