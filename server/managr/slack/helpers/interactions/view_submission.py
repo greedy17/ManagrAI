@@ -1900,15 +1900,23 @@ def process_submit_product(payload, context):
                     },
                 )
                 blocks.append(product_block)
+    if type == "meeting":
+        external_id = f"meeting_review_modal.{str(uuid.uuid4())}"
+        title = "Log Meeting"
+        callback_id = slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
+    else:
+        external_id = f"update_modal_block_set.{str(uuid.uuid4())}"
+        callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
+        title = f"Update {main_form.template.resource}"
     data = {
         "view_id": context.get("view_id"),
         "view": {
             "type": "modal",
-            "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
-            "title": {"type": "plain_text", "text": f"Update {main_form.template.resource}"},
+            "callback_id": callback_id,
+            "title": {"type": "plain_text", "text": title},
             "blocks": blocks,
-            "private_metadata": json.dumps(context),
-            "external_id": f"update_modal_block_set.{str(uuid.uuid4())}",
+            "private_metadata": json.dumps(pm),
+            "external_id": external_id,
         },
     }
 

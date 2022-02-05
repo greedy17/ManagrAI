@@ -363,6 +363,7 @@ def process_stage_selected(payload, context):
         elif view_type == "update_alert_modal_block_set":
             callback_id = slack_const.PROCESS_SUBMIT_ALERT_RESOURCE_DATA
         else:
+            submit_text = "Update Salesforce"
             callback_id = slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
     else:
         submit_text = "Next"
@@ -833,6 +834,7 @@ def process_show_edit_product_form(payload, context):
 
 def process_add_products_form(payload, context):
     user = User.objects.get(slack_integration__slack_id=payload["user"]["id"])
+    print(context)
     view = payload["view"]
     state = view["state"]["values"]
     pricebook = context.get("pricebook", None)
@@ -861,6 +863,7 @@ def process_add_products_form(payload, context):
     private_metadata.update({**context, "view_id": view["id"], "product_form": product_form_id})
     # currently only for update
     blocks = []
+    print(pricebook)
     if pricebook is None:
         blocks.append(
             block_builders.external_select(
@@ -2697,70 +2700,6 @@ def process_show_convert_lead_form(payload, context):
             f"Failed To Generate Slack Product form with {str(user.id)} email {user.email} {e}"
         )
     return
-
-
-def process_add_products_form(payload, context):
-    user = User.objects.get(slack_integration__slack_id=payload["user"]["id"])
-    view = payload["view"]
-    state = view["state"]["values"]
-    private_metadata = json.loads(view["private_metadata"])
-    loading_view_data = send_loading_screen(
-        user.organization.slack_integration.access_token,
-        "Putting together your form...:file_cabinet:",
-        "push",
-        str(user.id),
-        payload["trigger_id"],
-        view["id"],
-    )
-    main_form = OrgCustomSlackFormInstance.objects.get(id=context.get("f"))
-    main_form.save_form(state)
-    product_form_id = context.get("product_form", None)
-    if product_form_id is None:
-        product_template = OrgCustomSlackForm.objects.filter(
-            Q(resource="OpportunityLineItem", form_type="CREATE", organization=user.organization)
-        ).first()
-        product_form = OrgCustomSlackFormInstance.objects.create(
-            template=product_template, user=user
-        )
-        product_form_id = str(product_form.id)
-    else:
-        product_form = OrgCustomSlackFormInstance.objects.get(id=product_form_id)
-    private_metadata.update({**context, "view_id": view["id"], "product_form": product_form_id})
-    # currently only for update
-    blocks = []
-    blocks.extend(product_form.generate_form())
-    if len(blocks):
-        data = {
-            "view_id": loading_view_data["view"]["id"],
-            "view": {
-                "type": "modal",
-                "title": {"type": "plain_text", "text": "Add Products Form"},
-                "submit": {"type": "plain_text", "text": "Submit"},
-                "blocks": blocks,
-                "private_metadata": json.dumps(private_metadata),
-                "callback_id": slack_const.PROCESS_SUBMIT_PRODUCT,
-            },
-        }
-    else:
-        data = {
-            "view_id": loading_view_data["view"]["id"],
-            "view": {
-                "type": "modal",
-                "title": {"type": "plain_text", "text": "Product Form error"},
-                "blocks": block_builders.simple_section("Failed to generate your products form"),
-                "private_metadata": json.dumps(private_metadata),
-            },
-        }
-    try:
-        slack_requests.generic_request(
-            slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
-            data,
-            access_token=user.organization.slack_integration.access_token,
-        )
-    except Exception as e:
-        return logger.exception(
-            f"Failed to show product form for user {str(user.id)} email {user.email} {e}"
-        )
 
 
 @processor(required_context="u")
