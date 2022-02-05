@@ -87,12 +87,16 @@ def create_resource(context):
             if view_id
             else slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
         )
+        private_metadata = {
+            "type": "command",
+            **context,
+        }
         data = {
             "view": {
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Create New"},
                 "blocks": blocks,
-                "private_metadata": json.dumps({"type": "command"}),
+                "private_metadata": json.dumps(private_metadata),
                 "external_id": f"create_modal.{str(uuid.uuid4())}",
             },
         }

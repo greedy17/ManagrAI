@@ -2,10 +2,7 @@ import json
 import logging
 import uuid
 import time
-from django.db.models import Q
-
 from django.utils import timezone
-
 
 from managr.api.decorators import log_all_exceptions
 from managr.salesforce.adapter.exceptions import (
@@ -18,16 +15,12 @@ from managr.salesforce.adapter.exceptions import (
 from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_paginator_block
 from managr.alerts.models import AlertInstance
-from managr.organization.models import (
-    Contact,
-    OpportunityLineItem,
-    PricebookEntry,
-)
+from managr.organization.models import Contact, OpportunityLineItem, PricebookEntry, Account
 from managr.core.models import User, MeetingPrepInstance
 from managr.core.background import emit_create_calendar_event
 from managr.outreach.tasks import emit_add_sequence_state
 from managr.core.cron import generate_morning_digest
-from managr.opportunity.models import Opportunity
+from managr.opportunity.models import Opportunity, Lead
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce import constants as sf_consts
 from managr.slack import constants as slack_const
@@ -50,9 +43,9 @@ from managr.salesforce.background import (
     _process_create_task,
     emit_meeting_workflow_tracker,
     emit_add_update_to_sf,
-    emit_add_products_to_sf,
     _send_recap,
     _send_instant_alert,
+    _send_convert_recap,
 )
 from managr.slack.helpers.block_sets import get_block_set
 from managr.salesloft.models import People
@@ -166,7 +159,6 @@ def process_zoom_meeting_data(payload, context):
             participant["_form"] for participant in workflow.non_zoom_meeting.participants
         ]
         contact_forms = OrgCustomSlackFormInstance.objects.filter(id__in=contact_ids)
-    print(contact_forms)
     ops = [
         # update
         f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}",
@@ -356,6 +348,11 @@ def process_submit_resource_data(payload, context):
                 break
             else:
                 resource = _process_create_new_resource.now(current_form_ids)
+                new_resource = model_routes[main_form.template.resource]["model"].objects.get(
+                    integration_id=resource.integration_id
+                )
+                main_form.resource_id = str(new_resource.id)
+                main_form.save()
                 break
 
         except FieldValidationError as e:
@@ -1420,7 +1417,9 @@ def process_get_notes(payload, context):
 @processor(required_context=["u"])
 def process_send_recaps(payload, context):
     values = payload["view"]["state"]["values"]
-    type = context.get("type")
+    pm = json.loads(payload["view"]["private_metadata"])
+    type = context.get("type", None)
+
     channels = list(values["__send_recap_to_channels"].values())[0]["selected_conversations"]
     leadership = [
         option["value"]
@@ -1434,6 +1433,7 @@ def process_send_recaps(payload, context):
             f"GET_LOCAL_RESOURCE_OPTIONS?u={context.get('u')}&resource=User&field_id=fae88a10-53cc-470e-86ec-32376c041893"
         ]["selected_options"]
     ]
+    send_to_recaps = {"channels": channels, "leadership": leadership, "reps": reps}
     if type == "meeting":
         workflow = MeetingWorkflow.objects.get(id=context.get("workflow_id"))
         # collect forms for resource meeting_review and if stages any stages related forms
@@ -1443,13 +1443,24 @@ def process_send_recaps(payload, context):
                 slack_const.FORM_TYPE_STAGE_GATING,
             ]
         )
+    elif type is None and pm.get("account", None) is not None:
+        workflow = MeetingWorkflow.objects.get(id=pm.get("workflow_id"))
+        update_form = workflow.forms.filter(template__form_type__in=["UPDATE", "CREATE"]).first()
+        _send_convert_recap(
+            str(update_form.id),
+            pm.get("account"),
+            pm.get("contact"),
+            pm.get("opportunity"),
+            send_to_recaps,
+        )
+        return
     else:
         form_id = context.get("form_id")
         command_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
         update_forms = [command_form]
     update_form_ids = []
     # aggregate the data
-    send_to_recaps = {"channels": channels, "leadership": leadership, "reps": reps}
+
     data = dict()
     for form in update_forms:
         update_form_ids.append(str(form.id))
@@ -1889,15 +1900,23 @@ def process_submit_product(payload, context):
                     },
                 )
                 blocks.append(product_block)
+    if type == "meeting":
+        external_id = f"meeting_review_modal.{str(uuid.uuid4())}"
+        title = "Log Meeting"
+        callback_id = slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
+    else:
+        external_id = f"update_modal_block_set.{str(uuid.uuid4())}"
+        callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
+        title = f"Update {main_form.template.resource}"
     data = {
         "view_id": context.get("view_id"),
         "view": {
             "type": "modal",
-            "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
-            "title": {"type": "plain_text", "text": f"Update {main_form.template.resource}"},
+            "callback_id": callback_id,
+            "title": {"type": "plain_text", "text": title},
             "blocks": blocks,
-            "private_metadata": json.dumps(context),
-            "external_id": f"update_modal_block_set.{str(uuid.uuid4())}",
+            "private_metadata": json.dumps(pm),
+            "external_id": external_id,
         },
     }
 
@@ -1925,6 +1944,114 @@ def process_submit_product(payload, context):
 
 @log_all_exceptions
 @slack_api_exceptions(rethrow=True)
+@processor(required_context=["w"])
+def process_convert_lead(payload, context):
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    pm = json.loads(payload["view"]["private_metadata"])
+    user = workflow.user
+    state = payload["view"]["state"]["values"]
+    loading_view_data = send_loading_screen(
+        user.organization.slack_integration.access_token,
+        "Converting your Lead :rocket:",
+        "update",
+        str(user.id),
+        payload["trigger_id"],
+        payload["view"]["id"],
+    )
+    convert_data = {}
+    sobjects = ["Opportunity", "Account", "Contact"]
+    for object in sobjects:
+        if f"{object}_NAME_INPUT" in state:
+            if "plain_input" in state[f"{object}_NAME_INPUT"]:
+                value = state[f"{object}_NAME_INPUT"]["plain_input"]["value"]
+            elif (
+                state[f"{object}_NAME_INPUT"][
+                    f"GET_SOBJECT_LIST?u={context.get('u')}&resource_type={object}"
+                ]["selected_option"]
+                is None
+            ):
+                value = None
+            else:
+                value = state[f"{object}_NAME_INPUT"][
+                    f"GET_SOBJECT_LIST?u={context.get('u')}&resource_type={object}"
+                ]["selected_option"]["value"]
+
+            if value is not None:
+                datakey = (
+                    f"{object.lower()}Name"
+                    if "plain_input" in state[f"{object}_NAME_INPUT"]
+                    else f"{object.lower()}Id"
+                )
+                convert_data[datakey] = value
+    convert_data["convertedStatus"] = list(state["Status"].values())[0]["selected_option"]["value"]
+    owner_id = list(state["RECORD_OWNER"].values())[0]["selected_option"]["value"]
+    assigned_owner = User.objects.get(id=owner_id)
+    convert_data["ownerId"] = assigned_owner.salesforce_account.salesforce_id
+    lead = Lead.objects.get(id=workflow.resource_id)
+    convert_data["leadId"] = lead.integration_id
+    try:
+        res = lead.convert_in_salesforce(convert_data)
+        if res["success"]:
+            success_data = {
+                "view_id": loading_view_data["view"]["id"],
+                "view": {
+                    "type": "modal",
+                    "title": {"type": "plain_text", "text": "Lead Converted"},
+                    "blocks": [
+                        block_builders.simple_section(
+                            ":white_check_mark: Your Lead was successfully converted :clap:",
+                            "mrkdwn",
+                        )
+                    ],
+                },
+            }
+            slack_requests.generic_request(
+                slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
+                success_data,
+                access_token=user.organization.slack_integration.access_token,
+            )
+            update_blocks = [
+                block_builders.section_with_button_block(
+                    "Send Recap",
+                    "SEND_RECAP",
+                    f":white_check_mark: Successfully converted your Lead {lead.name}",
+                    action_id=action_with_params(
+                        slack_const.PROCESS_SEND_RECAP_MODAL,
+                        params=[
+                            f"u={str(workflow.user.id)}",
+                            f"workflow_id={str(workflow.id)}",
+                            f"account={res['Account']}",
+                            f"opportunity={res['Opportunity']}",
+                            f"contact={res['Contact']}",
+                        ],
+                    ),
+                )
+            ]
+            slack_requests.update_channel_message(
+                pm.get("original_message_channel"),
+                pm.get("original_message_timestamp"),
+                access_token=user.organization.slack_integration.access_token,
+                block_set=update_blocks,
+            )
+        else:
+            error = res["error"]
+            return {
+                "response_action": "update",
+                "view": {
+                    "type": "modal",
+                    "title": {"type": "plain_text", "text": "Lead Convert Failed"},
+                    "blocks": [
+                        block_builders.simple_section(
+                            f":exclamation: There was an error converting your lead:\n{error}",
+                            "mrkdwn",
+                        )
+                    ],
+                },
+            }
+    except Exception as e:
+        print(e)
+
+
 @processor(required_context=["f"])
 def process_submit_alert_resource_data(payload, context):
     # get context
@@ -2315,6 +2442,7 @@ def process_submit_digest_resource_data(payload, context):
     slack_requests.update_channel_message(
         context.get("channel_id"), context.get("message_ts"), slack_access_token, block_set=blocks,
     )
+    return {"response_action": "clear"}
 
 
 def handle_view_submission(payload):
@@ -2342,6 +2470,7 @@ def handle_view_submission(payload):
         slack_const.PROCESS_ADD_PRODUCTS_FORM: process_add_products_form,
         slack_const.PROCESS_UPDATE_PRODUCT: process_update_product,
         slack_const.PROCESS_SUBMIT_PRODUCT: process_submit_product,
+        slack_const.ZOOM_MEETING__CONVERT_LEAD: process_convert_lead,
     }
 
     callback_id = payload["view"]["callback_id"]

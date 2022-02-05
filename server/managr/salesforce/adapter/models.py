@@ -8,14 +8,14 @@ from collections import OrderedDict
 from urllib.parse import urlencode, quote_plus, urlparse
 from requests.exceptions import HTTPError
 from django.contrib.postgres.fields import JSONField
-
+from managr.salesforce.utils import process_xml_dict
 from managr.utils.client import HttpClient, Client
 from managr.utils.misc import object_to_snake_case
 from managr.organization import constants as org_consts
 from managr.api.decorators import log_all_exceptions
 from managr.slack.helpers import block_builders
-
-from .exceptions import CustomAPIException, UnableToUnlockRow
+from xml.etree import cElementTree as ElementTree
+from .exceptions import CustomAPIException, CustomXMLException
 from .. import constants as sf_consts
 
 logger = logging.getLogger("managr")
@@ -183,6 +183,38 @@ class SalesforceAuthAccountAdapter:
 
             CustomAPIException(HTTPError(kwargs), fn_name)
         return data
+
+    @staticmethod
+    def _handle_xml_response(response, fn_name=None):
+        if not hasattr(response, "status_code"):
+            raise ValueError
+
+        elif response.status_code >= 200 and response.status_code < 300:
+            if response.status_code == 204:
+                return {}
+            try:
+                xmldict = process_xml_dict(response.content)
+            except Exception as e:
+                CustomAPIException(e, fn_name)
+        else:
+            xmldict = process_xml_dict(response.content)
+            status_code = response.status_code
+            error_data = xmldict["error_data"]
+            error_code = None
+            if status_code == 400:
+                error_param = error_data["faultcode"]
+                error_message = error_data["faultstring"]
+            else:
+                error_param = error_data["faultcode"]
+                error_message = error_data["faultstring"]
+            kwargs = {
+                "status_code": status_code,
+                "error_code": error_code,
+                "error_param": error_param,
+                "error_message": error_message,
+            }
+            CustomXMLException(HTTPError(kwargs), fn_name)
+        return xmldict
 
     @classmethod
     def create_account(cls, code, user_id):
@@ -909,6 +941,38 @@ class LeadAdapter:
                 url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
             )
             return SalesforceAuthAccountAdapter._handle_response(r)
+
+    @staticmethod
+    def convert_lead(data, token, base_url, user_id):
+        url = base_url + sf_consts.SALESFORCE_SOAP_URI
+        body = sf_consts.CONVERT_LEAD_BODY(token, data)
+        with Client as client:
+            r = client.post(url, data=body, headers=sf_consts.SALESFORCE_LEAD_CONVERT_HEADER,)
+            res = SalesforceAuthAccountAdapter._handle_xml_response(r)
+            success_check = res.get("convertLeadResponse", None)
+            if success_check and success_check["result"]["success"] == "true":
+                from managr.salesforce.routes import routes as serializer_routes
+                from managr.salesforce.adapter.routes import routes as adapter_routes
+
+                new_objects = {}
+                for object in ["Account", "Opportunity", "Contact"]:
+                    current_value = adapter_routes[object].get_current_values(
+                        res["convertLeadResponse"]["result"][f"{object.lower()}Id"],
+                        token,
+                        base_url,
+                        user_id,
+                    )
+                    serializer = serializer_routes[object]["serializer"](data=current_value.as_dict)
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save()
+                    new_objects[object] = res["convertLeadResponse"]["result"][
+                        f"{object.lower()}Id"
+                    ]
+                new_objects["success"] = True
+                return new_objects
+            else:
+                error_message = success_check.get("result").get("errors").get("message")
+                return {"success": False, "error": error_message}
 
     @property
     def as_dict(self):
