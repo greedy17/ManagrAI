@@ -1385,3 +1385,85 @@ def remove_field(org_id, form_field):
             else:
                 field.forms.first().delete()
     return
+
+
+@background(schedule=0)
+@slack_api_exceptions(rethrow=True)
+def _send_convert_recap(form_id, account_id, contact_id, opportunity_id=None, send_to_data=None):
+    lead_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
+    user = lead_form.user
+    send_summ_to_leadership = send_to_data.get("leadership", None) if send_to_data else None
+    send_summ_to_reps = send_to_data.get("reps", None) if send_to_data else None
+    send_summ_to_channels = send_to_data.get("channels", None) if send_to_data else None
+    slack_access_token = user.organization.slack_integration.access_token
+    account = Account.objects.get(integration_id=account_id)
+    contact = Contact.objects.get(integration_id=contact_id)
+    opportunity = Opportunity.objects.get(integration_id=opportunity_id)
+    text = f":zap: *Lead Convert Recap: {lead_form.resource_object.name}*\n*Account*: {account.name}\n*Opportunity*: {opportunity.name}\n*Contact*: {contact.secondary_data['Name']}"
+    blocks = [
+        block_builders.simple_section(text, "mrkdwn"),
+        block_builders.context_block(f"Lead owned by {user.full_name}"),
+    ]
+    query = None
+    user_list = []
+    if send_summ_to_leadership is not None:
+        query = Q(user_level="MANAGER", id__in=send_summ_to_leadership)
+        user_list.extend(
+            user.organization.users.filter(query)
+            .filter(is_active=True)
+            .distinct()
+            .select_related("slack_integration")
+        )
+    if send_summ_to_reps is not None:
+        query = Q(id__in=send_summ_to_reps)
+        user_list.extend(
+            user.organization.users.filter(query)
+            .filter(is_active=True)
+            .distinct()
+            .select_related("slack_integration")
+        )
+    logger.info(f"USERS LIST RECAP: {user_list}")
+    for u in user_list:
+        if hasattr(u, "slack_integration"):
+            try:
+                r = slack_requests.send_channel_message(
+                    u.slack_integration.channel,
+                    slack_access_token,
+                    text=f"Recap Lead",
+                    block_set=blocks,
+                )
+                logger.info(f"SEND RECAP RESPONSE: {r}")
+            except Exception as e:
+                logger.exception(f"Failed to send recap to {u.email} due to {e}")
+                continue
+    if send_summ_to_channels is not None:
+        for channel in send_summ_to_channels:
+            try:
+                r = slack_requests.send_channel_message(
+                    channel, slack_access_token, text=f"Recap Lead", block_set=blocks,
+                )
+                logger.info(f"SEND RECAP CHANNEL RESPONSE: {r}")
+            except CannotSendToChannel:
+                try:
+                    slack_requests.send_channel_message(
+                        user.slack_integration.channel,
+                        slack_access_token,
+                        text="Failed to send recap to channel",
+                        block_set=[
+                            block_builders.simple_section(
+                                f"Unable to send recap to one of the channels you selected, please add <@{user.organization.slack_integration.bot_user_id}> to the channel _*<#{channel}>*_",
+                                "mrkdwn",
+                            )
+                        ],
+                    )
+                    continue
+                except Exception as e:
+                    logger.exception(
+                        f"Failed to send error message to user informing them of channel issue to {user.email} due to {e}"
+                    )
+                    continue
+            except Exception as e:
+                logger.exception(
+                    f"Failed to send recap to channel for user {user.email} due to {e}"
+                )
+                continue

@@ -15,17 +15,12 @@ from managr.salesforce.adapter.exceptions import (
 from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_paginator_block
 from managr.alerts.models import AlertInstance
-from managr.organization.models import (
-    Contact,
-    OpportunityLineItem,
-    PricebookEntry,
-)
+from managr.organization.models import Contact, OpportunityLineItem, PricebookEntry, Account
 from managr.core.models import User, MeetingPrepInstance
 from managr.core.background import emit_create_calendar_event
 from managr.outreach.tasks import emit_add_sequence_state
 from managr.core.cron import generate_morning_digest
 from managr.opportunity.models import Opportunity, Lead
-from managr.opportunity.models import Opportunity
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce import constants as sf_consts
 from managr.slack import constants as slack_const
@@ -48,9 +43,9 @@ from managr.salesforce.background import (
     _process_create_task,
     emit_meeting_workflow_tracker,
     emit_add_update_to_sf,
-    emit_add_products_to_sf,
     _send_recap,
     _send_instant_alert,
+    _send_convert_recap,
 )
 from managr.slack.helpers.block_sets import get_block_set
 from managr.salesloft.models import People
@@ -1422,7 +1417,9 @@ def process_get_notes(payload, context):
 @processor(required_context=["u"])
 def process_send_recaps(payload, context):
     values = payload["view"]["state"]["values"]
-    type = context.get("type")
+    pm = json.loads(payload["view"]["private_metadata"])
+    type = context.get("type", None)
+
     channels = list(values["__send_recap_to_channels"].values())[0]["selected_conversations"]
     leadership = [
         option["value"]
@@ -1436,6 +1433,7 @@ def process_send_recaps(payload, context):
             f"GET_LOCAL_RESOURCE_OPTIONS?u={context.get('u')}&resource=User&field_id=fae88a10-53cc-470e-86ec-32376c041893"
         ]["selected_options"]
     ]
+    send_to_recaps = {"channels": channels, "leadership": leadership, "reps": reps}
     if type == "meeting":
         workflow = MeetingWorkflow.objects.get(id=context.get("workflow_id"))
         # collect forms for resource meeting_review and if stages any stages related forms
@@ -1445,13 +1443,24 @@ def process_send_recaps(payload, context):
                 slack_const.FORM_TYPE_STAGE_GATING,
             ]
         )
+    elif type is None and pm.get("account", None) is not None:
+        workflow = MeetingWorkflow.objects.get(id=pm.get("workflow_id"))
+        update_form = workflow.forms.filter(template__form_type__in=["UPDATE", "CREATE"]).first()
+        _send_convert_recap(
+            str(update_form.id),
+            pm.get("account"),
+            pm.get("contact"),
+            pm.get("opportunity"),
+            send_to_recaps,
+        )
+        return
     else:
         form_id = context.get("form_id")
         command_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
         update_forms = [command_form]
     update_form_ids = []
     # aggregate the data
-    send_to_recaps = {"channels": channels, "leadership": leadership, "reps": reps}
+
     data = dict()
     for form in update_forms:
         update_form_ids.append(str(form.id))
@@ -1933,7 +1942,6 @@ def process_convert_lead(payload, context):
     pm = json.loads(payload["view"]["private_metadata"])
     user = workflow.user
     state = payload["view"]["state"]["values"]
-    print(state)
     loading_view_data = send_loading_screen(
         user.organization.slack_integration.access_token,
         "Converting your Lead :rocket:",
@@ -1998,7 +2006,7 @@ def process_convert_lead(payload, context):
                 block_builders.section_with_button_block(
                     "Send Recap",
                     "SEND_RECAP",
-                    f"You've successfully convert your Lead {lead.name}",
+                    f":white_check_mark: Successfully converted your Lead {lead.name}",
                     action_id=action_with_params(
                         slack_const.PROCESS_SEND_RECAP_MODAL,
                         params=[
@@ -2011,16 +2019,29 @@ def process_convert_lead(payload, context):
                     ),
                 )
             ]
-        slack_requests.update_channel_message(
-            context.get("channel_id"),
-            context.get("message_ts"),
-            access_token=user.organization.slack_integration.access_token,
-            block_set=update_blocks,
-        )
-        return {"response_action": "clear"}
+            slack_requests.update_channel_message(
+                pm.get("original_message_channel"),
+                pm.get("original_message_timestamp"),
+                access_token=user.organization.slack_integration.access_token,
+                block_set=update_blocks,
+            )
+        else:
+            error = res["error"]
+            return {
+                "response_action": "update",
+                "view": {
+                    "type": "modal",
+                    "title": {"type": "plain_text", "text": "Lead Convert Failed"},
+                    "blocks": [
+                        block_builders.simple_section(
+                            f":exclamation: There was an error converting your lead:\n{error}",
+                            "mrkdwn",
+                        )
+                    ],
+                },
+            }
     except Exception as e:
         print(e)
-    return
 
 
 @processor(required_context=["f"])

@@ -2537,6 +2537,7 @@ def process_show_digest_update_resource_form(payload, context):
 
 @processor()
 def process_send_recap_modal(payload, context):
+    print(context, payload)
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
