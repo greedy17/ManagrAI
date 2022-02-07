@@ -245,5 +245,6 @@ class SalesforceSObjectViewSet(
     mixins.DestroyModelMixin,
 ):
     def get_queryset(self):
-        query = routes[self.request.sobject]["model"].objects.all()
+        sobject = routes[self.request.sobject]
+        query = sobject["model"].objects.for_user(self.request.user)
         return query
