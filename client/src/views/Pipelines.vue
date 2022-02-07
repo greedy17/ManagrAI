@@ -75,6 +75,8 @@
 
 <script>
 import DropDownSelect from '@thinknimble/dropdownselect'
+import { SObjectField, SObjectValidation, SObjectPicklist, SObjects } from '@/services/salesforce'
+import axios from 'axios'
 
 export default {
   name: 'Pipelines',
@@ -85,6 +87,7 @@ export default {
     return {
       noSelection: true,
       opportunities: ['test'],
+      test: null,
     }
   },
   computed: {
@@ -92,7 +95,34 @@ export default {
       return this.$store.state.user
     },
   },
-  methods: {},
+  // created() {
+  //   this.getObjects()
+  // },
+  mounted() {
+    axios
+      .get('http://d5w00000525speaa.my.salesforce.com/services/data/v54.0/sobjects/Opportunity')
+      .then((response) => console.log(response))
+  },
+  methods: {
+    // async getObjects() {
+    //   try {
+    //     const res = await SObjects.api.getObjects('Opportunity')
+    //     if (res.status == 200) {
+    //       this.$Alert.alert({
+    //         type: 'success',
+    //         timeout: 2000,
+    //         message: 'Successfully Retrieved Objects',
+    //       })
+    //     }
+    //   } catch {
+    //     this.$Alert.alert({
+    //       type: 'error',
+    //       timeout: 2000,
+    //       message: 'There was an error collecting objects',
+    //     })
+    //   }
+    // },
+  },
 }
 </script>
 
