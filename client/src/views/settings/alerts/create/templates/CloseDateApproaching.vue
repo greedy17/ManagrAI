@@ -426,7 +426,7 @@ export default {
       return /\d/.test(str) ? this.user.fullName : str
     },
     repsPipeline() {
-      if (this.userLevel == 'REP') {
+      if (this.userLevel !== 'MANAGER') {
         this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
         this.setPipelines({
           fullName: 'MYSELF',

@@ -48,6 +48,19 @@
           <img src="@/assets/images/configCheck.png" class="filtered" alt="" />
         </button>
       </div>
+
+      <div v-if="!wonConfigActive" @click="onWinning" class="stage-item">
+        <p>Closed Won</p>
+        <button class="plus_button">
+          <img src="@/assets/images/add.svg" alt="" />
+        </button>
+      </div>
+      <div v-else class="added-item">
+        <p>Closed Won</p>
+        <button style="cursor: auto" class="plus_button">
+          <img src="@/assets/images/configCheck.png" class="filtered" alt="" />
+        </button>
+      </div>
     </div>
 
     <div
@@ -126,6 +139,25 @@
         </section>
       </div>
 
+      <div v-if="wonConfigActive && !winning" class="added-collection">
+        <div class="added-collection__header">
+          <p class="title">Closed Won</p>
+          <span class="active">active</span>
+        </div>
+        <section class="added-collection__body">
+          <p>Recieve alerts when deals are closed.</p>
+        </section>
+        <section class="added-collection__footer">
+          <div class="edit" @click="onWinning">
+            <img
+              src="@/assets/images/edit.png"
+              style="height: 1rem; filter: brightness(40%)"
+              alt=""
+            />
+          </div>
+        </section>
+      </div>
+
       <transition name="fade">
         <div v-if="advancing">
           <StageAdvanced></StageAdvanced>
@@ -141,6 +173,12 @@
       <transition name="fade">
         <div v-if="pushing">
           <CloseDatePushed></CloseDatePushed>
+        </div>
+      </transition>
+
+      <transition name="fade">
+        <div v-if="winning">
+          <ClosedWon></ClosedWon>
         </div>
       </transition>
     </div>
@@ -173,6 +211,7 @@ import Modal from '@/components/Modal'
 import MovedToCommit from '@/views/settings/alerts/create/templates/MovedToCommit'
 import CloseDatePushed from '@/views/settings/alerts/create/templates/CloseDatePushed'
 import StageAdvanced from '@/views/settings/alerts/create/templates/StageAdvanced'
+import ClosedWon from '@/views/settings/alerts/create/templates/ClosedWon'
 
 /**
  * Services
@@ -216,6 +255,7 @@ export default {
     MovedToCommit,
     CloseDatePushed,
     StageAdvanced,
+    ClosedWon,
   },
   data() {
     return {
@@ -226,6 +266,7 @@ export default {
       advancing: false,
       commit: false,
       pushing: false,
+      winning: false,
       showLoader: true,
       NON_FIELD_ALERT_OPTS,
       stringRenderer,
@@ -252,6 +293,9 @@ export default {
     },
     onPushing() {
       this.pushing = !this.pushing
+    },
+    onWinning() {
+      this.winning = !this.winning
     },
     showList() {
       this.listVisible = !this.listVisible
@@ -319,6 +363,13 @@ export default {
     pushedConfigActive() {
       for (let i = 0; i < this.realtimeConfigs.length; i++) {
         if (this.realtimeConfigs[i]['Close date pushed']) {
+          return true
+        }
+      }
+    },
+    wonConfigActive() {
+      for (let i = 0; i < this.realtimeConfigs.length; i++) {
+        if (this.realtimeConfigs[i]['Closed Won']) {
           return true
         }
       }
@@ -622,7 +673,8 @@ textarea {
   justify-content: center;
   padding: 0rem 0.75rem;
   margin-right: 1rem;
-  box-shadow: 3px 2px 2px $very-light-gray;
+  box-shadow: 1px 3px 7px $very-light-gray;
+  border: 1px solid $soft-gray;
   border-radius: 7px;
   color: $base-gray;
   cursor: pointer;
@@ -636,7 +688,7 @@ textarea {
   margin-top: 2.5rem;
   max-width: 20vw;
   max-height: 27vh;
-  margin-right: 5vw;
+  margin-right: 2vw;
   &__header {
     max-height: 3rem;
     display: flex;
@@ -665,6 +717,7 @@ textarea {
   padding: 0rem 0.75rem;
   margin-right: 1rem;
   box-shadow: 1px 1px 1px $very-light-gray;
+  background-color: $lighter-green;
   border-radius: 7px;
   color: $base-gray;
   font-size: 12px;
