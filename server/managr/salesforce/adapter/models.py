@@ -194,10 +194,12 @@ class SalesforceAuthAccountAdapter:
                 return {}
             try:
                 xmldict = process_xml_dict(response.content)
+                print(f"SUCCESS XMLDICT: {xmldict}")
             except Exception as e:
                 CustomAPIException(e, fn_name)
         else:
             xmldict = process_xml_dict(response.content)
+            print(f"FAIL XMLDICT: {xmldict}")
             status_code = response.status_code
             error_data = xmldict["error_data"]
             error_code = None
@@ -969,6 +971,7 @@ class LeadAdapter:
                         f"{object.lower()}Id"
                     ]
                 new_objects["success"] = True
+                print(f"CONVERT LEAD NEW OBJECTS: {new_objects}")
                 return new_objects
             else:
                 error_message = success_check.get("result").get("errors").get("message")
