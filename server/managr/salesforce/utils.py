@@ -111,22 +111,17 @@ def process_text_field_format(user_id, resource, saved_data):
     from managr.core.models import User
     from managr.salesforce.models import SObjectField
 
-    print(resource)
-    print(saved_data)
     user = User.objects.get(id=user_id)
     fields = list(
         SObjectField.objects.for_user(user)
         .filter(Q(salesforce_object=resource, data_type="TextArea"))
         .values_list("api_name", flat=True)
     )
-    print(fields)
     to_check_fields = [field for field in saved_data if field in fields]
-    print(to_check_fields)
     if len(to_check_fields):
         for field in to_check_fields:
 
             split_field = saved_data[field].split("\n")
-            print(split_field)
             if len(split_field) > 1:
                 salesforce_formatted = "\r\n".join(split_field)
                 saved_data[field] = salesforce_formatted

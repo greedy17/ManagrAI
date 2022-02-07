@@ -330,11 +330,9 @@ def process_submit_resource_data(payload, context):
     if not len(stage_forms):
         main_form.save_form(state)
     all_form_data = {**stage_form_data_collector, **main_form.saved_data}
-    print(all_form_data)
     formatted_saved_data = process_text_field_format(
         str(user.id), main_form.template.resource, all_form_data
     )
-    print(formatted_saved_data)
     slack_access_token = user.organization.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     loading_view_data = send_loading_screen(
