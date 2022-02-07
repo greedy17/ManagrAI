@@ -251,8 +251,6 @@ class SalesforceSObjectViewSet(
 
     def get_queryset(self):
         param_sobject = self.request.GET.get("sobject")
-        print(param_sobject)
         sobject = routes[param_sobject]
-        print(sobject)
         query = sobject["model"].objects.for_user(self.request.user)
         return query
