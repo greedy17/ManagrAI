@@ -1958,6 +1958,7 @@ def process_convert_lead(payload, context):
         payload["trigger_id"],
         payload["view"]["id"],
     )
+    print(f"LOADING VIEW: {loading_view_data}")
     convert_data = {}
     sobjects = ["Opportunity", "Account", "Contact"]
     for object in sobjects:
@@ -1989,8 +1990,10 @@ def process_convert_lead(payload, context):
     convert_data["ownerId"] = assigned_owner.salesforce_account.salesforce_id
     lead = Lead.objects.get(id=workflow.resource_id)
     convert_data["leadId"] = lead.integration_id
+    print(f"CONVERT DATA: {convert_data}")
     try:
         res = lead.convert_in_salesforce(convert_data)
+        print(f"CONVERT RES: {res}")
         if res["success"]:
             success_data = {
                 "view_id": loading_view_data["view"]["id"],
@@ -2005,11 +2008,12 @@ def process_convert_lead(payload, context):
                     ],
                 },
             }
-            slack_requests.generic_request(
+            success_res = slack_requests.generic_request(
                 slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
                 success_data,
                 access_token=user.organization.slack_integration.access_token,
             )
+            print(f"SUCCESS MESSAGE: {success_res}")
             update_blocks = [
                 block_builders.section_with_button_block(
                     "Send Recap",
