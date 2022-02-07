@@ -1,15 +1,10 @@
 import json
-import pdb
-import pytz
-from datetime import datetime, date
 import logging
 import uuid
 import time
 from django.db.models import Q
 
-from django.http import JsonResponse
 from django.utils import timezone
-from rest_framework.response import Response
 
 
 from managr.api.decorators import log_all_exceptions
@@ -24,9 +19,7 @@ from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_paginator_block
 from managr.alerts.models import AlertInstance
 from managr.organization.models import (
-    Organization,
     Contact,
-    Account,
     OpportunityLineItem,
     PricebookEntry,
 )
@@ -35,7 +28,6 @@ from managr.core.background import emit_create_calendar_event
 from managr.outreach.tasks import emit_add_sequence_state
 from managr.core.cron import generate_morning_digest
 from managr.opportunity.models import Opportunity
-from managr.zoom.models import ZoomMeeting
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce import constants as sf_consts
 from managr.slack import constants as slack_const
@@ -50,8 +42,7 @@ from managr.slack.helpers.utils import (
     check_contact_last_name,
     send_loading_screen,
 )
-from managr.salesforce.adapter.models import ContactAdapter, OpportunityAdapter, TaskAdapter
-from managr.zoom import constants as zoom_consts
+from managr.salesforce.adapter.models import ContactAdapter
 from managr.salesforce.routes import routes as model_routes
 from managr.salesforce.adapter.routes import routes as adapter_routes
 from managr.salesforce.background import (
@@ -61,6 +52,7 @@ from managr.salesforce.background import (
     emit_add_update_to_sf,
     emit_add_products_to_sf,
     _send_recap,
+    _send_instant_alert,
 )
 from managr.slack.helpers.block_sets import get_block_set
 from managr.salesloft.models import People
@@ -74,7 +66,7 @@ from managr.slack.helpers.exceptions import (
     InvalidAccessToken,
 )
 from managr.api.decorators import slack_api_exceptions
-from managr.organization.serializers import ContactSerializer
+from managr.slack.helpers.block_sets.command_views_blocksets import custom_meeting_paginator_block
 
 logger = logging.getLogger("managr")
 
@@ -167,9 +159,14 @@ def process_zoom_meeting_data(payload, context):
     else:
         form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
         form.save_form(state)
-
-    contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
-
+    if workflow.meeting:
+        contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
+    else:
+        contact_ids = [
+            participant["_form"] for participant in workflow.non_zoom_meeting.participants
+        ]
+        contact_forms = OrgCustomSlackFormInstance.objects.filter(id__in=contact_ids)
+    print(contact_forms)
     ops = [
         # update
         f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}",
@@ -523,6 +520,8 @@ def process_submit_resource_data(payload, context):
             message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
         if len(user.slack_integration.recap_receivers) and type == "meeting":
             _send_recap(current_form_ids, None, True)
+        if len(user.slack_integration.realtime_alert_configs):
+            _send_instant_alert(current_form_ids)
         if (
             all_form_data.get("meeting_comments") is not None
             and all_form_data.get("meeting_type") is not None
@@ -806,13 +805,18 @@ def process_update_meeting_contact(payload, context):
         form = OrgCustomSlackFormInstance.objects.get(id=contact["_form"])
     else:
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+        meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
         contact = dict(
             *filter(
                 lambda contact: contact["_tracking_id"] == context.get("tracking_id"),
-                workflow.meeting.participants,
+                meeting.participants,
             )
         )
-        form = workflow.forms.get(id=contact["_form"])
+        form = (
+            workflow.forms.get(id=contact["_form"])
+            if workflow.meeting
+            else OrgCustomSlackFormInstance.objects.get(id=contact.get("_form"))
+        )
     form.save_form(state)
     user_id = workflow.user.id if type else workflow.user_id
     # reconstruct the current data with the updated data
@@ -848,16 +852,16 @@ def process_update_meeting_contact(payload, context):
     else:
         # replace the contact in the participants list
         part_index = None
-        for index, participant in enumerate(workflow.meeting.participants):
+        for index, participant in enumerate(meeting.participants):
             if participant["_tracking_id"] == new_contact["_tracking_id"]:
                 part_index = index
                 break
-        workflow.meeting.participants = [
-            *workflow.meeting.participants[:part_index],
+        meeting.participants = [
+            *meeting.participants[:part_index],
             new_contact,
-            *workflow.meeting.participants[part_index + 1 :],
+            *meeting.participants[part_index + 1 :],
         ]
-        workflow.meeting.save()
+        meeting.save()
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
         org = workflow.user.organization
         access_token = org.slack_integration.access_token
@@ -866,7 +870,8 @@ def process_update_meeting_contact(payload, context):
             "original_message_channel": context.get("original_message_channel"),
             "original_message_timestamp": context.get("original_message_timestamp"),
         }
-        if check_contact_last_name(workflow.id):
+        meeting_type = "zoom" if workflow.meeting else "non-zoom"
+        if check_contact_last_name(workflow.id, meeting_type):
             update_res = slack_requests.update_channel_message(
                 context.get("original_message_channel"),
                 context.get("original_message_timestamp"),

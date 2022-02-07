@@ -61,6 +61,10 @@ export class SObjectPicklist extends Model {
   static values = new fields.ArrayField({ type: new fields.Field() })
 }
 
+export class SObjects extends Model {
+  static api = SObjectFormBuilderAPI.create(SObjects)
+}
+
 const INTEGER = 'INTEGER'
 const STRING = 'STRING'
 const DATE = 'DATE'

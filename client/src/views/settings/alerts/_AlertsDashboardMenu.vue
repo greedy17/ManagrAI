@@ -60,7 +60,7 @@
                 alt=""
               />
 
-              <h5>Pipeline Management</h5>
+              <h5>Scheduled Updates</h5>
             </div>
           </router-link>
         </div>
@@ -182,7 +182,7 @@
                 alt=""
               />
 
-              <h5 style="margin-left: 1rem">Pipeline Management</h5>
+              <h5 style="margin-left: 1rem">Scheduled Updates</h5>
             </div>
           </router-link>
         </div>

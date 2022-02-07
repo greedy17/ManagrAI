@@ -285,6 +285,16 @@ class AlertGroupWriteSerializer(serializers.ModelSerializer):
         return data
 
 
+# class RealTimeAlertConfigWriteSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = alert_models.Config
+#         fields = (
+#             "title",
+#             "is_active",
+#             "recipients",
+#         )
+
+
 class AlertConfigWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = alert_models.AlertConfig
@@ -370,7 +380,9 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
             new_configs = list(map(lambda x: {**x, "template": data.id}, new_configs))
 
             _new_configs = AlertConfigWriteSerializer(
-                data=new_configs, many=True, context=self.context,
+                data=new_configs,
+                many=True,
+                context=self.context,
             )
             _new_configs.is_valid(raise_exception=True)
             _new_configs.save()
