@@ -120,10 +120,10 @@ def process_text_field_format(user_id, resource, saved_data):
     to_check_fields = [field for field in saved_data if field in fields]
     if len(to_check_fields):
         for field in to_check_fields:
-
-            split_field = saved_data[field].split("\n")
-            if len(split_field) > 1:
-                salesforce_formatted = "\r\n".join(split_field)
-                saved_data[field] = salesforce_formatted
+            if saved_data[field]:
+                split_field = saved_data[field].split("\n")
+                if len(split_field) > 1:
+                    salesforce_formatted = "\r\n".join(split_field)
+                    saved_data[field] = salesforce_formatted
         return saved_data
     return False

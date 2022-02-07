@@ -315,6 +315,15 @@ def process_submit_resource_data(payload, context):
     user = User.objects.get(id=context.get("u"))
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
+    slack_access_token = user.organization.slack_integration.access_token
+    loading_view_data = send_loading_screen(
+        slack_access_token,
+        ":exclamation: Please wait a few seconds :zany_face:, then click *'try again'*",
+        "update",
+        str(user.id),
+        trigger_id,
+        view_id,
+    )
     external_id = payload.get("view", {}).get("external_id", None)
     try:
         view_type, __unique_id = external_id.split(".")
@@ -333,16 +342,9 @@ def process_submit_resource_data(payload, context):
     formatted_saved_data = process_text_field_format(
         str(user.id), main_form.template.resource, all_form_data
     )
-    slack_access_token = user.organization.slack_integration.access_token
+
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    loading_view_data = send_loading_screen(
-        slack_access_token,
-        ":exclamation: Please wait a few seconds :zany_face:, then click *'try again'*",
-        "update",
-        str(user.id),
-        trigger_id,
-        view_id,
-    )
+
     attempts = 1
     while True:
         sf = user.salesforce_account
