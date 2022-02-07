@@ -95,33 +95,33 @@ export default {
       return this.$store.state.user
     },
   },
-  // created() {
-  //   this.getObjects()
-  // },
+  created() {
+    this.getObjects()
+  },
   mounted() {
-    axios
-      .get('http://d5w00000525speaa.my.salesforce.com/services/data/v54.0/sobjects/Opportunity')
-      .then((response) => console.log(response))
+  //   axios
+  //     .get('http://d5w00000525speaa.my.salesforce.com/services/data/v54.0/sobjects/Opportunity')
+  //     .then((response) => console.log(response))
   },
   methods: {
-    // async getObjects() {
-    //   try {
-    //     const res = await SObjects.api.getObjects('Opportunity')
-    //     if (res.status == 200) {
-    //       this.$Alert.alert({
-    //         type: 'success',
-    //         timeout: 2000,
-    //         message: 'Successfully Retrieved Objects',
-    //       })
-    //     }
-    //   } catch {
-    //     this.$Alert.alert({
-    //       type: 'error',
-    //       timeout: 2000,
-    //       message: 'There was an error collecting objects',
-    //     })
-    //   }
-    // },
+    async getObjects() {
+      try {
+        const res = await SObjects.api.getObjects('Opportunity')
+        if (res.status == 200) {
+          this.$Alert.alert({
+            type: 'success',
+            timeout: 2000,
+            message: 'Successfully Retrieved Objects',
+          })
+        }
+      } catch {
+        this.$Alert.alert({
+          type: 'error',
+          timeout: 2000,
+          message: 'There was an error collecting objects',
+        })
+      }
+    },
   },
 }
 </script>

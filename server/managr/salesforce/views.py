@@ -244,7 +244,15 @@ class SalesforceSObjectViewSet(
     mixins.CreateModelMixin,
     mixins.DestroyModelMixin,
 ):
+    def get_serializer_class(self):
+        param_sobject = self.request.GET.get("sobject")
+        sobject = routes[param_sobject]
+        return sobject["serializer"]
+
     def get_queryset(self):
-        sobject = routes[self.request.sobject]
+        param_sobject = self.request.GET.get("sobject")
+        print(param_sobject)
+        sobject = routes[param_sobject]
+        print(sobject)
         query = sobject["model"].objects.for_user(self.request.user)
         return query
