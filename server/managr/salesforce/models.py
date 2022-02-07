@@ -330,7 +330,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
                     placeholder="MM-DD-YYYY HH:MM AM/PM",
                 )
 
-            if self.data_type == "String" and self.length >= 250:
+            if self.data_type == "String" and self.length >= 250 or self.data_type == "TextArea":
                 # set these fields to be multiline
 
                 return block_builders.input_block(
