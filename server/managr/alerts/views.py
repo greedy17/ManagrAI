@@ -246,19 +246,18 @@ class RealTimeAlertViewSet(
             for user in users:
                 configs = user.slack_integration.realtime_alert_configs
                 if str(field.id) in configs:
-                    print("first stop")
-                    if api_name in configs[str(field.id)].keys():
-                        print("next stop")
+                    if current_config["title"] in configs[str(field.id)].keys():
                         if (
                             str(manager.id)
                             not in configs[str(field.id)][api_name]["recipients"].keys()
                         ):
-                            print("finally")
                             configs[str(field.id)][api_name]["recipients"][
                                 str(manager.id)
                             ] = data.get("recipients")
+                    else:
+                        configs[str(field.id)][current_config["title"]] = current_config
+
                 else:
-                    print("finish line")
                     new_config = {current_config["title"]: current_config}
                     configs[str(field.id)] = new_config
                 user.slack_integration.save()
