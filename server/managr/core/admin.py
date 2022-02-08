@@ -40,8 +40,6 @@ class SalesloftAccountInline(admin.StackedInline):
 
 
 class EmailAuthAccForm(forms.ModelForm):
-    linked_at = forms.IntegerField()
-
     class Meta:
         model = NylasAuthAccount
         fields = (
