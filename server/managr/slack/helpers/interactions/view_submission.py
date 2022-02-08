@@ -1,4 +1,5 @@
 import json
+from lib2to3.pytree import convert
 import logging
 import uuid
 import time
@@ -47,6 +48,7 @@ from managr.salesforce.background import (
     _send_instant_alert,
     _send_convert_recap,
 )
+from managr.salesforce.utils import process_text_field_format
 from managr.slack.helpers.block_sets import get_block_set
 from managr.salesloft.models import People
 from managr.salesloft.background import emit_add_cadence_membership
@@ -314,6 +316,15 @@ def process_submit_resource_data(payload, context):
     user = User.objects.get(id=context.get("u"))
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
+    slack_access_token = user.organization.slack_integration.access_token
+    loading_view_data = send_loading_screen(
+        slack_access_token,
+        ":exclamation: Please wait a few seconds :zany_face:, then click *'try again'*",
+        "update",
+        str(user.id),
+        trigger_id,
+        view_id,
+    )
     external_id = payload.get("view", {}).get("external_id", None)
     try:
         view_type, __unique_id = external_id.split(".")
@@ -329,16 +340,12 @@ def process_submit_resource_data(payload, context):
     if not len(stage_forms):
         main_form.save_form(state)
     all_form_data = {**stage_form_data_collector, **main_form.saved_data}
-    slack_access_token = user.organization.slack_integration.access_token
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    loading_view_data = send_loading_screen(
-        slack_access_token,
-        ":exclamation: Please wait a few seconds :zany_face:, then click *'try again'*",
-        "update",
-        str(user.id),
-        trigger_id,
-        view_id,
+    formatted_saved_data = process_text_field_format(
+        str(user.id), main_form.template.resource, all_form_data
     )
+
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+
     attempts = 1
     while True:
         sf = user.salesforce_account
@@ -1958,7 +1965,6 @@ def process_convert_lead(payload, context):
         payload["trigger_id"],
         payload["view"]["id"],
     )
-    print(f"LOADING VIEW: {loading_view_data}")
     convert_data = {}
     sobjects = ["Opportunity", "Account", "Contact"]
     for object in sobjects:
@@ -1973,10 +1979,11 @@ def process_convert_lead(payload, context):
             ):
                 value = None
             else:
-                value = state[f"{object}_NAME_INPUT"][
+                internal_value = state[f"{object}_NAME_INPUT"][
                     f"GET_SOBJECT_LIST?u={context.get('u')}&resource_type={object}"
                 ]["selected_option"]["value"]
-
+                model = model_routes[object]["model"].objects.get(id=internal_value)
+                value = model.integration_id
             if value is not None:
                 datakey = (
                     f"{object.lower()}Name"
@@ -1984,6 +1991,7 @@ def process_convert_lead(payload, context):
                     else f"{object.lower()}Id"
                 )
                 convert_data[datakey] = value
+
     convert_data["convertedStatus"] = list(state["Status"].values())[0]["selected_option"]["value"]
     owner_id = list(state["RECORD_OWNER"].values())[0]["selected_option"]["value"]
     assigned_owner = User.objects.get(id=owner_id)

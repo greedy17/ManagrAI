@@ -416,7 +416,7 @@ export default {
           user: this.$store.state.user.id,
           config: {
             isActive: true,
-            title: 'Close Date Pushed',
+            title: 'Close date pushed',
             operator: '!=',
             value: 1,
             dataType: 'date',

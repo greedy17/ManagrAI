@@ -334,7 +334,7 @@ export default {
       await this.listChannels()
       await this.listUserChannels()
     }
-    if (this.user.userLevel == 'MANAGER') {
+    if (this.userLevel == 'MANAGER') {
       await this.users.refresh()
     }
     this.userConfigForm = new UserConfigForm({
@@ -686,7 +686,7 @@ export default {
       }
     },
     repsPipeline() {
-      if (this.userLevel == 'REP') {
+      if (this.userLevel !== 'MANAGER') {
         this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
         this.setPipelines({
           fullName: 'MYSELF',
@@ -697,7 +697,7 @@ export default {
   },
   computed: {
     userTargetsOpts() {
-      if (this.user.userLevel == 'MANAGER') {
+      if (this.userLevel == 'MANAGER') {
         return [
           ...this.alertTargetOpts.map((opt) => {
             return {
@@ -712,7 +712,7 @@ export default {
       }
     },
     recipientOpts() {
-      if (this.user.userLevel == 'MANAGER') {
+      if (this.userLevel == 'MANAGER') {
         return [
           ...this.alertRecipientOpts.map((opt) => {
             return {

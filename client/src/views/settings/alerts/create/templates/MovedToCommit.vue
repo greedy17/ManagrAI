@@ -418,7 +418,7 @@ export default {
             isActive: true,
             title: 'Moved to Commit',
             operator: '==',
-            value: 'commit',
+            value: 'Commit',
             dataType: 'string',
           },
         })

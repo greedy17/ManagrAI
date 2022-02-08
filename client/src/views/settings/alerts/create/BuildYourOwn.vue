@@ -53,19 +53,37 @@
           >
             {{ alertTemplateForm.field.resourceType.value }} Selected. Switch to
             <span
-              v-if="selectedResourceType === 'Opportunity'"
+              v-if="selectedResourceType !== 'Account'"
               v-on:click="accountResource"
               style="border-bottom: 3px solid #199e54; cursor: pointer"
               >Account</span
             >
+            <span v-if="selectedResourceType !== 'Account'">,</span>
             <span
-              v-else
+              v-if="selectedResourceType !== 'Contact'"
+              v-on:click="contactResource"
+              style="border-bottom: 3px solid #199e54; cursor: pointer"
+              >Contact</span
+            >
+            <span v-if="selectedResourceType !== 'Contact'">,</span>
+            <span
+              style="margin-left: 0.1rem; margin-right: 0.1rem"
+              v-if="selectedResourceType == 'Lead'"
+              >or</span
+            >
+            <span
+              v-if="selectedResourceType !== 'Opportunity'"
               v-on:click="opportunityResource"
               style="border-bottom: 3px solid #199e54; cursor: pointer"
               >Opporunity</span
             >
-            or
             <span
+              style="margin-left: 0.1rem; margin-right: 0.1rem"
+              v-if="selectedResourceType !== 'Lead'"
+              >or</span
+            >
+            <span
+              v-if="selectedResourceType !== 'Lead'"
               v-on:click="leadResource"
               style="border-bottom: 3px solid #199e54; cursor: pointer"
               >Lead</span
@@ -1091,6 +1109,9 @@ export default {
     },
     opportunityResource() {
       this.alertTemplateForm.field.resourceType.value = 'Opportunity'
+    },
+    contactResource() {
+      this.alertTemplateForm.field.resourceType.value = 'Contact'
     },
 
     async onSave() {

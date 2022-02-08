@@ -1,5 +1,7 @@
 from os import remove
+from posixpath import split
 from xml.etree import cElementTree as ElementTree
+from django.db.models import Q
 
 SALESFORCE_BODY_TAG = "{http://schemas.xmlsoap.org/soap/envelope/}Body"
 SALESFORCE_FAULT_TAG = "{http://schemas.xmlsoap.org/soap/envelope/}Fault"
@@ -103,3 +105,25 @@ def process_xml_dict(xml_response):
         result_dict = remove_tags(body[SALESFORCE_SUCCESS_TAG][SALESFORCE_RESULT_TAG])
         processed_dict[success_key] = {result_key: result_dict}
     return processed_dict
+
+
+def process_text_field_format(user_id, resource, saved_data):
+    from managr.core.models import User
+    from managr.salesforce.models import SObjectField
+
+    user = User.objects.get(id=user_id)
+    fields = list(
+        SObjectField.objects.for_user(user)
+        .filter(Q(salesforce_object=resource, data_type="TextArea"))
+        .values_list("api_name", flat=True)
+    )
+    to_check_fields = [field for field in saved_data if field in fields]
+    if len(to_check_fields):
+        for field in to_check_fields:
+            if saved_data[field]:
+                split_field = saved_data[field].split("\n")
+                if len(split_field) > 1:
+                    salesforce_formatted = "\r\n".join(split_field)
+                    saved_data[field] = salesforce_formatted
+        return saved_data
+    return False
