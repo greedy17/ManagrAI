@@ -175,15 +175,15 @@ def report_sf_data_sync(sf_account=None):
         report = get_report_data(sf_account)
         reports.append(report)
 
-    subject = render_to_string("salesforce/sync_report-subject.txt")
-    recipient = [settings.STAFF_EMAIL]
-    send_html_email(
-        subject,
-        "salesforce/sync_report.html",
-        settings.SERVER_EMAIL,
-        recipient,
-        context={"data": reports},
-    )
+    # subject = render_to_string("salesforce/sync_report-subject.txt")
+    # recipient = [settings.STAFF_EMAIL]
+    # send_html_email(
+    #     subject,
+    #     "salesforce/sync_report.html",
+    #     settings.SERVER_EMAIL,
+    #     recipient,
+    #     context={"data": reports},
+    # )
 
     # if latest workflow is at 100 emit sf resource sync
     return
