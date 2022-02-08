@@ -7,30 +7,22 @@
         <p class="enter-email">Please enter your email and password</p>
       </div>
       <!-- <label for="email">Email</label> -->
-      <FormField
-        labelRelation="email"
+      <input
+        type="email"
         @input="execCheckEmail"
         :disabled="showPassword"
         v-model="loginForm.field.email.value"
         placeholder="email"
         :errors="loginForm.field.email.errors"
-        name="email"
-        id="email"
-        large
       />
       <PulseLoadingSpinner v-if="!showPassword && loggingIn" />
-      <FormField
-        labelRelation="password"
+      <input
         @blur="loginForm.field.password.validate()"
         v-on:keyup.enter.native="handleLoginAttempt"
         :errors="loginForm.field.password.errors"
         v-if="showPassword"
         v-model="loginForm.field.password.value"
         type="password"
-        placeholder="Password"
-        name="password"
-        id="password"
-        large
       />
       <PulseLoadingSpinnerButton
         :disabled="loggingIn || !loginForm.isValid"
@@ -159,6 +151,21 @@ h2 {
   font-weight: bold;
   text-align: center;
 }
+input {
+  margin-bottom: 0.3rem;
+  width: 22vw;
+  height: 6vh;
+  border-radius: 0.3rem;
+  border: 2px solid $soft-gray;
+}
+input:focus {
+  outline: 2px solid $lighter-green;
+}
+
+::placeholder {
+  color: $mid-gray;
+  padding: 0.5rem;
+}
 
 .login-page {
   padding: 2rem 2rem;
@@ -214,8 +221,8 @@ h2 {
 button {
   @include primary-button();
   margin-bottom: 6px;
-  height: 2.75rem;
-  width: 19rem;
+  width: 22vw;
+  height: 6vh;
   background-color: #199e54 !important;
   color: white !important;
 }

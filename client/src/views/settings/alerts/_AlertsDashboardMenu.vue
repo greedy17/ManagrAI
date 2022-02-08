@@ -213,15 +213,6 @@
           <h5>Custom</h5>
         </div>
       </router-link>
-
-      <!-- <div class="row" style="cursor: not-allowed">
-        <img
-          src="@/assets/images/sharing.png"
-          style="height: 1.3rem; margin-right: 1rem; padding-left: 0.5rem"
-          alt=""
-        />
-        <h5>Shared<span class="coming-soon">coming soon</span></h5>
-      </div> -->
     </div>
 
     <router-view :key="$route.fullPath"></router-view>
@@ -348,10 +339,10 @@ export default {
 }
 
 #toolTip p {
-  color: $panther;
+  color: $base-gray;
   font-weight: bold;
-  padding: 10px;
-  background-color: #f9f9f9;
+  padding: 11px;
+  background-color: $lighter-green;
   border: 2px solid $dark-green;
   -moz-border-radius: 5px;
   -ie-border-radius: 5px;
@@ -367,6 +358,7 @@ export default {
   width: 0;
   height: 0;
   border: solid 2px $dark-green;
+
   box-shadow: 0 0 10px 1px #555;
 }
 h3 {
@@ -393,7 +385,8 @@ h5 {
   left: 80px;
   width: 0;
   height: 0;
-  border-color: #f9f9f9 transparent transparent transparent;
+  border-color: $lighter-green transparent transparent transparent;
+
   border-width: 10px;
   border-style: solid;
 }

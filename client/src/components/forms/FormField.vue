@@ -88,7 +88,7 @@ export default {
 
   &__label {
     font-size: 14px;
-    margin-bottom: 0.3rem;
+    margin-top: 0.3rem;
   }
   ::v-deep .primary {
     --active-opacity: 1;
