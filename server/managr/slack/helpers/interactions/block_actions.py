@@ -12,16 +12,8 @@ from managr.slack.helpers.block_sets.command_views_blocksets import (
     custom_paginator_block,
     custom_meeting_paginator_block,
 )
-from managr.organization.models import (
-    Organization,
-    Stage,
-    Account,
-    OpportunityLineItem,
-    Pricebook2,
-    PricebookEntry,
-)
+from managr.organization.models import Organization, Account, Pricebook2, PricebookEntry, Contact
 from managr.opportunity.models import Opportunity, Lead
-from managr.zoom.models import ZoomMeeting
 from managr.slack import constants as slack_const
 from managr.opportunity import constants as opp_consts
 from managr.slack.helpers import requests as slack_requests
@@ -1779,6 +1771,8 @@ def process_get_notes(payload, context):
         resource = Account.objects.get(id=context.get("resource_id"))
     elif resource_type == "Lead":
         resource = Lead.objects.get(id=context.get("resource_id"))
+    elif resource_type == "Contact":
+        resource = Contact.objects.get(id=context.get("resource_id"))
     note_data = (
         OrgCustomSlackFormInstance.objects.filter(resource_id=resource_id)
         .filter(is_submitted=True)

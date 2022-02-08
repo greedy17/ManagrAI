@@ -1958,6 +1958,7 @@ def process_submit_product(payload, context):
 def process_convert_lead(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     pm = json.loads(payload["view"]["private_metadata"])
+    print(f"PROCESS_CONVERT PM: {pm}")
     user = workflow.user
     state = payload["view"]["state"]["values"]
     loading_view_data = send_loading_screen(
