@@ -60,13 +60,17 @@
           <td>Stage</td>
           <td>Forecast Category</td>
           <td>Amount</td>
-          <td>Next Step</td>
           <td>Close Date</td>
           <td>Last Activity</td>
         </tr>
 
-        <tr>
-          <td></td>
+        <tr :key="i" v-for="(opp, i) in allOpps">
+          <td>{{ opp.name }}</td>
+          <td>{{ opp.stage }}</td>
+          <td>{{ opp.forecast_category }}</td>
+          <td>{{ opp.amount }}</td>
+          <td>{{ opp.close_date }}</td>
+          <td>{{ opp.last_activity_date }}</td>
         </tr>
       </table>
     </section>
@@ -87,7 +91,7 @@ export default {
     return {
       noSelection: true,
       opportunities: ['test'],
-      test: null,
+      allOpps: null,
     }
   },
   computed: {
@@ -99,21 +103,16 @@ export default {
     this.getObjects()
   },
   mounted() {
-  //   axios
-  //     .get('http://d5w00000525speaa.my.salesforce.com/services/data/v54.0/sobjects/Opportunity')
-  //     .then((response) => console.log(response))
+    //   axios
+    //     .get('http://d5w00000525speaa.my.salesforce.com/services/data/v54.0/sobjects/Opportunity')
+    //     .then((response) => console.log(response))
   },
   methods: {
     async getObjects() {
       try {
         const res = await SObjects.api.getObjects('Opportunity')
-        if (res.status == 200) {
-          this.$Alert.alert({
-            type: 'success',
-            timeout: 2000,
-            message: 'Successfully Retrieved Objects',
-          })
-        }
+        this.allOpps = res.results
+        console.log(this.allOpps)
       } catch {
         this.$Alert.alert({
           type: 'error',
