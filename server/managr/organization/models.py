@@ -271,6 +271,10 @@ class Contact(TimeStampModel, IntegrationModel):
     def __str__(self):
         return f"contact integration: {self.integration_source}: {self.integration_id}, email: {self.email}"
 
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.email, str(self.id))
+
     def save(self, *args, **kwargs):
         # if there is an integration id make sure it is unique
         if self.integration_id:

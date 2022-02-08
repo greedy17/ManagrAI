@@ -36,7 +36,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
 from background_task.models import Task
-
+from managr.core.models import User
 from managr.api.decorators import log_all_exceptions
 from managr.api.emails import send_html_email
 
@@ -100,7 +100,10 @@ def authenticate(request):
         # generate forms
         if serializer.instance.user.is_admin:
             emit_generate_form_template(data.user)
-
+        user = User.objects.get(id=request.user.id)
+        sync_operations = [*user.salesforce_account.resource_sync_opts]
+        sync_time = (timezone.now() + timezone.timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M%Z")
+        emit_gen_next_sync(str(request.user.id), sync_operations, sync_time)
         return Response(data={"success": True})
 
 

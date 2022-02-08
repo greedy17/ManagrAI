@@ -1,6 +1,6 @@
 <template>
   <div class="integrations">
-    <div v-if="!user.isAdmin">
+    <div v-if="userLevel == 'REP'">
       <div>
         <div class="welcome">
           <h1>Hi, {{ user.fullName }}</h1>
@@ -838,6 +838,9 @@ export default {
     user() {
       return this.$store.state.user
     },
+    userLevel() {
+      return this.$store.state.user.userLevel
+    },
     slackButtonMessage() {
       if (!this.orgHasSlackIntegration && this.userCanIntegrateSlack) {
         return 'Connect'
@@ -1146,6 +1149,9 @@ a {
   flex-direction: column;
   margin: 1rem 5rem;
   margin-bottom: 2rem;
+  // @media only screen and (max-width: 1250px) {
+  //   margin-left: 15%;
+  // }
 }
 .back-logo {
   position: absolute;

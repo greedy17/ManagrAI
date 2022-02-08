@@ -86,6 +86,12 @@ class Api500Error(APIException):
     default_code = "salesforce_api_error"
 
 
+class ConvertTargetNotAllowedError(Exception):
+    def __init(self, message="A new error occured"):
+        self.message = message
+        super().__init__(self.message)
+
+
 class CustomAPIException:
     def __init__(self, e, fn_name=None, retries=0):
         self.error = e
@@ -112,6 +118,87 @@ class CustomAPIException:
             raise ApiRateLimitExceeded()
         elif self.status_code == 400 and self.param == "FIELD_CUSTOM_VALIDATION_EXCEPTION":
             raise FieldValidationError(self.message)
+        elif self.status_code == 400 and self.param == "REQUIRED_FIELD_MISSING":
+            raise RequiredFieldError(self.message)
+        elif self.status_code == 400 and self.param == "MALFORMED_QUERY":
+            raise MalformedQuery(self.message)
+        elif self.status_code == 400 and self.param == "NUMBER_OUTSIDE_VALID_RANGE":
+            raise SFQueryOffsetError(self.message)
+        elif self.status_code == 400 and self.param == "invalid_grant":
+            raise InvalidRefreshToken(self.message)
+        elif self.status_code == 400 and self.param == "INVALID_FIELD":
+            # invalid field could apply to a number of different errors
+            # we are trying to parse out duplicate field errors and non queryable errors
+            message_split = self.message.splitlines()
+            if len(message_split) == 5:
+                error_line = message_split[4]
+                # check if error is on column
+                no_column_match = re.match(r"(No such column)", error_line)
+                if no_column_match:
+                    field = re.match(r"\s+\'\w+\' ", error_line[no_column_match.end() :])
+                    field_str = (
+                        error_line[
+                            no_column_match.end()
+                            + field.start() : no_column_match.end()
+                            + field.end()
+                        ]
+                        .lstrip(" ")
+                        .rstrip(" ")
+                    )
+                    logger.info(f"Invalid Field {field_str}")
+                    raise InvalidFieldError(f"{field_str}")
+
+            raise InvalidFieldError(
+                f"There was an error in the data sent to salesforce but we could not determine what field caused this {self.message}"
+            )
+
+        elif self.status_code == 400 and self.param == "NOT_FOUND":
+            raise UnhandledSalesforceError(
+                f"The selected object does not exist in salesforce {self.message}"
+            )
+        elif self.status_code == 400 and self.param == "INVALID_TYPE":
+            raise CannotRetreiveObjectType(
+                f"User does not have access to this object type {self.message}"
+            )
+        elif self.status_code == 400 and self.param == "INSUFFICIENT_ACCESS":
+            raise CannotRetreiveObjectType(
+                f"User does not have access to this object type {self.message}"
+            )
+        elif self.status_code == 400 and self.param == "UNABLE_TO_LOCK_ROW":
+            raise UnableToUnlockRow(
+                f"Unable to save data because row is locked by salesforce {self.message}"
+            )
+
+        else:
+
+            raise UnhandledSalesforceError(f"salesforce returned {self.param} {self.message}")
+
+
+class CustomXMLException:
+    def __init__(self, e, fn_name=None, retries=0):
+        self.error = e
+        self.error_class_name = e.__class__.__name__
+        self.status_code = e.args[0]["status_code"]
+        self.code = e.args[0]["error_code"]
+        self.param = e.args[0]["error_param"]
+        self.message = e.args[0]["error_message"]
+        self.fn_name = fn_name
+        self.retry_attempts = 0
+        self.raise_error()
+
+    def raise_error(self):
+        # if an invalid Basic auth is sent the response is still a 200 success
+        if self.error_class_name == "XMLError":
+            logger.error(f"An error occured with a salesforce integration, {self.fn_name}")
+            raise Api500Error()
+        elif self.status_code == 401:
+            raise TokenExpired()
+        elif self.status_code == 404:
+            raise SFNotFoundError()
+        elif self.status_code == 403:
+            raise ApiRateLimitExceeded()
+        elif self.status_code == 500 and self.param == "soapenv:Client":
+            raise ConvertTargetNotAllowedError(self.message)
         elif self.status_code == 400 and self.param == "REQUIRED_FIELD_MISSING":
             raise RequiredFieldError(self.message)
         elif self.status_code == 400 and self.param == "MALFORMED_QUERY":

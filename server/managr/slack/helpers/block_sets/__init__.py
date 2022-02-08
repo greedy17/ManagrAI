@@ -30,6 +30,7 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "show_meeting_contacts": meeting_review_block_sets.meeting_contacts_block_set,
         "edit_meeting_contacts": meeting_review_block_sets.edit_meeting_contacts_block_set,
         "schedule_meeting_modal": meeting_review_block_sets.schedule_zoom_meeting_modal,
+        "convert_lead_block_set": meeting_review_block_sets.convert_lead_block_set,
         "loading": common_blocksets.loading_block_set,
         "error_modal": common_blocksets.error_modal_block_set,
         "error_message": common_blocksets.error_message_block_set,

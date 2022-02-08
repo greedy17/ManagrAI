@@ -79,7 +79,6 @@ def emit_non_zoom_meetings(workflow_id, user_id, user_tz, non_zoom_end_times):
 @background()
 def non_zoom_meeting_message(workflow_id, user_id, user_tz, non_zoom_end_times):
     # Convert Non-Zoom Meeting from UNIX time to UTC
-    print(non_zoom_end_times)
     unix_time = datetime.utcfromtimestamp(int(non_zoom_end_times))
     tz = pytz.timezone("UTC")
     local_end = unix_time.astimezone(tz)
@@ -89,16 +88,7 @@ def non_zoom_meeting_message(workflow_id, user_id, user_tz, non_zoom_end_times):
     # user_7am = timezone.make_aware(user_7am_naive, timezone=pytz.timezone(user_tz))
     current_time = datetime.now()
     utc_time_from_user_7_am = current_time.astimezone(pytz.timezone("UTC"))
-    print(local_end, utc_time_from_user_7_am)
-    # Convert UTC time to seconds and get difference
-    # date_time = datetime.strptime(local_end, "%H:%M:%S")
-    # print(date_time)
-    # date_time2 = datetime.strptime(utc_time_from_user_7_am, "%H:%M:%S")
-    # print(date_time2)
-    # time_now = datetime.now()
-    # a_timedelta = date_time - date_time2
     time_difference = local_end - utc_time_from_user_7_am
-    print(time_difference)
     # seconds = a_timedelta.total_seconds()
     seconds = time_difference.total_seconds()
     seconds = int(seconds)
@@ -382,12 +372,11 @@ def meeting_prep(processed_data, user_id, invocation=1):
             )
             contact_forms.append(form)
             contact["_form"] = str(form.id)
-    event_data = processed_data
     processed_data.pop("participants")
     data = {
         "user": user.id,
         "participants": meeting_contacts,
-        "event_data": event_data,
+        "event_data": processed_data,
         "invocation": invocation,
     }
     resource_check = meeting_resource_data.get("resource_id", None)
@@ -407,7 +396,7 @@ def meeting_prep(processed_data, user_id, invocation=1):
     )
 
     # Conditional Check for Zoom meeting or Non-Zoom Meeting
-    if provider != [None, "zoom"]:
+    if user.email not in processed_data["owner"] or provider not in [None, "Zoom Meeting"]:
         # Google Meet (Non-Zoom)
         meeting_workflow = MeetingWorkflow.objects.create(
             non_zoom_meeting=meeting_prep_instance, user=user,

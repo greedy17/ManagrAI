@@ -37,6 +37,7 @@ from .background import emit_init_alert, _process_check_alert
 
 from . import models as alert_models
 from . import serializers as alert_serializers
+from managr.core.models import User
 
 # Create your views here.
 
@@ -118,6 +119,22 @@ class AlertMessageTemplateViewSet(
 
     def get_queryset(self):
         return alert_models.AlertMessageTemplate.objects.for_user(self.request.user)
+
+
+class RealTimeAlertConfigViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        print(data)
+        return Response(data)
 
 
 class AlertConfigViewSet(
@@ -210,6 +227,38 @@ class RealTimeAlertViewSet(
     permission_classes = (permissions.IsAuthenticated,)
 
     def create(self, request, *args, **kwargs):
+        from managr.salesforce.models import SObjectField
+
         data = request.data
-        print(data)
-        return Response()
+        manager = User.objects.get(id=data.get("user"))
+        api_name = data.get("api_name", None)
+        if api_name:
+            field = (
+                SObjectField.objects.filter(salesforce_object=data.get("resource_type"))
+                .filter(api_name=api_name)
+                .first()
+            )
+            current_config = data.get("config")
+            pipelines = data.get("pipelines")
+            current_config["recipients"] = {str(manager.id): data.get("recipients")}
+            current_config["api_name"] = api_name
+            users = User.objects.filter(id__in=pipelines)
+            for user in users:
+                configs = user.slack_integration.realtime_alert_configs
+                if str(field.id) in configs:
+                    if current_config["title"] in configs[str(field.id)].keys():
+                        if (
+                            str(manager.id)
+                            not in configs[str(field.id)][api_name]["recipients"].keys()
+                        ):
+                            configs[str(field.id)][api_name]["recipients"][
+                                str(manager.id)
+                            ] = data.get("recipients")
+                    else:
+                        configs[str(field.id)][current_config["title"]] = current_config
+
+                else:
+                    new_config = {current_config["title"]: current_config}
+                    configs[str(field.id)] = new_config
+                user.slack_integration.save()
+        return Response({"status": "success"})

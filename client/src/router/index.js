@@ -40,7 +40,7 @@ import DealRotting from '@/views/settings/alerts/create/templates/DealRotting'
 import UpdateForecast from '@/views/settings/alerts/create/templates/UpdateForecast'
 import LogZoom from '@/views/settings/alerts/create/templates/LogZoom'
 import ZoomRecap from '@/views/settings/alerts/create/templates/ZoomRecap'
-import RealTime from '@/views/settings/alerts/create/templates/RealTime'
+// import RealTime from '@/views/settings/alerts/create/templates/RealTime'
 import Custom from '@/views/customize/Custom'
 import ValidationRules from '@/views/customize/ValidationRules'
 import Required from '@/views/customize/Required'
@@ -212,6 +212,12 @@ export default new Router({
       name: 'DealMovement',
       component: () =>
         import(/* webpackChunkName: "settings" */ '../views/settings/alerts/create/templates/DealMovement'),
+    },
+    {
+      path: '/closed-won',
+      name: 'ClosedWon',
+      component: () =>
+        import(/* webpackChunkName: "settings" */ '../views/settings/alerts/create/templates/ClosedWon'),
     },
     {
       path: '/map',

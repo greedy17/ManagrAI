@@ -87,12 +87,16 @@ def create_resource(context):
             if view_id
             else slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
         )
+        private_metadata = {
+            "type": "command",
+            **context,
+        }
         data = {
             "view": {
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Create New"},
                 "blocks": blocks,
-                "private_metadata": json.dumps({"type": "command"}),
+                "private_metadata": json.dumps(private_metadata),
                 "external_id": f"create_modal.{str(uuid.uuid4())}",
             },
         }
@@ -113,21 +117,7 @@ def create_task(context):
                 "response_type": "ephemeral",
                 "text": "Sorry I cant find your managr account",
             }
-        blocks = [
-            block_builders.static_select(
-                "Pick a resource to create task for",
-                [
-                    *map(
-                        lambda resource: block_builders.option(resource, resource),
-                        slack_const.MEETING_RESOURCE_ATTACHMENT_OPTIONS,
-                    )
-                ],
-                action_id=action_with_params(
-                    slack_const.ZOOM_MEETING__CREATE_TASK, [f"u={str(user.id)}", "type=command"]
-                ),
-                block_id=slack_const.ZOOM_MEETING__ATTACH_RESOURCE_SECTION,
-            ),
-        ]
+
         access_token = user.organization.slack_integration.access_token
         view_id = context.get("view_id", None)
         url = (
@@ -138,9 +128,12 @@ def create_task(context):
         data = {
             "view": {
                 "type": "modal",
-                "title": {"type": "plain_text", "text": "Create Task"},
-                "blocks": blocks,
-                "external_id": f"create_modal.{str(uuid.uuid4())}",
+                "callback_id": slack_const.COMMAND_CREATE_TASK,
+                "title": {"type": "plain_text", "text": f"Create a Task"},
+                "blocks": get_block_set("create_task_modal", context={"u": context.get("u"),},),
+                "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
+                "private_metadata": json.dumps(context),
+                "external_id": f"create_task_modal.{str(uuid.uuid4())}",
             },
         }
         if view_id:
