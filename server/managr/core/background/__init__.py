@@ -372,12 +372,11 @@ def meeting_prep(processed_data, user_id, invocation=1):
             )
             contact_forms.append(form)
             contact["_form"] = str(form.id)
-    event_data = processed_data
     processed_data.pop("participants")
     data = {
         "user": user.id,
         "participants": meeting_contacts,
-        "event_data": event_data,
+        "event_data": processed_data,
         "invocation": invocation,
     }
     resource_check = meeting_resource_data.get("resource_id", None)
@@ -397,7 +396,7 @@ def meeting_prep(processed_data, user_id, invocation=1):
     )
 
     # Conditional Check for Zoom meeting or Non-Zoom Meeting
-    if provider not in [None, "Zoom Meeting"]:
+    if user.email not in processed_data["owner"] or provider not in [None, "Zoom Meeting"]:
         # Google Meet (Non-Zoom)
         meeting_workflow = MeetingWorkflow.objects.create(
             non_zoom_meeting=meeting_prep_instance, user=user,
