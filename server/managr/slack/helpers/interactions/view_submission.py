@@ -1024,7 +1024,10 @@ def process_create_task(payload, context):
 
     if related_to and related_to_type:
 
-        if related_to_type[0].get("value") != sf_consts.RESOURCE_SYNC_LEAD:
+        if related_to_type[0].get("value") not in [
+            sf_consts.RESOURCE_SYNC_CONTACT,
+            sf_consts.RESOURCE_SYNC_LEAD,
+        ]:
             data["WhatId"] = related_to
         else:
             data["WhoId"] = related_to
