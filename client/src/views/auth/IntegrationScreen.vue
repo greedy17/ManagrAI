@@ -11,7 +11,6 @@
                 (!(!orgHasSlackIntegration && userCanIntegrateSlack) ||
                   (orgHasSlackIntegration && !hasSlackIntegration)) &&
                 hasNylasIntegration &&
-                hasZoomIntegration &&
                 hasSalesforceIntegration
               "
               style="margin-top: 1rem; margin-right: 1rem"
