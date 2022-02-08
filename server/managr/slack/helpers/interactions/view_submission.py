@@ -1,4 +1,5 @@
 import json
+from lib2to3.pytree import convert
 import logging
 import uuid
 import time
@@ -1964,7 +1965,6 @@ def process_convert_lead(payload, context):
         payload["trigger_id"],
         payload["view"]["id"],
     )
-    print(f"LOADING VIEW: {loading_view_data}")
     convert_data = {}
     sobjects = ["Opportunity", "Account", "Contact"]
     for object in sobjects:
@@ -1979,10 +1979,11 @@ def process_convert_lead(payload, context):
             ):
                 value = None
             else:
-                value = state[f"{object}_NAME_INPUT"][
+                internal_value = state[f"{object}_NAME_INPUT"][
                     f"GET_SOBJECT_LIST?u={context.get('u')}&resource_type={object}"
                 ]["selected_option"]["value"]
-
+                model = model_routes[object]["model"].objects.get(id=internal_value)
+                value = model.integration_id
             if value is not None:
                 datakey = (
                     f"{object.lower()}Name"
@@ -1990,6 +1991,7 @@ def process_convert_lead(payload, context):
                     else f"{object.lower()}Id"
                 )
                 convert_data[datakey] = value
+
     convert_data["convertedStatus"] = list(state["Status"].values())[0]["selected_option"]["value"]
     owner_id = list(state["RECORD_OWNER"].values())[0]["selected_option"]["value"]
     assigned_owner = User.objects.get(id=owner_id)
