@@ -804,6 +804,8 @@ export default {
   updated() {
     if (
       this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
+        ._operandIdentifier.value !==
+      this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[1].field
         ._operandIdentifier.value
     ) {
       this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[1].field._operandIdentifier.value =
@@ -811,10 +813,6 @@ export default {
       this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[1].field.operandIdentifier.value =
         this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field.operandIdentifier.value
     }
-    console.log(
-      this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[1].field
-        ._operandIdentifier.value,
-    )
   },
 }
 </script>
