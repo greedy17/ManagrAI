@@ -6,7 +6,7 @@
       </div>
 
       <div class="left" ref="user-menu-icon">
-        <div class="mar" v-if="isAdmin">
+        <div class="mar" v-if="userLevel === 'MANAGER'">
           <ul>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Integrations' }"
@@ -36,34 +36,17 @@
           </ul>
         </div>
 
-        <div class="mar" v-else-if="!isAdmin && userLevel === 'MANAGER'">
+        <div class="mar" v-else-if="userLevel !== 'MANAGER' && userLevel !== 'REP'">
           <ul>
             <li>
-              <router-link
-                v-if="isOnboarding"
-                exact-active-class="active"
-                :to="{ name: 'Integrations' }"
-                >Onboarding
-              </router-link>
-              <router-link v-else exact-active-class="active" :to="{ name: 'Integrations' }"
+              <router-link exact-active-class="active" :to="{ name: 'Integrations' }"
                 >Connect
               </router-link>
             </li>
             <li>
-              <router-link
-                v-if="!isOnboarding"
-                active-class="active"
-                :to="{ name: 'ListTemplates' }"
+              <router-link active-class="active" :to="{ name: 'ListTemplates' }"
                 >Workflows
               </router-link>
-            </li>
-            <li>
-              <router-link
-                v-if="!isOnboarding"
-                exact-active-class="active"
-                :to="{ name: 'InviteUsers' }"
-                >Team</router-link
-              >
             </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Pipelines' }"
@@ -73,7 +56,7 @@
           </ul>
         </div>
 
-        <div v-else class="mar">
+        <div v-else>
           <ul>
             <li>
               <router-link
@@ -91,7 +74,7 @@
                 >Workflows
               </router-link>
             </li>
-            <li>
+            <li v-if="!isOnboarding">
               <router-link exact-active-class="active" :to="{ name: 'Pipelines' }"
                 >Pipeline <span>(coming soon)</span></router-link
               >
@@ -100,7 +83,7 @@
         </div>
       </div>
 
-      <div v-if="!isAdmin && !user.onboarding" class="right">
+      <div v-if="userLevel == 'REP' && !user.onboarding" class="right">
         <div class="tooltip">
           <img style="height: 1rem" src="@/assets/images/blackhelp.png" class="tooltip__icon" />
           <div class="tooltip__popup">
@@ -126,7 +109,7 @@
         </div>
       </div>
 
-      <div v-else-if="isAdmin" class="right">
+      <div v-if="userLevel !== 'REP'" class="right">
         <div class="tooltip">
           <img style="height: 1.3rem" src="@/assets/images/blackhelp.png" class="tooltip__icon" />
           <div class="tooltip__popup">

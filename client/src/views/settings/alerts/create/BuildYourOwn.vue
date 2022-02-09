@@ -897,7 +897,7 @@ export default {
       }
     },
     repsPipeline() {
-      if (this.user.userLevel == 'REP') {
+      if (this.user.userLevel !== 'MANAGER') {
         this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
         this.setPipelines({
           fullName: 'MYSELF',
