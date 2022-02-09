@@ -264,7 +264,9 @@ def process_get_external_relationship_options(payload, context):
 @processor(required_context=["u"])
 def process_get_cadences(payload, context):
     user = User.objects.get(id=context["u"])
-    cadences = Cadence.objects.filter(Q(is_team_cadence=True) | Q(owner=user.salesloft_account))
+    cadences = Cadence.objects.filter(
+        Q(is_team_cadence=True, is_shared=True) | Q(owner=user.salesloft_account)
+    )
     value = payload["value"]
     return {
         "options": [l.as_slack_option for l in cadences.filter(name__icontains=value)[:50]],

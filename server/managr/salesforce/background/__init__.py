@@ -236,16 +236,17 @@ def _process_resource_sync(user_id, sync_id, resource, limit, offset, attempts=1
             serializer.is_valid(raise_exception=True)
         except ValidationError as e:
             error_str = f"Failed to save data for {resource} {item.name if item.name else 'N/A'} with salesforce id {item.integration_id} due to the following error {e.detail}"
-            context = dict(email=user.email, error=error_str)
-            subject = render_to_string("salesforce/error_saving_resource_data.txt")
-            recipient = [settings.STAFF_EMAIL]
-            send_html_email(
-                subject,
-                "salesforce/error_saving_resource_data.html",
-                settings.SERVER_EMAIL,
-                recipient,
-                context={**context},
-            )
+
+            # context = dict(email=user.email, error=error_str)
+            # subject = render_to_string("salesforce/error_saving_resource_data.txt")
+            # recipient = [settings.STAFF_EMAIL]
+            # send_html_email(
+            #     subject,
+            #     "salesforce/error_saving_resource_data.html",
+            #     settings.SERVER_EMAIL,
+            #     recipient,
+            #     context={**context},
+            # )
             logger.exception(error_str)
             continue
         serializer.save()

@@ -4,6 +4,7 @@ import logging
 import uuid
 import time
 from django.utils import timezone
+from django.db.models import Q
 
 from managr.api.decorators import log_all_exceptions
 from managr.salesforce.adapter.exceptions import (
@@ -70,7 +71,7 @@ logger = logging.getLogger("managr")
 @processor(required_context=["w", "form_type"])
 def process_stage_next_page(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    print("STAGE RELATED:", context)
+    print(f"STAGE RELATED: {context}")
     view = payload["view"]
     # if there are additional stage gating forms aggregate them and push them in 1 view
     # save current data to its form we will close all views at the end
@@ -1024,7 +1025,10 @@ def process_create_task(payload, context):
 
     if related_to and related_to_type:
 
-        if related_to_type[0].get("value") != sf_consts.RESOURCE_SYNC_LEAD:
+        if related_to_type[0].get("value") not in [
+            sf_consts.RESOURCE_SYNC_CONTACT,
+            sf_consts.RESOURCE_SYNC_LEAD,
+        ]:
             data["WhatId"] = related_to
         else:
             data["WhoId"] = related_to
@@ -1207,7 +1211,7 @@ def process_schedule_meeting(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor(required_context=["u"])
 def process_add_contacts_to_cadence(payload, context):
-    meta_data = json.loads(payload["view"]["private_metadata"])
+    pm = json.loads(payload["view"]["private_metadata"])
     u = User.objects.get(id=context.get("u"))
     cadence_id = payload["view"]["state"]["values"]["select_cadence"][
         f"GET_CADENCE_OPTIONS?u={context.get('u')}"
@@ -1218,12 +1222,15 @@ def process_add_contacts_to_cadence(payload, context):
     org = u.organization
     access_token = org.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    contacts = [
-        option["value"]
-        for option in payload["view"]["state"]["values"]["select_people"][
-            f"{slack_const.GET_PEOPLE_OPTIONS}?u={u.id}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}"
-        ]["selected_options"]
-    ]
+    if pm.get("resource_type", None) == "Contact":
+        contacts = [context.get("resource_id")]
+    else:
+        contacts = [
+            option["value"]
+            for option in payload["view"]["state"]["values"]["select_people"][
+                f"{slack_const.GET_PEOPLE_OPTIONS}?u={u.id}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}"
+            ]["selected_options"]
+        ]
     loading_data = {
         "trigger_id": trigger_id,
         "view_id": view_id,
@@ -1241,8 +1248,9 @@ def process_add_contacts_to_cadence(payload, context):
         success = 0
         failed = 0
         created = 0
+        errors = []
         for person in contacts:
-            person_res = emit_add_cadence_membership(person, cadence_id)
+            person_res = emit_add_cadence_membership(person, cadence_id, str(u.id))
             if person_res["status"] == "Success":
                 success += 1
             elif person_res["status"] == "Created":
@@ -1250,29 +1258,37 @@ def process_add_contacts_to_cadence(payload, context):
                 created += 1
             else:
                 failed += 1
-        logger.info(
-            f"{success} out of {success + failed} added to cadence and {created} People created in Salesloft"
-        )
+                errors.append(person_res["errors"])
         message = (
             f"{success}/{success + failed} added to cadence ({created} new People imported to Salesloft)"
             if created > 0
             else f"{success}/{success + failed} added to cadence"
         )
-        update_res = slack_requests.send_ephemeral_message(
-            u.slack_integration.channel,
-            access_token,
-            meta_data["slack_id"],
-            block_set=[block_builders.simple_section(message)],
-        )
-        return
+        if len(errors):
+            message = f"Validation error adding contact to cadence: {','.join(errors)}"
+
+        return {
+            "response_action": "update",
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Add To Cadence"},
+                "blocks": [block_builders.simple_section(message)],
+            },
+        }
+
     else:
-        update_res = slack_requests.send_ephemeral_message(
-            u.slack_integration.channel,
-            access_token,
-            meta_data["slack_id"],
-            block_set=[block_builders.simple_section(f"No people associated for {resource_id}")],
-        )
-        return
+        return {
+            "response_action": "update",
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Add To Cadence"},
+                "blocks": [
+                    block_builders.simple_section(
+                        f"No people associated for {context.get('resource_name')}"
+                    )
+                ],
+            },
+        }
 
 
 @log_all_exceptions
@@ -1322,9 +1338,6 @@ def process_add_contacts_to_sequence(payload, context):
                 created += 1
             else:
                 failed += 1
-        logger.info(
-            f"{success} out of {success + failed} added to sequence and {created} Prospects created in Outreach"
-        )
         message = (
             f"{success}/{success + failed} added to sequence ({created} new Prospects imported to Outreach)"
             if created > 0
@@ -1955,6 +1968,7 @@ def process_submit_product(payload, context):
 def process_convert_lead(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     pm = json.loads(payload["view"]["private_metadata"])
+    print(f"PROCESS_CONVERT PM: {pm}")
     user = workflow.user
     state = payload["view"]["state"]["values"]
     loading_view_data = send_loading_screen(
@@ -1999,69 +2013,168 @@ def process_convert_lead(payload, context):
     lead = Lead.objects.get(id=workflow.resource_id)
     convert_data["leadId"] = lead.integration_id
     print(f"CONVERT DATA: {convert_data}")
-    try:
-        res = lead.convert_in_salesforce(convert_data)
-        print(f"CONVERT RES: {res}")
-        if res["success"]:
-            success_data = {
-                "view_id": loading_view_data["view"]["id"],
-                "view": {
-                    "type": "modal",
-                    "title": {"type": "plain_text", "text": "Lead Converted"},
-                    "blocks": [
-                        block_builders.simple_section(
-                            ":white_check_mark: Your Lead was successfully converted :clap:",
-                            "mrkdwn",
-                        )
-                    ],
-                },
-            }
-            success_res = slack_requests.generic_request(
-                slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
-                success_data,
-                access_token=user.organization.slack_integration.access_token,
+    attempts = 1
+    blocks = None
+    has_error = False
+    while True:
+        try:
+            res = lead.convert_in_salesforce(convert_data)
+            print(f"CONVERT RES: {res}")
+        except FieldValidationError as e:
+            has_error = True
+            blocks = (
+                get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Validations set up by your org\n *Error* : _{e}_"
+                    },
+                ),
             )
-            print(f"SUCCESS MESSAGE: {success_res}")
-            update_blocks = [
-                block_builders.section_with_button_block(
-                    "Send Recap",
-                    "SEND_RECAP",
-                    f":white_check_mark: Successfully converted your Lead {lead.name}",
-                    action_id=action_with_params(
-                        slack_const.PROCESS_SEND_RECAP_MODAL,
-                        params=[
-                            f"u={str(workflow.user.id)}",
-                            f"workflow_id={str(workflow.id)}",
-                            f"account={res['Account']}",
-                            f"opportunity={res['Opportunity']}",
-                            f"contact={res['Contact']}",
-                        ],
-                    ),
+            break
+
+        except RequiredFieldError as e:
+            has_error = True
+            blocks = get_block_set(
+                "error_modal",
+                {
+                    "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Required fields from Salesforce\n *Error* : _{e}_"
+                },
+            )
+            break
+        except UnhandledSalesforceError as e:
+            has_error = True
+            blocks = get_block_set(
+                "error_modal",
+                {
+                    "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is new to us please see below\n *Error* : _{e}_"
+                },
+            )
+            break
+
+        except SFNotFoundError as e:
+            has_error = True
+            blocks = get_block_set(
+                "error_modal",
+                {
+                    "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error one of the resources does not exist\n *Error* : _{e}_"
+                },
+            )
+            break
+
+        except TokenExpired:
+            if attempts >= 5:
+                logger.exception(
+                    f"Failed to Update data for user {str(user.id)} after {attempts} tries"
                 )
-            ]
-            slack_requests.update_channel_message(
-                pm.get("original_message_channel"),
-                pm.get("original_message_timestamp"),
-                access_token=user.organization.slack_integration.access_token,
-                block_set=update_blocks,
-            )
-        else:
-            error = res["error"]
-            return {
-                "response_action": "update",
-                "view": {
-                    "type": "modal",
-                    "title": {"type": "plain_text", "text": "Lead Convert Failed"},
-                    "blocks": [
-                        block_builders.simple_section(
-                            f":exclamation: There was an error converting your lead:\n{error}",
-                            "mrkdwn",
-                        )
+                has_error = True
+                blocks = get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh it looks like we've had an issue with your token\n *Error* : _{e}_"
+                    },
+                )
+                break
+            else:
+                user.salesforce_account.regenerate_token()
+                attempts += 1
+
+        except ConnectionResetError:
+            if attempts >= 5:
+                logger.exception(
+                    f"Failed to Update data for user {str(user.id)} after {attempts} tries because of connection error"
+                )
+                has_error = True
+                blocks = get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh we had an error connecting to your salesforce instance please try again"
+                    },
+                )
+                break
+            else:
+                time.sleep(2)
+                attempts += 1
+        except Exception as e:
+            if attempts >= 5:
+                has_error = True
+                logger.exception(f"CONVERT LEAD EXCEPTION: {e}")
+                blocks = [
+                    block_builders.simple_section(
+                        f":exclamation: There was an error converting your lead", "mrkdwn",
+                    )
+                ]
+                break
+            else:
+                time.sleep(2)
+                attempts += 1
+
+    if has_error:
+        return {
+            "response_action": "update",
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Lead Convert Failed"},
+                "blocks": blocks,
+            },
+        }
+    if res["success"]:
+        success_data = {
+            "view_id": loading_view_data["view"]["id"],
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Lead Converted"},
+                "blocks": [
+                    block_builders.simple_section(
+                        ":white_check_mark: Your Lead was successfully converted :clap:", "mrkdwn",
+                    )
+                ],
+            },
+        }
+        success_res = slack_requests.generic_request(
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
+            success_data,
+            access_token=user.organization.slack_integration.access_token,
+        )
+        print(f"SUCCESS MESSAGE: {success_res}")
+        update_blocks = [
+            block_builders.section_with_button_block(
+                "Send Recap",
+                "SEND_RECAP",
+                f":white_check_mark: Successfully converted your Lead {lead.name}",
+                action_id=action_with_params(
+                    slack_const.PROCESS_SEND_RECAP_MODAL,
+                    params=[
+                        f"u={str(workflow.user.id)}",
+                        f"workflow_id={str(workflow.id)}",
+                        f"account={res['Account']}",
+                        f"opportunity={res['Opportunity']}",
+                        f"contact={res['Contact']}",
                     ],
-                },
-            }
-    except Exception as e:
-        print(e)
+                ),
+            )
+        ]
+        logger.info(f"LEAD CONVERT BLOCK: {update_blocks}")
+        slack_requests.update_channel_message(
+            pm.get("original_message_channel"),
+            pm.get("original_message_timestamp"),
+            access_token=user.organization.slack_integration.access_token,
+            block_set=update_blocks,
+        )
+    else:
+        error = res["error"]
+        return {
+            "response_action": "update",
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Lead Convert Failed"},
+                "blocks": [
+                    block_builders.simple_section(
+                        f":exclamation: There was an error converting your lead:\n{error}",
+                        "mrkdwn",
+                    )
+                ],
+            },
+        }
 
 
 @processor(required_context=["f"])
