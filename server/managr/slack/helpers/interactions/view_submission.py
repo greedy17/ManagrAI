@@ -2053,6 +2053,7 @@ def process_convert_lead(payload, context):
                     ),
                 )
             ]
+            logger.info(f"LEAD CONVERT BLOCK: {update_blocks}")
             slack_requests.update_channel_message(
                 pm.get("original_message_channel"),
                 pm.get("original_message_timestamp"),
@@ -2075,7 +2076,19 @@ def process_convert_lead(payload, context):
                 },
             }
     except Exception as e:
-        print(e)
+        logger.exception(f"CONVERT LEAD EXCEPTION: {e}")
+        return {
+            "response_action": "update",
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Lead Convert Failed"},
+                "blocks": [
+                    block_builders.simple_section(
+                        f":exclamation: There was an error converting your lead", "mrkdwn",
+                    )
+                ],
+            },
+        }
 
 
 @processor(required_context=["f"])

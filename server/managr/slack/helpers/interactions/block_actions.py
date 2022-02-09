@@ -1881,7 +1881,6 @@ def process_get_call_recording(payload, context):
                         )
                     )
                 else:
-                    logger.info("Gong call recap without call")
                     blocks = [
                         block_builders.simple_section("No call associated with this opportunity")
                     ]
@@ -1909,7 +1908,6 @@ def process_get_call_recording(payload, context):
             call_details = generate_call_block(call_res)
             blocks = [*call_details]
         else:
-            logger.info("Gong details from non recap")
             blocks = [
                 block_builders.simple_section("No call associated with this opportunity*"),
                 block_builders.context_block(
@@ -2602,19 +2600,19 @@ def process_show_convert_lead_form(payload, context):
         )
     except InvalidBlocksException as e:
         return logger.exception(
-            f"Failed To Generate Slack Product form with {str(opp_item.id)} email {user.email} {e}"
+            f"Failed To Generate Slack Convert Lead form for email {user.email} {e}"
         )
     except InvalidBlocksFormatException as e:
         return logger.exception(
-            f"Failed To Generate Slack Product form with {str(opp_item.id)} email {user.email} {e}"
+            f"Failed To Generate Slack Convert Lead form for email {user.email} {e}"
         )
     except UnHandeledBlocksException as e:
         return logger.exception(
-            f"Failed To Generate Slack Product form with {str(opp_item.id)} email {user.email} {e}"
+            f"Failed To Generate Slack Convert Lead form for email {user.email} {e}"
         )
     except InvalidAccessToken as e:
         return logger.exception(
-            f"Failed To Generate Slack Product form with {str(user.id)} email {user.email} {e}"
+            f"Failed To Generate Slack Convert Lead form with {str(user.id)} email {user.email} {e}"
         )
     return
 
