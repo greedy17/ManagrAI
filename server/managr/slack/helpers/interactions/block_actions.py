@@ -2581,6 +2581,7 @@ def process_show_convert_lead_form(payload, context):
         "original_message_channel": payload["channel"]["id"],
         "original_message_timestamp": payload["message"]["ts"],
     }
+    print(private_metadata)
     data = {
         "trigger_id": payload["trigger_id"],
         "view": {
@@ -2761,6 +2762,7 @@ def process_lead_input_switch(payload, context):
     access_token = user.organization.slack_integration.access_token
     actions = payload["actions"][0]
     blocks = payload["view"]["blocks"]
+    pm = json.loads(payload["view"]["private_metadata"])
     try:
         selected_options = actions["selected_options"][0]["value"]
     except IndexError:
@@ -2800,7 +2802,7 @@ def process_lead_input_switch(payload, context):
             "title": {"type": "plain_text", "text": "Convert Lead"},
             "blocks": blocks,
             "submit": {"type": "plain_text", "text": "Convert"},
-            "private_metadata": json.dumps(context),
+            "private_metadata": json.dumps(pm),
         },
     }
     try:
