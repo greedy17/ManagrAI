@@ -71,7 +71,7 @@ logger = logging.getLogger("managr")
 @processor(required_context=["w", "form_type"])
 def process_stage_next_page(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    print("STAGE RELATED:", context)
+    print(f"STAGE RELATED: {context}")
     view = payload["view"]
     # if there are additional stage gating forms aggregate them and push them in 1 view
     # save current data to its form we will close all views at the end
@@ -1259,9 +1259,6 @@ def process_add_contacts_to_cadence(payload, context):
             else:
                 failed += 1
                 errors.append(person_res["errors"])
-        logger.info(
-            f"{success} out of {success + failed} added to cadence and {created} People created in Salesloft"
-        )
         message = (
             f"{success}/{success + failed} added to cadence ({created} new People imported to Salesloft)"
             if created > 0
@@ -1341,9 +1338,6 @@ def process_add_contacts_to_sequence(payload, context):
                 created += 1
             else:
                 failed += 1
-        logger.info(
-            f"{success} out of {success + failed} added to sequence and {created} Prospects created in Outreach"
-        )
         message = (
             f"{success}/{success + failed} added to sequence ({created} new Prospects imported to Outreach)"
             if created > 0
