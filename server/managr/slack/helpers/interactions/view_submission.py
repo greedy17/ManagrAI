@@ -1245,7 +1245,7 @@ def process_add_contacts_to_cadence(payload, context):
         failed = 0
         created = 0
         for person in contacts:
-            person_res = emit_add_cadence_membership(person, cadence_id)
+            person_res = emit_add_cadence_membership(person, cadence_id, str(u.id))
             if person_res["status"] == "Success":
                 success += 1
             elif person_res["status"] == "Created":
@@ -1262,18 +1262,22 @@ def process_add_contacts_to_cadence(payload, context):
             else f"{success}/{success + failed} added to cadence"
         )
         update_res = slack_requests.send_ephemeral_message(
-            u.slack_integration.channel,
+            meta_data["channel_id"],
             access_token,
-            meta_data["slack_id"],
+            payload["user"]["id"],
             block_set=[block_builders.simple_section(message)],
         )
         return
     else:
         update_res = slack_requests.send_ephemeral_message(
-            u.slack_integration.channel,
+            meta_data["channel_id"],
             access_token,
-            meta_data["slack_id"],
-            block_set=[block_builders.simple_section(f"No people associated for {resource_id}")],
+            payload["user"]["id"],
+            block_set=[
+                block_builders.simple_section(
+                    f"No people associated for {context.get('resource_id')}"
+                )
+            ],
         )
         return
 
