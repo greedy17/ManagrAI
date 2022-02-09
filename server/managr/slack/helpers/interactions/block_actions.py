@@ -826,7 +826,6 @@ def process_show_edit_product_form(payload, context):
 
 def process_add_products_form(payload, context):
     user = User.objects.get(slack_integration__slack_id=payload["user"]["id"])
-    print(context)
     view = payload["view"]
     state = view["state"]["values"]
     pricebook = context.get("pricebook", None)
@@ -855,7 +854,6 @@ def process_add_products_form(payload, context):
     private_metadata.update({**context, "view_id": view["id"], "product_form": product_form_id})
     # currently only for update
     blocks = []
-    print(pricebook)
     if pricebook is None:
         blocks.append(
             block_builders.external_select(
@@ -2534,7 +2532,6 @@ def process_show_digest_update_resource_form(payload, context):
 
 @processor()
 def process_send_recap_modal(payload, context):
-    print(context, payload)
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token

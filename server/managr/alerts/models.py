@@ -62,7 +62,7 @@ class AlertTemplate(TimeStampModel):
         operand_groups = [group.query_str(config_id) for group in self.groups.all()]
 
         operand_groups = f"AND ({' '.join(operand_groups)})"
-
+        print(operand_groups)
         q = sf_consts.SALESFORCE_RESOURCE_QUERY_URI(
             user_sf.salesforce_id,
             self.resource_type,

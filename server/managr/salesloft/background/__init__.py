@@ -223,8 +223,8 @@ def add_cadence_membership(person_id, cadence_id, user_id):
             else:
                 account.auth_account.regenerate_token()
                 attempts += 1
-        except InvalidRequest:
-            return {"status": "Failed"}
+        except InvalidRequest as e:
+            return {"status": "Failed", "errors": str(e)}
         except ValidationError as e:
             logger.exception(f"Error adding cadence: {e}")
             return {"status": "Failed"}

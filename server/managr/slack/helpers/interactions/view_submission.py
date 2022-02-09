@@ -4,6 +4,7 @@ import logging
 import uuid
 import time
 from django.utils import timezone
+from django.db.models import Q
 
 from managr.api.decorators import log_all_exceptions
 from managr.salesforce.adapter.exceptions import (
@@ -1210,7 +1211,7 @@ def process_schedule_meeting(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor(required_context=["u"])
 def process_add_contacts_to_cadence(payload, context):
-    meta_data = json.loads(payload["view"]["private_metadata"])
+    pm = json.loads(payload["view"]["private_metadata"])
     u = User.objects.get(id=context.get("u"))
     cadence_id = payload["view"]["state"]["values"]["select_cadence"][
         f"GET_CADENCE_OPTIONS?u={context.get('u')}"
@@ -1221,12 +1222,15 @@ def process_add_contacts_to_cadence(payload, context):
     org = u.organization
     access_token = org.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    contacts = [
-        option["value"]
-        for option in payload["view"]["state"]["values"]["select_people"][
-            f"{slack_const.GET_PEOPLE_OPTIONS}?u={u.id}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}"
-        ]["selected_options"]
-    ]
+    if pm.get("resource_type", None) == "Contact":
+        contacts = [context.get("resource_id")]
+    else:
+        contacts = [
+            option["value"]
+            for option in payload["view"]["state"]["values"]["select_people"][
+                f"{slack_const.GET_PEOPLE_OPTIONS}?u={u.id}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}"
+            ]["selected_options"]
+        ]
     loading_data = {
         "trigger_id": trigger_id,
         "view_id": view_id,
@@ -1244,6 +1248,7 @@ def process_add_contacts_to_cadence(payload, context):
         success = 0
         failed = 0
         created = 0
+        errors = []
         for person in contacts:
             person_res = emit_add_cadence_membership(person, cadence_id, str(u.id))
             if person_res["status"] == "Success":
@@ -1253,6 +1258,7 @@ def process_add_contacts_to_cadence(payload, context):
                 created += 1
             else:
                 failed += 1
+                errors.append(person_res["errors"])
         logger.info(
             f"{success} out of {success + failed} added to cadence and {created} People created in Salesloft"
         )
@@ -1261,25 +1267,31 @@ def process_add_contacts_to_cadence(payload, context):
             if created > 0
             else f"{success}/{success + failed} added to cadence"
         )
-        update_res = slack_requests.send_ephemeral_message(
-            meta_data["channel_id"],
-            access_token,
-            payload["user"]["id"],
-            block_set=[block_builders.simple_section(message)],
-        )
-        return
+        if len(errors):
+            message = f"Validation error adding contact to cadence: {','.join(errors)}"
+
+        return {
+            "response_action": "update",
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Add To Cadence"},
+                "blocks": [block_builders.simple_section(message)],
+            },
+        }
+
     else:
-        update_res = slack_requests.send_ephemeral_message(
-            meta_data["channel_id"],
-            access_token,
-            payload["user"]["id"],
-            block_set=[
-                block_builders.simple_section(
-                    f"No people associated for {context.get('resource_id')}"
-                )
-            ],
-        )
-        return
+        return {
+            "response_action": "update",
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Add To Cadence"},
+                "blocks": [
+                    block_builders.simple_section(
+                        f"No people associated for {context.get('resource_name')}"
+                    )
+                ],
+            },
+        }
 
 
 @log_all_exceptions

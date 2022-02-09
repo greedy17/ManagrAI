@@ -267,7 +267,6 @@ def process_get_cadences(payload, context):
     cadences = Cadence.objects.filter(
         Q(is_team_cadence=True, is_shared=True) | Q(owner=user.salesloft_account)
     )
-    print(cadences)
     value = payload["value"]
     return {
         "options": [l.as_slack_option for l in cadences.filter(name__icontains=value)[:50]],
