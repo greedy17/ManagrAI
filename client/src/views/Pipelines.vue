@@ -1,5 +1,5 @@
 <template>
-  <div class="pipelines">
+  <div @click="closeList" class="pipelines">
     <header v-if="!loading" class="flex-row-spread">
       <div>
         <h3 class="title">Hi, {{ user.fullName }}</h3>
@@ -24,14 +24,28 @@
           nullDisplay="Opportunities"
         /> -->
 
-        <button class="pipe-button">
+        <button @click="showList = !showList" class="pipe-button">
           <img
             class="invert"
             src="@/assets/images/list.png"
             style="height: 1rem; margin-right: 0.25rem"
             alt=""
-          />All Opportunities
+          />{{ currentList }}
         </button>
+        <div v-if="showList" class="list-section">
+          <button @click="allOpportunities" class="list-button">
+            All Opportunities
+            <span class="filter" v-if="currentList === 'All Opportunities'"> active</span>
+          </button>
+          <button @click="closeDatesThisMonth" class="list-button">
+            Closing this month
+            <span class="filter" v-if="currentList === 'Closing this month'"> active</span>
+          </button>
+          <button @click="closeDatesNextMonth" class="list-button">
+            Closing next month
+            <span class="filter" v-if="currentList === 'Closing next month'"> active</span>
+          </button>
+        </div>
         <button class="add-button">
           <img
             src="@/assets/images/plusOne.png"
@@ -40,13 +54,13 @@
           />Filter
         </button>
         <h5 v-if="!loading">
-          Results: <span class="resNum">{{ allOpps.length }}</span>
+          Results: <span>{{ allOpps.length }}</span>
         </h5>
       </div>
 
       <div class="flex-row">
         <div class="search-bar">
-          <input type="search" placeholder="search" />
+          <input type="search" v-model="filterText" placeholder="search" />
           <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
         </div>
 
@@ -72,7 +86,7 @@
           <div class="table-cell-header">Last Activity</div>
         </div>
 
-        <tr class="table-row" :key="i" v-for="(opp, i) in allOpps">
+        <tr class="table-row" :key="i" v-for="(opp, i) in allOppsFiltered">
           <div class="table-cell-checkbox">
             <input type="checkbox" />
           </div>
@@ -81,8 +95,8 @@
             <span style="color: #199e54; margin-left: 0.2rem">account name</span>
             <div style="color: #9b9b9b">owner: owner's name</div>
             <div style="margin-top: 0.5rem" class="flex-row">
+              <img class="name-cell-note-button" src="@/assets/images/edit-note.png" />
               <img class="name-cell-edit-note-button" src="@/assets/images/white-note.png" />
-              <img class="name-cell-note-button" src="@/assets/images/note.png" />
             </div>
           </div>
 
@@ -121,28 +135,67 @@ export default {
     return {
       noSelection: true,
       opportunities: ['test'],
+      originalList: null,
       allOpps: null,
       loading: false,
       team: CollectionManager.create({ ModelClass: User }),
+      filterText: '',
+      currentList: 'All Opportunities',
+      showList: false,
     }
   },
   computed: {
     user() {
       return this.$store.state.user
     },
+    allOppsFiltered() {
+      return this.allOpps.filter((opp) =>
+        opp.name.toLowerCase().includes(this.filterText.toLowerCase()),
+      )
+    },
+    currentMonth() {
+      let date = new Date()
+      return date.getMonth()
+    },
   },
   created() {
     this.getObjects()
     this.team.refresh()
-    console.log(this.team)
   },
   methods: {
+    closeDatesThisMonth() {
+      this.allOpps = this.allOpps.filter(
+        (opp) => new Date(opp.close_date).getMonth() == this.currentMonth,
+      )
+      this.currentList = 'Closing this month'
+      this.showList = !this.showList
+    },
+    closeDatesNextMonth() {
+      this.allOpps = this.allOpps.filter(
+        (opp) => new Date(opp.close_date).getMonth() == this.currentMonth + 1,
+      )
+      this.currentList = 'Closing next month'
+      this.showList = !this.showList
+    },
+    allOpportunities() {
+      this.allOpps = this.originalList
+      this.currentList = 'All Opportunities'
+      this.showList = !this.showList
+    },
+    closeList() {
+      if (this.showList === false) {
+        this.showList = this.showList
+      } else {
+        this.showList = true
+      }
+    },
     async getObjects() {
       this.loading = true
       try {
         const res = await SObjects.api.getObjects('Opportunity')
         this.allOpps = res.results
-        console.log(this.allOpps)
+        this.originalList = res.results
+        // console.log(this.allOpps)
       } catch {
         this.$Alert.alert({
           type: 'error',
@@ -344,7 +397,7 @@ section {
   transition: all 0.3s;
 }
 .pipe-button:hover {
-  transform: scale(1.025);
+  transform: scale(1.03);
   box-shadow: 1px 2px 2px $very-light-gray;
 }
 
@@ -360,9 +413,10 @@ section {
   background-color: $dark-green;
   cursor: pointer;
   color: white;
+  transition: all 0.3s;
 }
 .add-button:hover {
-  transform: scale(1.025);
+  transform: scale(1.03);
   box-shadow: 1px 2px 2px $very-light-gray;
 }
 .resNum {
@@ -390,26 +444,65 @@ section {
   filter: invert(99%);
 }
 .name-cell-note-button {
-  height: 1.25rem;
+  height: 1.2rem;
   cursor: pointer;
-  box-shadow: 1px 1px 1px 1px $very-light-gray;
+  // box-shadow: 1px 1px 1px 1px $very-light-gray;
   border: none;
   border-radius: 50%;
   padding: 0.2rem;
-  margin-right: 0.25rem;
+  margin-right: 0.5rem;
+  background-color: $lighter-green;
+  transition: all 0.3s;
+}
+.name-cell-note-button:hover,
+.name-cell-edit-note-button:hover {
+  transform: scale(1.03);
+  box-shadow: 1px 2px 2px $very-light-gray;
 }
 .name-cell-edit-note-button {
-  height: 1.25rem;
+  height: 1.2rem;
   cursor: pointer;
-  box-shadow: 1px 1px 1px 1px $very-light-gray;
   border: none;
   border-radius: 50%;
   padding: 0.2rem;
   margin-right: 0.25rem;
-  background-color: $lighter-green;
+  background-color: $dark-green;
+  transition: all 0.3s;
 }
-.spacer {
-  height: 5vh;
+.list-section {
+  z-index: 2;
+  position: absolute;
+  top: 28vh;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background-color: $off-white;
+  width: 16vw;
+  margin-right: 0.5rem;
+  box-shadow: 1px 1px 1px 1px $very-light-gray;
+}
+.list-button {
+  display: flex;
+  align-items: center;
+  height: 4.5vh;
+  width: 100%;
+  background-color: transparent;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 0.2rem;
+  color: $mid-gray;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: bold;
+}
+.list-button:hover {
+  color: $dark-green;
+  background-color: white;
+}
+.filter {
+  color: #199e54;
+  margin-left: 0.2rem;
 }
 ::-webkit-scrollbar {
   background-color: $light-orange-gray;
