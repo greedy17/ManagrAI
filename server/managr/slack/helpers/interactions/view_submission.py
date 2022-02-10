@@ -1968,7 +1968,6 @@ def process_submit_product(payload, context):
 def process_convert_lead(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     pm = json.loads(payload["view"]["private_metadata"])
-    print(f"PROCESS_CONVERT PM: {pm}")
     user = workflow.user
     state = payload["view"]["state"]["values"]
     loading_view_data = send_loading_screen(
@@ -2012,14 +2011,13 @@ def process_convert_lead(payload, context):
     convert_data["ownerId"] = assigned_owner.salesforce_account.salesforce_id
     lead = Lead.objects.get(id=workflow.resource_id)
     convert_data["leadId"] = lead.integration_id
-    print(f"CONVERT DATA: {convert_data}")
     attempts = 1
     blocks = None
     has_error = False
     while True:
         try:
             res = lead.convert_in_salesforce(convert_data)
-            print(f"CONVERT RES: {res}")
+            break
         except FieldValidationError as e:
             has_error = True
             blocks = (
@@ -2135,7 +2133,6 @@ def process_convert_lead(payload, context):
             success_data,
             access_token=user.organization.slack_integration.access_token,
         )
-        print(f"SUCCESS MESSAGE: {success_res}")
         update_blocks = [
             block_builders.section_with_button_block(
                 "Send Recap",
@@ -2153,7 +2150,6 @@ def process_convert_lead(payload, context):
                 ),
             )
         ]
-        logger.info(f"LEAD CONVERT BLOCK: {update_blocks}")
         slack_requests.update_channel_message(
             pm.get("original_message_channel"),
             pm.get("original_message_timestamp"),

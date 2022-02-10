@@ -67,6 +67,7 @@ const DATE = 'DATE'
 const DATETIME = 'DATETIME'
 const DECIMAL = 'DECIMAL'
 const BOOLEAN = 'BOOLEAN'
+const EMAIL = 'EMAIL'
 
 const INPUT_TYPE_MAP = {
   Currency: 'number',
@@ -89,5 +90,6 @@ const ALERT_DATA_TYPE_MAP = {
   Picklist: STRING,
   TextArea: STRING,
   Boolean: BOOLEAN,
+  Email: EMAIL,
 }
 export { INTEGER, STRING, DATE, DATETIME, DECIMAL, INPUT_TYPE_MAP, ALERT_DATA_TYPE_MAP }

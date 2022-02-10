@@ -1338,7 +1338,21 @@ export default {
     this.repsPipeline()
   },
   updated() {
-    this.alertTemplateForm.field.isActive.value = true
+    if (this.alertTemplateForm.field.isActive.value !== true) {
+      this.alertTemplateForm.field.isActive.value = true
+    }
+    // if (
+    //   this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
+    //     ._operandIdentifier.value.dataType === 'Email'
+    // ) {
+    //   console.log('yes')
+    //   this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field.dataType.value =
+    //     'Email'
+    //   console.log(
+    //     this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
+    //       .dataType.value,
+    //   )
+    // }
   },
 }
 </script>
