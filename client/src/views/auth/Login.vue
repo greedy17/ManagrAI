@@ -21,6 +21,7 @@
         v-on:keyup.enter.native="handleLoginAttempt"
         :errors="loginForm.field.password.errors"
         v-if="showPassword"
+        @keyup.enter="handleLoginAttempt"
         v-model="loginForm.field.password.value"
         type="password"
       />

@@ -897,8 +897,12 @@ export default {
       }
     },
     repsPipeline() {
-      if (this.user.userLevel !== 'MANAGER') {
+      if (
+        this.user.userLevel !== 'MANAGER' &&
+        this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.length < 1
+      ) {
         this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
+        console.log('test')
         this.setPipelines({
           fullName: 'MYSELF',
           id: 'SELF',
@@ -1153,7 +1157,12 @@ export default {
       this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDay.value = obj
     },
     setPipelines(obj) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._alertTargets.value.push(obj)
+      if (this.alertTemplateForm.field.alertConfig.groups[0].field._alertTargets.value.lenght < 1) {
+        this.alertTemplateForm.field.alertConfig.groups[0].field._alertTargets.value.push(obj)
+        console.log(
+          this.alertTemplateForm.field.alertConfig.groups[0].field._alertTargets.value.push(obj),
+        )
+      }
     },
     setRecipients(obj) {
       this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value.push(obj)
@@ -1338,21 +1347,8 @@ export default {
     this.repsPipeline()
   },
   updated() {
-    if (this.alertTemplateForm.field.isActive.value !== true) {
-      this.alertTemplateForm.field.isActive.value = true
-    }
-    // if (
-    //   this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
-    //     ._operandIdentifier.value.dataType === 'Email'
-    // ) {
-    //   console.log('yes')
-    //   this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field.dataType.value =
-    //     'Email'
-    //   console.log(
-    //     this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
-    //       .dataType.value,
-    //   )
-    // }
+    this.alertTemplateForm.field.isActive.value = true
+    this.repsPipeline()
   },
 }
 </script>
