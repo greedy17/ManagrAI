@@ -12,16 +12,8 @@ from managr.slack.helpers.block_sets.command_views_blocksets import (
     custom_paginator_block,
     custom_meeting_paginator_block,
 )
-from managr.organization.models import (
-    Organization,
-    Stage,
-    Account,
-    OpportunityLineItem,
-    Pricebook2,
-    PricebookEntry,
-)
+from managr.organization.models import Organization, Account, Pricebook2, PricebookEntry, Contact
 from managr.opportunity.models import Opportunity, Lead
-from managr.zoom.models import ZoomMeeting
 from managr.slack import constants as slack_const
 from managr.opportunity import constants as opp_consts
 from managr.slack.helpers import requests as slack_requests
@@ -834,7 +826,6 @@ def process_show_edit_product_form(payload, context):
 
 def process_add_products_form(payload, context):
     user = User.objects.get(slack_integration__slack_id=payload["user"]["id"])
-    print(context)
     view = payload["view"]
     state = view["state"]["values"]
     pricebook = context.get("pricebook", None)
@@ -863,7 +854,6 @@ def process_add_products_form(payload, context):
     private_metadata.update({**context, "view_id": view["id"], "product_form": product_form_id})
     # currently only for update
     blocks = []
-    print(pricebook)
     if pricebook is None:
         blocks.append(
             block_builders.external_select(
@@ -1779,6 +1769,8 @@ def process_get_notes(payload, context):
         resource = Account.objects.get(id=context.get("resource_id"))
     elif resource_type == "Lead":
         resource = Lead.objects.get(id=context.get("resource_id"))
+    elif resource_type == "Contact":
+        resource = Contact.objects.get(id=context.get("resource_id"))
     note_data = (
         OrgCustomSlackFormInstance.objects.filter(resource_id=resource_id)
         .filter(is_submitted=True)
@@ -1889,7 +1881,6 @@ def process_get_call_recording(payload, context):
                         )
                     )
                 else:
-                    logger.info("Gong call recap without call")
                     blocks = [
                         block_builders.simple_section("No call associated with this opportunity")
                     ]
@@ -1917,7 +1908,6 @@ def process_get_call_recording(payload, context):
             call_details = generate_call_block(call_res)
             blocks = [*call_details]
         else:
-            logger.info("Gong details from non recap")
             blocks = [
                 block_builders.simple_section("No call associated with this opportunity*"),
                 block_builders.context_block(
@@ -2540,7 +2530,6 @@ def process_show_digest_update_resource_form(payload, context):
 
 @processor()
 def process_send_recap_modal(payload, context):
-    print(context, payload)
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
@@ -2592,6 +2581,7 @@ def process_show_convert_lead_form(payload, context):
         "original_message_channel": payload["channel"]["id"],
         "original_message_timestamp": payload["message"]["ts"],
     }
+    print(private_metadata)
     data = {
         "trigger_id": payload["trigger_id"],
         "view": {
@@ -2611,19 +2601,19 @@ def process_show_convert_lead_form(payload, context):
         )
     except InvalidBlocksException as e:
         return logger.exception(
-            f"Failed To Generate Slack Product form with {str(opp_item.id)} email {user.email} {e}"
+            f"Failed To Generate Slack Convert Lead form for email {user.email} {e}"
         )
     except InvalidBlocksFormatException as e:
         return logger.exception(
-            f"Failed To Generate Slack Product form with {str(opp_item.id)} email {user.email} {e}"
+            f"Failed To Generate Slack Convert Lead form for email {user.email} {e}"
         )
     except UnHandeledBlocksException as e:
         return logger.exception(
-            f"Failed To Generate Slack Product form with {str(opp_item.id)} email {user.email} {e}"
+            f"Failed To Generate Slack Convert Lead form for email {user.email} {e}"
         )
     except InvalidAccessToken as e:
         return logger.exception(
-            f"Failed To Generate Slack Product form with {str(user.id)} email {user.email} {e}"
+            f"Failed To Generate Slack Convert Lead form with {str(user.id)} email {user.email} {e}"
         )
     return
 
@@ -2772,6 +2762,7 @@ def process_lead_input_switch(payload, context):
     access_token = user.organization.slack_integration.access_token
     actions = payload["actions"][0]
     blocks = payload["view"]["blocks"]
+    pm = json.loads(payload["view"]["private_metadata"])
     try:
         selected_options = actions["selected_options"][0]["value"]
     except IndexError:
@@ -2811,7 +2802,7 @@ def process_lead_input_switch(payload, context):
             "title": {"type": "plain_text", "text": "Convert Lead"},
             "blocks": blocks,
             "submit": {"type": "plain_text", "text": "Convert"},
-            "private_metadata": json.dumps(context),
+            "private_metadata": json.dumps(pm),
         },
     }
     try:
