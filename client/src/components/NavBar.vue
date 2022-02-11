@@ -30,7 +30,7 @@
             </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Pipelines' }"
-                >Pipeline <span>(coming soon)</span></router-link
+                >Pipeline</router-link
               >
             </li>
           </ul>
@@ -67,7 +67,7 @@
             </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Pipelines' }"
-                >Pipeline <span>(coming soon)</span></router-link
+                >Pipeline</router-link
               >
             </li>
           </ul>
@@ -93,7 +93,7 @@
             </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Pipelines' }"
-                >Pipeline <span>(coming soon)</span></router-link
+                >Pipeline</router-link
               >
             </li>
           </ul>

@@ -1,5 +1,5 @@
 <template>
-  <div @click="closeList" class="pipelines">
+  <div class="pipelines">
     <header v-if="!loading" class="flex-row-spread">
       <div>
         <h3 class="title">Hi, {{ user.fullName }}</h3>
@@ -46,7 +46,7 @@
             <span class="filter" v-if="currentList === 'Closing next month'"> active</span>
           </button>
         </div>
-        <button class="add-button">
+        <button @click="filtering = !filtering" class="add-button">
           <img
             src="@/assets/images/plusOne.png"
             style="height: 1rem; margin-right: 0.25rem"
@@ -56,6 +56,58 @@
         <h5 v-if="!loading">
           Results: <span>{{ allOpps.length }}</span>
         </h5>
+
+        <div v-if="filtering" class="filter-section">
+          <div class="flex-row-spread wide">
+            <p class="filter-section__title">All Filters</p>
+            <img @click="closeFilters" class="exit" src="@/assets/images/close.png" alt="" />
+          </div>
+          <div class="wide" style="display: flex; justify-content: center">
+            <div style="margin-left: 0.5rem" class="search-bar wide">
+              <input
+                class="wide"
+                type="search"
+                v-model="searchFilterText"
+                placeholder="Search filters"
+              />
+              <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
+            </div>
+          </div>
+
+          <div :key="i" v-for="(filter, i) in filteredFilters" class="filter-section__filters">
+            <button
+              @click="selectFilter(filter.type)"
+              style="margin-top: -0.5rem"
+              class="list-button"
+            >
+              <img
+                v-if="filter.type === 'monetary'"
+                src="@/assets/images/monetary.png"
+                class="img"
+                alt=""
+              />
+              <img
+                v-if="filter.type === 'date'"
+                src="@/assets/images/date.png"
+                class="img"
+                alt=""
+              />
+              <img
+                v-if="filter.type === 'time'"
+                src="@/assets/images/time.png"
+                class="img"
+                alt=""
+              />
+              <img
+                v-if="filter.type === 'person'"
+                src="@/assets/images/person.png"
+                class="img"
+                alt=""
+              />
+              {{ filter.title }}
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="flex-row">
@@ -140,8 +192,37 @@ export default {
       loading: false,
       team: CollectionManager.create({ ModelClass: User }),
       filterText: '',
+      searchFilterText: '',
       currentList: 'All Opportunities',
       showList: false,
+      filtering: false,
+      filterType: null,
+      oppFilters: [
+        {
+          title: 'Amount',
+          type: 'monetary',
+        },
+        {
+          title: 'Close date',
+          type: 'date',
+        },
+        {
+          title: 'Next step date',
+          type: 'date',
+        },
+        {
+          title: 'Last activity',
+          type: 'time',
+        },
+        {
+          title: 'Last modified',
+          type: 'time',
+        },
+        {
+          title: 'Owner',
+          type: 'person',
+        },
+      ],
     }
   },
   computed: {
@@ -151,6 +232,11 @@ export default {
     allOppsFiltered() {
       return this.allOpps.filter((opp) =>
         opp.name.toLowerCase().includes(this.filterText.toLowerCase()),
+      )
+    },
+    filteredFilters() {
+      return this.oppFilters.filter((opp) =>
+        opp.title.toLowerCase().includes(this.searchFilterText.toLowerCase()),
       )
     },
     currentMonth() {
@@ -163,6 +249,37 @@ export default {
     this.team.refresh()
   },
   methods: {
+    selectFilter(name) {
+      switch (name) {
+        case 'monetary':
+          this.monetaryFilter()
+          break
+        case 'date':
+          this.dateFilter()
+          break
+        case 'time':
+          this.timeFilter()
+          break
+        case 'person':
+          this.personFilter()
+          break
+      }
+    },
+    monetaryFilter() {
+      console.log('money')
+    },
+    dateFilter() {
+      console.log('date')
+    },
+    timeFilter() {
+      console.log('time')
+    },
+    personFilter() {
+      console.log('person')
+    },
+    closeFilters() {
+      this.filtering = !this.filtering
+    },
     closeDatesThisMonth() {
       this.allOpps = this.allOpps.filter(
         (opp) => new Date(opp.close_date).getMonth() == this.currentMonth,
@@ -186,7 +303,7 @@ export default {
       if (this.showList === false) {
         this.showList = this.showList
       } else {
-        this.showList = true
+        this.showList = !this.showList
       }
     },
     async getObjects() {
@@ -195,7 +312,7 @@ export default {
         const res = await SObjects.api.getObjects('Opportunity')
         this.allOpps = res.results
         this.originalList = res.results
-        // console.log(this.allOpps)
+        console.log(this.allOpps)
       } catch {
         this.$Alert.alert({
           type: 'error',
@@ -298,6 +415,7 @@ export default {
   border: none;
   border-bottom: 1px solid $soft-gray;
   font-size: 13px;
+  overflow: scroll;
 }
 .table-cell-checkbox {
   display: table-cell;
@@ -338,7 +456,7 @@ export default {
 }
 input[type='search'] {
   border: none;
-  background-color: transparent;
+  background-color: $off-white;
   padding: 4px;
   margin: 0;
 }
@@ -348,6 +466,12 @@ input[type='search']:focus {
 p {
   font-size: 13px;
 }
+.img {
+  margin-right: 0.25rem;
+  height: 0.75rem;
+  filter: invert(50%);
+}
+
 header,
 section {
   margin: 0;
@@ -425,6 +549,7 @@ section {
 }
 .search-bar {
   height: 4.5vh;
+  background-color: $off-white;
   box-shadow: 1px 1px 1px $very-light-gray;
   border: 1px solid $soft-gray;
   display: flex;
@@ -442,6 +567,9 @@ section {
 }
 .invert {
   filter: invert(99%);
+}
+.wide {
+  width: 100%;
 }
 .name-cell-note-button {
   height: 1.2rem;
@@ -482,6 +610,36 @@ section {
   margin-right: 0.5rem;
   box-shadow: 1px 1px 1px 1px $very-light-gray;
 }
+.filter-section {
+  position: absolute;
+  top: 21vh;
+  left: 22vw;
+  z-index: 2;
+  padding: 0.25rem;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background-color: $off-white;
+  width: 20vw;
+  margin-right: 0.5rem;
+  box-shadow: 1px 1px 1px 2px $light-orange-gray;
+
+  &__title {
+    color: $dark-green;
+    margin-left: 0.75rem;
+    font-weight: bold;
+    border-bottom: 2px solid $dark-green;
+    padding-bottom: 2px;
+  }
+
+  &__filters {
+    // background-color: $white-green;
+    border-radius: 5px;
+    width: 100%;
+    margin-top: 1rem;
+  }
+}
 .list-button {
   display: flex;
   align-items: center;
@@ -503,6 +661,11 @@ section {
 .filter {
   color: #199e54;
   margin-left: 0.2rem;
+}
+.exit {
+  padding-right: 0.5rem;
+  height: 1rem;
+  cursor: pointer;
 }
 ::-webkit-scrollbar {
   background-color: $light-orange-gray;
