@@ -1,11 +1,8 @@
-import logging
-import requests
-import json
 from faker import Faker
 from urllib.parse import urlencode, unquote
 from datetime import datetime
 from .routes import routes
-
+import time
 from django.http import HttpResponse
 from django.utils import timezone
 from django.core.management import call_command
@@ -68,6 +65,8 @@ from managr.salesforce.adapter.exceptions import (
     FieldValidationError,
     RequiredFieldError,
     SFQueryOffsetError,
+    UnhandledSalesforceError,
+    SFNotFoundError,
 )
 
 from . import constants as sf_consts
@@ -254,3 +253,88 @@ class SalesforceSObjectViewSet(
         sobject = routes[param_sobject]
         query = sobject["model"].objects.for_user(self.request.user)
         return query
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="notes",
+    )
+    def get_resource_notes(self, request, *args, **kwargs):
+        from managr.slack.models import OrgCustomSlackFormInstance
+
+        resource_id = self.request.GET.get("resource_id")
+        note_data = (
+            OrgCustomSlackFormInstance.objects.filter(resource_id=resource_id)
+            .filter(is_submitted=True)
+            .values_list(
+                "submission_date",
+                "saved_data__meeting_type",
+                "saved_data__meeting_comments",
+                "saved_data__StageName",
+                "previous_data__StageName",
+            )
+        )
+        return note_data
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="update",
+    )
+    def update_resource(self, request, *args, **kwargs):
+        from managr.slack.models import OrgCustomSlackFormInstance
+        from managr.core.models import User
+
+        data = self.request.data
+        user = User.objects.get(id=self.request.user.id)
+        form_id = self.request.GET.get("form_id")
+        main_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
+        stage_forms = []
+        stage_form_data_collector = {}
+        for form in stage_forms:
+            stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
+        if not len(stage_forms):
+            main_form.save_form(data)
+        all_form_data = {**stage_form_data_collector, **main_form.saved_data}
+        data = None
+        attempts = 1
+        while True:
+            sf = user.salesforce_account
+            try:
+                resource = main_form.resource_object.update_in_salesforce(all_form_data)
+                break
+            except FieldValidationError as e:
+                data = {"success": False, "error": str(e)}
+                break
+
+            except RequiredFieldError as e:
+                data = {"success": False, "error": str(e)}
+                break
+            except UnhandledSalesforceError as e:
+                data = {"success": False, "error": str(e)}
+                break
+
+            except SFNotFoundError as e:
+                data = {"success": False, "error": str(e)}
+                break
+
+            except TokenExpired:
+                if attempts >= 5:
+                    data = {"success": False, "error": "Could not refresh token"}
+                    break
+                else:
+                    sf.regenerate_token()
+                    attempts += 1
+
+            except ConnectionResetError:
+                if attempts >= 5:
+                    data = {"success": False, "error": "Connection was reset"}
+                    break
+                else:
+                    time.sleep(2)
+                    attempts += 1
+        if data is None:
+            data = {"success": True}
+        return Response(data=data)
