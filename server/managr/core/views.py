@@ -433,7 +433,7 @@ class NylasAccountWebhook(APIView):
 )
 def email_auth_token(request):
     u = request.user
-
+    print(f"email_auth_token request {request}")
     # if user already has a token revoke it this will make sure we do not have duplicates on Nylas
     try:
         u.nylas.revoke()
@@ -462,17 +462,16 @@ def email_auth_token(request):
         try:
             access_token = get_access_token(code)
             details = get_account_details(access_token)
+
             account = details["account"]
             calendar_data = details["calendars"]
+            email_check = [cal for cal in calendar_data if cal["name"] == account["email_address"]]
             calendar = [cal for cal in calendar_data if cal["read_only"] is False]
-            if len(calendar):
-                if len(calendar) > 1:
-                    by_email = [cal for cal in calendar if cal["name"] == account["email_address"]]
-                    calendar_id = by_email[0]["id"]
-                else:
-                    calendar_id = calendar[0]["id"]
+            if len(email_check):
+
+                calendar_id = email_check[0]["id"]
             else:
-                calendar_id = None
+                calendar_id = calendar[0]["id"]
             NylasAuthAccount.objects.create(
                 access_token=access_token,
                 account_id=account["account_id"],
