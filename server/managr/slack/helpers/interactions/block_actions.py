@@ -1827,7 +1827,7 @@ def process_get_call_recording(payload, context):
     except KeyError:
         view_id = None
     loading_view_data = send_loading_screen(
-        access_token, "Checking for a call details...", view_type, str(user.id), trigger_id, view_id
+        access_token, "Checking for call details...", view_type, str(user.id), trigger_id, view_id
     )
     resource_id = context.get("resource_id", None)
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
