@@ -289,7 +289,7 @@ class SalesforceSObjectViewSet(
 
         data = self.request.data
         user = User.objects.get(id=self.request.user.id)
-        form_id = self.request.GET.get("form_id")
+        form_id = self.request.POST.get("form_id")
         main_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
         stage_forms = []
         stage_form_data_collector = {}
