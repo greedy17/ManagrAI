@@ -569,6 +569,7 @@ def process_submit_resource_data(payload, context):
         update_view,
         user.organization.slack_integration.access_token,
     )
+    return {"response_action": "clear"}
 
 
 @log_all_exceptions
