@@ -404,7 +404,7 @@ def process_submit_resource_data(payload, context):
             )
             break
 
-        except TokenExpired:
+        except TokenExpired as e:
             if attempts >= 5:
                 logger.exception(
                     f"Failed to Update data for user {str(user.id)} after {attempts} tries"
@@ -432,6 +432,20 @@ def process_submit_resource_data(payload, context):
                     {
                         "message": f":no_entry: Uh-Ohhh we had an error connecting to your salesforce instance please try again"
                     },
+                )
+                break
+            else:
+                time.sleep(2)
+                attempts += 1
+        except Exception as e:
+            if attempts >= 5:
+                logger.exception(
+                    f"Failed to Update data for user {str(user.id)} after {attempts} tries because of {e}"
+                )
+                has_error = True
+                blocks = get_block_set(
+                    "error_modal",
+                    {"message": f":no_entry: Uh-Ohhh we had an error updating your Salesforce {e}"},
                 )
                 break
             else:
