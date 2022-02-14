@@ -29,9 +29,9 @@ class LeadQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
             if user.user_level in ["SDR", "MANAGER"]:
-                return self.filter(organization=user.organization)
+                return self.filter(owner__organization=user.organization)
             else:
-                return self.filter(organization=user.organization, owner=user)
+                return self.filter(owner=user)
         else:
             return None
 
