@@ -2581,7 +2581,6 @@ def process_show_convert_lead_form(payload, context):
         "original_message_channel": payload["channel"]["id"],
         "original_message_timestamp": payload["message"]["ts"],
     }
-    print(private_metadata)
     data = {
         "trigger_id": payload["trigger_id"],
         "view": {

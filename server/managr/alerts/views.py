@@ -240,25 +240,27 @@ class RealTimeAlertViewSet(
             )
             current_config = data.get("config")
             pipelines = data.get("pipelines")
+
             current_config["recipients"] = {str(manager.id): data.get("recipients")}
             current_config["api_name"] = api_name
             users = User.objects.filter(id__in=pipelines)
             for user in users:
-                configs = user.slack_integration.realtime_alert_configs
-                if str(field.id) in configs:
-                    if current_config["title"] in configs[str(field.id)].keys():
-                        if (
-                            str(manager.id)
-                            not in configs[str(field.id)][api_name]["recipients"].keys()
-                        ):
-                            configs[str(field.id)][api_name]["recipients"][
+                if hasattr(user, "slack_integration"):
+                    configs = user.slack_integration.realtime_alert_configs
+                    if str(field.id) in configs:
+                        if current_config["title"] in configs[str(field.id)].keys():
+                            if (
                                 str(manager.id)
-                            ] = data.get("recipients")
-                    else:
-                        configs[str(field.id)][current_config["title"]] = current_config
+                                not in configs[str(field.id)][api_name]["recipients"].keys()
+                            ):
+                                configs[str(field.id)][api_name]["recipients"][
+                                    str(manager.id)
+                                ] = data.get("recipients")
+                        else:
+                            configs[str(field.id)][current_config["title"]] = current_config
 
-                else:
-                    new_config = {current_config["title"]: current_config}
-                    configs[str(field.id)] = new_config
-                user.slack_integration.save()
+                    else:
+                        new_config = {current_config["title"]: current_config}
+                        configs[str(field.id)] = new_config
+                    user.slack_integration.save()
         return Response({"status": "success"})
