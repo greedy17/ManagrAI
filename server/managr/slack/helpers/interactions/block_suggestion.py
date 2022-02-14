@@ -1,10 +1,7 @@
-import pdb
 import logging
 import json
 
 from django.db.models import Q
-from managr.opportunity import constants as opp_consts
-from managr.organization import constants as org_consts
 from managr.slack import constants as slack_const
 from managr.salesforce import constants as sf_consts
 from managr.gong.models import GongCall
@@ -13,11 +10,10 @@ from managr.opportunity.models import Opportunity, Lead
 from managr.organization.models import (
     Organization,
     Account,
-    ActionChoice,
+    Contact,
     Pricebook2,
     PricebookEntry,
 )
-from managr.salesforce.models import SObjectPicklist, SObjectField
 from managr.outreach.models import Sequence
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.utils import process_action_id, NO_OP, processor
@@ -62,7 +58,8 @@ def process_get_user_opportunities(payload, context):
     value = payload["value"]
     return {
         "options": [
-            l.as_slack_option for l in user.owned_opportunities.filter(title__icontains=value)
+            l.as_slack_option
+            for l in Opportunity.objects.for_user(user).filter(title__icontains=value)
         ],
     }
 
@@ -72,7 +69,10 @@ def process_get_user_contacts(payload, context):
     user = User.objects.get(id=context["u"])
     value = payload["value"]
     return {
-        "options": [l.as_slack_option for l in user.contacts.filter(email__icontains=value)[:50]],
+        "options": [
+            l.as_slack_option
+            for l in Contact.objects.for_user(user).filter(email__icontains=value)[:50]
+        ],
     }
 
 
@@ -81,7 +81,10 @@ def process_get_user_accounts(payload, context):
     user = User.objects.get(id=context["u"])
     value = payload["value"]
     return {
-        "options": [l.as_slack_option for l in user.accounts.filter(name__icontains=value)[:50]],
+        "options": [
+            l.as_slack_option
+            for l in Account.objects.for_user(user).filter(name__icontains=value)[:50]
+        ],
     }
 
 
@@ -103,7 +106,10 @@ def process_get_local_resource_options(payload, context):
         return {
             "options": [
                 *additional_opts,
-                *[l.as_slack_option for l in user.accounts.filter(name__icontains=value)[:50]],
+                *[
+                    l.as_slack_option
+                    for l in Account.objects.for_user(user).filter(name__icontains=value)[:50]
+                ],
             ],
         }
 
@@ -111,14 +117,20 @@ def process_get_local_resource_options(payload, context):
         return {
             "options": [
                 *additional_opts,
-                *[l.as_slack_option for l in user.owned_leads.filter(name__icontains=value)[:50]],
+                *[
+                    l.as_slack_option
+                    for l in Lead.objects.for_user(user).filter(name__icontains=value)[:50]
+                ],
             ],
         }
     elif resource == sf_consts.RESOURCE_SYNC_CONTACT:
         return {
             "options": [
                 *additional_opts,
-                *[l.as_slack_option for l in user.contacts.filter(Q(email__icontains=value))[:50]],
+                *[
+                    l.as_slack_option
+                    for l in Contact.object.for_user(user).filter(Q(email__icontains=value))[:50]
+                ],
             ],
         }
     elif resource == sf_consts.RESOURCE_SYNC_OPPORTUNITY:
@@ -127,7 +139,7 @@ def process_get_local_resource_options(payload, context):
                 *additional_opts,
                 *[
                     l.as_slack_option
-                    for l in user.owned_opportunities.filter(name__icontains=value)[:50]
+                    for l in Opportunity.objects.for_user(user).filter(name__icontains=value)[:50]
                 ],
             ],
         }
