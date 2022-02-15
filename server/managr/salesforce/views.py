@@ -267,7 +267,7 @@ class SalesforceSObjectViewSet(
         note_data = (
             OrgCustomSlackFormInstance.objects.filter(resource_id=resource_id)
             .filter(is_submitted=True)
-            .values_list(
+            .values(
                 "submission_date",
                 "saved_data__meeting_type",
                 "saved_data__meeting_comments",
@@ -275,7 +275,9 @@ class SalesforceSObjectViewSet(
                 "previous_data__StageName",
             )
         )
-        return note_data
+        if note_data:
+            return Response(data=note_data)
+        return Response(data=[])
 
     @action(
         methods=["post"],
