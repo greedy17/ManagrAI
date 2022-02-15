@@ -136,11 +136,11 @@ export class AlertConfigAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'AlertGroupAPI.create' })(e)
     }
   }
-  async getCurrentInstances(data) {
-    // let configData = objectToSnakeCase(data)
+  async getCurrentInstances(configId) {
+
     try {
-      const res = await this.client.get(`${AlertConfigAPI.ENDPOINT}/current-instances/`, data)
-      return res.data
+      const res = await this.client.get(`${AlertConfigAPI.ENDPOINT}/current-instances/`, configId)
+      return this.cls.fromAPI(res.data)
     } catch (e) {
       apiErrorHandler({ apiName: 'AlertGroupAPI.getCurrentInstances' })(e)
     }

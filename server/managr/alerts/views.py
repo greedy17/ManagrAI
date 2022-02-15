@@ -172,15 +172,14 @@ class AlertConfigViewSet(
         url_path="current-instances",
     )
     def get_current_instances(self, request, *args, **kwargs):
-        data = request.data
-        print(data)
-        user = User.objects.get(id=data.get("user"))
+        user = User.objects.get(id=request.user.id)
+        print(user)
         last_instance = alert_models.AlertInstance.objects.filter(
-            user=user, config=data.get("config_id")
+            user=user, config=request.data.get("config_id")
         ).first()
         if last_instance and last_instance.datetime_created.date() == datetime.today().date():
             instances = alert_models.AlertInstance.objects.filter(
-                user=user, config=data.get("config_id"), invocation=last_instance.invocation
+                user=user, config=request.data.get("config_id"), invocation=last_instance.invocation
             )
             return Response(data=instances)
         return Response(data=[])

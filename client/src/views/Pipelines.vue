@@ -284,8 +284,12 @@ export default {
   methods: {
     async getConfigs() {
       try {
-        const res = await AlertConfig.api.getCurrentInstances()
+        const res = await AlertConfig.api.getCurrentInstances({
+          configId: '5b7c903d-44ba-4915-a884-11f364a1fad',
+        })
         console.log(res)
+      } catch (e) {
+        console.log(e)
       } finally {
         console.log('test')
       }
@@ -306,14 +310,14 @@ export default {
       }
       this.loading = false
     },
-    // async getNotes() {
-    //   try {
-    //     const res = await SObjects.api.getNotes('8fa011fc-1d64-4b1f-9be9-ca40f42cc756')
-    //     console.log(res)
-    //   } catch {
-    //     console.log(error)
-    //   }
-    // },
+    async getNotes() {
+      try {
+        const res = await SObjects.api.getNotes('8fa011fc-1d64-4b1f-9be9-ca40f42cc756')
+        console.log(res)
+      } catch (e) {
+        console.log(e)
+      }
+    },
     applyAmountFilter() {
       // this.allOpps = this.allOpps.filter((opp) => opp.amount > this.amountValue)
     },
