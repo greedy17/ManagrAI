@@ -10,7 +10,6 @@ from django.core.management import call_command
 from django.shortcuts import render, redirect
 from django.conf import settings
 from django.utils import timezone
-
 from rest_framework.views import APIView
 from rest_framework import (
     authentication,
@@ -178,10 +177,13 @@ class AlertConfigViewSet(
             user=user, config=config_id
         ).first()
         if last_instance and last_instance.datetime_created.date() == datetime.today().date():
+            template = alert_models.AlertTemplate.objects.filter(
+                id=last_instance.template.id
+            ).values()[0]
             instances = alert_models.AlertInstance.objects.filter(
                 user=user, config__id=config_id, invocation=last_instance.invocation,
             )
-            return Response(data=instances.values())
+            return Response(data={"instances": instances.values(), "template": template})
 
         return Response(data=[])
 
