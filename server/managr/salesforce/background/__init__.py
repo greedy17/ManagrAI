@@ -134,6 +134,10 @@ def emit_generate_form_template(user_id):
     return _generate_form_template(user_id)
 
 
+def emit_update_current_db_values(user_id, resource_type, integration_id):
+    return _update_current_db_values(user_id, resource_type, integration_id)
+
+
 def emit_meeting_workflow_tracker(workflow_id):
     """Checks the workflow after 5 mins to ensure completion"""
     schedule = timezone.now() + timezone.timedelta(minutes=5)
@@ -236,16 +240,17 @@ def _process_resource_sync(user_id, sync_id, resource, limit, offset, attempts=1
             serializer.is_valid(raise_exception=True)
         except ValidationError as e:
             error_str = f"Failed to save data for {resource} {item.name if item.name else 'N/A'} with salesforce id {item.integration_id} due to the following error {e.detail}"
-            context = dict(email=user.email, error=error_str)
-            subject = render_to_string("salesforce/error_saving_resource_data.txt")
-            recipient = [settings.STAFF_EMAIL]
-            send_html_email(
-                subject,
-                "salesforce/error_saving_resource_data.html",
-                settings.SERVER_EMAIL,
-                recipient,
-                context={**context},
-            )
+
+            # context = dict(email=user.email, error=error_str)
+            # subject = render_to_string("salesforce/error_saving_resource_data.txt")
+            # recipient = [settings.STAFF_EMAIL]
+            # send_html_email(
+            #     subject,
+            #     "salesforce/error_saving_resource_data.html",
+            #     settings.SERVER_EMAIL,
+            #     recipient,
+            #     context={**context},
+            # )
             logger.exception(error_str)
             continue
         serializer.save()
@@ -1467,3 +1472,23 @@ def _send_convert_recap(form_id, account_id, contact_id, opportunity_id=None, se
                     f"Failed to send recap to channel for user {user.email} due to {e}"
                 )
                 continue
+
+
+@background(schedule=0)
+@slack_api_exceptions(rethrow=True)
+def _update_current_db_values(user_id, resource_type, integration_id):
+    from managr.salesforce.routes import routes as model_routes
+
+    user = User.objects.get(id=user_id)
+    route = model_routes[resource_type]
+    model_class = route["model"]
+    resource = model_class.objects.filter(integration_id=integration_id).first()
+    if resource:
+        current_values = resource.get_current_values()
+        serializer = routes[resource_type]["serializer"](
+            data=current_values.as_dict, instance=resource
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        logger.info(f"Successfully {resource} in the Database for user {user.email}")
+    return

@@ -1096,7 +1096,6 @@ class OpportunityAdapter:
         )
         formatted_data["imported_by"] = str(user_id)
         formatted_data["is_stale"] = False
-
         return OpportunityAdapter(**formatted_data)
 
     @staticmethod
