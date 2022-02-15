@@ -74,9 +74,33 @@
             </div>
           </div>
 
+          <small v-if="filterTitle" class="filter-title"
+            >{{ filterTitle + ' ' + (filterOption ? filterOption : '') }}:</small
+          >
+          <div v-if="filterType && !enteringAmount" class="filter-option-section">
+            <button
+              @click="selectFilterOption(option)"
+              class="filter-option-button"
+              :key="option"
+              v-for="option in monetaryOptions"
+            >
+              {{ option }}
+            </button>
+          </div>
+          <div v-if="filterType && enteringAmount" class="filter-option-section">
+            <input class="search-bar" v-model="amountValue" type="text" />
+            <button
+              @click="applyAmountFilter"
+              :disabled="!amountValue"
+              :class="!amountValue ? 'disabled-button' : 'add-button'"
+            >
+              add
+            </button>
+          </div>
+
           <div :key="i" v-for="(filter, i) in filteredFilters" class="filter-section__filters">
             <button
-              @click="selectFilter(filter.type)"
+              @click="selectFilter(filter.type, filter.title)"
               style="margin-top: -0.5rem"
               class="list-button"
             >
@@ -174,7 +198,8 @@
 
 <script>
 import DropDownSelect from '@thinknimble/dropdownselect'
-import { SObjectField, SObjectValidation, SObjectPicklist, SObjects } from '@/services/salesforce'
+import { SObjects } from '@/services/salesforce'
+import { AlertConfig } from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
 import User from '@/services/users'
 
@@ -197,6 +222,12 @@ export default {
       showList: false,
       filtering: false,
       filterType: null,
+      filterTitle: null,
+      filterOption: null,
+      enteringAmount: false,
+      amountValue: null,
+      instances: [],
+      monetaryOptions: ['less than', 'greater than', 'equals'],
       oppFilters: [
         {
           title: 'Amount',
@@ -246,36 +277,93 @@ export default {
   },
   created() {
     this.getObjects()
+    // this.getNotes()
+    this.getConfigs()
     this.team.refresh()
   },
   methods: {
-    selectFilter(name) {
-      switch (name) {
+    async getConfigs() {
+      try {
+        const res = await AlertConfig.api.getCurrentInstances()
+        console.log(res)
+      } finally {
+        console.log('test')
+      }
+    },
+    async getObjects() {
+      this.loading = true
+      try {
+        const res = await SObjects.api.getObjects('Opportunity')
+        this.allOpps = res.results
+        this.originalList = res.results
+        console.log(this.allOpps)
+      } catch {
+        this.$Alert.alert({
+          type: 'error',
+          timeout: 2000,
+          message: 'There was an error collecting objects',
+        })
+      }
+      this.loading = false
+    },
+    // async getNotes() {
+    //   try {
+    //     const res = await SObjects.api.getNotes('8fa011fc-1d64-4b1f-9be9-ca40f42cc756')
+    //     console.log(res)
+    //   } catch {
+    //     console.log(error)
+    //   }
+    // },
+    applyAmountFilter() {
+      // this.allOpps = this.allOpps.filter((opp) => opp.amount > this.amountValue)
+    },
+    showAmount() {
+      console.log(this.amountValue)
+    },
+    selectFilter(type, title) {
+      switch (type) {
         case 'monetary':
-          this.monetaryFilter()
+          this.monetaryFilter(type, title)
           break
         case 'date':
-          this.dateFilter()
+          this.dateFilter(type, title)
           break
         case 'time':
-          this.timeFilter()
+          this.timeFilter(type, title)
           break
         case 'person':
-          this.personFilter()
+          this.personFilter(type, title)
           break
       }
     },
-    monetaryFilter() {
-      console.log('money')
+    selectFilterOption(option) {
+      if (option === 'less than' || option === 'greater than' || option === 'equals') {
+        this.amountInput(option)
+      }
     },
-    dateFilter() {
-      console.log('date')
+    amountInput(option) {
+      this.enteringAmount = !this.enteringAmount
+      this.filterOption = option
     },
-    timeFilter() {
-      console.log('time')
+    monetaryFilter(type, title) {
+      this.filterType = type
+      this.filterTitle = title
+      console.log(type, title)
     },
-    personFilter() {
-      console.log('person')
+    dateFilter(type, title) {
+      this.filterType = type
+      this.filterTitle = title
+      console.log(type, title)
+    },
+    timeFilter(type, title) {
+      this.filterType = type
+      this.filterTitle = title
+      console.log(type, title)
+    },
+    personFilter(type, title) {
+      this.filterType = type
+      this.filterTitle = title
+      console.log(type, title)
     },
     closeFilters() {
       this.filtering = !this.filtering
@@ -305,22 +393,6 @@ export default {
       } else {
         this.showList = !this.showList
       }
-    },
-    async getObjects() {
-      this.loading = true
-      try {
-        const res = await SObjects.api.getObjects('Opportunity')
-        this.allOpps = res.results
-        this.originalList = res.results
-        console.log(this.allOpps)
-      } catch {
-        this.$Alert.alert({
-          type: 'error',
-          timeout: 2000,
-          message: 'There was an error collecting objects',
-        })
-      }
-      this.loading = false
     },
     formatDate(input) {
       var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
@@ -463,6 +535,9 @@ input[type='search'] {
 input[type='search']:focus {
   outline: none;
 }
+input[type='text']:focus {
+  outline: none;
+}
 p {
   font-size: 13px;
 }
@@ -524,7 +599,16 @@ section {
   transform: scale(1.03);
   box-shadow: 1px 2px 2px $very-light-gray;
 }
-
+.disabled-button {
+  display: flex;
+  align-items: center;
+  border: none;
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.2rem;
+  background-color: $gray;
+  cursor: not-allowed;
+  color: white;
+}
 .add-button {
   display: flex;
   align-items: center;
@@ -666,6 +750,35 @@ section {
   padding-right: 0.5rem;
   height: 1rem;
   cursor: pointer;
+}
+.filter-option-button {
+  padding: 0.25rem 0.5rem;
+  border: none;
+  background-color: $dark-green;
+  color: white;
+  border-radius: 3px;
+  margin: 0.1rem;
+  font-size: 10px;
+  cursor: pointer;
+}
+.filter-option-section {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  max-height: 10vh;
+  padding: 0.5rem;
+  border-radius: 1px;
+  width: 100%;
+  background-color: $white-green;
+}
+.filter-title {
+  padding-left: 0.7rem;
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
+  width: 100%;
+  border-radius: 2px;
+  color: $base-gray;
+  background-color: $white-green;
 }
 ::-webkit-scrollbar {
   background-color: $light-orange-gray;

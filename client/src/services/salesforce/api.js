@@ -87,6 +87,14 @@ export class SObjectFormBuilderAPI extends ModelAPI {
     }
   }
 
+  async getNotes(resource_id) {
+    try {
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/notes/', { params: { resource_id: resource_id } })
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+    }
+  }
 
   async getStagePicklistValues() {
     // if the picklist values dont populate for some reason allow users to manually populate

@@ -136,6 +136,15 @@ export class AlertConfigAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'AlertGroupAPI.create' })(e)
     }
   }
+  async getCurrentInstances(data) {
+    // let configData = objectToSnakeCase(data)
+    try {
+      const res = await this.client.get(`${AlertConfigAPI.ENDPOINT}/current-instances/`, data)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'AlertGroupAPI.getCurrentInstances' })(e)
+    }
+  }
   async delete(id) {
     try {
       await this.client.delete(`${AlertConfigAPI.ENDPOINT}${id}/`)

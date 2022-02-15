@@ -643,6 +643,7 @@ export default {
             ...this.alertTemplateForm.toAPI,
             user: this.$store.state.user.id,
           })
+          console.log(this.alertTemplateForm.toAPI)
           this.userConfigForm.field.activatedManagrConfigs.value.push(res.title)
           this.handleUpdate()
           this.$router.push({ name: 'CreateNew' })
