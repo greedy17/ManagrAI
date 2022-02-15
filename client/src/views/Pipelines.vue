@@ -285,7 +285,7 @@ export default {
     async getConfigs() {
       try {
         const res = await AlertConfig.api.getCurrentInstances({
-          configId: '5b7c903d-44ba-4915-a884-11f364a1fad',
+          configId: '91e1881f-9fb1-457f-ac69-aba9df48a512',
         })
         console.log(res)
       } catch (e) {
