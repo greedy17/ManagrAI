@@ -358,6 +358,7 @@ def process_stage_selected(payload, context):
             submit_text = "Update Salesforce"
             callback_id = slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
     else:
+        print(context)
         submit_text = "Next"
         callback_id = slack_const.ZOOM_MEETING__PROCESS_STAGE_NEXT_PAGE
         if view_type == "meeting_review_modal":

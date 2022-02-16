@@ -1,5 +1,6 @@
 import logging
-
+import time
+import random
 import jwt
 import pytz
 import uuid
@@ -8,8 +9,7 @@ import re
 from background_task import background
 from django.db.models import Q
 from django.utils import timezone
-
-
+from managr.salesforce.adapter.exceptions import TokenExpired
 from managr.alerts.models import AlertConfig
 from managr.core.models import User, MeetingPrepInstance
 from managr.core.serializers import MeetingPrepInstanceSerializer
@@ -207,10 +207,14 @@ def _process_calendar_details(user_id):
     if events:
         processed_data = []
         for event in events:
+            description = event.get("description")
+            if description is None:
+                description = "No Description"
             data = {}
             data["title"] = event.get("title", None)
             data["owner"] = event.get("owner", None)
             data["participants"] = event.get("participants", None)
+            data["description"] = description
             conferencing = event.get("conferencing", None)
             if conferencing:
                 data["provider"] = conferencing["provider"]
@@ -394,11 +398,11 @@ def meeting_prep(processed_data, user_id, invocation=1):
     meeting_prep_instance = (
         MeetingPrepInstance.objects.filter(user=user).order_by("-datetime_created").first()
     )
-
     # Conditional Check for Zoom meeting or Non-Zoom Meeting
-    if (
-        provider == "Zoom Meeting" and user.email not in processed_data["owner"]
-    ) or provider not in [None, "Zoom Meeting",]:
+    if (provider == "Zoom Meeting" and user.email not in processed_data["owner"]) or (
+        provider not in [None, "Zoom Meeting",]
+        and "Zoom meeting" not in processed_data["description"]
+    ):
         # Google Meet (Non-Zoom)
         meeting_workflow = MeetingWorkflow.objects.create(
             non_zoom_meeting=meeting_prep_instance, user=user,
@@ -491,21 +495,44 @@ def process_get_task_list(user_id, page=1):
     user = User.objects.get(id=user_id)
     task_blocks = []
     if hasattr(user, "salesforce_account"):
-        try:
-            tasks = user.salesforce_account.adapter_class.list_tasks()
-        except Exception as e:
-            logger.exception(f"Morning digest tasks error: {e}")
-            task_blocks.extend(
-                [
-                    block_builders.simple_section(
-                        ":white_check_mark: *Upcoming Tasks*", "mrkdwn", block_id="task_header",
-                    ),
-                    block_builders.simple_section(
-                        "There was an issue retreiving your tasks", "mrkdwn"
-                    ),
-                ]
-            )
-            return task_blocks
+        attempts = 1
+        while True:
+            try:
+                tasks = user.salesforce_account.adapter_class.list_tasks()
+                break
+            except TokenExpired:
+                if attempts >= 5:
+                    task_blocks.extend(
+                        [
+                            block_builders.simple_section(
+                                ":white_check_mark: *Upcoming Tasks*",
+                                "mrkdwn",
+                                block_id="task_header",
+                            ),
+                            block_builders.simple_section(
+                                "There was an issue retreiving your tasks", "mrkdwn"
+                            ),
+                        ]
+                    )
+                    return task_blocks
+                else:
+                    sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                    time.sleep(sleep)
+                    user.salesforce_account.regenerate_token()
+                    attempts += 1
+            except Exception as e:
+                logger.exception(f"Morning digest tasks error: {e}")
+                task_blocks.extend(
+                    [
+                        block_builders.simple_section(
+                            ":white_check_mark: *Upcoming Tasks*", "mrkdwn", block_id="task_header",
+                        ),
+                        block_builders.simple_section(
+                            "There was an issue retreiving your tasks", "mrkdwn"
+                        ),
+                    ]
+                )
+                return task_blocks
         paged_tasks = custom_paginator(tasks, count=3, page=page)
         results = paged_tasks.get("results", [])
         if results:

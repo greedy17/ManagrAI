@@ -230,7 +230,6 @@ def process_next_page_slack_commands_form(payload, context):
     current_form_ids = context.get("f").split(",")
     view = payload["view"]
     state = view["state"]["values"]
-
     current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
     # save the main form
     main_form = current_forms.filter(template__form_type__in=["UPDATE", "CREATE"]).first()
@@ -314,6 +313,7 @@ def process_submit_resource_data(payload, context):
     has_error = False
     state = payload["view"]["state"]["values"]
     current_form_ids = context.get("f").split(",")
+    print(current_form_ids)
     user = User.objects.get(id=context.get("u"))
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
@@ -337,6 +337,7 @@ def process_submit_resource_data(payload, context):
     stage_forms = current_forms.exclude(template__form_type__in=["UPDATE", "CREATE"])
     stage_form_data_collector = {}
     for form in stage_forms:
+        form.save_form(state)
         stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
     if not len(stage_forms):
         main_form.save_form(state)
@@ -344,7 +345,6 @@ def process_submit_resource_data(payload, context):
     formatted_saved_data = process_text_field_format(
         str(user.id), main_form.template.resource, all_form_data
     )
-
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
 
     attempts = 1
