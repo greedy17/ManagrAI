@@ -183,6 +183,51 @@ export class AlertGroupAPI extends ModelAPI {
   }
 }
 
+const INSTANCES_ENDPOINT = 'alerts/instances/'
+
+export class AlertInstanceAPI extends ModelAPI {
+  static ENDPOINT = 'alerts/instances/'
+  static FILTERS_MAP = {
+    page: ApiFilter.create({ key: 'page' }),
+    pageSize: ApiFilter.create({ key: 'page_size' }),
+  }
+  get client() {
+    return apiClient()
+  }
+
+  list({ pagination, filters }) {
+    const filtersMap = {
+      page: ApiFilter.create({ key: 'page' }),
+      pageSize: ApiFilter.create({ key: 'page_size' }),
+      ordering: ApiFilter.create({ key: 'ordering' }),
+      byParams: ApiFilter.create({ key: 'by_params' }),
+      byConfig: ApiFilter.create({ key: 'by_config' }),
+    }
+
+    const options = {
+      params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),
+    }
+
+    const promise = apiClient()
+      .get(INSTANCES_ENDPOINT, options)
+      .then(response => response.data)
+      .then(data => {
+        return {
+          ...data,
+          results: data.results.map(this.cls.fromAPI),
+        }
+      })
+      .catch(
+        apiErrorHandler({
+          apiName: 'InstanceAPI.list error',
+        }),
+      )
+    return promise
+  }
+}
+
+
+
 export class RealTimeAPI extends ModelAPI {
   static ENDPOINT = 'alerts/real-time/'
   static FILTERS_MAP = {

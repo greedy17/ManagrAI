@@ -199,7 +199,7 @@
 <script>
 import DropDownSelect from '@thinknimble/dropdownselect'
 import { SObjects } from '@/services/salesforce'
-import { AlertConfig } from '@/services/alerts/'
+import { AlertConfig, AlertInstance } from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
 import User from '@/services/users'
 
@@ -216,6 +216,9 @@ export default {
       allOpps: null,
       loading: false,
       team: CollectionManager.create({ ModelClass: User }),
+      alertInstances: CollectionManager.create({ModelClass: AlertInstance,filters: {
+          byConfig:'91e1881f-9fb1-457f-ac69-aba9df48a512' ,
+        }}),
       filterText: '',
       searchFilterText: '',
       currentList: 'All Opportunities',
@@ -279,7 +282,9 @@ export default {
     this.getObjects()
     // this.getNotes()
     this.getConfigs()
+    this.alertInstances.refresh()
     this.team.refresh()
+    console.log(this.alertInstances)
   },
   methods: {
     async getConfigs() {
