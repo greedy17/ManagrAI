@@ -5,6 +5,7 @@ from faker import Faker
 import pytz
 from urllib.parse import urlencode
 from datetime import datetime
+from django_filters.rest_framework import DjangoFilterBackend
 
 from django.core.management import call_command
 from django.shortcuts import render, redirect
@@ -36,6 +37,7 @@ from .background import emit_init_alert, _process_check_alert
 
 from . import models as alert_models
 from . import serializers as alert_serializers
+from .filters import AlertInstanceFilterSet
 from managr.core.models import User
 
 # Create your views here.
@@ -236,6 +238,21 @@ class AlertOperandViewSet(
             return alert_serializers.AlertOperandWriteSerializer
 
         return self.serializer_class
+
+
+class AlertInstanceViewSet(
+    mixins.ListModelMixin, viewsets.GenericViewSet,
+):
+    filter_backends = (
+        DjangoFilterBackend,
+        filters.SearchFilter,
+    )
+    serializer_class = alert_serializers.AlertInstanceSerializer
+    filter_class = AlertInstanceFilterSet
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        return alert_models.AlertInstance.objects.for_user(self.request.user)
 
 
 class RealTimeAlertViewSet(
