@@ -18,11 +18,7 @@
       <h2 v-if="!editing" :class="templates.refreshing ? 'loading-title titles' : 'titles'">
         Edit your Workflow Automation
       </h2>
-      <h2
-        @click="logChannels"
-        v-else
-        :class="templates.refreshing ? 'loading-title titles' : 'titles'"
-      >
+      <h2 @click="test" v-else :class="templates.refreshing ? 'loading-title titles' : 'titles'">
         Saved Workflow Automations
       </h2>
       <p
@@ -273,6 +269,9 @@ export default {
     }
   },
   methods: {
+    test() {
+      console.log(this.templates)
+    },
     logChannels() {
       console.log(this.userChannelOpts)
     },

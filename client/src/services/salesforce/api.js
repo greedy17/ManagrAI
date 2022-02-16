@@ -1,5 +1,6 @@
 import { ModelAPI, ApiFilter, Model } from '@thinknimble/tn-models'
 import { apiClient, apiErrorHandler } from '@/services/api'
+import { objectToSnakeCase } from '@/services/utils'
 
 export default class SalesforceAPI extends ModelAPI {
   static ENDPOINT = 'users/salesforce/'
@@ -87,9 +88,10 @@ export class SObjectFormBuilderAPI extends ModelAPI {
     }
   }
 
-  async getNotes(resource_id) {
+  async getNotes(resourceId) {
+    let id = objectToSnakeCase(resourceId)
     try {
-      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/notes/', resource_id)
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/notes/', { params: id })
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)

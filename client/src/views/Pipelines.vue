@@ -9,9 +9,9 @@
       </div>
 
       <div>
-        <!-- <button class="pipe-button">
+        <button class="pipe-button">
           <img src="@/assets/images/refresh.png" style="height: 1rem" alt="" />
-        </button> -->
+        </button>
       </div>
     </header>
 
@@ -45,6 +45,10 @@
             Closing next month
             <span class="filter" v-if="currentList === 'Closing next month'"> active</span>
           </button>
+          <!-- <button @click="showAlertList" class="list-button">
+            {{ todaysTemplate.title }}
+            <span class="filter" v-if="alertList.length && !currentList"> active</span>
+          </button> -->
         </div>
         <button @click="filtering = !filtering" class="add-button">
           <img
@@ -154,12 +158,15 @@
             <input style="padding-top: 0.5rem" type="checkbox" />
           </div>
           <div class="table-cell-header">Name</div>
-          <div class="table-cell-header">Stage</div>
+          <div class="table-cell-header" :key="i" v-for="(field, i) in oppFields">
+            {{ field.referenceDisplayLabel }}
+          </div>
+          <!-- <div class="table-cell-header">Stage</div>
           <div class="table-cell-header">Forecast Category</div>
           <div class="table-cell-header">Amount</div>
           <div class="table-cell-header">Next Step</div>
           <div class="table-cell-header">Close Date</div>
-          <div class="table-cell-header">Last Activity</div>
+          <div class="table-cell-header">Last Activity</div> -->
         </div>
 
         <tr class="table-row" :key="i" v-for="(opp, i) in allOppsFiltered">
@@ -176,7 +183,7 @@
             </div>
           </div>
 
-          <div class="table-cell">{{ opp.stage }}</div>
+          <!-- <div class="table-cell">{{ opp.stage }}</div>
           <div class="table-cell">{{ opp.forecast_category }}</div>
           <div class="table-cell" style="color: #199e54">
             {{ formatCash(parseFloat(opp.amount)) }}
@@ -184,9 +191,9 @@
           <div v-if="opp.secondary_data.NextStep" class="table-cell">
             {{ opp.secondary_data.NextStep }}
           </div>
-          <div v-else>No next step found</div>
+          <div class="table-cell" v-else>-</div>
           <div class="table-cell">{{ formatDate(opp.close_date) }}</div>
-          <div class="table-cell">{{ formatDateTime(opp.last_activity_date) }}</div>
+          <div class="table-cell">{{ formatDateTime(opp.last_activity_date) }}</div> -->
         </tr>
       </div>
     </section>
@@ -201,6 +208,7 @@ import DropDownSelect from '@thinknimble/dropdownselect'
 import { SObjects } from '@/services/salesforce'
 import { AlertConfig } from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
+import SlackOAuth, { salesforceFields } from '@/services/slack'
 import User from '@/services/users'
 
 export default {
@@ -226,6 +234,14 @@ export default {
       filterOption: null,
       enteringAmount: false,
       amountValue: null,
+      todaysAlerts: null,
+      todaysList: null,
+      todaysTemplate: null,
+      showNotes: false,
+      notes: null,
+      noteTitle: null,
+      updateOppForm: null,
+      oppFields: [],
       instances: [],
       monetaryOptions: ['less than', 'greater than', 'equals'],
       oppFilters: [
@@ -274,24 +290,60 @@ export default {
       let date = new Date()
       return date.getMonth()
     },
+    // todaysAlertIds() {
+    //   let ids = []
+    //   for (let i = 0; i < this.todaysAlerts.length; i++) {
+    //     ids.push(this.todaysAlerts[i].resource_id)
+    //   }
+    //   return ids
+    // },
+    // alertList() {
+    //   return this.todaysList.filter((opp) => this.todaysAlertIds.includes(opp.id))
+    // },
   },
   created() {
     this.getObjects()
-    // this.getNotes()
-    this.getConfigs()
     this.team.refresh()
+    this.getAllForms()
   },
+  // mounted() {
+  //   this.loading = true
+  //   setTimeout(() => {
+  //     this.loading = false
+  //   }, 3000)
+  // },
   methods: {
-    async getConfigs() {
+    showAlertList() {
+      this.allOpps = this.alertList
+    },
+    async getConfigs(configId) {
       try {
         const res = await AlertConfig.api.getCurrentInstances({
-          configId: '91e1881f-9fb1-457f-ac69-aba9df48a512',
+          configId: configId,
         })
-        console.log(res)
+        console.log(res.data)
+        this.todaysAlerts = res.data.instances
+        this.todaysTemplate = res.data.template
       } catch (e) {
         console.log(e)
       } finally {
-        console.log('test')
+      }
+    },
+    async getAllForms() {
+      try {
+        this.updateOppForm = await SlackOAuth.api.getOrgCustomForm()
+        this.updateOppForm = this.updateOppForm.filter(
+          (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
+        )
+        this.oppFields = this.updateOppForm[0].fieldsRef.filter(
+          (field) =>
+            field.apiName !== 'meeting_type' &&
+            field.apiName !== 'meeting_comments' &&
+            field.apiName !== 'Name',
+        )
+        console.log(this.oppFields)
+      } catch (error) {
+        console.log(error)
       }
     },
     async getObjects() {
@@ -299,8 +351,9 @@ export default {
       try {
         const res = await SObjects.api.getObjects('Opportunity')
         this.allOpps = res.results
-        this.originalList = res.results
         console.log(this.allOpps)
+        this.originalList = res.results
+        this.todaysList = res.results
       } catch {
         this.$Alert.alert({
           type: 'error',
@@ -310,10 +363,14 @@ export default {
       }
       this.loading = false
     },
-    async getNotes() {
+    async getNotes(id) {
       try {
-        const res = await SObjects.api.getNotes('8fa011fc-1d64-4b1f-9be9-ca40f42cc756')
-        console.log(res)
+        const res = await SObjects.api.getNotes({
+          resourceId: id,
+        })
+        this.showNotes = true
+        this.notes = res[0].saved_data__meeting_comments
+        this.noteTitle = res[0].saved_data__meeting_type
       } catch (e) {
         console.log(e)
       }
@@ -420,8 +477,10 @@ export default {
         minimumFractionDigits: 0,
         //maximumFractionDigits: 0, // (2500.99 would be printed as $2,501)
       })
-
-      return cash.format(money)
+      if (money) {
+        return cash.format(money)
+      }
+      return '-'
     },
   },
 }
@@ -430,6 +489,41 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0, 0, 0); /* Fallback color */
+  background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto; /* 15% from the top and centered */
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%; /* Could be more or less, depending on screen size */
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
 
 ::placeholder {
   color: $mid-gray;

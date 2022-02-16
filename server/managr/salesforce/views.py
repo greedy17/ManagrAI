@@ -264,6 +264,7 @@ class SalesforceSObjectViewSet(
         from managr.slack.models import OrgCustomSlackFormInstance
 
         resource_id = self.request.GET.get("resource_id")
+        print(resource_id)
         note_data = (
             OrgCustomSlackFormInstance.objects.filter(resource_id=resource_id)
             .filter(is_submitted=True)
