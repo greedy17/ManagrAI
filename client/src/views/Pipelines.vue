@@ -1,202 +1,347 @@
 <template>
   <div class="pipelines">
-    <header v-if="!loading" class="flex-row-spread">
-      <div>
-        <h3 class="title">Hi, {{ user.fullName }}</h3>
-        <h5 class="sub-heading">
-          Update you pipeline faster. Changes auto sync to Salesforce instantly
-        </h5>
-      </div>
-
-      <div>
-        <button class="pipe-button">
-          <img src="@/assets/images/refresh.png" style="height: 1rem" alt="" />
-        </button>
-      </div>
-    </header>
-
-    <section v-if="!loading" style="margin-top: -1rem" class="flex-row-spread">
-      <div v-if="noSelection" class="flex-row">
-        <!-- <DropDownSelect
-          :items="opportunities"
-          valueKey="key"
-          displayKey="name"
-          nullDisplay="Opportunities"
-        /> -->
-
-        <button @click="showList = !showList" class="pipe-button">
+    <Modal
+      v-if="modalOpen"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), resetNotes()
+        }
+      "
+    >
+      <div v-if="notes.length" class="modal-container">
+        <div class="flex-row-spread">
+          <div class="flex-row">
+            <img
+              src="@/assets/images/logo.png"
+              style="height: 2rem; margin-left: 0.5rem; margin-right: 0.25rem"
+              alt=""
+            />
+            <h2>Notes</h2>
+          </div>
           <img
+            src="@/assets/images/clear.png"
+            style="height: 1.3rem; margin-right: 0.75rem; cursor: pointer"
+            @click="resetNotes"
             class="invert"
-            src="@/assets/images/list.png"
-            style="height: 1rem; margin-right: 0.25rem"
             alt=""
-          />{{ currentList }}
-        </button>
-        <div v-if="showList" class="list-section">
-          <button @click="allOpportunities" class="list-button">
-            All Opportunities
-            <span class="filter" v-if="currentList === 'All Opportunities'"> active</span>
-          </button>
-          <button @click="closeDatesThisMonth" class="list-button">
-            Closing this month
-            <span class="filter" v-if="currentList === 'Closing this month'"> active</span>
-          </button>
-          <button @click="closeDatesNextMonth" class="list-button">
-            Closing next month
-            <span class="filter" v-if="currentList === 'Closing next month'"> active</span>
-          </button>
-          <!-- <button @click="showAlertList" class="list-button">
-            {{ todaysTemplate.title }}
-            <span class="filter" v-if="alertList.length && !currentList"> active</span>
-          </button> -->
+          />
         </div>
-        <button @click="filtering = !filtering" class="add-button">
+        <section class="note-section" :key="i" v-for="(note, i) in notes">
+          <p class="note-section__title">
+            {{
+              note.saved_data__meeting_type
+                ? 'Notes for ' + note.saved_data__meeting_type
+                : 'Untitled note'
+            }}
+          </p>
+          <p class="note-section__body">{{ note.saved_data__meeting_comments }}</p>
+        </section>
+      </div>
+
+      <div v-else class="modal-container">
+        <div class="flex-row-spread">
+          <div class="flex-row">
+            <img
+              src="@/assets/images/logo.png"
+              style="height: 2rem; margin-left: 0.5rem; margin-right: 0.25rem"
+              alt=""
+            />
+            <h2>Notes</h2>
+          </div>
           <img
-            src="@/assets/images/plusOne.png"
-            style="height: 1rem; margin-right: 0.25rem"
+            src="@/assets/images/clear.png"
+            style="height: 1.3rem; margin-right: 0.75rem; cursor: pointer"
+            @click="resetNotes"
+            class="invert"
             alt=""
-          />Filter
-        </button>
-        <h5 v-if="!loading">
-          Results: <span>{{ allOpps.length }}</span>
-        </h5>
+          />
+        </div>
+        <section class="note-section">
+          <p class="note-section__title">No notes for this opportunity</p>
+        </section>
+      </div>
+    </Modal>
+    <div v-if="!loading">
+      <header class="flex-row-spread">
+        <div @click="test">
+          <h3 class="title">Hi, {{ user.fullName }}</h3>
+          <h5 class="sub-heading">
+            Update you pipeline faster. Changes instantly auto sync to Salesforce
+          </h5>
+        </div>
 
-        <div v-if="filtering" class="filter-section">
-          <div class="flex-row-spread wide">
-            <p class="filter-section__title">All Filters</p>
-            <img @click="closeFilters" class="exit" src="@/assets/images/close.png" alt="" />
-          </div>
-          <div class="wide" style="display: flex; justify-content: center">
-            <div style="margin-left: 0.5rem" class="search-bar wide">
-              <input
-                class="wide"
-                type="search"
-                v-model="searchFilterText"
-                placeholder="Search filters"
+        <div>
+          <button @click="refresh(refreshId)" class="pipe-button">
+            <img src="@/assets/images/refresh.png" style="height: 1rem" alt="" />
+          </button>
+        </div>
+      </header>
+
+      <section style="margin-top: -1rem" class="flex-row-spread">
+        <div v-if="noSelection" class="flex-row">
+          <button @click="showList = !showList" class="pipe-button">
+            <img
+              class="invert"
+              src="@/assets/images/list.png"
+              style="height: 1rem; margin-right: 0.25rem"
+              alt=""
+            />{{ currentList }}
+          </button>
+          <div v-show="showList" class="list-section">
+            <p @click="showPopularList = !showPopularList" class="list-section__title">
+              Popular Lists
+              <img v-if="showPopularList" src="@/assets/images/downArrow.png" alt="" /><img
+                v-else
+                src="@/assets/images/rightArrow.png"
+                alt=""
               />
-              <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
+            </p>
+            <button v-if="showPopularList" @click="allOpportunities" class="list-button">
+              All Opportunities
+              <span class="filter" v-if="currentList === 'All Opportunities'"> active</span>
+            </button>
+            <button v-if="showPopularList" @click="closeDatesThisMonth" class="list-button">
+              Closing this month
+              <span class="filter" v-if="currentList === 'Closing this month'"> active</span>
+            </button>
+            <button v-if="showPopularList" @click="closeDatesNextMonth" class="list-button">
+              Closing next month
+              <span class="filter" v-if="currentList === 'Closing next month'"> active</span>
+            </button>
+            <p @click="showWorkflowList = !showWorkflowList" class="list-section__title">
+              Workflows
+              <img v-if="showWorkflowList" src="@/assets/images/downArrow.png" alt="" /><img
+                v-else
+                src="@/assets/images/rightArrow.png"
+                alt=""
+              />
+            </p>
+            <div v-if="showWorkflowList">
+              <button
+                :key="i"
+                v-for="(template, i) in templates.list"
+                @click="selectList(template.configs[0], template.title)"
+                class="list-button"
+              >
+                {{ template.title }}
+                <span class="filter" v-if="currentList === template.title"> active</span>
+              </button>
+            </div>
+          </div>
+          <button @click="filtering = !filtering" class="add-button">
+            <img
+              src="@/assets/images/plusOne.png"
+              style="height: 1rem; margin-right: 0.25rem"
+              alt=""
+            />Filter
+          </button>
+          <h5>
+            Results:
+            <span>{{ selectedWorkflow ? currentWorkflow.list.length : allOpps.length }}</span>
+          </h5>
+
+          <div v-if="filtering" class="filter-section">
+            <div class="flex-row-spread wide">
+              <p class="filter-section__title">All Filters</p>
+              <img @click="closeFilters" class="exit" src="@/assets/images/close.png" alt="" />
+            </div>
+            <div class="wide" style="display: flex; justify-content: center">
+              <div style="margin-left: 0.5rem" class="search-bar wide">
+                <input
+                  class="wide"
+                  type="search"
+                  v-model="searchFilterText"
+                  placeholder="Search filters"
+                />
+                <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
+              </div>
+            </div>
+
+            <small v-if="filterTitle" class="filter-title"
+              >{{ filterTitle + ' ' + (filterOption ? filterOption : '') }}:</small
+            >
+            <div v-if="filterType && !enteringAmount" class="filter-option-section">
+              <button
+                @click="selectFilterOption(option)"
+                class="filter-option-button"
+                :key="option"
+                v-for="option in monetaryOptions"
+              >
+                {{ option }}
+              </button>
+            </div>
+            <div v-if="filterType && enteringAmount" class="filter-option-section">
+              <input class="search-bar" v-model="amountValue" type="text" />
+              <button
+                @click="applyAmountFilter"
+                :disabled="!amountValue"
+                :class="!amountValue ? 'disabled-button' : 'add-button'"
+              >
+                add
+              </button>
+            </div>
+
+            <div :key="i" v-for="(filter, i) in filteredFilters" class="filter-section__filters">
+              <button
+                @click="selectFilter(filter.type, filter.title)"
+                style="margin-top: -0.5rem"
+                class="list-button"
+              >
+                <img
+                  v-if="filter.type === 'monetary'"
+                  src="@/assets/images/monetary.png"
+                  class="img"
+                  alt=""
+                />
+                <img
+                  v-if="filter.type === 'date'"
+                  src="@/assets/images/date.png"
+                  class="img"
+                  alt=""
+                />
+                <img
+                  v-if="filter.type === 'time'"
+                  src="@/assets/images/time.png"
+                  class="img"
+                  alt=""
+                />
+                <img
+                  v-if="filter.type === 'person'"
+                  src="@/assets/images/person.png"
+                  class="img"
+                  alt=""
+                />
+                {{ filter.title }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex-row">
+          <div v-if="!selectedWorkflow" class="search-bar">
+            <input type="search" v-model="filterText" placeholder="search" />
+            <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
+          </div>
+          <div v-else class="search-bar">
+            <input type="search" v-model="workflowFilterText" placeholder="search" />
+            <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
+          </div>
+
+          <button class="add-button">
+            <img src="@/assets/images/plusOne.png" style="height: 1rem" alt="" />
+            Opportunity
+          </button>
+        </div>
+      </section>
+
+      <section v-if="!selectedWorkflow" class="table-section">
+        <div class="table">
+          <div class="table-row">
+            <div class="table-cell-checkbox-header">
+              <input style="padding-top: 0.5rem" type="checkbox" />
+            </div>
+            <div class="table-cell-header">Name</div>
+            <div class="table-cell-header">Stage</div>
+            <div class="table-cell-header">Forecast Category</div>
+            <div class="table-cell-header">Amount</div>
+            <!-- <div class="table-cell-header">Next Step</div> -->
+            <div class="table-cell-header">Close Date</div>
+            <div class="table-cell-header">Last Activity</div>
+          </div>
+
+          <tr class="table-row" :key="i" v-for="(opp, i) in allOppsFiltered">
+            <div class="table-cell-checkbox">
+              <input type="checkbox" />
+            </div>
+            <div class="table-cell cell-name">
+              <div class="flex-row-spread">
+                <div>
+                  {{ opp.name }}
+                  <span style="color: #199e54; margin-left: 0.2rem">account name</span>
+                  <div style="color: #9b9b9b">owner: owner's name</div>
+                </div>
+                <div style="margin-top: 0.5rem" class="flex-row">
+                  <img class="name-cell-note-button" src="@/assets/images/edit-note.png" />
+                  <img
+                    @click="getNotes(opp.id)"
+                    class="name-cell-edit-note-button"
+                    src="@/assets/images/white-note.png"
+                    :id="opp.id"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="table-cell">{{ opp.stage }}</div>
+            <div class="table-cell">{{ opp.forecast_category }}</div>
+            <div class="table-cell" style="color: #199e54">
+              {{ formatCash(parseFloat(opp.amount)) }}
+            </div>
+            <!-- <div v-if="opp.secondary_data.NextStep" class="table-cell">
+              {{ opp.secondary_data.NextStep }}
+            </div>
+            <div class="table-cell" v-else>-</div> -->
+            <div class="table-cell">{{ formatDate(opp.close_date) }}</div>
+            <div class="table-cell" v-if="opp.last_activity_date">
+              {{ formatDateTime(opp.last_activity_date) }}
+            </div>
+            <div class="table-cell" v-else>-</div>
+          </tr>
+        </div>
+      </section>
+
+      <section v-else class="table-section">
+        <div class="table">
+          <div class="table-row">
+            <div class="table-cell-checkbox-header">
+              <input style="padding-top: 0.5rem" type="checkbox" />
+            </div>
+            <div class="table-cell-header">Name</div>
+            <div class="table-cell-header" :key="i" v-for="(field, i) in oppFields" ref="fields">
+              {{ getFields(field.referenceDisplayLabel) }}
             </div>
           </div>
 
-          <small v-if="filterTitle" class="filter-title"
-            >{{ filterTitle + ' ' + (filterOption ? filterOption : '') }}:</small
-          >
-          <div v-if="filterType && !enteringAmount" class="filter-option-section">
-            <button
-              @click="selectFilterOption(option)"
-              class="filter-option-button"
-              :key="option"
-              v-for="option in monetaryOptions"
-            >
-              {{ option }}
-            </button>
-          </div>
-          <div v-if="filterType && enteringAmount" class="filter-option-section">
-            <input class="search-bar" v-model="amountValue" type="text" />
-            <button
-              @click="applyAmountFilter"
-              :disabled="!amountValue"
-              :class="!amountValue ? 'disabled-button' : 'add-button'"
-            >
-              add
-            </button>
-          </div>
-
-          <div :key="i" v-for="(filter, i) in filteredFilters" class="filter-section__filters">
-            <button
-              @click="selectFilter(filter.type, filter.title)"
-              style="margin-top: -0.5rem"
-              class="list-button"
-            >
-              <img
-                v-if="filter.type === 'monetary'"
-                src="@/assets/images/monetary.png"
-                class="img"
-                alt=""
-              />
-              <img
-                v-if="filter.type === 'date'"
-                src="@/assets/images/date.png"
-                class="img"
-                alt=""
-              />
-              <img
-                v-if="filter.type === 'time'"
-                src="@/assets/images/time.png"
-                class="img"
-                alt=""
-              />
-              <img
-                v-if="filter.type === 'person'"
-                src="@/assets/images/person.png"
-                class="img"
-                alt=""
-              />
-              {{ filter.title }}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="flex-row">
-        <div class="search-bar">
-          <input type="search" v-model="filterText" placeholder="search" />
-          <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
-        </div>
-
-        <button class="add-button">
-          <img src="@/assets/images/plusOne.png" style="height: 1rem" alt="" />
-          Opportunity
-        </button>
-      </div>
-    </section>
-
-    <section v-if="!loading" class="table-section">
-      <div class="table">
-        <div class="table-row">
-          <div class="table-cell-checkbox-header">
-            <input style="padding-top: 0.5rem" type="checkbox" />
-          </div>
-          <div class="table-cell-header">Name</div>
-          <div class="table-cell-header" :key="i" v-for="(field, i) in oppFields">
-            {{ field.referenceDisplayLabel }}
-          </div>
-          <!-- <div class="table-cell-header">Stage</div>
-          <div class="table-cell-header">Forecast Category</div>
-          <div class="table-cell-header">Amount</div>
-          <div class="table-cell-header">Next Step</div>
-          <div class="table-cell-header">Close Date</div>
-          <div class="table-cell-header">Last Activity</div> -->
-        </div>
-
-        <tr class="table-row" :key="i" v-for="(opp, i) in allOppsFiltered">
-          <div class="table-cell-checkbox">
-            <input type="checkbox" />
-          </div>
-          <div class="table-cell cell-name">
-            {{ opp.name }}
-            <span style="color: #199e54; margin-left: 0.2rem">account name</span>
-            <div style="color: #9b9b9b">owner: owner's name</div>
-            <div style="margin-top: 0.5rem" class="flex-row">
-              <img class="name-cell-note-button" src="@/assets/images/edit-note.png" />
-              <img class="name-cell-edit-note-button" src="@/assets/images/white-note.png" />
+          <tr class="table-row" :key="i" v-for="(workflow, i) in filteredWorkflows">
+            <div class="table-cell-checkbox">
+              <input type="checkbox" />
             </div>
-          </div>
+            <div class="table-cell cell-name">
+              <div class="flex-row-spread">
+                <div>
+                  {{ workflow.resourceRef.name }}
+                  <span style="color: #199e54; margin-left: 0.2rem">account name</span>
+                  <div style="color: #9b9b9b">owner: owner's name</div>
+                </div>
+                <div style="margin-top: 0.5rem" class="flex-row">
+                  <img class="name-cell-note-button" src="@/assets/images/edit-note.png" />
+                  <img
+                    @click="getNotes(workflow.resourceRef.id)"
+                    class="name-cell-edit-note-button"
+                    src="@/assets/images/white-note.png"
+                  />
+                </div>
+              </div>
+            </div>
 
-          <!-- <div class="table-cell">{{ opp.stage }}</div>
-          <div class="table-cell">{{ opp.forecast_category }}</div>
-          <div class="table-cell" style="color: #199e54">
-            {{ formatCash(parseFloat(opp.amount)) }}
-          </div>
-          <div v-if="opp.secondary_data.NextStep" class="table-cell">
-            {{ opp.secondary_data.NextStep }}
-          </div>
-          <div class="table-cell" v-else>-</div>
-          <div class="table-cell">{{ formatDate(opp.close_date) }}</div>
-          <div class="table-cell">{{ formatDateTime(opp.last_activity_date) }}</div> -->
-        </tr>
-      </div>
-    </section>
+            <!-- <div :key="field" v-for="field in currentWorkflowFields" class="table-cell">
+              {{ workflow.resourceRef[camelize(field)] }}
+            </div> -->
+
+            <div :key="field.name" v-for="field in currentWorkflowFields" class="table-cell">
+              {{
+                field === 'Stage'
+                  ? workflow.resourceRef.secondaryData[
+                      capitalizeFirstLetter(camelize(field + 'Name'))
+                    ]
+                  : workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field))]
+              }}
+            </div>
+          </tr>
+        </div>
+      </section>
+    </div>
     <div class="loader" v-if="loading">
       <img src="@/assets/images/loading-gif.gif" class="invert" style="height: 8rem" alt="" />
     </div>
@@ -206,34 +351,38 @@
 <script>
 import DropDownSelect from '@thinknimble/dropdownselect'
 import { SObjects } from '@/services/salesforce'
-import { AlertConfig, AlertInstance } from '@/services/alerts/'
+import AlertTemplate, { AlertConfig, AlertInstance } from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
 import SlackOAuth, { salesforceFields } from '@/services/slack'
+import Modal from '@/components/InviteModal'
 import User from '@/services/users'
 
 export default {
   name: 'Pipelines',
   components: {
     DropDownSelect,
+    Modal,
   },
   data() {
     return {
       noSelection: true,
-      opportunities: ['test'],
       originalList: null,
       allOpps: null,
       loading: false,
+      templates: CollectionManager.create({ ModelClass: AlertTemplate }),
       team: CollectionManager.create({ ModelClass: User }),
-      alertInstances: CollectionManager.create({
-        ModelClass: AlertInstance,
-        filters: {
-          byConfig: '91e1881f-9fb1-457f-ac69-aba9df48a512',
-        },
-      }),
+      currentWorkflow: null,
+      currentWorkflowFields: null,
+      selectedWorkflow: false,
+      modalOpen: false,
+      refreshId: null,
       filterText: '',
+      workflowFilterText: '',
       searchFilterText: '',
       currentList: 'All Opportunities',
       showList: false,
+      showWorkflowList: true,
+      showPopularList: true,
       filtering: false,
       filterType: null,
       filterTitle: null,
@@ -244,8 +393,7 @@ export default {
       todaysList: null,
       todaysTemplate: null,
       showNotes: false,
-      notes: null,
-      noteTitle: null,
+      notes: [],
       updateOppForm: null,
       oppFields: [],
       instances: [],
@@ -287,6 +435,11 @@ export default {
         opp.name.toLowerCase().includes(this.filterText.toLowerCase()),
       )
     },
+    filteredWorkflows() {
+      return this.currentWorkflow.list.filter((opp) =>
+        opp.resourceRef.name.toLowerCase().includes(this.workflowFilterText.toLowerCase()),
+      )
+    },
     filteredFilters() {
       return this.oppFilters.filter((opp) =>
         opp.title.toLowerCase().includes(this.searchFilterText.toLowerCase()),
@@ -296,32 +449,79 @@ export default {
       let date = new Date()
       return date.getMonth()
     },
-    // todaysAlertIds() {
-    //   let ids = []
-    //   for (let i = 0; i < this.todaysAlerts.length; i++) {
-    //     ids.push(this.todaysAlerts[i].resource_id)
-    //   }
-    //   return ids
-    // },
-    // alertList() {
-    //   return this.todaysList.filter((opp) => this.todaysAlertIds.includes(opp.id))
-    // },
   },
   created() {
     this.getObjects()
     this.getAllForms()
-    this.getConfigs()
-    this.alertInstances.refresh()
+    this.updateResource('4cdae7c0-0641-49f5-87e5-16a8f6134c4c')
     this.team.refresh()
-    console.log(this.alertInstances)
+    this.templates.refresh()
   },
-  // mounted() {
-  //   this.loading = true
-  //   setTimeout(() => {
-  //     this.loading = false
-  //   }, 3000)
-  // },
   methods: {
+    test() {
+      console.log(this.currentWorkflow.list)
+    },
+    async refresh(id) {
+      console.log(id)
+      try {
+        await AlertTemplate.api.runAlertTemplateNow(id)
+        this.$Alert.alert({
+          message: `workflow initiated successfully`,
+          type: 'success',
+          timeout: 2000,
+        })
+      } catch {
+        this.$Alert.alert({
+          message: 'Something went wrong (o^^)o.... Try again',
+          type: 'error',
+          timeout: 2000,
+        })
+      }
+    },
+    resetNotes() {
+      this.notes = []
+      this.noteTitles = []
+      this.modalOpen = !this.modalOpen
+    },
+    camelize(str) {
+      return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {
+        if (+match === 0) return ''
+        return index === 0 ? match.toLowerCase() : match.toUpperCase()
+      })
+    },
+    capitalizeFirstLetter(string) {
+      return string.charAt(0).toUpperCase() + string.slice(1)
+    },
+    getFields(field) {
+      while (!this.currentWorkflowFields.includes(field)) {
+        this.currentWorkflowFields.push(field)
+        console.log(this.currentWorkflowFields)
+      }
+      return field
+    },
+    // defaultList(){
+    //   this.defaultList = CollectionManager.create({
+    //     ModelClass: AlertInstance,
+    //     filters: {
+    //       byConfig: configId,
+    //     },
+    //   })
+    //   this.currentWorkflow.refresh()
+    // },
+    selectList(configId, title) {
+      this.currentWorkflowFields = []
+      this.refreshId = configId
+      this.currentWorkflow = CollectionManager.create({
+        ModelClass: AlertInstance,
+        filters: {
+          byConfig: configId,
+        },
+      })
+      this.currentWorkflow.refresh()
+      this.currentList = title
+      this.selectedWorkflow = true
+      this.showList = false
+    },
     showAlertList() {
       this.allOpps = this.alertList
     },
@@ -330,7 +530,6 @@ export default {
         const res = await AlertConfig.api.getCurrentInstances({
           configId: configId,
         })
-        console.log(res.data)
         this.todaysAlerts = res.data.instances
         this.todaysTemplate = res.data.template
       } catch (e) {
@@ -339,6 +538,7 @@ export default {
       }
     },
     async getAllForms() {
+      this.loading = true
       try {
         this.updateOppForm = await SlackOAuth.api.getOrgCustomForm()
         this.updateOppForm = this.updateOppForm.filter(
@@ -350,17 +550,16 @@ export default {
             field.apiName !== 'meeting_comments' &&
             field.apiName !== 'Name',
         )
-        console.log(this.oppFields)
       } catch (error) {
         console.log(error)
       }
+      this.loading = false
     },
     async getObjects() {
       this.loading = true
       try {
         const res = await SObjects.api.getObjects('Opportunity')
         this.allOpps = res.results
-        console.log(this.allOpps)
         this.originalList = res.results
         this.todaysList = res.results
       } catch {
@@ -373,16 +572,39 @@ export default {
       this.loading = false
     },
     async getNotes(id) {
+      console.log(id)
       try {
         const res = await SObjects.api.getNotes({
           resourceId: id,
         })
-        this.showNotes = true
-        this.notes = res[0].saved_data__meeting_comments
-        this.noteTitle = res[0].saved_data__meeting_type
+        this.modalOpen = true
+        console.log(res)
+        if (res.length) {
+          for (let i = 0; i < res.length; i++) {
+            this.notes.push(res[i])
+          }
+        }
       } catch (e) {
         console.log(e)
       }
+    },
+    async updateResource(id) {
+      try {
+        const res = await SObjects.api.updateResource({
+          form_id: id,
+          formdata: {
+            meeting_type: 'Update Works bitch!',
+          },
+        })
+        console.log(res)
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    async handleCancel() {
+      await this.refresh()
+      this.resetNotes()
+      this.$emit('cancel')
     },
     applyAmountFilter() {
       // this.allOpps = this.allOpps.filter((opp) => opp.amount > this.amountValue)
@@ -439,6 +661,7 @@ export default {
       this.filtering = !this.filtering
     },
     closeDatesThisMonth() {
+      this.selectedWorkflow = false
       this.allOpps = this.allOpps.filter(
         (opp) => new Date(opp.close_date).getMonth() == this.currentMonth,
       )
@@ -446,6 +669,7 @@ export default {
       this.showList = !this.showList
     },
     closeDatesNextMonth() {
+      this.selectedWorkflow = false
       this.allOpps = this.allOpps.filter(
         (opp) => new Date(opp.close_date).getMonth() == this.currentMonth + 1,
       )
@@ -453,6 +677,7 @@ export default {
       this.showList = !this.showList
     },
     allOpportunities() {
+      this.selectedWorkflow = false
       this.allOpps = this.originalList
       this.currentList = 'All Opportunities'
       this.showList = !this.showList
@@ -499,41 +724,6 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
-.modal {
-  display: none; /* Hidden by default */
-  position: fixed; /* Stay in place */
-  z-index: 1; /* Sit on top */
-  left: 0;
-  top: 0;
-  width: 100%; /* Full width */
-  height: 100%; /* Full height */
-  overflow: auto; /* Enable scroll if needed */
-  background-color: rgb(0, 0, 0); /* Fallback color */
-  background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
-}
-
-.modal-content {
-  background-color: #fefefe;
-  margin: 15% auto; /* 15% from the top and centered */
-  padding: 20px;
-  border: 1px solid #888;
-  width: 80%; /* Could be more or less, depending on screen size */
-}
-
-.close {
-  color: #aaa;
-  float: right;
-  font-size: 28px;
-  font-weight: bold;
-}
-
-.close:hover,
-.close:focus {
-  color: black;
-  text-decoration: none;
-  cursor: pointer;
-}
-
 ::placeholder {
   color: $mid-gray;
 }
@@ -578,6 +768,7 @@ export default {
   margin-top: 0.5rem;
   border-radius: 5px;
   box-shadow: 1px 1px 20px 1px $soft-gray;
+  background-color: $off-white;
 }
 .table {
   display: table;
@@ -596,6 +787,34 @@ export default {
   font-size: 13px;
   overflow: scroll;
 }
+.table-cell:hover {
+  cursor: text;
+  background-color: white;
+}
+.modal-container {
+  background-color: $off-white;
+  min-height: 60vh;
+  align-items: center;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+}
+.note-section {
+  padding: 0.5rem 1rem;
+  margin-bottom: 0.25rem;
+  background-color: white;
+  border-radius: 0.3rem;
+  &__title {
+    font-size: 16px;
+    font-weight: bold;
+    color: $base-gray;
+  }
+  &__body {
+    color: $gray;
+  }
+}
+// .table-row > .table-cell:hover {
+//   background-color: $off-white;
+// }
 .table-cell-checkbox {
   display: table-cell;
   padding: 2vh 1vh;
@@ -644,6 +863,9 @@ input[type='search']:focus {
 }
 input[type='text']:focus {
   outline: none;
+}
+input[type='checkbox'] {
+  cursor: pointer;
 }
 p {
   font-size: 13px;
@@ -763,7 +985,7 @@ section {
   width: 100%;
 }
 .name-cell-note-button {
-  height: 1.2rem;
+  height: 1.5rem;
   cursor: pointer;
   // box-shadow: 1px 1px 1px 1px $very-light-gray;
   border: none;
@@ -779,7 +1001,7 @@ section {
   box-shadow: 1px 2px 2px $very-light-gray;
 }
 .name-cell-edit-note-button {
-  height: 1.2rem;
+  height: 1.5rem;
   cursor: pointer;
   border: none;
   border-radius: 50%;
@@ -798,8 +1020,26 @@ section {
   align-items: flex-start;
   background-color: $off-white;
   width: 16vw;
+  max-height: 40vh;
+  overflow: scroll;
   margin-right: 0.5rem;
   box-shadow: 1px 1px 1px 1px $very-light-gray;
+
+  &__title {
+    font-size: 13px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    margin-left: 0.75rem;
+    color: $base-gray;
+    cursor: pointer;
+
+    img {
+      margin: 2px 0px 0px 3px;
+      height: 0.75rem;
+      filter: invert(70%);
+    }
+  }
 }
 .filter-section {
   position: absolute;

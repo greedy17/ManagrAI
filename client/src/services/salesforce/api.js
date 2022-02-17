@@ -81,17 +81,24 @@ export class SObjectFormBuilderAPI extends ModelAPI {
 
   async getObjects(sobject) {
     try {
-      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/', { params: { sobject: sobject } })
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/', { params: { sobject: sobject, page_size: 100 } })
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
     }
   }
-
   async getNotes(resourceId) {
     let id = objectToSnakeCase(resourceId)
     try {
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/notes/', { params: id })
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+    }
+  }
+  async updateResource(formData) {
+    try {
+      const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'sobject/update/', formData)
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)

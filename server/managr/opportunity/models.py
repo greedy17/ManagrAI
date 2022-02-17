@@ -48,7 +48,11 @@ class Lead(TimeStampModel, IntegrationModel):
         max_length=500,
     )
     owner = models.ForeignKey(
-        "core.User", related_name="owned_leads", on_delete=models.SET_NULL, blank=True, null=True,
+        "core.User",
+        related_name="owned_leads",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
     )
     objects = LeadQuerySet.as_manager()
 
@@ -101,10 +105,11 @@ class Lead(TimeStampModel, IntegrationModel):
 
 class OpportunityQuerySet(models.QuerySet):
     def for_user(self, user):
-        if user.is_superuser:
-            return self.all()
-        elif user.organization and user.is_active:
-            return self.filter(account__organization=user.organization_id)
+        if user.organization and user.is_active:
+            if user.user_level in ["SDR", "MANAGER"]:
+                return self.filter(owner__organization=user.organization)
+            else:
+                return self.filter(owner=user)
         else:
             return None
 
@@ -117,7 +122,12 @@ class Opportunity(TimeStampModel, IntegrationModel):
     """
 
     name = models.CharField(max_length=255, blank=True, null=False)
-    amount = models.DecimalField(max_digits=30, decimal_places=15, default=0.00, null=True,)
+    amount = models.DecimalField(
+        max_digits=30,
+        decimal_places=15,
+        default=0.00,
+        null=True,
+    )
     forecast_category = models.CharField(max_length=255, null=True)
 
     close_date = models.DateField(null=True)
@@ -240,4 +250,3 @@ class Opportunity(TimeStampModel, IntegrationModel):
         token = self.owner.salesforce_account.access_token
         base_url = self.owner.salesforce_account.instance_url
         return OpportunityAdapter.get_current_values(integration_id, token, base_url, self.owner.id)
-

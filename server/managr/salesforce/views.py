@@ -252,6 +252,8 @@ class SalesforceSObjectViewSet(
         param_sobject = self.request.GET.get("sobject")
         sobject = routes[param_sobject]
         query = sobject["model"].objects.for_user(self.request.user)
+        print(len(sobject["model"].objects.filter(owner=self.request.user)))
+        print(len(query))
         return query
 
     @action(
@@ -291,8 +293,10 @@ class SalesforceSObjectViewSet(
         from managr.core.models import User
 
         data = self.request.data
+        print(data)
         user = User.objects.get(id=self.request.user.id)
-        form_id = self.request.POST.get("form_id")
+        form_id = data.get("form_id")
+        print(form_id)
         main_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
         stage_forms = []
         stage_form_data_collector = {}
