@@ -240,27 +240,29 @@ class RealTimeAlertViewSet(
             )
             current_config = data.get("config")
             pipelines = data.get("pipelines")
-
+            title = current_config["title"]
             current_config["recipients"] = {str(manager.id): data.get("recipients")}
             current_config["api_name"] = api_name
             users = User.objects.filter(id__in=pipelines)
             for user in users:
                 if hasattr(user, "slack_integration"):
                     configs = user.slack_integration.realtime_alert_configs
-                    if str(field.id) in configs:
+                    if str(field.id) in configs.keys():
                         if current_config["title"] in configs[str(field.id)].keys():
                             if (
                                 str(manager.id)
-                                not in configs[str(field.id)][api_name]["recipients"].keys()
+                                not in configs[str(field.id)][title]["recipients"].keys()
                             ):
-                                configs[str(field.id)][api_name]["recipients"][
+                                configs[str(field.id)][title]["recipients"][
                                     str(manager.id)
                                 ] = data.get("recipients")
                         else:
-                            configs[str(field.id)][current_config["title"]] = current_config
+                            configs[str(field.id)][title] = current_config
 
                     else:
                         new_config = {current_config["title"]: current_config}
                         configs[str(field.id)] = new_config
                     user.slack_integration.save()
+                else:
+                    continue
         return Response({"status": "success"})
