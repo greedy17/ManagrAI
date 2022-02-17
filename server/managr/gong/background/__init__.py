@@ -38,13 +38,16 @@ def sync_gong_calls(auth_account_id):
     for call in call_data.get("calls"):
         call_id = call.get("metaData").get("id")
         call_res = GongCallAdapter.create_call(call, auth_account.id)
-        call_existing = GongCall.objects.filter(gong_id=call_id).first()
-        if call_existing:
-            call_serializer = GongCallSerializer(data=call_res.as_dict, instance=call_existing)
+        if call_res:
+            call_existing = GongCall.objects.filter(gong_id=call_id).first()
+            if call_existing:
+                call_serializer = GongCallSerializer(data=call_res.as_dict, instance=call_existing)
+            else:
+                call_serializer = GongCallSerializer(data=call_res.as_dict)
+            call_serializer.is_valid(raise_exception=True)
+            call_serializer.save()
         else:
-            call_serializer = GongCallSerializer(data=call_res.as_dict)
-        call_serializer.is_valid(raise_exception=True)
-        call_serializer.save()
+            continue
     return logger.info(f"Synced calls for account {auth_account_id}")
 
 
@@ -59,7 +62,6 @@ def sync_gong_accounts(auth_account_id):
         for user in user_data:
             user_res = GongAccountAdapter.create_account(user, auth_account.id)
             if user_res is None:
-                logger.error(f"Could not create gong account for {user['emailAddress']}")
                 continue
             else:
                 user_existing = GongAccount.objects.filter(email=user.get("emailAddress")).first()

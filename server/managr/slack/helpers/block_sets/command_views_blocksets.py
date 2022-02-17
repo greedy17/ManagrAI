@@ -250,6 +250,7 @@ def alert_instance_block_set(context):
                         params=[
                             f"u={str(user.id)}",
                             f"resource_id={str(instance.resource_id)}",
+                            f"resource_type={instance.template.resource_type}",
                             "type=alert",
                         ],
                     ),
@@ -518,7 +519,7 @@ def pick_resource_modal_block_set(context, *args, **kwargs):
         blocks.append(
             block_builders.external_select(
                 f"*Search for an {context.get('resource_type')}*",
-                f"{slack_const.GONG_CALL_RECORDING}?u={user_id}&resource={resource_type}",
+                f"{slack_const.GONG_CALL_RECORDING}?u={user_id}&resource={resource_type}&resource_type={resource_type}",
                 block_id="select_existing",
                 placeholder="Type to search",
                 initial_option=block_builders.option(resource_id, resource_id)

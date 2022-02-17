@@ -46,6 +46,7 @@ from managr.api.decorators import slack_api_exceptions
 from managr.alerts.models import AlertTemplate, AlertInstance, AlertConfig
 from managr.gong.models import GongCall, GongAuthAccount
 from managr.gong.exceptions import InvalidRequest
+from managr.salesforce.routes import routes
 
 logger = logging.getLogger("managr")
 
@@ -358,7 +359,6 @@ def process_stage_selected(payload, context):
             submit_text = "Update Salesforce"
             callback_id = slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
     else:
-        print(context)
         submit_text = "Next"
         callback_id = slack_const.ZOOM_MEETING__PROCESS_STAGE_NEXT_PAGE
         if view_type == "meeting_review_modal":
@@ -1838,7 +1838,7 @@ def process_get_call_recording(payload, context):
             f"UPDATE_TASK_SELECTED_RESOURCE?u={context.get('u')}"
         ]["selected_option"]["value"]
         resource_id = payload["view"]["state"]["values"]["select_existing"][
-            f"GONG_CALL_RECORDING?u={context.get('u')}&resource={resource_type}"
+            f"GONG_CALL_RECORDING?u={context.get('u')}&resource={resource_type}&resource_type={resource_type}"
         ]["selected_option"]["value"]
     else:
         resource_type = context.get("resource_type")
@@ -1847,21 +1847,14 @@ def process_get_call_recording(payload, context):
     user_tz = datetime.now(pytz.timezone(user.timezone)).strftime("%z")
     user_timezone = pytz.timezone(user.timezone)
     gong_auth = GongAuthAccount.objects.get(organization=user.organization)
-    resource_ids = []
-    resource = None
-    opps = Opportunity.objects.filter(id=resource_id)
-    if opps:
-        resource_ids.append(opps.first().integration_id)
-        acc = Account.objects.filter(opportunities__in=[opps.first().id]).first()
-        resource = opps.first()
-        if acc:
-            resource_ids.append(acc.integration_id)
+    resource = routes[resource_type]["model"].objects.get(id=resource_id)
+    if resource_type in ["Opportunity", "Contact"]:
+        resource_ids = [resource.secondary_data["Id"], resource.account.secondary_data["Id"]]
     else:
-        accs = Account.objects.filter(id=resource_id)
-        if accs:
-            resource_ids.append(accs.first().integration_id)
-            resource = accs.first()
-    call = GongCall.objects.filter(crm_id=resource.secondary_data["Id"]).first()
+        resource_ids = [resource.secondary_data["Id"]]
+    call = GongCall.objects.filter(
+        Q(crm_id__in=resource_ids) | Q(acc_crm_id__in=resource_ids)
+    ).first()
     current = pytz.utc.localize(timestamp).astimezone(user_timezone).date()
     blocks = []
     if type == "recap" and datetime.now().date() == current:
@@ -1883,7 +1876,9 @@ def process_get_call_recording(payload, context):
                     )
                 else:
                     blocks = [
-                        block_builders.simple_section("No call associated with this opportunity")
+                        block_builders.simple_section(
+                            f"No call associated with this {resource_type}"
+                        )
                     ]
         except InvalidRequest as e:
             logger.exception(f"Gong invalid request: {e}")
@@ -1898,11 +1893,19 @@ def process_get_call_recording(payload, context):
                 )
             else:
                 blocks = [
-                    block_builders.simple_section("No call associated with this opportunity*"),
+                    block_builders.simple_section(f"No call associated with this {resource_type}"),
                     block_builders.context_block(
                         "*Gong may still be processing this call, check back in a bit"
                     ),
                 ]
+        except Exception as e:
+            logger.exception(f"Gong call error: {e}")
+            blocks = [
+                block_builders.simple_section("There was an error retreiving your call"),
+                block_builders.context_block(
+                    "*Gong may still be processing this call, check back in a bit"
+                ),
+            ]
     else:
         if call:
             call_res = call.helper_class.get_call_details(call.auth_account.access_token)
@@ -1910,7 +1913,7 @@ def process_get_call_recording(payload, context):
             blocks = [*call_details]
         else:
             blocks = [
-                block_builders.simple_section("No call associated with this opportunity*"),
+                block_builders.simple_section(f"No call associated with this {resource_type}"),
                 block_builders.context_block(
                     "*Gong may still be processing this call, check back in a bit"
                 ),
