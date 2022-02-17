@@ -308,13 +308,15 @@ class SalesforceSObjectViewSet(
         print(data)
         user = User.objects.get(id=self.request.user.id)
         form_id = data.get("form_id")
+        form_data = data.get("form_data")
         main_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
         stage_forms = []
         stage_form_data_collector = {}
         for form in stage_forms:
+            form.save_form(form_data)
             stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
         if not len(stage_forms):
-            main_form.save_form(data)
+            main_form.save_form(form_data)
         all_form_data = {**stage_form_data_collector, **main_form.saved_data}
         data = None
         attempts = 1
