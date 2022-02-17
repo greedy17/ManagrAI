@@ -325,7 +325,7 @@ def add_to_cadence(context):
     data = {
         "view": {
             "type": "modal",
-            "callback_id": slack_const.ADD_TO_CADENCE,
+            "callback_id": slack_const.ADD_TO_CADENCE_MODAL,
             "title": {"type": "plain_text", "text": "Select Account"},
             "blocks": blocks,
             "private_metadata": json.dumps(private_metadata),

@@ -471,7 +471,10 @@ def email_auth_token(request):
 
                 calendar_id = email_check[0]["id"]
             else:
-                calendar_id = calendar[0]["id"]
+                if len(calendar):
+                    calendar_id = calendar[0]["id"]
+                else:
+                    calendar_id = None
             NylasAuthAccount.objects.create(
                 access_token=access_token,
                 account_id=account["account_id"],
