@@ -412,7 +412,7 @@ def create_add_to_cadence_block_set(context):
         blocks.append(
             block_builders.multi_external_select(
                 f"*Add Contacts from {context.get('resource_name')} to selected Cadence*:",
-                f"{slack_const.GET_PEOPLE_OPTIONS}?u={user_id}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}",
+                f"{slack_const.GET_CONTACT_OPTIONS}?u={user_id}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}",
                 block_id="select_people",
                 placeholder="Type to search",
             ),
@@ -432,7 +432,7 @@ def create_add_to_sequence_block_set(context):
         ),
         block_builders.multi_external_select(
             f"*Add Contacts from {context.get('resource_name')} to selected Sequence*:",
-            f"{slack_const.GET_PEOPLE_OPTIONS}?u={user_id}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}",
+            f"{slack_const.GET_CONTACT_OPTIONS}?u={user_id}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}",
             block_id="select_people",
             placeholder="Type to search",
         ),

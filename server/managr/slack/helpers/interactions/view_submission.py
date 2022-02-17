@@ -1243,7 +1243,7 @@ def process_add_contacts_to_cadence(payload, context):
         contacts = [
             option["value"]
             for option in payload["view"]["state"]["values"]["select_people"][
-                f"{slack_const.GET_PEOPLE_OPTIONS}?u={u.id}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}"
+                f"{slack_const.GET_CONTACT_OPTIONS}?u={u.id}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}"
             ]["selected_options"]
         ]
     loading_data = {
@@ -1324,7 +1324,7 @@ def process_add_contacts_to_sequence(payload, context):
     contacts = [
         option["value"]
         for option in payload["view"]["state"]["values"]["select_people"][
-            f"{slack_const.GET_PEOPLE_OPTIONS}?u={u.id}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}"
+            f"{slack_const.GET_CONTACT_OPTIONS}?u={u.id}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}"
         ]["selected_options"]
     ]
     loading_data = {
