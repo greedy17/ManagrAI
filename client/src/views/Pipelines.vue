@@ -121,7 +121,7 @@
               <button
                 :key="i"
                 v-for="(template, i) in templates.list"
-                @click="selectList(template.configs[0], template.title)"
+                @click="selectList(template.configs[0], template.title, template.id)"
                 class="list-button"
               >
                 {{ template.title }}
@@ -291,7 +291,7 @@
         </div>
       </section>
 
-      <section v-else class="table-section">
+      <section v-if="selectedWorkflow && currentWorkflow.list.length > 0" class="table-section">
         <div class="table">
           <div class="table-row">
             <div class="table-cell-checkbox-header">
@@ -339,6 +339,28 @@
               }}
             </div>
           </tr>
+        </div>
+      </section>
+
+      <section v-if="currentWorkflow && currentWorkflow.list.length < 1" class="table-section">
+        <div class="table">
+          <div class="table-row">
+            <div class="table-cell-header">Name</div>
+            <div class="table-cell-header">Stage</div>
+            <div class="table-cell-header">Forecast Category</div>
+            <div class="table-cell-header">Amount</div>
+            <div class="table-cell-header">Close Date</div>
+            <div class="table-cell-header">Last Activity</div>
+          </div>
+
+          <div class="table-row flex-row">
+            <h5 style="margin-left: 1rem">
+              No results for the {{ currentList }} workflow. Try refreshing
+            </h5>
+            <button @click="refresh(refreshId)" class="centered__button">
+              <img src="@/assets/images/refresh.png" style="height: 0.75rem" alt="" />
+            </button>
+          </div>
         </div>
       </section>
     </div>
@@ -397,6 +419,7 @@ export default {
       updateOppForm: null,
       oppFields: [],
       instances: [],
+      testingUpdate: null,
       monetaryOptions: ['less than', 'greater than', 'equals'],
       oppFilters: [
         {
@@ -453,13 +476,13 @@ export default {
   created() {
     this.getObjects()
     this.getAllForms()
-    this.updateResource('4cdae7c0-0641-49f5-87e5-16a8f6134c4c')
+    this.createFormInstance()
     this.team.refresh()
     this.templates.refresh()
   },
   methods: {
     test() {
-      console.log(this.currentWorkflow.list)
+      console.log(this.updateResource())
     },
     async refresh(id) {
       console.log(id)
@@ -508,9 +531,37 @@ export default {
     //   })
     //   this.currentWorkflow.refresh()
     // },
-    selectList(configId, title) {
+
+    async createFormInstance() {
+      try {
+        const res = await SObjects.api.createFormInstance({
+          formData: {
+            resourceType: 'Opportunity',
+            formType: 'Update',
+          },
+        })
+        console.log(res)
+        this.testingUpdate = res.form_id
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    async updateResource() {
+      try {
+        const res = await SObjects.api.updateResource({
+          form_id: this.testingUpdate,
+          form_data: {
+            meeting_type: 'Update pending......',
+          },
+        })
+        console.log(res)
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    selectList(configId, title, id) {
       this.currentWorkflowFields = []
-      this.refreshId = configId
+      this.refreshId = id
       this.currentWorkflow = CollectionManager.create({
         ModelClass: AlertInstance,
         filters: {
@@ -588,19 +639,7 @@ export default {
         console.log(e)
       }
     },
-    async updateResource(id) {
-      try {
-        const res = await SObjects.api.updateResource({
-          form_id: id,
-          formdata: {
-            meeting_type: 'Update Works bitch!',
-          },
-        })
-        console.log(res)
-      } catch (e) {
-        console.log(e)
-      }
-    },
+
     async handleCancel() {
       await this.refresh()
       this.resetNotes()
@@ -1126,6 +1165,22 @@ section {
   border-radius: 2px;
   color: $base-gray;
   background-color: $white-green;
+}
+.centered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &__button {
+    display: flex;
+    align-items: center;
+    background-color: $dark-green;
+    border: none;
+    margin-left: 0.5rem;
+    padding: 0.25rem;
+    border-radius: 0.2rem;
+    cursor: pointer;
+  }
 }
 ::-webkit-scrollbar {
   background-color: $light-orange-gray;

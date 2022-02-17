@@ -69,7 +69,7 @@
             <div class="row">
               <button
                 :disabled="clicked.includes(alert.id)"
-                @click.stop="onRunAlertTemplateNow(alert, alert.id)"
+                @click.stop="onRunAlertTemplateNow(alert.id)"
                 class="green_button"
               >
                 Run now
@@ -394,8 +394,8 @@ export default {
         })
       }
     },
-    async onRunAlertTemplateNow(alert, id) {
-      console.log(alert)
+    async onRunAlertTemplateNow(id) {
+      console.log(id)
       try {
         await AlertTemplate.api.runAlertTemplateNow(id)
         this.$Alert.alert({

@@ -104,6 +104,15 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
     }
   }
+  async createFormInstance(formData) {
+    let d = objectToSnakeCase(formData)
+    try {
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/create-form-instance/', { params: d })
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+    }
+  }
 
   async getStagePicklistValues() {
     // if the picklist values dont populate for some reason allow users to manually populate

@@ -245,8 +245,6 @@ class SalesforceSObjectViewSet(
         param_sobject = self.request.GET.get("sobject")
         sobject = routes[param_sobject]
         query = sobject["model"].objects.for_user(self.request.user)
-        print(len(sobject["model"].objects.filter(owner=self.request.user)))
-        print(len(query))
         return query
 
     @action(
@@ -291,7 +289,10 @@ class SalesforceSObjectViewSet(
             .filter(Q(resource=resource_type, form_type=form_type))
             .first()
         )
-        slack_form = OrgCustomSlackFormInstance.objects.create(template=template, user=user,)
+        slack_form = OrgCustomSlackFormInstance.objects.create(
+            template=template,
+            user=user,
+        )
         return Response(data={"form_id": str(slack_form.id)})
 
     @action(
@@ -305,7 +306,6 @@ class SalesforceSObjectViewSet(
         from managr.core.models import User
 
         data = self.request.data
-        print(data)
         user = User.objects.get(id=self.request.user.id)
         form_id = data.get("form_id")
         form_data = data.get("form_data")
