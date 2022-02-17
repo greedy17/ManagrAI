@@ -3,7 +3,7 @@ from urllib.parse import urlencode, unquote
 from datetime import datetime
 from .routes import routes
 import time
-from django.http import HttpResponse
+from django.db.models import Q
 from django.utils import timezone
 from django.core.management import call_command
 from django.shortcuts import render, redirect
@@ -12,7 +12,6 @@ from django.template.loader import render_to_string
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import IntegrityError
 
-from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework import (
     authentication,
@@ -31,17 +30,11 @@ from rest_framework.decorators import (
 )
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, PermissionDenied
-
-from background_task.models import Task
-
 from managr.api.decorators import log_all_exceptions
 from managr.api.emails import send_html_email
 
 from managr.slack.models import OrgCustomSlackForm
-from managr.slack import constants as slack_consts
 from .models import (
-    SFResourceSync,
-    SFObjectFieldsOperation,
     SObjectField,
     SObjectValidation,
     SObjectPicklist,
@@ -266,7 +259,6 @@ class SalesforceSObjectViewSet(
         from managr.slack.models import OrgCustomSlackFormInstance
 
         resource_id = self.request.GET.get("resource_id")
-        print(resource_id)
         note_data = (
             OrgCustomSlackFormInstance.objects.filter(resource_id=resource_id)
             .filter(is_submitted=True)
@@ -283,6 +275,27 @@ class SalesforceSObjectViewSet(
         return Response(data=[])
 
     @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="create-form-instance",
+    )
+    def create_form_instance(self, request, *args, **kwargs):
+        from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
+
+        user = self.request.user
+        data = self.request.data
+        form_type = data.get("form_type")
+        resource_type = data.get("resource_type")
+        template = (
+            OrgCustomSlackForm.objects.for_user(user)
+            .filter(Q(resource=resource_type, form_type=form_type))
+            .first()
+        )
+        slack_form = OrgCustomSlackFormInstance.objects.create(template=template, user=user,)
+        return Response(data={"form_id": str(slack_form.id)})
+
+    @action(
         methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
@@ -296,7 +309,6 @@ class SalesforceSObjectViewSet(
         print(data)
         user = User.objects.get(id=self.request.user.id)
         form_id = data.get("form_id")
-        print(form_id)
         main_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
         stage_forms = []
         stage_form_data_collector = {}
