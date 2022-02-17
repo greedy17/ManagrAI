@@ -284,9 +284,8 @@ class SalesforceSObjectViewSet(
         from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 
         user = self.request.user
-        data = self.request.data
-        form_type = data.get("form_type")
-        resource_type = data.get("resource_type")
+        form_type = self.request.GET.get("form_type")
+        resource_type = self.request.GET.get("resource_type")
         template = (
             OrgCustomSlackForm.objects.for_user(user)
             .filter(Q(resource=resource_type, form_type=form_type))
