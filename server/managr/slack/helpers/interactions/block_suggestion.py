@@ -371,7 +371,7 @@ def handle_block_suggestion(payload):
         slack_const.GET_EXTERNAL_PICKLIST_OPTIONS: process_get_external_picklist_options,
         slack_const.GET_CADENCE_OPTIONS: process_get_cadences,
         slack_const.GET_SEQUENCE_OPTIONS: process_get_sequences,
-        slack_const.GET_PEOPLE_OPTIONS: process_get_people,
+        slack_const.GET_CONTACT_OPTIONS: process_get_people,
         slack_const.GET_CALLS: process_get_calls,
         slack_const.GET_SOBJECT_LIST: process_get_sobject_list,
         slack_const.GET_PRICEBOOK_ENTRY_OPTIONS: process_get_pricebook_entry_options,

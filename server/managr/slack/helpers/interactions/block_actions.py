@@ -1581,10 +1581,16 @@ def process_show_cadence_modal(payload, context):
     access_token = org.slack_integration.access_token
     is_update = payload.get("view", None)
     view_id = is_update.get("id") if is_update is not None else None
-    loading_view_data = send_loading_screen(
-        access_token, "Putting together your cadences", "open", str(u.id), trigger_id, view_id
-    )
     type = context.get("type", None)
+    loading_view_data = send_loading_screen(
+        access_token,
+        "Putting together your cadences",
+        f"{'open' if type != 'command' else 'update'}",
+        str(u.id),
+        trigger_id,
+        view_id,
+    )
+
     resource_name = (
         payload["view"]["state"]["values"]["select_existing"][
             f"{slack_const.GET_USER_ACCOUNTS}?u={u.id}&type=command&system=salesloft"
