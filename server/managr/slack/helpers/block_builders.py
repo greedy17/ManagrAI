@@ -438,6 +438,24 @@ def checkbox_block(label, options, action_id=None, initial_options=None, block_i
     return block
 
 
+def checkbox_input(options, action_id):
+    """
+    Function returns a checkbox input for action blocks
+    """
+    block = {"type": "checkboxes", "options": options, "action_id": action_id}
+    return block
+
+
+def checkbox_option(text, value, text_type="mrkdwn", description=None):
+    """
+    Function for building the options for a checkbox input
+    """
+    block = {"text": {"type": text_type, "text": text}, "value": value}
+    if description:
+        block["description"] = {"type": "mrkdwn", "text": description}
+    return block
+
+
 def section_with_accessory_block(
     section_text, accessory, text_type="mrkdwn", block_id=None,
 ):

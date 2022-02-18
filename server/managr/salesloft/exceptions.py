@@ -31,8 +31,9 @@ class SalesloftAPIException:
         # if an invalid Basic auth is sent the response is still a 200 success
         # instead we check data.json() which will return a JSONDecodeError
         if self.status_code == 422:
-            logger.error(f"Salesloft API error: {self.error}")
-            raise InvalidRequest()
+            logger.error(f"Salesloft Validation Error:{self.error}")
+            message = list(self.error.values())[0][0]
+            raise InvalidRequest(message)
         elif self.status_code == 403 or self.status_code == 401:
             raise TokenExpired()
         else:

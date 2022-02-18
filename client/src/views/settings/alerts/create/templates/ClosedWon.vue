@@ -1,205 +1,141 @@
 <template>
   <div class="alerts-page">
-    <div style="display: flex; align-item: flex-start; flex-direction: column; margin-left: 12vw">
-      <h2>
-        <span>
-          Upcoming
-          <span style="color: #ddad3c">Next Step</span>
-        </span>
-      </h2>
-      <p style="margin-top: -0.5rem">
-        View and update all Opportunities with Next Steps due this Week
-      </p>
-    </div>
-
-    <div style="margin-top: 1rem" class="alert__column">
+    <div v-if="pageNumber === 0" class="alert__column">
       <template>
         <div class="forecast__collection">
-          <div
-            class="delivery__row"
-            :key="index"
-            v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
-          >
-            <span style="margin-bottom: 0.5rem">Select Next Step Date</span>
-            <NextAlertGroup
-              :form="alertGroup"
-              :resourceType="alertTemplateForm.field.resourceType.value"
-            />
+          <div v-if="userLevel == 'MANAGER'" style="margin-top: -1.5rem" class="delivery__row">
+            <span style="margin-bottom: 0.5rem">Select Users:</span>
 
-            <p
-              style="margin-top: -1rem"
-              v-if="alertGroup.field.alertOperands.groups[0].field.operandIdentifier.value"
-              @click="removeIdentity"
-              :class="
-                alertGroup.field.alertOperands.groups[0].field.operandIdentifier.value
-                  ? 'selected__item'
-                  : 'visible'
-              "
-            >
-              <img
-                src="@/assets/images/remove.png"
-                style="height: 1rem; margin-right: 0.25rem"
-                alt=""
-              />
-              {{ alertGroup.field.alertOperands.groups[0].field.operandIdentifier.value }}
-            </p>
+            <FormField>
+              <template v-slot:input>
+                <DropDownSearch
+                  :items.sync="userList"
+                  v-model="realTimeAlertForm.field.pipelines.value"
+                  @input="realTimeAlertForm.field.pipelines.validate()"
+                  displayKey="fullName"
+                  valueKey="id"
+                  nullDisplay="Multi-select"
+                  searchable
+                  multi
+                  medium
+                />
+              </template>
+            </FormField>
           </div>
 
-          <div
-            class="_row"
-            :key="i + 1"
-            v-for="(form, i) in alertTemplateForm.field.alertConfig.groups"
-          >
-            <div v-if="userLevel == 'MANAGER'" class="delivery__row">
-              <span style="margin-bottom: 0.5rem">Select Users</span>
+          <!-- <div style="margin-bottom: 2.5rem; margin-top: 0.5rem" class="delivery__row">
+            <span style="margin-bottom: 0.5rem">Select Stage</span>
+            <DropDownSearch
+              :items.sync="stages"
+              v-model="advancedStage"
+              displayKey="label"
+              valueKey="value"
+              nullDisplay="Select a Stage"
+              searchable
+              local
+            />
+          </div> -->
 
-              <FormField :errors="form.field.alertTargets.errors">
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: flex-start;
+              margin-top: 0.5rem;
+            "
+          >
+            <div v-if="!channelName" class="row__">
+              <label :class="!create ? 'green' : ''">Select #channel</label>
+              <ToggleCheckBox
+                style="margin-left: 0.25rem; margin-right: 0.25rem"
+                @input="changeCreate"
+                :value="create"
+                offColor="#199e54"
+                onColor="#199e54"
+              />
+              <label :class="create ? 'green' : ''">Create #channel:</label>
+            </div>
+
+            <label v-else for="channel" style="font-weight: bold"
+              >Alert will send to
+              <span style="color: #199e54">{{ channelName }}</span>
+              channel</label
+            >
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+              "
+              v-if="create"
+            >
+              <input
+                v-model="channelName"
+                class="search__input"
+                type="text"
+                name="channel"
+                id="channel"
+                placeholder="Name your channel"
+                @input="logNewName(channelName)"
+              />
+
+              <div v-if="!channelCreated" v style="margin-top: 1rem">
+                <button
+                  v-if="channelName"
+                  @click="createChannel(channelName)"
+                  class="purple__button bouncy"
+                >
+                  Create Channel
+                </button>
+                <button v-else class="disabled__button">Create Channel</button>
+              </div>
+            </div>
+
+            <div style="margin-top: 0.5rem" v-else>
+              <FormField>
                 <template v-slot:input>
                   <DropDownSearch
-                    :items.sync="userTargetsOpts"
-                    :itemsRef.sync="form.field._alertTargets.value"
-                    v-model="form.field.alertTargets.value"
-                    @input="form.field.alertTargets.validate()"
-                    displayKey="fullName"
+                    :items.sync="userChannelOpts.channels"
+                    v-model="realTimeAlertForm.field.recipients.value"
+                    displayKey="name"
                     valueKey="id"
-                    nullDisplay="Multi-select"
+                    nullDisplay="Channels"
+                    :hasNext="!!userChannelOpts.nextCursor"
+                    @load-more="listChannels(userChannelOpts.nextCursor)"
                     searchable
-                    multi
-                    medium
-                    :loading="users.loadingNextPage"
-                    :hasNext="!!users.pagination.hasNextPage"
-                    @load-more="onUsersNextPage"
-                    @search-term="onSearchUsers"
-                  />
+                    local
+                  >
+                    <template v-slot:tn-dropdown-option="{ option }">
+                      <img
+                        v-if="option.isPrivate == true"
+                        class="card-img"
+                        style="width: 1rem; height: 1rem; margin-right: 0.2rem"
+                        src="@/assets/images/lockAsset.png"
+                      />
+                      {{ option['name'] }}
+                    </template>
+                  </DropDownSearch>
                 </template>
               </FormField>
-              <div style="margin-top: -0.75rem" class="items_height">
-                <p
-                  :key="i"
-                  v-for="(item, i) in form.field.alertTargets.value"
-                  :class="form.field.alertTargets.value ? 'selected__item' : ''"
-                  @click="removeItemFromTargetArray(item)"
-                >
-                  <img
-                    src="@/assets/images/remove.png"
-                    style="height: 1rem; margin-right: 0.25rem"
-                    alt=""
-                  />
-                  {{ item.length ? checkInteger(item) : '' }}
-                </p>
-              </div>
             </div>
-
-            <div class="delivery__row">
-              <div v-if="!channelName" class="row__">
-                <label :class="!create ? 'green' : ''">Select #channel</label>
-                <ToggleCheckBox
-                  style="margin: 0.25rem"
-                  @input="changeCreate"
-                  :value="create"
-                  offColor="#ddad3c"
-                  onColor="#ddad3c"
-                />
-                <label :class="create ? 'green' : ''">Create #channel</label>
-              </div>
-
-              <label v-else for="channel" style="font-weight: bold"
-                >Alert will send to
-                <span style="color: #ddad3c; font-size: 1.2rem">{{ channelName }}</span>
-                channel</label
-              >
-              <div
-                style="
-                  display: flex;
-                  flex-direction: column;
-                  align-items: center;
-                  justify-content: flex-start;
-                  margin-top: -0.8rem;
-                "
-                v-if="create"
-              >
-                <input
-                  v-model="channelName"
-                  placeholder="Name your Channel"
-                  class="search__input"
-                  type="text"
-                  name="channel"
-                  id="channel"
-                  @input="logNewName(channelName)"
-                />
-
-                <div v-if="!channelCreated" style="margin-top: 0.75rem">
-                  <button
-                    v-if="channelName"
-                    @click="createChannel(channelName)"
-                    class="purple__button"
-                  >
-                    Create Channel
-                  </button>
-                  <button v-else class="disabled__button">Create Channel</button>
-                </div>
-              </div>
-
-              <div v-else>
-                <FormField>
-                  <template v-slot:input>
-                    <DropDownSearch
-                      :items.sync="userChannelOpts.channels"
-                      :itemsRef.sync="form.field._recipients.value"
-                      v-model="form.field.recipients.value"
-                      @input="form.field.recipients.validate()"
-                      displayKey="name"
-                      valueKey="id"
-                      nullDisplay="Channels"
-                      :hasNext="!!userChannelOpts.nextCursor"
-                      @load-more="listChannels(userChannelOpts.nextCursor)"
-                      searchable
-                      local
-                    >
-                      <template v-slot:tn-dropdown-option="{ option }">
-                        <img
-                          v-if="option.isPrivate == true"
-                          class="card-img"
-                          style="width: 1rem; height: 1rem; margin-right: 0.2rem"
-                          src="@/assets/images/lockAsset.png"
-                        />
-                        {{ option['name'] }}
-                      </template>
-                    </DropDownSearch>
-                  </template>
-                </FormField>
-
-                <p
-                  v-if="form.field.recipients.value.length > 0"
-                  @click="removeTarget"
-                  :class="form.field.recipients.value ? 'selected__item' : 'visible'"
-                >
-                  <img
-                    src="@/assets/images/remove.png"
-                    style="height: 1rem; margin-right: 0.25rem"
-                    alt=""
-                  />
-                  {{ form.field._recipients.value.name }}
-                </p>
-              </div>
-            </div>
+          </div>
+          <div v-if="realTimeAlertForm.isValid" class="centered__">
+            <PulseLoadingSpinnerButton
+              :loading="savingTemplate"
+              class="purple__button bouncy"
+              text="Activate alert"
+              @click.stop="onSave"
+            />
           </div>
         </div>
       </template>
-    </div>
 
-    <div class="bottom_locked">
-      <PulseLoadingSpinnerButton
-        :loading="savingTemplate"
-        :class="
-          !alertTemplateForm.isValid || savingTemplate
-            ? 'disabled__button'
-            : 'purple__button bouncy'
-        "
-        text="Activate alert"
-        @click.stop="onSave"
-        :disabled="!alertTemplateForm.isValid"
-      />
+      <div class="description">
+        <h4 class="title">Closed Won</h4>
+        <p>Recieve alerts when deals closed</p>
+      </div>
     </div>
   </div>
 </template>
@@ -218,7 +154,7 @@ import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 //Internal
 import FormField from '@/components/forms/FormField'
-import NextAlertGroup from '@/views/settings/alerts/create/NextAlertGroup'
+import CommitAlertGroup from '@/views/settings/alerts/create/CommitAlertGroup'
 import AlertSummary from '@/views/settings/alerts/create/_AlertSummary'
 import ListContainer from '@/components/ListContainer'
 import ListItem from '@/components/ListItem'
@@ -234,33 +170,26 @@ import { UserConfigForm } from '@/services/users/forms'
  * Services
  */
 
-import AlertTemplate, {
-  AlertGroupForm,
-  AlertTemplateForm,
-  AlertConfigForm,
-  AlertMessageTemplateForm,
-  AlertOperandForm,
-} from '@/services/alerts/'
+import { RealTimeAlertForm, RealTime } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
 import {
   SObjectField,
-  SObjectValidations,
-  SObjectPicklist,
   NON_FIELD_ALERT_OPTS,
   SOBJECTS_LIST,
+  SObjectPicklist,
 } from '@/services/salesforce'
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
-  name: 'NextStep',
+  name: 'ClosedWon',
   components: {
     ExpandablePanel,
     DropDownSearch,
     ListContainer,
     ListItem,
     SlackMessagePreview,
-    NextAlertGroup,
+    CommitAlertGroup,
     SlackNotificationTemplate,
     quillEditor,
     ToggleCheckBox,
@@ -279,6 +208,7 @@ export default {
       dropdownVisible: true,
       channelCreated: false,
       create: true,
+      realTimeAlertRecipient: '',
       NON_FIELD_ALERT_OPTS,
       stringRenderer,
       newChannel: {},
@@ -286,17 +216,21 @@ export default {
       OPPORTUNITY: 'Opportunity',
       operandDate: '',
       searchQuery: '',
+      advancedStage: '',
       searchText: '',
       recurrenceDay: '',
       searchChannels: '',
       SOBJECTS_LIST,
       pageNumber: 0,
       configName: '',
+      stages: [],
+      allForms: [],
       userConfigForm: new UserConfigForm({}),
-      alertTemplateForm: new AlertTemplateForm(),
+      realTimeAlertForm: new RealTimeAlertForm(),
       selectedBindings: [],
       fields: CollectionManager.create({ ModelClass: SObjectField }),
       users: CollectionManager.create({ ModelClass: User }),
+      userList: [],
       recipientBindings: [
         { referenceDisplayLabel: 'Recipient Full Name', apiName: 'full_name' },
         { referenceDisplayLabel: 'Recipient First Name', apiName: 'first_name' },
@@ -334,28 +268,23 @@ export default {
       await this.listChannels()
       await this.listUserChannels()
     }
-    if (this.userLevel == 'MANAGER') {
+    if (this.user.userLevel == 'MANAGER') {
       await this.users.refresh()
+      this.userList = this.users.list
     }
     this.userConfigForm = new UserConfigForm({
       activatedManagrConfigs: this.user.activatedManagrConfigs,
     })
-  },
-  watch: {
-    selectedResourceType: {
-      immediate: true,
-      async handler(val, prev) {
-        if (prev && val !== prev) {
-          this.alertTemplateForm = this.alertTemplateForm.reset()
-          this.selectedResourceType = val
-        }
-        if (this.selectedResourceType) {
-          this.fields.filters.salesforceObject = this.selectedResourceType
-          this.fields.filters.page = 1
-          await this.fields.refresh()
-        }
-      },
-    },
+    try {
+      this.allForms = await SlackOAuth.api.getOrgCustomForm()
+      await this.listPicklists({
+        salesforceObject: this.Opportunity,
+        picklistFor: 'StageName',
+      })
+    } catch (error) {
+      console.log(error)
+    }
+    this.getStageForms()
   },
   methods: {
     checkInteger(str) {
@@ -375,13 +304,6 @@ export default {
     },
     changeCreate() {
       this.create = !this.create
-      if (
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value !==
-        'SLACK_CHANNEL'
-      ) {
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value =
-          'SLACK_CHANNEL'
-      }
     },
     async listUserChannels(cursor = null) {
       const res = await SlackOAuth.api.listUserChannels(cursor)
@@ -390,31 +312,6 @@ export default {
         responseMetadata: { nextCursor: res.nextCursor },
       })
       this.userChannelOpts = results
-    },
-    removeDay() {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = ''
-    },
-    removeTarget() {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = []
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = []
-    },
-    removeItemFromTargetArray(item) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value =
-        this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.filter(
-          (i) => i !== item,
-        )
-    },
-    removeItemFromRecipientArray(item) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value.filter(
-          (i) => i !== item,
-        )
-    },
-    removeIdentity() {
-      this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field.operandIdentifier.value =
-        ''
-      this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field._operandIdentifier.value =
-        {}
     },
     onConvert(val) {
       let newVal = ''
@@ -445,11 +342,9 @@ export default {
       this.$router.push({ name: 'CreateNew' })
     },
     async createChannel(name) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
       const res = await SlackOAuth.api.createChannel(name)
       if (res.channel) {
-        this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = res.channel
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = res.channel.id
+        this.realTimeAlertForm.field.recipients.value = res.channel.id
         this.channelCreated = !this.channelCreated
       } else {
         console.log(res.error)
@@ -541,59 +436,30 @@ export default {
       })
       this.channelOpts = results
     },
-    recipientTypeToggle(value) {
-      if (!this.user.slackRef) {
-        this.$Alert.alert({ type: 'error', message: 'Slack Not Integrated', timeout: 2000 })
-        return 'USER_LEVEL'
-      }
-      if (value == 'USER_LEVEL') {
-        return 'SLACK_CHANNEL'
-      } else if (value == 'SLACK_CHANNEL') {
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = []
-        this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = []
-        return 'USER_LEVEL'
-      }
-      return value
-    },
-    setRecipients(obj) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value.push(obj)
-    },
-    setRecipient(obj) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = obj
-    },
-    setDay(obj) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDay.value = obj
-    },
-    setPipelines(obj) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._alertTargets.value.push(obj)
-    },
+
     async onSave() {
       this.savingTemplate = true
-      console.log(this.alertTemplateForm)
-      this.alertTemplateForm.validate()
-      if (this.alertTemplateForm.isValid) {
-        try {
-          const res = await AlertTemplate.api.createAlertTemplate({
-            ...this.alertTemplateForm.toAPI,
-            user: this.$store.state.user.id,
-          })
-          this.userConfigForm.field.activatedManagrConfigs.value.push(res.title)
-          this.handleUpdate()
-          this.$router.push({ name: 'CreateNew' })
-          this.$Alert.alert({
-            message: 'Workflow saved succcessfully!',
-            timeout: 2000,
-            type: 'success',
-          })
-        } catch (e) {
-          this.$Alert.alert({
-            message: 'An error occured saving template',
-            timeout: 2000,
-            type: 'error',
-          })
-        } finally {
-          this.savingTemplate = false
-        }
+      try {
+        const res = await RealTime.api.createRealTimeAlert({
+          ...this.realTimeAlertForm.toAPI,
+          user: this.$store.state.user.id,
+          config: {
+            isActive: true,
+            title: 'Closed Won',
+            operator: '==',
+            value: 'Closed Won',
+            dataType: 'string',
+          },
+        })
+        this.$router.go()
+      } catch (e) {
+        this.$Alert.alert({
+          message: 'An error occured saving template',
+          timeout: 2000,
+          type: 'error',
+        })
+      } finally {
+        this.savingTemplate = false
       }
     },
     bindText(val) {
@@ -604,48 +470,7 @@ export default {
       }
       this.editor.insertText(start, `{ ${val} }`)
     },
-    onAddAlertGroup() {
-      // length determines order
-      const order = this.alertTemplateForm.field.alertGroups.groups.length
-      if (order >= 3) {
-        this.$Alert.alert({ message: 'You can only add 3 groups', timeout: 2000 })
-        return
-      }
-      // set next order
 
-      this.alertTemplateForm.addToArray('alertGroups', new AlertGroupForm())
-      this.alertTemplateForm.field.alertGroups.groups[order].field.groupOrder.value = order
-    },
-    onAddAlertSetting() {
-      if (this.alertTemplateForm.field.alertConfig.groups.length >= 3) {
-        this.$Alert.alert({ message: 'You can only add 3 configurations', timeout: 2000 })
-        return
-      }
-      this.alertTemplateForm.addToArray('alertConfig', new AlertConfigForm())
-    },
-    onRemoveAlertGroup(i) {
-      // get order and update options
-
-      if (this.alertTemplateForm.field.alertGroups.groups.length - 1 <= 0) {
-        return
-      }
-
-      const order = this.alertTemplateForm.field.alertGroups.groups[i].field.groupOrder.value
-
-      this.alertTemplateForm.removeFromArray('alertGroups', i)
-
-      let greaterThan = this.alertTemplateForm.field.alertGroups.groups.slice(i)
-
-      greaterThan.forEach((el, index) => {
-        el.field.groupOrder.value = order + index
-      })
-    },
-    onRemoveSetting(i) {
-      if (this.alertTemplateForm.field.alertConfig.groups.length - 1 <= 0) {
-        return
-      }
-      this.alertTemplateForm.removeFromArray('alertConfig', i)
-    },
     async onSearchFields(v) {
       this.fields.pagination = new Pagination()
       this.fields.filters = {
@@ -674,30 +499,35 @@ export default {
     showDropDown() {
       this.dropdownVisible = !this.dropdownVisible
     },
-    setAlertValues(date, name) {
-      this.alertTemplateForm.field.title = name
-      this.alertTemplateForm.alertGroups.groups[0].fields.alertOperands.groups[0].fields.operandValue.value =
-        date
-      this.alertTemplateForm.alertGroups.groups[0].fields.alertOperands.groups[0].fields.operandOperator.value =
-        '<='
-      if (date >= 0) {
-        this.alertGroups.groups[0].fields.alertOperands.groups[0].fields.field.operandOperator.value =
-          '='
-      }
+    getStageForms() {
+      // users can only create one form for the stage orderd by stage
+      let forms = []
+      this.stages.forEach((s) => {
+        this.allForms
+          .filter((f) => f.formType == this.STAGE_GATING)
+          .forEach((sf) => {
+            if (sf.stage == s.value) {
+              forms.push(sf)
+            }
+          })
+      })
+
+      this.formStages = [...forms]
     },
-    repsPipeline() {
-      if (this.userLevel !== 'MANAGER') {
-        this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
-        this.setPipelines({
-          fullName: 'MYSELF',
-          id: 'SELF',
-        })
+
+    async listPicklists(query_params = {}) {
+      try {
+        const res = await SObjectPicklist.api.listPicklists(query_params)
+
+        this.stages = res.length ? res[0]['values'] : []
+      } catch (e) {
+        console.log(e)
       }
     },
   },
   computed: {
     userTargetsOpts() {
-      if (this.userLevel == 'MANAGER') {
+      if (this.user.userLevel == 'MANAGER') {
         return [
           ...this.alertTargetOpts.map((opt) => {
             return {
@@ -712,7 +542,7 @@ export default {
       }
     },
     recipientOpts() {
-      if (this.userLevel == 'MANAGER') {
+      if (this.user.userLevel == 'MANAGER') {
         return [
           ...this.alertRecipientOpts.map((opt) => {
             return {
@@ -765,54 +595,16 @@ export default {
     selection() {
       return this.editor.selection.lastRange
     },
-    alertObj() {
-      return {
-        title: this.formValue.title,
-        message: this.formValue.alertMessages[0].body,
-        resourceType: this.selectedResourceType,
-      }
-    },
     user() {
       return this.$store.state.user
     },
     userLevel() {
       return this.$store.state.user.userLevel
     },
-    selectedResourceType: {
-      get() {
-        return this.alertTemplateForm.field.resourceType.value
-      },
-      set(val) {
-        this.alertTemplateForm.field.resourceType.value = val
-      },
-    },
   },
   beforeMount() {
-    this.alertTemplateForm.field.resourceType.value = 'Opportunity'
-    this.alertTemplateForm.field.title.value = 'Upcoming Next Step'
-    this.alertTemplateForm.field.isActive.value = true
-    this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
-      'Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has an upcoming Next Step Date due this week.'
-    this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceFrequency.value = 'WEEKLY'
-    this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = '0'
-    this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDay.value = {
-      key: 'Monday',
-      value: '0',
-    }
-    this.repsPipeline()
-  },
-  updated() {
-    if (
-      this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
-        ._operandIdentifier.value !==
-      this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[1].field
-        ._operandIdentifier.value
-    ) {
-      this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[1].field._operandIdentifier.value =
-        this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field._operandIdentifier.value
-      this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[1].field.operandIdentifier.value =
-        this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field.operandIdentifier.value
-    }
+    this.realTimeAlertForm.field.apiName.value = 'StageName'
+    this.realTimeAlertForm.field.resourceType.value = 'Opportunity'
   },
 }
 </script>
@@ -836,14 +628,12 @@ export default {
     transform: translateY(-6px);
   }
 }
-
+.bouncy {
+  animation: bounce 0.2s infinite alternate;
+}
 ::placeholder {
   color: $panther-silver;
   font-size: 0.75rem;
-}
-
-.bouncy {
-  animation: bounce 0.2s infinite alternate;
 }
 ::v-deep .input-content {
   width: 12vw;
@@ -861,10 +651,10 @@ export default {
 .selected__item {
   padding: 0.5rem;
   border: none;
-  box-shadow: 3px 4px 7px $very-light-gray;
   border-radius: 0.3rem;
   width: 96%;
   text-align: center;
+  box-shadow: 3px 4px 7px $very-light-gray;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -872,6 +662,10 @@ export default {
 }
 img {
   filter: invert(60%);
+}
+.title {
+  font-weight: bold;
+  font-size: 14px;
 }
 .search__input {
   font-family: Lato-Regular, sans-serif;
@@ -888,7 +682,7 @@ img {
   border: none;
   width: 75%;
   text-align: center;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
   box-shadow: 3px 4px 7px $very-light-gray;
 }
 .channels_height {
@@ -936,39 +730,30 @@ img {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.25rem 1rem;
+  padding: 0.5rem 1rem;
   border-radius: 0.3rem;
-  font-weight: bold;
-  line-height: 1.14;
-  text-indent: none;
   border-style: none;
   letter-spacing: 0.03rem;
   color: white;
   background-color: $dark-green;
   cursor: pointer;
-  height: 2rem;
-  width: 10rem;
   font-weight: bold;
-  font-size: 1.02rem;
+  font-size: 11px;
 }
 .disabled__button {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.25rem 1rem;
-  border-radius: 0.3rem;
+  padding: 0.5rem 1rem;
   font-weight: bold;
-  line-height: 1.14;
+  border-radius: 0.3rem;
   text-indent: none;
   border-style: none;
   letter-spacing: 0.03rem;
   background-color: $soft-gray;
   color: $panther-gray;
   cursor: not-allowed;
-  height: 2rem;
-  width: 10rem;
-  font-weight: bold;
-  font-size: 1.02rem;
+  font-size: 11px;
 }
 .collection {
   background-color: $panther;
@@ -1003,14 +788,6 @@ img {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  width: 100%;
-}
-._row {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  justify-content: space-evenly;
-  width: 66%;
 }
 input {
   cursor: pointer;
@@ -1024,6 +801,7 @@ input {
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-top: 1rem;
 }
 .visible {
   visibility: hidden;
@@ -1071,8 +849,9 @@ input {
 .alert__column {
   display: flex;
   flex-direction: row;
-  justify-content: center;
-  align-items: center;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: 1rem;
 }
 .alert__row {
   display: flex;
@@ -1084,8 +863,8 @@ input {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: auto;
-  margin-bottom: -2rem;
+  margin-top: -4rem;
+  margin-bottom: 0.5rem;
 }
 .delivery__row {
   display: flex;
@@ -1093,17 +872,21 @@ input {
   justify-content: flex-start;
   align-items: center;
 }
+.description {
+  margin: -3.5rem 0rem 0rem 1rem;
+  width: 10vw;
+  border-bottom: 2px solid $soft-gray;
+}
 .forecast__collection {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-evenly;
-  flex-direction: row;
+  //   display: flex;
+  //   align-items: flex-start;
+  //   justify-content: space-evenly;
+  //   flex-direction: row;
   background-color: white;
   box-shadow: 3px 4px 7px $very-light-gray;
   border-radius: 0.75rem;
-  width: 75vw;
-  padding: 2rem 2rem 1rem 5rem;
-  margin-bottom: 1rem;
+  padding: 3rem 2rem;
+  margin-top: -3rem;
 }
 .items_height {
   overflow-y: scroll;
@@ -1114,6 +897,18 @@ input {
   overflow-y: scroll;
   max-height: 30vh;
   width: 80%;
+}
+.collection_fields {
+  background-color: $panther;
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  height: 50vh;
+  width: 34vw;
+  box-shadow: 3px 4px 7px black;
+  margin-top: 1rem;
+  overflow-x: scroll;
 }
 .fields_title {
   background-color: $panther;
@@ -1143,9 +938,9 @@ textarea {
   }
 }
 .alerts-page {
+  font-size: 11px;
   height: 100vh;
   color: $base-gray;
-  margin-top: 4rem;
   &__previous-step {
     @include muted-font(12);
   }
@@ -1249,7 +1044,7 @@ textarea {
   // width: 40rem;
 }
 .green {
-  color: #ddad3c;
+  color: $dark-green;
 }
 .red {
   color: red;

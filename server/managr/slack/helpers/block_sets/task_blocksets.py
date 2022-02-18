@@ -49,7 +49,7 @@ def create_task_modal_block_set(context):
             [
                 block_builders.option("Opportunity", "Opportunity"),
                 block_builders.option("Account", "Account"),
-                # block_builders.option("Contact", "Contact"),
+                block_builders.option("Contact", "Contact"),
                 block_builders.option("Lead", "Lead"),
             ],
             action_id=f"{slack_const.UPDATE_TASK_SELECTED_RESOURCE}?u={context.get('u')}",

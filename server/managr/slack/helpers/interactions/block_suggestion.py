@@ -1,10 +1,7 @@
-import pdb
 import logging
 import json
 
 from django.db.models import Q
-from managr.opportunity import constants as opp_consts
-from managr.organization import constants as org_consts
 from managr.slack import constants as slack_const
 from managr.salesforce import constants as sf_consts
 from managr.gong.models import GongCall
@@ -13,11 +10,10 @@ from managr.opportunity.models import Opportunity, Lead
 from managr.organization.models import (
     Organization,
     Account,
-    ActionChoice,
+    Contact,
     Pricebook2,
     PricebookEntry,
 )
-from managr.salesforce.models import SObjectPicklist, SObjectField
 from managr.outreach.models import Sequence
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.utils import process_action_id, NO_OP, processor
@@ -62,7 +58,8 @@ def process_get_user_opportunities(payload, context):
     value = payload["value"]
     return {
         "options": [
-            l.as_slack_option for l in user.owned_opportunities.filter(title__icontains=value)
+            l.as_slack_option
+            for l in Opportunity.objects.for_user(user).filter(title__icontains=value)
         ],
     }
 
@@ -72,7 +69,10 @@ def process_get_user_contacts(payload, context):
     user = User.objects.get(id=context["u"])
     value = payload["value"]
     return {
-        "options": [l.as_slack_option for l in user.contacts.filter(email__icontains=value)[:50]],
+        "options": [
+            l.as_slack_option
+            for l in Contact.objects.for_user(user).filter(email__icontains=value)[:50]
+        ],
     }
 
 
@@ -81,7 +81,10 @@ def process_get_user_accounts(payload, context):
     user = User.objects.get(id=context["u"])
     value = payload["value"]
     return {
-        "options": [l.as_slack_option for l in user.accounts.filter(name__icontains=value)[:50]],
+        "options": [
+            l.as_slack_option
+            for l in Account.objects.for_user(user).filter(name__icontains=value)[:50]
+        ],
     }
 
 
@@ -103,7 +106,10 @@ def process_get_local_resource_options(payload, context):
         return {
             "options": [
                 *additional_opts,
-                *[l.as_slack_option for l in user.accounts.filter(name__icontains=value)[:50]],
+                *[
+                    l.as_slack_option
+                    for l in Account.objects.for_user(user).filter(name__icontains=value)[:50]
+                ],
             ],
         }
 
@@ -111,14 +117,20 @@ def process_get_local_resource_options(payload, context):
         return {
             "options": [
                 *additional_opts,
-                *[l.as_slack_option for l in user.owned_leads.filter(name__icontains=value)[:50]],
+                *[
+                    l.as_slack_option
+                    for l in Lead.objects.for_user(user).filter(name__icontains=value)[:50]
+                ],
             ],
         }
     elif resource == sf_consts.RESOURCE_SYNC_CONTACT:
         return {
             "options": [
                 *additional_opts,
-                *[l.as_slack_option for l in user.contacts.filter(Q(email__icontains=value))[:50]],
+                *[
+                    l.as_slack_option
+                    for l in Contact.objects.for_user(user).filter(Q(email__icontains=value))[:50]
+                ],
             ],
         }
     elif resource == sf_consts.RESOURCE_SYNC_OPPORTUNITY:
@@ -127,7 +139,7 @@ def process_get_local_resource_options(payload, context):
                 *additional_opts,
                 *[
                     l.as_slack_option
-                    for l in user.owned_opportunities.filter(name__icontains=value)[:50]
+                    for l in Opportunity.objects.for_user(user).filter(name__icontains=value)[:50]
                 ],
             ],
         }
@@ -264,7 +276,9 @@ def process_get_external_relationship_options(payload, context):
 @processor(required_context=["u"])
 def process_get_cadences(payload, context):
     user = User.objects.get(id=context["u"])
-    cadences = Cadence.objects.filter(Q(is_team_cadence=True) | Q(owner=user.salesloft_account))
+    cadences = Cadence.objects.filter(
+        Q(is_team_cadence=True, is_shared=True) | Q(owner=user.salesloft_account)
+    )
     value = payload["value"]
     return {
         "options": [l.as_slack_option for l in cadences.filter(name__icontains=value)[:50]],
@@ -304,6 +318,31 @@ def process_get_calls(payload, context):
     return {"options": [l.slack_option for l in calls]}
 
 
+def process_get_sobject_list(payload, context):
+    user = User.objects.get(id=context["u"])
+    add_opt = context.get("add_option", None)
+    value = payload["value"]
+    sobject = context.get("resource_type")
+    if sobject == "Opportunity":
+        sobject_value = user.owned_opportunities
+    elif sobject == "Account":
+        sobject_value = user.accounts
+    elif sobject == "Lead":
+        sobject_value = user.owned_leads
+    elif sobject == "Contact":
+        sobject_value = user.contacts
+    options = (
+        [l.as_slack_option for l in sobject_value.filter(email__icontains=value)[:50]]
+        if sobject == "Contact"
+        else [l.as_slack_option for l in sobject_value.filter(name__icontains=value)[:50]]
+    )
+    if add_opt:
+        options.insert(0, add_opt)
+    return {
+        "options": options,
+    }
+
+
 def process_get_pricebook_entry_options(payload, context):
     value = payload["value"]
     pricebooks = Pricebook2.objects.filter(organization=context.get("org"))
@@ -332,8 +371,9 @@ def handle_block_suggestion(payload):
         slack_const.GET_EXTERNAL_PICKLIST_OPTIONS: process_get_external_picklist_options,
         slack_const.GET_CADENCE_OPTIONS: process_get_cadences,
         slack_const.GET_SEQUENCE_OPTIONS: process_get_sequences,
-        slack_const.GET_PEOPLE_OPTIONS: process_get_people,
+        slack_const.GET_CONTACT_OPTIONS: process_get_people,
         slack_const.GET_CALLS: process_get_calls,
+        slack_const.GET_SOBJECT_LIST: process_get_sobject_list,
         slack_const.GET_PRICEBOOK_ENTRY_OPTIONS: process_get_pricebook_entry_options,
     }
     action_query_string = payload["action_id"]

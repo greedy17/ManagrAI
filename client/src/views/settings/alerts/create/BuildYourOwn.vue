@@ -53,19 +53,37 @@
           >
             {{ alertTemplateForm.field.resourceType.value }} Selected. Switch to
             <span
-              v-if="selectedResourceType === 'Opportunity'"
+              v-if="selectedResourceType !== 'Account'"
               v-on:click="accountResource"
               style="border-bottom: 3px solid #199e54; cursor: pointer"
               >Account</span
             >
+            <span v-if="selectedResourceType !== 'Account'">,</span>
             <span
-              v-else
+              v-if="selectedResourceType !== 'Contact'"
+              v-on:click="contactResource"
+              style="border-bottom: 3px solid #199e54; cursor: pointer"
+              >Contact</span
+            >
+            <span v-if="selectedResourceType !== 'Contact'">,</span>
+            <span
+              style="margin-left: 0.1rem; margin-right: 0.1rem"
+              v-if="selectedResourceType == 'Lead'"
+              >or</span
+            >
+            <span
+              v-if="selectedResourceType !== 'Opportunity'"
               v-on:click="opportunityResource"
               style="border-bottom: 3px solid #199e54; cursor: pointer"
               >Opporunity</span
             >
-            or
             <span
+              style="margin-left: 0.1rem; margin-right: 0.1rem"
+              v-if="selectedResourceType !== 'Lead'"
+              >or</span
+            >
+            <span
+              v-if="selectedResourceType !== 'Lead'"
               v-on:click="leadResource"
               style="border-bottom: 3px solid #199e54; cursor: pointer"
               >Lead</span
@@ -879,8 +897,12 @@ export default {
       }
     },
     repsPipeline() {
-      if (this.user.userLevel == 'REP') {
+      if (
+        this.user.userLevel !== 'MANAGER' &&
+        this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.length < 1
+      ) {
         this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
+        console.log('test')
         this.setPipelines({
           fullName: 'MYSELF',
           id: 'SELF',
@@ -1092,6 +1114,9 @@ export default {
     opportunityResource() {
       this.alertTemplateForm.field.resourceType.value = 'Opportunity'
     },
+    contactResource() {
+      this.alertTemplateForm.field.resourceType.value = 'Contact'
+    },
 
     async onSave() {
       this.savingTemplate = true
@@ -1132,7 +1157,12 @@ export default {
       this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDay.value = obj
     },
     setPipelines(obj) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._alertTargets.value.push(obj)
+      if (this.alertTemplateForm.field.alertConfig.groups[0].field._alertTargets.value.lenght < 1) {
+        this.alertTemplateForm.field.alertConfig.groups[0].field._alertTargets.value.push(obj)
+        console.log(
+          this.alertTemplateForm.field.alertConfig.groups[0].field._alertTargets.value.push(obj),
+        )
+      }
     },
     setRecipients(obj) {
       this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value.push(obj)
@@ -1318,6 +1348,7 @@ export default {
   },
   updated() {
     this.alertTemplateForm.field.isActive.value = true
+    this.repsPipeline()
   },
 }
 </script>
