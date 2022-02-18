@@ -535,10 +535,9 @@ export default {
     async createFormInstance() {
       try {
         const res = await SObjects.api.createFormInstance({
-          formData: {
             resourceType: 'Opportunity',
-            formType: 'Update',
-          },
+            formType: 'UPDATE',
+            resourceId: "9f1f26a5-414c-4b29-b3c6-fe9e8477b67f"
         })
         console.log(res)
         this.testingUpdate = res.form_id

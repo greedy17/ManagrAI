@@ -284,14 +284,14 @@ class SalesforceSObjectViewSet(
         user = self.request.user
         form_type = self.request.GET.get("form_type")
         resource_type = self.request.GET.get("resource_type")
+        resource_id = self.request.GET.get("resource_id")
         template = (
             OrgCustomSlackForm.objects.for_user(user)
             .filter(Q(resource=resource_type, form_type=form_type))
             .first()
         )
         slack_form = OrgCustomSlackFormInstance.objects.create(
-            template=template,
-            user=user,
+            template=template, user=user, resource_id=resource_id
         )
         return Response(data={"form_id": str(slack_form.id)})
 
@@ -306,17 +306,19 @@ class SalesforceSObjectViewSet(
         from managr.core.models import User
 
         data = self.request.data
+
         user = User.objects.get(id=self.request.user.id)
         form_id = data.get("form_id")
         form_data = data.get("form_data")
         main_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
+        print(main_form.template)
         stage_forms = []
         stage_form_data_collector = {}
         for form in stage_forms:
-            form.save_form(form_data)
+            form.save_form(form_data, False)
             stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
         if not len(stage_forms):
-            main_form.save_form(form_data)
+            main_form.save_form(form_data, False)
         all_form_data = {**stage_form_data_collector, **main_form.saved_data}
         data = None
         attempts = 1
@@ -357,4 +359,5 @@ class SalesforceSObjectViewSet(
                     attempts += 1
         if data is None:
             data = {"success": True}
+        print(data)
         return Response(data=data)
