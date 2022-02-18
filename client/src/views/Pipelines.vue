@@ -64,29 +64,32 @@
     </Modal>
     <div v-if="!loading">
       <header class="flex-row-spread">
-        <div @click="test">
+        <!-- <div @click="test">
           <h3 class="title">Hi, {{ user.fullName }}</h3>
           <h5 class="sub-heading">
             Update you pipeline faster. Changes instantly auto sync to Salesforce
           </h5>
         </div>
-
         <div>
-          <button @click="refresh(refreshId)" class="pipe-button">
-            <img src="@/assets/images/refresh.png" style="height: 1rem" alt="" />
-          </button>
-        </div>
+        </div> -->
       </header>
 
-      <section style="margin-top: -1rem" class="flex-row-spread">
+      <section class="flex-row-spread">
         <div v-if="noSelection" class="flex-row">
           <button @click="showList = !showList" class="pipe-button">
-            <img
-              class="invert"
+            <!-- <img
               src="@/assets/images/list.png"
-              style="height: 1rem; margin-right: 0.25rem"
+              style="height: 1rem; margin-right: 0.3rem"
               alt=""
-            />{{ currentList }}
+            /> -->
+            {{ currentList }}
+            <img
+              v-if="showPopularList"
+              class="invert filter"
+              style="height: 0.75rem"
+              src="@/assets/images/downArrow.png"
+              alt=""
+            />
           </button>
           <div v-show="showList" class="list-section">
             <p @click="showPopularList = !showPopularList" class="list-section__title">
@@ -227,10 +230,12 @@
             <input type="search" v-model="workflowFilterText" placeholder="search" />
             <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
           </div>
-
           <button class="add-button">
             <img src="@/assets/images/plusOne.png" style="height: 1rem" alt="" />
             Opportunity
+          </button>
+          <button @click="refresh(refreshId)" class="pipe-button">
+            <img src="@/assets/images/refresh.png" class="invert" style="height: 1rem" alt="" />
           </button>
         </div>
       </section>
@@ -248,6 +253,9 @@
             <!-- <div class="table-cell-header">Next Step</div> -->
             <div class="table-cell-header">Close Date</div>
             <div class="table-cell-header">Last Activity</div>
+            <div class="table-cell-header cell-name">
+              <img src="@/assets/images/plusOne.png" class="invert" style="height: 1rem" alt="" />
+            </div>
           </div>
 
           <tr class="table-row" :key="i" v-for="(opp, i) in allOppsFiltered">
@@ -287,6 +295,9 @@
               {{ formatDateTime(opp.last_activity_date) }}
             </div>
             <div class="table-cell" v-else>-</div>
+            <div class="table-cell">
+              <p>---</p>
+            </div>
           </tr>
         </div>
       </section>
@@ -300,6 +311,9 @@
             <div class="table-cell-header">Name</div>
             <div class="table-cell-header" :key="i" v-for="(field, i) in oppFields" ref="fields">
               {{ getFields(field.referenceDisplayLabel) }}
+            </div>
+            <div class="table-cell-header cell-name">
+              <img src="@/assets/images/plusOne.png" class="invert" style="height: 1rem" alt="" />
             </div>
           </div>
 
@@ -337,6 +351,9 @@
                     ]
                   : workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field))]
               }}
+            </div>
+            <div class="table-cell">
+              <p>---</p>
             </div>
           </tr>
         </div>
@@ -485,21 +502,27 @@ export default {
       console.log(this.updateResource())
     },
     async refresh(id) {
-      console.log(id)
-      try {
-        await AlertTemplate.api.runAlertTemplateNow(id)
-        this.$Alert.alert({
-          message: `workflow initiated successfully`,
-          type: 'success',
-          timeout: 2000,
-        })
-      } catch {
-        this.$Alert.alert({
-          message: 'Something went wrong (o^^)o.... Try again',
-          type: 'error',
-          timeout: 2000,
-        })
+      if (id) {
+        try {
+          await AlertTemplate.api.runAlertTemplateNow(id)
+          this.$Alert.alert({
+            message: `workflow initiated successfully`,
+            type: 'success',
+            timeout: 2000,
+          })
+        } catch {
+          this.$Alert.alert({
+            message: 'Something went wrong (o^^)o.... Try again',
+            type: 'error',
+            timeout: 2000,
+          })
+        }
       }
+      this.$Alert.alert({
+        message: `workflows sucessfully refreshed`,
+        type: 'success',
+        timeout: 2000,
+      })
     },
     resetNotes() {
       this.notes = []
@@ -766,6 +789,9 @@ export default {
 ::placeholder {
   color: $mid-gray;
 }
+h3 {
+  font-size: 22px;
+}
 ::v-deep .tn-dropdown__selection-container:after {
   position: absolute;
   content: '';
@@ -871,7 +897,7 @@ export default {
   position: sticky;
   background-color: $off-white;
   font-weight: bold;
-  font-size: 14px;
+  font-size: 15px;
   color: $base-gray;
 }
 .table-cell-checkbox-header {
@@ -918,7 +944,7 @@ p {
 header,
 section {
   margin: 0;
-  padding: 0px 10px;
+  padding: 0px 2px;
 }
 .flex-row {
   display: flex;
@@ -936,7 +962,7 @@ section {
   justify-content: space-between;
 }
 .pipelines {
-  margin-top: 3rem;
+  margin-top: 5rem;
   color: $base-gray;
 }
 .invert {
@@ -959,7 +985,7 @@ section {
   margin: 0 0.5rem 0 0;
   padding: 0.25rem 0.5rem;
   border-radius: 0.2rem;
-  color: white;
+  color: $darker-green;
   cursor: pointer;
   transition: all 0.3s;
 }
