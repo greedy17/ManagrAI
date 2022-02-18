@@ -129,11 +129,57 @@ def create_task(context):
             "view": {
                 "type": "modal",
                 "callback_id": slack_const.COMMAND_CREATE_TASK,
-                "title": {"type": "plain_text", "text": f"Create a Task"},
+                "title": {"type": "plain_text", "text": "Create a Task"},
                 "blocks": get_block_set("create_task_modal", context={"u": context.get("u"),},),
                 "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
                 "private_metadata": json.dumps(context),
                 "external_id": f"create_task_modal.{str(uuid.uuid4())}",
+            },
+        }
+        if view_id:
+            data["view_id"] = view_id
+        else:
+            data["trigger_id"] = context.get("trigger_id")
+        slack_requests.generic_request(url, data, access_token=access_token)
+
+
+def log_new_activity(context):
+    # list of accepted commands for this fake endpoint
+    user = User.objects.get(id=context.get("u"))
+    if user.slack_integration:
+        slack = UserSlackIntegration.objects.filter(slack_id=user.slack_integration.id).first()
+        if not slack:
+            data = {
+                "response_type": "ephemeral",
+                "text": "Sorry I cant find your managr account",
+            }
+
+        access_token = user.organization.slack_integration.access_token
+        view_id = context.get("view_id", None)
+        url = (
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+            if view_id
+            else slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+        )
+        options = [
+            block_builders.option("Event", "create_event_modal"),
+            block_builders.option("Task", "create_task_modal"),
+        ]
+        blocks = [
+            block_builders.static_select(
+                "Type of Activity to log:",
+                options,
+                slack_const.COMMAND_LOG_NEW_ACTIVITY,
+                block_id="selected_activity",
+            )
+        ]
+        data = {
+            "view": {
+                "type": "modal",
+                "callback_id": slack_const.COMMAND_LOG_NEW_ACTIVITY,
+                "title": {"type": "plain_text", "text": "Log Activity"},
+                "blocks": blocks,
+                "private_metadata": json.dumps(context),
             },
         }
         if view_id:
@@ -377,7 +423,7 @@ def get_action(action_name, context={}, *args, **kwargs):
         "UPDATE_RESOURCE": update_resource,
         "CREATE_RESOURCE": create_resource,
         "LIST_TASKS": list_tasks,
-        "CREATE_TASK": create_task,
+        "LOG_NEW_ACTIVITY": log_new_activity,
         "GET_NOTES": get_notes_command,
         "SCHEDULE_MEETING": schedule_meeting,
         "ADD_SEQUENCE": add_to_sequence,
