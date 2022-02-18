@@ -217,6 +217,7 @@ RESOURCE_SYNC_OPPORTUNITYLINEITEM = "OpportunityLineItem"
 
 
 SALESFORCE_RESOURCE_TASK = "Task"
+SALESFORCE_RESOURCE_EVENT = "Event"
 
 SALESFORCE_OBJECT_FIELDS = "OBJECT_FIELDS"
 SALESFORCE_PICKLIST_VALUES = "PICKLIST_VALUES"
@@ -248,6 +249,18 @@ TASK_QUERY_FIELDS = [
     "WhatId",
     "WhoId",
     "Status",
+]
+
+EVENT_FIELDS = [
+    "Id",
+    "Description",
+    "Subject",
+    "CreatedDate",
+    "ActivityDate",
+    "WhatId",
+    "WhoId",
+    "DurationInMinutes",
+    "ActivityDateTime",
 ]
 
 OPPORTUNITY_HISTORY_FIELDS = ["Id", "CreatedDate"]
