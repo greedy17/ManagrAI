@@ -1152,10 +1152,10 @@ def process_create_event(payload, context):
 
     related_to_type = [
         value.get("selected_option")
-        for value in state.get("managr_task_related_to_resource", {}).values()
+        for value in state.get("managr_event_related_to_resource", {}).values()
     ]
     related_to = [
-        value.get("selected_option") for value in state.get("managr_task_related_to", {}).values()
+        value.get("selected_option") for value in state.get("managr_event_related_to", {}).values()
     ]
     if len(related_to) and len(related_to_type):
         related_to = (
