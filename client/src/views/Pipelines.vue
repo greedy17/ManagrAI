@@ -62,6 +62,124 @@
         </section>
       </div>
     </Modal>
+
+    <Modal
+      v-if="editOpModalOpen"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), resetEdit()
+        }
+      "
+    >
+      <div class="opp-modal-container">
+        <div class="flex-row-spread header">
+          <div class="flex-row">
+            <img
+              src="@/assets/images/logo.png"
+              style="height: 1.5rem; margin-left: 0.5rem; margin-right: 0.25rem"
+              alt=""
+            />
+            <h4>Update Opportunity</h4>
+          </div>
+          <img
+            src="@/assets/images/clear.png"
+            style="height: 1.2rem; margin-right: 0.1rem; cursor: pointer"
+            @click="resetEdit"
+            class="invert"
+            alt=""
+          />
+        </div>
+        <div class="opp-modal">
+          <section :key="field.apiName" v-for="field in oppFormCopy">
+            <div v-if="field.apiName === 'meeting_type'">
+              <p>Note Subject <span style="color: #beb5cc">(optional)</span></p>
+              <textarea
+                id="update-input"
+                cols="30"
+                rows="2"
+                style="width: 100%; border-radius: 0.25rem"
+              >
+              </textarea>
+            </div>
+            <div v-else-if="field.apiName === 'meeting_comments'">
+              <p>Notes <span style="color: #beb5cc">(optional)</span></p>
+              <textarea
+                id="update-input"
+                ccols="30"
+                rows="4"
+                style="width: 100%; border-radius: 0.25rem"
+              >
+              </textarea>
+            </div>
+
+            <div
+              class="drop-row"
+              v-else-if="
+                (field.dataType === 'String' && field.apiName !== 'meeting_type') ||
+                (field.dataType === 'String' && field.apiName !== 'meeting_comments') ||
+                field.dataType === 'Currency' ||
+                field.dataType === 'TextArea'
+              "
+            >
+              <p>
+                {{ field.referenceDisplayLabel }}
+              </p>
+              <input id="update-input" type="text" />
+            </div>
+
+            <div
+              class="drop-row"
+              v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'"
+            >
+              <p>
+                {{ field.referenceDisplayLabel }}
+              </p>
+              <select name="select" id="update-input">
+                <option :key="stage" v-for="stage in stages" :value="stage.value">
+                  {{ stage.label }}
+                </option>
+              </select>
+            </div>
+
+            <div class="drop-row" v-else-if="field.dataType === 'Date'">
+              <p>
+                {{ field.referenceDisplayLabel }}
+              </p>
+              <input type="date" id="update-input" name="trip-start" value="0000-00-00" />
+            </div>
+            <div class="drop-row" v-else-if="field.dataType === 'DateTime'">
+              <p>
+                {{ field.referenceDisplayLabel }}
+              </p>
+              <input type="datetime-local" id="start" name="trip-start" value="0000-00-00" />
+            </div>
+            <div
+              class="drop-row"
+              v-else-if="field.dataType === 'Phone' || field.dataType === 'Reference'"
+            >
+              <p>
+                {{ field.referenceDisplayLabel }}
+              </p>
+              <input id="update-input" type="text" />
+            </div>
+            <div
+              class="drop-row"
+              v-else-if="field.dataType === 'Phone' || field.dataType === 'Double'"
+            >
+              <p>
+                {{ field.referenceDisplayLabel }}
+              </p>
+              <input id="update-input" type="number" />
+            </div>
+          </section>
+        </div>
+        <div class="flex-end">
+          <button class="add-button">update</button>
+        </div>
+      </div>
+    </Modal>
+
     <div v-if="!loading">
       <header class="flex-row-spread">
         <!-- <div @click="test">
@@ -246,11 +364,10 @@
             <div class="table-cell-checkbox-header">
               <input style="padding-top: 0.5rem" type="checkbox" />
             </div>
-            <div class="table-cell-header">Name</div>
+            <div @click="test" class="table-cell-header">Name</div>
             <div class="table-cell-header">Stage</div>
             <div class="table-cell-header">Forecast Category</div>
             <div class="table-cell-header">Amount</div>
-            <!-- <div class="table-cell-header">Next Step</div> -->
             <div class="table-cell-header">Close Date</div>
             <div class="table-cell-header">Last Activity</div>
             <div class="table-cell-header cell-name">
@@ -270,7 +387,11 @@
                   <div style="color: #9b9b9b">owner: owner's name</div>
                 </div>
                 <div style="margin-top: 0.5rem" class="flex-row">
-                  <img class="name-cell-note-button" src="@/assets/images/edit-note.png" />
+                  <img
+                    @click="createFormInstance(opp.id)"
+                    class="name-cell-note-button"
+                    src="@/assets/images/edit-note.png"
+                  />
                   <img
                     @click="getNotes(opp.id)"
                     class="name-cell-edit-note-button"
@@ -389,7 +510,7 @@
 
 <script>
 import DropDownSelect from '@thinknimble/dropdownselect'
-import { SObjects } from '@/services/salesforce'
+import { SObjects, SObjectPicklist } from '@/services/salesforce'
 import AlertTemplate, { AlertConfig, AlertInstance } from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
 import SlackOAuth, { salesforceFields } from '@/services/slack'
@@ -414,6 +535,7 @@ export default {
       currentWorkflowFields: null,
       selectedWorkflow: false,
       modalOpen: false,
+      editOpModalOpen: false,
       refreshId: null,
       filterText: '',
       workflowFilterText: '',
@@ -434,9 +556,12 @@ export default {
       showNotes: false,
       notes: [],
       updateOppForm: null,
+      oppFormCopy: null,
       oppFields: [],
       instances: [],
-      testingUpdate: null,
+      instanceId: null,
+      formData: {},
+      stages: null,
       monetaryOptions: ['less than', 'greater than', 'equals'],
       oppFilters: [
         {
@@ -493,13 +618,25 @@ export default {
   created() {
     this.getObjects()
     this.getAllForms()
-    this.createFormInstance()
     this.team.refresh()
     this.templates.refresh()
+    this.listPicklists({
+      salesforceObject: this.Opportunity,
+      picklistFor: 'StageName',
+    })
   },
   methods: {
     test() {
-      console.log(this.updateResource())
+      console.log(this.stages)
+    },
+    async listPicklists(query_params = {}) {
+      try {
+        const res = await SObjectPicklist.api.listPicklists(query_params)
+
+        this.stages = res.length ? res[0]['values'] : []
+      } catch (e) {
+        console.log(e)
+      }
     },
     async refresh(id) {
       if (id) {
@@ -526,8 +663,10 @@ export default {
     },
     resetNotes() {
       this.notes = []
-      this.noteTitles = []
-      this.modalOpen = !this.modalOpen
+      this.editModalOpen = !this.editModalOpen
+    },
+    resetEdit() {
+      this.editOpModalOpen = !this.editOpModalOpen
     },
     camelize(str) {
       return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {
@@ -555,15 +694,15 @@ export default {
     //   this.currentWorkflow.refresh()
     // },
 
-    async createFormInstance() {
+    async createFormInstance(id) {
       try {
         const res = await SObjects.api.createFormInstance({
-            resourceType: 'Opportunity',
-            formType: 'UPDATE',
-            resourceId: "9f1f26a5-414c-4b29-b3c6-fe9e8477b67f"
+          resourceType: 'Opportunity',
+          formType: 'UPDATE',
+          resourceId: id,
         })
-        console.log(res)
-        this.testingUpdate = res.form_id
+        this.editOpModalOpen = true
+        this.instanceId = res.form_id
       } catch (e) {
         console.log(e)
       }
@@ -571,12 +710,13 @@ export default {
     async updateResource() {
       try {
         const res = await SObjects.api.updateResource({
-          form_id: this.testingUpdate,
+          form_id: this.instanceId,
           form_data: {
-            meeting_type: 'Update pending......',
+            Name: 'Update Testing...',
+            NextStep: 'Still testing updates',
           },
         })
-        console.log(res)
+        console.log(res.data)
       } catch (e) {
         console.log(e)
       }
@@ -617,6 +757,7 @@ export default {
         this.updateOppForm = this.updateOppForm.filter(
           (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
         )
+        this.oppFormCopy = this.updateOppForm[0].fieldsRef
         this.oppFields = this.updateOppForm[0].fieldsRef.filter(
           (field) =>
             field.apiName !== 'meeting_type' &&
@@ -788,6 +929,14 @@ export default {
 ::placeholder {
   color: $mid-gray;
 }
+input[type='date']::-webkit-datetime-edit-text,
+input[type='date']::-webkit-datetime-edit-month-field,
+input[type='date']::-webkit-datetime-edit-day-field,
+input[type='date']::-webkit-datetime-edit-year-field {
+  color: #888;
+  cursor: pointer;
+}
+
 h3 {
   font-size: 22px;
 }
@@ -827,7 +976,7 @@ h3 {
   border-radius: 0.25rem;
 }
 .table-section {
-  height: 67vh;
+  height: 70vh;
   overflow: scroll;
   margin-top: 0.5rem;
   border-radius: 5px;
@@ -861,6 +1010,21 @@ h3 {
   align-items: center;
   border-radius: 0.5rem;
   padding: 0.5rem;
+}
+.opp-modal-container {
+  background-color: $off-white;
+  height: 80vh;
+  align-items: center;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+}
+.opp-modal {
+  padding: 0 0.75rem;
+  overflow-y: scroll;
+  height: 56vh;
+  border-radius: 0.25rem;
+  border-bottom: 3px solid $white;
+  background-color: white;
 }
 .note-section {
   padding: 0.5rem 1rem;
@@ -896,7 +1060,7 @@ h3 {
   position: sticky;
   background-color: $off-white;
   font-weight: bold;
-  font-size: 15px;
+  font-size: 14px;
   color: $base-gray;
 }
 .table-cell-checkbox-header {
@@ -930,6 +1094,13 @@ input[type='text']:focus {
 }
 input[type='checkbox'] {
   cursor: pointer;
+}
+select {
+  color: #9e9e9e;
+  cursor: pointer;
+}
+option:not(:first-of-type) {
+  color: black;
 }
 p {
   font-size: 13px;
@@ -1035,6 +1206,18 @@ section {
   border-radius: 5px;
   margin-right: 0.5rem;
 }
+#update-input {
+  background-color: $off-white;
+  box-shadow: 1px 1px 1px $gray;
+  border: 2px solid $light-orange-gray;
+  border-radius: 5px;
+  padding: 2px;
+  min-height: 4vh;
+  width: 14vw;
+}
+#update-input:focus {
+  outline: 2px solid $lighter-green;
+}
 .loader {
   display: flex;
   justify-content: center;
@@ -1073,6 +1256,10 @@ section {
   margin-right: 0.25rem;
   background-color: $dark-green;
   transition: all 0.3s;
+}
+.header {
+  font-size: 18px;
+  margin-bottom: 0.4rem;
 }
 .list-section {
   z-index: 2;
@@ -1207,14 +1394,28 @@ section {
     cursor: pointer;
   }
 }
+.drop-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+.flex-end {
+  width: 100%;
+  padding: 2rem 0.25rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
 ::-webkit-scrollbar {
-  background-color: $light-orange-gray;
+  background-color: transparent;
   -webkit-appearance: none;
-  width: 1px;
-  height: 100%;
+  width: 3px;
+  height: 90%;
 }
 ::-webkit-scrollbar-thumb {
   border-radius: 2px;
-  background-color: $very-light-gray;
+  background-color: $soft-gray;
+  max-height: 10px;
 }
 </style>
