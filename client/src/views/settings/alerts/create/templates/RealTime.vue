@@ -80,7 +80,7 @@
         </div>
       </div>
 
-      <div class="card__">
+      <!-- <div class="card__">
         <div class="card__header">
           <h3>Closed <span style="color: #199e54">Won</span></h3>
         </div>
@@ -103,29 +103,16 @@
           />
         </div>
 
-        <div style="margin-top: 0.5rem">
-          <!-- <button
+        <div style="margin-top: 2rem">
+          <button
             v-if="hasSalesforceIntegration && hasSlackIntegration"
-            @click="goToStageAdvanced"
+            @click="goToClosedWon"
             class="orange_button"
           >
             Activate
           </button>
-          <h4
-            style="margin-top: -0.5rem"
-            v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)"
-          >
-            Connect Slack & Salesforce to acivate
-          </h4>
-          <h4
-            style="margin-top: -0.5rem"
-            v-else-if="user.activatedManagrConfigs.includes('Close Date Passed')"
-          >
-            Activated
-          </h4> -->
-          <p style="">Coming Soon</p>
         </div>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
@@ -222,6 +209,9 @@ export default {
     },
     goToCloseDateApproaching() {
       this.$router.push({ name: 'CloseDateApproaching' })
+    },
+    goToClosedWon() {
+      this.$router.push({ name: 'ClosedWon' })
     },
     goToCloseDatePassed() {
       this.$router.push({ name: 'CloseDatePassed' })

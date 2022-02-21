@@ -9,6 +9,7 @@ from rest_framework.exceptions import ValidationError
 
 from ..exceptions import TokenExpired, InvalidRequest
 from ..models import (
+    SalesloftAccount,
     SalesloftAuthAccount,
     SLAccount,
     Cadence,
@@ -45,8 +46,8 @@ def emit_sync_people(auth_account_id, verbose_name):
     return sync_people(auth_account_id, verbose_name=verbose_name)
 
 
-def emit_add_cadence_membership(people_id, cadence_id):
-    return add_cadence_membership(people_id, cadence_id)
+def emit_add_cadence_membership(people_id, cadence_id, user_id):
+    return add_cadence_membership(people_id, cadence_id, user_id)
 
 
 @background()
@@ -185,14 +186,12 @@ def sync_people(auth_account_id):
     return logger.info(f"Synced {success}/{success+failed} people for {auth_account}")
 
 
-def add_cadence_membership(person_id, cadence_id):
+def add_cadence_membership(person_id, cadence_id, user_id):
     cadence = Cadence.objects.get(id=cadence_id)
-    auth_account = SalesloftAuthAccount.objects.get(id=cadence.owner.auth_account.id)
+    account = SalesloftAccount.objects.get(user=user_id)
     contact = Contact.objects.get(id=person_id)
     person = People.objects.filter(email=contact.email).first()
-    slaccount = SLAccount.objects.get(name=contact.account.name)
-    owner = slaccount.owner.salesloft_id
-    people_id = person.people_id if person else None
+    slaccount = SLAccount.objects.filter(name=contact.account.name).first()
     created = False
     while True:
         attempts = 1
@@ -202,15 +201,19 @@ def add_cadence_membership(person_id, cadence_id):
                     "first_name": contact.secondary_data["FirstName"],
                     "last_name": contact.secondary_data["LastName"],
                     "email_address": contact.email,
-                    "owner_id": owner,
-                    "account_id": slaccount.account_id,
+                    "owner_id": account.salesloft_id,
                 }
-                create_res = PeopleAdapter.create_in_salesloft(auth_account.access_token, data)
+                if slaccount:
+                    data["account_id"] = slaccount.account_id
+                create_res = PeopleAdapter.create_in_salesloft(
+                    account.auth_account.access_token, data
+                )
                 process_person(create_res["data"])
                 people_id = create_res["data"]["id"]
                 created = True
-
-            res = cadence.helper_class.add_membership(people_id, auth_account.access_token)
+            else:
+                people_id = person.people_id
+            res = cadence.helper_class.add_membership(people_id, account.auth_account.access_token)
             break
         except TokenExpired:
             if attempts >= 5:
@@ -218,10 +221,10 @@ def add_cadence_membership(person_id, cadence_id):
                     f"Failed to add Person with id {people_id} to Cadence {cadence.name}, could not regenerate token"
                 )
             else:
-                auth_account.regenerate_token()
+                account.auth_account.regenerate_token()
                 attempts += 1
-        except InvalidRequest:
-            return {"status": "Failed"}
+        except InvalidRequest as e:
+            return {"status": "Failed", "errors": str(e)}
         except ValidationError as e:
             logger.exception(f"Error adding cadence: {e}")
             return {"status": "Failed"}

@@ -27,10 +27,11 @@ from . import constants as opp_consts
 
 class LeadQuerySet(models.QuerySet):
     def for_user(self, user):
-        if user.is_superuser:
-            return self.all()
-        elif user.organization and user.is_active:
-            return self.filter(imported_by__organization=user.organization_id)
+        if user.organization and user.is_active:
+            if user.user_level in ["SDR", "MANAGER"]:
+                return self.filter(owner__organization=user.organization)
+            else:
+                return self.filter(owner=user)
         else:
             return None
 
@@ -48,11 +49,7 @@ class Lead(TimeStampModel, IntegrationModel):
         max_length=500,
     )
     owner = models.ForeignKey(
-        "core.User",
-        related_name="owned_leads",
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
+        "core.User", related_name="owned_leads", on_delete=models.SET_NULL, blank=True, null=True,
     )
     objects = LeadQuerySet.as_manager()
 
@@ -77,6 +74,15 @@ class Lead(TimeStampModel, IntegrationModel):
                 salesforce_object="Lead"
             ).values_list("api_name", flat=True)
             res = LeadAdapter.update_lead(data, token, base_url, self.integration_id, object_fields)
+            self.is_stale = True
+            self.save()
+            return res
+
+    def convert_in_salesforce(self, data):
+        if self.owner and hasattr(self.owner, "salesforce_account"):
+            token = self.owner.salesforce_account.access_token
+            base_url = self.owner.salesforce_account.instance_url
+            res = LeadAdapter.convert_lead(data, token, base_url, str(self.owner.id))
             self.is_stale = True
             self.save()
             return res
@@ -122,12 +128,7 @@ class Opportunity(TimeStampModel, IntegrationModel):
     """
 
     name = models.CharField(max_length=255, blank=True, null=False)
-    amount = models.DecimalField(
-        max_digits=30,
-        decimal_places=15,
-        default=0.00,
-        null=True,
-    )
+    amount = models.DecimalField(max_digits=30, decimal_places=15, default=0.00, null=True,)
     forecast_category = models.CharField(max_length=255, null=True)
 
     close_date = models.DateField(null=True)
@@ -192,7 +193,9 @@ class Opportunity(TimeStampModel, IntegrationModel):
         data["id"] = str(data.get("id"))
         return OpportunityAdapter(**data)
 
-    def update_in_salesforce(self, data):
+    def update_in_salesforce(self, data, return_task_name=False):
+        from managr.salesforce.background import emit_update_current_db_values
+
         if self.owner and hasattr(self.owner, "salesforce_account"):
             token = self.owner.salesforce_account.access_token
             base_url = self.owner.salesforce_account.instance_url
@@ -204,6 +207,17 @@ class Opportunity(TimeStampModel, IntegrationModel):
             )
             self.is_stale = True
             self.save()
+            update_task = emit_update_current_db_values(
+                str(self.owner.id),
+                "Opportunity",
+                self.integration_id,
+                f"OPPORTUNITY-UPDATE-{str(uuid.uuid4())}",
+            )
+            if return_task_name:
+                return {
+                    "task_hash": update_task.task_hash,
+                    "verbose_name": update_task.verbose_name,
+                }
             return res
 
     def create_in_salesforce(self, data=None, user_id=None):

@@ -53,6 +53,7 @@ class SalesloftAuthAdapter:
     def _handle_response(response, fn_name=None):
         if not hasattr(response, "status_code"):
             raise ValueError
+
         elif response.status_code == 200 or response.status_code == 201:
             try:
                 data = response.json()
@@ -61,9 +62,9 @@ class SalesloftAuthAdapter:
             except json.decoder.JSONDecodeError as e:
                 return logger.error(f"An error occured with a zoom integration, {e}")
         else:
+
             status_code = response.status_code
             error_data = response.json()
-            logger.info(f"{error_data}")
             error_check = error_data.get("error_param", None)
             error_param = error_check if error_check else error_data.get("errors")
             kwargs = {
@@ -329,7 +330,6 @@ class CadenceAdapter:
         else:
             status_code = response.status_code
             error_data = response.json()
-            logger.info(f"{error_data}")
             error_check = error_data.get("error_param", None)
             error_param = error_check if error_check else error_data.get("errors")
             kwargs = {
@@ -485,6 +485,7 @@ class PeopleAdapter:
 
     @staticmethod
     def _handle_response(response, fn_name=None):
+
         if not hasattr(response, "status_code"):
             raise ValueError
         elif response.status_code == 200 or response.status_code == 201:
@@ -497,7 +498,6 @@ class PeopleAdapter:
         else:
             status_code = response.status_code
             error_data = response.json()
-            logger.info(f"{error_data}")
             error_check = error_data.get("error_param", None)
             error_param = error_check if error_check else error_data.get("errors")
             kwargs = {

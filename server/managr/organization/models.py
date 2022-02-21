@@ -101,10 +101,11 @@ class Organization(TimeStampModel):
 
 class AccountQuerySet(models.QuerySet):
     def for_user(self, user):
-        if user.is_superuser:
-            return self.all()
-        elif user.organization and user.is_active:
-            return self.filter(organization=user.organization)
+        if user.organization and user.is_active:
+            if user.user_level in ["SDR", "MANAGER"]:
+                return self.filter(organization=user.organization)
+            else:
+                return self.filter(organization=user.organization, owner=user)
         else:
             return None
 
@@ -213,12 +214,13 @@ class Account(TimeStampModel, IntegrationModel):
 
 class ContactQuerySet(models.QuerySet):
     def for_user(self, user):
-        if user.is_superuser:
-            return self.all()
-        elif user.organization and user.is_active:
-            return self.filter(account__organization=user.organization)
+        if user.organization and user.is_active:
+            if user.user_level in ["SDR", "MANAGER"]:
+                return self.filter(owner__organization=user.organization)
+            else:
+                return self.filter(owner=user)
         else:
-            return self.none()
+            return None
 
 
 class Contact(TimeStampModel, IntegrationModel):
@@ -270,6 +272,10 @@ class Contact(TimeStampModel, IntegrationModel):
 
     def __str__(self):
         return f"contact integration: {self.integration_source}: {self.integration_id}, email: {self.email}"
+
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.email, str(self.id))
 
     def save(self, *args, **kwargs):
         # if there is an integration id make sure it is unique

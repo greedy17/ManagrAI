@@ -337,7 +337,7 @@ class GongCallAdapter:
             except Exception as e:
                 GongAPIException(e, fn_name)
             except json.decoder.JSONDecodeError as e:
-                return logger.error(f"An error occured with a zoom integration, {e}")
+                return logger.error(f"An error occured with a gong integration, {e}")
         else:
             status_code = response.status_code
             error_data = response.json()
@@ -369,16 +369,19 @@ class GongCallAdapter:
         )
         opp = opp_data[0] if len(opp_data) else None
         acc = acc_data[0] if len(acc_data) else None
-        data = {}
-        data["auth_account"] = auth_account.id
-        data["crm"] = context_data[0].get("system", None) if len(context_data) else None
-        data["crm_id"] = opp.get("objectId") if opp else None
-        data["acc_crm_id"] = acc.get("objectId") if acc else None
-        data["gong_id"] = meta_data.get("id")
-        data["client_id"] = meta_data.get("clientUniqueId", None)
-        data["client_system"] = meta_data.get("system", None)
-        data["scheduled_date"] = schedule_date
-        return cls(**data)
+        if acc is not None:
+            data = {}
+            data["auth_account"] = auth_account.id
+            data["crm"] = context_data[0].get("system", None) if len(context_data) else None
+            data["crm_id"] = opp.get("objectId") if opp else None
+            data["acc_crm_id"] = acc.get("objectId") if acc else None
+            data["gong_id"] = meta_data.get("id")
+            data["client_id"] = meta_data.get("clientUniqueId", None)
+            data["client_system"] = meta_data.get("system", None)
+            data["scheduled_date"] = schedule_date
+            return cls(**data)
+        else:
+            return None
 
     def get_call_details(self, access_token):
         headers = {

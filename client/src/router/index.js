@@ -214,6 +214,12 @@ export default new Router({
         import(/* webpackChunkName: "settings" */ '../views/settings/alerts/create/templates/DealMovement'),
     },
     {
+      path: '/closed-won',
+      name: 'ClosedWon',
+      component: () =>
+        import(/* webpackChunkName: "settings" */ '../views/settings/alerts/create/templates/ClosedWon'),
+    },
+    {
       path: '/map',
       name: 'CustomizeLandingPage',
       component: CustomizeLandingPage,

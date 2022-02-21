@@ -1,8 +1,11 @@
+import logging
+import random
 from faker import Faker
 from urllib.parse import urlencode, unquote
 from datetime import datetime
 from .routes import routes
 import time
+from background_task.models import CompletedTask
 from django.db.models import Q
 from django.utils import timezone
 from django.core.management import call_command
@@ -14,23 +17,18 @@ from django.db import IntegrityError
 
 from rest_framework.decorators import action
 from rest_framework import (
-    authentication,
     filters,
     permissions,
-    generics,
     mixins,
-    status,
-    views,
     viewsets,
 )
 from rest_framework.decorators import (
     api_view,
     permission_classes,
-    authentication_classes,
 )
 from rest_framework.response import Response
-from rest_framework.exceptions import ValidationError, PermissionDenied
-from managr.api.decorators import log_all_exceptions
+from rest_framework.exceptions import ValidationError
+from managr.core.models import User
 from managr.api.emails import send_html_email
 
 from managr.slack.models import OrgCustomSlackForm
@@ -47,23 +45,21 @@ from .serializers import (
 )
 from .adapter.models import SalesforceAuthAccountAdapter
 from .background import (
-    emit_sf_sync,
     emit_gen_next_sync,
     emit_gen_next_object_field_sync,
     emit_generate_form_template,
-    emit_sync_sobject_picklist,
 )
 from managr.salesforce.adapter.exceptions import (
     TokenExpired,
     FieldValidationError,
     RequiredFieldError,
-    SFQueryOffsetError,
     UnhandledSalesforceError,
     SFNotFoundError,
 )
 
-from . import constants as sf_consts
 from .filters import SObjectFieldFilterSet
+
+logger = logging.getLogger("managr")
 
 
 @api_view(["post"])
@@ -92,7 +88,10 @@ def authenticate(request):
         # generate forms
         if serializer.instance.user.is_admin:
             emit_generate_form_template(data.user)
-
+        user = User.objects.get(id=request.user.id)
+        sync_operations = [*user.salesforce_account.resource_sync_opts]
+        sync_time = (timezone.now() + timezone.timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M%Z")
+        emit_gen_next_sync(str(request.user.id), sync_operations, sync_time)
         return Response(data={"success": True})
 
 
@@ -243,8 +242,13 @@ class SalesforceSObjectViewSet(
 
     def get_queryset(self):
         param_sobject = self.request.GET.get("sobject")
+        param_resource_id = self.request.GET.get("resource_id", None)
         sobject = routes[param_sobject]
-        query = sobject["model"].objects.for_user(self.request.user)
+        query = (
+            sobject["model"].objects.get(id=param_resource_id)
+            if param_resource_id
+            else sobject["model"].objects.for_user(self.request.user)
+        )
         return query
 
     @action(
@@ -311,7 +315,6 @@ class SalesforceSObjectViewSet(
         form_id = data.get("form_id")
         form_data = data.get("form_data")
         main_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
-        print(main_form.template)
         stage_forms = []
         stage_form_data_collector = {}
         for form in stage_forms:
@@ -325,7 +328,12 @@ class SalesforceSObjectViewSet(
         while True:
             sf = user.salesforce_account
             try:
-                resource = main_form.resource_object.update_in_salesforce(all_form_data)
+                resource = main_form.resource_object.update_in_salesforce(all_form_data, True)
+                data = {
+                    "success": True,
+                    "task_hash": resource["task_hash"],
+                    "verbose_name": resource["verbose_name"],
+                }
                 break
             except FieldValidationError as e:
                 data = {"success": False, "error": str(e)}
@@ -357,7 +365,37 @@ class SalesforceSObjectViewSet(
                 else:
                     time.sleep(2)
                     attempts += 1
-        if data is None:
-            data = {"success": True}
-        print(data)
         return Response(data=data)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="confirm-update",
+    )
+    def confirm_update(self, request, *args, **kwargs):
+
+        task_hash = self.request.GET.get("task_hash")
+        verbose_name = self.request.GET.get("verbose_name")
+        attempts = 1
+        has_error = False
+        while True:
+            if attempts >= 10:
+                has_error = True
+                break
+            try:
+                task = CompletedTask.objects.filter(task_hash=task_hash).order_by("-run_at").first()
+                if task and task.verbose_name == verbose_name:
+                    break
+                else:
+                    attempts += 1
+                    sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                    time.sleep(sleep)
+            except Exception as e:
+                logger.exception(
+                    f"Error retreiving update status from task {verbose_name}, <HASH: {task_hash}> because of: {e}"
+                )
+                attempts += 1
+        if has_error:
+            return Response(data={"success": False})
+        return Response(data={"success": True})
