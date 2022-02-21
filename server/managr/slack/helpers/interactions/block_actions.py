@@ -1346,9 +1346,9 @@ def process_check_is_owner(payload, context):
     slack_id = payload.get("user", {}).get("id")
     user_id = context.get("u")
     type = context.pop("type", None)
-    user = User.objects.get(id=user_id)
+    user = User.objects.get(slack_integration__slack_id=slack_id)
     user_slack = UserSlackIntegration.objects.filter(slack_id=slack_id).first()
-    if user_slack and str(user_slack.user.id) == user_id or user.user_level in ["MANAGER", "SDR"]:
+    if user.user_level in ["MANAGER", "SDR"] or user_slack and str(user_slack.user.id) == user_id:
         if type == "alert":
             return process_show_alert_update_resource_form(payload, context)
         elif type == "prep":
