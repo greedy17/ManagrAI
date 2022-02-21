@@ -1194,7 +1194,8 @@ class ActivityAdapter:
     @staticmethod
     def save_zoom_meeting_to_salesforce(data, access_token, custom_base):
         json_data = json.dumps(data)
-        url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.SALESFORCE_RESOURCE_TASK, "")
+        print(data)
+        url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.SALESFORCE_RESOURCE_EVENT, "")
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         with Client as client:
             r = client.post(
@@ -1247,6 +1248,71 @@ class TaskAdapter:
     def save_task_to_salesforce(data, access_token, custom_base):
         json_data = json.dumps(data)
         url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.SALESFORCE_RESOURCE_TASK, "")
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        with Client as client:
+            r = client.post(
+                url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+            )
+            return SalesforceAuthAccountAdapter._handle_response(r)
+
+    @staticmethod
+    def save_event_to_salesforce(data, access_token, custom_base):
+        json_data = json.dumps(data)
+        url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.SALESFORCE_RESOURCE_EVENT, "")
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        with Client as client:
+            r = client.post(
+                url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+            )
+            return SalesforceAuthAccountAdapter._handle_response(r)
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+
+class EventAdapter:
+    """Two types of activities Task (includes calls, emails) and Events"""
+
+    def __init__(self, **kwargs):
+        self.id = kwargs.get("id", None)
+        self.subject = kwargs.get("subject", None)
+        self.description = kwargs.get("description", None)
+        self.created_date = kwargs.get("created_date", None)
+        self.activity_date = kwargs.get("activity_date", None)
+        self.activity_datetime = kwargs.get("activity_datetime", None)
+        self.what_id = kwargs.get("what_id", None)
+        self.who_id = kwargs.get("who_id", None)
+
+    @staticmethod
+    def get_child_rels():
+        return {}
+
+    @staticmethod
+    def additional_filters(**kwargs):
+        """pass custom additional filters to the url"""
+        time_zone = datetime.now().date().strftime("%Y-%m-%d")
+        return [f"AND ActivityDate >= {time_zone}"]
+
+    # formatted_data.append(resource_class.from_api(result, self.user, *args))
+    @staticmethod
+    def from_api(result, user):
+        """pass custom additional filters to the url"""
+        return TaskAdapter(
+            id=result["Id"],
+            description=result["Description"],
+            subject=result["Subject"],
+            created_date=result["CreatedDate"],
+            activity_date=result["ActivityDate"],
+            activity_datetime=result["ActivityDateTime"],
+            what_id=result["WhatId"],
+            who_id=result["WhoId"],
+        )
+
+    @staticmethod
+    def save_event_to_salesforce(data, access_token, custom_base):
+        json_data = json.dumps(data)
+        url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.SALESFORCE_RESOURCE_EVENT, "")
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         with Client as client:
             r = client.post(
