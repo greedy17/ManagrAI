@@ -90,6 +90,7 @@
             alt=""
           />
         </div>
+
         <div class="opp-modal">
           <section :key="field.id" v-for="field in oppFormCopy">
             <div v-if="field.apiName === 'meeting_type'">
@@ -99,6 +100,7 @@
                 cols="30"
                 rows="2"
                 style="width: 100%; border-radius: 0.25rem"
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
               </textarea>
             </div>
@@ -109,6 +111,7 @@
                 ccols="30"
                 rows="4"
                 style="width: 100%; border-radius: 0.25rem"
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
               </textarea>
             </div>
@@ -119,49 +122,63 @@
                 (field.dataType === 'String' && field.apiName !== 'meeting_type') ||
                 (field.dataType === 'String' && field.apiName !== 'meeting_comments') ||
                 field.dataType === 'Currency' ||
-                field.dataType === 'TextArea'
+                field.dataType === 'TextArea' ||
+                field.dataType === 'Reference'
               "
             >
               <p>
                 {{ field.referenceDisplayLabel }}
               </p>
-              <input id="update-input" type="text" />
+              <input
+                id="update-input"
+                type="text"
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+              />
             </div>
 
             <div
               class="drop-row"
               v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'"
             >
-              <p>
+              <p style="display: none">
+                {{ listPicklists(field.apiName, { picklistFor: field.apiName }) }}
+              </p>
+              <p @click="test(picklistQueryOpts[field.apiName])">
                 {{ field.referenceDisplayLabel }}
               </p>
-              <select name="select" id="update-input">
-                <option :key="stage.label" v-for="stage in stages" :value="stage.value">
-                  {{ stage.label }}
-                </option>
-              </select>
+              <DropDownSearch
+                :items="picklistQueryOpts[getIndex(field.apiName)]"
+                displayKey="label"
+                valueKey="value"
+                nullDisplay="Select"
+                searchable
+                @input="setUpdateValues(field.apiName, value)"
+              />
+              <!-- @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                 v-for="stage in picklistQueryOpts[field.apiName]"
+                 :key="stage.label"
+                 :value="stage.value" -->
             </div>
 
             <div class="drop-row" v-else-if="field.dataType === 'Date'">
               <p>
                 {{ field.referenceDisplayLabel }}
               </p>
-              <input type="date" id="update-input" name="trip-start" value="0000-00-00" />
+              <input
+                type="date"
+                id="update-input"
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+              />
             </div>
             <div class="drop-row" v-else-if="field.dataType === 'DateTime'">
               <p>
                 {{ field.referenceDisplayLabel }}
               </p>
-              <input type="datetime-local" id="start" name="trip-start" value="0000-00-00" />
-            </div>
-            <div
-              class="drop-row"
-              v-else-if="field.dataType === 'Phone' || field.dataType === 'Reference'"
-            >
-              <p>
-                {{ field.referenceDisplayLabel }}
-              </p>
-              <input id="update-input" type="text" />
+              <input
+                type="datetime-local"
+                id="start"
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+              />
             </div>
             <div
               class="drop-row"
@@ -170,7 +187,11 @@
               <p>
                 {{ field.referenceDisplayLabel }}
               </p>
-              <input id="update-input" type="number" />
+              <input
+                id="update-input"
+                type="number"
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+              />
             </div>
           </section>
         </div>
@@ -364,7 +385,7 @@
             <div class="table-cell-checkbox-header">
               <input style="padding-top: 0.5rem" type="checkbox" />
             </div>
-            <div @click="test" class="table-cell-header">Name</div>
+            <div class="table-cell-header">Name</div>
             <div class="table-cell-header">Stage</div>
             <div class="table-cell-header">Forecast Category</div>
             <div class="table-cell-header">Amount</div>
@@ -514,6 +535,7 @@ import { SObjects, SObjectPicklist } from '@/services/salesforce'
 import AlertTemplate, { AlertConfig, AlertInstance } from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
 import SlackOAuth, { salesforceFields } from '@/services/slack'
+import DropDownSearch from '@/components/DropDownSearch'
 import Modal from '@/components/InviteModal'
 import User from '@/services/users'
 
@@ -522,6 +544,7 @@ export default {
   components: {
     DropDownSelect,
     Modal,
+    DropDownSearch,
   },
   data() {
     return {
@@ -561,8 +584,14 @@ export default {
       instances: [],
       instanceId: null,
       formData: {},
+      noteTitle: '',
+      noteInfo: '',
       stages: null,
+      stages2: null,
+      stages3: null,
+      stages4: null,
       monetaryOptions: ['less than', 'greater than', 'equals'],
+      picklistQueryOpts: {},
       oppFilters: [
         {
           title: 'Amount',
@@ -620,20 +649,23 @@ export default {
     this.getAllForms()
     this.team.refresh()
     this.templates.refresh()
-    this.listPicklists({
-      salesforceObject: this.Opportunity,
-      picklistFor: 'StageName',
-    })
   },
   methods: {
-    test() {
-      console.log(this.stages)
+    getIndex(val) {
+      let index = 0
+      for (let i = 0; i < this.picklistQueryOpts.length; i++) {
+        this.picklistQueryOpts[i] === val ? (index = i) : (index = null)
+      }
+      return index
     },
-    async listPicklists(query_params = {}) {
+    test(val) {
+      console.log(val)
+    },
+    async listPicklists(type, query_params = {}) {
       try {
         const res = await SObjectPicklist.api.listPicklists(query_params)
-
-        this.stages = res.length ? res[0]['values'] : []
+        this.picklistQueryOpts[type] = res.length ? res[0]['values'] : []
+        console.log(this.picklistQueryOpts[type])
       } catch (e) {
         console.log(e)
       }
@@ -707,14 +739,17 @@ export default {
         console.log(e)
       }
     },
+    setUpdateValues(key, val) {
+      if (val) {
+        this.formData[key] = val
+      }
+      console.log(this.formData)
+    },
     async updateResource() {
       try {
         const res = await SObjects.api.updateResource({
           form_id: this.instanceId,
-          form_data: {
-            Name: 'Update Testing again',
-            NextStep: 'Testing new update endpoints...',
-          },
+          form_data: this.formData,
         })
         console.log(res.data)
       } catch (e) {
@@ -758,6 +793,10 @@ export default {
           (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
         )
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
+        for (let i = 0; i < this.oppFormCopy.length; i++) {
+          this.picklistQueryOpts[i] = this.oppFormCopy[i].apiName
+        }
+        console.log(this.picklistQueryOpts)
         this.oppFields = this.updateOppForm[0].fieldsRef.filter(
           (field) =>
             field.apiName !== 'meeting_type' &&
