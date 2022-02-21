@@ -2900,10 +2900,9 @@ def process_log_activity(payload, context):
 
         access_token = user.organization.slack_integration.access_token
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH
-
         callback_id = (
             slack_const.COMMAND_CREATE_TASK
-            if modal_type[0] == "create_task_modal"
+            if modal_type == "create_task_modal"
             else slack_const.COMMAND_CREATE_EVENT
         )
         title = "Create Task" if modal_type == "create_task_modal" else "Create Event"

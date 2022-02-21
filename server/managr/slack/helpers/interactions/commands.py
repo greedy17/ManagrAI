@@ -176,7 +176,6 @@ def log_new_activity(context):
         data = {
             "view": {
                 "type": "modal",
-                "callback_id": slack_const.COMMAND_LOG_NEW_ACTIVITY,
                 "title": {"type": "plain_text", "text": "Log Activity"},
                 "blocks": blocks,
                 "private_metadata": json.dumps(context),
