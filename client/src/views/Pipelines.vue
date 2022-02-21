@@ -91,7 +91,7 @@
           />
         </div>
         <div class="opp-modal">
-          <section :key="field.apiName" v-for="field in oppFormCopy">
+          <section :key="field.id" v-for="field in oppFormCopy">
             <div v-if="field.apiName === 'meeting_type'">
               <p>Note Subject <span style="color: #beb5cc">(optional)</span></p>
               <textarea
@@ -136,7 +136,7 @@
                 {{ field.referenceDisplayLabel }}
               </p>
               <select name="select" id="update-input">
-                <option :key="stage" v-for="stage in stages" :value="stage.value">
+                <option :key="stage.label" v-for="stage in stages" :value="stage.value">
                   {{ stage.label }}
                 </option>
               </select>
@@ -175,7 +175,7 @@
           </section>
         </div>
         <div class="flex-end">
-          <button class="add-button">update</button>
+          <button @click="updateResource" class="add-button">update</button>
         </div>
       </div>
     </Modal>
@@ -712,8 +712,8 @@ export default {
         const res = await SObjects.api.updateResource({
           form_id: this.instanceId,
           form_data: {
-            Name: 'Update Testing...',
-            NextStep: 'Still testing updates',
+            Name: 'Update Testing again',
+            NextStep: 'Testing new update endpoints...',
           },
         })
         console.log(res.data)
