@@ -1393,7 +1393,6 @@ def _send_instant_alert(form_ids):
     sobject_fields = list(
         SObjectField.objects.filter(id__in=configs.keys()).values("id", "api_name")
     )
-    resource_data = main_form.resource_object.secondary_data
     resource_name = main_form.resource_object.name if main_form.resource_object.name else ""
 
     old_data = dict()
@@ -1405,15 +1404,11 @@ def _send_instant_alert(form_ids):
     for form in submitted_forms:
         new_data = {**new_data, **form.saved_data}
     users_list = {}
-    print(old_data)
-    print(new_data)
     for field in sobject_fields:
         api_name = field["api_name"]
         if api_name in new_data.keys():
             for object in configs[str(field["id"])].values():
                 if api_name in list(object.values()):
-                    print(new_data[api_name])
-                    print(resource_data[api_name])
                     value_check = create_alert_string(
                         object["operator"],
                         object["data_type"],
