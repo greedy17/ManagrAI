@@ -1301,29 +1301,36 @@ def _send_instant_alert(form_ids):
     for form in submitted_forms:
         new_data = {**new_data, **form.saved_data}
     users_list = {}
+    print(old_data)
+    print(new_data)
     for field in sobject_fields:
         api_name = field["api_name"]
         if api_name in new_data.keys():
             for object in configs[str(field["id"])].values():
-                value_check = create_alert_string(
-                    object["operator"],
-                    object["data_type"],
-                    object["value"],
-                    new_data[api_name],
-                    resource_data[api_name],
-                    object["title"],
-                )
-                if value_check:
-                    recipients = object["recipients"]
-                    for key in recipients.keys():
-                        channel = recipients[key]
-                        if recipients[key] in users_list.keys():
-                            users_list[channel]["text"] += f", _{value_check}_"
-                        else:
-                            users_list[channel] = {
-                                "text": f":zap: *Instant Update:* _{value_check}_",
-                                "id": key,
-                            }
+                if api_name in list(object.values()):
+                    print(new_data[api_name])
+                    print(resource_data[api_name])
+                    value_check = create_alert_string(
+                        object["operator"],
+                        object["data_type"],
+                        object["value"],
+                        new_data[api_name],
+                        old_data[api_name],
+                        object["title"],
+                    )
+                    if value_check:
+                        recipients = object["recipients"]
+                        for key in recipients.keys():
+                            channel = recipients[key]
+                            if recipients[key] in users_list.keys():
+                                users_list[channel]["text"] += f", _{value_check}_"
+                            else:
+                                users_list[channel] = {
+                                    "text": f":zap: *Instant Update:* _{value_check}_",
+                                    "id": key,
+                                }
+                else:
+                    continue
     if len(users_list):
         add_blocks = [
             block_builders.section_with_button_block(
