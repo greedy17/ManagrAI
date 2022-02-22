@@ -474,8 +474,8 @@ def process_submit_resource_data(payload, context):
         new_context = {**context, "type": "command"}
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
         error_view_data = {
-            "trigger_id": trigger_id,
-            "view_id": view_id,
+            "trigger_id": loading_view_data["trigger_id"],
+            "view_id": loading_view_data["view"]["id"],
             "view": {
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Error"},
@@ -1367,7 +1367,7 @@ def process_add_contacts_to_cadence(payload, context):
     ]["selected_option"]["value"]
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
-
+    print(cadence_id)
     org = u.organization
     access_token = org.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
@@ -2478,8 +2478,8 @@ def process_submit_alert_resource_data(payload, context):
         new_context = {**context, "type": "alert"}
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
         error_view_data = {
-            "trigger_id": trigger_id,
-            "view_id": view_id,
+            "trigger_id": loading_view_data["trigger_id"],
+            "view_id": loading_view_data["view"]["id"],
             "view": {
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Error"},
@@ -2684,8 +2684,8 @@ def process_submit_digest_resource_data(payload, context):
         new_context = {**context, "type": "digest"}
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
         error_view_data = {
-            "trigger_id": trigger_id,
-            "view_id": view_id,
+            "trigger_id": loading_view_data["trigger_id"],
+            "view_id": loading_view_data["view"]["id"],
             "view": {
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Error"},
