@@ -143,21 +143,19 @@
               <p style="display: none">
                 {{ listPicklists(field.apiName, { picklistFor: field.apiName }) }}
               </p>
-              <p @click="test(picklistQueryOpts[field.apiName])">
+              <p>
                 {{ field.referenceDisplayLabel }}
               </p>
-              <DropDownSearch
-                :items="picklistQueryOpts[getIndex(field.apiName)]"
-                displayKey="label"
-                valueKey="value"
-                nullDisplay="Select"
-                searchable
-                @input="setUpdateValues(field.apiName, value)"
-              />
-              <!-- @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-                 v-for="stage in picklistQueryOpts[field.apiName]"
-                 :key="stage.label"
-                 :value="stage.value" -->
+              <select id="update-input">
+                <option
+                  @input="setUpdateValues(field.apiName, value)"
+                  v-for="stage in picklistQueryOpts[field.apiName]"
+                  :key="stage.label"
+                  :value="stage.value"
+                >
+                  {{ stage.label }}
+                </option>
+              </select>
             </div>
 
             <div class="drop-row" v-else-if="field.dataType === 'Date'">
@@ -661,7 +659,7 @@ export default {
     test(val) {
       console.log(val)
     },
-    async listPicklists(type, query_params = {}) {
+    async listPicklists(type, query_params) {
       try {
         const res = await SObjectPicklist.api.listPicklists(query_params)
         this.picklistQueryOpts[type] = res.length ? res[0]['values'] : []
@@ -794,9 +792,8 @@ export default {
         )
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
         for (let i = 0; i < this.oppFormCopy.length; i++) {
-          this.picklistQueryOpts[i] = this.oppFormCopy[i].apiName
+          this.picklistQueryOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].apiName
         }
-        console.log(this.picklistQueryOpts)
         this.oppFields = this.updateOppForm[0].fieldsRef.filter(
           (field) =>
             field.apiName !== 'meeting_type' &&
