@@ -1194,8 +1194,7 @@ class ActivityAdapter:
     @staticmethod
     def save_zoom_meeting_to_salesforce(data, access_token, custom_base):
         json_data = json.dumps(data)
-        print(data)
-        url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.SALESFORCE_RESOURCE_EVENT, "")
+        url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.SALESFORCE_RESOURCE_TASK, "")
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         with Client as client:
             r = client.post(
