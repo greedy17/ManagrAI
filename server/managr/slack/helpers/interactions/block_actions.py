@@ -1346,8 +1346,9 @@ def process_check_is_owner(payload, context):
     slack_id = payload.get("user", {}).get("id")
     user_id = context.get("u")
     type = context.pop("type", None)
+    user = User.objects.get(slack_integration__slack_id=slack_id)
     user_slack = UserSlackIntegration.objects.filter(slack_id=slack_id).first()
-    if user_slack and str(user_slack.user.id) == user_id:
+    if user.user_level in ["MANAGER", "SDR"] or user_slack and str(user_slack.user.id) == user_id:
         if type == "alert":
             return process_show_alert_update_resource_form(payload, context)
         elif type == "prep":
@@ -1412,7 +1413,11 @@ def process_resource_selected_for_task(payload, context):
             "external_id": f"{view_type}.{str(uuid.uuid4())}",
         },
     }
-    if (payload["view"]["submit"] and form_id) or view_type == "create_task_modal":
+    if (
+        (payload["view"]["submit"] and form_id)
+        or view_type == "create_task_modal"
+        or view_type == "create_event_modal"
+    ):
         data["view"]["submit"] = payload["view"]["submit"]
 
     try:
@@ -2877,6 +2882,47 @@ def process_pricebook_selected(payload, context):
     return
 
 
+def process_log_activity(payload, context):
+    state = payload["view"]["state"]["values"]
+    pm = json.loads(payload["view"]["private_metadata"])
+
+    modal_type = [
+        value.get("selected_option") for value in state.get("selected_activity", {}).values()
+    ][0].get("value")
+    user = User.objects.get(id=pm.get("u"))
+    if user.slack_integration:
+        slack = UserSlackIntegration.objects.filter(slack_id=user.slack_integration.id).first()
+        if not slack:
+            data = {
+                "response_type": "ephemeral",
+                "text": "Sorry I cant find your managr account",
+            }
+
+        access_token = user.organization.slack_integration.access_token
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH
+        callback_id = (
+            slack_const.COMMAND_CREATE_TASK
+            if modal_type == "create_task_modal"
+            else slack_const.COMMAND_CREATE_EVENT
+        )
+        title = "Create Task" if modal_type == "create_task_modal" else "Create Event"
+        data = {
+            "view_id": payload["view"]["id"],
+            "trigger_id": payload["trigger_id"],
+            "view": {
+                "type": "modal",
+                "callback_id": callback_id,
+                "title": {"type": "plain_text", "text": title},
+                "blocks": get_block_set(modal_type, context={"u": pm.get("u"),},),
+                "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
+                "private_metadata": json.dumps(context),
+                "external_id": f"{modal_type}.{str(uuid.uuid4())}",
+            },
+        }
+        slack_requests.generic_request(url, data, access_token=access_token)
+    return
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -2923,6 +2969,7 @@ def handle_block_actions(payload):
         slack_const.VIEW_RECAP: process_view_recap,
         slack_const.PROCESS_LEAD_INPUT_SWITCH: process_lead_input_switch,
         slack_const.GET_PRICEBOOK_ENTRY_OPTIONS: process_pricebook_selected,
+        slack_const.COMMAND_LOG_NEW_ACTIVITY: process_log_activity,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)
