@@ -1254,17 +1254,6 @@ class TaskAdapter:
             )
             return SalesforceAuthAccountAdapter._handle_response(r)
 
-    @staticmethod
-    def save_event_to_salesforce(data, access_token, custom_base):
-        json_data = json.dumps(data)
-        url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.SALESFORCE_RESOURCE_EVENT, "")
-        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
-        with Client as client:
-            r = client.post(
-                url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
-            )
-            return SalesforceAuthAccountAdapter._handle_response(r)
-
     @property
     def as_dict(self):
         return vars(self)

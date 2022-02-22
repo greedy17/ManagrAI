@@ -491,6 +491,11 @@ def initial_meeting_interaction_block_set(context):
             ),
         ]
     else:
+        participant_info = "\nAttendee info: "
+        for idx, participant in enumerate(meeting.participants):
+            if idx > 0:
+                participant_info += ", "
+            participant_info += f"{participant['email']}"
         blocks = [
             block_builders.section_with_button_block(
                 "Map to Opportunity",
@@ -501,7 +506,7 @@ def initial_meeting_interaction_block_set(context):
             ),
             {"type": "divider"},
             block_builders.section_with_accessory_block(
-                f":calendar: *{title}*\n{formatted_start} - {formatted_end}\n Attendees: {len(meeting.participants)} ",
+                f":calendar: *{title}*\n{formatted_start} - {formatted_end}\n Attendees: {len(meeting.participants)} {participant_info}",
                 block_builders.simple_image_block(
                     "https://managr-images.s3.amazonaws.com/slack/logo_loading.gif", "Managr Logo"
                 ),

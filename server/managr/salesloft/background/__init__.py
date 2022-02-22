@@ -188,6 +188,7 @@ def sync_people(auth_account_id):
 
 def add_cadence_membership(person_id, cadence_id, user_id):
     cadence = Cadence.objects.get(id=cadence_id)
+    print(cadence)
     account = SalesloftAccount.objects.get(user=user_id)
     contact = Contact.objects.get(id=person_id)
     person = People.objects.filter(email=contact.email).first()
