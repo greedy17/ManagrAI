@@ -904,7 +904,7 @@ def schedule_zoom_meeting_modal(context):
             block_id="meeting_time",
         ),
         block_builders.static_select(
-            "Duration",
+            "Duration (in minutes)",
             block_sets.get_block_set("duration_options"),
             action_id="meeting_data",
             initial_option={"text": {"type": "plain_text", "text": "30"}, "value": "30"},
@@ -922,6 +922,12 @@ def schedule_zoom_meeting_modal(context):
             action_id=f"{slack_const.GET_USER_CONTACTS}?u={user.id}",
             block_id="meeting_participants",
             placeholder="Search Contacts",
+        ),
+        block_builders.multi_external_select(
+            "*Add internal people to this meeting*",
+            action_id=f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={user.id}&resource={slack_const.SLACK_ACTION_RESOURCE_USER}",
+            block_id="meeting_internals",
+            placeholder="Search Users",
         ),
     ]
     return blocks
