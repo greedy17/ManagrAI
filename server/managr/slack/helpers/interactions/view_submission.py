@@ -1268,7 +1268,6 @@ def process_create_event(payload, context):
 def process_schedule_meeting(payload, context):
     u = User.objects.get(id=context.get("u"))
     data = payload["view"]["state"]["values"]
-    print(data)
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
     org = u.organization
@@ -1314,7 +1313,6 @@ def process_schedule_meeting(payload, context):
                     "status": "noreply",
                 }
             )
-    print(participants)
     zoom_data = {
         "meeting_topic": data["meeting_topic"]["meeting_data"]["value"],
         "meeting_date": data["meeting_date"]["meeting_data"]["selected_date"],
@@ -1387,7 +1385,6 @@ def process_add_contacts_to_cadence(payload, context):
     ]["selected_option"]["value"]
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
-    print(cadence_id)
     org = u.organization
     access_token = org.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
