@@ -360,6 +360,7 @@ class CadenceAdapter:
     def add_membership(self, person_id, access_token):
         headers = salesloft_consts.SALESLOFT_REQUEST_HEADERS(access_token)
         query = urlencode({"person_id": person_id, "cadence_id": self.cadence_id})
+        print(query)
         res = client.post(
             f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.ADD_TO_CADENCE}?{query}",
             headers=headers,

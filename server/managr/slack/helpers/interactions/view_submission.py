@@ -314,7 +314,6 @@ def process_submit_resource_data(payload, context):
     has_error = False
     state = payload["view"]["state"]["values"]
     current_form_ids = context.get("f").split(",")
-    print(current_form_ids)
     user = User.objects.get(id=context.get("u"))
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
@@ -1268,12 +1267,11 @@ def process_create_event(payload, context):
 @processor(required_context=[])
 def process_schedule_meeting(payload, context):
     u = User.objects.get(id=context.get("u"))
-    type = context.get("type", None)
     data = payload["view"]["state"]["values"]
+    print(data)
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
     org = u.organization
-    meta_data = json.loads(payload["view"]["private_metadata"])
     access_token = org.slack_integration.access_token
     description = data["meeting_description"]["meeting_data"]["value"]
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
@@ -1295,6 +1293,28 @@ def process_schedule_meeting(payload, context):
                     "status": "noreply",
                 }
             )
+    if data["meeting_internals"][f"GET_LOCAL_RESOURCE_OPTIONS?u={u.id}&resource=User"][
+        "selected_options"
+    ]:
+        query_data = User.objects.filter(
+            id__in=list(
+                map(
+                    lambda val: val["value"],
+                    data["meeting_internals"][f"GET_LOCAL_RESOURCE_OPTIONS?u={u.id}&resource=User"][
+                        "selected_options"
+                    ],
+                )
+            )
+        ).values("email", "first_name", "last_name")
+        for participant in query_data:
+            participants.append(
+                {
+                    "email": participant["email"],
+                    "name": f"{participant['first_name']} {participant['last_name']}",
+                    "status": "noreply",
+                }
+            )
+    print(participants)
     zoom_data = {
         "meeting_topic": data["meeting_topic"]["meeting_data"]["value"],
         "meeting_date": data["meeting_date"]["meeting_data"]["selected_date"],
