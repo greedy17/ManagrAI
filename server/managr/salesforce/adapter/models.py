@@ -798,7 +798,7 @@ class ContactAdapter:
             url = f"{url}{res['id']}"
             r = client.get(url, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header})
             r = SalesforceAuthAccountAdapter._handle_response(r)
-            r = OpportunityAdapter.from_api(r, user_id)
+            r = ContactAdapter.from_api(r, user_id)
             return r
 
     @staticmethod
