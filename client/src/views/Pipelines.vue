@@ -94,7 +94,7 @@
         <div class="opp-modal">
           <section :key="field.id" v-for="field in oppFormCopy">
             <div v-if="field.apiName === 'meeting_type'">
-              <p>Note Subject <span style="color: #beb5cc">(optional)</span></p>
+              <p>Note Subject</p>
               <textarea
                 id="update-input"
                 cols="30"
@@ -105,7 +105,7 @@
               </textarea>
             </div>
             <div v-else-if="field.apiName === 'meeting_comments'">
-              <p>Notes <span style="color: #beb5cc">(optional)</span></p>
+              <p>Notes</p>
               <textarea
                 id="update-input"
                 ccols="30"
@@ -121,7 +121,6 @@
               v-else-if="
                 (field.dataType === 'String' && field.apiName !== 'meeting_type') ||
                 (field.dataType === 'String' && field.apiName !== 'meeting_comments') ||
-                field.dataType === 'Currency' ||
                 field.dataType === 'TextArea' ||
                 field.dataType === 'Reference'
               "
@@ -140,20 +139,15 @@
               class="drop-row"
               v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'"
             >
-              <p style="display: none">
-                {{ listPicklists(field.apiName, { picklistFor: field.apiName }) }}
-              </p>
               <p>
                 {{ field.referenceDisplayLabel }}
               </p>
-              <select id="update-input">
-                <option
-                  @input="setUpdateValues(field.apiName, value)"
-                  v-for="stage in picklistQueryOpts[field.apiName]"
-                  :key="stage.label"
-                  :value="stage.value"
-                >
-                  {{ stage.label }}
+              <select
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                id="update-input"
+              >
+                <option v-for="(option, i) in picklistQueryOpts[field.apiName]" :key="i">
+                  <p>{{ option.label }}</p>
                 </option>
               </select>
             </div>
@@ -180,7 +174,11 @@
             </div>
             <div
               class="drop-row"
-              v-else-if="field.dataType === 'Phone' || field.dataType === 'Double'"
+              v-else-if="
+                field.dataType === 'Phone' ||
+                field.dataType === 'Double' ||
+                field.dataType === 'Currency'
+              "
             >
               <p>
                 {{ field.referenceDisplayLabel }}
@@ -214,11 +212,6 @@
       <section class="flex-row-spread">
         <div v-if="noSelection" class="flex-row">
           <button @click="showList = !showList" class="pipe-button">
-            <!-- <img
-              src="@/assets/images/list.png"
-              style="height: 1rem; margin-right: 0.3rem"
-              alt=""
-            /> -->
             {{ currentList }}
             <img
               v-if="showPopularList"
@@ -384,11 +377,9 @@
               <input style="padding-top: 0.5rem" type="checkbox" />
             </div>
             <div class="table-cell-header">Name</div>
-            <div class="table-cell-header">Stage</div>
-            <div class="table-cell-header">Forecast Category</div>
-            <div class="table-cell-header">Amount</div>
-            <div class="table-cell-header">Close Date</div>
-            <div class="table-cell-header">Last Activity</div>
+            <div class="table-cell-header" :key="i" v-for="(field, i) in oppFields" ref="fields">
+              {{ field.referenceDisplayLabel }}
+            </div>
             <div class="table-cell-header cell-name">
               <img src="@/assets/images/plusOne.png" class="invert" style="height: 1rem" alt="" />
             </div>
@@ -421,15 +412,33 @@
               </div>
             </div>
 
-            <div class="table-cell">{{ opp.stage }}</div>
+            <div :key="i" v-for="(field, i) in oppFields" class="table-cell">
+              <!-- {{ opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))] }} -->
+              <p v-if="field.apiName !== 'Amount'">
+                {{
+                  opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+                    ? opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+                    : '---'
+                }}
+              </p>
+
+              <p style="color: #199e54" v-else>
+                {{
+                  opp[lowercaseFirstLetter(camelize(field.apiName))]
+                    ? formatCash(parseFloat(opp[lowercaseFirstLetter(camelize(field.apiName))]))
+                    : '$ ---'
+                }}
+              </p>
+            </div>
+            <div class="table-cell">
+              <p>---</p>
+            </div>
+
+            <!-- <div class="table-cell">{{ opp.stage }}</div>
             <div class="table-cell">{{ opp.forecast_category }}</div>
             <div class="table-cell" style="color: #199e54">
               {{ formatCash(parseFloat(opp.amount)) }}
             </div>
-            <!-- <div v-if="opp.secondary_data.NextStep" class="table-cell">
-              {{ opp.secondary_data.NextStep }}
-            </div>
-            <div class="table-cell" v-else>-</div> -->
             <div class="table-cell">{{ formatDate(opp.close_date) }}</div>
             <div class="table-cell" v-if="opp.last_activity_date">
               {{ formatDateTime(opp.last_activity_date) }}
@@ -437,7 +446,7 @@
             <div class="table-cell" v-else>-</div>
             <div class="table-cell">
               <p>---</p>
-            </div>
+            </div> -->
           </tr>
         </div>
       </section>
@@ -469,7 +478,11 @@
                   <div style="color: #9b9b9b">owner: owner's name</div>
                 </div>
                 <div style="margin-top: 0.5rem" class="flex-row">
-                  <img class="name-cell-note-button" src="@/assets/images/edit-note.png" />
+                  <img
+                    @click="createFormInstance(workflow.resourceRef.id)"
+                    class="name-cell-note-button"
+                    src="@/assets/images/edit-note.png"
+                  />
                   <img
                     @click="getNotes(workflow.resourceRef.id)"
                     class="name-cell-edit-note-button"
@@ -484,13 +497,31 @@
             </div> -->
 
             <div :key="field.name" v-for="field in currentWorkflowFields" class="table-cell">
-              {{
-                field === 'Stage'
-                  ? workflow.resourceRef.secondaryData[
-                      capitalizeFirstLetter(camelize(field + 'Name'))
-                    ]
-                  : workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field))]
-              }}
+              <p v-if="field !== 'Amount'">
+                {{
+                  field === 'Stage'
+                    ? workflow.resourceRef.secondaryData[
+                        capitalizeFirstLetter(camelize(field + 'Name'))
+                      ]
+                    : workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field))]
+                    ? workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field))]
+                    : '---'
+                }}
+              </p>
+
+              <p style="color: #199e54" v-else>
+                {{
+                  workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field))]
+                    ? formatCash(
+                        parseFloat(
+                          workflow.resourceRef.secondaryData[
+                            capitalizeFirstLetter(camelize(field))
+                          ],
+                        ),
+                      )
+                    : '$ ---'
+                }}
+              </p>
             </div>
             <div class="table-cell">
               <p>---</p>
@@ -499,24 +530,25 @@
         </div>
       </section>
 
-      <section v-if="currentWorkflow && currentWorkflow.list.length < 1" class="table-section">
-        <div class="table">
+      <section
+        v-if="currentWorkflow && currentWorkflow.list.length < 1"
+        class="empty-table-section"
+      >
+        <div class="empty-table">
           <div class="table-row">
-            <div class="table-cell-header">Name</div>
-            <div class="table-cell-header">Stage</div>
-            <div class="table-cell-header">Forecast Category</div>
-            <div class="table-cell-header">Amount</div>
-            <div class="table-cell-header">Close Date</div>
-            <div class="table-cell-header">Last Activity</div>
-          </div>
-
-          <div class="table-row flex-row">
-            <h5 style="margin-left: 1rem">
-              No results for the {{ currentList }} workflow. Try refreshing
-            </h5>
-            <button @click="refresh(refreshId)" class="centered__button">
-              <img src="@/assets/images/refresh.png" style="height: 0.75rem" alt="" />
-            </button>
+            <div class="flex-row table-cell-header">
+              <h5 style="margin-left: 1rem">
+                No results for the {{ currentList }} workflow. Try refreshing
+              </h5>
+              <button @click="refresh(refreshId)" class="centered__button">
+                <img src="@/assets/images/refresh.png" style="height: 0.75rem" alt="" />
+              </button>
+            </div>
+            <!-- <div :key="field.id" v-for="field in oppFormCopy" class="table-cell-header">
+              <p v-if="field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments'">
+                {{ field.referenceDisplayLabel }}
+              </p>
+            </div> -->
           </div>
         </div>
       </section>
@@ -588,6 +620,8 @@ export default {
       stages2: null,
       stages3: null,
       stages4: null,
+      verboseName: null,
+      taskHash: null,
       monetaryOptions: ['less than', 'greater than', 'equals'],
       picklistQueryOpts: {},
       oppFilters: [
@@ -643,10 +677,10 @@ export default {
     },
   },
   created() {
+    this.templates.refresh()
     this.getObjects()
     this.getAllForms()
     this.team.refresh()
-    this.templates.refresh()
   },
   methods: {
     getIndex(val) {
@@ -656,14 +690,10 @@ export default {
       }
       return index
     },
-    test(val) {
-      console.log(val)
-    },
     async listPicklists(type, query_params) {
       try {
         const res = await SObjectPicklist.api.listPicklists(query_params)
         this.picklistQueryOpts[type] = res.length ? res[0]['values'] : []
-        console.log(this.picklistQueryOpts[type])
       } catch (e) {
         console.log(e)
       }
@@ -685,15 +715,11 @@ export default {
           })
         }
       }
-      this.$Alert.alert({
-        message: `workflows sucessfully refreshed`,
-        type: 'success',
-        timeout: 2000,
-      })
+      this.$router.go()
     },
     resetNotes() {
+      this.modalOpen = !this.modalOpen
       this.notes = []
-      this.editModalOpen = !this.editModalOpen
     },
     resetEdit() {
       this.editOpModalOpen = !this.editOpModalOpen
@@ -704,8 +730,20 @@ export default {
         return index === 0 ? match.toLowerCase() : match.toUpperCase()
       })
     },
+    snakeCase(string) {
+      return string
+        .replace(/\W+/g, ' ')
+        .split(/ |\B(?=[A-Z])/)
+        .map((word) => word.toLowerCase())
+        .join('_')
+    },
     capitalizeFirstLetter(string) {
       return string.charAt(0).toUpperCase() + string.slice(1)
+    },
+    lowercaseFirstLetter(string) {
+      if (string) {
+        return string.charAt(0).toLowerCase() + string.slice(1)
+      }
     },
     getFields(field) {
       while (!this.currentWorkflowFields.includes(field)) {
@@ -744,12 +782,32 @@ export default {
       console.log(this.formData)
     },
     async updateResource() {
+      this.loading = true
+      this.editOpModalOpen = false
       try {
         const res = await SObjects.api.updateResource({
           form_id: this.instanceId,
           form_data: this.formData,
         })
-        console.log(res.data)
+        //  this.$router.go()
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 4000,
+          message: 'Salesforce update successful! Refresh for changes.',
+        })
+        console.log(res)
+      } catch (e) {
+        console.log(e)
+      }
+      this.getObjects()
+    },
+    async confirmUpdate() {
+      try {
+        const res = await SObjects.api.confirmUpdate({
+          verbose_name: this.verboseName,
+          task_hash: this.taskHash,
+        })
+        console.log(res)
       } catch (e) {
         console.log(e)
       }
@@ -792,8 +850,17 @@ export default {
         )
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
         for (let i = 0; i < this.oppFormCopy.length; i++) {
-          this.picklistQueryOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].apiName
+          if (
+            this.oppFormCopy[i].dataType === 'Picklist' ||
+            this.oppFormCopy[i].dataType === 'MultiPicklist'
+          ) {
+            this.picklistQueryOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].apiName
+          }
         }
+        for (let i in this.picklistQueryOpts) {
+          this.picklistQueryOpts[i] = this.listPicklists(i, { picklistFor: i })
+        }
+        console.log(this.updateOppForm)
         this.oppFields = this.updateOppForm[0].fieldsRef.filter(
           (field) =>
             field.apiName !== 'meeting_type' &&
@@ -822,13 +889,13 @@ export default {
       this.loading = false
     },
     async getNotes(id) {
-      console.log(id)
+      console.log(this.templates)
       try {
         const res = await SObjects.api.getNotes({
           resourceId: id,
         })
         this.modalOpen = true
-        console.log(res)
+
         if (res.length) {
           for (let i = 0; i < res.length; i++) {
             this.notes.push(res[i])
@@ -1019,10 +1086,21 @@ h3 {
   box-shadow: 1px 1px 20px 1px $soft-gray;
   background-color: $off-white;
 }
+.empty-table-section {
+  height: 30vh;
+  margin-top: 2rem;
+  border-radius: 5px;
+  box-shadow: 1px 1px 20px 1px $soft-gray;
+  background-color: $off-white;
+}
 .table {
   display: table;
   width: 98vw;
-  height: 10vh !important;
+  height: 10vh;
+}
+.empty-table {
+  display: table;
+  width: 98vw;
 }
 .table-row {
   display: table-row;
@@ -1443,15 +1521,15 @@ section {
   align-items: flex-end;
   justify-content: flex-end;
 }
-::-webkit-scrollbar {
-  background-color: transparent;
-  -webkit-appearance: none;
-  width: 3px;
-  height: 90%;
-}
-::-webkit-scrollbar-thumb {
-  border-radius: 2px;
-  background-color: $soft-gray;
-  max-height: 10px;
-}
+// ::-webkit-scrollbar {
+//   background-color: transparent;
+//   -webkit-appearance: none;
+//   width: 3px;
+//   height: 90%;
+// }
+// ::-webkit-scrollbar-thumb {
+//   border-radius: 2px;
+//   background-color: $soft-gray;
+//   max-height: 10px;
+// }
 </style>

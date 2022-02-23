@@ -376,6 +376,7 @@ class SalesforceSObjectViewSet(
     def confirm_update(self, request, *args, **kwargs):
 
         task_hash = self.request.GET.get("task_hash")
+        print(task_hash)
         verbose_name = self.request.GET.get("verbose_name")
         attempts = 1
         has_error = False
