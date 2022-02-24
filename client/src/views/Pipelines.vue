@@ -64,6 +64,37 @@
     </Modal>
 
     <Modal
+      v-if="addOppModalOpen"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), resetAddOpp()
+        }
+      "
+    >
+      <div class="opp-modal-container">
+        <div class="flex-row-spread header">
+          <div class="flex-row">
+            <img
+              src="@/assets/images/logo.png"
+              style="height: 1.5rem; margin-left: 0.5rem; margin-right: 0.25rem"
+              alt=""
+            />
+            <h4>Add Opportunity</h4>
+          </div>
+          <img
+            src="@/assets/images/clear.png"
+            style="height: 1.2rem; margin-right: 0.1rem; cursor: pointer"
+            @click="resetAddOpp"
+            class="invert"
+            alt=""
+          />
+        </div>
+        <div class="opp-modal"></div>
+      </div>
+    </Modal>
+
+    <Modal
       v-if="editOpModalOpen"
       dimmed
       @close-modal="
@@ -210,12 +241,12 @@
       </header>
 
       <section class="flex-row-spread">
-        <div v-if="noSelection" class="flex-row">
-          <button @click="showList = !showList" class="pipe-button">
+        <div v-if="!workflowCheckList.length && !primaryCheckList.length" class="flex-row">
+          <button @click="showList = !showList" class="add-button">
             {{ currentList }}
             <img
               v-if="showPopularList"
-              class="invert filter"
+              class="filter"
               style="height: 0.75rem"
               src="@/assets/images/downArrow.png"
               alt=""
@@ -270,7 +301,7 @@
             />Filter
           </button>
           <h5>
-            Results:
+            {{ currentList }}:
             <span>{{ selectedWorkflow ? currentWorkflow.list.length : allOpps.length }}</span>
           </h5>
 
@@ -350,6 +381,44 @@
             </div>
           </div>
         </div>
+        <div v-else>
+          <div v-if="!closeDateSelected" class="flex-row-pad">
+            <button @click="closeDateSelected = !closeDateSelected" class="add-button">
+              Push close date
+              <img
+                src="@/assets/images/date.png"
+                style="height: 1.1rem; margin-left: 0.25rem"
+                class="invert filter"
+                alt=""
+              />
+            </button>
+            <button class="add-button">
+              Advance stage
+              <img
+                src="@/assets/images/stairs.png"
+                style="height: 1.1rem; margin-left: 0.25rem"
+                alt=""
+              />
+            </button>
+            <button class="add-button">
+              Change forecast
+              <img
+                src="@/assets/images/go.png"
+                style="height: 1.1rem; margin-left: 0.25rem"
+                alt=""
+              />
+            </button>
+          </div>
+
+          <div class="flex-row-pad" v-if="closeDateSelected">
+            <p>How many days ?:</p>
+            <input class="number-input" v-model="daysForward" type="number" />
+            <button class="add-button" @click="pushCloseDates(primaryCheckList, daysForward)">
+              Push close date
+              <img src="@/assets/images/go.png" style="height: 1rem; margin-left: 0.25rem" alt="" />
+            </button>
+          </div>
+        </div>
 
         <div class="flex-row">
           <div v-if="!selectedWorkflow" class="search-bar">
@@ -360,7 +429,7 @@
             <input type="search" v-model="workflowFilterText" placeholder="search" />
             <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
           </div>
-          <button class="add-button">
+          <button @click="addOpp" class="add-button">
             <img src="@/assets/images/plusOne.png" style="height: 1rem" alt="" />
             Opportunity
           </button>
@@ -373,8 +442,11 @@
       <section v-if="!selectedWorkflow" class="table-section">
         <div class="table">
           <div class="table-row">
-            <div class="table-cell-checkbox-header">
-              <input style="padding-top: 0.5rem" type="checkbox" />
+            <div style="padding: 2vh" class="table-cell-checkbox table-cell-header">
+              <div>
+                <input @click="onCheckAll" type="checkbox" id="checkAllPrimary" />
+                <label for="checkAllPrimary"></label>
+              </div>
             </div>
             <div class="table-cell-header">Name</div>
             <div class="table-cell-header" :key="i" v-for="(field, i) in oppFields" ref="fields">
@@ -382,14 +454,28 @@
             </div>
             <div class="table-cell-header cell-name">
               <img src="@/assets/images/plusOne.png" class="invert" style="height: 1rem" alt="" />
+              <!-- <p style="color: #9b9b9b">(coming soon)</p> -->
             </div>
           </div>
 
           <tr class="table-row" :key="i" v-for="(opp, i) in allOppsFiltered">
-            <div class="table-cell-checkbox">
-              <input type="checkbox" />
+            <div
+              :class="
+                primaryCheckList.includes(opp.id)
+                  ? 'table-cell-checkbox selected'
+                  : 'table-cell-checkbox'
+              "
+            >
+              <div>
+                <input type="checkbox" :id="i" v-model="primaryCheckList" :value="opp.id" />
+                <label :for="i"></label>
+              </div>
             </div>
-            <div class="table-cell cell-name">
+            <div
+              :class="
+                primaryCheckList.includes(opp.id) ? 'table-cell-selected' : 'table-cell cell-name'
+              "
+            >
               <div class="flex-row-spread">
                 <div>
                   {{ opp.name }}
@@ -412,7 +498,11 @@
               </div>
             </div>
 
-            <div :key="i" v-for="(field, i) in oppFields" class="table-cell">
+            <div
+              :key="i"
+              v-for="(field, i) in oppFields"
+              :class="primaryCheckList.includes(opp.id) ? 'table-cell-selected' : 'table-cell'"
+            >
               <!-- {{ opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))] }} -->
               <p v-if="field.apiName !== 'Amount'">
                 {{
@@ -433,20 +523,6 @@
             <div class="table-cell">
               <p>---</p>
             </div>
-
-            <!-- <div class="table-cell">{{ opp.stage }}</div>
-            <div class="table-cell">{{ opp.forecast_category }}</div>
-            <div class="table-cell" style="color: #199e54">
-              {{ formatCash(parseFloat(opp.amount)) }}
-            </div>
-            <div class="table-cell">{{ formatDate(opp.close_date) }}</div>
-            <div class="table-cell" v-if="opp.last_activity_date">
-              {{ formatDateTime(opp.last_activity_date) }}
-            </div>
-            <div class="table-cell" v-else>-</div>
-            <div class="table-cell">
-              <p>---</p>
-            </div> -->
           </tr>
         </div>
       </section>
@@ -455,7 +531,15 @@
         <div class="table">
           <div class="table-row">
             <div class="table-cell-checkbox-header">
-              <input style="padding-top: 0.5rem" type="checkbox" />
+              <div>
+                <input
+                  @click="onCheckAllWorkflows"
+                  type="checkbox"
+                  value="1"
+                  id="checkAllWorkflow"
+                />
+                <label for="checkAllWorkflow"></label>
+              </div>
             </div>
             <div class="table-cell-header">Name</div>
             <div class="table-cell-header" :key="i" v-for="(field, i) in oppFields" ref="fields">
@@ -468,7 +552,15 @@
 
           <tr class="table-row" :key="i" v-for="(workflow, i) in filteredWorkflows">
             <div class="table-cell-checkbox">
-              <input type="checkbox" />
+              <div>
+                <input
+                  type="checkbox"
+                  :id="i"
+                  v-model="workflowCheckList"
+                  :value="workflow.resourceRef.id"
+                />
+                <label :for="i"></label>
+              </div>
             </div>
             <div class="table-cell cell-name">
               <div class="flex-row-spread">
@@ -578,8 +670,11 @@ export default {
   },
   data() {
     return {
-      noSelection: true,
+      primaryCheckList: [],
+      workflowCheckList: [],
+      selection: false,
       originalList: null,
+      daysForward: null,
       allOpps: null,
       loading: false,
       templates: CollectionManager.create({ ModelClass: AlertTemplate }),
@@ -589,6 +684,7 @@ export default {
       selectedWorkflow: false,
       modalOpen: false,
       editOpModalOpen: false,
+      addOppModalOpen: false,
       refreshId: null,
       filterText: '',
       workflowFilterText: '',
@@ -624,6 +720,8 @@ export default {
       taskHash: null,
       monetaryOptions: ['less than', 'greater than', 'equals'],
       picklistQueryOpts: {},
+      instanceIds: [],
+      closeDateSelected: false,
       oppFilters: [
         {
           title: 'Amount',
@@ -683,6 +781,27 @@ export default {
     this.team.refresh()
   },
   methods: {
+    test() {
+      console.log(this.workflowCheckList)
+    },
+    onCheckAll() {
+      if (this.primaryCheckList.length < 1) {
+        for (let i = 0; i < this.allOppsFiltered.length; i++) {
+          this.primaryCheckList.push(this.allOppsFiltered[i].id)
+        }
+      } else {
+        this.primaryCheckList = []
+      }
+    },
+    onCheckAllWorkflows() {
+      if (this.workflowCheckList.length < 1) {
+        for (let i = 0; i < this.filteredWorkflows.length; i++) {
+          this.workflowCheckList.push(this.filteredWorkflows[i].resourceRef.id)
+        }
+      } else {
+        this.workflowCheckList = []
+      }
+    },
     getIndex(val) {
       let index = 0
       for (let i = 0; i < this.picklistQueryOpts.length; i++) {
@@ -724,6 +843,9 @@ export default {
     resetEdit() {
       this.editOpModalOpen = !this.editOpModalOpen
     },
+    resetAddOpp() {
+      this.addOppModalOpen = !this.addOppModalOpen
+    },
     camelize(str) {
       return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {
         if (+match === 0) return ''
@@ -748,7 +870,6 @@ export default {
     getFields(field) {
       while (!this.currentWorkflowFields.includes(field)) {
         this.currentWorkflowFields.push(field)
-        console.log(this.currentWorkflowFields)
       }
       return field
     },
@@ -775,11 +896,63 @@ export default {
         console.log(e)
       }
     },
+    futureDate(val) {
+      let currentDate = new Date()
+      currentDate.setDate(currentDate.getDate() + Number(val))
+      let currentDayOfMonth = currentDate.getDate()
+      let currentMonth = currentDate.getMonth()
+      let currentYear = currentDate.getFullYear()
+      let dateString = currentYear + '-' + (currentMonth + 1) + '-' + currentDayOfMonth
+      return dateString
+    },
+    pushCloseDates(ids, val) {
+      this.instanceIds = []
+      let data = this.futureDate(val)
+      this.createBulkInstance(ids)
+      setTimeout(() => {
+        this.bulkUpdate(this.instanceIds, data)
+      }, 100)
+    },
+    async createBulkInstance(ids) {
+      this.loading = true
+      for (let i = 0; i < ids.length; i++) {
+        try {
+          const res = await SObjects.api.createFormInstance({
+            resourceType: 'Opportunity',
+            formType: 'UPDATE',
+            resourceId: ids[i],
+          })
+          this.instanceIds.push(res.form_id)
+        } catch (e) {
+          console.log(e)
+        }
+      }
+    },
     setUpdateValues(key, val) {
       if (val) {
         this.formData[key] = val
       }
-      console.log(this.formData)
+    },
+    async bulkUpdate(ids, data) {
+      for (let i = 0; i < ids.length; i++) {
+        try {
+          const res = await SObjects.api.updateResource({
+            form_id: ids[i],
+            form_data: { CloseDate: data },
+          })
+        } catch (e) {
+          console.log(e)
+        }
+      }
+      this.primaryCheckList = []
+      this.workflowCheckList = []
+      this.closeDateSelected = false
+      this.loading = false
+      this.$Alert.alert({
+        type: 'success',
+        timeout: 4000,
+        message: 'Salesforce update successful! Refresh for changes.',
+      })
     },
     async updateResource() {
       this.loading = true
@@ -795,7 +968,6 @@ export default {
           timeout: 4000,
           message: 'Salesforce update successful! Refresh for changes.',
         })
-        console.log(res)
       } catch (e) {
         console.log(e)
       }
@@ -860,7 +1032,7 @@ export default {
         for (let i in this.picklistQueryOpts) {
           this.picklistQueryOpts[i] = this.listPicklists(i, { picklistFor: i })
         }
-        console.log(this.updateOppForm)
+
         this.oppFields = this.updateOppForm[0].fieldsRef.filter(
           (field) =>
             field.apiName !== 'meeting_type' &&
@@ -889,7 +1061,6 @@ export default {
       this.loading = false
     },
     async getNotes(id) {
-      console.log(this.templates)
       try {
         const res = await SObjects.api.getNotes({
           resourceId: id,
@@ -910,6 +1081,9 @@ export default {
       await this.refresh()
       this.resetNotes()
       this.$emit('cancel')
+    },
+    addOpp() {
+      this.addOppModalOpen = true
     },
     applyAmountFilter() {
       // this.allOpps = this.allOpps.filter((opp) => opp.amount > this.amountValue)
@@ -945,27 +1119,24 @@ export default {
     monetaryFilter(type, title) {
       this.filterType = type
       this.filterTitle = title
-      console.log(type, title)
     },
     dateFilter(type, title) {
       this.filterType = type
       this.filterTitle = title
-      console.log(type, title)
     },
     timeFilter(type, title) {
       this.filterType = type
       this.filterTitle = title
-      console.log(type, title)
     },
     personFilter(type, title) {
       this.filterType = type
       this.filterTitle = title
-      console.log(type, title)
     },
     closeFilters() {
       this.filtering = !this.filtering
     },
     closeDatesThisMonth() {
+      this.allOpps = this.originalList
       this.selectedWorkflow = false
       this.allOpps = this.allOpps.filter(
         (opp) => new Date(opp.close_date).getMonth() == this.currentMonth,
@@ -974,6 +1145,7 @@ export default {
       this.showList = !this.showList
     },
     closeDatesNextMonth() {
+      this.allOpps = this.originalList
       this.selectedWorkflow = false
       this.allOpps = this.allOpps.filter(
         (opp) => new Date(opp.close_date).getMonth() == this.currentMonth + 1,
@@ -1029,6 +1201,52 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+input[type='checkbox']:checked + label::after {
+  content: '';
+  position: absolute;
+  width: 1ex;
+  height: 0.3ex;
+  background: rgba(0, 0, 0, 0);
+  top: 0.9ex;
+  left: 0.4ex;
+  border: 2px solid $dark-green;
+  border-top: none;
+  border-right: none;
+  -webkit-transform: rotate(-45deg);
+  -moz-transform: rotate(-45deg);
+  -o-transform: rotate(-45deg);
+  -ms-transform: rotate(-45deg);
+  transform: rotate(-45deg);
+}
+
+input[type='checkbox'] {
+  line-height: 2.1ex;
+}
+
+input[type='radio'],
+input[type='checkbox'] {
+  position: absolute;
+  left: -999em;
+}
+
+input[type='checkbox'] + label {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+input[type='checkbox'] + label::before {
+  content: '';
+  display: inline-block;
+  vertical-align: -22%;
+  height: 1.75ex;
+  width: 1.75ex;
+  background-color: white;
+  border: 1px solid rgb(182, 180, 180);
+  border-radius: 4px;
+  margin-right: 0.5em;
+}
+
 ::placeholder {
   color: $mid-gray;
 }
@@ -1079,8 +1297,7 @@ h3 {
   border-radius: 0.25rem;
 }
 .table-section {
-  height: 70vh;
-  overflow: scroll;
+  height: 75vh;
   margin-top: 0.5rem;
   border-radius: 5px;
   box-shadow: 1px 1px 20px 1px $soft-gray;
@@ -1095,8 +1312,7 @@ h3 {
 }
 .table {
   display: table;
-  width: 98vw;
-  height: 10vh;
+  width: 99vw;
 }
 .empty-table {
   display: table;
@@ -1108,6 +1324,19 @@ h3 {
 .table-cell {
   display: table-cell;
   background-color: $off-white;
+  padding: 3vh;
+  border: none;
+  border-bottom: 1px solid $soft-gray;
+  font-size: 13px;
+  overflow: scroll;
+}
+.selected {
+  // background-color: white;
+}
+.table-cell-selected {
+  display: table-cell;
+  background-color: white;
+  color: $darker-green;
   padding: 3vh;
   border: none;
   border-bottom: 1px solid $soft-gray;
@@ -1159,7 +1388,7 @@ h3 {
 // }
 .table-cell-checkbox {
   display: table-cell;
-  padding: 2vh 1vh;
+  padding: 2vh;
   border: none;
   border-bottom: 1px solid $soft-gray;
 }
@@ -1192,7 +1421,6 @@ h3 {
 }
 .cell-name {
   background-color: white;
-  border-radius: 6px;
 }
 input[type='search'] {
   border: none;
@@ -1235,6 +1463,12 @@ section {
   flex-direction: row;
   align-items: center;
 }
+.flex-row-pad {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0.9rem 0rem;
+}
 .flex-col {
   display: flex;
   flex-direction: column;
@@ -1248,6 +1482,7 @@ section {
 .pipelines {
   margin-top: 5rem;
   color: $base-gray;
+  max-height: 75vh;
 }
 .invert {
   filter: invert(80%);
@@ -1286,6 +1521,19 @@ section {
   background-color: $gray;
   cursor: not-allowed;
   color: white;
+}
+.add-button-dark {
+  display: flex;
+  align-items: center;
+  border: none;
+  height: 4.5vh;
+  margin: 0 0.5rem 0 0;
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.2rem;
+  background-color: $darker-green;
+  cursor: pointer;
+  color: white;
+  transition: all 0.3s;
 }
 .add-button {
   display: flex;
@@ -1329,7 +1577,18 @@ section {
   min-height: 4vh;
   width: 14vw;
 }
-#update-input:focus {
+.number-input {
+  background-color: $off-white;
+  box-shadow: 1px 1px 1px $gray;
+  border: 2px solid $light-orange-gray;
+  border-radius: 5px;
+  min-height: 4vh;
+  margin-right: 1rem;
+  margin-left: 0.5rem;
+  width: 6vw;
+}
+#update-input:focus,
+.number-input:focus {
   outline: 2px solid $lighter-green;
 }
 .loader {
