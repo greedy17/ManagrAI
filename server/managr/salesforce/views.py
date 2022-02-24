@@ -484,14 +484,10 @@ class SalesforceSObjectViewSet(
         from managr.core.models import User
 
         data = self.request.data
-
         user = User.objects.get(id=self.request.user.id)
         form_id = data.get("form_id")
-        print(form_id)
         form_data = data.get("form_data")
-        print(form_data)
         main_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
-        print(main_form)
         stage_forms = []
         stage_form_data_collector = {}
         for form in stage_forms:
@@ -503,10 +499,10 @@ class SalesforceSObjectViewSet(
         data = None
         attempts = 1
         while True:
-            sf = user.salesforce_account
             try:
+                print(user.id)
                 resource = model_routes[main_form.resource_type]["model"].create_in_salesforce(
-                    all_form_data
+                    all_form_data, user.id
                 )
                 print(resource)
                 data = {
