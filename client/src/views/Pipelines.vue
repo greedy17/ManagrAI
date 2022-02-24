@@ -90,7 +90,9 @@
             alt=""
           />
         </div>
-        <div class="opp-modal"></div>
+        <div class="opp-modal">
+          <button @click="createResource">updateResource</button>
+        </div>
       </div>
     </Modal>
 
@@ -423,6 +425,16 @@
               <img src="@/assets/images/go.png" style="height: 1rem; margin-left: 0.25rem" alt="" />
             </button>
           </div>
+
+          <div class="flex-row-pad" v-if="advanceStageSelected">
+            <p>Select stage:</p>
+            <input class="number-input" v-model="stage" type="number" />
+
+            <button class="add-button">
+              Advance stage
+              <img src="@/assets/images/go.png" style="height: 1rem; margin-left: 0.25rem" alt="" />
+            </button>
+          </div>
         </div>
 
         <div class="flex-row">
@@ -434,7 +446,7 @@
             <input type="search" v-model="workflowFilterText" placeholder="search" />
             <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
           </div>
-          <button @click="addOpp" class="add-button">
+          <button @click="createOppInstance()" class="add-button">
             <img src="@/assets/images/plusOne.png" style="height: 1rem" alt="" />
             Opportunity
           </button>
@@ -443,6 +455,8 @@
           </button>
         </div>
       </section>
+
+      <!-- <SkeletonBox width="200px" height="40px" /> -->
 
       <section v-if="!selectedWorkflow" class="table-section">
         <div class="table">
@@ -508,7 +522,6 @@
               v-for="(field, i) in oppFields"
               :class="primaryCheckList.includes(opp.id) ? 'table-cell-selected' : 'table-cell'"
             >
-              <!-- {{ opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))] }} -->
               <p v-if="field.apiName !== 'Amount'">
                 {{
                   opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
@@ -660,6 +673,7 @@
 import DropDownSelect from '@thinknimble/dropdownselect'
 import { SObjects, SObjectPicklist } from '@/services/salesforce'
 import AlertTemplate, { AlertConfig, AlertInstance } from '@/services/alerts/'
+import SkeletonBox from '@/components/SkeletonBox'
 import CollectionManager from '@/services/collectionManager'
 import SlackOAuth, { salesforceFields } from '@/services/slack'
 import DropDownSearch from '@/components/DropDownSearch'
@@ -672,6 +686,7 @@ export default {
     DropDownSelect,
     Modal,
     DropDownSearch,
+    SkeletonBox,
   },
   data() {
     return {
@@ -717,10 +732,6 @@ export default {
       formData: {},
       noteTitle: '',
       noteInfo: '',
-      stages: null,
-      stages2: null,
-      stages3: null,
-      stages4: null,
       verboseName: null,
       taskHash: null,
       monetaryOptions: ['less than', 'greater than', 'equals'],
@@ -901,6 +912,19 @@ export default {
         console.log(e)
       }
     },
+    async createOppInstance() {
+      try {
+        const res = await SObjects.api.createFormInstance({
+          resourceType: 'Opportunity',
+          formType: 'CREATE',
+        })
+        this.addOppModalOpen = true
+        console.log(res.form_id)
+        this.instanceId = res.form_id
+      } catch (e) {
+        console.log(e)
+      }
+    },
     futureDate(val) {
       let currentDate = new Date()
       currentDate.setDate(currentDate.getDate() + Number(val))
@@ -974,6 +998,30 @@ export default {
           timeout: 3000,
           message: 'Salesforce update successful!',
           sub: 'Refresh to see changes',
+        })
+      } catch (e) {
+        console.log(e)
+      }
+      this.getObjects()
+    },
+    async createResource() {
+      this.loading = true
+      this.addOppModalOpen = false
+      try {
+        const res = await SObjects.api.createResource({
+          form_id: this.instanceId,
+          form_data: {
+            Name: 'createdOpp',
+            StageName: 'Trial',
+            CloseDate: '2022-03-14',
+          },
+        })
+        console.log(res)
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 3000,
+          message: 'Opportunity created successfully!',
+          // sub: 'Refresh to see changes',
         })
       } catch (e) {
         console.log(e)
