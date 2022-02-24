@@ -2,27 +2,17 @@ import uuid
 import json
 
 from django.db import models
-from django.db.models import F, Q, Count
-from rest_framework.exceptions import ValidationError
 from django.contrib.postgres.fields import JSONField, ArrayField
-from django.utils import timezone
-from django.core import serializers
 
 from managr.salesforce.exceptions import ResourceAlreadyImported
 from managr.core.models import TimeStampModel, IntegrationModel
-from managr.utils.misc import datetime_appended_filepath
 from managr.slack.helpers import block_builders
-from managr.organization import constants as org_consts
-from managr.core import constants as core_consts
-from managr.slack import constants as slack_consts
 from managr.salesforce.adapter.models import (
     SalesforceAuthAccountAdapter,
     OpportunityAdapter,
     LeadAdapter,
 )
-
-# from managr.core import background as bg_task
-from . import constants as opp_consts
+from managr.core.models import User
 
 
 class LeadQuerySet(models.QuerySet):
@@ -222,9 +212,10 @@ class Opportunity(TimeStampModel, IntegrationModel):
 
     def create_in_salesforce(self, data=None, user_id=None):
         """when synchronous create in db first to be able to use immediately"""
-        token = self.owner.salesforce_account.access_token
-        base_url = self.owner.salesforce_account.instance_url
-        object_fields = self.owner.salesforce_account.object_fields.filter(
+        user = User.objects.get(id=user_id)
+        token = user.salesforce_account.access_token
+        base_url = user.salesforce_account.instance_url
+        object_fields = user.salesforce_account.object_fields.filter(
             salesforce_object="Opportunity"
         ).values_list("api_name", flat=True)
         if not data:
