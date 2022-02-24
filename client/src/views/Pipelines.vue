@@ -384,7 +384,7 @@
           </div>
         </div>
         <div v-else>
-          <div v-if="!closeDateSelected" class="flex-row-pad">
+          <div v-if="!closeDateSelected && !advanceStageSelected" class="flex-row-pad">
             <button @click="closeDateSelected = !closeDateSelected" class="add-button">
               Push close date
               <img
@@ -394,7 +394,7 @@
                 alt=""
               />
             </button>
-            <button class="add-button">
+            <button @click="advanceStageSelected = !advanceStageSelected" class="add-button">
               Advance stage
               <img
                 src="@/assets/images/stairs.png"
@@ -428,9 +428,17 @@
 
           <div class="flex-row-pad" v-if="advanceStageSelected">
             <p>Select stage:</p>
-            <input class="number-input" v-model="stage" type="number" />
+            <select
+              style="margin-left: 0.5rem; margin-right: 0.5rem"
+              @input=";(value = $event.target.value), setStage(value)"
+              id="update-input"
+            >
+              <option v-for="(stage, i) in allStages" :key="i" :value="stage.value">
+                <p>{{ stage.label }}</p>
+              </option>
+            </select>
 
-            <button class="add-button">
+            <button @click="advanceStage(primaryCheckList)" class="add-button">
               Advance stage
               <img src="@/assets/images/go.png" style="height: 1rem; margin-left: 0.25rem" alt="" />
             </button>
@@ -692,7 +700,11 @@ export default {
     return {
       primaryCheckList: [],
       workflowCheckList: [],
+      closeDateSelected: false,
+      advanceStageSelected: false,
       selection: false,
+      allStages: [],
+      newStage: null,
       originalList: null,
       daysForward: null,
       allOpps: null,
@@ -737,7 +749,6 @@ export default {
       monetaryOptions: ['less than', 'greater than', 'equals'],
       picklistQueryOpts: {},
       instanceIds: [],
-      closeDateSelected: false,
       oppFilters: [
         {
           title: 'Amount',
@@ -794,9 +805,13 @@ export default {
     this.templates.refresh()
     this.getObjects()
     this.getAllForms()
+    this.listStages()
     this.team.refresh()
   },
   methods: {
+    setStage(val) {
+      this.newStage = val
+    },
     test() {
       console.log(this.workflowCheckList)
     },
@@ -829,6 +844,17 @@ export default {
       try {
         const res = await SObjectPicklist.api.listPicklists(query_params)
         this.picklistQueryOpts[type] = res.length ? res[0]['values'] : []
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    async listStages() {
+      try {
+        const res = await SObjectPicklist.api.listPicklists({
+          salesforceObject: 'Opportunity',
+          picklistFor: 'StageName',
+        })
+        this.allStages = res.length ? res[0]['values'] : []
       } catch (e) {
         console.log(e)
       }
@@ -939,7 +965,14 @@ export default {
       let data = this.futureDate(val)
       this.createBulkInstance(ids)
       setTimeout(() => {
-        this.bulkUpdate(this.instanceIds, data)
+        this.bulkUpdateCloseDate(this.instanceIds, data)
+      }, 100)
+    },
+    advanceStage(ids) {
+      this.instanceIds = []
+      this.createBulkInstance(ids)
+      setTimeout(() => {
+        this.bulkUpdateStage(this.instanceIds, this.newStage)
       }, 100)
     },
     async createBulkInstance(ids) {
@@ -962,7 +995,7 @@ export default {
         this.formData[key] = val
       }
     },
-    async bulkUpdate(ids, data) {
+    async bulkUpdateCloseDate(ids, data) {
       for (let i = 0; i < ids.length; i++) {
         try {
           const res = await SObjects.api.updateResource({
@@ -976,6 +1009,29 @@ export default {
       this.primaryCheckList = []
       this.workflowCheckList = []
       this.closeDateSelected = false
+      this.loading = false
+      this.$Alert.alert({
+        type: 'success',
+        timeout: 3000,
+        message: 'Salesforce update successful!',
+        sub: 'Refresh to see changes',
+      })
+    },
+    async bulkUpdateStage(ids, data) {
+      for (let i = 0; i < ids.length; i++) {
+        try {
+          const res = await SObjects.api.updateResource({
+            form_id: ids[i],
+            form_data: { StageName: data },
+          })
+        } catch (e) {
+          console.log(e)
+        }
+      }
+      console.log(data)
+      this.primaryCheckList = []
+      this.workflowCheckList = []
+      this.advanceStageSelected = false
       this.loading = false
       this.$Alert.alert({
         type: 'success',

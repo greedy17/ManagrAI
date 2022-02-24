@@ -505,13 +505,8 @@ class SalesforceSObjectViewSet(
         while True:
             sf = user.salesforce_account
             try:
-<<<<<<< HEAD
-                resource = main_form.resource_object.create_in_salesforce(
-                    all_form_data, str(user.id)
-=======
                 resource = model_routes[main_form.resource_type]["model"].create_in_salesforce(
                     all_form_data
->>>>>>> 41370dad935d5cfc1c0c38f53e808772a024245d
                 )
                 print(resource)
                 data = {
