@@ -1135,6 +1135,7 @@ class OpportunityAdapter:
         json_data = json.dumps(
             OpportunityAdapter.to_api(data, OpportunityAdapter.integration_mapping, object_fields)
         )
+        print(json_data)
         url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.RESOURCE_SYNC_OPPORTUNITY, "")
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         with Client as client:
