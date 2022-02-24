@@ -288,14 +288,18 @@ class SalesforceSObjectViewSet(
         user = self.request.user
         form_type = self.request.GET.get("form_type")
         resource_type = self.request.GET.get("resource_type")
-        resource_id = self.request.GET.get("resource_id")
+        resource_id = self.request.GET.get("resource_id", None)
         template = (
             OrgCustomSlackForm.objects.for_user(user)
             .filter(Q(resource=resource_type, form_type=form_type))
             .first()
         )
-        slack_form = OrgCustomSlackFormInstance.objects.create(
-            template=template, user=user, resource_id=resource_id
+        slack_form = (
+            OrgCustomSlackFormInstance.objects.create(
+                template=template, user=user, resource_id=resource_id
+            )
+            if form_type == "UPDATE"
+            else OrgCustomSlackFormInstance.objects.create(template=template, user=user)
         )
         return Response(data={"form_id": str(slack_form.id)})
 
