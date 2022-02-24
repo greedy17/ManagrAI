@@ -14,7 +14,7 @@ from django.conf import settings
 from django.template.loader import render_to_string
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import IntegrityError
-
+from managr.salesforce.routes import routes as model_routes
 from rest_framework.decorators import action
 from rest_framework import (
     filters,
@@ -301,6 +301,7 @@ class SalesforceSObjectViewSet(
             if form_type == "UPDATE"
             else OrgCustomSlackFormInstance.objects.create(template=template, user=user)
         )
+
         return Response(data={"form_id": str(slack_form.id)})
 
     @action(
@@ -501,7 +502,9 @@ class SalesforceSObjectViewSet(
         while True:
             sf = user.salesforce_account
             try:
-                resource = main_form.resource_object.create_in_salesforce(all_form_data)
+                resource = model_routes[main_form.resource_type]["model"].create_in_salesforce(
+                    all_form_data
+                )
                 print(resource)
                 data = {
                     "success": True,
