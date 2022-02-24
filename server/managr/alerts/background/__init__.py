@@ -248,8 +248,8 @@ def _process_send_alert(invocation, channel, config_id):
     text = template.title
     blocks = [
         block_builders.section_with_button_block(
-            "View in Pipeline",
-            "VIEW_IN_PIPELINE",
+            "Open in Pipeline",
+            "OPEN_IN_PIPELINE",
             f"*{len(alert_instances)} results for workflow {text}*",
             url=ALERT_PIPELINE_URL,
         ),
