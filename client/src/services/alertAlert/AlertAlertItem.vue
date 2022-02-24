@@ -1,7 +1,13 @@
 <template>
   <div class="aa-notification" :class="alert.type" @click="$emit('remove', alert)">
-    <img class="check" src="@/assets/images/check.png" alt="" />
-    <div class="content" v-html="alert.message" />
+    <div class="row">
+      <img class="check" src="@/assets/images/check.png" alt="" />
+      <div class="col">
+        <div class="content" v-html="alert.message" />
+        <div class="subs" v-html="alert.sub" />
+      </div>
+    </div>
+
     <img class="icon" alt="icon" src="@/assets/images/remove.svg" />
   </div>
 </template>
@@ -19,9 +25,13 @@ export default {
 
 .aa-notification {
   @include pointer-on-hover();
-  width: 30vw;
-  min-height: 4rem;
-  padding: 0.75rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  min-width: 24vw;
+  max-width: 30vw;
+  min-height: 4.5rem;
+  padding: 0.5rem;
   margin-bottom: 0.5rem;
   border-radius: 0.5rem;
   transition: all 200ms ease-in-out;
@@ -37,10 +47,12 @@ export default {
 }
 
 .aa-notification.success {
-  background-color: rgba($color: $dark-green, $alpha: 1.5);
-  border: 1px solid rgba($color: $dark-green, $alpha: 1.2);
-  color: white;
+  background-color: white;
+  border: white;
+  border-radius: 0.33rem;
+  color: $base-gray;
   font-weight: bold;
+  box-shadow: 1px 2px 7px $very-light-gray;
 }
 
 .aa-notification.banner {
@@ -64,15 +76,35 @@ export default {
 
 .content {
   flex-grow: 1;
+  font-size: 18px;
 }
-
+.subs {
+  font-size: 12px;
+  color: $very-light-gray;
+}
+.col {
+  display: flex;
+  flex-direction: column;
+}
+.row {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  height: 100%;
+  border-radius: 0.1rem;
+  padding-left: 0.5rem;
+}
 .icon {
   margin-left: 0.75rem;
-  height: 1.2rem;
-  filter: invert(100%);
+  height: 1.25rem;
+  width: 1.5rem;
+  filter: invert(60%);
+  align-self: flex-start;
+  padding: 0.1rem;
 }
 .check {
-  height: 1rem;
-  margin-right: 0.2rem;
+  height: 1.25rem;
+  margin-right: 0.75rem;
+  filter: invert(46%) sepia(20%) saturate(1576%) hue-rotate(94deg) brightness(102%) contrast(92%);
 }
 </style>
