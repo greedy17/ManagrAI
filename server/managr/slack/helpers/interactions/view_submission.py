@@ -43,6 +43,7 @@ from managr.salesforce.adapter.routes import routes as adapter_routes
 from managr.salesforce.background import (
     _process_create_new_resource,
     _process_create_task,
+    _process_create_event,
     emit_meeting_workflow_tracker,
     emit_add_update_to_sf,
     _send_recap,
@@ -472,8 +473,8 @@ def process_submit_resource_data(payload, context):
         new_context = {**context, "type": "command"}
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
         error_view_data = {
-            "trigger_id": trigger_id,
-            "view_id": view_id,
+            "trigger_id": loading_view_data["trigger_id"],
+            "view_id": loading_view_data["view"]["id"],
             "view": {
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Error"},
@@ -1129,16 +1130,147 @@ def process_create_task(payload, context):
 
 
 @log_all_exceptions
+@processor(required_context=[])
+def process_create_event(payload, context):
+    user = User.objects.get(id=context.get("u"))
+
+    slack_access_token = user.organization.slack_integration.access_token
+    # get state - state contains the values based on the block_id
+
+    state = payload["view"]["state"]["values"]
+    activity_date = [
+        value.get("selected_date") for value in state.get("managr_event_date", {}).values()
+    ]
+    activity_time = [
+        value.get("selected_time") for value in state.get("managr_event_time", {}).values()
+    ]
+    owner_id = [
+        value.get("selected_option") for value in state.get("managr_event_assign_to", {}).values()
+    ]
+    duration = state.get("managr_event_duration", {}).get("plain_input", {}).get("value")
+
+    related_to_type = [
+        value.get("selected_option")
+        for value in state.get("managr_event_related_to_resource", {}).values()
+    ]
+    related_to = [
+        value.get("selected_option") for value in state.get("managr_event_related_to", {}).values()
+    ]
+    if len(related_to) and len(related_to_type):
+        related_to = (
+            model_routes.get(related_to_type[0].get("value"))
+            .get("model")
+            .objects.get(id=related_to[0].get("value"))
+            .integration_id
+        )
+    data = {
+        "Subject": state.get("managr_event_subject", {}).get("plain_input", {}).get("value"),
+        "ActivityDate": activity_date[0] if len(activity_date) else None,
+        "OwnerId": owner_id[0].get("value") if len(owner_id) else None,
+        "DurationInMinutes": duration[0] if len(duration) else None,
+        "ActivityDateTime": f"{activity_date[0]}T{activity_time[0]+':00'  if len(activity_time) else ''}",
+    }
+
+    if related_to and related_to_type:
+
+        if related_to_type[0].get("value") not in [
+            sf_consts.RESOURCE_SYNC_CONTACT,
+            sf_consts.RESOURCE_SYNC_LEAD,
+        ]:
+            data["WhatId"] = related_to
+        else:
+            data["WhoId"] = related_to
+
+    try:
+
+        _process_create_event.now(context.get("u"), data)
+
+    except FieldValidationError as e:
+
+        return {
+            "response_action": "push",
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "An Error Occured"},
+                "blocks": get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Validations set up by your org\n *Error* : _{e}_"
+                    },
+                ),
+            },
+        }
+    except RequiredFieldError as e:
+
+        return {
+            "response_action": "push",
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "An Error Occurred"},
+                "blocks": get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Required fields from Salesforce\n *Error* : _{e}_"
+                    },
+                ),
+            },
+        }
+    except SFNotFoundError as e:
+
+        return {
+            "response_action": "push",
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "An Error Occurred"},
+                "blocks": get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error one of the resources does not exist\n *Error* : _{e}_"
+                    },
+                ),
+            },
+        }
+
+    except UnhandledSalesforceError as e:
+
+        return {
+            "response_action": "push",
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "An Error Occurred"},
+                "blocks": get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is new to us\n *Error* : _{e}_"
+                    },
+                ),
+            },
+        }
+
+    # TODO: [MGR-830] Change this to be api.update method instead PB 03/31/21
+    return {
+        "response_action": "update",
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Event Created"},
+            "blocks": [
+                block_builders.simple_section(
+                    ":white_check_mark: Successfully created event!", "mrkdwn"
+                )
+            ],
+        },
+    }
+
+
+@log_all_exceptions
 @slack_api_exceptions(rethrow=True)
 @processor(required_context=[])
 def process_schedule_meeting(payload, context):
     u = User.objects.get(id=context.get("u"))
-    type = context.get("type", None)
     data = payload["view"]["state"]["values"]
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
     org = u.organization
-    meta_data = json.loads(payload["view"]["private_metadata"])
     access_token = org.slack_integration.access_token
     description = data["meeting_description"]["meeting_data"]["value"]
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
@@ -1157,6 +1289,27 @@ def process_schedule_meeting(payload, context):
                 {
                     "email": participant["email"],
                     "name": participant["secondary_data"]["Name"],
+                    "status": "noreply",
+                }
+            )
+    if data["meeting_internals"][f"GET_LOCAL_RESOURCE_OPTIONS?u={u.id}&resource=User"][
+        "selected_options"
+    ]:
+        query_data = User.objects.filter(
+            id__in=list(
+                map(
+                    lambda val: val["value"],
+                    data["meeting_internals"][f"GET_LOCAL_RESOURCE_OPTIONS?u={u.id}&resource=User"][
+                        "selected_options"
+                    ],
+                )
+            )
+        ).values("email", "first_name", "last_name")
+        for participant in query_data:
+            participants.append(
+                {
+                    "email": participant["email"],
+                    "name": f"{participant['first_name']} {participant['last_name']}",
                     "status": "noreply",
                 }
             )
@@ -1232,7 +1385,6 @@ def process_add_contacts_to_cadence(payload, context):
     ]["selected_option"]["value"]
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
-
     org = u.organization
     access_token = org.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
@@ -2343,8 +2495,8 @@ def process_submit_alert_resource_data(payload, context):
         new_context = {**context, "type": "alert"}
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
         error_view_data = {
-            "trigger_id": trigger_id,
-            "view_id": view_id,
+            "trigger_id": loading_view_data["trigger_id"],
+            "view_id": loading_view_data["view"]["id"],
             "view": {
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Error"},
@@ -2549,8 +2701,8 @@ def process_submit_digest_resource_data(payload, context):
         new_context = {**context, "type": "digest"}
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
         error_view_data = {
-            "trigger_id": trigger_id,
-            "view_id": view_id,
+            "trigger_id": loading_view_data["trigger_id"],
+            "view_id": loading_view_data["view"]["id"],
             "view": {
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Error"},
@@ -2597,6 +2749,7 @@ def handle_view_submission(payload):
         slack_const.PROCESS_SUBMIT_ALERT_RESOURCE_DATA: process_submit_alert_resource_data,
         slack_const.PROCESS_SUBMIT_DIGEST_RESOURCE_DATA: process_submit_digest_resource_data,
         slack_const.COMMAND_CREATE_TASK: process_create_task,
+        slack_const.COMMAND_CREATE_EVENT: process_create_event,
         slack_const.ZOOM_MEETING__SCHEDULE_MEETING: process_schedule_meeting,
         slack_const.ADD_TO_CADENCE: process_add_contacts_to_cadence,
         slack_const.ADD_TO_SEQUENCE: process_add_contacts_to_sequence,

@@ -707,6 +707,74 @@ def _process_add_update_to_sf(form_id, *args):
     return
 
 
+# @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
+# @sf_api_exceptions_wf("add_call_log")
+# def _process_add_event_to_sf(form_id, *args):
+#     form = OrgCustomSlackFormInstance.objects.filter(id=form_id).first()
+#     resource = None
+#     if form.resource_type == "Opportunity":
+#         resource = Opportunity.objects.get(id=form.resource_id)
+#     elif form.resource_type == "Account":
+#         resource = Account.objects.get(id=form.resource_id)
+#     elif form.resource_type == "Lead":
+#         resource = Lead.objects.get(id=form.resource_id)
+#     else:
+#         resource = Contact.objects.get(id=form.resource_id)
+#     user = form.user
+#     if not user:
+#         return logger.exception(f"User not found unable to log call {str(user.id)}")
+#     if not hasattr(user, "salesforce_account"):
+#         return logger.exception("User does not have a salesforce account cannot push to sf")
+#     start_time = form.submission_date
+#     data = dict(
+#         Subject=f"{form.saved_data.get('meeting_type')}",
+#         Description=f"{form.saved_data.get('meeting_comments')}",
+#         ActivityDate=start_time.strftime("%Y-%m-%d"),
+#         DurationInMinutes=30,
+#         ActivityDateTime=start_time.strftime("%Y-%m-%dT%H:%M:%S"),
+#     )
+#     if form.resource_type in ["Account", "Opportunity"]:
+#         data["WhatId"] = resource.integration_id
+#     else:
+#         data["WhoId"] = resource.integration_id
+#     attempts = 1
+#     while True:
+#         sf = user.salesforce_account
+#         try:
+#             ActivityAdapter.save_zoom_meeting_to_salesforce(data, sf.access_token, sf.instance_url)
+#             attempts = 1
+#             break
+#         except TokenExpired as e:
+#             if attempts >= 5:
+#                 return logger.exception(
+#                     f"Failed to refresh user token for Salesforce operation add contact as contact role to opportunity"
+#                 )
+#             else:
+#                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+#                 time.sleep(sleep)
+#                 sf.regenerate_token()
+#                 attempts += 1
+#         except UnableToUnlockRow as e:
+#             if attempts >= 5:
+#                 logger.exception(
+#                     f"Failed to create call log from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+#                 )
+#                 raise e
+#             else:
+#                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+#                 time.sleep(sleep)
+#                 attempts += 1
+#         except Exception as e:
+#             if attempts >= 5:
+#                 logger.info(f"Add update to SF exception: {e}")
+#                 raise e
+#             else:
+#                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+#                 time.sleep(sleep)
+#                 attempts += 1
+#     return
+
+
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
 @sf_api_exceptions_wf("create_new_contacts")
 def _process_create_new_contacts(workflow_id, *args):
@@ -1012,6 +1080,42 @@ def _process_create_task(user_id, data, *args):
 
 
 @background(schedule=0)
+def _process_create_event(user_id, data, *args):
+
+    user = User.objects.get(id=user_id)
+    # get the create form
+
+    attempts = 1
+    while True:
+        sf = user.salesforce_account
+        from managr.salesforce.adapter.models import EventAdapter
+
+        try:
+            EventAdapter.save_event_to_salesforce(data, sf.access_token, sf.instance_url)
+            break
+        except TokenExpired:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to create new resource for user {str(user.id)} after {attempts} tries because their token is expired"
+                )
+            else:
+                sf.regenerate_token()
+                attempts += 1
+        except FieldValidationError as e:
+            logger.exception(
+                f"Failed to create new resource for user {str(user.id)} becuase they have a field validation error"
+            )
+            raise FieldValidationError(e)
+        except RequiredFieldError as e:
+            logger.exception(
+                f"Failed to create new resource for user {str(user.id)} becuase they have a field validation error"
+            )
+            raise RequiredFieldError(e)
+
+    return
+
+
+@background(schedule=0)
 def _process_list_tasks(user_id, data, *args):
 
     user = User.objects.get(id=user_id)
@@ -1291,7 +1395,6 @@ def _send_instant_alert(form_ids):
     sobject_fields = list(
         SObjectField.objects.filter(id__in=configs.keys()).values("id", "api_name")
     )
-    resource_data = main_form.resource_object.secondary_data
     resource_name = main_form.resource_object.name if main_form.resource_object.name else ""
 
     old_data = dict()
@@ -1307,25 +1410,28 @@ def _send_instant_alert(form_ids):
         api_name = field["api_name"]
         if api_name in new_data.keys():
             for object in configs[str(field["id"])].values():
-                value_check = create_alert_string(
-                    object["operator"],
-                    object["data_type"],
-                    object["value"],
-                    new_data[api_name],
-                    resource_data[api_name],
-                    object["title"],
-                )
-                if value_check:
-                    recipients = object["recipients"]
-                    for key in recipients.keys():
-                        channel = recipients[key]
-                        if recipients[key] in users_list.keys():
-                            users_list[channel]["text"] += f", _{value_check}_"
-                        else:
-                            users_list[channel] = {
-                                "text": f":zap: *Instant Update:* _{value_check}_",
-                                "id": key,
-                            }
+                if api_name in list(object.values()):
+                    value_check = create_alert_string(
+                        object["operator"],
+                        object["data_type"],
+                        object["value"],
+                        new_data[api_name],
+                        old_data[api_name],
+                        object["title"],
+                    )
+                    if value_check:
+                        recipients = object["recipients"]
+                        for key in recipients.keys():
+                            channel = recipients[key]
+                            if recipients[key] in users_list.keys():
+                                users_list[channel]["text"] += f", _{value_check}_"
+                            else:
+                                users_list[channel] = {
+                                    "text": f":zap: *Instant Update:* _{value_check}_",
+                                    "id": key,
+                                }
+                else:
+                    continue
     if len(users_list):
         add_blocks = [
             block_builders.section_with_button_block(

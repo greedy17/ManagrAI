@@ -7,6 +7,7 @@ from django.conf import settings
 from background_task import background
 from rest_framework.exceptions import ValidationError
 
+from managr.core.models import User
 from ..exceptions import TokenExpired, InvalidRequest
 from ..models import (
     SalesloftAccount,
@@ -18,6 +19,7 @@ from ..models import (
 )
 from managr.organization.models import Contact
 from background_task.models import CompletedTask
+from managr.salesloft.routes import routes as sl_routes
 
 from ..helpers.class_functions import (
     process_person,
@@ -26,6 +28,7 @@ from ..helpers.class_functions import (
     sync_current_cadence_page,
     sync_current_account_page,
 )
+from managr.api.decorators import log_all_exceptions
 
 logger = logging.getLogger("managr")
 
@@ -188,6 +191,7 @@ def sync_people(auth_account_id):
 
 def add_cadence_membership(person_id, cadence_id, user_id):
     cadence = Cadence.objects.get(id=cadence_id)
+    print(cadence)
     account = SalesloftAccount.objects.get(user=user_id)
     contact = Contact.objects.get(id=person_id)
     person = People.objects.filter(email=contact.email).first()
@@ -272,4 +276,25 @@ def sync_helper(auth_id):
             except Exception as e:
                 logger.exception(f"Salesloft sync helper: {e}")
                 attempts += 1
+    return
+
+
+@background(schedule=0)
+@log_all_exceptions
+def _process_stale_salesloft_data_for_delete(batch):
+    for record in batch:
+        # running this as for loop instead of bulk delete to keep track of records deleted
+        try:
+            u = User.objects.filter(id=record["user_id"]).first()
+            if u:
+                for resource, values in record["resource"].items():
+                    qs = sl_routes[resource]["model"].objects.filter(id__in=values)
+                    logger.info(
+                        f"deleting {qs.count()} {resource} for user {u.email} with id {str(u.id)}"
+                    )
+                    qs.delete()
+
+        except Exception as e:
+            logger.exception(e)
+            pass
     return
