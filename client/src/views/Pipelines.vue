@@ -413,7 +413,12 @@
           <div class="flex-row-pad" v-if="closeDateSelected">
             <p>How many days ?:</p>
             <input class="number-input" v-model="daysForward" type="number" />
-            <button class="add-button" @click="pushCloseDates(primaryCheckList, daysForward)">
+
+            <button
+              :disabled="!daysForward"
+              class="add-button"
+              @click="pushCloseDates(primaryCheckList, daysForward)"
+            >
               Push close date
               <img src="@/assets/images/go.png" style="height: 1rem; margin-left: 0.25rem" alt="" />
             </button>
@@ -950,8 +955,9 @@ export default {
       this.loading = false
       this.$Alert.alert({
         type: 'success',
-        timeout: 4000,
-        message: 'Salesforce update successful! Refresh for changes.',
+        timeout: 3000,
+        message: 'Salesforce update successful!',
+        sub: 'Refresh to see changes',
       })
     },
     async updateResource() {
@@ -965,8 +971,9 @@ export default {
         //  this.$router.go()
         this.$Alert.alert({
           type: 'success',
-          timeout: 4000,
-          message: 'Salesforce update successful! Refresh for changes.',
+          timeout: 3000,
+          message: 'Salesforce update successful!',
+          sub: 'Refresh to see changes',
         })
       } catch (e) {
         console.log(e)
@@ -1522,18 +1529,15 @@ section {
   cursor: not-allowed;
   color: white;
 }
-.add-button-dark {
+.add-button:disabled {
   display: flex;
   align-items: center;
   border: none;
-  height: 4.5vh;
-  margin: 0 0.5rem 0 0;
   padding: 0.25rem 0.6rem;
   border-radius: 0.2rem;
-  background-color: $darker-green;
-  cursor: pointer;
+  background-color: $gray;
+  cursor: not-allowed;
   color: white;
-  transition: all 0.3s;
 }
 .add-button {
   display: flex;
@@ -1549,6 +1553,7 @@ section {
   color: white;
   transition: all 0.3s;
 }
+
 .add-button:hover {
   transform: scale(1.03);
   box-shadow: 1px 2px 2px $very-light-gray;
