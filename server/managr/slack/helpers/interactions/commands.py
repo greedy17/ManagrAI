@@ -353,7 +353,8 @@ def add_to_cadence(context):
         if not slack:
             return
     blocks = get_block_set(
-        "select_account", {"u": str(user.id), "type": "command", "system": "salesloft"},
+        "pick_resource_modal_block_set",
+        {"u": str(user.id), "type": "command", "system": "salesloft"},
     )
     access_token = user.organization.slack_integration.access_token
 
