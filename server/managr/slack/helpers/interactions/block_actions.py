@@ -1733,95 +1733,6 @@ def process_show_engagement_modal(payload, context):
 
 
 @processor(required_context="u")
-def process_show_sequence_modal(payload, context):
-    u = User.objects.get(id=context.get("u"))
-    trigger_id = payload["trigger_id"]
-    org = u.organization
-    access_token = org.slack_integration.access_token
-    is_update = payload.get("view", None)
-    view_id = is_update.get("id") if is_update is not None else None
-    loading_view_data = send_loading_screen(
-        access_token, "Putting together your sequences", "open", str(u.id), trigger_id, view_id
-    )
-    type = context.get("type", None)
-    resource_name = (
-        payload["view"]["state"]["values"]["select_existing"][
-            f"{slack_const.GET_USER_ACCOUNTS}?u={u.id}&type=command&system=outreach"
-        ]["selected_option"]["text"]["text"]
-        if type == "command"
-        else context.get("resource_name")
-    )
-    resource_id = (
-        payload["view"]["state"]["values"]["select_existing"][
-            f"{slack_const.GET_USER_ACCOUNTS}?u={u.id}&type=command&system=outreach"
-        ]["selected_option"]["value"]
-        if type == "command"
-        else context.get("resource_id")
-    )
-    resource_type = "Account" if type == "command" else context.get("resource_type")
-    if is_update:
-        meta_data = json.loads(payload["view"]["private_metadata"])
-    private_metadata = {
-        "resource_name": resource_name,
-        "resource_id": resource_id,
-        "resource_type": resource_type,
-    }
-    if type != "command":
-        private_metadata.update({"channel_id": payload["channel"]["id"]})
-    private_metadata.update(context)
-    data = {
-        "view_id": loading_view_data["view"]["id"],
-        "view": {
-            "type": "modal",
-            "callback_id": slack_const.ADD_TO_SEQUENCE,
-            "title": {"type": "plain_text", "text": "Add to a Sequence"},
-            "blocks": get_block_set(
-                "sequence_modal_blockset",
-                context={
-                    "u": context.get("u"),
-                    "resource_name": resource_name,
-                    "resource_id": resource_id,
-                    "resource_type": resource_type,
-                },
-            ),
-            "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
-            "private_metadata": json.dumps(private_metadata),
-        },
-    }
-    try:
-        slack_requests.generic_request(
-            slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE, data, access_token=access_token
-        )
-    except InvalidBlocksException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
-        )
-    except InvalidBlocksFormatException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
-        )
-    except UnHandeledBlocksException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
-        )
-    except InvalidAccessToken as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
-        )
-
-
-# def process_show_engagement_modal(payload, context):
-#     print(payload)
-#     pm = json.loads(payload["view"]["private_metadata"])
-#     print(f"PM {pm}")
-#     system = pm.get("system", None)
-#     if system == "outreach":
-#         process_show_sequence_modal(payload, context)
-#     else:
-#         process_show_cadence_modal(payload, context)
-
-
-@processor(required_context="u")
 def process_get_notes(payload, context):
     u = User.objects.get(id=context.get("u"))
     type = context.get("type", None)
@@ -1905,34 +1816,41 @@ def process_get_call_recording(payload, context):
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
     trigger_id = payload["trigger_id"] if "trigger_id" in payload else None
-    view_type = "open" if type == "alert" else "push"
-    try:
+    state = None
+    view_id = None
+    if "view" in payload:
+        state = payload["view"]["state"]["values"]
         view_id = payload["view"]["id"]
-    except KeyError:
-        view_id = None
     loading_view_data = send_loading_screen(
-        access_token, "Checking for call details...", view_type, str(user.id), trigger_id, view_id
+        access_token,
+        "Checking for call details...",
+        f"{'update' if state else 'open'}",
+        str(user.id),
+        trigger_id,
+        view_id,
     )
     resource_id = context.get("resource_id", None)
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     if resource_id is None and type != "recap":
         timestamp = datetime.fromtimestamp(float(payload["actions"][0]["action_ts"]))
-        resource_type = payload["view"]["state"]["values"]["managr_task_related_to_resource"][
-            f"UPDATE_TASK_SELECTED_RESOURCE?u={context.get('u')}"
-        ]["selected_option"]["value"]
-        resource_id = payload["view"]["state"]["values"]["select_existing"][
-            f"GONG_CALL_RECORDING?u={context.get('u')}&resource={resource_type}&resource_type={resource_type}"
-        ]["selected_option"]["value"]
+        resource_type = [
+            value.get("selected_option") for value in state.get("selected_object_type", {}).values()
+        ][0].get("value")
+
+        resource_id = [
+            value.get("selected_option") for value in state.get("selected_object", {}).values()
+        ][0].get("value")
     else:
         resource_type = context.get("resource_type")
         timestamp = datetime.fromtimestamp(float(payload["actions"][0]["action_ts"]))
-
     user_tz = datetime.now(pytz.timezone(user.timezone)).strftime("%z")
     user_timezone = pytz.timezone(user.timezone)
     gong_auth = GongAuthAccount.objects.get(organization=user.organization)
     resource = routes[resource_type]["model"].objects.get(id=resource_id)
     if resource_type in ["Opportunity", "Contact"]:
-        resource_ids = [resource.secondary_data["Id"], resource.account.secondary_data["Id"]]
+        resource_ids = [resource.secondary_data["Id"]]
+        if resource.account:
+            resource_ids.append(resource.account.secondary_data["Id"])
     else:
         resource_ids = [resource.secondary_data["Id"]]
     call = GongCall.objects.filter(
@@ -3027,8 +2945,6 @@ def handle_block_actions(payload):
         slack_const.PAGINATE_ALERTS: process_paginate_alerts,
         slack_const.PAGINATE_MEETINGS: process_paginate_meetings,
         slack_const.PAGINATE_TASKS: process_paginate_tasks,
-        # slack_const.ADD_TO_CADENCE_MODAL: process_show_cadence_modal,
-        # slack_const.ADD_TO_SEQUENCE_MODAL: process_show_sequence_modal,
         slack_const.PROCESS_SHOW_ENGAGEMENT_MODEL: process_show_engagement_modal,
         slack_const.GET_NOTES: process_get_notes,
         slack_const.CALL_ERROR: process_call_error,

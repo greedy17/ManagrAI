@@ -403,7 +403,6 @@ def call_recording(context):
         ).first()
         if not slack:
             return
-    blocks = get_block_set("pick_resource_modal_block_set", {"u": str(user.id)},)
     access_token = user.organization.slack_integration.access_token
 
     view_id = context.get("view_id", None)
@@ -412,12 +411,19 @@ def call_recording(context):
         if view_id
         else slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     )
-
+    options = "%".join(["Opportunity", "Account"])
     data = {
         "view": {
             "type": "modal",
             "title": {"type": "plain_text", "text": "Call Recording"},
-            "blocks": blocks,
+            "blocks": get_block_set(
+                "pick_resource_modal_block_set",
+                {
+                    "u": str(user.id),
+                    "options": options,
+                    "action_id": slack_const.GONG_CALL_RECORDING,
+                },
+            ),
             "external_id": f"pick_resource_modal_block_set.{str(uuid.uuid4())}",
         },
     }
