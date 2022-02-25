@@ -556,7 +556,8 @@ def process_submit_resource_data(payload, context):
                 user.slack_integration.slack_id,
                 text=text,
                 block_set=get_block_set(
-                    "success_modal", {"message": message, "u": user.id, "form_id": form_id}
+                    "success_modal",
+                    {"message": message, "u": user.id, "form_ids": context.get("f")},
                 ),
             )
 
@@ -1645,17 +1646,9 @@ def process_send_recaps(payload, context):
         )
         return
     else:
-        form_id = context.get("form_id")
-        command_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
-        update_forms = [command_form]
-    update_form_ids = []
-    # aggregate the data
+        form_ids = context.get("form_ids").split(",")
 
-    data = dict()
-    for form in update_forms:
-        update_form_ids.append(str(form.id))
-        data = {**data, **form.saved_data}
-    _send_recap(update_form_ids, send_to_recaps)
+    _send_recap(form_ids, send_to_recaps)
     return
 
 

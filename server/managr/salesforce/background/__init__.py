@@ -1222,18 +1222,6 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
     )
     main_form = submitted_forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
     user = main_form.user
-    old_data = dict()
-    if main_form.template.form_type == "UPDATE":
-        for additional_stage_form in submitted_forms:
-            old_data = {**old_data, **additional_stage_form.previous_data}
-    new_data = dict()
-    form_fields = None
-    for form in submitted_forms:
-        new_data = {**new_data, **form.saved_data}
-        if form_fields:
-            form_fields = form_fields | form.template.formfield_set.filter(include_in_recap=True)
-        else:
-            form_fields = form.template.formfield_set.filter(include_in_recap=True)
     send_summ_to_leadership = send_to_data.get("leadership", None) if send_to_data else None
     send_summ_to_reps = send_to_data.get("reps", None) if send_to_data else None
     send_summ_to_channels = send_to_data.get("channels", None) if send_to_data else None

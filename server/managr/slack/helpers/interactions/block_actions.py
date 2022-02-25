@@ -1455,7 +1455,6 @@ def process_select_resource(payload, context):
         action = payload["actions"][0]
         blocks = payload["view"]["blocks"]
         selected_value = action["selected_option"]["value"]
-    print(payload["view"]["private_metadata"])
     external_id = payload.get("view", {}).get("external_id", None)
     try:
         view_type, __unique_id = external_id.split(".")
@@ -2558,17 +2557,11 @@ def process_send_recap_modal(payload, context):
     try:
         res = slack_requests.generic_request(url, data, access_token=access_token)
     except InvalidBlocksException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
+        return logger.exception(f"Failed To Send Recap for user {user.email} because of: {e}")
     except InvalidBlocksFormatException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
+        return logger.exception(f"Failed To Send Recap for user {user.email} because of: {e}")
     except UnHandeledBlocksException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
+        return logger.exception(f"Failed To Send Recap for user {user.email} because of: {e}")
     except InvalidAccessToken as e:
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user with workflow {str(user.id)} email {user.email} {e}"
@@ -2626,6 +2619,7 @@ def process_show_convert_lead_form(payload, context):
 def process_view_recap(payload, context):
     form_id_str = context.get("form_ids")
     form_ids = form_id_str.split(".")
+
     submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
         template__resource="OpportunityLineItem"
     )
