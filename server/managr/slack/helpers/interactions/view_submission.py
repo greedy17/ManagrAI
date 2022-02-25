@@ -1461,6 +1461,7 @@ def process_add_contacts_to_cadence(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor(required_context=["u"])
 def process_add_contacts_to_sequence(payload, context):
+    pm = json.loads(payload["view"]["private_metadata"])
     meta_data = json.loads(payload["view"]["private_metadata"])
     u = User.objects.get(id=context.get("u"))
     sequence_id = payload["view"]["state"]["values"]["select_sequence"][
@@ -1472,12 +1473,15 @@ def process_add_contacts_to_sequence(payload, context):
     org = u.organization
     access_token = org.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    contacts = [
-        option["value"]
-        for option in payload["view"]["state"]["values"]["select_people"][
-            f"{slack_const.GET_CONTACT_OPTIONS}?u={u.id}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}"
-        ]["selected_options"]
-    ]
+    if pm.get("resource_type", None) == "Contact":
+        contacts = [context.get("resource_id")]
+    else:
+        contacts = [
+            option["value"]
+            for option in payload["view"]["state"]["values"]["select_people"][
+                f"{slack_const.GET_CONTACT_OPTIONS}?u={u.id}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}"
+            ]["selected_options"]
+        ]
     loading_data = {
         "trigger_id": trigger_id,
         "view_id": view_id,

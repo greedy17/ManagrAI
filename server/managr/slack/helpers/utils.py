@@ -321,7 +321,7 @@ def generate_call_block(call_res, resource_id=None):
 
 def check_contact_last_name(meeting_id, meeting_type):
     workflow = MeetingWorkflow.objects.get(id=meeting_id)
-    meeting = workflow.meeting if meeting_type == 'zoom' else workflow.non_zoom_meeting
+    meeting = workflow.meeting if meeting_type == "zoom" else workflow.non_zoom_meeting
     if meeting:
         contacts = meeting.participants
         for contact in contacts:
@@ -329,8 +329,8 @@ def check_contact_last_name(meeting_id, meeting_type):
             if not contactData["LastName"]:
                 return False
         return True
-    else: 
-        pass 
+    else:
+        pass
 
 
 def get_random_update_message(topic):
@@ -394,7 +394,7 @@ def check_for_uncompleted_meetings(user_id, org_level=False):
             not_completed = [meeting for meeting in total_meetings if meeting.progress == 0]
         if len(not_completed):
             return [not_completed]
-    return {"status": False }
+    return {"status": False}
 
 
 def check_workflows_count(user_id):

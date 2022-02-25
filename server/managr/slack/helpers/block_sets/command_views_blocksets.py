@@ -1,4 +1,5 @@
 import pdb
+import resource
 import pytz
 import uuid
 import json
@@ -257,38 +258,40 @@ def alert_instance_block_set(context):
                 )
             )
         if instance.template.resource_type != "Lead":
-            # if hasattr(user, "outreach_account"):
-            #     action_blocks.append(
-            #         block_builders.simple_button_block(
-            #             "Add to Sequence",
-            #             "add_to_sequence",
-            #             action_id=action_with_params(
-            #                 slack_const.ADD_TO_SEQUENCE_MODAL,
-            #                 params=[
-            #                     f"u={str(user.id)}",
-            #                     f"resource_id={str(instance.resource_id)}",
-            #                     f"resource_name={instance.resource.name}",
-            #                     f"resource_type={instance.template.resource_type}",
-            #                 ],
-            #             ),
-            #         )
-            #     )
-            # else:
-            action_blocks.append(
-                block_builders.simple_button_block(
-                    "Add to Cadence",
-                    "add_to_cadence",
-                    action_id=action_with_params(
-                        slack_const.ADD_TO_CADENCE_MODAL,
-                        params=[
-                            f"u={str(user.id)}",
-                            f"resource_id={str(instance.resource_id)}",
-                            f"resource_name={instance.resource.name}",
-                            f"resource_type={instance.template.resource_type}",
-                        ],
-                    ),
+            if hasattr(user, "outreach_account"):
+                action_blocks.append(
+                    block_builders.simple_button_block(
+                        "Add to Sequence",
+                        "add_to_sequence",
+                        action_id=action_with_params(
+                            slack_const.PROCESS_SHOW_ENGAGEMENT_MODEL,
+                            params=[
+                                f"u={str(user.id)}",
+                                f"resource_id={str(instance.resource_id)}",
+                                f"resource_name={instance.resource.name}",
+                                f"resource_type={instance.template.resource_type}",
+                                "system=outreach",
+                            ],
+                        ),
+                    )
                 )
-            )
+            else:
+                action_blocks.append(
+                    block_builders.simple_button_block(
+                        "Add to Cadence",
+                        "add_to_cadence",
+                        action_id=action_with_params(
+                            slack_const.PROCESS_SHOW_ENGAGEMENT_MODEL,
+                            params=[
+                                f"u={str(user.id)}",
+                                f"resource_id={str(instance.resource_id)}",
+                                f"resource_name={instance.resource.name}",
+                                f"resource_type={instance.template.resource_type}",
+                                "system=salesloft",
+                            ],
+                        ),
+                    )
+                )
         blocks.append(block_builders.actions_block(action_blocks))
     if in_channel or (user.id != resource_owner.id):
         blocks.append(
@@ -430,13 +433,16 @@ def create_add_to_sequence_block_set(context):
             block_id="select_sequence",
             placeholder="Type to search",
         ),
-        block_builders.multi_external_select(
-            f"*Add Contacts from {context.get('resource_name')} to selected Sequence*:",
-            f"{slack_const.GET_CONTACT_OPTIONS}?u={user_id}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}",
-            block_id="select_people",
-            placeholder="Type to search",
-        ),
     ]
+    if context.get("resource_type", None) != "Contact":
+        blocks.append(
+            block_builders.multi_external_select(
+                f"*Add Contacts from {context.get('resource_name')} to selected Sequence*:",
+                f"{slack_const.GET_CONTACT_OPTIONS}?u={user_id}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}",
+                block_id="select_people",
+                placeholder="Type to search",
+            ),
+        )
     return blocks
 
 
@@ -499,17 +505,17 @@ def pick_resource_modal_block_set(context, *args, **kwargs):
     resource_type = context.get("resource_type", None)
     resource_id = context.get("resource_id", None)
     user_id = context.get("u")
-
+    options = [
+        block_builders.option(resource, resource.capitalize())
+        for resource in context.get("options").split("%")
+    ]
     blocks = []
     blocks.append(
         block_builders.static_select(
             "Related to type",
-            [
-                block_builders.option("Opportunity", "Opportunity"),
-                block_builders.option("Account", "Account"),
-            ],
-            action_id=f"{slack_const.UPDATE_TASK_SELECTED_RESOURCE}?u={user_id}",
-            block_id="managr_task_related_to_resource",
+            options,
+            action_id=f"{slack_const.PROCESS_SELECT_RESOURCE}?u={user_id}&options={context.get('options')}&action_id={context.get('action_id')}",
+            block_id="selected_object_type",
             initial_option=block_builders.option(resource_type, resource_type)
             if resource_type
             else None,
@@ -519,8 +525,8 @@ def pick_resource_modal_block_set(context, *args, **kwargs):
         blocks.append(
             block_builders.external_select(
                 f"*Search for an {context.get('resource_type')}*",
-                f"{slack_const.GONG_CALL_RECORDING}?u={user_id}&resource={resource_type}&resource_type={resource_type}",
-                block_id="select_existing",
+                action_id=f"{context.get('action_id')}?u={user_id}&resource={resource_type}",
+                block_id="selected_object",
                 placeholder="Type to search",
                 initial_option=block_builders.option(resource_id, resource_id)
                 if resource_id
