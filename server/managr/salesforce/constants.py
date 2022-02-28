@@ -3,7 +3,6 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 
-
 SF_API_VERSION = (
     settings.SALESFORCE_API_VERSION if hasattr(settings, "SALESFORCE_API_VERSION") else ""
 )
