@@ -193,7 +193,7 @@ class Opportunity(TimeStampModel, IntegrationModel):
         data["id"] = str(data.get("id"))
         return OpportunityAdapter(**data)
 
-    def update_in_salesforce(self, data):
+    def update_in_salesforce(self, data, return_task_name=False):
         from managr.salesforce.background import emit_update_current_db_values
 
         if self.owner and hasattr(self.owner, "salesforce_account"):
@@ -207,7 +207,17 @@ class Opportunity(TimeStampModel, IntegrationModel):
             )
             self.is_stale = True
             self.save()
-            emit_update_current_db_values(str(self.owner.id), "Opportunity", self.integration_id)
+            update_task = emit_update_current_db_values(
+                str(self.owner.id),
+                "Opportunity",
+                self.integration_id,
+                f"OPPORTUNITY-UPDATE-{str(uuid.uuid4())}",
+            )
+            if return_task_name:
+                return {
+                    "task_hash": update_task.task_hash,
+                    "verbose_name": update_task.verbose_name,
+                }
             return res
 
     def create_in_salesforce(self, data=None, user_id=None):
@@ -254,4 +264,3 @@ class Opportunity(TimeStampModel, IntegrationModel):
         token = self.owner.salesforce_account.access_token
         base_url = self.owner.salesforce_account.instance_url
         return OpportunityAdapter.get_current_values(integration_id, token, base_url, self.owner.id)
-

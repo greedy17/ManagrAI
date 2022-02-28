@@ -134,8 +134,10 @@ def emit_generate_form_template(user_id):
     return _generate_form_template(user_id)
 
 
-def emit_update_current_db_values(user_id, resource_type, integration_id):
-    return _update_current_db_values(user_id, resource_type, integration_id)
+def emit_update_current_db_values(user_id, resource_type, integration_id, verbose_name):
+    return _update_current_db_values(
+        user_id, resource_type, integration_id, verbose_name=verbose_name
+    )
 
 
 def emit_meeting_workflow_tracker(workflow_id):

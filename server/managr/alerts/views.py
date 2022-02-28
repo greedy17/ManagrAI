@@ -5,12 +5,12 @@ from faker import Faker
 import pytz
 from urllib.parse import urlencode
 from datetime import datetime
+from django_filters.rest_framework import DjangoFilterBackend
 
 from django.core.management import call_command
 from django.shortcuts import render, redirect
 from django.conf import settings
 from django.utils import timezone
-
 from rest_framework.views import APIView
 from rest_framework import (
     authentication,
@@ -37,6 +37,7 @@ from .background import emit_init_alert, _process_check_alert
 
 from . import models as alert_models
 from . import serializers as alert_serializers
+from .filters import AlertInstanceFilterSet
 from managr.core.models import User
 
 # Create your views here.
@@ -165,6 +166,29 @@ class AlertConfigViewSet(
         readSerializer = self.serializer_class(instance=serializer.instance)
         return Response(data=readSerializer.data)
 
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="current-instances",
+    )
+    def get_current_instances(self, request, *args, **kwargs):
+        user = User.objects.get(id=request.user.id)
+        config_id = self.request.GET.get("config_id")
+        last_instance = alert_models.AlertInstance.objects.filter(
+            user=user, config=config_id
+        ).first()
+        if last_instance and last_instance.datetime_created.date() == datetime.today().date():
+            template = alert_models.AlertTemplate.objects.filter(
+                id=last_instance.template.id
+            ).values()[0]
+            instances = alert_models.AlertInstance.objects.filter(
+                user=user, config__id=config_id, invocation=last_instance.invocation,
+            )
+            return Response(data={"instances": instances.values(), "template": template})
+
+        return Response(data=[])
+
 
 class AlertGroupViewSet(
     mixins.CreateModelMixin,
@@ -214,6 +238,21 @@ class AlertOperandViewSet(
             return alert_serializers.AlertOperandWriteSerializer
 
         return self.serializer_class
+
+
+class AlertInstanceViewSet(
+    mixins.ListModelMixin, viewsets.GenericViewSet,
+):
+    filter_backends = (
+        DjangoFilterBackend,
+        filters.SearchFilter,
+    )
+    serializer_class = alert_serializers.AlertInstanceSerializer
+    filter_class = AlertInstanceFilterSet
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        return alert_models.AlertInstance.objects.for_user(self.request.user)
 
 
 class RealTimeAlertViewSet(

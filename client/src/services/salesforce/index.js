@@ -1,7 +1,7 @@
-import Salesforce, { SObjectField, SObjectValidation, SObjectPicklist } from './models'
+import Salesforce, { SObjectField, SObjectValidation, SObjectPicklist, SObjects } from './models'
 
 export default Salesforce
-export { SObjectValidation, SObjectField, SObjectPicklist }
+export { SObjectValidation, SObjectField, SObjectPicklist, SObjects }
 export const OPPORTUNITY = 'Opportunity'
 export const CONTACT = 'Contact'
 export const ACCOUNT = 'Account'

@@ -6,7 +6,6 @@ import json
 
 from urllib.parse import urlencode, quote_plus, urlparse
 from datetime import datetime
-
 from django.db.models import Q
 
 from managr.utils.sites import get_site_url

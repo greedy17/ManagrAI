@@ -10,9 +10,7 @@
         />
         <div v-if="!isMulti" class="selected-items">
           <span v-show="!isMulti && !visible">
-            {{
-            objectSelectedItems ? objectSelectedItems[displayKey] : ''
-            }}
+            {{ objectSelectedItems ? objectSelectedItems[displayKey] : '' }}
           </span>
         </div>
         <div v-if="isMulti" class="selected-items multi">
@@ -21,7 +19,8 @@
             :key="`${item[valueKey]}-${i}`"
             v-for="(item, i) in objectSelectedItems"
             class="selected-items__item"
-          >{{ item[displayKey] }}</span>
+            >{{ item[displayKey] }}</span
+          >
         </div>
       </div>
 
@@ -66,7 +65,9 @@
                   ? ~checkIsSelected(item[valueKey])
                   : item[valueKey] == selectedItems,
               }"
-            >{{ item[displayKey] }}</div>
+            >
+              {{ item[displayKey] }}
+            </div>
           </slot>
         </template>
 
@@ -167,11 +168,11 @@ export default {
         return null
       }
       if (this.isMulti) {
-        return this.selectedItems.map(v => {
-          return this.itemList.filter(i => i[this.valueKey] == v)[0]
+        return this.selectedItems.map((v) => {
+          return this.itemList.filter((i) => i[this.valueKey] == v)[0]
         })
       }
-      return this.itemList.filter(i => i[this.valueKey] == this.selectedItems)[0]
+      return this.itemList.filter((i) => i[this.valueKey] == this.selectedItems)[0]
     },
     isMulti() {
       return this.$attrs.hasOwnProperty('multi')
@@ -209,7 +210,7 @@ export default {
        * @itemValue itemValue to check
        * will be used to style multiselect if selected and remove item if selected
        */
-      const index = this.selectedItems.findIndex(i => i == itemValue)
+      const index = this.selectedItems.findIndex((i) => i == itemValue)
       return index
     },
     updateValue(val) {
@@ -219,7 +220,7 @@ export default {
       if (this.isLocalFilter) {
         this.isLoading = true
 
-        let results = this.itemList.filter(i => {
+        let results = this.itemList.filter((i) => {
           return i[this.displayKey].toLowerCase().includes(val)
         })
 
