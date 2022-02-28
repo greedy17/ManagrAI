@@ -553,7 +553,23 @@
           </div>
           <p class="card-text">Sync Companies, Deals, and Contacts</p>
           <div class="card__body">
-            <p style="color: #beb5cc">Coming Soon</p>
+            <PulseLoadingSpinnerButton
+              v-if="!hasHubspotIntegration"
+              :disabled="hasHubspotIntegration"
+              @click="onGetAuthLink('HUBSPOT')"
+              style="margin-left: 1rem; cursor: pointer"
+              class="orange_button"
+              text="Connect"
+              :loading="generatingToken && selectedIntegration == 'HUBSPOT'"
+            ></PulseLoadingSpinnerButton>
+            <div v-else class="card__body">
+              <div class="dropdown-container" tabindex="1">
+                <div class="three-dots"></div>
+                <div class="dropdown">
+                  <button @click="onRevoke('HUBSPOT')" class="revoke-button">revoke</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -602,6 +618,7 @@ import SlackOAuth from '@/services/slack'
 import ZoomAccount from '@/services/zoom/account/'
 import Nylas from '@/services/nylas'
 import Salesforce from '@/services/salesforce'
+import Hubspot from '@/services/hubspot'
 import SalesloftAccount from '@/services/salesloft'
 import GongAccount from '@/services/gong'
 import OutreachAccount from '@/services/outreach'
@@ -780,6 +797,9 @@ export default {
     hasSalesforceIntegration() {
       return !!this.$store.state.user.salesforceAccount
     },
+    hasHubspotIntegration() {
+      return !!this.$store.state.user.hubspotAccount
+    },
     hasZoomIntegration() {
       return !!this.$store.state.user.zoomAccount && this.$store.state.user.hasZoomIntegration
     },
@@ -818,6 +838,8 @@ export default {
       switch (this.selectedIntegration) {
         case 'SALESFORCE':
           return Salesforce
+        case 'HUBSPOT':
+          return Hubspot
         case 'ZOOM':
           return ZoomAccount
         case 'NYLAS':
