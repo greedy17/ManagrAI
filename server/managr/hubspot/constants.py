@@ -8,7 +8,7 @@ if settings.USE_HUBSPOT:
     BASE_URL = settings.HUBSPOT_BASE_URL
     CLIENT_ID = settings.HUBSPOT_CLIENT_ID
     CLIENT_SECRET = settings.HUBSPOT_SECRET
-    REDIRECT_URL = settings.HUBSPOT_REDIRECT_URL
+    REDIRECT_URI = settings.HUBSPOT_REDIRECT_URI
     SCOPES = [
         "crm.objects.contacts.read",
         "crm.objects.contacts.write",
@@ -30,7 +30,7 @@ if settings.USE_HUBSPOT:
         "code": code,
         "client_id": CLIENT_ID,
         "client_secret": CLIENT_SECRET,
-        "redirect_uri": REDIRECT_URL,
+        "redirect_uri": REDIRECT_URI,
     }
     REAUTHENTICATION_BODY = lambda refresh_token: {
         "grant_type": "refresh_token",
@@ -44,7 +44,7 @@ if settings.USE_HUBSPOT:
         {
             "client_id": CLIENT_ID,
             "client_secret": CLIENT_SECRET,
-            "redirect_uri": REDIRECT_URL,
+            "redirect_uri": REDIRECT_URI,
             "scopes": URL_SCOPES,
             "state": "HUBSPOT",
         }

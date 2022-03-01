@@ -94,6 +94,7 @@ INSTALLED_APPS = [
     "managr.salesloft",
     "managr.gong",
     "managr.outreach",
+    "managr.hubspot",
     # "managr.demo",
     # Django
     "django.contrib.admin",
@@ -456,5 +457,12 @@ if USE_GONG:
     GONG_CLIENT_ID = _env_get_required("GONG_CLIENT_ID")
     GONG_BASE_URL = _env_get_required("GONG_BASE_URL")
     GONG_REDIRECT_URI = _env_get_required("GONG_REDIRECT_URI")
+
+USE_HUBSPOT = os.environ.get("USE_HUBSPOT") == "True"
+if USE_HUBSPOT:
+    HUBSPOT_SECRET = _env_get_required("HUBSPOT_SECRET")
+    HUBSPOT_CLIENT_ID = _env_get_required("HUBSPOT_CLIENT_ID")
+    HUBSPOT_BASE_URL = _env_get_required("HUBSPOT_BASE_URL")
+    HUBSPOT_REDIRECT_URI = _env_get_required("HUBSPOT_REDIRECT_URI")
 
 MAX_ATTEMPTS = 5

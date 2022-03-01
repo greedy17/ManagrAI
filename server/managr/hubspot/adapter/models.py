@@ -2,7 +2,7 @@ import os.path
 import logging
 from requests.exceptions import HTTPError
 from managr.utils.client import Client
-from .exceptions import CustomAPIException, CustomXMLException
+from .exceptions import CustomAPIException
 from .. import constants as hubspot_consts
 
 logger = logging.getLogger("managr")

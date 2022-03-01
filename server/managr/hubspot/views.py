@@ -32,11 +32,10 @@ from rest_framework.decorators import (
 from . import constants as hubspot_consts
 
 # from .cron import queue_hubspot_sync
-from .models import (
-    HubspotAccount,
-    HubspotAccountAdapter,
-)
-from .serializers import HubspotAccountSerializer
+from .models import HubspotAuthAccount
+from .adapter.models import HubspotAuthAccountAdapter
+
+from .serializers import HubspotAuthAccountSerializer
 
 # Create your views here.
 logger = logging.getLogger("managr")
@@ -45,7 +44,8 @@ logger = logging.getLogger("managr")
 @api_view(["GET"])
 @permission_classes([permissions.IsAuthenticated])
 def get_hubspot_auth_link(request):
-    link = HubspotAccountAdapter.get_authorization()
+    link = HubspotAuthAccountAdapter.get_authorization()
+    print(f"AUTH LINK: {link}")
     return Response({"link": link})
 
 
@@ -55,15 +55,15 @@ def get_hubspot_authentication(request):
     code = request.data.get("code", None)
     if not code:
         raise ValidationError()
-    res = HubspotAccountAdapter.create_account(code, request.user.id)
-    existing = HubspotAccount.objects.filter(user=request.user).first()
+    res = HubspotAuthAccountAdapter.create_account(code, request.user.id)
+    existing = HubspotAuthAccount.objects.filter(user=request.user).first()
     if existing:
-        serializer = HubspotAccountSerializer(data=res.as_dict, instance=existing)
+        serializer = HubspotAuthAccountSerializer(data=res.as_dict, instance=existing)
     else:
-        serializer = HubspotAccountSerializer(data=res.as_dict)
+        serializer = HubspotAuthAccountSerializer(data=res.as_dict)
     serializer.is_valid(raise_exception=True)
     serializer.save()
-    hubspot_acc = HubspotAccount.objects.filter(user=request.user).first()
+    hubspot_acc = HubspotAuthAccount.objects.filter(user=request.user).first()
     return Response(data={"success": True})
 
 

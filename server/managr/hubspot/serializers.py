@@ -3,7 +3,7 @@ from rest_framework import serializers
 from .models import HubspotAuthAccount
 
 
-class HubspotAuthSerializer(serializers.ModelSerializer):
+class HubspotAuthAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = HubspotAuthAccount
         fields = (

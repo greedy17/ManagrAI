@@ -13,6 +13,7 @@ from managr.autonomous import views as auto_views
 from managr.salesloft import views as salesloft_views
 from managr.gong import views as gong_views
 from managr.outreach import views as outreach_views
+from managr.hubspot import views as hubspot_views
 
 # from . import views
 
