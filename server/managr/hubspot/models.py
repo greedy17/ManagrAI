@@ -111,14 +111,9 @@ class HubspotAuthAccount(TimeStampModel):
         return []
 
     def regenerate_token(self):
-        data = self.__dict__
-        data["id"] = str(data.get("id"))
-        helper = HubspotAuthAccountAdapter(**data)
-        res = helper.refresh()
-        self.token_generated_date = timezone.now()
+        res = self.adapter_class.refresh()
         self.access_token = res.get("access_token", None)
-        self.signature = res.get("signature", None)
-        self.scope = res.get("scope", None)
+        self.refresh_token = res.get("refresh_token", None)
         self.save()
 
     def revoke(self):

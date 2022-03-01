@@ -66,7 +66,6 @@ class HubspotAuthAccountAdapter:
         user = User.objects.get(id=user_id)
         res = cls.authenticate(code)
         user_res = cls.get_user_info(res["access_token"])
-        # get fields for resources
 
         data = {
             "user": user.id,
@@ -150,7 +149,6 @@ class HubspotAuthAccountAdapter:
                 data=data,
                 headers=hubspot_consts.AUTHENTICATION_HEADERS,
             )
-            print(res.json())
             return HubspotAuthAccountAdapter._handle_response(res)
 
     @staticmethod
@@ -163,10 +161,10 @@ class HubspotAuthAccountAdapter:
         return HubspotAuthAccountAdapter._handle_response(res)
 
     def refresh(self):
-        data = hubspot_consts.REAUTHENTICATION_BODY(self.refresh_token)
         with Client as client:
+            data = hubspot_consts.REAUTHENTICATION_BODY(self.refresh_token)
             res = client.post(
-                f"{hubspot_consts.REFRESH_URI}",
+                f"{hubspot_consts.BASE_URL}/{hubspot_consts.REFRESH_TOKEN_URI}/{self.refresh_token}",
                 data=data,
                 headers=hubspot_consts.AUTHENTICATION_HEADERS,
             )

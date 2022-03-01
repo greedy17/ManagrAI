@@ -2,6 +2,7 @@ from django.conf import settings
 
 
 TOKEN_INFO_URI = "oauth/v1/access-tokens"
+REFRESH_TOKEN_URI = "oauth/v1/refresh-tokens"
 
 if settings.USE_HUBSPOT:
     BASE_URL = settings.HUBSPOT_BASE_URL
@@ -42,7 +43,6 @@ if settings.USE_HUBSPOT:
     }
     REAUTHENTICATION_BODY = lambda refresh_token: {
         "grant_type": "refresh_token",
-        "Content-type": "application/json",
         "refresh_token": refresh_token,
         "client_id": CLIENT_ID,
         "client_secret": CLIENT_SECRET,
