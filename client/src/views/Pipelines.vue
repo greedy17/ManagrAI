@@ -588,18 +588,21 @@
                 <label :for="i"></label>
               </div>
             </div>
+
             <div
               :class="
                 primaryCheckList.includes(opp.id) ? 'table-cell-selected' : 'table-cell cell-name'
               "
             >
               <div class="flex-row-spread">
-                <div>
+                <div style="max-width: 14vw">
                   {{ opp.name }}
-                  <span style="color: #199e54; margin-left: 0.2rem">account name</span>
-                  <div style="color: #9b9b9b">owner: owner's name</div>
+                  <span style="color: #199e54; margin-left: 0.2rem">{{
+                    opp.account_ref ? opp.account_ref.name : '---'
+                  }}</span>
+                  <div style="color: #9b9b9b">owned by {{ opp.owner_ref.first_name }}</div>
                 </div>
-                <div style="margin-top: 0.5rem" class="flex-row">
+                <div class="flex-row">
                   <img
                     @click="createFormInstance(opp.id)"
                     class="name-cell-note-button"
@@ -620,9 +623,7 @@
               v-for="(field, i) in oppFields"
               :class="primaryCheckList.includes(opp.id) ? 'table-cell-selected' : 'table-cell'"
             >
-              <p class="invisible" v-if="field.apiName === 'AccountId'"></p>
-
-              <p v-else-if="field.apiName !== 'Amount' && field.apiName !== 'AccountId'">
+              <p v-if="field.apiName !== 'Amount'">
                 {{
                   opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
                     ? opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
@@ -648,7 +649,7 @@
       <section v-if="selectedWorkflow && currentWorkflow.list.length > 0" class="table-section">
         <div class="table">
           <div class="table-row">
-            <div class="table-cell-checkbox-header">
+            <div style="padding: 2vh" class="table-cell-checkbox table-cell-header">
               <div>
                 <input
                   @click="onCheckAllWorkflows"
@@ -680,14 +681,27 @@
                 <label :for="i"></label>
               </div>
             </div>
-            <div class="table-cell cell-name">
+            <div
+              style="max-width: 15vw"
+              :class="
+                workflowCheckList.includes(workflow.resourceRef.id)
+                  ? 'table-cell-selected'
+                  : 'table-cell cell-name'
+              "
+            >
               <div class="flex-row-spread">
-                <div>
+                <div style="max-width: 14vw">
                   {{ workflow.resourceRef.name }}
-                  <span style="color: #199e54; margin-left: 0.2rem">account name</span>
-                  <div style="color: #9b9b9b">owner: owner's name</div>
+                  <span style="color: #199e54; margin-left: 0.2rem">
+                    {{
+                      workflow.resourceRef.accountRef ? workflow.resourceRef.accountRef.name : '---'
+                    }}</span
+                  >
+                  <div style="color: #9b9b9b">
+                    owned by {{ workflow.resourceRef.ownerRef.firstName }}
+                  </div>
                 </div>
-                <div style="margin-top: 0.5rem" class="flex-row">
+                <div class="flex-row">
                   <img
                     @click="createFormInstance(workflow.resourceRef.id)"
                     class="name-cell-note-button"
@@ -705,7 +719,6 @@
             <!-- <div :key="field" v-for="field in currentWorkflowFields" class="table-cell">
               {{ workflow.resourceRef[camelize(field)] }}
             </div> -->
-
             <div :key="field.name" v-for="field in currentWorkflowFields" class="table-cell">
               <p v-if="field !== 'Amount'">
                 {{
@@ -934,7 +947,7 @@ export default {
       this.newForecast = val
     },
     test() {
-      console.log(this.templates.list)
+      console.log(this.filteredWorkflows)
     },
     onCheckAll() {
       if (this.primaryCheckList.length < 1) {
@@ -1204,7 +1217,7 @@ export default {
           form_id: this.instanceId,
           form_data: this.formData,
         })
-        //  this.$router.go()
+        console.log(res)
         this.$Alert.alert({
           type: 'success',
           timeout: 3000,
@@ -1304,7 +1317,8 @@ export default {
           (field) =>
             field.apiName !== 'meeting_type' &&
             field.apiName !== 'meeting_comments' &&
-            field.apiName !== 'Name',
+            field.apiName !== 'Name' &&
+            field.apiName !== 'AccountId',
         )
       } catch (error) {
         console.log(error)
@@ -1725,6 +1739,7 @@ h3 {
   background-color: $off-white;
   font-weight: bold;
   font-size: 14px;
+  letter-spacing: 0.25px;
   color: $base-gray;
 }
 .table-cell-checkbox-header {
@@ -1819,7 +1834,7 @@ section {
 .pipelines {
   margin-top: 5rem;
   color: $base-gray;
-  height: 94vh;
+  height: 90vh;
   overflow: hidden;
 }
 .invert {

@@ -489,7 +489,7 @@ a {
 }
 
 li:hover {
-  background-color: $soft-gray;
+  background-color: $lighter-green;
   border-radius: 0.2rem;
   color: white;
 }
