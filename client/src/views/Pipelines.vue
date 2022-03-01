@@ -1316,6 +1316,7 @@ export default {
       try {
         const res = await SObjects.api.getObjects('Opportunity')
         this.allOpps = res.results
+        console.log(this.allOpps)
         this.originalList = res.results
         this.todaysList = res.results
       } catch {

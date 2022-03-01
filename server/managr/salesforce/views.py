@@ -30,8 +30,10 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from managr.core.models import User
 from managr.api.emails import send_html_email
-
+from managr.slack.helpers import requests as slack_requests
 from managr.slack.models import OrgCustomSlackForm
+from managr.slack.helpers.block_sets import get_block_set
+
 from .models import (
     SObjectField,
     SObjectValidation,
@@ -328,6 +330,7 @@ class SalesforceSObjectViewSet(
         if not len(stage_forms):
             main_form.save_form(form_data, False)
         all_form_data = {**stage_form_data_collector, **main_form.saved_data}
+        current_forms = user.custom_slack_form_instances.filter(id__in=[form_id])
         data = None
         attempts = 1
         while True:
@@ -370,6 +373,26 @@ class SalesforceSObjectViewSet(
                 else:
                     time.sleep(2)
                     attempts += 1
+        current_forms.update(
+            is_submitted=True, update_source="pipeline", submission_date=timezone.now()
+        )
+        try:
+            text = f"Managr updated {main_form.resource_type}"
+            message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
+            slack_requests.send_ephemeral_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                user.slack_integration.slack_id,
+                text=text,
+                block_set=get_block_set(
+                    "success_modal", {"message": message, "u": user.id, "form_id": form_id}
+                ),
+            )
+
+        except Exception as e:
+            logger.exception(
+                f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
+            )
         return Response(data=data)
 
     @action(
@@ -503,11 +526,9 @@ class SalesforceSObjectViewSet(
         while True:
             sf = user.salesforce_account
             try:
-                print(user.id)
                 resource = model_routes[main_form.resource_type]["model"].create_in_salesforce(
                     all_form_data, user.id
                 )
-                print(resource)
                 data = {
                     "success": True,
                 }
