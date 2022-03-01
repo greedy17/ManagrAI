@@ -495,10 +495,13 @@ class SalesforceSObjectViewSet(
             stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
         if not len(stage_forms):
             main_form.save_form(form_data, False)
+
         all_form_data = {**stage_form_data_collector, **main_form.saved_data}
+
         data = None
         attempts = 1
         while True:
+            sf = user.salesforce_account
             try:
                 print(user.id)
                 resource = model_routes[main_form.resource_type]["model"].create_in_salesforce(

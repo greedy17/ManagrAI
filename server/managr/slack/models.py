@@ -120,7 +120,10 @@ class UserSlackIntegration(TimeStampModel):
     )
 
     recap_channel = models.CharField(
-        max_length=255, null=True, blank=True, help_text="Channel for recaps to be sent",
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text="Channel for recaps to be sent",
     )
     recap_receivers = ArrayField(
         models.CharField(max_length=255),
@@ -129,7 +132,9 @@ class UserSlackIntegration(TimeStampModel):
         help_text="Manager's slack id's who want a recap from this user",
     )
     realtime_alert_configs = JSONField(
-        default=dict, help_text="Object for all real time alert settings", blank=True,
+        default=dict,
+        help_text="Object for all real time alert settings",
+        blank=True,
     )
 
     objects = UserSlackIntegrationQuerySet.as_manager()
@@ -163,7 +168,9 @@ class OrgCustomSlackForm(TimeStampModel):
     """Model to store the organizations JSON-based custom Slack form config - these are templates"""
 
     organization = models.ForeignKey(
-        "organization.Organization", related_name="custom_slack_forms", on_delete=models.CASCADE,
+        "organization.Organization",
+        related_name="custom_slack_forms",
+        on_delete=models.CASCADE,
     )
     form_type = models.CharField(
         max_length=255,
@@ -212,14 +219,22 @@ class OrgCustomSlackFormInstance(TimeStampModel):
     """Model to store the instances created when a form is submitted from slack"""
 
     user = models.ForeignKey(
-        "core.User", related_name="custom_slack_form_instances", on_delete=models.CASCADE,
+        "core.User",
+        related_name="custom_slack_form_instances",
+        on_delete=models.CASCADE,
     )
     template = models.ForeignKey(
         "slack.OrgCustomSlackForm", on_delete=models.SET_NULL, related_name="instances", null=True
     )
-    saved_data = JSONField(default=dict, help_text="The data submitted on the form", blank=True,)
+    saved_data = JSONField(
+        default=dict,
+        help_text="The data submitted on the form",
+        blank=True,
+    )
     previous_data = JSONField(
-        default=dict, help_text="This will hold previous data for updated forms", blank=True,
+        default=dict,
+        help_text="This will hold previous data for updated forms",
+        blank=True,
     )
     resource_id = models.CharField(
         max_length=255, blank=True, help_text="The resource for this form (if not create"
@@ -266,7 +281,10 @@ class OrgCustomSlackFormInstance(TimeStampModel):
     def get_user_fields(self):
         template_fields = (
             self.template.formfield_set.all()
-            .values_list("field__api_name", "field__salesforce_object",)
+            .values_list(
+                "field__api_name",
+                "field__salesforce_object",
+            )
             .order_by("order")
         )
         user_fields = []
@@ -345,7 +363,9 @@ class OrgCustomSlackFormInstance(TimeStampModel):
             if field.is_public:
                 # pass in user as a kwarg
                 generated_field = field.to_slack_field(
-                    val, user=self.user, resource=self.resource_type,
+                    val,
+                    user=self.user,
+                    resource=self.resource_type,
                 )
                 if isinstance(generated_field, list):
                     form_blocks.extend(generated_field)
@@ -413,7 +433,6 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         values = self.get_values(state) if from_slack_object else state
         fields = [field.api_name for field in self.get_user_fields()]
         old_values = self.generate_form_values()
-
         new_data = dict()
         old_data = dict()
         for k, v in values.items():
@@ -427,6 +446,8 @@ class OrgCustomSlackFormInstance(TimeStampModel):
 
         self.saved_data = new_data
         self.previous_data = old_data
+        print(new_data)
+        print(old_data)
         self.save()
 
 
@@ -434,6 +455,9 @@ class FormField(TimeStampModel):
     field = models.ForeignKey(
         "salesforce.SObjectField", on_delete=models.CASCADE, related_name="forms"
     )
-    form = models.ForeignKey("slack.OrgCustomSlackForm", on_delete=models.CASCADE,)
+    form = models.ForeignKey(
+        "slack.OrgCustomSlackForm",
+        on_delete=models.CASCADE,
+    )
     order = models.IntegerField(default=0)
     include_in_recap = models.BooleanField(default=True)

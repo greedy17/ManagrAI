@@ -76,11 +76,12 @@ export default {
 
 .content {
   flex-grow: 1;
-  font-size: 18px;
+  font-size: 15px;
+  color: $dark-green;
 }
 .subs {
   font-size: 12px;
-  color: $very-light-gray;
+  color: $base-gray;
 }
 .col {
   display: flex;

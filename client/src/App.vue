@@ -69,11 +69,10 @@ export default {
 }
 
 body {
-  overflow-y: scroll;
-  overflow-x: auto;
+  overflow: auto;
   margin: 0;
   min-height: 100vh;
-  position: relative;
+  // position: relative;
   background-color: $off-white;
 }
 
