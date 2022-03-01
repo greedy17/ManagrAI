@@ -46,8 +46,8 @@ class UserRefSerializer(serializers.ModelSerializer):
 
 
 class OpportunitySerializer(serializers.ModelSerializer):
-    account_ref = AccountSerializer(source="account")
-    owner_ref = UserRefSerializer(source="owner")
+    account_ref = AccountSerializer(source="account", required=False)
+    owner_ref = UserRefSerializer(source="owner", required=False)
 
     class Meta:
         model = Opportunity

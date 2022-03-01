@@ -39,11 +39,7 @@ class Lead(TimeStampModel, IntegrationModel):
         max_length=500,
     )
     owner = models.ForeignKey(
-        "core.User",
-        related_name="owned_leads",
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
+        "core.User", related_name="owned_leads", on_delete=models.SET_NULL, blank=True, null=True,
     )
     objects = LeadQuerySet.as_manager()
 
@@ -122,12 +118,7 @@ class Opportunity(TimeStampModel, IntegrationModel):
     """
 
     name = models.CharField(max_length=255, blank=True, null=False)
-    amount = models.DecimalField(
-        max_digits=30,
-        decimal_places=15,
-        default=0.00,
-        null=True,
-    )
+    amount = models.DecimalField(max_digits=30, decimal_places=15, default=0.00, null=True,)
     forecast_category = models.CharField(max_length=255, null=True)
 
     close_date = models.DateField(null=True)
@@ -222,7 +213,6 @@ class Opportunity(TimeStampModel, IntegrationModel):
     @staticmethod
     def create_in_salesforce(data=None, user_id=None):
         """when synchronous create in db first to be able to use immediately"""
-        print(data)
         user = User.objects.get(id=user_id)
         if user and hasattr(user, "salesforce_account"):
             token = user.salesforce_account.access_token
