@@ -5,7 +5,7 @@ import CSRF from '@/services/csrf'
 import API_BASE from '@/services/api/base'
 
 export default class HubspotAPI extends ModelAPI {
-    static ENDPOINT = 'users/Hubspot/'
+    static ENDPOINT = 'users/hubspot/'
     static FILTERS_MAP = {
         page: ApiFilter.create({ key: 'page' }),
         pageSize: ApiFilter.create({ key: 'page_size' }),

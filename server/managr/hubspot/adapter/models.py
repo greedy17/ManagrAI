@@ -1,9 +1,12 @@
-import os.path
 import logging
 from requests.exceptions import HTTPError
 from managr.utils.client import Client
 from .exceptions import CustomAPIException
+from urllib.parse import urlencode
+
 from .. import constants as hubspot_consts
+from managr.core.models import User
+
 
 logger = logging.getLogger("managr")
 
@@ -13,7 +16,7 @@ class HubspotAuthAccountAdapter:
         self.id = kwargs.get("id", None)
         self.access_token = kwargs.get("access_token", None)
         self.refresh_token = kwargs.get("refresh_token", None)
-        self.salesforce_id = kwargs.get("salesforce_id", None)
+        self.hubspot_id = kwargs.get("hubspot_id", None)
         self.user = kwargs.get("user", None)
 
     @staticmethod
@@ -21,11 +24,12 @@ class HubspotAuthAccountAdapter:
         if not hasattr(response, "status_code"):
             raise ValueError
 
-        elif response.status_code >= 200 and response.status_code < 300:
+        elif response.status_code == 200 or response.status_code == 201:
             if response.status_code == 204:
                 return {}
             try:
                 data = response.json()
+                print(data)
             except Exception as e:
                 CustomAPIException(e, fn_name)
         else:
@@ -54,12 +58,18 @@ class HubspotAuthAccountAdapter:
 
     @classmethod
     def create_account(cls, code, user_id):
+        user = User.objects.get(id=user_id)
         res = cls.authenticate(code)
         user_res = cls.get_user_info(res["access_token"])
         # get fields for resources
-        data = cls.from_api(res, user_id)
 
-        return data
+        data = {
+            "user": user,
+            "access_token": res.get("access_token"),
+            "refresh_token": res.get("refresh_token"),
+            "hubspot_id": user_res.get("user_id"),
+        }
+        return cls(**data)
 
     # def format_field_options(
     #     self, hubspot_account_id, user_id, resource, res_data=[],
@@ -122,14 +132,9 @@ class HubspotAuthAccountAdapter:
     #     )
 
     @staticmethod
-    def from_api(data, user_id=None):
-
-        data["user"] = user_id
-        return HubspotAuthAccountAdapter(**data)
-
-    @staticmethod
-    def generate_auth_link():
-        return f"{hubspot_consts.AUTHORIZATION_URI}?{hubspot_consts.AUTHORIZATION_QUERY}"
+    def get_authorization():
+        query = urlencode(hubspot_consts.AUTHORIZATION_QUERY_PARAMS)
+        return f"{hubspot_consts.AUTHORIZATION_URI}?{query}"
 
     @staticmethod
     def authenticate(code):
@@ -140,13 +145,14 @@ class HubspotAuthAccountAdapter:
                 data=data,
                 headers=hubspot_consts.AUTHENTICATION_HEADERS,
             )
+            print(res.json())
             return HubspotAuthAccountAdapter._handle_response(res)
 
     @staticmethod
     def get_user_info(access_token):
         with Client as client:
             res = client.get(
-                f"{hubspot_consts.BASE_URL}/me",
+                f"{hubspot_consts.BASE_URL}/{hubspot_consts.TOKEN_INFO_URI}/{access_token}",
                 headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token),
             )
         return HubspotAuthAccountAdapter._handle_response(res)

@@ -1,32 +1,15 @@
 import logging
-import requests
-import json
 from faker import Faker
 from urllib.parse import urlencode
-from datetime import datetime
 
-from django.core.management import call_command
-from django.shortcuts import render, redirect
-from django.conf import settings
-from django.views.decorators.csrf import csrf_exempt, csrf_protect
+from django.shortcuts import redirect
 
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
-from rest_framework.views import APIView
-from rest_framework import (
-    authentication,
-    filters,
-    permissions,
-    generics,
-    mixins,
-    status,
-    views,
-    viewsets,
-)
+from rest_framework import permissions
 from rest_framework.decorators import (
     api_view,
     permission_classes,
-    authentication_classes,
 )
 
 from . import constants as hubspot_consts
@@ -63,7 +46,6 @@ def get_hubspot_authentication(request):
         serializer = HubspotAuthAccountSerializer(data=res.as_dict)
     serializer.is_valid(raise_exception=True)
     serializer.save()
-    hubspot_acc = HubspotAuthAccount.objects.filter(user=request.user).first()
     return Response(data={"success": True})
 
 

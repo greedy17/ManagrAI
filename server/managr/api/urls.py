@@ -133,6 +133,26 @@ urlpatterns = [
     ),
     path("users/salesforce/authenticate", sf_views.authenticate, name="salesforce-authentication",),
     path("users/salesforce/revoke", sf_views.revoke, name="salesforce-revoke",),
+    path(
+        "users/hubspot/authorization/",
+        hubspot_views.get_hubspot_auth_link,
+        name="get-hubspot-auth-link",
+    ),
+    path(
+        "users/hubspot/authenticate",
+        hubspot_views.get_hubspot_authentication,
+        name="get-hubspot-authentication",
+    ),
+    path(
+        "users/hubspot/re-direct",
+        hubspot_views.redirect_from_hubspot,
+        name="redirect-from-hubspot",
+    ),
+    path(
+        "users/hubspot/revoke",
+        hubspot_views.revoke_hubspot_access_token,
+        name="revoke-hubspot-access-token",
+    ),
     path("zoom/fake-meeting", zoom_views.init_fake_meeting, name="init-meeting",),
     path("slack/commands/create-task", slack_views.create_task, name="create-task",),
     path("slack/commands/add-to-cadence", slack_views.add_to_cadence, name="add-to-cadence",),

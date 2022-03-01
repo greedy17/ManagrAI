@@ -40,11 +40,6 @@ class HubspotAuthAccount(TimeStampModel):
     access_token = models.CharField(max_length=255, blank=True)
     refresh_token = models.CharField(max_length=255, blank=True)
     hubspot_id = models.CharField(max_length=255, blank=True)
-    refresh_token_task = models.CharField(
-        max_length=55,
-        blank=True,
-        help_text="Automatically Send a Refresh task to be executed 15 mins before expiry to reduce errors",
-    )
 
     class Meta:
         ordering = ["-datetime_created"]
