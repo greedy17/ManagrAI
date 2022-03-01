@@ -1158,7 +1158,6 @@ export default {
           console.log(e)
         }
       }
-      console.log(data)
       this.primaryCheckList = []
       this.workflowCheckList = []
       this.advanceStageSelected = false

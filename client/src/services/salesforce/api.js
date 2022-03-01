@@ -99,6 +99,7 @@ export class SObjectFormBuilderAPI extends ModelAPI {
   async updateResource(formData) {
     try {
       const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'sobject/update/', formData)
+      console.log(res.data)
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)

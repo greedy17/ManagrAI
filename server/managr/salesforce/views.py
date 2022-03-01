@@ -317,7 +317,6 @@ class SalesforceSObjectViewSet(
         from managr.core.models import User
 
         data = self.request.data
-
         user = User.objects.get(id=self.request.user.id)
         form_id = data.get("form_id")
         form_data = data.get("form_data")
@@ -427,74 +426,6 @@ class SalesforceSObjectViewSet(
         if has_error:
             return Response(data={"success": False})
         return Response(data={"success": True})
-
-    @action(
-        methods=["post"],
-        permission_classes=[permissions.IsAuthenticated],
-        detail=False,
-        url_path="update",
-    )
-    def bulk_update_resource(self, request, *args, **kwargs):
-        from managr.slack.models import OrgCustomSlackFormInstance
-        from managr.core.models import User
-
-        data = self.request.data
-
-        user = User.objects.get(id=self.request.user.id)
-        form_id = data.get("form_id")
-        form_data = data.get("form_data")
-        main_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
-        stage_forms = []
-        stage_form_data_collector = {}
-        for form in stage_forms:
-            form.save_form(form_data, False)
-            stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
-        if not len(stage_forms):
-            main_form.save_form(form_data, False)
-        all_form_data = {**stage_form_data_collector, **main_form.saved_data}
-        data = None
-        attempts = 1
-        while True:
-            sf = user.salesforce_account
-            try:
-                resource = main_form.resource_object.update_in_salesforce(all_form_data, True)
-                data = {
-                    "success": True,
-                    "task_hash": resource["task_hash"],
-                    "verbose_name": resource["verbose_name"],
-                }
-                break
-            except FieldValidationError as e:
-                data = {"success": False, "error": str(e)}
-                break
-
-            except RequiredFieldError as e:
-                data = {"success": False, "error": str(e)}
-                break
-            except UnhandledSalesforceError as e:
-                data = {"success": False, "error": str(e)}
-                break
-
-            except SFNotFoundError as e:
-                data = {"success": False, "error": str(e)}
-                break
-
-            except TokenExpired:
-                if attempts >= 5:
-                    data = {"success": False, "error": "Could not refresh token"}
-                    break
-                else:
-                    sf.regenerate_token()
-                    attempts += 1
-
-            except ConnectionResetError:
-                if attempts >= 5:
-                    data = {"success": False, "error": "Connection was reset"}
-                    break
-                else:
-                    time.sleep(2)
-                    attempts += 1
-        return Response(data=data)
 
     @action(
         methods=["post"],
