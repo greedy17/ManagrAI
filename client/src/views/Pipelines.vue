@@ -34,6 +34,7 @@
             {{ note.saved_data__meeting_type ? note.saved_data__meeting_type + ':' : 'Untitled:' }}
           </p>
           <p class="note-section__body">{{ note.saved_data__meeting_comments }}</p>
+          <p class="note-section__date">{{ formatDateTime(note.submission_date) }}</p>
         </section>
       </div>
 
@@ -619,7 +620,9 @@
               v-for="(field, i) in oppFields"
               :class="primaryCheckList.includes(opp.id) ? 'table-cell-selected' : 'table-cell'"
             >
-              <p v-if="field.apiName !== 'Amount'">
+              <p class="invisible" v-if="field.apiName === 'AccountId'"></p>
+
+              <p v-else-if="field.apiName !== 'Amount' && field.apiName !== 'AccountId'">
                 {{
                   opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
                     ? opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
@@ -1329,6 +1332,7 @@ export default {
         const res = await SObjects.api.getNotes({
           resourceId: id,
         })
+        console.log(res)
         this.modalOpen = true
 
         if (res.length) {
@@ -1697,6 +1701,10 @@ h3 {
   &__body {
     color: $base-gray;
   }
+  &__date {
+    color: $mid-gray;
+    font-size: 11px;
+  }
 }
 .table-cell-checkbox {
   display: table-cell;
@@ -1937,8 +1945,12 @@ section {
   border-radius: 50%;
   padding: 0.2rem;
   margin-right: 0.5rem;
-  background-color: $lighter-green;
+  background-color: white;
+  box-shadow: 1px 1px 1px 1px $very-light-gray;
   transition: all 0.3s;
+}
+.green-filter {
+  filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
 }
 .name-cell-note-button:hover,
 .name-cell-edit-note-button:hover {
@@ -2112,5 +2124,8 @@ section {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+}
+.invisible {
+  display: none;
 }
 </style>
