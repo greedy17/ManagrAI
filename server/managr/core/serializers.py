@@ -74,6 +74,8 @@ class UserSerializer(serializers.ModelSerializer):
             "nylas_ref",
             "salesforce_account",
             "salesforce_account_ref",
+            "hubspot_account",
+            "has_hubspot_integration",
             "slack_ref",
             "slack_account",
             "zoom_account",

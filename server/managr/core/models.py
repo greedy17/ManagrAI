@@ -321,6 +321,10 @@ class User(AbstractUser, TimeStampModel):
         return hasattr(self, "outreach_account")
 
     @property
+    def has_hubspot_integration(self):
+        return hasattr(self, "hubspot_account")
+
+    @property
     def as_slack_option(self):
         return block_builders.option(self.full_name, str(self.id))
 

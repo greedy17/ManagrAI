@@ -1,4 +1,5 @@
 import logging
+import json
 from requests.exceptions import HTTPError
 from managr.utils.client import Client
 from .exceptions import CustomAPIException
@@ -6,7 +7,6 @@ from urllib.parse import urlencode
 
 from .. import constants as hubspot_consts
 from managr.core.models import User
-
 
 logger = logging.getLogger("managr")
 
@@ -29,23 +29,28 @@ class HubspotAuthAccountAdapter:
                 return {}
             try:
                 data = response.json()
-                print(data)
             except Exception as e:
                 CustomAPIException(e, fn_name)
         else:
-
             status_code = response.status_code
-            error_data = (
-                response.json()[0] if isinstance(response.json(), list) else response.json()
-            )
-            # sf does not use this field
             error_code = None
-            if status_code == 400:
-                error_param = error_data.get("error", error_data.get("errorCode", None))
-                error_message = error_data.get("error_description", error_data.get("message", None))
+            if status_code == 404:
+                error_param = "Invalid Request"
+                error_message = "The api sent back a 404 request"
             else:
-                error_param = error_data.get("errorCode", None)
-                error_message = error_data.get("message", None)
+                error_data = (
+                    response.json()[0] if isinstance(response.json(), list) else response.json()
+                )
+                # sf does not use this field
+
+                if status_code == 400:
+                    error_param = error_data.get("error", error_data.get("errorCode", None))
+                    error_message = error_data.get(
+                        "error_description", error_data.get("message", None)
+                    )
+                else:
+                    error_param = error_data.get("errorCode", None)
+                    error_message = error_data.get("message", None)
             kwargs = {
                 "status_code": status_code,
                 "error_code": error_code,
@@ -64,7 +69,7 @@ class HubspotAuthAccountAdapter:
         # get fields for resources
 
         data = {
-            "user": user,
+            "user": user.id,
             "access_token": res.get("access_token"),
             "refresh_token": res.get("refresh_token"),
             "hubspot_id": user_res.get("user_id"),

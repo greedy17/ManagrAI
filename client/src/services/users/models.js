@@ -31,6 +31,8 @@ export default class User extends Model {
   static isInvited = new fields.BooleanField()
   static slackRef = new fields.Field()
   static slackAccount = new fields.Field()
+  static hubspotAccount = new fields.Field()
+  static hasHubspotIntegration = new fields.Field({ readOnly: true })
   static zoomAccount = new fields.Field()
   static token = new fields.Field()
   static hasZoomIntegration = new fields.Field({ readOnly: true })

@@ -28,7 +28,6 @@ logger = logging.getLogger("managr")
 @permission_classes([permissions.IsAuthenticated])
 def get_hubspot_auth_link(request):
     link = HubspotAuthAccountAdapter.get_authorization()
-    print(f"AUTH LINK: {link}")
     return Response({"link": link})
 
 

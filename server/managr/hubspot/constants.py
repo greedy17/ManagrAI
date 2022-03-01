@@ -1,15 +1,15 @@
 from django.conf import settings
 
 
-TOKEN_INFO_URI = "/oauth/v1/access-tokens/"
+TOKEN_INFO_URI = "oauth/v1/access-tokens"
 
 if settings.USE_HUBSPOT:
     BASE_URL = settings.HUBSPOT_BASE_URL
     CLIENT_ID = settings.HUBSPOT_CLIENT_ID
     CLIENT_SECRET = settings.HUBSPOT_SECRET
     REDIRECT_URI = settings.HUBSPOT_REDIRECT_URI
-    AUTHORIZATION_URI = f"{BASE_URL}/oauth/authorize"
-    AUTHENTICATION_URI = f"{BASE_URL}/oauth/v1/token"
+    AUTHORIZATION_URI = "https://app.hubspot.com/oauth/authorize"
+    AUTHENTICATION_URI = "https://api.hubapi.com/oauth/v1/token"
 
     if settings.IN_DEV:
         HUBSPOT_FRONTEND_REDIRECT = "http://localhost:8080/settings/integrations"
@@ -42,7 +42,7 @@ if settings.USE_HUBSPOT:
     }
     REAUTHENTICATION_BODY = lambda refresh_token: {
         "grant_type": "refresh_token",
-        "Content-type": "application/x-www-form-urlencoded",
+        "Content-type": "application/json",
         "refresh_token": refresh_token,
         "client_id": CLIENT_ID,
         "client_secret": CLIENT_SECRET,
