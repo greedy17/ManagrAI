@@ -50,6 +50,7 @@ from .background import (
     emit_gen_next_sync,
     emit_gen_next_object_field_sync,
     emit_generate_form_template,
+    emit_add_update_to_sf,
 )
 from managr.salesforce.adapter.exceptions import (
     TokenExpired,
@@ -375,6 +376,11 @@ class SalesforceSObjectViewSet(
         current_forms.update(
             is_submitted=True, update_source="pipeline", submission_date=timezone.now()
         )
+        if (
+            all_form_data.get("meeting_comments") is not None
+            and all_form_data.get("meeting_type") is not None
+        ):
+            emit_add_update_to_sf(str(main_form.id))
         try:
             text = f"Managr updated {main_form.resource_type}"
             message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
