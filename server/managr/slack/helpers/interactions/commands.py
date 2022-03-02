@@ -313,9 +313,18 @@ def add_to_sequence(context):
         ).first()
         if not slack:
             return
+    options = "%".join(["Contact", "Opportunity", "Account"])
     blocks = get_block_set(
-        "select_account", {"u": str(user.id), "type": "command", "system": "outreach"},
+        "pick_resource_modal_block_set",
+        {
+            "u": str(user.id),
+            "options": options,
+            "system": "outreach",
+            "action_id": slack_const.PROCESS_SHOW_ENGAGEMENT_MODEL,
+            "private_metadata": json.dumps(context),
+        },
     )
+    pm = {"system": "outreach"}
     access_token = user.organization.slack_integration.access_token
 
     view_id = context.get("view_id", None)
@@ -324,17 +333,14 @@ def add_to_sequence(context):
         if view_id
         else slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     )
-    private_metadata = {
-        "resource_type": "Account",
-    }
 
     data = {
         "view": {
             "type": "modal",
-            "callback_id": slack_const.ADD_TO_SEQUENCE,
-            "title": {"type": "plain_text", "text": "Select Account"},
+            "title": {"type": "plain_text", "text": "Select Object Type"},
             "blocks": blocks,
-            "private_metadata": json.dumps(private_metadata),
+            "external_id": f"pick_resource_modal_block_set.{str(uuid.uuid4())}",
+            "private_metadata": json.dumps(pm),
         },
     }
     if view_id:
@@ -352,9 +358,21 @@ def add_to_cadence(context):
         ).first()
         if not slack:
             return
+    options = "%".join(["Contact", "Opportunity", "Account"])
+    pm = {"system": "salesloft"}
     blocks = get_block_set(
         "pick_resource_modal_block_set",
+<<<<<<< HEAD
         {"u": str(user.id), "type": "command", "system": "salesloft"},
+=======
+        {
+            "u": str(user.id),
+            "options": options,
+            "system": "salesloft",
+            "action_id": slack_const.PROCESS_SHOW_ENGAGEMENT_MODEL,
+            "private_metadata": json.dumps(context),
+        },
+>>>>>>> develop
     )
     access_token = user.organization.slack_integration.access_token
 
@@ -364,17 +382,14 @@ def add_to_cadence(context):
         if view_id
         else slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     )
-    private_metadata = {
-        "resource_type": "Account",
-    }
 
     data = {
         "view": {
             "type": "modal",
-            "callback_id": slack_const.ADD_TO_CADENCE_MODAL,
-            "title": {"type": "plain_text", "text": "Select Account"},
+            "title": {"type": "plain_text", "text": "Select Object Type"},
             "blocks": blocks,
-            "private_metadata": json.dumps(private_metadata),
+            "external_id": f"pick_resource_modal_block_set.{str(uuid.uuid4())}",
+            "private_metadata": json.dumps(pm),
         },
     }
     if view_id:
@@ -392,7 +407,6 @@ def call_recording(context):
         ).first()
         if not slack:
             return
-    blocks = get_block_set("pick_resource_modal_block_set", {"u": str(user.id)},)
     access_token = user.organization.slack_integration.access_token
 
     view_id = context.get("view_id", None)
@@ -401,12 +415,19 @@ def call_recording(context):
         if view_id
         else slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     )
-
+    options = "%".join(["Opportunity", "Account"])
     data = {
         "view": {
             "type": "modal",
             "title": {"type": "plain_text", "text": "Call Recording"},
-            "blocks": blocks,
+            "blocks": get_block_set(
+                "pick_resource_modal_block_set",
+                {
+                    "u": str(user.id),
+                    "options": options,
+                    "action_id": slack_const.GONG_CALL_RECORDING,
+                },
+            ),
             "external_id": f"pick_resource_modal_block_set.{str(uuid.uuid4())}",
         },
     }

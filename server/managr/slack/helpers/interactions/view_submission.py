@@ -556,7 +556,8 @@ def process_submit_resource_data(payload, context):
                 user.slack_integration.slack_id,
                 text=text,
                 block_set=get_block_set(
-                    "success_modal", {"message": message, "u": user.id, "form_id": form_id}
+                    "success_modal",
+                    {"message": message, "u": user.id, "form_ids": context.get("f")},
                 ),
             )
 
@@ -1461,6 +1462,7 @@ def process_add_contacts_to_cadence(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor(required_context=["u"])
 def process_add_contacts_to_sequence(payload, context):
+    pm = json.loads(payload["view"]["private_metadata"])
     meta_data = json.loads(payload["view"]["private_metadata"])
     u = User.objects.get(id=context.get("u"))
     sequence_id = payload["view"]["state"]["values"]["select_sequence"][
@@ -1472,12 +1474,15 @@ def process_add_contacts_to_sequence(payload, context):
     org = u.organization
     access_token = org.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    contacts = [
-        option["value"]
-        for option in payload["view"]["state"]["values"]["select_people"][
-            f"{slack_const.GET_CONTACT_OPTIONS}?u={u.id}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}"
-        ]["selected_options"]
-    ]
+    if pm.get("resource_type", None) == "Contact":
+        contacts = [context.get("resource_id")]
+    else:
+        contacts = [
+            option["value"]
+            for option in payload["view"]["state"]["values"]["select_people"][
+                f"{slack_const.GET_CONTACT_OPTIONS}?u={u.id}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}"
+            ]["selected_options"]
+        ]
     loading_data = {
         "trigger_id": trigger_id,
         "view_id": view_id,
@@ -1641,17 +1646,9 @@ def process_send_recaps(payload, context):
         )
         return
     else:
-        form_id = context.get("form_id")
-        command_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
-        update_forms = [command_form]
-    update_form_ids = []
-    # aggregate the data
+        form_ids = context.get("form_ids").split(",")
 
-    data = dict()
-    for form in update_forms:
-        update_form_ids.append(str(form.id))
-        data = {**data, **form.saved_data}
-    _send_recap(update_form_ids, send_to_recaps)
+    _send_recap(form_ids, send_to_recaps)
     return
 
 
