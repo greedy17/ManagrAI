@@ -362,13 +362,7 @@ def add_to_cadence(context):
     pm = {"system": "salesloft"}
     blocks = get_block_set(
         "pick_resource_modal_block_set",
-        {
-            "u": str(user.id),
-            "options": options,
-            "system": "salesloft",
-            "action_id": slack_const.PROCESS_SHOW_ENGAGEMENT_MODEL,
-            "private_metadata": json.dumps(context),
-        },
+        {"u": str(user.id), "type": "command", "system": "salesloft"},
     )
     access_token = user.organization.slack_integration.access_token
 

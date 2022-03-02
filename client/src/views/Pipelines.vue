@@ -1,5 +1,5 @@
 <template>
-  <div class="pipelines">
+  <div :key="key" class="pipelines">
     <Modal
       v-if="modalOpen"
       dimmed
@@ -19,23 +19,22 @@
             />
             <h2>Notes</h2>
           </div>
-          <img
-            src="@/assets/images/clear.png"
-            style="height: 1.3rem; margin-right: 0.75rem; cursor: pointer"
-            @click="resetNotes"
-            class="invert"
-            alt=""
-          />
+
+          <div class="close-button">
+            <img
+              src="@/assets/images/clear.png"
+              style="height: 1.2rem"
+              @click="resetNotes"
+              alt=""
+            />
+          </div>
         </div>
         <section class="note-section" :key="i" v-for="(note, i) in notes">
           <p class="note-section__title">
-            {{
-              note.saved_data__meeting_type
-                ? 'Notes for ' + note.saved_data__meeting_type
-                : 'Untitled note'
-            }}
+            {{ note.saved_data__meeting_type ? note.saved_data__meeting_type + ':' : 'Untitled:' }}
           </p>
           <p class="note-section__body">{{ note.saved_data__meeting_comments }}</p>
+          <p class="note-section__date">{{ formatDateTime(note.submission_date) }}</p>
         </section>
       </div>
 
@@ -49,13 +48,14 @@
             />
             <h2>Notes</h2>
           </div>
-          <img
-            src="@/assets/images/clear.png"
-            style="height: 1.3rem; margin-right: 0.75rem; cursor: pointer"
-            @click="resetNotes"
-            class="invert"
-            alt=""
-          />
+          <div class="close-button">
+            <img
+              src="@/assets/images/clear.png"
+              style="height: 1.2rem"
+              @click="resetNotes"
+              alt=""
+            />
+          </div>
         </div>
         <section class="note-section">
           <p class="note-section__title">No notes for this opportunity</p>
@@ -80,17 +80,94 @@
               style="height: 1.5rem; margin-left: 0.5rem; margin-right: 0.25rem"
               alt=""
             />
-            <h4>Add Opportunity</h4>
+            <h3>Create Opportunity</h3>
           </div>
-          <img
-            src="@/assets/images/clear.png"
-            style="height: 1.2rem; margin-right: 0.1rem; cursor: pointer"
-            @click="resetAddOpp"
-            class="invert"
-            alt=""
-          />
+          <div class="close-button">
+            <img
+              src="@/assets/images/clear.png"
+              style="height: 1.2rem"
+              @click="resetAddOpp"
+              alt=""
+            />
+          </div>
         </div>
-        <div class="opp-modal"></div>
+        <div class="opp-modal">
+          <section :key="field.id" v-for="field in createOppForm">
+            <div
+              v-if="
+                field.dataType === 'TextArea' ||
+                (field.dataType === 'String' && field.apiName === 'NextStep')
+              "
+              class="flex-col"
+            >
+              <p>{{ field.referenceDisplayLabel }}:</p>
+              <textarea
+                id="update-input"
+                ccols="30"
+                rows="4"
+                style="width: 30vw; border-radius: 0.4rem"
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+              >
+              </textarea>
+            </div>
+            <div v-else-if="field.dataType === 'Reference' || field.dataType === 'String'">
+              <p>{{ field.referenceDisplayLabel }}:</p>
+              <input
+                id="update-input"
+                type="text"
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+              />
+            </div>
+
+            <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
+              <p>{{ field.referenceDisplayLabel }}:</p>
+              <select
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                id="update-input"
+              >
+                <option v-for="(option, i) in picklistQueryOpts[field.apiName]" :key="i">
+                  <p>{{ option.label }}</p>
+                </option>
+              </select>
+            </div>
+
+            <div v-else-if="field.dataType === 'Date'">
+              <p>{{ field.referenceDisplayLabel }}:</p>
+              <input
+                type="date"
+                id="update-input"
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+              />
+            </div>
+            <div v-else-if="field.dataType === 'DateTime'">
+              <p>
+                {{ field.referenceDisplayLabel }}
+              </p>
+              <input
+                type="datetime-local"
+                id="start"
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+              />
+            </div>
+            <div
+              v-else-if="
+                field.dataType === 'Phone' ||
+                field.dataType === 'Double' ||
+                field.dataType === 'Currency'
+              "
+            >
+              <p>{{ field.referenceDisplayLabel }}:</p>
+              <input
+                id="update-input"
+                type="number"
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+              />
+            </div>
+          </section>
+        </div>
+        <div class="flex-end">
+          <button class="add-button" @click="createResource">Create Opportunity</button>
+        </div>
       </div>
     </Modal>
 
@@ -111,54 +188,63 @@
               style="height: 1.5rem; margin-left: 0.5rem; margin-right: 0.25rem"
               alt=""
             />
-            <h4>Update Opportunity</h4>
+            <h3>Update Opportunity</h3>
           </div>
-          <img
-            src="@/assets/images/clear.png"
-            style="height: 1.2rem; margin-right: 0.1rem; cursor: pointer"
-            @click="resetEdit"
-            class="invert"
-            alt=""
-          />
+
+          <div class="close-button">
+            <img src="@/assets/images/clear.png" style="height: 1.2rem" @click="resetEdit" alt="" />
+          </div>
         </div>
 
         <div class="opp-modal">
           <section :key="field.id" v-for="field in oppFormCopy">
             <div v-if="field.apiName === 'meeting_type'">
-              <p>Note Subject</p>
+              <p>Note Title:</p>
               <textarea
                 id="update-input"
                 cols="30"
                 rows="2"
-                style="width: 100%; border-radius: 0.25rem"
+                style="width: 30vw; border-radius: 0.4rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
               </textarea>
             </div>
             <div v-else-if="field.apiName === 'meeting_comments'">
-              <p>Notes</p>
+              <p>Notes:</p>
               <textarea
                 id="update-input"
                 ccols="30"
-                rows="4"
-                style="width: 100%; border-radius: 0.25rem"
+                rows="3"
+                style="width: 30vw; border-radius: 0.4rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
               </textarea>
             </div>
-
             <div
-              class="drop-row"
+              v-else-if="
+                field.dataType === 'TextArea' ||
+                (field.dataType === 'String' && field.apiName === 'NextStep')
+              "
+            >
+              <p>{{ field.referenceDisplayLabel }}:</p>
+              <textarea
+                id="update-input"
+                ccols="30"
+                rows="4"
+                style="width: 30vw; border-radius: 0.4rem"
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+              >
+              </textarea>
+            </div>
+            <div
               v-else-if="
                 (field.dataType === 'String' && field.apiName !== 'meeting_type') ||
                 (field.dataType === 'String' && field.apiName !== 'meeting_comments') ||
-                field.dataType === 'TextArea' ||
+                (field.dataType === 'String' && field.apiName !== 'NextStep') ||
                 field.dataType === 'Reference'
               "
             >
-              <p>
-                {{ field.referenceDisplayLabel }}
-              </p>
+              <p>{{ field.referenceDisplayLabel }}:</p>
               <input
                 id="update-input"
                 type="text"
@@ -166,15 +252,16 @@
               />
             </div>
 
-            <div
-              class="drop-row"
-              v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'"
-            >
-              <p>
-                {{ field.referenceDisplayLabel }}
-              </p>
+            <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
+              <p>{{ field.referenceDisplayLabel }}:</p>
               <select
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                @input="
+                  ;(value = $event.target.value),
+                    setUpdateValues(
+                      field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+                      value,
+                    )
+                "
                 id="update-input"
               >
                 <option v-for="(option, i) in picklistQueryOpts[field.apiName]" :key="i">
@@ -183,20 +270,16 @@
               </select>
             </div>
 
-            <div class="drop-row" v-else-if="field.dataType === 'Date'">
-              <p>
-                {{ field.referenceDisplayLabel }}
-              </p>
+            <div v-else-if="field.dataType === 'Date'">
+              <p>{{ field.referenceDisplayLabel }}:</p>
               <input
                 type="date"
                 id="update-input"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
-            <div class="drop-row" v-else-if="field.dataType === 'DateTime'">
-              <p>
-                {{ field.referenceDisplayLabel }}
-              </p>
+            <div v-else-if="field.dataType === 'DateTime'">
+              <p>{{ field.referenceDisplayLabel }}:</p>
               <input
                 type="datetime-local"
                 id="start"
@@ -204,16 +287,13 @@
               />
             </div>
             <div
-              class="drop-row"
               v-else-if="
                 field.dataType === 'Phone' ||
                 field.dataType === 'Double' ||
                 field.dataType === 'Currency'
               "
             >
-              <p>
-                {{ field.referenceDisplayLabel }}
-              </p>
+              <p>{{ field.referenceDisplayLabel }}:</p>
               <input
                 id="update-input"
                 type="number"
@@ -223,30 +303,28 @@
           </section>
         </div>
         <div class="flex-end">
-          <button @click="updateResource" class="add-button">update</button>
+          <p @click="resetEdit" class="cancel">Cancel</p>
+          <button @click="updateResource" class="add-button">Update Opportunity</button>
         </div>
       </div>
     </Modal>
 
     <div v-if="!loading">
       <header class="flex-row-spread">
-        <!-- <div @click="test">
-          <h3 class="title">Hi, {{ user.fullName }}</h3>
-          <h5 class="sub-heading">
-            Update you pipeline faster. Changes instantly auto sync to Salesforce
-          </h5>
-        </div>
-        <div>
+        <!-- <p style="margin-left: 0.25rem">Pipe Hygeine:</p> -->
+        <!-- <div class="stats">
+          <p class="closed-deals">Deal closing %:</p>
+          <p class="closed-deals">Avg. time to close:</p>
         </div> -->
       </header>
 
-      <section class="flex-row-spread">
+      <section style="margin-bottom: 1rem" class="flex-row-spread">
         <div v-if="!workflowCheckList.length && !primaryCheckList.length" class="flex-row">
-          <button @click="showList = !showList" class="add-button">
+          <button @click="showList = !showList" class="select-btn">
             {{ currentList }}
             <img
               v-if="showPopularList"
-              class="filter"
+              class="filter invert"
               style="height: 0.75rem"
               src="@/assets/images/downArrow.png"
               alt=""
@@ -293,7 +371,7 @@
               </button>
             </div>
           </div>
-          <button @click="filtering = !filtering" class="add-button">
+          <button @click="closeFilters" class="add-button">
             <img
               src="@/assets/images/plusOne.png"
               style="height: 1rem; margin-right: 0.25rem"
@@ -382,46 +460,84 @@
           </div>
         </div>
         <div v-else>
-          <div v-if="!closeDateSelected" class="flex-row-pad">
-            <button @click="closeDateSelected = !closeDateSelected" class="add-button">
-              Push close date
-              <img
-                src="@/assets/images/date.png"
-                style="height: 1.1rem; margin-left: 0.25rem"
-                class="invert filter"
-                alt=""
-              />
-            </button>
-            <button class="add-button">
-              Advance stage
-              <img
-                src="@/assets/images/stairs.png"
-                style="height: 1.1rem; margin-left: 0.25rem"
-                alt=""
-              />
-            </button>
-            <button class="add-button">
-              Change forecast
-              <img
-                src="@/assets/images/go.png"
-                style="height: 1.1rem; margin-left: 0.25rem"
-                alt=""
-              />
-            </button>
-          </div>
+          <div class="bulk-action">
+            <div v-if="!closeDateSelected && !advanceStageSelected && !forecastSelected">
+              <img class="back-logo" src="@/assets/images/logo.png" />
+              <!-- <p class="bulk-action__title">Bulk Actions:</p> -->
+              <div class="flex-row">
+                <button @click="closeDateSelected = !closeDateSelected" class="select-btn">
+                  Push Close Date
+                  <img
+                    src="@/assets/images/date.png"
+                    style="height: 1.25rem; margin-left: 0.25rem"
+                    alt=""
+                  />
+                </button>
 
-          <div class="flex-row-pad" v-if="closeDateSelected">
-            <p>How many days ?:</p>
-            <input class="number-input" v-model="daysForward" type="number" />
+                <button @click="advanceStageSelected = !advanceStageSelected" class="select-btn">
+                  Advance Stage
+                  <img
+                    src="@/assets/images/stairs.png"
+                    style="height: 1.25rem; margin-left: 0.25rem"
+                    alt=""
+                  />
+                </button>
+                <button @click="forecastSelected = !forecastSelected" class="select-btn">
+                  Change Forecast
+                  <img
+                    src="@/assets/images/monetary.png"
+                    style="height: 1.1rem; width: 1.35rem; margin-left: 0.25rem"
+                    alt=""
+                  />
+                </button>
+              </div>
+            </div>
+            <div class="flex-row-pad" v-if="closeDateSelected">
+              <p>How many days ?:</p>
+              <input class="number-input" v-model="daysForward" type="number" />
 
-            <button
-              :disabled="!daysForward"
-              class="add-button"
-              @click="pushCloseDates(primaryCheckList, daysForward)"
-            >
-              Push close date
-              <img src="@/assets/images/go.png" style="height: 1rem; margin-left: 0.25rem" alt="" />
-            </button>
+              <button
+                :disabled="!daysForward"
+                class="add-button"
+                @click="pushCloseDates(currentCheckList, daysForward)"
+              >
+                Push Close Date
+              </button>
+            </div>
+
+            <div class="flex-row-pad" v-if="advanceStageSelected">
+              <p>Select Stage:</p>
+              <select
+                style="margin-left: 0.5rem; margin-right: 0.5rem"
+                @input=";(value = $event.target.value), setStage(value)"
+                id="update-input"
+              >
+                <option v-for="(stage, i) in allStages" :key="i" :value="stage.value">
+                  <p>{{ stage.label }}</p>
+                </option>
+              </select>
+
+              <button @click="advanceStage(currentCheckList)" class="add-button">
+                Advance Stage
+              </button>
+            </div>
+
+            <div class="flex-row-pad" v-if="forecastSelected">
+              <p>Select Forecast:</p>
+              <select
+                style="margin-left: 0.5rem; margin-right: 0.5rem"
+                @input=";(value = $event.target.value), setForecast(value)"
+                id="update-input"
+              >
+                <option v-for="(forecast, i) in allForecasts" :key="i" :value="forecast.value">
+                  <p>{{ forecast.label }}</p>
+                </option>
+              </select>
+
+              <button @click="changeForecast(currentCheckList)" class="add-button">
+                Change Forecast
+              </button>
+            </div>
           </div>
         </div>
 
@@ -434,32 +550,30 @@
             <input type="search" v-model="workflowFilterText" placeholder="search" />
             <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
           </div>
-          <button @click="addOpp" class="add-button">
+          <button @click="createOppInstance()" class="add-button">
             <img src="@/assets/images/plusOne.png" style="height: 1rem" alt="" />
-            Opportunity
+            Create Opportunity
           </button>
           <button @click="refresh(refreshId)" class="pipe-button">
-            <img src="@/assets/images/refresh.png" class="invert" style="height: 1rem" alt="" />
+            <img src="@/assets/images/refresh.png" class="invert" style="height: 1.15rem" alt="" />
           </button>
         </div>
       </section>
 
-      <section v-if="!selectedWorkflow" class="table-section">
+      <!-- <SkeletonBox width="100px" height="10px" /> -->
+
+      <section v-show="!selectedWorkflow" class="table-section">
         <div class="table">
           <div class="table-row">
-            <div style="padding: 2vh" class="table-cell-checkbox table-cell-header">
+            <div style="padding: 2vh" class="table-cell-checkbox-header">
               <div>
                 <input @click="onCheckAll" type="checkbox" id="checkAllPrimary" />
                 <label for="checkAllPrimary"></label>
               </div>
             </div>
-            <div class="table-cell-header">Name</div>
+            <div class="cell-name-header">Name</div>
             <div class="table-cell-header" :key="i" v-for="(field, i) in oppFields" ref="fields">
               {{ field.referenceDisplayLabel }}
-            </div>
-            <div class="table-cell-header cell-name">
-              <img src="@/assets/images/plusOne.png" class="invert" style="height: 1rem" alt="" />
-              <!-- <p style="color: #9b9b9b">(coming soon)</p> -->
             </div>
           </div>
 
@@ -471,23 +585,38 @@
                   : 'table-cell-checkbox'
               "
             >
+              <!-- <SkeletonBox v-if="updateList.includes(opp.id)" width="10px" height="10px" /> -->
               <div>
                 <input type="checkbox" :id="i" v-model="primaryCheckList" :value="opp.id" />
                 <label :for="i"></label>
               </div>
             </div>
+
             <div
+              style="min-width: 26vw"
               :class="
-                primaryCheckList.includes(opp.id) ? 'table-cell-selected' : 'table-cell cell-name'
+                primaryCheckList.includes(opp.id)
+                  ? 'table-cell-selected cell-name'
+                  : 'table-cell cell-name'
               "
             >
               <div class="flex-row-spread">
-                <div>
-                  {{ opp.name }}
-                  <span style="color: #199e54; margin-left: 0.2rem">account name</span>
-                  <div style="color: #9b9b9b">owner: owner's name</div>
+                <div style="max-width: 14vw">
+                  <SkeletonBox v-if="updateList.includes(opp.id)" width="150px" height="14px" />
+                  <SkeletonBox v-if="updateList.includes(opp.id)" width="150px" height="9px" />
+                  <PipelineRow
+                    v-else
+                    :key="`${key + 1}`"
+                    :name="opp.name"
+                    :accountName="opp.account_ref ? opp.account_ref.name : ''"
+                    :owner="opp.owner_ref.first_name"
+                  />
                 </div>
-                <div style="margin-top: 0.5rem" class="flex-row">
+                <div v-if="updateList.includes(opp.id)" class="flex-row">
+                  <SkeletonBox width="15px" height="14px" />
+                  <SkeletonBox width="15px" height="14px" />
+                </div>
+                <div v-else class="flex-row">
                   <img
                     @click="createFormInstance(opp.id)"
                     class="name-cell-note-button"
@@ -508,25 +637,14 @@
               v-for="(field, i) in oppFields"
               :class="primaryCheckList.includes(opp.id) ? 'table-cell-selected' : 'table-cell'"
             >
-              <!-- {{ opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))] }} -->
-              <p v-if="field.apiName !== 'Amount'">
-                {{
-                  opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-                    ? opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-                    : '---'
-                }}
-              </p>
-
-              <p style="color: #199e54" v-else>
-                {{
-                  opp[lowercaseFirstLetter(camelize(field.apiName))]
-                    ? formatCash(parseFloat(opp[lowercaseFirstLetter(camelize(field.apiName))]))
-                    : '$ ---'
-                }}
-              </p>
-            </div>
-            <div class="table-cell">
-              <p>---</p>
+              <SkeletonBox v-if="updateList.includes(opp.id)" width="100px" height="14px" />
+              <PipelineField
+                v-else
+                :key="key"
+                :apiName="field.apiName"
+                :dataType="field.dataType"
+                :fieldData="opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]"
+              />
             </div>
           </tr>
         </div>
@@ -535,7 +653,7 @@
       <section v-if="selectedWorkflow && currentWorkflow.list.length > 0" class="table-section">
         <div class="table">
           <div class="table-row">
-            <div class="table-cell-checkbox-header">
+            <div style="padding: 2vh" class="table-cell-checkbox-header">
               <div>
                 <input
                   @click="onCheckAllWorkflows"
@@ -546,13 +664,13 @@
                 <label for="checkAllWorkflow"></label>
               </div>
             </div>
-            <div class="table-cell-header">Name</div>
+            <div class="cell-name-header">Name</div>
             <div class="table-cell-header" :key="i" v-for="(field, i) in oppFields" ref="fields">
               {{ getFields(field.referenceDisplayLabel) }}
             </div>
-            <div class="table-cell-header cell-name">
+            <!-- <div class="table-cell-header cell-name">
               <img src="@/assets/images/plusOne.png" class="invert" style="height: 1rem" alt="" />
-            </div>
+            </div> -->
           </div>
 
           <tr class="table-row" :key="i" v-for="(workflow, i) in filteredWorkflows">
@@ -567,14 +685,26 @@
                 <label :for="i"></label>
               </div>
             </div>
-            <div class="table-cell cell-name">
+            <div
+              :class="
+                workflowCheckList.includes(workflow.resourceRef.id)
+                  ? 'table-cell-selected cell-name'
+                  : 'table-cell cell-name'
+              "
+            >
               <div class="flex-row-spread">
-                <div>
+                <div style="width: 16vw">
                   {{ workflow.resourceRef.name }}
-                  <span style="color: #199e54; margin-left: 0.2rem">account name</span>
-                  <div style="color: #9b9b9b">owner: owner's name</div>
+                  <span style="color: #199e54; margin-left: 0.2rem">
+                    {{
+                      workflow.resourceRef.accountRef ? workflow.resourceRef.accountRef.name : '---'
+                    }}</span
+                  >
+                  <div style="color: #9b9b9b">
+                    owned by {{ workflow.resourceRef.ownerRef.firstName }}
+                  </div>
                 </div>
-                <div style="margin-top: 0.5rem" class="flex-row">
+                <div class="flex-row">
                   <img
                     @click="createFormInstance(workflow.resourceRef.id)"
                     class="name-cell-note-button"
@@ -592,9 +722,8 @@
             <!-- <div :key="field" v-for="field in currentWorkflowFields" class="table-cell">
               {{ workflow.resourceRef[camelize(field)] }}
             </div> -->
-
             <div :key="field.name" v-for="field in currentWorkflowFields" class="table-cell">
-              <p v-if="field !== 'Amount'">
+              <p v-if="field !== 'Amount' && !field.includes('date') && !field.includes('Date')">
                 {{
                   field === 'Stage'
                     ? workflow.resourceRef.secondaryData[
@@ -602,6 +731,16 @@
                       ]
                     : workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field))]
                     ? workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field))]
+                    : '---'
+                }}
+              </p>
+
+              <p v-else-if="field.includes('date') || field.includes('Date')">
+                {{
+                  workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field))]
+                    ? formatDate(
+                        workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field))],
+                      )
                     : '---'
                 }}
               </p>
@@ -616,13 +755,13 @@
                           ],
                         ),
                       )
-                    : '$ ---'
+                    : '$ --- ---'
                 }}
               </p>
             </div>
-            <div class="table-cell">
+            <!-- <div class="table-cell">
               <p>---</p>
-            </div>
+            </div> -->
           </tr>
         </div>
       </section>
@@ -660,10 +799,13 @@
 import DropDownSelect from '@thinknimble/dropdownselect'
 import { SObjects, SObjectPicklist } from '@/services/salesforce'
 import AlertTemplate, { AlertConfig, AlertInstance } from '@/services/alerts/'
+import SkeletonBox from '@/components/SkeletonBox'
 import CollectionManager from '@/services/collectionManager'
 import SlackOAuth, { salesforceFields } from '@/services/slack'
 import DropDownSearch from '@/components/DropDownSearch'
 import Modal from '@/components/InviteModal'
+import PipelineRow from '@/components/PipelineRow'
+import PipelineField from '@/components/PipelineField'
 import User from '@/services/users'
 
 export default {
@@ -672,12 +814,25 @@ export default {
     DropDownSelect,
     Modal,
     DropDownSearch,
+    SkeletonBox,
+    PipelineRow,
+    PipelineField,
   },
   data() {
     return {
+      key: 0,
+      oppId: null,
       primaryCheckList: [],
       workflowCheckList: [],
+      updateList: [],
+      closeDateSelected: false,
+      advanceStageSelected: false,
+      forecastSelected: false,
       selection: false,
+      allStages: [],
+      allForecasts: [],
+      newStage: null,
+      newForecast: null,
       originalList: null,
       daysForward: null,
       allOpps: null,
@@ -711,22 +866,18 @@ export default {
       notes: [],
       updateOppForm: null,
       oppFormCopy: null,
+      createOppForm: null,
       oppFields: [],
       instances: [],
       instanceId: null,
       formData: {},
       noteTitle: '',
       noteInfo: '',
-      stages: null,
-      stages2: null,
-      stages3: null,
-      stages4: null,
       verboseName: null,
       taskHash: null,
       monetaryOptions: ['less than', 'greater than', 'equals'],
       picklistQueryOpts: {},
       instanceIds: [],
-      closeDateSelected: false,
       oppFilters: [
         {
           title: 'Amount',
@@ -756,6 +907,15 @@ export default {
     }
   },
   computed: {
+    currentCheckList() {
+      if (this.primaryCheckList.length > 0) {
+        return this.primaryCheckList
+      } else if (this.workflowCheckList.length > 0) {
+        return this.workflowCheckList
+      } else {
+        return []
+      }
+    },
     user() {
       return this.$store.state.user
     },
@@ -783,11 +943,33 @@ export default {
     this.templates.refresh()
     this.getObjects()
     this.getAllForms()
+    this.listStages()
+    this.listForecast()
     this.team.refresh()
   },
+  watch: {
+    primaryCheckList: 'closeAll',
+    workflowCheckList: 'closeAll',
+  },
   methods: {
+    forceUpdate() {
+      this.key += 1
+    },
+    closeAll() {
+      if (this.primaryCheckList.length === 0 || this.workflowCheckList === 0) {
+        this.closeDateSelected = false
+        this.advanceStageSelected = false
+        this.forecastSelected = false
+      }
+    },
+    setStage(val) {
+      this.newStage = val
+    },
+    setForecast(val) {
+      this.newForecast = val
+    },
     test() {
-      console.log(this.workflowCheckList)
+      console.log(this.filteredWorkflows)
     },
     onCheckAll() {
       if (this.primaryCheckList.length < 1) {
@@ -822,12 +1004,35 @@ export default {
         console.log(e)
       }
     },
+    async listStages() {
+      try {
+        const res = await SObjectPicklist.api.listPicklists({
+          salesforceObject: 'Opportunity',
+          picklistFor: 'StageName',
+        })
+        this.allStages = res.length ? res[0]['values'] : []
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    async listForecast() {
+      try {
+        const res = await SObjectPicklist.api.listPicklists({
+          salesforceObject: 'Opportunity',
+          picklistFor: 'ForecastCategoryName',
+        })
+        this.allForecasts = res.length ? res[0]['values'] : []
+      } catch (e) {
+        console.log(e)
+      }
+    },
     async refresh(id) {
       if (id) {
         try {
           await AlertTemplate.api.runAlertTemplateNow(id)
           this.$Alert.alert({
             message: `workflow initiated successfully`,
+            sub: 'Refresh to see changes',
             type: 'success',
             timeout: 2000,
           })
@@ -839,7 +1044,6 @@ export default {
           })
         }
       }
-      this.$router.go()
     },
     resetNotes() {
       this.modalOpen = !this.modalOpen
@@ -878,16 +1082,6 @@ export default {
       }
       return field
     },
-    // defaultList(){
-    //   this.defaultList = CollectionManager.create({
-    //     ModelClass: AlertInstance,
-    //     filters: {
-    //       byConfig: configId,
-    //     },
-    //   })
-    //   this.currentWorkflow.refresh()
-    // },
-
     async createFormInstance(id) {
       try {
         const res = await SObjects.api.createFormInstance({
@@ -895,7 +1089,20 @@ export default {
           formType: 'UPDATE',
           resourceId: id,
         })
+        this.oppId = id
         this.editOpModalOpen = true
+        this.instanceId = res.form_id
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    async createOppInstance() {
+      try {
+        const res = await SObjects.api.createFormInstance({
+          resourceType: 'Opportunity',
+          formType: 'CREATE',
+        })
+        this.addOppModalOpen = true
         this.instanceId = res.form_id
       } catch (e) {
         console.log(e)
@@ -915,11 +1122,24 @@ export default {
       let data = this.futureDate(val)
       this.createBulkInstance(ids)
       setTimeout(() => {
-        this.bulkUpdate(this.instanceIds, data)
+        this.bulkUpdateCloseDate(this.instanceIds, data)
+      }, 100)
+    },
+    advanceStage(ids) {
+      this.instanceIds = []
+      this.createBulkInstance(ids)
+      setTimeout(() => {
+        this.bulkUpdateStage(this.instanceIds, this.newStage)
+      }, 100)
+    },
+    changeForecast(ids) {
+      this.instanceIds = []
+      this.createBulkInstance(ids)
+      setTimeout(() => {
+        this.bulkChangeForecast(this.instanceIds, this.newForecast)
       }, 100)
     },
     async createBulkInstance(ids) {
-      this.loading = true
       for (let i = 0; i < ids.length; i++) {
         try {
           const res = await SObjects.api.createFormInstance({
@@ -938,7 +1158,7 @@ export default {
         this.formData[key] = val
       }
     },
-    async bulkUpdate(ids, data) {
+    async bulkUpdateCloseDate(ids, data) {
       for (let i = 0; i < ids.length; i++) {
         try {
           const res = await SObjects.api.updateResource({
@@ -952,7 +1172,49 @@ export default {
       this.primaryCheckList = []
       this.workflowCheckList = []
       this.closeDateSelected = false
-      this.loading = false
+      this.$Alert.alert({
+        type: 'success',
+        timeout: 3000,
+        message: 'Salesforce update successful!',
+        sub: 'Refresh to see changes',
+      })
+    },
+    async bulkUpdateStage(ids, data) {
+      for (let i = 0; i < ids.length; i++) {
+        try {
+          const res = await SObjects.api.updateResource({
+            form_id: ids[i],
+            form_data: { StageName: data },
+          })
+        } catch (e) {
+          console.log(e)
+        }
+      }
+      this.primaryCheckList = []
+      this.workflowCheckList = []
+      this.advanceStageSelected = false
+      this.$Alert.alert({
+        type: 'success',
+        timeout: 3000,
+        message: 'Salesforce update successful!',
+        sub: 'Refresh to see changes',
+      })
+    },
+    async bulkChangeForecast(ids, data) {
+      for (let i = 0; i < ids.length; i++) {
+        try {
+          const res = await SObjects.api.updateResource({
+            form_id: ids[i],
+            form_data: { ForecastCategoryName: data },
+          })
+          console.log(data)
+        } catch (e) {
+          console.log(e)
+        }
+      }
+      this.primaryCheckList = []
+      this.workflowCheckList = []
+      this.forecastSelected = false
       this.$Alert.alert({
         type: 'success',
         timeout: 3000,
@@ -961,24 +1223,65 @@ export default {
       })
     },
     async updateResource() {
-      this.loading = true
+      this.updateList.push(this.oppId)
       this.editOpModalOpen = false
+      // let currentObj = this.allOpps.filter((opp) => opp.id === this.oppId)
       try {
         const res = await SObjects.api.updateResource({
           form_id: this.instanceId,
           form_data: this.formData,
         })
-        //  this.$router.go()
         this.$Alert.alert({
           type: 'success',
           timeout: 3000,
           message: 'Salesforce update successful!',
+          sub: 'Some changes may take longer to reflect',
+        })
+      } catch (e) {
+        console.log(e)
+      }
+      this.key = 0
+      while (this.key < 100) {
+        this.getObjectsDupe()
+        this.key += 1
+      }
+      setTimeout(() => {
+        this.updateList = []
+      }, 1000)
+      // this.updateList = this.updateList.filter((item) => item !== this.oppId)
+    },
+    async getObjectsDupe() {
+      try {
+        const res = await SObjects.api.getObjects('Opportunity')
+        this.allOpps = res.results
+        this.originalList = res.results
+        this.todaysList = res.results
+      } catch {
+        this.$Alert.alert({
+          type: 'error',
+          timeout: 2000,
+          message: 'There was an error collecting objects',
+        })
+      }
+    },
+    async createResource() {
+      this.loading = true
+      this.addOppModalOpen = false
+      try {
+        const res = await SObjects.api.createResource({
+          form_id: this.instanceId,
+          form_data: this.formData,
+        })
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 3000,
+          message: 'Opportunity created successfully!',
           sub: 'Refresh to see changes',
         })
       } catch (e) {
         console.log(e)
       }
-      this.getObjects()
+      this.getAllForms()
     },
     async confirmUpdate() {
       try {
@@ -1023,11 +1326,15 @@ export default {
     async getAllForms() {
       this.loading = true
       try {
-        this.updateOppForm = await SlackOAuth.api.getOrgCustomForm()
-        this.updateOppForm = this.updateOppForm.filter(
+        let res = await SlackOAuth.api.getOrgCustomForm()
+        this.updateOppForm = res.filter(
           (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
         )
+        this.createOppForm = res.filter(
+          (obj) => obj.formType === 'CREATE' && obj.resource === 'Opportunity',
+        )
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
+        this.createOppForm = this.createOppForm[0].fieldsRef
         for (let i = 0; i < this.oppFormCopy.length; i++) {
           if (
             this.oppFormCopy[i].dataType === 'Picklist' ||
@@ -1044,7 +1351,8 @@ export default {
           (field) =>
             field.apiName !== 'meeting_type' &&
             field.apiName !== 'meeting_comments' &&
-            field.apiName !== 'Name',
+            field.apiName !== 'Name' &&
+            field.apiName !== 'AccountId',
         )
       } catch (error) {
         console.log(error)
@@ -1072,6 +1380,7 @@ export default {
         const res = await SObjects.api.getNotes({
           resourceId: id,
         })
+
         this.modalOpen = true
 
         if (res.length) {
@@ -1140,6 +1449,7 @@ export default {
       this.filterTitle = title
     },
     closeFilters() {
+      this.showList ? (this.showList = !this.showList) : (this.showList = this.showList)
       this.filtering = !this.filtering
     },
     closeDatesThisMonth() {
@@ -1208,6 +1518,35 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+.closed-deals {
+}
+.stats {
+  padding-left: 0.25rem;
+}
+.select-btn {
+  border: none;
+  min-height: 4.5vh;
+  padding: 0.5rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 1px 1px 2px $very-light-gray;
+  border-radius: 0.25rem;
+  background-color: white;
+  cursor: pointer;
+  color: $dark-green;
+  letter-spacing: 0.2px;
+  margin-right: 0.5rem;
+  transition: all 0.25s;
+
+  img {
+    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+  }
+}
+.select-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 1px 2px 3px $very-light-gray;
+}
 input[type='checkbox']:checked + label::after {
   content: '';
   position: absolute;
@@ -1263,6 +1602,7 @@ input[type='date']::-webkit-datetime-edit-day-field,
 input[type='date']::-webkit-datetime-edit-year-field {
   color: #888;
   cursor: pointer;
+  padding-left: 0.5rem;
 }
 
 h3 {
@@ -1304,10 +1644,11 @@ h3 {
   border-radius: 0.25rem;
 }
 .table-section {
-  height: 75vh;
+  height: 80vh;
+  overflow: scroll;
   margin-top: 0.5rem;
   border-radius: 5px;
-  box-shadow: 1px 1px 20px 1px $soft-gray;
+  box-shadow: 2px 2px 20px 2px $soft-gray;
   background-color: $off-white;
 }
 .empty-table-section {
@@ -1319,6 +1660,7 @@ h3 {
 }
 .table {
   display: table;
+  overflow: scroll;
   width: 99vw;
 }
 .empty-table {
@@ -1330,74 +1672,110 @@ h3 {
 }
 .table-cell {
   display: table-cell;
+  position: sticky;
+  min-width: 12vw;
   background-color: $off-white;
   padding: 3vh;
   border: none;
   border-bottom: 1px solid $soft-gray;
   font-size: 13px;
-  overflow: scroll;
 }
 .selected {
   // background-color: white;
 }
 .table-cell-selected {
   display: table-cell;
+  position: sticky;
+  min-width: 12vw;
   background-color: white;
   color: $darker-green;
   padding: 3vh;
   border: none;
   border-bottom: 1px solid $soft-gray;
   font-size: 13px;
-  overflow: scroll;
 }
 .table-cell:hover {
   cursor: text;
   background-color: white;
 }
 .modal-container {
-  background-color: $off-white;
+  background-color: $white;
   min-height: 60vh;
   align-items: center;
   border-radius: 0.5rem;
-  padding: 0.5rem;
+  padding: 0.25rem;
+  box-shadow: 2px 2px 10px 2px $base-gray;
+}
+.close-button {
+  border-radius: 50%;
+  background-color: $lighter-green;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.5rem;
+  margin-top: -1rem;
+  padding: 0.25rem;
+  cursor: pointer;
+  img {
+    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+  }
 }
 .opp-modal-container {
-  background-color: $off-white;
+  background-color: white;
   height: 80vh;
   align-items: center;
-  border-radius: 0.25rem;
+  border-radius: 0.6rem;
   padding: 0.5rem;
+  box-shadow: 2px 2px 10px 2px $base-gray;
 }
 .opp-modal {
-  padding: 0 0.75rem;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem;
   overflow-y: scroll;
   height: 56vh;
   border-radius: 0.25rem;
   border-bottom: 3px solid $white;
-  background-color: white;
+  letter-spacing: 1px;
+  color: $darker-green;
+  font-weight: bold;
+
+  div {
+    margin-right: 1rem;
+  }
 }
+
 .note-section {
   padding: 0.5rem 1rem;
   margin-bottom: 0.25rem;
   background-color: white;
-  border-radius: 0.3rem;
+  border-bottom: 1px solid $soft-gray;
+  overflow: scroll;
   &__title {
     font-size: 16px;
     font-weight: bold;
-    color: $base-gray;
+    color: $dark-green;
+    letter-spacing: 1px;
   }
   &__body {
-    color: $gray;
+    color: $base-gray;
+  }
+  &__date {
+    color: $mid-gray;
+    font-size: 11px;
   }
 }
-// .table-row > .table-cell:hover {
-//   background-color: $off-white;
-// }
 .table-cell-checkbox {
   display: table-cell;
   padding: 2vh;
+  width: 4vw;
   border: none;
+  left: 2px;
+  position: sticky;
+  z-index: 1;
   border-bottom: 1px solid $soft-gray;
+  background-color: $off-white;
 }
 .table-cell-header {
   display: table-cell;
@@ -1405,12 +1783,29 @@ h3 {
   border: none;
   border-bottom: 3px solid $light-orange-gray;
   border-radius: 2px;
-  z-index: 1;
+  z-index: 2;
   top: 0;
   position: sticky;
   background-color: $off-white;
   font-weight: bold;
-  font-size: 14px;
+  font-size: 13px;
+  letter-spacing: 0.25px;
+  color: $base-gray;
+}
+.cell-name-header {
+  display: table-cell;
+  padding: 3vh;
+  border: none;
+  border-bottom: 3px solid $light-orange-gray;
+  border-radius: 2px;
+  z-index: 3;
+  left: 4vw;
+  top: 0;
+  position: sticky;
+  background-color: $off-white;
+  font-weight: bold;
+  font-size: 13px;
+  letter-spacing: 0.25px;
   color: $base-gray;
 }
 .table-cell-checkbox-header {
@@ -1418,8 +1813,10 @@ h3 {
   padding: 2vh 1vh;
   border: none;
   border-bottom: 3px solid $light-orange-gray;
-  z-index: 1;
+  z-index: 3;
+  width: 4vw;
   top: 0;
+  left: 2px;
   position: sticky;
   background-color: $off-white;
 }
@@ -1428,7 +1825,13 @@ h3 {
 }
 .cell-name {
   background-color: white;
+  color: $base-gray;
+  letter-spacing: 0.25px;
+  position: sticky;
+  left: 4vw;
+  z-index: 2;
 }
+
 input[type='search'] {
   border: none;
   background-color: $off-white;
@@ -1466,6 +1869,7 @@ section {
   padding: 0px 2px;
 }
 .flex-row {
+  position: relative;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -1474,7 +1878,22 @@ section {
   display: flex;
   flex-direction: row;
   align-items: center;
-  padding: 0.9rem 0rem;
+  padding: 0rem 0.5rem;
+}
+.bulk-action {
+  margin: 0.75rem 0rem;
+  &__title {
+    font-weight: bold;
+    font-size: 14px;
+    margin-left: 0.25rem;
+  }
+}
+.back-logo {
+  position: absolute;
+  opacity: 0.06;
+  filter: alpha(opacity=50);
+  height: 10%;
+  right: 0;
 }
 .flex-col {
   display: flex;
@@ -1489,7 +1908,8 @@ section {
 .pipelines {
   margin-top: 5rem;
   color: $base-gray;
-  max-height: 75vh;
+  height: 90vh;
+  overflow: hidden;
 }
 .invert {
   filter: invert(80%);
@@ -1505,8 +1925,8 @@ section {
   display: flex;
   align-items: center;
   height: 4.5vh;
-  // box-shadow: 1px 2px 3px $very-light-gray;
-  background-color: $lighter-green;
+  box-shadow: 1px 1px 2px $very-light-gray;
+  background-color: white;
   border: none;
   margin: 0 0.5rem 0 0;
   padding: 0.25rem 0.5rem;
@@ -1514,6 +1934,10 @@ section {
   color: $darker-green;
   cursor: pointer;
   transition: all 0.3s;
+
+  img {
+    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+  }
 }
 .pipe-button:hover {
   transform: scale(1.03);
@@ -1574,13 +1998,11 @@ section {
   margin-right: 0.5rem;
 }
 #update-input {
-  background-color: $off-white;
-  box-shadow: 1px 1px 1px $gray;
-  border: 2px solid $light-orange-gray;
-  border-radius: 5px;
-  padding: 2px;
-  min-height: 4vh;
-  width: 14vw;
+  border: 1px solid $very-light-gray;
+  border-radius: 0.4rem;
+  padding: 3px;
+  min-height: 4.5vh;
+  min-width: 14vw;
 }
 .number-input {
   background-color: $off-white;
@@ -1617,8 +2039,12 @@ section {
   border-radius: 50%;
   padding: 0.2rem;
   margin-right: 0.5rem;
-  background-color: $lighter-green;
+  background-color: white;
+  box-shadow: 1px 1px 1px 1px $very-light-gray;
   transition: all 0.3s;
+}
+.green-filter {
+  filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
 }
 .name-cell-note-button:hover,
 .name-cell-edit-note-button:hover {
@@ -1637,22 +2063,24 @@ section {
 }
 .header {
   font-size: 18px;
+  letter-spacing: 1px;
   margin-bottom: 0.4rem;
 }
 .list-section {
-  z-index: 2;
+  z-index: 4;
   position: absolute;
-  top: 28vh;
+  top: 8vh;
+  left: 0;
   border-radius: 4px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  background-color: $off-white;
+  background-color: $white;
   width: 16vw;
   max-height: 40vh;
   overflow: scroll;
   margin-right: 0.5rem;
-  box-shadow: 1px 1px 1px 1px $very-light-gray;
+  box-shadow: 2px 2px 6px 2px $very-light-gray;
 
   &__title {
     font-size: 13px;
@@ -1672,18 +2100,18 @@ section {
 }
 .filter-section {
   position: absolute;
-  top: 21vh;
-  left: 22vw;
-  z-index: 2;
+  top: 8vh;
+  left: 0;
+  z-index: 4;
   padding: 0.25rem;
   border-radius: 4px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  background-color: $off-white;
+  background-color: $white;
   width: 20vw;
   margin-right: 0.5rem;
-  box-shadow: 1px 1px 1px 2px $light-orange-gray;
+  box-shadow: 2px 2px 6px 2px $very-light-gray;
 
   &__title {
     color: $dark-green;
@@ -1778,22 +2206,20 @@ section {
   justify-content: space-between;
   align-items: center;
 }
+.cancel {
+  color: $darker-green;
+  font-weight: bold;
+  margin-right: 1rem;
+  cursor: pointer;
+}
 .flex-end {
   width: 100%;
   padding: 2rem 0.25rem;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: flex-end;
 }
-// ::-webkit-scrollbar {
-//   background-color: transparent;
-//   -webkit-appearance: none;
-//   width: 3px;
-//   height: 90%;
-// }
-// ::-webkit-scrollbar-thumb {
-//   border-radius: 2px;
-//   background-color: $soft-gray;
-//   max-height: 10px;
-// }
+.invisible {
+  display: none;
+}
 </style>

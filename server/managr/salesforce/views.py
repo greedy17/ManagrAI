@@ -14,7 +14,7 @@ from django.conf import settings
 from django.template.loader import render_to_string
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import IntegrityError
-
+from managr.salesforce.routes import routes as model_routes
 from rest_framework.decorators import action
 from rest_framework import (
     filters,
@@ -30,8 +30,10 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from managr.core.models import User
 from managr.api.emails import send_html_email
-
+from managr.slack.helpers import requests as slack_requests
 from managr.slack.models import OrgCustomSlackForm
+from managr.slack.helpers.block_sets import get_block_set
+
 from .models import (
     SObjectField,
     SObjectValidation,
@@ -288,15 +290,20 @@ class SalesforceSObjectViewSet(
         user = self.request.user
         form_type = self.request.GET.get("form_type")
         resource_type = self.request.GET.get("resource_type")
-        resource_id = self.request.GET.get("resource_id")
+        resource_id = self.request.GET.get("resource_id", None)
         template = (
             OrgCustomSlackForm.objects.for_user(user)
             .filter(Q(resource=resource_type, form_type=form_type))
             .first()
         )
-        slack_form = OrgCustomSlackFormInstance.objects.create(
-            template=template, user=user, resource_id=resource_id
+        slack_form = (
+            OrgCustomSlackFormInstance.objects.create(
+                template=template, user=user, resource_id=resource_id
+            )
+            if form_type == "UPDATE"
+            else OrgCustomSlackFormInstance.objects.create(template=template, user=user)
         )
+
         return Response(data={"form_id": str(slack_form.id)})
 
     @action(
@@ -310,7 +317,6 @@ class SalesforceSObjectViewSet(
         from managr.core.models import User
 
         data = self.request.data
-
         user = User.objects.get(id=self.request.user.id)
         form_id = data.get("form_id")
         form_data = data.get("form_data")
@@ -323,6 +329,7 @@ class SalesforceSObjectViewSet(
         if not len(stage_forms):
             main_form.save_form(form_data, False)
         all_form_data = {**stage_form_data_collector, **main_form.saved_data}
+        current_forms = user.custom_slack_form_instances.filter(id__in=[form_id])
         data = None
         attempts = 1
         while True:
@@ -365,6 +372,26 @@ class SalesforceSObjectViewSet(
                 else:
                     time.sleep(2)
                     attempts += 1
+        current_forms.update(
+            is_submitted=True, update_source="pipeline", submission_date=timezone.now()
+        )
+        try:
+            text = f"Managr updated {main_form.resource_type}"
+            message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
+            slack_requests.send_ephemeral_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                user.slack_integration.slack_id,
+                text=text,
+                block_set=get_block_set(
+                    "success_modal", {"message": message, "u": user.id, "form_id": form_id}
+                ),
+            )
+
+        except Exception as e:
+            logger.exception(
+                f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
+            )
         return Response(data=data)
 
     @action(
@@ -376,7 +403,6 @@ class SalesforceSObjectViewSet(
     def confirm_update(self, request, *args, **kwargs):
 
         task_hash = self.request.GET.get("task_hash")
-        print(task_hash)
         verbose_name = self.request.GET.get("verbose_name")
         attempts = 1
         has_error = False
@@ -400,3 +426,72 @@ class SalesforceSObjectViewSet(
         if has_error:
             return Response(data={"success": False})
         return Response(data={"success": True})
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="create",
+    )
+    def create_resource(self, request, *args, **kwargs):
+        from managr.slack.models import OrgCustomSlackFormInstance
+        from managr.core.models import User
+
+        data = self.request.data
+        user = User.objects.get(id=self.request.user.id)
+        form_id = data.get("form_id")
+        form_data = data.get("form_data")
+        main_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
+        stage_forms = []
+        stage_form_data_collector = {}
+        for form in stage_forms:
+            form.save_form(form_data, False)
+            stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
+        if not len(stage_forms):
+            main_form.save_form(form_data, False)
+
+        all_form_data = {**stage_form_data_collector, **main_form.saved_data}
+
+        data = None
+        attempts = 1
+        while True:
+            sf = user.salesforce_account
+            try:
+                resource = model_routes[main_form.resource_type]["model"].create_in_salesforce(
+                    all_form_data, user.id
+                )
+                data = {
+                    "success": True,
+                }
+                break
+            except FieldValidationError as e:
+                data = {"success": False, "error": str(e)}
+                break
+
+            except RequiredFieldError as e:
+                data = {"success": False, "error": str(e)}
+                break
+            except UnhandledSalesforceError as e:
+                data = {"success": False, "error": str(e)}
+                break
+
+            except SFNotFoundError as e:
+                data = {"success": False, "error": str(e)}
+                break
+
+            except TokenExpired:
+                if attempts >= 5:
+                    data = {"success": False, "error": "Could not refresh token"}
+                    break
+                else:
+                    sf.regenerate_token()
+                    attempts += 1
+
+            except ConnectionResetError:
+                if attempts >= 5:
+                    data = {"success": False, "error": "Connection was reset"}
+                    break
+                else:
+                    time.sleep(2)
+                    attempts += 1
+        return Response(data=data)
