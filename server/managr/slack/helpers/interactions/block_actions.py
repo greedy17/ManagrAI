@@ -1823,7 +1823,7 @@ def process_get_call_recording(payload, context):
     loading_view_data = send_loading_screen(
         access_token,
         "Checking for call details...",
-        f"{'update' if state else 'open'}",
+        f"{'push' if state is not None else 'open'}",
         str(user.id),
         trigger_id,
         view_id,
