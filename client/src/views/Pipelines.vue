@@ -1,5 +1,5 @@
 <template>
-  <div class="pipelines">
+  <div :key="key" class="pipelines">
     <Modal
       v-if="modalOpen"
       dimmed
@@ -255,7 +255,13 @@
             <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <select
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                @input="
+                  ;(value = $event.target.value),
+                    setUpdateValues(
+                      field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+                      value,
+                    )
+                "
                 id="update-input"
               >
                 <option v-for="(option, i) in picklistQueryOpts[field.apiName]" :key="i">
@@ -480,7 +486,7 @@
                   Change Forecast
                   <img
                     src="@/assets/images/monetary.png"
-                    style="height: 1.2rem; margin-left: 0.25rem"
+                    style="height: 1.1rem; width: 1.35rem; margin-left: 0.25rem"
                     alt=""
                   />
                 </button>
@@ -546,32 +552,28 @@
           </div>
           <button @click="createOppInstance()" class="add-button">
             <img src="@/assets/images/plusOne.png" style="height: 1rem" alt="" />
-            Opportunity
+            Create Opportunity
           </button>
           <button @click="refresh(refreshId)" class="pipe-button">
-            <img src="@/assets/images/refresh.png" class="invert" style="height: 1rem" alt="" />
+            <img src="@/assets/images/refresh.png" class="invert" style="height: 1.15rem" alt="" />
           </button>
         </div>
       </section>
 
-      <!-- <SkeletonBox width="200px" height="40px" /> -->
+      <!-- <SkeletonBox width="100px" height="10px" /> -->
 
-      <section v-if="!selectedWorkflow" class="table-section">
+      <section v-show="!selectedWorkflow" class="table-section">
         <div class="table">
           <div class="table-row">
-            <div style="padding: 2vh" class="table-cell-checkbox table-cell-header">
+            <div style="padding: 2vh" class="table-cell-checkbox-header">
               <div>
                 <input @click="onCheckAll" type="checkbox" id="checkAllPrimary" />
                 <label for="checkAllPrimary"></label>
               </div>
             </div>
-            <div class="table-cell-header">Name</div>
+            <div class="cell-name-header">Name</div>
             <div class="table-cell-header" :key="i" v-for="(field, i) in oppFields" ref="fields">
               {{ field.referenceDisplayLabel }}
-            </div>
-            <div class="table-cell-header cell-name">
-              <img src="@/assets/images/plusOne.png" class="invert" style="height: 1rem" alt="" />
-              <!-- <p style="color: #9b9b9b">(coming soon)</p> -->
             </div>
           </div>
 
@@ -583,6 +585,7 @@
                   : 'table-cell-checkbox'
               "
             >
+              <!-- <SkeletonBox v-if="updateList.includes(opp.id)" width="10px" height="10px" /> -->
               <div>
                 <input type="checkbox" :id="i" v-model="primaryCheckList" :value="opp.id" />
                 <label :for="i"></label>
@@ -590,19 +593,30 @@
             </div>
 
             <div
+              style="min-width: 26vw"
               :class="
-                primaryCheckList.includes(opp.id) ? 'table-cell-selected' : 'table-cell cell-name'
+                primaryCheckList.includes(opp.id)
+                  ? 'table-cell-selected cell-name'
+                  : 'table-cell cell-name'
               "
             >
               <div class="flex-row-spread">
                 <div style="max-width: 14vw">
-                  {{ opp.name }}
-                  <span style="color: #199e54; margin-left: 0.2rem">{{
-                    opp.account_ref ? opp.account_ref.name : '---'
-                  }}</span>
-                  <div style="color: #9b9b9b">owned by {{ opp.owner_ref.first_name }}</div>
+                  <SkeletonBox v-if="updateList.includes(opp.id)" width="150px" height="14px" />
+                  <SkeletonBox v-if="updateList.includes(opp.id)" width="150px" height="9px" />
+                  <PipelineRow
+                    v-else
+                    :key="`${key + 1}`"
+                    :name="opp.name"
+                    :accountName="opp.account_ref ? opp.account_ref.name : ''"
+                    :owner="opp.owner_ref.first_name"
+                  />
                 </div>
-                <div class="flex-row">
+                <div v-if="updateList.includes(opp.id)" class="flex-row">
+                  <SkeletonBox width="15px" height="14px" />
+                  <SkeletonBox width="15px" height="14px" />
+                </div>
+                <div v-else class="flex-row">
                   <img
                     @click="createFormInstance(opp.id)"
                     class="name-cell-note-button"
@@ -623,24 +637,14 @@
               v-for="(field, i) in oppFields"
               :class="primaryCheckList.includes(opp.id) ? 'table-cell-selected' : 'table-cell'"
             >
-              <p v-if="field.apiName !== 'Amount'">
-                {{
-                  opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-                    ? opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-                    : '---'
-                }}
-              </p>
-
-              <p style="color: #199e54" v-else>
-                {{
-                  opp[lowercaseFirstLetter(camelize(field.apiName))]
-                    ? formatCash(parseFloat(opp[lowercaseFirstLetter(camelize(field.apiName))]))
-                    : '$ ---'
-                }}
-              </p>
-            </div>
-            <div class="table-cell">
-              <p>---</p>
+              <SkeletonBox v-if="updateList.includes(opp.id)" width="100px" height="14px" />
+              <PipelineField
+                v-else
+                :key="key"
+                :apiName="field.apiName"
+                :dataType="field.dataType"
+                :fieldData="opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]"
+              />
             </div>
           </tr>
         </div>
@@ -649,7 +653,7 @@
       <section v-if="selectedWorkflow && currentWorkflow.list.length > 0" class="table-section">
         <div class="table">
           <div class="table-row">
-            <div style="padding: 2vh" class="table-cell-checkbox table-cell-header">
+            <div style="padding: 2vh" class="table-cell-checkbox-header">
               <div>
                 <input
                   @click="onCheckAllWorkflows"
@@ -660,13 +664,13 @@
                 <label for="checkAllWorkflow"></label>
               </div>
             </div>
-            <div class="table-cell-header">Name</div>
+            <div class="cell-name-header">Name</div>
             <div class="table-cell-header" :key="i" v-for="(field, i) in oppFields" ref="fields">
               {{ getFields(field.referenceDisplayLabel) }}
             </div>
-            <div class="table-cell-header cell-name">
+            <!-- <div class="table-cell-header cell-name">
               <img src="@/assets/images/plusOne.png" class="invert" style="height: 1rem" alt="" />
-            </div>
+            </div> -->
           </div>
 
           <tr class="table-row" :key="i" v-for="(workflow, i) in filteredWorkflows">
@@ -682,15 +686,14 @@
               </div>
             </div>
             <div
-              style="max-width: 15vw"
               :class="
                 workflowCheckList.includes(workflow.resourceRef.id)
-                  ? 'table-cell-selected'
+                  ? 'table-cell-selected cell-name'
                   : 'table-cell cell-name'
               "
             >
               <div class="flex-row-spread">
-                <div style="max-width: 14vw">
+                <div style="width: 16vw">
                   {{ workflow.resourceRef.name }}
                   <span style="color: #199e54; margin-left: 0.2rem">
                     {{
@@ -720,7 +723,7 @@
               {{ workflow.resourceRef[camelize(field)] }}
             </div> -->
             <div :key="field.name" v-for="field in currentWorkflowFields" class="table-cell">
-              <p v-if="field !== 'Amount'">
+              <p v-if="field !== 'Amount' && !field.includes('date') && !field.includes('Date')">
                 {{
                   field === 'Stage'
                     ? workflow.resourceRef.secondaryData[
@@ -728,6 +731,16 @@
                       ]
                     : workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field))]
                     ? workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field))]
+                    : '---'
+                }}
+              </p>
+
+              <p v-else-if="field.includes('date') || field.includes('Date')">
+                {{
+                  workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field))]
+                    ? formatDate(
+                        workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field))],
+                      )
                     : '---'
                 }}
               </p>
@@ -742,13 +755,13 @@
                           ],
                         ),
                       )
-                    : '$ ---'
+                    : '$ --- ---'
                 }}
               </p>
             </div>
-            <div class="table-cell">
+            <!-- <div class="table-cell">
               <p>---</p>
-            </div>
+            </div> -->
           </tr>
         </div>
       </section>
@@ -791,6 +804,8 @@ import CollectionManager from '@/services/collectionManager'
 import SlackOAuth, { salesforceFields } from '@/services/slack'
 import DropDownSearch from '@/components/DropDownSearch'
 import Modal from '@/components/InviteModal'
+import PipelineRow from '@/components/PipelineRow'
+import PipelineField from '@/components/PipelineField'
 import User from '@/services/users'
 
 export default {
@@ -800,11 +815,16 @@ export default {
     Modal,
     DropDownSearch,
     SkeletonBox,
+    PipelineRow,
+    PipelineField,
   },
   data() {
     return {
+      key: 0,
+      oppId: null,
       primaryCheckList: [],
       workflowCheckList: [],
+      updateList: [],
       closeDateSelected: false,
       advanceStageSelected: false,
       forecastSelected: false,
@@ -932,12 +952,14 @@ export default {
     workflowCheckList: 'closeAll',
   },
   methods: {
+    forceUpdate() {
+      this.key += 1
+    },
     closeAll() {
       if (this.primaryCheckList.length === 0 || this.workflowCheckList === 0) {
         this.closeDateSelected = false
         this.advanceStageSelected = false
         this.forecastSelected = false
-        console.log('works')
       }
     },
     setStage(val) {
@@ -1022,10 +1044,6 @@ export default {
           })
         }
       }
-      setTimeout(() => {
-        this.getObjects()
-        this.getAllForms()
-      }, 200)
     },
     resetNotes() {
       this.modalOpen = !this.modalOpen
@@ -1071,6 +1089,7 @@ export default {
           formType: 'UPDATE',
           resourceId: id,
         })
+        this.oppId = id
         this.editOpModalOpen = true
         this.instanceId = res.form_id
       } catch (e) {
@@ -1084,7 +1103,6 @@ export default {
           formType: 'CREATE',
         })
         this.addOppModalOpen = true
-        console.log(res.form_id)
         this.instanceId = res.form_id
       } catch (e) {
         console.log(e)
@@ -1122,7 +1140,6 @@ export default {
       }, 100)
     },
     async createBulkInstance(ids) {
-      this.loading = true
       for (let i = 0; i < ids.length; i++) {
         try {
           const res = await SObjects.api.createFormInstance({
@@ -1155,7 +1172,6 @@ export default {
       this.primaryCheckList = []
       this.workflowCheckList = []
       this.closeDateSelected = false
-      this.loading = false
       this.$Alert.alert({
         type: 'success',
         timeout: 3000,
@@ -1177,7 +1193,6 @@ export default {
       this.primaryCheckList = []
       this.workflowCheckList = []
       this.advanceStageSelected = false
-      this.loading = false
       this.$Alert.alert({
         type: 'success',
         timeout: 3000,
@@ -1192,15 +1207,14 @@ export default {
             form_id: ids[i],
             form_data: { ForecastCategoryName: data },
           })
+          console.log(data)
         } catch (e) {
           console.log(e)
         }
       }
-      console.log(data)
       this.primaryCheckList = []
       this.workflowCheckList = []
       this.forecastSelected = false
-      this.loading = false
       this.$Alert.alert({
         type: 'success',
         timeout: 3000,
@@ -1209,24 +1223,46 @@ export default {
       })
     },
     async updateResource() {
-      this.loading = true
+      this.updateList.push(this.oppId)
       this.editOpModalOpen = false
+      // let currentObj = this.allOpps.filter((opp) => opp.id === this.oppId)
       try {
         const res = await SObjects.api.updateResource({
           form_id: this.instanceId,
           form_data: this.formData,
         })
-        console.log(res)
         this.$Alert.alert({
           type: 'success',
           timeout: 3000,
           message: 'Salesforce update successful!',
-          sub: 'Refresh to see changes',
+          sub: 'Some changes may take longer to reflect',
         })
       } catch (e) {
         console.log(e)
       }
-      this.getObjects()
+      this.key = 0
+      while (this.key < 100) {
+        this.getObjectsDupe()
+        this.key += 1
+      }
+      setTimeout(() => {
+        this.updateList = []
+      }, 1000)
+      // this.updateList = this.updateList.filter((item) => item !== this.oppId)
+    },
+    async getObjectsDupe() {
+      try {
+        const res = await SObjects.api.getObjects('Opportunity')
+        this.allOpps = res.results
+        this.originalList = res.results
+        this.todaysList = res.results
+      } catch {
+        this.$Alert.alert({
+          type: 'error',
+          timeout: 2000,
+          message: 'There was an error collecting objects',
+        })
+      }
     },
     async createResource() {
       this.loading = true
@@ -1236,7 +1272,6 @@ export default {
           form_id: this.instanceId,
           form_data: this.formData,
         })
-        console.log(res)
         this.$Alert.alert({
           type: 'success',
           timeout: 3000,
@@ -1246,7 +1281,7 @@ export default {
       } catch (e) {
         console.log(e)
       }
-      this.getObjects()
+      this.getAllForms()
     },
     async confirmUpdate() {
       try {
@@ -1329,7 +1364,6 @@ export default {
       try {
         const res = await SObjects.api.getObjects('Opportunity')
         this.allOpps = res.results
-        console.log(this.allOpps)
         this.originalList = res.results
         this.todaysList = res.results
       } catch {
@@ -1346,7 +1380,7 @@ export default {
         const res = await SObjects.api.getNotes({
           resourceId: id,
         })
-        console.log(res)
+
         this.modalOpen = true
 
         if (res.length) {
@@ -1500,13 +1534,18 @@ export default {
   border-radius: 0.25rem;
   background-color: white;
   cursor: pointer;
-  color: $darker-green;
-  font-weight: 900px;
+  color: $dark-green;
+  letter-spacing: 0.2px;
   margin-right: 0.5rem;
+  transition: all 0.25s;
 
   img {
     filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
   }
+}
+.select-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 1px 2px 3px $very-light-gray;
 }
 input[type='checkbox']:checked + label::after {
   content: '';
@@ -1609,7 +1648,7 @@ h3 {
   overflow: scroll;
   margin-top: 0.5rem;
   border-radius: 5px;
-  box-shadow: 1px 1px 20px 1px $soft-gray;
+  box-shadow: 2px 2px 20px 2px $soft-gray;
   background-color: $off-white;
 }
 .empty-table-section {
@@ -1621,6 +1660,7 @@ h3 {
 }
 .table {
   display: table;
+  overflow: scroll;
   width: 99vw;
 }
 .empty-table {
@@ -1632,6 +1672,8 @@ h3 {
 }
 .table-cell {
   display: table-cell;
+  position: sticky;
+  min-width: 12vw;
   background-color: $off-white;
   padding: 3vh;
   border: none;
@@ -1643,6 +1685,8 @@ h3 {
 }
 .table-cell-selected {
   display: table-cell;
+  position: sticky;
+  min-width: 12vw;
   background-color: white;
   color: $darker-green;
   padding: 3vh;
@@ -1660,6 +1704,7 @@ h3 {
   align-items: center;
   border-radius: 0.5rem;
   padding: 0.25rem;
+  box-shadow: 2px 2px 10px 2px $base-gray;
 }
 .close-button {
   border-radius: 50%;
@@ -1681,6 +1726,7 @@ h3 {
   align-items: center;
   border-radius: 0.6rem;
   padding: 0.5rem;
+  box-shadow: 2px 2px 10px 2px $base-gray;
 }
 .opp-modal {
   display: inline-flex;
@@ -1723,8 +1769,13 @@ h3 {
 .table-cell-checkbox {
   display: table-cell;
   padding: 2vh;
+  width: 4vw;
   border: none;
+  left: 2px;
+  position: sticky;
+  z-index: 1;
   border-bottom: 1px solid $soft-gray;
+  background-color: $off-white;
 }
 .table-cell-header {
   display: table-cell;
@@ -1732,12 +1783,28 @@ h3 {
   border: none;
   border-bottom: 3px solid $light-orange-gray;
   border-radius: 2px;
-  z-index: 1;
+  z-index: 2;
   top: 0;
   position: sticky;
   background-color: $off-white;
   font-weight: bold;
-  font-size: 14px;
+  font-size: 13px;
+  letter-spacing: 0.25px;
+  color: $base-gray;
+}
+.cell-name-header {
+  display: table-cell;
+  padding: 3vh;
+  border: none;
+  border-bottom: 3px solid $light-orange-gray;
+  border-radius: 2px;
+  z-index: 3;
+  left: 4vw;
+  top: 0;
+  position: sticky;
+  background-color: $off-white;
+  font-weight: bold;
+  font-size: 13px;
   letter-spacing: 0.25px;
   color: $base-gray;
 }
@@ -1746,8 +1813,10 @@ h3 {
   padding: 2vh 1vh;
   border: none;
   border-bottom: 3px solid $light-orange-gray;
-  z-index: 1;
+  z-index: 3;
+  width: 4vw;
   top: 0;
+  left: 2px;
   position: sticky;
   background-color: $off-white;
 }
@@ -1756,7 +1825,13 @@ h3 {
 }
 .cell-name {
   background-color: white;
+  color: $base-gray;
+  letter-spacing: 0.25px;
+  position: sticky;
+  left: 4vw;
+  z-index: 2;
 }
+
 input[type='search'] {
   border: none;
   background-color: $off-white;
@@ -1850,8 +1925,8 @@ section {
   display: flex;
   align-items: center;
   height: 4.5vh;
-  // box-shadow: 1px 2px 3px $very-light-gray;
-  background-color: $lighter-green;
+  box-shadow: 1px 1px 2px $very-light-gray;
+  background-color: white;
   border: none;
   margin: 0 0.5rem 0 0;
   padding: 0.25rem 0.5rem;
@@ -1859,6 +1934,10 @@ section {
   color: $darker-green;
   cursor: pointer;
   transition: all 0.3s;
+
+  img {
+    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+  }
 }
 .pipe-button:hover {
   transform: scale(1.03);
@@ -1988,7 +2067,7 @@ section {
   margin-bottom: 0.4rem;
 }
 .list-section {
-  z-index: 2;
+  z-index: 4;
   position: absolute;
   top: 8vh;
   left: 0;
@@ -1996,12 +2075,12 @@ section {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  background-color: $off-white;
+  background-color: $white;
   width: 16vw;
   max-height: 40vh;
   overflow: scroll;
   margin-right: 0.5rem;
-  box-shadow: 1px 1px 3px 1px $very-light-gray;
+  box-shadow: 2px 2px 6px 2px $very-light-gray;
 
   &__title {
     font-size: 13px;
@@ -2023,16 +2102,16 @@ section {
   position: absolute;
   top: 8vh;
   left: 0;
-  z-index: 2;
+  z-index: 4;
   padding: 0.25rem;
   border-radius: 4px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  background-color: $off-white;
+  background-color: $white;
   width: 20vw;
   margin-right: 0.5rem;
-  box-shadow: 1px 1px 3px 1px $very-light-gray;
+  box-shadow: 2px 2px 6px 2px $very-light-gray;
 
   &__title {
     color: $dark-green;

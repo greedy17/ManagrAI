@@ -49,7 +49,7 @@ export default {
   overflow: hidden;
   vertical-align: middle;
   background-color: #dddbdd;
-  border-radius: 0.2rem;
+  border-radius: 0.4rem;
 
   &::after {
     position: absolute;

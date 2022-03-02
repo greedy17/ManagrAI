@@ -99,7 +99,6 @@ export class SObjectFormBuilderAPI extends ModelAPI {
   async updateResource(formData) {
     try {
       const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'sobject/update/', formData)
-      console.log(res.data)
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
@@ -116,7 +115,7 @@ export class SObjectFormBuilderAPI extends ModelAPI {
   async confirmUpdate(data) {
     try {
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'confirm-update/', data)
-      return res.data
+      return res
     } catch (e) {
       apiErrorHandler({ apiName: 'Confirmation error' })(e)
     }
