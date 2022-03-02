@@ -331,6 +331,7 @@ class SalesforceSObjectViewSet(
             main_form.save_form(form_data, False)
         all_form_data = {**stage_form_data_collector, **main_form.saved_data}
         current_forms = user.custom_slack_form_instances.filter(id__in=[form_id])
+        print
         data = None
         attempts = 1
         while True:
@@ -376,6 +377,7 @@ class SalesforceSObjectViewSet(
         current_forms.update(
             is_submitted=True, update_source="pipeline", submission_date=timezone.now()
         )
+        print(form_id)
         if (
             all_form_data.get("meeting_comments") is not None
             and all_form_data.get("meeting_type") is not None
@@ -390,7 +392,7 @@ class SalesforceSObjectViewSet(
                 user.slack_integration.slack_id,
                 text=text,
                 block_set=get_block_set(
-                    "success_modal", {"message": message, "u": user.id, "form_id": form_id}
+                    "success_modal", {"message": message, "u": user.id, "form_ids": form_id}
                 ),
             )
 
