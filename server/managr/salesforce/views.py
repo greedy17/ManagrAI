@@ -303,8 +303,8 @@ class SalesforceSObjectViewSet(
             if form_type == "UPDATE"
             else OrgCustomSlackFormInstance.objects.create(template=template, user=user)
         )
-
-        return Response(data={"form_id": str(slack_form.id)})
+        current_values = slack_form.generate_form_values()
+        return Response(data={"form_id": str(slack_form.id), "current_values": current_values})
 
     @action(
         methods=["post"],

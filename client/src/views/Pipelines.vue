@@ -1089,6 +1089,7 @@ export default {
           formType: 'UPDATE',
           resourceId: id,
         })
+        console.log(res)
         this.oppId = id
         this.editOpModalOpen = true
         this.instanceId = res.form_id
