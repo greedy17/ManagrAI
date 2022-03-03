@@ -207,16 +207,12 @@ def alert_instance_block_set(context):
         )
     else:
         blocks = [
-            block_builders.section_with_button_block(
-                "Mark as Complete",
-                "mark_complete",
-                instance.render_text(),
-                text_type="mrkdwn",
-                block_id=f"{instance.id}_text",
-                action_id=f"{slack_const.MARK_COMPLETE}?u={user.id}&page={context.get('current_page',1)}&instance_id={instance.id}",
-                style="danger",
+            block_builders.simple_section(
+                instance.render_text(), text_type="mrkdwn", block_id=f"{instance.id}_text",
             ),
         ]
+        options = []
+
         action_blocks = [
             block_builders.simple_button_block(
                 f"Update {instance.template.resource_type} + Notes",
@@ -226,72 +222,37 @@ def alert_instance_block_set(context):
             )
         ]
         if instance.template.resource_type == "Opportunity":
-            action_blocks.append(
-                block_builders.simple_button_block(
-                    "Get Notes",
-                    "get_notes",
-                    action_id=action_with_params(
-                        slack_const.GET_NOTES,
-                        params=[
-                            f"u={str(user.id)}",
-                            f"resource_id={str(instance.resource_id)}",
-                            f"resource_type={instance.template.resource_type}",
-                            "type=alert",
-                        ],
-                    ),
-                )
-            )
-            action_blocks.append(
-                block_builders.simple_button_block(
-                    "Call Details",
-                    "call_details",
-                    action_id=action_with_params(
-                        slack_const.GONG_CALL_RECORDING,
-                        params=[
-                            f"u={str(user.id)}",
-                            f"resource_id={str(instance.resource_id)}",
-                            f"resource_type={instance.template.resource_type}",
-                            "type=alert",
-                        ],
-                    ),
-                )
+            options.extend(
+                [
+                    block_builders.option("Mark as Complete", "mark_as_complete"),
+                    block_builders.option("Get Notes", "get_notes"),
+                    block_builders.option("Call Details", "call_details"),
+                ]
             )
         if instance.template.resource_type != "Lead":
             if hasattr(user, "outreach_account"):
-                action_blocks.append(
-                    block_builders.simple_button_block(
-                        "Add to Sequence",
-                        "add_to_sequence",
-                        action_id=action_with_params(
-                            slack_const.PROCESS_SHOW_ENGAGEMENT_MODEL,
-                            params=[
-                                f"u={str(user.id)}",
-                                f"resource_id={str(instance.resource_id)}",
-                                f"resource_name={instance.resource.name}",
-                                f"resource_type={instance.template.resource_type}",
-                                "system=outreach",
-                            ],
-                        ),
-                    )
-                )
-            else:
-                action_blocks.append(
-                    block_builders.simple_button_block(
-                        "Add to Cadence",
-                        "add_to_cadence",
-                        action_id=action_with_params(
-                            slack_const.PROCESS_SHOW_ENGAGEMENT_MODEL,
-                            params=[
-                                f"u={str(user.id)}",
-                                f"resource_id={str(instance.resource_id)}",
-                                f"resource_name={instance.resource.name}",
-                                f"resource_type={instance.template.resource_type}",
-                                "system=salesloft",
-                            ],
-                        ),
-                    )
-                )
-        blocks.append(block_builders.actions_block(action_blocks))
+                options.append(block_builders.option("Add to Sequence", "add_to_sequence"))
+            if hasattr(user, "salesloft_account"):
+                options.append(block_builders.option("Add to Cadence", "add_to_cadence"))
+
+        action_blocks.append(
+            block_builders.static_select_input(
+                options,
+                action_id=action_with_params(
+                    slack_const.PROCESS_ALERT_ACTIONS,
+                    params=[
+                        f"u={str(user.id)}",
+                        f"alert_id={str(instance.id)}",
+                        f"page={context.get('current_page',1)}",
+                        f"resource_id={str(instance.resource_id)}",
+                        f"resource_name={instance.resource.name}",
+                        f"resource_type={instance.template.resource_type}",
+                    ],
+                ),
+                placeholder="Managr Action",
+            )
+        )
+        blocks.append(block_builders.actions_block(action_blocks, block_id=str(instance.id)))
     if in_channel or (user.id != resource_owner.id):
         blocks.append(
             block_builders.context_block(
