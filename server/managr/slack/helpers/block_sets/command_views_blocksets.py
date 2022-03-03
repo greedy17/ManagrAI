@@ -388,7 +388,7 @@ def create_add_to_sequence_block_set(context):
     user_id = context.get("u")
     blocks = [
         block_builders.external_select(
-            f"*Select Sequence:*",
+            "*Select Sequence:*",
             f"{slack_const.GET_SEQUENCE_OPTIONS}?u={user_id}",
             block_id="select_sequence",
             placeholder="Type to search",

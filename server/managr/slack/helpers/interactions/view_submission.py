@@ -597,7 +597,6 @@ def process_zoom_meeting_attach_resource(payload, context):
         else MeetingWorkflow.objects.get(id=context.get("w"))
     )
     user = workflow.user
-    pm = json.loads(payload["view"]["private_metadata"])
     slack_access_token = user.organization.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     # get state - state contains the values based on the block_id
@@ -702,8 +701,7 @@ def process_zoom_meeting_attach_resource(payload, context):
         paginate_results = paged_meetings.get("results", [])
         if len(paginate_results):
             current_instance = paginate_results[0]
-            blockset = [
-                *blocks,
+            blocks = [
                 *get_block_set(
                     "calendar_reminders_blockset",
                     {"prep_id": str(current_instance.id), "u": str(user.id)},
@@ -718,12 +716,12 @@ def process_zoom_meeting_attach_resource(payload, context):
         workflow.add_form(
             meeting_resource, slack_const.FORM_TYPE_UPDATE,
         )
-        blocks_set = get_block_set("initial_meeting_interaction", {"w": context.get("w")})
+        blocks = get_block_set("initial_meeting_interaction", {"w": context.get("w")})
 
     try:
         # update initial interaction workflow with new resource
         res = slack_requests.update_channel_message(
-            channel, ts, slack_access_token, block_set=blocks_set
+            channel, ts, slack_access_token, block_set=blocks
         )
         if type is None:
             workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
@@ -2104,25 +2102,27 @@ def process_submit_product(payload, context):
     }
 
     data["view"]["submit"] = {"type": "plain_text", "text": "Submit", "emoji": True}
-
+    slack_requests.generic_request(
+        slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
+        data={
+            "view_id": loading_view_data["view_id"],
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Product Created"},
+                "blocks": [
+                    block_builders.simple_section(
+                        ":white_check_mark: Successfully created product!", "mrkdwn"
+                    )
+                ],
+            },
+        },
+        access_token=user.organization.slack_integration.access_token,
+    )
     slack_requests.generic_request(
         slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
         data,
         access_token=user.organization.slack_integration.access_token,
     )
-
-    return {
-        "response_action": "update",
-        "view": {
-            "type": "modal",
-            "title": {"type": "plain_text", "text": "Product Created"},
-            "blocks": [
-                block_builders.simple_section(
-                    ":white_check_mark: Successfully created product!", "mrkdwn"
-                )
-            ],
-        },
-    }
 
 
 @log_all_exceptions
