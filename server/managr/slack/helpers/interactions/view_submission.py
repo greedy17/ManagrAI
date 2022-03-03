@@ -149,12 +149,15 @@ def process_zoom_meeting_data(payload, context):
     state = view["state"]["values"]
     # if we had a next page the form data for the review was already saved
     forms = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING)
+    current_form_ids = []
     if len(forms):
         for form in forms:
+            current_form_ids.append(str(form.id))
             form.save_form(state)
     # otherwise we save the meeting review form
     else:
         form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
+        current_form_ids.append(str(form.id))
         form.save_form(state)
     if workflow.meeting:
         contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
@@ -190,6 +193,8 @@ def process_zoom_meeting_data(payload, context):
     block_set = [
         *get_block_set("loading", {"message": ":rocket: We are saving your data to salesforce..."}),
     ]
+    if len(user.slack_integration.realtime_alert_configs):
+        _send_instant_alert(current_form_ids)
     try:
         res = slack_requests.update_channel_message(
             channel, ts, slack_access_token, block_set=block_set
