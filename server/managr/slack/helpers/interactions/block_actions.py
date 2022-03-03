@@ -1823,7 +1823,7 @@ def process_get_call_recording(payload, context):
     loading_view_data = send_loading_screen(
         access_token,
         "Checking for call details...",
-        f"{'update' if state else 'open'}",
+        f"{'push' if state is not None else 'open'}",
         str(user.id),
         trigger_id,
         view_id,
@@ -2239,6 +2239,7 @@ def process_show_alert_update_resource_form(payload, context):
 @processor(required_context="u")
 def process_mark_complete(payload, context):
     user = User.objects.get(id=context.get("u"))
+    print(context)
     access_token = user.organization.slack_integration.access_token
     instance = AlertInstance.objects.get(id=context.get("instance_id"))
     instance.completed = True
@@ -2285,11 +2286,41 @@ def process_mark_complete(payload, context):
                 alert_instances, instance.invocation, payload["channel"]["id"], instance.config_id
             ),
         ]
-
-    res = slack_requests.update_channel_message(
-        payload["channel"]["id"], payload["message"]["ts"], access_token, block_set=blocks,
-    )
+    try:
+        res = slack_requests.update_channel_message(
+            payload["channel"]["id"], payload["message"]["ts"], access_token, block_set=blocks,
+        )
+    except Exception as e:
+        logger.exception(f"Alert mark as complete exception: {e}")
     return
+
+
+@slack_api_exceptions(rethrow=True)
+@processor(required_context=["u"])
+def process_alert_actions(payload, context):
+    state = payload["state"]["values"]
+    selected = (
+        state[context.get("alert_id")][
+            f"PROCESS_ALERT_ACTIONS?u={context.get('u')}&alert_id={context.get('alert_id')}&page={context.get('page')}&resource_id={context.get('resource_id')}&resource_name={context.get('resource_name')}&resource_type={context.get('resource_type')}"
+        ]
+        .get("selected_option")
+        .get("value")
+    )
+    alert_id = context.pop("alert_id")
+    alert_action_switcher = {
+        "call_details": process_get_call_recording,
+        "get_notes": process_get_notes,
+        "add_to_sequence": process_show_engagement_modal,
+        "add_to_cadence": process_show_engagement_modal,
+        "mark_as_complete": process_mark_complete,
+    }
+    if selected in ["add_to_sequence", "add_to_cadence"]:
+        context["system"] = "salesloft" if selected == "add_to_cadence" else "outreach"
+    elif selected == "mark_as_complete":
+        context.update({"instance_id": alert_id})
+    else:
+        context["type"] = "alert"
+    return alert_action_switcher[selected](payload, context)
 
 
 #########################################################
@@ -2953,6 +2984,7 @@ def handle_block_actions(payload):
         slack_const.PROCESS_LEAD_INPUT_SWITCH: process_lead_input_switch,
         slack_const.GET_PRICEBOOK_ENTRY_OPTIONS: process_pricebook_selected,
         slack_const.COMMAND_LOG_NEW_ACTIVITY: process_log_activity,
+        slack_const.PROCESS_ALERT_ACTIONS: process_alert_actions,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)
