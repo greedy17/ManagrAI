@@ -231,6 +231,7 @@
                 id="update-input"
                 ccols="30"
                 rows="4"
+                :placeholder="currentVals[field.apiName]"
                 style="width: 30vw; border-radius: 0.4rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
@@ -240,19 +241,25 @@
               v-else-if="
                 (field.dataType === 'String' && field.apiName !== 'meeting_type') ||
                 (field.dataType === 'String' && field.apiName !== 'meeting_comments') ||
-                (field.dataType === 'String' && field.apiName !== 'NextStep') ||
-                field.dataType === 'Reference'
+                (field.dataType === 'String' && field.apiName !== 'NextStep')
               "
             >
               <p>{{ field.referenceDisplayLabel }}:</p>
               <input
                 id="update-input"
                 type="text"
+                :placeholder="currentVals[field.apiName]"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
 
-            <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
+            <div
+              v-else-if="
+                field.dataType === 'Picklist' ||
+                field.dataType === 'MultiPicklist' ||
+                field.dataType === 'Reference'
+              "
+            >
               <p>{{ field.referenceDisplayLabel }}:</p>
               <select
                 @input="
@@ -264,6 +271,7 @@
                 "
                 id="update-input"
               >
+                <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option>
                 <option v-for="(option, i) in picklistQueryOpts[field.apiName]" :key="i">
                   <p>{{ option.label }}</p>
                 </option>
@@ -273,7 +281,10 @@
             <div v-else-if="field.dataType === 'Date'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <input
-                type="date"
+                type="text"
+                onfocus="(this.type='date')"
+                onblur="(this.type='text')"
+                :placeholder="currentVals[field.apiName]"
                 id="update-input"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
@@ -297,6 +308,7 @@
               <input
                 id="update-input"
                 type="number"
+                :placeholder="currentVals[field.apiName]"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
@@ -559,8 +571,6 @@
           </button>
         </div>
       </section>
-
-      <!-- <SkeletonBox width="100px" height="10px" /> -->
 
       <section v-show="!selectedWorkflow" class="table-section">
         <div class="table">
@@ -825,6 +835,7 @@ export default {
       primaryCheckList: [],
       workflowCheckList: [],
       updateList: [],
+      currentVals: [],
       closeDateSelected: false,
       advanceStageSelected: false,
       forecastSelected: false,
@@ -1083,15 +1094,16 @@ export default {
       return field
     },
     async createFormInstance(id) {
+      this.currentVals = []
+      this.editOpModalOpen = true
       try {
         const res = await SObjects.api.createFormInstance({
           resourceType: 'Opportunity',
           formType: 'UPDATE',
           resourceId: id,
         })
-        console.log(res)
+        this.currentVals = res.current_values
         this.oppId = id
-        this.editOpModalOpen = true
         this.instanceId = res.form_id
       } catch (e) {
         console.log(e)
@@ -1343,11 +1355,16 @@ export default {
           ) {
             this.picklistQueryOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].apiName
           }
+          // else if (this.oppFormCopy[i].dataType === 'Reference') {
+          //   this.picklistQueryOpts[this.oppFormCopy[i].referenceDisplayLabel] =
+          //     this.oppFormCopy[i].referenceDisplayLabel
+          // }
         }
+
         for (let i in this.picklistQueryOpts) {
           this.picklistQueryOpts[i] = this.listPicklists(i, { picklistFor: i })
         }
-
+        console.log(this.picklistQueryOpts)
         this.oppFields = this.updateOppForm[0].fieldsRef.filter(
           (field) =>
             field.apiName !== 'meeting_type' &&
