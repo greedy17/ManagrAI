@@ -1,16 +1,22 @@
 <template>
   <div>
-    <p v-if="apiName !== 'Amount' && dataType !== 'Date'">
-      {{ fieldData ? fieldData : '---' }}
-    </p>
+    <div v-if="dataType">
+      <p v-if="apiName !== 'Amount' && dataType !== 'Date'">
+        {{ fieldData ? fieldData : '---' }}
+      </p>
 
-    <p v-else-if="dataType === 'Date'">
-      {{ fieldData ? formatDate(fieldData) : '---' }}
-    </p>
+      <p v-else-if="dataType === 'Date'">
+        {{ fieldData ? formatDate(fieldData) : '---' }}
+      </p>
 
-    <p style="color: #199e54" v-else>
-      {{ fieldData ? formatCash(fieldData) : '$ --- ---' }}
-    </p>
+      <p style="color: #199e54" v-else>
+        {{ fieldData ? formatCash(fieldData) : '$ --- ---' }}
+      </p>
+    </div>
+
+    <div v-else>
+      <p>{{ fieldData }}</p>
+    </div>
   </div>
 </template>
 
