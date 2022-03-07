@@ -959,6 +959,7 @@ export default {
       selectedTitle: null,
       selectedId: null,
       updatedOpp: null,
+      updateOppId: null,
       oppFilters: [
         {
           title: 'Amount',
@@ -1174,6 +1175,7 @@ export default {
     async createFormInstance(id) {
       this.currentVals = []
       this.editOpModalOpen = true
+      this.updateOppId = id
       try {
         const res = await SObjects.api.createFormInstance({
           resourceType: 'Opportunity',
@@ -1374,6 +1376,7 @@ export default {
         }
       }
       setTimeout(() => {
+        this.formData = {}
         this.updateList = []
       }, 2000)
     },
@@ -1497,7 +1500,6 @@ export default {
       this.loading = true
       try {
         const res = await SObjects.api.getObjects('Opportunity')
-        // this.$set(this.allOpps, Object.keys(res.results), 2)
         this.allOpps = res.results
         this.originalList = res.results
         this.todaysList = res.results
