@@ -323,11 +323,7 @@
 
     <div v-if="!loading">
       <header class="flex-row-spread">
-        <!-- <p style="margin-left: 0.25rem">Pipe Hygeine:</p> -->
-        <!-- <div class="stats">
-          <p class="closed-deals">Deal closing %:</p>
-          <p class="closed-deals">Avg. time to close:</p>
-        </div> -->
+        <!-- <button @click="test">Testing list functionality</button> -->
       </header>
 
       <section style="margin-bottom: 1rem" class="flex-row-spread">
@@ -378,7 +374,7 @@
               <span class="filter" v-if="currentList === 'Closing next month'"> active</span>
             </button>
             <p @click="showWorkflowList = !showWorkflowList" class="list-section__title">
-              Workflows
+              Pipeline Monitoring
               <img v-if="showWorkflowList" src="@/assets/images/downArrow.png" alt="" /><img
                 v-else
                 src="@/assets/images/rightArrow.png"
@@ -609,8 +605,10 @@
                   : 'table-cell-checkbox'
               "
             >
-              <!-- <SkeletonBox v-if="updateList.includes(opp.id)" width="10px" height="10px" /> -->
-              <div>
+              <div v-if="updateList.includes(opp.id)">
+                <SkeletonBox width="10px" height="9px" />
+              </div>
+              <div v-else>
                 <input type="checkbox" :id="i" v-model="primaryCheckList" :value="opp.id" />
                 <label :for="i"></label>
               </div>
@@ -686,12 +684,7 @@
           <div class="table-row">
             <div style="padding: 2vh" class="table-cell-checkbox-header">
               <div>
-                <input
-                  @click="onCheckAllWorkflows"
-                  type="checkbox"
-                  value="1"
-                  id="checkAllWorkflow"
-                />
+                <input @click="onCheckAllWorkflows" type="checkbox" id="checkAllWorkflow" />
                 <label for="checkAllWorkflow"></label>
               </div>
             </div>
@@ -702,15 +695,15 @@
           </div>
 
           <tr class="table-row" :key="i" v-for="(workflow, i) in filteredWorkflows">
-            <div class="table-cell-checkbox">
+            <div style="padding: 2vh" class="table-cell-checkbox">
               <div>
                 <input
                   type="checkbox"
-                  :id="i"
+                  :id="i + workflow.resourceRef.id"
                   v-model="workflowCheckList"
                   :value="workflow.resourceRef.id"
                 />
-                <label :for="i"></label>
+                <label :for="i + workflow.resourceRef.id"></label>
               </div>
             </div>
             <div
@@ -730,7 +723,7 @@
 
                   <PipelineRow
                     v-else
-                    :key="`${key + i * 2}`"
+                    :key="`${key2 + i}`"
                     :name="workflow.resourceRef.name"
                     :accountName="
                       workflow.resourceRef.accountRef ? workflow.resourceRef.accountRef.name : '---'
@@ -758,7 +751,7 @@
               </div>
             </div>
 
-            <div :key="field.name" v-for="(field, i) in currentWorkflowFields" class="table-cell">
+            <div :key="field.name" v-for="field in currentWorkflowFields" class="table-cell">
               <div v-if="field !== 'Amount' && !field.includes('date') && !field.includes('Date')">
                 <SkeletonBox
                   v-if="updateList.includes(workflow.resourceRef.id)"
@@ -769,7 +762,7 @@
 
                 <PipelineField
                   v-else
-                  :key="key + i"
+                  :key="key2"
                   :apiName="field"
                   :dataType="null"
                   :fieldData="
@@ -794,7 +787,7 @@
 
                 <PipelineField
                   v-else
-                  :key="key + i + 1"
+                  :key="key2"
                   :apiName="field"
                   :dataType="null"
                   :fieldData="
@@ -819,7 +812,7 @@
 
                 <PipelineField
                   v-else
-                  :key="key + i + 2"
+                  :key="key2"
                   :apiName="field"
                   :dataType="null"
                   :fieldData="
@@ -848,7 +841,7 @@
           <div class="table-row">
             <div class="flex-row table-cell-header">
               <h5 style="margin-left: 1rem">
-                No results for the {{ currentList }} workflow. Try refreshing
+                No results for the {{ currentList }} workflow. Run now
               </h5>
               <button @click="refresh(refreshId)" class="centered__button">
                 <img src="@/assets/images/refresh.png" style="height: 0.75rem" alt="" />
@@ -895,6 +888,7 @@ export default {
   data() {
     return {
       key: 0,
+      key2: 1,
       oppId: null,
       primaryCheckList: [],
       workflowCheckList: [],
@@ -953,6 +947,9 @@ export default {
       monetaryOptions: ['less than', 'greater than', 'equals'],
       picklistQueryOpts: {},
       instanceIds: [],
+      selectedConfigId: null,
+      selectedTitle: null,
+      selectedId: null,
       oppFilters: [
         {
           title: 'Amount',
@@ -1044,7 +1041,7 @@ export default {
       this.newForecast = val
     },
     test() {
-      console.log(this.filteredWorkflows)
+      console.log(this.primaryCheckList)
     },
     onCheckAll() {
       if (this.primaryCheckList.length < 1) {
@@ -1102,15 +1099,19 @@ export default {
       }
     },
     async refresh(id) {
+      this.key = 0
       if (id) {
         try {
           await AlertTemplate.api.runAlertTemplateNow(id)
           this.$Alert.alert({
             message: `workflow initiated successfully`,
-            sub: 'Refresh to see changes',
             type: 'success',
             timeout: 2000,
           })
+          while (this.key < 20) {
+            this.currentWorkflow.refresh()
+            this.key += 1
+          }
         } catch {
           this.$Alert.alert({
             message: 'Something went wrong (o^^)o.... Try again',
@@ -1200,24 +1201,25 @@ export default {
       this.createBulkInstance(ids)
       setTimeout(() => {
         this.bulkUpdateCloseDate(this.instanceIds, data)
-      }, 100)
+      }, 1000)
     },
     advanceStage(ids) {
       this.instanceIds = []
       this.createBulkInstance(ids)
       setTimeout(() => {
         this.bulkUpdateStage(this.instanceIds, this.newStage)
-      }, 100)
+      }, 1000)
     },
     changeForecast(ids) {
       this.instanceIds = []
       this.createBulkInstance(ids)
       setTimeout(() => {
         this.bulkChangeForecast(this.instanceIds, this.newForecast)
-      }, 100)
+      }, 1000)
     },
     async createBulkInstance(ids) {
       for (let i = 0; i < ids.length; i++) {
+        this.updateList.push(ids[i])
         try {
           const res = await SObjects.api.createFormInstance({
             resourceType: 'Opportunity',
@@ -1237,11 +1239,24 @@ export default {
     },
     async bulkUpdateCloseDate(ids, data) {
       for (let i = 0; i < ids.length; i++) {
+        this.key = 0
         try {
           const res = await SObjects.api.updateResource({
             form_id: ids[i],
             form_data: { CloseDate: data },
           })
+          while (this.key < 120) {
+            if (this.selectedWorkflow) {
+              this.currentWorkflow.refresh()
+              this.key += 1
+            } else {
+              this.getObjectsDupe()
+              this.key += 1
+            }
+          }
+          setTimeout(() => {
+            this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
+          }, 3000)
         } catch (e) {
           console.log(e)
         }
@@ -1253,16 +1268,29 @@ export default {
         type: 'success',
         timeout: 3000,
         message: 'Salesforce update successful!',
-        sub: 'Refresh to see changes',
+        sub: 'Some changes may take longer to reflect',
       })
     },
     async bulkUpdateStage(ids, data) {
       for (let i = 0; i < ids.length; i++) {
+        this.key = 0
         try {
           const res = await SObjects.api.updateResource({
             form_id: ids[i],
             form_data: { StageName: data },
           })
+          while (this.key < 120) {
+            if (this.selectedWorkflow) {
+              this.currentWorkflow.refresh()
+              this.key += 1
+            } else {
+              this.getObjectsDupe()
+              this.key += 1
+            }
+          }
+          setTimeout(() => {
+            this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
+          }, 3000)
         } catch (e) {
           console.log(e)
         }
@@ -1279,11 +1307,17 @@ export default {
     },
     async bulkChangeForecast(ids, data) {
       for (let i = 0; i < ids.length; i++) {
+        this.key = 0
+        this.key2 += 1
         try {
           const res = await SObjects.api.updateResource({
             form_id: ids[i],
             form_data: { ForecastCategoryName: data },
           })
+
+          setTimeout(() => {
+            this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
+          }, 3000)
           console.log(data)
         } catch (e) {
           console.log(e)
@@ -1319,35 +1353,19 @@ export default {
         console.log(e)
       }
       while (this.key < 120) {
-        this.getObjectsDupe()
-        this.currentWorkflow.refresh()
-        this.key += 1
+        if (this.selectedWorkflow) {
+          // this.selectList(this.selectedConfigId, this.selectedTitle, this.selectedId)
+          this.currentWorkflow.refresh()
+          this.key += 1
+        } else {
+          this.getObjectsDupe()
+          this.key += 1
+        }
       }
       setTimeout(() => {
         this.updateList = []
       }, 2000)
     },
-    // async getAllFormsDupe() {
-    //   try {
-    //     let res = await SlackOAuth.api.getOrgCustomForm()
-    //     this.updateOppForm = res.filter(
-    //       (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
-    //     )
-    //     this.createOppForm = res.filter(
-    //       (obj) => obj.formType === 'CREATE' && obj.resource === 'Opportunity',
-    //     )
-    //     this.oppFormCopy = this.updateOppForm[0].fieldsRef
-    //     this.oppFields = this.updateOppForm[0].fieldsRef.filter(
-    //       (field) =>
-    //         field.apiName !== 'meeting_type' &&
-    //         field.apiName !== 'meeting_comments' &&
-    //         field.apiName !== 'Name' &&
-    //         field.apiName !== 'AccountId',
-    //     )
-    //   } catch (error) {
-    //     console.log(error)
-    //   }
-    // },
     async getObjectsDupe() {
       try {
         const res = await SObjects.api.getObjects('Opportunity')
@@ -1391,6 +1409,10 @@ export default {
       }
     },
     selectList(configId, title, id) {
+      this.selectedConfigId = configId
+      this.selectedTitle = title
+      this.selectedId = id
+
       this.currentWorkflowFields = []
       this.refreshId = id
       this.currentWorkflow = CollectionManager.create({
@@ -1447,7 +1469,7 @@ export default {
         for (let i in this.picklistQueryOpts) {
           this.picklistQueryOpts[i] = this.listPicklists(i, { picklistFor: i })
         }
-        console.log(this.picklistQueryOpts)
+
         this.oppFields = this.updateOppForm[0].fieldsRef.filter(
           (field) =>
             field.apiName !== 'meeting_type' &&
@@ -1670,7 +1692,6 @@ input[type='checkbox'] {
   line-height: 2.1ex;
 }
 
-input[type='radio'],
 input[type='checkbox'] {
   position: absolute;
   left: -999em;
@@ -1776,7 +1797,7 @@ h3 {
   position: sticky;
   min-width: 12vw;
   background-color: $off-white;
-  padding: 3vh;
+  padding: 2vh 3vh;
   border: none;
   border-bottom: 1px solid $soft-gray;
   font-size: 13px;
@@ -1786,7 +1807,7 @@ h3 {
   position: sticky;
   min-width: 24vw;
   background-color: $off-white;
-  padding: 3vh;
+  padding: 2vh 3vh;
   border: none;
   border-bottom: 1px solid $soft-gray;
   font-size: 13px;
@@ -1800,7 +1821,7 @@ h3 {
   min-width: 12vw;
   background-color: white;
   color: $darker-green;
-  padding: 3vh;
+  padding: 2vh 3vh;
   border: none;
   border-bottom: 1px solid $soft-gray;
   font-size: 13px;
