@@ -844,7 +844,7 @@
         v-if="currentWorkflow && currentWorkflow.list.length < 1"
         class="empty-table-section"
       >
-        <div v-if="!loadingWorkflow">
+        <div v-if="!loadingWorkflows">
           <div class="empty-table">
             <div class="table-row">
               <div class="flex-row table-cell-header">
@@ -858,8 +858,8 @@
             </div>
           </div>
         </div>
-        <div v-else>
-          <SkeletonBox width="350px" height="18px" />
+        <div style="padding: 2rem" v-else>
+          <SkeletonBox width="400px" height="25px" />
         </div>
       </section>
     </div>
@@ -958,6 +958,7 @@ export default {
       selectedConfigId: null,
       selectedTitle: null,
       selectedId: null,
+      updatedOpp: null,
       oppFilters: [
         {
           title: 'Amount',
@@ -1349,7 +1350,6 @@ export default {
       this.key = 0
       this.updateList.push(this.oppId)
       this.editOpModalOpen = false
-      // let currentObj = this.allOpps.filter((opp) => opp.id === this.oppId)
       try {
         const res = await SObjects.api.updateResource({
           form_id: this.instanceId,
@@ -1366,7 +1366,6 @@ export default {
       }
       while (this.key < 120) {
         if (this.selectedWorkflow) {
-          // this.selectList(this.selectedConfigId, this.selectedTitle, this.selectedId)
           this.currentWorkflow.refresh()
           this.key += 1
         } else {
@@ -1498,6 +1497,7 @@ export default {
       this.loading = true
       try {
         const res = await SObjects.api.getObjects('Opportunity')
+        // this.$set(this.allOpps, Object.keys(res.results), 2)
         this.allOpps = res.results
         this.originalList = res.results
         this.todaysList = res.results
