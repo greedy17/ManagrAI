@@ -1785,6 +1785,8 @@ def process_get_notes(payload, context):
     ]
     if note_data:
         for note in note_data:
+            if note[1] is None:
+                continue
             date = note[0].date() if note[0] is not None else " "
             current_stage = note[3]
             previous_stage = note[4]
@@ -1795,6 +1797,12 @@ def process_get_notes(payload, context):
             block_message += f"\nNotes:\n {note[2]}"
             note_blocks.append(block_builders.simple_section(block_message, "mrkdwn"))
             note_blocks.append({"type": "divider"})
+    if len(note_blocks) == 1:
+        note_blocks = [
+            block_builders.header_block(
+                f"No notes for {resource.name}, start leaving notes! :smiley:"
+            )
+        ]
     data = {
         "view_id": loading_view_data["view"]["id"],
         "view": {

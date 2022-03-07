@@ -82,7 +82,6 @@ export class SObjectFormBuilderAPI extends ModelAPI {
   async getObjects(sobject, resource_id) {
     try {
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/', { params: { sobject: sobject, resource_id: resource_id } })
-
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
@@ -113,9 +112,9 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
     }
   }
-  async confirmUpdate(data) {
+  async confirmUpdate(verbose_name, task_hash) {
     try {
-      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'confirm-update/', data)
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/confirm-update/', { params: verbose_name, task_hash })
       return res
     } catch (e) {
       apiErrorHandler({ apiName: 'Confirmation error' })(e)

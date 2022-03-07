@@ -250,6 +250,8 @@ class SalesforceSObjectViewSet(
     def get_queryset(self):
         param_sobject = self.request.GET.get("sobject")
         param_resource_id = self.request.GET.get("resource_id", None)
+        if param_sobject == "User":
+            return User.objects.filter(organization=self.request.user.organization)
         sobject = routes[param_sobject]
         query = (
             sobject["model"].objects.filter(id=param_resource_id)
@@ -309,7 +311,22 @@ class SalesforceSObjectViewSet(
             else OrgCustomSlackFormInstance.objects.create(template=template, user=user)
         )
         current_values = slack_form.generate_form_values()
-        return Response(data={"form_id": str(slack_form.id), "current_values": current_values})
+        data = {
+            "form_id": str(slack_form.id),
+            "current_values": current_values,
+        }
+        if resource_type == "Opportunity":
+            current_products = user.salesforce_account.list_resource_data(
+                "OpportunityLineItem",
+                0,
+                filter=[
+                    "AND IsDeleted = false",
+                    f"AND OpportunityId = '{slack_form.resource_object.integration_id}'",
+                ],
+            )
+            product_values = [product.as_dict for product in current_products]
+            data["current_products"] = product_values
+        return Response()
 
     @action(
         methods=["post"],
@@ -387,6 +404,7 @@ class SalesforceSObjectViewSet(
             all_form_data.get("meeting_comments") is not None
             and all_form_data.get("meeting_type") is not None
         ):
+            print("here")
             emit_add_update_to_sf(str(main_form.id))
         try:
             text = f"Managr updated {main_form.resource_type}"

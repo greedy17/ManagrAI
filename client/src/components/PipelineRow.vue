@@ -2,14 +2,12 @@
   <div>
     <div style="max-width: 16vw">
       <div>
-        <p style="letter-spacing: 0.25px; font-size: 13px; margin: 0rem">{{ name }}</p>
+        <p style="letter-spacing: 0.25px; font-size: 14px; margin-bottom: 3px">{{ name }}</p>
         <span style="color: #199e54; font-size: 12px">
           {{ accountName ? accountName + ' ' : '--- ' }}
         </span>
       </div>
-      <div style="color: #9b9b9b; font-size: 10px">
-        <i>owned by {{ owner }}</i>
-      </div>
+      <div style="color: #9b9b9b; font-size: 11px; margin-top: 3px">owned by {{ owner }}</div>
     </div>
   </div>
 </template>

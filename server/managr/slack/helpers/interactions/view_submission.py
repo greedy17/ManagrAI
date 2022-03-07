@@ -1563,9 +1563,12 @@ def process_get_notes(payload, context):
     note_blocks = [block_builders.header_block(f"Notes for {opportunity.name}")]
     if note_data:
         for note in note_data:
+            if note[1] is None:
+                continue
             date = note[0].date()
             current_stage = note[3]
             previous_stage = note[4]
+
             block_message = f"*{date} - {note[1]}*\n"
             if current_stage and previous_stage:
                 if current_stage != previous_stage:
@@ -2516,6 +2519,8 @@ def process_submit_alert_resource_data(payload, context):
                 f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
             )
     current_forms.update(is_submitted=True, update_source="alert", submission_date=timezone.now())
+    if len(user.slack_integration.realtime_alert_configs):
+        _send_instant_alert(current_form_ids)
     instance = AlertInstance.objects.get(id=context.get("alert_id"))
     alert_instances = AlertInstance.objects.filter(
         invocation=instance.invocation,
