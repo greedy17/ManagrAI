@@ -337,7 +337,6 @@ class SalesforceSObjectViewSet(
         formatted_saved_data = process_text_field_format(
             str(user.id), main_form.template.resource, all_form_data
         )
-        print(f"FORMATTED: {formatted_saved_data}")
         current_forms = user.custom_slack_form_instances.filter(id__in=[form_id])
         data = None
         attempts = 1
