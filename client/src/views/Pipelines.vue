@@ -1355,12 +1355,19 @@ export default {
           form_id: this.instanceId,
           form_data: this.formData,
         })
+        // .then(res => {
+        //   this.verboseName = res['verbose_name']
+        //   this.taskHash = res['task_hash']
+
+        // })
+
         this.$Alert.alert({
           type: 'success',
           timeout: 3000,
           message: 'Salesforce update successful!',
           sub: 'Some changes may take longer to reflect',
         })
+        // confirmRes = this.confirmUpdate()
       } catch (e) {
         console.log(e)
       }

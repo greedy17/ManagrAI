@@ -250,6 +250,8 @@ class SalesforceSObjectViewSet(
     def get_queryset(self):
         param_sobject = self.request.GET.get("sobject")
         param_resource_id = self.request.GET.get("resource_id", None)
+        if param_sobject == "User":
+            return User.objects.filter(organization=self.request.user.organization)
         sobject = routes[param_sobject]
         query = (
             sobject["model"].objects.filter(id=param_resource_id)
