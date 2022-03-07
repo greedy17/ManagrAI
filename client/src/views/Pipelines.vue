@@ -393,12 +393,19 @@
               </button>
             </div>
           </div>
-          <button @click="closeFilters" class="add-button">
+          <!-- <button @click="closeFilters" class="add-button">
             <img
               src="@/assets/images/plusOne.png"
               style="height: 1rem; margin-right: 0.25rem"
               alt=""
             />Filter
+          </button> -->
+          <button class="soon-button">
+            <img
+              src="@/assets/images/plusOne.png"
+              style="height: 1rem; margin-right: 0.25rem"
+              alt=""
+            />Filter <span class="soon-button__soon">(Coming Soon)</span>
           </button>
           <h5>
             {{ currentList }}:
@@ -837,22 +844,22 @@
         v-if="currentWorkflow && currentWorkflow.list.length < 1"
         class="empty-table-section"
       >
-        <div class="empty-table">
-          <div class="table-row">
-            <div class="flex-row table-cell-header">
-              <h5 style="margin-left: 1rem">
-                No results for the {{ currentList }} workflow. Run now
-              </h5>
-              <button @click="refresh(refreshId)" class="centered__button">
-                <img src="@/assets/images/refresh.png" style="height: 0.75rem" alt="" />
-              </button>
+        <div v-if="!loadingWorkflow">
+          <div class="empty-table">
+            <div class="table-row">
+              <div class="flex-row table-cell-header">
+                <h5 style="margin-left: 1rem">
+                  No results for the {{ currentList }} workflow. Run now
+                </h5>
+                <button @click="refresh(refreshId)" class="centered__button">
+                  <img src="@/assets/images/refresh.png" style="height: 0.75rem" alt="" />
+                </button>
+              </div>
             </div>
-            <!-- <div :key="field.id" v-for="field in oppFormCopy" class="table-cell-header">
-              <p v-if="field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments'">
-                {{ field.referenceDisplayLabel }}
-              </p>
-            </div> -->
           </div>
+        </div>
+        <div v-else>
+          <SkeletonBox width="350px" height="18px" />
         </div>
       </section>
     </div>
@@ -906,6 +913,7 @@ export default {
       daysForward: null,
       allOpps: null,
       loading: false,
+      loadingWorkflows: false,
       templates: CollectionManager.create({ ModelClass: AlertTemplate }),
       team: CollectionManager.create({ ModelClass: User }),
       currentWorkflow: null,
@@ -1099,6 +1107,7 @@ export default {
       }
     },
     async refresh(id) {
+      this.loadingWorkflows = true
       this.key = 0
       if (id) {
         try {
@@ -1108,7 +1117,7 @@ export default {
             type: 'success',
             timeout: 2000,
           })
-          while (this.key < 20) {
+          while (this.key < 50) {
             this.currentWorkflow.refresh()
             this.key += 1
           }
@@ -1119,6 +1128,9 @@ export default {
             timeout: 2000,
           })
         }
+        setTimeout(() => {
+          this.loadingWorkflows = false
+        }, 1000)
       }
     },
     resetNotes() {
@@ -2101,7 +2113,6 @@ section {
   align-items: center;
   border: none;
   height: 4.5vh;
-  // box-shadow: 1px 2px 3px 1px $very-light-gray;
   margin: 0 0.5rem 0 0;
   padding: 0.25rem 0.6rem;
   border-radius: 0.2rem;
@@ -2109,6 +2120,24 @@ section {
   cursor: pointer;
   color: white;
   transition: all 0.3s;
+}
+.soon-button {
+  display: flex;
+  align-items: center;
+  border: none;
+  height: 4.5vh;
+  margin: 0 0.5rem 0 0;
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.2rem;
+  background-color: $very-light-gray;
+  cursor: text;
+  color: $base-gray;
+  font-weight: bold;
+  font-size: 11px;
+
+  img {
+    filter: invert(80%);
+  }
 }
 
 .add-button:hover {
