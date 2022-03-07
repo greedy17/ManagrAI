@@ -316,14 +316,14 @@
         </div>
         <div class="flex-end">
           <p @click="resetEdit" class="cancel">Cancel</p>
-          <button @click="updateResource" class="add-button">Update Opportunity</button>
+          <button @click="updateResource()" class="add-button">Update Opportunity</button>
         </div>
       </div>
     </Modal>
 
     <div v-if="!loading">
       <header class="flex-row-spread">
-        <!-- <button @click="test">Testing list functionality</button> -->
+        <!-- <button @click="test">Testing custom workflow fields</button> -->
       </header>
 
       <section style="margin-bottom: 1rem" class="flex-row-spread">
@@ -668,18 +668,25 @@
               :key="i"
               v-for="(field, i) in oppFields"
               :class="
-                opp.dataType === 'textArea' || field.apiName === 'NextStep'
+                field.dataType === 'TextArea' ||
+                field.apiName === 'NextStep' ||
+                (field.length > 250 && field.dataType === 'String')
                   ? 'table-cell-wide'
                   : 'table-cell'
               "
             >
+              <!-- {{ field.apiName.includes('__c') ? opp['secondary_data'][field.apiName] : '' }} -->
               <SkeletonBox v-if="updateList.includes(opp.id)" width="100px" height="14px" />
               <PipelineField
                 v-else
                 :key="key"
                 :apiName="field.apiName"
                 :dataType="field.dataType"
-                :fieldData="opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]"
+                :fieldData="
+                  field.apiName.includes('__c')
+                    ? opp['secondary_data'][field.apiName]
+                    : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+                "
               />
             </div>
           </tr>
@@ -703,7 +710,10 @@
 
           <tr class="table-row" :key="i" v-for="(workflow, i) in filteredWorkflows">
             <div style="padding: 2vh" class="table-cell-checkbox">
-              <div>
+              <div v-if="updateList.includes(workflow.resourceRef.id)">
+                <SkeletonBox width="10px" height="9px" />
+              </div>
+              <div v-else>
                 <input
                   type="checkbox"
                   :id="i + workflow.resourceRef.id"
@@ -767,21 +777,28 @@
                   style="margin-bottom: 0.2rem"
                 />
 
-                <PipelineField
-                  v-else
-                  :key="key2"
-                  :apiName="field"
-                  :dataType="null"
-                  :fieldData="
-                    field === 'Stage'
-                      ? workflow.resourceRef.secondaryData[
-                          capitalizeFirstLetter(camelize(field + 'Name'))
-                        ]
-                      : workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field))]
-                      ? workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field))]
-                      : '---'
-                  "
-                />
+                <div class="limit-cell-height" v-else>
+                  <PipelineField
+                    :key="key2"
+                    :apiName="field"
+                    :dataType="null"
+                    :fieldData="
+                      field === 'Stage'
+                        ? workflow.resourceRef.secondaryData[
+                            capitalizeFirstLetter(camelize(field + 'Name'))
+                          ]
+                        : workflow.resourceRef.secondaryData[
+                            capitalizeFirstLetter(camelize(sliced(field + 'c')))
+                          ]
+                        ? workflow.resourceRef.secondaryData[
+                            capitalizeFirstLetter(camelize(sliced(field + 'c')))
+                          ]
+                        : workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field))]
+                        ? workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field))]
+                        : '---'
+                    "
+                  />
+                </div>
               </div>
 
               <div v-else-if="field.includes('date') || field.includes('Date')">
@@ -1034,8 +1051,9 @@ export default {
     workflowCheckList: 'closeAll',
   },
   methods: {
-    forceUpdate() {
-      this.key += 1
+    sliced(str) {
+      let newStr = str.slice(0, -1) + 'C'
+      return newStr
     },
     closeAll() {
       if (this.primaryCheckList.length === 0 || this.workflowCheckList === 0) {
@@ -1051,7 +1069,7 @@ export default {
       this.newForecast = val
     },
     test() {
-      console.log(this.primaryCheckList)
+      this.sliced('appleJackCerealc')
     },
     onCheckAll() {
       if (this.primaryCheckList.length < 1) {
@@ -1253,32 +1271,39 @@ export default {
       }
     },
     async bulkUpdateCloseDate(ids, data) {
+      this.closeDateSelected = false
       for (let i = 0; i < ids.length; i++) {
-        this.key = 0
         try {
-          const res = await SObjects.api.updateResource({
-            form_id: ids[i],
-            form_data: { CloseDate: data },
-          })
-          while (this.key < 120) {
-            if (this.selectedWorkflow) {
-              this.currentWorkflow.refresh()
-              this.key += 1
-            } else {
-              this.getObjectsDupe()
-              this.key += 1
-            }
+          const res = await SObjects.api
+            .updateResource({
+              form_id: ids[i],
+              form_data: { CloseDate: data },
+            })
+            .then(async (res) => {
+              this.verboseName = res['verbose_name']
+              this.taskHash = res['task_hash']
+              let confirmRes = await this.confirmUpdate(this.verboseName, this.taskHash)
+            })
+            .then(async (confirmRes) => {
+              console.log('Update', confirmRes)
+              let updatedRes = await SObjects.api.getObjects('Opportunity')
+              this.allOpps = updatedRes.results
+            })
+          this.formData = {}
+          if (this.selectedWorkflow) {
+            this.currentWorkflow.refresh()
           }
-          setTimeout(() => {
-            this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
-          }, 3000)
+          this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
+          this.primaryCheckList.length > 1
+            ? this.primaryCheckList.shift()
+            : (this.primaryCheckList = [])
+          this.workflowCheckList.length > 1
+            ? this.workflowCheckList.shift()
+            : (this.workflowCheckList = [])
         } catch (e) {
           console.log(e)
         }
       }
-      this.primaryCheckList = []
-      this.workflowCheckList = []
-      this.closeDateSelected = false
       this.$Alert.alert({
         type: 'success',
         timeout: 3000,
@@ -1287,32 +1312,39 @@ export default {
       })
     },
     async bulkUpdateStage(ids, data) {
+      this.advanceStageSelected = false
       for (let i = 0; i < ids.length; i++) {
-        this.key = 0
         try {
-          const res = await SObjects.api.updateResource({
-            form_id: ids[i],
-            form_data: { StageName: data },
-          })
-          while (this.key < 120) {
-            if (this.selectedWorkflow) {
-              this.currentWorkflow.refresh()
-              this.key += 1
-            } else {
-              this.getObjectsDupe()
-              this.key += 1
-            }
+          const res = await SObjects.api
+            .updateResource({
+              form_id: ids[i],
+              form_data: { StageName: data },
+            })
+            .then(async (res) => {
+              this.verboseName = res['verbose_name']
+              this.taskHash = res['task_hash']
+              let confirmRes = await this.confirmUpdate(this.verboseName, this.taskHash)
+            })
+            .then(async (confirmRes) => {
+              console.log('Update', confirmRes)
+              let updatedRes = await SObjects.api.getObjects('Opportunity')
+              this.allOpps = updatedRes.results
+            })
+          this.formData = {}
+          if (this.selectedWorkflow) {
+            this.currentWorkflow.refresh()
           }
-          setTimeout(() => {
-            this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
-          }, 3000)
+          this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
+          this.primaryCheckList.length > 1
+            ? this.primaryCheckList.shift()
+            : (this.primaryCheckList = [])
+          this.workflowCheckList.length > 1
+            ? this.workflowCheckList.shift()
+            : (this.workflowCheckList = [])
         } catch (e) {
           console.log(e)
         }
       }
-      this.primaryCheckList = []
-      this.workflowCheckList = []
-      this.advanceStageSelected = false
       this.$Alert.alert({
         type: 'success',
         timeout: 3000,
@@ -1321,26 +1353,39 @@ export default {
       })
     },
     async bulkChangeForecast(ids, data) {
+      this.forecastSelected = false
       for (let i = 0; i < ids.length; i++) {
-        this.key = 0
-        this.key2 += 1
         try {
-          const res = await SObjects.api.updateResource({
-            form_id: ids[i],
-            form_data: { ForecastCategoryName: data },
-          })
-
-          setTimeout(() => {
-            this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
-          }, 3000)
-          console.log(data)
+          const res = await SObjects.api
+            .updateResource({
+              form_id: ids[i],
+              form_data: { ForecastCategoryName: data },
+            })
+            .then(async (res) => {
+              this.verboseName = res['verbose_name']
+              this.taskHash = res['task_hash']
+              let confirmRes = await this.confirmUpdate(this.verboseName, this.taskHash)
+            })
+            .then(async (confirmRes) => {
+              console.log('Update', confirmRes)
+              let updatedRes = await SObjects.api.getObjects('Opportunity')
+              this.allOpps = updatedRes.results
+            })
+          this.formData = {}
+          if (this.selectedWorkflow) {
+            this.currentWorkflow.refresh()
+          }
+          this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
+          this.primaryCheckList.length > 1
+            ? this.primaryCheckList.shift()
+            : (this.primaryCheckList = [])
+          this.workflowCheckList.length > 1
+            ? this.workflowCheckList.shift()
+            : (this.workflowCheckList = [])
         } catch (e) {
           console.log(e)
         }
       }
-      this.primaryCheckList = []
-      this.workflowCheckList = []
-      this.forecastSelected = false
       this.$Alert.alert({
         type: 'success',
         timeout: 3000,
@@ -1349,7 +1394,6 @@ export default {
       })
     },
     async updateResource() {
-      this.key = 0
       this.updateList.push(this.oppId)
       this.editOpModalOpen = false
       try {
@@ -1367,9 +1411,7 @@ export default {
             console.log('Update', confirmRes)
             let updatedRes = await SObjects.api.getObjects('Opportunity')
             this.allOpps = updatedRes.results
-            console.log('Update', updatedRes)
           })
-
         this.$Alert.alert({
           type: 'success',
           timeout: 3000,
@@ -1379,19 +1421,11 @@ export default {
       } catch (e) {
         console.log(e)
       }
-      // while (this.key < 120) {
-      //   if (this.selectedWorkflow) {
-      //     this.currentWorkflow.refresh()
-      //     this.key += 1
-      //   } else {
-      //     this.getObjectsDupe()
-      //     this.key += 1
-      //   }
-      // }
-      setTimeout(() => {
-        this.formData = {}
-        this.updateList = []
-      }, 2000)
+      if (this.selectedWorkflow) {
+        this.currentWorkflow.refresh()
+      }
+      this.formData = {}
+      this.updateList = []
     },
     async getObjectsDupe() {
       try {
@@ -1502,7 +1536,8 @@ export default {
             field.apiName !== 'meeting_type' &&
             field.apiName !== 'meeting_comments' &&
             field.apiName !== 'Name' &&
-            field.apiName !== 'AccountId',
+            field.apiName !== 'AccountId' &&
+            field.apiName !== 'OwnerId',
         )
       } catch (error) {
         console.log(error)
@@ -1832,7 +1867,7 @@ h3 {
 .table-cell-wide {
   display: table-cell;
   position: sticky;
-  min-width: 24vw;
+  min-width: 26vw;
   background-color: $off-white;
   padding: 2vh 3vh;
   border: none;
@@ -1951,6 +1986,11 @@ h3 {
   font-size: 13px;
   letter-spacing: 0.25px;
   color: $base-gray;
+}
+.limit-cell-height {
+  max-height: 5rem;
+  width: 110%;
+  overflow: scroll;
 }
 .cell-name-header {
   display: table-cell;
