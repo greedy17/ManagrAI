@@ -61,7 +61,7 @@ class ArrayLength(models.Func):
 class SObjectFieldQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            return self.filter(salesforce_account__user__id=user.id, is_public=False)
+            return self.filter(Q(salesforce_account__user__id=user.id, is_public=False))
         else:
             return self.none()
 

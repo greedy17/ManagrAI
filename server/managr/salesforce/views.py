@@ -256,7 +256,6 @@ class SalesforceSObjectViewSet(
             if param_resource_id
             else sobject["model"].objects.for_user(self.request.user)
         )
-        print(query)
         return query
 
     @action(
