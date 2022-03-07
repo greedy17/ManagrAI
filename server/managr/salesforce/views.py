@@ -311,7 +311,22 @@ class SalesforceSObjectViewSet(
             else OrgCustomSlackFormInstance.objects.create(template=template, user=user)
         )
         current_values = slack_form.generate_form_values()
-        return Response(data={"form_id": str(slack_form.id), "current_values": current_values})
+        data = {
+            "form_id": str(slack_form.id),
+            "current_values": current_values,
+        }
+        if resource_type == "Opportunity":
+            current_products = user.salesforce_account.list_resource_data(
+                "OpportunityLineItem",
+                0,
+                filter=[
+                    "AND IsDeleted = false",
+                    f"AND OpportunityId = '{slack_form.resource_object.integration_id}'",
+                ],
+            )
+            product_values = [product.as_dict for product in current_products]
+            data["current_products"] = product_values
+        return Response()
 
     @action(
         methods=["post"],
