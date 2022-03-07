@@ -30,6 +30,7 @@ from managr.opportunity.models import Lead, Opportunity
 from managr.zoom.background import _split_first_name, _split_last_name
 from managr.utils.misc import custom_paginator
 from managr.zoom.background import emit_kick_off_slack_interaction
+from managr.alerts.constants import ALERT_PIPELINE_URL
 
 # from managr.slack.helpers.block_sets.meeting_review_block_sets import _initial_interaction_message
 
@@ -587,7 +588,12 @@ def process_current_alert_list(user_id):
     user = User.objects.get(id=user_id)
     configs = AlertConfig.objects.filter(Q(template__user=user.id, template__is_active=True))
     alert_blocks = [
-        block_builders.simple_section(":eyes: *Pipeline Monitor*", "mrkdwn"),
+        block_builders.section_with_button_block(
+            "Open in Pipeline",
+            "OPEN_IN_PIPELINE",
+            ":eyes: *Pipeline Monitor*",
+            url=ALERT_PIPELINE_URL,
+        ),
     ]
     if configs:
         for config in configs:

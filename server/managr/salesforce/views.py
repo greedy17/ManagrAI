@@ -52,6 +52,7 @@ from .background import (
     emit_add_update_to_sf,
     emit_gen_next_object_field_sync,
     emit_generate_form_template,
+    emit_add_update_to_sf,
 )
 from managr.salesforce.utils import process_text_field_format
 
@@ -337,7 +338,6 @@ class SalesforceSObjectViewSet(
         formatted_saved_data = process_text_field_format(
             str(user.id), main_form.template.resource, all_form_data
         )
-        print(formatted_saved_data)
         current_forms = user.custom_slack_form_instances.filter(id__in=[form_id])
         data = None
         attempts = 1
@@ -398,7 +398,7 @@ class SalesforceSObjectViewSet(
                 user.slack_integration.slack_id,
                 text=text,
                 block_set=get_block_set(
-                    "success_modal", {"message": message, "u": user.id, "form_id": form_id}
+                    "success_modal", {"message": message, "u": user.id, "form_ids": form_id}
                 ),
             )
 
