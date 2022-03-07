@@ -112,9 +112,9 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
     }
   }
-  async confirmUpdate(data) {
+  async confirmUpdate(verbose_name, task_hash) {
     try {
-      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'confirm-update/', data)
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/confirm-update/', { params: verbose_name, task_hash })
       return res
     } catch (e) {
       apiErrorHandler({ apiName: 'Confirmation error' })(e)

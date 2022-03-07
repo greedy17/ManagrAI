@@ -1563,7 +1563,6 @@ def process_get_notes(payload, context):
     note_blocks = [block_builders.header_block(f"Notes for {opportunity.name}")]
     if note_data:
         for note in note_data:
-            print(note[1])
             if note[1] is None:
                 continue
             date = note[0].date()

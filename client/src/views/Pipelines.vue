@@ -1358,13 +1358,16 @@ export default {
             form_id: this.instanceId,
             form_data: this.formData,
           })
-          .then((res) => {
+          .then(async (res) => {
             this.verboseName = res['verbose_name']
             this.taskHash = res['task_hash']
-            confirmRes = await this.confirmUpdate()
+            let confirmRes = await this.confirmUpdate(this.verboseName, this.taskHash)
           })
-          .then(() => {
-            updatedRes = await SObjects.api.getObjects('Opportunity', this.updatedOppId)
+          .then(async (confirmRes) => {
+            console.log('Update', confirmRes)
+            let updatedRes = await SObjects.api.getObjects('Opportunity')
+            this.allOpps = updatedRes.results
+            console.log('Update', updatedRes)
           })
 
         this.$Alert.alert({
@@ -1376,15 +1379,15 @@ export default {
       } catch (e) {
         console.log(e)
       }
-      while (this.key < 120) {
-        if (this.selectedWorkflow) {
-          this.currentWorkflow.refresh()
-          this.key += 1
-        } else {
-          this.getObjectsDupe()
-          this.key += 1
-        }
-      }
+      // while (this.key < 120) {
+      //   if (this.selectedWorkflow) {
+      //     this.currentWorkflow.refresh()
+      //     this.key += 1
+      //   } else {
+      //     this.getObjectsDupe()
+      //     this.key += 1
+      //   }
+      // }
       setTimeout(() => {
         this.formData = {}
         this.updateList = []
