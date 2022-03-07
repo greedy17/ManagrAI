@@ -1351,15 +1351,19 @@ export default {
       this.updateList.push(this.oppId)
       this.editOpModalOpen = false
       try {
-        const res = await SObjects.api.updateResource({
-          form_id: this.instanceId,
-          form_data: this.formData,
-        })
-        // .then(res => {
-        //   this.verboseName = res['verbose_name']
-        //   this.taskHash = res['task_hash']
-
-        // })
+        const res = await SObjects.api
+          .updateResource({
+            form_id: this.instanceId,
+            form_data: this.formData,
+          })
+          .then((res) => {
+            this.verboseName = res['verbose_name']
+            this.taskHash = res['task_hash']
+            confirmRes = await this.confirmUpdate()
+          })
+          .then(() => {
+            updatedRes = await SObjects.api.getObjects('Opportunity', this.updatedOppId)
+          })
 
         this.$Alert.alert({
           type: 'success',
@@ -1367,7 +1371,6 @@ export default {
           message: 'Salesforce update successful!',
           sub: 'Some changes may take longer to reflect',
         })
-        // confirmRes = this.confirmUpdate()
       } catch (e) {
         console.log(e)
       }

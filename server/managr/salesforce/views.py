@@ -389,6 +389,7 @@ class SalesforceSObjectViewSet(
             all_form_data.get("meeting_comments") is not None
             and all_form_data.get("meeting_type") is not None
         ):
+            print("here")
             emit_add_update_to_sf(str(main_form.id))
         try:
             text = f"Managr updated {main_form.resource_type}"
