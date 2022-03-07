@@ -3,6 +3,7 @@ import random
 from faker import Faker
 from urllib.parse import urlencode, unquote
 from datetime import datetime
+
 from .routes import routes
 import time
 from background_task.models import CompletedTask
@@ -48,10 +49,13 @@ from .serializers import (
 from .adapter.models import SalesforceAuthAccountAdapter
 from .background import (
     emit_gen_next_sync,
+    emit_add_update_to_sf,
     emit_gen_next_object_field_sync,
     emit_generate_form_template,
     emit_add_update_to_sf,
 )
+from managr.salesforce.utils import process_text_field_format
+
 from managr.salesforce.adapter.exceptions import (
     TokenExpired,
     FieldValidationError,
@@ -248,10 +252,11 @@ class SalesforceSObjectViewSet(
         param_resource_id = self.request.GET.get("resource_id", None)
         sobject = routes[param_sobject]
         query = (
-            sobject["model"].objects.get(id=param_resource_id)
+            sobject["model"].objects.filter(id=param_resource_id)
             if param_resource_id
             else sobject["model"].objects.for_user(self.request.user)
         )
+        print(query)
         return query
 
     @action(
@@ -304,8 +309,8 @@ class SalesforceSObjectViewSet(
             if form_type == "UPDATE"
             else OrgCustomSlackFormInstance.objects.create(template=template, user=user)
         )
-
-        return Response(data={"form_id": str(slack_form.id)})
+        current_values = slack_form.generate_form_values()
+        return Response(data={"form_id": str(slack_form.id), "current_values": current_values})
 
     @action(
         methods=["post"],
@@ -330,8 +335,10 @@ class SalesforceSObjectViewSet(
         if not len(stage_forms):
             main_form.save_form(form_data, False)
         all_form_data = {**stage_form_data_collector, **main_form.saved_data}
+        formatted_saved_data = process_text_field_format(
+            str(user.id), main_form.template.resource, all_form_data
+        )
         current_forms = user.custom_slack_form_instances.filter(id__in=[form_id])
-        print
         data = None
         attempts = 1
         while True:
@@ -377,7 +384,6 @@ class SalesforceSObjectViewSet(
         current_forms.update(
             is_submitted=True, update_source="pipeline", submission_date=timezone.now()
         )
-        print(form_id)
         if (
             all_form_data.get("meeting_comments") is not None
             and all_form_data.get("meeting_type") is not None
