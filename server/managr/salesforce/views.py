@@ -326,7 +326,7 @@ class SalesforceSObjectViewSet(
             )
             product_values = [product.as_dict for product in current_products]
             data["current_products"] = product_values
-        return Response()
+        return Response(data=data)
 
     @action(
         methods=["post"],
