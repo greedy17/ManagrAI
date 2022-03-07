@@ -3,6 +3,7 @@ import random
 from faker import Faker
 from urllib.parse import urlencode, unquote
 from datetime import datetime
+
 from .routes import routes
 import time
 from background_task.models import CompletedTask
@@ -48,9 +49,12 @@ from .serializers import (
 from .adapter.models import SalesforceAuthAccountAdapter
 from .background import (
     emit_gen_next_sync,
+    emit_add_update_to_sf,
     emit_gen_next_object_field_sync,
     emit_generate_form_template,
 )
+from managr.salesforce.utils import process_text_field_format
+
 from managr.salesforce.adapter.exceptions import (
     TokenExpired,
     FieldValidationError,
@@ -329,6 +333,10 @@ class SalesforceSObjectViewSet(
         if not len(stage_forms):
             main_form.save_form(form_data, False)
         all_form_data = {**stage_form_data_collector, **main_form.saved_data}
+        formatted_saved_data = process_text_field_format(
+            str(user.id), main_form.template.resource, all_form_data
+        )
+        print(formatted_saved_data)
         current_forms = user.custom_slack_form_instances.filter(id__in=[form_id])
         data = None
         attempts = 1
@@ -375,6 +383,11 @@ class SalesforceSObjectViewSet(
         current_forms.update(
             is_submitted=True, update_source="pipeline", submission_date=timezone.now()
         )
+        if (
+            all_form_data.get("meeting_comments") is not None
+            and all_form_data.get("meeting_type") is not None
+        ):
+            emit_add_update_to_sf(str(main_form.id))
         try:
             text = f"Managr updated {main_form.resource_type}"
             message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
