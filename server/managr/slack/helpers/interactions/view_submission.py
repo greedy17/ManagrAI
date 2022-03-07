@@ -2519,6 +2519,8 @@ def process_submit_alert_resource_data(payload, context):
                 f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
             )
     current_forms.update(is_submitted=True, update_source="alert", submission_date=timezone.now())
+    if len(user.slack_integration.realtime_alert_configs):
+        _send_instant_alert(current_form_ids)
     instance = AlertInstance.objects.get(id=context.get("alert_id"))
     alert_instances = AlertInstance.objects.filter(
         invocation=instance.invocation,
