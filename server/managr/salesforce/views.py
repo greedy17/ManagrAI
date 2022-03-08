@@ -310,11 +310,28 @@ class SalesforceSObjectViewSet(
             if form_type == "UPDATE"
             else OrgCustomSlackFormInstance.objects.create(template=template, user=user)
         )
-        current_values = slack_form.generate_form_values()
-        data = {
-            "form_id": str(slack_form.id),
-            "current_values": current_values,
-        }
+        attempts = 1
+        while True:
+            try:
+                current_values = slack_form.generate_form_values()
+                data = {
+                    "form_id": str(slack_form.id),
+                    "current_values": current_values,
+                }
+                break
+            except TokenExpired:
+                if attempts >= 5:
+                    raise ValidationError()
+                else:
+                    user.salesforce_account.regenerate_token()
+                    attempts += 1
+            except Exception as e:
+                if attempts >= 5:
+                    raise ValidationError()
+                    data = {"error": str(e)}
+                else:
+                    attempts += 1
+
         if resource_type == "Opportunity":
             current_products = user.salesforce_account.list_resource_data(
                 "OpportunityLineItem",
@@ -326,7 +343,7 @@ class SalesforceSObjectViewSet(
             )
             product_values = [product.as_dict for product in current_products]
             data["current_products"] = product_values
-        return Response(data=data)
+            return Response(data=data)
 
     @action(
         methods=["post"],
