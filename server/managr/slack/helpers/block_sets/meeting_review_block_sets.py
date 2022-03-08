@@ -491,6 +491,11 @@ def initial_meeting_interaction_block_set(context):
             ),
         ]
     else:
+        participant_info = "\nAttendee info: "
+        for idx, participant in enumerate(meeting.participants):
+            if idx > 0:
+                participant_info += ", "
+            participant_info += f"{participant['email']}"
         blocks = [
             block_builders.section_with_button_block(
                 "Map to Opportunity",
@@ -501,7 +506,7 @@ def initial_meeting_interaction_block_set(context):
             ),
             {"type": "divider"},
             block_builders.section_with_accessory_block(
-                f":calendar: *{title}*\n{formatted_start} - {formatted_end}\n Attendees: {len(meeting.participants)} ",
+                f":calendar: *{title}*\n{formatted_start} - {formatted_end}\n Attendees: {len(meeting.participants)} {participant_info}",
                 block_builders.simple_image_block(
                     "https://managr-images.s3.amazonaws.com/slack/logo_loading.gif", "Managr Logo"
                 ),
@@ -899,7 +904,7 @@ def schedule_zoom_meeting_modal(context):
             block_id="meeting_time",
         ),
         block_builders.static_select(
-            "Duration",
+            "Duration (in minutes)",
             block_sets.get_block_set("duration_options"),
             action_id="meeting_data",
             initial_option={"text": {"type": "plain_text", "text": "30"}, "value": "30"},
@@ -917,6 +922,12 @@ def schedule_zoom_meeting_modal(context):
             action_id=f"{slack_const.GET_USER_CONTACTS}?u={user.id}",
             block_id="meeting_participants",
             placeholder="Search Contacts",
+        ),
+        block_builders.multi_external_select(
+            "*Add internal people to this meeting*",
+            action_id=f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={user.id}&resource={slack_const.SLACK_ACTION_RESOURCE_USER}",
+            block_id="meeting_internals",
+            placeholder="Search Users",
         ),
     ]
     return blocks

@@ -413,7 +413,6 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         values = self.get_values(state) if from_slack_object else state
         fields = [field.api_name for field in self.get_user_fields()]
         old_values = self.generate_form_values()
-
         new_data = dict()
         old_data = dict()
         for k, v in values.items():

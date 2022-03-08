@@ -66,14 +66,14 @@ export function apiErrorHandler({
       return
     }
 
-    if (response && response.status >= 500 && enable500Alert) {
-      // Generic handling for other errors (ex: 500 errors)
-      Vue.prototype.$Alert.alert({
-        type: 'error',
-        message: '<div>Error...</div>' + '<div>Something went wrong! Please try again later.</div>',
-        timeout: 3000,
-      })
-    }
+    // if (response && response.status >= 500 && enable500Alert) {
+
+    //   Vue.prototype.$Alert.alert({
+    //     type: 'error',
+    //     message: '<div>Error...</div>' + '<div>Something went wrong! Please try again later.</div>',
+    //     timeout: 3000,
+    //   })
+    // }
     if (response && response.status === 401) {
       // Logs out a user if there is a 401 error
       store.commit('LOGOUT_USER')

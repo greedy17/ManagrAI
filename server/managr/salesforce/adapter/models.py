@@ -798,7 +798,7 @@ class ContactAdapter:
             url = f"{url}{res['id']}"
             r = client.get(url, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header})
             r = SalesforceAuthAccountAdapter._handle_response(r)
-            r = OpportunityAdapter.from_api(r, user_id)
+            r = ContactAdapter.from_api(r, user_id)
             return r
 
     @staticmethod
@@ -1130,7 +1130,6 @@ class OpportunityAdapter:
 
     @staticmethod
     def create(data, access_token, custom_base, object_fields, user_id):
-
         json_data = json.dumps(
             OpportunityAdapter.to_api(data, OpportunityAdapter.integration_mapping, object_fields)
         )
@@ -1194,8 +1193,7 @@ class ActivityAdapter:
     @staticmethod
     def save_zoom_meeting_to_salesforce(data, access_token, custom_base):
         json_data = json.dumps(data)
-        print(data)
-        url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.SALESFORCE_RESOURCE_EVENT, "")
+        url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.SALESFORCE_RESOURCE_TASK, "")
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         with Client as client:
             r = client.post(
@@ -1248,17 +1246,6 @@ class TaskAdapter:
     def save_task_to_salesforce(data, access_token, custom_base):
         json_data = json.dumps(data)
         url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.SALESFORCE_RESOURCE_TASK, "")
-        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
-        with Client as client:
-            r = client.post(
-                url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
-            )
-            return SalesforceAuthAccountAdapter._handle_response(r)
-
-    @staticmethod
-    def save_event_to_salesforce(data, access_token, custom_base):
-        json_data = json.dumps(data)
-        url = sf_consts.SALESFORCE_WRITE_URI(custom_base, sf_consts.SALESFORCE_RESOURCE_EVENT, "")
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         with Client as client:
             r = client.post(

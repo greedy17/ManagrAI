@@ -2,7 +2,7 @@
   <div>
     <nav id="nav" v-if="userIsLoggedIn">
       <div class="logo">
-        <img style="height: 3rem" src="@/assets/images/logo.png" />
+        <img style="height: 2rem" src="@/assets/images/logo.png" />
       </div>
 
       <div class="left" ref="user-menu-icon">
@@ -30,7 +30,7 @@
             </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Pipelines' }"
-                >Pipeline <span>(coming soon)</span></router-link
+                >Pipeline</router-link
               >
             </li>
           </ul>
@@ -50,7 +50,7 @@
             </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Pipelines' }"
-                >Pipeline <span>(coming soon)</span></router-link
+                >Pipeline</router-link
               >
             </li>
           </ul>
@@ -76,7 +76,7 @@
             </li>
             <li v-if="!isOnboarding">
               <router-link exact-active-class="active" :to="{ name: 'Pipelines' }"
-                >Pipeline <span>(coming soon)</span></router-link
+                >Pipeline</router-link
               >
             </li>
           </ul>
@@ -111,20 +111,35 @@
 
       <div v-if="userLevel !== 'REP'" class="right">
         <div class="tooltip">
-          <img style="height: 1.3rem" src="@/assets/images/blackhelp.png" class="tooltip__icon" />
+          <img
+            style="height: 1.4rem; filter: invert(30%)"
+            src="@/assets/images/blackhelp.png"
+            class="tooltip__icon"
+          />
           <div class="tooltip__popup">
             <div class="tooltip__popup__bold">Having issues?</div>
             <div class="tip">Email Us: support@mymanagr.com</div>
           </div>
         </div>
 
-        <router-link :to="{ name: 'ProfilePage' }"
-          ><img src="@/assets/images/profile.png" style="height: 1.3rem" alt=""
-        /></router-link>
-
-        <router-link :to="{ name: 'Login' }"
-          ><img @click="logOut" src="@/assets/images/blacklogout.png" alt="" style="height: 1.3rem"
-        /></router-link>
+        <div>
+          <router-link class="profile-wrapper" :to="{ name: 'ProfilePage' }">
+            <img src="@/assets/images/profile.png" style="height: 1rem" alt="" />
+          </router-link>
+        </div>
+        <div class="center">
+          <router-link class="pad" :to="{ name: 'Login' }">
+            <button class="logout">
+              Log out
+              <img
+                @click="logOut"
+                src="@/assets/images/blacklogout.png"
+                alt=""
+                style="height: 0.75rem; margin: 0.25rem"
+              />
+            </button>
+          </router-link>
+        </div>
       </div>
     </nav>
   </div>
@@ -241,9 +256,49 @@ span {
   font-size: 10px;
   color: $dark-green;
 }
+.profile-wrapper {
+  border: none;
+  background-color: $lighter-green;
+  padding: 0.3rem 0.3rem 0.1rem 0.4rem;
+  border-radius: 50%;
+  img {
+    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+  }
+}
+.profile-button {
+  border: none;
+  padding: 0.25rem;
+  display: flex;
+  justify-self: end;
+  box-shadow: 1px 1px 2px $very-light-gray;
+  border-radius: 0.5rem;
+  background-color: $soft-gray;
+  cursor: pointer;
+  color: $base-gray;
+  font-weight: bold;
+}
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.logout {
+  border: none;
+  padding: 0.25rem 0.5rem;
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 1px 1px 2px $very-light-gray;
+  border-radius: 0.5rem;
+  background-color: $soft-gray;
+  cursor: pointer;
+  color: $base-gray;
+  font-weight: bold;
+}
 nav {
   height: 4rem;
-  font-weight: 900;
   display: flex;
   flex-flow: row;
   align-items: center;
@@ -312,6 +367,7 @@ nav {
   align-items: center;
   justify-content: center;
   margin-right: 1rem;
+  margin-top: 0.75rem;
 
   > * {
     margin-right: 1rem;
@@ -357,10 +413,9 @@ nav {
   }
 
   &__popup {
-    width: 18rem;
+    padding: 0.5rem;
+    min-width: 14vw;
     visibility: hidden;
-
-    padding: 13px 21px;
     border-radius: 5px;
     box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
     border: solid 2px $off-white;
@@ -373,8 +428,12 @@ nav {
     &__bold {
       font-family: #{$bold-font-family};
       color: $panther;
+      font-size: 14px;
     }
   }
+}
+.tip {
+  font-size: 11px;
 }
 
 .tooltip:hover .tooltip__popup {
@@ -389,10 +448,11 @@ ul {
 
 li {
   display: inline;
+  letter-spacing: 0.4px;
   text-align: center;
-  font-weight: 900;
   margin-right: 1rem;
-  font-size: 14px;
+  font-size: 13px;
+  padding: 0.5rem;
   @media only screen and (max-width: 800px) {
     margin-right: 0.5rem;
     font-size: 11px;
@@ -423,19 +483,15 @@ img {
 }
 a {
   text-decoration: none;
-  font-weight: 900;
   color: $base-gray;
-  padding: 0.5rem;
+  font-family: #{$base-font-family};
+  font-weight: bold;
 }
 
-a:hover {
-  color: $off-white;
+li:hover {
   background-color: $lighter-green;
   border-radius: 0.2rem;
-
-  img {
-    filter: invert(100%);
-  }
+  color: white;
 }
 .mar {
   margin-top: 1rem;
@@ -443,7 +499,6 @@ a:hover {
 .active {
   border-bottom: 3px solid $dark-green;
   color: $dark-green;
-  font-weight: 900;
   padding-bottom: 1rem;
 }
 </style>

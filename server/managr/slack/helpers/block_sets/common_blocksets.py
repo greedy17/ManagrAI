@@ -73,7 +73,7 @@ def loading_block_set(context):
 def success_modal_block_set(context):
     message = context.get("message", ":white_check_mark: Success!")
     user = context.get("u")
-    form_id = context.get("form_id")
+    form_ids = context.get("form_ids")
     blocks = [
         block_builders.section_with_button_block(
             "Send Recap",
@@ -81,7 +81,7 @@ def success_modal_block_set(context):
             message,
             action_id=action_with_params(
                 slack_const.PROCESS_SEND_RECAP_MODAL,
-                params=[f"u={user}", f"form_id={form_id}", "type=command"],
+                params=[f"u={user}", f"form_ids={form_ids}", "type=command"],
             ),
         )
     ]
@@ -481,16 +481,13 @@ def meeting_reminder_block_set(context):
     ]
     return blocks
 
+
 @block_set()
 def message_meeting_block_set():
-    message = 'this is a test'
-    blocks = [
-        block_builders.simple_section(
-            f"This is a {message}",
-            "mrkdwn",
-        )
-    ]
+    message = "this is a test"
+    blocks = [block_builders.simple_section(f"This is a {message}", "mrkdwn",)]
     return blocks
+
 
 @block_set()
 def manager_meeting_reminder_block_set(context):

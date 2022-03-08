@@ -1,0 +1,36 @@
+import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
+
+const OPPORTUNITYS_ENDPOINT = '/opportunity/'
+
+export default class OpportunityAPI {
+    constructor(cls) {
+        this.cls = cls
+    }
+    get client() {
+        return apiClient()
+    }
+    static create(cls) {
+        return new OpportunityAPI(cls)
+    }
+    async list({ pagination, filters }) {
+        const url = OPPORTUNITYS_ENDPOINT
+        const filtersMap = {
+            // Pagination
+            page: ApiFilter.create({ key: 'page' }),
+            pageSize: ApiFilter.create({ key: 'page_size' }),
+        }
+        const options = {
+            params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),
+        }
+        try {
+            const res = await this.client.get(url, options)
+
+            return {
+                ...res.data,
+                results: res.data.results.map(this.cls.fromAPI),
+            }
+        } catch {
+            apiErrorHandler({ apiName: 'Opportunity.list' })
+        }
+    }
+}

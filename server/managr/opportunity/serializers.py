@@ -46,6 +46,9 @@ class UserRefSerializer(serializers.ModelSerializer):
 
 
 class OpportunitySerializer(serializers.ModelSerializer):
+    account_ref = AccountSerializer(source="account", required=False)
+    owner_ref = UserRefSerializer(source="owner", required=False)
+
     class Meta:
         model = Opportunity
         fields = (
@@ -57,8 +60,10 @@ class OpportunitySerializer(serializers.ModelSerializer):
             "close_date",
             "forecast_category",
             "account",
+            "account_ref",
             "stage",
             "owner",
+            "owner_ref",
             "last_stage_update",
             "last_activity_date",
             "external_account",

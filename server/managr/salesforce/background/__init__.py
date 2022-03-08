@@ -134,8 +134,10 @@ def emit_generate_form_template(user_id):
     return _generate_form_template(user_id)
 
 
-def emit_update_current_db_values(user_id, resource_type, integration_id):
-    return _update_current_db_values(user_id, resource_type, integration_id)
+def emit_update_current_db_values(user_id, resource_type, integration_id, verbose_name):
+    return _update_current_db_values(
+        user_id, resource_type, integration_id, verbose_name=verbose_name
+    )
 
 
 def emit_meeting_workflow_tracker(workflow_id):
@@ -705,72 +707,72 @@ def _process_add_update_to_sf(form_id, *args):
     return
 
 
-@background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
-@sf_api_exceptions_wf("add_call_log")
-def _process_add_event_to_sf(form_id, *args):
-    form = OrgCustomSlackFormInstance.objects.filter(id=form_id).first()
-    resource = None
-    if form.resource_type == "Opportunity":
-        resource = Opportunity.objects.get(id=form.resource_id)
-    elif form.resource_type == "Account":
-        resource = Account.objects.get(id=form.resource_id)
-    elif form.resource_type == "Lead":
-        resource = Lead.objects.get(id=form.resource_id)
-    else:
-        resource = Contact.objects.get(id=form.resource_id)
-    user = form.user
-    if not user:
-        return logger.exception(f"User not found unable to log call {str(user.id)}")
-    if not hasattr(user, "salesforce_account"):
-        return logger.exception("User does not have a salesforce account cannot push to sf")
-    start_time = form.submission_date
-    data = dict(
-        Subject=f"{form.saved_data.get('meeting_type')}",
-        Description=f"{form.saved_data.get('meeting_comments')}",
-        ActivityDate=start_time.strftime("%Y-%m-%d"),
-        DurationInMinutes=30,
-        ActivityDateTime=start_time.strftime("%Y-%m-%dT%H:%M:%S"),
-    )
-    if form.resource_type in ["Account", "Opportunity"]:
-        data["WhatId"] = resource.integration_id
-    else:
-        data["WhoId"] = resource.integration_id
-    attempts = 1
-    while True:
-        sf = user.salesforce_account
-        try:
-            ActivityAdapter.save_zoom_meeting_to_salesforce(data, sf.access_token, sf.instance_url)
-            attempts = 1
-            break
-        except TokenExpired as e:
-            if attempts >= 5:
-                return logger.exception(
-                    f"Failed to refresh user token for Salesforce operation add contact as contact role to opportunity"
-                )
-            else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
-                time.sleep(sleep)
-                sf.regenerate_token()
-                attempts += 1
-        except UnableToUnlockRow as e:
-            if attempts >= 5:
-                logger.exception(
-                    f"Failed to create call log from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
-                )
-                raise e
-            else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
-                time.sleep(sleep)
-                attempts += 1
-        except Exception as e:
-            if attempts >= 5:
-                logger.info(f"Add update to SF exception: {e}")
-                raise e
-            else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
-                time.sleep(sleep)
-                attempts += 1
-    return
+# @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
+# @sf_api_exceptions_wf("add_call_log")
+# def _process_add_event_to_sf(form_id, *args):
+#     form = OrgCustomSlackFormInstance.objects.filter(id=form_id).first()
+#     resource = None
+#     if form.resource_type == "Opportunity":
+#         resource = Opportunity.objects.get(id=form.resource_id)
+#     elif form.resource_type == "Account":
+#         resource = Account.objects.get(id=form.resource_id)
+#     elif form.resource_type == "Lead":
+#         resource = Lead.objects.get(id=form.resource_id)
+#     else:
+#         resource = Contact.objects.get(id=form.resource_id)
+#     user = form.user
+#     if not user:
+#         return logger.exception(f"User not found unable to log call {str(user.id)}")
+#     if not hasattr(user, "salesforce_account"):
+#         return logger.exception("User does not have a salesforce account cannot push to sf")
+#     start_time = form.submission_date
+#     data = dict(
+#         Subject=f"{form.saved_data.get('meeting_type')}",
+#         Description=f"{form.saved_data.get('meeting_comments')}",
+#         ActivityDate=start_time.strftime("%Y-%m-%d"),
+#         DurationInMinutes=30,
+#         ActivityDateTime=start_time.strftime("%Y-%m-%dT%H:%M:%S"),
+#     )
+#     if form.resource_type in ["Account", "Opportunity"]:
+#         data["WhatId"] = resource.integration_id
+#     else:
+#         data["WhoId"] = resource.integration_id
+#     attempts = 1
+#     while True:
+#         sf = user.salesforce_account
+#         try:
+#             ActivityAdapter.save_zoom_meeting_to_salesforce(data, sf.access_token, sf.instance_url)
+#             attempts = 1
+#             break
+#         except TokenExpired as e:
+#             if attempts >= 5:
+#                 return logger.exception(
+#                     f"Failed to refresh user token for Salesforce operation add contact as contact role to opportunity"
+#                 )
+#             else:
+#                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+#                 time.sleep(sleep)
+#                 sf.regenerate_token()
+#                 attempts += 1
+#         except UnableToUnlockRow as e:
+#             if attempts >= 5:
+#                 logger.exception(
+#                     f"Failed to create call log from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+#                 )
+#                 raise e
+#             else:
+#                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+#                 time.sleep(sleep)
+#                 attempts += 1
+#         except Exception as e:
+#             if attempts >= 5:
+#                 logger.info(f"Add update to SF exception: {e}")
+#                 raise e
+#             else:
+#                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+#                 time.sleep(sleep)
+#                 attempts += 1
+#     return
 
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
@@ -1222,18 +1224,6 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
     )
     main_form = submitted_forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
     user = main_form.user
-    old_data = dict()
-    if main_form.template.form_type == "UPDATE":
-        for additional_stage_form in submitted_forms:
-            old_data = {**old_data, **additional_stage_form.previous_data}
-    new_data = dict()
-    form_fields = None
-    for form in submitted_forms:
-        new_data = {**new_data, **form.saved_data}
-        if form_fields:
-            form_fields = form_fields | form.template.formfield_set.filter(include_in_recap=True)
-        else:
-            form_fields = form.template.formfield_set.filter(include_in_recap=True)
     send_summ_to_leadership = send_to_data.get("leadership", None) if send_to_data else None
     send_summ_to_reps = send_to_data.get("reps", None) if send_to_data else None
     send_summ_to_channels = send_to_data.get("channels", None) if send_to_data else None

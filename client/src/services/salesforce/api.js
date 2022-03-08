@@ -1,5 +1,6 @@
 import { ModelAPI, ApiFilter, Model } from '@thinknimble/tn-models'
 import { apiClient, apiErrorHandler } from '@/services/api'
+import { objectToSnakeCase } from '@/services/utils'
 
 export default class SalesforceAPI extends ModelAPI {
   static ENDPOINT = 'users/salesforce/'
@@ -73,6 +74,57 @@ export class SObjectFormBuilderAPI extends ModelAPI {
     try {
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'public-fields')
       return res.data.results.map(f => this.cls.fromAPI(f))
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+    }
+  }
+
+  async getObjects(sobject, resource_id) {
+    try {
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/', { params: { sobject: sobject, resource_id: resource_id } })
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+    }
+  }
+  async getNotes(resourceId) {
+    let id = objectToSnakeCase(resourceId)
+    try {
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/notes/', { params: id })
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+    }
+  }
+  async updateResource(formData) {
+    try {
+      const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'sobject/update/', formData)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+    }
+  }
+  async createResource(formData) {
+    try {
+      const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'sobject/create/', formData)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+    }
+  }
+  async confirmUpdate(verbose_name, task_hash) {
+    try {
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/confirm-update/', { params: verbose_name, task_hash })
+      return res
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Confirmation error' })(e)
+    }
+  }
+  async createFormInstance(formData) {
+    let d = objectToSnakeCase(formData)
+    try {
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/create-form-instance/', { params: d })
+      return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
     }
