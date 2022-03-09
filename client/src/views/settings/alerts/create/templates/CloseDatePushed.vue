@@ -90,7 +90,7 @@
                     valueKey="id"
                     nullDisplay="Channels"
                     :hasNext="!!userChannelOpts.nextCursor"
-                    @load-more="listChannels(userChannelOpts.nextCursor)"
+                    @load-more="listUserChannels(userChannelOpts.nextCursor)"
                     searchable
                     local
                   >
@@ -629,7 +629,7 @@ img {
   width: 75%;
   text-align: center;
   margin-top: 0.5rem;
-  box-shadow: 3px 4px 7px $very-light-gray;
+  box-shadow: 1px 1px 3px 0px $very-light-gray;
 }
 .channels_height {
   height: 22vh;

@@ -812,7 +812,7 @@
                         ? workflow.resourceRef.secondaryData[
                             capitalizeFirstLetter(camelize(field.apiName))
                           ]
-                        : '---'
+                        : ''
                     "
                   />
                 </div>
