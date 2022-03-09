@@ -20,14 +20,12 @@
             <h2>Notes</h2>
           </div>
 
-          <div class="close-button">
-            <img
-              src="@/assets/images/clear.png"
-              style="height: 1.2rem"
-              @click="resetNotes"
-              alt=""
-            />
-          </div>
+          <img
+            src="@/assets/images/closer.png"
+            style="height: 1.75rem; margin-top: -0.5rem; margin-right: 0.5rem; cursor: pointer"
+            @click="resetNotes"
+            alt=""
+          />
         </div>
         <section class="note-section" :key="i" v-for="(note, i) in notes">
           <p class="note-section__title">
@@ -48,14 +46,13 @@
             />
             <h2>Notes</h2>
           </div>
-          <div class="close-button">
-            <img
-              src="@/assets/images/clear.png"
-              style="height: 1.2rem"
-              @click="resetNotes"
-              alt=""
-            />
-          </div>
+
+          <img
+            src="@/assets/images/closer.png"
+            style="height: 1.75rem; margin-top: -0.5rem; margin-right: 0.5rem; cursor: pointer"
+            @click="resetNotes"
+            alt=""
+          />
         </div>
         <section class="note-section">
           <p class="note-section__title">No notes for this opportunity</p>
@@ -326,7 +323,7 @@
 
     <div v-if="!loading">
       <header class="flex-row-spread">
-        <!-- <button @click="test">Testing custom workflow fields</button> -->
+        <!-- <button @click="test">Testing workflow fields</button> -->
       </header>
 
       <section style="margin-bottom: 1rem" class="flex-row-spread">
@@ -784,8 +781,8 @@
               </div>
             </div>
 
-            <div :key="field" v-for="field in currentWorkflowFields" class="table-cell">
-              <div v-if="field !== 'Amount' && !field.includes('date') && !field.includes('Date')">
+            <div :key="i" v-for="(field, i) in oppFields" class="table-cell">
+              <div>
                 <SkeletonBox
                   v-if="updateList.includes(workflow.resourceRef.id)"
                   width="125px"
@@ -796,78 +793,29 @@
                 <div class="limit-cell-height" v-else>
                   <PipelineField
                     style="direction: ltr"
-                    :key="key2"
-                    :apiName="field"
-                    :dataType="null"
+                    :key="i"
+                    :apiName="field.apiName"
+                    :dataType="field.dataType"
                     :fieldData="
-                      field === 'Stage'
+                      workflow.resourceRef.secondaryData[
+                        capitalizeFirstLetter(camelize(sliced(field.apiName))).replaceAll('_', '')
+                      ]
                         ? workflow.resourceRef.secondaryData[
-                            capitalizeFirstLetter(camelize(field + 'Name'))
+                            capitalizeFirstLetter(camelize(sliced(field.apiName))).replaceAll(
+                              '_',
+                              '',
+                            )
                           ]
                         : workflow.resourceRef.secondaryData[
-                            capitalizeFirstLetter(camelize(sliced(field + 'c')))
+                            capitalizeFirstLetter(camelize(field.apiName))
                           ]
                         ? workflow.resourceRef.secondaryData[
-                            capitalizeFirstLetter(camelize(sliced(field + 'c')))
+                            capitalizeFirstLetter(camelize(field.apiName))
                           ]
-                        : workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field))]
-                        ? workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field))]
                         : '---'
                     "
                   />
                 </div>
-              </div>
-
-              <div v-else-if="field.includes('date') || field.includes('Date')">
-                <SkeletonBox
-                  v-if="updateList.includes(workflow.resourceRef.id)"
-                  width="125px"
-                  height="14px"
-                  style="margin-bottom: 0.2rem"
-                />
-
-                <PipelineField
-                  v-else
-                  :key="key2"
-                  :apiName="field"
-                  :dataType="null"
-                  :fieldData="
-                    workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field))]
-                      ? formatDate(
-                          workflow.resourceRef.secondaryData[
-                            capitalizeFirstLetter(camelize(field))
-                          ],
-                        )
-                      : '---'
-                  "
-                />
-              </div>
-
-              <div style="color: #199e54" v-else>
-                <SkeletonBox
-                  v-if="updateList.includes(workflow.resourceRef.id)"
-                  width="125px"
-                  height="14px"
-                  style="margin-bottom: 0.2rem"
-                />
-
-                <PipelineField
-                  v-else
-                  :key="key2"
-                  :apiName="field"
-                  :dataType="null"
-                  :fieldData="
-                    workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field))]
-                      ? formatCash(
-                          parseFloat(
-                            workflow.resourceRef.secondaryData[
-                              capitalizeFirstLetter(camelize(field))
-                            ],
-                          ),
-                        )
-                      : '$ --- ---'
-                  "
-                />
               </div>
             </div>
           </tr>
@@ -1085,9 +1033,11 @@ export default {
     setForecast(val) {
       this.newForecast = val
     },
-    test() {
-      this.sliced('appleJackCerealc')
-    },
+    // test() {
+    //   console.log(this.currentWorkflow)
+    //   console.log(this.allOppsFiltered)
+    //   console.log(this.oppFields)
+    // },
     onCheckAll() {
       if (this.primaryCheckList.length < 1) {
         for (let i = 0; i < this.allOppsFiltered.length; i++) {
@@ -1291,22 +1241,26 @@ export default {
       this.closeDateSelected = false
       for (let i = 0; i < ids.length; i++) {
         try {
-          const res = await SObjects.api.updateResource({
-            form_id: ids[i],
-            form_data: { CloseDate: data },
-          })
-          this.verboseName = res['verbose_name']
-          this.taskHash = res['task_hash']
-          let confirmRes = await this.confirmUpdate(this.verboseName, this.taskHash).then(
-            async (confirmRes) => {
-              console.log('Update', confirmRes)
+          const res = await SObjects.api
+            .updateResource({
+              form_id: ids[i],
+              form_data: { CloseDate: data },
+            })
+            .then(async (res) => {
+              this.verboseName = res['verbose_name']
+              this.taskHash = res['task_hash']
+              this.confirmUpdate()
+            })
+            .then(async () => {
               let updatedRes = await SObjects.api.getObjects('Opportunity')
               this.allOpps = updatedRes.results
-            },
-          )
+              this.originalList = updatedRes.results
+            })
           this.formData = {}
           if (this.selectedWorkflow) {
             this.currentWorkflow.refresh()
+          } else {
+            this.currentList = 'All Opportunities'
           }
           this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
           this.primaryCheckList.length > 1
@@ -1330,22 +1284,26 @@ export default {
       this.advanceStageSelected = false
       for (let i = 0; i < ids.length; i++) {
         try {
-          const res = await SObjects.api.updateResource({
-            form_id: ids[i],
-            form_data: { StageName: data },
-          })
-          this.verboseName = res['verbose_name']
-          this.taskHash = res['task_hash']
-          let confirmRes = await this.confirmUpdate(this.verboseName, this.taskHash).then(
-            async (confirmRes) => {
-              console.log('Update', confirmRes)
+          const res = await SObjects.api
+            .updateResource({
+              form_id: ids[i],
+              form_data: { StageName: data },
+            })
+            .then(async (res) => {
+              this.verboseName = res['verbose_name']
+              this.taskHash = res['task_hash']
+              this.confirmUpdate()
+            })
+            .then(async () => {
               let updatedRes = await SObjects.api.getObjects('Opportunity')
               this.allOpps = updatedRes.results
-            },
-          )
+              this.originalList = updatedRes.results
+            })
           this.formData = {}
           if (this.selectedWorkflow) {
             this.currentWorkflow.refresh()
+          } else {
+            this.currentList = 'All Opportunities'
           }
           this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
           this.primaryCheckList.length > 1
@@ -1369,22 +1327,26 @@ export default {
       this.forecastSelected = false
       for (let i = 0; i < ids.length; i++) {
         try {
-          const res = await SObjects.api.updateResource({
-            form_id: ids[i],
-            form_data: { ForecastCategoryName: data },
-          })
-          this.verboseName = res['verbose_name']
-          this.taskHash = res['task_hash']
-          let confirmRes = await this.confirmUpdate(this.verboseName, this.taskHash).then(
-            async (confirmRes) => {
-              console.log('Update', confirmRes)
+          const res = await SObjects.api
+            .updateResource({
+              form_id: ids[i],
+              form_data: { ForecastCategoryName: data },
+            })
+            .then(async (res) => {
+              this.verboseName = res['verbose_name']
+              this.taskHash = res['task_hash']
+              this.confirmUpdate()
+            })
+            .then(async () => {
               let updatedRes = await SObjects.api.getObjects('Opportunity')
               this.allOpps = updatedRes.results
-            },
-          )
+              this.originalList = updatedRes.results
+            })
           this.formData = {}
           if (this.selectedWorkflow) {
             this.currentWorkflow.refresh()
+          } else {
+            this.currentList = 'All Opportunities'
           }
           this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
           this.primaryCheckList.length > 1
@@ -1408,33 +1370,37 @@ export default {
       this.updateList.push(this.oppId)
       this.editOpModalOpen = false
       try {
-        const res = await SObjects.api.updateResource({
-          form_id: this.instanceId,
-          form_data: this.formData,
-        })
-        this.verboseName = res['verbose_name']
-        this.taskHash = res['task_hash']
-        let confirmRes = await this.confirmUpdate(this.verboseName, this.taskHash).then(
-          async (confirmRes) => {
-            console.log('Update', confirmRes)
+        const res = await SObjects.api
+          .updateResource({
+            form_id: this.instanceId,
+            form_data: this.formData,
+          })
+          .then(async (res) => {
+            this.verboseName = res['verbose_name']
+            this.taskHash = res['task_hash']
+            this.confirmUpdate()
+          })
+          .then(async () => {
             let updatedRes = await SObjects.api.getObjects('Opportunity')
             this.allOpps = updatedRes.results
-          },
-        )
+            this.originalList = updatedRes.results
+          })
+        this.updateList = []
+        this.formData = {}
         this.$Alert.alert({
           type: 'success',
           timeout: 3000,
           message: 'Salesforce update successful!',
           sub: 'Some changes may take longer to reflect',
         })
+        if (this.selectedWorkflow) {
+          this.currentWorkflow.refresh()
+        } else {
+          this.currentList = 'All Opportunities'
+        }
       } catch (e) {
         console.log(e)
       }
-      if (this.selectedWorkflow) {
-        this.currentWorkflow.refresh()
-      }
-      this.formData = {}
-      this.updateList = []
     },
     async getObjectsDupe() {
       try {
@@ -1538,7 +1504,6 @@ export default {
         for (let i in this.picklistQueryOpts) {
           this.picklistQueryOpts[i] = this.listPicklists(i, { picklistFor: i })
         }
-
         this.oppFields = this.updateOppForm[0].fieldsRef.filter(
           (field) =>
             field.apiName !== 'meeting_type' &&
@@ -1595,9 +1560,6 @@ export default {
     },
     applyAmountFilter() {
       // this.allOpps = this.allOpps.filter((opp) => opp.amount > this.amountValue)
-    },
-    showAmount() {
-      console.log(this.amountValue)
     },
     selectFilter(type, title) {
       switch (type) {
@@ -1904,7 +1866,7 @@ h3 {
 .modal-container {
   background-color: $white;
   overflow: hidden;
-  max-width: 40vw;
+  width: 30vw;
   min-height: 60vh;
   align-items: center;
   border-radius: 0.3rem;
@@ -2258,7 +2220,7 @@ section {
 #update-input {
   border: 1px solid $very-light-gray;
   border-radius: 0.25rem;
-
+  background-color: transparent;
   min-height: 4.5vh;
   min-width: 14vw;
 }
@@ -2481,7 +2443,7 @@ section {
 }
 .flex-end-opp {
   width: 100%;
-  padding: 1rem 0.25rem;
+  padding: 0.5rem 0.25rem;
   display: flex;
   align-items: center;
   justify-content: flex-end;
