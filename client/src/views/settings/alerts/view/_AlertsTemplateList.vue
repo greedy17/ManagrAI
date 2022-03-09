@@ -588,6 +588,7 @@ button:disabled {
   color: $base-gray;
   border-radius: 0.5rem;
   height: 28vh;
+  width: 40vw;
 }
 .edit__modal {
   background-color: white;
