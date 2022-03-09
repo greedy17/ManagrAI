@@ -525,7 +525,7 @@
               </div>
             </div>
             <div class="flex-row-pad" v-if="closeDateSelected">
-              <p>How many days ?:</p>
+              <p style="font-size: 14px">How many days ?:</p>
               <input class="number-input" v-model="daysForward" type="number" />
 
               <button
