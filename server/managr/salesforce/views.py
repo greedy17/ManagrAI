@@ -53,6 +53,7 @@ from .background import (
     emit_gen_next_object_field_sync,
     emit_generate_form_template,
     emit_add_update_to_sf,
+    _send_instant_alert,
 )
 from managr.salesforce.utils import process_text_field_format
 
@@ -421,8 +422,9 @@ class SalesforceSObjectViewSet(
             all_form_data.get("meeting_comments") is not None
             and all_form_data.get("meeting_type") is not None
         ):
-            print("here")
             emit_add_update_to_sf(str(main_form.id))
+        if len(user.slack_integration.realtime_alert_configs):
+            _send_instant_alert([form_id])
         try:
             text = f"Managr updated {main_form.resource_type}"
             message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
