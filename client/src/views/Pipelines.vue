@@ -183,17 +183,20 @@
       <div class="opp-modal-container">
         <div class="flex-row-spread header">
           <div class="flex-row">
-            <img
+            <!-- <img
               src="@/assets/images/logo.png"
               style="height: 1.5rem; margin-left: 0.5rem; margin-right: 0.25rem"
               alt=""
-            />
-            <h3>Update Opportunity</h3>
+            /> -->
+            <h2 style="margin-left: 0.5rem">Update Opportunity</h2>
           </div>
 
-          <div class="close-button">
-            <img src="@/assets/images/clear.png" style="height: 1.2rem" @click="resetEdit" alt="" />
-          </div>
+          <img
+            src="@/assets/images/closer.png"
+            style="height: 1.75rem; margin-top: -0.5rem; cursor: pointer"
+            @click="resetEdit"
+            alt=""
+          />
         </div>
 
         <div class="opp-modal">
@@ -204,7 +207,7 @@
                 id="update-input"
                 cols="30"
                 rows="2"
-                style="width: 30vw; border-radius: 0.4rem"
+                style="width: 30vw; border-radius: 0.2rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
               </textarea>
@@ -215,7 +218,7 @@
                 id="update-input"
                 ccols="30"
                 rows="3"
-                style="width: 30vw; border-radius: 0.4rem"
+                style="width: 30vw; border-radius: 0.2rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
               </textarea>
@@ -314,9 +317,9 @@
             </div>
           </section>
         </div>
-        <div class="flex-end">
+        <div class="flex-end-opp">
           <p @click="resetEdit" class="cancel">Cancel</p>
-          <button @click="updateResource()" class="add-button">Update Opportunity</button>
+          <button @click="updateResource()" class="add-button__">Update</button>
         </div>
       </div>
     </Modal>
@@ -664,30 +667,43 @@
               </div>
             </div>
 
-            <div
-              :key="i"
-              v-for="(field, i) in oppFields"
-              :class="
-                field.dataType === 'TextArea' ||
-                field.apiName === 'NextStep' ||
-                (field.length > 250 && field.dataType === 'String')
-                  ? 'table-cell-wide'
-                  : 'table-cell'
-              "
-            >
-              <!-- {{ field.apiName.includes('__c') ? opp['secondary_data'][field.apiName] : '' }} -->
+            <div :key="i" v-for="(field, i) in oppFields" class="table-cell">
               <SkeletonBox v-if="updateList.includes(opp.id)" width="100px" height="14px" />
-              <PipelineField
-                v-else
-                :key="key"
-                :apiName="field.apiName"
-                :dataType="field.dataType"
-                :fieldData="
-                  field.apiName.includes('__c')
-                    ? opp['secondary_data'][field.apiName]
-                    : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-                "
-              />
+
+              <div v-else>
+                <div
+                  class="limit-cell-height"
+                  v-if="
+                    field.dataType === 'TextArea' ||
+                    field.apiName === 'NextStep' ||
+                    (field.length > 250 && field.dataType === 'String')
+                  "
+                >
+                  <PipelineField
+                    style="direction: ltr"
+                    :key="key"
+                    :apiName="field.apiName"
+                    :dataType="field.dataType"
+                    :fieldData="
+                      field.apiName.includes('__c')
+                        ? opp['secondary_data'][field.apiName]
+                        : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+                    "
+                  />
+                </div>
+
+                <PipelineField
+                  v-else
+                  :key="key"
+                  :apiName="field.apiName"
+                  :dataType="field.dataType"
+                  :fieldData="
+                    field.apiName.includes('__c')
+                      ? opp['secondary_data'][field.apiName]
+                      : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+                  "
+                />
+              </div>
             </div>
           </tr>
         </div>
@@ -768,7 +784,7 @@
               </div>
             </div>
 
-            <div :key="field.name" v-for="field in currentWorkflowFields" class="table-cell">
+            <div :key="field" v-for="field in currentWorkflowFields" class="table-cell">
               <div v-if="field !== 'Amount' && !field.includes('date') && !field.includes('Date')">
                 <SkeletonBox
                   v-if="updateList.includes(workflow.resourceRef.id)"
@@ -779,6 +795,7 @@
 
                 <div class="limit-cell-height" v-else>
                   <PipelineField
+                    style="direction: ltr"
                     :key="key2"
                     :apiName="field"
                     :dataType="null"
@@ -1274,21 +1291,19 @@ export default {
       this.closeDateSelected = false
       for (let i = 0; i < ids.length; i++) {
         try {
-          const res = await SObjects.api
-            .updateResource({
-              form_id: ids[i],
-              form_data: { CloseDate: data },
-            })
-            .then(async (res) => {
-              this.verboseName = res['verbose_name']
-              this.taskHash = res['task_hash']
-              let confirmRes = await this.confirmUpdate(this.verboseName, this.taskHash)
-            })
-            .then(async (confirmRes) => {
+          const res = await SObjects.api.updateResource({
+            form_id: ids[i],
+            form_data: { CloseDate: data },
+          })
+          this.verboseName = res['verbose_name']
+          this.taskHash = res['task_hash']
+          let confirmRes = await this.confirmUpdate(this.verboseName, this.taskHash).then(
+            async (confirmRes) => {
               console.log('Update', confirmRes)
               let updatedRes = await SObjects.api.getObjects('Opportunity')
               this.allOpps = updatedRes.results
-            })
+            },
+          )
           this.formData = {}
           if (this.selectedWorkflow) {
             this.currentWorkflow.refresh()
@@ -1315,21 +1330,19 @@ export default {
       this.advanceStageSelected = false
       for (let i = 0; i < ids.length; i++) {
         try {
-          const res = await SObjects.api
-            .updateResource({
-              form_id: ids[i],
-              form_data: { StageName: data },
-            })
-            .then(async (res) => {
-              this.verboseName = res['verbose_name']
-              this.taskHash = res['task_hash']
-              let confirmRes = await this.confirmUpdate(this.verboseName, this.taskHash)
-            })
-            .then(async (confirmRes) => {
+          const res = await SObjects.api.updateResource({
+            form_id: ids[i],
+            form_data: { StageName: data },
+          })
+          this.verboseName = res['verbose_name']
+          this.taskHash = res['task_hash']
+          let confirmRes = await this.confirmUpdate(this.verboseName, this.taskHash).then(
+            async (confirmRes) => {
               console.log('Update', confirmRes)
               let updatedRes = await SObjects.api.getObjects('Opportunity')
               this.allOpps = updatedRes.results
-            })
+            },
+          )
           this.formData = {}
           if (this.selectedWorkflow) {
             this.currentWorkflow.refresh()
@@ -1356,21 +1369,19 @@ export default {
       this.forecastSelected = false
       for (let i = 0; i < ids.length; i++) {
         try {
-          const res = await SObjects.api
-            .updateResource({
-              form_id: ids[i],
-              form_data: { ForecastCategoryName: data },
-            })
-            .then(async (res) => {
-              this.verboseName = res['verbose_name']
-              this.taskHash = res['task_hash']
-              let confirmRes = await this.confirmUpdate(this.verboseName, this.taskHash)
-            })
-            .then(async (confirmRes) => {
+          const res = await SObjects.api.updateResource({
+            form_id: ids[i],
+            form_data: { ForecastCategoryName: data },
+          })
+          this.verboseName = res['verbose_name']
+          this.taskHash = res['task_hash']
+          let confirmRes = await this.confirmUpdate(this.verboseName, this.taskHash).then(
+            async (confirmRes) => {
               console.log('Update', confirmRes)
               let updatedRes = await SObjects.api.getObjects('Opportunity')
               this.allOpps = updatedRes.results
-            })
+            },
+          )
           this.formData = {}
           if (this.selectedWorkflow) {
             this.currentWorkflow.refresh()
@@ -1397,21 +1408,19 @@ export default {
       this.updateList.push(this.oppId)
       this.editOpModalOpen = false
       try {
-        const res = await SObjects.api
-          .updateResource({
-            form_id: this.instanceId,
-            form_data: this.formData,
-          })
-          .then(async (res) => {
-            this.verboseName = res['verbose_name']
-            this.taskHash = res['task_hash']
-            let confirmRes = await this.confirmUpdate(this.verboseName, this.taskHash)
-          })
-          .then(async (confirmRes) => {
+        const res = await SObjects.api.updateResource({
+          form_id: this.instanceId,
+          form_data: this.formData,
+        })
+        this.verboseName = res['verbose_name']
+        this.taskHash = res['task_hash']
+        let confirmRes = await this.confirmUpdate(this.verboseName, this.taskHash).then(
+          async (confirmRes) => {
             console.log('Update', confirmRes)
             let updatedRes = await SObjects.api.getObjects('Opportunity')
             this.allOpps = updatedRes.results
-          })
+          },
+        )
         this.$Alert.alert({
           type: 'success',
           timeout: 3000,
@@ -1473,7 +1482,6 @@ export default {
       this.selectedConfigId = configId
       this.selectedTitle = title
       this.selectedId = id
-
       this.currentWorkflowFields = []
       this.refreshId = id
       this.currentWorkflow = CollectionManager.create({
@@ -1565,12 +1573,11 @@ export default {
         const res = await SObjects.api.getNotes({
           resourceId: id,
         })
-
         this.modalOpen = true
-
         if (res.length) {
           for (let i = 0; i < res.length; i++) {
             this.notes.push(res[i])
+            this.notes = this.notes.filter((note) => note.saved_data__meeting_comments !== null)
           }
         }
       } catch (e) {
@@ -1828,6 +1835,8 @@ h3 {
   border-radius: 0.25rem;
 }
 .table-section {
+  margin: 0;
+  padding: 0;
   height: 80vh;
   overflow: scroll;
   margin-top: 0.5rem;
@@ -1894,48 +1903,50 @@ h3 {
 }
 .modal-container {
   background-color: $white;
+  overflow: hidden;
+  max-width: 40vw;
   min-height: 60vh;
   align-items: center;
-  border-radius: 0.5rem;
+  border-radius: 0.3rem;
   padding: 0.25rem;
   box-shadow: 2px 2px 10px 2px $base-gray;
 }
 .close-button {
   border-radius: 50%;
-  background-color: $lighter-green;
-  // box-shadow: 1px 1px 2px 1px $very-light-gray;
+  background-color: white;
+  box-shadow: 1px 1px 1px 1px $very-light-gray;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 0.5rem;
+
   margin-top: -1rem;
   padding: 0.25rem;
   cursor: pointer;
   img {
-    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+    filter: invert(80%);
   }
 }
 .opp-modal-container {
+  overflow: hidden;
   background-color: white;
   height: 80vh;
+  max-width: 34vw;
   align-items: center;
   border-radius: 0.6rem;
-  padding: 0.5rem;
-  box-shadow: 2px 2px 10px 2px $base-gray;
+  padding: 1rem;
+  box-shadow: 1px 3px 7px $base-gray;
 }
 .opp-modal {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.25rem;
   padding: 0.5rem;
   overflow-y: scroll;
   height: 56vh;
   border-radius: 0.25rem;
   border-bottom: 3px solid $white;
-  letter-spacing: 1px;
-  color: $darker-green;
-  font-weight: bold;
-
+  color: $base-gray;
+  font-size: 16px;
   div {
     margin-right: 1rem;
   }
@@ -1966,7 +1977,7 @@ h3 {
   padding: 2vh;
   width: 3.75vw;
   border: none;
-  left: -2px;
+  left: 0;
   position: sticky;
   z-index: 1;
   border-bottom: 1px solid $soft-gray;
@@ -1984,13 +1995,28 @@ h3 {
   background-color: $off-white;
   font-weight: bold;
   font-size: 13px;
-  letter-spacing: 0.25px;
+  letter-spacing: 0.5px;
   color: $base-gray;
 }
 .limit-cell-height {
-  max-height: 5rem;
+  max-height: 4rem;
   width: 110%;
-  overflow: scroll;
+  overflow: auto;
+  direction: rtl;
+  padding: 0px 0.25rem;
+}
+::-webkit-scrollbar {
+  background-color: $off-white;
+  -webkit-appearance: none;
+  height: 100%;
+  width: 3px;
+}
+::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background-color: $very-light-gray;
+}
+::-webkit-scrollbar-track {
+  margin-top: 1rem;
 }
 .cell-name-header {
   display: table-cell;
@@ -2005,7 +2031,7 @@ h3 {
   background-color: $off-white;
   font-weight: bold;
   font-size: 13px;
-  letter-spacing: 0.25px;
+  letter-spacing: 0.5px;
   color: $base-gray;
 }
 .table-cell-checkbox-header {
@@ -2016,7 +2042,7 @@ h3 {
   z-index: 3;
   width: 4vw;
   top: 0;
-  left: -2px;
+  left: 0;
   position: sticky;
   background-color: $off-white;
 }
@@ -2054,9 +2080,9 @@ select {
 option:not(:first-of-type) {
   color: black;
 }
-p {
-  font-size: 13px;
-}
+// p {
+//   font-size: 13px;
+// }
 .img {
   margin-right: 0.25rem;
   height: 0.75rem;
@@ -2108,8 +2134,6 @@ section {
 .pipelines {
   margin-top: 5rem;
   color: $base-gray;
-  height: 94vh;
-  overflow: hidden;
 }
 .invert {
   filter: invert(80%);
@@ -2176,6 +2200,19 @@ section {
   color: white;
   transition: all 0.3s;
 }
+.add-button__ {
+  display: flex;
+  align-items: center;
+  border: none;
+  min-height: 4.5vh;
+  padding: 0.5rem 1rem;
+  font-size: 16px;
+  border-radius: 0.2rem;
+  background-color: $dark-green;
+  cursor: pointer;
+  color: white;
+  transition: all 0.3s;
+}
 .soon-button {
   display: flex;
   align-items: center;
@@ -2199,6 +2236,10 @@ section {
   transform: scale(1.03);
   box-shadow: 1px 2px 2px $very-light-gray;
 }
+.add-button__:hover {
+  transform: scale(1.03);
+  box-shadow: 1px 2px 2px $very-light-gray;
+}
 .resNum {
   color: $dark-green;
   font-weight: bold;
@@ -2216,8 +2257,8 @@ section {
 }
 #update-input {
   border: 1px solid $very-light-gray;
-  border-radius: 0.4rem;
-  padding: 3px;
+  border-radius: 0.25rem;
+
   min-height: 4.5vh;
   min-width: 14vw;
 }
@@ -2233,7 +2274,7 @@ section {
 }
 #update-input:focus,
 .number-input:focus {
-  outline: 2px solid $lighter-green;
+  outline: 1px solid $lighter-green;
 }
 .loader {
   display: flex;
@@ -2434,6 +2475,13 @@ section {
 .flex-end {
   width: 100%;
   padding: 2rem 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+.flex-end-opp {
+  width: 100%;
+  padding: 1rem 0.25rem;
   display: flex;
   align-items: center;
   justify-content: flex-end;
