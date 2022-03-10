@@ -1,8 +1,6 @@
 import logging
 import random
-from tabnanny import verbose
-from faker import Faker
-from urllib.parse import urlencode, unquote
+from urllib.parse import unquote
 from datetime import datetime
 
 from .routes import routes
@@ -10,8 +8,6 @@ import time
 from background_task.models import CompletedTask
 from django.db.models import Q
 from django.utils import timezone
-from django.core.management import call_command
-from django.shortcuts import render, redirect
 from django.conf import settings
 from django.template.loader import render_to_string
 from django_filters.rest_framework import DjangoFilterBackend
