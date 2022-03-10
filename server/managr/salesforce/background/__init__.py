@@ -1218,7 +1218,7 @@ def check_for_display_value(field, value):
 
 @background(schedule=0)
 @slack_api_exceptions(rethrow=True)
-def _send_recap(form_ids, send_to_data=None, manager_recap=False):
+def _send_recap(form_ids, send_to_data=None, manager_recap=False, bulk=False):
     submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
         template__resource="OpportunityLineItem"
     )
@@ -1232,12 +1232,19 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
     title = (
         "*Meeting Recap* :zap:" if manager_recap else f"*{main_form.template.resource} Recap* :zap:"
     )
+    text = f"_{main_form.template.resource}_ *{resource_name}*"
+    if bulk:
+        title = "*Bulk Update* :zap:"
+        text = ""
+        for index, form in submitted_forms:
+            text += f"{form.resource_object.name}"
+            if index != len(submitted_forms):
+                text += ", "
     blocks = [
         block_builders.simple_section(title, "mrkdwn"),
         block_builders.section_with_button_block(
             "View Recap",
             "recap",
-            f"_{main_form.template.resource}_ *{resource_name}*",
             action_id=action_with_params(
                 slack_consts.VIEW_RECAP,
                 params=[f"u={str(user.id)}", f"form_ids={'.'.join(form_ids)}"],

@@ -1613,7 +1613,8 @@ def process_send_recaps(payload, context):
     values = payload["view"]["state"]["values"]
     pm = json.loads(payload["view"]["private_metadata"])
     type = context.get("type", None)
-    bulk_status = pm.get("bulk_status")
+    bulk_status = True if pm.get("bulk_status") == "true" else False
+
     channels = list(values["__send_recap_to_channels"].values())[0]["selected_conversations"]
     leadership = [
         option["value"]
@@ -1650,8 +1651,7 @@ def process_send_recaps(payload, context):
         return
     else:
         form_ids = context.get("form_ids").split(",")
-
-    _send_recap(form_ids, send_to_recaps)
+    _send_recap(form_ids, send_to_recaps, bulk=bulk_status)
     return
 
 

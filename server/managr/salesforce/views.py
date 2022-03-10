@@ -437,24 +437,51 @@ class SalesforceSObjectViewSet(
             and all_form_data.get("meeting_type") is not None
         ):
             emit_add_update_to_sf(str(main_form.id))
-        try:
-            text = f"Managr updated {main_form.resource_type}"
-            message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
-            slack_requests.send_ephemeral_message(
-                user.slack_integration.channel,
-                user.organization.slack_integration.access_token,
-                user.slack_integration.slack_id,
-                text=text,
-                block_set=get_block_set(
-                    "success_modal", {"message": message, "u": user.id, "form_ids": form_id}
-                ),
-            )
+        attempts = 1
+        has_error = False
+        while True:
+            if attempts >= 5:
+                has_error = True
+                break
+            try:
+                task = (
+                    CompletedTask.objects.filter(task_hash=resource["task_hash"])
+                    .order_by("-run_at")
+                    .first()
+                )
+                logger.info(f"CONFIRM UPDATE TASK ---- {task}")
+                if task and task.verbose_name == resource["verbose_name"]:
+                    break
+                else:
+                    attempts += 1
+                    sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                    time.sleep(sleep)
+            except Exception as e:
+                logger.exception(
+                    f"Error retreiving update status from task {resource['verbose_name']}, <HASH: {resource['task_hash']}> because of: {e}"
+                )
+                attempts += 1
+        if has_error:
+            return Response(data={"success": False})
+        return Response(data={"success": True})
+        # try:
+        #     text = f"Managr updated {main_form.resource_type}"
+        #     message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
+        #     slack_requests.send_ephemeral_message(
+        #         user.slack_integration.channel,
+        #         user.organization.slack_integration.access_token,
+        #         user.slack_integration.slack_id,
+        #         text=text,
+        #         block_set=get_block_set(
+        #             "success_modal", {"message": message, "u": user.id, "form_ids": form_id}
+        #         ),
+        #     )
 
-        except Exception as e:
-            logger.exception(
-                f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
-            )
-        return Response(data=data)
+        # except Exception as e:
+        #     logger.exception(
+        #         f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
+        #     )
+        # return Response(data=data)
 
     @action(
         methods=["get"],
@@ -575,7 +602,7 @@ class SalesforceSObjectViewSet(
         if len(user.slack_integration.realtime_alert_configs):
             _send_instant_alert([form_ids])
         try:
-            if bulk_status:
+            if bulk_status == "true":
                 plural = (
                     f"Opportunities"
                     if main_form.resource_type == "Opportunity"

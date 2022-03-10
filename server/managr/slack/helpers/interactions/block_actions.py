@@ -2247,7 +2247,6 @@ def process_show_alert_update_resource_form(payload, context):
 @processor(required_context="u")
 def process_mark_complete(payload, context):
     user = User.objects.get(id=context.get("u"))
-    print(context)
     access_token = user.organization.slack_integration.access_token
     instance = AlertInstance.objects.get(id=context.get("instance_id"))
     instance.completed = True
