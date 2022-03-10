@@ -222,8 +222,7 @@
             </div>
             <div
               v-else-if="
-                field.dataType === 'TextArea' ||
-                (field.dataType === 'String' && field.apiName === 'NextStep')
+                field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
               "
             >
               <p>{{ field.referenceDisplayLabel }}:</p>
@@ -233,6 +232,7 @@
                 rows="4"
                 :placeholder="currentVals[field.apiName]"
                 style="width: 30vw; border-radius: 0.4rem"
+                v-model="currentVals[field.apiName]"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
               </textarea>
@@ -535,7 +535,7 @@
             </div>
 
             <div class="flex-row-pad" v-if="advanceStageSelected">
-              <p>Select Stage:</p>
+              <p style="font-size: 14px">Select Stage:</p>
               <select
                 style="margin-left: 0.5rem; margin-right: 0.5rem"
                 @input=";(value = $event.target.value), setStage(value)"
@@ -552,7 +552,7 @@
             </div>
 
             <div class="flex-row-pad" v-if="forecastSelected">
-              <p>Select Forecast:</p>
+              <p style="font-size: 14px">Select Forecast:</p>
               <select
                 style="margin-left: 0.5rem; margin-right: 0.5rem"
                 @input=";(value = $event.target.value), setForecast(value)"
@@ -812,7 +812,7 @@
                         ? workflow.resourceRef.secondaryData[
                             capitalizeFirstLetter(camelize(field.apiName))
                           ]
-                        : '---'
+                        : ''
                     "
                   />
                 </div>
@@ -1043,6 +1043,15 @@ export default {
         for (let i = 0; i < this.allOppsFiltered.length; i++) {
           this.primaryCheckList.push(this.allOppsFiltered[i].id)
         }
+      } else if (
+        this.primaryCheckList.length > 0 &&
+        this.primaryCheckList.length < this.allOppsFiltered.length
+      ) {
+        for (let i = 0; i < this.allOppsFiltered.length; i++) {
+          !this.primaryCheckList.includes(this.allOppsFiltered[i].id)
+            ? this.primaryCheckList.push(this.allOppsFiltered[i].id)
+            : (this.primaryCheckList = this.primaryCheckList)
+        }
       } else {
         this.primaryCheckList = []
       }
@@ -1051,6 +1060,15 @@ export default {
       if (this.workflowCheckList.length < 1) {
         for (let i = 0; i < this.filteredWorkflows.length; i++) {
           this.workflowCheckList.push(this.filteredWorkflows[i].resourceRef.id)
+        }
+      } else if (
+        this.workflowCheckList.length > 0 &&
+        this.workflowCheckList.length < this.filteredWorkflows.length
+      ) {
+        for (let i = 0; i < this.filteredWorkflows.length; i++) {
+          !this.workflowCheckList.includes(this.filteredWorkflows[i].resourceRef.id)
+            ? this.workflowCheckList.push(this.filteredWorkflows[i].resourceRef.id)
+            : (this.workflowCheckList = this.workflowCheckList)
         }
       } else {
         this.workflowCheckList = []
