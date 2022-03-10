@@ -34,7 +34,8 @@ from managr.api.emails import send_html_email
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.models import OrgCustomSlackForm
 from managr.slack.helpers.block_sets import get_block_set
-
+from managr.slack.models import OrgCustomSlackFormInstance
+from managr.core.models import User
 from .models import (
     SObjectField,
     SObjectValidation,
@@ -423,25 +424,6 @@ class SalesforceSObjectViewSet(
             and all_form_data.get("meeting_type") is not None
         ):
             emit_add_update_to_sf(str(main_form.id))
-        if len(user.slack_integration.realtime_alert_configs):
-            _send_instant_alert([form_id])
-        try:
-            text = f"Managr updated {main_form.resource_type}"
-            message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
-            slack_requests.send_ephemeral_message(
-                user.slack_integration.channel,
-                user.organization.slack_integration.access_token,
-                user.slack_integration.slack_id,
-                text=text,
-                block_set=get_block_set(
-                    "success_modal", {"message": message, "u": user.id, "form_ids": form_id}
-                ),
-            )
-
-        except Exception as e:
-            logger.exception(
-                f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
-            )
         return Response(data=data)
 
     @action(
@@ -484,9 +466,6 @@ class SalesforceSObjectViewSet(
         url_path="create",
     )
     def create_resource(self, request, *args, **kwargs):
-        from managr.slack.models import OrgCustomSlackFormInstance
-        from managr.core.models import User
-
         data = self.request.data
         user = User.objects.get(id=self.request.user.id)
         form_id = data.get("form_id")
@@ -544,4 +523,35 @@ class SalesforceSObjectViewSet(
                 else:
                     time.sleep(2)
                     attempts += 1
+        return Response(data=data)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="send-recap",
+    )
+    def send_recaps(self, request, *args, **kwargs):
+
+        data = self.request.data
+        user = User.objects.get(id=self.request.user.id)
+        if len(user.slack_integration.realtime_alert_configs):
+            _send_instant_alert([form_id])
+        try:
+            text = f"Managr updated {main_form.resource_type}"
+            message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
+            slack_requests.send_ephemeral_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                user.slack_integration.slack_id,
+                text=text,
+                block_set=get_block_set(
+                    "success_modal", {"message": message, "u": user.id, "form_ids": form_id}
+                ),
+            )
+
+        except Exception as e:
+            logger.exception(
+                f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
+            )
         return Response(data=data)
