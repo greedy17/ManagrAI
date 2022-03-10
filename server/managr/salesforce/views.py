@@ -1,7 +1,6 @@
 import logging
 import random
-from faker import Faker
-from urllib.parse import urlencode, unquote
+from urllib.parse import unquote
 from datetime import datetime
 
 from .routes import routes
@@ -9,8 +8,6 @@ import time
 from background_task.models import CompletedTask
 from django.db.models import Q
 from django.utils import timezone
-from django.core.management import call_command
-from django.shortcuts import render, redirect
 from django.conf import settings
 from django.template.loader import render_to_string
 from django_filters.rest_framework import DjangoFilterBackend
@@ -34,7 +31,8 @@ from managr.api.emails import send_html_email
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.models import OrgCustomSlackForm
 from managr.slack.helpers.block_sets import get_block_set
-
+from managr.slack.models import OrgCustomSlackFormInstance
+from managr.core.models import User
 from .models import (
     SObjectField,
     SObjectValidation,
@@ -322,13 +320,16 @@ class SalesforceSObjectViewSet(
                 break
             except TokenExpired:
                 if attempts >= 5:
-                    raise ValidationError()
+                    logger.info(f"CREATE FORM INSTANCE TOKEN EXPIRED ERROR ---- {e}")
+
                 else:
                     user.salesforce_account.regenerate_token()
                     attempts += 1
             except Exception as e:
                 if attempts >= 5:
-                    raise ValidationError()
+
+                    logger.info(f"CREATE FORM INSTANCE ERROR ---- {e}")
+
                     data = {"error": str(e)}
                 else:
                     attempts += 1
@@ -357,6 +358,8 @@ class SalesforceSObjectViewSet(
         from managr.core.models import User
 
         data = self.request.data
+        logger.info(f"UPDATE START ---- {data}")
+
         user = User.objects.get(id=self.request.user.id)
         form_id = data.get("form_id")
         form_data = data.get("form_data")
@@ -379,6 +382,7 @@ class SalesforceSObjectViewSet(
             sf = user.salesforce_account
             try:
                 resource = main_form.resource_object.update_in_salesforce(all_form_data, True)
+                logger.info(f"RESOURCE UPDATE --- {resource}")
                 data = {
                     "success": True,
                     "task_hash": resource["task_hash"],
@@ -386,22 +390,28 @@ class SalesforceSObjectViewSet(
                 }
                 break
             except FieldValidationError as e:
+                logger.info(f"UPDATE FIELD VALIDATION ERROR {e}")
                 data = {"success": False, "error": str(e)}
                 break
 
             except RequiredFieldError as e:
+                logger.info(f"UPDATE REQUIRED FIELD ERROR {e}")
+
                 data = {"success": False, "error": str(e)}
                 break
             except UnhandledSalesforceError as e:
+                logger.info(f"UPDATE UNHANDLED SF ERROR {e}")
                 data = {"success": False, "error": str(e)}
                 break
 
             except SFNotFoundError as e:
+                logger.info(f"UPDATE SF NOT FOUND ERROR {e}")
                 data = {"success": False, "error": str(e)}
                 break
 
             except TokenExpired:
                 if attempts >= 5:
+                    logger.info(f"UPDATE REFRESHING TOKEN ERROR {e}")
                     data = {"success": False, "error": "Could not refresh token"}
                     break
                 else:
@@ -410,11 +420,15 @@ class SalesforceSObjectViewSet(
 
             except ConnectionResetError:
                 if attempts >= 5:
+                    logger.info(f"UPDATE CONNECTION RESET ERROR {e}")
                     data = {"success": False, "error": "Connection was reset"}
                     break
                 else:
                     time.sleep(2)
                     attempts += 1
+            except Exception as e:
+                logger.info(f"UPDATE ERROR {e}")
+                break
         current_forms.update(
             is_submitted=True, update_source="pipeline", submission_date=timezone.now()
         )
@@ -423,8 +437,6 @@ class SalesforceSObjectViewSet(
             and all_form_data.get("meeting_type") is not None
         ):
             emit_add_update_to_sf(str(main_form.id))
-        if len(user.slack_integration.realtime_alert_configs):
-            _send_instant_alert([form_id])
         try:
             text = f"Managr updated {main_form.resource_type}"
             message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
@@ -451,17 +463,21 @@ class SalesforceSObjectViewSet(
         url_path="confirm-update",
     )
     def confirm_update(self, request, *args, **kwargs):
-
         task_hash = self.request.GET.get("task_hash")
         verbose_name = self.request.GET.get("verbose_name")
+        logger.info(
+            f"CONFIRM UPDATE START FOR TASK HASH:<{task_hash}>, VERBOSE NAME:<{verbose_name}>"
+        )
+
         attempts = 1
         has_error = False
         while True:
-            if attempts >= 10:
+            if attempts >= 5:
                 has_error = True
                 break
             try:
                 task = CompletedTask.objects.filter(task_hash=task_hash).order_by("-run_at").first()
+                logger.info(f"CONFIRM UPDATE TASK ---- {task}")
                 if task and task.verbose_name == verbose_name:
                     break
                 else:
@@ -484,9 +500,6 @@ class SalesforceSObjectViewSet(
         url_path="create",
     )
     def create_resource(self, request, *args, **kwargs):
-        from managr.slack.models import OrgCustomSlackFormInstance
-        from managr.core.models import User
-
         data = self.request.data
         user = User.objects.get(id=self.request.user.id)
         form_id = data.get("form_id")
@@ -545,3 +558,34 @@ class SalesforceSObjectViewSet(
                     time.sleep(2)
                     attempts += 1
         return Response(data=data)
+
+    # @action(
+    #     methods=["post"],
+    #     permission_classes=[permissions.IsAuthenticated],
+    #     detail=False,
+    #     url_path="send-recap",
+    # )
+    # def send_recaps(self, request, *args, **kwargs):
+
+    #     data = self.request.data
+    #     user = User.objects.get(id=self.request.user.id)
+    #     if len(user.slack_integration.realtime_alert_configs):
+    #         _send_instant_alert([form_id])
+    #     try:
+    #         text = f"Managr updated {main_form.resource_type}"
+    #         message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
+    #         slack_requests.send_ephemeral_message(
+    #             user.slack_integration.channel,
+    #             user.organization.slack_integration.access_token,
+    #             user.slack_integration.slack_id,
+    #             text=text,
+    #             block_set=get_block_set(
+    #                 "success_modal", {"message": message, "u": user.id, "form_ids": form_id}
+    #             ),
+    #         )
+
+    #     except Exception as e:
+    #         logger.exception(
+    #             f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
+    #         )
+    #     return Response(data=data)
