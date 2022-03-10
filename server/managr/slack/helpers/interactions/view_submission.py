@@ -1613,7 +1613,7 @@ def process_send_recaps(payload, context):
     values = payload["view"]["state"]["values"]
     pm = json.loads(payload["view"]["private_metadata"])
     type = context.get("type", None)
-
+    bulk_status = pm.get("bulk_status")
     channels = list(values["__send_recap_to_channels"].values())[0]["selected_conversations"]
     leadership = [
         option["value"]

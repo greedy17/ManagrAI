@@ -2580,7 +2580,6 @@ def process_send_recap_modal(payload, context):
     loading_data = send_loading_screen(
         access_token, "Loading users and channels", "open", str(user.id), trigger_id
     )
-    type = context.get("type")
 
     data = {
         "view_id": loading_data["view"]["id"],

@@ -559,33 +559,54 @@ class SalesforceSObjectViewSet(
                     attempts += 1
         return Response(data=data)
 
-    # @action(
-    #     methods=["post"],
-    #     permission_classes=[permissions.IsAuthenticated],
-    #     detail=False,
-    #     url_path="send-recap",
-    # )
-    # def send_recaps(self, request, *args, **kwargs):
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="send-recap",
+    )
+    def send_recaps(self, request, *args, **kwargs):
 
-    #     data = self.request.data
-    #     user = User.objects.get(id=self.request.user.id)
-    #     if len(user.slack_integration.realtime_alert_configs):
-    #         _send_instant_alert([form_id])
-    #     try:
-    #         text = f"Managr updated {main_form.resource_type}"
-    #         message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
-    #         slack_requests.send_ephemeral_message(
-    #             user.slack_integration.channel,
-    #             user.organization.slack_integration.access_token,
-    #             user.slack_integration.slack_id,
-    #             text=text,
-    #             block_set=get_block_set(
-    #                 "success_modal", {"message": message, "u": user.id, "form_ids": form_id}
-    #             ),
-    #         )
+        data = self.request.data
+        form_ids = data["form_ids"]
+        bulk_status = data["bulk"]
+        user = User.objects.get(id=self.request.user.id)
+        main_form = OrgCustomSlackFormInstance.objects.get(id=form_ids[0])
+        if len(user.slack_integration.realtime_alert_configs):
+            _send_instant_alert([form_ids])
+        try:
+            if bulk_status:
+                plural = (
+                    f"Opportunities"
+                    if main_form.resource_type == "Opportunity"
+                    else f"{main_form.resource_type}s"
+                )
+                text = "Manager Bulk Update"
+                message = f":white_check_mark: Successfully updated *{len(form_ids)} {main_form.resource_type}*"
+            else:
 
-    #     except Exception as e:
-    #         logger.exception(
-    #             f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
-    #         )
-    #     return Response(data=data)
+                text = f"Managr update {main_form.resource_type}"
+                message = (
+                    f":white_check_mark: Successfully updated *{main_form.resource_type}* {plural}"
+                )
+            slack_requests.send_ephemeral_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                user.slack_integration.slack_id,
+                text=text,
+                block_set=get_block_set(
+                    "success_modal",
+                    {
+                        "message": message,
+                        "u": user.id,
+                        "form_ids": form_ids,
+                        "bulk_status": bulk_status,
+                    },
+                ),
+            )
+
+        except Exception as e:
+            logger.exception(
+                f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
+            )
+        return Response(data=data)
