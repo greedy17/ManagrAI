@@ -78,7 +78,7 @@ export default {
 
   height: 2.5rem;
   background-color: white;
-  box-shadow: 3px 4px 7px $very-light-gray;
+  box-shadow: 1px 1px 3px 0px $very-light-gray;
   .tn-dropdown__search {
     @include input-field-white();
     border: none;

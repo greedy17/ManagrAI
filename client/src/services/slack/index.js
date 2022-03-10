@@ -22,6 +22,25 @@ export class SlackListResponse {
   }
 }
 
+export class SlackUserList {
+  constructor({ members = [], responseMetadata = {} } = {}) {
+    Object.assign(this, {
+      members: members.map(member => objectToCamelCase(member)),
+      nextCursor:
+        responseMetadata['nextCursor'] && responseMetadata['nextCursor'].length
+          ? responseMetadata['nextCursor']
+          : null,
+    })
+  }
+
+  static create(opts) {
+    return new SlackUserList(opts)
+  }
+  static fromAPI(json) {
+    return new SlackUserList(objectToCamelCase(json))
+  }
+}
+
 export class CustomSlackForm extends Model {
   static api = null
   static id = new fields.CharField({ readOnly: true })

@@ -210,7 +210,7 @@
                     valueKey="id"
                     nullDisplay="Channels"
                     :hasNext="!!userChannelOpts.nextCursor"
-                    @load-more="listChannels(userChannelOpts.nextCursor)"
+                    @load-more="listUserChannels(userChannelOpts.nextCursor)"
                     searchable
                     local
                   >
@@ -747,7 +747,7 @@ export default {
       }
     },
     repsPipeline() {
-      if (this.userLevel == 'REP') {
+      if (this.userLevel !== 'MANAGER') {
         this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
         this.setPipelines({
           fullName: 'MYSELF',

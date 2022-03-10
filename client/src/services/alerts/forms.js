@@ -111,6 +111,41 @@ export class AlertMessageTemplateForm extends Form {
   // static notificationText = new FormField({ validators: [new RequiredValidator()] })
   static body = new FormField({ validators: [new RequiredValidator()] })
 }
+
+export class RealTimeAlertConfigForm extends Form {
+  title = new FormField({ validators: [new RequiredValidator()] })
+  isActive = new FormField({ value: true })
+  recipients = new FormField({ validators: [new RequiredValidator()], value: [] })
+
+  get toAPI() {
+    let val = this.value
+
+    return {
+      title: val.title,
+      isActive: val.isActive,
+      recipients: val.recipients
+    }
+  }
+}
+
+export class RealTimeAlertForm extends Form {
+  static resourceType = new FormField({ validators: [new RequiredValidator()] })
+  static pipelines = new FormField({ validators: [new RequiredValidator()], value: [] })
+  static apiName = new FormField({ validators: [new RequiredValidator()] })
+  static recipients = new FormField({ validators: [new RequiredValidator()], value: [] })
+
+  get toAPI() {
+    let val = this.value
+
+    return {
+      resourceType: val.resourceType,
+      recipients: val.recipients,
+      pipelines: val.pipelines,
+      apiName: val.apiName,
+    }
+  }
+}
+
 export class AlertTemplateForm extends Form {
   static title = new FormField({ validators: [new RequiredValidator()] })
   static resourceType = new FormField({ validators: [new RequiredValidator()] })

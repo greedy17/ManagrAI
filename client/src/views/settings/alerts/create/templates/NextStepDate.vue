@@ -152,7 +152,7 @@
                       valueKey="id"
                       nullDisplay="Channels"
                       :hasNext="!!userChannelOpts.nextCursor"
-                      @load-more="listChannels(userChannelOpts.nextCursor)"
+                      @load-more="listUserChannels(userChannelOpts.nextCursor)"
                       searchable
                       local
                     >
@@ -334,7 +334,7 @@ export default {
       await this.listChannels()
       await this.listUserChannels()
     }
-    if (this.user.userLevel == 'MANAGER') {
+    if (this.userLevel == 'MANAGER') {
       await this.users.refresh()
     }
     this.userConfigForm = new UserConfigForm({
@@ -686,7 +686,7 @@ export default {
       }
     },
     repsPipeline() {
-      if (this.userLevel == 'REP') {
+      if (this.userLevel !== 'MANAGER') {
         this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
         this.setPipelines({
           fullName: 'MYSELF',
@@ -697,7 +697,7 @@ export default {
   },
   computed: {
     userTargetsOpts() {
-      if (this.user.userLevel == 'MANAGER') {
+      if (this.userLevel == 'MANAGER') {
         return [
           ...this.alertTargetOpts.map((opt) => {
             return {
@@ -712,7 +712,7 @@ export default {
       }
     },
     recipientOpts() {
-      if (this.user.userLevel == 'MANAGER') {
+      if (this.userLevel == 'MANAGER') {
         return [
           ...this.alertRecipientOpts.map((opt) => {
             return {
@@ -804,6 +804,8 @@ export default {
   updated() {
     if (
       this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
+        ._operandIdentifier.value !==
+      this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[1].field
         ._operandIdentifier.value
     ) {
       this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[1].field._operandIdentifier.value =
@@ -811,10 +813,6 @@ export default {
       this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[1].field.operandIdentifier.value =
         this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field.operandIdentifier.value
     }
-    console.log(
-      this.alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[1].field
-        ._operandIdentifier.value,
-    )
   },
 }
 </script>
@@ -891,7 +889,7 @@ img {
   width: 75%;
   text-align: center;
   margin-top: 1rem;
-  box-shadow: 3px 4px 7px $very-light-gray;
+  box-shadow: 1px 1px 3px 0px $very-light-gray;
 }
 .channels_height {
   height: 22vh;

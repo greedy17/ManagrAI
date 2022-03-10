@@ -2,35 +2,26 @@ import uuid
 import json
 
 from django.db import models
-from django.db.models import F, Q, Count
-from rest_framework.exceptions import ValidationError
 from django.contrib.postgres.fields import JSONField, ArrayField
-from django.utils import timezone
-from django.core import serializers
 
 from managr.salesforce.exceptions import ResourceAlreadyImported
 from managr.core.models import TimeStampModel, IntegrationModel
-from managr.utils.misc import datetime_appended_filepath
 from managr.slack.helpers import block_builders
-from managr.organization import constants as org_consts
-from managr.core import constants as core_consts
-from managr.slack import constants as slack_consts
 from managr.salesforce.adapter.models import (
     SalesforceAuthAccountAdapter,
     OpportunityAdapter,
     LeadAdapter,
 )
-
-# from managr.core import background as bg_task
-from . import constants as opp_consts
+from managr.core.models import User
 
 
 class LeadQuerySet(models.QuerySet):
     def for_user(self, user):
-        if user.is_superuser:
-            return self.all()
-        elif user.organization and user.is_active:
-            return self.filter(imported_by__organization=user.organization_id)
+        if user.organization and user.is_active:
+            if user.user_level in ["SDR", "MANAGER"]:
+                return self.filter(owner__organization=user.organization)
+            else:
+                return self.filter(owner=user)
         else:
             return None
 
@@ -77,6 +68,30 @@ class Lead(TimeStampModel, IntegrationModel):
             self.save()
             return res
 
+    def convert_in_salesforce(self, data):
+        if self.owner and hasattr(self.owner, "salesforce_account"):
+            token = self.owner.salesforce_account.access_token
+            base_url = self.owner.salesforce_account.instance_url
+            res = LeadAdapter.convert_lead(data, token, base_url, str(self.owner.id))
+            self.is_stale = True
+            self.save()
+            return res
+
+    def create_in_salesforce(self, data=None, user_id=None):
+        if self.owner and hasattr(self.owner, "salesforce_account"):
+            token = self.owner.salesforce_account.access_token
+            base_url = self.owner.salesforce_account.instance_url
+            object_fields = self.owner.salesforce_account.object_fields.filter(
+                salesforce_object="Lead"
+            ).values_list("api_name", flat=True)
+            res = LeadAdapter.create(data, token, base_url, self.integration_id, object_fields)
+            from managr.salesforce.routes import routes
+
+            serializer = routes["Lead"]["serializer"](data=res.as_dict)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return serializer.instance
+
     def get_current_values(self, *args, **kwargs):
         integration_id = self.integration_id
         token = self.owner.salesforce_account.access_token
@@ -86,10 +101,11 @@ class Lead(TimeStampModel, IntegrationModel):
 
 class OpportunityQuerySet(models.QuerySet):
     def for_user(self, user):
-        if user.is_superuser:
-            return self.all()
-        elif user.organization and user.is_active:
-            return self.filter(account__organization=user.organization_id)
+        if user.organization and user.is_active:
+            if user.user_level in ["SDR", "MANAGER"]:
+                return self.filter(owner__organization=user.organization)
+            else:
+                return self.filter(owner=user)
         else:
             return None
 
@@ -167,7 +183,9 @@ class Opportunity(TimeStampModel, IntegrationModel):
         data["id"] = str(data.get("id"))
         return OpportunityAdapter(**data)
 
-    def update_in_salesforce(self, data):
+    def update_in_salesforce(self, data, return_task_name=False):
+        from managr.salesforce.background import emit_update_current_db_values
+
         if self.owner and hasattr(self.owner, "salesforce_account"):
             token = self.owner.salesforce_account.access_token
             base_url = self.owner.salesforce_account.instance_url
@@ -179,25 +197,36 @@ class Opportunity(TimeStampModel, IntegrationModel):
             )
             self.is_stale = True
             self.save()
+            update_task = emit_update_current_db_values(
+                str(self.owner.id),
+                "Opportunity",
+                self.integration_id,
+                f"OPPORTUNITY-UPDATE-{str(uuid.uuid4())}",
+            )
+            if return_task_name:
+                return {
+                    "task_hash": update_task.task_hash,
+                    "verbose_name": update_task.verbose_name,
+                }
             return res
 
-    def create_in_salesforce(self, data=None, user_id=None):
+    @staticmethod
+    def create_in_salesforce(data=None, user_id=None):
         """when synchronous create in db first to be able to use immediately"""
-        token = self.owner.salesforce_account.access_token
-        base_url = self.owner.salesforce_account.instance_url
-        object_fields = self.owner.salesforce_account.object_fields.filter(
-            salesforce_object="Opportunity"
-        ).values_list("api_name", flat=True)
-        if not data:
-            data = self.adapter_class
+        user = User.objects.get(id=user_id)
+        if user and hasattr(user, "salesforce_account"):
+            token = user.salesforce_account.access_token
+            base_url = user.salesforce_account.instance_url
+            object_fields = user.salesforce_account.object_fields.filter(
+                salesforce_object="Opportunity"
+            ).values_list("api_name", flat=True)
+            res = OpportunityAdapter.create(data, token, base_url, object_fields, user_id)
+            from managr.salesforce.routes import routes
 
-        res = OpportunityAdapter.create_opportunity(data, token, base_url, object_fields, user_id)
-        from managr.salesforce.routes import routes
-
-        serializer = routes["Opportunity"]["serializer"](data=res.as_dict)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return serializer.instance
+            serializer = routes["Opportunity"]["serializer"](data=res.as_dict)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return serializer.instance
 
     def add_contact_role(self, access_token, base_url, contact_integration_id):
 
@@ -225,4 +254,3 @@ class Opportunity(TimeStampModel, IntegrationModel):
         token = self.owner.salesforce_account.access_token
         base_url = self.owner.salesforce_account.instance_url
         return OpportunityAdapter.get_current_values(integration_id, token, base_url, self.owner.id)
-

@@ -101,10 +101,11 @@ class Organization(TimeStampModel):
 
 class AccountQuerySet(models.QuerySet):
     def for_user(self, user):
-        if user.is_superuser:
-            return self.all()
-        elif user.organization and user.is_active:
-            return self.filter(organization=user.organization)
+        if user.organization and user.is_active:
+            if user.user_level in ["SDR", "MANAGER"]:
+                return self.filter(organization=user.organization)
+            else:
+                return self.filter(organization=user.organization, owner=user)
         else:
             return None
 
@@ -213,12 +214,13 @@ class Account(TimeStampModel, IntegrationModel):
 
 class ContactQuerySet(models.QuerySet):
     def for_user(self, user):
-        if user.is_superuser:
-            return self.all()
-        elif user.organization and user.is_active:
-            return self.filter(account__organization=user.organization)
+        if user.organization and user.is_active:
+            if user.user_level in ["SDR", "MANAGER"]:
+                return self.filter(owner__organization=user.organization)
+            else:
+                return self.filter(owner=user)
         else:
-            return self.none()
+            return None
 
 
 class Contact(TimeStampModel, IntegrationModel):
@@ -271,6 +273,10 @@ class Contact(TimeStampModel, IntegrationModel):
     def __str__(self):
         return f"contact integration: {self.integration_source}: {self.integration_id}, email: {self.email}"
 
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.email, str(self.id))
+
     def save(self, *args, **kwargs):
         # if there is an integration id make sure it is unique
         if self.integration_id:
@@ -284,6 +290,21 @@ class Contact(TimeStampModel, IntegrationModel):
             if existing:
                 raise ResourceAlreadyImported()
         return super(Contact, self).save(*args, **kwargs)
+
+    def create_in_salesforce(self, data=None, user_id=None):
+        if self.owner and hasattr(self.owner, "salesforce_account"):
+            token = self.owner.salesforce_account.access_token
+            base_url = self.owner.salesforce_account.instance_url
+            object_fields = self.owner.salesforce_account.object_fields.filter(
+                salesforce_object="Contact"
+            ).values_list("api_name", flat=True)
+            res = ContactAdapter.create(data, token, base_url, self.integration_id, object_fields)
+            from managr.salesforce.routes import routes
+
+            serializer = routes["Contact"]["serializer"](data=res.as_dict)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return serializer.instance
 
     def update_in_salesforce(self, data):
         if self.owner and hasattr(self.owner, "salesforce_account"):
@@ -427,6 +448,10 @@ class Pricebook2(TimeStampModel, IntegrationModel):
 
     class Meta:
         ordering = ["-datetime_created"]
+
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.name, str(self.id))
 
     @property
     def adapter_class(self):
@@ -574,6 +599,10 @@ class PricebookEntry(TimeStampModel, IntegrationModel):
         data = self.__dict__
         data["id"] = str(data["id"])
         return PricebookEntryAdapter(**data)
+
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.name, str(self.integration_id))
 
 
 class OpportunityLineItemQuerySet(models.QuerySet):

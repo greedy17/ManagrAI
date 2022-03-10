@@ -62,7 +62,6 @@ class AlertTemplate(TimeStampModel):
         operand_groups = [group.query_str(config_id) for group in self.groups.all()]
 
         operand_groups = f"AND ({' '.join(operand_groups)})"
-
         q = sf_consts.SALESFORCE_RESOURCE_QUERY_URI(
             user_sf.salesforce_id,
             self.resource_type,
@@ -499,7 +498,6 @@ class AlertInstance(TimeStampModel):
                     continue
                 if k == self.template.resource_type and hasattr(self.user, "salesforce_account"):
                     # if field does not exist set to strike through field with N/A
-                    print(v)
                     # binding_map[binding] = self.resource.secondary_data.get(v, "~None~")
                     binding_map[binding] = current_values.secondary_data.get(v, "~None~")
                     # if field value is None or blank set to empty or no value

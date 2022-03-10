@@ -6,8 +6,20 @@ import AlertTemplateAPI, {
   AlertOperandAPI,
   AlertConfigAPI,
   AlertGroupAPI,
+  RealTimeAPI,
+  AlertInstanceAPI,
+  RealTimeAlertConfigAPI,
 } from './api'
+import Contact from '../contacts'
+import Account from '../accounts/'
+import Opportunity from '../opportunity/'
 
+
+const resourceMap = {
+  "Contact": new fields.ModelField({ ModelClass: Contact }),
+  "Account": new fields.ModelField({ ModelClass: Account }),
+  "Opportunity": new fields.ModelField({ ModelClass: Opportunity })
+}
 export class AlertTemplateRef extends Model {
   /**
    * Template Ref class ignores Model Ref classes of child models
@@ -74,14 +86,20 @@ export class AlertConfig extends Model {
 }
 
 export class AlertInstance extends Model {
+  static api = new AlertInstanceAPI(AlertInstance)
   static id = new fields.IdField({})
   static template = new fields.CharField({})
   static templateRef = new fields.ModelField({ ModelClass: AlertTemplateRef })
   static user = new fields.CharField({})
   static renderedText = new fields.CharField({})
+  static resourceRef = new fields.Field({})
   static resourceId = new fields.CharField({})
   static sentAt = new fields.CharField({})
   static config = new fields.ModelField({ ModelClass: AlertConfig })
+
+  static fromAPI(json) {
+    return new AlertInstance(objectToCamelCase(json))
+  }
 }
 
 export default class AlertTemplate extends AlertTemplateRef {
@@ -96,4 +114,18 @@ export default class AlertTemplate extends AlertTemplateRef {
   static groups = new fields.ArrayField({ type: new fields.CharField() })
   static configs = new fields.ArrayField({ type: new fields.CharField() })
   static instances = new fields.ArrayField({ type: new fields.CharField() })
+}
+export class Config extends Model {
+  static api = new RealTimeAlertConfigAPI(Config)
+  static title = new fields.CharField()
+  static isActive = new fields.BooleanField({ default: true })
+  static recipients = new fields.ArrayField({ type: new fields.CharField() })
+}
+
+export class RealTime extends Model {
+  static api = RealTimeAPI.create(RealTime)
+  static apiName = new fields.CharField()
+  static resourceType = new fields.CharField({})
+  static pipelines = new fields.ArrayField({ type: new fields.CharField() })
+  static recipients = new fields.ArrayField({ type: new fields.CharField() })
 }

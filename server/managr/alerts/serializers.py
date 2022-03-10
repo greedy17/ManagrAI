@@ -182,6 +182,35 @@ class AlertInstanceRefSerializer(serializers.ModelSerializer):
         )
 
 
+class AlertInstanceSerializer(serializers.ModelSerializer):
+    template_ref = AlertTemplateRefSerializer(source="template")
+    resource_ref = serializers.SerializerMethodField("get_resource_ref")
+
+    class Meta:
+        model = alert_models.AlertInstance
+        fields = (
+            "id",
+            "template",
+            "template_ref",
+            "user",
+            "rendered_text",
+            "resource_id",
+            "resource_ref",
+            "sent_at",
+            "channel",
+            "config",
+            "invocation",
+        )
+
+    def get_resource_ref(self, instance):
+        from managr.salesforce.routes import routes
+
+        resource = instance.template.resource_type
+        serializer = routes[resource]["serializer"]
+        resource_id = routes[resource]["model"].objects.get(id=instance.resource_id)
+        return serializer(instance=resource_id).data
+
+
 # READ SERIALIZERS
 
 
@@ -283,6 +312,16 @@ class AlertGroupWriteSerializer(serializers.ModelSerializer):
             _new_operands.is_valid(raise_exception=True)
             _new_operands.save()
         return data
+
+
+# class RealTimeAlertConfigWriteSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = alert_models.Config
+#         fields = (
+#             "title",
+#             "is_active",
+#             "recipients",
+#         )
 
 
 class AlertConfigWriteSerializer(serializers.ModelSerializer):

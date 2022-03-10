@@ -161,6 +161,7 @@ router.register("accounts", organization_views.AccountViewSet, "accounts")
 router.register("contacts", organization_views.ContactViewSet, "contacts")
 router.register("action-choices", organization_views.ActionChoiceViewSet, "action-choices")
 router.register("salesforce/fields", sf_views.SObjectFieldViewSet, "salesforce-fields")
+router.register("salesforce/sobject", sf_views.SalesforceSObjectViewSet, "salesforce-sobject")
 router.register("salesforce/public-fields", sf_views.PublicSObjectFieldViewSet, "public-fields")
 router.register(
     "salesforce/validations", sf_views.SObjectValidationViewSet, "salesforce-validation"
@@ -176,4 +177,9 @@ router.register(
 router.register("alerts/operands", alert_views.AlertOperandViewSet, "alert-operands")
 router.register("alerts/groups", alert_views.AlertGroupViewSet, "alert-groups")
 router.register("alerts/configs", alert_views.AlertConfigViewSet, "alert-configs")
+router.register(
+    "alerts/real-time-configs", alert_views.RealTimeAlertConfigViewSet, "real-time-alert-configs"
+)
+router.register("alerts/instances", alert_views.AlertInstanceViewSet, "alert-instance")
+router.register("alerts/real-time", alert_views.RealTimeAlertViewSet, "real-time-alerts")
 urlpatterns += router.urls

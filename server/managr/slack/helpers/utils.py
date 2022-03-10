@@ -12,6 +12,7 @@ from managr.core.models import User
 from managr.slack.helpers import block_builders, requests
 from managr.slack import constants as slack_consts
 from managr.salesforce.models import MeetingWorkflow
+from managr.slack.models import OrgCustomSlackFormInstance
 
 logger = logging.getLogger("managr")
 
@@ -318,15 +319,18 @@ def generate_call_block(call_res, resource_id=None):
     return blocks
 
 
-def check_contact_last_name(meeting_id):
+def check_contact_last_name(meeting_id, meeting_type):
     workflow = MeetingWorkflow.objects.get(id=meeting_id)
-    meeting = workflow.meeting
-    contacts = meeting.participants
-    for contact in contacts:
-        contactData = contact.get("secondary_data")
-        if not contactData["LastName"]:
-            return False
-    return True
+    meeting = workflow.meeting if meeting_type == "zoom" else workflow.non_zoom_meeting
+    if meeting:
+        contacts = meeting.participants
+        for contact in contacts:
+            contactData = contact.get("secondary_data")
+            if not contactData["LastName"]:
+                return False
+        return True
+    else:
+        pass
 
 
 def get_random_update_message(topic):
@@ -371,6 +375,7 @@ def check_for_uncompleted_meetings(user_id, org_level=False):
             users = User.objects.filter(
                 slack_integration__recap_receivers__contains=[user.slack_integration.slack_id]
             )
+            slack_id = OrgCustomSlackFormInstance.objects.get(id=user.slack_integration.slack_id)
             not_completed = []
             for user in users:
                 total_meetings = MeetingWorkflow.objects.filter(user=user.id).filter(
@@ -385,9 +390,10 @@ def check_for_uncompleted_meetings(user_id, org_level=False):
             total_meetings = MeetingWorkflow.objects.filter(user=user.id).filter(
                 datetime_created__contains=datetime.today().date()
             )
+            slack_id = OrgCustomSlackFormInstance.objects.get(id=user.slack_integration.slack_id)
             not_completed = [meeting for meeting in total_meetings if meeting.progress == 0]
         if len(not_completed):
-            return {"status": True, "not_completed": len(not_completed)}
+            return [not_completed]
     return {"status": False}
 
 
@@ -410,7 +416,10 @@ def send_loading_screen(access_token, message, view_type, user_id, trigger_id=No
                         "https://managr-images.s3.amazonaws.com/slack/logo_loading.gif",
                         "Loading...",
                     ),
-                )
+                ),
+                block_builders.context_block(
+                    "* _After a few seconds click Close and try again_", "mrkdwn"
+                ),
             ],
         },
     }
@@ -419,15 +428,22 @@ def send_loading_screen(access_token, message, view_type, user_id, trigger_id=No
         loading_view_data["trigger_id"] = trigger_id
         if view_id is not None:
             loading_view_data["view_id"] = view_id
-    else:
-        view = slack_consts.VIEWS_PUSH
+    elif view_type == "update":
+        view = slack_consts.VIEWS_UPDATE
         loading_view_data["view_id"] = view_id
         if trigger_id is not None:
             loading_view_data["trigger_id"] = trigger_id
+    else:
+        view = slack_consts.VIEWS_PUSH
+        loading_view_data["trigger_id"] = trigger_id
+        if view_id is not None:
+            loading_view_data["view_id"] = view_id
     try:
         loading_res = requests.generic_request(
             slack_consts.SLACK_API_ROOT + view, loading_view_data, access_token=access_token,
         )
+        return loading_res
     except Exception as e:
-        return logger.exception(f"Failed To Show Loading Screen for user {user_id} {e}")
-    return loading_res
+        logger.exception(f"Failed To Show Loading Screen for user {user_id} {e}")
+        return e
+

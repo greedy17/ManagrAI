@@ -472,6 +472,7 @@ export default {
       })
 
       this.formStages = [...forms]
+      console.log(this.formStages)
     },
 
     async listPicklists(query_params = {}) {

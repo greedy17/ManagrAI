@@ -24,6 +24,7 @@ SALESFORCE_FIELDS_URI = lambda resource: f"{CUSTOM_BASE_URI}/ui-api/object-info/
 SALESFORCE_PICKLIST_URI = (
     lambda resource_uri, record_type_id: f"{resource_uri}/picklist-values/{record_type_id}"
 )
+SALESFORCE_SOAP_URI = f"/services/Soap/u/{SF_API_VERSION}"
 
 REMOVE_OWNER_ID = {
     # we automatically add owner id as a filter to be most restrictive and not have cross account issues
@@ -134,6 +135,33 @@ def SF_DEFAULT_RECORD_ID(resource):
     return url
 
 
+def CONVERT_LEAD_BODY(access_token, data):
+    result = ""
+    count = 0
+    for key in data.keys():
+        count += 1
+        result += f"<tns:{key}>{data[key]}</tns:{key}>"
+        if count != len(data.keys()):
+            result += "\n"
+
+    body = f"""<?xml version="1.0" encoding="UTF-8"?>
+    <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ens="urn:sobject.partner.soap.sforce.com" xmlns:fns="urn:fault.partner.soap.sforce.com" xmlns:tns="urn:partner.soap.sforce.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <soap:Header>
+    <tns:SessionHeader>
+    <sessionId>{access_token}</sessionId>
+    </tns:SessionHeader>
+    </soap:Header>
+    <soap:Body>
+    <tns:convertLead>
+    <tns:leadConverts>
+    {result}
+    </tns:leadConverts>
+    </tns:convertLead>
+    </soap:Body>
+    </soap:Envelope>"""
+    return body
+
+
 SALESFORCE_VALIDATION_QUERY = (
     lambda resource: f"{CUSTOM_BASE_URI}/tooling/query/?q=Select Id,Active,Description,ErrorMessage,EntityDefinition.DeveloperName From ValidationRule where EntityDefinition.DeveloperName = '{resource}' AND Active = true"
 )
@@ -172,6 +200,8 @@ AUTHORIZATION_QUERY = urlencode(
         "state": "SALESFORCE",
     }
 )
+
+SALESFORCE_LEAD_CONVERT_HEADER = {"Content-Type": "text/xml", "SOAPAction": "null"}
 SALESFORCE_JSON_HEADER = {"Content-Type": "application/json"}
 SALESFORCE_BEARER_AUTH_HEADER = lambda x: dict(Authorization=f"Bearer {x}")
 
@@ -187,6 +217,7 @@ RESOURCE_SYNC_OPPORTUNITYLINEITEM = "OpportunityLineItem"
 
 
 SALESFORCE_RESOURCE_TASK = "Task"
+SALESFORCE_RESOURCE_EVENT = "Event"
 
 SALESFORCE_OBJECT_FIELDS = "OBJECT_FIELDS"
 SALESFORCE_PICKLIST_VALUES = "PICKLIST_VALUES"
@@ -218,6 +249,18 @@ TASK_QUERY_FIELDS = [
     "WhatId",
     "WhoId",
     "Status",
+]
+
+EVENT_FIELDS = [
+    "Id",
+    "Description",
+    "Subject",
+    "CreatedDate",
+    "ActivityDate",
+    "WhatId",
+    "WhoId",
+    "DurationInMinutes",
+    "ActivityDateTime",
 ]
 
 OPPORTUNITY_HISTORY_FIELDS = ["Id", "CreatedDate"]

@@ -87,12 +87,16 @@ def create_resource(context):
             if view_id
             else slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
         )
+        private_metadata = {
+            "type": "command",
+            **context,
+        }
         data = {
             "view": {
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Create New"},
                 "blocks": blocks,
-                "private_metadata": json.dumps({"type": "command"}),
+                "private_metadata": json.dumps(private_metadata),
                 "external_id": f"create_modal.{str(uuid.uuid4())}",
             },
         }
@@ -113,21 +117,7 @@ def create_task(context):
                 "response_type": "ephemeral",
                 "text": "Sorry I cant find your managr account",
             }
-        blocks = [
-            block_builders.static_select(
-                "Pick a resource to create task for",
-                [
-                    *map(
-                        lambda resource: block_builders.option(resource, resource),
-                        slack_const.MEETING_RESOURCE_ATTACHMENT_OPTIONS,
-                    )
-                ],
-                action_id=action_with_params(
-                    slack_const.ZOOM_MEETING__CREATE_TASK, [f"u={str(user.id)}", "type=command"]
-                ),
-                block_id=slack_const.ZOOM_MEETING__ATTACH_RESOURCE_SECTION,
-            ),
-        ]
+
         access_token = user.organization.slack_integration.access_token
         view_id = context.get("view_id", None)
         url = (
@@ -138,9 +128,57 @@ def create_task(context):
         data = {
             "view": {
                 "type": "modal",
-                "title": {"type": "plain_text", "text": "Create Task"},
+                "callback_id": slack_const.COMMAND_CREATE_TASK,
+                "title": {"type": "plain_text", "text": "Create a Task"},
+                "blocks": get_block_set("create_task_modal", context={"u": context.get("u"),},),
+                "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
+                "private_metadata": json.dumps(context),
+                "external_id": f"create_task_modal.{str(uuid.uuid4())}",
+            },
+        }
+        if view_id:
+            data["view_id"] = view_id
+        else:
+            data["trigger_id"] = context.get("trigger_id")
+        slack_requests.generic_request(url, data, access_token=access_token)
+
+
+def log_new_activity(context):
+    # list of accepted commands for this fake endpoint
+    user = User.objects.get(id=context.get("u"))
+    if user.slack_integration:
+        slack = UserSlackIntegration.objects.filter(slack_id=user.slack_integration.id).first()
+        if not slack:
+            data = {
+                "response_type": "ephemeral",
+                "text": "Sorry I cant find your managr account",
+            }
+
+        access_token = user.organization.slack_integration.access_token
+        view_id = context.get("view_id", None)
+        url = (
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+            if view_id
+            else slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+        )
+        options = [
+            block_builders.option("Event", "create_event_modal"),
+            block_builders.option("Task", "create_task_modal"),
+        ]
+        blocks = [
+            block_builders.static_select(
+                "Type of Activity to log:",
+                options,
+                slack_const.COMMAND_LOG_NEW_ACTIVITY,
+                block_id="selected_activity",
+            )
+        ]
+        data = {
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Log Activity"},
                 "blocks": blocks,
-                "external_id": f"create_modal.{str(uuid.uuid4())}",
+                "private_metadata": json.dumps(context),
             },
         }
         if view_id:
@@ -275,9 +313,18 @@ def add_to_sequence(context):
         ).first()
         if not slack:
             return
+    options = "%".join(["Contact", "Opportunity", "Account"])
     blocks = get_block_set(
-        "select_account", {"u": str(user.id), "type": "command", "system": "outreach"},
+        "pick_resource_modal_block_set",
+        {
+            "u": str(user.id),
+            "options": options,
+            "system": "outreach",
+            "action_id": slack_const.PROCESS_SHOW_ENGAGEMENT_MODEL,
+            "private_metadata": json.dumps(context),
+        },
     )
+    pm = {"system": "outreach"}
     access_token = user.organization.slack_integration.access_token
 
     view_id = context.get("view_id", None)
@@ -286,17 +333,14 @@ def add_to_sequence(context):
         if view_id
         else slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     )
-    private_metadata = {
-        "resource_type": "Account",
-    }
 
     data = {
         "view": {
             "type": "modal",
-            "callback_id": slack_const.ADD_TO_SEQUENCE,
-            "title": {"type": "plain_text", "text": "Select Account"},
+            "title": {"type": "plain_text", "text": "Select Object Type"},
             "blocks": blocks,
-            "private_metadata": json.dumps(private_metadata),
+            "external_id": f"pick_resource_modal_block_set.{str(uuid.uuid4())}",
+            "private_metadata": json.dumps(pm),
         },
     }
     if view_id:
@@ -314,8 +358,17 @@ def add_to_cadence(context):
         ).first()
         if not slack:
             return
+    options = "%".join(["Contact", "Opportunity", "Account"])
+    pm = {"system": "salesloft"}
     blocks = get_block_set(
-        "select_account", {"u": str(user.id), "type": "command", "system": "salesloft"},
+        "pick_resource_modal_block_set",
+        {
+            "u": str(user.id),
+            "options": options,
+            "system": "salesloft",
+            "action_id": slack_const.PROCESS_SHOW_ENGAGEMENT_MODEL,
+            "private_metadata": json.dumps(context),
+        },
     )
     access_token = user.organization.slack_integration.access_token
 
@@ -325,17 +378,14 @@ def add_to_cadence(context):
         if view_id
         else slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     )
-    private_metadata = {
-        "resource_type": "Account",
-    }
 
     data = {
         "view": {
             "type": "modal",
-            "callback_id": slack_const.ADD_TO_CADENCE,
-            "title": {"type": "plain_text", "text": "Select Account"},
+            "title": {"type": "plain_text", "text": "Select Object Type"},
             "blocks": blocks,
-            "private_metadata": json.dumps(private_metadata),
+            "external_id": f"pick_resource_modal_block_set.{str(uuid.uuid4())}",
+            "private_metadata": json.dumps(pm),
         },
     }
     if view_id:
@@ -353,7 +403,6 @@ def call_recording(context):
         ).first()
         if not slack:
             return
-    blocks = get_block_set("pick_resource_modal_block_set", {"u": str(user.id)},)
     access_token = user.organization.slack_integration.access_token
 
     view_id = context.get("view_id", None)
@@ -362,12 +411,19 @@ def call_recording(context):
         if view_id
         else slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     )
-
+    options = "%".join(["Opportunity", "Account"])
     data = {
         "view": {
             "type": "modal",
             "title": {"type": "plain_text", "text": "Call Recording"},
-            "blocks": blocks,
+            "blocks": get_block_set(
+                "pick_resource_modal_block_set",
+                {
+                    "u": str(user.id),
+                    "options": options,
+                    "action_id": slack_const.GONG_CALL_RECORDING,
+                },
+            ),
             "external_id": f"pick_resource_modal_block_set.{str(uuid.uuid4())}",
         },
     }
@@ -384,7 +440,7 @@ def get_action(action_name, context={}, *args, **kwargs):
         "UPDATE_RESOURCE": update_resource,
         "CREATE_RESOURCE": create_resource,
         "LIST_TASKS": list_tasks,
-        "CREATE_TASK": create_task,
+        "LOG_NEW_ACTIVITY": log_new_activity,
         "GET_NOTES": get_notes_command,
         "SCHEDULE_MEETING": schedule_meeting,
         "ADD_SEQUENCE": add_to_sequence,

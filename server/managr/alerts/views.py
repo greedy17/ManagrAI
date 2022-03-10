@@ -5,12 +5,12 @@ from faker import Faker
 import pytz
 from urllib.parse import urlencode
 from datetime import datetime
+from django_filters.rest_framework import DjangoFilterBackend
 
 from django.core.management import call_command
 from django.shortcuts import render, redirect
 from django.conf import settings
 from django.utils import timezone
-
 from rest_framework.views import APIView
 from rest_framework import (
     authentication,
@@ -37,6 +37,8 @@ from .background import emit_init_alert, _process_check_alert
 
 from . import models as alert_models
 from . import serializers as alert_serializers
+from .filters import AlertInstanceFilterSet
+from managr.core.models import User
 
 # Create your views here.
 
@@ -120,6 +122,22 @@ class AlertMessageTemplateViewSet(
         return alert_models.AlertMessageTemplate.objects.for_user(self.request.user)
 
 
+class RealTimeAlertConfigViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        print(data)
+        return Response(data)
+
+
 class AlertConfigViewSet(
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
@@ -147,6 +165,29 @@ class AlertConfigViewSet(
         serializer.save()
         readSerializer = self.serializer_class(instance=serializer.instance)
         return Response(data=readSerializer.data)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="current-instances",
+    )
+    def get_current_instances(self, request, *args, **kwargs):
+        user = User.objects.get(id=request.user.id)
+        config_id = self.request.GET.get("config_id")
+        last_instance = alert_models.AlertInstance.objects.filter(
+            user=user, config=config_id
+        ).first()
+        if last_instance and last_instance.datetime_created.date() == datetime.today().date():
+            template = alert_models.AlertTemplate.objects.filter(
+                id=last_instance.template.id
+            ).values()[0]
+            instances = alert_models.AlertInstance.objects.filter(
+                user=user, config__id=config_id, invocation=last_instance.invocation,
+            )
+            return Response(data={"instances": instances.values(), "template": template})
+
+        return Response(data=[])
 
 
 class AlertGroupViewSet(
@@ -197,3 +238,70 @@ class AlertOperandViewSet(
             return alert_serializers.AlertOperandWriteSerializer
 
         return self.serializer_class
+
+
+class AlertInstanceViewSet(
+    mixins.ListModelMixin, viewsets.GenericViewSet,
+):
+    filter_backends = (
+        DjangoFilterBackend,
+        filters.SearchFilter,
+    )
+    serializer_class = alert_serializers.AlertInstanceSerializer
+    filter_class = AlertInstanceFilterSet
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        return alert_models.AlertInstance.objects.for_user(self.request.user)
+
+
+class RealTimeAlertViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def create(self, request, *args, **kwargs):
+        from managr.salesforce.models import SObjectField
+
+        data = request.data
+        manager = User.objects.get(id=data.get("user"))
+        api_name = data.get("api_name", None)
+        if api_name:
+            field = (
+                SObjectField.objects.filter(salesforce_object=data.get("resource_type"))
+                .filter(api_name=api_name)
+                .first()
+            )
+            current_config = data.get("config")
+            pipelines = data.get("pipelines")
+            title = current_config["title"]
+            current_config["recipients"] = {str(manager.id): data.get("recipients")}
+            current_config["api_name"] = api_name
+            users = User.objects.filter(id__in=pipelines)
+            for user in users:
+                if hasattr(user, "slack_integration"):
+                    configs = user.slack_integration.realtime_alert_configs
+                    if str(field.id) in configs.keys():
+                        if current_config["title"] in configs[str(field.id)].keys():
+                            if (
+                                str(manager.id)
+                                not in configs[str(field.id)][title]["recipients"].keys()
+                            ):
+                                configs[str(field.id)][title]["recipients"][
+                                    str(manager.id)
+                                ] = data.get("recipients")
+                        else:
+                            configs[str(field.id)][title] = current_config
+
+                    else:
+                        new_config = {current_config["title"]: current_config}
+                        configs[str(field.id)] = new_config
+                    user.slack_integration.save()
+                else:
+                    continue
+        return Response({"status": "success"})

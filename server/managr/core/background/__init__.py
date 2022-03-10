@@ -1,11 +1,15 @@
 import logging
+import time
+import random
+import jwt
 import pytz
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 import re
 from background_task import background
 from django.db.models import Q
-
+from django.utils import timezone
+from managr.salesforce.adapter.exceptions import TokenExpired
 from managr.alerts.models import AlertConfig
 from managr.core.models import User, MeetingPrepInstance
 from managr.core.serializers import MeetingPrepInstanceSerializer
@@ -25,6 +29,10 @@ from managr.organization.models import Account
 from managr.opportunity.models import Lead, Opportunity
 from managr.zoom.background import _split_first_name, _split_last_name
 from managr.utils.misc import custom_paginator
+from managr.zoom.background import emit_kick_off_slack_interaction
+from managr.alerts.constants import ALERT_PIPELINE_URL
+
+# from managr.slack.helpers.block_sets.meeting_review_block_sets import _initial_interaction_message
 
 logger = logging.getLogger("managr")
 
@@ -64,6 +72,31 @@ def emit_check_reminders(user_id, verbose_name):
     return check_reminders(user_id, verbose_name=verbose_name)
 
 
+# Functions for Scheduling Meeting
+def emit_non_zoom_meetings(workflow_id, user_id, user_tz, non_zoom_end_times):
+    return non_zoom_meeting_message(workflow_id, user_id, user_tz, non_zoom_end_times)
+
+
+@background()
+def non_zoom_meeting_message(workflow_id, user_id, user_tz, non_zoom_end_times):
+    # Convert Non-Zoom Meeting from UNIX time to UTC
+    unix_time = datetime.utcfromtimestamp(int(non_zoom_end_times))
+    tz = pytz.timezone("UTC")
+    local_end = unix_time.astimezone(tz)
+
+    # Convert their 7am local time to UTC
+    # user_7am_naive = timezone.now()
+    # user_7am = timezone.make_aware(user_7am_naive, timezone=pytz.timezone(user_tz))
+    current_time = datetime.now()
+    utc_time_from_user_7_am = current_time.astimezone(pytz.timezone("UTC"))
+    time_difference = local_end - utc_time_from_user_7_am
+    # seconds = a_timedelta.total_seconds()
+    seconds = time_difference.total_seconds()
+    seconds = int(seconds)
+    # Use time difference in UTC to schedule realtime meeting alert
+    return emit_kick_off_slack_interaction(user_id, workflow_id, schedule=seconds)
+
+
 #########################################################
 # Helper functions
 #########################################################
@@ -89,6 +122,30 @@ def _process_create_calendar_event(
         logger.info(f"Nylas warning {e}")
 
 
+def afternoon_digest_scheduler(self):
+    if self.access_token:
+        decoded = jwt.decode(
+            self.access_token, algorithms="HS512", options={"verify_signature": False}
+        )
+    exp = decoded["exp"]
+    expiration = datetime.fromtimestamp(exp) - timezone.timedelta(minutes=10)
+
+    t = emit_generate_afternoon_digest(str(self.id), expiration.strftime("%Y-%m-%dT%H:%M"))
+    self.refresh_token_task = str(t.id)
+
+
+def morning_digest_scheduler(self):
+    if self.access_token:
+        decoded = jwt.decode(
+            self.access_token, algorithms="HS512", options={"verify_signature": False}
+        )
+    exp = decoded["exp"]
+    expiration = datetime.fromtimestamp(exp) - timezone.timedelta(minutes=10)
+
+    t = emit_generate_morning_digest(str(self.id), expiration.strftime("%Y-%m-%dT%H:%M"))
+    self.refresh_token_task = str(t.id)
+
+
 def check_for_time(tz, hour, minute):
     user_timezone = pytz.timezone(tz)
     currenttime = datetime.today().time()
@@ -112,20 +169,22 @@ def check_for_uncompleted_meetings(user_id, org_level=False):
             not_completed = []
             for user in users:
                 total_meetings = MeetingWorkflow.objects.filter(user=user.id).filter(
-                    datetime_created__contains=datetime.today().date()
+                    datetime_created__contains=datetime.today().date(),
                 )
                 user_not_completed = [
                     meeting for meeting in total_meetings if meeting.progress == 0
                 ]
+
                 if len(user_not_completed):
                     not_completed = [*not_completed, *user_not_completed]
         else:
+            # This will be for the reps
             total_meetings = MeetingWorkflow.objects.filter(user=user.id).filter(
                 datetime_created__contains=datetime.today().date()
             )
             not_completed = [meeting for meeting in total_meetings if meeting.progress == 0]
         if len(not_completed):
-            return {"status": True, "not_completed": len(not_completed)}
+            return {"status": True, "not_completed": not_completed}
     return {"status": False}
 
 
@@ -145,22 +204,26 @@ def check_workflows_count(user_id):
 
 def _process_calendar_details(user_id):
     user = User.objects.get(id=user_id)
-    try:
-        events = user.nylas._get_calendar_data()
-        if events:
-            processed_data = []
-            for event in events:
-                data = {}
-                data["title"] = event.get("title", None)
-                data["participants"] = event.get("participants", None)
-                data["times"] = event.get("when", None)
-                processed_data.append(data)
-            return processed_data
-        else:
-            return None
-    except Exception as e:
-        logger.exception(f"_PROCESS_CALENDAR_DETAILS ERROR: {e}")
-        return dict({"status": "error"})
+    events = user.nylas._get_calendar_data()
+    if events:
+        processed_data = []
+        for event in events:
+            description = event.get("description")
+            if description is None:
+                description = "No Description"
+            data = {}
+            data["title"] = event.get("title", None)
+            data["owner"] = event.get("owner", None)
+            data["participants"] = event.get("participants", None)
+            data["description"] = description
+            conferencing = event.get("conferencing", None)
+            if conferencing:
+                data["provider"] = conferencing["provider"]
+            data["times"] = event.get("when", None)
+            processed_data.append(data)
+        return processed_data
+    else:
+        return None
 
 
 def meeting_prep(processed_data, user_id, invocation=1):
@@ -314,22 +377,44 @@ def meeting_prep(processed_data, user_id, invocation=1):
             )
             contact_forms.append(form)
             contact["_form"] = str(form.id)
-    event_data = processed_data
     processed_data.pop("participants")
     data = {
         "user": user.id,
         "participants": meeting_contacts,
-        "event_data": event_data,
+        "event_data": processed_data,
         "invocation": invocation,
     }
     resource_check = meeting_resource_data.get("resource_id", None)
+    provider = processed_data.get("provider")
+
     if resource_check:
         data["resource_id"] = meeting_resource_data["resource_id"]
         data["resource_type"] = meeting_resource_data["resource_type"]
+
+    # Creates Meeting Prep Instance
     serializer = MeetingPrepInstanceSerializer(data=data)
     serializer.is_valid(raise_exception=True)
     serializer.save()
-    return
+
+    meeting_prep_instance = (
+        MeetingPrepInstance.objects.filter(user=user).order_by("-datetime_created").first()
+    )
+    # Conditional Check for Zoom meeting or Non-Zoom Meeting
+    if (provider == "Zoom Meeting" and user.email not in processed_data["owner"]) or (
+        provider not in [None, "Zoom Meeting",]
+        and "Zoom meeting" not in processed_data["description"]
+    ):
+        # Google Meet (Non-Zoom)
+        meeting_workflow = MeetingWorkflow.objects.create(
+            non_zoom_meeting=meeting_prep_instance, user=user,
+        )
+
+        # Sending end_times, workflow_id, and user values to emit function
+        non_zoom_end_times = processed_data.get("times").get("end_time")
+        workflow_id = str(meeting_workflow.id)
+        user_id = str(user.id)
+        user_tz = str(user.timezone)
+        return emit_non_zoom_meetings(workflow_id, user_id, user_tz, non_zoom_end_times)
 
 
 def _send_calendar_details(
@@ -411,21 +496,44 @@ def process_get_task_list(user_id, page=1):
     user = User.objects.get(id=user_id)
     task_blocks = []
     if hasattr(user, "salesforce_account"):
-        try:
-            tasks = user.salesforce_account.adapter_class.list_tasks()
-        except Exception as e:
-            logger.exception(f"Morning digest tasks error: {e}")
-            task_blocks.extend(
-                [
-                    block_builders.simple_section(
-                        ":white_check_mark: *Upcoming Tasks*", "mrkdwn", block_id="task_header",
-                    ),
-                    block_builders.simple_section(
-                        "There was an issue retreiving your tasks", "mrkdwn"
-                    ),
-                ]
-            )
-            return task_blocks
+        attempts = 1
+        while True:
+            try:
+                tasks = user.salesforce_account.adapter_class.list_tasks()
+                break
+            except TokenExpired:
+                if attempts >= 5:
+                    task_blocks.extend(
+                        [
+                            block_builders.simple_section(
+                                ":white_check_mark: *Upcoming Tasks*",
+                                "mrkdwn",
+                                block_id="task_header",
+                            ),
+                            block_builders.simple_section(
+                                "There was an issue retreiving your tasks", "mrkdwn"
+                            ),
+                        ]
+                    )
+                    return task_blocks
+                else:
+                    sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                    time.sleep(sleep)
+                    user.salesforce_account.regenerate_token()
+                    attempts += 1
+            except Exception as e:
+                logger.exception(f"Morning digest tasks error: {e}")
+                task_blocks.extend(
+                    [
+                        block_builders.simple_section(
+                            ":white_check_mark: *Upcoming Tasks*", "mrkdwn", block_id="task_header",
+                        ),
+                        block_builders.simple_section(
+                            "There was an issue retreiving your tasks", "mrkdwn"
+                        ),
+                    ]
+                )
+                return task_blocks
         paged_tasks = custom_paginator(tasks, count=3, page=page)
         results = paged_tasks.get("results", [])
         if results:
@@ -480,7 +588,12 @@ def process_current_alert_list(user_id):
     user = User.objects.get(id=user_id)
     configs = AlertConfig.objects.filter(Q(template__user=user.id, template__is_active=True))
     alert_blocks = [
-        block_builders.simple_section(":eyes: *Pipeline Monitor*", "mrkdwn"),
+        block_builders.section_with_button_block(
+            "Open in Pipeline",
+            "OPEN_IN_PIPELINE",
+            ":eyes: *Pipeline Monitor*",
+            url=ALERT_PIPELINE_URL,
+        ),
     ]
     if configs:
         for config in configs:
@@ -490,7 +603,7 @@ def process_current_alert_list(user_id):
                     user.organization.slack_integration.access_token, config.recipients[0]
                 )
                 name = channel_info.get("channel").get("name")
-                text += f": {name}"
+                text += f": #{name}"
             alert_blocks = [
                 *alert_blocks,
                 block_builders.simple_section(text, "mrkdwn"),
@@ -568,7 +681,7 @@ def _process_send_manager_reminder(user_id, not_completed):
         logger.exception(f"{user.email} does not have a slack account")
 
 
-@background()
+@background(schedule=0)
 def generate_morning_digest(user_id, invocation=None, page=1):
     user = User.objects.get(id=user_id)
     blocks = [
@@ -599,7 +712,7 @@ def generate_morning_digest(user_id, invocation=None, page=1):
         return blocks
 
 
-@background()
+@background(schedule=0)
 def generate_afternoon_digest(user_id):
     user = User.objects.get(id=user_id)
     #   check user_level for manager

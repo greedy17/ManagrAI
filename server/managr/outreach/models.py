@@ -245,7 +245,6 @@ class SequenceAdapter:
         else:
             status_code = response.status_code
             error_data = response.json()
-            logger.info(f"{error_data}")
             error_check = error_data.get("error_param", None)
             error_param = error_check if error_check else error_data.get("errors")
             kwargs = {
@@ -409,7 +408,6 @@ class ProspectAdapter:
         else:
             status_code = response.status_code
             error_data = response.json()
-            logger.info(f"{error_data}")
             error_check = error_data.get("error_param", None)
             error_param = error_check if error_check else error_data.get("errors")
             kwargs = {

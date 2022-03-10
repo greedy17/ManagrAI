@@ -438,6 +438,31 @@ def checkbox_block(label, options, action_id=None, initial_options=None, block_i
     return block
 
 
+def checkbox_input(options, action_id):
+    """
+    Function returns a checkbox input for action blocks
+    """
+    block = {"type": "checkboxes", "options": options, "action_id": action_id}
+    return block
+
+
+def static_select_input(options, action_id, placeholder=None):
+    block = {"type": "static_select", "options": options, "action_id": action_id}
+    if placeholder:
+        block["placeholder"] = {"type": "plain_text", "text": placeholder}
+    return block
+
+
+def checkbox_option(text, value, text_type="mrkdwn", description=None):
+    """
+    Function for building the options for a checkbox input
+    """
+    block = {"text": {"type": text_type, "text": text}, "value": value}
+    if description:
+        block["description"] = {"type": "mrkdwn", "text": description}
+    return block
+
+
 def section_with_accessory_block(
     section_text, accessory, text_type="mrkdwn", block_id=None,
 ):
@@ -560,4 +585,40 @@ def context_block(value, text_type="plain_text", block_id=None):
         "elements": [{"type": text_type, "text": value}],
         "block_id": block_id,
     }
+
+
+def timepicker(
+    initial_time=None,
+    action_id=None,
+    block_id=None,
+    label="Select Time",
+    placeholder="Select a time",
+):
+    """
+    Function returns a timepicker block object
+
+    Parameters:
+    initial_time - Sets the initial value to the time string passed in, must be 'HOUR-MINUTE'
+    action_id - Sets id to value passed in, otherwise None
+    block_id - Sets id to value passed in, otherwise sets id with uuid
+    label - Sets the label to the string passed in, otherwise default is 'Select time'
+    placeholder - Sets the placeholder text of the input to string passed in, otherwise default is 'Select a time'
+
+    """
+    if not block_id:
+        block_id = str(uuid.uuid4())
+    block = {
+        "type": "section",
+        "text": {"type": "mrkdwn", "text": f"{label}"},
+        "block_id": block_id,
+        "accessory": {
+            "type": "timepicker",
+            "placeholder": {"type": "plain_text", "text": f"{placeholder}"},
+        },
+    }
+    if initial_time:
+        block["accessory"]["initial_time"] = initial_time
+    if action_id:
+        block["accessory"]["action_id"] = action_id
+    return block
 

@@ -15,13 +15,14 @@
           <h3>Log <span style="color: #5f8cff">Meetings</span></h3>
         </div>
         <div class="row">
-          <img style="height: 2rem; margin-right: 0.5rem" src="@/assets/images/zoom.png" alt="" />
-          <img
+          <img style="height: 2rem; margin-right: 1rem" src="@/assets/images/zoom.png" alt="" />
+          <!-- <img
             style="height: 1.65rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
             class="filter-plus"
             alt=""
-          />
+          /> -->
+
           <img
             style="height: 2rem; margin-right: 0.5rem"
             src="@/assets/images/gmailCal.png"
@@ -30,16 +31,13 @@
         </div>
         <div style="margin-top: 2rem">
           <button
-            v-if="hasZoomIntegration && !hasZoomChannel"
+            v-if="!hasZoomChannel"
             @click="goToLogZoom"
             :class="!isAdmin && isOnboarding ? 'orange_button bouncy' : 'orange_button'"
           >
             Activate
           </button>
-          <h4 style="margin-top: -0.5rem" v-else-if="!hasZoomIntegration">
-            Connect Zoom in order to activate
-          </h4>
-          <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="hasZoomChannel">Activated</p>
+          <p style="margin-top: -0.5rem; font-weight: 900" v-else>Activated</p>
         </div>
       </div>
 

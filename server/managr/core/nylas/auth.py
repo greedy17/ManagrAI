@@ -1,6 +1,7 @@
 import base64
 import datetime
 import time
+import unittest
 import pytz
 import requests
 from requests.exceptions import HTTPError
@@ -47,6 +48,7 @@ def get_access_token(code):
         data=data,
         headers=headers,
     )
+    print(f"ACCESS TOKEN RESPONSE: {res.json()}")
     if res.status_code == 200:
         return res.json()["access_token"]
     elif res.status_code == 400:
@@ -66,6 +68,7 @@ def get_account_details(token):
         f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.CALENDAR_URI}", headers=headers,
     )
     collected_data = {"account": account.json(), "calendars": calendar.json()}
+    print(f"COLLECTED_DATA {collected_data}")
     return collected_data
 
 

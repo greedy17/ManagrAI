@@ -18,11 +18,7 @@
       <h2 v-if="!editing" :class="templates.refreshing ? 'loading-title titles' : 'titles'">
         Edit your Workflow Automation
       </h2>
-      <h2
-        @click="logChannels"
-        v-else
-        :class="templates.refreshing ? 'loading-title titles' : 'titles'"
-      >
+      <h2 @click="test" v-else :class="templates.refreshing ? 'loading-title titles' : 'titles'">
         Saved Workflow Automations
       </h2>
       <p
@@ -110,7 +106,7 @@
               <div class="row__two">
                 <img
                   @click="makeAlertCurrent(alert)"
-                  src="@/assets/images/settings.png"
+                  src="@/assets/images/edit.png"
                   style="
                     height: 1.5rem;
                     cursor: pointer;
@@ -179,7 +175,10 @@
       <div class="dot-flashing"></div>
     </div> -->
 
-    <div class="invert center-loader" v-else>
+    <div
+      class="invert center-loader"
+      v-if="templates.refreshing && alertsCount(templates.list.length)"
+    >
       <img src="@/assets/images/loading-gif.gif" class="invert" style="height: 8rem" alt="" />
     </div>
   </div>
@@ -270,6 +269,9 @@ export default {
     }
   },
   methods: {
+    test() {
+      console.log(this.templates)
+    },
     logChannels() {
       console.log(this.userChannelOpts)
     },
@@ -393,6 +395,7 @@ export default {
       }
     },
     async onRunAlertTemplateNow(id) {
+      console.log(id)
       try {
         await AlertTemplate.api.runAlertTemplateNow(id)
         this.$Alert.alert({
@@ -585,6 +588,7 @@ button:disabled {
   color: $base-gray;
   border-radius: 0.5rem;
   height: 28vh;
+  width: 40vw;
 }
 .edit__modal {
   background-color: white;

@@ -29,10 +29,11 @@ from managr.salesforce.models import MeetingWorkflow
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.slack import constants as slack_consts
 from managr.api import constants as api_consts
+from managr.api.decorators import LOGGER
 
 from .. import constants as zoom_consts
 from ..zoom_helper.exceptions import TokenExpired, AccountSubscriptionLevel
-from ..models import ZoomAuthAccount, ZoomMeeting
+from ..models import ZoomAuthAccount
 from ..zoom_helper.models import ZoomAcct
 from ..serializers import ZoomMeetingSerializer
 
@@ -65,8 +66,8 @@ def emit_process_past_zoom_meeting(user_id, meeting_uuid, send_slack=True):
     return _get_past_zoom_meeting_details(user_id, meeting_uuid, send_slack)
 
 
-def emit_kick_off_slack_interaction(user_id, managr_meeting_id):
-    return _kick_off_slack_interaction(user_id, managr_meeting_id)
+def emit_kick_off_slack_interaction(user_id, managr_meeting_id, schedule=0):
+    return _kick_off_slack_interaction(user_id, managr_meeting_id, schedule=schedule)
 
 
 def emit_send_meeting_summary(workflow_id):
@@ -406,7 +407,7 @@ def _kick_off_slack_interaction(user_id, managr_meeting_id):
                 res = slack_requests.send_channel_message(
                     user_slack_channel,
                     slack_org_access_token,
-                    text=f"Your Meeting just ended {workflow.meeting.topic}",
+                    text=f"Your Meeting just ended",
                     block_set=block_set,
                 )
             except InvalidBlocksException as e:

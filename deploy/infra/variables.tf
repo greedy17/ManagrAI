@@ -183,7 +183,7 @@ variable "scheduled_tasks" {
     {
       name       = "clearsfstaledata"
       command    = "clearsfstaledata 1440"
-      cron       = "cron(0 7 * * ? *)"
+      cron       = "cron(0 22 * * ? *)"
       task_count = 1
     },
     {
@@ -195,19 +195,19 @@ variable "scheduled_tasks" {
     {
       name       = "syncsalesloftaccounts"
       command    = "initsalesloftsync"
-      cron       = "cron(0 */12 * * ? *)"
+      cron       = "cron(0 23 * * ? *)"
       task_count = 1
     },
     {
       name       = "syncgongcalls"
       command    = "initgongsync"
-      cron       = "cron(0 */12 * * ? *)"
+      cron       = "cron(0 23 * * ? *)"
       task_count = 1
     },
     {
       name       = "syncoutreachaccounts"
       command    = "initoutreachsync"
-      cron       = "cron(0 */12 * * ? *)"
+      cron       = "cron(0 23 * * ? *)"
       task_count = 1
     },
     {

@@ -49,7 +49,6 @@ class CustomOrgSlackForms(admin.ModelAdmin):
     model = slack_models.OrgCustomSlackForm
     inlines = (CustomFormFieldInline,)
     list_filter = ("organization",)
-    readonly_fields = ["organization"]
 
 
 class CustomOrgSlackFormsInstance(admin.ModelAdmin):

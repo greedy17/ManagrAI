@@ -1,6 +1,6 @@
 <template>
   <div class="integrations">
-    <div v-if="!user.isAdmin">
+    <div v-if="userLevel == 'REP'">
       <div>
         <div class="welcome">
           <h1>Hi, {{ user.fullName }}</h1>
@@ -11,14 +11,13 @@
                 (!(!orgHasSlackIntegration && userCanIntegrateSlack) ||
                   (orgHasSlackIntegration && !hasSlackIntegration)) &&
                 hasNylasIntegration &&
-                hasZoomIntegration &&
                 hasSalesforceIntegration
               "
               style="margin-top: 1rem; margin-right: 1rem"
             >
               Connect managr to your favorite apps
             </div>
-            <div v-else>Step 1/2. Connect the four required apps.</div>
+            <div v-else>Step 1/2. Connect the required apps.</div>
           </div>
         </div>
       </div>
@@ -131,15 +130,21 @@
           "
         >
           <div class="card__header">
-            <img class="card-img card-img__radius" src="@/assets/images/zoom.png" />
-            <h2 class="card__title">Zoom</h2>
-            <img v-if="hasZoomIntegration" class="dot" src="@/assets/images/dot.png" alt="" />
+            <img
+              class="card-img"
+              src="@/assets/images/gmailCal.png"
+              style="margin-right: 1rem; height: 2.5rem; width: 2.5rem"
+            />
+            <img class="card-img" src="@/assets/images/outlookMail.png" style="height: 3rem" />
+            <h2 class="card__title">Calendar</h2>
+            <img v-if="hasNylasIntegration" class="dot" src="@/assets/images/dot.png" alt="" />
           </div>
-          <p class="card-text">Activates the meeting workflow automation.</p>
-          <div v-if="!hasZoomIntegration" class="card__body">
+
+          <p class="card-text">Accesses your upcoming meetings + attendees</p>
+          <div v-if="!hasNylasIntegration" class="card__body">
             <PulseLoadingSpinnerButton
-              :disabled="hasZoomIntegration"
-              @click="onGetAuthLink('ZOOM')"
+              @click="onGetAuthLink('NYLAS')"
+              style="margin-left: 1rem"
               :class="
                 !(
                   (!orgHasSlackIntegration && userCanIntegrateSlack) ||
@@ -148,6 +153,48 @@
                   ? 'orange_button test'
                   : 'orange_button'
               "
+              text="Connect"
+              :loading="generatingToken && selectedIntegration == 'NYLAS'"
+            ></PulseLoadingSpinnerButton>
+          </div>
+          <div v-else class="card__body">
+            <div class="dropdown-container" tabindex="1">
+              <div class="three-dots"></div>
+              <div class="dropdown">
+                <button
+                  class="revoke-button"
+                  :loading="generatingToken && selectedIntegration == 'NYLAS'"
+                  @click="onRevoke('NYLAS')"
+                >
+                  revoke
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- <div style="margin-bottom: 0.5rem; width: 15rem">
+          <GoogleButton
+            @click="onGetAuthLink('NYLAS')"
+            :loading="generatingToken && selectedIntegration == 'NYLAS'"
+            v-if="!hasNylasIntegration"
+          />
+        </div> -->
+        </div>
+
+        <div v-if="hasNylasIntegration" class="card">
+          <div class="card__header">
+            <img class="card-img card-img__radius" src="@/assets/images/zoom.png" />
+            <h2 class="card__title">Zoom</h2>
+            <img v-if="hasZoomIntegration" class="dot" src="@/assets/images/dot.png" alt="" />
+          </div>
+          <p class="card-text">Activates the zoom meeting workflow automation.</p>
+          <div v-if="!hasZoomIntegration" class="card__body">
+            <p style="font-size: 11px; color: #9b9b9b">
+              Not required but recommended for organizations who use zoom.
+            </p>
+            <PulseLoadingSpinnerButton
+              :disabled="hasZoomIntegration"
+              @click="onGetAuthLink('ZOOM')"
+              class="orange_button"
               text="Connect"
               :loading="generatingToken && selectedIntegration == 'ZOOM'"
             ></PulseLoadingSpinnerButton>
@@ -176,56 +223,11 @@
           </div>
         </div>
 
-        <div :class="hasZoomIntegration ? 'card' : 'card onboarding'">
-          <div class="card__header">
-            <img
-              class="card-img"
-              src="@/assets/images/gmailCal.png"
-              style="margin-right: 1rem; height: 2.5rem; width: 2.5rem"
-            />
-            <img class="card-img" src="@/assets/images/outlookMail.png" style="height: 3rem" />
-            <h2 class="card__title">Calendar</h2>
-            <img v-if="hasNylasIntegration" class="dot" src="@/assets/images/dot.png" alt="" />
-          </div>
-
-          <p class="card-text">Accesses your upcoming meetings + attendees</p>
-          <div v-if="!hasNylasIntegration" class="card__body">
-            <PulseLoadingSpinnerButton
-              @click="onGetAuthLink('NYLAS')"
-              style="margin-left: 1rem"
-              :class="hasZoomIntegration ? 'orange_button test' : 'orange_button'"
-              text="Connect"
-              :loading="generatingToken && selectedIntegration == 'NYLAS'"
-            ></PulseLoadingSpinnerButton>
-          </div>
-          <div v-else class="card__body">
-            <div class="dropdown-container" tabindex="1">
-              <div class="three-dots"></div>
-              <div class="dropdown">
-                <button
-                  class="revoke-button"
-                  :loading="generatingToken && selectedIntegration == 'NYLAS'"
-                  @click="onRevoke('NYLAS')"
-                >
-                  revoke
-                </button>
-              </div>
-            </div>
-          </div>
-          <!-- <div style="margin-bottom: 0.5rem; width: 15rem">
-          <GoogleButton
-            @click="onGetAuthLink('NYLAS')"
-            :loading="generatingToken && selectedIntegration == 'NYLAS'"
-            v-if="!hasNylasIntegration"
-          />
-        </div> -->
-        </div>
         <div
           v-if="
             (!(!orgHasSlackIntegration && userCanIntegrateSlack) ||
               (orgHasSlackIntegration && !hasSlackIntegration)) &&
             hasNylasIntegration &&
-            hasZoomIntegration &&
             hasSalesforceIntegration &&
             user.onboarding
           "
@@ -245,6 +247,7 @@
             </button>
           </div>
         </div>
+
         <div v-if="!user.onboarding" class="card">
           <div class="card__header">
             <img style="height: 1.5rem" src="@/assets/images/outreach.webp" />
@@ -834,6 +837,9 @@ export default {
     user() {
       return this.$store.state.user
     },
+    userLevel() {
+      return this.$store.state.user.userLevel
+    },
     slackButtonMessage() {
       if (!this.orgHasSlackIntegration && this.userCanIntegrateSlack) {
         return 'Connect'
@@ -986,6 +992,7 @@ export default {
     align-items: flex-end;
     justify-content: flex-end;
     margin-top: auto;
+    min-height: 3rem;
   }
   &__start {
     display: flex;
@@ -1141,6 +1148,9 @@ a {
   flex-direction: column;
   margin: 1rem 5rem;
   margin-bottom: 2rem;
+  // @media only screen and (max-width: 1250px) {
+  //   margin-left: 15%;
+  // }
 }
 .back-logo {
   position: absolute;

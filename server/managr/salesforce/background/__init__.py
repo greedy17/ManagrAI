@@ -134,6 +134,12 @@ def emit_generate_form_template(user_id):
     return _generate_form_template(user_id)
 
 
+def emit_update_current_db_values(user_id, resource_type, integration_id, verbose_name):
+    return _update_current_db_values(
+        user_id, resource_type, integration_id, verbose_name=verbose_name
+    )
+
+
 def emit_meeting_workflow_tracker(workflow_id):
     """Checks the workflow after 5 mins to ensure completion"""
     schedule = timezone.now() + timezone.timedelta(minutes=5)
@@ -236,16 +242,17 @@ def _process_resource_sync(user_id, sync_id, resource, limit, offset, attempts=1
             serializer.is_valid(raise_exception=True)
         except ValidationError as e:
             error_str = f"Failed to save data for {resource} {item.name if item.name else 'N/A'} with salesforce id {item.integration_id} due to the following error {e.detail}"
-            context = dict(email=user.email, error=error_str)
-            subject = render_to_string("salesforce/error_saving_resource_data.txt")
-            recipient = [settings.STAFF_EMAIL]
-            send_html_email(
-                subject,
-                "salesforce/error_saving_resource_data.html",
-                settings.SERVER_EMAIL,
-                recipient,
-                context={**context},
-            )
+
+            # context = dict(email=user.email, error=error_str)
+            # subject = render_to_string("salesforce/error_saving_resource_data.txt")
+            # recipient = [settings.STAFF_EMAIL]
+            # send_html_email(
+            #     subject,
+            #     "salesforce/error_saving_resource_data.html",
+            #     settings.SERVER_EMAIL,
+            #     recipient,
+            #     context={**context},
+            # )
             logger.exception(error_str)
             continue
         serializer.save()
@@ -569,9 +576,19 @@ def _process_add_call_to_sf(workflow_id, *args):
     if not hasattr(user, "salesforce_account"):
         return logger.exception("User does not have a salesforce account cannot push to sf")
     review_form = workflow.forms.filter(template__form_type=slack_consts.FORM_TYPE_UPDATE).first()
-    user_timezone = user.zoom_account.timezone
-    start_time = workflow.meeting.start_time
-    end_time = workflow.meeting.end_time
+    if workflow.meeting:
+        user_timezone = user.zoom_account.timezone
+        start_time = workflow.meeting.start_time
+        end_time = workflow.meeting.end_time
+
+    else:
+        user_timezone = user.timezone
+        start_time = datetime.utcfromtimestamp(
+            int(workflow.non_zoom_meeting.event_data["times"]["start_time"])
+        )
+        end_time = datetime.utcfromtimestamp(
+            int(workflow.non_zoom_meeting.event_data["times"]["end_time"])
+        )
     formatted_start = (
         datetime.strftime(
             start_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p"
@@ -584,12 +601,11 @@ def _process_add_call_to_sf(workflow_id, *args):
         if end_time
         else end_time
     )
-
     data = dict(
         Subject=f"Zoom Meeting - {review_form.saved_data.get('meeting_type')}",
         Description=f"{review_form.saved_data.get('meeting_comments')}, this meeting started on {formatted_start} and ended on {formatted_end} ",
         WhatId=workflow.resource.integration_id,
-        ActivityDate=workflow.meeting.start_time.strftime("%Y-%m-%d"),
+        ActivityDate=start_time.strftime("%Y-%m-%d"),
         Status="Completed",
         TaskSubType="Call",
     )
@@ -645,11 +661,14 @@ def _process_add_update_to_sf(form_id, *args):
     data = dict(
         Subject=f"{form.saved_data.get('meeting_type')}",
         Description=f"{form.saved_data.get('meeting_comments')}",
-        WhatId=resource.integration_id,
         ActivityDate=start_time.strftime("%Y-%m-%d"),
         Status="Completed",
         TaskSubType="Task",
     )
+    if form.resource_type in ["Account", "Opportunity"]:
+        data["WhatId"] = resource.integration_id
+    else:
+        data["WhoId"] = resource.integration_id
     attempts = 1
     while True:
         sf = user.salesforce_account
@@ -677,7 +696,83 @@ def _process_add_update_to_sf(form_id, *args):
                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 attempts += 1
+        except Exception as e:
+            if attempts >= 5:
+                logger.info(f"Add update to SF exception: {e}")
+                raise e
+            else:
+                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                time.sleep(sleep)
+                attempts += 1
     return
+
+
+# @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
+# @sf_api_exceptions_wf("add_call_log")
+# def _process_add_event_to_sf(form_id, *args):
+#     form = OrgCustomSlackFormInstance.objects.filter(id=form_id).first()
+#     resource = None
+#     if form.resource_type == "Opportunity":
+#         resource = Opportunity.objects.get(id=form.resource_id)
+#     elif form.resource_type == "Account":
+#         resource = Account.objects.get(id=form.resource_id)
+#     elif form.resource_type == "Lead":
+#         resource = Lead.objects.get(id=form.resource_id)
+#     else:
+#         resource = Contact.objects.get(id=form.resource_id)
+#     user = form.user
+#     if not user:
+#         return logger.exception(f"User not found unable to log call {str(user.id)}")
+#     if not hasattr(user, "salesforce_account"):
+#         return logger.exception("User does not have a salesforce account cannot push to sf")
+#     start_time = form.submission_date
+#     data = dict(
+#         Subject=f"{form.saved_data.get('meeting_type')}",
+#         Description=f"{form.saved_data.get('meeting_comments')}",
+#         ActivityDate=start_time.strftime("%Y-%m-%d"),
+#         DurationInMinutes=30,
+#         ActivityDateTime=start_time.strftime("%Y-%m-%dT%H:%M:%S"),
+#     )
+#     if form.resource_type in ["Account", "Opportunity"]:
+#         data["WhatId"] = resource.integration_id
+#     else:
+#         data["WhoId"] = resource.integration_id
+#     attempts = 1
+#     while True:
+#         sf = user.salesforce_account
+#         try:
+#             ActivityAdapter.save_zoom_meeting_to_salesforce(data, sf.access_token, sf.instance_url)
+#             attempts = 1
+#             break
+#         except TokenExpired as e:
+#             if attempts >= 5:
+#                 return logger.exception(
+#                     f"Failed to refresh user token for Salesforce operation add contact as contact role to opportunity"
+#                 )
+#             else:
+#                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+#                 time.sleep(sleep)
+#                 sf.regenerate_token()
+#                 attempts += 1
+#         except UnableToUnlockRow as e:
+#             if attempts >= 5:
+#                 logger.exception(
+#                     f"Failed to create call log from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+#                 )
+#                 raise e
+#             else:
+#                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+#                 time.sleep(sleep)
+#                 attempts += 1
+#         except Exception as e:
+#             if attempts >= 5:
+#                 logger.info(f"Add update to SF exception: {e}")
+#                 raise e
+#             else:
+#                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+#                 time.sleep(sleep)
+#                 attempts += 1
+#     return
 
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
@@ -689,11 +784,12 @@ def _process_create_new_contacts(workflow_id, *args):
         return logger.exception(f"User not found unable to log call {str(user.id)}")
     if not hasattr(user, "salesforce_account"):
         return logger.exception("User does not have a salesforce account cannot push to sf")
-
+    meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
     attempts = 1
     if not len(args):
         return
     contact_forms = workflow.forms.filter(id__in=args[0])
+
     for form in contact_forms:
         # if the resource is an account we set it to that account
         # if it is an opp we create a contact role as well
@@ -702,10 +798,7 @@ def _process_create_new_contacts(workflow_id, *args):
         if not data:
             # try and collect whatever data we have
             contact = dict(
-                *filter(
-                    lambda contact: contact.get("_form") == str(form.id),
-                    workflow.meeting.participants,
-                )
+                *filter(lambda contact: contact.get("_form") == str(form.id), meeting.participants,)
             )
             if contact:
                 form.save_form(contact.get("secondary_data", {}), from_slack_object=False)
@@ -987,6 +1080,42 @@ def _process_create_task(user_id, data, *args):
 
 
 @background(schedule=0)
+def _process_create_event(user_id, data, *args):
+
+    user = User.objects.get(id=user_id)
+    # get the create form
+
+    attempts = 1
+    while True:
+        sf = user.salesforce_account
+        from managr.salesforce.adapter.models import EventAdapter
+
+        try:
+            EventAdapter.save_event_to_salesforce(data, sf.access_token, sf.instance_url)
+            break
+        except TokenExpired:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to create new resource for user {str(user.id)} after {attempts} tries because their token is expired"
+                )
+            else:
+                sf.regenerate_token()
+                attempts += 1
+        except FieldValidationError as e:
+            logger.exception(
+                f"Failed to create new resource for user {str(user.id)} becuase they have a field validation error"
+            )
+            raise FieldValidationError(e)
+        except RequiredFieldError as e:
+            logger.exception(
+                f"Failed to create new resource for user {str(user.id)} becuase they have a field validation error"
+            )
+            raise RequiredFieldError(e)
+
+    return
+
+
+@background(schedule=0)
 def _process_list_tasks(user_id, data, *args):
 
     user = User.objects.get(id=user_id)
@@ -1036,6 +1165,7 @@ def _process_workflow_tracker(workflow_id):
             task = CompletedTask.objects.filter(task_hash=task_hash).count()
             if task:
                 workflow.completed_operations.append(task_hash)
+                workflow.save()
 
 
 @background(schedule=0)
@@ -1092,22 +1222,8 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
     submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
         template__resource="OpportunityLineItem"
     )
-    main_form = submitted_forms.filter(
-        template__form_type__in=["CREATE", "UPDATE", "MEETING_REVIEW"]
-    ).first()
+    main_form = submitted_forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
     user = main_form.user
-    old_data = dict()
-    if main_form.template.form_type == "UPDATE" or main_form.template.form_type == "MEETING_REVIEW":
-        for additional_stage_form in submitted_forms:
-            old_data = {**old_data, **additional_stage_form.previous_data}
-    new_data = dict()
-    form_fields = None
-    for form in submitted_forms:
-        new_data = {**new_data, **form.saved_data}
-        if form_fields:
-            form_fields = form_fields | form.template.formfield_set.filter(include_in_recap=True)
-        else:
-            form_fields = form.template.formfield_set.filter(include_in_recap=True)
     send_summ_to_leadership = send_to_data.get("leadership", None) if send_to_data else None
     send_summ_to_reps = send_to_data.get("reps", None) if send_to_data else None
     send_summ_to_channels = send_to_data.get("channels", None) if send_to_data else None
@@ -1234,6 +1350,131 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
                     continue
 
 
+def create_alert_string(operator, data_type, config_value, saved_value, old_value, title):
+    alert_string = f"{title}"
+    if operator == "==":
+        if data_type == "string" and saved_value == config_value and saved_value != old_value:
+            return alert_string
+    elif operator == "<=":
+        return
+    elif operator == ">=":
+        return
+    elif operator == "!=":
+        if data_type == "string" and saved_value != config_value:
+            return alert_string
+        elif (
+            data_type == "date"
+            and datetime.strptime(saved_value, "%Y-%m-%d").month
+            != datetime.strptime(old_value, "%Y-%m-%d").month
+        ):
+            return alert_string
+    return None
+
+
+@background(schedule=0)
+@slack_api_exceptions(rethrow=True)
+def _send_instant_alert(form_ids):
+    submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
+        template__resource="OpportunityLineItem"
+    )
+    main_form = submitted_forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
+    user = main_form.user
+    configs = user.slack_integration.realtime_alert_configs
+    sobject_fields = list(
+        SObjectField.objects.filter(id__in=configs.keys()).values("id", "api_name")
+    )
+    resource_name = main_form.resource_object.name if main_form.resource_object.name else ""
+
+    old_data = dict()
+
+    if main_form.template.form_type == "UPDATE":
+        for additional_stage_form in submitted_forms:
+            old_data = {**old_data, **additional_stage_form.previous_data}
+    new_data = dict()
+    for form in submitted_forms:
+        new_data = {**new_data, **form.saved_data}
+    users_list = {}
+    for field in sobject_fields:
+        api_name = field["api_name"]
+        if api_name in new_data.keys():
+            for object in configs[str(field["id"])].values():
+                if api_name in list(object.values()):
+                    value_check = create_alert_string(
+                        object["operator"],
+                        object["data_type"],
+                        object["value"],
+                        new_data[api_name],
+                        old_data[api_name],
+                        object["title"],
+                    )
+                    if value_check:
+                        recipients = object["recipients"]
+                        for key in recipients.keys():
+                            channel = recipients[key]
+                            if recipients[key] in users_list.keys():
+                                users_list[channel]["text"] += f", _{value_check}_"
+                            else:
+                                users_list[channel] = {
+                                    "text": f":zap: *Instant Update:* _{value_check}_",
+                                    "id": key,
+                                }
+                else:
+                    continue
+    if len(users_list):
+        add_blocks = [
+            block_builders.section_with_button_block(
+                "View Recap",
+                "recap",
+                f"_{main_form.template.resource}_ *{resource_name}*",
+                action_id=action_with_params(
+                    slack_consts.VIEW_RECAP,
+                    params=[f"u={str(user.id)}", f"form_ids={'.'.join(form_ids)}"],
+                ),
+            ),
+            block_builders.context_block(
+                f"{main_form.template.resource} owned by {user.full_name}"
+            ),
+        ]
+        for key in users_list:
+            blocks = [
+                block_builders.simple_section(users_list[key]["text"], "mrkdwn"),
+                *add_blocks,
+            ]
+            user = User.objects.get(id=users_list[key]["id"])
+            try:
+                slack_requests.send_channel_message(
+                    key,
+                    user.organization.slack_integration.access_token,
+                    text=f"Recap {main_form.template.resource}",
+                    block_set=blocks,
+                )
+            except CannotSendToChannel:
+                try:
+                    slack_requests.send_channel_message(
+                        key,
+                        user.organization.slack_integration.access_token,
+                        text="Failed to send recap to channel",
+                        block_set=[
+                            block_builders.simple_section(
+                                f"Unable to send recap to one of the channels you selected, please add <@{user.organization.slack_integration.bot_user_id}> to the channel _*<#{channel}>*_",
+                                "mrkdwn",
+                            )
+                        ],
+                    )
+                    continue
+                except Exception as e:
+                    logger.exception(
+                        f"Failed to send error message to user informing them of channel issue to {user.email} due to {e}"
+                    )
+                    continue
+            except Exception as e:
+                logger.exception(
+                    f"Failed to send recap to channel for user {user.email} due to {e}"
+                )
+                continue
+        return
+
+
 def remove_field(org_id, form_field):
     org = Organization.objects.get(id=org_id)
     forms = OrgCustomSlackForm.objects.filter(organization=org)
@@ -1244,4 +1485,106 @@ def remove_field(org_id, form_field):
                 field.forms.first().save()
             else:
                 field.forms.first().delete()
+    return
+
+
+@background(schedule=0)
+@slack_api_exceptions(rethrow=True)
+def _send_convert_recap(form_id, account_id, contact_id, opportunity_id=None, send_to_data=None):
+    lead_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
+    user = lead_form.user
+    send_summ_to_leadership = send_to_data.get("leadership", None) if send_to_data else None
+    send_summ_to_reps = send_to_data.get("reps", None) if send_to_data else None
+    send_summ_to_channels = send_to_data.get("channels", None) if send_to_data else None
+    slack_access_token = user.organization.slack_integration.access_token
+    account = Account.objects.get(integration_id=account_id)
+    contact = Contact.objects.get(integration_id=contact_id)
+    opportunity = Opportunity.objects.get(integration_id=opportunity_id)
+    text = f":zap: *Lead Convert Recap: {lead_form.resource_object.name}*\n*Account*: {account.name}\n*Opportunity*: {opportunity.name}\n*Contact*: {contact.secondary_data['Name']}"
+    blocks = [
+        block_builders.simple_section(text, "mrkdwn"),
+        block_builders.context_block(f"Lead owned by {user.full_name}"),
+    ]
+    query = None
+    user_list = []
+    if send_summ_to_leadership is not None:
+        query = Q(user_level="MANAGER", id__in=send_summ_to_leadership)
+        user_list.extend(
+            user.organization.users.filter(query)
+            .filter(is_active=True)
+            .distinct()
+            .select_related("slack_integration")
+        )
+    if send_summ_to_reps is not None:
+        query = Q(id__in=send_summ_to_reps)
+        user_list.extend(
+            user.organization.users.filter(query)
+            .filter(is_active=True)
+            .distinct()
+            .select_related("slack_integration")
+        )
+    logger.info(f"USERS LIST RECAP: {user_list}")
+    for u in user_list:
+        if hasattr(u, "slack_integration"):
+            try:
+                r = slack_requests.send_channel_message(
+                    u.slack_integration.channel,
+                    slack_access_token,
+                    text=f"Recap Lead",
+                    block_set=blocks,
+                )
+                logger.info(f"SEND RECAP RESPONSE: {r}")
+            except Exception as e:
+                logger.exception(f"Failed to send recap to {u.email} due to {e}")
+                continue
+    if send_summ_to_channels is not None:
+        for channel in send_summ_to_channels:
+            try:
+                r = slack_requests.send_channel_message(
+                    channel, slack_access_token, text=f"Recap Lead", block_set=blocks,
+                )
+                logger.info(f"SEND RECAP CHANNEL RESPONSE: {r}")
+            except CannotSendToChannel:
+                try:
+                    slack_requests.send_channel_message(
+                        user.slack_integration.channel,
+                        slack_access_token,
+                        text="Failed to send recap to channel",
+                        block_set=[
+                            block_builders.simple_section(
+                                f"Unable to send recap to one of the channels you selected, please add <@{user.organization.slack_integration.bot_user_id}> to the channel _*<#{channel}>*_",
+                                "mrkdwn",
+                            )
+                        ],
+                    )
+                    continue
+                except Exception as e:
+                    logger.exception(
+                        f"Failed to send error message to user informing them of channel issue to {user.email} due to {e}"
+                    )
+                    continue
+            except Exception as e:
+                logger.exception(
+                    f"Failed to send recap to channel for user {user.email} due to {e}"
+                )
+                continue
+
+
+@background(schedule=0)
+@slack_api_exceptions(rethrow=True)
+def _update_current_db_values(user_id, resource_type, integration_id):
+    from managr.salesforce.routes import routes as model_routes
+
+    user = User.objects.get(id=user_id)
+    route = model_routes[resource_type]
+    model_class = route["model"]
+    resource = model_class.objects.filter(integration_id=integration_id).first()
+    if resource:
+        current_values = resource.get_current_values()
+        serializer = routes[resource_type]["serializer"](
+            data=current_values.as_dict, instance=resource
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        logger.info(f"Successfully {resource} in the Database for user {user.email}")
     return
