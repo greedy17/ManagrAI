@@ -62,8 +62,8 @@ http {
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Scheme $scheme;
-        proxy_connect_timeout 60s;
-        proxy_read_timeout 60s;
+        proxy_connect_timeout 20s;
+        proxy_read_timeout 20s;
         proxy_redirect off;
         proxy_intercept_errors on;
         #
