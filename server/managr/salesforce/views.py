@@ -642,10 +642,14 @@ class SalesforceSObjectViewSet(
         url_path="resource-sync",
     )
     def resource_sync(self, request, *args, **kwargs):
-        user = self.requst.user
+        user = self.request.user
         operations = user.salesforce_account.resource_sync_opts
         verbose_name = f"PIPELINE_RESOURCE_SYNC_{str(user.salesforce_account.id)}"
-        sync = _process_gen_next_sync(str(request.user.id), operations, verbose_name=verbose_name,)
+        sync = _process_gen_next_sync(
+            str(request.user.id),
+            operations,
+            verbose_name=verbose_name,
+        )
         attempts = 1
         has_error = False
         while True:
@@ -664,4 +668,3 @@ class SalesforceSObjectViewSet(
                 attempts += 1
         data = {"success": False} if has_error else {"success": True}
         return Response(data=data)
-

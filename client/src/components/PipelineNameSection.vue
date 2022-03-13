@@ -14,7 +14,7 @@
 
 <script>
 export default {
-  name: 'PipelineRow',
+  name: 'PipelineNameSection',
   data() {
     return {}
   },
@@ -33,6 +33,6 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 @import '@/styles/variables';
 @import '@/styles/buttons';
