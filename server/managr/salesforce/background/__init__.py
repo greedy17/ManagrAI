@@ -155,13 +155,26 @@ def _process_gen_next_sync(user_id, operations_list):
     user = User.objects.filter(id=user_id).first()
     if not user:
         return logger.exception(f"User not found sync operation not created {user_id}")
+    SFResourceSync.objects.create(
+        user=user,
+        operations_list=operations_list,
+        operation_type=sf_consts.SALESFORCE_RESOURCE_SYNC,
+    ).begin_tasks()
+    return
+
+
+@log_all_exceptions
+def _process_pipeline_sync(user_id, operations_list):
+    user = User.objects.filter(id=user_id).first()
+    if not user:
+        return logger.exception(f"User not found sync operation not created {user_id}")
     sync = SFResourceSync.objects.create(
         user=user,
         operations_list=operations_list,
         operation_type=sf_consts.SALESFORCE_RESOURCE_SYNC,
     )
     sync.begin_tasks()
-    return str(sync.id)
+    return sync.id
 
 
 @background(schedule=0)

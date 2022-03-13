@@ -669,7 +669,7 @@ export default {
     this.listStages()
     this.listForecast()
     this.team.refresh()
-    // this.resourceSync()
+    this.resourceSync()
   },
   watch: {
     primaryCheckList: 'closeAll',

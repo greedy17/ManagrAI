@@ -48,7 +48,7 @@ from .background import (
     emit_generate_form_template,
     emit_add_update_to_sf,
     _send_instant_alert,
-    _process_gen_next_sync,
+    _process_pipeline_sync,
 )
 from managr.salesforce.utils import process_text_field_format
 
@@ -644,27 +644,24 @@ class SalesforceSObjectViewSet(
     def resource_sync(self, request, *args, **kwargs):
         user = self.request.user
         operations = user.salesforce_account.resource_sync_opts
-        verbose_name = f"PIPELINE_RESOURCE_SYNC_{str(user.salesforce_account.id)}"
-        sync = _process_gen_next_sync(
-            str(request.user.id),
-            operations,
-            verbose_name=verbose_name,
-        )
+        sync = _process_pipeline_sync(str(user.id), operations)
         attempts = 1
         has_error = False
         while True:
-            sync = SFResourceSync.objects.get(id=sync)
-            if attempts >= 10:
-                has_error = True
-                break
+            resource_sync = SFResourceSync.objects.get(id=sync)
             try:
-                if sync.status == "Completed":
+                if resource_sync.status == "Completed":
                     break
                 else:
                     attempts += 1
                     sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                     time.sleep(sleep)
             except Exception as e:
-                attempts += 1
+                if attempts >= 10:
+                    logger.exception("Failed to receive complete status from sync")
+                    break
+                else:
+                    attempts += 1
+
         data = {"success": False} if has_error else {"success": True}
         return Response(data=data)
