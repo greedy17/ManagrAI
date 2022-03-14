@@ -72,6 +72,10 @@ def emit_check_reminders(user_id, verbose_name):
     return check_reminders(user_id, verbose_name=verbose_name)
 
 
+def emit_process_non_zoom_meetings(user_id, verbose_name):
+    return _process_non_zoom_meetings(user_id, verbose_name=verbose_name)
+
+
 # Functions for Scheduling Meeting
 def emit_non_zoom_meetings(workflow_id, user_id, user_tz, non_zoom_end_times):
     return non_zoom_meeting_message(workflow_id, user_id, user_tz, non_zoom_end_times)
@@ -618,6 +622,28 @@ def process_current_alert_list(user_id):
 #########################################################
 # BACKGROUND TASKS
 #########################################################
+
+
+@background()
+def _process_non_zoom_meetings(user_id):
+    user = User.objects.get(id=user_id)
+    if (
+        hasattr(user, "nylas")
+        and hasattr(user, "slack_integration")
+        and user.slack_integration.recap_channel is not None
+    ):
+        try:
+            processed_data = _process_calendar_details(user_id)
+        except Exception as e:
+            logger.exception(f"MORNING DIGEST ERROR IN SEND CALENDAR DETAILS: {e}")
+        if processed_data is not None:
+            last_instance = (
+                MeetingPrepInstance.objects.filter(user=user).order_by("-datetime_created").first()
+            )
+            current_invocation = last_instance.invocation + 1 if last_instance else 1
+            for event in processed_data:
+                meeting_prep(event, user_id, current_invocation)
+    return
 
 
 @background()
