@@ -484,9 +484,9 @@
             <img src="@/assets/images/plusOne.png" style="height: 1rem" alt="" />
             Create Opportunity
           </button>
-          <button @click="refresh(refreshId)" class="select-btn">
+          <!-- <button @click="resourceSync" class="select-btn">
             <img src="@/assets/images/refresh.png" class="invert" style="height: 1.15rem" alt="" />
-          </button>
+          </button> -->
         </div>
       </section>
       <section v-show="!selectedWorkflow" class="table-section">
@@ -663,12 +663,11 @@ export default {
     },
   },
   created() {
-    this.templates.refresh()
     this.getObjects()
+    this.templates.refresh()
     this.getAllForms()
     this.listStages()
     this.listForecast()
-    this.team.refresh()
     this.resourceSync()
   },
   watch: {
@@ -803,7 +802,6 @@ export default {
           resourceId: id,
         })
         this.currentVals = res.current_values
-        console.log(this.currentVals)
         this.oppId = id
         this.instanceId = res.form_id
       } catch (e) {
@@ -996,13 +994,13 @@ export default {
       })
     },
     async resourceSync() {
-      // this.loading = true
       try {
         const res = await SObjects.api.resourceSync()
         console.log(res)
       } catch (e) {
         console.log(e)
       }
+      this.loading = false
     },
     async updateResource() {
       this.updateList.push(this.oppId)
@@ -1038,7 +1036,6 @@ export default {
       }
     },
     async createResource() {
-      this.loading = true
       this.addOppModalOpen = false
       try {
         const res = await SObjects.api.createResource({
@@ -1075,7 +1072,6 @@ export default {
       }, 500)
     },
     async getAllForms() {
-      this.loading = true
       try {
         let res = await SlackOAuth.api.getOrgCustomForm()
         this.updateOppForm = res.filter(
@@ -1112,7 +1108,6 @@ export default {
       } catch (error) {
         console.log(error)
       }
-      this.loading = false
     },
     async getObjects() {
       this.loading = true
@@ -1127,7 +1122,6 @@ export default {
           message: 'There was an error collecting objects',
         })
       }
-      this.loading = false
     },
     async getNotes(id) {
       try {
@@ -1685,7 +1679,7 @@ section {
   flex-direction: column;
   align-items: flex-start;
   background-color: $white;
-  width: 16vw;
+  min-width: 16vw;
   max-height: 40vh;
   overflow: scroll;
   margin-right: 0.5rem;
