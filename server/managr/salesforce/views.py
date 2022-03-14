@@ -667,6 +667,7 @@ class SalesforceSObjectViewSet(
                     break
                 else:
                     attempts += 1
-
+        user.salesforce_account.last_sync_time = datetime.now()
+        user.salesforce_account.save()
         data = {"success": False} if has_error else {"success": True}
         return Response(data=data)
