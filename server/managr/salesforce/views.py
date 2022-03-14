@@ -643,7 +643,7 @@ class SalesforceSObjectViewSet(
     )
     def resource_sync(self, request, *args, **kwargs):
         user = self.request.user
-        operations = user.salesforce_account.resource_sync_opts
+        operations = ["Account", "Lead", "Opportunity", "Contact"]
         sync = SFResourceSync.objects.create(
             user=user,
             operations_list=operations,
@@ -654,6 +654,7 @@ class SalesforceSObjectViewSet(
         has_error = False
         while True:
             resource_sync = SFResourceSync.objects.get(id=sync.id)
+            print(resource_sync.status)
             try:
                 if resource_sync.status == "Completed":
                     break
