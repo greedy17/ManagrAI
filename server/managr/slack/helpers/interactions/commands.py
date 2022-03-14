@@ -451,16 +451,16 @@ def launch_digest(context):
     )
     verbose_name = f"MORNING_DIGEST_COMMAND_{str(uuid.uuid4())}"
     task = emit_generate_morning_digest(context.get("u"), verbose_name)
-    print(loading_view_data)
-    return {
-        "response_action": "update",
-        "view_id": loading_view_data["view_id"],
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    data = {
+        "view_id": context.get("view_id"),
         "view": {
             "type": "modal",
             "title": {"type": "plain_text", "text": "Morning Digest"},
             "blocks": [block_builders.simple_section("Success! You can close this window.")],
         },
     }
+    slack_requests.generic_request(url, data, access_token=access_token)
 
 
 def get_action(action_name, context={}, *args, **kwargs):
