@@ -654,13 +654,12 @@ class SalesforceSObjectViewSet(
         has_error = False
         while True:
             resource_sync = SFResourceSync.objects.get(id=sync.id)
-            print(resource_sync.status)
             try:
                 if resource_sync.status == "Completed":
                     break
                 else:
                     attempts += 1
-                    sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                    sleep = 1 * 1.15 ** attempts + random.uniform(0, 1)
                     time.sleep(sleep)
             except Exception as e:
                 if attempts >= 10:
