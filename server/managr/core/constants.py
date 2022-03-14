@@ -179,7 +179,7 @@ REMINDER_CONFIG = {
 def REMINDERS():
     return {
         WORKFLOW_REMINDER: True,
-        MORNING_DIGEST: True,
-        AFTERNOON_DIGEST_REP: True,
-        AFTERNOON_DIGEST_MANAGER: True,
+        MORNING_DIGEST: False,
+        AFTERNOON_DIGEST_REP: False,
+        AFTERNOON_DIGEST_MANAGER: False,
     }

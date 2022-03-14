@@ -706,6 +706,7 @@ def generate_morning_digest(user_id, invocation=None, page=1):
                 user.organization.slack_integration.access_token,
                 block_set=blocks,
             )
+            return {"response_action": "clear"}
         except Exception as e:
             logger.exception(f"Failed to send morning digest message to {user.email} due to {e}")
     else:
