@@ -51,7 +51,7 @@ from .background import (
     _process_pipeline_sync,
 )
 from managr.salesforce.utils import process_text_field_format
-
+from managr.salesforce import constants as sf_consts
 from managr.salesforce.adapter.exceptions import (
     TokenExpired,
     FieldValidationError,
@@ -644,11 +644,16 @@ class SalesforceSObjectViewSet(
     def resource_sync(self, request, *args, **kwargs):
         user = self.request.user
         operations = user.salesforce_account.resource_sync_opts
-        sync = _process_pipeline_sync(str(user.id), operations)
+        sync = SFResourceSync.objects.create(
+            user=user,
+            operations_list=operations,
+            operation_type=sf_consts.SALESFORCE_RESOURCE_SYNC,
+        )
+        _process_pipeline_sync(str(sync.id))
         attempts = 1
         has_error = False
         while True:
-            resource_sync = SFResourceSync.objects.get(id=sync)
+            resource_sync = SFResourceSync.objects.get(id=sync.id)
             try:
                 if resource_sync.status == "Completed":
                     break
