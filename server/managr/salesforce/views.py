@@ -1,5 +1,6 @@
 import logging
 import random
+import pytz
 from urllib.parse import unquote
 from datetime import datetime
 
@@ -33,11 +34,7 @@ from managr.slack.models import OrgCustomSlackForm
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.models import OrgCustomSlackFormInstance
 from managr.core.models import User
-from .models import (
-    SObjectField,
-    SObjectValidation,
-    SObjectPicklist,
-)
+from .models import SObjectField, SObjectValidation, SObjectPicklist, SFResourceSync
 from .serializers import (
     SalesforceAuthSerializer,
     SObjectFieldSerializer,
@@ -52,9 +49,10 @@ from .background import (
     emit_generate_form_template,
     emit_add_update_to_sf,
     _send_instant_alert,
+    _process_pipeline_sync,
 )
 from managr.salesforce.utils import process_text_field_format
-
+from managr.salesforce import constants as sf_consts
 from managr.salesforce.adapter.exceptions import (
     TokenExpired,
     FieldValidationError,
@@ -437,24 +435,51 @@ class SalesforceSObjectViewSet(
             and all_form_data.get("meeting_type") is not None
         ):
             emit_add_update_to_sf(str(main_form.id))
-        try:
-            text = f"Managr updated {main_form.resource_type}"
-            message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
-            slack_requests.send_ephemeral_message(
-                user.slack_integration.channel,
-                user.organization.slack_integration.access_token,
-                user.slack_integration.slack_id,
-                text=text,
-                block_set=get_block_set(
-                    "success_modal", {"message": message, "u": user.id, "form_ids": form_id}
-                ),
-            )
+        attempts = 1
+        has_error = False
+        while True:
+            if attempts >= 5:
+                has_error = True
+                break
+            try:
+                task = (
+                    CompletedTask.objects.filter(task_hash=resource["task_hash"])
+                    .order_by("-run_at")
+                    .first()
+                )
+                logger.info(f"CONFIRM UPDATE TASK ---- {task}")
+                if task and task.verbose_name == resource["verbose_name"]:
+                    break
+                else:
+                    attempts += 1
+                    sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                    time.sleep(sleep)
+            except Exception as e:
+                logger.exception(
+                    f"Error retreiving update status from task {resource['verbose_name']}, <HASH: {resource['task_hash']}> because of: {e}"
+                )
+                attempts += 1
+        if has_error:
+            return Response(data={"success": False})
+        return Response(data={"success": True})
+        # try:
+        #     text = f"Managr updated {main_form.resource_type}"
+        #     message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
+        #     slack_requests.send_ephemeral_message(
+        #         user.slack_integration.channel,
+        #         user.organization.slack_integration.access_token,
+        #         user.slack_integration.slack_id,
+        #         text=text,
+        #         block_set=get_block_set(
+        #             "success_modal", {"message": message, "u": user.id, "form_ids": form_id}
+        #         ),
+        #     )
 
-        except Exception as e:
-            logger.exception(
-                f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
-            )
-        return Response(data=data)
+        # except Exception as e:
+        #     logger.exception(
+        #         f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
+        #     )
+        # return Response(data=data)
 
     @action(
         methods=["get"],
@@ -559,33 +584,95 @@ class SalesforceSObjectViewSet(
                     attempts += 1
         return Response(data=data)
 
-    # @action(
-    #     methods=["post"],
-    #     permission_classes=[permissions.IsAuthenticated],
-    #     detail=False,
-    #     url_path="send-recap",
-    # )
-    # def send_recaps(self, request, *args, **kwargs):
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="send-recap",
+    )
+    def send_recaps(self, request, *args, **kwargs):
 
-    #     data = self.request.data
-    #     user = User.objects.get(id=self.request.user.id)
-    #     if len(user.slack_integration.realtime_alert_configs):
-    #         _send_instant_alert([form_id])
-    #     try:
-    #         text = f"Managr updated {main_form.resource_type}"
-    #         message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
-    #         slack_requests.send_ephemeral_message(
-    #             user.slack_integration.channel,
-    #             user.organization.slack_integration.access_token,
-    #             user.slack_integration.slack_id,
-    #             text=text,
-    #             block_set=get_block_set(
-    #                 "success_modal", {"message": message, "u": user.id, "form_ids": form_id}
-    #             ),
-    #         )
+        data = self.request.data
+        form_ids = data["form_ids"]
+        bulk_status = data["bulk"]
+        user = User.objects.get(id=self.request.user.id)
+        main_form = OrgCustomSlackFormInstance.objects.get(id=form_ids[0])
+        if len(user.slack_integration.realtime_alert_configs):
+            _send_instant_alert([form_ids])
+        try:
+            if bulk_status == "true":
+                plural = (
+                    f"Opportunities"
+                    if main_form.resource_type == "Opportunity"
+                    else f"{main_form.resource_type}s"
+                )
+                text = "Manager Bulk Update"
+                message = f":white_check_mark: Successfully updated *{len(form_ids)} {main_form.resource_type}*"
+            else:
 
-    #     except Exception as e:
-    #         logger.exception(
-    #             f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
-    #         )
-    #     return Response(data=data)
+                text = f"Managr update {main_form.resource_type}"
+                message = (
+                    f":white_check_mark: Successfully updated *{main_form.resource_type}* {plural}"
+                )
+            slack_requests.send_ephemeral_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                user.slack_integration.slack_id,
+                text=text,
+                block_set=get_block_set(
+                    "success_modal",
+                    {
+                        "message": message,
+                        "u": user.id,
+                        "form_ids": form_ids,
+                        "bulk_status": bulk_status,
+                    },
+                ),
+            )
+
+        except Exception as e:
+            logger.exception(
+                f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
+            )
+        return Response(data=data)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="resource-sync",
+    )
+    def resource_sync(self, request, *args, **kwargs):
+        user = self.request.user
+        operations = ["Account", "Lead", "Opportunity", "Contact"]
+        sync = SFResourceSync.objects.create(
+            user=user,
+            operations_list=operations,
+            operation_type=sf_consts.SALESFORCE_RESOURCE_SYNC,
+        )
+        _process_pipeline_sync(str(sync.id))
+        attempts = 1
+        has_error = False
+        while True:
+            resource_sync = SFResourceSync.objects.get(id=sync.id)
+            try:
+                if resource_sync.status == "Completed":
+                    break
+                else:
+                    attempts += 1
+                    sleep = 1 * 1.15 ** attempts + random.uniform(0, 1)
+                    time.sleep(sleep)
+            except Exception as e:
+                if attempts >= 10:
+                    logger.exception("Failed to receive complete status from sync")
+                    break
+                else:
+                    attempts += 1
+
+        user_timezone = pytz.timezone(user.timezone)
+        currenttime = datetime.now()
+        current = pytz.utc.localize(currenttime).astimezone(user_timezone)
+        user.salesforce_account.last_sync_time = current
+        user.salesforce_account.save()
+        data = {"success": False} if has_error else {"success": True}
+        return Response(data=data)

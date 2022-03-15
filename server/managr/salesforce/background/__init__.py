@@ -155,11 +155,20 @@ def _process_gen_next_sync(user_id, operations_list):
     user = User.objects.filter(id=user_id).first()
     if not user:
         return logger.exception(f"User not found sync operation not created {user_id}")
-    return SFResourceSync.objects.create(
+    SFResourceSync.objects.create(
         user=user,
         operations_list=operations_list,
         operation_type=sf_consts.SALESFORCE_RESOURCE_SYNC,
     ).begin_tasks()
+    return
+
+
+@background(schedule=0)
+@log_all_exceptions
+def _process_pipeline_sync(sync_id):
+    sync = SFResourceSync.objects.get(id=sync_id)
+    sync.begin_tasks()
+    return sync.id
 
 
 @background(schedule=0)
@@ -1218,7 +1227,7 @@ def check_for_display_value(field, value):
 
 @background(schedule=0)
 @slack_api_exceptions(rethrow=True)
-def _send_recap(form_ids, send_to_data=None, manager_recap=False):
+def _send_recap(form_ids, send_to_data=None, manager_recap=False, bulk=False):
     submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
         template__resource="OpportunityLineItem"
     )
@@ -1232,12 +1241,19 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
     title = (
         "*Meeting Recap* :zap:" if manager_recap else f"*{main_form.template.resource} Recap* :zap:"
     )
+    text = f"_{main_form.template.resource}_ *{resource_name}*"
+    if bulk:
+        title = "*Bulk Update* :zap:"
+        text = ""
+        for index, form in submitted_forms:
+            text += f"{form.resource_object.name}"
+            if index != len(submitted_forms):
+                text += ", "
     blocks = [
         block_builders.simple_section(title, "mrkdwn"),
         block_builders.section_with_button_block(
             "View Recap",
             "recap",
-            f"_{main_form.template.resource}_ *{resource_name}*",
             action_id=action_with_params(
                 slack_consts.VIEW_RECAP,
                 params=[f"u={str(user.id)}", f"form_ids={'.'.join(form_ids)}"],

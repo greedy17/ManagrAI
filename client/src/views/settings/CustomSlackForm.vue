@@ -65,7 +65,7 @@
             Be sure to save changes before adding another stage!
           </p>
         </div>
-
+        <p @click="test">TEST</p>
         <div>
           <div v-if="formType === 'STAGE_GATING'">
             <div class="center">
@@ -142,38 +142,6 @@
                 "
               />
             </div>
-
-            <!-- <div
-              v-if="!addedFieldLabels.includes('Line Description')"
-              class="centered field-border"
-            >
-              <p style="margin-left: 0.5rem; font-weight: bold">
-                Line Description <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
-              </p>
-
-              <img
-                src="@/assets/images/unlinked.png"
-                alt=""
-                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-              />
-              <DropDownSearch
-                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-                displayKey="referenceDisplayLabel"
-                valueKey="apiName"
-                nullDisplay="Search fields"
-                searchable
-                :loading="formFields.loadingNextPage"
-                :hasNext="!!formFields.pagination.hasNextPage"
-                v-model="lineValue"
-                @load-more="onFieldsNextPage"
-                @search-term="onSearchFields"
-                @input="
-                  (e) => {
-                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
-                  }
-                "
-              />
-            </div> -->
           </div>
         </div>
 
@@ -503,7 +471,10 @@
             />
           </div>
 
-          <div v-if="!userHasProducts && formType !== 'CREATE'" class="centered field-border">
+          <div
+            v-if="!userHasProducts && !addedFieldNames.includes('Amount') && formType !== 'CREATE'"
+            class="centered field-border"
+          >
             <div class="row__">
               <div style="margin-left: 0.5rem" class="centered">
                 <label :class="!productSelected ? 'green' : 'label'">Amount</label>
@@ -1455,6 +1426,10 @@ export default {
   //   }
   // },
   methods: {
+    test() {
+      console.log(this.formFields.list)
+      console.log(this.addedFieldNames)
+    },
     goToProducts() {
       this.onSave()
       this.$router.push({ name: 'ProductForm' })
