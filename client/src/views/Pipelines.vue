@@ -339,7 +339,7 @@
               <p>{{ currentList }}</p>
               <img
                 @click="showList = !showList"
-                class="exit"
+                class="exit invert"
                 src="@/assets/images/close.png"
                 alt=""
               />
