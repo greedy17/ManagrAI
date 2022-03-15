@@ -1,5 +1,6 @@
 import logging
 import random
+import pytz
 from urllib.parse import unquote
 from datetime import datetime
 
@@ -667,7 +668,11 @@ class SalesforceSObjectViewSet(
                     break
                 else:
                     attempts += 1
-        user.salesforce_account.last_sync_time = datetime.now()
+
+        user_timezone = pytz.timezone(user.timezone)
+        currenttime = datetime.now()
+        current = pytz.utc.localize(currenttime).astimezone(user_timezone)
+        user.salesforce_account.last_sync_time = current
         user.salesforce_account.save()
         data = {"success": False} if has_error else {"success": True}
         return Response(data=data)
