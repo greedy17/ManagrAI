@@ -92,7 +92,6 @@
                 field.dataType === 'TextArea' ||
                 (field.dataType === 'String' && field.apiName === 'NextStep')
               "
-              class="flex-col"
             >
               <p>{{ field.referenceDisplayLabel }}:</p>
               <textarea
@@ -487,12 +486,12 @@
             <img src="@/assets/images/plusOne.png" style="height: 1rem" alt="" />
             Create Opportunity
           </button>
-          <!-- <button @click="resourceSync" class="select-btn">
+          <button @click="manualSync" class="select-btn">
             <img src="@/assets/images/refresh.png" class="invert" style="height: 1.15rem" alt="" />
-          </button> -->
+          </button>
         </div>
       </section>
-      <!-- <p @click="test">TESTING SYNC DAY</p> -->
+      <!-- <p @click="test">test</p> -->
       <section v-show="!selectedWorkflow" class="table-section">
         <div class="table">
           <PipelineHeader
@@ -592,8 +591,9 @@ export default {
   },
   data() {
     return {
-      updatingOpps: false,
       key: 0,
+      updatingOpps: false,
+      oppInstanceId: null,
       oppId: null,
       allUsers: null,
       primaryCheckList: [],
@@ -677,23 +677,28 @@ export default {
         .substring(0, date.toLocaleDateString().indexOf('/') + 1)
     },
     syncDay() {
-      return this.formatDateTime(this.$store.state.user.salesforceAccountRef.lastSyncTime)
-        .substring(
-          this.formatDateTime(this.$store.state.user.salesforceAccountRef.lastSyncTime).indexOf(
-            '/',
-          ) + 1,
-        )
-        .substring(
-          0,
-          this.formatDateTime(this.$store.state.user.salesforceAccountRef.lastSyncTime).indexOf(
-            '/',
-          ),
-        )
+      if (this.$store.state.user.salesforceAccountRef.lastSyncTime) {
+        return this.formatDateTime(this.$store.state.user.salesforceAccountRef.lastSyncTime)
+          .substring(
+            this.formatDateTime(this.$store.state.user.salesforceAccountRef.lastSyncTime).indexOf(
+              '/',
+            ) + 1,
+          )
+          .substring(
+            0,
+            this.formatDateTime(this.$store.state.user.salesforceAccountRef.lastSyncTime).indexOf(
+              '/',
+            ),
+          )
+      } else {
+        return null
+      }
     },
   },
   created() {
     this.getObjects()
     this.templates.refresh()
+    this.team.refresh()
     this.getAllForms()
     this.listStages()
     this.listForecast()
@@ -705,8 +710,8 @@ export default {
   },
   methods: {
     test() {
-      console.log(this.syncDay)
-      console.log(this.currentDay)
+      console.log(this.primaryCheckList)
+      console.log(this.team.list)
     },
     selectPrimaryCheckbox(id) {
       if (this.primaryCheckList.includes(id)) {
@@ -815,7 +820,7 @@ export default {
       } finally {
         setTimeout(() => {
           this.loadingWorkflows = false
-        }, 3500)
+        }, 3750)
       }
     },
     resetNotes() {
@@ -851,7 +856,7 @@ export default {
           formType: 'CREATE',
         })
         this.addOppModalOpen = true
-        this.instanceId = res.form_id
+        this.oppInstanceId = res.form_id
       } catch (e) {
         console.log(e)
       }
@@ -922,13 +927,9 @@ export default {
               this.originalList = updatedRes.results
             })
           this.formData = {}
-          this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
-          this.primaryCheckList.length > 1
-            ? this.primaryCheckList.shift()
-            : (this.primaryCheckList = [])
-          this.workflowCheckList.length > 1
-            ? this.workflowCheckList.shift()
-            : (this.workflowCheckList = [])
+          setTimeout(() => {
+            this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
+          }, 300)
           if (this.selectedWorkflow) {
             this.currentWorkflow.refresh()
           } else if (this.currentList === 'Closing this month') {
@@ -938,6 +939,12 @@ export default {
           }
         } catch (e) {
           console.log(e)
+        } finally {
+          if (this.selectedWorkflow) {
+            this.workflowCheckList = []
+          } else {
+            this.primaryCheckList = []
+          }
         }
       }
       this.updatingOpps = false
@@ -965,13 +972,9 @@ export default {
               this.originalList = updatedRes.results
             })
           this.formData = {}
-          this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
-          this.primaryCheckList.length > 1
-            ? this.primaryCheckList.shift()
-            : (this.primaryCheckList = [])
-          this.workflowCheckList.length > 1
-            ? this.workflowCheckList.shift()
-            : (this.workflowCheckList = [])
+          setTimeout(() => {
+            this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
+          }, 300)
           if (this.selectedWorkflow) {
             this.currentWorkflow.refresh()
           } else if (this.currentList === 'Closing this month') {
@@ -981,6 +984,12 @@ export default {
           }
         } catch (e) {
           console.log(e)
+        } finally {
+          if (this.selectedWorkflow) {
+            this.workflowCheckList = []
+          } else {
+            this.primaryCheckList = []
+          }
         }
       }
       this.updatingOpps = false
@@ -1007,13 +1016,9 @@ export default {
               this.originalList = updatedRes.results
             })
           this.formData = {}
-          this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
-          this.primaryCheckList.length > 1
-            ? this.primaryCheckList.shift()
-            : (this.primaryCheckList = [])
-          this.workflowCheckList.length > 1
-            ? this.workflowCheckList.shift()
-            : (this.workflowCheckList = [])
+          setTimeout(() => {
+            this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
+          }, 300)
           if (this.selectedWorkflow) {
             this.currentWorkflow.refresh()
           } else if (this.currentList === 'Closing this month') {
@@ -1023,6 +1028,12 @@ export default {
           }
         } catch (e) {
           console.log(e)
+        } finally {
+          if (this.selectedWorkflow) {
+            this.workflowCheckList = []
+          } else {
+            this.primaryCheckList = []
+          }
         }
       }
       this.updatingOpps = false
@@ -1052,6 +1063,24 @@ export default {
             sub: 'All fields reflect your current SFDC data',
           })
         }
+      }
+    },
+    async manualSync() {
+      this.loading = true
+      try {
+        const res = await SObjects.api.resourceSync()
+        console.log(res)
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.getObjects()
+        this.loading = false
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 3000,
+          message: 'Daily Sync complete',
+          sub: 'All fields reflect your current SFDC data',
+        })
       }
     },
     async updateResource() {
@@ -1091,7 +1120,7 @@ export default {
       this.addOppModalOpen = false
       try {
         const res = await SObjects.api.createResource({
-          form_id: this.instanceId,
+          form_id: this.oppInstanceId,
           form_data: this.formData,
         })
         this.$Alert.alert({
@@ -1153,6 +1182,7 @@ export default {
         for (let i in this.picklistQueryOpts) {
           this.picklistQueryOpts[i] = this.listPicklists(i, { picklistFor: i })
         }
+        // this.oppName = this.updateOppForm[0].fieldsRef.filter((field) => field.apiName === 'Name')
         this.oppFields = this.updateOppForm[0].fieldsRef.filter(
           (field) =>
             field.apiName !== 'meeting_type' &&
@@ -1571,10 +1601,7 @@ section {
     margin-left: 0.5rem;
   }
 }
-.flex-col {
-  display: flex;
-  flex-direction: column;
-}
+
 .flex-row-spread {
   display: flex;
   flex-direction: row;
@@ -1696,51 +1723,6 @@ section {
 .gray {
   filter: invert(44%);
 }
-.name-cell-note-button {
-  cursor: pointer;
-  border: none;
-  border-radius: 0.2rem;
-  padding: 0.2rem;
-  background-color: white;
-  box-shadow: 1px 1px 3px $very-light-gray;
-  transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  font-size: 10px;
-  font-weight: 700px;
-  letter-spacing: 0.25px;
-  img {
-    height: 0.8rem;
-  }
-}
-.name-cell-note-button:hover,
-.name-cell-edit-note-button:hover {
-  transform: scale(1.03);
-  box-shadow: 1px 1px 1px 1px $very-light-gray;
-}
-.name-cell-edit-note-button {
-  cursor: pointer;
-  border: none;
-  border-radius: 0.2rem;
-  padding: 0.2rem;
-  background-color: $dark-green;
-  color: white;
-  transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 10px;
-  box-shadow: 1px 1px 2px $very-light-gray;
-  font-weight: 700px;
-  letter-spacing: 0.25px;
-  margin-bottom: 0.5rem;
-
-  img {
-    height: 0.8rem;
-    margin-left: 0.25rem;
-  }
-}
 .header {
   font-size: 18px;
   letter-spacing: 0.5px;
@@ -1762,9 +1744,12 @@ section {
   margin-right: 0.5rem;
   box-shadow: 1px 1px 7px 2px $very-light-gray;
   &__title {
-    color: $dark-green;
+    position: sticky;
+    top: 0;
+    color: white;
+    background-color: $dark-green;
     letter-spacing: 0.25px;
-    margin-left: 0.75rem;
+    padding-left: 0.75rem;
     font-weight: bold;
     font-size: 15px;
     width: 100%;
@@ -1808,7 +1793,7 @@ section {
   margin-left: 0.2rem;
 }
 .exit {
-  padding-right: 1.25rem;
+  padding-right: 0.75rem;
   margin-top: -0.5rem;
   height: 1rem;
   cursor: pointer;

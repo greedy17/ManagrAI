@@ -39,7 +39,11 @@ class Lead(TimeStampModel, IntegrationModel):
         max_length=500,
     )
     owner = models.ForeignKey(
-        "core.User", related_name="owned_leads", on_delete=models.SET_NULL, blank=True, null=True,
+        "core.User",
+        related_name="owned_leads",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
     )
     objects = LeadQuerySet.as_manager()
 
@@ -118,7 +122,12 @@ class Opportunity(TimeStampModel, IntegrationModel):
     """
 
     name = models.CharField(max_length=255, blank=True, null=False)
-    amount = models.DecimalField(max_digits=30, decimal_places=15, default=0.00, null=True,)
+    amount = models.DecimalField(
+        max_digits=30,
+        decimal_places=15,
+        default=0.00,
+        null=True,
+    )
     forecast_category = models.CharField(max_length=255, null=True)
 
     close_date = models.DateField(null=True)
@@ -254,3 +263,11 @@ class Opportunity(TimeStampModel, IntegrationModel):
         token = self.owner.salesforce_account.access_token
         base_url = self.owner.salesforce_account.instance_url
         return OpportunityAdapter.get_current_values(integration_id, token, base_url, self.owner.id)
+
+    def update_database_values(self, data, *args, **kwargs):
+        data.pop("meeting_comments", None)
+        data.pop("meeting_type", None)
+        print(self.secondary_data)
+        self.secondary_data.update(data)
+        print(self.secondary_data)
+        return self.save()

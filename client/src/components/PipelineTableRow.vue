@@ -26,7 +26,7 @@
 
           <PipelineNameSection
             v-else
-            :name="opp.name"
+            :name="opp['secondary_data']['Name']"
             :accountName="opp.account_ref ? opp.account_ref.name : ''"
             :owner="opp.owner_ref.first_name"
           />
@@ -35,12 +35,12 @@
           <SkeletonBox width="15px" height="14px" />
           <SkeletonBox width="15px" height="14px" />
         </div>
-        <div v-else class="flex-col">
-          <button @click="emitCreateForm" class="name-cell-edit-note-button">
+        <div v-else class="flex-column">
+          <button @click="emitCreateForm" class="name-cell-edit-note-button-1">
             Update
             <img class="invert" src="@/assets/images/edit-note.png" />
           </button>
-          <button @click="emitGetNotes" class="name-cell-note-button">
+          <button @click="emitGetNotes" class="name-cell-note-button-1">
             Notes
             <img class="gray" src="@/assets/images/white-note.png" />
           </button>
@@ -204,9 +204,11 @@ export default {
   align-items: center;
   justify-content: space-between;
 }
-.flex-col {
+.flex-column {
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-end;
 }
 .flex-row {
   position: relative;
@@ -263,19 +265,52 @@ input[type='checkbox'] + label::before {
   width: 110%;
   overflow: auto;
   direction: rtl;
-  // padding: 0px 0.25rem;
 }
-// ::-webkit-scrollbar {
-//   background-color: $off-white;
-//   -webkit-appearance: none;
-//   height: 100%;
-//   width: 3px;
-// }
-// ::-webkit-scrollbar-thumb {
-//   border-radius: 3px;
-//   background-color: $very-light-gray;
-// }
-// ::-webkit-scrollbar-track {
-//   margin-top: 1rem;
-// }
+.name-cell-note-button-1 {
+  cursor: pointer;
+  border: none;
+  border-radius: 0.2rem;
+  padding: 0.25rem 0.3rem;
+  background-color: white;
+  box-shadow: 1px 1px 3px $very-light-gray;
+  max-width: 4rem;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  font-size: 11px;
+  font-weight: 700px;
+  letter-spacing: 0.25px;
+  img {
+    height: 0.8rem;
+  }
+}
+.name-cell-note-button-1:hover,
+.name-cell-edit-note-button-1:hover {
+  transform: scale(1.03);
+  box-shadow: 1px 1px 1px 1px $very-light-gray;
+}
+.name-cell-edit-note-button-1 {
+  cursor: pointer;
+  border: none;
+  border-radius: 0.2rem;
+  padding: 0.25rem 0.3rem;
+  background-color: $dark-green;
+  color: white;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  box-shadow: 1px 1px 2px $very-light-gray;
+  font-weight: 700px;
+  letter-spacing: 0.25px;
+  margin-top: 0.4rem;
+  margin-bottom: 0.3rem;
+
+  img {
+    height: 0.8rem;
+    margin-left: 0.25rem;
+  }
+}
 </style>
