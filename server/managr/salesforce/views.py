@@ -436,34 +436,6 @@ class SalesforceSObjectViewSet(
         ):
             emit_add_update_to_sf(str(main_form.id))
         value_update = main_form.resource_object.update_database_values(all_form_data)
-        print(main_form.resource_object.secondary_data)
-        # attempts = 1
-        # has_error = False
-        # while True:
-        #     if attempts >= 5:
-        #         has_error = True
-        #         break
-        #     try:
-        #         task = (
-        #             CompletedTask.objects.filter(task_hash=resource["task_hash"])
-        #             .order_by("-run_at")
-        #             .first()
-        #         )
-        #         logger.info(f"CONFIRM UPDATE TASK ---- {task}")
-        #         if task and task.verbose_name == resource["verbose_name"]:
-        #             break
-        #         else:
-        #             attempts += 1
-        #             sleep = 1 * 2 ** attempts + random.uniform(0, 1)
-        #             time.sleep(sleep)
-        #     except Exception as e:
-        #         logger.exception(
-        #             f"Error retreiving update status from task {resource['verbose_name']}, <HASH: {resource['task_hash']}> because of: {e}"
-        #         )
-        #         attempts += 1
-        # if has_error:
-        #     return Response(data={"success": False})
-
         return Response(data={"success": True})
         # try:
         #     text = f"Managr updated {main_form.resource_type}"
@@ -674,7 +646,11 @@ class SalesforceSObjectViewSet(
 
         user_timezone = pytz.timezone(user.timezone)
         currenttime = datetime.now()
-        current = pytz.utc.localize(currenttime).astimezone(user_timezone)
+        print(currenttime)
+        current = (
+            pytz.utc.localize(currenttime).astimezone(user_timezone).strftime("%Y-%m-%d %H:%M:%S")
+        )
+        print(current)
         user.salesforce_account.last_sync_time = current
         user.salesforce_account.save()
         data = {"success": False} if has_error else {"success": True}
