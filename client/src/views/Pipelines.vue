@@ -318,7 +318,7 @@
       </div>
     </Modal>
     <div v-if="!loading">
-      <section style="margin-bottom: 1rem" class="flex-row-spread top-section">
+      <section style="margin-bottom: 1rem" class="flex-row-spread">
         <div v-if="!workflowCheckList.length && !primaryCheckList.length" class="flex-row">
           <button @click="showList = !showList" class="select-btn">
             {{ currentList }}
@@ -398,9 +398,9 @@
           </h5>
         </div>
         <div v-else>
-          <div class="bulk-action">
+          <div v-if="!updatingOpps" class="bulk-action">
             <div v-if="!closeDateSelected && !advanceStageSelected && !forecastSelected">
-              <!-- <p class="bulk-action__title">Bulk Actions:</p> -->
+              <!-- <p class="bulk-action__title">Select Update or <span class="cancel">cancel</span></p> -->
               <div class="flex-row">
                 <button @click="closeDateSelected = !closeDateSelected" class="select-btn">
                   Push Close Date
@@ -470,6 +470,9 @@
               </button>
             </div>
           </div>
+          <div class="bulk-action" v-else>
+            <SkeletonBox width="400px" height="22px" />
+          </div>
         </div>
         <div class="flex-row">
           <div v-if="!selectedWorkflow" class="search-bar">
@@ -489,6 +492,7 @@
           </button> -->
         </div>
       </section>
+      <!-- <p @click="test">TESTING SYNC DAY</p> -->
       <section v-show="!selectedWorkflow" class="table-section">
         <div class="table">
           <PipelineHeader
@@ -515,7 +519,7 @@
           <WorkflowHeader
             :oppFields="oppFields"
             @check-all="onCheckAllWorkflows"
-            :allSelected="allWorkflowsSelected"
+            :allWorkflowsSelected="allWorkflowsSelected"
           />
           <WorkflowRow
             :key="i"
@@ -549,8 +553,9 @@
         </div>
       </section>
     </div>
-    <div class="loader" v-if="loading">
-      <img src="@/assets/images/loading-gif.gif" class="invert" style="height: 8rem" alt="" />
+    <div v-if="loading">
+      <PipelineLoader />
+      <!-- <img src="@/assets/images/loading-gif.gif" class="invert" style="height: 8rem" alt="" /> -->
     </div>
   </div>
 </template>
@@ -567,6 +572,7 @@ import PipelineField from '@/components/PipelineField'
 import PipelineTableRow from '@/components/PipelineTableRow'
 import WorkflowRow from '@/components/WorkflowRow'
 import PipelineHeader from '@/components/PipelineHeader'
+import PipelineLoader from '@/components/PipelineLoader'
 import WorkflowHeader from '@/components/WorkflowHeader'
 import User from '@/services/users'
 
@@ -582,9 +588,11 @@ export default {
     PipelineHeader,
     WorkflowHeader,
     WorkflowRow,
+    PipelineLoader,
   },
   data() {
     return {
+      updatingOpps: false,
       key: 0,
       oppId: null,
       allUsers: null,
@@ -661,6 +669,27 @@ export default {
       let date = new Date()
       return date.getMonth()
     },
+    currentDay() {
+      let date = new Date()
+      return date
+        .toLocaleDateString()
+        .substring(date.toLocaleDateString().indexOf('/') + 1)
+        .substring(0, date.toLocaleDateString().indexOf('/') + 1)
+    },
+    syncDay() {
+      return this.formatDateTime(this.$store.state.user.salesforceAccountRef.lastSyncTime)
+        .substring(
+          this.formatDateTime(this.$store.state.user.salesforceAccountRef.lastSyncTime).indexOf(
+            '/',
+          ) + 1,
+        )
+        .substring(
+          0,
+          this.formatDateTime(this.$store.state.user.salesforceAccountRef.lastSyncTime).indexOf(
+            '/',
+          ),
+        )
+    },
   },
   created() {
     this.getObjects()
@@ -675,6 +704,10 @@ export default {
     workflowCheckList: 'closeAll',
   },
   methods: {
+    test() {
+      console.log(this.syncDay)
+      console.log(this.currentDay)
+    },
     selectPrimaryCheckbox(id) {
       if (this.primaryCheckList.includes(id)) {
         this.primaryCheckList = this.primaryCheckList.filter((opp) => opp !== id)
@@ -770,16 +803,19 @@ export default {
     },
     async refresh(id) {
       this.loadingWorkflows = true
-      this.key = 0
-      if (id) {
-        try {
-          await AlertTemplate.api.runAlertTemplateNow(id).then(() => {
-            this.currentWorkflow.refresh()
-            this.loadingWorkflows = false
-          })
-        } catch (e) {
-          console.log(e)
+      let counter = 0
+      try {
+        await AlertTemplate.api.runAlertTemplateNow(id)
+        while (counter < 100) {
+          this.currentWorkflow.refresh()
+          counter += 1
         }
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.loadingWorkflows = false
+        }, 3500)
       }
     },
     resetNotes() {
@@ -872,6 +908,7 @@ export default {
       }
     },
     async bulkUpdateCloseDate(ids, data) {
+      this.updatingOpps = true
       for (let i = 0; i < ids.length; i++) {
         try {
           const res = await SObjects.api
@@ -892,18 +929,19 @@ export default {
           this.workflowCheckList.length > 1
             ? this.workflowCheckList.shift()
             : (this.workflowCheckList = [])
+          if (this.selectedWorkflow) {
+            this.currentWorkflow.refresh()
+          } else if (this.currentList === 'Closing this month') {
+            this.stillThisMonth()
+          } else if (this.currentList === 'Closing next month') {
+            this.stillNextMonth()
+          }
         } catch (e) {
           console.log(e)
         }
       }
+      this.updatingOpps = false
       this.closeDateSelected = false
-      if (this.selectedWorkflow) {
-        this.currentWorkflow.refresh()
-      } else if (this.currentList === 'Closing this month') {
-        this.stillThisMonth()
-      } else if (this.currentList === 'Closing next month') {
-        this.stillNextMonth()
-      }
       console.log(this.primaryCheckList)
       this.$Alert.alert({
         type: 'success',
@@ -913,6 +951,7 @@ export default {
       })
     },
     async bulkUpdateStage(ids, data) {
+      this.updatingOpps = true
       for (let i = 0; i < ids.length; i++) {
         try {
           const res = await SObjects.api
@@ -933,19 +972,19 @@ export default {
           this.workflowCheckList.length > 1
             ? this.workflowCheckList.shift()
             : (this.workflowCheckList = [])
+          if (this.selectedWorkflow) {
+            this.currentWorkflow.refresh()
+          } else if (this.currentList === 'Closing this month') {
+            this.stillThisMonth()
+          } else if (this.currentList === 'Closing next month') {
+            this.stillNextMonth()
+          }
         } catch (e) {
           console.log(e)
         }
       }
+      this.updatingOpps = false
       this.advanceStageSelected = false
-      if (this.selectedWorkflow) {
-        this.currentWorkflow.refresh()
-      } else if (this.currentList === 'Closing this month') {
-        this.stillThisMonth()
-      } else if (this.currentList === 'Closing next month') {
-        this.stillNextMonth()
-      }
-
       this.$Alert.alert({
         type: 'success',
         timeout: 3000,
@@ -954,6 +993,7 @@ export default {
       })
     },
     async bulkChangeForecast(ids, data) {
+      this.updatingOpps = true
       for (let i = 0; i < ids.length; i++) {
         try {
           const res = await SObjects.api
@@ -974,18 +1014,19 @@ export default {
           this.workflowCheckList.length > 1
             ? this.workflowCheckList.shift()
             : (this.workflowCheckList = [])
+          if (this.selectedWorkflow) {
+            this.currentWorkflow.refresh()
+          } else if (this.currentList === 'Closing this month') {
+            this.stillThisMonth()
+          } else if (this.currentList === 'Closing next month') {
+            this.stillNextMonth()
+          }
         } catch (e) {
           console.log(e)
         }
       }
+      this.updatingOpps = false
       this.forecastSelected = false
-      if (this.selectedWorkflow) {
-        this.currentWorkflow.refresh()
-      } else if (this.currentList === 'Closing this month') {
-        this.stillThisMonth()
-      } else if (this.currentList === 'Closing next month') {
-        this.stillNextMonth()
-      }
       this.$Alert.alert({
         type: 'success',
         timeout: 3000,
@@ -994,13 +1035,24 @@ export default {
       })
     },
     async resourceSync() {
-      try {
-        const res = await SObjects.api.resourceSync()
-        console.log(res)
-      } catch (e) {
-        console.log(e)
+      if (this.currentDay !== this.syncDay) {
+        this.loading = true
+        try {
+          const res = await SObjects.api.resourceSync()
+          console.log(res)
+        } catch (e) {
+          console.log(e)
+        } finally {
+          this.getObjects()
+          this.loading = false
+          this.$Alert.alert({
+            type: 'success',
+            timeout: 3000,
+            message: 'Daily Sync complete',
+            sub: 'All fields reflect your current SFDC data',
+          })
+        }
       }
-      this.loading = false
     },
     async updateResource() {
       this.updateList.push(this.oppId)
@@ -1053,23 +1105,27 @@ export default {
       }
       this.getAllForms()
     },
-    selectList(configId, title, id) {
+    async selectList(configId, title, id) {
       this.refreshId = id
       this.currentList = title
-      this.currentWorkflow = CollectionManager.create({
-        ModelClass: AlertInstance,
-        filters: {
-          byConfig: configId,
-        },
-      })
-      this.currentWorkflow.refresh()
+      try {
+        this.currentWorkflow = CollectionManager.create({
+          ModelClass: AlertInstance,
+          filters: {
+            byConfig: configId,
+          },
+        })
+        this.currentWorkflow.refresh()
+        setTimeout(() => {
+          if (this.currentWorkflow.list.length < 1) {
+            this.refresh(this.refreshId)
+          }
+        }, 300)
+      } catch (error) {
+        console.log(error)
+      }
       this.selectedWorkflow = true
       this.showList = false
-      setTimeout(() => {
-        if (this.currentWorkflow.list.length < 1) {
-          this.refresh(this.refreshId)
-        }
-      }, 500)
     },
     async getAllForms() {
       try {
@@ -1110,7 +1166,6 @@ export default {
       }
     },
     async getObjects() {
-      this.loading = true
       try {
         const res = await SObjects.api.getObjects('Opportunity')
         this.allOpps = res.results
@@ -1512,7 +1567,8 @@ section {
   &__title {
     font-weight: bold;
     font-size: 14px;
-    margin-left: 0.25rem;
+    color: $base-gray;
+    margin-left: 0.5rem;
   }
 }
 .flex-col {
@@ -1637,32 +1693,53 @@ section {
 .invert {
   filter: invert(99%);
 }
+.gray {
+  filter: invert(44%);
+}
 .name-cell-note-button {
-  height: 1.5rem;
   cursor: pointer;
-  // box-shadow: 1px 1px 1px 1px $very-light-gray;
   border: none;
-  border-radius: 50%;
+  border-radius: 0.2rem;
   padding: 0.2rem;
-  margin-right: 0.5rem;
   background-color: white;
-  box-shadow: 1px 1px 1px 1px $very-light-gray;
+  box-shadow: 1px 1px 3px $very-light-gray;
   transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  font-size: 10px;
+  font-weight: 700px;
+  letter-spacing: 0.25px;
+  img {
+    height: 0.8rem;
+  }
 }
 .name-cell-note-button:hover,
 .name-cell-edit-note-button:hover {
   transform: scale(1.03);
-  box-shadow: 1px 2px 2px $very-light-gray;
+  box-shadow: 1px 1px 1px 1px $very-light-gray;
 }
 .name-cell-edit-note-button {
-  height: 1.5rem;
   cursor: pointer;
   border: none;
-  border-radius: 50%;
+  border-radius: 0.2rem;
   padding: 0.2rem;
-  margin-right: 0.25rem;
   background-color: $dark-green;
+  color: white;
   transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  box-shadow: 1px 1px 2px $very-light-gray;
+  font-weight: 700px;
+  letter-spacing: 0.25px;
+  margin-bottom: 0.5rem;
+
+  img {
+    height: 0.8rem;
+    margin-left: 0.25rem;
+  }
 }
 .header {
   font-size: 18px;
@@ -1737,7 +1814,7 @@ section {
   cursor: pointer;
 }
 .cancel {
-  color: $darker-green;
+  color: $dark-green;
   font-weight: bold;
   margin-right: 1rem;
   cursor: pointer;

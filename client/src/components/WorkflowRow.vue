@@ -38,17 +38,15 @@
           <SkeletonBox width="15px" height="14px" />
         </div>
 
-        <div v-else class="flex-row">
-          <img
-            @click="emitCreateForm"
-            class="name-cell-note-button"
-            src="@/assets/images/edit-note.png"
-          />
-          <img
-            @click="emitGetNotes"
-            class="name-cell-edit-note-button"
-            src="@/assets/images/white-note.png"
-          />
+        <div v-else class="flex-col">
+          <button @click="emitCreateForm" class="name-cell-edit-note-button">
+            Update
+            <img class="invert" src="@/assets/images/edit-note.png" />
+          </button>
+          <button @click="emitGetNotes" class="name-cell-note-button">
+            Notes
+            <img class="gray" src="@/assets/images/white-note.png" />
+          </button>
         </div>
       </div>
     </div>
@@ -285,16 +283,17 @@ input[type='checkbox'] + label::before {
   direction: rtl;
   padding: 0px 0.25rem;
 }
-::-webkit-scrollbar {
-  background-color: $off-white;
-  -webkit-appearance: none;
-  height: 100%;
-  width: 3px;
-}
-::-webkit-scrollbar-thumb {
-  border-radius: 3px;
-  background-color: $very-light-gray;
-}
-::-webkit-scrollbar-track {
-  margin-top: 1rem;
-}
+// ::-webkit-scrollbar {
+//   background-color: $off-white;
+//   -webkit-appearance: none;
+//   height: 100%;
+//   width: 3px;
+// }
+// ::-webkit-scrollbar-thumb {
+//   border-radius: 3px;
+//   background-color: $very-light-gray;
+// }
+// ::-webkit-scrollbar-track {
+//   margin-top: 1rem;
+// }
+</style>

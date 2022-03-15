@@ -2,7 +2,12 @@
   <div class="table-row">
     <div style="padding: 2vh" class="table-cell-checkbox-header">
       <div>
-        <input @click="emitCheckAll" type="checkbox" id="checkAllWorkflows" v-model="allSelected" />
+        <input
+          @click="emitCheckAll"
+          type="checkbox"
+          id="checkAllWorkflows"
+          v-model="allWorkflowsSelected"
+        />
         <label for="checkAllWorkflows"></label>
       </div>
     </div>
@@ -26,7 +31,7 @@ export default {
   },
   props: {
     oppFields: {},
-    allSelected: {},
+    allWorkflowsSelected: {},
   },
 }
 </script>
