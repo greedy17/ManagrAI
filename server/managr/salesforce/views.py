@@ -646,7 +646,11 @@ class SalesforceSObjectViewSet(
 
         user_timezone = pytz.timezone(user.timezone)
         currenttime = datetime.now()
-        current = pytz.utc.localize(currenttime).astimezone(user_timezone)
+        print(currenttime)
+        current = (
+            pytz.utc.localize(currenttime).astimezone(user_timezone).strftime("%Y-%m-%d %H:%M:%S")
+        )
+        print(current)
         user.salesforce_account.last_sync_time = current
         user.salesforce_account.save()
         data = {"success": False} if has_error else {"success": True}
