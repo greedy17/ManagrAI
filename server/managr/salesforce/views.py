@@ -332,7 +332,7 @@ class SalesforceSObjectViewSet(
                 else:
                     attempts += 1
 
-        if resource_type == "Opportunity":
+        if resource_type == "Opportunity" and form_type == "UPDATE":
             current_products = user.salesforce_account.list_resource_data(
                 "OpportunityLineItem",
                 0,
@@ -343,7 +343,7 @@ class SalesforceSObjectViewSet(
             )
             product_values = [product.as_dict for product in current_products]
             data["current_products"] = product_values
-            return Response(data=data)
+        return Response(data=data)
 
     @action(
         methods=["post"],
@@ -646,11 +646,9 @@ class SalesforceSObjectViewSet(
 
         user_timezone = pytz.timezone(user.timezone)
         currenttime = datetime.now()
-        print(currenttime)
         current = (
             pytz.utc.localize(currenttime).astimezone(user_timezone).strftime("%Y-%m-%d %H:%M:%S")
         )
-        print(current)
         user.salesforce_account.last_sync_time = current
         user.salesforce_account.save()
         data = {"success": False} if has_error else {"success": True}
