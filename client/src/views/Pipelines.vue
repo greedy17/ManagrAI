@@ -92,7 +92,6 @@
                 field.dataType === 'TextArea' ||
                 (field.dataType === 'String' && field.apiName === 'NextStep')
               "
-              class="flex-col"
             >
               <p>{{ field.referenceDisplayLabel }}:</p>
               <textarea
@@ -492,6 +491,7 @@
           </button>
         </div>
       </section>
+      <!-- <p @click="test">test</p> -->
       <section v-show="!selectedWorkflow" class="table-section">
         <div class="table">
           <PipelineHeader
@@ -698,6 +698,7 @@ export default {
   created() {
     this.getObjects()
     this.templates.refresh()
+    this.team.refresh()
     this.getAllForms()
     this.listStages()
     this.listForecast()
@@ -710,7 +711,7 @@ export default {
   methods: {
     test() {
       console.log(this.primaryCheckList)
-      console.log(this.workflowCheckList)
+      console.log(this.team.list)
     },
     selectPrimaryCheckbox(id) {
       if (this.primaryCheckList.includes(id)) {
@@ -1600,10 +1601,7 @@ section {
     margin-left: 0.5rem;
   }
 }
-.flex-col {
-  display: flex;
-  flex-direction: column;
-}
+
 .flex-row-spread {
   display: flex;
   flex-direction: row;
