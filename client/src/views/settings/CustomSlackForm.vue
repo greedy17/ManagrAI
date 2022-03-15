@@ -65,7 +65,6 @@
             Be sure to save changes before adding another stage!
           </p>
         </div>
-        <p @click="test">TEST</p>
         <div>
           <div v-if="formType === 'STAGE_GATING'">
             <div class="center">

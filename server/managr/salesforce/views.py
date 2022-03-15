@@ -436,6 +436,7 @@ class SalesforceSObjectViewSet(
         ):
             emit_add_update_to_sf(str(main_form.id))
         value_update = main_form.resource_object.update_database_values(all_form_data)
+        print(main_form.resource_object.secondary_data)
         # attempts = 1
         # has_error = False
         # while True:

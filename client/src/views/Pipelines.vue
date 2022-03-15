@@ -592,8 +592,9 @@ export default {
   },
   data() {
     return {
-      updatingOpps: false,
       key: 0,
+      updatingOpps: false,
+      oppInstanceId: null,
       oppId: null,
       allUsers: null,
       primaryCheckList: [],
@@ -815,7 +816,7 @@ export default {
       } finally {
         setTimeout(() => {
           this.loadingWorkflows = false
-        }, 3500)
+        }, 3750)
       }
     },
     resetNotes() {
@@ -851,7 +852,7 @@ export default {
           formType: 'CREATE',
         })
         this.addOppModalOpen = true
-        this.instanceId = res.form_id
+        this.oppInstanceId = res.form_id
       } catch (e) {
         console.log(e)
       }
@@ -1091,7 +1092,7 @@ export default {
       this.addOppModalOpen = false
       try {
         const res = await SObjects.api.createResource({
-          form_id: this.instanceId,
+          form_id: this.oppInstanceId,
           form_data: this.formData,
         })
         this.$Alert.alert({
@@ -1700,14 +1701,14 @@ section {
   cursor: pointer;
   border: none;
   border-radius: 0.2rem;
-  padding: 0.2rem;
+  padding: 0.25rem;
   background-color: white;
   box-shadow: 1px 1px 3px $very-light-gray;
   transition: all 0.3s;
   display: flex;
   align-items: center;
   justify-content: space-around;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700px;
   letter-spacing: 0.25px;
   img {
@@ -1723,14 +1724,14 @@ section {
   cursor: pointer;
   border: none;
   border-radius: 0.2rem;
-  padding: 0.2rem;
+  padding: 0.25rem;
   background-color: $dark-green;
   color: white;
   transition: all 0.3s;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 10px;
+  font-size: 12px;
   box-shadow: 1px 1px 2px $very-light-gray;
   font-weight: 700px;
   letter-spacing: 0.25px;
