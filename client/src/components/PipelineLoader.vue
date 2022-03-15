@@ -2,12 +2,10 @@
   <div class="pipeline-loader">
     <section class="flex-row-spreader">
       <div>
-        <SkeletonBox style="margin-right: 0.25rem" width="150px" height="30px" />
-        <SkeletonBox style="margin-right: 0.25rem" width="300px" height="30px" />
+        <SkeletonBox style="margin-right: 0.25rem" width="44vw" height="34px" />
       </div>
       <div>
-        <SkeletonBox style="margin-right: 0.25rem" width="150px" height="30px" />
-        <SkeletonBox width="150px" height="30px" />
+        <SkeletonBox style="margin-right: 0.25rem" width="36vw" height="34px" />
       </div>
     </section>
 
