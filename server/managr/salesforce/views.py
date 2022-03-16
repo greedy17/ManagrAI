@@ -362,6 +362,9 @@ class SalesforceSObjectViewSet(
         user = User.objects.get(id=self.request.user.id)
         form_id = data.get("form_id")
         form_data = data.get("form_data")
+        print(data)
+        alert_instance_id = data.get("alert_instance", None)
+        print(alert_instance_id)
         main_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
         stage_forms = []
         stage_form_data_collector = {}
@@ -381,7 +384,6 @@ class SalesforceSObjectViewSet(
             sf = user.salesforce_account
             try:
                 resource = main_form.resource_object.update_in_salesforce(all_form_data, True)
-                logger.info(f"RESOURCE UPDATE --- {resource}")
                 data = {
                     "success": True,
                     "task_hash": resource["task_hash"],
@@ -428,14 +430,26 @@ class SalesforceSObjectViewSet(
             except Exception as e:
                 logger.info(f"UPDATE ERROR {e}")
                 break
-        current_forms.update(
-            is_submitted=True, update_source="pipeline", submission_date=timezone.now()
-        )
         if (
             all_form_data.get("meeting_comments") is not None
             and all_form_data.get("meeting_type") is not None
         ):
             emit_add_update_to_sf(str(main_form.id))
+        if alert_instance_id:
+            from managr.alerts.models import AlertInstance
+
+            print("here")
+            instance = AlertInstance.objects.get(id=alert_instance_id)
+            current_forms.update(
+                is_submitted=True,
+                update_source="pipeline",
+                submission_date=timezone.now(),
+                alert_instance_id=instance,
+            )
+        else:
+            current_forms.update(
+                is_submitted=True, update_source="pipeline", submission_date=timezone.now()
+            )
         value_update = main_form.resource_object.update_database_values(all_form_data)
         return Response(data={"success": True})
         # try:

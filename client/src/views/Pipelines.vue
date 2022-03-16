@@ -522,7 +522,7 @@
           <WorkflowRow
             :key="i"
             v-for="(workflow, i) in filteredWorkflows"
-            @create-form="createFormInstance(workflow.resourceRef.id, workflow.config.id)"
+            @create-form="createFormInstance(workflow.resourceRef.id, workflow.id)"
             @get-notes="getNotes(workflow.resourceRef.id)"
             @checked-box="selectWorkflowCheckbox(workflow.resourceRef.id)"
             :workflow="workflow"
@@ -831,12 +831,11 @@ export default {
     resetAddOpp() {
       this.addOppModalOpen = !this.addOppModalOpen
     },
-    async createFormInstance(id, alertInstanceId) {
+    async createFormInstance(id, alertInstanceId = null) {
       this.currentVals = []
       this.editOpModalOpen = true
-      this.alertInstanceId
-        ? (this.alertInstanceId = alertInstanceId)
-        : (this.alertInstanceId = this.alertInstanceId)
+      console.log(alertInstanceId)
+      this.alertInstanceId = alertInstanceId
       try {
         const res = await SObjects.api.createFormInstance({
           resourceType: 'Opportunity',
@@ -1088,6 +1087,7 @@ export default {
       this.updateList.push(this.oppId)
       this.editOpModalOpen = false
       try {
+        console.log(this.alertInstanceId)
         const res = await SObjects.api
           .updateResource({
             form_id: this.instanceId,

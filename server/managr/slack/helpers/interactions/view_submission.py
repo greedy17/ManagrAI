@@ -2521,7 +2521,6 @@ def process_submit_alert_resource_data(payload, context):
     instance = AlertInstance.objects.get(id=context.get("alert_id"))
     main_form.alert_instance_id = instance
     main_form.save()
-    print(main_form.alert_instance_id)
     alert_instances = AlertInstance.objects.filter(
         invocation=instance.invocation,
         channel=context.get("channel_id"),
