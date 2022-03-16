@@ -490,7 +490,7 @@
           </button>
         </div>
       </section>
-      <!-- <p @click="test">test</p> -->
+      <p @click="tester">test</p>
       <section v-show="!selectedWorkflow" class="table-section">
         <div class="table">
           <PipelineHeader
@@ -660,8 +660,10 @@ export default {
       )
     },
     filteredWorkflows() {
-      return this.currentWorkflow.list.filter((opp) =>
-        opp.resourceRef.name.toLowerCase().includes(this.workflowFilterText.toLowerCase()),
+      return this.currentWorkflow.list.filter(
+        (opp) =>
+          opp.resourceRef.name.toLowerCase().includes(this.workflowFilterText.toLowerCase()) &&
+          opp.form_instance_ref === false,
       )
     },
     currentMonth() {
@@ -708,8 +710,10 @@ export default {
     workflowCheckList: 'closeAll',
   },
   methods: {
-    test() {
-      console.log(this.currentWorkflow)
+    tester() {
+      for (let i = 0; i < this.currentWorkflow.list.length; i++) {
+        console.log(this.currentWorkflow.list[i].form_instance_ref)
+      }
     },
     selectPrimaryCheckbox(id) {
       if (this.primaryCheckList.includes(id)) {
@@ -834,7 +838,6 @@ export default {
     async createFormInstance(id, alertInstanceId = null) {
       this.currentVals = []
       this.editOpModalOpen = true
-      console.log(alertInstanceId)
       this.alertInstanceId = alertInstanceId
       try {
         const res = await SObjects.api.createFormInstance({
@@ -1158,7 +1161,7 @@ export default {
       }
       this.selectedWorkflow = true
       this.showList = false
-      console.log(this.currentWorkflow)
+      // console.log(this.currentWorkflow)
     },
     async getAllForms() {
       try {
