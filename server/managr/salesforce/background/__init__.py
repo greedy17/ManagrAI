@@ -1254,6 +1254,7 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False, bulk=False):
         block_builders.section_with_button_block(
             "View Recap",
             "recap",
+            f"_{main_form.template.resource}_ *{resource_name}*",
             action_id=action_with_params(
                 slack_consts.VIEW_RECAP,
                 params=[f"u={str(user.id)}", f"form_ids={'.'.join(form_ids)}"],

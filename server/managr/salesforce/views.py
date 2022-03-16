@@ -1,3 +1,4 @@
+from audioop import tostereo
 import logging
 import random
 import pytz
@@ -620,36 +621,73 @@ class SalesforceSObjectViewSet(
     def resource_sync(self, request, *args, **kwargs):
         user = self.request.user
         operations = ["Account", "Lead", "Opportunity", "Contact"]
-        sync = SFResourceSync.objects.create(
-            user=user,
-            operations_list=operations,
-            operation_type=sf_consts.SALESFORCE_RESOURCE_SYNC,
-        )
-        _process_pipeline_sync(str(sync.id))
+        currenttime = datetime.now()
+        to_sync_ids = []
+        synced_ids = []
+        if user.user_level in ["MANAGER", "SDR"]:
+            users = User.objects.filter(Q(organization=user.organization, is_active=True))
+            for user in users:
+                if hasattr(user, "salesforce_account"):
+                    sync = SFResourceSync.objects.create(
+                        user=user,
+                        operations_list=operations,
+                        operation_type=sf_consts.SALESFORCE_RESOURCE_SYNC,
+                    )
+                    user_timezone = pytz.timezone(user.timezone)
+                    current = (
+                        pytz.utc.localize(currenttime)
+                        .astimezone(user_timezone)
+                        .strftime("%Y-%m-%d %H:%M:%S")
+                    )
+                    user.salesforce_account.last_sync_time = current
+                    user.salesforce_account.save()
+                    to_sync_ids.append(str(sync.id))
+                    _process_pipeline_sync(str(sync.id))
+        else:
+            sync = SFResourceSync.objects.create(
+                user=user,
+                operations_list=operations,
+                operation_type=sf_consts.SALESFORCE_RESOURCE_SYNC,
+            )
+            user_timezone = pytz.timezone(user.timezone)
+
+            current = (
+                pytz.utc.localize(currenttime)
+                .astimezone(user_timezone)
+                .strftime("%Y-%m-%d %H:%M:%S")
+            )
+            user.salesforce_account.last_sync_time = current
+            user.salesforce_account.save()
+            to_sync_ids.append(str(sync.id))
+            _process_pipeline_sync(str(sync.id))
         attempts = 1
+        logger.info(f"TO SYNC: {to_sync_ids}")
+        logger.info(f"SYNCED: {synced_ids}")
         has_error = False
         while True:
-            resource_sync = SFResourceSync.objects.get(id=sync.id)
-            try:
-                if resource_sync.status == "Completed":
-                    break
-                else:
-                    attempts += 1
-                    sleep = 1 * 1.15 ** attempts + random.uniform(0, 1)
-                    time.sleep(sleep)
-            except Exception as e:
-                if attempts >= 10:
-                    logger.exception("Failed to receive complete status from sync")
-                    break
-                else:
-                    attempts += 1
-
-        user_timezone = pytz.timezone(user.timezone)
-        currenttime = datetime.now()
-        current = (
-            pytz.utc.localize(currenttime).astimezone(user_timezone).strftime("%Y-%m-%d %H:%M:%S")
-        )
-        user.salesforce_account.last_sync_time = current
-        user.salesforce_account.save()
+            for index, id in enumerate(to_sync_ids):
+                resource_sync = SFResourceSync.objects.get(id=id)
+                try:
+                    if resource_sync.status == "Completed":
+                        synced_ids.append(id)
+                        to_sync_ids.pop(index)
+                        logger.info(f"IN LOOP TO SYNC: {to_sync_ids}")
+                        logger.info(f"IN LOOP SYNCED: {synced_ids}")
+                        if len(to_sync_ids) == 0:
+                            break
+                        else:
+                            continue
+                    else:
+                        attempts += 1
+                        sleep = 1 * 1.15 ** attempts + random.uniform(0, 1)
+                        time.sleep(sleep)
+                except Exception as e:
+                    if attempts >= 5:
+                        logger.exception(f"Failed to receive complete status from sync from {e}")
+                        break
+                    else:
+                        attempts += 1
+            if len(to_sync_ids) == 0 or has_error:
+                break
         data = {"success": False} if has_error else {"success": True}
         return Response(data=data)
