@@ -200,6 +200,7 @@ class AlertInstanceSerializer(serializers.ModelSerializer):
             "channel",
             "config",
             "invocation",
+            "form_instance",
         )
 
     def get_resource_ref(self, instance):

@@ -1145,6 +1145,7 @@ export default {
           },
         })
         this.currentWorkflow.refresh()
+        console.log(this.currentWorkflow)
         setTimeout(() => {
           if (this.currentWorkflow.list.length < 1) {
             this.refresh(this.refreshId)

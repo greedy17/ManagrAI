@@ -96,6 +96,7 @@ export class AlertInstance extends Model {
   static resourceId = new fields.CharField({})
   static sentAt = new fields.CharField({})
   static config = new fields.ModelField({ ModelClass: AlertConfig })
+  static form_instance = new fields.Field({})
 
   static fromAPI(json) {
     return new AlertInstance(objectToCamelCase(json))
