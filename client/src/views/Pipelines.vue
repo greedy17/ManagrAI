@@ -74,7 +74,7 @@
               style="height: 1.5rem; margin-left: 0.5rem; margin-right: 0.25rem"
               alt=""
             />
-            <h3>Create Opportunity</h3>
+            <h2>Create Opportunity</h2>
           </div>
           <div class="close-button">
             <img
@@ -181,7 +181,6 @@
             />
             <h2>Update Opportunity</h2>
           </div>
-
           <img
             src="@/assets/images/closer.png"
             style="height: 1.75rem; margin-top: -0.5rem; cursor: pointer"
@@ -553,8 +552,7 @@
       </section>
     </div>
     <div v-if="loading">
-      <PipelineLoader />
-      <!-- <img src="@/assets/images/loading-gif.gif" class="invert" style="height: 8rem" alt="" /> -->
+      <Loader loaderText="Pulling in your latest Salesforce data" />
     </div>
   </div>
 </template>
@@ -571,7 +569,7 @@ import PipelineField from '@/components/PipelineField'
 import PipelineTableRow from '@/components/PipelineTableRow'
 import WorkflowRow from '@/components/WorkflowRow'
 import PipelineHeader from '@/components/PipelineHeader'
-import PipelineLoader from '@/components/PipelineLoader'
+import Loader from '@/components/Loader'
 import WorkflowHeader from '@/components/WorkflowHeader'
 import User from '@/services/users'
 
@@ -587,7 +585,7 @@ export default {
     PipelineHeader,
     WorkflowHeader,
     WorkflowRow,
-    PipelineLoader,
+    Loader,
   },
   data() {
     return {
@@ -1107,6 +1105,7 @@ export default {
         })
         if (this.selectedWorkflow) {
           this.currentWorkflow.refresh()
+          this.refresh(this.refreshId)
         } else if (this.currentList === 'Closing this month') {
           this.stillThisMonth()
         } else if (this.currentList === 'Closing next month') {
@@ -1178,7 +1177,6 @@ export default {
               this.oppFormCopy[i].referenceDisplayLabel
           }
         }
-        console.log(this.picklistQueryOpts)
         for (let i in this.picklistQueryOpts) {
           this.picklistQueryOpts[i] = this.listPicklists(i, { picklistFor: i })
         }
@@ -1224,11 +1222,11 @@ export default {
         console.log(e)
       }
     },
-    async handleCancel() {
-      await this.refresh()
-      this.resetNotes()
-      this.$emit('cancel')
-    },
+    // async handleCancel() {
+    //   await this.refresh()
+    //   this.resetNotes()
+    //   this.$emit('cancel')
+    // },
     addOpp() {
       this.addOppModalOpen = true
     },
