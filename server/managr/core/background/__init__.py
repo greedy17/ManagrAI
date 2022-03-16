@@ -818,3 +818,36 @@ def check_reminders(user_id):
                         user_id, f"afternoon-digest-{user.email}-{str(uuid.uuid4())}"
                     )
     return
+
+
+TIMEZONE_TASK_FUNCTION = {core_consts.NON_ZOOM_MEETINGS: emit_non_zoom_meetings}
+
+
+@background()
+def timezone_tasks(user_id):
+    tasks = core_consts.TIMEZONE_TASK_TIMES
+    user = User.objects.get(id=user_id)
+    for key in tasks.keys():
+        if user.reminders[key]:
+            check = check_for_time(user.timezone, tasks[key]["HOUR"], tasks[key]["MINUTE"],)
+            if check:
+                if key == core_consts.MORNING_DIGEST:
+                    emit_generate_morning_digest(
+                        user_id, f"morning-digest-{user.email}-{str(uuid.uuid4())}"
+                    )
+                elif key == core_consts.WORKFLOW_REMINDER:
+                    if datetime.today().weekday() == 4:
+                        workflows = check_workflows_count(user.id)
+                        if workflows["status"] and workflows["workflow_count"] <= 2:
+                            emit_process_send_workflow_reminder(
+                                str(user.id), workflows["workflow_count"]
+                            )
+                elif key == core_consts.AFTERNOON_DIGEST_REP and user.user_level != "MANAGER":
+                    emit_generate_afternoon_digest(
+                        user_id, f"afternoon-digest-{user.email}-{str(uuid.uuid4())}"
+                    )
+                elif key == core_consts.AFTERNOON_DIGEST_MANAGER and user.user_level == "MANAGER":
+                    emit_generate_afternoon_digest(
+                        user_id, f"afternoon-digest-{user.email}-{str(uuid.uuid4())}"
+                    )
+    return
