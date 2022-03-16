@@ -211,8 +211,8 @@ variable "scheduled_tasks" {
       task_count = 1
     },
     {
-      name       = "runreminders"
-      command    = "triggerreminders"
+      name       = "runtimezonetasks"
+      command    = "timezonetasks"
       cron       = "cron(*/30 * * * ? *)"
       task_count = 1
     },
