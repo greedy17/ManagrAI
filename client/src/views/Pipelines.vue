@@ -663,7 +663,7 @@ export default {
       return this.currentWorkflow.list.filter(
         (opp) =>
           opp.resourceRef.name.toLowerCase().includes(this.workflowFilterText.toLowerCase()) &&
-          opp.form_instance_ref === false,
+          !opp.formInstanceRef,
       )
     },
     currentMonth() {
@@ -712,7 +712,7 @@ export default {
   methods: {
     tester() {
       for (let i = 0; i < this.currentWorkflow.list.length; i++) {
-        console.log(this.currentWorkflow.list[i].form_instance_ref)
+        console.log(this.currentWorkflow.list[i].formInstanceRef)
       }
     },
     selectPrimaryCheckbox(id) {

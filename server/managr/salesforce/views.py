@@ -362,9 +362,7 @@ class SalesforceSObjectViewSet(
         user = User.objects.get(id=self.request.user.id)
         form_id = data.get("form_id")
         form_data = data.get("form_data")
-        print(data)
         alert_instance_id = data.get("alert_instance", None)
-        print(alert_instance_id)
         main_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
         stage_forms = []
         stage_form_data_collector = {}
@@ -438,7 +436,6 @@ class SalesforceSObjectViewSet(
         if alert_instance_id:
             from managr.alerts.models import AlertInstance
 
-            print("here")
             instance = AlertInstance.objects.get(id=alert_instance_id)
             current_forms.update(
                 is_submitted=True,
