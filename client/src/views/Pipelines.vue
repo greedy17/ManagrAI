@@ -522,7 +522,7 @@
           <WorkflowRow
             :key="i"
             v-for="(workflow, i) in filteredWorkflows"
-            @create-form="createFormInstance(workflow.resourceRef.id)"
+            @create-form="createFormInstance(workflow.resourceRef.id, workflow.config.id)"
             @get-notes="getNotes(workflow.resourceRef.id)"
             @checked-box="selectWorkflowCheckbox(workflow.resourceRef.id)"
             :workflow="workflow"
@@ -624,6 +624,7 @@ export default {
       filterText: '',
       workflowFilterText: '',
       currentList: 'All Opportunities',
+      alertInstanceId: null,
       showList: false,
       showWorkflowList: true,
       showPopularList: true,
@@ -708,8 +709,7 @@ export default {
   },
   methods: {
     test() {
-      console.log(this.primaryCheckList)
-      console.log(this.team.list)
+      console.log(this.currentWorkflow)
     },
     selectPrimaryCheckbox(id) {
       if (this.primaryCheckList.includes(id)) {
@@ -831,9 +831,12 @@ export default {
     resetAddOpp() {
       this.addOppModalOpen = !this.addOppModalOpen
     },
-    async createFormInstance(id) {
+    async createFormInstance(id, alertInstanceId) {
       this.currentVals = []
       this.editOpModalOpen = true
+      this.alertInstanceId
+        ? (this.alertInstanceId = alertInstanceId)
+        : (this.alertInstanceId = this.alertInstanceId)
       try {
         const res = await SObjects.api.createFormInstance({
           resourceType: 'Opportunity',
@@ -1089,6 +1092,7 @@ export default {
           .updateResource({
             form_id: this.instanceId,
             form_data: this.formData,
+            alert_instance: this.alertInstance,
           })
           .then(async () => {
             let updatedRes = await SObjects.api.getObjects('Opportunity')
@@ -1105,7 +1109,6 @@ export default {
         })
         if (this.selectedWorkflow) {
           this.currentWorkflow.refresh()
-          this.refresh(this.refreshId)
         } else if (this.currentList === 'Closing this month') {
           this.stillThisMonth()
         } else if (this.currentList === 'Closing next month') {
@@ -1154,6 +1157,7 @@ export default {
       }
       this.selectedWorkflow = true
       this.showList = false
+      console.log(this.currentWorkflow)
     },
     async getAllForms() {
       try {
