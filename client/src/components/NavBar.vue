@@ -6,7 +6,7 @@
       </div>
 
       <div class="left" ref="user-menu-icon">
-        <div class="mar" v-if="userLevel === 'MANAGER'">
+        <div class="mar" v-if="isAdmin">
           <ul>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Integrations' }"
@@ -24,19 +24,44 @@
               </router-link>
             </li>
             <li>
+              <router-link exact-active-class="active" :to="{ name: 'Pipelines' }"
+                >Pipeline</router-link
+              >
+            </li>
+            <li>
               <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
                 >Team</router-link
               >
+            </li>
+          </ul>
+        </div>
+
+        <div class="mar" v-else-if="userLevel === 'MANAGER' && !isAdmin">
+          <ul>
+            <li>
+              <router-link exact-active-class="active" :to="{ name: 'Integrations' }"
+                >Connect
+              </router-link>
+            </li>
+            <li>
+              <router-link active-class="active" :to="{ name: 'ListTemplates' }"
+                >Workflows
+              </router-link>
             </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Pipelines' }"
                 >Pipeline</router-link
               >
             </li>
+            <li>
+              <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
+                >Team</router-link
+              >
+            </li>
           </ul>
         </div>
 
-        <div class="mar" v-else-if="userLevel !== 'MANAGER' && userLevel !== 'REP'">
+        <div class="mar" v-else-if="userLevel === 'SDR'">
           <ul>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Integrations' }"
@@ -56,7 +81,7 @@
           </ul>
         </div>
 
-        <div v-else>
+        <div v-else-if="userLevel === 'REP'">
           <ul>
             <li>
               <router-link

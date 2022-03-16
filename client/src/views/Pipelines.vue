@@ -74,7 +74,7 @@
               style="height: 1.5rem; margin-left: 0.5rem; margin-right: 0.25rem"
               alt=""
             />
-            <h3>Create Opportunity</h3>
+            <h2>Create Opportunity</h2>
           </div>
           <div class="close-button">
             <img
@@ -181,7 +181,6 @@
             />
             <h2>Update Opportunity</h2>
           </div>
-
           <img
             src="@/assets/images/closer.png"
             style="height: 1.75rem; margin-top: -0.5rem; cursor: pointer"
@@ -523,7 +522,7 @@
           <WorkflowRow
             :key="i"
             v-for="(workflow, i) in filteredWorkflows"
-            @create-form="createFormInstance(workflow.resourceRef.id)"
+            @create-form="createFormInstance(workflow.resourceRef.id, workflow.config.id)"
             @get-notes="getNotes(workflow.resourceRef.id)"
             @checked-box="selectWorkflowCheckbox(workflow.resourceRef.id)"
             :workflow="workflow"
@@ -553,8 +552,7 @@
       </section>
     </div>
     <div v-if="loading">
-      <PipelineLoader />
-      <!-- <img src="@/assets/images/loading-gif.gif" class="invert" style="height: 8rem" alt="" /> -->
+      <Loader loaderText="Pulling in your latest Salesforce data" />
     </div>
   </div>
 </template>
@@ -571,7 +569,7 @@ import PipelineField from '@/components/PipelineField'
 import PipelineTableRow from '@/components/PipelineTableRow'
 import WorkflowRow from '@/components/WorkflowRow'
 import PipelineHeader from '@/components/PipelineHeader'
-import PipelineLoader from '@/components/PipelineLoader'
+import Loader from '@/components/Loader'
 import WorkflowHeader from '@/components/WorkflowHeader'
 import User from '@/services/users'
 
@@ -587,7 +585,7 @@ export default {
     PipelineHeader,
     WorkflowHeader,
     WorkflowRow,
-    PipelineLoader,
+    Loader,
   },
   data() {
     return {
@@ -626,6 +624,7 @@ export default {
       filterText: '',
       workflowFilterText: '',
       currentList: 'All Opportunities',
+      alertInstanceId: null,
       showList: false,
       showWorkflowList: true,
       showPopularList: true,
@@ -710,8 +709,7 @@ export default {
   },
   methods: {
     test() {
-      console.log(this.primaryCheckList)
-      console.log(this.team.list)
+      console.log(this.currentWorkflow)
     },
     selectPrimaryCheckbox(id) {
       if (this.primaryCheckList.includes(id)) {
@@ -833,9 +831,12 @@ export default {
     resetAddOpp() {
       this.addOppModalOpen = !this.addOppModalOpen
     },
-    async createFormInstance(id) {
+    async createFormInstance(id, alertInstanceId) {
       this.currentVals = []
       this.editOpModalOpen = true
+      this.alertInstanceId
+        ? (this.alertInstanceId = alertInstanceId)
+        : (this.alertInstanceId = this.alertInstanceId)
       try {
         const res = await SObjects.api.createFormInstance({
           resourceType: 'Opportunity',
@@ -1091,6 +1092,7 @@ export default {
           .updateResource({
             form_id: this.instanceId,
             form_data: this.formData,
+            alert_instance: this.alertInstanceId,
           })
           .then(async () => {
             let updatedRes = await SObjects.api.getObjects('Opportunity')
@@ -1156,6 +1158,7 @@ export default {
       }
       this.selectedWorkflow = true
       this.showList = false
+      console.log(this.currentWorkflow)
     },
     async getAllForms() {
       try {
@@ -1179,7 +1182,6 @@ export default {
               this.oppFormCopy[i].referenceDisplayLabel
           }
         }
-        console.log(this.picklistQueryOpts)
         for (let i in this.picklistQueryOpts) {
           this.picklistQueryOpts[i] = this.listPicklists(i, { picklistFor: i })
         }
@@ -1225,11 +1227,11 @@ export default {
         console.log(e)
       }
     },
-    async handleCancel() {
-      await this.refresh()
-      this.resetNotes()
-      this.$emit('cancel')
-    },
+    // async handleCancel() {
+    //   await this.refresh()
+    //   this.resetNotes()
+    //   this.$emit('cancel')
+    // },
     addOpp() {
       this.addOppModalOpen = true
     },

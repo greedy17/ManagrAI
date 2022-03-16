@@ -1,12 +1,16 @@
 <template>
-  <div v-if="active" class="loader-wrapper">
-    <div class="loader">
+  <div class="loader-wrapper">
+    <!-- <div class="loader-2">
       <div></div>
       <div></div>
       <div></div>
       <div></div>
+    </div> -->
+    <div class="invert">
+      <img src="@/assets/images/loading-gif.gif" class="invert" style="height: 7rem" alt="" />
     </div>
-    <p>{{ text }}</p>
+
+    <p>{{ loaderText }}</p>
   </div>
 </template>
 
@@ -14,8 +18,7 @@
 export default {
   name: 'Loader',
   props: {
-    active: Boolean,
-    text: String,
+    loaderText: String,
   },
 }
 </script>
@@ -31,15 +34,16 @@ p {
 
 .loader-wrapper {
   text-align: center;
+  margin-top: 30vh;
 }
 
-.loader {
+.loader-2 {
   display: inline-block;
   position: relative;
   width: 80px;
   height: 80px;
 }
-.loader div {
+.loader-2 div {
   box-sizing: border-box;
   display: block;
   position: absolute;
@@ -51,13 +55,13 @@ p {
   animation: loader 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
   border-color: #199e54 transparent transparent transparent;
 }
-.loader div:nth-child(1) {
+.loader-2 div:nth-child(1) {
   animation-delay: -0.45s;
 }
-.loader div:nth-child(2) {
+.loader-2 div:nth-child(2) {
   animation-delay: -0.3s;
 }
-.loader div:nth-child(3) {
+.loader-2 div:nth-child(3) {
   animation-delay: -0.15s;
 }
 @keyframes loader {
