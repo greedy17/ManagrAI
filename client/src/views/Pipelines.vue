@@ -1092,7 +1092,7 @@ export default {
           .updateResource({
             form_id: this.instanceId,
             form_data: this.formData,
-            alert_instance: this.alertInstance,
+            alert_instance: this.alertInstanceId,
           })
           .then(async () => {
             let updatedRes = await SObjects.api.getObjects('Opportunity')
