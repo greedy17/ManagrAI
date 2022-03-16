@@ -639,6 +639,7 @@ export default {
       noteInfo: '',
       picklistQueryOpts: {},
       instanceIds: [],
+      allAccounts: null,
     }
   },
   computed: {
@@ -704,6 +705,7 @@ export default {
     this.listStages()
     this.listForecast()
     this.resourceSync()
+    this.getAccounts()
   },
   watch: {
     primaryCheckList: 'closeAll',
@@ -711,9 +713,7 @@ export default {
   },
   methods: {
     tester() {
-      for (let i = 0; i < this.currentWorkflow.list.length; i++) {
-        console.log(this.currentWorkflow.list[i].form_instance_ref)
-      }
+      console.log(this.allAccounts)
     },
     selectPrimaryCheckbox(id) {
       if (this.primaryCheckList.includes(id)) {
@@ -1201,6 +1201,18 @@ export default {
         console.log(error)
       }
     },
+    async getAccounts() {
+      try {
+        const res = await SObjects.api.getObjects('Account')
+        this.allAccounts = res.results
+      } catch {
+        this.$Alert.alert({
+          type: 'error',
+          timeout: 2000,
+          message: 'There was an error collecting objects',
+        })
+      }
+    },
     async getObjects() {
       try {
         const res = await SObjects.api.getObjects('Opportunity')
@@ -1242,7 +1254,7 @@ export default {
       this.allOpps = this.originalList
       this.selectedWorkflow = false
       this.allOpps = this.allOpps.filter(
-        (opp) => new Date(opp.close_date).getMonth() == this.currentMonth,
+        (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth,
       )
       this.currentList = 'Closing this month'
       this.showList = !this.showList
@@ -1250,7 +1262,7 @@ export default {
     stillThisMonth() {
       this.allOpps = this.originalList
       this.allOpps = this.allOpps.filter(
-        (opp) => new Date(opp.close_date).getMonth() == this.currentMonth,
+        (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth,
       )
       this.currentList = 'Closing this month'
     },
@@ -1258,7 +1270,7 @@ export default {
       this.allOpps = this.originalList
       this.selectedWorkflow = false
       this.allOpps = this.allOpps.filter(
-        (opp) => new Date(opp.close_date).getMonth() == this.currentMonth + 1,
+        (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth + 1,
       )
       this.currentList = 'Closing next month'
       this.showList = !this.showList
@@ -1266,7 +1278,7 @@ export default {
     stillNextMonth() {
       this.allOpps = this.originalList
       this.allOpps = this.allOpps.filter(
-        (opp) => new Date(opp.close_date).getMonth() == this.currentMonth + 1,
+        (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth + 1,
       )
       this.currentList = 'Closing next month'
     },
