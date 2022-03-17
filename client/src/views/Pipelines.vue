@@ -103,7 +103,7 @@
               >
               </textarea>
             </div>
-            <div v-else-if="field.dataType === 'Reference' || field.dataType === 'String'">
+            <div v-else-if="field.dataType === 'String'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <input
                 id="update-input"
@@ -154,6 +154,36 @@
                 type="number"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
+            </div>
+            <div v-else-if="field.apiName === 'OwnerId'">
+              <p>{{ field.referenceDisplayLabel }}:</p>
+              <select
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                id="update-input"
+              >
+                <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option>
+                <option :value="user.salesforce_account" v-for="(user, i) in allUsers" :key="i">
+                  <p>{{ user.full_name }}</p>
+                </option>
+              </select>
+            </div>
+
+            <div v-else-if="field.apiName === 'AccountId'">
+              <p>{{ field.referenceDisplayLabel }}:</p>
+
+              <select
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                id="update-input"
+              >
+                <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option>
+                <option
+                  :value="account.integration_id"
+                  v-for="(account, i) in allAccounts"
+                  :key="i"
+                >
+                  <p>{{ account.name }}</p>
+                </option>
+              </select>
             </div>
           </section>
         </div>
@@ -245,13 +275,7 @@
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
-            <div
-              v-else-if="
-                field.dataType === 'Picklist' ||
-                field.dataType === 'MultiPicklist' ||
-                field.dataType === 'Reference'
-              "
-            >
+            <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <select
                 v-model="currentVals[field.apiName]"
@@ -306,6 +330,37 @@
                 :placeholder="currentVals[field.apiName]"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
+            </div>
+
+            <div v-else-if="field.apiName === 'OwnerId'">
+              <p>{{ field.referenceDisplayLabel }}:</p>
+              <select
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                id="update-input"
+              >
+                <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option>
+                <option :value="user.salesforce_account" v-for="(user, i) in allUsers" :key="i">
+                  <p>{{ user.full_name }}</p>
+                </option>
+              </select>
+            </div>
+
+            <div v-else-if="field.apiName === 'AccountId'">
+              <p>{{ field.referenceDisplayLabel }}:</p>
+
+              <select
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                id="update-input"
+              >
+                <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option>
+                <option
+                  :value="account.integration_id"
+                  v-for="(account, i) in allAccounts"
+                  :key="i"
+                >
+                  <p>{{ account.name }}</p>
+                </option>
+              </select>
             </div>
           </section>
         </div>
@@ -490,7 +545,7 @@
           </button>
         </div>
       </section>
-      <p @click="tester">test</p>
+      <!-- <p @click="tester">test</p> -->
       <section v-show="!selectedWorkflow" class="table-section">
         <div class="table">
           <PipelineHeader
@@ -614,7 +669,6 @@ export default {
       loading: false,
       loadingWorkflows: false,
       templates: CollectionManager.create({ ModelClass: AlertTemplate }),
-      team: CollectionManager.create({ ModelClass: User }),
       currentWorkflow: null,
       selectedWorkflow: false,
       modalOpen: false,
@@ -640,6 +694,7 @@ export default {
       picklistQueryOpts: {},
       instanceIds: [],
       allAccounts: null,
+      allUsers: null,
     }
   },
   computed: {
@@ -700,12 +755,12 @@ export default {
   created() {
     this.getObjects()
     this.templates.refresh()
-    this.team.refresh()
     this.getAllForms()
     this.listStages()
     this.listForecast()
     this.resourceSync()
     this.getAccounts()
+    this.getUsers()
   },
   watch: {
     primaryCheckList: 'closeAll',
@@ -713,7 +768,7 @@ export default {
   },
   methods: {
     tester() {
-      console.log(this.allAccounts)
+      console.log(this.allUsers)
     },
     selectPrimaryCheckbox(id) {
       if (this.primaryCheckList.includes(id)) {
@@ -1188,7 +1243,6 @@ export default {
         for (let i in this.picklistQueryOpts) {
           this.picklistQueryOpts[i] = this.listPicklists(i, { picklistFor: i })
         }
-        // this.oppName = this.updateOppForm[0].fieldsRef.filter((field) => field.apiName === 'Name')
         this.oppFields = this.updateOppForm[0].fieldsRef.filter(
           (field) =>
             field.apiName !== 'meeting_type' &&
@@ -1199,6 +1253,18 @@ export default {
         )
       } catch (error) {
         console.log(error)
+      }
+    },
+    async getUsers() {
+      try {
+        const res = await SObjects.api.getObjects('User')
+        this.allUsers = res.results
+      } catch {
+        this.$Alert.alert({
+          type: 'error',
+          timeout: 2000,
+          message: 'There was an error collecting objects',
+        })
       }
     },
     async getAccounts() {
