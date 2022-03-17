@@ -345,7 +345,13 @@
                 id="update-input"
               >
                 <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option>
-                <option :value="user.salesforce_account" v-for="(user, i) in allUsers" :key="i">
+                <option
+                  :value="
+                    user.salesforce_account_ref ? user.salesforce_account_ref.salesforce_id : ''
+                  "
+                  v-for="(user, i) in allUsers"
+                  :key="i"
+                >
                   <p>{{ user.full_name }}</p>
                 </option>
               </select>
@@ -552,6 +558,8 @@
         </div>
       </section>
       <!-- <p @click="tester">test</p> -->
+      <!-- <p>{{ instanceIdList }}</p>
+      <p>{{ currentCheckList }}</p> -->
       <section v-show="!selectedWorkflow" class="table-section">
         <div class="table">
           <PipelineHeader
@@ -699,7 +707,7 @@ export default {
       noteInfo: '',
       picklistQueryOpts: {},
       instanceIds: [],
-      instanceIdList: [],
+      // instanceIdList: [],
       allAccounts: null,
       allUsers: null,
     }
@@ -772,17 +780,19 @@ export default {
   watch: {
     primaryCheckList: 'closeAll',
     workflowCheckList: 'closeAll',
-    currentCheckList: 'clearInstanceIdList',
+    // currentCheckList: 'clearInstanceIdList',
   },
   methods: {
     tester() {
       console.log(this.allUsers)
     },
-    clearInstanceIdList() {
-      this.currentCheckList.length === 0
-        ? (this.instanceIdList = [])
-        : (this.instanceIdList = this.instanceIdList)
-    },
+    // clearInstanceIdList() {
+    //   this.currentCheckList.length === 0
+    //     ? (this.instanceIdList = [])
+    //     : (this.instanceIdList = this.instanceIdList)
+
+    //   console.log('test')
+    // },
     selectPrimaryCheckbox(id) {
       if (this.primaryCheckList.includes(id)) {
         this.primaryCheckList = this.primaryCheckList.filter((opp) => opp !== id)
@@ -797,11 +807,11 @@ export default {
         this.workflowCheckList.push(id)
       }
 
-      if (this.instanceIdList.includes(instance)) {
-        this.instanceIdList = this.instanceIdList.filter((opp) => opp !== instance)
-      } else {
-        this.instanceIdList.push(instance)
-      }
+      // if (this.instanceIdList.includes(instance)) {
+      //   this.instanceIdList = this.instanceIdList.filter((opp) => opp !== instance)
+      // } else {
+      //   this.instanceIdList.push(instance)
+      // }
     },
     closeAll() {
       if (this.primaryCheckList.length === 0 || this.workflowCheckList === 0) {
@@ -852,22 +862,22 @@ export default {
         this.workflowCheckList = []
       }
 
-      if (this.instanceIdList.length < 1) {
-        for (let i = 0; i < this.filteredWorkflows.length; i++) {
-          this.instanceIdList.push(this.filteredWorkflows[i].id)
-        }
-      } else if (
-        this.instanceIdList.length > 0 &&
-        this.instanceIdList.length < this.filteredWorkflows.length
-      ) {
-        for (let i = 0; i < this.filteredWorkflows.length; i++) {
-          !this.instanceIdList.includes(this.filteredWorkflows[i].id)
-            ? this.instanceIdList.push(this.filteredWorkflows[i].id)
-            : (this.instanceIdList = this.instanceIdList)
-        }
-      } else {
-        this.instanceIdList = []
-      }
+      // if (this.instanceIdList.length < 1) {
+      //   for (let i = 0; i < this.filteredWorkflows.length; i++) {
+      //     this.instanceIdList.push(this.filteredWorkflows[i].id)
+      //   }
+      // } else if (
+      //   this.instanceIdList.length > 0 &&
+      //   this.instanceIdList.length < this.filteredWorkflows.length
+      // ) {
+      //   for (let i = 0; i < this.filteredWorkflows.length; i++) {
+      //     !this.instanceIdList.includes(this.filteredWorkflows[i].id)
+      //       ? this.instanceIdList.push(this.filteredWorkflows[i].id)
+      //       : (this.instanceIdList = this.instanceIdList)
+      //   }
+      // } else {
+      //   this.instanceIdList = []
+      // }
     },
     async listPicklists(type, query_params) {
       try {
@@ -1015,7 +1025,7 @@ export default {
             .updateResource({
               form_id: ids[i],
               form_data: { CloseDate: data },
-              alert_instance: this.instanceIdList[i],
+              // alert_instance: this.instanceIdList[i],
             })
             .then(async () => {
               let updatedRes = await SObjects.api.getObjects('Opportunity')
@@ -1061,7 +1071,7 @@ export default {
             .updateResource({
               form_id: ids[i],
               form_data: { StageName: data },
-              alert_instance: this.instanceIdList[i],
+              // alert_instance: this.instanceIdList[i],
             })
             .then(async () => {
               let updatedRes = await SObjects.api.getObjects('Opportunity')
@@ -1106,7 +1116,7 @@ export default {
             .updateResource({
               form_id: ids[i],
               form_data: { ForecastCategoryName: data },
-              alert_instance: this.instanceIdList[i],
+              // alert_instance: this.instanceIdList[i],
             })
             .then(async () => {
               let updatedRes = await SObjects.api.getObjects('Opportunity')
@@ -1176,7 +1186,7 @@ export default {
         this.$Alert.alert({
           type: 'success',
           timeout: 3000,
-          message: 'Daily Sync complete',
+          message: 'Sync complete',
           sub: 'All fields reflect your current SFDC data',
         })
       }
@@ -1190,7 +1200,7 @@ export default {
           .updateResource({
             form_id: this.instanceId,
             form_data: this.formData,
-            alert_instance: this.alertInstanceId,
+            // alert_instance: this.alertInstanceId,
           })
           .then(async () => {
             let updatedRes = await SObjects.api.getObjects('Opportunity')
@@ -1198,7 +1208,7 @@ export default {
             this.originalList = updatedRes.results
           })
         this.updateList = []
-        this.instanceIdList = []
+        // this.instanceIdList = []
         this.formData = {}
         this.$Alert.alert({
           type: 'success',
