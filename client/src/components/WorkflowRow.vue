@@ -83,6 +83,7 @@
               ? workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field.apiName))]
               : ''
           "
+          :lastStageUpdate="workflow['resourceRef']['lastStageUpdate']"
         />
       </div>
     </div>

@@ -28,17 +28,18 @@ from rest_framework.decorators import (
     permission_classes,
     authentication_classes,
 )
-
+from managr.salesforce.adapter.exceptions import TokenExpired, SFQueryOffsetError
 
 from rest_framework.response import Response
-from rest_framework.exceptions import ValidationError, PermissionDenied
 
-from .background import emit_init_alert, _process_check_alert
+from .background import _process_check_alert
 
 from . import models as alert_models
 from . import serializers as alert_serializers
 from .filters import AlertInstanceFilterSet
 from managr.core.models import User
+
+logger = logging.getLogger("managr")
 
 # Create your views here.
 
@@ -90,6 +91,8 @@ class AlertTemplateViewSet(
     )
     def run_now(self, request, *args, **kwargs):
         obj = self.get_object()
+        data = self.request.data
+        from_workflow = data.get("from_workflow", False)
         for config in obj.configs.all():
             template = config.template
             template.invocation = template.invocation + 1
@@ -104,7 +107,34 @@ class AlertTemplateViewSet(
                     template.invocation,
                     run_time.strftime("%Y-%m-%dT%H:%M%z"),
                 )
-        return Response()
+        if from_workflow:
+            config = obj.configs.all().first()
+            template = config.template
+            attempts = 1
+            while True:
+                sf = user.salesforce_account
+                try:
+                    res = sf.adapter_class.execute_alert_query(
+                        template.url_str(user, config.id), template.resource_type
+                    )
+                    data = res
+                    logger.info(
+                        f"Pulled total {len(res)} from request for {template.resource} matching alert query"
+                    )
+                    break
+                except TokenExpired:
+                    if attempts >= 5:
+                        return logger.exception(
+                            f"Failed to retrieve alerts for {template.resource} data for user {str(user.id)} after {attempts} tries"
+                        )
+                    else:
+                        sf.regenerate_token()
+                        attempts += 1
+                except SFQueryOffsetError:
+                    return logger.warning(
+                        f"Failed to sync some data for resource {template.resource} for user {str(user.id)} because of SF LIMIT"
+                    )
+            return Response(data=data)
 
 
 class AlertMessageTemplateViewSet(
