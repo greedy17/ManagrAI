@@ -23,6 +23,7 @@ class SalesforceAuthSerializer(serializers.ModelSerializer):
             "sobjects",
             "exclude_fields",
             "is_busy",
+            "last_sync_time",
         )
 
 

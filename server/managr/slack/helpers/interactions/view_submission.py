@@ -1613,6 +1613,7 @@ def process_send_recaps(payload, context):
     values = payload["view"]["state"]["values"]
     pm = json.loads(payload["view"]["private_metadata"])
     type = context.get("type", None)
+    bulk_status = True if pm.get("bulk_status") == "true" else False
 
     channels = list(values["__send_recap_to_channels"].values())[0]["selected_conversations"]
     leadership = [
@@ -1650,8 +1651,7 @@ def process_send_recaps(payload, context):
         return
     else:
         form_ids = context.get("form_ids").split(",")
-
-    _send_recap(form_ids, send_to_recaps)
+    _send_recap(form_ids, send_to_recaps, bulk=bulk_status)
     return
 
 
@@ -2519,6 +2519,8 @@ def process_submit_alert_resource_data(payload, context):
     if len(user.slack_integration.realtime_alert_configs):
         _send_instant_alert(current_form_ids)
     instance = AlertInstance.objects.get(id=context.get("alert_id"))
+    main_form.alert_instance_id = instance
+    main_form.save()
     alert_instances = AlertInstance.objects.filter(
         invocation=instance.invocation,
         channel=context.get("channel_id"),

@@ -1,7 +1,7 @@
 <template>
   <div class="aa-notification" :class="alert.type" @click="$emit('remove', alert)">
     <div class="row">
-      <img class="check" src="@/assets/images/check.png" alt="" />
+      <img v-if="alert.type === 'success'" class="check" src="@/assets/images/check.png" alt="" />
       <div class="col">
         <div class="content" v-html="alert.message" />
         <div class="subs" v-html="alert.sub" />
@@ -50,7 +50,7 @@ export default {
   background-color: white;
   border: white;
   border-radius: 0.33rem;
-  color: $base-gray;
+  color: $dark-green;
   font-weight: bold;
   box-shadow: 1px 2px 7px $very-light-gray;
 }
@@ -76,12 +76,13 @@ export default {
 
 .content {
   flex-grow: 1;
-  font-size: 15px;
-  color: $dark-green;
+  font-size: 14px;
+  // color: $dark-green;
 }
 .subs {
-  font-size: 12px;
+  font-size: 11px;
   color: $base-gray;
+  margin-top: 0.35rem;
 }
 .col {
   display: flex;

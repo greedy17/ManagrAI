@@ -983,6 +983,7 @@ def process_add_create_form(payload, context):
 @processor(required_context=["u", "f"])
 def process_stage_selected_command_form(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    type = context.get("type", None)
     current_form_ids = context.get("f").split(",")
     user = User.objects.get(id=context.get("u"))
     org = user.organization
@@ -1029,7 +1030,10 @@ def process_stage_selected_command_form(payload, context):
         callback_id = slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE
     elif not len(added_form_ids) and main_form.template.form_type == "UPDATE":
         submit_button_message = "Update"
-        callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
+        if type == "alert":
+            callback_id = slack_const.PROCESS_SUBMIT_ALERT_RESOURCE_DATA
+        else:
+            callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
     elif not len(added_form_ids) and main_form.template.form_type == "CREATE":
         submit_button_message = "Create"
         callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
@@ -2142,7 +2146,7 @@ def process_show_alert_update_resource_form(payload, context):
                 **block,
                 "accessory": {
                     **block["accessory"],
-                    "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(user.id)}&f={str(slack_form.id)}",
+                    "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(user.id)}&f={str(slack_form.id)}&type=alert",
                 },
             }
             blocks = [*blocks[:index], block, *blocks[index + 1 :]]
@@ -2168,7 +2172,7 @@ def process_show_alert_update_resource_form(payload, context):
         params = [
             f"f={str(slack_form.id)}",
             f"u={str(user.id)}",
-            "type=command",
+            "type=alert",
         ]
         if slack_form.resource_object.secondary_data["Pricebook2Id"]:
             params.append(f"pricebook={slack_form.resource_object.secondary_data['Pricebook2Id']}")
@@ -2247,7 +2251,6 @@ def process_show_alert_update_resource_form(payload, context):
 @processor(required_context="u")
 def process_mark_complete(payload, context):
     user = User.objects.get(id=context.get("u"))
-    print(context)
     access_token = user.organization.slack_integration.access_token
     instance = AlertInstance.objects.get(id=context.get("instance_id"))
     instance.completed = True
@@ -2580,7 +2583,6 @@ def process_send_recap_modal(payload, context):
     loading_data = send_loading_screen(
         access_token, "Loading users and channels", "open", str(user.id), trigger_id
     )
-    type = context.get("type")
 
     data = {
         "view_id": loading_data["view"]["id"],

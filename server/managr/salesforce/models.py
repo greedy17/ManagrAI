@@ -837,6 +837,7 @@ class SalesforceAuthAccount(TimeStampModel):
         blank=True,
     )
     is_busy = models.BooleanField(default=False)
+    last_sync_time = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         ordering = ["-datetime_created"]
@@ -881,7 +882,8 @@ class SalesforceAuthAccount(TimeStampModel):
 
     @property
     def resource_sync_opts(self):
-        return list(
+        operations_order = sf_consts.RESOURCE_SYNC_ORDER
+        operations = list(
             filter(
                 lambda resource: f"{resource}"
                 if self.sobjects.get(resource, None) not in ["", None, False]
@@ -889,6 +891,9 @@ class SalesforceAuthAccount(TimeStampModel):
                 self.sobjects,
             )
         )
+        operations_diff = list(set(operations) - set(operations_order))
+        operations_order.extend(operations_diff)
+        return operations_order
 
     @property
     def field_sync_opts(self):
