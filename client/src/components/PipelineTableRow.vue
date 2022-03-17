@@ -69,6 +69,7 @@
               ? opp['secondary_data'][field.apiName]
               : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
           "
+          :lastStageUpdate="opp['last_stage_update']"
         />
       </div>
     </div>
