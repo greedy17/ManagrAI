@@ -732,9 +732,8 @@ export default {
     },
     filteredWorkflows() {
       return this.currentWorkflow.list.filter(
-        (opp) =>
-          opp.resourceRef.name.toLowerCase().includes(this.workflowFilterText.toLowerCase()) &&
-          !opp.formInstanceRef,
+        (opp) => opp.resourceRef.name.toLowerCase().includes(this.workflowFilterText.toLowerCase()),
+        // !opp.formInstanceRef
       )
     },
     currentMonth() {
