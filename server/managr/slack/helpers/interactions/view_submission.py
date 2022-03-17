@@ -2519,6 +2519,8 @@ def process_submit_alert_resource_data(payload, context):
     if len(user.slack_integration.realtime_alert_configs):
         _send_instant_alert(current_form_ids)
     instance = AlertInstance.objects.get(id=context.get("alert_id"))
+    main_form.alert_instance_id = instance
+    main_form.save()
     alert_instances = AlertInstance.objects.filter(
         invocation=instance.invocation,
         channel=context.get("channel_id"),

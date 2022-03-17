@@ -1114,7 +1114,6 @@ class OpportunityAdapter:
 
     @staticmethod
     def update_opportunity(data, access_token, custom_base, salesforce_id, object_fields):
-        print(data)
         json_data = json.dumps(
             OpportunityAdapter.to_api(data, OpportunityAdapter.integration_mapping, object_fields)
         )

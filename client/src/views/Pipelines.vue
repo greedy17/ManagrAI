@@ -103,7 +103,7 @@
               >
               </textarea>
             </div>
-            <div v-else-if="field.dataType === 'Reference' || field.dataType === 'String'">
+            <div v-else-if="field.dataType === 'String'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <input
                 id="update-input"
@@ -154,6 +154,36 @@
                 type="number"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
+            </div>
+            <div v-else-if="field.apiName === 'OwnerId'">
+              <p>{{ field.referenceDisplayLabel }}:</p>
+              <select
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                id="update-input"
+              >
+                <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option>
+                <option :value="user.salesforce_account" v-for="(user, i) in allUsers" :key="i">
+                  <p>{{ user.full_name }}</p>
+                </option>
+              </select>
+            </div>
+
+            <div v-else-if="field.apiName === 'AccountId'">
+              <p>{{ field.referenceDisplayLabel }}:</p>
+
+              <select
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                id="update-input"
+              >
+                <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option>
+                <option
+                  :value="account.integration_id"
+                  v-for="(account, i) in allAccounts"
+                  :key="i"
+                >
+                  <p>{{ account.name }}</p>
+                </option>
+              </select>
             </div>
           </section>
         </div>
@@ -245,13 +275,7 @@
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
-            <div
-              v-else-if="
-                field.dataType === 'Picklist' ||
-                field.dataType === 'MultiPicklist' ||
-                field.dataType === 'Reference'
-              "
-            >
+            <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <select
                 v-model="currentVals[field.apiName]"
@@ -306,6 +330,37 @@
                 :placeholder="currentVals[field.apiName]"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
+            </div>
+
+            <div v-else-if="field.apiName === 'OwnerId'">
+              <p>{{ field.referenceDisplayLabel }}:</p>
+              <select
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                id="update-input"
+              >
+                <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option>
+                <option :value="user.salesforce_account" v-for="(user, i) in allUsers" :key="i">
+                  <p>{{ user.full_name }}</p>
+                </option>
+              </select>
+            </div>
+
+            <div v-else-if="field.apiName === 'AccountId'">
+              <p>{{ field.referenceDisplayLabel }}:</p>
+
+              <select
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                id="update-input"
+              >
+                <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option>
+                <option
+                  :value="account.integration_id"
+                  v-for="(account, i) in allAccounts"
+                  :key="i"
+                >
+                  <p>{{ account.name }}</p>
+                </option>
+              </select>
             </div>
           </section>
         </div>
@@ -490,7 +545,7 @@
           </button>
         </div>
       </section>
-      <!-- <p @click="test">test</p> -->
+      <!-- <p @click="tester">test</p> -->
       <section v-show="!selectedWorkflow" class="table-section">
         <div class="table">
           <PipelineHeader
@@ -522,7 +577,7 @@
           <WorkflowRow
             :key="i"
             v-for="(workflow, i) in filteredWorkflows"
-            @create-form="createFormInstance(workflow.resourceRef.id)"
+            @create-form="createFormInstance(workflow.resourceRef.id, workflow.id)"
             @get-notes="getNotes(workflow.resourceRef.id)"
             @checked-box="selectWorkflowCheckbox(workflow.resourceRef.id)"
             :workflow="workflow"
@@ -614,7 +669,6 @@ export default {
       loading: false,
       loadingWorkflows: false,
       templates: CollectionManager.create({ ModelClass: AlertTemplate }),
-      team: CollectionManager.create({ ModelClass: User }),
       currentWorkflow: null,
       selectedWorkflow: false,
       modalOpen: false,
@@ -624,6 +678,7 @@ export default {
       filterText: '',
       workflowFilterText: '',
       currentList: 'All Opportunities',
+      alertInstanceId: null,
       showList: false,
       showWorkflowList: true,
       showPopularList: true,
@@ -638,6 +693,8 @@ export default {
       noteInfo: '',
       picklistQueryOpts: {},
       instanceIds: [],
+      allAccounts: null,
+      allUsers: null,
     }
   },
   computed: {
@@ -659,8 +716,10 @@ export default {
       )
     },
     filteredWorkflows() {
-      return this.currentWorkflow.list.filter((opp) =>
-        opp.resourceRef.name.toLowerCase().includes(this.workflowFilterText.toLowerCase()),
+      return this.currentWorkflow.list.filter(
+        (opp) =>
+          opp.resourceRef.name.toLowerCase().includes(this.workflowFilterText.toLowerCase()) &&
+          !opp.formInstanceRef,
       )
     },
     currentMonth() {
@@ -696,20 +755,20 @@ export default {
   created() {
     this.getObjects()
     this.templates.refresh()
-    this.team.refresh()
     this.getAllForms()
     this.listStages()
     this.listForecast()
     this.resourceSync()
+    this.getAccounts()
+    this.getUsers()
   },
   watch: {
     primaryCheckList: 'closeAll',
     workflowCheckList: 'closeAll',
   },
   methods: {
-    test() {
-      console.log(this.primaryCheckList)
-      console.log(this.team.list)
+    tester() {
+      console.log(this.allUsers)
     },
     selectPrimaryCheckbox(id) {
       if (this.primaryCheckList.includes(id)) {
@@ -831,9 +890,10 @@ export default {
     resetAddOpp() {
       this.addOppModalOpen = !this.addOppModalOpen
     },
-    async createFormInstance(id) {
+    async createFormInstance(id, alertInstanceId = null) {
       this.currentVals = []
       this.editOpModalOpen = true
+      this.alertInstanceId = alertInstanceId
       try {
         const res = await SObjects.api.createFormInstance({
           resourceType: 'Opportunity',
@@ -1085,10 +1145,12 @@ export default {
       this.updateList.push(this.oppId)
       this.editOpModalOpen = false
       try {
+        console.log(this.alertInstanceId)
         const res = await SObjects.api
           .updateResource({
             form_id: this.instanceId,
             form_data: this.formData,
+            alert_instance: this.alertInstanceId,
           })
           .then(async () => {
             let updatedRes = await SObjects.api.getObjects('Opportunity')
@@ -1105,7 +1167,6 @@ export default {
         })
         if (this.selectedWorkflow) {
           this.currentWorkflow.refresh()
-          this.refresh(this.refreshId)
         } else if (this.currentList === 'Closing this month') {
           this.stillThisMonth()
         } else if (this.currentList === 'Closing next month') {
@@ -1144,6 +1205,7 @@ export default {
           },
         })
         this.currentWorkflow.refresh()
+        console.log(this.currentWorkflow)
         setTimeout(() => {
           if (this.currentWorkflow.list.length < 1) {
             this.refresh(this.refreshId)
@@ -1154,6 +1216,7 @@ export default {
       }
       this.selectedWorkflow = true
       this.showList = false
+      // console.log(this.currentWorkflow)
     },
     async getAllForms() {
       try {
@@ -1180,7 +1243,6 @@ export default {
         for (let i in this.picklistQueryOpts) {
           this.picklistQueryOpts[i] = this.listPicklists(i, { picklistFor: i })
         }
-        // this.oppName = this.updateOppForm[0].fieldsRef.filter((field) => field.apiName === 'Name')
         this.oppFields = this.updateOppForm[0].fieldsRef.filter(
           (field) =>
             field.apiName !== 'meeting_type' &&
@@ -1191,6 +1253,30 @@ export default {
         )
       } catch (error) {
         console.log(error)
+      }
+    },
+    async getUsers() {
+      try {
+        const res = await SObjects.api.getObjects('User')
+        this.allUsers = res.results
+      } catch {
+        this.$Alert.alert({
+          type: 'error',
+          timeout: 2000,
+          message: 'There was an error collecting objects',
+        })
+      }
+    },
+    async getAccounts() {
+      try {
+        const res = await SObjects.api.getObjects('Account')
+        this.allAccounts = res.results
+      } catch {
+        this.$Alert.alert({
+          type: 'error',
+          timeout: 2000,
+          message: 'There was an error collecting objects',
+        })
       }
     },
     async getObjects() {
@@ -1234,7 +1320,7 @@ export default {
       this.allOpps = this.originalList
       this.selectedWorkflow = false
       this.allOpps = this.allOpps.filter(
-        (opp) => new Date(opp.close_date).getMonth() == this.currentMonth,
+        (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth,
       )
       this.currentList = 'Closing this month'
       this.showList = !this.showList
@@ -1242,7 +1328,7 @@ export default {
     stillThisMonth() {
       this.allOpps = this.originalList
       this.allOpps = this.allOpps.filter(
-        (opp) => new Date(opp.close_date).getMonth() == this.currentMonth,
+        (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth,
       )
       this.currentList = 'Closing this month'
     },
@@ -1250,7 +1336,7 @@ export default {
       this.allOpps = this.originalList
       this.selectedWorkflow = false
       this.allOpps = this.allOpps.filter(
-        (opp) => new Date(opp.close_date).getMonth() == this.currentMonth + 1,
+        (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth + 1,
       )
       this.currentList = 'Closing next month'
       this.showList = !this.showList
@@ -1258,7 +1344,7 @@ export default {
     stillNextMonth() {
       this.allOpps = this.originalList
       this.allOpps = this.allOpps.filter(
-        (opp) => new Date(opp.close_date).getMonth() == this.currentMonth + 1,
+        (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth + 1,
       )
       this.currentList = 'Closing next month'
     },

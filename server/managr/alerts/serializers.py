@@ -185,6 +185,7 @@ class AlertInstanceRefSerializer(serializers.ModelSerializer):
 class AlertInstanceSerializer(serializers.ModelSerializer):
     template_ref = AlertTemplateRefSerializer(source="template")
     resource_ref = serializers.SerializerMethodField("get_resource_ref")
+    form_instance_ref = serializers.SerializerMethodField("get_form_ref")
 
     class Meta:
         model = alert_models.AlertInstance
@@ -200,6 +201,7 @@ class AlertInstanceSerializer(serializers.ModelSerializer):
             "channel",
             "config",
             "invocation",
+            "form_instance_ref",
         )
 
     def get_resource_ref(self, instance):
@@ -209,6 +211,12 @@ class AlertInstanceSerializer(serializers.ModelSerializer):
         serializer = routes[resource]["serializer"]
         resource_id = routes[resource]["model"].objects.get(id=instance.resource_id)
         return serializer(instance=resource_id).data
+
+    def get_form_ref(self, instance):
+        forms = instance.form_instance.all().values_list("is_submitted", flat=True)
+        if len(forms):
+            return forms[0]
+        return False
 
 
 # READ SERIALIZERS
