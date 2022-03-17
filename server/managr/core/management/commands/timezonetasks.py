@@ -1,7 +1,7 @@
 import uuid
 from django.core.management.base import BaseCommand, CommandError
 from managr.core.models import User
-from managr.core.background import emit_check_reminders, emit_process_non_zoom_meetings
+from managr.core.background import emit_check_reminders, emit_timezone_tasks
 
 
 class Command(BaseCommand):
@@ -16,8 +16,8 @@ class Command(BaseCommand):
                 user = User.objects.filter(email=t).first()
                 emit_check_reminders(str(user.id), f"reminders-{user.email}-{str(uuid.uuid4())}")
 
-                emit_process_non_zoom_meetings(
-                    str(user.id), f"non-zoom-meetings-{user.email}-{str(uuid.uuid4())}"
+                emit_timezone_tasks(
+                    str(user.id), f"timezone_tasks-{user.email}-{str(uuid.uuid4())}"
                 )
                 self.stdout.write(
                     self.style.SUCCESS(
@@ -28,8 +28,8 @@ class Command(BaseCommand):
             users = User.objects.filter(is_active=True)
             for user in users:
                 emit_check_reminders(str(user.id), f"reminders-{user.email}-{str(uuid.uuid4())}")
-                emit_process_non_zoom_meetings(
-                    str(user.id), f"non-zoom-meetings-{user.email}-{str(uuid.uuid4())}"
+                emit_timezone_tasks(
+                    str(user.id), f"emit_timezone_tasks-{user.email}-{str(uuid.uuid4())}"
                 )
             self.stdout.write(self.style.SUCCESS("Checking Timezone Dependant Tasks for all users"))
 
