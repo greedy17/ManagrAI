@@ -15,7 +15,7 @@
               "
               style="margin-top: 1rem; margin-right: 1rem"
             >
-              Connect managr to your favorite apps
+              Connect Managr to your favorite apps
             </div>
             <div v-else>Step 1/2. Connect the required apps.</div>
           </div>
@@ -283,7 +283,7 @@
 
         <div style="margin-top: -1.5rem" class="row">
           <div style="margin-top: 1rem; margin-right: 1rem">
-            Connect managr to your favorite apps
+            Connect Managr to your favorite apps
           </div>
         </div>
       </div>

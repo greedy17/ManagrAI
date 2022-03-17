@@ -135,7 +135,7 @@
                   style="height: 1rem; margin-right: 0.25rem"
                   alt=""
                 />
-                {{ item.length ? checkInteger(item) : '' }}
+                {{ item.length ? getUser(item) : '' }}
               </p>
             </div>
           </div>
@@ -426,8 +426,14 @@ export default {
     },
   },
   methods: {
-    checkInteger(str) {
-      return /\d/.test(str) ? this.user.fullName : str
+    getUser(userInfo) {
+      if (this.userIds.includes(userInfo)) {
+        let selectedUser = this.users.list.filter((user) => user.id === userInfo)
+        console.log(selectedUser)
+        return selectedUser[0].fullName
+      } else {
+        return userInfo
+      }
     },
     handleUpdate() {
       this.loading = true
@@ -757,6 +763,11 @@ export default {
     },
   },
   computed: {
+    userIds() {
+      return this.users.list.map((field) => {
+        return field.id
+      })
+    },
     userTargetsOpts() {
       if (this.user.userLevel == 'MANAGER') {
         return [

@@ -1,0 +1,333 @@
+<template>
+  <div class="table-row">
+    <div style="padding: 2vh" class="table-cell-checkbox">
+      <div v-if="updateList.includes(workflow.resourceRef.id)">
+        <SkeletonBox width="10px" height="9px" />
+      </div>
+      <div v-else>
+        <input
+          type="checkbox"
+          :id="index"
+          v-model="workflowCheckList"
+          :value="workflow.resourceRef.id"
+          @click="emitCheckedBox"
+        />
+        <label :for="index"></label>
+      </div>
+    </div>
+
+    <div style="min-width: 26vw" class="table-cell cell-name">
+      <div class="flex-row-spread">
+        <div>
+          <div class="flex-col" v-if="updateList.includes(workflow.resourceRef.id)">
+            <SkeletonBox width="125px" height="14px" style="margin-bottom: 0.2rem" />
+            <SkeletonBox width="125px" height="9px" />
+          </div>
+
+          <PipelineNameSection
+            v-else
+            :name="workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize('Name'))]"
+            :accountName="
+              workflow.resourceRef.accountRef ? workflow.resourceRef.accountRef.name : '---'
+            "
+            :owner="workflow.resourceRef.ownerRef.firstName"
+          />
+        </div>
+        <div v-if="updateList.includes(workflow.resourceRef.id)" class="flex-row">
+          <SkeletonBox width="15px" height="14px" />
+          <SkeletonBox width="15px" height="14px" />
+        </div>
+
+        <div v-else class="flex-column">
+          <button @click="emitCreateForm" class="name-cell-edit-note-button-2">
+            Update
+            <img class="invert" src="@/assets/images/edit-note.png" />
+          </button>
+          <button @click="emitGetNotes" class="name-cell-note-button-2">
+            Notes
+            <img class="gray" src="@/assets/images/white-note.png" />
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      :key="i"
+      v-for="(field, i) in oppFields"
+      :class="
+        field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
+          ? 'table-cell-wide'
+          : 'table-cell'
+      "
+    >
+      <SkeletonBox
+        v-if="updateList.includes(workflow.resourceRef.id)"
+        width="125px"
+        height="14px"
+        style="margin-bottom: 0.2rem"
+      />
+
+      <div class="limit-cell-height" v-else>
+        <PipelineField
+          style="direction: ltr"
+          :apiName="field.apiName"
+          :dataType="field.dataType"
+          :fieldData="
+            workflow.resourceRef.secondaryData[
+              capitalizeFirstLetter(camelize(sliced(field.apiName))).replaceAll('_', '')
+            ]
+              ? workflow.resourceRef.secondaryData[
+                  capitalizeFirstLetter(camelize(sliced(field.apiName))).replaceAll('_', '')
+                ]
+              : workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field.apiName))]
+              ? workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field.apiName))]
+              : ''
+          "
+        />
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import PipelineNameSection from '@/components/PipelineNameSection'
+import PipelineField from '@/components/PipelineField'
+import SkeletonBox from '@/components/SkeletonBox'
+
+export default {
+  name: 'WorkflowRow',
+  components: {
+    PipelineNameSection,
+    PipelineField,
+    SkeletonBox,
+  },
+  data() {
+    return {}
+  },
+  methods: {
+    emitCreateForm() {
+      this.$emit('create-form')
+    },
+    emitGetNotes() {
+      this.$emit('get-notes')
+    },
+    emitCheckedBox() {
+      this.$emit('checked-box')
+    },
+    capitalizeFirstLetter(string) {
+      return string.charAt(0).toUpperCase() + string.slice(1)
+    },
+    camelize(str) {
+      return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {
+        if (+match === 0) return ''
+        return index === 0 ? match.toLowerCase() : match.toUpperCase()
+      })
+    },
+    sliced(str) {
+      let newStr = str.slice(0, -1) + 'C'
+      return newStr
+    },
+  },
+  props: {
+    index: {},
+    oppFields: {},
+    workflowCheckList: {},
+    workflow: {},
+    updateList: {},
+  },
+}
+</script>
+
+<style lang="scss">
+@import '@/styles/variables';
+@import '@/styles/buttons';
+
+.table-row {
+  display: table-row;
+}
+.table-cell {
+  display: table-cell;
+  position: sticky;
+  min-width: 12vw;
+  background-color: $off-white;
+  padding: 2vh 3vh;
+  border: none;
+  border-bottom: 1px solid $soft-gray;
+  font-size: 13px;
+}
+.cell-name {
+  background-color: white;
+  color: $base-gray;
+  letter-spacing: 0.25px;
+  position: sticky;
+  left: 3.5vw;
+  z-index: 2;
+}
+.table-cell-wide {
+  display: table-cell;
+  position: sticky;
+  min-width: 26vw;
+  background-color: $off-white;
+  padding: 2vh 3vh;
+  border: none;
+  border-bottom: 1px solid $soft-gray;
+  font-size: 13px;
+}
+.table-cell-checkbox-header {
+  display: table-cell;
+  padding: 2vh 1vh;
+  border: none;
+  border-bottom: 3px solid $light-orange-gray;
+  z-index: 3;
+  width: 4vw;
+  top: 0;
+  left: 0;
+  position: sticky;
+  background-color: $off-white;
+}
+.cell-name-header {
+  display: table-cell;
+  padding: 3vh;
+  border: none;
+  border-bottom: 3px solid $light-orange-gray;
+  border-radius: 2px;
+  z-index: 3;
+  left: 3.5vw;
+  top: 0;
+  position: sticky;
+  background-color: $off-white;
+  font-weight: bold;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  color: $base-gray;
+}
+.table-cell-header {
+  display: table-cell;
+  padding: 3vh;
+  border: none;
+  border-bottom: 3px solid $light-orange-gray;
+  border-radius: 2px;
+  z-index: 2;
+  top: 0;
+  position: sticky;
+  background-color: $off-white;
+  font-weight: bold;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  color: $base-gray;
+}
+.flex-row-spread {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+.flex-row {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+input[type='checkbox']:checked + label::after {
+  content: '';
+  position: absolute;
+  width: 1ex;
+  height: 0.3ex;
+  background: rgba(0, 0, 0, 0);
+  top: 0.9ex;
+  left: 0.4ex;
+  border: 2px solid $dark-green;
+  border-top: none;
+  border-right: none;
+  -webkit-transform: rotate(-45deg);
+  -moz-transform: rotate(-45deg);
+  -o-transform: rotate(-45deg);
+  -ms-transform: rotate(-45deg);
+  transform: rotate(-45deg);
+}
+
+input[type='checkbox'] {
+  line-height: 2.1ex;
+}
+
+input[type='checkbox'] {
+  position: absolute;
+  left: -999em;
+}
+
+input[type='checkbox'] + label {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+input[type='checkbox'] + label::before {
+  content: '';
+  display: inline-block;
+  vertical-align: -22%;
+  height: 1.75ex;
+  width: 1.75ex;
+  background-color: white;
+  border: 1px solid rgb(182, 180, 180);
+  border-radius: 4px;
+  margin-right: 0.5em;
+}
+.limit-cell-height {
+  max-height: 4rem;
+  width: 110%;
+  overflow: auto;
+  direction: rtl;
+  padding: 0px 0.25rem;
+}
+.name-cell-note-button-2 {
+  cursor: pointer;
+  border: none;
+  border-radius: 0.2rem;
+  padding: 0.25rem 0.3rem;
+  background-color: white;
+  box-shadow: 1px 1px 3px $very-light-gray;
+  max-width: 4rem;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  font-size: 11px;
+  font-weight: 700px;
+  letter-spacing: 0.25px;
+  img {
+    height: 0.8rem;
+  }
+}
+.name-cell-note-button-2:hover,
+.name-cell-edit-note-button-2:hover {
+  transform: scale(1.03);
+  box-shadow: 1px 1px 1px 1px $very-light-gray;
+}
+.name-cell-edit-note-button-2 {
+  cursor: pointer;
+  border: none;
+  border-radius: 0.2rem;
+  padding: 0.25rem 0.3rem;
+  background-color: $dark-green;
+  color: white;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  box-shadow: 1px 1px 2px $very-light-gray;
+  font-weight: 700px;
+  letter-spacing: 0.25px;
+  margin-top: 0.4rem;
+  margin-bottom: 0.3rem;
+
+  img {
+    height: 0.8rem;
+    margin-left: 0.25rem;
+  }
+}
+</style>
