@@ -72,9 +72,17 @@ def emit_check_reminders(user_id, verbose_name):
     return check_reminders(user_id, verbose_name=verbose_name)
 
 
+def emit_process_non_zoom_meetings(user_id, verbose_name):
+    return _process_non_zoom_meetings(user_id, verbose_name=verbose_name)
+
+
 # Functions for Scheduling Meeting
 def emit_non_zoom_meetings(workflow_id, user_id, user_tz, non_zoom_end_times):
     return non_zoom_meeting_message(workflow_id, user_id, user_tz, non_zoom_end_times)
+
+
+def emit_timezone_tasks(user_id, verbose_name):
+    return timezone_tasks(user_id, verbose_name=verbose_name)
 
 
 @background()
@@ -226,7 +234,7 @@ def _process_calendar_details(user_id):
         return None
 
 
-def meeting_prep(processed_data, user_id, invocation=1):
+def meeting_prep(processed_data, user_id, invocation=1, from_task=False):
     def get_domain(email):
         """Parse domain out of an email"""
         return email[email.index("@") + 1 :]
@@ -385,8 +393,6 @@ def meeting_prep(processed_data, user_id, invocation=1):
         "invocation": invocation,
     }
     resource_check = meeting_resource_data.get("resource_id", None)
-    provider = processed_data.get("provider")
-
     if resource_check:
         data["resource_id"] = meeting_resource_data["resource_id"]
         data["resource_type"] = meeting_resource_data["resource_type"]
@@ -399,22 +405,24 @@ def meeting_prep(processed_data, user_id, invocation=1):
     meeting_prep_instance = (
         MeetingPrepInstance.objects.filter(user=user).order_by("-datetime_created").first()
     )
-    # Conditional Check for Zoom meeting or Non-Zoom Meeting
-    if (provider == "Zoom Meeting" and user.email not in processed_data["owner"]) or (
-        provider not in [None, "Zoom Meeting",]
-        and "Zoom meeting" not in processed_data["description"]
-    ):
-        # Google Meet (Non-Zoom)
-        meeting_workflow = MeetingWorkflow.objects.create(
-            non_zoom_meeting=meeting_prep_instance, user=user,
-        )
+    if from_task:
+        provider = processed_data.get("provider")
+        # Conditional Check for Zoom meeting or Non-Zoom Meeting
+        if (provider == "Zoom Meeting" and user.email not in processed_data["owner"]) or (
+            provider not in [None, "Zoom Meeting",]
+            and "Zoom meeting" not in processed_data["description"]
+        ):
+            # Google Meet (Non-Zoom)
+            meeting_workflow = MeetingWorkflow.objects.create(
+                non_zoom_meeting=meeting_prep_instance, user=user,
+            )
 
-        # Sending end_times, workflow_id, and user values to emit function
-        non_zoom_end_times = processed_data.get("times").get("end_time")
-        workflow_id = str(meeting_workflow.id)
-        user_id = str(user.id)
-        user_tz = str(user.timezone)
-        return emit_non_zoom_meetings(workflow_id, user_id, user_tz, non_zoom_end_times)
+            # Sending end_times, workflow_id, and user values to emit function
+            non_zoom_end_times = processed_data.get("times").get("end_time")
+            workflow_id = str(meeting_workflow.id)
+            user_id = str(user.id)
+            user_tz = str(user.timezone)
+            return emit_non_zoom_meetings(workflow_id, user_id, user_tz, non_zoom_end_times)
 
 
 def _send_calendar_details(
@@ -621,6 +629,28 @@ def process_current_alert_list(user_id):
 
 
 @background()
+def _process_non_zoom_meetings(user_id):
+    user = User.objects.get(id=user_id)
+    if (
+        hasattr(user, "nylas")
+        and hasattr(user, "slack_integration")
+        and user.slack_integration.recap_channel is not None
+    ):
+        try:
+            processed_data = _process_calendar_details(user_id)
+        except Exception as e:
+            logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
+        if processed_data is not None:
+            last_instance = (
+                MeetingPrepInstance.objects.filter(user=user).order_by("-datetime_created").first()
+            )
+            current_invocation = last_instance.invocation + 1 if last_instance else 1
+            for event in processed_data:
+                meeting_prep(event, user_id, current_invocation, from_task=True)
+    return
+
+
+@background()
 def _process_send_workflow_reminder(user_id, workflow_count):
     user = User.objects.get(id=user_id)
     if hasattr(user, "slack_integration"):
@@ -706,6 +736,7 @@ def generate_morning_digest(user_id, invocation=None, page=1):
                 user.organization.slack_integration.access_token,
                 block_set=blocks,
             )
+            return {"response_action": "clear"}
         except Exception as e:
             logger.exception(f"Failed to send morning digest message to {user.email} due to {e}")
     else:
@@ -771,11 +802,11 @@ def check_reminders(user_id):
                 core_consts.REMINDER_CONFIG[key]["MINUTE"],
             )
             if check:
-                if key == core_consts.MORNING_DIGEST:
-                    emit_generate_morning_digest(
-                        user_id, f"morning-digest-{user.email}-{str(uuid.uuid4())}"
-                    )
-                elif key == core_consts.WORKFLOW_REMINDER:
+                # if key == core_consts.MORNING_DIGEST:
+                #     emit_generate_morning_digest(
+                #         user_id, f"morning-digest-{user.email}-{str(uuid.uuid4())}"
+                #     )
+                if key == core_consts.WORKFLOW_REMINDER:
                     if datetime.today().weekday() == 4:
                         workflows = check_workflows_count(user.id)
                         if workflows["status"] and workflows["workflow_count"] <= 2:
@@ -790,4 +821,19 @@ def check_reminders(user_id):
                     emit_generate_afternoon_digest(
                         user_id, f"afternoon-digest-{user.email}-{str(uuid.uuid4())}"
                     )
+    return
+
+
+TIMEZONE_TASK_FUNCTION = {core_consts.NON_ZOOM_MEETINGS: emit_process_non_zoom_meetings}
+
+
+@background()
+def timezone_tasks(user_id):
+    tasks = core_consts.TIMEZONE_TASK_TIMES
+    user = User.objects.get(id=user_id)
+    for key in tasks.keys():
+        check = check_for_time(user.timezone, tasks[key]["HOUR"], tasks[key]["MINUTE"])
+        if check:
+            verbose_name = f"{key}-{user.email}-{str(uuid.uuid4())}"
+            TIMEZONE_TASK_FUNCTION[key](user_id, verbose_name)
     return
