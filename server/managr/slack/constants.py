@@ -313,5 +313,6 @@ MANAGR_ACTIONS = [
     ("LOG_NEW_ACTIVITY", "Log New Activity"),
     ("LIST_TASKS", "List Tasks"),
     ("SCHEDULE_MEETING", "Schedule Zoom Meeting"),
+    ("LAUNCH_DIGEST", "Morning Digest"),
 ]
 

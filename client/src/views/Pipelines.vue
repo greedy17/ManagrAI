@@ -783,7 +783,7 @@ export default {
   },
   methods: {
     tester() {
-      console.log(this.allUsers)
+      console.log(this.currentWorkflow)
     },
     // clearInstanceIdList() {
     //   this.currentCheckList.length === 0
