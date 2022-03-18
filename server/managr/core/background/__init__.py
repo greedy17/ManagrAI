@@ -639,7 +639,7 @@ def _process_non_zoom_meetings(user_id):
         try:
             processed_data = _process_calendar_details(user_id)
         except Exception as e:
-            logger.exception(f"MORNING DIGEST ERROR IN SEND CALENDAR DETAILS: {e}")
+            logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
         if processed_data is not None:
             last_instance = (
                 MeetingPrepInstance.objects.filter(user=user).order_by("-datetime_created").first()
