@@ -60,6 +60,7 @@ from managr.salesforce.adapter.exceptions import (
     RequiredFieldError,
     UnhandledSalesforceError,
     SFNotFoundError,
+    InvalidRefreshToken,
 )
 
 from .filters import SObjectFieldFilterSet
@@ -679,6 +680,9 @@ class SalesforceSObjectViewSet(
             for index, id in enumerate(to_sync_ids):
                 resource_sync = SFResourceSync.objects.get(id=id)
                 try:
+                    if len(resource_sync.operations < 1):
+                        has_error = True
+                        break
                     if resource_sync.status == "Completed":
                         synced_ids.append(id)
                         to_sync_ids.pop(index)
@@ -692,8 +696,12 @@ class SalesforceSObjectViewSet(
                         attempts += 1
                         sleep = 1 * 1.15 ** attempts + random.uniform(0, 1)
                         time.sleep(sleep)
+                except InvalidRefreshToken:
+                    has_error = True
+                    break
                 except Exception as e:
                     if attempts >= 5:
+                        has_error = True
                         logger.exception(f"Failed to receive complete status from sync from {e}")
                         break
                     else:
