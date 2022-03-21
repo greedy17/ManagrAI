@@ -567,6 +567,13 @@
                 <div class="three-dots"></div>
                 <div class="dropdown">
                   <button @click="onRevoke('HUBSPOT')" class="revoke-button">revoke</button>
+                  <button
+                    :loading="generatingToken && selectedIntegration == 'HUBSPOT'"
+                    @click="onGetAuthLink('HUBSPOT')"
+                    class="plain-button"
+                  >
+                    refresh
+                  </button>
                 </div>
               </div>
             </div>
