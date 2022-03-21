@@ -33,6 +33,11 @@
                 >Team</router-link
               >
             </li>
+            <li>
+              <router-link exact-active-class="active" :to="{ name: 'Forecasting' }"
+                >Forecast (coming soon)</router-link
+              >
+            </li>
           </ul>
         </div>
 
@@ -53,9 +58,15 @@
                 >Pipeline</router-link
               >
             </li>
+
             <li>
               <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
                 >Team</router-link
+              >
+            </li>
+            <li>
+              <router-link exact-active-class="active" :to="{ name: 'Forecasting' }"
+                >Forecast (coming soon)</router-link
               >
             </li>
           </ul>
@@ -76,6 +87,11 @@
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Pipelines' }"
                 >Pipeline</router-link
+              >
+            </li>
+            <li>
+              <router-link exact-active-class="active" :to="{ name: 'Forecasting' }"
+                >Forecast (coming soon)</router-link
               >
             </li>
           </ul>
@@ -104,13 +120,22 @@
                 >Pipeline</router-link
               >
             </li>
+            <li v-if="!isOnboarding">
+              <router-link exact-active-class="active" :to="{ name: 'Forecasting' }"
+                >Forecast (coming soon)</router-link
+              >
+            </li>
           </ul>
         </div>
       </div>
 
       <div v-if="userLevel == 'REP' && !user.onboarding" class="right">
         <div class="tooltip">
-          <img style="height: 1rem" src="@/assets/images/blackhelp.png" class="tooltip__icon" />
+          <img
+            style="height: 1.4rem; filter: invert(30%)"
+            src="@/assets/images/blackhelp.png"
+            class="tooltip__icon"
+          />
           <div class="tooltip__popup">
             <div class="tooltip__popup__bold">Having issues?</div>
             <div class="tip">Email Us: support@mymanagr.com</div>
@@ -118,19 +143,22 @@
         </div>
 
         <div>
-          <router-link :to="{ name: 'ProfilePage' }"
-            ><img src="@/assets/images/profile.png" style="height: 1.5rem" alt=""
-          /></router-link>
+          <router-link class="profile-wrapper" :to="{ name: 'ProfilePage' }">
+            <img src="@/assets/images/profile.png" style="height: 1rem" alt="" />
+          </router-link>
         </div>
-
-        <div>
-          <router-link :to="{ name: 'Login' }"
-            ><img
-              @click="logOut"
-              src="@/assets/images/blacklogout.png"
-              alt=""
-              style="height: 1.5rem"
-          /></router-link>
+        <div class="center">
+          <router-link class="pad" :to="{ name: 'Login' }">
+            <button class="logout">
+              Log out
+              <img
+                @click="logOut"
+                src="@/assets/images/blacklogout.png"
+                alt=""
+                style="height: 0.75rem; margin: 0.25rem"
+              />
+            </button>
+          </router-link>
         </div>
       </div>
 

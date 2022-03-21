@@ -45,6 +45,7 @@ import Custom from '@/views/customize/Custom'
 import ValidationRules from '@/views/customize/ValidationRules'
 import Required from '@/views/customize/Required'
 import Pipelines from '@/views/Pipelines'
+import Forecasting from '@/views/Forecasting'
 
 // TODO: We should keep this style guide page
 // import Styles from '@/views/settings/Styles'
@@ -206,6 +207,11 @@ export default new Router({
       path: '/pipelines',
       name: 'Pipelines',
       component: Pipelines,
+    },
+    {
+      path: '/forecasting',
+      name: 'Forecasting',
+      component: Forecasting,
     },
     {
       path: '/deal-movement',
