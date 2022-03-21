@@ -683,6 +683,7 @@ export default {
       loading: false,
       loadingWorkflows: false,
       templates: CollectionManager.create({ ModelClass: AlertTemplate }),
+      users: CollectionManager.create({ ModelClass: User }),
       currentWorkflow: null,
       selectedWorkflow: false,
       modalOpen: false,
@@ -1162,6 +1163,9 @@ export default {
           console.log(e)
         } finally {
           this.getObjects()
+          User.api.getUser(this.user.id).then((response) => {
+            this.$store.commit('UPDATE_USER', response)
+          })
           this.loading = false
           this.$Alert.alert({
             type: 'success',
@@ -1181,6 +1185,7 @@ export default {
         console.log(e)
       } finally {
         this.getObjects()
+        // User.getUser(this.user.id)
         this.loading = false
         this.$Alert.alert({
           type: 'success',
