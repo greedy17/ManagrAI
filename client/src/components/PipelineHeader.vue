@@ -8,7 +8,13 @@
     </div>
     <div class="cell-name-header">Name</div>
     <div class="table-cell-header" :key="i" v-for="(field, i) in oppFields" ref="fields">
-      {{ field.referenceDisplayLabel }}
+      <p
+        @click="$emit('sort-opps', `${field.dataType}`)"
+        style="display: flex; flex-direction: row; align-items: center; margin-right: 0.2rem"
+      >
+        {{ field.referenceDisplayLabel }}
+        <img style="height: 0.8rem" src="@/assets/images/sort.png" alt="" />
+      </p>
     </div>
   </div>
 </template>
@@ -27,6 +33,7 @@ export default {
   props: {
     oppFields: {},
     allSelected: {},
+    dataType: {},
   },
 }
 </script>
@@ -81,3 +88,10 @@ export default {
   letter-spacing: 0.5px;
   color: $base-gray;
 }
+// .rowed {
+//   display: flex;
+//   flex-direction: row;
+//   justify-content: center;
+//   // align-items: center;
+//   outline: 1px solid red;
+// }

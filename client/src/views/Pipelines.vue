@@ -242,7 +242,7 @@
               <textarea
                 id="update-input"
                 ccols="30"
-                rows="3"
+                rows="4"
                 style="width: 30vw; border-radius: 0.2rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
@@ -377,8 +377,10 @@
           </section>
         </div>
         <div class="flex-end-opp">
-          <p @click="resetEdit" class="cancel">Cancel</p>
-          <button @click="updateResource()" class="add-button__">Update</button>
+          <div style="display: flex; align-items: center">
+            <p @click="resetEdit" class="cancel">Cancel</p>
+            <button @click="updateResource()" class="add-button__">Update</button>
+          </div>
         </div>
       </div>
     </Modal>
@@ -565,6 +567,7 @@
           <PipelineHeader
             :oppFields="oppFields"
             @check-all="onCheckAll"
+            @sort-opps="sortOpps"
             :allSelected="allSelected"
           />
           <PipelineTableRow
@@ -619,6 +622,29 @@
           <SkeletonBox width="400px" height="25px" />
         </div>
       </section>
+
+      <!-- <div class="slideshow-container">
+        <div class="mySlides fade">
+          <div class="numbertext">1 / 3</div>
+          <img src="" style="width: 100%" />
+          <div class="text">Caption Text</div>
+        </div>
+
+        <div class="mySlides fade">
+          <div class="numbertext">2 / 3</div>
+          <img src="" style="width: 100%" />
+          <div class="text">Caption Two</div>
+        </div>
+
+        <div class="mySlides fade">
+          <div class="numbertext">3 / 3</div>
+          <img src="" style="width: 100%" />
+          <div class="text">Caption Three</div>
+        </div>
+
+        <a class="prev">&#10094;</a>
+        <a class="next">&#10095;</a>
+      </div> -->
     </div>
     <div v-if="loading">
       <Loader loaderText="Pulling in your latest Salesforce data" />
@@ -785,13 +811,27 @@ export default {
     tester() {
       console.log(this.currentWorkflow)
     },
-    // clearInstanceIdList() {
-    //   this.currentCheckList.length === 0
-    //     ? (this.instanceIdList = [])
-    //     : (this.instanceIdList = this.instanceIdList)
-
-    //   console.log('test')
-    // },
+    sortOpps(dT) {
+      console.log(this.allOpps)
+      console.log(dT)
+      field.apiName.includes('__c')
+        ? opp['secondary_data'][field.apiName]
+        : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+      // this.allOpps = this.originalList
+      // if ((dT = 'Picklist')) {
+      //   this.allOpps.sort(function (a, b) {
+      //     const nameA = a.secondary_data.toUpperCase()
+      //     const nameB = b.name.toUpperCase()
+      //     if (nameA < nameB) {
+      //       return -1
+      //     }
+      //     if (nameA > nameB) {
+      //       return 1
+      //     }
+      //     return 0
+      //   })
+      // }
+    },
     selectPrimaryCheckbox(id) {
       if (this.primaryCheckList.includes(id)) {
         this.primaryCheckList = this.primaryCheckList.filter((opp) => opp !== id)
@@ -805,7 +845,6 @@ export default {
       } else {
         this.workflowCheckList.push(id)
       }
-
       // if (this.instanceIdList.includes(instance)) {
       //   this.instanceIdList = this.instanceIdList.filter((opp) => opp !== instance)
       // } else {
@@ -860,7 +899,6 @@ export default {
       } else {
         this.workflowCheckList = []
       }
-
       // if (this.instanceIdList.length < 1) {
       //   for (let i = 0; i < this.filteredWorkflows.length; i++) {
       //     this.instanceIdList.push(this.filteredWorkflows[i].id)
@@ -914,6 +952,23 @@ export default {
       try {
         await AlertTemplate.api.runAlertTemplateNow(id)
         while (counter < 100) {
+          this.currentWorkflow.refresh()
+          counter += 1
+        }
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.loadingWorkflows = false
+        }, 3750)
+      }
+    },
+    async updateWorkflow() {
+      this.loadingWorkflows = true
+      let counter = 0
+      try {
+        await AlertTemplate.api.runAlertTemplateNow(this.workflowId, (from_workflow = true))
+        while (counter < 50) {
           this.currentWorkflow.refresh()
           counter += 1
         }
@@ -1216,6 +1271,8 @@ export default {
           sub: 'Some changes may take longer to reflect',
         })
         if (this.selectedWorkflow) {
+          this.updateWorkflow()
+          this.refresh()
           this.currentWorkflow.refresh()
         } else if (this.currentList === 'Closing this month') {
           this.stillThisMonth()
@@ -1255,7 +1312,6 @@ export default {
           },
         })
         this.currentWorkflow.refresh()
-        console.log(this.currentWorkflow)
         setTimeout(() => {
           if (this.currentWorkflow.list.length < 1) {
             this.refresh(this.refreshId)
@@ -1266,7 +1322,6 @@ export default {
       }
       this.selectedWorkflow = true
       this.showList = false
-      // console.log(this.currentWorkflow)
     },
     async getAllForms() {
       try {
@@ -1564,8 +1619,8 @@ h3 {
 .opp-modal-container {
   overflow: hidden;
   background-color: white;
-  height: 80vh;
-  max-width: 34vw;
+  min-height: 80vh;
+  width: 34vw;
   align-items: center;
   border-radius: 0.6rem;
   padding: 1rem;
@@ -1582,6 +1637,8 @@ h3 {
   border-bottom: 3px solid $white;
   color: $base-gray;
   font-size: 16px;
+  font-weight: bold;
+  letter-spacing: 0.75px;
   div {
     margin-right: 1rem;
   }
@@ -1812,11 +1869,12 @@ section {
   margin-right: 0.5rem;
 }
 #update-input {
-  border: 1px solid $very-light-gray;
+  border: none;
   border-radius: 0.25rem;
-  background-color: transparent;
-  min-height: 4.5vh;
-  min-width: 14vw;
+  box-shadow: 1px 1px 1px 1px $very-light-gray;
+  background-color: white;
+  min-height: 2.5rem;
+  width: 14vw;
 }
 .number-input {
   background-color: $off-white;
@@ -1847,6 +1905,7 @@ section {
 }
 .header {
   font-size: 18px;
+  padding: 0;
   letter-spacing: 0.5px;
   margin-bottom: 0.2rem;
 }
@@ -1936,8 +1995,12 @@ section {
 .flex-end-opp {
   width: 100%;
   padding: 0.5rem 0.25rem;
+  height: 6rem;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: flex-end;
+}
+textarea {
+  resize: none;
 }
 </style>
