@@ -680,7 +680,7 @@ class SalesforceSObjectViewSet(
             for index, id in enumerate(to_sync_ids):
                 resource_sync = SFResourceSync.objects.get(id=id)
                 try:
-                    if len(resource_sync.operations < 1):
+                    if len(resource_sync.operations) < 1:
                         has_error = True
                         break
                     if resource_sync.status == "Completed":
