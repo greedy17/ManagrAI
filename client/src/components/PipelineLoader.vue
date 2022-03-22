@@ -48,6 +48,7 @@
     </section> -->
 
     <div class="card">
+      <img src="@/assets/images/loading-gif.gif" class="invert" style="height: 8rem" alt="" />
       <h1>Just a moment</h1>
       <p>Pulling in your latest Salesforce data</p>
       <div class="loader"></div>
