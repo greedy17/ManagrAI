@@ -61,8 +61,6 @@ export default {
     },
     getDaysInStage(date) {
       let newDate = new Date(date)
-      console.log(this.currentDay.getTime())
-      console.log(newDate.getTime())
       return Math.floor((this.currentDay.getTime() - newDate.getTime()) / (24 * 3600 * 1000))
     },
   },
