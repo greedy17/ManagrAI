@@ -314,4 +314,17 @@ input[type='checkbox'] + label::before {
     margin-left: 0.25rem;
   }
 }
+// ::-webkit-scrollbar {
+//   background-color: $off-white;
+//   -webkit-appearance: none;
+//   height: 100%;
+//   width: 3px;
+// }
+// ::-webkit-scrollbar-thumb {
+//   border-radius: 3px;
+//   background-color: $very-light-gray;
+// }
+// ::-webkit-scrollbar-track {
+//   margin-top: 1rem;
+// }
 </style>

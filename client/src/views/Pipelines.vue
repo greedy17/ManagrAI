@@ -407,7 +407,7 @@
               <p>{{ currentList }}</p>
               <img
                 @click="showList = !showList"
-                class="exit invert"
+                class="exit"
                 src="@/assets/images/close.png"
                 alt=""
               />
@@ -568,6 +568,7 @@
             :oppFields="oppFields"
             @check-all="onCheckAll"
             @sort-opps="sortOpps"
+            @sort-opps-reverse="sortOppsReverse"
             :allSelected="allSelected"
           />
           <PipelineTableRow
@@ -590,6 +591,8 @@
             :oppFields="oppFields"
             @check-all="onCheckAllWorkflows"
             :allWorkflowsSelected="allWorkflowsSelected"
+            @sort-opps-workflows="sortWorkflows"
+            @sort-opps-reverse-workflows="sortWorkflowsReverse"
           />
           <WorkflowRow
             :key="i"
@@ -622,29 +625,6 @@
           <SkeletonBox width="400px" height="25px" />
         </div>
       </section>
-
-      <!-- <div class="slideshow-container">
-        <div class="mySlides fade">
-          <div class="numbertext">1 / 3</div>
-          <img src="" style="width: 100%" />
-          <div class="text">Caption Text</div>
-        </div>
-
-        <div class="mySlides fade">
-          <div class="numbertext">2 / 3</div>
-          <img src="" style="width: 100%" />
-          <div class="text">Caption Two</div>
-        </div>
-
-        <div class="mySlides fade">
-          <div class="numbertext">3 / 3</div>
-          <img src="" style="width: 100%" />
-          <div class="text">Caption Three</div>
-        </div>
-
-        <a class="prev">&#10094;</a>
-        <a class="next">&#10095;</a>
-      </div> -->
     </div>
     <div v-if="loading">
       <Loader loaderText="Pulling in your latest Salesforce data" />
@@ -666,7 +646,6 @@ import WorkflowRow from '@/components/WorkflowRow'
 import PipelineHeader from '@/components/PipelineHeader'
 import Loader from '@/components/Loader'
 import WorkflowHeader from '@/components/WorkflowHeader'
-import User from '@/services/users'
 
 export default {
   name: 'Pipelines',
@@ -757,9 +736,8 @@ export default {
       )
     },
     filteredWorkflows() {
-      return this.currentWorkflow.list.filter(
-        (opp) => opp.resourceRef.name.toLowerCase().includes(this.workflowFilterText.toLowerCase()),
-        // !opp.formInstanceRef
+      return this.currentWorkflow.list.filter((opp) =>
+        opp.resourceRef.name.toLowerCase().includes(this.workflowFilterText.toLowerCase()),
       )
     },
     currentMonth() {
@@ -809,28 +787,217 @@ export default {
   },
   methods: {
     tester() {
-      console.log(this.currentWorkflow)
+      console.log(this.currentWorkflow.list)
     },
-    sortOpps(dT) {
-      console.log(this.allOpps)
-      console.log(dT)
-      field.apiName.includes('__c')
-        ? opp['secondary_data'][field.apiName]
-        : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-      // this.allOpps = this.originalList
-      // if ((dT = 'Picklist')) {
-      //   this.allOpps.sort(function (a, b) {
-      //     const nameA = a.secondary_data.toUpperCase()
-      //     const nameB = b.name.toUpperCase()
-      //     if (nameA < nameB) {
-      //       return -1
-      //     }
-      //     if (nameA > nameB) {
-      //       return 1
-      //     }
-      //     return 0
-      //   })
-      // }
+    capitalizeFirstLetter(string) {
+      return string.charAt(0).toUpperCase() + string.slice(1)
+    },
+    camelize(str) {
+      return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {
+        if (+match === 0) return ''
+        return index === 0 ? match.toLowerCase() : match.toUpperCase()
+      })
+    },
+    sliced(str) {
+      let newStr = str.slice(0, -1) + 'C'
+      return newStr
+    },
+    sortOpps(dT, field, apiName) {
+      let newField = this.capitalizeFirstLetter(this.camelize(field))
+
+      if (field === 'Stage') {
+        this.allOpps = this.allOpps.sort(function (a, b) {
+          const nameA = a['secondary_data']['StageName']
+          const nameB = b['secondary_data']['StageName']
+          if (nameA < nameB) {
+            return -1
+          }
+          if (nameA > nameB) {
+            return 1
+          }
+          return 0
+        })
+      } else if (dT === 'TextArea') {
+        this.allOpps = this.allOpps.sort(function (a, b) {
+          const nameA = a['secondary_data'][`${newField}`]
+          const nameB = b['secondary_data'][`${newField}`]
+          if (nameA.length < nameB.length) {
+            return -1
+          }
+          if (nameA.length > nameB.length) {
+            return 1
+          }
+          return 0
+        })
+      } else if (apiName.includes('__c')) {
+        this.allOpps = this.allOpps.sort(function (a, b) {
+          const nameA = a['secondary_data'][`${apiName}`]
+          const nameB = b['secondary_data'][`${apiName}`]
+          if (nameA < nameB) {
+            return -1
+          }
+          if (nameA > nameB) {
+            return 1
+          }
+          return 0
+        })
+      } else {
+        this.allOpps = this.allOpps.sort(function (a, b) {
+          const nameA = a['secondary_data'][`${newField}`]
+          const nameB = b['secondary_data'][`${newField}`]
+          if (nameA < nameB) {
+            return -1
+          }
+          if (nameA > nameB) {
+            return 1
+          }
+          return 0
+        })
+      }
+    },
+    sortOppsReverse(dT, field, apiName) {
+      let newField = this.capitalizeFirstLetter(this.camelize(field))
+
+      if (field === 'Stage') {
+        this.allOpps = this.allOpps.sort(function (a, b) {
+          const nameA = a['secondary_data']['StageName']
+          const nameB = b['secondary_data']['StageName']
+          if (nameA < nameB) {
+            return 1
+          }
+          if (nameA > nameB) {
+            return -1
+          }
+          return 0
+        })
+      } else if (dT === 'TextArea') {
+        this.allOpps = this.allOpps.sort(function (a, b) {
+          const nameA = a['secondary_data'][`${newField}`]
+          const nameB = b['secondary_data'][`${newField}`]
+          if (nameA.length < nameB.length) {
+            return 1
+          }
+          if (nameA.length > nameB.length) {
+            return -1
+          }
+          return 0
+        })
+      } else if (apiName.includes('__c')) {
+        this.allOpps = this.allOpps.sort(function (a, b) {
+          const nameA = a['secondary_data'][`${apiName}`]
+          const nameB = b['secondary_data'][`${apiName}`]
+          if (nameA < nameB) {
+            return 1
+          }
+          if (nameA > nameB) {
+            return -1
+          }
+          return 0
+        })
+      } else {
+        this.allOpps = this.allOpps.sort(function (a, b) {
+          const nameA = a['secondary_data'][`${newField}`]
+          const nameB = b['secondary_data'][`${newField}`]
+          if (nameA < nameB) {
+            return 1
+          }
+          if (nameA > nameB) {
+            return -1
+          }
+          return 0
+        })
+      }
+    },
+
+    sortWorkflows(dT, field, apiName) {
+      let newField = this.capitalizeFirstLetter(this.camelize(apiName))
+      let customField = this.capitalizeFirstLetter(this.camelize(this.sliced(apiName))).replaceAll(
+        '_',
+        '',
+      )
+
+      if (dT === 'TextArea') {
+        this.currentWorkflow.list = this.currentWorkflow.list.sort(function (a, b) {
+          const nameA = a.resourceRef.secondaryData[`${newField}`]
+          const nameB = b.resourceRef.secondaryData[`${newField}`]
+          if (nameA.length < nameB.length) {
+            return -1
+          }
+          if (nameA.length > nameB.length) {
+            return 1
+          }
+          return 0
+        })
+      } else if (apiName.includes('__c')) {
+        this.currentWorkflow.list = this.currentWorkflow.list.sort(function (a, b) {
+          const nameA = a.resourceRef.secondaryData[`${customField}`]
+          const nameB = b['resourceRef']['secondaryData'][`${customField}`]
+          if (nameA < nameB) {
+            return -1
+          }
+          if (nameA > nameB) {
+            return 1
+          }
+          return 0
+        })
+      } else {
+        this.currentWorkflow.list = this.currentWorkflow.list.sort(function (a, b) {
+          const nameA = a.resourceRef.secondaryData[`${newField}`]
+          const nameB = b.resourceRef.secondaryData[`${newField}`]
+          if (nameA < nameB) {
+            return -1
+          }
+          if (nameA > nameB) {
+            return 1
+          }
+          return 0
+        })
+      }
+    },
+    sortWorkflowsReverse(dT, field, apiName) {
+      let newField = this.capitalizeFirstLetter(this.camelize(apiName))
+      let customField = this.capitalizeFirstLetter(this.camelize(this.sliced(apiName))).replaceAll(
+        '_',
+        '',
+      )
+
+      if (dT === 'TextArea') {
+        this.currentWorkflow.list = this.currentWorkflow.list.sort(function (a, b) {
+          const nameA = a.resourceRef.secondaryData[`${newField}`]
+          const nameB = b.resourceRef.secondaryData[`${newField}`]
+          if (nameA.length < nameB.length) {
+            return 1
+          }
+          if (nameA.length > nameB.length) {
+            return -1
+          }
+          return 0
+        })
+      } else if (apiName.includes('__c')) {
+        this.currentWorkflow.list = this.currentWorkflow.list.sort(function (a, b) {
+          const nameA = a.resourceRef.secondaryData[`${customField}`]
+          const nameB = b.resourceRef.secondaryData[`${customField}`]
+          if (nameA < nameB) {
+            return 1
+          }
+          if (nameA > nameB) {
+            return -1
+          }
+          return 0
+        })
+      } else {
+        this.currentWorkflow.list = this.currentWorkflow.list.sort(function (a, b) {
+          const nameA = a.resourceRef.secondaryData[`${newField}`]
+          const nameB = b.resourceRef.secondaryData[`${newField}`]
+          if (nameA < nameB) {
+            return 1
+          }
+          if (nameA > nameB) {
+            return -11
+          }
+          return 0
+        })
+      }
     },
     selectPrimaryCheckbox(id) {
       if (this.primaryCheckList.includes(id)) {
@@ -845,11 +1012,6 @@ export default {
       } else {
         this.workflowCheckList.push(id)
       }
-      // if (this.instanceIdList.includes(instance)) {
-      //   this.instanceIdList = this.instanceIdList.filter((opp) => opp !== instance)
-      // } else {
-      //   this.instanceIdList.push(instance)
-      // }
     },
     closeAll() {
       if (this.primaryCheckList.length === 0 || this.workflowCheckList === 0) {
@@ -899,22 +1061,6 @@ export default {
       } else {
         this.workflowCheckList = []
       }
-      // if (this.instanceIdList.length < 1) {
-      //   for (let i = 0; i < this.filteredWorkflows.length; i++) {
-      //     this.instanceIdList.push(this.filteredWorkflows[i].id)
-      //   }
-      // } else if (
-      //   this.instanceIdList.length > 0 &&
-      //   this.instanceIdList.length < this.filteredWorkflows.length
-      // ) {
-      //   for (let i = 0; i < this.filteredWorkflows.length; i++) {
-      //     !this.instanceIdList.includes(this.filteredWorkflows[i].id)
-      //       ? this.instanceIdList.push(this.filteredWorkflows[i].id)
-      //       : (this.instanceIdList = this.instanceIdList)
-      //   }
-      // } else {
-      //   this.instanceIdList = []
-      // }
     },
     async listPicklists(type, query_params) {
       try {
@@ -1069,7 +1215,6 @@ export default {
       if (val) {
         this.formData[key] = val
       }
-      console.log(val)
     },
     async bulkUpdateCloseDate(ids, data) {
       this.updatingOpps = true
@@ -1109,7 +1254,7 @@ export default {
       }
       this.updatingOpps = false
       this.closeDateSelected = false
-      console.log(this.primaryCheckList)
+
       this.$Alert.alert({
         type: 'success',
         timeout: 3000,
@@ -1212,7 +1357,6 @@ export default {
         this.loading = true
         try {
           const res = await SObjects.api.resourceSync()
-          console.log(res)
         } catch (e) {
           console.log(e)
         } finally {
@@ -1231,7 +1375,6 @@ export default {
       this.loading = true
       try {
         const res = await SObjects.api.resourceSync()
-        console.log(res)
       } catch (e) {
         console.log(e)
       } finally {
@@ -1249,7 +1392,6 @@ export default {
       this.updateList.push(this.oppId)
       this.editOpModalOpen = false
       try {
-        console.log(this.alertInstanceId)
         const res = await SObjects.api
           .updateResource({
             form_id: this.instanceId,
@@ -1401,11 +1543,6 @@ export default {
         console.log(e)
       }
     },
-    // async handleCancel() {
-    //   await this.refresh()
-    //   this.resetNotes()
-    //   this.$emit('cancel')
-    // },
     addOpp() {
       this.addOppModalOpen = true
     },
@@ -1587,6 +1724,7 @@ h3 {
   border: none;
   border-bottom: 1px solid $soft-gray;
   font-size: 13px;
+  overflow: scroll;
 }
 .table-cell:hover {
   cursor: text;
@@ -1676,7 +1814,7 @@ h3 {
 }
 .table-cell-header {
   display: table-cell;
-  padding: 3vh;
+  padding: 1.25vh 3vh;
   border: none;
   border-bottom: 3px solid $light-orange-gray;
   border-radius: 2px;
@@ -1698,7 +1836,7 @@ h3 {
 }
 .cell-name-header {
   display: table-cell;
-  padding: 3vh;
+  padding: 1.25vh 3vh;
   border: none;
   border-bottom: 3px solid $light-orange-gray;
   border-radius: 2px;
@@ -1714,7 +1852,7 @@ h3 {
 }
 .table-cell-checkbox-header {
   display: table-cell;
-  padding: 2vh 1vh;
+  padding: 1.25vh;
   border: none;
   border-bottom: 3px solid $light-orange-gray;
   z-index: 3;
@@ -1927,8 +2065,8 @@ section {
   &__title {
     position: sticky;
     top: 0;
-    color: white;
-    background-color: $dark-green;
+    color: $base-gray;
+    background-color: $off-white;
     letter-spacing: 0.25px;
     padding-left: 0.75rem;
     font-weight: bold;
