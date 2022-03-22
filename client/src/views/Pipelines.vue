@@ -646,6 +646,7 @@ import WorkflowRow from '@/components/WorkflowRow'
 import PipelineHeader from '@/components/PipelineHeader'
 import Loader from '@/components/Loader'
 import WorkflowHeader from '@/components/WorkflowHeader'
+import User from '@/services/users'
 
 export default {
   name: 'Pipelines',
