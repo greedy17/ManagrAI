@@ -8,13 +8,7 @@ from managr.organization.models import Organization
 class HubspotAuthAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = HubspotAuthAccount
-        fields = (
-            "id",
-            "user",
-            "access_token",
-            "refresh_token",
-            "hubspot_id",
-        )
+        fields = ("id", "user", "access_token", "refresh_token", "hubspot_id", "hobjects")
 
 
 class CompanySerializer(serializers.ModelSerializer):
@@ -160,7 +154,7 @@ class DealSerializer(serializers.ModelSerializer):
         return internal_data
 
 
-class HObjectField(serializers.ModelSerializer):
+class HObjectFieldSerializer(serializers.ModelSerializer):
     class Meta:
         model: HObjectField
         fields = (

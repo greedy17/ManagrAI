@@ -4,7 +4,7 @@ from requests.exceptions import HTTPError
 from managr.utils.client import Client
 from .exceptions import CustomAPIException
 from urllib.parse import urlencode
-
+from managr.utils.misc import object_to_snake_case
 from .. import constants as hubspot_consts
 from managr.core.models import User
 
@@ -75,32 +75,19 @@ class HubspotAuthAccountAdapter:
         }
         return cls(**data)
 
-    # def format_field_options(
-    #     self, hubspot_account_id, user_id, resource, res_data=[],
-    # ):
-    #     fields = res_data["fields"]
-    #     ### REMOVE CLONESOURCE, OPPORTUNITYSCOREID ID THIS FIELD DOES NOT WORK IN QUERY
-    #     if "CloneSourceId" in fields.keys():
-    #         del fields["CloneSourceId"]
-    #     if "OpportunityScoreId" in fields.keys():
-    #         del fields["OpportunityScoreId"]
+    def format_field_options(
+        self, hubspot_account_id, user_id, resource, res_data=[],
+    ):
+        fields = res_data["fields"]
+        custom_additions = dict(
+            hubspot_account=hubspot_account_id, hubspot_object=resource, imported_by=user_id,
+        )
 
-    #     for exclude in self.exclude_fields.get(resource, []):
-    #         # remove any exclude fields we have already caught in previous requests
-    #         # in addition to the static ones above
-    #         if exclude in fields.keys():
-    #             del fields[exclude]
-    #     custom_additions = dict(
-    #         salesforce_account=hubspot_account_id,
-    #         salesforce_object=res_data["apiName"],
-    #         imported_by=user_id,
-    #     )
+        data = [
+            HObjectFieldAdapter.create_from_api({**f, **custom_additions}) for f in fields.values()
+        ]
 
-    #     data = [
-    #         HubspotFieldAdapter.create_from_api({**f, **custom_additions}) for f in fields.values()
-    #     ]
-
-    #     return data
+        return data
 
     # def format_validation_rules(
     #     self, hubspot_account_id, user_id, res_data=[],
@@ -171,21 +158,16 @@ class HubspotAuthAccountAdapter:
 
             return HubspotAuthAccountAdapter._handle_response(res)
 
-    # def list_fields(self, resource):
-    #     """Uses the UI API to list fields for a resource using this endpoint only returns fields a user has access to"""
-    #     url = f"{self.instance_url}{hubspot_consts.SALESFORCE_FIELDS_URI(resource)}"
-    #     with Client as client:
-    #         res = client.get(
-    #             url, headers=hubspot_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
-    #         )
-    #         res = self._handle_response(res)
-
-    #         return {
-    #             "fields": self.format_field_options(
-    #                 str(self.id), str(self.user), resource, res_data=res
-    #             ),
-    #             "record_type_id": res["defaultRecordTypeId"],  # required for the picklist options
-    #         }
+    def list_fields(self, resource):
+        url = f"{hubspot_consts.BASE_URL}/{hubspot_consts.HUBSPOT_OBJECTS_URI}/{resource}"
+        print(url)
+        with Client as client:
+            res = client.get(
+                url, headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
+            )
+            res = self._handle_response(res)
+            print(f"RES {resource} - {res}")
+            return self.format_field_options(str(self.id), str(self.user), resource, res_data=res)
 
     # def list_picklist_values(self, resource):
     #     """Uses the UI API to list all picklist values resource using this endpoint only returns fields a user has access to"""
@@ -385,3 +367,39 @@ class HubspotAuthAccountAdapter:
     def as_dict(self):
         return vars(self)
 
+
+class HObjectFieldAdapter:
+    def __init__(self, **kwargs):
+        self.hubspot_account = kwargs.get("hubspot_account", None)
+        self.hubspot_object = kwargs.get("hubspot_object", None)
+        self.name = kwargs.get("name", None)
+        self.label = kwargs.get("label", None)
+        self.type = kwargs.get("type", None)
+        self.field_type = kwargs.get("field_type", None)
+        self.calculated = kwargs.get("calculated", None)
+        self.external_options = kwargs.get("external_options", None)
+        self.has_unique_value = kwargs.get("has_unique_value", None)
+        self.hidden = kwargs.get("hidden", None)
+        self.archived = kwargs.get("archived", None)
+        self.display_value = kwargs.get("display_value", None)
+        self.group_name = kwargs.get("group_name", None)
+        self.options = kwargs.get("options", None)
+        self.display_order = kwargs.get("display_order", None)
+        self.hubspot_defined = kwargs.get("hubspot_defined", None)
+        self.modification_metadata = kwargs.get("modification_metadata", None)
+        self.form_field = kwargs.get("form_field", None)
+
+    @staticmethod
+    def from_api(data):
+        data["integration_source"] = "HUBSPOT"
+        d = object_to_snake_case(data)
+
+        return d
+
+    @classmethod
+    def create_from_api(cls, data):
+        return cls(cls.from_api(data))
+
+    @property
+    def as_dict(self):
+        return vars(self)

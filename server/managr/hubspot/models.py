@@ -34,7 +34,7 @@ from . import constants as hs_consts
 logger = logging.getLogger("managr")
 
 
-def getSobjectDefaults():
+def getHobjectDefaults():
     return {
         hs_consts.RESOURCE_SYNC_COMPANY: True,
         hs_consts.RESOURCE_SYNC_CONTACT: True,
@@ -42,7 +42,7 @@ def getSobjectDefaults():
     }
 
 
-class SFSyncOperation(TimeStampModel):
+class HSSyncOperation(TimeStampModel):
     operation_type = models.CharField(max_length=255, blank=True)
     user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="hs_sync")
     operations_list = ArrayField(
@@ -147,16 +147,16 @@ class SFSyncOperation(TimeStampModel):
         return
 
     def save(self, *args, **kwargs):
-        return super(SFSyncOperation, self).save(*args, **kwargs)
+        return super(HSSyncOperation, self).save(*args, **kwargs)
 
 
-class HSObjectFieldsOperation(SFSyncOperation):
+class HSObjectFieldsOperation(HSSyncOperation):
     @property
     def operations_map(self):
-        from managr.salesforce.background import emit_sync_hobject_fields
+        from managr.hubspot.background import emit_sync_hobject_fields
 
         return {
-            hs_consts.SALESFORCE_OBJECT_FIELDS: emit_sync_hobject_fields,
+            hs_consts.HUBSPOT_OBJECT_FIELDS: emit_sync_hobject_fields,
         }
 
     def begin_tasks(self, attempts=1):
@@ -165,7 +165,7 @@ class HSObjectFieldsOperation(SFSyncOperation):
             # split the operation to get opp and params
             operation_name, param = op.split(".")
             operation = self.operations_map.get(operation_name)
-
+            print(operation)
             scheduled_for = datetime.now(pytz.utc)
             t = operation(str(self.user.id), str(self.id), param, scheduled_for)
 
@@ -184,6 +184,9 @@ class HubspotAuthAccount(TimeStampModel):
     access_token = models.CharField(max_length=255, blank=True)
     refresh_token = models.CharField(max_length=255, blank=True)
     hubspot_id = models.CharField(max_length=255, blank=True)
+    hobjects = JSONField(
+        default=getHobjectDefaults, help_text="All resources we are retrieving", max_length=500,
+    )
 
     class Meta:
         ordering = ["-datetime_created"]
@@ -204,9 +207,9 @@ class HubspotAuthAccount(TimeStampModel):
         return list(
             filter(
                 lambda resource: f"{resource}"
-                if self.sobjects.get(resource, None) not in ["", None, False]
+                if self.hobjects.get(resource, None) not in ["", None, False]
                 else False,
-                self.sobjects,
+                self.hobjects,
             )
         )
 
@@ -214,12 +217,12 @@ class HubspotAuthAccount(TimeStampModel):
     def field_sync_opts(self):
         return list(
             map(
-                lambda resource: f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{resource}",
+                lambda resource: f"{hs_consts.HUBSPOT_OBJECT_FIELDS}.{resource}",
                 filter(
                     lambda resource: resource
-                    if self.sobjects.get(resource, None) not in ["", None, False]
+                    if self.hobjects.get(resource, None) not in ["", None, False]
                     else False,
-                    self.sobjects,
+                    self.hobjects,
                 ),
             )
         )
@@ -529,7 +532,6 @@ class HObjectField(TimeStampModel, IntegrationModel):
     label = models.CharField(max_length=255)
     type = models.CharField(max_length=255)
     field_type = models.CharField(max_length=255)
-    custom = models.BooleanField(default=False)
     calculated = models.BooleanField(default=False)
     external_options = models.BooleanField(default=False)
     has_unique_value = models.BooleanField(default=False)
