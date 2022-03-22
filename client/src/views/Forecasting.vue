@@ -3,7 +3,7 @@
     <div class="pipelines__center">
       <div>
         <div class="spacer"></div>
-        <span style="color: #45a16f">Efficiently allocate your resources for future growth</span>
+        <span style="color: #45a16f">Introducing Forecasting</span>
         <h1>Coming Soon.</h1>
         <p style="margin-top: -1rem">
           Email us at mike@mymanagr.com if you have any feedback or questions.
