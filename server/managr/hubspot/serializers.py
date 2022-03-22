@@ -1,7 +1,7 @@
 import datetime
 from rest_framework import serializers
 
-from .models import HubspotAuthAccount, Company, HubspotContact, Deal
+from .models import HubspotAuthAccount, Company, HubspotContact, Deal, HObjectField
 from managr.organization.models import Organization
 
 
@@ -158,3 +158,29 @@ class DealSerializer(serializers.ModelSerializer):
         data.update({"contacts": contacts})
         internal_data = super().to_internal_value(data)
         return internal_data
+
+
+class HObjectField(serializers.ModelSerializer):
+    class Meta:
+        model: HObjectField
+        fields = (
+            "hubspot_account",
+            "hubspot_object",
+            "name",
+            "label",
+            "type",
+            "field_type",
+            "custom",
+            "calculated",
+            "external_options",
+            "has_unique_value",
+            "hidden",
+            "archived",
+            "display_value",
+            "group_name",
+            "options",
+            "display_order",
+            "hubspot_defined",
+            "modification_metadata",
+            "form_field",
+        )

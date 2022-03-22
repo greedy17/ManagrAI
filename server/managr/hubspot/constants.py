@@ -62,3 +62,10 @@ if settings.USE_HUBSPOT:
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
     }
+
+
+RESOURCE_SYNC_COMPANY = "Company"
+RESOURCE_SYNC_CONTACT = "Contact"
+RESOURCE_SYNC_DEAL = "Deal"
+
+SALESFORCE_OBJECT_FIELDS = "OBJECT_FIELDS"

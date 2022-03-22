@@ -11,6 +11,7 @@ from django.utils import timezone
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
 from django.db.models.constraints import UniqueConstraint
+from background_task.models import CompletedTask, Task
 
 from managr.core.models import TimeStampModel, IntegrationModel
 from managr.slack.helpers.exceptions import (
@@ -28,9 +29,152 @@ from .adapter.exceptions import (
     InvalidRefreshToken,
     CannotRetreiveObjectType,
 )
-from . import constants as sf_consts
+from . import constants as hs_consts
 
 logger = logging.getLogger("managr")
+
+
+def getSobjectDefaults():
+    return {
+        hs_consts.RESOURCE_SYNC_COMPANY: True,
+        hs_consts.RESOURCE_SYNC_CONTACT: True,
+        hs_consts.RESOURCE_SYNC_DEAL: True,
+    }
+
+
+class SFSyncOperation(TimeStampModel):
+    operation_type = models.CharField(max_length=255, blank=True)
+    user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="hs_sync")
+    operations_list = ArrayField(
+        models.CharField(max_length=255, blank=True),
+        default=list,
+        blank=True,
+        help_text="An Array of operations to perform on",
+    )
+    operations = ArrayField(
+        models.CharField(max_length=255, blank=True),
+        default=list,
+        blank=True,
+        help_text="An Array of task ids",
+    )
+    completed_operations = ArrayField(
+        models.CharField(max_length=255, blank=True),
+        default=list,
+        blank=True,
+        help_text="An Array of completed task id's",
+    )
+    failed_operations = ArrayField(
+        models.CharField(max_length=255, blank=True),
+        default=list,
+        blank=True,
+        help_text="List of failed tasks as that failed from task runner for uncaught exceptions after 5 tries",
+    )
+
+    @property
+    def status(self):
+        if not len(self.operations_list):
+            return "No Operations"
+        elif len(self.operations_list) and not len(self.operations):
+            return "Not Started"
+        elif len(self.operations_list) and not self.progress == 100:
+            return "In Progress"
+        elif len(self.operations_list) and self.progress == 100:
+            return "Completed"
+        else:
+            return "Can't determine progress"
+
+    @property
+    def failed_count(self):
+        return len(self.failed_operations)
+
+    @property
+    def completed_count(self):
+        """Number of all operations success/failed completed"""
+        return len(self.completed_operations)
+
+    @property
+    def total_count(self):
+        """Number of all operations success/failed"""
+        return len(self.operations)
+
+    @property
+    def progress(self):
+        """percentage of all operations"""
+        if len(self.operations):
+            return int(((self.completed_count + self.failed_count) / self.total_count) * 100)
+
+        return 0
+
+    @property
+    def in_progress(self):
+        """disable actions while in progress"""
+        return self.progress != 100
+
+    def __str__(self):
+        return f"{self.user.email} status: {self.status} tasks {self.progress}% complete"
+
+    def remove_from_operations_list(self, operations=[]):
+        """This method is used to remove operations (array) from the NEXT sync"""
+        self.operations_list = list(filter(lambda opp: opp not in operations, self.operations_list))
+        self.save()
+
+    def reconcile(self):
+        if len(self.operations) and (len(self.completed_operations) or len(self.failed_operations)):
+            completed_tasks = set(self.completed_operations)
+            all_tasks = set(self.operations)
+            if self.progress > 100:
+                tasks_diff = list(completed_tasks - all_tasks)
+                for task_hash in tasks_diff:
+                    # check to see if there was a problem completing the flow but all tasks are ready
+                    task = CompletedTask.objects.filter(task_hash=task_hash).first()
+                    if task and str(self.id) in task.task_params:
+                        self.operations.append(task_hash)
+
+                return self.save()
+
+                return
+            elif self.progress < 100:
+
+                tasks_diff = list(all_tasks - completed_tasks)
+                for task_hash in tasks_diff:
+                    # check to see if there was a problem completing the flow but all tasks are ready
+                    task = CompletedTask.objects.filter(task_hash=task_hash).count()
+                    if task:
+                        self.completed_operations.append(task_hash)
+
+                return self.save()
+
+        return
+
+    def save(self, *args, **kwargs):
+        return super(SFSyncOperation, self).save(*args, **kwargs)
+
+
+class HSObjectFieldsOperation(SFSyncOperation):
+    @property
+    def operations_map(self):
+        from managr.salesforce.background import emit_sync_hobject_fields
+
+        return {
+            hs_consts.SALESFORCE_OBJECT_FIELDS: emit_sync_hobject_fields,
+        }
+
+    def begin_tasks(self, attempts=1):
+
+        for op in self.operations_list:
+            # split the operation to get opp and params
+            operation_name, param = op.split(".")
+            operation = self.operations_map.get(operation_name)
+
+            scheduled_for = datetime.now(pytz.utc)
+            t = operation(str(self.user.id), str(self.id), param, scheduled_for)
+
+            self.operations.append(str(t.task_hash))
+
+            self.save()
+
+    def save(self, *args, **kwargs):
+        return super(HSObjectFieldsOperation, self).save(*args, **kwargs)
 
 
 class HubspotAuthAccount(TimeStampModel):
@@ -381,47 +525,28 @@ class HObjectField(TimeStampModel, IntegrationModel):
         "HubspotAuthAccount", on_delete=models.CASCADE, related_name="hubspot_fields", null=True,
     )
     hubspot_object = models.CharField(max_length=255, null=True)
-    api_name = models.CharField(max_length=255)
-    custom = models.BooleanField(default=False)
-    createable = models.BooleanField(default=False)
-    updateable = models.BooleanField(default=False)
-    unique = models.BooleanField(default=False)
-    required = models.BooleanField(default=False)
-    data_type = models.CharField(max_length=255)
-    display_value = models.CharField(
-        max_length=255,
-        blank=True,
-        help_text="if this is a reference field we save the display value as well",
-    )
-    value = models.CharField(max_length=255, null=True, blank=True)
+    name = models.CharField(max_length=255)
     label = models.CharField(max_length=255)
-    length = models.PositiveIntegerField(default=0)
-    reference = models.BooleanField(default=False)
-    relationship_name = models.CharField(max_length=255, null=True)
-    allow_multiple = models.BooleanField(default=False)
-    default_filters = ArrayField(
-        JSONField(max_length=255, blank=True, null=True, default=dict), default=list, blank=True
-    )
-    reference_to_infos = ArrayField(
-        JSONField(max_length=128, default=dict),
-        default=list,
-        blank=True,
-        help_text="An of objects containing the API Name references",
-    )
+    type = models.CharField(max_length=255)
+    field_type = models.CharField(max_length=255)
+    custom = models.BooleanField(default=False)
+    calculated = models.BooleanField(default=False)
+    external_options = models.BooleanField(default=False)
+    has_unique_value = models.BooleanField(default=False)
+    hidden = models.BooleanField(default=False)
+    archived = models.BooleanField(default=False)
+    display_value = models.TextField(blank=True,)
+    group_name = models.CharField(max_length=255, null=True, blank=True)
     options = ArrayField(
-        JSONField(max_length=255, blank=True, null=True, default=dict),
-        default=list,
-        blank=True,
-        help_text="if this is a custom managr field pass a dict of label, value, if this is not a custom managr field then construct the values dynamically",
+        JSONField(max_length=255, blank=True, null=True, default=dict), default=list, blank=True,
     )
-    is_public = models.BooleanField(
-        default=False,
-        help_text="Indicates whether or not this is a managr_created field that is not part of the user's object fields",
-    )
-    filterable = models.BooleanField(
-        default=False, help_text="Indicates if we can filter queries against this field"
-    )
+    display_order = models.IntegerField(default=0)
+    hubspot_defined = models.BooleanField(default=False)
+    modification_metadata = JSONField(blank=True, null=True, default=dict)
+    form_field = models.BooleanField(default=False)
+
     objects = HObjectFieldQuerySet.as_manager()
 
     def __str__(self):
         return f"{self.label} {self.hubspot_account} {self.hubspot_object}"
+
