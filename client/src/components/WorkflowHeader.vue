@@ -11,9 +11,121 @@
         <label for="checkAllWorkflows"></label>
       </div>
     </div>
-    <div class="cell-name-header">Name</div>
+
+    <div
+      @click="
+        $emit('sort-opps-workflows', 'String', 'Name', 'name'),
+          (sortingForwardWorkflows = false),
+          (nameSortWorkflows = 1),
+          (sortingIndexWorkflows = null),
+          (reverseIndexWorkflows = null)
+      "
+      v-if="sortingForwardWorkflows"
+      class="cell-name-header"
+    >
+      <div class="sort-img-visible">
+        Name
+        <img
+          v-if="nameSortWorkflows === 0"
+          style="height: 0.75rem"
+          src="@/assets/images/sort.png"
+          alt=""
+        />
+        <span v-if="nameSortWorkflows === 2">
+          <img class="light-green" src="@/assets/images/ascend.png" style="height: 0.6rem" alt="" />
+        </span>
+      </div>
+    </div>
+
+    <div
+      @click="
+        $emit('sort-opps-reverse-workflows', 'String', 'Name', 'name'),
+          (sortingForwardWorkflows = true),
+          (nameSortWorkflows = 2),
+          (sortingIndexWorkflows = null),
+          (reverseIndexWorkflows = null)
+      "
+      v-if="sortingForwardWorkflows === false"
+      class="cell-name-header"
+    >
+      <div class="sort-img-visible">
+        Name
+        <img
+          v-if="nameSortWorkflows === 0"
+          style="height: 0.75rem"
+          src="@/assets/images/sort.png"
+          alt=""
+        />
+        <span v-if="nameSortWorkflows === 1">
+          <img
+            class="light-green"
+            src="@/assets/images/descend.png"
+            style="height: 0.6rem"
+            alt=""
+          />
+        </span>
+      </div>
+    </div>
+
     <div class="table-cell-header" :key="i" v-for="(field, i) in oppFields" ref="fields">
-      {{ field.referenceDisplayLabel }}
+      <p
+        v-if="sortingIndexWorkflows !== i"
+        @click="
+          $emit(
+            'sort-opps-workflows',
+            `${field.dataType}`,
+            `${field.referenceDisplayLabel}`,
+            `${field.apiName}`,
+          ),
+            (sortingIndexWorkflows = i),
+            (reverseIndexWorkflows = null),
+            (nameSortWorkflows = 0)
+        "
+        class="sort-img-visible"
+      >
+        {{ field.referenceDisplayLabel }}
+        <img
+          v-if="reverseIndexWorkflows !== i"
+          style="height: 0.75rem"
+          src="@/assets/images/sort.png"
+          alt=""
+        />
+        <span v-if="reverseIndexWorkflows === i">
+          <img class="light-green" src="@/assets/images/ascend.png" style="height: 0.6rem" alt="" />
+        </span>
+      </p>
+
+      <p
+        v-if="sortingIndexWorkflows === i"
+        @click="
+          $emit(
+            'sort-opps-reverse-workflows',
+            `${field.dataType}`,
+            `${field.referenceDisplayLabel}`,
+            `${field.apiName}`,
+          ),
+            (sortingIndexWorkflows = null),
+            (reverseIndexWorkflows = i),
+            (nameSortWorkflows = 0)
+        "
+        class="sort-img-visible"
+      >
+        {{ field.referenceDisplayLabel }}
+        <img
+          v-if="sortingIndexWorkflows !== i"
+          style="height: 0.75rem"
+          src="@/assets/images/sort.png"
+          alt=""
+        />
+        <span v-if="sortingIndexWorkflows === i">
+          <img
+            class="light-green"
+            src="@/assets/images/descend.png"
+            style="height: 0.6rem"
+            alt=""
+          />
+        </span>
+      </p>
     </div>
   </div>
 </template>
@@ -22,7 +134,12 @@
 export default {
   name: 'WorkflowHeader',
   data() {
-    return {}
+    return {
+      sortingIndexWorkflows: null,
+      reverseIndexWorkflows: null,
+      sortingForwardWorkflows: true,
+      nameSortWorkflows: 0,
+    }
   },
   methods: {
     emitCheckAll() {
@@ -40,6 +157,22 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+// .light-green {
+//   filter: invert(36%) sepia(81%) saturate(5047%) hue-rotate(139deg) brightness(107%) contrast(80%);
+// }
+.sort-img-visible {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  cursor: pointer;
+}
+
+.sort-img-visible > img {
+  display: none;
+}
+.sort-img-visible:hover > img {
+  display: block;
+}
 .table-row {
   display: table-row;
 }
@@ -86,3 +219,4 @@ export default {
   letter-spacing: 0.5px;
   color: $base-gray;
 }
+</style>

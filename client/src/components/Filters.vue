@@ -55,9 +55,13 @@
     </div>
   </div>
 </template>
-data(){
-    return(
-              oppFilters: [
+
+<script>
+export default {
+  name: 'Filters',
+  data() {
+    return {
+      oppFilters: [
         {
           title: 'Amount',
           type: 'monetary',
@@ -83,20 +87,18 @@ data(){
           type: 'person',
         },
       ],
-
-
       monetaryOptions: ['less than', 'greater than', 'equals'],
-    )
-}
-computed: {
-     filteredFilters() {
+    }
+  },
+  computed: {
+    filteredFilters() {
       return this.oppFilters.filter((opp) =>
         opp.title.toLowerCase().includes(this.searchFilterText.toLowerCase()),
       )
     },
-}
-methods: {
-     selectFilterOption(option) {
+  },
+  methods: {
+    selectFilterOption(option) {
       if (option === 'less than' || option === 'greater than' || option === 'equals') {
         this.amountInput(option)
       }
@@ -125,7 +127,7 @@ methods: {
       this.showList ? (this.showList = !this.showList) : (this.showList = this.showList)
       this.filtering = !this.filtering
     },
-        applyAmountFilter() {
+    applyAmountFilter() {
       // this.allOpps = this.allOpps.filter((opp) => opp.amount > this.amountValue)
     },
     selectFilter(type, title) {
@@ -144,4 +146,6 @@ methods: {
           break
       }
     },
+  },
 }
+</script>
