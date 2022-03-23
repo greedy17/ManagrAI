@@ -33,27 +33,15 @@ class HubspotAuthAccountAdapter:
                 CustomAPIException(e, fn_name)
         else:
             status_code = response.status_code
-            error_code = None
-            if status_code == 404:
-                error_param = "Invalid Request"
-                error_message = "The api sent back a 404 request"
+            error_data = response.json()
+            if status_code == 400:
+                error_param = error_data.get("error", error_data.get("errorCode", None))
+                error_message = error_data.get("error_description", error_data.get("message", None))
             else:
-                error_data = (
-                    response.json()[0] if isinstance(response.json(), list) else response.json()
-                )
-                # sf does not use this field
-
-                if status_code == 400:
-                    error_param = error_data.get("error", error_data.get("errorCode", None))
-                    error_message = error_data.get(
-                        "error_description", error_data.get("message", None)
-                    )
-                else:
-                    error_param = error_data.get("errorCode", None)
-                    error_message = error_data.get("message", None)
+                error_param = error_data.get("category", None)
+                error_message = error_data.get("message", None)
             kwargs = {
                 "status_code": status_code,
-                "error_code": error_code,
                 "error_param": error_param,
                 "error_message": error_message,
             }
@@ -78,14 +66,12 @@ class HubspotAuthAccountAdapter:
     def format_field_options(
         self, hubspot_account_id, user_id, resource, res_data=[],
     ):
-        fields = res_data["fields"]
+        fields = res_data["results"]
         custom_additions = dict(
             hubspot_account=hubspot_account_id, hubspot_object=resource, imported_by=user_id,
         )
-
-        data = [
-            HObjectFieldAdapter.create_from_api({**f, **custom_additions}) for f in fields.values()
-        ]
+        print(custom_additions)
+        data = [HObjectFieldAdapter.create_from_api({**f, **custom_additions}) for f in fields]
 
         return data
 
@@ -151,22 +137,20 @@ class HubspotAuthAccountAdapter:
         with Client as client:
             data = hubspot_consts.REAUTHENTICATION_BODY(self.refresh_token)
             res = client.post(
-                f"{hubspot_consts.BASE_URL}/{hubspot_consts.REFRESH_TOKEN_URI}/{self.refresh_token}",
+                f"{hubspot_consts.BASE_URL}/{hubspot_consts.REFRESH_TOKEN_URI}",
                 data=data,
                 headers=hubspot_consts.AUTHENTICATION_HEADERS,
             )
-
             return HubspotAuthAccountAdapter._handle_response(res)
 
     def list_fields(self, resource):
-        url = f"{hubspot_consts.BASE_URL}/{hubspot_consts.HUBSPOT_OBJECTS_URI}/{resource}"
-        print(url)
+        url = f"{hubspot_consts.BASE_URL}/{hubspot_consts.HUBSPOT_PROPERTIES_URI}{resource}"
+        print(self.user)
         with Client as client:
             res = client.get(
                 url, headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
             )
             res = self._handle_response(res)
-            print(f"RES {resource} - {res}")
             return self.format_field_options(str(self.id), str(self.user), resource, res_data=res)
 
     # def list_picklist_values(self, resource):
@@ -369,25 +353,27 @@ class HubspotAuthAccountAdapter:
 
 
 class HObjectFieldAdapter:
-    def __init__(self, **kwargs):
-        self.hubspot_account = kwargs.get("hubspot_account", None)
-        self.hubspot_object = kwargs.get("hubspot_object", None)
-        self.name = kwargs.get("name", None)
-        self.label = kwargs.get("label", None)
-        self.type = kwargs.get("type", None)
-        self.field_type = kwargs.get("field_type", None)
-        self.calculated = kwargs.get("calculated", None)
-        self.external_options = kwargs.get("external_options", None)
-        self.has_unique_value = kwargs.get("has_unique_value", None)
-        self.hidden = kwargs.get("hidden", None)
-        self.archived = kwargs.get("archived", None)
-        self.display_value = kwargs.get("display_value", None)
-        self.group_name = kwargs.get("group_name", None)
-        self.options = kwargs.get("options", None)
-        self.display_order = kwargs.get("display_order", None)
-        self.hubspot_defined = kwargs.get("hubspot_defined", None)
-        self.modification_metadata = kwargs.get("modification_metadata", None)
-        self.form_field = kwargs.get("form_field", None)
+    def __init__(self, data):
+        self.hubspot_account = data.get("hubspot_account", None)
+        self.hubspot_object = data.get("hubspot_object", None)
+        self.name = data.get("name", None)
+        self.label = data.get("label", None)
+        self.type = data.get("type", None)
+        self.field_type = data.get("field_type", None)
+        self.calculated = data.get("calculated", None)
+        self.external_options = data.get("external_options", None)
+        self.has_unique_value = data.get("has_unique_value", None)
+        self.hidden = data.get("hidden", None)
+        self.display_value = data.get("display_value", None)
+        self.group_name = data.get("group_name", None)
+        self.options = data.get("options", None)
+        self.display_order = data.get("display_order", None)
+        self.hubspot_defined = data.get("hubspot_defined", None)
+        self.modification_metadata = data.get("modification_metadata", None)
+        self.form_field = data.get("form_field", None)
+        self.integration_source = data.get("integration_source", "")
+        self.integration_id = data.get("integration_id", "")
+        self.imported_by = data.get("imported_by", None)
 
     @staticmethod
     def from_api(data):

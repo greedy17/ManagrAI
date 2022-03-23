@@ -4,7 +4,7 @@ from django.utils import timezone
 
 
 from managr.hubspot.models import HubspotAuthAccount, HSObjectFieldsOperation
-from .background import emit_gen_next_hubspot_field_sync
+from managr.hubspot.tasks import emit_gen_next_hubspot_field_sync
 
 logger = logging.getLogger("managr")
 
@@ -18,11 +18,11 @@ def queue_users_hs_fields(force_all=False):
     hs_accounts = HubspotAuthAccount.objects.filter(user__is_active=True)
     for account in hs_accounts:
         # get latest workflow
-        if not force_all:
-            # flows = HSObjectFieldsOperation.objects.filter(user=account.user)
-            # should_run = check_last_object_sync(flows)
-            # if should_run:
-            init_hs_field_sync(account.user)
+        # if not force_all:
+        # flows = HSObjectFieldsOperation.objects.filter(user=account.user)
+        # should_run = check_last_object_sync(flows)
+        # if should_run:
+        init_hs_field_sync(account.user)
         #         continue
         #     else:
         #         continue
@@ -40,7 +40,6 @@ def init_hs_field_sync(user):
     operations = [
         *user.hubspot_account.field_sync_opts,
     ]
-    print(operations)
     scheduled_time = timezone.now()
     formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
     emit_gen_next_hubspot_field_sync(str(user.id), operations, formatted_time)

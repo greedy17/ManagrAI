@@ -156,7 +156,7 @@ class DealSerializer(serializers.ModelSerializer):
 
 class HObjectFieldSerializer(serializers.ModelSerializer):
     class Meta:
-        model: HObjectField
+        model = HObjectField
         fields = (
             "hubspot_account",
             "hubspot_object",
@@ -164,12 +164,10 @@ class HObjectFieldSerializer(serializers.ModelSerializer):
             "label",
             "type",
             "field_type",
-            "custom",
             "calculated",
             "external_options",
             "has_unique_value",
             "hidden",
-            "archived",
             "display_value",
             "group_name",
             "options",
@@ -177,4 +175,7 @@ class HObjectFieldSerializer(serializers.ModelSerializer):
             "hubspot_defined",
             "modification_metadata",
             "form_field",
+            "integration_source",
+            "integration_id",
+            "imported_by",
         )

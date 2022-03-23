@@ -71,7 +71,7 @@ def _process_hobject_fields_sync(user_id, sync_id, resource):
             hs.hobjects[resource] = False
     for field in fields:
         existing = HObjectField.objects.filter(
-            name=field.name, hubspot_account_id=field.hubspot_account, hubspot_object=resource,
+            name=field.name, hubspot_account=field.hubspot_account, hubspot_object=resource,
         ).first()
         if existing:
             serializer = HObjectFieldSerializer(data=field.as_dict, instance=existing)

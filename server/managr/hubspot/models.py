@@ -153,19 +153,17 @@ class HSSyncOperation(TimeStampModel):
 class HSObjectFieldsOperation(HSSyncOperation):
     @property
     def operations_map(self):
-        from managr.hubspot.background import emit_sync_hobject_fields
+        from managr.hubspot.tasks import emit_sync_hobject_fields
 
         return {
             hs_consts.HUBSPOT_OBJECT_FIELDS: emit_sync_hobject_fields,
         }
 
     def begin_tasks(self, attempts=1):
-
         for op in self.operations_list:
             # split the operation to get opp and params
             operation_name, param = op.split(".")
             operation = self.operations_map.get(operation_name)
-            print(operation)
             scheduled_for = datetime.now(pytz.utc)
             t = operation(str(self.user.id), str(self.id), param, scheduled_for)
 
@@ -537,13 +535,13 @@ class HObjectField(TimeStampModel, IntegrationModel):
     has_unique_value = models.BooleanField(default=False)
     hidden = models.BooleanField(default=False)
     archived = models.BooleanField(default=False)
-    display_value = models.TextField(blank=True,)
+    display_value = models.TextField(blank=True, null=True)
     group_name = models.CharField(max_length=255, null=True, blank=True)
     options = ArrayField(
         JSONField(max_length=255, blank=True, null=True, default=dict), default=list, blank=True,
     )
     display_order = models.IntegerField(default=0)
-    hubspot_defined = models.BooleanField(default=False)
+    hubspot_defined = models.BooleanField(default=False, null=True)
     modification_metadata = JSONField(blank=True, null=True, default=dict)
     form_field = models.BooleanField(default=False)
 

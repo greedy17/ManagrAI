@@ -2,7 +2,7 @@ from django.contrib import admin
 
 # Register your models here.
 
-from .models import HubspotAuthAccount, HSObjectFieldsOperation, HSSyncOperation
+from .models import HubspotAuthAccount, HSObjectFieldsOperation, HSSyncOperation, HObjectField
 
 # Register your models here.
 
@@ -16,3 +16,5 @@ class CustomHubspotAuthAccountAdmin(admin.ModelAdmin):
 admin.site.register(HubspotAuthAccount, CustomHubspotAuthAccountAdmin)
 admin.site.register(HSObjectFieldsOperation)
 admin.site.register(HSSyncOperation)
+admin.site.register(HObjectField)
+

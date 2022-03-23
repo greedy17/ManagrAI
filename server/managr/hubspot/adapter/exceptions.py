@@ -97,7 +97,6 @@ class CustomAPIException:
         self.error = e
         self.error_class_name = e.__class__.__name__
         self.status_code = e.args[0]["status_code"]
-        self.code = e.args[0]["error_code"]
         self.param = e.args[0]["error_param"]
         self.message = e.args[0]["error_message"]
         self.fn_name = fn_name
@@ -112,8 +111,8 @@ class CustomAPIException:
             raise Api500Error()
         elif self.status_code == 401:
             raise TokenExpired()
-        elif self.status_code == 404:
-            raise SFNotFoundError()
+        elif self.status_code == 404 and self.param == "EXPIRED_AUTHENTICATION":
+            raise TokenExpired()
         elif self.status_code == 403:
             raise ApiRateLimitExceeded()
         elif self.status_code == 400 and self.param == "FIELD_CUSTOM_VALIDATION_EXCEPTION":
