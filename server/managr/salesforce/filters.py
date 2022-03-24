@@ -5,6 +5,16 @@ from django.db.models import IntegerField, F
 from django.db.models.functions import Cast
 from . import models as sf_models
 
+sobject_comparison = {
+    "EQUALS": "%s",
+    "GREATER_THAN": "%s__gt",
+    "GREATER_THAN_EQUALS": "%s__gte",
+    "LESS_THAN": "%s__lt",
+    "LESS_THAN_EQUALS": "%s__lte",
+    "CONTAINS": "%s__icontains",
+    "RANGE": "%s__range",
+}
+
 
 class SObjectFieldFilterSet(FilterSet):
 
@@ -39,3 +49,13 @@ class SObjectFieldFilterSet(FilterSet):
                 ]
             )
         return qs
+
+
+class SalesforceSObjectFilterSet(FilterSet):
+
+    for_filter = django_filters.CharFilter(method="for_filter")
+
+    def for_filter(self, qs, filter_term, field, value):
+        query = sobject_comparison[filter_term] % field
+
+        return qs.filter(**{query: value})

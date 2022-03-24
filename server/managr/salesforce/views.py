@@ -63,7 +63,7 @@ from managr.salesforce.adapter.exceptions import (
     InvalidRefreshToken,
 )
 
-from .filters import SObjectFieldFilterSet
+from .filters import SObjectFieldFilterSet, SalesforceSObjectFilterSet
 
 logger = logging.getLogger("managr")
 
@@ -241,6 +241,8 @@ class SalesforceSObjectViewSet(
     mixins.CreateModelMixin,
     mixins.DestroyModelMixin,
 ):
+    filter_class = SalesforceSObjectFilterSet
+
     def get_serializer_class(self):
         param_sobject = self.request.GET.get("sobject")
         sobject = routes[param_sobject]
