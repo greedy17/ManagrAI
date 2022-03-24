@@ -251,14 +251,24 @@ class SalesforceSObjectViewSet(
     def get_queryset(self):
         param_sobject = self.request.GET.get("sobject")
         param_resource_id = self.request.GET.get("resource_id", None)
+        for_filter = self.request.GET.get("for_filter", False)
         if param_sobject == "User":
             return User.objects.filter(organization=self.request.user.organization)
         sobject = routes[param_sobject]
+
         query = (
             sobject["model"].objects.filter(id=param_resource_id)
             if param_resource_id
             else sobject["model"].objects.for_user(self.request.user)
         )
+        if for_filter:
+            filtered_query = SalesforceSObjectFilterSet.for_filter(
+                query,
+                self.request.GET.get("filter_term"),
+                self.request.GET.get("field"),
+                self.request.GET.get("value"),
+            )
+            return filtered_query
         return query
 
     @action(
