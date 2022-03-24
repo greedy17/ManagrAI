@@ -385,7 +385,7 @@
       </div>
     </Modal>
     <div v-if="!loading">
-      <section style="margin-bottom: 1rem" class="flex-row-spread">
+      <section class="flex-row-spread">
         <div v-if="!workflowCheckList.length && !primaryCheckList.length" class="flex-row">
           <button @click="showList = !showList" class="select-btn">
             {{ currentList }}
@@ -453,50 +453,43 @@
             </div>
           </div>
 
-          <!-- <section v-if="filterSelected" class="selected-filters" style="position: relative">
-            <main
-              v-for="(filter, i) in activeFilters"
-              :key="i"
-              @mouseenter="hoveredIndex = i"
-              @mouseleave="hoveredIndex = null"
-            >
-              {{ filter }} <small style="font-weight: 400px"></small>
-              <span v-if="hoveredIndex === i" class="selected-filters__close"
+          <div
+            v-for="(filter, i) in activeFilters"
+            :key="i"
+            @mouseenter="hoveredIndex = i"
+            @mouseleave="hoveredIndex = null"
+            class="main"
+          >
+            {{ filter }} <small style="font-weight: 400px"></small>
+            <span v-if="hoveredIndex === i" class="selected-filters__close"
+              ><img src="@/assets/images/close.png" @click="removeFilter(filter)" alt=""
+            /></span>
+          </div>
+
+          <section v-if="filterSelected" style="position: relative">
+            <main class="main">
+              {{ currentFilter }} <small style="font-weight: 400px"></small>
+              <span class="selected-filters__close"
                 ><img src="@/assets/images/close.png" @click="removeFilter(filter)" alt=""
               /></span>
             </main>
+            <div>
+              <FilterSelection @filter-added="filterAdded" />
+            </div>
+          </section>
 
-            <FilterSelection />
-          </section> -->
-
-          <!-- <section style="position: relative">
-            <button
-              v-if="activeFilters.length < 4"
-              @click="filtering = !filtering"
-              class="add-button"
-            >
+          <section style="position: relative">
+            <button v-if="activeFilters.length < 4" @click="addingFilter" class="add-filter-button">
               <img
                 src="@/assets/images/plusOne.png"
-                style="height: 1rem; margin-right: 0.25rem"
+                style="height: 0.8rem; margin-right: 0.25rem"
                 alt=""
               />Add filter
             </button>
             <div v-if="filtering">
               <Filters @select-filter="selectFilter" />
             </div>
-          </section> -->
-          <button class="add-button" disabled>
-            <img
-              src="@/assets/images/plusOne.png"
-              style="height: 1rem; margin-right: 0.25rem"
-              alt=""
-            />Add filter(coming soon)
-          </button>
-
-          <h5>
-            {{ currentList }}:
-            <span>{{ selectedWorkflow ? currentWorkflow.list.length : allOpps.length }}</span>
-          </h5>
+          </section>
         </div>
         <div v-else>
           <div v-if="!updatingOpps" class="bulk-action">
@@ -593,6 +586,12 @@
           </button>
         </div>
       </section>
+      <div class="results">
+        <h6 style="color: #9b9b9b">
+          {{ currentList }}:
+          <span>{{ selectedWorkflow ? currentWorkflow.list.length : allOpps.length }}</span>
+        </h6>
+      </div>
       <!-- <p @click="tester">test</p> -->
       <!-- <p>{{ instanceIdList }}</p>
       <p>{{ currentCheckList }}</p> -->
@@ -758,6 +757,7 @@ export default {
       filterSelected: false,
       activeFilters: [],
       hoveredIndex: null,
+      currentFilter: null,
     }
   },
   computed: {
@@ -832,13 +832,27 @@ export default {
     tester() {
       console.log(this.allOpps)
     },
+    addingFilter() {
+      if (this.filtering === true) {
+        this.filtering = false
+      } else {
+        this.filtering = true
+        this.filterSelected = false
+      }
+    },
+    filterAdded() {
+      this.filterSelected = false
+      this.activeFilters.push(this.currentFilter)
+    },
     selectFilter(name, type) {
       this.filtering = !this.filtering
       this.filterSelected = true
-      this.activeFilters.push(name)
+      this.currentFilter = name
     },
     removeFilter(name) {
       this.activeFilters = this.activeFilters.filter((filter) => filter !== name)
+      this.filterSelected = false
+      this.currentFilter = null
     },
     capitalizeFirstLetter(string) {
       return string.charAt(0).toUpperCase() + string.slice(1)
@@ -1646,6 +1660,17 @@ export default {
 <style lang="scss">
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+.results {
+  margin: 0;
+  width: 100%;
+  display: flex;
+  padding-right: 0.5rem;
+  margin-bottom: -1.25rem;
+  margin-top: -0.75rem;
+  justify-content: flex-end;
+}
+
 .select-btn {
   border: none;
   min-height: 4.5vh;
@@ -1946,7 +1971,7 @@ section {
   padding: 0px;
 }
 .flex-row {
-  position: relative;
+  // position: relative;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -1974,7 +1999,7 @@ section {
   justify-content: space-between;
 }
 .pipelines {
-  margin-top: 4rem;
+  margin-top: 5rem;
   color: $base-gray;
 }
 .invert {
@@ -1992,6 +2017,22 @@ section {
 }
 .add-button:disabled:hover {
   transform: none;
+}
+.add-filter-button {
+  display: flex;
+  align-items: center;
+  border: none;
+  height: 4.5vh;
+  margin: 0 0.5rem 0 0;
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.2rem;
+  background-color: transparent;
+  cursor: pointer;
+  color: $dark-green;
+
+  img {
+    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+  }
 }
 .add-button {
   display: flex;
@@ -2039,11 +2080,9 @@ section {
 }
 
 .add-button:hover {
-  transform: scale(1.03);
   box-shadow: 1px 2px 2px $very-light-gray;
 }
 .add-button__:hover {
-  transform: scale(1.03);
   box-shadow: 1px 2px 2px $very-light-gray;
 }
 .search-bar {
@@ -2108,21 +2147,6 @@ section {
   overflow: scroll;
   padding: 0;
 
-  main {
-    display: flex;
-    align-items: center;
-    flex-direction: row;
-    border: none;
-    min-height: 5vh;
-    margin: 0 0.5rem 0 0;
-    padding: 0.25rem 0.6rem;
-    border-radius: 0.2rem;
-    background-color: $white-green;
-    cursor: pointer;
-    color: $dark-green;
-    font-weight: bold;
-  }
-
   &__close {
     background-color: $white-green;
     backdrop-filter: blur(0.5px);
@@ -2138,11 +2162,25 @@ section {
     }
   }
 }
+.main {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  border: none;
+  min-height: 5vh;
+  margin: 0 0.5rem 0 0;
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.2rem;
+  background-color: $white-green;
+  cursor: pointer;
+  color: $dark-green;
+  font-weight: bold;
+}
 
-.selected-filters > main > span {
+main > span {
   display: none;
 }
-.selected-filters > main:hover > span {
+main:hover > span {
   display: block;
 }
 

@@ -56,6 +56,7 @@ class SalesforceSObjectFilterSet(FilterSet):
     for_filter = django_filters.CharFilter(method="for_filter")
 
     def for_filter(self, qs, filter_term, field, value):
-        query = sobject_comparison[filter_term] % field
+        filter_field = f"secondary_data__{sobject_comparison[filter_term]}"
+        query = filter_field % field
 
         return qs.filter(**{query: value})

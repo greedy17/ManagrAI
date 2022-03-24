@@ -1,12 +1,20 @@
 <template>
   <div class="filter-selection">
     <div>
-      <p>Testing</p>
-
       <div class="filter-selection__title">
-        <div>
-          <input />
-        </div>
+        <select id="operators">
+          <!-- <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option> -->
+          <option v-for="(option, i) in operators" :key="i">
+            <p>{{ option }}</p>
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-selection__body">
+        <input id="update-input" type="text" />
+      </div>
+      <div class="filter-selection__footer">
+        <p @click="$emit('filter-added')">Done</p>
       </div>
     </div>
   </div>
@@ -16,7 +24,17 @@
 export default {
   name: 'FilterSelection',
   data() {
-    return {}
+    return {
+      operators: [
+        'equals',
+        'greater than',
+        'greater or equal',
+        'less than',
+        'less or equal',
+        'contains',
+        'range',
+      ],
+    }
   },
   computed: {
     filteredFilters() {
@@ -31,49 +49,6 @@ export default {
         this.amountInput(option)
       }
     },
-    amountInput(option) {
-      this.enteringAmount = !this.enteringAmount
-      this.filterOption = option
-    },
-    monetaryFilter(type, title) {
-      this.filterType = type
-      this.filterTitle = title
-    },
-    dateFilter(type, title) {
-      this.filterType = type
-      this.filterTitle = title
-    },
-    timeFilter(type, title) {
-      this.filterType = type
-      this.filterTitle = title
-    },
-    personFilter(type, title) {
-      this.filterType = type
-      this.filterTitle = title
-    },
-    closeFilters() {
-      this.showList ? (this.showList = !this.showList) : (this.showList = this.showList)
-      this.filtering = !this.filtering
-    },
-    applyAmountFilter() {
-      // this.allOpps = this.allOpps.filter((opp) => opp.amount > this.amountValue)
-    },
-    selectFilter(type, title) {
-      switch (type) {
-        case 'monetary':
-          this.monetaryFilter(type, title)
-          break
-        case 'date':
-          this.dateFilter(type, title)
-          break
-        case 'time':
-          this.timeFilter(type, title)
-          break
-        case 'person':
-          this.personFilter(type, title)
-          break
-      }
-    },
   },
 }
 </script>
@@ -81,6 +56,17 @@ export default {
 @import '@/styles/variables';
 // @import '@/styles/buttons';
 
+#operators {
+  border: none;
+  border-bottom: 1px solid $very-light-gray;
+  border-radius: 0.25rem;
+  background-color: white;
+  height: 3.5rem;
+  width: 14vw;
+}
+#operators:focus {
+  outline: none;
+}
 ::placeholder {
   color: $very-light-gray;
 }
@@ -91,37 +77,50 @@ export default {
   background-color: white;
 }
 .filter-selection {
-  z-index: 4;
+  z-index: 5;
   position: absolute;
   top: 6vh;
-  left: 10vw;
+  left: 0;
   border-radius: 0.33rem;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   background-color: $white;
-  min-width: 40vw;
-  max-height: 25vh;
+  width: 24vw;
   overflow: scroll;
   box-shadow: 1px 1px 7px 2px $very-light-gray;
-  padding: 1rem;
+
   &__title {
-    position: sticky;
-    top: 0;
-    margin-bottom: 1rem;
-    width: 100%;
-  }
-  &__filters {
+    margin-top: 1rem;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    color: $gray;
-    cursor: pointer;
+    justify-content: center;
+    position: sticky;
+    top: 0;
+    color: $base-gray;
+  }
+
+  &__body {
+    display: flex;
+    margin-top: 2rem;
+    align-items: center;
+    justify-content: center;
+    width: 24vw;
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1rem;
     width: 100%;
-    img {
-      height: 0.8rem;
-      filter: invert(30%);
-      margin-right: 0.5rem;
+    height: 2rem;
+    border-top: 1px solid $soft-gray;
+    p {
+      cursor: pointer;
+      color: $dark-green;
+      font-weight: bold;
+      padding-top: 0.5rem;
     }
   }
 }
