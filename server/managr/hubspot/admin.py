@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django import forms
 
 # Register your models here.
 
@@ -13,8 +14,42 @@ class CustomHubspotAuthAccountAdmin(admin.ModelAdmin):
     list_display = ["user", "datetime_created"]
 
 
+class SyncResourceForm(forms.ModelForm):
+    class Meta:
+        model = HSSyncOperation
+        fields = (
+            "user",
+            "operations",
+            "completed_operations",
+            "failed_operations",
+            "operation_type",
+        )
+
+
+class CustomSyncOperationAdmin(admin.ModelAdmin):
+    form = SyncResourceForm
+    list_filter = ("user",)
+    ordering = ("-datetime_created",)
+    list_display = (
+        "datetime_created",
+        "user",
+        "progress",
+    )
+
+
+class CustomSyncFieldOperationAdmin(admin.ModelAdmin):
+    model = HSObjectFieldsOperation
+    list_display = (
+        "datetime_created",
+        "user",
+        "progress",
+    )
+    list_filter = ("user",)
+    ordering = ("-datetime_created",)
+
+
 admin.site.register(HubspotAuthAccount, CustomHubspotAuthAccountAdmin)
-admin.site.register(HSObjectFieldsOperation)
-admin.site.register(HSSyncOperation)
+admin.site.register(HSObjectFieldsOperation, CustomSyncFieldOperationAdmin)
+admin.site.register(HSSyncOperation, CustomSyncOperationAdmin)
 admin.site.register(HObjectField)
 

@@ -70,7 +70,6 @@ class HubspotAuthAccountAdapter:
         custom_additions = dict(
             hubspot_account=hubspot_account_id, hubspot_object=resource, imported_by=user_id,
         )
-        print(custom_additions)
         data = [HObjectFieldAdapter.create_from_api({**f, **custom_additions}) for f in fields]
 
         return data
@@ -145,7 +144,6 @@ class HubspotAuthAccountAdapter:
 
     def list_fields(self, resource):
         url = f"{hubspot_consts.BASE_URL}/{hubspot_consts.HUBSPOT_PROPERTIES_URI}{resource}"
-        print(self.user)
         with Client as client:
             res = client.get(
                 url, headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),

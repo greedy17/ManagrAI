@@ -23,7 +23,7 @@ logger = logging.getLogger("managr")
 
 def emit_gen_next_hubspot_field_sync(user_id, ops_list, schedule_time=timezone.now()):
     schedule = datetime.strptime(schedule_time, "%Y-%m-%dT%H:%M%Z")
-    return _process_gen_next_hubspot_field_sync(user_id, ops_list)
+    return _process_gen_next_hubspot_field_sync(user_id, ops_list, schedule=schedule)
 
 
 def emit_sync_hobject_fields(user_id, sync_id, resource, scheduled_for=timezone.now()):
@@ -36,15 +36,13 @@ def _process_gen_next_hubspot_field_sync(user_id, operations_list):
     user = User.objects.filter(id=user_id).first()
     if not user:
         return logger.exception(f"User not found sync operation not created {user_id}")
-
     sync = HSObjectFieldsOperation.objects.create(
         user=user, operations_list=operations_list, operation_type=hs_consts.HUBSPOT_FIELD_SYNC
     )
-
     return sync.begin_tasks()
 
 
-@background(schedule=0)
+@background(schedule=0, queue=hs_consts.HUBSPOT_FIELD_SYNC_QUEUE)
 @log_all_exceptions
 def _process_hobject_fields_sync(user_id, sync_id, resource):
     user = User.objects.filter(id=user_id).select_related("hubspot_account").first()
