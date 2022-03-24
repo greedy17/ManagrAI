@@ -4,7 +4,7 @@ from django.utils import timezone
 
 
 from managr.hubspot.models import HubspotAuthAccount, HSObjectFieldsOperation
-from managr.hubspot.tasks import emit_gen_next_hubspot_field_sync
+from managr.hubspot.tasks import emit_gen_next_hubspot_field_sync, emit_gen_next_hubspot_sync
 
 logger = logging.getLogger("managr")
 
@@ -44,3 +44,12 @@ def init_hs_field_sync(user):
     formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
     emit_gen_next_hubspot_field_sync(str(user.id), operations, formatted_time)
     return
+
+
+def init_hubspot_resource_sync(user):
+    if not hasattr(user, "hubspot_account"):
+        return
+    operations = [*user.hubspot_account.resource_sync_opts]
+    scheduled_time = timezone.now()
+    formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
+    return emit_gen_next_hubspot_sync(str(user.id), operations, formatted_time)

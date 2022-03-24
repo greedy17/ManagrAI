@@ -175,6 +175,49 @@ class HSObjectFieldsOperation(HSSyncOperation):
         return super(HSObjectFieldsOperation, self).save(*args, **kwargs)
 
 
+class HSResourceSync(HSSyncOperation):
+    def begin_tasks(self, attempts=1):
+        from managr.hubspot.tasks import emit_hs_sync
+
+        for key in self.operations_list:
+            while True:
+                hs_account = self.user.hubspot_account
+                adapter = self.user.hubspot_account.adapter_class
+                try:
+                    count = adapter.get_resource_count(key)["totalSize"]
+                    break
+                except TokenExpired:
+                    if attempts >= 5:
+                        return logger.exception(
+                            f"Failed to sync {key} data for user {str(self.user.id)} after {attempts} tries"
+                        )
+                    else:
+                        try:
+                            hs_account.regenerate_token()
+                            attempts += 1
+                        except InvalidRefreshToken:
+                            return logger.exception(
+                                f"Failed to sync {key} data for user {str(self.user.id)} after not being able to refresh their token"
+                            )
+                except CannotRetreiveObjectType:
+                    hs_account.hobjects[key] = False
+                    hs_account.save()
+            max_count = 300
+            count = min(count, max_count)
+            for i in range(math.ceil(count / hs_consts.hubspot_QUERY_LIMIT)):
+                offset = hs_consts.hubspot_QUERY_LIMIT * i
+                limit = hs_consts.hubspot_QUERY_LIMIT
+                logger.info(
+                    f"offset set to {offset} for {key} with limit {limit} for user with email {self.user.email} for a count of {count}"
+                )
+                t = emit_hs_sync(str(self.user.id), str(self.id), key, limit, offset)
+                self.operations.append(str(t.task_hash))
+                self.save()
+
+    def save(self, *args, **kwargs):
+        return super(HSResourceSync, self).save(*args, **kwargs)
+
+
 class HubspotAuthAccount(TimeStampModel):
     user = models.OneToOneField(
         "core.User", on_delete=models.CASCADE, related_name="hubspot_account"
@@ -229,12 +272,12 @@ class HubspotAuthAccount(TimeStampModel):
     def picklist_sync_opts(self):
         return list(
             map(
-                lambda resource: f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{resource}",
+                lambda resource: f"{hs_consts.hubspot_PICKLIST_VALUES}.{resource}",
                 filter(
                     lambda resource: resource
-                    if self.sobjects.get(resource, None) not in ["", None, False]
+                    if self.hobjects.get(resource, None) not in ["", None, False]
                     else False,
-                    self.sobjects,
+                    self.hobjects,
                 ),
             )
         )
@@ -244,12 +287,12 @@ class HubspotAuthAccount(TimeStampModel):
         if self.user.is_admin:
             return list(
                 map(
-                    lambda resource: f"{sf_consts.SALESFORCE_VALIDATIONS}.{resource}",
+                    lambda resource: f"{hs_consts.hubspot_VALIDATIONS}.{resource}",
                     filter(
                         lambda resource: resource
-                        if self.sobjects.get(resource, None) not in ["", None, False]
+                        if self.hobjects.get(resource, None) not in ["", None, False]
                         else False,
-                        self.sobjects,
+                        self.hobjects,
                     ),
                 )
             )
