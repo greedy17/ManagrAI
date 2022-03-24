@@ -1,58 +1,22 @@
 <template>
-  <div class="filter-section">
-    <!-- <div class="flex-row-spread wide">
-      <p class="filter-section__title">All Filters</p>
-      <img @click="closeFilters" class="exit" src="@/assets/images/close.png" alt="" />
-    </div> -->
-    <div class="filter-section__title">
-      <div class="filter-search-bar wide">
-        <input class="wide" type="search" v-model="searchFilterText" placeholder="Search filters" />
-        <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
-      </div>
-    </div>
+  <div class="filter-selection">
+    <div>
+      <p>Testing</p>
 
-    <div :key="i" v-for="(filter, i) in filteredFilters" class="filter-section__filters">
-      <button @click="$emit('select-filter', filter.title, filter.type)" class="filter-button">
-        {{ filter.title }}
-      </button>
+      <div class="filter-selection__title">
+        <div>
+          <input />
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'Filters',
+  name: 'FilterSelection',
   data() {
-    return {
-      searchFilterText: '',
-      oppFilters: [
-        {
-          title: 'Amount',
-          type: 'monetary',
-        },
-        {
-          title: 'Close date',
-          type: 'date',
-        },
-        {
-          title: 'Next step date',
-          type: 'date',
-        },
-        {
-          title: 'Last activity',
-          type: 'time',
-        },
-        {
-          title: 'Last modified',
-          type: 'time',
-        },
-        {
-          title: 'Owner',
-          type: 'person',
-        },
-      ],
-      monetaryOptions: ['less than', 'greater than', 'equals'],
-    }
+    return {}
   },
   computed: {
     filteredFilters() {
@@ -126,18 +90,18 @@ export default {
   width: 100%;
   background-color: white;
 }
-.filter-section {
+.filter-selection {
   z-index: 4;
   position: absolute;
   top: 6vh;
-  left: 0;
+  left: 10vw;
   border-radius: 0.33rem;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   background-color: $white;
-  min-width: 20vw;
-  max-height: 40vh;
+  min-width: 40vw;
+  max-height: 25vh;
   overflow: scroll;
   box-shadow: 1px 1px 7px 2px $very-light-gray;
   padding: 1rem;
