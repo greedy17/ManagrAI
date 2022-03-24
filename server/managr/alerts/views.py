@@ -93,6 +93,37 @@ class AlertTemplateViewSet(
         obj = self.get_object()
         data = self.request.data
         from_workflow = data.get("from_workflow", False)
+        if from_workflow:
+            config = obj.configs.all().first()
+            template = config.template
+            attempts = 1
+            while True:
+                sf = self.request.user.salesforce_account
+                try:
+                    res = sf.adapter_class.execute_alert_query(
+                        template.url_str(self.request.user, config.id), template.resource_type
+                    )
+                    res_data = [item["Id"] for item in res.get("records")]
+                    print(res_data)
+                    logger.info(
+                        f"Pulled total {len(res)} from request for {template.resource} matching alert query"
+                    )
+                    break
+                except TokenExpired:
+                    if attempts >= 5:
+                        res_data = {"error": "Could not refresh token"}
+                        logger.exception(
+                            f"Failed to retrieve alerts for {template.resource} data for user {str(user.id)} after {attempts} tries"
+                        )
+                        break
+                    else:
+                        sf.regenerate_token()
+                        attempts += 1
+                except SFQueryOffsetError:
+                    return logger.warning(
+                        f"Failed to sync some data for resource {template.resource} for user {str(user.id)} because of SF LIMIT"
+                    )
+            return Response(data=res_data)
         for config in obj.configs.all():
             template = config.template
             template.invocation = template.invocation + 1
@@ -107,34 +138,7 @@ class AlertTemplateViewSet(
                     template.invocation,
                     run_time.strftime("%Y-%m-%dT%H:%M%z"),
                 )
-        if from_workflow:
-            config = obj.configs.all().first()
-            template = config.template
-            attempts = 1
-            while True:
-                sf = user.salesforce_account
-                try:
-                    res = sf.adapter_class.execute_alert_query(
-                        template.url_str(user, config.id), template.resource_type
-                    )
-                    data = res
-                    logger.info(
-                        f"Pulled total {len(res)} from request for {template.resource} matching alert query"
-                    )
-                    break
-                except TokenExpired:
-                    if attempts >= 5:
-                        return logger.exception(
-                            f"Failed to retrieve alerts for {template.resource} data for user {str(user.id)} after {attempts} tries"
-                        )
-                    else:
-                        sf.regenerate_token()
-                        attempts += 1
-                except SFQueryOffsetError:
-                    return logger.warning(
-                        f"Failed to sync some data for resource {template.resource} for user {str(user.id)} because of SF LIMIT"
-                    )
-            return Response(data=data)
+        return Response()
 
 
 class AlertMessageTemplateViewSet(
@@ -213,7 +217,9 @@ class AlertConfigViewSet(
                 id=last_instance.template.id
             ).values()[0]
             instances = alert_models.AlertInstance.objects.filter(
-                user=user, config__id=config_id, invocation=last_instance.invocation,
+                user=user,
+                config__id=config_id,
+                invocation=last_instance.invocation,
             )
             return Response(data={"instances": instances.values(), "template": template})
 
@@ -271,7 +277,8 @@ class AlertOperandViewSet(
 
 
 class AlertInstanceViewSet(
-    mixins.ListModelMixin, viewsets.GenericViewSet,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
 ):
     filter_backends = (
         DjangoFilterBackend,
