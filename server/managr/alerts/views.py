@@ -123,7 +123,6 @@ class AlertTemplateViewSet(
                     return logger.warning(
                         f"Failed to sync some data for resource {template.resource} for user {str(user.id)} because of SF LIMIT"
                     )
-
             return Response(data=res_data)
         for config in obj.configs.all():
             template = config.template

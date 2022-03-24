@@ -452,13 +452,47 @@
               </button>
             </div>
           </div>
-          <button class="soon-button">
+
+          <!-- <section v-if="filterSelected" class="selected-filters" style="position: relative">
+            <main
+              v-for="(filter, i) in activeFilters"
+              :key="i"
+              @mouseenter="hoveredIndex = i"
+              @mouseleave="hoveredIndex = null"
+            >
+              {{ filter }} <small style="font-weight: 400px"></small>
+              <span v-if="hoveredIndex === i" class="selected-filters__close"
+                ><img src="@/assets/images/close.png" @click="removeFilter(filter)" alt=""
+              /></span>
+            </main>
+
+            <FilterSelection />
+          </section> -->
+
+          <!-- <section style="position: relative">
+            <button
+              v-if="activeFilters.length < 4"
+              @click="filtering = !filtering"
+              class="add-button"
+            >
+              <img
+                src="@/assets/images/plusOne.png"
+                style="height: 1rem; margin-right: 0.25rem"
+                alt=""
+              />Add filter
+            </button>
+            <div v-if="filtering">
+              <Filters @select-filter="selectFilter" />
+            </div>
+          </section> -->
+          <button class="add-button" disabled>
             <img
               src="@/assets/images/plusOne.png"
               style="height: 1rem; margin-right: 0.25rem"
               alt=""
-            />Filter <span class="soon-button__soon">(Coming Soon)</span>
+            />Add filter(coming soon)
           </button>
+
           <h5>
             {{ currentList }}:
             <span>{{ selectedWorkflow ? currentWorkflow.list.length : allOpps.length }}</span>
@@ -646,6 +680,8 @@ import WorkflowRow from '@/components/WorkflowRow'
 import PipelineHeader from '@/components/PipelineHeader'
 import Loader from '@/components/Loader'
 import WorkflowHeader from '@/components/WorkflowHeader'
+import Filters from '@/components/Filters'
+import FilterSelection from '@/components/FilterSelection'
 import User from '@/services/users'
 
 export default {
@@ -661,6 +697,8 @@ export default {
     WorkflowHeader,
     WorkflowRow,
     Loader,
+    Filters,
+    FilterSelection,
   },
   data() {
     return {
@@ -714,9 +752,12 @@ export default {
       noteInfo: '',
       picklistQueryOpts: {},
       instanceIds: [],
-      // instanceIdList: [],
       allAccounts: null,
       allUsers: null,
+      filtering: false,
+      filterSelected: false,
+      activeFilters: [],
+      hoveredIndex: null,
     }
   },
   computed: {
@@ -789,7 +830,15 @@ export default {
   },
   methods: {
     tester() {
-      console.log(this.currentWorkflow.list)
+      console.log(this.allOpps)
+    },
+    selectFilter(name, type) {
+      this.filtering = !this.filtering
+      this.filterSelected = true
+      this.activeFilters.push(name)
+    },
+    removeFilter(name) {
+      this.activeFilters = this.activeFilters.filter((filter) => filter !== name)
     },
     capitalizeFirstLetter(string) {
       return string.charAt(0).toUpperCase() + string.slice(1)
@@ -1108,14 +1157,14 @@ export default {
       } finally {
         setTimeout(() => {
           this.loadingWorkflows = false
-        }, 3750)
+        }, 4000)
       }
     },
     async updateWorkflow() {
       this.loadingWorkflows = true
       let counter = 0
       try {
-        await AlertTemplate.api.runAlertTemplateNow(this.workflowId, (from_workflow = true))
+        await AlertTemplate.api.runAlertTemplateNow(this.workflowId)
         while (counter < 50) {
           this.currentWorkflow.refresh()
           counter += 1
@@ -1272,7 +1321,6 @@ export default {
             .updateResource({
               form_id: ids[i],
               form_data: { StageName: data },
-              // alert_instance: this.instanceIdList[i],
             })
             .then(async () => {
               let updatedRes = await SObjects.api.getObjects('Opportunity')
@@ -1317,7 +1365,6 @@ export default {
             .updateResource({
               form_id: ids[i],
               form_data: { ForecastCategoryName: data },
-              // alert_instance: this.instanceIdList[i],
             })
             .then(async () => {
               let updatedRes = await SObjects.api.getObjects('Opportunity')
@@ -1384,7 +1431,6 @@ export default {
         console.log(e)
       } finally {
         this.getObjects()
-        // User.getUser(this.user.id)
         this.loading = false
         this.$Alert.alert({
           type: 'success',
@@ -1402,7 +1448,6 @@ export default {
           .updateResource({
             form_id: this.instanceId,
             form_data: this.formData,
-            // alert_instance: this.alertInstanceId,
           })
           .then(async () => {
             let updatedRes = await SObjects.api.getObjects('Opportunity')
@@ -1410,7 +1455,6 @@ export default {
             this.originalList = updatedRes.results
           })
         this.updateList = []
-        // this.instanceIdList = []
         this.formData = {}
         this.$Alert.alert({
           type: 'success',
@@ -1419,8 +1463,6 @@ export default {
           sub: 'Some changes may take longer to reflect',
         })
         if (this.selectedWorkflow) {
-          this.updateWorkflow()
-          this.refresh()
           this.currentWorkflow.refresh()
         } else if (this.currentList === 'Closing this month') {
           this.stillThisMonth()
@@ -1945,8 +1987,11 @@ section {
   padding: 0.25rem 0.6rem;
   border-radius: 0.2rem;
   background-color: $gray;
-  cursor: not-allowed;
+  cursor: text;
   color: white;
+}
+.add-button:disabled:hover {
+  transform: none;
 }
 .add-button {
   display: flex;
@@ -2053,6 +2098,54 @@ section {
   letter-spacing: 0.5px;
   margin-bottom: 0.2rem;
 }
+.selected-filters {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  max-width: 50vw;
+  margin-top: 1rem;
+  overflow: scroll;
+  padding: 0;
+
+  main {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    border: none;
+    min-height: 5vh;
+    margin: 0 0.5rem 0 0;
+    padding: 0.25rem 0.6rem;
+    border-radius: 0.2rem;
+    background-color: $white-green;
+    cursor: pointer;
+    color: $dark-green;
+    font-weight: bold;
+  }
+
+  &__close {
+    background-color: $white-green;
+    backdrop-filter: blur(0.5px);
+    opacity: 4;
+    border: none;
+    margin-left: -1rem;
+    padding: 0rem 0.1rem 0rem 0.1rem;
+    min-height: 3vh;
+
+    img {
+      height: 0.8rem;
+      filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+    }
+  }
+}
+
+.selected-filters > main > span {
+  display: none;
+}
+.selected-filters > main:hover > span {
+  display: block;
+}
+
 .list-section {
   z-index: 4;
   position: absolute;
