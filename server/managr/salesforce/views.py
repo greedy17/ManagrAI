@@ -188,6 +188,23 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     def get_queryset(self):
         return SObjectField.objects.for_user(self.request.user)
 
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="update-pipeline-fields",
+    )
+    def update_pipeline_fields(self, request, *args, **kwargs):
+        user = self.request.user
+        sf = user.salesforce_account
+        data = self.request.data
+        ids = data.get("field_ids")
+        for id in ids:
+            if id not in sf.extra_pipeline_fields:
+                sf.extra_pipeline_fields.append(id)
+        sf.save()
+        return Response()
+
 
 class SObjectPicklistViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     serializer_class = SObjectPicklistSerializer
