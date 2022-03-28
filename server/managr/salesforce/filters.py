@@ -60,4 +60,5 @@ class SalesforceSObjectFilterSet(FilterSet):
             filter_field = f"secondary_data__{sobject_comparison[filter[0]]}"
             new_query = filter_field % filter[1]
             qs = qs.filter(**{new_query: filter[2]})
+            print(qs)
         return qs

@@ -79,7 +79,7 @@ export class SObjectFormBuilderAPI extends ModelAPI {
     }
   }
 
-  async getObjects(sobject, for_filter, filters, resource_id) {
+  async getObjects(sobject, for_filter = false, filters = false, resource_id = false) {
     try {
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/', { params: { sobject: sobject, resource_id: resource_id, for_filter: for_filter, filters: filters, page_size: 500 } })
       return res.data

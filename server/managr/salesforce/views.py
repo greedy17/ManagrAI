@@ -2,6 +2,7 @@ from audioop import tostereo
 import logging
 import random
 import pytz
+import json
 from urllib.parse import unquote
 from datetime import datetime
 
@@ -267,8 +268,8 @@ class SalesforceSObjectViewSet(
 
     def get_queryset(self):
         param_sobject = self.request.GET.get("sobject")
-        param_resource_id = self.request.GET.get("resource_id", None)
-        for_filter = self.request.GET.get("for_filter", False)
+        param_resource_id = json.loads(self.request.GET.get("resource_id", None))
+        for_filter = json.loads(self.request.GET.get("for_filter", None))
         if param_sobject == "User":
             return User.objects.filter(organization=self.request.user.organization)
         sobject = routes[param_sobject]
@@ -279,6 +280,7 @@ class SalesforceSObjectViewSet(
             else sobject["model"].objects.for_user(self.request.user)
         )
         if for_filter:
+            print(self.request.GET.get("filters"))
             filtered_query = SalesforceSObjectFilterSet.for_filter(
                 query, self.request.GET.get("filters")
             )
