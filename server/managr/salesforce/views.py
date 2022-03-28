@@ -280,9 +280,9 @@ class SalesforceSObjectViewSet(
             else sobject["model"].objects.for_user(self.request.user)
         )
         if for_filter:
-            print(self.request.GET.get("filters"))
+            print(json.loads(self.request.GET.get("filters")))
             filtered_query = SalesforceSObjectFilterSet.for_filter(
-                query, self.request.GET.get("filters")
+                query, json.loads(self.request.GET.get("filters"))
             )
             return filtered_query
         return query

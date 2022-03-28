@@ -851,9 +851,7 @@ export default {
       // this.loading = true
       try {
         const res = await SObjects.api.getObjects('Opportunity', true, [
-          this.currentOperator,
-          this.filterApiName,
-          'Redbull',
+          [this.currentOperator, this.filterApiName, 'Redbull'],
         ])
         console.log(res)
       } catch (e) {
@@ -1628,7 +1626,7 @@ export default {
         this.allOpps = res.results
         this.originalList = res.results
       } catch (e) {
-        console.lof(e)
+        console.log(e)
       } finally {
         this.loading = false
       }
