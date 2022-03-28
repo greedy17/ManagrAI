@@ -2,17 +2,73 @@
   <div class="filter-selection">
     <div>
       <div class="filter-selection__title">
-        <select id="operators">
-          <!-- <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option> -->
+        <select
+          @input=";(value = $event.target.value), $emit('operator-selected', `${value}`)"
+          v-model="selectedOperator"
+          id="operators"
+        >
+          <option disabled selected hidden>{{ operators[0] }}</option>
           <option v-for="(option, i) in operators" :key="i">
             <p>{{ option }}</p>
           </option>
         </select>
       </div>
 
-      <div class="filter-selection__body">
-        <input id="update-input" type="text" />
+      <div
+        v-if="
+          type === 'Currency' ||
+          type === 'Double' ||
+          (type === 'Phone' && selectedOperator !== 'range')
+        "
+        class="filter-selection__body"
+      >
+        <input id="update-input" type="number" />
       </div>
+
+      <div
+        v-if="
+          (type === 'Currency' || type === 'Double' || type === 'Phone') &&
+          selectedOperator === 'range'
+        "
+        class="filter-selection__body"
+      >
+        <div class="range-row">
+          <input id="update-input-small" type="number" />
+          <p style="margin-right: 0.5rem; margin-left: 0.5rem">-</p>
+          <input id="update-input-small" type="number" />
+        </div>
+      </div>
+
+      <div
+        v-else-if="type === 'Picklist' || type === 'MultiPicklist'"
+        class="filter-selection__body"
+      >
+        <select id="update-input">
+          <option v-for="(option, i) in dropdowns[apiName]" :key="i">
+            <p>{{ option.label }}</p>
+          </option>
+        </select>
+      </div>
+      <div v-else-if="type === 'Reference'" class="filter-selection__body">
+        <select v-if="apiName === 'OwnerId'" id="update-input">
+          <option v-for="(owner, i) in owners" :key="i">
+            <p>{{ owner.full_name }}</p>
+          </option>
+        </select>
+
+        <select v-else-if="apiName === 'AccountId'" id="update-input">
+          <option v-for="(account, i) in accounts" :key="i">
+            <p>{{ account.name }}</p>
+          </option>
+        </select>
+      </div>
+      <div v-else-if="type === 'Date' || type === 'DateTime'" class="filter-selection__body">
+        <input type="date" placeholder="Select date" id="update-input" />
+      </div>
+      <div v-else-if="type === 'String' || type === 'TextArea'" class="filter-selection__body">
+        <input v-model="inputValue" id="update-input" type="text" />
+      </div>
+
       <div class="filter-selection__footer">
         <p @click="$emit('filter-added')">Done</p>
       </div>
@@ -34,7 +90,17 @@ export default {
         'contains',
         'range',
       ],
+      selectedOperator: 'equals',
+      inputValue: '',
     }
+  },
+  props: {
+    type: {},
+    filterName: {},
+    dropdowns: {},
+    apiName: {},
+    accounts: {},
+    owners: {},
   },
   computed: {
     filteredFilters() {
@@ -56,13 +122,28 @@ export default {
 @import '@/styles/variables';
 // @import '@/styles/buttons';
 
+#update-input-small {
+  border: none;
+  border-radius: 0.25rem;
+  box-shadow: 1px 1px 1px 1px $very-light-gray;
+  background-color: white;
+  min-height: 2rem;
+  width: 8vw;
+}
+.range-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
 #operators {
   border: none;
-  border-bottom: 1px solid $very-light-gray;
+  //   border-bottom: 1px solid $very-light-gray;
   border-radius: 0.25rem;
   background-color: white;
   height: 3.5rem;
-  width: 14vw;
+  max-width: 5vw;
+  overflow: scroll;
 }
 #operators:focus {
   outline: none;
@@ -82,9 +163,9 @@ export default {
   top: 6vh;
   left: 0;
   border-radius: 0.33rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  //   display: flex;
+  //   flex-direction: column;
+  //   align-items: center;
   background-color: $white;
   width: 24vw;
   overflow: scroll;
@@ -94,7 +175,8 @@ export default {
     margin-top: 1rem;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
+    padding-left: 2vw;
     position: sticky;
     top: 0;
     color: $base-gray;
@@ -102,9 +184,10 @@ export default {
 
   &__body {
     display: flex;
-    margin-top: 2rem;
+    margin-top: 0.5rem;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
+    padding-left: 2vw;
     width: 24vw;
   }
 
@@ -112,7 +195,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-top: 1rem;
+    margin-top: 1.5rem;
     width: 100%;
     height: 2rem;
     border-top: 1px solid $soft-gray;

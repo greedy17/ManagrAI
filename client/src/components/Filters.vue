@@ -1,9 +1,5 @@
 <template>
   <div class="filter-section">
-    <!-- <div class="flex-row-spread wide">
-      <p class="filter-section__title">All Filters</p>
-      <img @click="closeFilters" class="exit" src="@/assets/images/close.png" alt="" />
-    </div> -->
     <div class="filter-section__title">
       <div class="filter-search-bar wide">
         <input class="wide" type="search" v-model="searchFilterText" placeholder="Search filters" />
@@ -12,8 +8,13 @@
     </div>
 
     <div :key="i" v-for="(filter, i) in filteredFilters" class="filter-section__filters">
-      <button @click="$emit('select-filter', filter.title, filter.type)" class="filter-button">
-        {{ filter.title }}
+      <button
+        @click="
+          $emit('select-filter', filter.apiName, filter.dataType, filter.referenceDisplayLabel)
+        "
+        class="filter-button"
+      >
+        {{ filter.referenceDisplayLabel }}
       </button>
     </div>
   </div>
@@ -22,13 +23,16 @@
 <script>
 export default {
   name: 'Filters',
+  props: {
+    filterFields: {},
+  },
   data() {
     return {
       searchFilterText: '',
       oppFilters: [
         {
           title: 'Amount',
-          type: 'monetary',
+          type: 'number',
         },
         {
           title: 'Close date',
@@ -40,15 +44,15 @@ export default {
         },
         {
           title: 'Last activity',
-          type: 'time',
+          type: 'date',
         },
         {
           title: 'Last modified',
-          type: 'time',
+          type: 'date',
         },
         {
           title: 'Owner',
-          type: 'person',
+          type: 'picklist',
         },
       ],
       monetaryOptions: ['less than', 'greater than', 'equals'],
@@ -56,8 +60,8 @@ export default {
   },
   computed: {
     filteredFilters() {
-      return this.oppFilters.filter((opp) =>
-        opp.title.toLowerCase().includes(this.searchFilterText.toLowerCase()),
+      return this.filterFields.filter((filter) =>
+        filter.referenceDisplayLabel.toLowerCase().includes(this.searchFilterText.toLowerCase()),
       )
     },
   },

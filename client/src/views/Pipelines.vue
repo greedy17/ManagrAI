@@ -155,7 +155,7 @@
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
-            <div v-else-if="field.apiName === 'OwnerId'">
+            <div v-else-if="apiName === 'OwnerId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <select
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
@@ -174,7 +174,7 @@
               </select>
             </div>
 
-            <div v-else-if="field.apiName === 'AccountId'">
+            <div v-else-if="apiName === 'AccountId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
 
               <select
@@ -359,7 +359,6 @@
 
             <div v-else-if="field.apiName === 'AccountId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
-
               <select
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
                 id="update-input"
@@ -460,7 +459,8 @@
             @mouseleave="hoveredIndex = null"
             class="main"
           >
-            {{ filter }} <small style="font-weight: 400px"></small>
+            {{ filter }}
+            <small style="font-weight: 400px; margin-left: 0.2rem">{{ currentOperator }}</small>
             <span v-if="hoveredIndex === i" class="selected-filters__close"
               ><img src="@/assets/images/close.png" @click="removeFilter(filter)" alt=""
             /></span>
@@ -468,13 +468,23 @@
 
           <section v-if="filterSelected" style="position: relative">
             <main class="main">
-              {{ currentFilter }} <small style="font-weight: 400px"></small>
+              {{ currentFilter }}
+              <small style="font-weight: 400px; margin-left: 0.2rem">{{ currentOperator }}</small>
               <span class="selected-filters__close"
                 ><img src="@/assets/images/close.png" @click="removeFilter(filter)" alt=""
               /></span>
             </main>
             <div>
-              <FilterSelection @filter-added="filterAdded" />
+              <FilterSelection
+                @filter-added="filterAdded"
+                @operator-selected="addOperator"
+                :type="filterType"
+                :filterName="currentFilter"
+                :dropdowns="picklistQueryOpts"
+                :apiName="filterApiName"
+                :accounts="allAccounts"
+                :owners="allUsers"
+              />
             </div>
           </section>
 
@@ -487,7 +497,7 @@
               />Add filter
             </button>
             <div v-if="filtering">
-              <Filters @select-filter="selectFilter" />
+              <Filters @select-filter="selectFilter" :filterFields="filterFields" />
             </div>
           </section>
         </div>
@@ -592,7 +602,7 @@
           <span>{{ selectedWorkflow ? currentWorkflow.list.length : allOpps.length }}</span>
         </h6>
       </div>
-      <!-- <p @click="tester">test</p> -->
+      <p @click="tester">test</p>
       <!-- <p>{{ instanceIdList }}</p>
       <p>{{ currentCheckList }}</p> -->
       <section v-show="!selectedWorkflow" class="table-section">
@@ -758,6 +768,11 @@ export default {
       activeFilters: [],
       hoveredIndex: null,
       currentFilter: null,
+      currentOperator: 'EQUALS',
+      filterType: null,
+      filterFields: [],
+      filterApiName: null,
+      filterId: null,
     }
   },
   computed: {
@@ -830,7 +845,25 @@ export default {
   },
   methods: {
     tester() {
-      console.log(this.allOpps)
+      console.log(this.filterFields)
+    },
+    async getFilteredObjects() {
+      // this.loading = true
+      try {
+        const res = await SObjects.api.getObjects('Opportunity', true, [
+          this.currentOperator,
+          this.filterApiName,
+          'Redbull',
+        ])
+        console.log(res)
+      } catch (e) {
+        console.log(e)
+      } finally {
+        // this.loading = false
+      }
+    },
+    addOperator(name) {
+      this.currentOperator = name
     },
     addingFilter() {
       if (this.filtering === true) {
@@ -841,18 +874,22 @@ export default {
       }
     },
     filterAdded() {
+      this.getFilteredObjects()
       this.filterSelected = false
       this.activeFilters.push(this.currentFilter)
     },
-    selectFilter(name, type) {
+    selectFilter(name, type, label) {
       this.filtering = !this.filtering
+      this.filterApiName = name
+      this.filterType = type
+      this.currentFilter = label
       this.filterSelected = true
-      this.currentFilter = name
     },
     removeFilter(name) {
       this.activeFilters = this.activeFilters.filter((filter) => filter !== name)
       this.filterSelected = false
       this.currentFilter = null
+      this.currentOperator = 'equals'
     },
     capitalizeFirstLetter(string) {
       return string.charAt(0).toUpperCase() + string.slice(1)
@@ -1552,6 +1589,9 @@ export default {
         for (let i in this.picklistQueryOpts) {
           this.picklistQueryOpts[i] = this.listPicklists(i, { picklistFor: i })
         }
+        this.filterFields = this.updateOppForm[0].fieldsRef.filter(
+          (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+        )
         this.oppFields = this.updateOppForm[0].fieldsRef.filter(
           (field) =>
             field.apiName !== 'meeting_type' &&
@@ -1569,7 +1609,7 @@ export default {
         const res = await SObjects.api.getObjects('User')
         this.allUsers = res.results
       } catch (e) {
-        console.lof(e)
+        console.log(e)
       }
     },
     async getAccounts() {
@@ -1577,16 +1617,20 @@ export default {
         const res = await SObjects.api.getObjects('Account')
         this.allAccounts = res.results
       } catch (e) {
-        console.lof(e)
+        console.log(e)
       }
     },
     async getObjects() {
+      this.loading = true
       try {
         const res = await SObjects.api.getObjects('Opportunity')
+        console.log(res)
         this.allOpps = res.results
         this.originalList = res.results
       } catch (e) {
         console.lof(e)
+      } finally {
+        this.loading = false
       }
     },
     async getNotes(id) {
@@ -1665,10 +1709,10 @@ export default {
   margin: 0;
   width: 100%;
   display: flex;
-  padding-right: 0.5rem;
+  padding-left: 1rem;
   margin-bottom: -1.25rem;
   margin-top: -0.75rem;
-  justify-content: flex-end;
+  justify-content: flex-start;
 }
 
 .select-btn {
