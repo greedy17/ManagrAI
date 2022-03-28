@@ -15,9 +15,6 @@ class AlertInstanceFilterSet(FilterSet):
         by_config = qs.filter(config__id=value)
         last = by_config.first()
         if last and last.datetime_created.date() == datetime.today().date():
-            instances = qs.filter(
-                config__id=value,
-                invocation=last.invocation,
-            )
+            instances = qs.filter(config__id=value, invocation=last.invocation,)
             return instances
-        return []
+        return AlertInstance.objects.none()
