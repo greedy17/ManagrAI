@@ -320,14 +320,6 @@ class HubspotAuthAccountAdapter:
             res = self._format_resource_response(res, None)
             return res
 
-    def get_resource_count(self, resource):
-        with Client as client:
-            res = client.get(
-                f"{self.instance_url}{hubspot_consts.SF_COUNT_URI(resource, self.salesforce_id)}",
-                headers=hubspot_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
-            )
-            return self._handle_response(res)
-
     def execute_alert_query(self, url, resource):
         """Handles alert requests to salesforce"""
         with Client as client:
