@@ -34,13 +34,13 @@ def queue_users_hs_fields(force_all=False):
 
 
 @kronos.register("*/10  * * * *")
-def queue_users_sf_resource(force_all=False):
+def queue_users_hs_resource(force_all=False):
     """
     runs every 12 hours and initiates user sf syncs if their prev workflow is done
     force_all will attempt all failed and not faild
     """
-    sf_accounts = HubspotAuthAccount.objects.filter(user__is_active=True)
-    for account in sf_accounts:
+    hs_accounts = HubspotAuthAccount.objects.filter(user__is_active=True)
+    for account in hs_accounts:
         # if not force_all:
         #     flows = HSResourceSync.objects.filter(user=account.user)
         #     has_completed_object_field_flow = check_last_object_sync(
