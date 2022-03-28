@@ -9,15 +9,14 @@ from managr.api.decorators import log_all_exceptions
 
 from managr.core.models import User
 
-from managr.hubspot.models import HSObjectFieldsOperation, HObjectField
+from managr.hubspot.models import HSObjectFieldsOperation, HObjectField, HSResourceSync
 from managr.hubspot.serializers import HObjectFieldSerializer
-
+from managr.hubspot.routes import routes as routes
 from managr.hubspot import constants as hs_consts
 from managr.hubspot.adapter.exceptions import (
     TokenExpired,
     CannotRetreiveObjectType,
 )
-from server.managr.hubspot.models import HSResourceSync
 
 logger = logging.getLogger("managr")
 
@@ -116,9 +115,9 @@ def _process_resource_sync(user_id, sync_id, resource, limit, offset, attempts=1
     serializer_class = route["serializer"]
 
     while True:
-        sf = user.hubspot_account
+        hs = user.hubspot_account
         try:
-            res = sf.list_resource_data(resource, offset, limit=limit)
+            res = hs.list_resource_data(resource, offset, limit=limit)
             logger.info(f"Pulled total {len(res)} from request for {resource}")
             attempts = 1
             break
@@ -130,11 +129,11 @@ def _process_resource_sync(user_id, sync_id, resource, limit, offset, attempts=1
             else:
                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                 time.sleep(sleep)
-                sf.regenerate_token()
+                hs.regenerate_token()
                 attempts += 1
-        except SFQueryOffsetError:
+        except Exception as e:
             return logger.warning(
-                f"Failed to sync some data for resource {resource} for user {user_id} because of SF LIMIT"
+                f"Failed to sync some data for resource {resource} for user {user_id} because of {e}"
             )
     for item in res:
         existing = model_class.objects.filter(integration_id=item.integration_id).first()
@@ -145,19 +144,8 @@ def _process_resource_sync(user_id, sync_id, resource, limit, offset, attempts=1
         # check if already exists and update
         try:
             serializer.is_valid(raise_exception=True)
-        except ValidationError as e:
+        except Exception as e:
             error_str = f"Failed to save data for {resource} {item.name if item.name else 'N/A'} with hubspot id {item.integration_id} due to the following error {e.detail}"
-
-            # context = dict(email=user.email, error=error_str)
-            # subject = render_to_string("hubspot/error_saving_resource_data.txt")
-            # recipient = [settings.STAFF_EMAIL]
-            # send_html_email(
-            #     subject,
-            #     "hubspot/error_saving_resource_data.html",
-            #     settings.SERVER_EMAIL,
-            #     recipient,
-            #     context={**context},
-            # )
             logger.exception(error_str)
             continue
         serializer.save()

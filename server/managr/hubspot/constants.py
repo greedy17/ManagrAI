@@ -5,7 +5,7 @@ TOKEN_INFO_URI = "oauth/v1/access-tokens"
 REFRESH_TOKEN_URI = "oauth/v1/token"
 HUBSPOT_OBJECTS_URI = "crm/v3/objects/"
 HUBSPOT_PROPERTIES_URI = "crm/v3/properties/"
-
+HUBSPOT_QUERY_LIMIT = 200
 if settings.USE_HUBSPOT:
     BASE_URL = settings.HUBSPOT_BASE_URL
     CLIENT_ID = settings.HUBSPOT_CLIENT_ID

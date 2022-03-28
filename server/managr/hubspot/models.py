@@ -204,9 +204,9 @@ class HSResourceSync(HSSyncOperation):
                     hs_account.save()
             max_count = 300
             count = min(count, max_count)
-            for i in range(math.ceil(count / hs_consts.hubspot_QUERY_LIMIT)):
-                offset = hs_consts.hubspot_QUERY_LIMIT * i
-                limit = hs_consts.hubspot_QUERY_LIMIT
+            for i in range(math.ceil(count / hs_consts.HUBSPOT_QUERY_LIMIT)):
+                offset = hs_consts.HUBSPOT_QUERY_LIMIT * i
+                limit = hs_consts.HUBSPOT_QUERY_LIMIT
                 logger.info(
                     f"offset set to {offset} for {key} with limit {limit} for user with email {self.user.email} for a count of {count}"
                 )
@@ -344,9 +344,7 @@ class HubspotAuthAccount(TimeStampModel):
                     # get the field and make it into a string
                     try:
                         field_str = e.args[0].replace("'", "")
-                        fields = self.object_fields.filter(
-                            hubspot_object=resource, api_name=field_str
-                        )
+                        fields = self.object_fields.filter(hubspot_object=resource, name=field_str)
                         if fields.count():
                             fields.delete()
                         exclude_fields = self.exclude_fields if not None else {}
