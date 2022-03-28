@@ -280,10 +280,7 @@ class SalesforceSObjectViewSet(
         )
         if for_filter:
             filtered_query = SalesforceSObjectFilterSet.for_filter(
-                query,
-                self.request.GET.get("filter_term"),
-                self.request.GET.get("field"),
-                self.request.GET.get("value"),
+                query, self.request.GET.get("filters")
             )
             return filtered_query
         return query
