@@ -383,10 +383,10 @@
         </div>
       </div>
     </Modal>
-    <div v-if="!loading">
+    <div ref="pipelines" v-if="!loading">
       <section class="flex-row-spread">
         <div v-if="!workflowCheckList.length && !primaryCheckList.length" class="flex-row">
-          <button @click="showList = !showList" class="select-btn">
+          <button @click.stop="showList = !showList" class="select-btn">
             {{ currentList }}
             <img
               v-if="!showList"
@@ -401,15 +401,15 @@
               alt=""
             />
           </button>
-          <div v-show="showList" class="list-section">
+          <div v-outside-click="closeListSelect" v-show="showList" class="list-section">
             <div class="list-section__title flex-row-spread">
               <p>{{ currentList }}</p>
-              <img
+              <!-- <img
                 @click="showList = !showList"
                 class="exit"
                 src="@/assets/images/close.png"
                 alt=""
-              />
+              /> -->
             </div>
             <p @click="showPopularList = !showPopularList" class="list-section__sub-title">
               Popular Lists
@@ -459,25 +459,26 @@
             @mouseleave="hoveredIndex = null"
             class="main"
           >
-            {{ filter }}
-            <small style="font-weight: 400px; margin-left: 0.2rem">{{ currentOperator }}</small>
+            <strong style="font-size: 14px">{{ filter }}</strong>
+            <small style="font-weight: 400px; margin-left: 0.2rem">{{ currentOperators[i] }}</small>
+            <small style="margin-left: 0.2rem">{{ filterValues[i] }}</small>
             <span v-if="hoveredIndex === i" class="selected-filters__close"
-              ><img src="@/assets/images/close.png" @click="removeFilter(filter)" alt=""
+              ><img src="@/assets/images/close.png" @click="removeFilter(filter, i)" alt=""
             /></span>
           </div>
 
           <section v-if="filterSelected" style="position: relative">
-            <main class="main">
-              {{ currentFilter }}
-              <small style="font-weight: 400px; margin-left: 0.2rem">{{ currentOperator }}</small>
-              <span class="selected-filters__close"
-                ><img src="@/assets/images/close.png" @click="removeFilter(filter)" alt=""
-              /></span>
+            <main class="main__before">
+              <small
+                ><strong>{{ currentFilter }}</strong></small
+              >
+              <small style="margin-left: 0.2rem">{{ currentOperators[-1] }}</small>
             </main>
             <div>
               <FilterSelection
-                @filter-added="filterAdded"
+                @filter-added="applyFilter"
                 @operator-selected="addOperator"
+                @value-selected="valueSelected"
                 :type="filterType"
                 :filterName="currentFilter"
                 :dropdowns="picklistQueryOpts"
@@ -489,14 +490,18 @@
           </section>
 
           <section style="position: relative">
-            <button v-if="activeFilters.length < 4" @click="addingFilter" class="add-filter-button">
+            <button
+              v-if="activeFilters.length < 4"
+              @click.stop="addingFilter"
+              class="add-filter-button"
+            >
               <img
                 src="@/assets/images/plusOne.png"
                 style="height: 0.8rem; margin-right: 0.25rem"
                 alt=""
               />Add filter
             </button>
-            <div v-if="filtering">
+            <div v-outside-click="closeFilters" v-if="filtering">
               <Filters @select-filter="selectFilter" :filterFields="filterFields" />
             </div>
           </section>
@@ -602,7 +607,7 @@
           <span>{{ selectedWorkflow ? currentWorkflow.list.length : allOpps.length }}</span>
         </h6>
       </div>
-      <p @click="tester">test</p>
+      <!-- <p @click="tester">test</p> -->
       <!-- <p>{{ instanceIdList }}</p>
       <p>{{ currentCheckList }}</p> -->
       <section v-show="!selectedWorkflow" class="table-section">
@@ -715,7 +720,6 @@ export default {
       updatingOpps: false,
       oppInstanceId: null,
       oppId: null,
-      allUsers: null,
       primaryCheckList: [],
       workflowCheckList: [],
       allSelected: false,
@@ -768,11 +772,14 @@ export default {
       activeFilters: [],
       hoveredIndex: null,
       currentFilter: null,
-      currentOperator: 'EQUALS',
+      operatorValue: 'EQUALS',
+      currentOperators: ['equals'],
       filterType: null,
       filterFields: [],
       filterApiName: null,
-      filterId: null,
+      filterValues: [],
+      filters: [],
+      operatorsLength: 0,
     }
   },
   computed: {
@@ -845,23 +852,73 @@ export default {
   },
   methods: {
     tester() {
-      console.log(this.filterFields)
+      console.log(this.allOpps)
     },
-    async getFilteredObjects() {
-      // this.loading = true
+    closeFilters() {
+      this.filtering = false
+    },
+    closeListSelect() {
+      this.showList = false
+    },
+    closeSelection() {
+      this.filtering ? (this.filtering = false) : (this.filtering = true)
+      this.showList ? (this.showList = false) : (this.showList = this.showList)
+    },
+    async getFilteredObjects(value) {
+      if (value) {
+        this.filters.push([this.operatorValue, this.filterApiName, value])
+      }
       try {
-        const res = await SObjects.api.getObjects('Opportunity', true, [
-          [this.currentOperator, this.filterApiName, 'Redbull'],
-        ])
-        console.log(res)
+        const res = await SObjects.api.getObjects('Opportunity', true, this.filters)
+        this.allOpps = res.results
       } catch (e) {
         console.log(e)
       } finally {
-        // this.loading = false
+        this.operatorValue = 'EQUALS'
+        this.currentOperator = ['equals']
       }
     },
     addOperator(name) {
-      this.currentOperator = name
+      this.operatorValue = name
+      switch (name) {
+        case 'EQUALS':
+          this.currentOperators.length === 1
+            ? (this.currentOperators = ['equals'])
+            : this.currentOperators.push('equals')
+          break
+        case 'GREATER_THAN':
+          this.currentOperators.length === 1
+            ? (this.currentOperators = ['greater than'])
+            : this.currentOperators.push('greater than')
+          break
+        case 'GREATER_THAN_EQUALS':
+          this.currentOperators.length === 1
+            ? (this.currentOperators = ['greater or equal'])
+            : this.currentOperators.push('greater or equal')
+          break
+        case 'LESS_THAN':
+          this.currentOperators.length === 1
+            ? (this.currentOperators = ['less than'])
+            : this.currentOperators.push('less than')
+          break
+        case 'LESS_THAN_EQUALS':
+          this.currentOperators.length === 1
+            ? (this.currentOperators = ['less or equal'])
+            : this.currentOperators.push('less or equal')
+          break
+        case 'CONTAINS':
+          this.currentOperators.length === 1
+            ? (this.currentOperators = ['contains'])
+            : this.currentOperators.push('contains')
+          break
+        case 'RANGE':
+          this.currentOperators.length === 1
+            ? (this.currentOperators = ['range'])
+            : this.currentOperators.push('range')
+          break
+        default:
+          console.log('(0_o)')
+      }
     },
     addingFilter() {
       if (this.filtering === true) {
@@ -871,10 +928,25 @@ export default {
         this.filterSelected = false
       }
     },
-    filterAdded() {
-      this.getFilteredObjects()
+    choosingList() {
+      if (this.showList === true) {
+        this.showList = false
+      } else {
+        this.showList = true
+        this.showList = false
+      }
+    },
+    applyFilter(value) {
+      this.operatorsLength += 1
+      if (this.currentOperators.length < this.operatorsLength) {
+        this.currentOperators.push('equals')
+      }
+      this.getFilteredObjects(value)
       this.filterSelected = false
       this.activeFilters.push(this.currentFilter)
+    },
+    valueSelected(value) {
+      this.filterValues.push(value)
     },
     selectFilter(name, type, label) {
       this.filtering = !this.filtering
@@ -883,11 +955,16 @@ export default {
       this.currentFilter = label
       this.filterSelected = true
     },
-    removeFilter(name) {
+    removeFilter(name, index) {
       this.activeFilters = this.activeFilters.filter((filter) => filter !== name)
+      this.filters.splice(index, 1)
+      this.filterValues.splice(index, 1)
+      this.currentOperators.splice(index, 1)
+      this.getFilteredObjects()
       this.filterSelected = false
       this.currentFilter = null
-      this.currentOperator = 'equals'
+      this.operatorValue = 'EQUALS'
+      this.filterApiName = null
     },
     capitalizeFirstLetter(string) {
       return string.charAt(0).toUpperCase() + string.slice(1)
@@ -1622,7 +1699,6 @@ export default {
       this.loading = true
       try {
         const res = await SObjects.api.getObjects('Opportunity')
-        console.log(res)
         this.allOpps = res.results
         this.originalList = res.results
       } catch (e) {
@@ -2041,7 +2117,7 @@ section {
   justify-content: space-between;
 }
 .pipelines {
-  margin-top: 5rem;
+  padding-top: 5rem;
   color: $base-gray;
 }
 .invert {
@@ -2199,24 +2275,29 @@ section {
     min-height: 3vh;
 
     img {
-      height: 0.8rem;
+      height: 0.9rem;
       filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
     }
   }
 }
 .main {
-  display: flex;
-  align-items: center;
-  flex-direction: row;
   border: none;
-  min-height: 5vh;
+  height: 5vh;
+  max-width: 10vw;
   margin: 0 0.5rem 0 0;
   padding: 0.25rem 0.6rem;
   border-radius: 0.2rem;
   background-color: $white-green;
   cursor: pointer;
   color: $dark-green;
-  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.main:hover {
+  overflow: visible;
+  white-space: normal;
+  max-width: none;
 }
 
 main > span {
@@ -2225,7 +2306,20 @@ main > span {
 main:hover > span {
   display: block;
 }
-
+.main__before {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  border: none;
+  min-height: 5vh;
+  margin: 0 0.5rem 0 0;
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.2rem;
+  background-color: $dark-green;
+  cursor: pointer;
+  color: white;
+  font-weight: bold;
+}
 .list-section {
   z-index: 4;
   position: absolute;
@@ -2236,7 +2330,7 @@ main:hover > span {
   flex-direction: column;
   align-items: flex-start;
   background-color: $white;
-  min-width: 16vw;
+  min-width: 18vw;
   max-height: 40vh;
   overflow: scroll;
   margin-right: 0.5rem;
@@ -2244,6 +2338,7 @@ main:hover > span {
   &__title {
     position: sticky;
     top: 0;
+    z-index: 5;
     color: $base-gray;
     background-color: $off-white;
     letter-spacing: 0.25px;

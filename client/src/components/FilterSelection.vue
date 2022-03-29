@@ -7,25 +7,26 @@
           v-model="selectedOperator"
           id="operators"
         >
-          <option disabled selected hidden>{{ operators[0] }}</option>
-          <option v-for="(option, i) in operators" :key="i">
-            <p>{{ option }}</p>
+          <option disabled selected hidden>{{ operators[0].label }}</option>
+          <option v-for="(option, i) in operators" :value="option.value" :key="i">
+            <p>{{ option.label }}</p>
           </option>
         </select>
       </div>
 
       <div
-        v-if="
-          type === 'Currency' ||
-          type === 'Double' ||
-          (type === 'Phone' && selectedOperator !== 'range')
-        "
+        v-if="type === 'Currency' || type === 'Double' || type === 'Phone'"
         class="filter-selection__body"
       >
-        <input id="update-input" type="number" />
+        <input
+          @input=";(value = $event.target.value), $emit('value-selected', value)"
+          v-model="inputValue"
+          id="update-input"
+          type="number"
+        />
       </div>
 
-      <div
+      <!-- <div
         v-if="
           (type === 'Currency' || type === 'Double' || type === 'Phone') &&
           selectedOperator === 'range'
@@ -37,40 +38,90 @@
           <p style="margin-right: 0.5rem; margin-left: 0.5rem">-</p>
           <input id="update-input-small" type="number" />
         </div>
-      </div>
+      </div> -->
 
       <div
         v-else-if="type === 'Picklist' || type === 'MultiPicklist'"
         class="filter-selection__body"
       >
-        <select id="update-input">
+        <select
+          v-model="inputValue"
+          @input=";(value = $event.target.value), $emit('value-selected', `${value}`)"
+          id="update-input"
+        >
           <option v-for="(option, i) in dropdowns[apiName]" :key="i">
             <p>{{ option.label }}</p>
           </option>
         </select>
       </div>
+
       <div v-else-if="type === 'Reference'" class="filter-selection__body">
-        <select v-if="apiName === 'OwnerId'" id="update-input">
-          <option v-for="(owner, i) in owners" :key="i">
-            <p>{{ owner.full_name }}</p>
+        <select
+          @input=";(value = $event.target.value), $emit('value-selected', `${value}`)"
+          v-model="inputValue"
+          v-if="apiName === 'OwnerId'"
+          id="update-input"
+        >
+          <option
+            v-for="(owner, i) in owners"
+            :key="i"
+            :value="
+              owner.salesforce_account_ref ? owner.salesforce_account_ref.salesforce_id : owner.id
+            "
+          >
+            <p>
+              {{ owner.full_name }}
+            </p>
           </option>
         </select>
 
-        <select v-else-if="apiName === 'AccountId'" id="update-input">
-          <option v-for="(account, i) in accounts" :key="i">
+        <select
+          v-model="inputValue"
+          v-else-if="apiName === 'AccountId'"
+          id="update-input"
+          @input=";(value = $event.target.value), $emit('value-selected', `${value}`)"
+        >
+          <option v-for="(account, i) in accounts" :key="i" :value="account.integration_id">
             <p>{{ account.name }}</p>
           </option>
         </select>
       </div>
+
       <div v-else-if="type === 'Date' || type === 'DateTime'" class="filter-selection__body">
-        <input type="date" placeholder="Select date" id="update-input" />
-      </div>
-      <div v-else-if="type === 'String' || type === 'TextArea'" class="filter-selection__body">
-        <input v-model="inputValue" id="update-input" type="text" />
+        <input
+          @input=";(value = $event.target.value), $emit('value-selected', `${value}`)"
+          type="date"
+          placeholder="Select date"
+          id="update-input"
+          v-model="inputValue"
+        />
       </div>
 
-      <div class="filter-selection__footer">
-        <p @click="$emit('filter-added')">Done</p>
+      <div v-else-if="type === 'String' || type === 'TextArea'" class="filter-selection__body">
+        <input
+          @input=";(value = $event.target.value), $emit('value-selected', `${value}`)"
+          v-model="inputValue"
+          id="update-input"
+          type="text"
+        />
+      </div>
+
+      <div v-if="inputValue" class="filter-selection__footer">
+        <p
+          @click="
+            $emit(
+              'filter-added',
+              type === 'Currency' || type === 'Double' || type === 'Phone'
+                ? parseInt(inputValue)
+                : inputValue,
+            )
+          "
+        >
+          Done
+        </p>
+      </div>
+      <div v-else class="filter-selection__footer">
+        <p style="color: gray">Done</p>
       </div>
     </div>
   </div>
@@ -82,13 +133,13 @@ export default {
   data() {
     return {
       operators: [
-        'equals',
-        'greater than',
-        'greater or equal',
-        'less than',
-        'less or equal',
-        'contains',
-        'range',
+        { label: 'equals', value: 'EQUALS' },
+        { label: 'greater than', value: 'GREATER_THAN' },
+        { label: 'greater or equal', value: 'GREATER_THAN_EQUALS' },
+        { label: 'less than', value: 'LESS_THAN' },
+        { label: 'less or equal', value: 'LESS_THAN_EQUALS' },
+        { label: 'contains', value: 'CONTAINS' },
+        // { label: 'range', value: 'RANGE' },
       ],
       selectedOperator: 'equals',
       inputValue: '',

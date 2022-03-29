@@ -144,12 +144,15 @@ export default {
   max-height: 40vh;
   overflow: scroll;
   box-shadow: 1px 1px 7px 2px $very-light-gray;
-  padding: 1rem;
+  padding: 0rem 1rem;
   &__title {
     position: sticky;
+    z-index: 5;
+    background-color: white;
     top: 0;
     margin-bottom: 1rem;
     width: 100%;
+    padding-top: 0.5rem;
   }
   &__filters {
     display: flex;
@@ -188,12 +191,14 @@ export default {
 }
 
 .filter-search-bar {
-  height: 4.5vh;
-  background-color: transparent;
+  min-height: 5vh;
+  background-color: white;
   border-bottom: 1px solid $very-light-gray;
   display: flex;
   align-items: center;
-  padding: 2px;
-  margin-right: 0.5rem;
+  // padding: 2px;
+  margin: auto;
+  padding: auto;
+  // margin-right: 0.5rem;
 }
 </style>
