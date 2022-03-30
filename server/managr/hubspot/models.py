@@ -182,9 +182,10 @@ class HSResourceSync(HSSyncOperation):
         for key in self.operations_list:
             while True:
                 hs_account = self.user.hubspot_account
-                adapter = self.user.hubspot_account.adapter_class
                 try:
-                    count = adapter.get_resource_count(key)["totalSize"]
+                    t = emit_hs_sync(str(self.user.id), str(self.id), key)
+                    self.operations.append(str(t.task_hash))
+                    self.save()
                     break
                 except TokenExpired:
                     if attempts >= 5:
@@ -202,17 +203,6 @@ class HSResourceSync(HSSyncOperation):
                 except CannotRetreiveObjectType:
                     hs_account.hobjects[key] = False
                     hs_account.save()
-            max_count = 300
-            count = min(count, max_count)
-            for i in range(math.ceil(count / hs_consts.HUBSPOT_QUERY_LIMIT)):
-                offset = hs_consts.HUBSPOT_QUERY_LIMIT * i
-                limit = hs_consts.HUBSPOT_QUERY_LIMIT
-                logger.info(
-                    f"offset set to {offset} for {key} with limit {limit} for user with email {self.user.email} for a count of {count}"
-                )
-                t = emit_hs_sync(str(self.user.id), str(self.id), key, limit, offset)
-                self.operations.append(str(t.task_hash))
-                self.save()
 
     def save(self, *args, **kwargs):
         return super(HSResourceSync, self).save(*args, **kwargs)
@@ -241,6 +231,10 @@ class HubspotAuthAccount(TimeStampModel):
         data = self.__dict__
         data["id"] = str(data["id"])
         data["user"] = str(self.user.id)
+        data["hubspot_fields"] = {
+            key: self.hubspot_fields.filter(hubspot_object=key).values_list("name", flat=True)
+            for key in self.hobjects.keys()
+        }
         return HubspotAuthAccountAdapter(**data)
 
     @property
@@ -328,11 +322,11 @@ class HubspotAuthAccount(TimeStampModel):
         values = self.adapter_class.list_picklist_values(resource)
         return values
 
-    def list_resource_data(self, resource, offset, *args, **kwargs):
+    def list_resource_data(self, resource, *args, **kwargs):
         attempts = 1
         while True:
             try:
-                return self.adapter_class.list_resource_data(resource, offset, *args, **kwargs)
+                return self.adapter_class.list_resource_data(resource, *args, **kwargs)
 
             except InvalidFieldError as e:
                 # catch all invalid fields on sync remove them from self and retry up to 20 times

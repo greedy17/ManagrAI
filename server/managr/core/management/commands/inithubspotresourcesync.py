@@ -29,3 +29,4 @@ class Command(BaseCommand):
             return logger.info("Skipping sync between midnight utc time and 10 mins after")
         else:
             queue_users_hs_resource(force_all=options.get("force", None))
+            return logger.info("Starting hubspot resource sync for all users")

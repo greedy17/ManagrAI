@@ -30,11 +30,11 @@ class CompanySerializer(serializers.ModelSerializer):
         owner = data.get("external_owner", None)
         if not data.get("external_owner", None):
             data.update({"external_owner": ""})
-
         if owner:
             hs_account = (
                 HubspotAuthAccount.objects.filter(hubspot_id=owner).select_related("user").first()
             )
+            print(hs_account)
             user = hs_account.user.id if hs_account else hs_account
             data.update({"owner": user})
         org = Organization.objects.get(users__id=imported_by)

@@ -7,6 +7,7 @@ from urllib.parse import urlencode
 from managr.utils.misc import object_to_snake_case
 from .. import constants as hubspot_consts
 from managr.core.models import User
+from managr.organization import constants as org_consts
 
 logger = logging.getLogger("managr")
 
@@ -18,6 +19,7 @@ class HubspotAuthAccountAdapter:
         self.refresh_token = kwargs.get("refresh_token", None)
         self.hubspot_id = kwargs.get("hubspot_id", None)
         self.user = kwargs.get("user", None)
+        self.hubspot_fields = kwargs.get("hubspot_fields", None)
 
     @staticmethod
     def _handle_response(response, fn_name=None):
@@ -62,6 +64,23 @@ class HubspotAuthAccountAdapter:
             "hubspot_id": user_res.get("user_id"),
         }
         return cls(**data)
+
+    def _format_resource_response(self, response_data, class_name, *args, **kwargs):
+
+        res = response_data.get("results", [])
+        formatted_data = []
+        from .routes import routes
+
+        resource_class = routes.get(class_name, None)
+        for result in res:
+            if resource_class:
+                formatted_data.append(
+                    resource_class.from_api(result["properties"], self.user, *args)
+                )
+            else:
+                formatted_data.append(result)
+
+        return formatted_data
 
     def format_field_options(
         self, hubspot_account_id, user_id, resource, res_data=[],
@@ -252,21 +271,18 @@ class HubspotAuthAccountAdapter:
 
     #         return self.format_validation_rules(str(self.id), str(self.user), res)
 
-    def list_resource_data(self, resource, offset, *args, **kwargs):
+    def list_resource_data(self, resource, *args, **kwargs):
         # add extra fields to query string
-        extra_items = self.object_fields.get(resource)
         from ..routes import routes
 
+        resource_fields = self.hubspot_fields.get(resource)
         add_filters = kwargs.get("filter", None)
         resource_class = routes.get(resource)
-        relationships = resource_class.get_child_rels()
-        additional_filters = (
-            resource_class.additional_filters() if add_filters is None else add_filters
-        )
+        # additional_filters = (
+        #     resource_class.additional_filters() if add_filters is None else add_filters
+        # )
         limit = kwargs.pop("limit", hubspot_consts.HUBSPOT_QUERY_LIMIT)
-        url = f"{hubspot_consts.BASE_URL}{hubspot_consts.HUBSPOT_OBJECTS_URI}{resource}"
-        if offset:
-            url = f"{url} offset {offset}"
+        url = hubspot_consts.HUBSPOT_OBJECTS_URI(resource, resource_fields)
         logger.info(f"{url} was sent")
         with Client as client:
             res = client.get(
@@ -275,23 +291,21 @@ class HubspotAuthAccountAdapter:
             res = self._handle_response(res)
             saved_response = res
             logger.info(
-                f"Request returned {res.get('totalSize')} number of results for {resource} at offset {offset} with limit {limit}"
+                f"Request returned {len(res.get('results'))} number of results for {resource} with limit {limit}"
             )
-            # regardless of the offset if the data is too large Hubspot will paginate
             while True:
-                has_next_page = res.get("nextRecordsUrl", None)
+                has_next_page = res.get("paging", None)
                 if has_next_page:
-                    logger.info(f"Request returned a next page {has_next_page}")
-                    next_page_url = self.instance_url + has_next_page
+                    logger.info(f"Request returned a next page")
+                    next_page_url = has_next_page.get("next").get("link")
                     with Client as client:
                         res = client.get(
                             next_page_url,
-                            headers=hubspot_consts.SALESFORCE_USER_REQUEST_HEADERS(
-                                self.access_token
-                            ),
+                            headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
                         )
                         res = self._handle_response(res)
-                        saved_response["records"] = [*saved_response["records"], *res["records"]]
+                        saved_response["results"] = [*saved_response["results"], *res["results"]]
+
                 else:
                     break
 
@@ -371,6 +385,53 @@ class HObjectFieldAdapter:
         d = object_to_snake_case(data)
 
         return d
+
+    @classmethod
+    def create_from_api(cls, data):
+        return cls(cls.from_api(data))
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+
+class CompanyAdapter:
+    def __init__(self, **kwargs):
+        self.name = kwargs.get("name", None)
+        self.organization = kwargs.get("organization", None)
+        self.owner = kwargs.get("owner", None)
+        self.external_owner = kwargs.get("external_owner", None)
+        self.integration_source = kwargs.get("integration_source", "")
+        self.integration_id = kwargs.get("integration_id", "")
+        self.imported_by = kwargs.get("imported_by", None)
+        self.secondary_data = kwargs.get("secondary_data", None)
+
+    integration_mapping = dict(
+        integration_id="hs_object_id",
+        name="name",
+        owner="hubspot_owner_id",
+        external_owner="hubspot_owner_id",
+    )
+
+    @staticmethod
+    def reverse_integration_mapping():
+        """mapping of 'standard' data when sending from the SF API"""
+        reverse = {}
+        for k, v in CompanyAdapter.integration_mapping.items():
+            reverse[v] = k
+        return reverse
+
+    @staticmethod
+    def from_api(data, user_id, *args, **kwargs):
+        mapping = CompanyAdapter.reverse_integration_mapping()
+        formatted_data = dict(secondary_data={})
+        for k, v in data.items():
+            if k in mapping:
+                formatted_data[mapping.get(k)] = v
+            formatted_data["secondary_data"][k] = v
+        formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_HUBSPOT
+        formatted_data["imported_by"] = str(user_id)
+        return CompanyAdapter(**formatted_data)
 
     @classmethod
     def create_from_api(cls, data):

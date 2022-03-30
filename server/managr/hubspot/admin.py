@@ -3,7 +3,13 @@ from django import forms
 
 # Register your models here.
 
-from .models import HubspotAuthAccount, HSObjectFieldsOperation, HSSyncOperation, HObjectField
+from .models import (
+    HubspotAuthAccount,
+    HSObjectFieldsOperation,
+    HSSyncOperation,
+    HObjectField,
+    Company,
+)
 
 # Register your models here.
 
@@ -52,4 +58,5 @@ admin.site.register(HubspotAuthAccount, CustomHubspotAuthAccountAdmin)
 admin.site.register(HSObjectFieldsOperation, CustomSyncFieldOperationAdmin)
 admin.site.register(HSSyncOperation, CustomSyncOperationAdmin)
 admin.site.register(HObjectField)
+admin.site.register(Company)
 

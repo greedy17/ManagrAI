@@ -21,10 +21,10 @@ from managr.hubspot.adapter.exceptions import (
 logger = logging.getLogger("managr")
 
 
-def emit_hs_sync(user_id, sync_id, resource, limit, offset):
+def emit_hs_sync(user_id, sync_id, resource):
     user_id = str(user_id)
     sync_id = str(sync_id)
-    return _process_resource_sync(user_id, sync_id, resource, limit, offset)
+    return _process_resource_sync(user_id, sync_id, resource)
 
 
 def emit_gen_next_hubspot_field_sync(user_id, ops_list, schedule_time=timezone.now()):
@@ -104,7 +104,7 @@ def _process_hobject_fields_sync(user_id, sync_id, resource):
 
 @background(schedule=0, queue=hs_consts.HUBSPOT_RESOURCE_SYNC_QUEUE)
 @log_all_exceptions
-def _process_resource_sync(user_id, sync_id, resource, limit, offset, attempts=1):
+def _process_resource_sync(user_id, sync_id, resource, attempts=1):
     user = User.objects.filter(id=user_id).select_related("hubspot_account").first()
     if not hasattr(user, "hubspot_account"):
         return
@@ -117,7 +117,7 @@ def _process_resource_sync(user_id, sync_id, resource, limit, offset, attempts=1
     while True:
         hs = user.hubspot_account
         try:
-            res = hs.list_resource_data(resource, offset, limit=limit)
+            res = hs.list_resource_data(resource)
             logger.info(f"Pulled total {len(res)} from request for {resource}")
             attempts = 1
             break
@@ -136,6 +136,7 @@ def _process_resource_sync(user_id, sync_id, resource, limit, offset, attempts=1
                 f"Failed to sync some data for resource {resource} for user {user_id} because of {e}"
             )
     for item in res:
+        print(item.as_dict)
         existing = model_class.objects.filter(integration_id=item.integration_id).first()
         if existing:
             serializer = serializer_class(data=item.as_dict, instance=existing)
@@ -147,7 +148,7 @@ def _process_resource_sync(user_id, sync_id, resource, limit, offset, attempts=1
         except Exception as e:
             error_str = f"Failed to save data for {resource} {item.name if item.name else 'N/A'} with hubspot id {item.integration_id} due to the following error {e.detail}"
             logger.exception(error_str)
-            continue
+            break
         serializer.save()
 
     return

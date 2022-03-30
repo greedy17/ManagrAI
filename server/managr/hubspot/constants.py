@@ -3,9 +3,9 @@ from django.conf import settings
 
 TOKEN_INFO_URI = "oauth/v1/access-tokens"
 REFRESH_TOKEN_URI = "oauth/v1/token"
-HUBSPOT_OBJECTS_URI = "crm/v3/objects/"
+
 HUBSPOT_PROPERTIES_URI = "crm/v3/properties/"
-HUBSPOT_QUERY_LIMIT = 200
+HUBSPOT_QUERY_LIMIT = 100
 if settings.USE_HUBSPOT:
     BASE_URL = settings.HUBSPOT_BASE_URL
     CLIENT_ID = settings.HUBSPOT_CLIENT_ID
@@ -63,6 +63,14 @@ if settings.USE_HUBSPOT:
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
     }
+
+
+def HUBSPOT_OBJECTS_URI(
+    resource, fields, childRelationshipFields=[], additional_filters=[], limit=HUBSPOT_QUERY_LIMIT,
+):
+    fields = set(fields)
+    url = f"{BASE_URL}/crm/v3/objects/{resource}?limit={limit}&properties={','.join(fields)}"
+    return url
 
 
 RESOURCE_SYNC_COMPANY = "Company"
