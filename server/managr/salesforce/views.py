@@ -778,5 +778,5 @@ class SalesforceSObjectViewSet(
             Q(user=user, datetime_created__range=(start, end))
         )
         print(meetings)
-        return Response(data={"meeetings": meetings})
+        return Response(data={"meetings": meetings})
 
