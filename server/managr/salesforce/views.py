@@ -200,9 +200,27 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         sf = user.salesforce_account
         data = self.request.data
         ids = data.get("field_ids")
+        print(ids)
         for id in ids:
             if id not in sf.extra_pipeline_fields:
                 sf.extra_pipeline_fields.append(id)
+        sf.save()
+        return Response()
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="remove-pipeline-fields",
+    )
+    def remove_pipeline_fields(self, request, *args, **kwargs):
+        user = self.request.user
+        sf = user.salesforce_account
+        data = self.request.data
+        ids = data.get("field_ids")
+        print(ids)
+        for id in ids:
+            sf.extra_pipeline_fields.remove(id)
         sf.save()
         return Response()
 

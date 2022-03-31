@@ -616,6 +616,7 @@
             :oppFields="oppFields"
             @check-all="onCheckAll"
             @sort-opps="sortOpps"
+            @set-opps="setOpps"
             @sort-opps-reverse="sortOppsReverse"
             :allSelected="allSelected"
           />
@@ -780,6 +781,16 @@ export default {
       filterValues: [],
       filters: [],
       operatorsLength: 0,
+      ladFilter: {
+        apiName: 'LastActivityDate',
+        dataType: 'Date',
+        referenceDisplayLabel: 'Last Activity Date',
+      },
+      lmdFilter: {
+        apiName: 'LastModifiedDate',
+        dataType: 'DateTime',
+        referenceDisplayLabel: 'Last Modified Date',
+      },
     }
   },
   computed: {
@@ -852,7 +863,13 @@ export default {
   },
   methods: {
     tester() {
-      console.log(this.allOpps)
+      console.log(this.oppFields)
+    },
+    setOpps() {
+      //  this.getObjects()
+      User.api.getUser(this.user.id).then((response) => {
+        this.$store.commit('UPDATE_USER', response)
+      })
     },
     closeFilters() {
       this.filtering = false
@@ -1085,7 +1102,6 @@ export default {
         })
       }
     },
-
     sortWorkflows(dT, field, apiName) {
       let newField = this.capitalizeFirstLetter(this.camelize(apiName))
       let customField = this.capitalizeFirstLetter(this.camelize(this.sliced(apiName))).replaceAll(
@@ -1434,9 +1450,9 @@ export default {
 
       this.$Alert.alert({
         type: 'success',
-        timeout: 3000,
+        timeout: 1000,
         message: 'Salesforce update successful!',
-        sub: 'Some changes may take longer to reflect',
+        // sub: 'Some changes may take longer to reflect',
       })
     },
     async bulkUpdateStage(ids, data) {
@@ -1478,9 +1494,9 @@ export default {
       this.advanceStageSelected = false
       this.$Alert.alert({
         type: 'success',
-        timeout: 3000,
+        timeout: 1000,
         message: 'Salesforce update successful!',
-        sub: 'Some changes may take longer to reflect',
+        // sub: 'Some changes may take longer to reflect',
       })
     },
     async bulkChangeForecast(ids, data) {
@@ -1584,9 +1600,9 @@ export default {
         this.formData = {}
         this.$Alert.alert({
           type: 'success',
-          timeout: 3000,
+          timeout: 1000,
           message: 'Salesforce update successful!',
-          sub: 'Some changes may take longer to reflect',
+          // sub: 'Some changes may take longer to reflect',
         })
         if (this.selectedWorkflow) {
           this.currentWorkflow.refresh()
@@ -1667,6 +1683,7 @@ export default {
         this.filterFields = this.updateOppForm[0].fieldsRef.filter(
           (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
         )
+        this.filterFields = [...this.filterFields, this.ladFilter, this.lmdFilter]
         this.oppFields = this.updateOppForm[0].fieldsRef.filter(
           (field) =>
             field.apiName !== 'meeting_type' &&
@@ -2330,8 +2347,8 @@ main:hover > span {
   flex-direction: column;
   align-items: flex-start;
   background-color: $white;
-  min-width: 18vw;
-  max-height: 40vh;
+  min-width: 20vw;
+  max-height: 56vh;
   overflow: scroll;
   margin-right: 0.5rem;
   box-shadow: 1px 1px 7px 2px $very-light-gray;

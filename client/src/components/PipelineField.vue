@@ -12,7 +12,10 @@
       <p class="flex-columned" v-else-if="apiName === 'StageName'">
         {{ fieldData ? fieldData : '---' }}
         <span class="daysinstage">{{
-          fieldData ? 'Days in Stage: ' + getDaysInStage(lastStageUpdate) : ''
+          fieldData
+            ? 'Days in Stage: ' +
+              (getDaysInStage(lastStageUpdate) > 19000 ? 0 : getDaysInStage(lastStageUpdate))
+            : ''
         }}</span>
       </p>
 

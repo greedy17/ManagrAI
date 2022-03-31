@@ -113,6 +113,22 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
     }
   }
+  async addExtraFields(fieldIds) {
+    try {
+      const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'fields/update-pipeline-fields/', fieldIds)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error syncing resources' })(e)
+    }
+  }
+  async removeExtraField(fieldIds) {
+    try {
+      const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'fields/remove-pipeline-fields/', fieldIds)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error syncing resources' })(e)
+    }
+  }
   async resourceSync() {
     try {
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/resource-sync/')

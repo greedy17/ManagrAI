@@ -29,33 +29,6 @@ export default {
   data() {
     return {
       searchFilterText: '',
-      oppFilters: [
-        {
-          title: 'Amount',
-          type: 'number',
-        },
-        {
-          title: 'Close date',
-          type: 'date',
-        },
-        {
-          title: 'Next step date',
-          type: 'date',
-        },
-        {
-          title: 'Last activity',
-          type: 'date',
-        },
-        {
-          title: 'Last modified',
-          type: 'date',
-        },
-        {
-          title: 'Owner',
-          type: 'picklist',
-        },
-      ],
-      monetaryOptions: ['less than', 'greater than', 'equals'],
     }
   },
   computed: {
@@ -71,48 +44,9 @@ export default {
         this.amountInput(option)
       }
     },
-    amountInput(option) {
-      this.enteringAmount = !this.enteringAmount
-      this.filterOption = option
-    },
-    monetaryFilter(type, title) {
-      this.filterType = type
-      this.filterTitle = title
-    },
-    dateFilter(type, title) {
-      this.filterType = type
-      this.filterTitle = title
-    },
-    timeFilter(type, title) {
-      this.filterType = type
-      this.filterTitle = title
-    },
-    personFilter(type, title) {
-      this.filterType = type
-      this.filterTitle = title
-    },
     closeFilters() {
       this.showList ? (this.showList = !this.showList) : (this.showList = this.showList)
       this.filtering = !this.filtering
-    },
-    applyAmountFilter() {
-      // this.allOpps = this.allOpps.filter((opp) => opp.amount > this.amountValue)
-    },
-    selectFilter(type, title) {
-      switch (type) {
-        case 'monetary':
-          this.monetaryFilter(type, title)
-          break
-        case 'date':
-          this.dateFilter(type, title)
-          break
-        case 'time':
-          this.timeFilter(type, title)
-          break
-        case 'person':
-          this.personFilter(type, title)
-          break
-      }
     },
   },
 }
