@@ -71,19 +71,19 @@
           <div class="flex-row">
             <img
               src="@/assets/images/logo.png"
-              style="height: 1.5rem; margin-left: 0.5rem; margin-right: 0.25rem"
+              style="height: 1.75rem; margin-left: 0.5rem; margin-right: 0.25rem"
               alt=""
             />
             <h2>Create Opportunity</h2>
           </div>
-          <div class="close-button">
-            <img
-              src="@/assets/images/clear.png"
-              style="height: 1.2rem"
-              @click="resetAddOpp"
-              alt=""
-            />
-          </div>
+
+          <img
+            src="@/assets/images/clear.png"
+            class="invert"
+            style="height: 1.25rem; margin-top: -1rem; margin-right: 0.75rem; cursor: pointer"
+            @click="resetAddOpp"
+            alt=""
+          />
         </div>
         <div class="opp-modal">
           <section :key="field.id" v-for="field in createOppForm">
@@ -95,7 +95,7 @@
             >
               <p>{{ field.referenceDisplayLabel }}:</p>
               <textarea
-                id="update-input"
+                id="user-input"
                 ccols="30"
                 rows="4"
                 style="width: 30vw; border-radius: 0.4rem"
@@ -106,7 +106,7 @@
             <div v-else-if="field.dataType === 'String'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <input
-                id="update-input"
+                id="user-input"
                 type="text"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
@@ -116,7 +116,7 @@
               <p>{{ field.referenceDisplayLabel }}:</p>
               <select
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-                id="update-input"
+                id="user-input"
               >
                 <option v-for="(option, i) in picklistQueryOpts[field.apiName]" :key="i">
                   <p>{{ option.label }}</p>
@@ -127,7 +127,7 @@
               <p>{{ field.referenceDisplayLabel }}:</p>
               <input
                 type="date"
-                id="update-input"
+                id="user-input"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
@@ -150,7 +150,7 @@
             >
               <p>{{ field.referenceDisplayLabel }}:</p>
               <input
-                id="update-input"
+                id="user-input"
                 type="number"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
@@ -159,7 +159,7 @@
               <p>{{ field.referenceDisplayLabel }}:</p>
               <select
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-                id="update-input"
+                id="user-input"
               >
                 <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option>
                 <option
@@ -179,7 +179,7 @@
 
               <select
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-                id="update-input"
+                id="user-input"
               >
                 <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option>
                 <option
@@ -195,6 +195,7 @@
         </div>
         <div class="flex-end">
           <button class="add-button" @click="createResource">Create Opportunity</button>
+          <p @click="resetAddOpp" class="cancel">Cancel</p>
         </div>
       </div>
     </Modal>
@@ -219,7 +220,7 @@
           </div>
           <img
             src="@/assets/images/closer.png"
-            style="height: 1.75rem; margin-top: -0.5rem; cursor: pointer"
+            style="height: 1.5rem; margin-top: -1rem; margin-right: 0.75rem; cursor: pointer"
             @click="resetEdit"
             alt=""
           />
@@ -229,10 +230,10 @@
             <div v-if="field.apiName === 'meeting_type'">
               <p>Note Title:</p>
               <textarea
-                id="update-input"
+                id="user-input"
                 cols="30"
                 rows="2"
-                style="width: 30vw; border-radius: 0.2rem"
+                style="width: 29.5vw; border-radius: 0.2rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
               </textarea>
@@ -240,10 +241,10 @@
             <div v-else-if="field.apiName === 'meeting_comments'">
               <p>Notes:</p>
               <textarea
-                id="update-input"
+                id="user-input"
                 ccols="30"
                 rows="4"
-                style="width: 30vw; border-radius: 0.2rem"
+                style="width: 29.5vw; border-radius: 0.2rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
               </textarea>
@@ -255,11 +256,11 @@
             >
               <p>{{ field.referenceDisplayLabel }}:</p>
               <textarea
-                id="update-input"
+                id="user-input"
                 ccols="30"
                 rows="4"
                 :placeholder="currentVals[field.apiName]"
-                style="width: 30vw; border-radius: 0.4rem; padding: 7px"
+                style="width: 29.5vw; border-radius: 0.4rem; padding: 7px"
                 v-model="currentVals[field.apiName]"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
@@ -274,7 +275,7 @@
             >
               <p>{{ field.referenceDisplayLabel }}:</p>
               <input
-                id="update-input"
+                id="user-input"
                 type="text"
                 :placeholder="currentVals[field.apiName]"
                 v-model="currentVals[field.apiName]"
@@ -292,7 +293,7 @@
                       value,
                     )
                 "
-                id="update-input"
+                id="user-input"
               >
                 <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option>
                 <option v-for="(option, i) in picklistQueryOpts[field.apiName]" :key="i">
@@ -308,7 +309,7 @@
                 onblur="(this.type='text')"
                 :placeholder="currentVals[field.apiName]"
                 v-model="currentVals[field.apiName]"
-                id="update-input"
+                id="user-input"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
@@ -330,7 +331,7 @@
             >
               <p>{{ field.referenceDisplayLabel }}:</p>
               <input
-                id="update-input"
+                id="user-input"
                 type="number"
                 v-model="currentVals[field.apiName]"
                 :placeholder="currentVals[field.apiName]"
@@ -342,7 +343,7 @@
               <p>{{ field.referenceDisplayLabel }}:</p>
               <select
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-                id="update-input"
+                id="user-input"
               >
                 <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option>
                 <option
@@ -361,7 +362,7 @@
               <p>{{ field.referenceDisplayLabel }}:</p>
               <select
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-                id="update-input"
+                id="user-input"
               >
                 <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option>
                 <option
@@ -377,8 +378,8 @@
         </div>
         <div class="flex-end-opp">
           <div style="display: flex; align-items: center">
-            <p @click="resetEdit" class="cancel">Cancel</p>
             <button @click="updateResource()" class="add-button__">Update</button>
+            <p @click="resetEdit" class="cancel">Cancel</p>
           </div>
         </div>
       </div>
@@ -698,6 +699,7 @@ import WorkflowHeader from '@/components/WorkflowHeader'
 import Filters from '@/components/Filters'
 import FilterSelection from '@/components/FilterSelection'
 import User from '@/services/users'
+import Multiselect from 'vue-multiselect'
 
 export default {
   name: 'Pipelines',
@@ -714,6 +716,7 @@ export default {
     Loader,
     Filters,
     FilterSelection,
+    Multiselect,
   },
   data() {
     return {
@@ -1805,7 +1808,20 @@ export default {
   margin-top: -0.75rem;
   justify-content: flex-start;
 }
-
+select {
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-color: #fafafa;
+  height: 40px;
+  width: 100%;
+  background-image: url('../assets/images/dropdown.png');
+  background-size: 1rem;
+  background-position: 100%;
+  background-repeat: no-repeat;
+  border: 1px solid #ccc;
+  padding-left: 0.75rem;
+  border-radius: 0;
+}
 .select-btn {
   border: none;
   min-height: 4.5vh;
@@ -1983,7 +1999,6 @@ h3 {
   border-bottom: 3px solid $white;
   color: $base-gray;
   font-size: 16px;
-  font-weight: bold;
   letter-spacing: 0.75px;
   div {
     margin-right: 1rem;
@@ -2239,6 +2254,16 @@ section {
   min-height: 2.5rem;
   width: 14vw;
 }
+#user-input {
+  border: 1px solid $theme-gray;
+  border-radius: 0.3rem;
+  background-color: white;
+  min-height: 2.5rem;
+  width: 14vw;
+}
+#user-input:focus {
+  outline: 1px solid $lighter-green;
+}
 .number-input {
   background-color: $off-white;
   box-shadow: 1px 1px 1px $gray;
@@ -2411,7 +2436,7 @@ main:hover > span {
 .cancel {
   color: $dark-green;
   font-weight: bold;
-  margin-right: 1rem;
+  margin-left: 1rem;
   cursor: pointer;
 }
 .flex-end {
@@ -2423,8 +2448,8 @@ main:hover > span {
 }
 .flex-end-opp {
   width: 100%;
-  padding: 0.5rem 0.25rem;
-  height: 6rem;
+  padding: 0.5rem 1.5rem;
+  height: 5rem;
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;

@@ -134,7 +134,7 @@
     </div>
 
     <div class="table-cell-header">
-      <div v-outside-click="closeAddField" class="direction-row" @click="addField">
+      <div class="direction-row" @click="addField">
         <p style="color: white">.</p>
         <img src="@/assets/images/plusOne.png" class="add-row" alt="" />
       </div>
@@ -142,11 +142,12 @@
       <div v-if="addingField" class="add-field-section">
         <div class="add-field-section__title">
           <p>Add View Only Field</p>
-          <!-- <img
+          <img
             src="@/assets/images/closer.png"
             style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
             @click="closeAddField"
-          /> -->
+          />
+          <!-- v-outside-click="closeAddField" -->
         </div>
 
         <div class="add-field-section__body">
