@@ -55,13 +55,12 @@ class HubspotAuthAccountAdapter:
     def create_account(cls, code, user_id):
         user = User.objects.get(id=user_id)
         res = cls.authenticate(code)
-        user_res = cls.get_user_info(res["access_token"])
-        print(user_res)
+        user_res = cls.get_user_info(res["access_token"], user.email)["results"]
         data = {
             "user": user.id,
             "access_token": res.get("access_token"),
             "refresh_token": res.get("refresh_token"),
-            "hubspot_id": user_res.get("user_id"),
+            "hubspot_id": user_res[0].get("id") if len(user_res) else None,
         }
         return cls(**data)
 
@@ -143,10 +142,10 @@ class HubspotAuthAccountAdapter:
             return HubspotAuthAccountAdapter._handle_response(res)
 
     @staticmethod
-    def get_user_info(access_token):
+    def get_user_info(access_token, email):
         with Client as client:
             res = client.get(
-                f"{hubspot_consts.BASE_URL}/{hubspot_consts.TOKEN_INFO_URI}/{access_token}",
+                hubspot_consts.HUBSPOT_OWNERS_URI(email),
                 headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token),
             )
         return HubspotAuthAccountAdapter._handle_response(res)
@@ -312,10 +311,8 @@ class HubspotAuthAccountAdapter:
 
                 else:
                     break
-            print(res)
-            # res = self._format_resource_response(saved_response, resource)
-            # return res
-            return
+            res = self._format_resource_response(saved_response, resource)
+            return res
 
     def list_relationship_data(self, relationship, fields, value, *args, **kwargs):
         # build the filter query from the name fields and value
