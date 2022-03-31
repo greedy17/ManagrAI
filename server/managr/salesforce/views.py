@@ -628,13 +628,13 @@ class SalesforceSObjectViewSet(
 
         data = self.request.data
         form_ids = data["form_ids"]
-        bulk_status = data["bulk"]
+        bulk_status = json.load(data["bulk"])
         user = User.objects.get(id=self.request.user.id)
         main_form = OrgCustomSlackFormInstance.objects.get(id=form_ids[0])
         if len(user.slack_integration.realtime_alert_configs):
             _send_instant_alert([form_ids])
         try:
-            if bulk_status == "true":
+            if bulk_status:
                 plural = (
                     f"Opportunities"
                     if main_form.resource_type == "Opportunity"
