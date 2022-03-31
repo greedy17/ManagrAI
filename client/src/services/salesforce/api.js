@@ -79,9 +79,10 @@ export class SObjectFormBuilderAPI extends ModelAPI {
     }
   }
 
-  async getObjects(sobject, resource_id) {
+  async getObjects(sobject, for_filter = false, filters = false, resource_id = false) {
+
     try {
-      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/', { params: { sobject: sobject, resource_id: resource_id, page_size: 500 } })
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/', { params: { sobject: sobject, resource_id: resource_id, for_filter: for_filter, filters: JSON.stringify(filters), page_size: 500 } })
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
@@ -110,6 +111,22 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+    }
+  }
+  async addExtraFields(fieldIds) {
+    try {
+      const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'fields/update-pipeline-fields/', fieldIds)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error syncing resources' })(e)
+    }
+  }
+  async removeExtraField(fieldIds) {
+    try {
+      const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'fields/remove-pipeline-fields/', fieldIds)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error syncing resources' })(e)
     }
   }
   async resourceSync() {

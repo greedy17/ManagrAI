@@ -2,6 +2,7 @@ from audioop import tostereo
 import logging
 import random
 import pytz
+import json
 from urllib.parse import unquote
 from datetime import datetime
 
@@ -63,7 +64,7 @@ from managr.salesforce.adapter.exceptions import (
     InvalidRefreshToken,
 )
 
-from .filters import SObjectFieldFilterSet
+from .filters import SObjectFieldFilterSet, SalesforceSObjectFilterSet
 
 logger = logging.getLogger("managr")
 
@@ -188,6 +189,41 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     def get_queryset(self):
         return SObjectField.objects.for_user(self.request.user)
 
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="update-pipeline-fields",
+    )
+    def update_pipeline_fields(self, request, *args, **kwargs):
+        user = self.request.user
+        sf = user.salesforce_account
+        data = self.request.data
+        ids = data.get("field_ids")
+        print(ids)
+        for id in ids:
+            if id not in sf.extra_pipeline_fields:
+                sf.extra_pipeline_fields.append(id)
+        sf.save()
+        return Response()
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="remove-pipeline-fields",
+    )
+    def remove_pipeline_fields(self, request, *args, **kwargs):
+        user = self.request.user
+        sf = user.salesforce_account
+        data = self.request.data
+        ids = data.get("field_ids")
+        print(ids)
+        for id in ids:
+            sf.extra_pipeline_fields.remove(id)
+        sf.save()
+        return Response()
+
 
 class SObjectPicklistViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     serializer_class = SObjectPicklistSerializer
@@ -241,6 +277,8 @@ class SalesforceSObjectViewSet(
     mixins.CreateModelMixin,
     mixins.DestroyModelMixin,
 ):
+    filter_class = SalesforceSObjectFilterSet
+
     def get_serializer_class(self):
         param_sobject = self.request.GET.get("sobject")
         sobject = routes[param_sobject]
@@ -248,15 +286,23 @@ class SalesforceSObjectViewSet(
 
     def get_queryset(self):
         param_sobject = self.request.GET.get("sobject")
-        param_resource_id = self.request.GET.get("resource_id", None)
+        param_resource_id = json.loads(self.request.GET.get("resource_id", None))
+        for_filter = json.loads(self.request.GET.get("for_filter", None))
         if param_sobject == "User":
             return User.objects.filter(organization=self.request.user.organization)
         sobject = routes[param_sobject]
+
         query = (
             sobject["model"].objects.filter(id=param_resource_id)
             if param_resource_id
             else sobject["model"].objects.for_user(self.request.user)
         )
+        if for_filter:
+            print(json.loads(self.request.GET.get("filters")))
+            filtered_query = SalesforceSObjectFilterSet.for_filter(
+                query, json.loads(self.request.GET.get("filters"))
+            )
+            return filtered_query
         return query
 
     @action(
@@ -582,13 +628,13 @@ class SalesforceSObjectViewSet(
 
         data = self.request.data
         form_ids = data["form_ids"]
-        bulk_status = data["bulk"]
+        bulk_status = json.load(data["bulk"])
         user = User.objects.get(id=self.request.user.id)
         main_form = OrgCustomSlackFormInstance.objects.get(id=form_ids[0])
         if len(user.slack_integration.realtime_alert_configs):
             _send_instant_alert([form_ids])
         try:
-            if bulk_status == "true":
+            if bulk_status:
                 plural = (
                     f"Opportunities"
                     if main_form.resource_type == "Opportunity"
