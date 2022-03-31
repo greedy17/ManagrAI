@@ -13,6 +13,7 @@ sobject_comparison = {
     "LESS_THAN_EQUALS": "%s__lte",
     "CONTAINS": "%s__icontains",
     "RANGE": "%s__range",
+    "NOT_EQUALS": "%s",
 }
 
 
@@ -59,6 +60,9 @@ class SalesforceSObjectFilterSet(FilterSet):
         for filter in filters:
             filter_field = f"secondary_data__{sobject_comparison[filter[0]]}"
             new_query = filter_field % filter[1]
-            qs = qs.filter(**{new_query: filter[2]})
+            if filter[0] == "NOT_EQUALS":
+                qs = qs.excludes(**{new_query: filter[2]})
+            else:
+                qs = qs.filter(**{new_query: filter[2]})
             print(qs)
         return qs
