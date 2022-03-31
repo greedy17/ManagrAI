@@ -56,7 +56,7 @@ class HubspotAuthAccountAdapter:
         user = User.objects.get(id=user_id)
         res = cls.authenticate(code)
         user_res = cls.get_user_info(res["access_token"])
-
+        print(user_res)
         data = {
             "user": user.id,
             "access_token": res.get("access_token"),
@@ -276,17 +276,21 @@ class HubspotAuthAccountAdapter:
         from ..routes import routes
 
         resource_fields = self.hubspot_fields.get(resource)
-        add_filters = kwargs.get("filter", None)
+        add_filters = kwargs.get(
+            "filters",
+            [{"propertyName": "hubspot_owner_id", "operator": "EQ", "value": self.hubspot_id}],
+        )
         resource_class = routes.get(resource)
-        # additional_filters = (
-        #     resource_class.additional_filters() if add_filters is None else add_filters
-        # )
+
         limit = kwargs.pop("limit", hubspot_consts.HUBSPOT_QUERY_LIMIT)
-        url = hubspot_consts.HUBSPOT_OBJECTS_URI(resource, resource_fields)
+        url = hubspot_consts.HUBSPOT_SEARCH_URI(resource)
+        data = hubspot_consts.HUBSPOT_SEARCH_BODY(resource_fields, add_filters, limit)
         logger.info(f"{url} was sent")
         with Client as client:
-            res = client.get(
-                url, headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
+            res = client.post(
+                url,
+                headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
+                data=json.dumps(data),
             )
             res = self._handle_response(res)
             saved_response = res
@@ -308,9 +312,10 @@ class HubspotAuthAccountAdapter:
 
                 else:
                     break
-
-            res = self._format_resource_response(saved_response, resource)
-            return res
+            print(res)
+            # res = self._format_resource_response(saved_response, resource)
+            # return res
+            return
 
     def list_relationship_data(self, relationship, fields, value, *args, **kwargs):
         # build the filter query from the name fields and value

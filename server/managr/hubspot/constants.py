@@ -5,6 +5,17 @@ TOKEN_INFO_URI = "oauth/v1/access-tokens"
 REFRESH_TOKEN_URI = "oauth/v1/token"
 
 HUBSPOT_PROPERTIES_URI = "crm/v3/properties/"
+
+
+def HUBSPOT_SEARCH_URI(resource):
+    object_map = {
+        RESOURCE_SYNC_COMPANY: "companies",
+        RESOURCE_SYNC_CONTACT: "contacts",
+        RESOURCE_SYNC_DEAL: "deals",
+    }
+    return f"{BASE_URL}/crm/v3/objects/{object_map[resource]}/search"
+
+
 HUBSPOT_QUERY_LIMIT = 100
 if settings.USE_HUBSPOT:
     BASE_URL = settings.HUBSPOT_BASE_URL
@@ -71,6 +82,12 @@ def HUBSPOT_OBJECTS_URI(
     fields = set(fields)
     url = f"{BASE_URL}/crm/v3/objects/{resource}?limit={limit}&properties={','.join(fields)}"
     return url
+
+
+def HUBSPOT_SEARCH_BODY(fields, filters, limit):
+    fields = set(fields)
+    print({"properties": list(fields), "filters": filters, "limit": limit})
+    return {"properties": list(fields), "filters": filters, "limit": limit}
 
 
 RESOURCE_SYNC_COMPANY = "Company"

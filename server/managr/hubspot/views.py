@@ -58,11 +58,7 @@ def revoke_hubspot_access_token(request):
         except Exception:
             # revoke token will fail if ether token is expired
             pass
-        # if hubspot.refresh_token_task:
-        #     task = Task.objects.filter(id=hubspot.refresh_token_task).first()
-        #     if task:
-        #         task.delete()
-        # hubspot.delete()
+        hubspot.delete()
 
     return Response()
 
