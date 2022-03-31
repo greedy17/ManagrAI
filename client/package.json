@@ -16,7 +16,6 @@
   "dependencies": {
     "@datadog/browser-rum": "^2.6.2",
     "@thinknimble/button": "^0.4.0",
-    "@thinknimble/checkbox": "^0.1.2",
     "@thinknimble/collection-search": "^0.5.2",
     "@thinknimble/dropdownselect": "0.0.5",
     "@thinknimble/elastic-text-area": "^0.1.1",
