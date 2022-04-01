@@ -552,9 +552,7 @@ def initial_alert_message(context):
     else:
         url = "https://app.managr.ai/pipelines"
     blocks = [
-        block_builders.section_with_button_block(
-            "Update in Pipeline", "open_in_pipeline", title, url=url
-        ),
+        block_builders.simple_section(title),
         block_builders.actions_block(
             [
                 block_builders.simple_button_block(
@@ -568,7 +566,10 @@ def initial_alert_message(context):
                             f"config_id={config_id}",
                         ],
                     ),
-                )
+                ),
+                block_builders.simple_button_block(
+                    "Update in Pipeline", "open_in_pipeline", url=url
+                ),
             ]
         ),
     ]
