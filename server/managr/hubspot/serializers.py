@@ -22,19 +22,19 @@ class CompanySerializer(serializers.ModelSerializer):
             "integration_source",
             "imported_by",
             "owner",
+            "external_owner",
             "secondary_data",
         )
 
     def to_internal_value(self, data):
         imported_by = data.get("imported_by")
         owner = data.get("external_owner", None)
-        if not data.get("external_owner", None):
+        if not owner:
             data.update({"external_owner": ""})
         if owner:
             hs_account = (
                 HubspotAuthAccount.objects.filter(hubspot_id=owner).select_related("user").first()
             )
-            print(hs_account)
             user = hs_account.user.id if hs_account else hs_account
             data.update({"owner": user})
         org = Organization.objects.get(users__id=imported_by)
@@ -71,7 +71,6 @@ class HubspotContactSerializer(serializers.ModelSerializer):
             data.update({"external_owner": ""})
         if not data.get("email", None):
             data.update({"email": ""})
-
         if owner:
             hs_account = (
                 HubspotAuthAccount.objects.filter(hubspot_id=owner).select_related("user").first()
