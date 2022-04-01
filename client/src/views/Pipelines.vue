@@ -71,19 +71,19 @@
           <div class="flex-row">
             <img
               src="@/assets/images/logo.png"
-              style="height: 1.5rem; margin-left: 0.5rem; margin-right: 0.25rem"
+              style="height: 1.75rem; margin-left: 0.5rem; margin-right: 0.25rem"
               alt=""
             />
             <h2>Create Opportunity</h2>
           </div>
-          <div class="close-button">
-            <img
-              src="@/assets/images/clear.png"
-              style="height: 1.2rem"
-              @click="resetAddOpp"
-              alt=""
-            />
-          </div>
+
+          <img
+            src="@/assets/images/clear.png"
+            class="invert"
+            style="height: 1.25rem; margin-top: -1rem; margin-right: 0.75rem; cursor: pointer"
+            @click="resetAddOpp"
+            alt=""
+          />
         </div>
         <div class="opp-modal">
           <section :key="field.id" v-for="field in createOppForm">
@@ -95,7 +95,7 @@
             >
               <p>{{ field.referenceDisplayLabel }}:</p>
               <textarea
-                id="update-input"
+                id="user-input"
                 ccols="30"
                 rows="4"
                 style="width: 30vw; border-radius: 0.4rem"
@@ -106,7 +106,7 @@
             <div v-else-if="field.dataType === 'String'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <input
-                id="update-input"
+                id="user-input"
                 type="text"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
@@ -116,7 +116,7 @@
               <p>{{ field.referenceDisplayLabel }}:</p>
               <select
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-                id="update-input"
+                id="user-input"
               >
                 <option v-for="(option, i) in picklistQueryOpts[field.apiName]" :key="i">
                   <p>{{ option.label }}</p>
@@ -127,7 +127,7 @@
               <p>{{ field.referenceDisplayLabel }}:</p>
               <input
                 type="date"
-                id="update-input"
+                id="user-input"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
@@ -150,16 +150,16 @@
             >
               <p>{{ field.referenceDisplayLabel }}:</p>
               <input
-                id="update-input"
+                id="user-input"
                 type="number"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
-            <div v-else-if="field.apiName === 'OwnerId'">
+            <div v-else-if="apiName === 'OwnerId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <select
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-                id="update-input"
+                id="user-input"
               >
                 <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option>
                 <option
@@ -174,12 +174,12 @@
               </select>
             </div>
 
-            <div v-else-if="field.apiName === 'AccountId'">
+            <div v-else-if="apiName === 'AccountId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
 
               <select
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-                id="update-input"
+                id="user-input"
               >
                 <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option>
                 <option
@@ -195,6 +195,7 @@
         </div>
         <div class="flex-end">
           <button class="add-button" @click="createResource">Create Opportunity</button>
+          <p @click="resetAddOpp" class="cancel">Cancel</p>
         </div>
       </div>
     </Modal>
@@ -219,7 +220,7 @@
           </div>
           <img
             src="@/assets/images/closer.png"
-            style="height: 1.75rem; margin-top: -0.5rem; cursor: pointer"
+            style="height: 1.5rem; margin-top: -1rem; margin-right: 0.75rem; cursor: pointer"
             @click="resetEdit"
             alt=""
           />
@@ -229,10 +230,10 @@
             <div v-if="field.apiName === 'meeting_type'">
               <p>Note Title:</p>
               <textarea
-                id="update-input"
+                id="user-input"
                 cols="30"
                 rows="2"
-                style="width: 30vw; border-radius: 0.2rem"
+                style="width: 29.5vw; border-radius: 0.2rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
               </textarea>
@@ -240,10 +241,10 @@
             <div v-else-if="field.apiName === 'meeting_comments'">
               <p>Notes:</p>
               <textarea
-                id="update-input"
+                id="user-input"
                 ccols="30"
                 rows="4"
-                style="width: 30vw; border-radius: 0.2rem"
+                style="width: 29.5vw; border-radius: 0.2rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
               </textarea>
@@ -255,11 +256,11 @@
             >
               <p>{{ field.referenceDisplayLabel }}:</p>
               <textarea
-                id="update-input"
+                id="user-input"
                 ccols="30"
                 rows="4"
                 :placeholder="currentVals[field.apiName]"
-                style="width: 30vw; border-radius: 0.4rem; padding: 7px"
+                style="width: 29.5vw; border-radius: 0.4rem; padding: 7px"
                 v-model="currentVals[field.apiName]"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
@@ -274,7 +275,7 @@
             >
               <p>{{ field.referenceDisplayLabel }}:</p>
               <input
-                id="update-input"
+                id="user-input"
                 type="text"
                 :placeholder="currentVals[field.apiName]"
                 v-model="currentVals[field.apiName]"
@@ -292,7 +293,7 @@
                       value,
                     )
                 "
-                id="update-input"
+                id="user-input"
               >
                 <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option>
                 <option v-for="(option, i) in picklistQueryOpts[field.apiName]" :key="i">
@@ -308,7 +309,7 @@
                 onblur="(this.type='text')"
                 :placeholder="currentVals[field.apiName]"
                 v-model="currentVals[field.apiName]"
-                id="update-input"
+                id="user-input"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
@@ -330,7 +331,7 @@
             >
               <p>{{ field.referenceDisplayLabel }}:</p>
               <input
-                id="update-input"
+                id="user-input"
                 type="number"
                 v-model="currentVals[field.apiName]"
                 :placeholder="currentVals[field.apiName]"
@@ -342,7 +343,7 @@
               <p>{{ field.referenceDisplayLabel }}:</p>
               <select
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-                id="update-input"
+                id="user-input"
               >
                 <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option>
                 <option
@@ -359,10 +360,9 @@
 
             <div v-else-if="field.apiName === 'AccountId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
-
               <select
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-                id="update-input"
+                id="user-input"
               >
                 <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option>
                 <option
@@ -378,16 +378,16 @@
         </div>
         <div class="flex-end-opp">
           <div style="display: flex; align-items: center">
-            <p @click="resetEdit" class="cancel">Cancel</p>
             <button @click="updateResource()" class="add-button__">Update</button>
+            <p @click="resetEdit" class="cancel">Cancel</p>
           </div>
         </div>
       </div>
     </Modal>
-    <div v-if="!loading">
-      <section style="margin-bottom: 1rem" class="flex-row-spread">
+    <div ref="pipelines" v-if="!loading">
+      <section class="flex-row-spread">
         <div v-if="!workflowCheckList.length && !primaryCheckList.length" class="flex-row">
-          <button @click="showList = !showList" class="select-btn">
+          <button @click.stop="showList = !showList" class="select-btn">
             {{ currentList }}
             <img
               v-if="!showList"
@@ -402,15 +402,15 @@
               alt=""
             />
           </button>
-          <div v-show="showList" class="list-section">
+          <div v-outside-click="closeListSelect" v-show="showList" class="list-section">
             <div class="list-section__title flex-row-spread">
               <p>{{ currentList }}</p>
-              <img
+              <!-- <img
                 @click="showList = !showList"
                 class="exit"
                 src="@/assets/images/close.png"
                 alt=""
-              />
+              /> -->
             </div>
             <p @click="showPopularList = !showPopularList" class="list-section__sub-title">
               Popular Lists
@@ -433,7 +433,7 @@
               <span class="filter" v-if="currentList === 'Closing next month'"> active</span>
             </button>
             <p @click="showWorkflowList = !showWorkflowList" class="list-section__sub-title">
-              Pipeline Monitoring
+              Workflows
               <img v-if="showWorkflowList" src="@/assets/images/downArrow.png" alt="" /><img
                 v-else
                 src="@/assets/images/rightArrow.png"
@@ -444,7 +444,7 @@
               <button
                 :key="i"
                 v-for="(template, i) in templates.list"
-                @click="selectList(template.configs[0], template.title, template.id)"
+                @click="selectList(template.title, template.id)"
                 class="list-button"
               >
                 {{ template.title }}
@@ -453,50 +453,60 @@
             </div>
           </div>
 
-          <!-- <section v-if="filterSelected" class="selected-filters" style="position: relative">
-            <main
-              v-for="(filter, i) in activeFilters"
-              :key="i"
-              @mouseenter="hoveredIndex = i"
-              @mouseleave="hoveredIndex = null"
-            >
-              {{ filter }} <small style="font-weight: 400px"></small>
-              <span v-if="hoveredIndex === i" class="selected-filters__close"
-                ><img src="@/assets/images/close.png" @click="removeFilter(filter)" alt=""
-              /></span>
+          <div
+            v-for="(filter, i) in activeFilters"
+            :key="i"
+            @mouseenter="hoveredIndex = i"
+            @mouseleave="hoveredIndex = null"
+            class="main"
+          >
+            <strong style="font-size: 14px">{{ filter }}</strong>
+            <small style="font-weight: 400px; margin-left: 0.2rem">{{ currentOperators[i] }}</small>
+            <small style="margin-left: 0.2rem">{{ filterValues[i] }}</small>
+            <span v-if="hoveredIndex === i" class="selected-filters__close"
+              ><img src="@/assets/images/close.png" @click="removeFilter(filter, i)" alt=""
+            /></span>
+          </div>
+
+          <section v-if="filterSelected" style="position: relative">
+            <main class="main__before">
+              <small
+                ><strong>{{ currentFilter }}</strong></small
+              >
+              <small style="margin-left: 0.2rem">{{ currentOperators[-1] }}</small>
             </main>
+            <div>
+              <FilterSelection
+                @filter-added="applyFilter"
+                @operator-selected="addOperator"
+                @value-selected="valueSelected"
+                @close-selection="closeFilterSelection"
+                :type="filterType"
+                :filterName="currentFilter"
+                :dropdowns="picklistQueryOpts"
+                :apiName="filterApiName"
+                :accounts="allAccounts"
+                :owners="allUsers"
+              />
+            </div>
+          </section>
 
-            <FilterSelection />
-          </section> -->
-
-          <!-- <section style="position: relative">
+          <section style="position: relative">
             <button
-              v-if="activeFilters.length < 4"
-              @click="filtering = !filtering"
-              class="add-button"
+              v-if="activeFilters.length < 4 && !selectedWorkflow"
+              @click.stop="addingFilter"
+              class="add-filter-button"
             >
               <img
                 src="@/assets/images/plusOne.png"
-                style="height: 1rem; margin-right: 0.25rem"
+                style="height: 0.8rem; margin-right: 0.25rem"
                 alt=""
               />Add filter
             </button>
-            <div v-if="filtering">
-              <Filters @select-filter="selectFilter" />
+            <div v-outside-click="closeFilters" v-if="filtering">
+              <Filters @select-filter="selectFilter" :filterFields="filterFields" />
             </div>
-          </section> -->
-          <button class="add-button" disabled>
-            <img
-              src="@/assets/images/plusOne.png"
-              style="height: 1rem; margin-right: 0.25rem"
-              alt=""
-            />Add filter(coming soon)
-          </button>
-
-          <h5>
-            {{ currentList }}:
-            <span>{{ selectedWorkflow ? currentWorkflow.list.length : allOpps.length }}</span>
-          </h5>
+          </section>
         </div>
         <div v-else>
           <div v-if="!updatingOpps" class="bulk-action">
@@ -593,15 +603,20 @@
           </button>
         </div>
       </section>
+      <div class="results">
+        <h6 style="color: #9b9b9b">
+          {{ currentList }}:
+          <span>{{ selectedWorkflow ? currentWorkflow.length : allOpps.length }}</span>
+        </h6>
+      </div>
       <!-- <p @click="tester">test</p> -->
-      <!-- <p>{{ instanceIdList }}</p>
-      <p>{{ currentCheckList }}</p> -->
       <section v-show="!selectedWorkflow" class="table-section">
         <div class="table">
           <PipelineHeader
             :oppFields="oppFields"
             @check-all="onCheckAll"
             @sort-opps="sortOpps"
+            @set-opps="setOpps"
             @sort-opps-reverse="sortOppsReverse"
             :allSelected="allSelected"
           />
@@ -619,7 +634,7 @@
           />
         </div>
       </section>
-      <section v-if="selectedWorkflow && currentWorkflow.list.length > 0" class="table-section">
+      <section v-if="selectedWorkflow && currentWorkflow.length > 0" class="table-section">
         <div class="table">
           <WorkflowHeader
             :oppFields="oppFields"
@@ -631,9 +646,9 @@
           <WorkflowRow
             :key="i"
             v-for="(workflow, i) in filteredWorkflows"
-            @create-form="createFormInstance(workflow.resourceRef.id, workflow.id)"
-            @get-notes="getNotes(workflow.resourceRef.id)"
-            @checked-box="selectWorkflowCheckbox(workflow.resourceRef.id, workflow.id)"
+            @create-form="createFormInstance(workflow.id)"
+            @get-notes="getNotes(workflow.id)"
+            @checked-box="selectWorkflowCheckbox(workflow.id)"
             :workflow="workflow"
             :index="i + 1 * 1000"
             :oppFields="oppFields"
@@ -642,10 +657,7 @@
           />
         </div>
       </section>
-      <section
-        v-if="currentWorkflow && currentWorkflow.list.length < 1"
-        class="empty-table-section"
-      >
+      <section v-if="currentWorkflow && currentWorkflow.length < 1" class="empty-table-section">
         <div v-if="!loadingWorkflows">
           <div class="empty-table">
             <div class="table-row">
@@ -683,6 +695,7 @@ import WorkflowHeader from '@/components/WorkflowHeader'
 import Filters from '@/components/Filters'
 import FilterSelection from '@/components/FilterSelection'
 import User from '@/services/users'
+import Multiselect from 'vue-multiselect'
 
 export default {
   name: 'Pipelines',
@@ -699,6 +712,7 @@ export default {
     Loader,
     Filters,
     FilterSelection,
+    Multiselect,
   },
   data() {
     return {
@@ -706,7 +720,6 @@ export default {
       updatingOpps: false,
       oppInstanceId: null,
       oppId: null,
-      allUsers: null,
       primaryCheckList: [],
       workflowCheckList: [],
       allSelected: false,
@@ -758,6 +771,25 @@ export default {
       filterSelected: false,
       activeFilters: [],
       hoveredIndex: null,
+      currentFilter: null,
+      operatorValue: 'EQUALS',
+      currentOperators: ['equals'],
+      filterType: null,
+      filterFields: [],
+      filterApiName: null,
+      filterValues: [],
+      filters: [],
+      operatorsLength: 0,
+      ladFilter: {
+        apiName: 'LastActivityDate',
+        dataType: 'Date',
+        referenceDisplayLabel: 'Last Activity Date',
+      },
+      lmdFilter: {
+        apiName: 'LastModifiedDate',
+        dataType: 'DateTime',
+        referenceDisplayLabel: 'Last Modified Date',
+      },
     }
   },
   computed: {
@@ -779,8 +811,8 @@ export default {
       )
     },
     filteredWorkflows() {
-      return this.currentWorkflow.list.filter((opp) =>
-        opp.resourceRef.name.toLowerCase().includes(this.workflowFilterText.toLowerCase()),
+      return this.currentWorkflow.filter((opp) =>
+        opp.name.toLowerCase().includes(this.workflowFilterText.toLowerCase()),
       )
     },
     currentMonth() {
@@ -832,13 +864,134 @@ export default {
     tester() {
       console.log(this.allOpps)
     },
-    selectFilter(name, type) {
-      this.filtering = !this.filtering
-      this.filterSelected = true
-      this.activeFilters.push(name)
+    setOpps() {
+      //  this.getObjects()
+      User.api.getUser(this.user.id).then((response) => {
+        this.$store.commit('UPDATE_USER', response)
+      })
     },
-    removeFilter(name) {
-      this.activeFilters = this.activeFilters.filter((filter) => filter !== name)
+    closeFilters() {
+      this.filtering = false
+    },
+    closeFilterSelection() {
+      this.filterSelected = false
+      this.activeFilters = []
+      this.operatorValue = 'EQUALS'
+      this.currentOperator = ['equals']
+    },
+    closeListSelect() {
+      this.showList = false
+    },
+    closeSelection() {
+      this.filtering ? (this.filtering = false) : (this.filtering = true)
+      this.showList ? (this.showList = false) : (this.showList = this.showList)
+    },
+    async getFilteredObjects(value) {
+      if (value) {
+        this.filters.push([this.operatorValue, this.filterApiName, value])
+      }
+      try {
+        const res = await SObjects.api.getObjects('Opportunity', true, this.filters)
+        this.allOpps = res.results
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.operatorValue = 'EQUALS'
+        this.currentOperator = ['equals']
+      }
+    },
+    addOperator(name) {
+      this.operatorValue = name
+      switch (name) {
+        case 'EQUALS':
+          this.currentOperators.length === 1
+            ? (this.currentOperators = ['equals'])
+            : this.currentOperators.push('equals')
+          break
+        case 'NOT_EQUALS':
+          this.currentOperators.length === 1
+            ? (this.currentOperators = ['not equals'])
+            : this.currentOperators.push('not equals')
+          break
+        case 'GREATER_THAN':
+          this.currentOperators.length === 1
+            ? (this.currentOperators = ['greater than'])
+            : this.currentOperators.push('greater than')
+          break
+        case 'GREATER_THAN_EQUALS':
+          this.currentOperators.length === 1
+            ? (this.currentOperators = ['greater or equal'])
+            : this.currentOperators.push('greater or equal')
+          break
+        case 'LESS_THAN':
+          this.currentOperators.length === 1
+            ? (this.currentOperators = ['less than'])
+            : this.currentOperators.push('less than')
+          break
+        case 'LESS_THAN_EQUALS':
+          this.currentOperators.length === 1
+            ? (this.currentOperators = ['less or equal'])
+            : this.currentOperators.push('less or equal')
+          break
+        case 'CONTAINS':
+          this.currentOperators.length === 1
+            ? (this.currentOperators = ['contains'])
+            : this.currentOperators.push('contains')
+          break
+        case 'RANGE':
+          this.currentOperators.length === 1
+            ? (this.currentOperators = ['range'])
+            : this.currentOperators.push('range')
+          break
+        default:
+          console.log('(0_o)')
+      }
+    },
+    addingFilter() {
+      if (this.filtering === true) {
+        this.filtering = false
+      } else {
+        this.filtering = true
+        this.filterSelected = false
+      }
+    },
+    choosingList() {
+      if (this.showList === true) {
+        this.showList = false
+      } else {
+        this.showList = true
+        this.showList = false
+      }
+    },
+    applyFilter(value) {
+      this.operatorsLength += 1
+      if (this.currentOperators.length < this.operatorsLength) {
+        this.currentOperators.push('equals')
+      }
+      this.getFilteredObjects(value)
+      this.filterSelected = false
+      this.activeFilters.push(this.currentFilter)
+    },
+    valueSelected(value) {
+      this.filterValues.push(value)
+    },
+    selectFilter(name, type, label) {
+      this.filtering = !this.filtering
+      this.filterApiName = name
+      this.filterType = type
+      this.currentFilter = label
+      this.filterSelected = true
+    },
+    removeFilter(name, index) {
+      this.activeFilters.splice(index, 1)
+      this.filters.splice(index, 1)
+      this.filterValues.splice(index, 1)
+      this.currentOperators.splice(index, 1)
+      this.getFilteredObjects()
+      this.filterSelected = false
+      this.currentFilter = null
+      this.operatorValue = 'EQUALS'
+      this.filterApiName = null
     },
     capitalizeFirstLetter(string) {
       return string.charAt(0).toUpperCase() + string.slice(1)
@@ -959,18 +1112,25 @@ export default {
         })
       }
     },
-
     sortWorkflows(dT, field, apiName) {
-      let newField = this.capitalizeFirstLetter(this.camelize(apiName))
-      let customField = this.capitalizeFirstLetter(this.camelize(this.sliced(apiName))).replaceAll(
-        '_',
-        '',
-      )
+      let newField = this.capitalizeFirstLetter(this.camelize(field))
 
-      if (dT === 'TextArea') {
-        this.currentWorkflow.list = this.currentWorkflow.list.sort(function (a, b) {
-          const nameA = a.resourceRef.secondaryData[`${newField}`]
-          const nameB = b.resourceRef.secondaryData[`${newField}`]
+      if (field === 'Stage') {
+        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+          const nameA = a['secondary_data']['StageName']
+          const nameB = b['secondary_data']['StageName']
+          if (nameA < nameB) {
+            return -1
+          }
+          if (nameA > nameB) {
+            return 1
+          }
+          return 0
+        })
+      } else if (dT === 'TextArea') {
+        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+          const nameA = a['secondary_data'][`${newField}`]
+          const nameB = b['secondary_data'][`${newField}`]
           if (nameA.length < nameB.length) {
             return -1
           }
@@ -980,9 +1140,9 @@ export default {
           return 0
         })
       } else if (apiName.includes('__c')) {
-        this.currentWorkflow.list = this.currentWorkflow.list.sort(function (a, b) {
-          const nameA = a.resourceRef.secondaryData[`${customField}`]
-          const nameB = b['resourceRef']['secondaryData'][`${customField}`]
+        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+          const nameA = a['secondary_data'][`${apiName}`]
+          const nameB = b['secondary_data'][`${apiName}`]
           if (nameA < nameB) {
             return -1
           }
@@ -992,9 +1152,9 @@ export default {
           return 0
         })
       } else {
-        this.currentWorkflow.list = this.currentWorkflow.list.sort(function (a, b) {
-          const nameA = a.resourceRef.secondaryData[`${newField}`]
-          const nameB = b.resourceRef.secondaryData[`${newField}`]
+        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+          const nameA = a['secondary_data'][`${newField}`]
+          const nameB = b['secondary_data'][`${newField}`]
           if (nameA < nameB) {
             return -1
           }
@@ -1006,16 +1166,24 @@ export default {
       }
     },
     sortWorkflowsReverse(dT, field, apiName) {
-      let newField = this.capitalizeFirstLetter(this.camelize(apiName))
-      let customField = this.capitalizeFirstLetter(this.camelize(this.sliced(apiName))).replaceAll(
-        '_',
-        '',
-      )
+      let newField = this.capitalizeFirstLetter(this.camelize(field))
 
-      if (dT === 'TextArea') {
-        this.currentWorkflow.list = this.currentWorkflow.list.sort(function (a, b) {
-          const nameA = a.resourceRef.secondaryData[`${newField}`]
-          const nameB = b.resourceRef.secondaryData[`${newField}`]
+      if (field === 'Stage') {
+        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+          const nameA = a['secondary_data']['StageName']
+          const nameB = b['secondary_data']['StageName']
+          if (nameA < nameB) {
+            return 1
+          }
+          if (nameA > nameB) {
+            return -1
+          }
+          return 0
+        })
+      } else if (dT === 'TextArea') {
+        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+          const nameA = a['secondary_data'][`${newField}`]
+          const nameB = b['secondary_data'][`${newField}`]
           if (nameA.length < nameB.length) {
             return 1
           }
@@ -1025,9 +1193,9 @@ export default {
           return 0
         })
       } else if (apiName.includes('__c')) {
-        this.currentWorkflow.list = this.currentWorkflow.list.sort(function (a, b) {
-          const nameA = a.resourceRef.secondaryData[`${customField}`]
-          const nameB = b.resourceRef.secondaryData[`${customField}`]
+        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+          const nameA = a['secondary_data'][`${apiName}`]
+          const nameB = b['secondary_data'][`${apiName}`]
           if (nameA < nameB) {
             return 1
           }
@@ -1037,14 +1205,14 @@ export default {
           return 0
         })
       } else {
-        this.currentWorkflow.list = this.currentWorkflow.list.sort(function (a, b) {
-          const nameA = a.resourceRef.secondaryData[`${newField}`]
-          const nameB = b.resourceRef.secondaryData[`${newField}`]
+        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+          const nameA = a['secondary_data'][`${newField}`]
+          const nameB = b['secondary_data'][`${newField}`]
           if (nameA < nameB) {
             return 1
           }
           if (nameA > nameB) {
-            return -11
+            return -1
           }
           return 0
         })
@@ -1057,7 +1225,7 @@ export default {
         this.primaryCheckList.push(id)
       }
     },
-    selectWorkflowCheckbox(id, instance) {
+    selectWorkflowCheckbox(id) {
       if (this.workflowCheckList.includes(id)) {
         this.workflowCheckList = this.workflowCheckList.filter((opp) => opp !== id)
       } else {
@@ -1065,7 +1233,7 @@ export default {
       }
     },
     closeAll() {
-      if (this.primaryCheckList.length === 0 || this.workflowCheckList === 0) {
+      if (this.primaryCheckList.length === 0 || this.workflowCheckList.length === 0) {
         this.closeDateSelected = false
         this.advanceStageSelected = false
         this.forecastSelected = false
@@ -1098,15 +1266,15 @@ export default {
     onCheckAllWorkflows() {
       if (this.workflowCheckList.length < 1) {
         for (let i = 0; i < this.filteredWorkflows.length; i++) {
-          this.workflowCheckList.push(this.filteredWorkflows[i].resourceRef.id)
+          this.workflowCheckList.push(this.filteredWorkflows[i].id)
         }
       } else if (
         this.workflowCheckList.length > 0 &&
         this.workflowCheckList.length < this.filteredWorkflows.length
       ) {
         for (let i = 0; i < this.filteredWorkflows.length; i++) {
-          !this.workflowCheckList.includes(this.filteredWorkflows[i].resourceRef.id)
-            ? this.workflowCheckList.push(this.filteredWorkflows[i].resourceRef.id)
+          !this.workflowCheckList.includes(this.filteredWorkflows[i].id)
+            ? this.workflowCheckList.push(this.filteredWorkflows[i].id)
             : (this.workflowCheckList = this.workflowCheckList)
         }
       } else {
@@ -1275,7 +1443,6 @@ export default {
             .updateResource({
               form_id: ids[i],
               form_data: { CloseDate: data },
-              // alert_instance: this.instanceIdList[i],
             })
             .then(async () => {
               let updatedRes = await SObjects.api.getObjects('Opportunity')
@@ -1286,12 +1453,16 @@ export default {
           setTimeout(() => {
             this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
           }, 300)
+          this.closeFilterSelection()
           if (this.selectedWorkflow) {
-            this.currentWorkflow.refresh()
+            this.updateWorkflowList(this.currentList, this.refreshId)
           } else if (this.currentList === 'Closing this month') {
             this.stillThisMonth()
           } else if (this.currentList === 'Closing next month') {
             this.stillNextMonth()
+          }
+
+          if (this.activefilters.length) {
           }
         } catch (e) {
           console.log(e)
@@ -1308,9 +1479,9 @@ export default {
 
       this.$Alert.alert({
         type: 'success',
-        timeout: 3000,
+        timeout: 1000,
         message: 'Salesforce update successful!',
-        sub: 'Some changes may take longer to reflect',
+        // sub: 'Some changes may take longer to reflect',
       })
     },
     async bulkUpdateStage(ids, data) {
@@ -1331,8 +1502,9 @@ export default {
           setTimeout(() => {
             this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
           }, 300)
+          this.closeFilterSelection()
           if (this.selectedWorkflow) {
-            this.currentWorkflow.refresh()
+            this.updateWorkflowList(this.currentList, this.refreshId)
           } else if (this.currentList === 'Closing this month') {
             this.stillThisMonth()
           } else if (this.currentList === 'Closing next month') {
@@ -1352,9 +1524,9 @@ export default {
       this.advanceStageSelected = false
       this.$Alert.alert({
         type: 'success',
-        timeout: 3000,
+        timeout: 1000,
         message: 'Salesforce update successful!',
-        sub: 'Some changes may take longer to reflect',
+        // sub: 'Some changes may take longer to reflect',
       })
     },
     async bulkChangeForecast(ids, data) {
@@ -1375,8 +1547,9 @@ export default {
           setTimeout(() => {
             this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
           }, 300)
+          this.closeFilterSelection()
           if (this.selectedWorkflow) {
-            this.currentWorkflow.refresh()
+            this.updateWorkflowList(this.currentList, this.refreshId)
           } else if (this.currentList === 'Closing this month') {
             this.stillThisMonth()
           } else if (this.currentList === 'Closing next month') {
@@ -1458,12 +1631,13 @@ export default {
         this.formData = {}
         this.$Alert.alert({
           type: 'success',
-          timeout: 3000,
+          timeout: 1000,
           message: 'Salesforce update successful!',
-          sub: 'Some changes may take longer to reflect',
+          // sub: 'Some changes may take longer to reflect',
         })
+        this.closeFilterSelection()
         if (this.selectedWorkflow) {
-          this.currentWorkflow.refresh()
+          this.updateWorkflowList(this.currentList, this.refreshId)
         } else if (this.currentList === 'Closing this month') {
           this.stillThisMonth()
         } else if (this.currentList === 'Closing next month') {
@@ -1491,27 +1665,41 @@ export default {
       }
       this.getAllForms()
     },
-    async selectList(configId, title, id) {
+    async selectList(title, id) {
+      this.loading = true
       this.refreshId = id
       this.currentList = title
       try {
-        this.currentWorkflow = CollectionManager.create({
-          ModelClass: AlertInstance,
-          filters: {
-            byConfig: configId,
-          },
+        let res = await AlertTemplate.api.runAlertTemplateNow(id, {
+          fromWorkflow: true,
         })
-        this.currentWorkflow.refresh()
-        setTimeout(() => {
-          if (this.currentWorkflow.list.length < 1) {
-            this.refresh(this.refreshId)
-          }
-        }, 300)
+        this.currentWorkflow = this.allOpps.filter((opp) =>
+          res.data.ids.includes(opp.integration_id),
+        )
       } catch (error) {
         console.log(error)
+      } finally {
+        this.selectedWorkflow = true
+        this.showList = false
+        this.loading = false
       }
-      this.selectedWorkflow = true
-      this.showList = false
+    },
+    async updateWorkflowList(title, id) {
+      this.refreshId = id
+      this.currentList = title
+      try {
+        let res = await AlertTemplate.api.runAlertTemplateNow(id, {
+          fromWorkflow: true,
+        })
+        this.currentWorkflow = this.allOpps.filter((opp) =>
+          res.data.ids.includes(opp.integration_id),
+        )
+      } catch (error) {
+        console.log(error)
+      } finally {
+        this.selectedWorkflow = true
+        this.showList = false
+      }
     },
     async getAllForms() {
       try {
@@ -1538,6 +1726,13 @@ export default {
         for (let i in this.picklistQueryOpts) {
           this.picklistQueryOpts[i] = this.listPicklists(i, { picklistFor: i })
         }
+        this.filterFields = this.updateOppForm[0].fieldsRef.filter(
+          (field) =>
+            field.apiName !== 'meeting_type' &&
+            field.apiName !== 'meeting_comments' &&
+            !field.apiName.includes('__c'),
+        )
+        this.filterFields = [...this.filterFields, this.ladFilter, this.lmdFilter]
         this.oppFields = this.updateOppForm[0].fieldsRef.filter(
           (field) =>
             field.apiName !== 'meeting_type' &&
@@ -1555,7 +1750,7 @@ export default {
         const res = await SObjects.api.getObjects('User')
         this.allUsers = res.results
       } catch (e) {
-        console.lof(e)
+        console.log(e)
       }
     },
     async getAccounts() {
@@ -1563,16 +1758,19 @@ export default {
         const res = await SObjects.api.getObjects('Account')
         this.allAccounts = res.results
       } catch (e) {
-        console.lof(e)
+        console.log(e)
       }
     },
     async getObjects() {
+      this.loading = true
       try {
         const res = await SObjects.api.getObjects('Opportunity')
         this.allOpps = res.results
         this.originalList = res.results
       } catch (e) {
-        console.lof(e)
+        console.log(e)
+      } finally {
+        this.loading = false
       }
     },
     async getNotes(id) {
@@ -1646,6 +1844,30 @@ export default {
 <style lang="scss">
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+.results {
+  margin: 0;
+  width: 100%;
+  display: flex;
+  padding-left: 1rem;
+  margin-bottom: -1.25rem;
+  margin-top: -0.75rem;
+  justify-content: flex-start;
+}
+select {
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-color: #fafafa;
+  height: 40px;
+  width: 100%;
+  background-image: url('../assets/images/dropdown.png');
+  background-size: 1rem;
+  background-position: 100%;
+  background-repeat: no-repeat;
+  border: 1px solid #ccc;
+  padding-left: 0.75rem;
+  border-radius: 0;
+}
 .select-btn {
   border: none;
   min-height: 4.5vh;
@@ -1823,7 +2045,6 @@ h3 {
   border-bottom: 3px solid $white;
   color: $base-gray;
   font-size: 16px;
-  font-weight: bold;
   letter-spacing: 0.75px;
   div {
     margin-right: 1rem;
@@ -1863,6 +2084,23 @@ h3 {
 .table-cell-header {
   display: table-cell;
   padding: 1.25vh 3vh;
+  border: none;
+  border-bottom: 3px solid $light-orange-gray;
+  border-radius: 2px;
+  z-index: 2;
+  top: 0;
+  position: sticky;
+  background-color: $off-white;
+  font-weight: bold;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  color: $base-gray;
+}
+.table-cell-header-wide {
+  display: table-cell;
+  padding: 0.25rem;
+  padding: 1.25vh 2.5vh;
+  min-width: 3rem;
   border: none;
   border-bottom: 3px solid $light-orange-gray;
   border-radius: 2px;
@@ -1946,7 +2184,7 @@ section {
   padding: 0px;
 }
 .flex-row {
-  position: relative;
+  // position: relative;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -1974,7 +2212,7 @@ section {
   justify-content: space-between;
 }
 .pipelines {
-  margin-top: 4rem;
+  padding-top: 5rem;
   color: $base-gray;
 }
 .invert {
@@ -1992,6 +2230,22 @@ section {
 }
 .add-button:disabled:hover {
   transform: none;
+}
+.add-filter-button {
+  display: flex;
+  align-items: center;
+  border: none;
+  height: 4.5vh;
+  margin: 0 0.5rem 0 0;
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.2rem;
+  background-color: transparent;
+  cursor: pointer;
+  color: $dark-green;
+
+  img {
+    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+  }
 }
 .add-button {
   display: flex;
@@ -2039,11 +2293,9 @@ section {
 }
 
 .add-button:hover {
-  transform: scale(1.03);
   box-shadow: 1px 2px 2px $very-light-gray;
 }
 .add-button__:hover {
-  transform: scale(1.03);
   box-shadow: 1px 2px 2px $very-light-gray;
 }
 .search-bar {
@@ -2064,6 +2316,16 @@ section {
   background-color: white;
   min-height: 2.5rem;
   width: 14vw;
+}
+#user-input {
+  border: 1px solid $theme-gray;
+  border-radius: 0.3rem;
+  background-color: white;
+  min-height: 2.5rem;
+  width: 14vw;
+}
+#user-input:focus {
+  outline: 1px solid $lighter-green;
 }
 .number-input {
   background-color: $off-white;
@@ -2108,21 +2370,6 @@ section {
   overflow: scroll;
   padding: 0;
 
-  main {
-    display: flex;
-    align-items: center;
-    flex-direction: row;
-    border: none;
-    min-height: 5vh;
-    margin: 0 0.5rem 0 0;
-    padding: 0.25rem 0.6rem;
-    border-radius: 0.2rem;
-    background-color: $white-green;
-    cursor: pointer;
-    color: $dark-green;
-    font-weight: bold;
-  }
-
   &__close {
     background-color: $white-green;
     backdrop-filter: blur(0.5px);
@@ -2133,37 +2380,70 @@ section {
     min-height: 3vh;
 
     img {
-      height: 0.8rem;
+      height: 0.9rem;
       filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
     }
   }
 }
+.main {
+  border: none;
+  height: 5vh;
+  max-width: 10vw;
+  margin: 0 0.5rem 0 0;
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.2rem;
+  background-color: $white-green;
+  cursor: pointer;
+  color: $dark-green;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.main:hover {
+  overflow: visible;
+  white-space: normal;
+  max-width: none;
+}
 
-.selected-filters > main > span {
+main > span {
   display: none;
 }
-.selected-filters > main:hover > span {
+main:hover > span {
   display: block;
 }
-
+.main__before {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  border: none;
+  min-height: 5vh;
+  margin: 0 0.5rem 0 0;
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.2rem;
+  background-color: $dark-green;
+  cursor: pointer;
+  color: white;
+  font-weight: bold;
+}
 .list-section {
   z-index: 4;
   position: absolute;
-  top: 8vh;
-  left: 0;
+  top: 20vh;
+  left: 1rem;
   border-radius: 0.33rem;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   background-color: $white;
-  min-width: 16vw;
-  max-height: 40vh;
+  min-width: 20vw;
+  max-height: 56vh;
   overflow: scroll;
   margin-right: 0.5rem;
   box-shadow: 1px 1px 7px 2px $very-light-gray;
   &__title {
     position: sticky;
     top: 0;
+    z-index: 5;
     color: $base-gray;
     background-color: $off-white;
     letter-spacing: 0.25px;
@@ -2219,7 +2499,7 @@ section {
 .cancel {
   color: $dark-green;
   font-weight: bold;
-  margin-right: 1rem;
+  margin-left: 1rem;
   cursor: pointer;
 }
 .flex-end {
@@ -2231,8 +2511,8 @@ section {
 }
 .flex-end-opp {
   width: 100%;
-  padding: 0.5rem 0.25rem;
-  height: 6rem;
+  padding: 0.5rem 1.5rem;
+  height: 5rem;
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;

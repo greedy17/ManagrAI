@@ -17,7 +17,7 @@
         </div>
       </router-link>
 
-      <div
+      <!-- <div
         v-if="isOnboarding && user.activatedManagrConfigs.includes('Update Forecast')"
         style="margin-bottom: -0.5rem"
         class="bouncy"
@@ -30,8 +30,9 @@
         <div id="tailShadow"></div>
         <div id="tail1"></div>
         <div id="tail2"></div>
-      </div>
-      <router-link
+      </div> -->
+
+      <!-- <router-link
         v-if="isOnboarding"
         :class="
           isOnboarding && !user.activatedManagrConfigs.includes('Update Forecast')
@@ -54,9 +55,10 @@
             }}</span>
           </h5>
         </div>
-      </router-link>
-      <router-link v-else exact-active-class="active" :to="{ name: 'ListTemplates' }">
-        <div class="row">
+      </router-link> -->
+
+      <router-link exact-active-class="active" :to="{ name: 'ListTemplates' }">
+        <div :class="isOnboarding ? 'onboarding row' : 'row'">
           <img
             src="@/assets/images/star.png"
             style="height: 1.3rem; margin-right: 1rem; padding-left: 0.5rem"

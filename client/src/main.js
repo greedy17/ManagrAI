@@ -57,7 +57,9 @@ import 'vue-datetime/dist/vue-datetime.css'
 import vmodal from 'vue-js-modal'
 import VueClipboard from 'vue-clipboard2'
 import { Drag, Drop } from 'vue-drag-drop';
+import outsideClickDirective from "@/services/directives/outside-click";
 
+Vue.directive("outside-click", outsideClickDirective);
 Vue.config.productionTip = false
 
 Vue.use(VueClipboard)
@@ -104,6 +106,7 @@ Vue.component('Modal', Modal)
 Vue.component('datetime', Datetime)
 Vue.component('vue-multiselect', window.VueMultiselect.default)
 Vue.use(vmodal)
+
 
 /* eslint-disable no-new */
 new Vue({

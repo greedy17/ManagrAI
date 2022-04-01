@@ -73,6 +73,25 @@
         />
       </div>
     </div>
+    <div :key="field.id" v-for="field in extraPipelineFields" class="table-cell">
+      <SkeletonBox v-if="updateList.includes(opp.id) && opp" width="100px" height="14px" />
+
+      <div class="limit-cell-height" v-else-if="!updateList.includes(opp.id) && opp">
+        <PipelineField
+          style="direction: ltr"
+          :apiName="field.apiName"
+          :dataType="field.dataType"
+          :fieldData="
+            field.apiName.includes('__c')
+              ? opp['secondary_data'][field.apiName]
+              : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+          "
+          :lastStageUpdate="opp['last_stage_update']"
+        />
+      </div>
+    </div>
+    <!-- <p @click="tester">test</p> -->
+    <div style="background-color: white" class="table-cell-checkbox"></div>
   </div>
 </template>
 
@@ -80,6 +99,8 @@
 import PipelineNameSection from '@/components/PipelineNameSection'
 import PipelineField from '@/components/PipelineField'
 import SkeletonBox from '@/components/SkeletonBox'
+import { CollectionManager } from '@thinknimble/tn-models'
+import { SObjectField } from '@/services/salesforce'
 
 export default {
   name: 'PipelineTableRow',
@@ -88,10 +109,36 @@ export default {
     PipelineField,
     SkeletonBox,
   },
+  async created() {
+    await this.objectFields.refresh()
+  },
   data() {
-    return {}
+    return {
+      objectFields: CollectionManager.create({
+        ModelClass: SObjectField,
+        pagination: { size: 300 },
+        filters: {
+          salesforceObject: 'Opportunity',
+        },
+      }),
+    }
+  },
+  computed: {
+    extraPipelineFields() {
+      let extras = []
+      extras = this.objectFields.list.filter((field) => this.hasExtraFields.includes(field.id))
+      return extras
+    },
+    hasExtraFields() {
+      return this.$store.state.user.salesforceAccountRef.extraPipelineFields
+    },
   },
   methods: {
+    // tester() {
+    //   console.log(this.extraPipelineFields)
+    //   console.log(this.objectFields)
+    //   console.log(this.hasExtraFields)
+    // },
     emitCreateForm() {
       this.$emit('create-form')
     },
@@ -121,7 +168,7 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
@@ -184,21 +231,21 @@ export default {
   letter-spacing: 0.5px;
   color: $base-gray;
 }
-.table-cell-header {
-  display: table-cell;
-  padding: 3vh;
-  border: none;
-  border-bottom: 3px solid $light-orange-gray;
-  border-radius: 2px;
-  z-index: 2;
-  top: 0;
-  position: sticky;
-  background-color: $off-white;
-  font-weight: bold;
-  font-size: 13px;
-  letter-spacing: 0.5px;
-  color: $base-gray;
-}
+// .table-cell-header {
+//   display: table-cell;
+//   padding: 1.25vh 3vh;
+//   border: none;
+//   border-bottom: 3px solid $light-orange-gray;
+//   border-radius: 2px;
+//   z-index: 2;
+//   top: 0;
+//   position: sticky;
+//   background-color: $off-white;
+//   font-weight: bold;
+//   font-size: 13px;
+//   letter-spacing: 0.5px;
+//   color: $base-gray;
+// }
 .flex-row-spread {
   display: flex;
   flex-direction: row;

@@ -103,10 +103,11 @@ class AlertTemplateViewSet(
                     res = sf.adapter_class.execute_alert_query(
                         template.url_str(self.request.user, config.id), template.resource_type
                     )
-                    res_data = [item["Id"] for item in res.get("records")]
-                    print(res_data)
+
+                    res_data = [item.integration_id for item in res]
+
                     logger.info(
-                        f"Pulled total {len(res)} from request for {template.resource} matching alert query"
+                        f"Pulled total {len(res)} from request for {template.resource_type} matching alert query"
                     )
                     break
                 except TokenExpired:
@@ -123,22 +124,23 @@ class AlertTemplateViewSet(
                     return logger.warning(
                         f"Failed to sync some data for resource {template.resource} for user {str(user.id)} because of SF LIMIT"
                     )
-            return Response(data=res_data)
-        for config in obj.configs.all():
-            template = config.template
-            template.invocation = template.invocation + 1
-            template.last_invocation_datetime = timezone.now()
-            template.save()
-            users = config.target_users
-            for user in users:
-                run_time = datetime.now(pytz.utc)
-                _process_check_alert(
-                    str(config.id),
-                    str(user.id),
-                    template.invocation,
-                    run_time.strftime("%Y-%m-%dT%H:%M%z"),
-                )
-        return Response()
+            return Response({"ids": res_data})
+        else:
+            for config in obj.configs.all():
+                template = config.template
+                template.invocation = template.invocation + 1
+                template.last_invocation_datetime = timezone.now()
+                template.save()
+                users = config.target_users
+                for user in users:
+                    run_time = datetime.now(pytz.utc)
+                    _process_check_alert(
+                        str(config.id),
+                        str(user.id),
+                        template.invocation,
+                        run_time.strftime("%Y-%m-%dT%H:%M%z"),
+                    )
+            return Response()
 
 
 class AlertMessageTemplateViewSet(

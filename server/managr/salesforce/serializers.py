@@ -24,6 +24,7 @@ class SalesforceAuthSerializer(serializers.ModelSerializer):
             "exclude_fields",
             "is_busy",
             "last_sync_time",
+            "extra_pipeline_fields",
         )
 
 

@@ -1,9 +1,5 @@
 <template>
   <div class="filter-section">
-    <!-- <div class="flex-row-spread wide">
-      <p class="filter-section__title">All Filters</p>
-      <img @click="closeFilters" class="exit" src="@/assets/images/close.png" alt="" />
-    </div> -->
     <div class="filter-section__title">
       <div class="filter-search-bar wide">
         <input class="wide" type="search" v-model="searchFilterText" placeholder="Search filters" />
@@ -12,8 +8,13 @@
     </div>
 
     <div :key="i" v-for="(filter, i) in filteredFilters" class="filter-section__filters">
-      <button @click="$emit('select-filter', filter.title, filter.type)" class="filter-button">
-        {{ filter.title }}
+      <button
+        @click="
+          $emit('select-filter', filter.apiName, filter.dataType, filter.referenceDisplayLabel)
+        "
+        class="filter-button"
+      >
+        {{ filter.referenceDisplayLabel }}
       </button>
     </div>
   </div>
@@ -22,42 +23,18 @@
 <script>
 export default {
   name: 'Filters',
+  props: {
+    filterFields: {},
+  },
   data() {
     return {
       searchFilterText: '',
-      oppFilters: [
-        {
-          title: 'Amount',
-          type: 'monetary',
-        },
-        {
-          title: 'Close date',
-          type: 'date',
-        },
-        {
-          title: 'Next step date',
-          type: 'date',
-        },
-        {
-          title: 'Last activity',
-          type: 'time',
-        },
-        {
-          title: 'Last modified',
-          type: 'time',
-        },
-        {
-          title: 'Owner',
-          type: 'person',
-        },
-      ],
-      monetaryOptions: ['less than', 'greater than', 'equals'],
     }
   },
   computed: {
     filteredFilters() {
-      return this.oppFilters.filter((opp) =>
-        opp.title.toLowerCase().includes(this.searchFilterText.toLowerCase()),
+      return this.filterFields.filter((filter) =>
+        filter.referenceDisplayLabel.toLowerCase().includes(this.searchFilterText.toLowerCase()),
       )
     },
   },
@@ -67,48 +44,9 @@ export default {
         this.amountInput(option)
       }
     },
-    amountInput(option) {
-      this.enteringAmount = !this.enteringAmount
-      this.filterOption = option
-    },
-    monetaryFilter(type, title) {
-      this.filterType = type
-      this.filterTitle = title
-    },
-    dateFilter(type, title) {
-      this.filterType = type
-      this.filterTitle = title
-    },
-    timeFilter(type, title) {
-      this.filterType = type
-      this.filterTitle = title
-    },
-    personFilter(type, title) {
-      this.filterType = type
-      this.filterTitle = title
-    },
     closeFilters() {
       this.showList ? (this.showList = !this.showList) : (this.showList = this.showList)
       this.filtering = !this.filtering
-    },
-    applyAmountFilter() {
-      // this.allOpps = this.allOpps.filter((opp) => opp.amount > this.amountValue)
-    },
-    selectFilter(type, title) {
-      switch (type) {
-        case 'monetary':
-          this.monetaryFilter(type, title)
-          break
-        case 'date':
-          this.dateFilter(type, title)
-          break
-        case 'time':
-          this.timeFilter(type, title)
-          break
-        case 'person':
-          this.personFilter(type, title)
-          break
-      }
     },
   },
 }
@@ -140,12 +78,15 @@ export default {
   max-height: 40vh;
   overflow: scroll;
   box-shadow: 1px 1px 7px 2px $very-light-gray;
-  padding: 1rem;
+  padding: 0rem 1rem;
   &__title {
     position: sticky;
+    z-index: 5;
+    background-color: white;
     top: 0;
     margin-bottom: 1rem;
     width: 100%;
+    padding-top: 0.5rem;
   }
   &__filters {
     display: flex;
@@ -184,12 +125,14 @@ export default {
 }
 
 .filter-search-bar {
-  height: 4.5vh;
-  background-color: transparent;
+  min-height: 5vh;
+  background-color: white;
   border-bottom: 1px solid $very-light-gray;
   display: flex;
   align-items: center;
-  padding: 2px;
-  margin-right: 0.5rem;
+  // padding: 2px;
+  margin: auto;
+  padding: auto;
+  // margin-right: 0.5rem;
 }
 </style>
