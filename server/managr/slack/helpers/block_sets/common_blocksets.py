@@ -4,7 +4,7 @@ import pytz
 import uuid
 import logging
 import json
-
+from django.conf import settings
 from datetime import datetime
 
 from django.db.models import Q
@@ -537,3 +537,41 @@ def edit_product_block_set(context):
     )
     form_blocks = slack_form.generate_form()
     return [*form_blocks]
+
+
+@block_set()
+def initial_alert_message(context):
+    title = context.get("title")
+    invocation = context.get("invocation")
+    channel = context.get("channel")
+    config_id = context.get("config_id")
+    if settings.IN_DEV:
+        url = "http://localhost:8080/pipelines"
+    elif settings.IN_STAGING:
+        url = "https://staging.managr.ai/pipelines"
+    else:
+        url = "https://app.managr.ai/pipelines"
+    blocks = [
+        block_builders.simple_section(title),
+        block_builders.actions_block(
+            [
+                block_builders.simple_button_block(
+                    "Update in Slack",
+                    "update_in_slack",
+                    action_id=action_with_params(
+                        slack_const.PAGINATE_ALERTS,
+                        params=[
+                            f"invocation={invocation}",
+                            f"channel={channel}",
+                            f"config_id={config_id}",
+                        ],
+                    ),
+                ),
+                block_builders.simple_button_block(
+                    "Update in Pipeline", "open_in_pipeline", url=url
+                ),
+            ]
+        ),
+    ]
+    return blocks
+
