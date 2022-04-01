@@ -1,12 +1,23 @@
 <template>
   <div>
     <div v-if="dataType">
-      <p v-if="apiName !== 'Amount' && dataType !== 'Date' && apiName !== 'StageName'">
+      <p
+        v-if="
+          apiName !== 'Amount' &&
+          dataType !== 'Date' &&
+          dataType !== 'DateTime' &&
+          apiName !== 'StageName'
+        "
+      >
         {{ fieldData ? fieldData : '---' }}
       </p>
 
       <p v-else-if="dataType === 'Date'">
         {{ fieldData ? formatDate(fieldData) : '---' }}
+      </p>
+
+      <p v-else-if="dataType === 'DateTime'">
+        {{ fieldData ? formatDateTime(fieldData) : '---' }}
       </p>
 
       <p class="flex-columned" v-else-if="apiName === 'StageName'">

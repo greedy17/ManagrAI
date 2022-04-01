@@ -1,7 +1,7 @@
 <template>
   <div class="alerts-page">
     <div style="display: flex; align-item: flex-start; flex-direction: column; margin-left: 12vw">
-      <h2>
+      <h2 @click="tester">
         <span>
           Close Date
           <span style="color: #fa646a">Passed</span>
@@ -425,6 +425,9 @@ export default {
     },
   },
   methods: {
+    tester() {
+      console.log(this.userChannelOpts)
+    },
     getUser(userInfo) {
       if (this.userIds.includes(userInfo)) {
         let selectedUser = this.users.list.filter((user) => user.id === userInfo)

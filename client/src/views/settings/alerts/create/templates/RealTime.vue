@@ -128,7 +128,6 @@ import 'quill/dist/quill.bubble.css'
 
 import { quillEditor } from 'vue-quill-editor'
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
-import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 //Internal
 import FormField from '@/components/forms/FormField'
 import AlertGroup from '@/views/settings/alerts/create/_AlertGroup'
@@ -178,7 +177,6 @@ export default {
     ToggleCheckBox,
     FormField,
     AlertSummary,
-    PulseLoadingSpinnerButton,
     Modal,
   },
   data() {

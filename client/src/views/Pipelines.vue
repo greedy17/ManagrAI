@@ -433,7 +433,7 @@
               <span class="filter" v-if="currentList === 'Closing next month'"> active</span>
             </button>
             <p @click="showWorkflowList = !showWorkflowList" class="list-section__sub-title">
-              Pipeline Monitoring
+              Workflows
               <img v-if="showWorkflowList" src="@/assets/images/downArrow.png" alt="" /><img
                 v-else
                 src="@/assets/images/rightArrow.png"
@@ -444,7 +444,7 @@
               <button
                 :key="i"
                 v-for="(template, i) in templates.list"
-                @click="selectList(template.configs[0], template.title, template.id)"
+                @click="selectList(template.title, template.id)"
                 class="list-button"
               >
                 {{ template.title }}
@@ -480,6 +480,7 @@
                 @filter-added="applyFilter"
                 @operator-selected="addOperator"
                 @value-selected="valueSelected"
+                @close-selection="closeFilterSelection"
                 :type="filterType"
                 :filterName="currentFilter"
                 :dropdowns="picklistQueryOpts"
@@ -492,7 +493,7 @@
 
           <section style="position: relative">
             <button
-              v-if="activeFilters.length < 4"
+              v-if="activeFilters.length < 4 && !selectedWorkflow"
               @click.stop="addingFilter"
               class="add-filter-button"
             >
@@ -605,12 +606,10 @@
       <div class="results">
         <h6 style="color: #9b9b9b">
           {{ currentList }}:
-          <span>{{ selectedWorkflow ? currentWorkflow.list.length : allOpps.length }}</span>
+          <span>{{ selectedWorkflow ? currentWorkflow.length : allOpps.length }}</span>
         </h6>
       </div>
       <!-- <p @click="tester">test</p> -->
-      <!-- <p>{{ instanceIdList }}</p>
-      <p>{{ currentCheckList }}</p> -->
       <section v-show="!selectedWorkflow" class="table-section">
         <div class="table">
           <PipelineHeader
@@ -635,7 +634,7 @@
           />
         </div>
       </section>
-      <section v-if="selectedWorkflow && currentWorkflow.list.length > 0" class="table-section">
+      <section v-if="selectedWorkflow && currentWorkflow.length > 0" class="table-section">
         <div class="table">
           <WorkflowHeader
             :oppFields="oppFields"
@@ -647,9 +646,9 @@
           <WorkflowRow
             :key="i"
             v-for="(workflow, i) in filteredWorkflows"
-            @create-form="createFormInstance(workflow.resourceRef.id, workflow.id)"
-            @get-notes="getNotes(workflow.resourceRef.id)"
-            @checked-box="selectWorkflowCheckbox(workflow.resourceRef.id, workflow.id)"
+            @create-form="createFormInstance(workflow.id)"
+            @get-notes="getNotes(workflow.id)"
+            @checked-box="selectWorkflowCheckbox(workflow.id)"
             :workflow="workflow"
             :index="i + 1 * 1000"
             :oppFields="oppFields"
@@ -658,10 +657,7 @@
           />
         </div>
       </section>
-      <section
-        v-if="currentWorkflow && currentWorkflow.list.length < 1"
-        class="empty-table-section"
-      >
+      <section v-if="currentWorkflow && currentWorkflow.length < 1" class="empty-table-section">
         <div v-if="!loadingWorkflows">
           <div class="empty-table">
             <div class="table-row">
@@ -815,8 +811,8 @@ export default {
       )
     },
     filteredWorkflows() {
-      return this.currentWorkflow.list.filter((opp) =>
-        opp.resourceRef.name.toLowerCase().includes(this.workflowFilterText.toLowerCase()),
+      return this.currentWorkflow.filter((opp) =>
+        opp.name.toLowerCase().includes(this.workflowFilterText.toLowerCase()),
       )
     },
     currentMonth() {
@@ -866,7 +862,7 @@ export default {
   },
   methods: {
     tester() {
-      console.log(this.oppFields)
+      console.log(this.allOpps)
     },
     setOpps() {
       //  this.getObjects()
@@ -876,6 +872,12 @@ export default {
     },
     closeFilters() {
       this.filtering = false
+    },
+    closeFilterSelection() {
+      this.filterSelected = false
+      this.activeFilters = []
+      this.operatorValue = 'EQUALS'
+      this.currentOperator = ['equals']
     },
     closeListSelect() {
       this.showList = false
@@ -905,6 +907,11 @@ export default {
           this.currentOperators.length === 1
             ? (this.currentOperators = ['equals'])
             : this.currentOperators.push('equals')
+          break
+        case 'NOT_EQUALS':
+          this.currentOperators.length === 1
+            ? (this.currentOperators = ['not equals'])
+            : this.currentOperators.push('not equals')
           break
         case 'GREATER_THAN':
           this.currentOperators.length === 1
@@ -976,7 +983,7 @@ export default {
       this.filterSelected = true
     },
     removeFilter(name, index) {
-      this.activeFilters = this.activeFilters.filter((filter) => filter !== name)
+      this.activeFilters.splice(index, 1)
       this.filters.splice(index, 1)
       this.filterValues.splice(index, 1)
       this.currentOperators.splice(index, 1)
@@ -1106,16 +1113,24 @@ export default {
       }
     },
     sortWorkflows(dT, field, apiName) {
-      let newField = this.capitalizeFirstLetter(this.camelize(apiName))
-      let customField = this.capitalizeFirstLetter(this.camelize(this.sliced(apiName))).replaceAll(
-        '_',
-        '',
-      )
+      let newField = this.capitalizeFirstLetter(this.camelize(field))
 
-      if (dT === 'TextArea') {
-        this.currentWorkflow.list = this.currentWorkflow.list.sort(function (a, b) {
-          const nameA = a.resourceRef.secondaryData[`${newField}`]
-          const nameB = b.resourceRef.secondaryData[`${newField}`]
+      if (field === 'Stage') {
+        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+          const nameA = a['secondary_data']['StageName']
+          const nameB = b['secondary_data']['StageName']
+          if (nameA < nameB) {
+            return -1
+          }
+          if (nameA > nameB) {
+            return 1
+          }
+          return 0
+        })
+      } else if (dT === 'TextArea') {
+        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+          const nameA = a['secondary_data'][`${newField}`]
+          const nameB = b['secondary_data'][`${newField}`]
           if (nameA.length < nameB.length) {
             return -1
           }
@@ -1125,9 +1140,9 @@ export default {
           return 0
         })
       } else if (apiName.includes('__c')) {
-        this.currentWorkflow.list = this.currentWorkflow.list.sort(function (a, b) {
-          const nameA = a.resourceRef.secondaryData[`${customField}`]
-          const nameB = b['resourceRef']['secondaryData'][`${customField}`]
+        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+          const nameA = a['secondary_data'][`${apiName}`]
+          const nameB = b['secondary_data'][`${apiName}`]
           if (nameA < nameB) {
             return -1
           }
@@ -1137,9 +1152,9 @@ export default {
           return 0
         })
       } else {
-        this.currentWorkflow.list = this.currentWorkflow.list.sort(function (a, b) {
-          const nameA = a.resourceRef.secondaryData[`${newField}`]
-          const nameB = b.resourceRef.secondaryData[`${newField}`]
+        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+          const nameA = a['secondary_data'][`${newField}`]
+          const nameB = b['secondary_data'][`${newField}`]
           if (nameA < nameB) {
             return -1
           }
@@ -1151,16 +1166,24 @@ export default {
       }
     },
     sortWorkflowsReverse(dT, field, apiName) {
-      let newField = this.capitalizeFirstLetter(this.camelize(apiName))
-      let customField = this.capitalizeFirstLetter(this.camelize(this.sliced(apiName))).replaceAll(
-        '_',
-        '',
-      )
+      let newField = this.capitalizeFirstLetter(this.camelize(field))
 
-      if (dT === 'TextArea') {
-        this.currentWorkflow.list = this.currentWorkflow.list.sort(function (a, b) {
-          const nameA = a.resourceRef.secondaryData[`${newField}`]
-          const nameB = b.resourceRef.secondaryData[`${newField}`]
+      if (field === 'Stage') {
+        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+          const nameA = a['secondary_data']['StageName']
+          const nameB = b['secondary_data']['StageName']
+          if (nameA < nameB) {
+            return 1
+          }
+          if (nameA > nameB) {
+            return -1
+          }
+          return 0
+        })
+      } else if (dT === 'TextArea') {
+        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+          const nameA = a['secondary_data'][`${newField}`]
+          const nameB = b['secondary_data'][`${newField}`]
           if (nameA.length < nameB.length) {
             return 1
           }
@@ -1170,9 +1193,9 @@ export default {
           return 0
         })
       } else if (apiName.includes('__c')) {
-        this.currentWorkflow.list = this.currentWorkflow.list.sort(function (a, b) {
-          const nameA = a.resourceRef.secondaryData[`${customField}`]
-          const nameB = b.resourceRef.secondaryData[`${customField}`]
+        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+          const nameA = a['secondary_data'][`${apiName}`]
+          const nameB = b['secondary_data'][`${apiName}`]
           if (nameA < nameB) {
             return 1
           }
@@ -1182,14 +1205,14 @@ export default {
           return 0
         })
       } else {
-        this.currentWorkflow.list = this.currentWorkflow.list.sort(function (a, b) {
-          const nameA = a.resourceRef.secondaryData[`${newField}`]
-          const nameB = b.resourceRef.secondaryData[`${newField}`]
+        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+          const nameA = a['secondary_data'][`${newField}`]
+          const nameB = b['secondary_data'][`${newField}`]
           if (nameA < nameB) {
             return 1
           }
           if (nameA > nameB) {
-            return -11
+            return -1
           }
           return 0
         })
@@ -1202,7 +1225,7 @@ export default {
         this.primaryCheckList.push(id)
       }
     },
-    selectWorkflowCheckbox(id, instance) {
+    selectWorkflowCheckbox(id) {
       if (this.workflowCheckList.includes(id)) {
         this.workflowCheckList = this.workflowCheckList.filter((opp) => opp !== id)
       } else {
@@ -1210,7 +1233,7 @@ export default {
       }
     },
     closeAll() {
-      if (this.primaryCheckList.length === 0 || this.workflowCheckList === 0) {
+      if (this.primaryCheckList.length === 0 || this.workflowCheckList.length === 0) {
         this.closeDateSelected = false
         this.advanceStageSelected = false
         this.forecastSelected = false
@@ -1243,15 +1266,15 @@ export default {
     onCheckAllWorkflows() {
       if (this.workflowCheckList.length < 1) {
         for (let i = 0; i < this.filteredWorkflows.length; i++) {
-          this.workflowCheckList.push(this.filteredWorkflows[i].resourceRef.id)
+          this.workflowCheckList.push(this.filteredWorkflows[i].id)
         }
       } else if (
         this.workflowCheckList.length > 0 &&
         this.workflowCheckList.length < this.filteredWorkflows.length
       ) {
         for (let i = 0; i < this.filteredWorkflows.length; i++) {
-          !this.workflowCheckList.includes(this.filteredWorkflows[i].resourceRef.id)
-            ? this.workflowCheckList.push(this.filteredWorkflows[i].resourceRef.id)
+          !this.workflowCheckList.includes(this.filteredWorkflows[i].id)
+            ? this.workflowCheckList.push(this.filteredWorkflows[i].id)
             : (this.workflowCheckList = this.workflowCheckList)
         }
       } else {
@@ -1420,7 +1443,6 @@ export default {
             .updateResource({
               form_id: ids[i],
               form_data: { CloseDate: data },
-              // alert_instance: this.instanceIdList[i],
             })
             .then(async () => {
               let updatedRes = await SObjects.api.getObjects('Opportunity')
@@ -1431,12 +1453,16 @@ export default {
           setTimeout(() => {
             this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
           }, 300)
+          this.closeFilterSelection()
           if (this.selectedWorkflow) {
-            this.currentWorkflow.refresh()
+            this.updateWorkflowList(this.currentList, this.refreshId)
           } else if (this.currentList === 'Closing this month') {
             this.stillThisMonth()
           } else if (this.currentList === 'Closing next month') {
             this.stillNextMonth()
+          }
+
+          if (this.activefilters.length) {
           }
         } catch (e) {
           console.log(e)
@@ -1476,8 +1502,9 @@ export default {
           setTimeout(() => {
             this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
           }, 300)
+          this.closeFilterSelection()
           if (this.selectedWorkflow) {
-            this.currentWorkflow.refresh()
+            this.updateWorkflowList(this.currentList, this.refreshId)
           } else if (this.currentList === 'Closing this month') {
             this.stillThisMonth()
           } else if (this.currentList === 'Closing next month') {
@@ -1520,8 +1547,9 @@ export default {
           setTimeout(() => {
             this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
           }, 300)
+          this.closeFilterSelection()
           if (this.selectedWorkflow) {
-            this.currentWorkflow.refresh()
+            this.updateWorkflowList(this.currentList, this.refreshId)
           } else if (this.currentList === 'Closing this month') {
             this.stillThisMonth()
           } else if (this.currentList === 'Closing next month') {
@@ -1607,8 +1635,9 @@ export default {
           message: 'Salesforce update successful!',
           // sub: 'Some changes may take longer to reflect',
         })
+        this.closeFilterSelection()
         if (this.selectedWorkflow) {
-          this.currentWorkflow.refresh()
+          this.updateWorkflowList(this.currentList, this.refreshId)
         } else if (this.currentList === 'Closing this month') {
           this.stillThisMonth()
         } else if (this.currentList === 'Closing next month') {
@@ -1636,27 +1665,41 @@ export default {
       }
       this.getAllForms()
     },
-    async selectList(configId, title, id) {
+    async selectList(title, id) {
+      this.loading = true
       this.refreshId = id
       this.currentList = title
       try {
-        this.currentWorkflow = CollectionManager.create({
-          ModelClass: AlertInstance,
-          filters: {
-            byConfig: configId,
-          },
+        let res = await AlertTemplate.api.runAlertTemplateNow(id, {
+          fromWorkflow: true,
         })
-        this.currentWorkflow.refresh()
-        setTimeout(() => {
-          if (this.currentWorkflow.list.length < 1) {
-            this.refresh(this.refreshId)
-          }
-        }, 300)
+        this.currentWorkflow = this.allOpps.filter((opp) =>
+          res.data.ids.includes(opp.integration_id),
+        )
       } catch (error) {
         console.log(error)
+      } finally {
+        this.selectedWorkflow = true
+        this.showList = false
+        this.loading = false
       }
-      this.selectedWorkflow = true
-      this.showList = false
+    },
+    async updateWorkflowList(title, id) {
+      this.refreshId = id
+      this.currentList = title
+      try {
+        let res = await AlertTemplate.api.runAlertTemplateNow(id, {
+          fromWorkflow: true,
+        })
+        this.currentWorkflow = this.allOpps.filter((opp) =>
+          res.data.ids.includes(opp.integration_id),
+        )
+      } catch (error) {
+        console.log(error)
+      } finally {
+        this.selectedWorkflow = true
+        this.showList = false
+      }
     },
     async getAllForms() {
       try {
@@ -1684,7 +1727,10 @@ export default {
           this.picklistQueryOpts[i] = this.listPicklists(i, { picklistFor: i })
         }
         this.filterFields = this.updateOppForm[0].fieldsRef.filter(
-          (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+          (field) =>
+            field.apiName !== 'meeting_type' &&
+            field.apiName !== 'meeting_comments' &&
+            !field.apiName.includes('__c'),
         )
         this.filterFields = [...this.filterFields, this.ladFilter, this.lmdFilter]
         this.oppFields = this.updateOppForm[0].fieldsRef.filter(
@@ -2050,6 +2096,23 @@ h3 {
   letter-spacing: 0.5px;
   color: $base-gray;
 }
+.table-cell-header-wide {
+  display: table-cell;
+  padding: 0.25rem;
+  padding: 1.25vh 2.5vh;
+  min-width: 3rem;
+  border: none;
+  border-bottom: 3px solid $light-orange-gray;
+  border-radius: 2px;
+  z-index: 2;
+  top: 0;
+  position: sticky;
+  background-color: $off-white;
+  font-weight: bold;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  color: $base-gray;
+}
 .limit-cell-height {
   max-height: 4rem;
   width: 110%;
@@ -2365,8 +2428,8 @@ main:hover > span {
 .list-section {
   z-index: 4;
   position: absolute;
-  top: 8vh;
-  left: 0;
+  top: 20vh;
+  left: 1rem;
   border-radius: 0.33rem;
   display: flex;
   flex-direction: column;

@@ -113,22 +113,80 @@
       </p>
     </div>
 
-    <div :key="field.name" v-for="(field, i) in extraPipelineFields" class="table-cell-header">
-      <p @click="removeExtraField(i)" class="sort-img-visible">
+    <div :key="field.name" v-for="(field, i) in extraPipelineFields" class="table-cell-header-wide">
+      <p
+        v-if="sortingIndex !== oppFields.length + i"
+        @click="
+          $emit(
+            'sort-opps',
+            `${field.dataType}`,
+            `${field.referenceDisplayLabel}`,
+            `${field.apiName}`,
+          ),
+            (sortingIndex = oppFields.length + i),
+            (reverseIndex = null),
+            (nameSort = 0)
+        "
+        class="sort-img-visible"
+      >
         {{ field.referenceDisplayLabel }}
         <img
-          style="height: 0.75rem; margin-top: 0.25rem"
-          src="@/assets/images/remove.png"
-          class="invert"
+          v-if="reverseIndex !== oppFields.length + i"
+          style="height: 0.75rem"
+          src="@/assets/images/sort.png"
+          alt=""
+        />
+        <span v-if="reverseIndex === oppFields.length + i">
+          <img class="light-green" src="@/assets/images/ascend.png" style="height: 0.6rem" alt="" />
+        </span>
+        <img
+          style="margin-left: 0.1rem"
+          class="red"
+          @click="removeExtraField(i)"
+          src="@/assets/images/closer.png"
           alt=""
         />
       </p>
+
+      <p
+        v-if="sortingIndex === oppFields.length + i"
+        @click="
+          $emit(
+            'sort-opps-reverse',
+            `${field.dataType}`,
+            `${field.referenceDisplayLabel}`,
+            `${field.apiName}`,
+          ),
+            (sortingIndex = null),
+            (reverseIndex = oppFields.length + i),
+            (nameSort = 0)
+        "
+        class="sort-img-visible"
+      >
+        {{ field.referenceDisplayLabel }}
+        <img
+          v-if="sortingIndex !== oppFields.length + i"
+          style="height: 0.75rem"
+          src="@/assets/images/sort.png"
+          alt=""
+        />
+        <span v-if="sortingIndex === oppFields.length + i">
+          <img
+            class="light-green"
+            src="@/assets/images/descend.png"
+            style="height: 0.6rem"
+            alt=""
+          />
+        </span>
+        <img class="red" @click="removeExtraField(i)" src="@/assets/images/closer.png" alt="" />
+      </p>
+
       <div v-if="removingField && removingIndex === i" class="remove-field-section">
         <div class="remove-field-section__title">Remove {{ field.referenceDisplayLabel }}</div>
         <div class="remove-field-section__body">Are you sure ?</div>
         <div class="remove-field-section__footer">
-          <p style="color: #199e54" @click="removeField(field.id)">Remove</p>
-          <p style="color: #fa646a" @click="cancelRemoveField">Cancel</p>
+          <p style="color: #fa646a" @click="removeField(field.id)">Remove</p>
+          <p style="color: #9b9b9b" @click="cancelRemoveField">Cancel</p>
         </div>
       </div>
     </div>
@@ -147,7 +205,6 @@
             style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
             @click="closeAddField"
           />
-          <!-- v-outside-click="closeAddField" -->
         </div>
 
         <div class="add-field-section__body">
@@ -204,7 +261,10 @@ export default {
       removingIndex: null,
       objectFields: CollectionManager.create({
         ModelClass: SObjectField,
-        pagination: { size: 500 },
+        pagination: { size: 300 },
+        filters: {
+          salesforceObject: 'Opportunity',
+        },
       }),
     }
   },
@@ -303,14 +363,17 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
 ::v-deep .multiselect {
   min-width: 7rem;
 }
-
+.red {
+  filter: invert(46%) sepia(37%) saturate(832%) hue-rotate(308deg) brightness(104%) contrast(104%);
+  height: 0.75rem;
+}
 .add-field-section {
   z-index: 5;
   position: absolute;
@@ -356,7 +419,6 @@ export default {
     }
   }
 }
-
 .remove-field-section {
   z-index: 5;
   position: absolute;
@@ -448,21 +510,21 @@ export default {
   letter-spacing: 0.5px;
   color: $base-gray;
 }
-.table-cell-header {
-  display: table-cell;
-  padding: 3vh;
-  border: none;
-  border-bottom: 3px solid $light-orange-gray;
-  border-radius: 2px;
-  z-index: 2;
-  top: 0;
-  position: sticky;
-  background-color: $off-white;
-  font-weight: bold;
-  font-size: 13px;
-  letter-spacing: 0.5px;
-  color: $base-gray;
-}
+// .table-cell-header {
+//   display: table-cell;
+//   padding: 3vh;
+//   border: none;
+//   border-bottom: 3px solid $light-orange-gray;
+//   border-radius: 2px;
+//   z-index: 2;
+//   top: 0;
+//   position: sticky;
+//   background-color: $off-white;
+//   font-weight: bold;
+//   font-size: 13px;
+//   letter-spacing: 0.5px;
+//   color: $base-gray;
+// }
 .add-row {
   height: 1rem;
   margin-left: 0.25rem;
