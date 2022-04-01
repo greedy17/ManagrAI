@@ -3,6 +3,13 @@
     <div v-if="isOnboarding && !isAdmin" class="col">
       <h2 class="title">Popular Workflow Automations</h2>
       <p style="margin-top: -0.5rem" class="sub__">Step 2/2: Activate at least 3 workflows</p>
+      <button
+        class="orange_button bouncy"
+        v-if="isOnboarding && user.activatedManagrConfigs.includes('Update Forecast')"
+        @click="onboardComplete"
+      >
+        Complete Onboarding
+      </button>
     </div>
     <div v-else class="col">
       <h2 class="title">Popular Workflow Automations</h2>
@@ -348,6 +355,7 @@ import AlertSummary from '@/views/settings/alerts/create/_AlertSummary'
 import ListContainer from '@/components/ListContainer'
 import ListItem from '@/components/ListItem'
 import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotificationTemplate'
+import { UserOnboardingForm } from '@/services/users/forms'
 import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePreview'
 import DropDownSearch from '@/components/DropDownSearch'
 import ExpandablePanel from '@/components/ExpandablePanel'
@@ -404,6 +412,7 @@ export default {
       SOBJECTS_LIST,
       alertTemplateForm: new AlertTemplateForm(),
       selectedBindings: [],
+      userOnboardingForm: new UserOnboardingForm({}),
       fields: CollectionManager.create({ ModelClass: SObjectField }),
       users: CollectionManager.create({ ModelClass: User }),
       templates: CollectionManager.create({ ModelClass: AlertTemplate }),
@@ -415,6 +424,21 @@ export default {
   methods: {
     showList() {
       this.listVisible = !this.listVisible
+    },
+    handleUpdate() {
+      User.api
+        .update(this.user.id, this.userOnboardingForm.value)
+        .then((response) => {
+          this.$store.dispatch('updateUser', User.fromAPI(response.data))
+        })
+        .catch((e) => {
+          console.log(e)
+        })
+      this.$router.push({ name: 'Pipelines' })
+    },
+    onboardComplete() {
+      this.userOnboardingForm.field.onboarding.value = false
+      this.handleUpdate()
     },
     showDropDown() {
       this.dropdownVisible = !this.dropdownVisible

@@ -35,9 +35,11 @@ export default class AlertTemplateAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'AlertTemplateAPI.deleteAlertTemplate' })(e)
     }
   }
-  async runAlertTemplateNow(id) {
+  async runAlertTemplateNow(id, from_workflow) {
+    const fw = objectToSnakeCase(from_workflow)
     try {
-      await this.client.post(`${AlertTemplateAPI.ENDPOINT}${id}/run-now/`)
+      const res = await this.client.post(`${AlertTemplateAPI.ENDPOINT}${id}/run-now/`, fw)
+      return res
     } catch (e) {
       apiErrorHandler({ apiName: 'AlertTemplateAPI.deleteAlertTemplate' })(e)
     }

@@ -108,6 +108,7 @@
 
       <div v-if="inputValue" class="filter-selection__footer">
         <p
+          style="color: #199e54"
           @click="
             $emit(
               'filter-added',
@@ -117,11 +118,12 @@
             )
           "
         >
-          Done
+          Add
         </p>
+        <p style="color: #fa646a" @click="closeFilters">Cancel</p>
       </div>
       <div v-else class="filter-selection__footer">
-        <p style="color: gray">Done</p>
+        <p style="color: #fa646a" @click="closeFilters">Cancel</p>
       </div>
     </div>
   </div>
@@ -134,6 +136,7 @@ export default {
     return {
       operators: [
         { label: 'equals', value: 'EQUALS' },
+        // { label: 'not equals', value: 'NOT_EQUALS' },
         { label: 'greater than', value: 'GREATER_THAN' },
         { label: 'greater or equal', value: 'GREATER_THAN_EQUALS' },
         { label: 'less than', value: 'LESS_THAN' },
@@ -161,10 +164,8 @@ export default {
     },
   },
   methods: {
-    selectFilterOption(option) {
-      if (option === 'less than' || option === 'greater than' || option === 'equals') {
-        this.amountInput(option)
-      }
+    closeFilters() {
+      this.$emit('close-selection')
     },
   },
 }
@@ -193,7 +194,7 @@ export default {
   border-radius: 0.25rem;
   background-color: white;
   height: 3.5rem;
-  max-width: 5vw;
+  max-width: 9vw;
   overflow: scroll;
 }
 #operators:focus {
@@ -245,15 +246,14 @@ export default {
   &__footer {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-evenly;
     margin-top: 1.5rem;
     width: 100%;
     height: 2rem;
     border-top: 1px solid $soft-gray;
     p {
       cursor: pointer;
-      color: $dark-green;
-      font-weight: bold;
+      font-size: 13px;
       padding-top: 0.5rem;
     }
   }

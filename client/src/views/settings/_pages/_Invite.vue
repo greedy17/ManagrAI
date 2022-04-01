@@ -519,6 +519,7 @@ button {
 .invite-form {
   border: none;
   border-radius: 0.75rem;
+  width: 28rem;
   height: 90vh;
   display: flex;
   align-items: center;

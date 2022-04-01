@@ -1,7 +1,7 @@
 <template>
   <div class="table-row">
     <div style="padding: 2vh" class="table-cell-checkbox">
-      <div v-if="updateList.includes(workflow.resourceRef.id)">
+      <div v-if="updateList.includes(workflow.id)">
         <SkeletonBox width="10px" height="9px" />
       </div>
       <div v-else>
@@ -9,7 +9,7 @@
           type="checkbox"
           :id="index"
           v-model="workflowCheckList"
-          :value="workflow.resourceRef.id"
+          :value="workflow.id"
           @click="emitCheckedBox"
         />
         <label :for="index"></label>
@@ -19,21 +19,19 @@
     <div style="min-width: 26vw" class="table-cell cell-name">
       <div class="flex-row-spread">
         <div>
-          <div class="flex-col" v-if="updateList.includes(workflow.resourceRef.id)">
+          <div class="flex-col" v-if="updateList.includes(workflow.id)">
             <SkeletonBox width="125px" height="14px" style="margin-bottom: 0.2rem" />
             <SkeletonBox width="125px" height="9px" />
           </div>
 
           <PipelineNameSection
             v-else
-            :name="workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize('Name'))]"
-            :accountName="
-              workflow.resourceRef.accountRef ? workflow.resourceRef.accountRef.name : '---'
-            "
-            :owner="workflow.resourceRef.ownerRef.firstName"
+            :name="workflow['secondary_data']['Name']"
+            :accountName="workflow.account_ref ? workflow.account_ref.name : ''"
+            :owner="workflow.owner_ref.first_name"
           />
         </div>
-        <div v-if="updateList.includes(workflow.resourceRef.id)" class="flex-row">
+        <div v-if="updateList.includes(workflow.id)" class="flex-row">
           <SkeletonBox width="15px" height="14px" />
           <SkeletonBox width="15px" height="14px" />
         </div>
@@ -61,29 +59,23 @@
       "
     >
       <SkeletonBox
-        v-if="updateList.includes(workflow.resourceRef.id)"
+        v-if="updateList.includes(workflow.id)"
         width="125px"
         height="14px"
         style="margin-bottom: 0.2rem"
       />
 
-      <div class="limit-cell-height" v-else>
+      <div class="limit-cell-height" v-else-if="!updateList.includes(workflow.id) && workflow">
         <PipelineField
           style="direction: ltr"
           :apiName="field.apiName"
           :dataType="field.dataType"
           :fieldData="
-            workflow.resourceRef.secondaryData[
-              capitalizeFirstLetter(camelize(sliced(field.apiName))).replaceAll('_', '')
-            ]
-              ? workflow.resourceRef.secondaryData[
-                  capitalizeFirstLetter(camelize(sliced(field.apiName))).replaceAll('_', '')
-                ]
-              : workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field.apiName))]
-              ? workflow.resourceRef.secondaryData[capitalizeFirstLetter(camelize(field.apiName))]
-              : ''
+            field.apiName.includes('__c')
+              ? workflow['secondary_data'][field.apiName]
+              : workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
           "
-          :lastStageUpdate="workflow['resourceRef']['lastStageUpdate']"
+          :lastStageUpdate="workflow['last_stage_update']"
         />
       </div>
     </div>
@@ -139,7 +131,7 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
