@@ -6,7 +6,7 @@
         <label for="index"></label>
       </div>
     </div>
-    <div class="table-cell">test</div>
+    <div class="table-cell"></div>
   </div>
 </template>
 <script>
