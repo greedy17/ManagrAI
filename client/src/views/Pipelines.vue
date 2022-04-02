@@ -871,7 +871,7 @@ export default {
     },
   },
   created() {
-    // this.getMeetingList()
+    this.getMeetingList()
     this.getObjects()
     this.templates.refresh()
     this.getAllForms()
