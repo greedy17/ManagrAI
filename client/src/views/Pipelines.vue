@@ -413,7 +413,7 @@
               /> -->
             </div>
             <p @click="showPopularList = !showPopularList" class="list-section__sub-title">
-              Popular Lists
+              Standard Lists
               <img v-if="showPopularList" src="@/assets/images/downArrow.png" alt="" /><img
                 v-else
                 src="@/assets/images/rightArrow.png"
@@ -432,6 +432,20 @@
               Closing next month
               <span class="filter" v-if="currentList === 'Closing next month'"> active</span>
             </button>
+            <p @click="showMeetingList = !showMeetingList" class="list-section__sub-title">
+              Meetings
+              <img v-if="showMeetingList" src="@/assets/images/downArrow.png" alt="" /><img
+                v-else
+                src="@/assets/images/rightArrow.png"
+                alt=""
+              />
+            </p>
+            <div style="width: 100%" v-if="showMeetingList">
+              <button @click="selectMeeting('Today\'s meetings')" class="list-button">
+                Today's meetings
+                <span class="filter" v-if="currentList === 'Today\'s meetings'"> active</span>
+              </button>
+            </div>
             <p @click="showWorkflowList = !showWorkflowList" class="list-section__sub-title">
               Workflows
               <img v-if="showWorkflowList" src="@/assets/images/downArrow.png" alt="" /><img
@@ -493,7 +507,7 @@
 
           <section style="position: relative">
             <button
-              v-if="activeFilters.length < 4 && !selectedWorkflow"
+              v-if="activeFilters.length < 4 && !selectedWorkflow && !selectedMeeting"
               @click.stop="addingFilter"
               class="add-filter-button"
             >
@@ -610,7 +624,7 @@
         </h6>
       </div>
       <!-- <p @click="tester">test</p> -->
-      <section v-show="!selectedWorkflow" class="table-section">
+      <section v-show="!selectedWorkflow && !selectedMeeting" class="table-section">
         <div class="table">
           <PipelineHeader
             :oppFields="oppFields"
@@ -634,7 +648,10 @@
           />
         </div>
       </section>
-      <section v-if="selectedWorkflow && currentWorkflow.length > 0" class="table-section">
+      <section
+        v-if="selectedWorkflow && currentWorkflow.length > 0 && !selectedMeeting"
+        class="table-section"
+      >
         <div class="table">
           <WorkflowHeader
             :oppFields="oppFields"
@@ -655,6 +672,12 @@
             :workflowCheckList="workflowCheckList"
             :updateList="updateList"
           />
+        </div>
+      </section>
+      <section v-if="selectedMeeting" class="table-section">
+        <div class="table">
+          <MeetingWorkflowHeader />
+          <MeetingWorkflow />
         </div>
       </section>
       <section v-if="currentWorkflow && currentWorkflow.length < 1" class="empty-table-section">
@@ -679,40 +702,34 @@
 </template>
 <script>
 import { SObjects, SObjectPicklist } from '@/services/salesforce'
-import AlertTemplate, { AlertConfig, AlertInstance } from '@/services/alerts/'
-import SkeletonBox from '@/components/SkeletonBox'
+import AlertTemplate from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
-import SlackOAuth, { salesforceFields } from '@/services/slack'
-import DropDownSearch from '@/components/DropDownSearch'
-import Modal from '@/components/InviteModal'
+import SlackOAuth from '@/services/slack'
 import PipelineNameSection from '@/components/PipelineNameSection'
 import PipelineField from '@/components/PipelineField'
 import PipelineTableRow from '@/components/PipelineTableRow'
-import WorkflowRow from '@/components/WorkflowRow'
 import PipelineHeader from '@/components/PipelineHeader'
-import Loader from '@/components/Loader'
-import WorkflowHeader from '@/components/WorkflowHeader'
-import Filters from '@/components/Filters'
-import FilterSelection from '@/components/FilterSelection'
 import User from '@/services/users'
-import Multiselect from 'vue-multiselect'
+// import WorkflowRow from '@/components/WorkflowRow'
+// import WorkflowHeader from '@/components/WorkflowHeader'
 
 export default {
   name: 'Pipelines',
   components: {
-    Modal,
-    DropDownSearch,
-    SkeletonBox,
+    Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
+    SkeletonBox: () => import(/* webpackPrefetch: true */ '@/components/SkeletonBox'),
     PipelineNameSection,
     PipelineField,
     PipelineTableRow,
     PipelineHeader,
-    WorkflowHeader,
-    WorkflowRow,
-    Loader,
-    Filters,
-    FilterSelection,
-    Multiselect,
+    WorkflowHeader: () => import(/* webpackPrefetch: true */ '@/components/WorkflowHeader'),
+    WorkflowRow: () => import(/* webpackPrefetch: true */ '@/components/WorkflowRow'),
+    Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
+    Filters: () => import(/* webpackPrefetch: true */ '@/components/Filters'),
+    FilterSelection: () => import(/* webpackPrefetch: true */ '@/components/FilterSelection'),
+    MeetingWorkflowHeader: () =>
+      import(/* webpackPrefetch: true */ '@/components/MeetingWorkflowHeader'),
+    MeetingWorkflow: () => import(/* webpackPrefetch: true */ '@/components/MeetingWorkflow'),
   },
   data() {
     return {
@@ -780,6 +797,8 @@ export default {
       filterValues: [],
       filters: [],
       operatorsLength: 0,
+      showMeetingList: true,
+      selectedMeeting: false,
       ladFilter: {
         apiName: 'LastActivityDate',
         dataType: 'Date',
@@ -821,10 +840,16 @@ export default {
     },
     currentDay() {
       let date = new Date()
-      return date
+      date = date
         .toLocaleDateString()
         .substring(date.toLocaleDateString().indexOf('/') + 1)
         .substring(0, date.toLocaleDateString().indexOf('/') + 1)
+      if (date.includes('/')) {
+        date = date.slice(0, -1)
+        return '0' + date
+      } else {
+        return date
+      }
     },
     syncDay() {
       if (this.$store.state.user.salesforceAccountRef.lastSyncTime) {
@@ -846,6 +871,7 @@ export default {
     },
   },
   created() {
+    // this.getMeetingList()
     this.getObjects()
     this.templates.refresh()
     this.getAllForms()
@@ -858,11 +884,25 @@ export default {
   watch: {
     primaryCheckList: 'closeAll',
     workflowCheckList: 'closeAll',
-    // currentCheckList: 'clearInstanceIdList',
   },
   methods: {
     tester() {
-      console.log(this.allOpps)
+      console.log(this.allUsers)
+    },
+    async getMeetingList() {
+      try {
+        const res = await SObjects.api.getMeetingList()
+        console.log(res)
+      } catch (e) {
+        console.log(e)
+      } finally {
+      }
+    },
+    selectMeeting(name) {
+      this.currentList = name
+      this.showList = false
+      this.selectedMeeting = true
+      this.selectedWorkflow = false
     },
     setOpps() {
       //  this.getObjects()
@@ -964,6 +1004,7 @@ export default {
       }
     },
     applyFilter(value) {
+      this.updateFilterValue = value
       this.operatorsLength += 1
       if (this.currentOperators.length < this.operatorsLength) {
         this.currentOperators.push('equals')
@@ -972,8 +1013,18 @@ export default {
       this.filterSelected = false
       this.activeFilters.push(this.currentFilter)
     },
-    valueSelected(value) {
-      this.filterValues.push(value)
+    valueSelected(value, name) {
+      let users = this.allUsers.filter((user) => user.salesforce_account_ref)
+      let user = null
+      if (name === 'OwnerId') {
+        user = users.filter((user) => user.salesforce_account_ref.salesforce_id === value)
+        this.filterValues.push(user[0].full_name)
+      } else if (name === 'AccountId') {
+        let account = this.allAccounts.filter((account) => account.integration_id === value)
+        this.filterValues.push(account[0].name)
+      } else {
+        this.filterValues.push(value)
+      }
     },
     selectFilter(name, type, label) {
       this.filtering = !this.filtering
@@ -1328,21 +1379,12 @@ export default {
         }, 4000)
       }
     },
-    async updateWorkflow() {
-      this.loadingWorkflows = true
-      let counter = 0
+    async updateWorkflow(id) {
       try {
-        await AlertTemplate.api.runAlertTemplateNow(this.workflowId)
-        while (counter < 50) {
-          this.currentWorkflow.refresh()
-          counter += 1
-        }
+        await AlertTemplate.api.runAlertTemplateNow(id)
       } catch (e) {
         console.log(e)
       } finally {
-        setTimeout(() => {
-          this.loadingWorkflows = false
-        }, 3750)
       }
     },
     resetNotes() {
@@ -1666,7 +1708,11 @@ export default {
       this.getAllForms()
     },
     async selectList(title, id) {
-      this.loading = true
+      this.allOpps = this.originalList
+      this.selectedMeeting = false
+      this.closeFilterSelection()
+      this.loadingWorkflows = true
+      this.showList = false
       this.refreshId = id
       this.currentList = title
       try {
@@ -1676,12 +1722,14 @@ export default {
         this.currentWorkflow = this.allOpps.filter((opp) =>
           res.data.ids.includes(opp.integration_id),
         )
+        if (this.currentWorkflow.length < 1) {
+          this.updateWorkflow(id)
+        }
       } catch (error) {
         console.log(error)
       } finally {
         this.selectedWorkflow = true
-        this.showList = false
-        this.loading = false
+        this.loadingWorkflows = false
       }
     },
     async updateWorkflowList(title, id) {
@@ -1795,6 +1843,7 @@ export default {
     closeDatesThisMonth() {
       this.allOpps = this.originalList
       this.selectedWorkflow = false
+      this.selectedMeeting = false
       this.allOpps = this.allOpps.filter(
         (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth,
       )
@@ -1811,6 +1860,7 @@ export default {
     closeDatesNextMonth() {
       this.allOpps = this.originalList
       this.selectedWorkflow = false
+      this.selectedMeeting = false
       this.allOpps = this.allOpps.filter(
         (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth + 1,
       )
@@ -1826,6 +1876,7 @@ export default {
     },
     allOpportunities() {
       this.selectedWorkflow = false
+      this.selectedMeeting = false
       this.allOpps = this.originalList
       this.currentList = 'All Opportunities'
       this.showList = !this.showList
@@ -2436,7 +2487,7 @@ main:hover > span {
   align-items: flex-start;
   background-color: $white;
   min-width: 20vw;
-  max-height: 56vh;
+  max-height: 70vh;
   overflow: scroll;
   margin-right: 0.5rem;
   box-shadow: 1px 1px 7px 2px $very-light-gray;

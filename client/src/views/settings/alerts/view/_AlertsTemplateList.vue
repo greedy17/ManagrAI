@@ -395,7 +395,6 @@ export default {
       }
     },
     async onRunAlertTemplateNow(id) {
-      console.log(id)
       try {
         await AlertTemplate.api.runAlertTemplateNow(id)
         this.$Alert.alert({

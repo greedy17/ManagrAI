@@ -90,7 +90,6 @@
         />
       </div>
     </div>
-    <!-- <p @click="tester">test</p> -->
     <div style="background-color: white" class="table-cell-checkbox"></div>
   </div>
 </template>
@@ -98,7 +97,6 @@
 <script>
 import PipelineNameSection from '@/components/PipelineNameSection'
 import PipelineField from '@/components/PipelineField'
-import SkeletonBox from '@/components/SkeletonBox'
 import { CollectionManager } from '@thinknimble/tn-models'
 import { SObjectField } from '@/services/salesforce'
 
@@ -107,7 +105,7 @@ export default {
   components: {
     PipelineNameSection,
     PipelineField,
-    SkeletonBox,
+    SkeletonBox: () => import(/* webpackPrefetch: true */ '@/components/SkeletonBox'),
   },
   async created() {
     await this.objectFields.refresh()
@@ -134,11 +132,6 @@ export default {
     },
   },
   methods: {
-    // tester() {
-    //   console.log(this.extraPipelineFields)
-    //   console.log(this.objectFields)
-    //   console.log(this.hasExtraFields)
-    // },
     emitCreateForm() {
       this.$emit('create-form')
     },
@@ -231,21 +224,6 @@ export default {
   letter-spacing: 0.5px;
   color: $base-gray;
 }
-// .table-cell-header {
-//   display: table-cell;
-//   padding: 1.25vh 3vh;
-//   border: none;
-//   border-bottom: 3px solid $light-orange-gray;
-//   border-radius: 2px;
-//   z-index: 2;
-//   top: 0;
-//   position: sticky;
-//   background-color: $off-white;
-//   font-weight: bold;
-//   font-size: 13px;
-//   letter-spacing: 0.5px;
-//   color: $base-gray;
-// }
 .flex-row-spread {
   display: flex;
   flex-direction: row;

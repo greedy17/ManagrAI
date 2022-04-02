@@ -137,6 +137,14 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'Error syncing resources' })(e)
     }
   }
+  async getMeetingList() {
+    try {
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'meeting-workflows')
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error getting meetings' })(e)
+    }
+  }
   async confirmUpdate(verbose_name, task_hash) {
     try {
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/confirm-update/', { params: verbose_name, task_hash })
