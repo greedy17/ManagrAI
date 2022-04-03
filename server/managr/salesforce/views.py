@@ -48,6 +48,7 @@ from .serializers import (
     SObjectFieldSerializer,
     SObjectValidationSerializer,
     SObjectPicklistSerializer,
+    MeetingWorkflowSerializer,
 )
 from .adapter.models import SalesforceAuthAccountAdapter
 from .background import (
@@ -763,13 +764,15 @@ class SalesforceSObjectViewSet(
         data = {"success": False} if has_error else {"success": True}
         return Response(data=data)
 
-    @action(
-        methods=["get"],
-        permission_classes=[permissions.IsAuthenticated],
-        detail=False,
-        url_path="meeting-workflows",
+
+class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+    serializer_class = MeetingWorkflowSerializer
+    filter_backends = (
+        DjangoFilterBackend,
+        filters.SearchFilter,
     )
-    def get_meeting_workflows(self, request, *args, **kwargs):
+
+    def get_queryset(self):
         user = self.request.user
         curr_date = datetime.now()
         start = curr_date.replace(hour=0, minute=0)
@@ -777,5 +780,4 @@ class SalesforceSObjectViewSet(
         meetings = MeetingWorkflow.objects.filter(
             Q(user=user, datetime_created__range=(start, end))
         )
-        print(meetings)
-        return Response(data={"meetings": meetings})
+        return meetings

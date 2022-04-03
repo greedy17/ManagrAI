@@ -139,7 +139,7 @@ export class SObjectFormBuilderAPI extends ModelAPI {
   }
   async getMeetingList() {
     try {
-      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'meeting-workflows')
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/meeting-workflows')
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error getting meetings' })(e)
