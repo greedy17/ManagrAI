@@ -33,8 +33,7 @@
         {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
       </p>
       <!-- <button @click="addingOpp = !addingOpp" v-else class="add-button">Map to Opportunity</button> -->
-      <button disabled class="add-button">Map to Opportunity</button>
-      <p>(coming soon)</p>
+      <button disabled class="add-button">Map to Opportunity (coming soon)</button>
 
       <div v-if="addingOpp" class="add-field-section">
         <div class="add-field-section__title">
