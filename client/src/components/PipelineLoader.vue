@@ -1,43 +1,71 @@
 <template>
-  <div class="pipeline-loader">
-    <div class="card">
-      <img src="@/assets/images/loading-gif.gif" class="invert" style="height: 8rem" alt="" />
-      <h1>Just a moment</h1>
-      <p>Pulling in your latest Salesforce data</p>
-      <div class="loader"></div>
+  <div>
+    <div class="lds-ring">
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
     </div>
+    <!-- <div class="invert">
+      <img src="@/assets/images/loading-gif.gif" class="invert" style="height: 7rem" alt="" />
+    </div> -->
+    <p>{{ loaderText }}</p>
   </div>
 </template>
 
 <script>
 export default {
   name: 'PipelineLoader',
-  data() {
-    return {}
+  props: {
+    loaderText: String,
   },
-  methods: {},
 }
 </script>
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
-@import '@/styles/buttons';
 
-.pipeline-loader {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 70vh;
+p {
+  font-size: 0.8em;
+  font-weight: 300;
+  margin-top: 5px;
+  letter-spacing: 1px;
+  color: rgb(82, 82, 82);
 }
-.table-sectioned {
-  height: 76vh;
+
+.lds-ring {
+  display: inline-block;
+  position: relative;
+  width: 80px;
+  height: 80px;
 }
-.flex-row-spreader {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 2rem;
-  margin-top: 1rem;
+.lds-ring div {
+  box-sizing: border-box;
+  display: block;
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  margin: 4px;
+  border: 4px solid $dark-green;
+  border-radius: 50%;
+  animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  border-color: $dark-green transparent transparent transparent;
+}
+.lds-ring div:nth-child(1) {
+  animation-delay: -0.45s;
+}
+.lds-ring div:nth-child(2) {
+  animation-delay: -0.3s;
+}
+.lds-ring div:nth-child(3) {
+  animation-delay: -0.15s;
+}
+@keyframes lds-ring {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>

@@ -1,15 +1,14 @@
 <template>
   <div class="loader-wrapper">
-    <!-- <div class="loader-2">
+    <div class="lds-ring">
       <div></div>
       <div></div>
       <div></div>
       <div></div>
-    </div> -->
-    <div class="invert">
-      <img src="@/assets/images/loading-gif.gif" class="invert" style="height: 7rem" alt="" />
     </div>
-
+    <!-- <div class="invert">
+      <img src="@/assets/images/loading-gif.gif" class="invert" style="height: 7rem" alt="" />
+    </div> -->
     <p>{{ loaderText }}</p>
   </div>
 </template>
@@ -23,7 +22,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+@import '@/styles/variables';
+
 p {
   font-size: 0.8em;
   font-weight: 300;
@@ -36,35 +37,34 @@ p {
   text-align: center;
   margin-top: 30vh;
 }
-
-.loader-2 {
+.lds-ring {
   display: inline-block;
   position: relative;
   width: 80px;
   height: 80px;
 }
-.loader-2 div {
+.lds-ring div {
   box-sizing: border-box;
   display: block;
   position: absolute;
   width: 64px;
   height: 64px;
   margin: 8px;
-  border: 8px solid #199e54;
+  border: 8px solid $dark-green;
   border-radius: 50%;
-  animation: loader 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-  border-color: #199e54 transparent transparent transparent;
+  animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  border-color: $dark-green transparent transparent transparent;
 }
-.loader-2 div:nth-child(1) {
+.lds-ring div:nth-child(1) {
   animation-delay: -0.45s;
 }
-.loader-2 div:nth-child(2) {
+.lds-ring div:nth-child(2) {
   animation-delay: -0.3s;
 }
-.loader-2 div:nth-child(3) {
+.lds-ring div:nth-child(3) {
   animation-delay: -0.15s;
 }
-@keyframes loader {
+@keyframes lds-ring {
   0% {
     transform: rotate(0deg);
   }

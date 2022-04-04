@@ -507,7 +507,7 @@
 
           <section style="position: relative">
             <button
-              v-if="activeFilters.length < 4 && !selectedWorkflow && !selectedMeeting"
+              v-if="activeFilters.length < 4 && !selectedMeeting"
               @click.stop="addingFilter"
               class="add-filter-button"
             >
@@ -655,7 +655,9 @@
         </div>
       </section>
       <section
-        v-if="selectedWorkflow && currentWorkflow.length > 0 && !selectedMeeting"
+        v-if="
+          selectedWorkflow && currentWorkflow.length > 0 && !selectedMeeting && !loadingWorkflows
+        "
         class="table-section"
       >
         <div class="table">
@@ -692,8 +694,13 @@
           />
         </div>
       </section>
-      <section v-if="currentWorkflow && currentWorkflow.length < 1" class="empty-table-section">
-        <div v-if="!loadingWorkflows">
+      <section
+        v-if="
+          currentWorkflow && currentWorkflow.length < 1 && selectedWorkflow && !loadingWorkflows
+        "
+        class="empty-table-section"
+      >
+        <div>
           <div class="empty-table">
             <div class="table-row">
               <div class="flex-row table-cell-header">
@@ -702,8 +709,10 @@
             </div>
           </div>
         </div>
-        <div style="padding: 2rem" v-else>
-          <SkeletonBox width="400px" height="25px" />
+      </section>
+      <section v-if="loadingWorkflows" class="empty-table-section">
+        <div>
+          <PipelineLoader />
         </div>
       </section>
     </div>
@@ -740,6 +749,7 @@ export default {
     WorkflowHeader,
     WorkflowRow,
     Loader,
+    PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
     // Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
     Filters: () => import(/* webpackPrefetch: true */ '@/components/Filters'),
     FilterSelection: () => import(/* webpackPrefetch: true */ '@/components/FilterSelection'),
@@ -785,7 +795,7 @@ export default {
       currentList: 'All Opportunities',
       alertInstanceId: null,
       showList: false,
-      showWorkflowList: false,
+      showWorkflowList: true,
       showPopularList: true,
       notes: [],
       updateOppForm: null,
@@ -937,6 +947,8 @@ export default {
       this.activeFilters = []
       this.operatorValue = 'EQUALS'
       this.currentOperator = ['equals']
+      this.filterValues = []
+      this.filters = []
     },
     closeListSelect() {
       this.showList = false
@@ -946,17 +958,24 @@ export default {
       this.showList ? (this.showList = false) : (this.showList = this.showList)
     },
     async getFilteredObjects(value) {
+      this.loadingWorkflows = true
       if (value) {
         this.filters.push([this.operatorValue, this.filterApiName, value])
       }
       try {
         const res = await SObjects.api.getObjects('Opportunity', true, this.filters)
-        this.allOpps = res.results
+        if (this.selectedWorkflow) {
+          this.allOpps = res.results
+          this.updateWorkflowList(this.currentList, this.refreshId)
+        } else {
+          this.allOpps = res.results
+        }
       } catch (e) {
         console.log(e)
       } finally {
         this.operatorValue = 'EQUALS'
         this.currentOperator = ['equals']
+        this.loadingWorkflows = false
       }
     },
     addOperator(name) {
@@ -1727,10 +1746,10 @@ export default {
       this.getAllForms()
     },
     async selectList(title, id) {
+      this.loadingWorkflows = true
       this.allOpps = this.originalList
       this.selectedMeeting = false
       this.closeFilterSelection()
-      this.loadingWorkflows = true
       this.showList = false
       this.refreshId = id
       this.currentList = title
@@ -1868,6 +1887,7 @@ export default {
       )
       this.currentList = 'Closing this month'
       this.showList = !this.showList
+      this.closeFilterSelection()
     },
     stillThisMonth() {
       this.allOpps = this.originalList
@@ -1885,6 +1905,7 @@ export default {
       )
       this.currentList = 'Closing next month'
       this.showList = !this.showList
+      this.closeFilterSelection()
     },
     stillNextMonth() {
       this.allOpps = this.originalList
@@ -1899,6 +1920,7 @@ export default {
       this.allOpps = this.originalList
       this.currentList = 'All Opportunities'
       this.showList = !this.showList
+      this.closeFilterSelection()
     },
     formatDateTime(input) {
       var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
@@ -2189,6 +2211,11 @@ h3 {
   overflow: auto;
   direction: rtl;
   padding: 0px 0.25rem;
+}
+.centered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .cell-name-header {
   display: table-cell;
