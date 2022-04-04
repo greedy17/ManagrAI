@@ -246,34 +246,44 @@ def _process_send_alert(invocation, channel, config_id):
     alert_page_instances = custom_paginator(alert_instances)
     access_token = template.user.organization.slack_integration.access_token
     text = template.title
+    # blocks = [
+    #     block_builders.section_with_button_block(
+    #         "Open in Pipeline",
+    #         "OPEN_IN_PIPELINE",
+    #         f"*{len(alert_instances)} results for workflow {text}*",
+    #         url=ALERT_PIPELINE_URL,
+    #     ),
+    # ]
+
+    # for alert_instance in alert_page_instances.get("results", []):
+    #     blocks = [
+    #         *blocks,
+    #         *get_block_set(
+    #             "alert_instance", {"instance_id": str(alert_instance.id), "current_page": 1}
+    #         ),
+    #     ]
+    #     alert_instance.rendered_text = (
+    #         f"~{alert_instance.render_text()}~"
+    #         if alert_instance.completed
+    #         else alert_instance.render_text()
+    #     )
+    #     alert_instance.save()
     blocks = [
-        block_builders.section_with_button_block(
-            "Open in Pipeline",
-            "OPEN_IN_PIPELINE",
-            f"*{len(alert_instances)} results for workflow {text}*",
-            url=ALERT_PIPELINE_URL,
-        ),
-    ]
-
-    for alert_instance in alert_page_instances.get("results", []):
-        blocks = [
-            *blocks,
-            *get_block_set(
-                "alert_instance", {"instance_id": str(alert_instance.id), "current_page": 1}
-            ),
-        ]
-        alert_instance.rendered_text = (
-            f"~{alert_instance.render_text()}~"
-            if alert_instance.completed
-            else alert_instance.render_text()
+        *get_block_set(
+            "initial_alert_blockset",
+            {
+                "channel": channel,
+                "config_id": config_id,
+                "invocation": invocation,
+                "title": f"{len(alert_instances)} results for workflow {template.title}",
+            },
         )
-        alert_instance.save()
-
+    ]
     if len(blocks):
-        blocks = [
-            *blocks,
-            *custom_paginator_block(alert_page_instances, invocation, channel, config_id),
-        ]
+        # blocks = [
+        #     *blocks,
+        #     *custom_paginator_block(alert_page_instances, invocation, channel, config_id),
+        # ]
         try:
             slack_requests.send_channel_message(
                 channel_id, access_token, text=text, block_set=blocks
@@ -283,7 +293,7 @@ def _process_send_alert(invocation, channel, config_id):
         except CannotSendToChannel:
             try:
                 slack_requests.send_channel_message(
-                    alert_instance.template.user.slack_integration.channel,
+                    template.user.slack_integration.channel,
                     access_token,
                     text=text,
                     block_set=[
@@ -302,7 +312,7 @@ def _process_send_alert(invocation, channel, config_id):
         except Exception as e:
             raise (e)
 
-    return alert_instance
+    return
 
 
 @background(queue="MANAGR_ALERTS_QUEUE", schedule=0)

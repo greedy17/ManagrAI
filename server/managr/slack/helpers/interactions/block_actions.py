@@ -2054,7 +2054,7 @@ def process_paginate_alerts(payload, context):
     blocks = [
         block_builders.header_block(f"{len(alert_instances)} results for workflow {alert_text}"),
     ]
-    alert_instances = custom_paginator(alert_instances, page=int(context.get("new_page", 0)))
+    alert_instances = custom_paginator(alert_instances, page=int(context.get("new_page", 1)))
     for alert_instance in alert_instances.get("results", []):
         blocks = [
             *blocks,
