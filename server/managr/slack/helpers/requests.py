@@ -235,7 +235,10 @@ def list_user_channels(access_token, user, limit=100, cursor=None, types=[]):
         q["cursor"] = cursor
 
     url += "?" + urlencode(q)
+    logger.info(f"SLACK LIST CHANNEL URL: {url}")
     res = requests.get(url, headers=slack_auth.encode_header(access_token)).json()
+    logger.info(f"LIST USER CHANNELS RESPONSE: {res}")
+    # return res
     return generic_request(url, None, access_token=access_token)
 
 
