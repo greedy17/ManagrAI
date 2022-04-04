@@ -630,7 +630,10 @@
         </h6>
       </div>
       <!-- <p @click="tester">test</p> -->
-      <section v-show="!selectedWorkflow && !selectedMeeting" class="table-section">
+      <section
+        v-show="!selectedWorkflow && !selectedMeeting && !loadingWorkflows"
+        class="table-section"
+      >
         <div class="table">
           <PipelineHeader
             :oppFields="oppFields"

@@ -61,7 +61,7 @@ class SalesforceSObjectFilterSet(FilterSet):
             filter_field = f"secondary_data__{sobject_comparison[filter[0]]}"
             new_query = filter_field % filter[1]
             if filter[0] == "NOT_EQUALS":
-                qs = qs.excludes(**{new_query: filter[2]})
+                qs = qs.exclude(**{new_query: filter[2]})
             else:
                 qs = qs.filter(**{new_query: filter[2]})
             print(qs)
