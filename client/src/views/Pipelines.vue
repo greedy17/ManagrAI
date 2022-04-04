@@ -725,6 +725,8 @@ import User from '@/services/users'
 import WorkflowRow from '@/components/WorkflowRow'
 import WorkflowHeader from '@/components/WorkflowHeader'
 import Loader from '@/components/Loader'
+// import MeetikngWorkflowHeader from '@/components/MeetingWorkflowHeader'
+// import MeetingWorkflow from '@/components/MeetingWorkflow'
 
 export default {
   name: 'Pipelines',
@@ -919,6 +921,7 @@ export default {
       this.showList = false
       this.selectedMeeting = true
       this.selectedWorkflow = false
+      this.closeFilterSelection()
     },
     setOpps() {
       //  this.getObjects()
