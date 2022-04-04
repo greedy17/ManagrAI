@@ -65,7 +65,7 @@
           :apiName="field.apiName"
           :dataType="field.dataType"
           :fieldData="
-            field.apiName.includes('__c')
+            field.apiName.includes('__c') || field.apiName.includes('__r')
               ? opp['secondary_data'][field.apiName]
               : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
           "

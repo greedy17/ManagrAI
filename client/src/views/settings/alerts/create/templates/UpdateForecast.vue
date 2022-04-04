@@ -531,6 +531,7 @@ export default {
         channels: [...this.userChannelOpts.channels, ...res.channels],
         responseMetadata: { nextCursor: res.nextCursor },
       })
+      console.log(results)
       this.userChannelOpts = results
     },
     async createChannel(name) {
