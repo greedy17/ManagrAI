@@ -19,7 +19,7 @@
     <div style="min-width: 26vw" class="table-cell cell-name">
       <div class="flex-row-spread">
         <div>
-          <div class="flex-col" v-if="updateList.includes(opp.id)">
+          <div class="flex-column" v-if="updateList.includes(opp.id)">
             <SkeletonBox width="125px" height="14px" style="margin-bottom: 0.2rem" />
             <SkeletonBox width="125px" height="9px" />
           </div>

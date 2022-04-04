@@ -296,7 +296,6 @@ export default {
           timeout: 1000,
           message: 'Field removed successfully',
         })
-        console.log(res)
       } catch (e) {
         console.log(e)
       } finally {
