@@ -249,7 +249,11 @@ def init_fake_meeting(request):
             )
         meeting_resource = command_params[0]
 
-    meeting_uuid = settings.ZOOM_FAKE_MEETING_UUID
+    meeting_uuid = (
+        user.zoom_account.fake_meeting_id
+        if user.zoom_account.fake_meeting_id
+        else settings.ZOOM_FAKE_MEETING_UUID
+    )
     if not meeting_uuid:
         return Response(
             data={"response_type": "ephemeral", "text": "Sorry I cant find your zoom meeting",}
