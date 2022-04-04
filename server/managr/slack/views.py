@@ -298,6 +298,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
     )
     def slack_user_channels(self, request, *args, **kwargs):
         cursor = request.data.get("cursor")
+        print(f"SLACK USER CHANNELS CURSOR: {cursor}")
         organization_slack = request.user.organization.slack_integration
         if organization_slack:
             channels = slack_requests.list_user_channels(

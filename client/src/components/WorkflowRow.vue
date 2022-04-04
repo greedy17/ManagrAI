@@ -71,7 +71,7 @@
           :apiName="field.apiName"
           :dataType="field.dataType"
           :fieldData="
-            field.apiName.includes('__c')
+            field.apiName.includes('__c') || field.apiName.includes('__r')
               ? workflow['secondary_data'][field.apiName]
               : workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
           "

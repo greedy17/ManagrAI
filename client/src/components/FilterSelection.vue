@@ -136,7 +136,7 @@ export default {
     return {
       operators: [
         { label: 'equals', value: 'EQUALS' },
-        // { label: 'not equals', value: 'NOT_EQUALS' },
+        { label: 'not equals', value: 'NOT_EQUALS' },
         { label: 'greater than', value: 'GREATER_THAN' },
         { label: 'greater or equal', value: 'GREATER_THAN_EQUALS' },
         { label: 'less than', value: 'LESS_THAN' },
