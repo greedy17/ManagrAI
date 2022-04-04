@@ -243,8 +243,6 @@
 import { SObjects } from '@/services/salesforce'
 import { CollectionManager } from '@thinknimble/tn-models'
 import { SObjectField } from '@/services/salesforce'
-import Modal from '@/components/InviteModal'
-import Multiselect from 'vue-multiselect'
 
 export default {
   name: 'PipelineHeader',
@@ -261,7 +259,7 @@ export default {
       removingIndex: null,
       objectFields: CollectionManager.create({
         ModelClass: SObjectField,
-        pagination: { size: 300 },
+        pagination: { size: 200 },
         filters: {
           salesforceObject: 'Opportunity',
         },
@@ -269,8 +267,7 @@ export default {
     }
   },
   components: {
-    Modal,
-    Multiselect,
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   async created() {
     await this.objectFields.refresh()
@@ -299,7 +296,6 @@ export default {
           timeout: 1000,
           message: 'Field removed successfully',
         })
-        console.log(res)
       } catch (e) {
         console.log(e)
       } finally {
@@ -336,7 +332,6 @@ export default {
       for (let i = 0; i < this.extraFieldObjs.length; i++) {
         this.extraFields.push(this.extraFieldObjs[i].id)
       }
-      console.log(this.extraFields)
       try {
         const res = await SObjects.api.addExtraFields({
           field_ids: this.extraFields,
@@ -346,7 +341,6 @@ export default {
           timeout: 1000,
           message: 'Field added successfully',
         })
-        console.log(res)
       } catch (e) {
         console.log(e)
       } finally {
@@ -510,21 +504,6 @@ export default {
   letter-spacing: 0.5px;
   color: $base-gray;
 }
-// .table-cell-header {
-//   display: table-cell;
-//   padding: 3vh;
-//   border: none;
-//   border-bottom: 3px solid $light-orange-gray;
-//   border-radius: 2px;
-//   z-index: 2;
-//   top: 0;
-//   position: sticky;
-//   background-color: $off-white;
-//   font-weight: bold;
-//   font-size: 13px;
-//   letter-spacing: 0.5px;
-//   color: $base-gray;
-// }
 .add-row {
   height: 1rem;
   margin-left: 0.25rem;
