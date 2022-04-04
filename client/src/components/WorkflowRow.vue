@@ -85,14 +85,13 @@
 <script>
 import PipelineNameSection from '@/components/PipelineNameSection'
 import PipelineField from '@/components/PipelineField'
-import SkeletonBox from '@/components/SkeletonBox'
 
 export default {
   name: 'WorkflowRow',
   components: {
     PipelineNameSection,
     PipelineField,
-    SkeletonBox,
+    SkeletonBox: () => import(/* webpackPrefetch: true */ '@/components/SkeletonBox'),
   },
   data() {
     return {}
@@ -115,10 +114,6 @@ export default {
         if (+match === 0) return ''
         return index === 0 ? match.toLowerCase() : match.toUpperCase()
       })
-    },
-    sliced(str) {
-      let newStr = str.slice(0, -1) + 'C'
-      return newStr
     },
   },
   props: {

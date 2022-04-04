@@ -38,6 +38,24 @@ export default class SalesforceAPI extends ModelAPI {
   }
 }
 
+export class MeetingWorkflowAPI extends ModelAPI {
+  static ENDPOINT = 'salesforce/'
+  get client() {
+    return apiClient()
+  }
+
+  async getMeetingList() {
+    try {
+      const res = await this.client.get(MeetingWorkflowAPI.ENDPOINT + 'meeting-workflows')
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error getting meetings' })(e)
+    }
+  }
+
+
+}
+
 export class SObjectFormBuilderAPI extends ModelAPI {
   static ENDPOINT = 'salesforce/'
   get client() {

@@ -1,7 +1,15 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
-from .models import SalesforceAuthAccount, SObjectPicklist, SObjectField, SObjectValidation
+from managr.zoom.serializers import ZoomMeetingSerializer
+
+from .models import (
+    MeetingWorkflow,
+    SalesforceAuthAccount,
+    SObjectPicklist,
+    SObjectField,
+    SObjectValidation,
+)
 
 
 class SalesforceAuthSerializer(serializers.ModelSerializer):
@@ -109,3 +117,11 @@ class SObjectPicklistSerializer(serializers.ModelSerializer):
                 .first()
             )
         return super().to_internal_value(data)
+
+
+class MeetingWorkflowSerializer(serializers.ModelSerializer):
+    meeting_ref = ZoomMeetingSerializer(source="meeting")
+
+    class Meta:
+        model = MeetingWorkflow
+        fields = ("meeting", "meeting_ref", "resource_id", "resource_type")

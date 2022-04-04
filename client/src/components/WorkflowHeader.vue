@@ -157,9 +157,6 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
-// .light-green {
-//   filter: invert(36%) sepia(81%) saturate(5047%) hue-rotate(139deg) brightness(107%) contrast(80%);
-// }
 .sort-img-visible {
   display: flex;
   flex-direction: row;
@@ -196,21 +193,6 @@ export default {
   border-radius: 2px;
   z-index: 3;
   left: 3.5vw;
-  top: 0;
-  position: sticky;
-  background-color: $off-white;
-  font-weight: bold;
-  font-size: 13px;
-  letter-spacing: 0.5px;
-  color: $base-gray;
-}
-.table-cell-header {
-  display: table-cell;
-  padding: 3vh;
-  border: none;
-  border-bottom: 3px solid $light-orange-gray;
-  border-radius: 2px;
-  z-index: 2;
   top: 0;
   position: sticky;
   background-color: $off-white;

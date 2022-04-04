@@ -57,7 +57,7 @@
 
       <div v-else-if="type === 'Reference'" class="filter-selection__body">
         <select
-          @input=";(value = $event.target.value), $emit('value-selected', `${value}`)"
+          @input=";(value = $event.target.value), $emit('value-selected', `${value}`, apiName)"
           v-model="inputValue"
           v-if="apiName === 'OwnerId'"
           id="update-input"
@@ -66,7 +66,7 @@
             v-for="(owner, i) in owners"
             :key="i"
             :value="
-              owner.salesforce_account_ref ? owner.salesforce_account_ref.salesforce_id : owner.id
+              owner.salesforce_account_ref ? owner.salesforce_account_ref.salesforce_id : null
             "
           >
             <p>
@@ -79,7 +79,7 @@
           v-model="inputValue"
           v-else-if="apiName === 'AccountId'"
           id="update-input"
-          @input=";(value = $event.target.value), $emit('value-selected', `${value}`)"
+          @input=";(value = $event.target.value), $emit('value-selected', `${value}`, apiName)"
         >
           <option v-for="(account, i) in accounts" :key="i" :value="account.integration_id">
             <p>{{ account.name }}</p>

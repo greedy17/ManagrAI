@@ -4,12 +4,13 @@ import json
 from faker import Faker
 from urllib.parse import urlencode
 from datetime import datetime
+from django.db.models import Q
 
 from django.core.management import call_command
 from django.shortcuts import render, redirect
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
-
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.views import APIView
 from rest_framework import (
     authentication,
@@ -54,6 +55,7 @@ from managr.zoom.zoom_helper.models import ZoomAcct, ZoomMtg
 from managr.zoom.zoom_helper.exceptions import InvalidRequest
 from managr.slack.models import UserSlackIntegration
 from managr.salesforce.models import MeetingWorkflow
+from managr.salesforce.serializers import MeetingWorkflowSerializer
 from managr.core.models import User
 from .models import ZoomAuthAccount, ZoomMeeting
 from .serializers import (
@@ -398,3 +400,4 @@ def fake_recording(request):
     except Exception as e:
         logger.warning(f"Zoom recording error: {e}")
     return Response()
+

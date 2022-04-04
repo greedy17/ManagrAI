@@ -2,51 +2,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import Auth from '@/services/auth'
-
-// Auth Views
-import Activation from '@/views/auth/Activation'
-import Login from '@/views/auth/Login'
-import AdminRegistration from '@/views/auth/AdminRegistration'
-import LeadershipCode from '@/views/auth/LeadershipCode'
-import InviteUsers from '@/views/auth/InviteUsers'
-import IntegrationScreen from '@/views/auth/IntegrationScreen'
-import ForgotPassword from '@/views/auth/ForgotPassword'
-import ResetPassword from '@/views/auth/ResetPassword'
-import Register from '@/views/auth/Register'
-
-// TODO: Add pages for Salesforce integration
-// Settigns-related views
-import Settings from '@/views/settings/Settings'
-import Profile from '@/views/settings/_pages/_Profile'
-import Invite from '@/views/settings/_pages/_Invite'
-import SlackFormSettings from '../views/settings/SlackFormSettings'
-import Notifications from '@/views/settings/Notifications'
-import Configure from '@/views/auth/Configure'
-import CustomizeLandingPage from '@/views/customize/CustomizeLandingPage'
-import UpdateOpportunity from '@/views/customize/UpdateOpportunity'
-import CreateContacts from '@/views/customize/CreateContacts'
-import CreateOpportunity from '@/views/customize/CreateOpportunity'
-import CreateAccounts from '@/views/customize/CreateAccounts'
-import UpdateContacts from '@/views/customize/UpdateContacts'
-import UpdateAccounts from '@/views/customize/UpdateAccounts'
-import UpdateLeads from '@/views/customize/UpdateLeads'
-import CreateLeads from '@/views/customize/CreateLeads'
-import ProductForm from '@/views/customize/ProductForm'
-import ProfilePage from '@/views/user/ProfilePage'
-import CloseDateApproaching from '@/views/settings/alerts/create/templates/CloseDateApproaching'
-import CloseDatePassed from '@/views/settings/alerts/create/templates/CloseDatePassed'
-import NextStepDate from '@/views/settings/alerts/create/templates/NextStepDate'
-import DealRotting from '@/views/settings/alerts/create/templates/DealRotting'
-import UpdateForecast from '@/views/settings/alerts/create/templates/UpdateForecast'
-import LogZoom from '@/views/settings/alerts/create/templates/LogZoom'
-import ZoomRecap from '@/views/settings/alerts/create/templates/ZoomRecap'
-// import RealTime from '@/views/settings/alerts/create/templates/RealTime'
-import Custom from '@/views/customize/Custom'
-import ValidationRules from '@/views/customize/ValidationRules'
-import Required from '@/views/customize/Required'
-import Pipelines from '@/views/Pipelines'
-import Forecasting from '@/views/Forecasting'
-
 // TODO: We should keep this style guide page
 // import Styles from '@/views/settings/Styles'
 // END TODO
@@ -59,197 +14,188 @@ export default new Router({
     {
       path: '/',
       beforeEnter: Auth.homepageRedirect,
-      component: Settings,
+      component: () => import('@/views/settings/Settings')
     },
     {
       path: '/login',
       name: 'Login',
-      component: Login,
+      component: () => import('@/views/auth/Login')
     },
     {
       path: '/admin-registration',
       name: 'AdminRegistration',
-      component: AdminRegistration,
+      component: () => import('@/views/auth/AdminRegistration')
     },
     {
       path: '/register',
       name: 'Register',
-      component: LeadershipCode,
+      component: () => import('@/views/auth/LeadershipCode')
     },
     {
       path: '/activation/:userId/:magicToken',
       name: 'RepRegistration',
-      component: Register,
+      component: () => import('@/views/auth/Register')
     },
     {
       path: '/activation/:uid/:token',
       name: 'Activation',
-      component: Activation,
+      component: () => import('@/views/auth/Activation')
     },
     {
       path: '/forgot-password',
       name: 'ForgotPassword',
-      component: ForgotPassword,
-    },
-    {
-      path: '/notifications',
-      name: 'Notifications',
-      component: Notifications,
+      component: () => import('@/views/auth/ForgotPassword'),
     },
     {
       path: '/resetpassword/:userId/:token',
       name: 'ResetPassword',
-      component: ResetPassword,
+      component: () => import('@/views/auth/ResetPassword'),
     },
     {
       path: '/invite-users',
       name: 'InviteUsers',
-      component: InviteUsers,
+      component: () => import('@/views/auth/InviteUsers'),
       beforeEnter: Auth.requireAuth,
     },
     {
       path: '/forms',
-      component: SlackFormSettings,
+      component: () => import('../views/settings/SlackFormSettings'),
       beforeEnter: Auth.requireIsAdminAuth,
       name: 'SlackFormSettings',
     },
     {
       path: '/profile-page',
       name: 'ProfilePage',
-      component: ProfilePage,
+      component: () => import('@/views/user/ProfilePage'),
     },
     {
       path: '/create-leads',
       name: 'CreateLeads',
-      component: CreateLeads,
+      component: () => import('@/views/customize/CreateLeads')
     },
     {
       path: '/update-leads',
       name: 'UpdateLeads',
-      component: UpdateLeads,
+      component: () => import('@/views/customize/UpdateLeads')
     },
     {
       path: '/update-contacts',
       name: 'UpdateContacts',
-      component: UpdateContacts,
+      component: () => import('@/views/customize/UpdateContacts')
     },
     {
       path: '/update-accounts',
       name: 'UpdateAccounts',
-      component: UpdateAccounts,
+      component: () => import('@/views/customize/UpdateAccounts')
     },
     {
       path: '/create-accounts',
       name: 'CreateAccounts',
-      component: CreateAccounts,
+      component: () => import('@/views/customize/CreateAccounts')
     },
     {
       path: '/product-form',
       name: 'ProductForm',
-      component: ProductForm,
+      component: () => import('@/views/customize/ProductForm')
     },
     {
       path: '/configure',
       name: 'Configure',
-      component: Configure
+      component: () => import('@/views/auth/Configure')
     },
     {
       path: '/create-contacts',
       name: 'CreateContacts',
-      component: CreateContacts,
+      component: () => import('@/views/customize/CreateContacts')
     },
     {
       path: '/update-opportunity',
       name: 'UpdateOpportunity',
-      component: UpdateOpportunity
+      component: () => import('@/views/customize/UpdateOpportunity')
     },
     {
       path: '/create-opportunity',
       name: 'CreateOpportunity',
-      component: CreateOpportunity,
+      component: () => import('@/views/customize/CreateOpportunity')
     },
     {
       path: '/close-date-passed',
       name: 'CloseDatePassed',
-      component: CloseDatePassed,
+      component: () => import('@/views/settings/alerts/create/templates/CloseDatePassed')
     },
     {
       path: '/next-step',
       name: 'NextStep',
-      component: NextStepDate,
+      component: () => import('@/views/settings/alerts/create/templates/NextStepDate')
     },
     {
       path: '/close-date-approaching',
       name: 'CloseDateApproaching',
-      component: CloseDateApproaching,
+      component: () => import('@/views/settings/alerts/create/templates/CloseDateApproaching')
     },
     {
       path: '/deal-rotting',
       name: 'DealRotting',
-      component: DealRotting,
+      component: () => import('@/views/settings/alerts/create/templates/DealRotting')
     },
     {
       path: '/update-forecast',
       name: 'UpdateForecast',
-      component: UpdateForecast,
+      component: () => import('@/views/settings/alerts/create/templates/UpdateForecast')
     },
     {
       path: '/log-zoom-meetings',
       name: 'LogZoom',
-      component: LogZoom,
+      component: () => import('@/views/settings/alerts/create/templates/LogZoom')
     },
     {
       path: '/recap-zoom-meetings',
       name: 'ZoomRecap',
-      component: ZoomRecap,
+      component: () => import('@/views/settings/alerts/create/templates/ZoomRecap')
     },
     {
       path: '/pipelines',
       name: 'Pipelines',
-      component: Pipelines,
+      component: () => import('@/views/Pipelines')
     },
     {
       path: '/forecasting',
       name: 'Forecasting',
-      component: Forecasting,
+      component: () =>
+        import('@/views/Forecasting')
     },
     {
       path: '/deal-movement',
       name: 'DealMovement',
       component: () =>
-        import(/* webpackChunkName: "settings" */ '../views/settings/alerts/create/templates/DealMovement'),
+        import('../views/settings/alerts/create/templates/DealMovement'),
     },
     {
       path: '/closed-won',
       name: 'ClosedWon',
       component: () =>
-        import(/* webpackChunkName: "settings" */ '../views/settings/alerts/create/templates/ClosedWon'),
+        import('../views/settings/alerts/create/templates/ClosedWon'),
     },
     {
       path: '/map',
       name: 'CustomizeLandingPage',
-      component: CustomizeLandingPage,
+      component: () => import('@/views/customize/CustomizeLandingPage'),
       children: [
         {
           path: 'required',
           name: 'Required',
-          component: Required,
+          component: () => import('@/views/customize/Required')
         },
         {
           path: 'validation',
           name: 'ValidationRules',
-          component: ValidationRules,
+          component: () => import('@/views/customize/ValidationRules')
         },
         {
           path: 'custom',
           name: 'Custom',
-          component: Custom,
+          component: () => import('@/views/customize/Custom')
         },
-        // {
-        //   path: 'saved',
-        //   name: 'Saved',
-        //   component: Saved,
-        // },
       ]
     },
     {
@@ -292,24 +238,16 @@ export default new Router({
 
     {
       path: '/settings',
-      component: Settings,
+      component: () => import('@/views/settings/Settings'),
       beforeEnter: Auth.requireAuth,
       children: [
         {
           path: 'integrations',
           name: 'Integrations',
           component: () =>
-            import(/* webpackChunkName: "settings" */ '../views/auth/IntegrationScreen'),
+            import('../views/auth/IntegrationScreen'),
         },
       ],
     },
-    //
-    // {
-    //   path: '/styles',
-    //   name: 'Styles',
-    //   component: Styles,
-    //   beforeEnter: Auth.requireAuth,
-    // },
-    // {
   ],
 })
