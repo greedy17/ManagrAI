@@ -124,5 +124,4 @@ class MeetingWorkflowSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MeetingWorkflow
-        fields = ("meeting", "meeting_ref" "resource_id", "resource_type")
-
+        fields = ("meeting", "meeting_ref", "resource_id", "resource_type")

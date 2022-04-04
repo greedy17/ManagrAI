@@ -2,7 +2,7 @@ import Model, { fields } from '@thinknimble/tn-models'
 import models from '@thinknimble/tn-models/lib/models'
 import { objectToCamelCase, objectToSnakeCase } from '@thinknimble/tn-utils'
 
-import SalesforceAPI, { SObjectFormBuilderAPI, SObjectValidationAPI } from './api'
+import SalesforceAPI, { SObjectFormBuilderAPI, SObjectValidationAPI, MeetingWorkflowAPI } from './api'
 
 export default class Salesforce extends Model {
   static api = SalesforceAPI.create(Salesforce)
@@ -63,6 +63,10 @@ export class SObjectPicklist extends Model {
 
 export class SObjects extends Model {
   static api = SObjectFormBuilderAPI.create(SObjects)
+}
+
+export class MeetingWorkflows extends Model {
+  static api = MeetingWorkflowAPI.create(MeetingWorkflows)
 }
 
 const INTEGER = 'INTEGER'

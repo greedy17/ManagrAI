@@ -7,6 +7,7 @@
       </div>
     </div>
 
+    <div class="cell-name-header">Event Name</div>
     <div class="table-cell-header" v-for="(column, i) in columns" :key="i">
       {{ column }}
     </div>
@@ -18,7 +19,7 @@ export default {
   name: 'MeetingWorkflowHeader',
   data() {
     return {
-      columns: ['Event Name', '# of Attendees', 'Attendees', 'Account/Opportunity', 'Action'],
+      columns: ['# of Attendees', 'Attendees', 'Account/Opportunity', 'Action'],
     }
   },
   components: {},

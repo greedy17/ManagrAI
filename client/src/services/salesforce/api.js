@@ -38,6 +38,24 @@ export default class SalesforceAPI extends ModelAPI {
   }
 }
 
+export class MeetingWorkflowAPI extends ModelAPI {
+  static ENDPOINT = 'salesforce/'
+  get client() {
+    return apiClient()
+  }
+
+  async getMeetingList() {
+    try {
+      const res = await this.client.get(MeetingWorkflowAPI.ENDPOINT + 'meeting-workflows')
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error getting meetings' })(e)
+    }
+  }
+
+
+}
+
 export class SObjectFormBuilderAPI extends ModelAPI {
   static ENDPOINT = 'salesforce/'
   get client() {
@@ -135,14 +153,6 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error syncing resources' })(e)
-    }
-  }
-  async getMeetingList() {
-    try {
-      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/meeting-workflows')
-      return res.data
-    } catch (e) {
-      apiErrorHandler({ apiName: 'Error getting meetings' })(e)
     }
   }
   async confirmUpdate(verbose_name, task_hash) {

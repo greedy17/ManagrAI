@@ -620,7 +620,13 @@
       <div class="results">
         <h6 style="color: #9b9b9b">
           {{ currentList }}:
-          <span>{{ selectedWorkflow ? currentWorkflow.length : allOpps.length }}</span>
+          <span>{{
+            selectedWorkflow
+              ? currentWorkflow.length
+              : selectedMeeting
+              ? meetings.length
+              : allOpps.length
+          }}</span>
         </h6>
       </div>
       <!-- <p @click="tester">test</p> -->
@@ -674,10 +680,16 @@
           />
         </div>
       </section>
-      <section v-if="selectedMeeting" class="table-section">
+      <section style="min-height: 74vh" v-if="selectedMeeting" class="table-section">
         <div class="table">
           <MeetingWorkflowHeader />
-          <MeetingWorkflow />
+          <MeetingWorkflow
+            v-for="(meeting, i) in meetings"
+            :key="i"
+            :meeting="meeting.meeting_ref"
+            :resourceId="meeting.resource_id"
+            :allOpps="allOpps"
+          />
         </div>
       </section>
       <section v-if="currentWorkflow && currentWorkflow.length < 1" class="empty-table-section">
@@ -701,7 +713,7 @@
   </div>
 </template>
 <script>
-import { SObjects, SObjectPicklist } from '@/services/salesforce'
+import { SObjects, SObjectPicklist, MeetingWorkflows } from '@/services/salesforce'
 import AlertTemplate from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
 import SlackOAuth from '@/services/slack'
@@ -710,8 +722,9 @@ import PipelineField from '@/components/PipelineField'
 import PipelineTableRow from '@/components/PipelineTableRow'
 import PipelineHeader from '@/components/PipelineHeader'
 import User from '@/services/users'
-// import WorkflowRow from '@/components/WorkflowRow'
-// import WorkflowHeader from '@/components/WorkflowHeader'
+import WorkflowRow from '@/components/WorkflowRow'
+import WorkflowHeader from '@/components/WorkflowHeader'
+import Loader from '@/components/Loader'
 
 export default {
   name: 'Pipelines',
@@ -722,9 +735,10 @@ export default {
     PipelineField,
     PipelineTableRow,
     PipelineHeader,
-    WorkflowHeader: () => import(/* webpackPrefetch: true */ '@/components/WorkflowHeader'),
-    WorkflowRow: () => import(/* webpackPrefetch: true */ '@/components/WorkflowRow'),
-    Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
+    WorkflowHeader,
+    WorkflowRow,
+    Loader,
+    // Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
     Filters: () => import(/* webpackPrefetch: true */ '@/components/Filters'),
     FilterSelection: () => import(/* webpackPrefetch: true */ '@/components/FilterSelection'),
     MeetingWorkflowHeader: () =>
@@ -769,7 +783,7 @@ export default {
       currentList: 'All Opportunities',
       alertInstanceId: null,
       showList: false,
-      showWorkflowList: true,
+      showWorkflowList: false,
       showPopularList: true,
       notes: [],
       updateOppForm: null,
@@ -799,6 +813,7 @@ export default {
       operatorsLength: 0,
       showMeetingList: true,
       selectedMeeting: false,
+      meetings: null,
       ladFilter: {
         apiName: 'LastActivityDate',
         dataType: 'Date',
@@ -887,12 +902,13 @@ export default {
   },
   methods: {
     tester() {
-      console.log(this.allUsers)
+      console.log(this.allOpps)
     },
     async getMeetingList() {
       try {
-        const res = await SObjects.api.getMeetingList()
-        console.log(res)
+        const res = await MeetingWorkflows.api.getMeetingList()
+        this.meetings = res.results
+        console.log(this.meetings)
       } catch (e) {
         console.log(e)
       } finally {
