@@ -75,7 +75,9 @@
       </div>
     </div>
     <div class="table-cell">
-      <button v-if="resourceId" class="add-button">Update Opportunity</button>
+      <button disabled v-if="resourceId" class="add-button">
+        Update Opportunity (coming soon)
+      </button>
       <p v-else>Please map meeting in order to take action.</p>
     </div>
   </div>
