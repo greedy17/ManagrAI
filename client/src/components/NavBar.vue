@@ -38,6 +38,9 @@
                 >Forecast (coming soon)</router-link
               >
             </li>
+            <li v-if="user.isStaff">
+              <router-link exact-active-class="active" :to="{ name: 'Staff' }">Staff</router-link>
+            </li>
           </ul>
         </div>
 

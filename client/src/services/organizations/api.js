@@ -1,4 +1,4 @@
-import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
+import { apiClient, apiErrorHandler, ApiFilter, ModelAPI } from '@/services/api'
 
 const ORGANIZATIONS_ENDPOINT = '/organizations/'
 
@@ -24,7 +24,7 @@ export default class OrganizationAPI {
     }
     try {
       const res = await this.client.get(url, options)
-
+      console.log(res)
       return {
         ...res.data,
         results: res.data.results.map(this.cls.fromAPI),

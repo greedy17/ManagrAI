@@ -26,6 +26,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = (
+            "id",
             "name",
             "photo",
             "state",

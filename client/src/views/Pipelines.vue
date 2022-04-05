@@ -734,14 +734,16 @@ import User from '@/services/users'
 import WorkflowRow from '@/components/WorkflowRow'
 import WorkflowHeader from '@/components/WorkflowHeader'
 import Loader from '@/components/Loader'
-// import MeetikngWorkflowHeader from '@/components/MeetingWorkflowHeader'
-// import MeetingWorkflow from '@/components/MeetingWorkflow'
+import MeetikngWorkflowHeader from '@/components/MeetingWorkflowHeader'
+import MeetingWorkflow from '@/components/MeetingWorkflow'
+import Modal from '@/components/Modal'
+import SkeletonBox from '@/components/SkeletonBox'
 
 export default {
   name: 'Pipelines',
   components: {
-    Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
-    SkeletonBox: () => import(/* webpackPrefetch: true */ '@/components/SkeletonBox'),
+    Modal,
+    SkeletonBox,
     PipelineNameSection,
     PipelineField,
     PipelineTableRow,
@@ -749,13 +751,15 @@ export default {
     WorkflowHeader,
     WorkflowRow,
     Loader,
-    PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
-    // Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
-    Filters: () => import(/* webpackPrefetch: true */ '@/components/Filters'),
-    FilterSelection: () => import(/* webpackPrefetch: true */ '@/components/FilterSelection'),
-    MeetingWorkflowHeader: () =>
-      import(/* webpackPrefetch: true */ '@/components/MeetingWorkflowHeader'),
-    MeetingWorkflow: () => import(/* webpackPrefetch: true */ '@/components/MeetingWorkflow'),
+    MeetingWorkflow,
+    MeetikngWorkflowHeader,
+    // PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
+    // // Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
+    // Filters: () => import(/* webpackPrefetch: true */ '@/components/Filters'),
+    // FilterSelection: () => import(/* webpackPrefetch: true */ '@/components/FilterSelection'),
+    // MeetingWorkflowHeader: () =>
+    //   import(/* webpackPrefetch: true */ '@/components/MeetingWorkflowHeader'),
+    // MeetingWorkflow: () => import(/* webpackPrefetch: true */ '@/components/MeetingWorkflow'),
   },
   data() {
     return {
