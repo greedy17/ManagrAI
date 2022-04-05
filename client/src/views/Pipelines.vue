@@ -575,9 +575,7 @@
                   <p>{{ stage.label }}</p>
                 </option>
               </select>
-              <button @click="advanceStage(currentCheckList)" class="add-button">
-                Advance Stage
-              </button>
+              <button @click="advanceStage()" class="add-button">Advance Stage</button>
             </div>
             <div class="flex-row-pad" v-if="forecastSelected">
               <p style="font-size: 14px">Select Forecast:</p>
@@ -644,6 +642,7 @@
             :allSelected="allSelected"
           />
           <PipelineTableRow
+            ref="pipelineTableChild"
             :key="i"
             v-for="(opp, i) in allOppsFiltered"
             @create-form="createFormInstance(opp.id)"
@@ -654,6 +653,7 @@
             :oppFields="oppFields"
             :primaryCheckList="primaryCheckList"
             :updateList="updateList"
+            :stageData="newStage"
           />
         </div>
       </section>
@@ -681,7 +681,7 @@
             :index="i + 1 * 1000"
             :oppFields="oppFields"
             :workflowCheckList="workflowCheckList"
-            :updateList="updateList"
+            :updateWorkflowList="updateList"
           />
         </div>
       </section>
@@ -1483,12 +1483,17 @@ export default {
         this.bulkUpdateCloseDate(this.instanceIds, data)
       }, 1000)
     },
-    advanceStage(ids) {
-      this.instanceIds = []
-      this.createBulkInstance(ids)
-      setTimeout(() => {
-        this.bulkUpdateStage(this.instanceIds, this.newStage)
-      }, 1000)
+    advanceStage() {
+      for (let i = 0; i < this.currentCheckList.length; i++) {
+        this.$refs.pipelineTableChild[i].createFormInstanceAndUpdate()
+        this.updateOpps()
+      }
+      this.primaryCheckList = []
+      // this.instanceIds = []
+      // this.createBulkInstance(ids)
+      // setTimeout(() => {
+      //   this.bulkUpdateStage(this.instanceIds, this.newStage)
+      // }, 1000)
     },
     changeForecast(ids) {
       this.instanceIds = []
@@ -1515,6 +1520,15 @@ export default {
     setUpdateValues(key, val) {
       if (val) {
         this.formData[key] = val
+      }
+    },
+    async updateOpps() {
+      try {
+        let updatedRes = await SObjects.api.getObjects('Opportunity')
+        this.allOpps = updatedRes.results
+        this.originalList = updatedRes.results
+      } catch (e) {
+        console.log(e)
       }
     },
     async bulkUpdateCloseDate(ids, data) {
@@ -1558,7 +1572,6 @@ export default {
       }
       this.updatingOpps = false
       this.closeDateSelected = false
-
       this.$Alert.alert({
         type: 'success',
         timeout: 1000,

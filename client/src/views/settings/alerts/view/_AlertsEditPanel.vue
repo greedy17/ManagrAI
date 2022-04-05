@@ -200,7 +200,6 @@ import 'quill/dist/quill.bubble.css'
 
 import debounce from 'lodash.debounce'
 import { quillEditor } from 'vue-quill-editor'
-import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
 import moment from 'moment'
 
@@ -210,7 +209,6 @@ import AlertGroupModal from '@/views/settings/alerts/view/_AlertGroupModal'
 import AlertSettingsModal from '@/views/settings/alerts/view/_AlertSettingsModal'
 import ListContainer from '@/components/ListContainer'
 import ListItem from '@/components/ListItem'
-import ExpandablePanel from '@/components/ExpandablePanel'
 import FormField from '@/components/forms/FormField'
 import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotificationTemplate'
 import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePreview'
@@ -271,6 +269,8 @@ export default {
     PulseLoadingSpinner,
     DropDownSearch,
     AlertOperandModal,
+    AlertGroupModal,
+    AlertSettingsModal,
   },
   props: {
     alert: {
