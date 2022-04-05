@@ -98,7 +98,7 @@
 import PipelineNameSection from '@/components/PipelineNameSection'
 import PipelineField from '@/components/PipelineField'
 import { CollectionManager } from '@thinknimble/tn-models'
-import { SObjectField } from '@/services/salesforce'
+import { SObjects, SObjectField } from '@/services/salesforce'
 
 export default {
   name: 'PipelineTableRow',
@@ -119,7 +119,18 @@ export default {
           salesforceObject: 'Opportunity',
         },
       }),
+      oppId: null,
+      updateList: [],
+      instanceId: null,
     }
+  },
+  props: {
+    index: {},
+    opp: {},
+    oppFields: {},
+    primaryCheckList: {},
+    stageData: {},
+    // updateList: {},
   },
   computed: {
     extraPipelineFields() {
@@ -150,13 +161,45 @@ export default {
         return index === 0 ? match.toLowerCase() : match.toUpperCase()
       })
     },
-  },
-  props: {
-    index: {},
-    opp: {},
-    oppFields: {},
-    primaryCheckList: {},
-    updateList: {},
+    async createFormInstanceAndUpdate() {
+      if (this.primaryCheckList.includes(this.opp.id)) {
+        this.updateList.push(this.opp.id)
+        try {
+          const res = await SObjects.api
+            .createFormInstance({
+              resourceType: 'Opportunity',
+              formType: 'UPDATE',
+              resourceId: this.opp.id,
+            })
+            .then(async (res) => {
+              const response = await SObjects.api.updateResource({
+                form_id: res.form_id,
+                form_data: { StageName: this.stageData },
+              })
+            })
+        } catch (e) {
+          console.log(e)
+        } finally {
+          this.updateList = []
+        }
+      }
+    },
+    async updateStage() {
+      try {
+        const res = await SObjects.api
+          .updateResource({
+            form_id: instanceId,
+            form_data: { StageName: stageData },
+          })
+          .then(async () => {
+            let updatedRes = await SObjects.api.getObjects('Opportunity')
+            this.allOpps = updatedRes.results
+            this.originalList = updatedRes.results
+          })
+      } catch (e) {
+        console.log(e)
+      }
+    },
   },
 }
 </script>
