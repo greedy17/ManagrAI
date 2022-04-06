@@ -5,15 +5,16 @@
       <div :key="i" v-for="(org, i) in organizations.list">
         <h1>{{ org.name }}</h1>  
         <div class="form__list">
-            <div class="form__list_item" :key="i" v-for="(form, i) in allForms">
-                <div v-if="org.id === form.organization">
+            <template v-for="(form, i) in allForms">
+                <div :key="i" class="form__list_item" v-if="org.id === form.organization">
                     <h3>{{form.formType}} {{form.resource}}</h3>
                     <p>Form Fields:</p>
-                    <ul>
+                    <ul v-if="form.fieldsRef.length > 1">
                         <li class="field__list_item" :key="i" v-for="(field, i) in form.fieldsRef"><span>{{field.order}}-{{field.label}}</span><span class="sub_text">{{field.dataType}}</span></li>
                     </ul>
+                    <p v-else>Form is not created</p>
                 </div>
-            </div>
+            </template>
         </div>
 
       </div>
@@ -81,16 +82,6 @@ export default {
   }
 }
 
-.preview-border {
-  box-shadow: 4px 5px 9px $very-light-gray;
-  background-color: white;
-  margin-top: 2rem;
-  border-radius: 0.5rem;
-  width: 51vw;
-}
-.spacer {
-  height: 20vh;
-}
 p {
   font-size: 14px;
 }
@@ -103,9 +94,15 @@ h1 {
   display: flex;
   flex-wrap: wrap;
 }
+ul {
+  margin: 0;
+  padding: 0;
+}
 .form__list_item {
-  padding: 3rem;
+  padding: 0 2rem 2rem 2rem;
   border: 1px solid black;
+  width: 20vw;
+  margin: 1rem;
 }
 .sub_text {
   font-size: 12px;
