@@ -772,6 +772,7 @@ export default {
       allSelected: false,
       allWorkflowsSelected: false,
       updateList: [],
+      recapList: [],
       currentVals: [],
       closeDateSelected: false,
       advanceStageSelected: false,
@@ -915,6 +916,22 @@ export default {
   watch: {
     primaryCheckList: 'closeAll',
     workflowCheckList: 'closeAll',
+    updateList: {
+      async handler(currList) {
+        if (currList.length === 0 && this.recapList.length) {
+          console.log(this.recapList.length)
+          let bulk = true ? this.recapList.length > 1 : false
+          try {
+            const res = await SObjects.api.sendRecap(bulk, this.recapList)
+            console.log(res)
+          } catch (e) {
+            console.log(e)
+          } finally {
+            this.recapList = []
+          }
+        }
+      },
+    },
   },
   methods: {
     tester() {
@@ -1506,6 +1523,7 @@ export default {
     async createBulkInstance(ids) {
       for (let i = 0; i < ids.length; i++) {
         this.updateList.push(ids[i])
+
         try {
           const res = await SObjects.api.createFormInstance({
             resourceType: 'Opportunity',
@@ -1513,6 +1531,7 @@ export default {
             resourceId: ids[i],
           })
           this.instanceIds.push(res.form_id)
+          this.recapList.push(res.form_id)
         } catch (e) {
           console.log(e)
         }

@@ -2583,7 +2583,6 @@ def process_send_recap_modal(payload, context):
     loading_data = send_loading_screen(
         access_token, "Loading users and channels", "open", str(user.id), trigger_id
     )
-
     data = {
         "view_id": loading_data["view"]["id"],
         "view": {
@@ -2660,7 +2659,6 @@ def process_show_convert_lead_form(payload, context):
 def process_view_recap(payload, context):
     form_id_str = context.get("form_ids")
     form_ids = form_id_str.split(".")
-
     submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
         template__resource="OpportunityLineItem"
     )
