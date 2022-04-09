@@ -556,11 +556,7 @@
             <div class="flex-row-pad" v-if="closeDateSelected">
               <p style="font-size: 14px">How many days ?:</p>
               <input class="number-input" v-model="daysForward" type="number" />
-              <button
-                :disabled="!daysForward"
-                class="add-button"
-                @click="pushCloseDates(currentCheckList, daysForward)"
-              >
+              <button :disabled="!daysForward" class="add-button" @click="pushCloseDate">
                 Push Close Date
               </button>
             </div>
@@ -654,6 +650,8 @@
             :primaryCheckList="primaryCheckList"
             :updateList="updateList"
             :stageData="newStage"
+            :closeDateData="daysForward"
+            :ForecastCategoryNameData="newForecast"
           />
         </div>
       </section>
@@ -673,6 +671,7 @@
           />
           <WorkflowRow
             :key="i"
+            ref="workflowTableChild"
             v-for="(workflow, i) in filteredWorkflows"
             @create-form="createFormInstance(workflow.id)"
             @get-notes="getNotes(workflow.id)"
@@ -682,6 +681,9 @@
             :oppFields="oppFields"
             :workflowCheckList="workflowCheckList"
             :updateWorkflowList="updateList"
+            :stageData="newStage"
+            :closeDateData="daysForward"
+            :ForecastCategoryNameData="newForecast"
           />
         </div>
       </section>
@@ -969,6 +971,16 @@ export default {
         if (this.selectedWorkflow) {
           this.allOpps = res.results
           this.updateWorkflowList(this.currentList, this.refreshId)
+        } else if (this.currentList === 'Closing this month') {
+          this.allOpps = res.results
+          this.allOpps = this.allOpps.filter(
+            (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth,
+          )
+        } else if (this.currentList === 'Closing next month') {
+          this.allOpps = res.results
+          this.allOpps = this.allOpps.filter(
+            (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth + 1,
+          )
         } else {
           this.allOpps = res.results
         }
@@ -1402,23 +1414,6 @@ export default {
         console.log(e)
       }
     },
-    async refresh(id) {
-      this.loadingWorkflows = true
-      let counter = 0
-      try {
-        await AlertTemplate.api.runAlertTemplateNow(id)
-        while (counter < 100) {
-          this.currentWorkflow.refresh()
-          counter += 1
-        }
-      } catch (e) {
-        console.log(e)
-      } finally {
-        setTimeout(() => {
-          this.loadingWorkflows = false
-        }, 4000)
-      }
-    },
     async updateWorkflow(id) {
       try {
         await AlertTemplate.api.runAlertTemplateNow(id)
@@ -1466,55 +1461,52 @@ export default {
         console.log(e)
       }
     },
-    futureDate(val) {
-      let currentDate = new Date()
-      currentDate.setDate(currentDate.getDate() + Number(val))
-      let currentDayOfMonth = currentDate.getDate()
-      let currentMonth = currentDate.getMonth()
-      let currentYear = currentDate.getFullYear()
-      let dateString = currentYear + '-' + (currentMonth + 1) + '-' + currentDayOfMonth
-      return dateString
-    },
-    pushCloseDates(ids, val) {
-      this.instanceIds = []
-      let data = this.futureDate(val)
-      this.createBulkInstance(ids)
-      setTimeout(() => {
-        this.bulkUpdateCloseDate(this.instanceIds, data)
-      }, 1000)
+    pushCloseDate() {
+      if (this.selectedWorkflow) {
+        for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
+          this.$refs.workflowTableChild[i].onPushCloseDate()
+          this.updateWorkflowList(this.currentList, this.refreshId)
+          this.updateOpps()
+        }
+        this.workflowCheckList = []
+      } else {
+        for (let i = 0; i < this.$refs.pipelineTableChild.length; i++) {
+          this.$refs.pipelineTableChild[i].onPushCloseDate()
+          this.updateOpps()
+        }
+        this.primaryCheckList = []
+      }
     },
     advanceStage() {
-      for (let i = 0; i < this.currentCheckList.length; i++) {
-        this.$refs.pipelineTableChild[i].createFormInstanceAndUpdate()
-        this.updateOpps()
-      }
-      this.primaryCheckList = []
-      // this.instanceIds = []
-      // this.createBulkInstance(ids)
-      // setTimeout(() => {
-      //   this.bulkUpdateStage(this.instanceIds, this.newStage)
-      // }, 1000)
-    },
-    changeForecast(ids) {
-      this.instanceIds = []
-      this.createBulkInstance(ids)
-      setTimeout(() => {
-        this.bulkChangeForecast(this.instanceIds, this.newForecast)
-      }, 1000)
-    },
-    async createBulkInstance(ids) {
-      for (let i = 0; i < ids.length; i++) {
-        this.updateList.push(ids[i])
-        try {
-          const res = await SObjects.api.createFormInstance({
-            resourceType: 'Opportunity',
-            formType: 'UPDATE',
-            resourceId: ids[i],
-          })
-          this.instanceIds.push(res.form_id)
-        } catch (e) {
-          console.log(e)
+      if (this.selectedWorkflow) {
+        for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
+          this.$refs.workflowTableChild[i].onAdvanceStage()
+          this.updateWorkflowList(this.currentList, this.refreshId)
+          this.updateOpps()
         }
+        this.workflowCheckList = []
+      } else {
+        for (let i = 0; i < this.$refs.pipelineTableChild.length; i++) {
+          this.$refs.pipelineTableChild[i].onAdvanceStage()
+          this.updateOpps()
+        }
+        this.primaryCheckList = []
+      }
+    },
+    changeForecast() {
+      if (this.selectedWorkflow) {
+        for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
+          this.$refs.workflowTableChild[i].onChangeForecast()
+          this.updateWorkflowList(this.currentList, this.refreshId)
+          this.updateOpps()
+        }
+        this.workflowCheckList = []
+      } else {
+        for (let i = 0; i < this.$refs.pipelineTableChild.length; i++) {
+          this.$refs.pipelineTableChild[i].onChangeForecast()
+          this.updateOpps()
+        }
+        this.primaryCheckList = []
       }
     },
     setUpdateValues(key, val) {
@@ -1530,144 +1522,6 @@ export default {
       } catch (e) {
         console.log(e)
       }
-    },
-    async bulkUpdateCloseDate(ids, data) {
-      this.updatingOpps = true
-      for (let i = 0; i < ids.length; i++) {
-        try {
-          const res = await SObjects.api
-            .updateResource({
-              form_id: ids[i],
-              form_data: { CloseDate: data },
-            })
-            .then(async () => {
-              let updatedRes = await SObjects.api.getObjects('Opportunity')
-              this.allOpps = updatedRes.results
-              this.originalList = updatedRes.results
-            })
-          this.formData = {}
-          setTimeout(() => {
-            this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
-          }, 300)
-          this.closeFilterSelection()
-          if (this.selectedWorkflow) {
-            this.updateWorkflowList(this.currentList, this.refreshId)
-          } else if (this.currentList === 'Closing this month') {
-            this.stillThisMonth()
-          } else if (this.currentList === 'Closing next month') {
-            this.stillNextMonth()
-          }
-
-          if (this.activefilters.length) {
-          }
-        } catch (e) {
-          console.log(e)
-        } finally {
-          if (this.selectedWorkflow) {
-            this.workflowCheckList = []
-          } else {
-            this.primaryCheckList = []
-          }
-        }
-      }
-      this.updatingOpps = false
-      this.closeDateSelected = false
-      this.$Alert.alert({
-        type: 'success',
-        timeout: 1000,
-        message: 'Salesforce update successful!',
-        // sub: 'Some changes may take longer to reflect',
-      })
-    },
-    async bulkUpdateStage(ids, data) {
-      this.updatingOpps = true
-      for (let i = 0; i < ids.length; i++) {
-        try {
-          const res = await SObjects.api
-            .updateResource({
-              form_id: ids[i],
-              form_data: { StageName: data },
-            })
-            .then(async () => {
-              let updatedRes = await SObjects.api.getObjects('Opportunity')
-              this.allOpps = updatedRes.results
-              this.originalList = updatedRes.results
-            })
-          this.formData = {}
-          setTimeout(() => {
-            this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
-          }, 300)
-          this.closeFilterSelection()
-          if (this.selectedWorkflow) {
-            this.updateWorkflowList(this.currentList, this.refreshId)
-          } else if (this.currentList === 'Closing this month') {
-            this.stillThisMonth()
-          } else if (this.currentList === 'Closing next month') {
-            this.stillNextMonth()
-          }
-        } catch (e) {
-          console.log(e)
-        } finally {
-          if (this.selectedWorkflow) {
-            this.workflowCheckList = []
-          } else {
-            this.primaryCheckList = []
-          }
-        }
-      }
-      this.updatingOpps = false
-      this.advanceStageSelected = false
-      this.$Alert.alert({
-        type: 'success',
-        timeout: 1000,
-        message: 'Salesforce update successful!',
-        // sub: 'Some changes may take longer to reflect',
-      })
-    },
-    async bulkChangeForecast(ids, data) {
-      this.updatingOpps = true
-      for (let i = 0; i < ids.length; i++) {
-        try {
-          const res = await SObjects.api
-            .updateResource({
-              form_id: ids[i],
-              form_data: { ForecastCategoryName: data },
-            })
-            .then(async () => {
-              let updatedRes = await SObjects.api.getObjects('Opportunity')
-              this.allOpps = updatedRes.results
-              this.originalList = updatedRes.results
-            })
-          this.formData = {}
-          setTimeout(() => {
-            this.updateList.length > 1 ? this.updateList.shift() : (this.updateList = [])
-          }, 300)
-          this.closeFilterSelection()
-          if (this.selectedWorkflow) {
-            this.updateWorkflowList(this.currentList, this.refreshId)
-          } else if (this.currentList === 'Closing this month') {
-            this.stillThisMonth()
-          } else if (this.currentList === 'Closing next month') {
-            this.stillNextMonth()
-          }
-        } catch (e) {
-          console.log(e)
-        } finally {
-          if (this.selectedWorkflow) {
-            this.workflowCheckList = []
-          } else {
-            this.primaryCheckList = []
-          }
-        }
-      }
-      this.updatingOpps = false
-      this.forecastSelected = false
-      this.$Alert.alert({
-        type: 'success',
-        timeout: 3000,
-        message: 'Salesforce update successful!',
-        sub: 'Some changes may take longer to reflect',
-      })
     },
     async resourceSync() {
       if (this.currentDay !== this.syncDay) {
@@ -1728,7 +1582,6 @@ export default {
           type: 'success',
           timeout: 1000,
           message: 'Salesforce update successful!',
-          // sub: 'Some changes may take longer to reflect',
         })
         this.closeFilterSelection()
         if (this.selectedWorkflow) {
