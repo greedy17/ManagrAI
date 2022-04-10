@@ -10,7 +10,7 @@
       <div>
         <div>
           <p style="letter-spacing: 0.25px; font-size: 15px; margin-bottom: 3px">
-            {{ meeting.topic }}
+            {{ meeting.topic ? meeting.topic : 'Meeting' }}
           </p>
           <span style="color: #9b9b9b; font-size: 11px">
             Time: {{ meeting.start_time ? formatDateTimeToTime(meeting.start_time) : '' }}
