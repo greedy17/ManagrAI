@@ -31,8 +31,6 @@ import store from './store'
 import PageLoadingSVG from '@/components/PageLoadingSVG'
 import ComponentLoadingSVG from '@/components/ComponentLoadingSVG'
 import Modal from '@/components/Modal'
-import '@/styles/vtooltip.scss'
-import VTooltip from 'v-tooltip'
 // filters
 // import { currencyFilter, currencyFilterNoCents } from '@/services/currency'
 import { formatDateShort, constantToCapitalized } from '@/services/utils'
@@ -75,7 +73,7 @@ Vue.use(VueGoogleMaps, {
     libraries: 'places',
   },
 })
-Vue.use(VTooltip)
+
 Vue.filter('momentDateTime', momentDateTime)
 Vue.filter('momentDateTimeShort', momentDateTimeShort)
 Vue.filter('momentDateShort', momentDateShort)
