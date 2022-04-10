@@ -20,6 +20,7 @@ from managr.slack.helpers.exceptions import (
     InvalidBlocksFormatException,
     InvalidBlocksException,
     InvalidAccessToken,
+    CannotSendToChannel,
 )
 from managr.slack.helpers.block_sets import get_block_set
 from managr.organization.models import Contact, Account
@@ -425,6 +426,14 @@ def _kick_off_slack_interaction(user_id, managr_meeting_id):
             except InvalidAccessToken as e:
                 return logger.exception(
                     f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+                )
+            except CannotSendToChannel as e:
+                return logger.exception(
+                    f"Failed to send to channel in kick off slack interaction for workflow {str(workflow.id)} {e}"
+                )
+            except Exception as e:
+                return logger.exception(
+                    f"Kick off slack interaction error {e} for workflow {str(workflow.id)}"
                 )
 
             # save slack message ts and channel id to remove if the meeting is deleted before being filled
