@@ -123,7 +123,6 @@ class DealSerializer(serializers.ModelSerializer):
         owner = data.get("external_owner", None)
         close_date = data.get("close_date")
         new_date = parser.parse(close_date).date()
-        print(new_date)
         data.update({"close_date": new_date})
         company = data.get("external_company", None)
         if not data.get("external_company", None):

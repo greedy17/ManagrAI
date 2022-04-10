@@ -104,7 +104,9 @@ def init_hubspot_resource_sync(user):
     if not hasattr(user, "hubspot_account"):
         return
     # operations = [*user.hubspot_account.resource_sync_opts]
-    operations = ["Contact"]
+    operations = [
+        *user.hubspot_account.field_sync_opts,
+    ]
     scheduled_time = timezone.now()
     formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
     return emit_gen_next_hubspot_sync(str(user.id), operations, formatted_time)

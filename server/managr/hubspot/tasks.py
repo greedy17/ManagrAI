@@ -141,7 +141,6 @@ def _process_resource_sync(user_id, sync_id, resource, attempts=1):
             serializer = serializer_class(data=item.as_dict, instance=existing)
         else:
             serializer = serializer_class(data=item.as_dict)
-        print(serializer)
         # check if already exists and update
         try:
             serializer.is_valid(raise_exception=True)

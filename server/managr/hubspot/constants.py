@@ -90,7 +90,6 @@ def HUBSPOT_OWNERS_URI(email):
 
 def HUBSPOT_SEARCH_BODY(fields, filters, limit):
     fields = set(fields)
-    print(fields)
     return {"properties": list(fields), "filters": filters, "limit": limit}
 
 
