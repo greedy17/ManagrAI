@@ -9,6 +9,7 @@ from .models import (
     HSSyncOperation,
     HObjectField,
     Company,
+    Deal,
 )
 
 # Register your models here.
@@ -54,9 +55,24 @@ class CustomSyncFieldOperationAdmin(admin.ModelAdmin):
     ordering = ("-datetime_created",)
 
 
+class CustomCompanyAdmin(admin.ModelAdmin):
+    model = Company
+    list_display = ("datetime_created", "name", "owner")
+    list_filter = ("owner",)
+    ordering = ("-datetime_created",)
+
+
+class CustomDealAdmin(admin.ModelAdmin):
+    model = Deal
+    list_display = ("datetime_created", "name", "owner")
+    list_filter = ("owner",)
+    ordering = ("-datetime_created",)
+
+
 admin.site.register(HubspotAuthAccount, CustomHubspotAuthAccountAdmin)
 admin.site.register(HSObjectFieldsOperation, CustomSyncFieldOperationAdmin)
 admin.site.register(HSSyncOperation, CustomSyncOperationAdmin)
 admin.site.register(HObjectField)
-admin.site.register(Company)
+admin.site.register(Company, CustomCompanyAdmin)
+admin.site.register(Deal, CustomDealAdmin)
 

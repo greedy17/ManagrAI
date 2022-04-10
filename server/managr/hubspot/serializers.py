@@ -1,4 +1,5 @@
 import datetime
+from dateutil import parser
 from rest_framework import serializers
 
 from .models import HubspotAuthAccount, Company, HubspotContact, Deal, HObjectField
@@ -103,13 +104,10 @@ class DealSerializer(serializers.ModelSerializer):
             "company",
             "stage",
             "owner",
-            "last_stage_update",
-            "last_activity_date",
             "external_company",
             "external_owner",
             "imported_by",
             "contacts",
-            "is_stale",
             "secondary_data",
         )
 
@@ -123,6 +121,10 @@ class DealSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
         imported_by = data.get("imported_by")
         owner = data.get("external_owner", None)
+        close_date = data.get("close_date")
+        new_date = parser.parse(close_date).date()
+        print(new_date)
+        data.update({"close_date": new_date})
         company = data.get("external_company", None)
         if not data.get("external_company", None):
             data.update({"external_company": ""})
@@ -140,8 +142,6 @@ class DealSerializer(serializers.ModelSerializer):
             ).first()
             acct = acct.id if acct else acct
             data.update({"company": acct})
-        if data.get("last_activity_date"):
-            data["last_activity_date"] = self._format_date_time_from_api(data["last_activity_date"])
         # remove contacts from validation
 
         contacts = data.pop("contacts", [])

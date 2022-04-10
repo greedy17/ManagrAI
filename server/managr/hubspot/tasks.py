@@ -136,17 +136,20 @@ def _process_resource_sync(user_id, sync_id, resource, attempts=1):
                 f"Failed to sync some data for resource {resource} for user {user_id} because of {e}"
             )
     for item in res:
+        print(item.as_dict)
         existing = model_class.objects.filter(integration_id=item.integration_id).first()
         if existing:
             serializer = serializer_class(data=item.as_dict, instance=existing)
         else:
             serializer = serializer_class(data=item.as_dict)
+        print(serializer)
         # check if already exists and update
         try:
             serializer.is_valid(raise_exception=True)
         except Exception as e:
-            error_str = f"Failed to save data for {resource} {item.name if item.name else 'N/A'} with hubspot id {item.integration_id} due to the following error {e.detail}"
-            logger.exception(error_str)
+            logger.exception(
+                f"Failed to save data for {resource} {item.name if item.name else 'N/A'} with hubspot id {item.integration_id} due to the following error {e}"
+            )
             break
         serializer.save()
 

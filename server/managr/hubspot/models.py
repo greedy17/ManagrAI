@@ -449,12 +449,6 @@ class DealQuerySet(models.QuerySet):
 
 
 class Deal(TimeStampModel, IntegrationModel):
-    """Leads are collections of Accounts with forecasting, status and Notes attached.
-
-    Currently we are setting on_delete to null and allowing null values. However we may
-    choose to use PROTECT and require that leads are transferred before delete.
-    """
-
     name = models.CharField(max_length=255, blank=True, null=False)
     amount = models.DecimalField(max_digits=30, decimal_places=15, default=0.00, null=True,)
     forecast_category = models.CharField(max_length=255, null=True)
@@ -478,11 +472,6 @@ class Deal(TimeStampModel, IntegrationModel):
     company = models.ForeignKey(
         "Company", related_name="companies", on_delete=models.SET_NULL, blank=True, null=True,
     )
-
-    last_activity_date = models.DateTimeField(
-        null=True
-    )  # sf has this as a datetime field but returns a date field only
-    last_stage_update = models.DateTimeField(null=True)
     is_stale = models.BooleanField(default=False)
     secondary_data = JSONField(
         default=dict,

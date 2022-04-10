@@ -442,3 +442,61 @@ class CompanyAdapter:
     @property
     def as_dict(self):
         return vars(self)
+
+
+class DealAdapter:
+    def __init__(self, **kwargs):
+        self.id = kwargs.get("id", None)
+        self.integration_source = kwargs.get("integration_source", None)
+        self.integration_id = kwargs.get("integration_id", None)
+        self.company = kwargs.get("company", None)
+        self.name = kwargs.get("name", None)
+        self.stage = kwargs.get("stage", None)
+        self.amount = kwargs.get("amount", None)
+        self.close_date = kwargs.get("close_date", None)
+        self.forecast_category = kwargs.get("forecast_category", None)
+        self.owner = kwargs.get("owner", None)
+        self.external_owner = kwargs.get("external_owner", None)
+        self.external_company = kwargs.get("external_company", None)
+        self.imported_by = kwargs.get("imported_by", None)
+        self.contacts = kwargs.get("contacts", [])
+        self.secondary_data = kwargs.get("secondary_data", None)
+
+    integration_mapping = dict(
+        integration_id="hs_object_id",
+        name="dealname",
+        owner="hubspot_owner_id",
+        external_owner="hubspot_owner_id",
+        stage="dealstage",
+        close_date="closedate",
+        forecast_category="hs_manual_forecast_category",
+        amount="amount",
+    )
+
+    @staticmethod
+    def reverse_integration_mapping():
+        """mapping of 'standard' data when sending from the SF API"""
+        reverse = {}
+        for k, v in DealAdapter.integration_mapping.items():
+            reverse[v] = k
+        return reverse
+
+    @staticmethod
+    def from_api(data, user_id, *args, **kwargs):
+        mapping = DealAdapter.reverse_integration_mapping()
+        formatted_data = dict(secondary_data={})
+        for k, v in data.items():
+            if k in mapping:
+                formatted_data[mapping.get(k)] = v
+            formatted_data["secondary_data"][k] = v
+        formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_HUBSPOT
+        formatted_data["imported_by"] = str(user_id)
+        return DealAdapter(**formatted_data)
+
+    @classmethod
+    def create_from_api(cls, data):
+        return cls(cls.from_api(data))
+
+    @property
+    def as_dict(self):
+        return vars(self)
