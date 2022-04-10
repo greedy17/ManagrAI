@@ -634,7 +634,7 @@ def _process_non_zoom_meetings(user_id):
     if (
         hasattr(user, "nylas")
         and hasattr(user, "slack_integration")
-        and user.slack_integration.recap_channel is not None
+        and user.slack_integration.zoom_channel is not None
     ):
         try:
             processed_data = _process_calendar_details(user_id)
