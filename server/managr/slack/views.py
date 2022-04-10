@@ -298,6 +298,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
     )
     def slack_user_channels(self, request, *args, **kwargs):
         cursor = request.data.get("cursor")
+        print(f"SLACK USER CHANNELS CURSOR: {cursor}")
         organization_slack = request.user.organization.slack_integration
         if organization_slack:
             channels = slack_requests.list_user_channels(
@@ -371,10 +372,10 @@ class SlackViewSet(viewsets.GenericViewSet,):
                     data={"success": False, "message": "Couldn't find your Slack account"},
                 )
         slack.change_recap_channel(request.data.get("recap_channel"))
-
+        logger.info(f"NEW RECAP CHANNEL FOR {slack.user.id}: {slack.recap_channel}")
         for user in request.data.get("users"):
             user_acc = User.objects.filter(id=user).first()
-            if user_acc:
+            if user_acc and hasattr(user_acc, "slack_acount"):
                 user_acc.slack_integration.recap_receivers.append(slack_id)
                 user_acc.slack_integration.save()
         return Response(status=status.HTTP_200_OK, data={"success": True})

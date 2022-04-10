@@ -89,6 +89,29 @@ def success_modal_block_set(context):
 
 
 @block_set()
+def bulk_recap_block_set(context):
+    message = context.get("message", ":white_check_mark: Success!")
+    user = context.get("u")
+    form_ids = context.get("form_ids")
+    blocks = [
+        block_builders.section_with_button_block(
+            "Send Recap",
+            "SEND_RECAP",
+            message,
+            action_id=action_with_params(
+                slack_const.PROCESS_SEND_RECAP_MODAL,
+                params=[
+                    f"u={user}",
+                    f"form_ids={form_ids}",
+                    f"bulk_status={context.get('bulk_status')}",
+                ],
+            ),
+        )
+    ]
+    return blocks
+
+
+@block_set()
 def success_text_block_set(context):
     message = context.get("message", ":clap: Success!")
     blocks = [block_builders.simple_section(message, text_type="mrkdwn")]

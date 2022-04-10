@@ -422,7 +422,7 @@
             </p>
             <button v-if="showPopularList" @click="allOpportunities" class="list-button">
               All Opportunities
-              <span class="filter" v-if="currentList === 'All Opportunities'"> active</span>
+              <span class="filter" v-if="currentList === 'AllOpportunities'"> active</span>
             </button>
             <button v-if="showPopularList" @click="closeDatesThisMonth" class="list-button">
               Closing this month
@@ -525,7 +525,7 @@
         <div v-else>
           <div v-if="!updatingOpps" class="bulk-action">
             <div v-if="!closeDateSelected && !advanceStageSelected && !forecastSelected">
-              <!-- <p class="bulk-action__title">Select Update or <span class="cancel">cancel</span></p> -->
+              <!-- <p class="bulk-action__title">Select Update or<span class="cancel">cancel</span></p> -->
               <div class="flex-row">
                 <button @click="closeDateSelected = !closeDateSelected" class="select-btn">
                   Push Close Date
@@ -773,6 +773,7 @@ export default {
       allSelected: false,
       allWorkflowsSelected: false,
       updateList: [],
+      recapList: [],
       currentVals: [],
       closeDateSelected: false,
       advanceStageSelected: false,
@@ -916,6 +917,22 @@ export default {
   watch: {
     primaryCheckList: 'closeAll',
     workflowCheckList: 'closeAll',
+    updateList: {
+      async handler(currList) {
+        if (currList.length === 0 && this.recapList.length) {
+          console.log(this.recapList.length)
+          let bulk = true ? this.recapList.length > 1 : false
+          try {
+            const res = await SObjects.api.sendRecap(bulk, this.recapList)
+            console.log(res)
+          } catch (e) {
+            console.log(e)
+          } finally {
+            this.recapList = []
+          }
+        }
+      },
+    },
   },
   methods: {
     tester() {
@@ -938,7 +955,6 @@ export default {
       this.closeFilterSelection()
     },
     setOpps() {
-      //  this.getObjects()
       User.api.getUser(this.user.id).then((response) => {
         this.$store.commit('UPDATE_USER', response)
       })
@@ -956,10 +972,6 @@ export default {
     },
     closeListSelect() {
       this.showList = false
-    },
-    closeSelection() {
-      this.filtering ? (this.filtering = false) : (this.filtering = true)
-      this.showList ? (this.showList = false) : (this.showList = this.showList)
     },
     async getFilteredObjects(value) {
       this.loadingWorkflows = true
@@ -1047,14 +1059,6 @@ export default {
         this.filterSelected = false
       }
     },
-    choosingList() {
-      if (this.showList === true) {
-        this.showList = false
-      } else {
-        this.showList = true
-        this.showList = false
-      }
-    },
     applyFilter(value) {
       this.updateFilterValue = value
       this.operatorsLength += 1
@@ -1104,10 +1108,6 @@ export default {
         if (+match === 0) return ''
         return index === 0 ? match.toLowerCase() : match.toUpperCase()
       })
-    },
-    sliced(str) {
-      let newStr = str.slice(0, -1) + 'C'
-      return newStr
     },
     sortOpps(dT, field, apiName) {
       let newField = this.capitalizeFirstLetter(this.camelize(field))
@@ -1465,8 +1465,8 @@ export default {
       if (this.selectedWorkflow) {
         for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
           this.$refs.workflowTableChild[i].onPushCloseDate()
-          this.updateWorkflowList(this.currentList, this.refreshId)
           this.updateOpps()
+          this.updateWorkflowList(this.currentList, this.refreshId)
         }
         this.workflowCheckList = []
       } else {
@@ -1481,8 +1481,8 @@ export default {
       if (this.selectedWorkflow) {
         for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
           this.$refs.workflowTableChild[i].onAdvanceStage()
-          this.updateWorkflowList(this.currentList, this.refreshId)
           this.updateOpps()
+          this.updateWorkflowList(this.currentList, this.refreshId)
         }
         this.workflowCheckList = []
       } else {
@@ -1497,8 +1497,8 @@ export default {
       if (this.selectedWorkflow) {
         for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
           this.$refs.workflowTableChild[i].onChangeForecast()
-          this.updateWorkflowList(this.currentList, this.refreshId)
           this.updateOpps()
+          this.updateWorkflowList(this.currentList, this.refreshId)
         }
         this.workflowCheckList = []
       } else {
@@ -1598,18 +1598,24 @@ export default {
     async createResource() {
       this.addOppModalOpen = false
       try {
-        const res = await SObjects.api.createResource({
-          form_id: this.oppInstanceId,
-          form_data: this.formData,
-        })
-        this.$Alert.alert({
-          type: 'success',
-          timeout: 3000,
-          message: 'Opportunity created successfully!',
-          sub: 'Refresh to see changes',
-        })
+        const res = await SObjects.api
+          .createResource({
+            form_id: this.oppInstanceId,
+            form_data: this.formData,
+          })
+          .then(async () => {
+            let updatedRes = await SObjects.api.getObjects('Opportunity')
+            this.allOpps = updatedRes.results
+            this.originalList = updatedRes.results
+          })
       } catch (e) {
         console.log(e)
+      } finally {
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 1000,
+          message: 'Opportunity created successfully!',
+        })
       }
       this.getAllForms()
     },
