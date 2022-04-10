@@ -280,7 +280,6 @@ class HubspotAuthAccountAdapter:
             [{"propertyName": "hubspot_owner_id", "operator": "EQ", "value": self.hubspot_id}],
         )
         resource_class = routes.get(resource)
-
         limit = kwargs.pop("limit", hubspot_consts.HUBSPOT_QUERY_LIMIT)
         url = hubspot_consts.HUBSPOT_SEARCH_URI(resource)
         data = hubspot_consts.HUBSPOT_SEARCH_BODY(resource_fields, add_filters, limit)
@@ -471,6 +470,7 @@ class DealAdapter:
         close_date="closedate",
         forecast_category="hs_manual_forecast_category",
         amount="amount",
+        # external_company=""
     )
 
     @staticmethod
@@ -492,6 +492,56 @@ class DealAdapter:
         formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_HUBSPOT
         formatted_data["imported_by"] = str(user_id)
         return DealAdapter(**formatted_data)
+
+    @classmethod
+    def create_from_api(cls, data):
+        return cls(cls.from_api(data))
+
+    @property
+    def as_dict(self):
+        return vars(self)
+
+
+class HubspotContactAdapter:
+    def __init__(self, **kwargs):
+        self.id = kwargs.get("id", None)
+        self.integration_source = kwargs.get("integration_source", None)
+        self.integration_id = kwargs.get("integration_id", None)
+        self.company = kwargs.get("company", None)
+        self.email = kwargs.get("email", None)
+        self.owner = kwargs.get("owner", None)
+        self.external_owner = kwargs.get("external_owner", None)
+        self.external_company = kwargs.get("external_company", None)
+        self.imported_by = kwargs.get("imported_by", None)
+        self.secondary_data = kwargs.get("secondary_data", None)
+
+    integration_mapping = dict(
+        integration_id="hs_object_id",
+        email="email",
+        owner="hubspot_owner_id",
+        external_owner="hubspot_owner_id",
+        # external_company=""
+    )
+
+    @staticmethod
+    def reverse_integration_mapping():
+        """mapping of 'standard' data when sending from the SF API"""
+        reverse = {}
+        for k, v in HubspotContactAdapter.integration_mapping.items():
+            reverse[v] = k
+        return reverse
+
+    @staticmethod
+    def from_api(data, user_id, *args, **kwargs):
+        mapping = HubspotContactAdapter.reverse_integration_mapping()
+        formatted_data = dict(secondary_data={})
+        for k, v in data.items():
+            if k in mapping:
+                formatted_data[mapping.get(k)] = v
+            formatted_data["secondary_data"][k] = v
+        formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_HUBSPOT
+        formatted_data["imported_by"] = str(user_id)
+        return HubspotContactAdapter(**formatted_data)
 
     @classmethod
     def create_from_api(cls, data):

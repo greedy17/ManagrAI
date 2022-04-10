@@ -10,6 +10,7 @@ from .models import (
     HObjectField,
     Company,
     Deal,
+    HubspotContact,
 )
 
 # Register your models here.
@@ -69,10 +70,18 @@ class CustomDealAdmin(admin.ModelAdmin):
     ordering = ("-datetime_created",)
 
 
+class CustomHubspotContactAdmin(admin.ModelAdmin):
+    model = HubspotContact
+    list_display = ("datetime_created", "email", "owner")
+    list_filter = ("owner",)
+    ordering = ("-datetime_created",)
+
+
 admin.site.register(HubspotAuthAccount, CustomHubspotAuthAccountAdmin)
 admin.site.register(HSObjectFieldsOperation, CustomSyncFieldOperationAdmin)
 admin.site.register(HSSyncOperation, CustomSyncOperationAdmin)
 admin.site.register(HObjectField)
 admin.site.register(Company, CustomCompanyAdmin)
 admin.site.register(Deal, CustomDealAdmin)
+admin.site.register(HubspotContact, CustomHubspotContactAdmin)
 
