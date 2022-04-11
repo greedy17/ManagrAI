@@ -275,9 +275,10 @@ def _process_send_alert(invocation, channel, config_id):
                 "channel": channel,
                 "config_id": config_id,
                 "invocation": invocation,
-                "title": f"{len(alert_instances)} results for workflow {template.title}",
+                "title": f"*New Task:* Update {len(alert_instances)} {template.title}",
             },
-        )
+        ),
+        block_builders.context_block(f"Owned by {instance_user.full_name}"),
     ]
     if len(blocks):
         # blocks = [
