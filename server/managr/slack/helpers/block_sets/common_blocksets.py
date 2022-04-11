@@ -575,11 +575,11 @@ def initial_alert_message(context):
     else:
         url = "https://app.managr.ai/pipelines"
     blocks = [
-        block_builders.simple_section(title),
+        block_builders.simple_section(title, "mrkdwn"),
         block_builders.actions_block(
             [
                 block_builders.simple_button_block(
-                    "Update in Slack",
+                    "Complete in Slack",
                     "update_in_slack",
                     action_id=action_with_params(
                         slack_const.PAGINATE_ALERTS,
@@ -589,9 +589,10 @@ def initial_alert_message(context):
                             f"config_id={config_id}",
                         ],
                     ),
+                    style="danger",
                 ),
                 block_builders.simple_button_block(
-                    "Update in Pipeline", "open_in_pipeline", url=url
+                    "Complete in Managr", "open_in_pipeline", url=url, style="primary"
                 ),
             ]
         ),

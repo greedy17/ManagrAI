@@ -120,8 +120,17 @@ class SObjectPicklistSerializer(serializers.ModelSerializer):
 
 
 class MeetingWorkflowSerializer(serializers.ModelSerializer):
-    meeting_ref = ZoomMeetingSerializer(source="meeting")
+    meeting_ref = serializers.SerializerMethodField("get_meeting_ref")
 
     class Meta:
         model = MeetingWorkflow
         fields = ("meeting", "meeting_ref", "resource_id", "resource_type")
+
+    def get_meeting_ref(self, instance):
+        from managr.core.serializers import MeetingPrepInstanceSerializer
+
+        if hasattr(instance, "meeting"):
+            meeting = ZoomMeetingSerializer(source=instance.meeting)
+        else:
+            meeting = MeetingPrepInstanceSerializer(source=instance.non_zoom_meeting)
+        return meeting
