@@ -33,6 +33,7 @@ export default {
   data() {
     return {
       allForms: null,
+      allMeetingWorkflows: null,
       organizations: CollectionManager.create({ ModelClass: Organization }),
     }
   },
@@ -46,7 +47,14 @@ export default {
       try {
         let res = await SlackOAuth.api.getOrgCustomForm()
         this.allForms = res
-        console.log(this.allForms)
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    async getAllMeetingWorkflows() {
+      try {
+        let res = await SlackOAuth.api.getOrgCustomForm()
+        this.allForms = res
       } catch (e) {
         console.log(e)
       }
@@ -55,7 +63,6 @@ export default {
   created() {
     this.getAllForms()
     this.organizations.refresh()
-    console.log(this.organizations)
   },
 }
 </script>
