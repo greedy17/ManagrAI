@@ -155,6 +155,14 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'Error syncing resources' })(e)
     }
   }
+  async sendRecap(bulk, form_ids) {
+    try {
+      const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'sobject/send-recap/', { bulk, form_ids })
+      return res
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Confirmation error' })(e)
+    }
+  }
   async confirmUpdate(verbose_name, task_hash) {
     try {
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/confirm-update/', { params: verbose_name, task_hash })

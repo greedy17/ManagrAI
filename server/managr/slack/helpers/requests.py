@@ -230,13 +230,15 @@ def list_user_channels(access_token, user, limit=100, cursor=None, types=[]):
         q["types"] = ",".join(types)
     url = slack_const.SLACK_API_ROOT + slack_const.USERS_CONVERSATIONS
     if limit:
-        q["limit"] = limit
+        q["limit"] = 20
     if cursor:
         q["cursor"] = cursor
 
     url += "?" + urlencode(q)
+    logger.info(f"SLACK LIST CHANNEL URL: {url}")
     res = requests.get(url, headers=slack_auth.encode_header(access_token)).json()
-    return generic_request(url, None, access_token=access_token)
+    return res
+    # return generic_request(url, None, access_token=access_token)
 
 
 def get_channel_info(access_token, channel_id):

@@ -207,7 +207,6 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         sf = user.salesforce_account
         data = self.request.data
         ids = data.get("field_ids")
-        print(ids)
         for id in ids:
             if id not in sf.extra_pipeline_fields:
                 sf.extra_pipeline_fields.append(id)
@@ -225,7 +224,6 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         sf = user.salesforce_account
         data = self.request.data
         ids = data.get("field_ids")
-        print(ids)
         for id in ids:
             sf.extra_pipeline_fields.remove(id)
         sf.save()
@@ -305,7 +303,6 @@ class SalesforceSObjectViewSet(
             else sobject["model"].objects.for_user(self.request.user)
         )
         if for_filter:
-            print(json.loads(self.request.GET.get("filters")))
             filtered_query = SalesforceSObjectFilterSet.for_filter(
                 query, json.loads(self.request.GET.get("filters"))
             )
@@ -632,14 +629,13 @@ class SalesforceSObjectViewSet(
         url_path="send-recap",
     )
     def send_recaps(self, request, *args, **kwargs):
-
         data = self.request.data
         form_ids = data["form_ids"]
-        bulk_status = json.load(data["bulk"])
+        bulk_status = data["bulk"]
         user = User.objects.get(id=self.request.user.id)
         main_form = OrgCustomSlackFormInstance.objects.get(id=form_ids[0])
         if len(user.slack_integration.realtime_alert_configs):
-            _send_instant_alert([form_ids])
+            _send_instant_alert(form_ids)
         try:
             if bulk_status:
                 plural = (
@@ -648,24 +644,22 @@ class SalesforceSObjectViewSet(
                     else f"{main_form.resource_type}s"
                 )
                 text = "Manager Bulk Update"
-                message = f":white_check_mark: Successfully updated *{len(form_ids)} {main_form.resource_type}*"
+                message = f":white_check_mark: Successfully updated {len(form_ids)} {plural}"
             else:
 
                 text = f"Managr update {main_form.resource_type}"
-                message = (
-                    f":white_check_mark: Successfully updated *{main_form.resource_type}* {plural}"
-                )
+                message = f":white_check_mark: Successfully updated *{main_form.resource_type}* {main_form.resource}"
             slack_requests.send_ephemeral_message(
                 user.slack_integration.channel,
                 user.organization.slack_integration.access_token,
                 user.slack_integration.slack_id,
                 text=text,
                 block_set=get_block_set(
-                    "success_modal",
+                    "bulk_recap_block_set",
                     {
                         "message": message,
                         "u": user.id,
-                        "form_ids": form_ids,
+                        "form_ids": ".".join(form_ids),
                         "bulk_status": bulk_status,
                     },
                 ),

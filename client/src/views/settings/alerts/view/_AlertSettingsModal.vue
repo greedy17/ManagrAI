@@ -134,7 +134,7 @@
                 valueKey="id"
                 nullDisplay="Channels"
                 :hasNext="!!userChannelOpts.nextCursor"
-                @load-more="listChannels(userChannelOpts.nextCursor)"
+                @load-more="listUserChannels(userChannelOpts.nextCursor)"
                 searchable
                 local
               >

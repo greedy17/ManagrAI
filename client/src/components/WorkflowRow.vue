@@ -1,7 +1,9 @@
 <template>
   <div class="table-row">
     <div style="padding: 2vh" class="table-cell-checkbox">
-      <div v-if="updateList.includes(workflow.id)">
+      <div
+        v-if="updateWorkflowList.includes(workflow.id) || updatedWorkflowList.includes(workflow.id)"
+      >
         <SkeletonBox width="10px" height="9px" />
       </div>
       <div v-else>
@@ -19,7 +21,12 @@
     <div style="min-width: 26vw" class="table-cell cell-name">
       <div class="flex-row-spread">
         <div>
-          <div class="flex-col" v-if="updateList.includes(workflow.id)">
+          <div
+            class="flex-col"
+            v-if="
+              updateWorkflowList.includes(workflow.id) || updatedWorkflowList.includes(workflow.id)
+            "
+          >
             <SkeletonBox width="125px" height="14px" style="margin-bottom: 0.2rem" />
             <SkeletonBox width="125px" height="9px" />
           </div>
@@ -31,7 +38,12 @@
             :owner="workflow.owner_ref.first_name"
           />
         </div>
-        <div v-if="updateList.includes(workflow.id)" class="flex-row">
+        <div
+          v-if="
+            updateWorkflowList.includes(workflow.id) || updatedWorkflowList.includes(workflow.id)
+          "
+          class="flex-row"
+        >
           <SkeletonBox width="15px" height="14px" />
           <SkeletonBox width="15px" height="14px" />
         </div>
@@ -59,19 +71,19 @@
       "
     >
       <SkeletonBox
-        v-if="updateList.includes(workflow.id)"
+        v-if="updateWorkflowList.includes(workflow.id) || updatedWorkflowList.includes(workflow.id)"
         width="125px"
         height="14px"
         style="margin-bottom: 0.2rem"
       />
 
-      <div class="limit-cell-height" v-else-if="!updateList.includes(workflow.id) && workflow">
+      <div class="limit-cell-height" v-else>
         <PipelineField
           style="direction: ltr"
           :apiName="field.apiName"
           :dataType="field.dataType"
           :fieldData="
-            field.apiName.includes('__c')
+            field.apiName.includes('__c') || field.apiName.includes('__r')
               ? workflow['secondary_data'][field.apiName]
               : workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
           "
@@ -85,6 +97,7 @@
 <script>
 import PipelineNameSection from '@/components/PipelineNameSection'
 import PipelineField from '@/components/PipelineField'
+import { SObjects, SObjectField } from '@/services/salesforce'
 
 export default {
   name: 'WorkflowRow',
@@ -94,7 +107,23 @@ export default {
     SkeletonBox: () => import(/* webpackPrefetch: true */ '@/components/SkeletonBox'),
   },
   data() {
-    return {}
+    return {
+      updatedWorkflowList: [],
+      newCloseDate: null,
+    }
+  },
+  props: {
+    index: {},
+    oppFields: {},
+    workflowCheckList: {},
+    workflow: {},
+    updateWorkflowList: {},
+    stageData: {},
+    closeDateData: {},
+    ForecastCategoryNameData: {},
+  },
+  watch: {
+    closeDateData: 'futureDate',
   },
   methods: {
     emitCreateForm() {
@@ -115,13 +144,100 @@ export default {
         return index === 0 ? match.toLowerCase() : match.toUpperCase()
       })
     },
-  },
-  props: {
-    index: {},
-    oppFields: {},
-    workflowCheckList: {},
-    workflow: {},
-    updateList: {},
+    futureDate() {
+      let currentDate = new Date()
+      currentDate.setDate(currentDate.getDate() + Number(this.closeDateData))
+      let currentDayOfMonth = currentDate.getDate()
+      let currentMonth = currentDate.getMonth()
+      let currentYear = currentDate.getFullYear()
+      let dateString = currentYear + '-' + (currentMonth + 1) + '-' + currentDayOfMonth
+      this.newCloseDate = dateString
+      console.log(this.newCloseDate)
+    },
+    async onAdvanceStage() {
+      if (this.workflowCheckList.includes(this.workflow.id)) {
+        this.updatedWorkflowList.push(this.workflow.id)
+        try {
+          const res = await SObjects.api
+            .createFormInstance({
+              resourceType: 'Opportunity',
+              formType: 'UPDATE',
+              resourceId: this.workflow.id,
+            })
+            .then(async (res) => {
+              const response = await SObjects.api.updateResource({
+                form_id: res.form_id,
+                form_data: { StageName: this.stageData },
+              })
+            })
+        } catch (e) {
+          console.log(e)
+        } finally {
+          this.updatedWorkflowList = []
+          this.$Alert.alert({
+            type: 'success',
+            timeout: 750,
+            message: 'Salesforce update successful!',
+          })
+        }
+      }
+    },
+    async onPushCloseDate() {
+      if (this.workflowCheckList.includes(this.workflow.id)) {
+        this.updatedWorkflowList.push(this.workflow.id)
+        try {
+          const res = await SObjects.api
+            .createFormInstance({
+              resourceType: 'Opportunity',
+              formType: 'UPDATE',
+              resourceId: this.workflow.id,
+            })
+            .then(async (res) => {
+              const response = await SObjects.api.updateResource({
+                form_id: res.form_id,
+                form_data: { CloseDate: this.newCloseDate },
+              })
+            })
+        } catch (e) {
+          console.log(e)
+        } finally {
+          this.updatedWorkflowList = []
+          this.$Alert.alert({
+            type: 'success',
+            timeout: 750,
+            message: 'Salesforce update successful!',
+          })
+        }
+      }
+    },
+    async onChangeForecast() {
+      if (this.workflowCheckList.includes(this.workflow.id)) {
+        this.updatedWorkflowList.push(this.workflow.id)
+        try {
+          const res = await SObjects.api
+            .createFormInstance({
+              resourceType: 'Opportunity',
+              formType: 'UPDATE',
+              resourceId: this.workflow.id,
+            })
+            .then(async (res) => {
+              const response = await SObjects.api.updateResource({
+                form_id: res.form_id,
+                form_data: { ForecastCategoryName: this.ForecastCategoryNameData },
+              })
+            })
+        } catch (e) {
+          console.log(e)
+        } finally {
+          this.updatedWorkflowList = []
+          this.$Alert.alert({
+            type: 'success',
+            timeout: 750,
+            message: 'Salesforce update successful!',
+          })
+        }
+      }
+    },
   },
 }
 </script>
