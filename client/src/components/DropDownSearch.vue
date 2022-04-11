@@ -15,8 +15,9 @@
         <div
           @click.stop="$emit('load-more')"
           class="tn-dropdown__options__option tn-dropdown__options__option__pagination"
+          style="background-color: #199e54:color:white"
         >
-          +
+          Load More
         </div>
       </template>
     </DropDownSelect>
