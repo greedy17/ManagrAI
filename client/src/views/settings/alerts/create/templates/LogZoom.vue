@@ -82,7 +82,21 @@
           >
             <FormField>
               <template v-slot:input>
-                <DropDownSearch
+                <Multiselect
+                  placeholder="Select Channel"
+                  v-model="zoomChannel"
+                  :options="userChannelOpts.channels"
+                  openDirection="below"
+                  style="min-width: 13vw"
+                  selectLabel="Enter"
+                  track-by="id"
+                  label="name"
+                >
+                  <template slot="noResult">
+                    <p>No results.</p>
+                  </template>
+                </Multiselect>
+                <!-- <DropDownSearch
                   :items.sync="userChannelOpts.channels"
                   v-model="zoomChannel"
                   displayKey="name"
@@ -102,11 +116,11 @@
                     />
                     {{ option['name'] }}
                   </template>
-                </DropDownSearch>
+                </DropDownSearch> -->
               </template>
             </FormField>
 
-            <p
+            <!-- <p
               v-if="zoomChannel"
               @click="removeZoomChannel"
               :class="zoomChannel ? 'selected__item' : 'visible'"
@@ -117,7 +131,7 @@
                 alt=""
               />
               {{ getChannelName(zoomChannel) }}
-            </p>
+            </p> -->
           </div>
         </div>
       </div>
@@ -150,6 +164,7 @@ export default {
   components: {
     DropDownSearch,
     ToggleCheckBox,
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     FormField,
   },
   data() {
@@ -174,12 +189,19 @@ export default {
     }
   },
   methods: {
+    test() {
+      console.log(this.userChannelOpts.channels)
+      console.log(this.zoomChannel)
+    },
     async handleZoomUpdate(zoom_channel) {
+      if (typeof zoom_channel === 'object') {
+        zoom_channel = zoom_channel.id
+      }
       const res = await SlackOAuth.api.updateZoomChannel(this.slackId, zoom_channel)
       this.createdZoomChannel = ''
       this.zoomChannel = ''
       this.$router.push({ name: 'CreateNew' })
-      location.reload()
+      // location.reload()
       this.$Alert.alert({
         type: 'success',
         message: 'Workflow saved successfully',

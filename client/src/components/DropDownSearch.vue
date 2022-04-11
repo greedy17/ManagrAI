@@ -16,7 +16,7 @@
           @click.stop="$emit('load-more')"
           class="tn-dropdown__options__option tn-dropdown__options__option__pagination"
         >
-          +
+          Load More
         </div>
       </template>
     </DropDownSelect>

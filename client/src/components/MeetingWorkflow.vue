@@ -97,6 +97,9 @@ export default {
   },
   created() {},
   methods: {
+    test() {
+      console.log(this.meeting)
+    },
     formatDateTime(input) {
       var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
       if (!input || !input.match(pattern)) {

@@ -23,7 +23,23 @@
         >
           <p style="text-align: center; font-weight: bold">Select Users</p>
           <div>
-            <DropDownSearch
+            <Multiselect
+              placeholder="Select Channel"
+              v-model="userIds"
+              :options="userList"
+              openDirection="below"
+              style="min-width: 13vw"
+              selectLabel="Enter"
+              track-by="id"
+              label="fullName"
+              :multiple="true"
+            >
+              <template slot="noResult">
+                <p>No results.</p>
+              </template>
+            </Multiselect>
+
+            <!-- <DropDownSearch
               @input="checkIds"
               :items.sync="userList"
               v-model="userIds"
@@ -34,7 +50,7 @@
               local
               multi
             >
-            </DropDownSearch>
+            </DropDownSearch> -->
           </div>
           <!-- <div class="items_height">
               <p
@@ -51,7 +67,8 @@
                 {{ item.length ? checkInteger(item) : '' }}
               </p>
             </div> -->
-          <div v-if="userIds.length > 0" class="items_height">
+
+          <!-- <div v-if="userIds.length > 0" class="items_height">
             <p
               :key="item"
               v-for="item in userIds"
@@ -66,7 +83,7 @@
               />
               {{ getUserName(item) }}
             </p>
-          </div>
+          </div> -->
         </div>
 
         <div>
@@ -129,7 +146,22 @@
           >
             <FormField>
               <template v-slot:input>
-                <DropDownSearch
+                <Multiselect
+                  placeholder="Select Channel"
+                  v-model="recapChannel"
+                  :options="userChannelOpts.channels"
+                  openDirection="below"
+                  style="min-width: 13vw"
+                  selectLabel="Enter"
+                  track-by="id"
+                  label="name"
+                >
+                  <template slot="noResult">
+                    <p>No results.</p>
+                  </template>
+                </Multiselect>
+
+                <!-- <DropDownSearch
                   :items.sync="userChannelOpts.channels"
                   v-model="recapChannel"
                   displayKey="name"
@@ -149,11 +181,11 @@
                     />
                     {{ option['name'] }}
                   </template>
-                </DropDownSearch>
+                </DropDownSearch> -->
               </template>
             </FormField>
 
-            <p
+            <!-- <p
               v-if="recapChannel"
               @click="removeRecapChannel"
               :class="recapChannel ? 'selected__item' : 'visible'"
@@ -165,7 +197,7 @@
                 alt=""
               />
               {{ getChannelName(recapChannel) }}
-            </p>
+            </p> -->
           </div>
         </div>
       </div>
@@ -191,7 +223,6 @@ import FormField from '@/components/forms/FormField'
 import DropDownSearch from '@/components/DropDownSearch'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
-import Multiselect from 'vue-multiselect'
 import User from '@/services/users'
 
 export default {
@@ -200,7 +231,7 @@ export default {
     DropDownSearch,
     ToggleCheckBox,
     FormField,
-    Multiselect,
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {
     return {
@@ -213,7 +244,7 @@ export default {
       recapChannel: '',
       recapChannelId: '',
       createdZoomChannel: '',
-      test: '',
+      // test: '',
       userIds: [],
       pipelines: [],
       users: CollectionManager.create({ ModelClass: User }),
@@ -238,22 +269,9 @@ export default {
     }
   },
   methods: {
-    // getPipes(arr) {
-    //   let ids = []
-    //   for (let i = 0; i < this.userList.length; i++) {
-    //     ids.push(this.userList[i].id)
-    //   }
-    //   for (let i in arr) {
-    //     if (ids.includes(arr[i])) {
-    //       this.pipelines.push(this.userList.filter((user) => user.id === arr[1]))
-    //     }
-    //   }
-    //   this.pipelines.reduce(function (a, b) {
-    //     if (a.indexOf(b) < 0) a.push(b)
-    //     return a
-    //   }, [])
-    //   console.log(this.pipelines)
-    // },
+    test() {
+      console.log(this.userList)
+    },
     removeItemFromTargetArray(item) {
       this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value =
         this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.filter(
@@ -273,6 +291,11 @@ export default {
       this.recapChannelId = obj.id
     },
     async handleRecapUpdate(recap_channel) {
+      if (typeof recap_channel === 'object') {
+        recap_channel = recap_channel.id
+      }
+      this.userIds = this.userIds.map((user) => user.id)
+      console.log(this.userIds)
       const res = await SlackOAuth.api.updateRecapChannel(this.slackId, recap_channel, this.userIds)
       console.log(res)
       this.createdZoomChannel = ''
@@ -449,17 +472,21 @@ export default {
     transform: translateY(-6px);
   }
 }
+.search__input {
+  min-height: 40px;
+  display: block;
+  padding: 8px 40px 8px 8px;
+  border-radius: 5px;
+  border: 1px solid #e8e8e8;
+  background: #fff;
+  font-size: 14px;
+}
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
 ::placeholder {
   color: $panther-silver;
   font-size: 0.75rem;
-}
-::v-deep .multiselect__tags {
-  min-width: 16vw;
-  max-width: 20vw;
-  box-shadow: 3px 4px 7px $very-light-gray;
 }
 
 .items_height {
@@ -538,8 +565,8 @@ export default {
   font-size: 1.02rem;
 }
 input {
-  box-shadow: 3px 4px 7px $very-light-gray;
-  border: 1px solid white;
+  // box-shadow: 3px 4px 7px $very-light-gray;
+  border: 1px solid #e8e8e8;
   border-radius: 0.25rem;
   margin-top: 0.5rem;
 }
@@ -570,27 +597,27 @@ img {
 .visible {
   display: none;
 }
-.dropdown {
-  font-family: Lato-Regular, sans-serif;
-  font-weight: normal;
-  font-stretch: normal;
-  font-style: normal;
-  letter-spacing: normal;
-  font-size: 16px;
-  border-radius: 4px;
-  line-height: 1;
-  letter-spacing: 0.5px;
-  color: #4d4e4c;
-  height: 2.5rem;
-  background-color: white;
-  border: 1px solid #5d5e5e;
-  width: 12vw;
-  // padding: 0 0 0 1rem;
-  margin: 1rem;
-  -webkit-box-shadow: 1px 4px 7px black;
-  box-shadow: 1px 4px 7px black;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  margin-top: -0.5rem;
-}
+// .dropdown {
+//   font-family: Lato-Regular, sans-serif;
+//   font-weight: normal;
+//   font-stretch: normal;
+//   font-style: normal;
+//   letter-spacing: normal;
+//   font-size: 16px;
+//   border-radius: 4px;
+//   line-height: 1;
+//   letter-spacing: 0.5px;
+//   color: #4d4e4c;
+//   height: 2.5rem;
+//   background-color: white;
+//   border: 1px solid #5d5e5e;
+//   width: 12vw;
+//   // padding: 0 0 0 1rem;
+//   margin: 1rem;
+//   -webkit-box-shadow: 1px 4px 7px black;
+//   box-shadow: 1px 4px 7px black;
+//   padding: 0.5rem 1rem;
+//   cursor: pointer;
+//   margin-top: -0.5rem;
+// }
 </style>
