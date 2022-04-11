@@ -16,6 +16,14 @@
                 </div>
             </template>
         </div>
+        <hr>
+        <div class="form__List">
+          <template v-for="(workflow, i) in allMeetingWorkflows">
+            <div :key="i" class="form__list_item" v-if="org.id === workflow.org_ref.id">
+              <p>{{workflow.meeting_ref.event_data.participants ? workflow.meeting_ref.event_data : workflow.meeting_ref.participants}}</p>
+            </div>
+          </template>
+        </div>
 
       </div>
       
@@ -25,6 +33,7 @@
 
 <script>
 import SlackOAuth from '@/services/slack'
+import { SObjects, SObjectPicklist, MeetingWorkflows } from '@/services/salesforce'
 import CollectionManager from '@/services/collectionManager'
 import Organization from '@/services/organizations'
 
@@ -53,8 +62,9 @@ export default {
     },
     async getAllMeetingWorkflows() {
       try {
-        let res = await SlackOAuth.api.getOrgCustomForm()
-        this.allForms = res
+        let res = await MeetingWorkflows.api.getMeetingList()
+        this.allMeetingWorkflows = res.results
+        console.log(this.allMeetingWorkflows)
       } catch (e) {
         console.log(e)
       }
@@ -62,6 +72,7 @@ export default {
   },
   created() {
     this.getAllForms()
+    this.getAllMeetingWorkflows()
     this.organizations.refresh()
   },
 }

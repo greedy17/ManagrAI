@@ -768,6 +768,8 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
 
     def get_queryset(self):
         user = self.request.user
+        if user.is_staff:
+            return MeetingWorkflow.objects.all()
         curr_date = datetime.now()
         start = curr_date.replace(hour=0, minute=0)
         end = curr_date.replace(hour=23, minute=59)
