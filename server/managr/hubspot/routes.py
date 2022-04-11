@@ -12,7 +12,7 @@ routes = {
         "serializer": hs_ser.CompanySerializer,
     },
     hs_consts.RESOURCE_SYNC_DEAL: {"model": hs_models.Deal, "serializer": hs_ser.DealSerializer,},
-    hs_consts.RESOURCE_SYNC_CONTACT: {
+    hs_consts.RESOURCE_SYNC_HUBSPOTCONTACT: {
         "model": hs_models.HubspotContact,
         "serializer": hs_ser.HubspotContactSerializer,
     },

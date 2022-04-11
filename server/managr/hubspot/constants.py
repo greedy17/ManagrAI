@@ -70,7 +70,7 @@ if settings.USE_HUBSPOT:
 def HUBSPOT_SEARCH_URI(resource):
     object_map = {
         RESOURCE_SYNC_COMPANY: "companies",
-        RESOURCE_SYNC_CONTACT: "contacts",
+        RESOURCE_SYNC_HUBSPOTCONTACT: "contacts",
         RESOURCE_SYNC_DEAL: "deals",
     }
     return f"{BASE_URL}/crm/v3/objects/{object_map[resource]}/search"
@@ -94,7 +94,7 @@ def HUBSPOT_SEARCH_BODY(fields, filters, limit):
 
 
 RESOURCE_SYNC_COMPANY = "Company"
-RESOURCE_SYNC_CONTACT = "Contact"
+RESOURCE_SYNC_HUBSPOTCONTACT = "HubspotContact"
 RESOURCE_SYNC_DEAL = "Deal"
 
 HUBSPOT_OBJECT_FIELDS = "OBJECT_FIELDS"
