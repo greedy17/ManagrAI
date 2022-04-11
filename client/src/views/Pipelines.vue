@@ -945,6 +945,7 @@ export default {
     async getMeetingList() {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
+        console.log(res)
         this.meetings = res.results
       } catch (e) {
         console.log(e)
