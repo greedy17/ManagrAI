@@ -1270,6 +1270,7 @@ def process_create_event(payload, context):
 def process_schedule_meeting(payload, context):
     u = User.objects.get(id=context.get("u"))
     data = payload["view"]["state"]["values"]
+    print(data)
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
     org = u.organization
@@ -1315,6 +1316,8 @@ def process_schedule_meeting(payload, context):
                     "status": "noreply",
                 }
             )
+    if data["meeting_extras"]["plain_input"]["value"]:
+        participants.extend(data["meeting_extras"]["plain_input"]["value"].split(","))
     zoom_data = {
         "meeting_topic": data["meeting_topic"]["meeting_data"]["value"],
         "meeting_date": data["meeting_date"]["meeting_data"]["selected_date"],
