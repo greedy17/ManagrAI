@@ -141,4 +141,4 @@ class MeetingWorkflowSerializer(serializers.ModelSerializer):
             meeting = ZoomMeetingSerializer(source=instance.meeting)
         else:
             meeting = MeetingPrepInstanceSerializer(source=instance.non_zoom_meeting)
-        return meeting
+        return meeting.data
