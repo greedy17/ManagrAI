@@ -995,14 +995,14 @@ def process_save_contact_data(payload, context):
 @log_all_exceptions
 @processor(required_context=[])
 def process_create_task(payload, context):
+    pm = json.loads(payload["view"]["private_metadata"])
 
-    user = User.objects.get(id=context.get("u"))
-
+    user = User.objects.get(id=pm.get("u"))
     slack_access_token = user.organization.slack_integration.access_token
     # get state - state contains the values based on the block_id
 
     state = payload["view"]["state"]["values"]
-
+    description = state.get("managr_task_description", {}).get("plain_input", {}).get("value", None)
     activity_date = [
         value.get("selected_date") for value in state.get("managr_task_datetime", {}).values()
     ]
@@ -1039,7 +1039,8 @@ def process_create_task(payload, context):
         "OwnerId": owner_id[0].get("value") if len(owner_id) else None,
         "Status": status,
     }
-
+    if description:
+        data["Description"] = description
     if related_to and related_to_type:
 
         if related_to_type[0].get("value") not in [
@@ -1051,8 +1052,7 @@ def process_create_task(payload, context):
             data["WhoId"] = related_to
 
     try:
-
-        _process_create_task.now(context.get("u"), data)
+        _process_create_task.now(str(user.id), data)
 
     except FieldValidationError as e:
 
@@ -1315,6 +1315,8 @@ def process_schedule_meeting(payload, context):
                     "status": "noreply",
                 }
             )
+    if data["meeting_extras"]["plain_input"]["value"]:
+        participants.extend(data["meeting_extras"]["plain_input"]["value"].split(","))
     zoom_data = {
         "meeting_topic": data["meeting_topic"]["meeting_data"]["value"],
         "meeting_date": data["meeting_date"]["meeting_data"]["selected_date"],
@@ -1611,7 +1613,6 @@ def process_get_notes(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor(required_context=["u"])
 def process_send_recaps(payload, context):
-    print(context)
     values = payload["view"]["state"]["values"]
     pm = json.loads(payload["view"]["private_metadata"])
     type = context.get("type", None)
@@ -2346,7 +2347,6 @@ def process_convert_lead(payload, context):
 @processor(required_context=["f"])
 def process_submit_alert_resource_data(payload, context):
     # get context
-    print(context)
     has_error = False
     state = payload["view"]["state"]["values"]
     current_form_ids = context.get("f").split(",")

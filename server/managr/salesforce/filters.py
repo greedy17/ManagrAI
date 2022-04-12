@@ -64,5 +64,4 @@ class SalesforceSObjectFilterSet(FilterSet):
                 qs = qs.exclude(**{new_query: filter[2]})
             else:
                 qs = qs.filter(**{new_query: filter[2]})
-            print(qs)
         return qs

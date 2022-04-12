@@ -936,6 +936,11 @@ def schedule_zoom_meeting_modal(context):
             block_id="meeting_internals",
             placeholder="Search Users",
         ),
+        block_builders.input_block(
+            "Extra Emails to add:",
+            placeholder="Separate emails with a comma",
+            block_id="meeting_extras",
+        ),
     ]
     return blocks
 
