@@ -17,6 +17,7 @@ from managr.core import constants as core_consts
 from managr.salesforce.routes import routes as model_routes
 from managr.salesforce.adapter.routes import routes as adapter_routes
 from managr.salesforce import constants as sf_consts
+from managr.salesforce.adapter.exceptions import TokenExpired
 
 # Create your models here.
 
@@ -489,32 +490,54 @@ class AlertInstance(TimeStampModel):
     def var_binding_map(self):
         """takes set of variable bindings and replaces them with the value"""
         binding_map = dict()
-        current_values = self.resource.get_current_values()
-        for binding in self.template.message_template.bindings:
-            ## collect all valid bindings
+        attempts = 1
+        while True:
             try:
-                k, v = binding.split(".")
-                if k != self.template.resource_type and k != "__Recipient":
-                    continue
-                if k == self.template.resource_type and hasattr(self.user, "salesforce_account"):
-                    # if field does not exist set to strike through field with N/A
-                    # binding_map[binding] = self.resource.secondary_data.get(v, "~None~")
-                    binding_map[binding] = current_values.secondary_data.get(v, "~None~")
-                    # if field value is None or blank set to empty or no value
-                    if binding_map[binding] in ["", None]:
-                        binding_map[binding] = "~None~"
-                    # HACK pb for datetime fields Mike wants just the date
-                    user = self.user
-                    if self.resource.secondary_data.get(v):
-                        field = user.salesforce_account.object_fields.filter(api_name=v).first()
-                        if field and field.data_type == "DateTime":
-                            binding_map[binding] = binding_map[binding][0:10]
+                current_values = self.resource.get_current_values()
+                for binding in self.template.message_template.bindings:
+                    ## collect all valid bindings
+                    try:
+                        k, v = binding.split(".")
+                        if k != self.template.resource_type and k != "__Recipient":
+                            continue
+                        if k == self.template.resource_type and hasattr(
+                            self.user, "salesforce_account"
+                        ):
+                            # if field does not exist set to strike through field with N/A
+                            # binding_map[binding] = self.resource.secondary_data.get(v, "~None~")
+                            binding_map[binding] = current_values.secondary_data.get(v, "~None~")
+                            # if field value is None or blank set to empty or no value
+                            if binding_map[binding] in ["", None]:
+                                binding_map[binding] = "~None~"
+                            # HACK pb for datetime fields Mike wants just the date
+                            user = self.user
+                            if self.resource.secondary_data.get(v):
+                                field = user.salesforce_account.object_fields.filter(
+                                    api_name=v
+                                ).first()
+                                if field and field.data_type == "DateTime":
+                                    binding_map[binding] = binding_map[binding][0:10]
 
-                elif k == "__Recipient":
-                    binding_map[binding] = getattr(self.user, v)
-                    if binding_map[binding] in ["", None]:
-                        binding_map[binding] = f" ~{k} {v} N/A~ "
+                        elif k == "__Recipient":
+                            binding_map[binding] = getattr(self.user, v)
+                            if binding_map[binding] in ["", None]:
+                                binding_map[binding] = f" ~{k} {v} N/A~ "
 
-            except ValueError:
-                continue
+                    except ValueError:
+                        continue
+                break
+
+            except TokenExpired:
+                if attempts >= 5:
+                    logger.exception(
+                        f"Failed to retrieve alerts current data for user {str(user.id)} after {attempts} tries"
+                    )
+                    break
+                else:
+                    self.user.salesforce_account.regenerate_token()
+                    attempts += 1
+            except Exception as e:
+                return logger.warning(
+                    f"Exception occured when pulling current data for render text in alert {self.id} because of {e}"
+                )
         return binding_map

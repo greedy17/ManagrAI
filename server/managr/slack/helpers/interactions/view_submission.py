@@ -226,6 +226,7 @@ def process_zoom_meeting_data(payload, context):
         update_view,
         user.organization.slack_integration.access_token,
     )
+    return {"response_action": "clear"}
 
 
 @log_all_exceptions
@@ -1610,6 +1611,7 @@ def process_get_notes(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor(required_context=["u"])
 def process_send_recaps(payload, context):
+    print(context)
     values = payload["view"]["state"]["values"]
     pm = json.loads(payload["view"]["private_metadata"])
     type = context.get("type", None)
@@ -1637,6 +1639,7 @@ def process_send_recaps(payload, context):
                 slack_const.FORM_TYPE_STAGE_GATING,
             ]
         )
+        form_ids = ".".join([str(form.id) for form in update_forms])
     elif type is None and pm.get("account", None) is not None:
         workflow = MeetingWorkflow.objects.get(id=pm.get("workflow_id"))
         update_form = workflow.forms.filter(template__form_type__in=["UPDATE", "CREATE"]).first()
@@ -2343,6 +2346,7 @@ def process_convert_lead(payload, context):
 @processor(required_context=["f"])
 def process_submit_alert_resource_data(payload, context):
     # get context
+    print(context)
     has_error = False
     state = payload["view"]["state"]["values"]
     current_form_ids = context.get("f").split(",")

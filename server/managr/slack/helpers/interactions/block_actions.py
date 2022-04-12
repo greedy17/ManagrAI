@@ -2062,7 +2062,7 @@ def process_paginate_alerts(payload, context):
                 "alert_instance",
                 {
                     "instance_id": str(alert_instance.id),
-                    "current_page": int(context.get("new_page", 0)),
+                    "current_page": int(context.get("new_page", 1)),
                 },
             ),
         ]
