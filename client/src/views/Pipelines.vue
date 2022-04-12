@@ -1543,6 +1543,11 @@ export default {
         let updatedRes = await SObjects.api.getObjects('Opportunity')
         this.allOpps = updatedRes.results
         this.originalList = updatedRes.results
+        if (this.currentList === 'Closing this month') {
+          this.stillThisMonth()
+        } else if (this.currentList === 'Closing next month') {
+          this.stillNextMonth()
+        }
       } catch (e) {
         console.log(e)
       }
