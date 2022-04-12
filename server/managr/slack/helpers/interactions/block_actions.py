@@ -1297,7 +1297,6 @@ def process_create_task(payload, context):
     trigger_id = payload["trigger_id"]
     u = User.objects.get(id=context.get("u"))
     org = u.organization
-
     data = {
         "view": {
             "type": "modal",
@@ -2955,7 +2954,6 @@ def process_log_activity(payload, context):
                 "response_type": "ephemeral",
                 "text": "Sorry I cant find your managr account",
             }
-
         access_token = user.organization.slack_integration.access_token
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH
         callback_id = (
@@ -2971,9 +2969,9 @@ def process_log_activity(payload, context):
                 "type": "modal",
                 "callback_id": callback_id,
                 "title": {"type": "plain_text", "text": title},
-                "blocks": get_block_set(modal_type, context={"u": pm.get("u"),},),
+                "blocks": get_block_set(modal_type, {"u": pm.get("u")}),
                 "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
-                "private_metadata": json.dumps(context),
+                "private_metadata": json.dumps(pm),
                 "external_id": f"{modal_type}.{str(uuid.uuid4())}",
             },
         }
