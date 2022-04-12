@@ -70,6 +70,29 @@ def loading_block_set(context):
 
 
 @block_set()
+def direct_to_block_set(context):
+    slack_context = context.get("slack")
+    managr_url = context.get("managr")
+    blocks = [
+        block_builders.simple_section(f"{context.get('title')}", "mrkdwn"),
+        block_builders.actions_block(
+            [
+                block_builders.simple_button_block(
+                    "Complete in Slack",
+                    "complete_in_slack",
+                    action_id=slack_context,
+                    style="danger",
+                ),
+                block_builders.simple_button_block(
+                    "Complete in Managr", "complete_in_managr", url=managr_url, style="primary"
+                ),
+            ]
+        ),
+    ]
+    return blocks
+
+
+@block_set()
 def success_modal_block_set(context):
     message = context.get("message", ":white_check_mark: Success!")
     user = context.get("u")

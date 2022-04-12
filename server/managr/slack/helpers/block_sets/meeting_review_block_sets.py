@@ -328,6 +328,13 @@ def meeting_contacts_block_set(context):
 
 
 @block_set(required_context=["w"])
+def direct_to_meeting_block_set(context):
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    blocks = []
+    return blocks
+
+
+@block_set(required_context=["w"])
 def edit_meeting_contacts_block_set(context):
     type = context.get("type", None)
     if type:
