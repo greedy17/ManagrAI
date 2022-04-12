@@ -1639,7 +1639,7 @@ def process_send_recaps(payload, context):
                 slack_const.FORM_TYPE_STAGE_GATING,
             ]
         )
-        form_ids = ".".join([str(form.id) for form in update_forms])
+        form_ids = ",".join([str(form.id) for form in update_forms])
     elif type is None and pm.get("account", None) is not None:
         workflow = MeetingWorkflow.objects.get(id=pm.get("workflow_id"))
         update_form = workflow.forms.filter(template__form_type__in=["UPDATE", "CREATE"]).first()

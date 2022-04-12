@@ -2658,7 +2658,7 @@ def process_show_convert_lead_form(payload, context):
 @processor(required_context="u")
 def process_view_recap(payload, context):
     form_id_str = context.get("form_ids")
-    form_ids = form_id_str.split(".")
+    form_ids = form_id_str.split(",")
     submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
         template__resource="OpportunityLineItem"
     )
