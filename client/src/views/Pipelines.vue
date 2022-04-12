@@ -443,7 +443,7 @@
             </p>
             <button v-if="showPopularList" @click="allOpportunities" class="list-button">
               All Opportunities
-              <span class="filter" v-if="currentList === 'AllOpportunities'"> active</span>
+              <span class="filter" v-if="currentList === 'All Opportunities'"> active</span>
             </button>
             <button v-if="showPopularList" @click="closeDatesThisMonth" class="list-button">
               Closing this month
@@ -717,6 +717,7 @@
             :meeting="meeting.meeting_ref"
             :resourceId="meeting.resource_id"
             :allOpps="allOpps"
+            :index="i"
           />
         </div>
       </section>
@@ -2262,7 +2263,7 @@ section {
   align-items: center;
   border: none;
   min-height: 4.5vh;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
   font-size: 16px;
   border-radius: 0.2rem;
   background-color: $dark-green;

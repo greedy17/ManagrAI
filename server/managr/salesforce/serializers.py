@@ -129,8 +129,8 @@ class MeetingWorkflowSerializer(serializers.ModelSerializer):
     def get_meeting_ref(self, instance):
         from managr.core.serializers import MeetingPrepInstanceSerializer
 
-        if hasattr(instance, "meeting"):
-            meeting = ZoomMeetingSerializer(source=instance.meeting)
+        if instance.non_zoom_meeting is None:
+            meeting = ZoomMeetingSerializer(instance=instance.meeting)
         else:
-            meeting = MeetingPrepInstanceSerializer(source=instance.non_zoom_meeting)
-        return meeting
+            meeting = MeetingPrepInstanceSerializer(instance=instance.non_zoom_meeting)
+        return meeting.data
