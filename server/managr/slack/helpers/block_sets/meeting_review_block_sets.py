@@ -34,16 +34,11 @@ from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 logger = logging.getLogger("managr")
 
 
-def _initial_interaction_message(
-    name, resource_name=None, resource_type=None, missing_attendees=False
-):
+def _initial_interaction_message(name, resource_name=None, resource_type=None):
     if not resource_type:
-        return f"Hey {name}, your meeting just ended!"
+        return f"*New Task:* Log your meeting"
 
-    # replace opp, review disregard
-    if missing_attendees:
-        return f"Hey {name}, your meeting just ended! Missing attendee info:exclamation:"
-    return f"Hey {name}, your meeting just ended and contacts look good :+1:"
+    return f"*New Task:* Log your meeting {resource_type} *{resource_name}*"
 
 
 def generate_edit_contact_form(field, id, value, optional=True):
