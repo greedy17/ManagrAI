@@ -7,8 +7,8 @@
       </div>
     </div>
     <div style="min-width: 22vw" class="table-cell cell-name">
-      <div>
-        <div>
+      <div v-if="!meeting.event_data">
+        <div @click="test">
           <p style="letter-spacing: 0.25px; font-size: 15px; margin-bottom: 3px">
             {{ meeting.topic ? meeting.topic : 'Meeting' }}
           </p>
@@ -19,15 +19,28 @@
         </div>
         <!-- <div style="color: #9b9b9b; font-size: 11px; margin-top: 3px">owner:</div> -->
       </div>
+
+      <div v-else>
+        <div>
+          <p style="letter-spacing: 0.25px; font-size: 15px; margin-bottom: 3px">
+            {{ meeting.event_data.title }}
+          </p>
+          <span style="color: #9b9b9b; font-size: 11px">
+            Time: {{ formatUnix(meeting.event_data.times.start_time) }}
+          </span>
+        </div>
+      </div>
     </div>
     <div class="table-cell">
       {{ meeting.participants.length }}
     </div>
+
     <div class="table-cell">
       <p v-for="(participant, i) in meeting.participants" :key="i">
         {{ meeting.participants[i].email }}
       </p>
     </div>
+
     <div class="table-cell">
       <p v-if="resourceId">
         {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
@@ -55,7 +68,6 @@
             openDirection="below"
             track-by="id"
             :options="allOpps"
-            :multiple="true"
           >
             <template slot="noResult">
               <div class="row">
@@ -67,7 +79,7 @@
         </div>
 
         <div v-if="mappedOpp" class="add-field-section__footer">
-          <p>Add</p>
+          <p @click="test">Add</p>
         </div>
         <div v-else style="cursor: text" class="add-field-section__footer">
           <p style="color: gray; cursor: text">Add</p>
@@ -97,6 +109,16 @@ export default {
   },
   created() {},
   methods: {
+    formatUnix(unix) {
+      let date = new Date(unix * 1000)
+      let hours = date.getHours()
+      let minutes = '0' + date.getMinutes()
+      let formattedTime = hours + ':' + minutes.substr(-2)
+      return formattedTime
+    },
+    test() {
+      console.log(this.mappedOpp.id)
+    },
     formatDateTime(input) {
       var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
       if (!input || !input.match(pattern)) {
@@ -130,6 +152,7 @@ export default {
     meeting: {},
     resourceId: {},
     allOpps: {},
+    index: {},
   },
 }
 </script>
@@ -138,7 +161,7 @@ export default {
 @import '@/styles/buttons';
 
 .add-field-section {
-  z-index: 5;
+  z-index: 7;
   position: absolute;
   right: 0.5rem;
   top: 9vh;

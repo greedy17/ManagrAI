@@ -271,7 +271,8 @@ def meeting_prep(processed_data, user_id, invocation=1, send_slack=True):
         meeting_resource_data["resource_type"] = "Opportunity"
     else:
         account = Account.objects.filter(
-            contacts__email__in=participant_emails, owner__id=user.id,
+            contacts__email__in=participant_emails,
+            owner__id=user.id,
         ).first()
         if account:
             meeting_resource_data["resource_id"] = str(account.id)
@@ -336,7 +337,8 @@ def meeting_prep(processed_data, user_id, invocation=1, send_slack=True):
     if provider != [None, "zoom"]:
         # Google Meet (Non-Zoom)
         meeting_workflow = MeetingWorkflow.objects.create(
-            non_zoom_meeting=meeting_prep_instance, user=user,
+            non_zoom_meeting=meeting_prep_instance,
+            user=user,
         )
 
         # Sending end_times, workflow_id, and user values to emit function
@@ -348,7 +350,9 @@ def meeting_prep(processed_data, user_id, invocation=1, send_slack=True):
 
 
 def _send_calendar_details(
-    user_id, page, invocation=None,
+    user_id,
+    page,
+    invocation=None,
 ):
     user = User.objects.get(id=user_id)
     try:
@@ -420,7 +424,9 @@ def process_get_task_list(user_id, page=1):
         task_blocks.extend(
             [
                 block_builders.simple_section(
-                    ":white_check_mark: *Upcoming Tasks*", "mrkdwn", block_id="task_header",
+                    ":white_check_mark: *Upcoming Tasks*",
+                    "mrkdwn",
+                    block_id="task_header",
                 ),
                 block_builders.simple_section("There was an issue retreiving your tasks", "mrkdwn"),
             ]
@@ -583,7 +589,8 @@ def generate_afternoon_digest(user_id):
                 )
 
             meeting = block_sets.get_block_set(
-                "manager_meeting_reminder", {"u": str(user.id), "not_completed": meetings},
+                "manager_meeting_reminder",
+                {"u": str(user.id), "not_completed": meetings},
             )
 
         else:

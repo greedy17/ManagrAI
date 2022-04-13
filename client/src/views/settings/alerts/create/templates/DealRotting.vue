@@ -47,17 +47,21 @@
             <div v-if="form.field.recurrenceFrequency.value == 'WEEKLY'">
               <FormField>
                 <template v-slot:input>
-                  <DropDownSearch
-                    :items.sync="weeklyOpts"
-                    :itemsRef.sync="form.field._recurrenceDay.value"
-                    v-model="form.field.recurrenceDay.value"
-                    @input="form.field.recurrenceDay.validate()"
-                    displayKey="key"
-                    valueKey="value"
-                    nullDisplay="Select Day"
-                    searchable
-                    local
-                  />
+                  <Multiselect
+                    placeholder="Select Day"
+                    @input="setDay"
+                    v-model="selectedDay"
+                    :options="weeklyOpts"
+                    openDirection="below"
+                    style="min-width: 13vw"
+                    selectLabel="Enter"
+                    track-by="vlue"
+                    label="key"
+                  >
+                    <template slot="noResult">
+                      <p>No results.</p>
+                    </template>
+                  </Multiselect>
                 </template>
               </FormField>
             </div>
@@ -69,31 +73,6 @@
               v-model="form.field.recurrenceDay.value"
               small
             />
-            <p
-              @click="removeDay"
-              v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
-              :class="form.field.recurrenceDay.value ? 'selected__item' : 'visible'"
-            >
-              <img
-                src="@/assets/images/remove.png"
-                style="height: 1rem; margin-right: 0.25rem"
-                alt=""
-              />
-              {{ form.field.recurrenceDay.value }}
-            </p>
-
-            <p
-              @click="removeDay"
-              v-else-if="form.field.recurrenceFrequency.value == 'WEEKLY'"
-              :class="form.field.recurrenceDay.value ? 'selected__item' : 'visible'"
-            >
-              <img
-                src="@/assets/images/remove.png"
-                style="height: 1rem; margin-right: 0.25rem"
-                alt=""
-              />
-              {{ onConvert(form.field.recurrenceDay.value) }}
-            </p>
           </div>
 
           <div
@@ -105,39 +84,25 @@
 
             <FormField :errors="form.field.alertTargets.errors">
               <template v-slot:input>
-                <DropDownSearch
-                  :items.sync="userTargetsOpts"
-                  :itemsRef.sync="form.field._alertTargets.value"
-                  v-model="form.field.alertTargets.value"
-                  @input="form.field.alertTargets.validate()"
-                  displayKey="fullName"
-                  valueKey="id"
-                  nullDisplay="Multi-select"
-                  searchable
-                  multi
-                  medium
-                  :loading="users.loadingNextPage"
-                  :hasNext="!!users.pagination.hasNextPage"
-                  @load-more="onUsersNextPage"
-                  @search-term="onSearchUsers"
-                />
+                <Multiselect
+                  placeholder="Select Users"
+                  @input="mapIds"
+                  v-model="selectedUsers"
+                  :options="userTargetsOpts"
+                  openDirection="below"
+                  style="min-width: 13vw"
+                  selectLabel="Enter"
+                  track-by="id"
+                  label="fullName"
+                  :multiple="true"
+                >
+                  <template slot="noResult">
+                    <p>No results.</p>
+                  </template>
+                </Multiselect>
               </template>
             </FormField>
-            <div class="items_height">
-              <p
-                :key="i"
-                v-for="(item, i) in form.field.alertTargets.value"
-                :class="form.field.alertTargets.value ? 'selected__item' : ''"
-                @click="removeItemFromTargetArray(item)"
-              >
-                <img
-                  src="@/assets/images/remove.png"
-                  style="height: 1rem; margin-right: 0.25rem"
-                  alt=""
-                />
-                {{ item.length ? getUser(item) : '' }}
-              </p>
-            </div>
+            <div class="items_height"></div>
           </div>
 
           <div
@@ -201,44 +166,28 @@
             <div style="margin-top: 0.5rem" v-else>
               <FormField>
                 <template v-slot:input>
-                  <DropDownSearch
-                    :items.sync="userChannelOpts.channels"
-                    :itemsRef.sync="form.field._recipients.value"
-                    v-model="form.field.recipients.value"
-                    @input="form.field.recipients.validate()"
-                    displayKey="name"
-                    valueKey="id"
-                    nullDisplay="Channels"
-                    :hasNext="!!userChannelOpts.nextCursor"
-                    @load-more="listUserChannels(userChannelOpts.nextCursor)"
-                    searchable
-                    local
+                  <Multiselect
+                    placeholder="Select Channel"
+                    v-model="selectedChannel"
+                    @input="setRecipient"
+                    :options="userChannelOpts.channels"
+                    openDirection="below"
+                    style="min-width: 13vw"
+                    selectLabel="Enter"
+                    track-by="id"
+                    label="name"
                   >
-                    <template v-slot:tn-dropdown-option="{ option }">
-                      <img
-                        v-if="option.isPrivate == true"
-                        class="card-img"
-                        style="width: 1rem; height: 1rem; margin-right: 0.2rem"
-                        src="@/assets/images/lockAsset.png"
-                      />
-                      {{ option['name'] }}
+                    <template slot="noResult">
+                      <p>No results.</p>
                     </template>
-                  </DropDownSearch>
+                    <template slot="afterList">
+                      <p class="load-more" @click="listUserChannels(userChannelOpts.nextCursor)">
+                        Load More
+                      </p>
+                    </template>
+                  </Multiselect>
                 </template>
               </FormField>
-
-              <p
-                v-if="form.field.recipients.value.length > 0"
-                @click="removeTarget"
-                :class="form.field.recipients.value ? 'selected__item' : 'visible'"
-              >
-                <img
-                  src="@/assets/images/remove.png"
-                  style="height: 1rem; margin-right: 0.25rem"
-                  alt=""
-                />
-                {{ form.field._recipients.value.name }}
-              </p>
             </div>
           </div>
         </div>
@@ -337,9 +286,13 @@ export default {
     PulseLoadingSpinnerButton,
     Modal,
     SmartAlertTemplateBuilder,
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {
     return {
+      selectedUsers: [],
+      selectedDay: null,
+      selectedChannel: null,
       channelOpts: new SlackListResponse(),
       userChannelOpts: new SlackListResponse(),
       savingTemplate: false,
@@ -623,14 +576,22 @@ export default {
       }
       return value
     },
-    setRecipients(obj) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value.push(obj)
+    setRecipient() {
+      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value =
+        this.selectedChannel
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
+        this.selectedChannel.id
     },
-    setRecipient(obj) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = obj
+    setDay() {
+      this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDay.value =
+        this.selectedDay
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value =
+        this.selectedDay.value
     },
-    setDay(obj) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDay.value = obj
+    mapIds() {
+      let mappedIds = this.selectedUsers.map((user) => user.id)
+      console.log(mappedIds)
+      this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value = mappedIds
     },
     setPipelines(obj) {
       this.alertTemplateForm.field.alertConfig.groups[0].field._alertTargets.value.push(obj)
@@ -881,6 +842,14 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
+.load-more {
+  text-align: center;
+  font-size: 13px;
+}
+.load-more:hover {
+  color: $dark-green;
+  cursor: pointer;
+}
 @keyframes bounce {
   0% {
     transform: translateY(0);

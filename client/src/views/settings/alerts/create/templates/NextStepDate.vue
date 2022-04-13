@@ -26,7 +26,7 @@
               :resourceType="alertTemplateForm.field.resourceType.value"
             />
 
-            <p
+            <!-- <p
               style="margin-top: -1rem"
               v-if="alertGroup.field.alertOperands.groups[0].field.operandIdentifier.value"
               @click="removeIdentity"
@@ -42,7 +42,7 @@
                 alt=""
               />
               {{ alertGroup.field.alertOperands.groups[0].field.operandIdentifier.value }}
-            </p>
+            </p> -->
           </div>
 
           <div
@@ -55,39 +55,24 @@
 
               <FormField :errors="form.field.alertTargets.errors">
                 <template v-slot:input>
-                  <DropDownSearch
-                    :items.sync="userTargetsOpts"
-                    :itemsRef.sync="form.field._alertTargets.value"
-                    v-model="form.field.alertTargets.value"
-                    @input="form.field.alertTargets.validate()"
-                    displayKey="fullName"
-                    valueKey="id"
-                    nullDisplay="Multi-select"
-                    searchable
-                    multi
-                    medium
-                    :loading="users.loadingNextPage"
-                    :hasNext="!!users.pagination.hasNextPage"
-                    @load-more="onUsersNextPage"
-                    @search-term="onSearchUsers"
-                  />
+                  <Multiselect
+                    placeholder="Select Users"
+                    @input="mapIds"
+                    v-model="selectedUsers"
+                    :options="userTargetsOpts"
+                    openDirection="below"
+                    style="min-width: 13vw"
+                    selectLabel="Enter"
+                    track-by="id"
+                    label="fullName"
+                    :multiple="true"
+                  >
+                    <template slot="noResult">
+                      <p>No results.</p>
+                    </template>
+                  </Multiselect>
                 </template>
               </FormField>
-              <div style="margin-top: -0.75rem" class="items_height">
-                <p
-                  :key="i"
-                  v-for="(item, i) in form.field.alertTargets.value"
-                  :class="form.field.alertTargets.value ? 'selected__item' : ''"
-                  @click="removeItemFromTargetArray(item)"
-                >
-                  <img
-                    src="@/assets/images/remove.png"
-                    style="height: 1rem; margin-right: 0.25rem"
-                    alt=""
-                  />
-                  {{ item.length ? getUser(item) : '' }}
-                </p>
-              </div>
             </div>
 
             <div class="delivery__row">
@@ -143,44 +128,19 @@
               <div v-else>
                 <FormField>
                   <template v-slot:input>
-                    <DropDownSearch
-                      :items.sync="userChannelOpts.channels"
-                      :itemsRef.sync="form.field._recipients.value"
-                      v-model="form.field.recipients.value"
-                      @input="form.field.recipients.validate()"
-                      displayKey="name"
-                      valueKey="id"
-                      nullDisplay="Channels"
-                      :hasNext="!!userChannelOpts.nextCursor"
-                      @load-more="listUserChannels(userChannelOpts.nextCursor)"
-                      searchable
-                      local
-                    >
-                      <template v-slot:tn-dropdown-option="{ option }">
-                        <img
-                          v-if="option.isPrivate == true"
-                          class="card-img"
-                          style="width: 1rem; height: 1rem; margin-right: 0.2rem"
-                          src="@/assets/images/lockAsset.png"
-                        />
-                        {{ option['name'] }}
-                      </template>
-                    </DropDownSearch>
+                    <Multiselect
+                      placeholder="Select Channel"
+                      v-model="selectedChannel"
+                      @input="setRecipient"
+                      :options="userChannelOpts.channels"
+                      openDirection="below"
+                      style="min-width: 13vw"
+                      selectLabel="Enter"
+                      track-by="id"
+                      label="name"
+                    />
                   </template>
                 </FormField>
-
-                <p
-                  v-if="form.field.recipients.value.length > 0"
-                  @click="removeTarget"
-                  :class="form.field.recipients.value ? 'selected__item' : 'visible'"
-                >
-                  <img
-                    src="@/assets/images/remove.png"
-                    style="height: 1rem; margin-right: 0.25rem"
-                    alt=""
-                  />
-                  {{ form.field._recipients.value.name }}
-                </p>
               </div>
             </div>
           </div>
@@ -269,9 +229,12 @@ export default {
     PulseLoadingSpinnerButton,
     Modal,
     SmartAlertTemplateBuilder,
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {
     return {
+      selectedUsers: [],
+      selectedChannel: null,
       channelOpts: new SlackListResponse(),
       userChannelOpts: new SlackListResponse(),
       savingTemplate: false,
@@ -561,14 +524,16 @@ export default {
       }
       return value
     },
-    setRecipients(obj) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value.push(obj)
+    setRecipient() {
+      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value =
+        this.selectedChannel
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
+        this.selectedChannel.id
     },
-    setRecipient(obj) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = obj
-    },
-    setDay(obj) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDay.value = obj
+    mapIds() {
+      let mappedIds = this.selectedUsers.map((user) => user.id)
+      console.log(mappedIds)
+      this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value = mappedIds
     },
     setPipelines(obj) {
       this.alertTemplateForm.field.alertConfig.groups[0].field._alertTargets.value.push(obj)
