@@ -540,7 +540,7 @@ def process_submit_resource_data(payload, context):
         else:
             text = f"Managr updated {main_form.resource_type}"
             message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
-        if len(user.slack_integration.recap_receivers) and type == "meeting":
+        if len(user.slack_integration.recap_receivers):
             _send_recap(current_form_ids, None, True)
         if len(user.slack_integration.realtime_alert_configs):
             _send_instant_alert(current_form_ids)
@@ -1640,7 +1640,7 @@ def process_send_recaps(payload, context):
                 slack_const.FORM_TYPE_STAGE_GATING,
             ]
         )
-        form_ids = ",".join([str(form.id) for form in update_forms])
+        form_ids = [str(form.id) for form in update_forms]
     elif type is None and pm.get("account", None) is not None:
         workflow = MeetingWorkflow.objects.get(id=pm.get("workflow_id"))
         update_form = workflow.forms.filter(template__form_type__in=["UPDATE", "CREATE"]).first()
@@ -1653,7 +1653,7 @@ def process_send_recaps(payload, context):
         )
         return
     else:
-        form_ids = context.get("form_ids")
+        form_ids = context.get("form_ids").split(",")
     _send_recap(form_ids, send_to_recaps, bulk=bulk_status)
     return
 

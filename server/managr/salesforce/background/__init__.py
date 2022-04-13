@@ -1228,7 +1228,7 @@ def check_for_display_value(field, value):
 @background(schedule=0)
 @slack_api_exceptions(rethrow=True)
 def _send_recap(form_ids, send_to_data=None, manager_recap=False, bulk=False):
-    submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids.split(".")).exclude(
+    submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
         template__resource="OpportunityLineItem"
     )
     main_form = submitted_forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
