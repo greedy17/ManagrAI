@@ -592,7 +592,10 @@ def initial_alert_message(context):
                     style="danger",
                 ),
                 block_builders.simple_button_block(
-                    "Complete in Managr", "open_in_pipeline", url=url, style="primary"
+                    "Complete in Managr",
+                    "open_in_pipeline",
+                    url=f"{url}/workflows/{config_id}",
+                    style="primary",
                 ),
             ]
         ),
