@@ -602,7 +602,7 @@ def process_current_alert_list(user_id):
             "Open in Pipeline",
             "OPEN_IN_PIPELINE",
             ":eyes: *Pipeline Monitor*",
-            url=f"{ALERT_PIPELINE_URL}/{str(configs[0].id)}",
+            url=f"{ALERT_PIPELINE_URL}",
         ),
     ]
     if configs:

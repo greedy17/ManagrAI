@@ -567,6 +567,7 @@ def initial_alert_message(context):
     title = context.get("title")
     invocation = context.get("invocation")
     channel = context.get("channel")
+    template = context.get("template")
     config_id = context.get("config_id")
     if settings.IN_DEV:
         url = "http://localhost:8080/pipelines"
@@ -594,7 +595,7 @@ def initial_alert_message(context):
                 block_builders.simple_button_block(
                     "Complete in Managr",
                     "open_in_pipeline",
-                    url=f"{url}/workflows/{config_id}",
+                    url=f"{url}/workflows/{template}",
                     style="primary",
                 ),
             ]
