@@ -159,6 +159,11 @@
                   <template slot="noResult">
                     <p>No results.</p>
                   </template>
+                  <template slot="afterList">
+                    <p class="load-more" @click="listUserChannels(userChannelOpts.nextCursor)">
+                      Load More
+                    </p>
+                  </template>
                 </Multiselect>
 
                 <!-- <DropDownSearch
@@ -295,7 +300,6 @@ export default {
         recap_channel = recap_channel.id
       }
       this.userIds = this.userIds.map((user) => user.id)
-      console.log(this.userIds)
       const res = await SlackOAuth.api.updateRecapChannel(this.slackId, recap_channel, this.userIds)
       console.log(res)
       this.createdZoomChannel = ''
@@ -464,6 +468,14 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
+.load-more {
+  text-align: center;
+  font-size: 13px;
+}
+.load-more:hover {
+  color: $dark-green;
+  cursor: pointer;
+}
 @keyframes bounce {
   0% {
     transform: translateY(0);
