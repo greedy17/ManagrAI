@@ -175,11 +175,8 @@
       <div class="dot-flashing"></div>
     </div> -->
 
-    <div
-      class="invert center-loader"
-      v-if="templates.refreshing && alertsCount(templates.list.length)"
-    >
-      <img src="@/assets/images/loading-gif.gif" class="invert" style="height: 8rem" alt="" />
+    <div class="center-loader" v-if="templates.refreshing && alertsCount(templates.list.length)">
+      <Loader loaderText="Gathering your workflows" />
     </div>
   </div>
 </template>
@@ -198,23 +195,16 @@ import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
 import ExpandablePanel from '@/components/ExpandablePanel'
 import FormField from '@/components/forms/FormField'
 import AlertsEditPanel from '@/views/settings/alerts/view/_AlertsEditPanel'
-import Modal from '@/components/InviteModal'
 /**
  * Services
  *
  */
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 import { UserConfigForm } from '@/services/users/forms'
 import User from '@/services/users'
 
-import AlertTemplate, {
-  AlertGroupForm,
-  AlertTemplateForm,
-  AlertConfigForm,
-  AlertMessageTemplateForm,
-  AlertOperandForm,
-} from '@/services/alerts/'
+import AlertTemplate from '@/services/alerts/'
 
 export default {
   name: 'AlertsTemplateList',
@@ -224,7 +214,8 @@ export default {
     ToggleCheckBox,
     FormField,
     AlertsEditPanel,
-    Modal,
+    Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
+    Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
   },
   data() {
     return {

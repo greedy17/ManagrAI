@@ -213,6 +213,7 @@ def check_workflows_count(user_id):
 def _process_calendar_details(user_id):
     user = User.objects.get(id=user_id)
     events = user.nylas._get_calendar_data()
+    print(events)
     if events:
         processed_data = []
         for event in events:
@@ -348,7 +349,8 @@ def meeting_prep(processed_data, user_id, invocation=1, from_task=False):
         meeting_resource_data["resource_type"] = "Opportunity"
     else:
         account = Account.objects.filter(
-            contacts__email__in=participant_emails, owner__id=user.id,
+            contacts__email__in=participant_emails,
+            owner__id=user.id,
         ).first()
         if account:
             meeting_resource_data["resource_id"] = str(account.id)
@@ -409,12 +411,17 @@ def meeting_prep(processed_data, user_id, invocation=1, from_task=False):
         provider = processed_data.get("provider")
         # Conditional Check for Zoom meeting or Non-Zoom Meeting
         if (provider == "Zoom Meeting" and user.email not in processed_data["owner"]) or (
-            provider not in [None, "Zoom Meeting",]
+            provider
+            not in [
+                None,
+                "Zoom Meeting",
+            ]
             and "Zoom meeting" not in processed_data["description"]
         ):
             # Google Meet (Non-Zoom)
             meeting_workflow = MeetingWorkflow.objects.create(
-                non_zoom_meeting=meeting_prep_instance, user=user,
+                non_zoom_meeting=meeting_prep_instance,
+                user=user,
             )
 
             # Sending end_times, workflow_id, and user values to emit function
@@ -426,12 +433,15 @@ def meeting_prep(processed_data, user_id, invocation=1, from_task=False):
 
 
 def _send_calendar_details(
-    user_id, page, invocation=None,
+    user_id,
+    page,
+    invocation=None,
 ):
     user = User.objects.get(id=user_id)
     if hasattr(user, "nylas"):
         try:
             processed_data = _process_calendar_details(user_id)
+            print(processed_data)
         except Exception as e:
             logger.exception(f"MORNING DIGEST ERROR IN SEND CALENDAR DETAILS: {e}")
             blocks = [
@@ -534,7 +544,9 @@ def process_get_task_list(user_id, page=1):
                 task_blocks.extend(
                     [
                         block_builders.simple_section(
-                            ":white_check_mark: *Upcoming Tasks*", "mrkdwn", block_id="task_header",
+                            ":white_check_mark: *Upcoming Tasks*",
+                            "mrkdwn",
+                            block_id="task_header",
                         ),
                         block_builders.simple_section(
                             "There was an issue retreiving your tasks", "mrkdwn"
@@ -638,6 +650,7 @@ def _process_non_zoom_meetings(user_id):
     ):
         try:
             processed_data = _process_calendar_details(user_id)
+            print(processed_data)
         except Exception as e:
             logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
         if processed_data is not None:
@@ -753,7 +766,11 @@ def generate_afternoon_digest(user_id):
             name = user.first_name if hasattr(user, "first_name") else user.full_name
             meeting = block_sets.get_block_set(
                 "manager_meeting_reminder",
-                {"u": str(user.id), "not_completed": meetings["not_completed"], "name": name,},
+                {
+                    "u": str(user.id),
+                    "not_completed": meetings["not_completed"],
+                    "name": name,
+                },
             )
         else:
             meeting = [

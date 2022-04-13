@@ -3,7 +3,24 @@
     <div>
       <FormField>
         <template v-slot:input>
-          <DropDownSearch
+          <Multiselect
+            placeholder="Select Users"
+            v-model="identity"
+            :options="objectFields.list"
+            openDirection="below"
+            style="min-width: 13vw"
+            selectLabel="Enter"
+            track-by="apiName"
+            label="referenceDisplayLabel"
+          >
+            <template slot="noResult">
+              <p>No results.</p>
+            </template>
+            <template slot="afterList">
+              <p class="load-more" @click="objectFieldNextPage">Load More</p>
+            </template>
+          </Multiselect>
+          <!-- <DropDownSearch
             :items="objectFields.list"
             :itemsRef.sync="form.field._operandIdentifier.value"
             v-model="identity"
@@ -15,7 +32,7 @@
             @load-more="objectFieldNextPage"
             @search-term="onSearchFields"
             @input="form.field.operandIdentifier.validate()"
-          />
+          /> -->
         </template>
       </FormField>
     </div>
@@ -141,7 +158,13 @@ export default {
    *
    */
   name: 'NextAlertOperandRow',
-  components: { ListContainer, ToggleCheckBox, DropDownSearch, FormField },
+  components: {
+    ListContainer,
+    ToggleCheckBox,
+    DropDownSearch,
+    FormField,
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+  },
   props: {
     form: { type: AlertOperandForm },
     resourceType: { type: String },
@@ -214,9 +237,9 @@ export default {
       },
     },
     identity: function () {
-      this.form.field.operandIdentifier.value = this.identity
+      this.form.field.operandIdentifier.value = this.identity.apiName
       this.form.field._operandIdentifier.value = this.objectFields.list.filter(
-        (item) => item.apiName === this.identity,
+        (item) => item.apiName === this.identity.apiName,
       )[0]
     },
   },
@@ -355,6 +378,14 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
+.load-more {
+  text-align: center;
+  font-size: 13px;
+}
+.load-more:hover {
+  color: $dark-green;
+  cursor: pointer;
+}
 .visible {
   visibility: hidden;
 }

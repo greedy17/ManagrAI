@@ -98,7 +98,7 @@
                 id="user-input"
                 ccols="30"
                 rows="4"
-                style="width: 30vw; border-radius: 0.4rem"
+                style="width: 26.25vw; border-radius: 0.4rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
               </textarea>
@@ -114,14 +114,26 @@
 
             <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
               <p>{{ field.referenceDisplayLabel }}:</p>
-              <select
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-                id="user-input"
+              <Multiselect
+                :placeholder="`Select ${field.referenceDisplayLabel}`"
+                v-model="currentVals[field.apiName]"
+                :options="picklistQueryOpts[field.apiName]"
+                @select="
+                  setUpdateValues(
+                    field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+                    $event.value,
+                  )
+                "
+                openDirection="below"
+                style="width: 13vw"
+                selectLabel="Enter"
+                track-by="value"
+                label="label"
               >
-                <option v-for="(option, i) in picklistQueryOpts[field.apiName]" :key="i">
-                  <p>{{ option.label }}</p>
-                </option>
-              </select>
+                <template slot="noResult">
+                  <p>No results.</p>
+                </template>
+              </Multiselect>
             </div>
             <div v-else-if="field.dataType === 'Date'">
               <p>{{ field.referenceDisplayLabel }}:</p>
@@ -157,39 +169,41 @@
             </div>
             <div v-else-if="apiName === 'OwnerId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
-              <select
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-                id="user-input"
+              <Multiselect
+                placeholder="Select Owner"
+                v-model="currentVals[field.apiName]"
+                :options="allUsers"
+                @select="setUpdateValues(field.apiName, $event.value)"
+                openDirection="below"
+                style="width: 13vw"
+                selectLabel="Enter"
+                :track-by="salesforce_account_ref ? salesforce_account_ref.salesforce_id : ''"
+                label="full_name"
               >
-                <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option>
-                <option
-                  :value="
-                    user.salesforce_account_ref ? user.salesforce_account_ref.salesforce_id : ''
-                  "
-                  v-for="(user, i) in allUsers"
-                  :key="i"
-                >
-                  <p>{{ user.full_name }}</p>
-                </option>
-              </select>
+                <template slot="noResult">
+                  <p>No results.</p>
+                </template>
+              </Multiselect>
             </div>
 
             <div v-else-if="apiName === 'AccountId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
 
-              <select
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-                id="user-input"
+              <Multiselect
+                placeholder="Select Account"
+                v-model="currentVals[field.apiName]"
+                :options="allAccounts"
+                @select="setUpdateValues(field.apiName, $event.value)"
+                openDirection="below"
+                style="width: 13vw"
+                selectLabel="Enter"
+                :track-by="integration_id"
+                label="name"
               >
-                <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option>
-                <option
-                  :value="account.integration_id"
-                  v-for="(account, i) in allAccounts"
-                  :key="i"
-                >
-                  <p>{{ account.name }}</p>
-                </option>
-              </select>
+                <template slot="noResult">
+                  <p>No results.</p>
+                </template>
+              </Multiselect>
             </div>
           </section>
         </div>
@@ -233,7 +247,7 @@
                 id="user-input"
                 cols="30"
                 rows="2"
-                style="width: 29.5vw; border-radius: 0.2rem"
+                style="width: 26.25vw; border-radius: 0.2rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
               </textarea>
@@ -244,7 +258,7 @@
                 id="user-input"
                 ccols="30"
                 rows="4"
-                style="width: 29.5vw; border-radius: 0.2rem"
+                style="width: 26.25vw; border-radius: 0.2rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
               </textarea>
@@ -260,7 +274,7 @@
                 ccols="30"
                 rows="4"
                 :placeholder="currentVals[field.apiName]"
-                style="width: 29.5vw; border-radius: 0.4rem; padding: 7px"
+                style="width: 26.25vw; border-radius: 0.4rem; padding: 7px"
                 v-model="currentVals[field.apiName]"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
@@ -284,22 +298,26 @@
             </div>
             <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
               <p>{{ field.referenceDisplayLabel }}:</p>
-              <select
+              <Multiselect
+                :placeholder="`${currentVals[field.apiName]}`"
                 v-model="currentVals[field.apiName]"
-                @input="
-                  ;(value = $event.target.value),
-                    setUpdateValues(
-                      field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-                      value,
-                    )
+                :options="picklistQueryOpts[field.apiName]"
+                @select="
+                  setUpdateValues(
+                    field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+                    $event.value,
+                  )
                 "
-                id="user-input"
+                openDirection="below"
+                style="width: 13vw"
+                selectLabel="Enter"
+                track-by="value"
+                label="label"
               >
-                <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option>
-                <option v-for="(option, i) in picklistQueryOpts[field.apiName]" :key="i">
-                  <p>{{ option.label }}</p>
-                </option>
-              </select>
+                <template slot="noResult">
+                  <p>No results.</p>
+                </template>
+              </Multiselect>
             </div>
             <div v-else-if="field.dataType === 'Date'">
               <p>{{ field.referenceDisplayLabel }}:</p>
@@ -341,38 +359,41 @@
 
             <div v-else-if="field.apiName === 'OwnerId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
-              <select
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-                id="user-input"
+              <Multiselect
+                :placeholder="`${currentVals[field.apiName]}`"
+                v-model="currentVals[field.apiName]"
+                :options="allUsers"
+                @select="setUpdateValues(field.apiName, $event.value)"
+                openDirection="below"
+                style="width: 13vw"
+                selectLabel="Enter"
+                :track-by="salesforce_account_ref ? salesforce_account_ref.salesforce_id : ''"
+                label="full_name"
               >
-                <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option>
-                <option
-                  :value="
-                    user.salesforce_account_ref ? user.salesforce_account_ref.salesforce_id : ''
-                  "
-                  v-for="(user, i) in allUsers"
-                  :key="i"
-                >
-                  <p>{{ user.full_name }}</p>
-                </option>
-              </select>
+                <template slot="noResult">
+                  <p>No results.</p>
+                </template>
+              </Multiselect>
             </div>
 
             <div v-else-if="field.apiName === 'AccountId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
-              <select
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-                id="user-input"
+
+              <Multiselect
+                :placeholder="`${currentVals[field.apiName]}`"
+                v-model="currentVals[field.apiName]"
+                :options="allAccounts"
+                @select="setUpdateValues(field.apiName, $event.value)"
+                openDirection="below"
+                style="width: 13vw"
+                selectLabel="Enter"
+                :track-by="integration_id"
+                label="name"
               >
-                <option value="" disabled selected hidden>{{ currentVals[field.apiName] }}</option>
-                <option
-                  :value="account.integration_id"
-                  v-for="(account, i) in allAccounts"
-                  :key="i"
-                >
-                  <p>{{ account.name }}</p>
-                </option>
-              </select>
+                <template slot="noResult">
+                  <p>No results.</p>
+                </template>
+              </Multiselect>
             </div>
           </section>
         </div>
@@ -422,7 +443,7 @@
             </p>
             <button v-if="showPopularList" @click="allOpportunities" class="list-button">
               All Opportunities
-              <span class="filter" v-if="currentList === 'AllOpportunities'"> active</span>
+              <span class="filter" v-if="currentList === 'All Opportunities'"> active</span>
             </button>
             <button v-if="showPopularList" @click="closeDatesThisMonth" class="list-button">
               Closing this month
@@ -696,6 +717,7 @@
             :meeting="meeting.meeting_ref"
             :resourceId="meeting.resource_id"
             :allOpps="allOpps"
+            :index="i"
           />
         </div>
       </section>
@@ -738,7 +760,6 @@ import PipelineHeader from '@/components/PipelineHeader'
 import User from '@/services/users'
 import WorkflowRow from '@/components/WorkflowRow'
 import WorkflowHeader from '@/components/WorkflowHeader'
-import Loader from '@/components/Loader'
 // import MeetikngWorkflowHeader from '@/components/MeetingWorkflowHeader'
 // import MeetingWorkflow from '@/components/MeetingWorkflow'
 
@@ -747,15 +768,15 @@ export default {
   components: {
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     SkeletonBox: () => import(/* webpackPrefetch: true */ '@/components/SkeletonBox'),
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     PipelineNameSection,
     PipelineField,
     PipelineTableRow,
     PipelineHeader,
     WorkflowHeader,
     WorkflowRow,
-    Loader,
     PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
-    // Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
+    Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
     Filters: () => import(/* webpackPrefetch: true */ '@/components/Filters'),
     FilterSelection: () => import(/* webpackPrefetch: true */ '@/components/FilterSelection'),
     MeetingWorkflowHeader: () =>
@@ -832,6 +853,7 @@ export default {
       showMeetingList: true,
       selectedMeeting: false,
       meetings: null,
+      multi: null,
       ladFilter: {
         apiName: 'LastActivityDate',
         dataType: 'Date',
@@ -941,7 +963,9 @@ export default {
     async getMeetingList() {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
+        console.log(res)
         this.meetings = res.results
+        console.log(res.results)
       } catch (e) {
         console.log(e)
       } finally {
@@ -1519,6 +1543,11 @@ export default {
         let updatedRes = await SObjects.api.getObjects('Opportunity')
         this.allOpps = updatedRes.results
         this.originalList = updatedRes.results
+        if (this.currentList === 'Closing this month') {
+          this.stillThisMonth()
+        } else if (this.currentList === 'Closing next month') {
+          this.stillNextMonth()
+        }
       } catch (e) {
         console.log(e)
       }
@@ -1820,6 +1849,7 @@ export default {
   margin-top: -0.75rem;
   justify-content: flex-start;
 }
+
 select {
   -webkit-appearance: none !important;
   -moz-appearance: none !important;
@@ -1969,7 +1999,7 @@ h3 {
 .modal-container {
   background-color: $white;
   overflow: hidden;
-  width: 30vw;
+  min-width: 32vw;
   min-height: 60vh;
   align-items: center;
   border-radius: 0.3rem;
@@ -1993,27 +2023,29 @@ h3 {
 .opp-modal-container {
   overflow: hidden;
   background-color: white;
-  min-height: 80vh;
-  width: 34vw;
+  // min-height: 80vh;
+  max-width: 34vw;
   align-items: center;
   border-radius: 0.6rem;
   padding: 1rem;
   box-shadow: 1px 3px 7px $base-gray;
 }
 .opp-modal {
-  display: inline-flex;
+  max-width: 30vw;
+  display: flex;
+  flex-direction: row;
   flex-wrap: wrap;
   gap: 0.25rem;
   padding: 0.5rem;
   overflow-y: scroll;
-  height: 56vh;
+  max-height: 56vh;
   border-radius: 0.25rem;
   border-bottom: 3px solid $white;
   color: $base-gray;
   font-size: 16px;
   letter-spacing: 0.75px;
   div {
-    margin-right: 1rem;
+    margin-right: 0.25rem;
   }
 }
 .note-section {
@@ -2236,7 +2268,7 @@ section {
   align-items: center;
   border: none;
   min-height: 4.5vh;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
   font-size: 16px;
   border-radius: 0.2rem;
   background-color: $dark-green;
@@ -2289,11 +2321,11 @@ section {
   width: 14vw;
 }
 #user-input {
-  border: 1px solid $theme-gray;
+  border: 1px solid #e8e8e8;
   border-radius: 0.3rem;
   background-color: white;
   min-height: 2.5rem;
-  width: 14vw;
+  width: 13vw;
 }
 #user-input:focus {
   outline: 1px solid $lighter-green;
