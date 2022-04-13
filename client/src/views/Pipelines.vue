@@ -968,7 +968,7 @@ export default {
   },
   methods: {
     tester() {
-      console.log('test')
+      console.log(this.templates.list)
     },
     async getMeetingList() {
       try {
@@ -1663,7 +1663,7 @@ export default {
         this.refreshId = this.id
         setTimeout(() => {
           this.currentList = this.templates.list.filter((temp) => temp.id === this.id)[0].title
-        }, 750)
+        }, 1000)
         try {
           let res = await AlertTemplate.api.runAlertTemplateNow(this.id, {
             fromWorkflow: true,
