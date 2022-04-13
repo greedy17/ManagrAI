@@ -328,6 +328,13 @@ def meeting_contacts_block_set(context):
 
 
 @block_set(required_context=["w"])
+def direct_to_meeting_block_set(context):
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    blocks = []
+    return blocks
+
+
+@block_set(required_context=["w"])
 def edit_meeting_contacts_block_set(context):
     type = context.get("type", None)
     if type:
@@ -928,6 +935,11 @@ def schedule_zoom_meeting_modal(context):
             action_id=f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={user.id}&resource={slack_const.SLACK_ACTION_RESOURCE_USER}",
             block_id="meeting_internals",
             placeholder="Search Users",
+        ),
+        block_builders.input_block(
+            "Extra Emails to add:",
+            placeholder="Separate emails with a comma",
+            block_id="meeting_extras",
         ),
     ]
     return blocks

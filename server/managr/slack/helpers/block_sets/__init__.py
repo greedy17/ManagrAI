@@ -72,5 +72,6 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "pick_resource_modal_block_set": command_views_blocksets.pick_resource_modal_block_set,
         "initial_alert_blockset": common_blocksets.initial_alert_message,
         "bulk_recap_block_set": common_blocksets.bulk_recap_block_set,
+        "direct_to_block_set": common_blocksets.direct_to_block_set,
     }
     return switcher.get(set_name)(context, *args, **kwargs)
