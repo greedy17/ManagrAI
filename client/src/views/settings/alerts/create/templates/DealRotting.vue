@@ -578,7 +578,7 @@ export default {
     },
     setRecipient() {
       this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value =
-        this.selectedChannel[0]
+        this.selectedChannel
       this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
         this.selectedChannel.id
     },
