@@ -1257,7 +1257,8 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False, bulk=False):
             "recap",
             text,
             action_id=action_with_params(
-                slack_consts.VIEW_RECAP, params=[f"u={str(user.id)}", f"form_ids={form_ids}"],
+                slack_consts.VIEW_RECAP,
+                params=[f"u={str(user.id)}", f"form_ids={'.'.join(form_ids)}"],
             ),
         ),
         block_builders.context_block(f"{main_form.template.resource} owned by {user.full_name}"),
