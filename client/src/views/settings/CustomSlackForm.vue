@@ -1159,7 +1159,6 @@ import Modal from '@/components/Modal'
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
 import CollectionSearch from '@thinknimble/collection-search'
 import DropDownSearch from '@/components/DropDownSearch'
-import Multiselect from 'vue-multiselect'
 import CustomDropDown from '@/components/CustomDropDown'
 import Paginator from '@thinknimble/paginator'
 import ActionChoice from '@/services/action-choices'
@@ -1184,9 +1183,9 @@ export default {
     Modal,
     DropDownSearch,
     CustomDropDown,
-    Multiselect,
     draggable,
     ToggleCheckBox,
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   props: {
     stageForms: {
