@@ -182,7 +182,7 @@ def meeting_contacts_block_set(context):
         ) if type else block_sets.extend(
             [
                 block_builders.simple_section(
-                    ":exclamation: Attendees below will be saved as Contacts", "mrkdwn",
+                    ":exclamation: *Attendees below will be saved as Contacts*", "mrkdwn",
                 )
             ]
         )
@@ -253,7 +253,7 @@ def meeting_contacts_block_set(context):
     else:
         block_sets.append(
             block_builders.simple_section(
-                "_All of the participants from your meeting where added by Managr to Salesforce_",
+                "*_All of the participants from your meeting where added by Managr to Salesforce_*",
                 "mrkdwn",
             )
         )
