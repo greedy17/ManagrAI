@@ -1316,7 +1316,8 @@ def process_schedule_meeting(payload, context):
                 }
             )
     if data["meeting_extras"]["plain_input"]["value"]:
-        participants.extend(data["meeting_extras"]["plain_input"]["value"].split(","))
+        for participant in data["meeting_extras"]["plain_input"]["value"].split(","):
+            participants.append({"email": participant})
     zoom_data = {
         "meeting_topic": data["meeting_topic"]["meeting_data"]["value"],
         "meeting_date": data["meeting_date"]["meeting_data"]["selected_date"],
