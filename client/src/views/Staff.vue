@@ -19,8 +19,10 @@
         <hr>
         <div class="form__List">
           <template v-for="(workflow, i) in allMeetingWorkflows">
-            <div :key="i" class="form__list_item" v-if="org.id === workflow.org_ref.id">
-              <p>{{workflow.meeting_ref.event_data.participants ? workflow.meeting_ref.event_data : workflow.meeting_ref.participants}}</p>
+            <div :key="i" class="field__list_item" v-if="org.id === workflow.org_ref.id">
+              <p>{{"event_data" in workflow.meeting_ref ? "Google Meet" : "Zoom Meeting"}}</p>
+              <p>{{workflow.meeting_ref.participants}}</p>
+              <!-- <p>{{workflow}}</p> -->
             </div>
           </template>
         </div>
