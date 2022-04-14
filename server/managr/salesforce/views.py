@@ -661,7 +661,7 @@ class SalesforceSObjectViewSet(
                     {
                         "message": message,
                         "u": user.id,
-                        "form_ids": ".".join(form_ids),
+                        "form_ids": ",".join(form_ids),
                         "bulk_status": bulk_status,
                     },
                 ),

@@ -50,6 +50,7 @@ from managr.slack.helpers.exceptions import (
     InvalidAccessToken,
 )
 from managr.slack.helpers.block_sets import get_block_set
+from managr.slack import constants as slack_consts
 from managr.zoom.zoom_helper import constants as zoom_model_consts
 from managr.zoom.zoom_helper.models import ZoomAcct, ZoomMtg
 from managr.zoom.zoom_helper.exceptions import InvalidRequest
@@ -57,6 +58,8 @@ from managr.slack.models import UserSlackIntegration
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce.serializers import MeetingWorkflowSerializer
 from managr.core.models import User
+from managr.slack.helpers.utils import action_with_params
+from managr.slack.helpers import block_builders
 from .models import ZoomAuthAccount, ZoomMeeting
 from .serializers import (
     ZoomAuthRefSerializer,
@@ -302,9 +305,20 @@ def init_fake_meeting(request):
                 channel,
                 ts,
                 access_token,
-                block_set=get_block_set(
-                    "initial_meeting_interaction", context={"w": str(workflow.id)},
-                ),
+                block_set=[
+                    *get_block_set(
+                        "direct_to_block_set",
+                        context={
+                            "slack": action_with_params(
+                                slack_consts.SHOW_INITIAL_MEETING_INTERACTION,
+                                params=[f"w={str(workflow.id)}"],
+                            ),
+                            "managr": slack_consts.MANAGR_URL,
+                            "title": f"*New Task:* Log your meeting",
+                        },
+                    ),
+                    block_builders.context_block(f"Owned by {user.full_name}"),
+                ],
             )
         except InvalidBlocksException as e:
             return logger.exception(
