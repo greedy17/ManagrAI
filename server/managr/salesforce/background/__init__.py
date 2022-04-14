@@ -1258,7 +1258,7 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False, bulk=False):
             text,
             action_id=action_with_params(
                 slack_consts.VIEW_RECAP,
-                params=[f"u={str(user.id)}", f"form_ids={'.'.join(form_ids)}"],
+                params=[f"u={str(user.id)}", f"form_ids={','.join(form_ids)}"],
             ),
         ),
         block_builders.context_block(f"{main_form.template.resource} owned by {user.full_name}"),
@@ -1446,7 +1446,7 @@ def _send_instant_alert(form_ids):
                 f"_{main_form.template.resource}_ *{resource_name}*",
                 action_id=action_with_params(
                     slack_consts.VIEW_RECAP,
-                    params=[f"u={str(user.id)}", f"form_ids={'.'.join(form_ids)}"],
+                    params=[f"u={str(user.id)}", f"form_ids={','.join(form_ids)}"],
                 ),
             ),
             block_builders.context_block(
