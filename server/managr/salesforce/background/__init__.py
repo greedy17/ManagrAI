@@ -1398,6 +1398,7 @@ def _send_instant_alert(form_ids):
     main_form = submitted_forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
     user = main_form.user
     configs = user.slack_integration.realtime_alert_configs
+    print(configs.keys())
     sobject_fields = list(
         SObjectField.objects.filter(id__in=configs.keys()).values("id", "api_name")
     )
@@ -1417,12 +1418,13 @@ def _send_instant_alert(form_ids):
         if api_name in new_data.keys():
             for object in configs[str(field["id"])].values():
                 if api_name in list(object.values()):
+                    old_value = old_data[api_name] if len(old_data) else None
                     value_check = create_alert_string(
                         object["operator"],
                         object["data_type"],
                         object["value"],
                         new_data[api_name],
-                        old_data[api_name],
+                        old_value,
                         object["title"],
                     )
                     if value_check:
