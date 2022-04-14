@@ -40,8 +40,8 @@
         </div>
         <div v-else class="flex-column">
           <button @click="emitCreateForm" class="name-cell-edit-note-button-1">
-            Update
-            <img class="invert" src="@/assets/images/edit-note.png" />
+            Edit
+            <img style="filter: invert(66%); height: 0.6rem" src="@/assets/images/edit.png" />
           </button>
           <button @click="emitGetNotes" class="name-cell-note-button-1">
             Notes
@@ -434,8 +434,8 @@ input[type='checkbox'] + label::before {
   border: none;
   border-radius: 0.2rem;
   padding: 0.25rem 0.3rem;
-  background-color: $dark-green;
-  color: white;
+  background-color: $soft-gray;
+  color: black;
   transition: all 0.3s;
   display: flex;
   align-items: center;

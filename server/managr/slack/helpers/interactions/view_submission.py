@@ -518,6 +518,8 @@ def process_submit_resource_data(payload, context):
                 "submit": {"type": "plain_text", "text": "Submit",},
             },
         }
+        if len(user.slack_integration.recap_receivers):
+            _send_recap(current_form_ids, None, True)
         try:
             slack_requests.generic_request(
                 url, select_resource_view_data, access_token=slack_access_token
@@ -528,6 +530,7 @@ def process_submit_resource_data(payload, context):
             )
 
     else:
+        print("here")
         current_forms.update(
             is_submitted=True, update_source="command", submission_date=timezone.now()
         )
@@ -536,12 +539,9 @@ def process_submit_resource_data(payload, context):
         if main_form.template.form_type == "CREATE":
             text = f"Managr created {main_form.resource_type}"
             message = f"Successfully created *{main_form.resource_type}* _{resource.name if resource.name else resource.email}_"
-
         else:
             text = f"Managr updated {main_form.resource_type}"
             message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
-        if len(user.slack_integration.recap_receivers):
-            _send_recap(current_form_ids, None, True)
         if len(user.slack_integration.realtime_alert_configs):
             _send_instant_alert(current_form_ids)
         if (
@@ -1316,7 +1316,8 @@ def process_schedule_meeting(payload, context):
                 }
             )
     if data["meeting_extras"]["plain_input"]["value"]:
-        participants.extend(data["meeting_extras"]["plain_input"]["value"].split(","))
+        for participant in data["meeting_extras"]["plain_input"]["value"].split(","):
+            participants.append({"email": participant})
     zoom_data = {
         "meeting_topic": data["meeting_topic"]["meeting_data"]["value"],
         "meeting_date": data["meeting_date"]["meeting_data"]["selected_date"],
