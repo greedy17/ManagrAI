@@ -777,3 +777,20 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             Q(user=user, datetime_created__range=(start, end))
         )
         return meetings
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="map-workflow",
+    )
+    def map_workflow(self, request, *args, **kwargs):
+        request_data = self.request.data
+        workflow = MeetingWorkflow.objects.get(id=data.get("workflow_id"))
+        resource_id = request_data.get("resource_id")
+        resource_type = request_data.get("resource_type")
+        workflow.resource_id = resource_id
+        workflow.resource_type = resource_type
+        workflow.save()
+        data = MeetingWorkflowSerializer(instance=workflow).data
+        return Response(data=data)
