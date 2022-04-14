@@ -484,6 +484,8 @@ class SalesforceSObjectViewSet(
             and all_form_data.get("meeting_type") is not None
         ):
             emit_add_update_to_sf(str(main_form.id))
+        if len(user.slack_integration.realtime_alert_configs):
+            _send_instant_alert([form_id])
         if alert_instance_id:
             from managr.alerts.models import AlertInstance
 

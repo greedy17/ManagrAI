@@ -154,7 +154,8 @@ export default new Router({
       component: () => import('@/views/settings/alerts/create/templates/ZoomRecap')
     },
     {
-      path: '/pipelines',
+      path: '/pipelines/:id?/',
+      props: true,
       name: 'Pipelines',
       component: () => import('@/views/Pipelines')
     },

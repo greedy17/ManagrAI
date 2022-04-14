@@ -61,7 +61,6 @@ def show_initial_meeting_interaction(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = workflow.user
     access_token = user.organization.slack_integration.access_token
-
     ts, channel = workflow.slack_interaction.split("|")
     try:
         res = slack_requests.update_channel_message(
@@ -746,7 +745,7 @@ def process_create_or_search_selected(payload, context):
     else:
         if not select_block:
             block_sets = get_block_set("attach_resource_interaction", {"w": workflow_id})
-            previous_blocks.insert(2, block_sets[0])
+            previous_blocks.insert(6, block_sets[0])
     try:
         res = slack_requests.update_channel_message(
             payload["channel"]["id"],

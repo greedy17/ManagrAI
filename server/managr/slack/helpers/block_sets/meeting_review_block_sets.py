@@ -34,16 +34,11 @@ from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 logger = logging.getLogger("managr")
 
 
-def _initial_interaction_message(
-    name, resource_name=None, resource_type=None, missing_attendees=False
-):
+def _initial_interaction_message(resource_name=None, resource_type=None):
     if not resource_type:
-        return f"Hey {name}, your meeting just ended!"
+        return f"*New Task:* Log your meeting"
 
-    # replace opp, review disregard
-    if missing_attendees:
-        return f"Hey {name}, your meeting just ended! Missing attendee info:exclamation:"
-    return f"Hey {name}, your meeting just ended and contacts look good :+1:"
+    return f"*New Task:* Log your meeting {resource_type} *{resource_name}*"
 
 
 def generate_edit_contact_form(field, id, value, optional=True):
@@ -169,13 +164,7 @@ def meeting_contacts_block_set(context):
         contacts = workflow.participants
         sf_account = workflow.user.salesforce_account
     else:
-        block_sets = [
-            {
-                "type": "header",
-                "text": {"type": "plain_text", "text": "Attendees below will be saved as Contacts"},
-            },
-            {"type": "divider"},
-        ]
+        block_sets = []
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
         meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
         contacts = meeting.participants
@@ -193,8 +182,7 @@ def meeting_contacts_block_set(context):
         ) if type else block_sets.extend(
             [
                 block_builders.simple_section(
-                    "_Click_ *'Edit'* _to fill in the missing details. Click_ *'Remove'* _to discard_",
-                    "mrkdwn",
+                    ":exclamation: Attendees below will be saved as Contacts", "mrkdwn",
                 )
             ]
         )
@@ -448,102 +436,80 @@ def initial_meeting_interaction_block_set(context):
         am_or_pm = unix_time.astimezone(tz).strftime("%I:%M %p")
         end_time = " " + am_or_pm
         formatted_end = end_time
+    title_section_text = (
+        _initial_interaction_message(resource.name, workflow.resource_type)
+        if workflow.resource_type
+        else _initial_interaction_message()
+    )
+    title_section = block_builders.simple_section(title_section_text, "mrkdwn")
 
-    contact_check = check_contact_last_name(context.get("w"), meeting_type)
-
-    if workflow.resource_type:
-        title_section_text = (
-            _initial_interaction_message(
-                workflow.user.first_name, resource.name, workflow.resource_type, False
-            )
-            if contact_check
-            else _initial_interaction_message(
-                workflow.user.first_name, resource.name, workflow.resource_type, True
-            )
+    blocks = [
+        title_section,
+        {"type": "divider"},
+        block_builders.section_with_accessory_block(
+            f":calendar: *{title}*\n{formatted_start} - {formatted_end}\nAttendees: {len(meeting.participants)}",
+            block_builders.simple_image_block(
+                "https://managr-images.s3.amazonaws.com/slack/logo_loading.gif", "Managr Logo"
+            ),
+            text_type="mrkdwn",
+        ),
+        block_builders.actions_block(
+            [
+                block_builders.simple_button_block(
+                    f"Review {len(meeting.participants)} Attendees",
+                    str(workflow.id),
+                    action_id=action_with_params(
+                        slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
+                        params=[f"w={str(workflow.id)}"],
+                    ),
+                )
+            ]
+        ),
+        {"type": "divider"},
+    ]
+    resource_button = (
+        f"Change {workflow.resource_type}" if workflow.resource_type else "Map to Opportunity"
+    )
+    resource_block = (
+        block_builders.section_with_button_block(
+            resource_button,
+            str(workflow.id),
+            f"*{workflow.resource_type}* {resource.name}",
+            action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
+            style="primary",
         )
-        if contact_check:
-            attendees_button = block_builders.section_with_button_block(
-                "Review Attendees",
-                str(workflow.id),
-                title_section_text,
-                action_id=action_with_params(
-                    slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
-                    params=[f"w={str(workflow.id)}"],
-                ),
-            )
-        else:
-            attendees_button = block_builders.section_with_button_block(
-                "Review Attendees",
-                str(workflow.id),
-                title_section_text,
-                action_id=action_with_params(
-                    slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
-                    params=[f"w={str(workflow.id)}"],
-                ),
-                style="danger",
-            )
-        change_opp_button = (
-            "Change Opportunity"
-            if workflow.resource_type == "Opportunity"
-            else "Map to Opportunity"
+        if workflow.resource_type
+        else block_builders.simple_button_block(
+            resource_button,
+            str(workflow.id),
+            action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
+            style="primary",
         )
-        blocks = [
-            attendees_button,
-            {"type": "divider"},
-            block_builders.section_with_button_block(
-                change_opp_button,
-                str(workflow.id),
-                f":calendar: Meeting {title} was mapped to: _{workflow.resource_type}_ *{workflow.resource.name}*",
-                action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
-            ),
-        ]
-    else:
-        participant_info = "\nAttendee info: "
-        for idx, participant in enumerate(meeting.participants):
-            if idx > 0:
-                participant_info += ", "
-            participant_info += f"{participant['email']}"
-        blocks = [
-            block_builders.section_with_button_block(
-                "Map to Opportunity",
-                str(workflow.id),
-                _initial_interaction_message(workflow.user.first_name),
-                action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
-                style="primary",
-            ),
-            {"type": "divider"},
-            block_builders.section_with_accessory_block(
-                f":calendar: *{title}*\n{formatted_start} - {formatted_end}\n Attendees: {len(meeting.participants)} {participant_info}",
-                block_builders.simple_image_block(
-                    "https://managr-images.s3.amazonaws.com/slack/logo_loading.gif", "Managr Logo"
-                ),
-                text_type="mrkdwn",
-            ),
-        ]
+    )
 
     action_blocks = []
-    action_blocks.append(
-        block_builders.simple_button_block(
-            f"Update {workflow.resource_type} + Notes",
-            str(workflow.id),
-            action_id=slack_const.ZOOM_MEETING__INIT_REVIEW,
-            style="primary",
-        ),
-    )
-    if workflow.resource_type == slack_const.FORM_RESOURCE_LEAD:
+    if workflow.resource_type:
+        blocks.append(resource_block)
         action_blocks.append(
             block_builders.simple_button_block(
-                "Convert Lead",
+                f"Update {workflow.resource_type} + Notes",
                 str(workflow.id),
-                action_id=action_with_params(
-                    slack_const.ZOOM_MEETING__CONVERT_LEAD,
-                    params=[f"u={str(workflow.user.id)}&w={str(workflow.id)}"],
-                ),
+                action_id=slack_const.ZOOM_MEETING__INIT_REVIEW,
                 style="primary",
             ),
         )
-
-    if workflow.resource_type:
+        if workflow.resource_type == slack_const.FORM_RESOURCE_LEAD:
+            action_blocks.append(
+                block_builders.simple_button_block(
+                    "Convert Lead",
+                    str(workflow.id),
+                    action_id=action_with_params(
+                        slack_const.ZOOM_MEETING__CONVERT_LEAD,
+                        params=[f"u={str(workflow.user.id)}&w={str(workflow.id)}"],
+                    ),
+                    style="primary",
+                ),
+            )
         action_blocks.append(
             block_builders.simple_button_block(
                 "No Update Needed",
@@ -552,9 +518,9 @@ def initial_meeting_interaction_block_set(context):
                 style="danger",
             )
         )
-    if contact_check and workflow.resource_type:
-        blocks.append({"type": "divider"})
-        blocks.append(block_builders.actions_block(action_blocks))
+    else:
+        action_blocks.append(resource_block)
+    blocks.append(block_builders.actions_block(action_blocks))
     return blocks
 
 
@@ -652,7 +618,7 @@ def attach_resource_interaction_block_set(context, *args, **kwargs):
     )
     blocks = [
         block_builders.static_select(
-            ":information_source: Select an object to attach to the meeting",
+            ":information_source: Select an opp to attach to the meeting",
             [
                 *map(
                     lambda resource: block_builders.option(resource, resource),

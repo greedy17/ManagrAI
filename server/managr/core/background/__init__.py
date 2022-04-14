@@ -213,6 +213,7 @@ def check_workflows_count(user_id):
 def _process_calendar_details(user_id):
     user = User.objects.get(id=user_id)
     events = user.nylas._get_calendar_data()
+    print(events)
     if events:
         processed_data = []
         for event in events:
@@ -432,6 +433,7 @@ def _send_calendar_details(
     if hasattr(user, "nylas"):
         try:
             processed_data = _process_calendar_details(user_id)
+            print(processed_data)
         except Exception as e:
             logger.exception(f"MORNING DIGEST ERROR IN SEND CALENDAR DETAILS: {e}")
             blocks = [
@@ -600,7 +602,7 @@ def process_current_alert_list(user_id):
             "Open in Pipeline",
             "OPEN_IN_PIPELINE",
             ":eyes: *Pipeline Monitor*",
-            url=ALERT_PIPELINE_URL,
+            url=f"{ALERT_PIPELINE_URL}",
         ),
     ]
     if configs:
@@ -638,6 +640,7 @@ def _process_non_zoom_meetings(user_id):
     ):
         try:
             processed_data = _process_calendar_details(user_id)
+            print(processed_data)
         except Exception as e:
             logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
         if processed_data is not None:
