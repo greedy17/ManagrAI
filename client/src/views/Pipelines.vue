@@ -476,7 +476,15 @@
               />
             </p>
             <div style="width: 100%" v-if="showWorkflowList">
-              <button
+              <div :key="i" v-for="(template, i) in templates.list">
+                <router-link v-bind:to="'/pipelines/' + `${template.id}`">
+                  <button class="list-button">
+                    {{ template.title }}
+                    <span class="filter" v-if="currentList === template.title"> active</span>
+                  </button>
+                </router-link>
+              </div>
+              <!-- <button
                 :key="i"
                 v-for="(template, i) in templates.list"
                 @click="selectList(template.title, template.id)"
@@ -484,7 +492,7 @@
               >
                 {{ template.title }}
                 <span class="filter" v-if="currentList === template.title"> active</span>
-              </button>
+              </button> -->
             </div>
           </div>
 
@@ -746,6 +754,7 @@
     <div v-if="loading">
       <Loader loaderText="Pulling in your latest Salesforce data" />
     </div>
+    <!-- <router-view :key="$route.fullPath"></router-view> -->
   </div>
 </template>
 <script>
@@ -785,6 +794,7 @@ export default {
   },
   data() {
     return {
+      id: this.$route.params.id,
       key: 0,
       updatingOpps: false,
       oppInstanceId: null,
@@ -958,14 +968,12 @@ export default {
   },
   methods: {
     tester() {
-      console.log(this.allOpps)
+      console.log(this.templates.list)
     },
     async getMeetingList() {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
-        console.log(res)
         this.meetings = res.results
-        console.log(res.results)
       } catch (e) {
         console.log(e)
       } finally {
@@ -1648,29 +1656,30 @@ export default {
       }
       this.getAllForms()
     },
-    async selectList(title, id) {
-      this.loadingWorkflows = true
-      this.allOpps = this.originalList
-      this.selectedMeeting = false
-      this.closeFilterSelection()
-      this.showList = false
-      this.refreshId = id
-      this.currentList = title
-      try {
-        let res = await AlertTemplate.api.runAlertTemplateNow(id, {
-          fromWorkflow: true,
-        })
-        this.currentWorkflow = this.allOpps.filter((opp) =>
-          res.data.ids.includes(opp.integration_id),
-        )
-        if (this.currentWorkflow.length < 1) {
-          this.updateWorkflow(id)
+    async selectList() {
+      // this.currentList = this.templates.list.filter((temp) => temp.id === this.id)[0].title
+      if (this.id) {
+        this.loadingWorkflows = true
+        this.refreshId = this.id
+        setTimeout(() => {
+          this.currentList = this.templates.list.filter((temp) => temp.id === this.id)[0].title
+        }, 1000)
+        try {
+          let res = await AlertTemplate.api.runAlertTemplateNow(this.id, {
+            fromWorkflow: true,
+          })
+          this.currentWorkflow = this.allOpps.filter((opp) =>
+            res.data.ids.includes(opp.integration_id),
+          )
+          if (this.currentWorkflow.length < 1) {
+            this.updateWorkflow(this.id)
+          }
+        } catch (error) {
+          console.log(error)
+        } finally {
+          this.selectedWorkflow = true
+          this.loadingWorkflows = false
         }
-      } catch (error) {
-        console.log(error)
-      } finally {
-        this.selectedWorkflow = true
-        this.loadingWorkflows = false
       }
     },
     async updateWorkflowList(title, id) {
@@ -1824,6 +1833,7 @@ export default {
       this.currentList = 'All Opportunities'
       this.showList = !this.showList
       this.closeFilterSelection()
+      this.$router.replace({ path: '/Pipelines' })
     },
     formatDateTime(input) {
       var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
@@ -1833,6 +1843,10 @@ export default {
       let newDate = input.replace(pattern, '$2/$3/$1')
       return newDate.split('T')[0]
     },
+  },
+  props: ['title'],
+  mounted() {
+    this.selectList()
   },
 }
 </script>
@@ -2522,5 +2536,8 @@ main:hover > span {
 }
 textarea {
   resize: none;
+}
+a {
+  text-decoration: none;
 }
 </style>

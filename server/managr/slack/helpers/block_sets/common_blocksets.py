@@ -460,7 +460,10 @@ def calendar_reminders_blockset(context):
             button_value=context.get("prep_id"),
             action_id=action_with_params(
                 slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
-                params=[f"w={str(meeting.id)}", f"type={type}",],
+                params=[
+                    f"w={str(meeting.id)}",
+                    f"type={type}",
+                ],
             ),
         ),
     ]
@@ -506,7 +509,12 @@ def calendar_reminders_blockset(context):
                 style="primary",
             )
         ),
-    blocks.append(block_builders.actions_block(action_blocks, block_id=f"type%{str(meeting.id)}",))
+    blocks.append(
+        block_builders.actions_block(
+            action_blocks,
+            block_id=f"type%{str(meeting.id)}",
+        )
+    )
     return blocks
 
 
@@ -531,7 +539,12 @@ def meeting_reminder_block_set(context):
 @block_set()
 def message_meeting_block_set():
     message = "this is a test"
-    blocks = [block_builders.simple_section(f"This is a {message}", "mrkdwn",)]
+    blocks = [
+        block_builders.simple_section(
+            f"This is a {message}",
+            "mrkdwn",
+        )
+    ]
     return blocks
 
 
@@ -590,6 +603,7 @@ def initial_alert_message(context):
     title = context.get("title")
     invocation = context.get("invocation")
     channel = context.get("channel")
+    template = context.get("template")
     config_id = context.get("config_id")
     if settings.IN_DEV:
         url = "http://localhost:8080/pipelines"
@@ -615,10 +629,12 @@ def initial_alert_message(context):
                     style="danger",
                 ),
                 block_builders.simple_button_block(
-                    "Complete in Managr", "open_in_pipeline", url=url, style="primary"
+                    "Complete in Managr",
+                    "open_in_pipeline",
+                    url=f"{url}/{template}",
+                    style="primary",
                 ),
             ]
         ),
     ]
     return blocks
-
