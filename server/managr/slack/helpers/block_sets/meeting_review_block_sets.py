@@ -164,13 +164,7 @@ def meeting_contacts_block_set(context):
         contacts = workflow.participants
         sf_account = workflow.user.salesforce_account
     else:
-        block_sets = [
-            {
-                "type": "header",
-                "text": {"type": "plain_text", "text": "Attendees below will be saved as Contacts"},
-            },
-            {"type": "divider"},
-        ]
+        block_sets = []
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
         meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
         contacts = meeting.participants
@@ -188,8 +182,7 @@ def meeting_contacts_block_set(context):
         ) if type else block_sets.extend(
             [
                 block_builders.simple_section(
-                    "_Click_ *'Edit'* _to fill in the missing details. Click_ *'Remove'* _to discard_",
-                    "mrkdwn",
+                    ":exclamation: Attendees below will be saved as Contacts", "mrkdwn",
                 )
             ]
         )
@@ -477,13 +470,26 @@ def initial_meeting_interaction_block_set(context):
     resource_button = (
         f"Change {workflow.resource_type}" if workflow.resource_type else "Map to Opportunity"
     )
-
-    resource_block = block_builders.simple_button_block(
-        resource_button, str(workflow.id), action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
+    resource_block = (
+        block_builders.section_with_button_block(
+            resource_button,
+            str(workflow.id),
+            f"*{workflow.resource_type}* {resource.name}",
+            action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
+            style="primary",
+        )
+        if workflow.resource_type
+        else block_builders.simple_button_block(
+            resource_button,
+            str(workflow.id),
+            action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
+            style="primary",
+        )
     )
+
     action_blocks = []
     if workflow.resource_type:
-        blocks.append(block_builders.actions_block([resource_block]))
+        blocks.append(resource_block)
         action_blocks.append(
             block_builders.simple_button_block(
                 f"Update {workflow.resource_type} + Notes",
@@ -612,7 +618,7 @@ def attach_resource_interaction_block_set(context, *args, **kwargs):
     )
     blocks = [
         block_builders.static_select(
-            ":information_source: Select an object to attach to the meeting",
+            ":information_source: Select an opp to attach to the meeting",
             [
                 *map(
                     lambda resource: block_builders.option(resource, resource),
