@@ -530,7 +530,6 @@ def process_submit_resource_data(payload, context):
             )
 
     else:
-        print("here")
         current_forms.update(
             is_submitted=True, update_source="command", submission_date=timezone.now()
         )

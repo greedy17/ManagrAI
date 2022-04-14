@@ -121,7 +121,7 @@ def process_meeting_review(payload, context):
             "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
             "title": {"type": "plain_text", "text": "Log Meeting"},
             "blocks": get_block_set("meeting_review_modal", context=context),
-            "submit": {"type": "plain_text", "text": "Update Salesforce"},
+            "submit": {"type": "plain_text", "text": "Submit"},
             "private_metadata": json.dumps(private_metadata),
             "external_id": f"meeting_review_modal.{str(uuid.uuid4())}",
         },
@@ -390,7 +390,7 @@ def process_stage_selected(payload, context):
         elif view_type == "update_alert_modal_block_set":
             callback_id = slack_const.PROCESS_SUBMIT_ALERT_RESOURCE_DATA
         else:
-            submit_text = "Update Salesforce"
+            submit_text = "Submit"
             callback_id = slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
     else:
         submit_text = "Next"

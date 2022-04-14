@@ -219,9 +219,7 @@ class AlertConfigViewSet(
                 id=last_instance.template.id
             ).values()[0]
             instances = alert_models.AlertInstance.objects.filter(
-                user=user,
-                config__id=config_id,
-                invocation=last_instance.invocation,
+                user=user, config__id=config_id, invocation=last_instance.invocation,
             )
             return Response(data={"instances": instances.values(), "template": template})
 
@@ -279,8 +277,7 @@ class AlertOperandViewSet(
 
 
 class AlertInstanceViewSet(
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet,
+    mixins.ListModelMixin, viewsets.GenericViewSet,
 ):
     filter_backends = (
         DjangoFilterBackend,
@@ -327,14 +324,6 @@ class RealTimeAlertViewSet(
                     configs = user.slack_integration.realtime_alert_configs
                     if str(field.id) in configs.keys():
                         if current_config["title"] in configs[str(field.id)].keys():
-                            if (
-                                str(manager.id)
-                                not in configs[str(field.id)][title]["recipients"].keys()
-                            ):
-                                configs[str(field.id)][title]["recipients"][
-                                    str(manager.id)
-                                ] = data.get("recipients")
-                        else:
                             configs[str(field.id)][title] = current_config
 
                     else:
