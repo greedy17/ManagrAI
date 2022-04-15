@@ -60,6 +60,7 @@ from .background import (
     emit_add_update_to_sf,
     _send_instant_alert,
     _process_pipeline_sync,
+    emit_meeting_workflow_tracker,
 )
 from managr.salesforce.utils import process_text_field_format
 from managr.salesforce import constants as sf_consts
@@ -885,12 +886,59 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
     def update_workflow(self, request, *args, **kwargs):
         request_data = self.request.data
+        current_form_ids = request_data.get("form_ids")
+        user = request.user
         workflow = MeetingWorkflow.objects.get(meeting=request_data.get("workflow_id"))
-        resource_id = request_data.get("resource_id")
-        resource_type = request_data.get("resource_type")
-        workflow.resource_id = resource_id
-        workflow.resource_type = resource_type
+
+        forms = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING)
+        current_form_ids = []
+        if len(forms):
+            for form in forms:
+                current_form_ids.append(str(form.id))
+                form.save_form(request_data.get("form_data"))
+        # otherwise we save the meeting review form
+        else:
+            form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
+            current_form_ids.append(str(form.id))
+            form.save_form(request_data.get("form_data"))
+        if workflow.meeting:
+            contact_forms = workflow.forms.filter(
+                template__resource=slack_const.FORM_RESOURCE_CONTACT
+            )
+        else:
+            contact_ids = [
+                participant["_form"] for participant in workflow.non_zoom_meeting.participants
+            ]
+            contact_forms = OrgCustomSlackFormInstance.objects.filter(id__in=contact_ids)
+        ops = [
+            f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}",
+            # save meeting data
+        ]
+        if request_data.get("form_data")["meeting_subject"] is not "No Update":
+            ops.append(f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}",)
+        for form in contact_forms:
+            if form.template.form_type == slack_const.FORM_TYPE_CREATE:
+                ops.append(
+                    f"{sf_consts.MEETING_REVIEW__CREATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
+                )
+            else:
+                ops.append(
+                    f"{sf_consts.MEETING_REVIEW__UPDATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
+                )
+
+        # emit all events
+        print(ops)
+        if len(workflow.operations_list):
+            workflow.operations_list = [*workflow.operations_list, *ops]
+        else:
+            workflow.operations_list = ops
+
+        if len(user.slack_integration.realtime_alert_configs):
+            _send_instant_alert(current_form_ids)
+
         workflow.save()
-        data = MeetingWorkflowSerializer(instance=workflow).data
+        workflow.begin_tasks()
+        emit_meeting_workflow_tracker(str(workflow.id))
+        data = {"success": True}
         return Response(data=data)
 
