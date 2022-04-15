@@ -227,7 +227,10 @@ def _process_calendar_details(user_id):
             data["description"] = description
             conferencing = event.get("conferencing", None)
             if conferencing:
-                data["provider"] = conferencing["provider"]
+                if "Zoom" in description:
+                    data["provider"] = "Zoom Meeting"
+                else:
+                    data["provider"] = conferencing["provider"]
             data["times"] = event.get("when", None)
             processed_data.append(data)
         return processed_data

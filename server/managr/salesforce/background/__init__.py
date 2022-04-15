@@ -1382,6 +1382,7 @@ def create_alert_string(operator, data_type, config_value, saved_value, old_valu
             return alert_string
         elif (
             data_type == "date"
+            and old_value is not None
             and datetime.strptime(saved_value, "%Y-%m-%d").month
             != datetime.strptime(old_value, "%Y-%m-%d").month
         ):
