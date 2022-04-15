@@ -518,11 +518,10 @@ def meeting_reminder_block_set(context):
         user.organization.slack_integration.access_token, user.slack_integration.zoom_channel
     )
     name = channel_info.get("channel").get("name")
-    text = "meeting" if len(not_completed) < 2 else "meetings"
+    text = "meeting" if not_completed < 2 else "meetings"
     blocks = [
         block_builders.simple_section(
-            f"FYI you have {len(not_completed)} {text} from today that still need to be logged: #{name}",
-            "mrkdwn",
+            f"{not_completed} {text} left to complete: #{name}", "mrkdwn",
         )
     ]
     return blocks
@@ -539,17 +538,8 @@ def message_meeting_block_set():
 def manager_meeting_reminder_block_set(context):
     not_completed = context.get("not_completed")
     name = context.get("name")
-    text = ""
-    for i, meeting in enumerate(not_completed):
-        text += f"{meeting['user']}: {meeting['uncompleted']}"
-        if len(not_completed) > 1 and i != len(not_completed):
-            text += ", "
-    blocks = [
-        block_builders.simple_section(
-            f"Hey {name} your team still has uncompleted meetings from today that need to be logged: {text}",
-            "mrkdwn",
-        )
-    ]
+    text = "meeting" if not_completed < 2 else "meetings"
+    blocks = [block_builders.simple_section(f"{not_completed} {text} left to complete", "mrkdwn",)]
     return blocks
 
 
