@@ -20,14 +20,26 @@
       ></FormField>
       <FormField :errors="profileForm.field.timezone.errors" label="Timezone">
         <template v-slot:input>
-          <DropDownSearch
+          <Multiselect
+            placeholder="Select Timezone"
+            style="width: 16rem"
+            v-model="selectedTimezone"
+            @input="test"
+            :options="timezones"
+            openDirection="below"
+            selectLabel="Enter"
+            label="key"
+            track-by="value"
+          />
+
+          <!-- <DropDownSearch
             :items.sync="timezones"
             v-model="profileForm.field.timezone.value"
             nullDisplay="Select your timezone"
             searchable
             local
-            @input="profileForm.field.timezone.validate()"
-          />
+            @input="profileForm.field.timezone.validate(), test()"
+          /> -->
         </template>
       </FormField>
 
@@ -56,9 +68,15 @@ import moment from 'moment-timezone'
 
 export default {
   name: 'ProfilePage',
-  components: { FormField, DropDownSearch, PulseLoadingSpinnerButton },
+  components: {
+    FormField,
+    DropDownSearch,
+    PulseLoadingSpinnerButton,
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+  },
   data() {
     return {
+      selectedTimezone: null,
       user: this.getUser,
       timezones: moment.tz.names(),
       profileForm: new UserProfileForm({}),
@@ -76,6 +94,9 @@ export default {
     })
   },
   methods: {
+    test() {
+      this.profileForm.field.timezone.value = this.selectedTimezone.value
+    },
     handleUpdate() {
       this.loading = true
       User.api
@@ -130,8 +151,7 @@ export default {
   }
 }
 ::v-deep .input-content {
-  box-shadow: 0px 2px 3px $very-light-gray;
-  border: none;
+  border: 1px solid #e8e8e8;
 }
 ::v-deep .tn-dropdown__selection-container {
   background: transparent;

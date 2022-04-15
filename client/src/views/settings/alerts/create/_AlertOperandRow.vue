@@ -1,7 +1,5 @@
 <template>
   <div class="alert-operand-row">
-    <!-- <span class="alert-operand-row--label">Alert Operands</span> -->
-
     <div style="margin-bottom: 2rem" class="centered" v-if="form.field.operandOrder.value != 0">
       <label class="alert-operand-row__condition-label">AND</label>
       <ToggleCheckBox
@@ -17,41 +15,26 @@
       <div class="centered" style="flex-direction: column">
         <p style="font-weight: bold">Select CRM Field:</p>
 
-        <!-- <CollectionSearch
-          class="fields__height"
-          :collection="objectFields"
-          itemDisplayKey="referenceDisplayLabel"
-          :showSubmitBtn="false"
-          @onSearch="
-            () => {
-              formFields.pagination = new Pagination()
-            }
-          "
-        >
-          <template v-slot:item="{ result }">
-            <div>
-              <input
-                id="key"
-                :value="result.apiName"
-                v-model="form.field.operandIdentifier.value"
-                type="radio"
-                @click="setIdentifier(result)"
-              />
-              <label for="result">{{ result['referenceDisplayLabel'] }}</label>
-            </div>
-
-            <div class="slack-form-builder__container">
-                <CheckBox :checked="addedFieldIds.includes(result.id)" />
-                <div class="slack-form-builder__sf-field">
-                  {{ result['referenceDisplayLabel'] }}
-                </div>
-              </div>
-          </template>
-        </CollectionSearch> -->
-
         <FormField :errors="form.field.operandIdentifier.errors">
           <template v-slot:input>
-            <DropDownSearch
+            <Multiselect
+              placeholder="Select Field"
+              v-model="identity"
+              :options="objectFields.list"
+              openDirection="below"
+              style="min-width: 13vw"
+              selectLabel="Enter"
+              track-by="apiName"
+              label="referenceDisplayLabel"
+            >
+              <template slot="noResult">
+                <p>No results.</p>
+              </template>
+              <template slot="afterList">
+                <p class="load-more" @click="objectFieldNextPage">Load More</p>
+              </template>
+            </Multiselect>
+            <!-- <DropDownSearch
               v-if="selectedOperandType == 'FIELD'"
               :items.sync="objectFields.list"
               :itemsRef.sync="form.field._operandIdentifier.value"
@@ -64,16 +47,16 @@
               @load-more="objectFieldNextPage"
               @search-term="onSearchFields"
               @input="form.field.operandIdentifier.validate()"
-            />
+            /> -->
           </template>
         </FormField>
-        <p
+        <!-- <p
           @click="removeIdentifier"
           :class="form.field.operandIdentifier.value ? 'selected__item' : 'invisible'"
         >
           <img src="@/assets/images/remove.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
           {{ form.field.operandIdentifier.value }}
-        </p>
+        </p> -->
       </div>
 
       <div
@@ -82,19 +65,23 @@
         style="flex-direction: column"
       >
         <p style="font-weight: bold">Select an operator:</p>
-        <!-- <div :key="value" v-for="(key, value) in operatorOpts">
-          <input
-            v-model="form.field.operandOperator.value"
-            id="key"
-            :value="key.value"
-            type="radio"
-            @click="setOperator(key)"
-          />
-          <label for="key">{{ key.label }}</label>
-        </div> -->
         <FormField :errors="form.field.operandOperator.errors">
           <template v-slot:input>
-            <DropDownSearch
+            <Multiselect
+              placeholder="Select Operator"
+              v-model="selectedOperator"
+              :options="operatorOpts"
+              openDirection="below"
+              style="min-width: 13vw"
+              selectLabel="Enter"
+              label="label"
+            >
+              <template slot="noResult">
+                <p>No results.</p>
+              </template>
+            </Multiselect>
+
+            <!-- <DropDownSearch
               :items.sync="operatorOpts"
               :itemsRef.sync="form.field._operandOperator.value"
               v-model="form.field.operandOperator.value"
@@ -104,16 +91,16 @@
               nullDisplay="Select Operators"
               searchable
               local
-            />
+            /> -->
           </template>
         </FormField>
-        <p
+        <!-- <p
           @click="removeOperator"
           :class="form.field.operandOperator.value ? 'selected__item' : 'invisible'"
         >
           <img src="@/assets/images/remove.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
           {{ form.field._operandOperator.value ? form.field._operandOperator.value.label : '' }}
-        </p>
+        </p> -->
       </div>
 
       <div class="alert-operand-row__value">
@@ -136,7 +123,21 @@
 
           <FormField :errors="form.field.operandValue.errors">
             <template v-slot:input>
-              <DropDownSearch
+              <Multiselect
+                placeholder="Select Value"
+                v-model="selectedOperand"
+                :options="picklistOpts"
+                openDirection="below"
+                style="min-width: 13vw"
+                selectLabel="Enter"
+                label="label"
+              >
+                <template slot="noResult">
+                  <p>No results.</p>
+                </template>
+              </Multiselect>
+
+              <!-- <DropDownSearch
                 :items.sync="picklistOpts"
                 :itemsRef.sync="form.field._operandValue.value"
                 v-model="form.field.operandValue.value"
@@ -145,10 +146,10 @@
                 nullDisplay="Select a value"
                 searchable
                 local
-              />
+              /> -->
             </template>
           </FormField>
-          <p
+          <!-- <p
             @click="removeValue"
             :class="form.field.operandValue.value ? 'selected__item' : 'invisible'"
           >
@@ -158,7 +159,7 @@
               alt=""
             />
             {{ form.field.operandValue.value }}
-          </p>
+          </p> -->
         </div>
 
         <template v-else>
@@ -171,7 +172,20 @@
 
             <FormField :errors="form.field.operandValue.errors">
               <template v-slot:input>
-                <DropDownSearch
+                <Multiselect
+                  placeholder="Select val test"
+                  v-model="selectedOperand"
+                  :options="valueOpts"
+                  openDirection="below"
+                  style="min-width: 13vw"
+                  selectLabel="Enter"
+                  label="label"
+                >
+                  <template slot="noResult">
+                    <p>No results.</p>
+                  </template>
+                </Multiselect>
+                <!-- <DropDownSearch
                   :items.sync="valueOpts"
                   :itemsRef.sync="form.field._operandValue.value"
                   v-model="form.field.operandValue.value"
@@ -180,12 +194,12 @@
                   nullDisplay="Select a value"
                   searchable
                   local
-                />
+                /> -->
               </template>
             </FormField>
-            <p :class="form.field.operandValue.value ? 'selected__item' : ''">
+            <!-- <p :class="form.field.operandValue.value ? 'selected__item' : ''">
               {{ form.field.operandValue.value }}
-            </p>
+            </p> -->
           </div>
 
           <div v-else>
@@ -213,7 +227,21 @@
                 </div> -->
                 <FormField :errors="form.field.operandOperator.errors">
                   <template v-slot:input>
-                    <DropDownSearch
+                    <Multiselect
+                      placeholder="Select Operator"
+                      v-model="selectedOperator"
+                      :options="operatorOpts"
+                      openDirection="below"
+                      style="min-width: 13vw"
+                      selectLabel="Enter"
+                      label="label"
+                    >
+                      <template slot="noResult">
+                        <p>No results.</p>
+                      </template>
+                    </Multiselect>
+
+                    <!-- <DropDownSearch
                       :items.sync="operatorOpts"
                       :itemsRef.sync="form.field._operandOperator.value"
                       v-model="form.field.operandOperator.value"
@@ -223,10 +251,10 @@
                       nullDisplay="Select Operators"
                       searchable
                       local
-                    />
+                    /> -->
                   </template>
                 </FormField>
-                <p
+                <!-- <p
                   style="margin-top: 2.25rem"
                   @click="removeOperator"
                   :class="form.field.operandOperator.value ? 'selected__item' : 'invisible'"
@@ -239,7 +267,7 @@
                   {{
                     form.field._operandOperator.value ? form.field._operandOperator.value.label : ''
                   }}
-                </p>
+                </p> -->
               </div>
 
               <div>
@@ -283,7 +311,7 @@
                     />
                   </template>
                 </FormField>
-                <p
+                <!-- <p
                   style="margin-top: -0.5rem; width: 90%"
                   :class="form.field.operandValue.value ? 'selected__item' : 'invisible'"
                   @click="removeValue"
@@ -294,7 +322,7 @@
                     alt=""
                   />
                   {{ form.field.operandValue.value }}
-                </p>
+                </p> -->
               </div>
 
               <!-- <div style="display: flex; align-items: center">
@@ -346,9 +374,9 @@
                 :inputType="getInputType(form.field._operandIdentifier.value)"
                 placeholder=""
               />
-              <p :class="form.field.operandValue.value ? 'selected__item' : ''">
+              <!-- <p :class="form.field.operandValue.value ? 'selected__item' : ''">
                 {{ form.field.operandValue.value }}
-              </p>
+              </p> -->
             </div>
           </div>
         </template>
@@ -399,13 +427,23 @@ export default {
    *
    */
   name: 'AlertOperandRow',
-  components: { ListContainer, ToggleCheckBox, DropDownSearch, FormField, CollectionSearch },
+  components: {
+    ListContainer,
+    ToggleCheckBox,
+    DropDownSearch,
+    FormField,
+    CollectionSearch,
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+  },
   props: {
     form: { type: AlertOperandForm },
     resourceType: { type: String },
   },
   data() {
     return {
+      identity: '',
+      selectedOperator: '',
+      selectedOperand: '',
       objectFields: CollectionManager.create({
         ModelClass: SObjectField,
         filters: { forAlerts: true, filterable: true, page: 1 },
@@ -527,6 +565,20 @@ export default {
     }
   },
   watch: {
+    identity: function () {
+      this.form.field.operandIdentifier.value = this.identity.apiName
+      this.form.field._operandIdentifier.value = this.objectFields.list.filter(
+        (item) => item.apiName === this.identity.apiName,
+      )[0]
+    },
+    selectedOperator: function () {
+      this.form.field.operandOperator.value = this.selectedOperator.value
+      this.form.field._operandOperator.value = this.selectedOperator
+    },
+    selectedOperand: function () {
+      this.form.field._operandValue.value = this.selectedOperand
+      this.form.field.operandValue.value = this.selectedOperand.value
+    },
     selectedFieldRef: {
       immediate: true,
       deep: true,
@@ -705,11 +757,20 @@ export default {
 
 ::v-deep .input-content {
   width: 6rem;
+  border: 1px solid #e8e8e8 !important;
   background-color: white;
+  box-shadow: none !important;
 }
 ::v-deep .input-form {
   width: 6rem;
-  box-shadow: 3px 4px 7px $very-light-gray;
+}
+.load-more {
+  text-align: center;
+  font-size: 13px;
+}
+.load-more:hover {
+  color: $dark-green;
+  cursor: pointer;
 }
 img {
   filter: invert(90%);
@@ -732,8 +793,6 @@ img {
   width: 10rem;
   padding: 0 0 0 1rem;
   margin: 1rem;
-  -webkit-box-shadow: 1px 4px 7px black;
-  box-shadow: 1px 4px 7px black;
 }
 ::v-deep .collection-search__result-item {
   overflow: auto;
@@ -845,8 +904,6 @@ img {
 }
 .selected__item {
   padding: 0.5rem;
-
-  box-shadow: 3px 4px 7px $very-light-gray;
   border-radius: 0.3rem;
   width: 100%;
   text-align: center;

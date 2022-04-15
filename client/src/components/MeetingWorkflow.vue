@@ -45,8 +45,8 @@
       <p v-if="resourceId">
         {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
       </p>
-      <!-- <button @click="addingOpp = !addingOpp" v-else class="add-button">Map to Opportunity</button> -->
-      <button disabled class="add-button">Map to Opportunity (coming soon)</button>
+      <button @click="addingOpp = !addingOpp" v-else class="add-button">Map to Opportunity</button>
+      <!-- <button disabled class="add-button">Map to Opportunity (coming soon)</button> -->
 
       <div v-if="addingOpp" class="add-field-section">
         <div class="add-field-section__title">
@@ -62,6 +62,7 @@
           <Multiselect
             style="width: 20vw"
             v-model="mappedOpp"
+            @select="selectOpp($event)"
             placeholder="Select Opportunity"
             selectLabel="Enter"
             label="name"
@@ -79,7 +80,7 @@
         </div>
 
         <div v-if="mappedOpp" class="add-field-section__footer">
-          <p @click="test">Add</p>
+          <p @click="mapOpp">Add</p>
         </div>
         <div v-else style="cursor: text" class="add-field-section__footer">
           <p style="color: gray; cursor: text">Add</p>
@@ -102,6 +103,7 @@ export default {
       fields: ['topic', 'participants_count', 'participants.email'],
       addingOpp: false,
       mappedOpp: null,
+      resource: null,
     }
   },
   components: {
@@ -109,6 +111,13 @@ export default {
   },
   created() {},
   methods: {
+    selectOpp(val) {
+      this.resource = val.id
+    },
+    mapOpp() {
+      this.$emit('map-opp', this.workflowId, this.resource, 'OPPORTUNITY')
+      this.addingOpp = !this.addingOpp
+    },
     formatUnix(unix) {
       let date = new Date(unix * 1000)
       let hours = date.getHours()
@@ -153,6 +162,7 @@ export default {
     resourceId: {},
     allOpps: {},
     index: {},
+    workflowId: {},
   },
 }
 </script>

@@ -4,7 +4,7 @@
       <FormField>
         <template v-slot:input>
           <Multiselect
-            placeholder="Select Users"
+            placeholder="Select Field"
             v-model="identity"
             :options="objectFields.list"
             openDirection="below"

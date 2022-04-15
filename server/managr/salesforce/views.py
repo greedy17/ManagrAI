@@ -786,7 +786,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
     def map_workflow(self, request, *args, **kwargs):
         request_data = self.request.data
-        workflow = MeetingWorkflow.objects.get(id=data.get("workflow_id"))
+        workflow = MeetingWorkflow.objects.get(meeting=request_data.get("workflow_id"))
         resource_id = request_data.get("resource_id")
         resource_type = request_data.get("resource_type")
         workflow.resource_id = resource_id

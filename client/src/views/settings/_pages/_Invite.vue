@@ -10,18 +10,39 @@
       "
     >
       <form class="invite-form" @submit.prevent="handleInvite">
-        <h2 class="invite-form__title">Invite Users via Slack</h2>
-        <h2 class="invite-form__subtitle" style="color: #199e54; margin-top: -4rem">
-          {{ $store.state.user.organizationRef.name }}
-        </h2>
+        <div class="header">
+          <h2 class="invite-form__title">Invite Users via Slack</h2>
+          <h2 class="invite-form__subtitle" style="color: #199e54">
+            {{ $store.state.user.organizationRef.name }}
+          </h2>
+        </div>
+
         <div
           style="display: flex; justify-content: center; flex-direction: column; margin-top: -3rem"
         >
           <div style="display: flex; align-items: flex-start; flex-direction: column">
-            <p style="margin-left: -2.2rem">Slack Users:</p>
+            <!-- <p style="margin-left: -2.2rem">Slack Users:</p> -->
             <FormField>
               <template v-slot:input>
-                <DropDownSearch
+                <Multiselect
+                  placeholder="Select Slack User"
+                  @input="mapMember"
+                  v-model="selectedMember"
+                  :options="slackMembers.members"
+                  openDirection="below"
+                  style="min-width: 15vw"
+                  selectLabel="Enter"
+                  track-by="id"
+                  label="realName"
+                >
+                  <template slot="noResult">
+                    <p>No results.</p>
+                  </template>
+                  <template slot="afterList">
+                    <p class="load-more" @click="listUsers(slackMembers.nextCursor)">Load More</p>
+                  </template>
+                </Multiselect>
+                <!-- <DropDownSearch
                   :items.sync="slackMembers.members"
                   v-model="userInviteForm.field.slackId.value"
                   displayKey="realName"
@@ -32,23 +53,38 @@
                   searchable
                   local
                 >
-                </DropDownSearch>
+                </DropDownSearch> -->
               </template>
             </FormField>
           </div>
           <div style="display: flex; align-items: flex-start; flex-direction: column">
-            <p style="margin-left: -2.2rem">User Level:</p>
+            <!-- <p style="margin-left: -2.2rem">User Level:</p> -->
             <FormField>
               <template v-slot:input>
+                <Multiselect
+                  placeholder="Select User Level"
+                  @input="mapUserLevel"
+                  v-model="selectedLevel"
+                  :options="userTypes"
+                  openDirection="below"
+                  style="min-width: 15vw"
+                  selectLabel="Enter"
+                  label="key"
+                >
+                  <template slot="noResult">
+                    <p>No results.</p>
+                  </template>
+                </Multiselect>
+                <!-- 
                 <DropDownSearch
                   :items.sync="userTypes"
                   v-model="userInviteForm.field.userLevel.value"
-                  nullDisplay="Select user level"
+                  nullDisplay="Select User Level"
                   local
                   searchable
                   valueKey="value"
                   @input="userInviteForm.field.userLevel.validate()"
-                />
+                /> -->
               </template>
             </FormField>
           </div>
@@ -253,6 +289,7 @@ export default {
     PulseLoadingSpinnerButton,
     FormField,
     CheckBox,
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   props: {
     inviteOpen: {
@@ -262,6 +299,8 @@ export default {
   },
   data() {
     return {
+      selectedMember: null,
+      selectedLevel: null,
       sendSlackInvite: false,
       organization: null,
       organizations: CollectionManager.create({ ModelClass: Organization }),
@@ -292,6 +331,13 @@ export default {
     await this.listUsers()
   },
   methods: {
+    mapMember() {
+      this.userInviteForm.field.slackId.value = this.selectedMember.id
+    },
+    mapUserLevel() {
+      console.log(this.selectedLevel.value)
+      this.userInviteForm.field.userLevel.value = this.selectedLevel.value
+    },
     console(wrd) {
       console.log(wrd)
     },
@@ -395,6 +441,14 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
+.load-more {
+  text-align: center;
+  font-size: 13px;
+}
+.load-more:hover {
+  color: $dark-green;
+  cursor: pointer;
+}
 .col {
   display: flex;
   flex-direction: column;
@@ -422,7 +476,9 @@ export default {
   flex-direction: row;
   justify-self: flex-start;
 }
-
+.header {
+  margin-top: -1rem;
+}
 .complete {
   border-bottom: 2.9px solid $dark-green;
   border-radius: 10%;
@@ -504,8 +560,7 @@ form,
   background-color: $dark-green;
   color: white;
   margin-top: 2.5rem;
-  height: 2.5rem;
-  width: 18vw;
+  width: 15vw;
   font-size: 16px;
   font-weight: bold;
 }
@@ -519,8 +574,8 @@ button {
 .invite-form {
   border: none;
   border-radius: 0.75rem;
-  width: 28rem;
-  height: 90vh;
+  min-width: 27vw;
+  min-height: 64vh;
   display: flex;
   align-items: center;
   // justify-content: center;
@@ -556,7 +611,7 @@ button {
 }
 .invite-list {
   &__title {
-    font-weight: bold;
+    // font-weight: bold;
     margin-bottom: 2rem;
   }
   &__container {
@@ -611,6 +666,7 @@ button {
   margin-top: 1rem;
   position: relative;
   right: 1px;
+  color: $gray;
   &:hover {
     cursor: pointer;
   }

@@ -39,20 +39,28 @@ export default class SalesforceAPI extends ModelAPI {
 }
 
 export class MeetingWorkflowAPI extends ModelAPI {
-  static ENDPOINT = 'salesforce/'
+  static ENDPOINT = 'salesforce/meeting-workflows/'
   get client() {
     return apiClient()
   }
 
   async getMeetingList() {
     try {
-      const res = await this.client.get(MeetingWorkflowAPI.ENDPOINT + 'meeting-workflows')
+      const res = await this.client.get(MeetingWorkflowAPI.ENDPOINT)
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error getting meetings' })(e)
     }
   }
 
+  async mapMeeting(workflow_id, resource_id, resource_type) {
+    try {
+      const res = await this.client.post(MeetingWorkflowAPI.ENDPOINT + 'map-workflow/', { workflow_id: workflow_id, resource_id: resource_id, resource_type: resource_type })
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error getting meetings' })(e)
+    }
+  }
 
 }
 

@@ -167,17 +167,19 @@
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
-            <div v-else-if="apiName === 'OwnerId'">
+            <div v-else-if="field.apiName === 'OwnerId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <Multiselect
                 placeholder="Select Owner"
                 v-model="currentVals[field.apiName]"
                 :options="allUsers"
-                @select="setUpdateValues(field.apiName, $event.value)"
+                @select="
+                  setUpdateValues(field.apiName, $event.salesforce_account_ref.salesforce_id)
+                "
                 openDirection="below"
                 style="width: 13vw"
                 selectLabel="Enter"
-                :track-by="salesforce_account_ref ? salesforce_account_ref.salesforce_id : ''"
+                track-by="salesforce_account_ref.salesforce_id"
                 label="full_name"
               >
                 <template slot="noResult">
@@ -186,18 +188,18 @@
               </Multiselect>
             </div>
 
-            <div v-else-if="apiName === 'AccountId'">
+            <div v-else-if="field.apiName === 'AccountId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
 
               <Multiselect
                 placeholder="Select Account"
                 v-model="currentVals[field.apiName]"
                 :options="allAccounts"
-                @select="setUpdateValues(field.apiName, $event.value)"
+                @select="setUpdateValues(field.apiName, $event.integration_id)"
                 openDirection="below"
                 style="width: 13vw"
                 selectLabel="Enter"
-                :track-by="integration_id"
+                track-by="integration_id"
                 label="name"
               >
                 <template slot="noResult">
@@ -360,14 +362,16 @@
             <div v-else-if="field.apiName === 'OwnerId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <Multiselect
-                :placeholder="`${currentVals[field.apiName]}`"
+                placeholder="Select Owner"
                 v-model="currentVals[field.apiName]"
                 :options="allUsers"
-                @select="setUpdateValues(field.apiName, $event.value)"
+                @select="
+                  setUpdateValues(field.apiName, $event.salesforce_account_ref.salesforce_id)
+                "
                 openDirection="below"
                 style="width: 13vw"
                 selectLabel="Enter"
-                :track-by="salesforce_account_ref ? salesforce_account_ref.salesforce_id : ''"
+                track-by="salesforce_account_ref.salesforce_id"
                 label="full_name"
               >
                 <template slot="noResult">
@@ -380,14 +384,14 @@
               <p>{{ field.referenceDisplayLabel }}:</p>
 
               <Multiselect
-                :placeholder="`${currentVals[field.apiName]}`"
+                placeholder="Select Account"
                 v-model="currentVals[field.apiName]"
                 :options="allAccounts"
-                @select="setUpdateValues(field.apiName, $event.value)"
+                @select="setUpdateValues(field.apiName, $event.integration_id)"
                 openDirection="below"
                 style="width: 13vw"
                 selectLabel="Enter"
-                :track-by="integration_id"
+                track-by="integration_id"
                 label="name"
               >
                 <template slot="noResult">
@@ -722,7 +726,9 @@
           <MeetingWorkflow
             v-for="(meeting, i) in meetings"
             :key="i"
+            @map-opp="mapOpp"
             :meeting="meeting.meeting_ref"
+            :workflowId="meeting.meeting"
             :resourceId="meeting.resource_id"
             :allOpps="allOpps"
             :index="i"
@@ -795,6 +801,7 @@ export default {
   data() {
     return {
       id: this.$route.params.id,
+      referenceName: null,
       key: 0,
       updatingOpps: false,
       oppInstanceId: null,
@@ -979,6 +986,18 @@ export default {
       } finally {
       }
     },
+    async mapOpp(workflow, resource, resourceType) {
+      try {
+        const res = await MeetingWorkflows.api
+          .mapMeeting(workflow, resource, resourceType)
+          .then(() => {
+            this.getMeetingList()
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+      }
+    },
     selectMeeting(name) {
       this.currentList = name
       this.showList = false
@@ -1037,6 +1056,7 @@ export default {
       }
     },
     addOperator(name) {
+      console.log(name)
       this.operatorValue = name
       switch (name) {
         case 'EQUALS':
@@ -1102,16 +1122,19 @@ export default {
       this.activeFilters.push(this.currentFilter)
     },
     valueSelected(value, name) {
+      console.log(value)
       let users = this.allUsers.filter((user) => user.salesforce_account_ref)
       let user = null
       if (name === 'OwnerId') {
+        this.referenceName = name
         user = users.filter((user) => user.salesforce_account_ref.salesforce_id === value)
         this.filterValues.push(user[0].full_name)
+        console.log(this.filterValues)
       } else if (name === 'AccountId') {
         let account = this.allAccounts.filter((account) => account.integration_id === value)
         this.filterValues.push(account[0].name)
       } else {
-        this.filterValues.push(value)
+        this.filterValues.push(value.value)
       }
     },
     selectFilter(name, type, label) {
@@ -1746,7 +1769,7 @@ export default {
     async getUsers() {
       try {
         const res = await SObjects.api.getObjects('User')
-        this.allUsers = res.results
+        this.allUsers = res.results.filter((user) => user.has_salesforce_integration)
       } catch (e) {
         console.log(e)
       }
