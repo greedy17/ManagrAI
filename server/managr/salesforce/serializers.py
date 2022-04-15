@@ -124,7 +124,7 @@ class MeetingWorkflowSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MeetingWorkflow
-        fields = ("meeting", "meeting_ref", "resource_id", "resource_type")
+        fields = ("id", "meeting", "meeting_ref", "resource_id", "resource_type")
 
     def get_meeting_ref(self, instance):
         from managr.core.serializers import MeetingPrepInstanceSerializer

@@ -30,6 +30,7 @@ from rest_framework.decorators import (
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from managr.core.models import User
+from managr.slack import constants as slack_const
 from managr.api.emails import send_html_email
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.models import OrgCustomSlackForm
@@ -786,6 +787,104 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
     def map_workflow(self, request, *args, **kwargs):
         request_data = self.request.data
+        workflow = MeetingWorkflow.objects.get(id=request_data.get("workflow_id"))
+        resource_id = request_data.get("resource_id")
+        resource_type = request_data.get("resource_type")
+        workflow.resource_id = resource_id
+        workflow.resource_type = resource_type
+        workflow.save()
+        data = MeetingWorkflowSerializer(instance=workflow).data
+        return Response(data=data)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="update-participant",
+    )
+    def update_participant(self, request, *args, **kwargs):
+        from managr.organization.models import ContactAdapter
+
+        request_data = self.request.data
+        workflow = MeetingWorkflow.objects.get(id=request_data.get("workflow_id"))
+        meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
+        contact = dict(
+            *filter(
+                lambda contact: contact["_tracking_id"] == request_data.get("tracking_id"),
+                meeting.participants,
+            )
+        )
+        form = (
+            workflow.forms.get(id=contact["_form"])
+            if workflow.meeting
+            else OrgCustomSlackFormInstance.objects.get(id=contact.get("_form"))
+        )
+        form.save_form(request_data.get("form_data"))
+        user_id = workflow.user.id if type else workflow.user_id
+        # reconstruct the current data with the updated data
+        adapter = ContactAdapter.from_api(
+            {**contact.get("secondary_data", {}), **form.saved_data}, str(user_id)
+        )
+        new_contact = {
+            **contact,
+            **adapter.as_dict,
+            "id": contact.get("id", None),
+            "__has_changes": True,
+        }
+        if type:
+            part_index = None
+            for index, participant in enumerate(workflow.participants):
+                if participant["_tracking_id"] == new_contact["_tracking_id"]:
+                    part_index = index
+                    break
+            workflow.participants = [
+                *workflow.participants[:part_index],
+                new_contact,
+                *workflow.participants[part_index + 1 :],
+            ]
+            workflow.save()
+        else:
+            part_index = None
+            for index, participant in enumerate(meeting.participants):
+                if participant["_tracking_id"] == new_contact["_tracking_id"]:
+                    part_index = index
+                    break
+            meeting.participants = [
+                *meeting.participants[:part_index],
+                new_contact,
+                *meeting.participants[part_index + 1 :],
+            ]
+            meeting.save()
+        return Response()
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="remove-participant",
+    )
+    def remove_participant(self, request, *args, **kwargs):
+        request_data = self.request.data
+        workflow = MeetingWorkflow.objects.get(meeting=request_data.get("workflow_id"))
+        meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
+        for i, part in enumerate(meeting.participants):
+            if part["_tracking_id"] == request_data.get("tracking_id"):
+                # remove its form if it exists
+                if part["_form"] not in [None, ""]:
+                    workflow.forms.filter(id=part["_form"]).delete()
+                del meeting.participants[i]
+                break
+        meeting.save()
+        return Response()
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="update-workflow",
+    )
+    def update_workflow(self, request, *args, **kwargs):
+        request_data = self.request.data
         workflow = MeetingWorkflow.objects.get(meeting=request_data.get("workflow_id"))
         resource_id = request_data.get("resource_id")
         resource_type = request_data.get("resource_type")
@@ -794,3 +893,4 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.save()
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)
+
