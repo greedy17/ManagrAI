@@ -185,9 +185,7 @@ def check_for_uncompleted_meetings(user_id, org_level=False):
 
                 if len(user_not_completed):
 
-                    not_completed.append(
-                        {"user": user.full_name, "uncompleted": len(user_not_completed)}
-                    )
+                    not_completed.extend(user_not_completed)
         else:
             # This will be for the reps
             total_meetings = MeetingWorkflow.objects.filter(user=user.id).filter(
@@ -195,7 +193,7 @@ def check_for_uncompleted_meetings(user_id, org_level=False):
             )
             not_completed = [meeting for meeting in total_meetings if meeting.progress == 0]
         if len(not_completed):
-            return {"status": True, "uncompleted": not_completed}
+            return {"status": True, "uncompleted": len(not_completed)}
     return {"status": False}
 
 
@@ -777,13 +775,18 @@ def generate_reminder_message(user_id):
                     "You've completed all your meetings today! :clap:", "mrkdwn"
                 )
             ]
+    title = (
+        "*Reminder:* Your team has uncommpleted tasks from today"
+        if user.user_level == "MANAGER"
+        else "*Reminder:* Uncompleted task from today"
+    )
     if len(meeting) or len(alert_blocks):
         try:
             slack_requests.send_channel_message(
                 user.slack_integration.channel,
                 user.organization.slack_integration.access_token,
                 block_set=[
-                    block_builders.simple_section("*Task Reminder*", "mrkdwn"),
+                    block_builders.simple_section(title, "mrkdwn"),
                     {"type": "divider"},
                     *meeting,
                     *alert_blocks,
