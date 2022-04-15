@@ -3,7 +3,7 @@ from django.utils import timezone
 
 from django.core.management.base import BaseCommand, CommandError
 from managr.core.models import User
-from managr.core.background import emit_generate_afternoon_digest, emit_generate_morning_digest
+from managr.core.background import emit_generate_reminder_message, emit_generate_morning_digest
 
 
 class Command(BaseCommand):
@@ -22,7 +22,7 @@ class Command(BaseCommand):
                     str(user.id), f"morning-digest-{user.email}-{str(uuid.uuid4())}"
                 )
             elif time == "afternoon":
-                emit_generate_afternoon_digest(
+                emit_generate_reminder_message(
                     str(user.id), f"afternoon-digest-{user.email}-{str(uuid.uuid4())}"
                 )
             else:

@@ -57,8 +57,10 @@ class CustomMeetingWorkflow(admin.ModelAdmin):
     list_filter = ("user__email",)
     list_display = (
         "datetime_created",
-        "meeting",
+        "user",
         "progress",
+        "meeting",
+        "non_zoom_meeting",
     )
     readonly_fields = ["user", "meeting", "non_zoom_meeting"]
     ordering = ("-datetime_created",)
