@@ -778,7 +778,7 @@ def generate_reminder_message(user_id):
     title = (
         "*Reminder:* Your team has uncommpleted tasks from today"
         if user.user_level == "MANAGER"
-        else "*Reminder:* Uncompleted task from today"
+        else "*Reminder:* Uncompleted tasks from today"
     )
     if len(meeting) or len(alert_blocks):
         try:
