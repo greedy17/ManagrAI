@@ -777,19 +777,22 @@ def generate_reminder_message(user_id):
                     "You've completed all your meetings today! :clap:", "mrkdwn"
                 )
             ]
-    try:
-        slack_requests.send_channel_message(
-            user.slack_integration.channel,
-            user.organization.slack_integration.access_token,
-            block_set=[
-                block_builders.simple_section("*Task Reminder*", "mrkdwn"),
-                {"type": "divider"},
-                *meeting,
-                *alert_blocks,
-            ],
-        )
-    except Exception as e:
-        logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
+    if len(meeting) or len(alert_blocks):
+        try:
+            slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                block_set=[
+                    block_builders.simple_section("*Task Reminder*", "mrkdwn"),
+                    {"type": "divider"},
+                    *meeting,
+                    *alert_blocks,
+                ],
+            )
+        except Exception as e:
+            logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
+    else:
+        return
 
 
 @background()
