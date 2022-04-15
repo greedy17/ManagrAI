@@ -1239,10 +1239,12 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False, bulk=False):
     resource_name = main_form.resource_object.name if main_form.resource_object.name else ""
     slack_access_token = user.organization.slack_integration.access_token
     title = (
-        "*Meeting Recap* :zap:" if manager_recap else f"*{main_form.template.resource} Recap* :zap:"
+        ":zap: *Instant Update:* Meeting Logged"
+        if manager_recap
+        else f":zap: *{main_form.template.resource} Recap*"
     )
     if bulk:
-        title = "*Bulk Update* :zap:"
+        title = ":zap: *Bulk Update* "
         text = ""
         for index, form in enumerate(submitted_forms):
             text += f"{form.resource_object.name}"
@@ -1399,7 +1401,6 @@ def _send_instant_alert(form_ids):
     main_form = submitted_forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
     user = main_form.user
     configs = user.slack_integration.realtime_alert_configs
-    print(configs.keys())
     sobject_fields = list(
         SObjectField.objects.filter(id__in=configs.keys()).values("id", "api_name")
     )
