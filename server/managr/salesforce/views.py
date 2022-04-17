@@ -941,5 +941,6 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.save()
         workflow.begin_tasks()
         emit_meeting_workflow_tracker(str(workflow.id))
-        data = {"success": True}
+        serializer = MeetingWorkflowSerializer(instance=workflow)
+        data = {"success": True, "workflow": serializer.data}
         return Response(data=data)
