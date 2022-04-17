@@ -61,7 +61,22 @@ export class MeetingWorkflowAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'Error getting meetings' })(e)
     }
   }
-
+  async removeParticipant(workflow_id, tracking_id) {
+    try {
+      const res = await this.client.post(MeetingWorkflowAPI.ENDPOINT + 'remove-participant/', { workflow_id: workflow_id, tracking_id: tracking_id })
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error removing participant' })(e)
+    }
+  }
+  async updateWorkflow(formData) {
+    try {
+      const res = await this.client.post(MeetingWorkflowAPI.ENDPOINT + 'update-workflow/', formData)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error updating workflow' })(e)
+    }
+  }
 }
 
 export class SObjectFormBuilderAPI extends ModelAPI {

@@ -866,7 +866,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
     def remove_participant(self, request, *args, **kwargs):
         request_data = self.request.data
-        workflow = MeetingWorkflow.objects.get(meeting=request_data.get("workflow_id"))
+        workflow = MeetingWorkflow.objects.get(id=request_data.get("workflow_id"))
         meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
         for i, part in enumerate(meeting.participants):
             if part["_tracking_id"] == request_data.get("tracking_id"):
@@ -888,7 +888,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         request_data = self.request.data
         current_form_ids = request_data.get("form_ids")
         user = request.user
-        workflow = MeetingWorkflow.objects.get(meeting=request_data.get("workflow_id"))
+        workflow = MeetingWorkflow.objects.get(id=request_data.get("workflow_id"))
 
         forms = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING)
         current_form_ids = []
@@ -898,7 +898,9 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
                 form.save_form(request_data.get("form_data"))
         # otherwise we save the meeting review form
         else:
+            print(workflow.forms)
             form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
+            print(form)
             current_form_ids.append(str(form.id))
             form.save_form(request_data.get("form_data"))
         if workflow.meeting:
@@ -914,8 +916,10 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}",
             # save meeting data
         ]
-        if request_data.get("form_data")["meeting_subject"] is not "No Update":
-            ops.append(f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}",)
+        if request_data.get("form_data")["meeting_type"] is not "No Update":
+            ops.append(
+                f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}",
+            )
         for form in contact_forms:
             if form.template.form_type == slack_const.FORM_TYPE_CREATE:
                 ops.append(
@@ -941,4 +945,3 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         emit_meeting_workflow_tracker(str(workflow.id))
         data = {"success": True}
         return Response(data=data)
-

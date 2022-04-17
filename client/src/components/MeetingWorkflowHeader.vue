@@ -1,13 +1,13 @@
 <template>
   <div class="table-row">
-    <div style="padding: 2vh" class="table-cell-checkbox-header">
+    <!-- <div style="padding: 2vh" class="table-cell-checkbox-header">
       <div>
         <input type="checkbox" id="checkAll" />
         <label for="checkAll"></label>
       </div>
-    </div>
+    </div> -->
 
-    <div class="cell-name-header">Event Name</div>
+    <div class="cell-name-header">Meeting Title</div>
     <div class="table-cell-header" v-for="(column, i) in columns" :key="i">
       {{ column }}
     </div>
@@ -19,7 +19,7 @@ export default {
   name: 'MeetingWorkflowHeader',
   data() {
     return {
-      columns: ['# of Attendees', 'Attendees', 'Account/Opportunity', 'Action'],
+      columns: ['# of Attendees', 'Attendees', 'Account/Opportunity', 'Actions'],
     }
   },
   components: {},
@@ -166,7 +166,7 @@ export default {
   border-bottom: 3px solid $light-orange-gray;
   border-radius: 2px;
   z-index: 3;
-  left: 3.5vw;
+  left: 0;
   top: 0;
   position: sticky;
   background-color: $off-white;

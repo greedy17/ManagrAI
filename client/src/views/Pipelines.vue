@@ -727,8 +727,11 @@
             v-for="(meeting, i) in meetings"
             :key="i"
             @map-opp="mapOpp"
+            @create-form="createFormInstance"
+            @no-update="NoMeetingUpdate"
+            @remove-participant="removeParticipant"
             :meeting="meeting.meeting_ref"
-            :workflowId="meeting.meeting"
+            :workflowId="meeting.id"
             :resourceId="meeting.resource_id"
             :allOpps="allOpps"
             :index="i"
@@ -847,6 +850,7 @@ export default {
       createOppForm: null,
       oppFields: [],
       instanceId: null,
+      contactInstanceId: null,
       formData: {},
       noteTitle: '',
       noteInfo: '',
@@ -980,6 +984,7 @@ export default {
     async getMeetingList() {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
+        console.log(res.results)
         this.meetings = res.results
       } catch (e) {
         console.log(e)
@@ -998,6 +1003,18 @@ export default {
       } finally {
       }
     },
+    async removeParticipant(workflow, participant) {
+      console.log(workflow)
+      console.log(participant)
+      try {
+        const res = await MeetingWorkflows.api.removeParticipant(workflow, participant).then(() => {
+          this.getMeetingList()
+        })
+      } catch (e) {
+        console.log(e)
+      }
+    },
+
     selectMeeting(name) {
       this.currentList = name
       this.showList = false
@@ -1486,6 +1503,41 @@ export default {
     },
     resetAddOpp() {
       this.addOppModalOpen = !this.addOppModalOpen
+    },
+    async updateContactInstance() {
+      try {
+        const res = await SObjects.api.createFormInstance({
+          resourceType: 'Contact',
+          formType: 'UPDATE',
+        })
+        // this.addOppModalOpen = true
+        this.contactInstanceId = res.form_id
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    async NoMeetingUpdate(meetingWorkflow, id) {
+      try {
+        // const res = await SObjects.api
+        //   .createFormInstance({
+        //     resourceType: 'Opportunity',
+        //     formType: 'UPDATE',
+        //     resourceId: id,
+        //   })
+        //   .then(async (res) => {
+        await MeetingWorkflows.api.updateWorkflow({
+          workflow_id: meetingWorkflow,
+          form_ids: [null],
+          form_data: {
+            meeting_type: 'No Update',
+            meeting_comments: 'No Update',
+          },
+        })
+        console.log(res)
+        // })
+      } catch (e) {
+        console.log(e)
+      }
     },
     async createFormInstance(id, alertInstanceId = null) {
       this.currentVals = []
@@ -2007,6 +2059,7 @@ h3 {
 }
 .table-row {
   display: table-row;
+  left: 0;
 }
 .table-cell {
   display: table-cell;
