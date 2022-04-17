@@ -795,8 +795,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type,
-            slack_const.FORM_TYPE_UPDATE,
+            resource_type, slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)
@@ -914,13 +913,11 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             ]
             contact_forms = OrgCustomSlackFormInstance.objects.filter(id__in=contact_ids)
         ops = [
+            f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}",
             f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}",
             # save meeting data
         ]
-        if request_data.get("form_data")["meeting_type"] != "No Update":
-            ops.append(
-                f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}",
-            )
+
         for form in contact_forms:
             if form.template.form_type == slack_const.FORM_TYPE_CREATE:
                 ops.append(
