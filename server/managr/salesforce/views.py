@@ -794,6 +794,9 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_id = resource_id
         workflow.resource_type = resource_type
         workflow.save()
+        workflow.add_form(
+            resource_type, slack_const.FORM_TYPE_UPDATE,
+        )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)
 
