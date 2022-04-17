@@ -795,7 +795,8 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type, slack_const.FORM_TYPE_UPDATE,
+            resource_type,
+            slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)
@@ -889,7 +890,6 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
     def update_workflow(self, request, *args, **kwargs):
         request_data = self.request.data
-        current_form_ids = request_data.get("form_ids")
         user = request.user
         workflow = MeetingWorkflow.objects.get(id=request_data.get("workflow_id"))
 
@@ -901,11 +901,12 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
                 form.save_form(request_data.get("form_data"))
         # otherwise we save the meeting review form
         else:
-            print(workflow.forms)
             form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
             print(form)
             current_form_ids.append(str(form.id))
-            form.save_form(request_data.get("form_data"))
+            print(current_form_ids)
+            print(request_data.get("form_data"))
+            form.save_form(request_data.get("form_data"), False)
         if workflow.meeting:
             contact_forms = workflow.forms.filter(
                 template__resource=slack_const.FORM_RESOURCE_CONTACT
@@ -919,7 +920,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}",
             # save meeting data
         ]
-        if request_data.get("form_data")["meeting_type"] is not "No Update":
+        if request_data.get("form_data")["meeting_type"] != "No Update":
             ops.append(
                 f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}",
             )

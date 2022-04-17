@@ -8,7 +8,7 @@
     </div> -->
     <div class="table-cell">
       <div v-if="!meeting.event_data">
-        <div @click="test">
+        <div>
           <p style="letter-spacing: 0.25px; font-size: 15px; margin-bottom: 3px">
             {{ meeting.topic ? meeting.topic : 'Meeting' }}
           </p>
@@ -35,7 +35,7 @@
       {{ meeting.participants.length }}
     </div>
 
-    <div class="table-cell">
+    <div @click="test" class="table-cell">
       <div v-for="(participant, i) in meeting.participants" :key="i" class="roww">
         <span class="red">
           <img
@@ -68,11 +68,7 @@
           </div>
 
           <div class="participant-field-section__footer">
-            <p
-              @click="$emit('remove-participant', workflowId, meeting.participants[i]._tracking_id)"
-            >
-              Yes
-            </p>
+            <p @click="$emit('remove-participant', workflowId)">Yes</p>
             <p @click="removingParticipant = !removingParticipant" style="color: #fa646a">No</p>
           </div>
         </div>
@@ -131,7 +127,7 @@
         </div>
       </div>
     </div>
-    <div class="table-cell">
+    <div v-if="!meetingUpdated" class="table-cell">
       <p v-show="!resourceId">Please map meeting in order to take action.</p>
       <div v-if="resourceId">
         <button @click="$emit('create-form', resourceId)" class="add-button">
@@ -154,10 +150,13 @@
         </div>
 
         <div class="noupdate-field-section__footer">
-          <p @click="$emit('no-update', workflowId, resourceId)">Yes</p>
+          <p @click="onNoUpdate">Yes</p>
           <p @click="noUpdate = !noUpdate" style="color: #fa646a">No</p>
         </div>
       </div>
+    </div>
+    <div v-else class="table-cell">
+      <p>testing update</p>
     </div>
   </div>
 </template>
@@ -179,12 +178,25 @@ export default {
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   watch: {
-    allOpps: 'test',
+    // allOpps: 'test',
+  },
+  props: {
+    meeting: {},
+    resourceId: {},
+    allOpps: {},
+    index: {},
+    workflowId: {},
+    meetingUpdated: {},
+    meetingLoading: {},
   },
   created() {},
   methods: {
     test() {
-      console.log('recognition')
+      console.log(this.meetingUpdated)
+    },
+    onNoUpdate() {
+      this.noUpdate = !this.noUpdate
+      this.$emit('no-update', this.workflowId, this.resourceId)
     },
     removeParticipant(index) {
       this.removingParticipant = !this.removingParticipant
@@ -194,7 +206,7 @@ export default {
       this.resource = val.id
     },
     mapOpp() {
-      this.$emit('map-opp', this.workflowId, this.resource, 'OPPORTUNITY')
+      this.$emit('map-opp', this.workflowId, this.resource, 'Opportunity')
       this.addingOpp = !this.addingOpp
     },
     formatUnix(unix) {
@@ -236,13 +248,6 @@ export default {
       return noSeconds
     },
   },
-  props: {
-    meeting: {},
-    resourceId: {},
-    allOpps: {},
-    index: {},
-    workflowId: {},
-  },
 }
 </script>
 <style lang="scss" scoped>
@@ -263,7 +268,7 @@ export default {
 .roww {
   display: flex;
   align-items: center;
-  justify-content: start;
+  justify-content: flex-start;
   cursor: pointer;
 }
 .contact-img {

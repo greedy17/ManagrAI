@@ -733,7 +733,9 @@
             :meeting="meeting.meeting_ref"
             :workflowId="meeting.id"
             :resourceId="meeting.resource_id"
+            :meetingUpdated="meeting.is_completed"
             :allOpps="allOpps"
+            :meetingLoading="meetingLoading"
             :index="i"
           />
         </div>
@@ -806,6 +808,7 @@ export default {
       id: this.$route.params.id,
       referenceName: null,
       key: 0,
+      meetingLoading: null,
       updatingOpps: false,
       oppInstanceId: null,
       oppId: null,
@@ -1516,29 +1519,24 @@ export default {
         console.log(e)
       }
     },
-    async NoMeetingUpdate(meetingWorkflow, id) {
+
+    async NoMeetingUpdate(meetingWorkflow) {
+      this.meetingLoading = true
       try {
-        // const res = await SObjects.api
-        //   .createFormInstance({
-        //     resourceType: 'Opportunity',
-        //     formType: 'UPDATE',
-        //     resourceId: id,
-        //   })
-        //   .then(async (res) => {
-        await MeetingWorkflows.api.updateWorkflow({
+        const res = await MeetingWorkflows.api.updateWorkflow({
           workflow_id: meetingWorkflow,
-          form_ids: [null],
           form_data: {
             meeting_type: 'No Update',
             meeting_comments: 'No Update',
           },
         })
-        console.log(res)
-        // })
       } catch (e) {
         console.log(e)
+      } finally {
+        this.meetingLoading = false
       }
     },
+
     async createFormInstance(id, alertInstanceId = null) {
       this.currentVals = []
       this.editOpModalOpen = true
