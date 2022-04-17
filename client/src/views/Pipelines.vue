@@ -1523,10 +1523,7 @@ export default {
         const res = await MeetingWorkflows.api
           .updateWorkflow({
             workflow_id: meetingWorkflow,
-            form_data: {
-              meeting_type: 'No Update',
-              meeting_comments: 'No Update',
-            },
+            form_data: this.formData,
           })
           .then(() => {
             this.getMeetingList()
