@@ -987,11 +987,7 @@ export default {
     async getMeetingList() {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
-<<<<<<< HEAD
         console.log(res.results)
-=======
-        console.log(res)
->>>>>>> cd31c32ab614425f977e4bd79205e05be2dba959
         this.meetings = res.results
       } catch (e) {
         console.log(e)
@@ -1011,8 +1007,6 @@ export default {
       }
     },
     async removeParticipant(workflow, participant) {
-      console.log(workflow)
-      console.log(participant)
       try {
         const res = await MeetingWorkflows.api.removeParticipant(workflow, participant).then(() => {
           this.getMeetingList()
@@ -1080,7 +1074,6 @@ export default {
       }
     },
     addOperator(name) {
-      console.log(name)
       this.operatorValue = name
       switch (name) {
         case 'EQUALS':
@@ -1527,20 +1520,41 @@ export default {
     async NoMeetingUpdate(meetingWorkflow) {
       this.meetingLoading = true
       try {
-        const res = await MeetingWorkflows.api.updateWorkflow({
-          workflow_id: meetingWorkflow,
-          form_data: {
-            meeting_type: 'No Update',
-            meeting_comments: 'No Update',
-          },
-        })
+        const res = await MeetingWorkflows.api
+          .updateWorkflow({
+            workflow_id: meetingWorkflow,
+            form_data: {
+              meeting_type: 'No Update',
+              meeting_comments: 'No Update',
+            },
+          })
+          .then(() => {
+            this.getMeetingList()
+          })
       } catch (e) {
         console.log(e)
       } finally {
         this.meetingLoading = false
       }
     },
-
+    async updateMeeting(meetingWorkflow) {
+      try {
+        const res = await MeetingWorkflows.api
+          .updateWorkflow({
+            workflow_id: meetingWorkflow,
+            form_data: {
+              meeting_type: 'No Update',
+              meeting_comments: 'No Update',
+            },
+          })
+          .then(() => {
+            this.getMeetingList()
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+      }
+    },
     async createFormInstance(id, alertInstanceId = null) {
       this.currentVals = []
       this.editOpModalOpen = true

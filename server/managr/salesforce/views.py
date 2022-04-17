@@ -902,10 +902,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         # otherwise we save the meeting review form
         else:
             form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
-            print(form)
             current_form_ids.append(str(form.id))
-            print(current_form_ids)
-            print(request_data.get("form_data"))
             form.save_form(request_data.get("form_data"), False)
         if workflow.meeting:
             contact_forms = workflow.forms.filter(
