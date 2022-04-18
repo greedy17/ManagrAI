@@ -250,13 +250,7 @@ def meeting_contacts_block_set(context):
                 ),
             ]
         )
-    else:
-        block_sets.append(
-            block_builders.simple_section(
-                "*_All of the participants from your meeting where added by Managr to Salesforce_*",
-                "mrkdwn",
-            )
-        )
+
     for i, contact in enumerate(contacts_in_sf):
         tracking_id_param = f"tracking_id={contact['_tracking_id']}"
         workflow_id_param = f"w={str(workflow.id)}"

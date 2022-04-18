@@ -460,10 +460,7 @@ def calendar_reminders_blockset(context):
             button_value=context.get("prep_id"),
             action_id=action_with_params(
                 slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
-                params=[
-                    f"w={str(meeting.id)}",
-                    f"type={type}",
-                ],
+                params=[f"w={str(meeting.id)}", f"type={type}",],
             ),
         ),
     ]
@@ -509,12 +506,7 @@ def calendar_reminders_blockset(context):
                 style="primary",
             )
         ),
-    blocks.append(
-        block_builders.actions_block(
-            action_blocks,
-            block_id=f"type%{str(meeting.id)}",
-        )
-    )
+    blocks.append(block_builders.actions_block(action_blocks, block_id=f"type%{str(meeting.id)}",))
     return blocks
 
 
@@ -526,11 +518,10 @@ def meeting_reminder_block_set(context):
         user.organization.slack_integration.access_token, user.slack_integration.zoom_channel
     )
     name = channel_info.get("channel").get("name")
-    text = "meeting" if len(not_completed) < 2 else "meetings"
+    text = "meeting" if not_completed < 2 else "meetings"
     blocks = [
         block_builders.simple_section(
-            f"FYI you have {len(not_completed)} {text} from today that still need to be logged",
-            "mrkdwn",
+            f"{not_completed} {text} left to complete: #{name}", "mrkdwn",
         )
     ]
     return blocks
@@ -539,12 +530,7 @@ def meeting_reminder_block_set(context):
 @block_set()
 def message_meeting_block_set():
     message = "this is a test"
-    blocks = [
-        block_builders.simple_section(
-            f"This is a {message}",
-            "mrkdwn",
-        )
-    ]
+    blocks = [block_builders.simple_section(f"This is a {message}", "mrkdwn",)]
     return blocks
 
 
@@ -552,13 +538,8 @@ def message_meeting_block_set():
 def manager_meeting_reminder_block_set(context):
     not_completed = context.get("not_completed")
     name = context.get("name")
-    text = "meeting" if len(not_completed) < 2 else "meetings"
-    blocks = [
-        block_builders.simple_section(
-            f"Hey {name} your team still has *{len(not_completed)} {text}* from today that needs to be logged",
-            "mrkdwn",
-        )
-    ]
+    text = "meeting" if not_completed < 2 else "meetings"
+    blocks = [block_builders.simple_section(f"{not_completed} {text} left to complete", "mrkdwn",)]
     return blocks
 
 
