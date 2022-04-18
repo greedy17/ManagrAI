@@ -138,15 +138,16 @@
                       selectLabel="Enter"
                       track-by="id"
                       label="name"
-                    />
-                    <template slot="noResult">
-                      <p>No results.</p>
-                    </template>
-                    <template slot="afterList">
-                      <p class="load-more" @click="listUserChannels(userChannelOpts.nextCursor)">
-                        Load More
-                      </p>
-                    </template>
+                    >
+                      <template slot="noResult">
+                        <p>No results.</p>
+                      </template>
+                      <template slot="afterList">
+                        <p class="load-more" @click="listUserChannels(userChannelOpts.nextCursor)">
+                          Load More
+                        </p>
+                      </template>
+                    </Multiselect>
                   </template>
                 </FormField>
               </div>
@@ -811,6 +812,15 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
+
+.load-more {
+  text-align: center;
+  font-size: 13px;
+}
+.load-more:hover {
+  color: $dark-green;
+  cursor: pointer;
+}
 
 @keyframes bounce {
   0% {
