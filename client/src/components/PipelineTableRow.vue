@@ -38,7 +38,7 @@
           <SkeletonBox width="15px" height="14px" />
           <SkeletonBox width="15px" height="14px" />
         </div>
-        <div v-else class="flex-column">
+        <div v-else class="flex-row">
           <button @click="emitCreateForm" class="name-cell-edit-note-button-1">
             <img style="filter: invert(90%); height: 0.6rem" src="@/assets/images/edit.png" />
           </button>
@@ -343,15 +343,15 @@ export default {
 }
 .flex-column {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   justify-content: flex-end;
   align-items: flex-end;
 }
 .flex-row {
-  position: relative;
   display: flex;
   flex-direction: row;
-  align-items: center;
+  justify-content: flex-end;
+  align-items: flex-end;
 }
 input[type='checkbox']:checked + label::after {
   content: '';
