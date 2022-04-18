@@ -1,8 +1,24 @@
 <template>
   <div class="filter-selection">
     <div>
-      <div class="filter-selection__title">
-        <select
+      <div class="filter-selection__body">
+        <Multiselect
+          placeholder="Select Operator"
+          style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
+          v-model="selectedOperator"
+          :options="operators"
+          @select="$emit('operator-selected', $event.value)"
+          openDirection="below"
+          selectLabel="Enter"
+          track-by="value"
+          label="label"
+        >
+          <template slot="noResult">
+            <p>No results.</p>
+          </template>
+        </Multiselect>
+
+        <!-- <select
           @input=";(value = $event.target.value), $emit('operator-selected', `${value}`)"
           v-model="selectedOperator"
           id="operators"
@@ -11,7 +27,7 @@
           <option v-for="(option, i) in operators" :value="option.value" :key="i">
             <p>{{ option.label }}</p>
           </option>
-        </select>
+        </select> -->
       </div>
 
       <div
@@ -21,7 +37,7 @@
         <input
           @input=";(value = $event.target.value), $emit('value-selected', value)"
           v-model="inputValue"
-          id="update-input"
+          id="input-field-id"
           type="number"
         />
       </div>
@@ -34,9 +50,9 @@
         class="filter-selection__body"
       >
         <div class="range-row">
-          <input id="update-input-small" type="number" />
+          <input id="input-field-id-small" type="number" />
           <p style="margin-right: 0.5rem; margin-left: 0.5rem">-</p>
-          <input id="update-input-small" type="number" />
+          <input id="input-field-id-small" type="number" />
         </div>
       </div> -->
 
@@ -44,23 +60,58 @@
         v-else-if="type === 'Picklist' || type === 'MultiPicklist'"
         class="filter-selection__body"
       >
-        <select
+        <Multiselect
+          :placeholder="'Select ' + `${filterName}`"
+          style="max-width: 20vw"
+          v-model="inputValue"
+          :options="dropdowns[apiName]"
+          @select="$emit('value-selected', $event.value)"
+          openDirection="below"
+          selectLabel="Enter"
+          track-by="value"
+          label="label"
+        >
+          <template slot="noResult">
+            <p>No results.</p>
+          </template>
+        </Multiselect>
+
+        <!-- <select
           v-model="inputValue"
           @input=";(value = $event.target.value), $emit('value-selected', `${value}`)"
-          id="update-input"
+          id="input-field-id"
         >
           <option v-for="(option, i) in dropdowns[apiName]" :key="i">
             <p>{{ option.label }}</p>
           </option>
-        </select>
+        </select> -->
       </div>
 
       <div v-else-if="type === 'Reference'" class="filter-selection__body">
-        <select
+        <Multiselect
+          v-if="apiName === 'OwnerId'"
+          placeholder="Select Owner"
+          style="max-width: 20vw"
+          v-model="inputValue"
+          @select="
+            $emit('value-selected', `${$event.salesforce_account_ref.salesforce_id}`, apiName)
+          "
+          :options="owners"
+          openDirection="below"
+          selectLabel="Enter"
+          label="full_name"
+          track-by="id"
+        >
+          <template slot="noResult">
+            <p>No results.</p>
+          </template>
+        </Multiselect>
+
+        <!-- <select
           @input=";(value = $event.target.value), $emit('value-selected', `${value}`, apiName)"
           v-model="inputValue"
           v-if="apiName === 'OwnerId'"
-          id="update-input"
+          id="input-field-id"
         >
           <option
             v-for="(owner, i) in owners"
@@ -73,18 +124,34 @@
               {{ owner.full_name }}
             </p>
           </option>
-        </select>
-
-        <select
+        </select> -->
+        <Multiselect
+          v-if="apiName === 'AccountId'"
+          placeholder="Select Account"
+          style="max-width: 20vw"
           v-model="inputValue"
-          v-else-if="apiName === 'AccountId'"
-          id="update-input"
+          @select="$emit('value-selected', `${$event.integration_id}`, apiName)"
+          :options="accounts"
+          openDirection="below"
+          selectLabel="Enter"
+          label="name"
+          track-by="integration_id"
+        >
+          <template slot="noResult">
+            <p>No results.</p>
+          </template>
+        </Multiselect>
+
+        <!-- <select
+          v-model="inputValue"
+        
+          id="input-field-id"
           @input=";(value = $event.target.value), $emit('value-selected', `${value}`, apiName)"
         >
           <option v-for="(account, i) in accounts" :key="i" :value="account.integration_id">
             <p>{{ account.name }}</p>
           </option>
-        </select>
+        </select> -->
       </div>
 
       <div v-else-if="type === 'Date' || type === 'DateTime'" class="filter-selection__body">
@@ -92,7 +159,7 @@
           @input=";(value = $event.target.value), $emit('value-selected', `${value}`)"
           type="date"
           placeholder="Select date"
-          id="update-input"
+          id="input-field-id"
           v-model="inputValue"
         />
       </div>
@@ -101,7 +168,7 @@
         <input
           @input=";(value = $event.target.value), $emit('value-selected', `${value}`)"
           v-model="inputValue"
-          id="update-input"
+          id="input-field-id"
           type="text"
         />
       </div>
@@ -114,6 +181,12 @@
               'filter-added',
               type === 'Currency' || type === 'Double' || type === 'Phone'
                 ? parseInt(inputValue)
+                : type === 'Picklist' || type === 'MultiPicklist'
+                ? inputValue.value
+                : apiName === 'OwnerId'
+                ? inputValue.salesforce_account_ref.salesforce_id
+                : apiName === 'AccountId'
+                ? inputValue.integration_id
                 : inputValue,
             )
           "
@@ -132,6 +205,10 @@
 <script>
 export default {
   name: 'FilterSelection',
+  components: {
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+  },
+
   data() {
     return {
       operators: [
@@ -144,8 +221,9 @@ export default {
         { label: 'contains', value: 'CONTAINS' },
         // { label: 'range', value: 'RANGE' },
       ],
-      selectedOperator: 'equals',
-      inputValue: '',
+      selectedOperator: '',
+      inputValue: null,
+      counter: 0,
     }
   },
   props: {
@@ -174,13 +252,11 @@ export default {
 @import '@/styles/variables';
 // @import '@/styles/buttons';
 
-#update-input-small {
-  border: none;
+#input-field-id {
+  border: 1px solid #e8e8e8;
   border-radius: 0.25rem;
-  box-shadow: 1px 1px 1px 1px $very-light-gray;
-  background-color: white;
-  min-height: 2rem;
-  width: 8vw;
+  min-height: 2.5rem;
+  width: 20vw;
 }
 .range-row {
   display: flex;
@@ -215,20 +291,17 @@ export default {
   top: 6vh;
   left: 0;
   border-radius: 0.33rem;
-  //   display: flex;
-  //   flex-direction: column;
-  //   align-items: center;
   background-color: $white;
-  width: 24vw;
+  min-width: 24vw;
+  padding: 1rem 1rem 0rem 1rem;
   overflow: scroll;
   box-shadow: 1px 1px 7px 2px $very-light-gray;
 
   &__title {
-    margin-top: 1rem;
+    margin: 1rem;
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    padding-left: 2vw;
     position: sticky;
     top: 0;
     color: $base-gray;
@@ -236,11 +309,8 @@ export default {
 
   &__body {
     display: flex;
-    margin-top: 0.5rem;
     align-items: center;
     justify-content: flex-start;
-    padding-left: 2vw;
-    width: 24vw;
   }
 
   &__footer {
@@ -248,7 +318,7 @@ export default {
     align-items: center;
     justify-content: space-evenly;
     margin-top: 1.5rem;
-    width: 100%;
+    // width: 100%;
     height: 2rem;
     border-top: 1px solid $soft-gray;
     p {

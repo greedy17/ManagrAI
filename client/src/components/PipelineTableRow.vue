@@ -38,13 +38,11 @@
           <SkeletonBox width="15px" height="14px" />
           <SkeletonBox width="15px" height="14px" />
         </div>
-        <div v-else class="flex-column">
+        <div v-else class="flex-row">
           <button @click="emitCreateForm" class="name-cell-edit-note-button-1">
-            Edit
-            <img style="filter: invert(66%); height: 0.6rem" src="@/assets/images/edit.png" />
+            <img style="filter: invert(90%); height: 0.6rem" src="@/assets/images/edit.png" />
           </button>
           <button @click="emitGetNotes" class="name-cell-note-button-1">
-            Notes
             <img class="gray" src="@/assets/images/white-note.png" />
           </button>
         </div>
@@ -350,10 +348,10 @@ export default {
   align-items: flex-end;
 }
 .flex-row {
-  position: relative;
   display: flex;
   flex-direction: row;
-  align-items: center;
+  justify-content: flex-end;
+  align-items: flex-end;
 }
 input[type='checkbox']:checked + label::after {
   content: '';
@@ -406,50 +404,39 @@ input[type='checkbox'] + label::before {
   direction: rtl;
 }
 .name-cell-note-button-1 {
-  cursor: pointer;
-  border: none;
-  border-radius: 0.2rem;
-  padding: 0.25rem 0.3rem;
+  height: 1.5rem;
+  width: 1.5rem;
+  margin-right: 0.2rem;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
   background-color: white;
-  box-shadow: 1px 1px 3px $very-light-gray;
-  max-width: 4rem;
-  transition: all 0.3s;
   display: flex;
   align-items: center;
-  justify-content: space-around;
-  font-size: 11px;
-  font-weight: 700px;
-  letter-spacing: 0.25px;
+  justify-content: center;
+  border: 1px solid #e8e8e8;
   img {
     height: 0.8rem;
+    padding: 1px;
   }
 }
 .name-cell-note-button-1:hover,
 .name-cell-edit-note-button-1:hover {
   transform: scale(1.03);
-  box-shadow: 1px 1px 1px 1px $very-light-gray;
+  box-shadow: 1px 1px 1px $soft-gray;
 }
 .name-cell-edit-note-button-1 {
-  cursor: pointer;
-  border: none;
-  border-radius: 0.2rem;
-  padding: 0.25rem 0.3rem;
-  background-color: $soft-gray;
-  color: black;
-  transition: all 0.3s;
+  height: 1.5rem;
+  width: 1.5rem;
+  margin-right: 0.2rem;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  background-color: white;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-  box-shadow: 1px 1px 2px $very-light-gray;
-  font-weight: 700px;
-  letter-spacing: 0.25px;
-  margin-top: 0.4rem;
-  margin-bottom: 0.3rem;
-
+  justify-content: center;
+  border: 1px solid #e8e8e8;
   img {
-    height: 0.8rem;
-    margin-left: 0.25rem;
+    height: 1.2rem;
   }
 }
 // ::-webkit-scrollbar {
