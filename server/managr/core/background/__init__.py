@@ -838,11 +838,11 @@ def timezone_tasks(user_id):
 @background()
 def _process_add_calendar_id(user_id):
     user = User.objects.get(id=user_id)
-    if user.nylas and user.nylas.calendar_id is None:
+    if hasattr(user, "nylas") and user.nylas.event_calendar_id is None:
         headers = dict(Authorization=f"Bearer {user.nylas.access_token}")
         calendars = requests.get(
             f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.CALENDAR_URI}", headers=headers,
-        )
+        ).json()
 
         email_check = [cal for cal in calendars if cal["name"] == user.email]
         calendar = [cal for cal in calendars if cal["read_only"] is False]
@@ -856,18 +856,18 @@ def _process_add_calendar_id(user_id):
         logger.info(
             textwrap.dedent(
                 f"""
-            ---------------------------
+            ------------------------------------
             NYLAS CALENAR ACCOUNT CREATION INFO: \n
-            ----------------------\n
             CALENDAR INFO:{calendar}\n
             EMAIL CHECK: {email_check} \n 
             CALENDAR CHECK: {calendar} \n
             FOUND CALENDAR ID: {calendar_id}\n
-            -----------------------"""
+            ------------------------------------"""
             )
         )
         if calendar_id:
-            user.nylas.calendar_id = calendar_id
+            user.nylas.event_calendar_id = calendar_id
             user.nylas.save()
         else:
             logger.info(f"COULD NOT FIND A CALENDAR ID FOR {user.email}")
+        return
