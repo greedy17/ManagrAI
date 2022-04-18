@@ -139,9 +139,7 @@ class MeetingWorkflowSerializer(serializers.ModelSerializer):
 
     def get_completed_status(self, instance):
         form = instance.forms.filter(template__form_type="UPDATE").first()
-        print(form)
         if form:
-            print(form.is_submitted)
-            if form.is_submitted:
+            if form.saved_data:
                 return True
         return False

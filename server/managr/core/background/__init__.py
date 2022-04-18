@@ -10,7 +10,7 @@ from background_task import background
 from django.db.models import Q
 from django.utils import timezone
 from managr.salesforce.adapter.exceptions import TokenExpired
-from managr.alerts.models import AlertConfig
+from managr.alerts.models import AlertConfig, AlertInstance
 from managr.core.models import User, MeetingPrepInstance
 from managr.core.serializers import MeetingPrepInstanceSerializer
 from managr.core import constants as core_consts
@@ -64,8 +64,8 @@ def emit_generate_morning_digest(user_id, verbose_name):
     return generate_morning_digest(user_id, verbose_name=verbose_name)
 
 
-def emit_generate_afternoon_digest(user_id, verbose_name):
-    return generate_afternoon_digest(user_id, verbose_name=verbose_name)
+def emit_generate_reminder_message(user_id, verbose_name):
+    return generate_reminder_message(user_id, verbose_name=verbose_name)
 
 
 def emit_check_reminders(user_id, verbose_name):
@@ -130,7 +130,7 @@ def _process_create_calendar_event(
         logger.info(f"Nylas warning {e}")
 
 
-def afternoon_digest_scheduler(self):
+def reminder_message_scheduler(self):
     if self.access_token:
         decoded = jwt.decode(
             self.access_token, algorithms="HS512", options={"verify_signature": False}
@@ -138,7 +138,7 @@ def afternoon_digest_scheduler(self):
     exp = decoded["exp"]
     expiration = datetime.fromtimestamp(exp) - timezone.timedelta(minutes=10)
 
-    t = emit_generate_afternoon_digest(str(self.id), expiration.strftime("%Y-%m-%dT%H:%M"))
+    t = emit_generate_reminder_message(str(self.id), expiration.strftime("%Y-%m-%dT%H:%M"))
     self.refresh_token_task = str(t.id)
 
 
@@ -184,7 +184,8 @@ def check_for_uncompleted_meetings(user_id, org_level=False):
                 ]
 
                 if len(user_not_completed):
-                    not_completed = [*not_completed, *user_not_completed]
+
+                    not_completed.extend(user_not_completed)
         else:
             # This will be for the reps
             total_meetings = MeetingWorkflow.objects.filter(user=user.id).filter(
@@ -192,7 +193,7 @@ def check_for_uncompleted_meetings(user_id, org_level=False):
             )
             not_completed = [meeting for meeting in total_meetings if meeting.progress == 0]
         if len(not_completed):
-            return {"status": True, "not_completed": not_completed}
+            return {"status": True, "uncompleted": len(not_completed)}
     return {"status": False}
 
 
@@ -213,7 +214,6 @@ def check_workflows_count(user_id):
 def _process_calendar_details(user_id):
     user = User.objects.get(id=user_id)
     events = user.nylas._get_calendar_data()
-    print(events)
     if events:
         processed_data = []
         for event in events:
@@ -227,7 +227,10 @@ def _process_calendar_details(user_id):
             data["description"] = description
             conferencing = event.get("conferencing", None)
             if conferencing:
-                data["provider"] = conferencing["provider"]
+                if "Zoom" in description:
+                    data["provider"] = "Zoom Meeting"
+                else:
+                    data["provider"] = conferencing["provider"]
             data["times"] = event.get("when", None)
             processed_data.append(data)
         return processed_data
@@ -433,7 +436,6 @@ def _send_calendar_details(
     if hasattr(user, "nylas"):
         try:
             processed_data = _process_calendar_details(user_id)
-            print(processed_data)
         except Exception as e:
             logger.exception(f"MORNING DIGEST ERROR IN SEND CALENDAR DETAILS: {e}")
             blocks = [
@@ -583,45 +585,34 @@ def process_get_task_list(user_id, page=1):
             task_blocks.extend(
                 custom_task_paginator_block(paged_tasks, user.slack_integration.channel)
             )
-        else:
-            task_blocks = [
-                block_builders.simple_section("You have no upcoming tasks :clap:", "mrkdwn"),
-            ]
-    else:
-        task_blocks.extend(
-            block_builders.simple_section("Seems you don't have Salesforce connected...")
-        )
     return task_blocks
 
 
 def process_current_alert_list(user_id):
     user = User.objects.get(id=user_id)
     configs = AlertConfig.objects.filter(Q(template__user=user.id, template__is_active=True))
-    alert_blocks = [
-        block_builders.section_with_button_block(
-            "Open in Pipeline",
-            "OPEN_IN_PIPELINE",
-            ":eyes: *Pipeline Monitor*",
-            url=f"{ALERT_PIPELINE_URL}",
-        ),
-    ]
+    alert_blocks = []
     if configs:
         for config in configs:
-            text = f"{config.template.title}"
-            if config.recipients[0] not in ["SELF", "OWNER"]:
-                channel_info = slack_requests.get_channel_info(
-                    user.organization.slack_integration.access_token, config.recipients[0]
+            instance_check = AlertInstance.objects.filter(
+                Q(
+                    config=config.id,
+                    datetime_created__date=datetime.today(),
+                    form_instance__isnull=True,
                 )
-                name = channel_info.get("channel").get("name")
-                text += f": #{name}"
-            alert_blocks = [
-                *alert_blocks,
-                block_builders.simple_section(text, "mrkdwn"),
-            ]
-    else:
-        alert_blocks.append(
-            block_builders.simple_section("Your pipeline look good today :thumbsup: ", "mrkdwn")
-        )
+            )
+            if len(instance_check):
+                text = f"{len(instance_check)} {config.template.title} left to complete"
+                if config.recipients[0] not in ["SELF", "OWNER"]:
+                    channel_info = slack_requests.get_channel_info(
+                        user.organization.slack_integration.access_token, config.recipients[0]
+                    )
+                    name = channel_info.get("channel").get("name")
+                    text += f": #{name}"
+                alert_blocks = [
+                    *alert_blocks,
+                    block_builders.simple_section(text, "mrkdwn"),
+                ]
     return alert_blocks
 
 
@@ -640,7 +631,6 @@ def _process_non_zoom_meetings(user_id):
     ):
         try:
             processed_data = _process_calendar_details(user_id)
-            print(processed_data)
         except Exception as e:
             logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
         if processed_data is not None:
@@ -747,51 +737,46 @@ def generate_morning_digest(user_id, invocation=None, page=1):
 
 
 @background(schedule=0)
-def generate_afternoon_digest(user_id):
+def generate_reminder_message(user_id):
     user = User.objects.get(id=user_id)
     #   check user_level for manager
+    meeting = []
+    alert_blocks = process_current_alert_list(user_id)
     if user.user_level == "MANAGER":
         meetings = check_for_uncompleted_meetings(user.id, True)
         if meetings["status"]:
             name = user.first_name if hasattr(user, "first_name") else user.full_name
             meeting = block_sets.get_block_set(
                 "manager_meeting_reminder",
-                {"u": str(user.id), "not_completed": meetings["not_completed"], "name": name,},
+                {"u": str(user.id), "not_completed": meetings["uncompleted"], "name": name,},
             )
-        else:
-            meeting = [
-                block_builders.simple_section(
-                    "Your team has logged all of their meetings today! :clap:", "mrkdwn"
-                )
-            ]
     else:
         meetings = check_for_uncompleted_meetings(user.id)
-        logger.info(f"UNCOMPLETED MEETINGS FOR {user.email}: {meetings}")
         if meetings["status"]:
             meeting = block_sets.get_block_set(
-                "meeting_reminder", {"u": str(user.id), "not_completed": meetings["not_completed"]}
+                "meeting_reminder", {"u": str(user.id), "not_completed": meetings["uncompleted"]}
             )
-        else:
-            meeting = [
-                block_builders.simple_section(
-                    "You've completed all your meetings today! :clap:", "mrkdwn"
-                )
-            ]
-    actions = block_sets.get_block_set("actions_block_set", {"u": str(user.id)})
-    try:
-        slack_requests.send_channel_message(
-            user.slack_integration.channel,
-            user.organization.slack_integration.access_token,
-            block_set=[
-                block_builders.simple_section("*Afternoon Digest* :beer:", "mrkdwn"),
-                {"type": "divider"},
-                *meeting,
-                {"type": "divider"},
-                *actions,
-            ],
-        )
-    except Exception as e:
-        logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
+    title = (
+        "*Reminder:* Your team has uncommpleted tasks from today"
+        if user.user_level == "MANAGER"
+        else "*Reminder:* Uncompleted tasks from today"
+    )
+    if len(meeting) or len(alert_blocks):
+        try:
+            slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                block_set=[
+                    block_builders.simple_section(title, "mrkdwn"),
+                    {"type": "divider"},
+                    *meeting,
+                    *alert_blocks,
+                ],
+            )
+        except Exception as e:
+            logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
+    else:
+        return
 
 
 @background()
@@ -805,10 +790,6 @@ def check_reminders(user_id):
                 core_consts.REMINDER_CONFIG[key]["MINUTE"],
             )
             if check:
-                # if key == core_consts.MORNING_DIGEST:
-                #     emit_generate_morning_digest(
-                #         user_id, f"morning-digest-{user.email}-{str(uuid.uuid4())}"
-                #     )
                 if key == core_consts.WORKFLOW_REMINDER:
                     if datetime.today().weekday() == 4:
                         workflows = check_workflows_count(user.id)
@@ -816,13 +797,13 @@ def check_reminders(user_id):
                             emit_process_send_workflow_reminder(
                                 str(user.id), workflows["workflow_count"]
                             )
-                elif key == core_consts.AFTERNOON_DIGEST_REP and user.user_level != "MANAGER":
-                    emit_generate_afternoon_digest(
-                        user_id, f"afternoon-digest-{user.email}-{str(uuid.uuid4())}"
+                elif key == core_consts.REMINDER_MESSAGE_REP and user.user_level != "MANAGER":
+                    emit_generate_reminder_message(
+                        user_id, f"reminder-message-{user.email}-{str(uuid.uuid4())}"
                     )
-                elif key == core_consts.AFTERNOON_DIGEST_MANAGER and user.user_level == "MANAGER":
-                    emit_generate_afternoon_digest(
-                        user_id, f"afternoon-digest-{user.email}-{str(uuid.uuid4())}"
+                elif key == core_consts.REMINDER_MESSAGE_MANAGER and user.user_level == "MANAGER":
+                    emit_generate_reminder_message(
+                        user_id, f"reminder-message-{user.email}-{str(uuid.uuid4())}"
                     )
     return
 

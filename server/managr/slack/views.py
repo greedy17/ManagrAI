@@ -46,7 +46,7 @@ from managr.core.serializers import UserSerializer
 from managr.core.models import User
 from managr.api.decorators import slack_api_exceptions
 from managr.organization.models import Organization
-from managr.core.cron import generate_afternoon_digest, generate_morning_digest
+from managr.core.background import generate_reminder_message, generate_morning_digest
 from .models import (
     OrganizationSlackIntegration,
     UserSlackIntegration,
@@ -1190,6 +1190,6 @@ def launch_digest(request):
     if time == "morning":
         generate_morning_digest(user.id)
     else:
-        generate_afternoon_digest(user.id)
+        generate_reminder_message(user.id)
 
     return Response()
