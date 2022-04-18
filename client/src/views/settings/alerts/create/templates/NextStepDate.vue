@@ -139,6 +139,14 @@
                       track-by="id"
                       label="name"
                     />
+                    <template slot="noResult">
+                      <p>No results.</p>
+                    </template>
+                    <template slot="afterList">
+                      <p class="load-more" @click="listUserChannels(userChannelOpts.nextCursor)">
+                        Load More
+                      </p>
+                    </template>
                   </template>
                 </FormField>
               </div>
@@ -1220,10 +1228,10 @@ textarea {
     font-size: 11px;
   }
 }
-.alerts-page__message-options-body__bindings__fields {
-  // margin: 3rem 0rem;
-  // width: 40rem;
-}
+// .alerts-page__message-options-body__bindings__fields {
+//   margin: 3rem 0rem;
+//   width: 40rem;
+// }
 .green {
   color: #ddad3c;
 }

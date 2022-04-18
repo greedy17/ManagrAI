@@ -71,7 +71,7 @@
             />
           </div>
 
-          <div class="contact-field-section__body">
+          <div v-if="!hasLastName" class="contact-field-section__body">
             <div v-for="(field, i) in contactFields" :key="i">
               <div v-if="field.dataType === 'Reference'">
                 <p>{{ field.referenceDisplayLabel }}:</p>
@@ -118,9 +118,15 @@
               </div>
             </div>
           </div>
+          <div style="margin-left: 1rem; padding: 1rem" class="contact-field-section__body" v-else>
+            Add "Last Name" to your<router-link class="link" :to="{ name: 'UpdateContacts' }"
+              >contact form</router-link
+            >in order to add Contacts.
+          </div>
 
           <div class="contact-field-section__footer">
             <p
+              v-if="!hasLastName"
               @click="
                 ;(addingContact = !addingContact),
                   $emit(
@@ -134,6 +140,7 @@
             >
               Add
             </p>
+            <p v-else style="color: #aaaaaa">Add</p>
             <p @click="addingContact = !addingContact" style="color: #fa646a">Cancel</p>
           </div>
         </div>
@@ -291,6 +298,16 @@ export default {
     accounts: {},
   },
   created() {},
+  computed: {
+    hasLastName() {
+      let lastName = null
+      this.contactFields.filter((field) => field.apiName === 'LastName')
+        ? (lastName = this.contactFields.filter((field) => field.apiName === 'LastName')[0].apiName)
+        : (lastName = null)
+      return lastName
+    },
+  },
+
   methods: {
     test() {
       console.log(this.meetingUpdated)
@@ -370,6 +387,19 @@ input {
   background-color: white;
   min-height: 2.5rem;
   width: 14vw;
+}
+.link {
+  border-bottom: 2px solid $dark-green;
+  padding-bottom: 2px;
+  padding: 2px 0px 2px 0px;
+  margin-left: -0.1rem;
+}
+a {
+  text-decoration: none;
+  padding: 0;
+  margin: 0;
+  color: $dark-green;
+  font-weight: bold;
 }
 
 .no-update {
