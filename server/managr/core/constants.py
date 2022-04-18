@@ -184,5 +184,5 @@ def REMINDERS():
         WORKFLOW_REMINDER: True,
         MORNING_DIGEST: False,
         REMINDER_MESSAGE_REP: True,
-        REMINDER_MESSAGE_MANAGER: False,
+        REMINDER_MESSAGE_MANAGER: True,
     }
