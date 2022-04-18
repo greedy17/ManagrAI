@@ -35,9 +35,9 @@
       {{ meeting.participants.length }}
     </div>
 
-    <div @click="test" class="table-cell">
+    <div class="table-cell">
       <div v-for="(participant, i) in meeting.participants" :key="i" class="roww">
-        <span class="red">
+        <span v-if="!meetingUpdated" class="red">
           <img
             src="@/assets/images/remove.svg"
             class="contact-img"
@@ -45,12 +45,63 @@
             alt=""
           />
         </span>
-        <span class="green">
-          <img class="contact-img" src="@/assets/images/add-contact.png" alt="" />
+        <span v-if="!meetingUpdated" class="green">
+          <img
+            @click="addContact(i)"
+            class="contact-img"
+            src="@/assets/images/add-contact.png"
+            alt=""
+          />
         </span>
         <p class="add-contact">
           {{ meeting.participants[i].email }}
         </p>
+        <div v-if="addingContact && selectedIndex === i" class="contact-field-section">
+          <div class="add-field-section__title">
+            <p>
+              Add <span>"{{ meeting.participants[i].email }}"</span> to your Contacts
+            </p>
+            <img
+              src="@/assets/images/closer.png"
+              style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
+              @click="addingContact = !addingContact"
+            />
+          </div>
+
+          <div class="contact-field-section__body">
+            <div v-for="(field, i) in contactFields" :key="i">
+              {{ field }}
+              <div v-if="field.dataType === 'Reference'">
+                <p>{{ field.referenceDisplayLabel }}</p>
+                <Multiselect
+                  :placeholder="'Select ' + `${field.referenceDisplayLabel}`"
+                  style="max-width: 20vw"
+                  :options="dropdowns[apiName]"
+                  openDirection="below"
+                  selectLabel="Enter"
+                  track-by="value"
+                  label="label"
+                >
+                  <template slot="noResult">
+                    <p>No results.</p>
+                    <!-- @select="$emit('value-selected', $event.value)"
+                      v-model="inputValue" -->
+                  </template>
+                </Multiselect>
+              </div>
+            </div>
+          </div>
+
+          <div class="contact-field-section__footer">
+            <p
+              @click="$emit('remove-participant', workflowId, meeting.participants[i]._tracking_id)"
+              style="color: #199e54"
+            >
+              Add
+            </p>
+            <p @click="addingContact = !addingContact" style="color: #fa646a">Cancel</p>
+          </div>
+        </div>
         <div v-if="removingParticipant && selectedIndex === i" class="participant-field-section">
           <div class="add-field-section__title">
             <p>
@@ -68,7 +119,11 @@
           </div>
 
           <div class="participant-field-section__footer">
-            <p @click="$emit('remove-participant', workflowId)">Yes</p>
+            <p
+              @click="$emit('remove-participant', workflowId, meeting.participants[i]._tracking_id)"
+            >
+              Yes
+            </p>
             <p @click="removingParticipant = !removingParticipant" style="color: #fa646a">No</p>
           </div>
         </div>
@@ -76,7 +131,7 @@
     </div>
 
     <div class="table-cell">
-      <p class="roww" @click="addingOpp = !addingOpp" v-if="resourceId">
+      <p class="roww" @click="addingOpp = !addingOpp" v-if="resourceId && !meetingUpdated">
         {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
         <img
           class="invert"
@@ -85,6 +140,7 @@
           alt=""
         />
       </p>
+      <p v-else-if="meetingUpdated">{{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}</p>
       <button @click="addingOpp = !addingOpp" v-else class="add-button">Map to Opportunity</button>
       <!-- <button disabled class="add-button">Map to Opportunity (coming soon)</button> -->
 
@@ -130,7 +186,7 @@
     <div v-if="!meetingUpdated" class="table-cell">
       <p v-show="!resourceId">Please map meeting in order to take action.</p>
       <div v-if="resourceId">
-        <button @click="$emit('create-form', resourceId)" class="add-button">
+        <button @click="$emit('update-Opportunity', workflowId, resourceId)" class="add-button">
           Update Opportunity
         </button>
         <button @click="noUpdate = !noUpdate" class="no-update">No update needed</button>
@@ -146,7 +202,7 @@
         </div>
 
         <div class="noupdate-field-section__body">
-          <p>Are you sure ?</p>
+          <section></section>
         </div>
 
         <div class="noupdate-field-section__footer">
@@ -156,7 +212,7 @@
       </div>
     </div>
     <div v-else class="table-cell">
-      <p>testing update</p>
+      <p class="success">Meeting Logged <img src="@/assets/images/complete.png" alt="" /></p>
     </div>
   </div>
 </template>
@@ -172,6 +228,7 @@ export default {
       resource: null,
       removingParticipant: null,
       selectedIndex: null,
+      addingContact: false,
     }
   },
   components: {
@@ -188,11 +245,17 @@ export default {
     workflowId: {},
     meetingUpdated: {},
     meetingLoading: {},
+    dropdowns: {},
+    contactFields: {},
   },
   created() {},
   methods: {
     test() {
       console.log(this.meetingUpdated)
+    },
+    addContact(index) {
+      this.addingContact = !this.addingContact
+      this.selectedIndex = index
     },
     onNoUpdate() {
       this.noUpdate = !this.noUpdate
@@ -281,6 +344,15 @@ export default {
 .green:hover {
   filter: invert(39%) sepia(96%) saturate(373%) hue-rotate(94deg) brightness(104%) contrast(94%);
 }
+.success {
+  display: flex;
+  align-items: center;
+  img {
+    height: 1rem;
+    filter: invert(40%) sepia(95%) saturate(370%) hue-rotate(90deg) brightness(54%) contrast(94%);
+    margin-left: 0.25rem;
+  }
+}
 .red:hover {
   img {
     filter: invert(46%) sepia(37%) saturate(832%) hue-rotate(308deg) brightness(104%) contrast(104%);
@@ -292,6 +364,49 @@ export default {
     height: 0.6rem;
   }
   cursor: pointer;
+}
+.contact-field-section {
+  z-index: 7;
+  position: absolute;
+  top: 15vh;
+  right: 0.5rem;
+  border-radius: 0.33rem;
+  background-color: $white;
+  min-width: 30vw;
+  overflow: visible;
+  box-shadow: 1px 1px 7px 2px $very-light-gray;
+  &__title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: $base-gray;
+    background-color: $off-white;
+    letter-spacing: 0.4px;
+    font-weight: bold;
+    font-size: 14px;
+    width: 100%;
+  }
+  &__body {
+    display: flex;
+    align-items: center;
+    flex-wrap: row;
+  }
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    margin-top: 1rem;
+    padding: 0rem 0.5rem;
+    width: 100%;
+    min-height: 6vh;
+    border-top: 1px solid $soft-gray;
+    p {
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+      color: $dark-green;
+    }
+  }
 }
 .noupdate-field-section {
   z-index: 7;

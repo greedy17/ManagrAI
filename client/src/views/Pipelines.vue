@@ -402,7 +402,11 @@
           </section>
         </div>
         <div class="flex-end-opp">
-          <div style="display: flex; align-items: center">
+          <div v-if="updatingMeeting" style="display: flex; align-items: center">
+            <button @click="onUpdateMeeting" class="add-button__">Update</button>
+            <p @click="resetEdit" class="cancel">Cancel</p>
+          </div>
+          <div v-else style="display: flex; align-items: center">
             <button @click="updateResource()" class="add-button__">Update</button>
             <p @click="resetEdit" class="cancel">Cancel</p>
           </div>
@@ -727,9 +731,11 @@
             v-for="(meeting, i) in meetings"
             :key="i"
             @map-opp="mapOpp"
-            @create-form="createFormInstance"
+            @update-Opportunity="updateMeeting"
             @no-update="NoMeetingUpdate"
             @remove-participant="removeParticipant"
+            :dropdowns="picklistQueryOptsContacts"
+            :contactFields="updateContactForm"
             :meeting="meeting.meeting_ref"
             :workflowId="meeting.id"
             :resourceId="meeting.resource_id"
@@ -808,6 +814,9 @@ export default {
       id: this.$route.params.id,
       referenceName: null,
       key: 0,
+      meetingKey: 0,
+      updatingMeeting: false,
+      meetingWorkflowId: null,
       meetingLoading: null,
       updatingOpps: false,
       oppInstanceId: null,
@@ -851,6 +860,7 @@ export default {
       updateOppForm: null,
       oppFormCopy: null,
       createOppForm: null,
+      updateContactForm: null,
       oppFields: [],
       instanceId: null,
       contactInstanceId: null,
@@ -858,6 +868,7 @@ export default {
       noteTitle: '',
       noteInfo: '',
       picklistQueryOpts: {},
+      picklistQueryOptsContacts: {},
       instanceIds: [],
       allAccounts: null,
       allUsers: null,
@@ -1516,25 +1527,8 @@ export default {
         console.log(e)
       }
     },
-
     async NoMeetingUpdate(meetingWorkflow) {
       this.meetingLoading = true
-      try {
-        const res = await MeetingWorkflows.api
-          .updateWorkflow({
-            workflow_id: meetingWorkflow,
-            form_data: this.formData,
-          })
-          .then(() => {
-            this.getMeetingList()
-          })
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.meetingLoading = false
-      }
-    },
-    async updateMeeting(meetingWorkflow) {
       try {
         const res = await MeetingWorkflows.api
           .updateWorkflow({
@@ -1550,10 +1544,60 @@ export default {
       } catch (e) {
         console.log(e)
       } finally {
+        this.meetingLoading = false
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 2000,
+          message: 'Meeting Logged successfully',
+          sub: 'No update necessary',
+        })
+      }
+    },
+    async updateMeeting(meetingWorkflow, id) {
+      this.currentVals = []
+      this.editOpModalOpen = true
+      this.updatingMeeting = true
+      this.meetingWorkflowId = meetingWorkflow
+      try {
+        const res = await SObjects.api.createFormInstance({
+          resourceType: 'Opportunity',
+          formType: 'UPDATE',
+          resourceId: id,
+        })
+        this.currentVals = res.current_values
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    async onUpdateMeeting() {
+      this.meetingLoading = true
+      this.editOpModalOpen = false
+      try {
+        const res = await MeetingWorkflows.api
+          .updateWorkflow({
+            workflow_id: this.meetingWorkflowId,
+            form_data: this.formData,
+          })
+          .then((res) => {
+            console.log(res)
+            this.getMeetingList()
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.updatingMeeting = false
+        this.meetingLoading = false
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 2000,
+          message: 'Meeting Logged successfully',
+          sub: 'Opportunity updated',
+        })
       }
     },
     async createFormInstance(id, alertInstanceId = null) {
       this.currentVals = []
+      this.updatingMeeting = false
       this.editOpModalOpen = true
       this.alertInstanceId = alertInstanceId
       try {
@@ -1796,8 +1840,29 @@ export default {
         this.createOppForm = res.filter(
           (obj) => obj.formType === 'CREATE' && obj.resource === 'Opportunity',
         )
+        this.updateContactForm = res.filter(
+          (obj) => obj.formType === 'UPDATE' && obj.resource === 'Contact',
+        )
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
         this.createOppForm = this.createOppForm[0].fieldsRef
+        this.updateContactForm = this.updateContactForm[0].fieldsRef
+
+        for (let i = 0; i < this.updateContactForm.length; i++) {
+          if (
+            this.updateContactForm[i].dataType === 'Picklist' ||
+            this.updateContactForm[i].dataType === 'MultiPicklist'
+          ) {
+            this.picklistQueryOptsContacts[this.updateContactForm[i].apiName] =
+              this.updateContactForm[i].apiName
+          } else if (this.updateContactForm[i].dataType === 'Reference') {
+            this.picklistQueryOptsContacts[this.updateContactForm[i].referenceDisplayLabel] =
+              this.updateContactForm[i].referenceDisplayLabel
+          }
+        }
+        for (let i in this.picklistQueryOptsContacts) {
+          this.picklistQueryOptsContacts[i] = this.listPicklists(i, { picklistFor: i })
+        }
+
         for (let i = 0; i < this.oppFormCopy.length; i++) {
           if (
             this.oppFormCopy[i].dataType === 'Picklist' ||
@@ -1826,6 +1891,9 @@ export default {
             field.apiName !== 'Name' &&
             field.apiName !== 'AccountId' &&
             field.apiName !== 'OwnerId',
+        )
+        this.updateContactForm = this.updateContactForm.filter(
+          (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
         )
       } catch (error) {
         console.log(error)
