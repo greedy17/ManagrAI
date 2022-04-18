@@ -100,15 +100,14 @@ class AlertTemplateViewSet(
             while True:
                 sf = self.request.user.salesforce_account
                 try:
-                    res = sf.adapter_class.execute_alert_query(
-                        template.url_str(self.request.user, config.id), template.resource_type
-                    )
-
-                    res_data = [item.integration_id for item in res]
-
-                    logger.info(
-                        f"Pulled total {len(res)} from request for {template.resource_type} matching alert query"
-                    )
+                    users = config.target_users
+                    res_data = []
+                    for user in users:
+                        if hasattr(user, "salesforce_account"):
+                            res = sf.adapter_class.execute_alert_query(
+                                template.url_str(user, config.id), template.resource_type
+                            )
+                            res_data.extend([item.integration_id for item in res])
                     break
                 except TokenExpired:
                     if attempts >= 5:
