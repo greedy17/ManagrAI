@@ -740,6 +740,7 @@ def generate_morning_digest(user_id, invocation=None, page=1):
 def generate_reminder_message(user_id):
     user = User.objects.get(id=user_id)
     #   check user_level for manager
+    meeting = []
     alert_blocks = process_current_alert_list(user_id)
     if user.user_level == "MANAGER":
         meetings = check_for_uncompleted_meetings(user.id, True)
@@ -749,24 +750,12 @@ def generate_reminder_message(user_id):
                 "manager_meeting_reminder",
                 {"u": str(user.id), "not_completed": meetings["uncompleted"], "name": name,},
             )
-        else:
-            meeting = [
-                block_builders.simple_section(
-                    "Your team has logged all of their meetings today! :clap:", "mrkdwn"
-                )
-            ]
     else:
         meetings = check_for_uncompleted_meetings(user.id)
         if meetings["status"]:
             meeting = block_sets.get_block_set(
                 "meeting_reminder", {"u": str(user.id), "not_completed": meetings["uncompleted"]}
             )
-        else:
-            meeting = [
-                block_builders.simple_section(
-                    "You've completed all your meetings today! :clap:", "mrkdwn"
-                )
-            ]
     title = (
         "*Reminder:* Your team has uncommpleted tasks from today"
         if user.user_level == "MANAGER"
