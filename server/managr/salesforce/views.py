@@ -795,8 +795,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type,
-            slack_const.FORM_TYPE_UPDATE,
+            resource_type, slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)
@@ -836,7 +835,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             "id": contact.get("id", None),
             "__has_changes": True,
         }
-        if type:
+        if workflow.non_zoom_meeting is not None:
             part_index = None
             print(workflow)
             for index, participant in enumerate(workflow.participants):
