@@ -583,28 +583,13 @@ def process_get_task_list(user_id, page=1):
             task_blocks.extend(
                 custom_task_paginator_block(paged_tasks, user.slack_integration.channel)
             )
-        else:
-            task_blocks = [
-                block_builders.simple_section("You have no upcoming tasks :clap:", "mrkdwn"),
-            ]
-    else:
-        task_blocks.extend(
-            block_builders.simple_section("Seems you don't have Salesforce connected...")
-        )
     return task_blocks
 
 
 def process_current_alert_list(user_id):
     user = User.objects.get(id=user_id)
     configs = AlertConfig.objects.filter(Q(template__user=user.id, template__is_active=True))
-    alert_blocks = [
-        block_builders.section_with_button_block(
-            "Open in Pipeline",
-            "OPEN_IN_PIPELINE",
-            ":eyes: *Pipeline Monitor*",
-            url=f"{ALERT_PIPELINE_URL}",
-        ),
-    ]
+    alert_blocks = []
     if configs:
         for config in configs:
             text = f"{config.template.title}"
@@ -618,10 +603,7 @@ def process_current_alert_list(user_id):
                 *alert_blocks,
                 block_builders.simple_section(text, "mrkdwn"),
             ]
-    else:
-        alert_blocks.append(
-            block_builders.simple_section("Your pipeline look good today :thumbsup: ", "mrkdwn")
-        )
+
     return alert_blocks
 
 
