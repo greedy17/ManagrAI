@@ -71,7 +71,7 @@
             />
           </div>
 
-          <div v-if="!hasLastName" class="contact-field-section__body">
+          <div v-if="hasLastName" class="contact-field-section__body">
             <div v-for="(field, i) in contactFields" :key="i">
               <div v-if="field.dataType === 'Reference'">
                 <p>{{ field.referenceDisplayLabel }}:</p>
@@ -126,7 +126,7 @@
 
           <div class="contact-field-section__footer">
             <p
-              v-if="!hasLastName"
+              v-if="hasLastName"
               @click="
                 ;(addingContact = !addingContact),
                   $emit(
