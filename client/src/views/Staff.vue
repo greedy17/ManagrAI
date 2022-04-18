@@ -26,7 +26,15 @@
           <div class="form__List">
             <div :key="i" class="field__list_item" v-for="(workflow, i) in orgMeetingWorkflows">
               <p>{{ 'event_data' in workflow.meeting_ref ? 'Google Meet' : 'Zoom Meeting' }}</p>
-              <p>{{ workflow.meeting_ref.participants }}</p>
+              <p>{{ workflow }}</p>
+              <ul>
+                <li
+                  v-for="(i, participant) in workflow.meeting_ref.participants.values()"
+                  :key="participant['email']"
+                >
+                  {{ participant }}
+                </li>
+              </ul>
               <p>{{ workflow }}</p>
             </div>
           </div>
@@ -79,10 +87,10 @@ export default {
       }
     },
     filterOrgForms(org_id) {
-      return this.allForms.map((form) => form.organization == org_id)
+      return this.allForms.filter((form) => form.organization == org_id)
     },
     filterMeetingWorkflow(org_id) {
-      return this.allMeetingWorkflows.map((workflow) => workflow.org_ref.id == org_id)
+      return this.allMeetingWorkflows.filter((workflow) => workflow.org_ref.id == org_id)
     },
     showOrgData(org_id) {
       console.log(org_id)
