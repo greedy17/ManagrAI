@@ -2,32 +2,35 @@
   <div class="staff">
     <div class="staff__drawer">
       <div :key="i" v-for="(org, i) in organizations.list">
-        <h2 @click="this.selected_org = org.id">{{ org.name }}</h2>
+        <h2 @click="selected_org = org.id">{{ org.name }}</h2>
       </div>
     </div>
     <div class="staff__main_page">
       <template v-if="selected_org">
-        <div class="form__list">
-          <div :key="i" class="form__list_item" v-for="(form, i) in orgForms">
-            <h3>{{ form.formType }} {{ form.resource }}</h3>
-            <p>Form Fields:</p>
-            <ul v-if="form.fieldsRef.length > 1">
-              <li class="field__list_item" :key="i" v-for="(field, i) in form.fieldsRef">
-                <span>{{ field.order }}-{{ field.label }}</span
-                ><span class="sub_text">{{ field.dataType }}</span>
-              </li>
-            </ul>
-            <p v-else>Form is not created</p>
+        <div v-if="loading">Loading</div>
+        <template v-else>
+          <div class="form__list">
+            <div :key="i" class="form__list_item" v-for="(form, i) in orgForms">
+              <h3>{{ form.formType }} {{ form.resource }}</h3>
+              <p>Form Fields:</p>
+              <ul v-if="form.fieldsRef.length > 1">
+                <li class="field__list_item" :key="i" v-for="(field, i) in form.fieldsRef">
+                  <span>{{ field.order }}-{{ field.label }}</span
+                  ><span class="sub_text">{{ field.dataType }}</span>
+                </li>
+              </ul>
+              <p v-else>Form is not created</p>
+            </div>
           </div>
-        </div>
-        <hr />
-        <div class="form__List">
-          <div :key="i" class="field__list_item" v-for="(workflow, i) in orgMeetingWorkflows">
-            <p>{{ 'event_data' in workflow.meeting_ref ? 'Google Meet' : 'Zoom Meeting' }}</p>
-            <p>{{ workflow.meeting_ref.participants }}</p>
-            <p>{{ workflow }}</p>
+          <hr />
+          <div class="form__List">
+            <div :key="i" class="field__list_item" v-for="(workflow, i) in orgMeetingWorkflows">
+              <p>{{ 'event_data' in workflow.meeting_ref ? 'Google Meet' : 'Zoom Meeting' }}</p>
+              <p>{{ workflow.meeting_ref.participants }}</p>
+              <p>{{ workflow }}</p>
+            </div>
           </div>
-        </div>
+        </template>
       </template>
     </div>
   </div>
@@ -43,6 +46,7 @@ export default {
   name: 'Staff',
   data() {
     return {
+      loading: true,
       allForms: null,
       allMeetingWorkflows: null,
       selected_org: null,
@@ -81,8 +85,11 @@ export default {
       return this.allMeetingWorkflows.map((workflow) => workflow.org_ref.id == org_id)
     },
     showOrgData(org_id) {
+      console.log(org_id)
       this.orgForms = this.filterOrgForms(org_id)
+      console.log(this.orgForms)
       this.orgMeetingWorkflows = this.filterMeetingWorkflow(org_id)
+      console.log(this.orgMeetingWorkflows)
     },
   },
   created() {
@@ -93,6 +100,10 @@ export default {
   watch: {
     organizations() {
       this.selected_org = organizations[0].id
+    },
+    selected_org() {
+      this.showOrgData(this.selected_org)
+      this.loading = false
     },
   },
 }
