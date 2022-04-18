@@ -77,6 +77,14 @@ export class MeetingWorkflowAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'Error updating workflow' })(e)
     }
   }
+  async updateParticipant(formData) {
+    try {
+      const res = await this.client.post(MeetingWorkflowAPI.ENDPOINT + 'update-participant/', formData)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error updating workflow' })(e)
+    }
+  }
 }
 
 export class SObjectFormBuilderAPI extends ModelAPI {

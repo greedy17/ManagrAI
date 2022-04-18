@@ -734,6 +734,7 @@
             @update-Opportunity="updateMeeting"
             @no-update="NoMeetingUpdate"
             @remove-participant="removeParticipant"
+            @add-participant="addParticipant"
             :dropdowns="picklistQueryOptsContacts"
             :contactFields="updateContactForm"
             :meeting="meeting.meeting_ref"
@@ -741,6 +742,7 @@
             :resourceId="meeting.resource_id"
             :meetingUpdated="meeting.is_completed"
             :allOpps="allOpps"
+            :accounts="allAccounts"
             :meetingLoading="meetingLoading"
             :index="i"
           />
@@ -1006,6 +1008,7 @@ export default {
       }
     },
     async mapOpp(workflow, resource, resourceType) {
+      this.meetingLoading = true
       try {
         const res = await MeetingWorkflows.api
           .mapMeeting(workflow, resource, resourceType)
@@ -1015,15 +1018,39 @@ export default {
       } catch (e) {
         console.log(e)
       } finally {
+        setTimeout(() => {
+          this.meetingLoading = false
+        }, 500)
       }
     },
     async removeParticipant(workflow, participant) {
+      this.meetingLoading = true
       try {
         const res = await MeetingWorkflows.api.removeParticipant(workflow, participant).then(() => {
           this.getMeetingList()
         })
       } catch (e) {
         console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.meetingLoading = false
+        }, 500)
+      }
+    },
+    async addParticipant(workflow, participant, data) {
+      this.meetingLoading = true
+      try {
+        const res = await MeetingWorkflows.api.updateParticipant({
+          workflow_id: workflow,
+          tracking_id: participant,
+          form_data: data,
+        })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.meetingLoading = false
+        }, 500)
       }
     },
 

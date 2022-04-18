@@ -70,17 +70,19 @@
 
           <div class="contact-field-section__body">
             <div v-for="(field, i) in contactFields" :key="i">
-              {{ field }}
               <div v-if="field.dataType === 'Reference'">
-                <p>{{ field.referenceDisplayLabel }}</p>
+                <p>{{ field.referenceDisplayLabel }}:</p>
                 <Multiselect
-                  :placeholder="'Select ' + `${field.referenceDisplayLabel}`"
-                  style="max-width: 20vw"
-                  :options="dropdowns[apiName]"
+                  v-if="field.apiName === 'AccountId'"
+                  placeholder="Select Account"
+                  @select="setUpdateValues(field.apiName, $event.integration_id)"
+                  v-model="selectedAccount"
+                  style="max-width: 14vw"
+                  :options="accounts"
                   openDirection="below"
                   selectLabel="Enter"
-                  track-by="value"
-                  label="label"
+                  label="name"
+                  track-by="integration_id"
                 >
                   <template slot="noResult">
                     <p>No results.</p>
@@ -89,12 +91,36 @@
                   </template>
                 </Multiselect>
               </div>
+              <div
+                v-else-if="
+                  field.dataType === 'TextArea' ||
+                  (field.length > 250 && field.dataType === 'String')
+                "
+              >
+                <p>{{ field.referenceDisplayLabel }}:</p>
+                <textarea
+                  @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                  ccols="30"
+                  rows="4"
+                  style="width: 26.25vw; border-radius: 0.4rem; padding: 7px"
+                >
+                </textarea>
+              </div>
+              <div v-else-if="field.dataType === 'String'">
+                <p>{{ field.referenceDisplayLabel }}:</p>
+                <input
+                  @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                  type="text"
+                />
+              </div>
             </div>
           </div>
 
           <div class="contact-field-section__footer">
             <p
-              @click="$emit('remove-participant', workflowId, meeting.participants[i]._tracking_id)"
+              @click="
+                $emit('add-participant', workflowId, meeting.participants[i]._tracking_id, formData)
+              "
               style="color: #199e54"
             >
               Add
@@ -184,8 +210,8 @@
       </div>
     </div>
     <div v-if="!meetingUpdated" class="table-cell">
-      <p v-show="!resourceId">Please map meeting in order to take action.</p>
-      <div v-if="resourceId">
+      <p v-if="!resourceId && !meetingLoading">Please map meeting in order to take action.</p>
+      <div v-if="resourceId && !meetingLoading">
         <button @click="$emit('update-Opportunity', workflowId, resourceId)" class="add-button">
           Update Opportunity
         </button>
@@ -201,13 +227,16 @@
           />
         </div>
 
-        <div class="noupdate-field-section__body">
-          <section></section>
-        </div>
+        <div class="noupdate-field-section__body">Are you sure ?</div>
 
         <div class="noupdate-field-section__footer">
           <p @click="onNoUpdate">Yes</p>
           <p @click="noUpdate = !noUpdate" style="color: #fa646a">No</p>
+        </div>
+      </div>
+      <div v-if="meetingLoading">
+        <div>
+          <PipelineLoader />
         </div>
       </div>
     </div>
@@ -229,10 +258,13 @@ export default {
       removingParticipant: null,
       selectedIndex: null,
       addingContact: false,
+      selectedAccount: null,
+      formData: {},
     }
   },
   components: {
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+    PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
   },
   watch: {
     // allOpps: 'test',
@@ -247,11 +279,17 @@ export default {
     meetingLoading: {},
     dropdowns: {},
     contactFields: {},
+    accounts: {},
   },
   created() {},
   methods: {
     test() {
       console.log(this.meetingUpdated)
+    },
+    setUpdateValues(key, val) {
+      if (val) {
+        this.formData[key] = val
+      }
     },
     addContact(index) {
       this.addingContact = !this.addingContact
@@ -316,6 +354,14 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+input {
+  border: 1px solid #e8e8e8;
+  border-radius: 0.3rem;
+  background-color: white;
+  min-height: 2.5rem;
+  max-width: 12vw;
+}
 
 .no-update {
   background-color: $base-gray;
@@ -389,7 +435,8 @@ export default {
   &__body {
     display: flex;
     align-items: center;
-    flex-wrap: row;
+    justify-content: space-evenly;
+    flex-direction: row;
   }
   &__footer {
     display: flex;
@@ -433,6 +480,7 @@ export default {
     height: 2rem;
     display: flex;
     justify-content: center;
+    align-items: center;
   }
   &__footer {
     display: flex;

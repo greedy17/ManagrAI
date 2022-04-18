@@ -795,7 +795,8 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type, slack_const.FORM_TYPE_UPDATE,
+            resource_type,
+            slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)
@@ -823,7 +824,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             if workflow.meeting
             else OrgCustomSlackFormInstance.objects.get(id=contact.get("_form"))
         )
-        form.save_form(request_data.get("form_data"))
+        form.save_form(request_data.get("form_data"), False)
         user_id = workflow.user.id if type else workflow.user_id
         # reconstruct the current data with the updated data
         adapter = ContactAdapter.from_api(
@@ -837,6 +838,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         }
         if type:
             part_index = None
+            print(workflow)
             for index, participant in enumerate(workflow.participants):
                 if participant["_tracking_id"] == new_contact["_tracking_id"]:
                     part_index = index
