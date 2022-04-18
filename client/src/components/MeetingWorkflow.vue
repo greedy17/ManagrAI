@@ -37,15 +37,10 @@
 
     <div class="table-cell">
       <div v-for="(participant, i) in meeting.participants" :key="i" class="roww">
-        <span v-if="!meetingUpdated" class="red">
-          <img
-            src="@/assets/images/remove.svg"
-            class="contact-img"
-            @click="removeParticipant(i)"
-            alt=""
-          />
-        </span>
-        <span v-if="!meetingUpdated" class="green">
+        <p class="add-contact">
+          {{ meeting.participants[i].email }}
+        </p>
+        <span v-if="!meetingUpdated && !meeting.participants[i].__has_changes" class="green">
           <img
             @click="addContact(i)"
             class="contact-img"
@@ -53,9 +48,17 @@
             alt=""
           />
         </span>
-        <p class="add-contact">
-          {{ meeting.participants[i].email }}
-        </p>
+        <span v-if="!meetingUpdated && !meeting.participants[i].__has_changes" class="red">
+          <img
+            src="@/assets/images/remove.svg"
+            class="contact-img"
+            @click="removeParticipant(i)"
+            alt=""
+          />
+        </span>
+        <span v-if="meeting.participants[i].__has_changes">
+          <img class="filter" src="@/assets/images/profile.png" alt="" />
+        </span>
         <div v-if="addingContact && selectedIndex === i" class="contact-field-section">
           <div class="add-field-section__title">
             <p>
@@ -77,7 +80,7 @@
                   placeholder="Select Account"
                   @select="setUpdateValues(field.apiName, $event.integration_id)"
                   v-model="selectedAccount"
-                  style="max-width: 14vw"
+                  style="width: 14vw"
                   :options="accounts"
                   openDirection="below"
                   selectLabel="Enter"
@@ -106,7 +109,7 @@
                 >
                 </textarea>
               </div>
-              <div v-else-if="field.dataType === 'String'">
+              <div v-else-if="field.dataType === 'String' || field.dataType === 'Email'">
                 <p>{{ field.referenceDisplayLabel }}:</p>
                 <input
                   @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
@@ -119,7 +122,13 @@
           <div class="contact-field-section__footer">
             <p
               @click="
-                $emit('add-participant', workflowId, meeting.participants[i]._tracking_id, formData)
+                ;(addingContact = !addingContact),
+                  $emit(
+                    'add-participant',
+                    workflowId,
+                    meeting.participants[i]._tracking_id,
+                    formData,
+                  )
               "
               style="color: #199e54"
             >
@@ -360,7 +369,7 @@ input {
   border-radius: 0.3rem;
   background-color: white;
   min-height: 2.5rem;
-  max-width: 12vw;
+  width: 14vw;
 }
 
 .no-update {
@@ -387,8 +396,16 @@ input {
   border-radius: 0.25rem;
   border: 1px solid #e8e8e8;
 }
+.green {
+  margin-left: 0.2rem;
+}
 .green:hover {
   filter: invert(39%) sepia(96%) saturate(373%) hue-rotate(94deg) brightness(104%) contrast(94%);
+}
+.filter {
+  filter: invert(39%) sepia(96%) saturate(373%) hue-rotate(94deg) brightness(104%) contrast(94%);
+  height: 1rem;
+  cursor: text;
 }
 .success {
   display: flex;
@@ -409,7 +426,7 @@ input {
   img {
     height: 0.6rem;
   }
-  cursor: pointer;
+  cursor: text;
 }
 .contact-field-section {
   z-index: 7;
@@ -433,10 +450,14 @@ input {
     width: 100%;
   }
   &__body {
+    max-width: 30vw;
     display: flex;
     align-items: center;
-    justify-content: space-evenly;
+    justify-content: flex-start;
+    margin: 0.5rem;
+    gap: 0.5rem;
     flex-direction: row;
+    flex-wrap: wrap;
   }
   &__footer {
     display: flex;

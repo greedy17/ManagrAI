@@ -1040,16 +1040,25 @@ export default {
     async addParticipant(workflow, participant, data) {
       this.meetingLoading = true
       try {
-        const res = await MeetingWorkflows.api.updateParticipant({
-          workflow_id: workflow,
-          tracking_id: participant,
-          form_data: data,
-        })
+        const res = await MeetingWorkflows.api
+          .updateParticipant({
+            workflow_id: workflow,
+            tracking_id: participant,
+            form_data: data,
+          })
+          .then(() => {
+            this.getMeetingList()
+          })
       } catch (e) {
         console.log(e)
       } finally {
         setTimeout(() => {
           this.meetingLoading = false
+          this.$Alert.alert({
+            type: 'success',
+            timeout: 2000,
+            message: 'Contact Added Successfully',
+          })
         }, 500)
       }
     },
