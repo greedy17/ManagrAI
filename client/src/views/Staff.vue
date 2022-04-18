@@ -1,34 +1,34 @@
 <template>
-  <div class="pipelines">
-    <div class="pipelines__center">
-      </div>
+  <div class="staff">
+    <div class="staff__drawer">
       <div :key="i" v-for="(org, i) in organizations.list">
-        <h1>{{ org.name }}</h1>  
-        <div class="form__list">
-            <template v-for="(form, i) in allForms">
-                <div :key="i" class="form__list_item" v-if="org.id === form.organization">
-                    <h3>{{form.formType}} {{form.resource}}</h3>
-                    <p>Form Fields:</p>
-                    <ul v-if="form.fieldsRef.length > 1">
-                        <li class="field__list_item" :key="i" v-for="(field, i) in form.fieldsRef"><span>{{field.order}}-{{field.label}}</span><span class="sub_text">{{field.dataType}}</span></li>
-                    </ul>
-                    <p v-else>Form is not created</p>
-                </div>
-            </template>
-        </div>
-        <hr>
-        <div class="form__List">
-          <template v-for="(workflow, i) in allMeetingWorkflows">
-            <div :key="i" class="field__list_item" v-if="org.id === workflow.org_ref.id">
-              <p>{{"event_data" in workflow.meeting_ref ? "Google Meet" : "Zoom Meeting"}}</p>
-              <p>{{workflow.meeting_ref.participants}}</p>
-              <!-- <p>{{workflow}}</p> -->
-            </div>
-          </template>
-        </div>
-
+        <h2 @click="this.selected_org = org.id">{{ org.name }}</h2>
       </div>
-      
+    </div>
+    <div class="staff__main_page">
+      <template v-if="selected_org">
+        <div class="form__list">
+          <div :key="i" class="form__list_item" v-for="(form, i) in orgForms">
+            <h3>{{ form.formType }} {{ form.resource }}</h3>
+            <p>Form Fields:</p>
+            <ul v-if="form.fieldsRef.length > 1">
+              <li class="field__list_item" :key="i" v-for="(field, i) in form.fieldsRef">
+                <span>{{ field.order }}-{{ field.label }}</span
+                ><span class="sub_text">{{ field.dataType }}</span>
+              </li>
+            </ul>
+            <p v-else>Form is not created</p>
+          </div>
+        </div>
+        <hr />
+        <div class="form__List">
+          <div :key="i" class="field__list_item" v-for="(workflow, i) in orgMeetingWorkflows">
+            <p>{{ 'event_data' in workflow.meeting_ref ? 'Google Meet' : 'Zoom Meeting' }}</p>
+            <p>{{ workflow.meeting_ref.participants }}</p>
+            <p>{{ workflow }}</p>
+          </div>
+        </div>
+      </template>
     </div>
   </div>
 </template>
@@ -45,6 +45,9 @@ export default {
     return {
       allForms: null,
       allMeetingWorkflows: null,
+      selected_org: null,
+      orgForms: null,
+      orgMeetingWorkflows: null,
       organizations: CollectionManager.create({ ModelClass: Organization }),
     }
   },
@@ -71,11 +74,26 @@ export default {
         console.log(e)
       }
     },
+    filterOrgForms(org_id) {
+      return this.allForms.map((form) => form.organization == org_id)
+    },
+    filterMeetingWorkflow(org_id) {
+      return this.allMeetingWorkflows.map((workflow) => workflow.org_ref.id == org_id)
+    },
+    showOrgData(org_id) {
+      this.orgForms = this.filterOrgForms(org_id)
+      this.orgMeetingWorkflows = this.filterMeetingWorkflow(org_id)
+    },
   },
   created() {
     this.getAllForms()
     this.getAllMeetingWorkflows()
     this.organizations.refresh()
+  },
+  watch: {
+    organizations() {
+      this.selected_org = organizations[0].id
+    },
   },
 }
 </script>
@@ -84,22 +102,19 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
-.pipelines {
+.staff {
   margin-top: 3rem;
-  color: $base-gray;
+  display: flex;
+  height: 100vh;
+}
 
-  &__preview {
-    display: flex;
-    align-items: flex-start;
-    flex-direction: column;
-    margin: 1rem 3rem;
-    z-index: 2;
-  }
-  &__center {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-evenly;
-  }
+.staff__drawer {
+  width: 20vw;
+  border-right: 1px solid black;
+}
+
+.staff__main_page {
+  width: 70vw;
 }
 
 p {
