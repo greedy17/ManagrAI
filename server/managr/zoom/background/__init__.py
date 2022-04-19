@@ -23,6 +23,9 @@ from managr.slack.helpers.exceptions import (
     CannotSendToChannel,
 )
 from managr.slack.helpers.block_sets import get_block_set
+from managr.slack.helpers.utils import action_with_params
+from managr.slack.helpers import block_builders
+
 from managr.organization.models import Contact, Account
 from managr.opportunity.models import Opportunity, Lead
 from managr.salesforce.adapter.models import ContactAdapter
@@ -403,7 +406,20 @@ def _kick_off_slack_interaction(user_id, managr_meeting_id):
                 else user.slack_integration.channel
             )
             slack_org_access_token = user.organization.slack_integration.access_token
-            block_set = get_block_set("initial_meeting_interaction", {"w": managr_meeting_id,},)
+            block_set = [
+                *get_block_set(
+                    "direct_to_block_set",
+                    context={
+                        "slack": action_with_params(
+                            slack_consts.SHOW_INITIAL_MEETING_INTERACTION,
+                            params=[f"w={str(workflow.id)}"],
+                        ),
+                        "managr": f"{slack_consts.MANAGR_URL}/meetings",
+                        "title": f"*New Task:* Log your meeting",
+                    },
+                ),
+                block_builders.context_block(f"Owned by {user.full_name}"),
+            ]
             try:
                 res = slack_requests.send_channel_message(
                     user_slack_channel,

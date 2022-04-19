@@ -9,11 +9,11 @@ if settings.USE_SLACK:
     SLACK_ERROR_WEBHOOK = settings.SLACK_ERROR_WEBHOOK
 
 if settings.IN_DEV:
-    MANAGR_URL = "http://localhost:8080/pipelines"
+    MANAGR_URL = "http://localhost:8080"
 elif settings.IN_STAGING:
-    MANAGR_URL = "https://staging.managr.ai/pipelines"
+    MANAGR_URL = "https://staging.managr.ai"
 else:
-    MANAGR_URL = "https://app.managr.ai/pipelines"
+    MANAGR_URL = "https://app.managr.ai"
 
 # https://api.slack.com/methods/oauth.v2.access
 OAUTH_V2_ACCESS = "oauth.v2.access"
