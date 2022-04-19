@@ -313,7 +313,7 @@ def init_fake_meeting(request):
                                 slack_consts.SHOW_INITIAL_MEETING_INTERACTION,
                                 params=[f"w={str(workflow.id)}"],
                             ),
-                            "managr": slack_consts.MANAGR_URL,
+                            "managr": f"{slack_consts.MANAGR_URL}/meetings",
                             "title": f"*New Task:* Log your meeting",
                         },
                     ),
