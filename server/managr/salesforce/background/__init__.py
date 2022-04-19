@@ -1372,22 +1372,22 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False, bulk=False):
 
 def create_alert_string(operator, data_type, config_value, saved_value, old_value, title):
     alert_string = f"{title}"
+    if data_type == "date":
+        saved_value = datetime.strptime(saved_value, "%Y-%m-%d")
+        old_value = datetime.strptime(old_value, "%Y-%m-%d")
     if operator == "==":
         if data_type == "string" and saved_value == config_value and saved_value != old_value:
             return alert_string
     elif operator == "<=":
-        return
+        if saved_value <= config_value:
+            return alert_string
     elif operator == ">=":
-        return
+        if saved_value >= config_value:
+            return alert_string
     elif operator == "!=":
         if data_type == "string" and saved_value != config_value:
             return alert_string
-        elif (
-            data_type == "date"
-            and old_value is not None
-            and datetime.strptime(saved_value, "%Y-%m-%d").month
-            != datetime.strptime(old_value, "%Y-%m-%d").month
-        ):
+        elif data_type == "date" and old_value is not None and saved_value.month != old_value.month:
             return alert_string
     return None
 
