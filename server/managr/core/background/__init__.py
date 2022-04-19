@@ -1,9 +1,11 @@
 import logging
 import time
 import random
+import textwrap
 import jwt
 import pytz
 import uuid
+import requests
 from datetime import datetime, timezone
 import re
 from background_task import background
@@ -44,6 +46,10 @@ logger = logging.getLogger("managr")
 
 def emit_process_send_workflow_reminder(user_id, workflow_count):
     return _process_send_workflow_reminder(user_id, workflow_count)
+
+
+def emit_process_add_calendar_id(user_id, verbose_name):
+    return _process_add_calendar_id(user_id, verbose_name=verbose_name)
 
 
 def emit_create_calendar_event(user, title, start_time, participants, meeting_link, description):
@@ -101,6 +107,9 @@ def non_zoom_meeting_message(workflow_id, user_id, user_tz, non_zoom_end_times):
     # seconds = a_timedelta.total_seconds()
     seconds = time_difference.total_seconds()
     seconds = int(seconds)
+    logger.info(
+        f"NON ZOOM MEETING SCHEDULER: \n END TIME: {non_zoom_end_times}\n LOCAL END: {local_end}\n CURRENT TIME: {current_time} \n TIME DIFFERENCE: {time_difference}"
+    )
     # Use time difference in UTC to schedule realtime meeting alert
     return emit_kick_off_slack_interaction(user_id, workflow_id, schedule=seconds)
 
@@ -808,7 +817,10 @@ def check_reminders(user_id):
     return
 
 
-TIMEZONE_TASK_FUNCTION = {core_consts.NON_ZOOM_MEETINGS: emit_process_non_zoom_meetings}
+TIMEZONE_TASK_FUNCTION = {
+    core_consts.NON_ZOOM_MEETINGS: emit_process_non_zoom_meetings,
+    core_consts.CALENDAR_CHECK: emit_process_add_calendar_id,
+}
 
 
 @background()
@@ -821,3 +833,41 @@ def timezone_tasks(user_id):
             verbose_name = f"{key}-{user.email}-{str(uuid.uuid4())}"
             TIMEZONE_TASK_FUNCTION[key](user_id, verbose_name)
     return
+
+
+@background()
+def _process_add_calendar_id(user_id):
+    user = User.objects.get(id=user_id)
+    if hasattr(user, "nylas") and user.nylas.event_calendar_id is None:
+        headers = dict(Authorization=f"Bearer {user.nylas.access_token}")
+        calendars = requests.get(
+            f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.CALENDAR_URI}", headers=headers,
+        ).json()
+
+        email_check = [cal for cal in calendars if cal["name"] == user.email]
+        calendar = [cal for cal in calendars if cal["read_only"] is False]
+        if len(email_check):
+            calendar_id = email_check[0]["id"]
+        else:
+            if len(calendar):
+                calendar_id = calendar[0]["id"]
+            else:
+                calendar_id = None
+        logger.info(
+            textwrap.dedent(
+                f"""
+            ------------------------------------
+            NYLAS CALENAR ACCOUNT CREATION INFO: \n
+            CALENDAR INFO:{calendar}\n
+            EMAIL CHECK: {email_check} \n 
+            CALENDAR CHECK: {calendar} \n
+            FOUND CALENDAR ID: {calendar_id}\n
+            ------------------------------------"""
+            )
+        )
+        if calendar_id:
+            user.nylas.event_calendar_id = calendar_id
+            user.nylas.save()
+        else:
+            logger.info(f"COULD NOT FIND A CALENDAR ID FOR {user.email}")
+        return
