@@ -36,29 +36,33 @@
     </div>
 
     <div class="table-cell">
-      <div v-for="(participant, i) in meeting.participants" :key="i" class="roww">
-        <p class="add-contact">
-          {{ meeting.participants[i].email }}
-        </p>
-        <span v-if="!meetingUpdated && !meeting.participants[i].__has_changes" class="green">
-          <img
-            @click="addContact(i)"
-            class="contact-img"
-            src="@/assets/images/add-contact.png"
-            alt=""
-          />
-        </span>
-        <span v-if="!meetingUpdated && !meeting.participants[i].__has_changes" class="red">
-          <img
-            src="@/assets/images/remove.svg"
-            class="contact-img"
-            @click="removeParticipant(i)"
-            alt=""
-          />
-        </span>
+      <div v-for="(participant, i) in meeting.participants" :key="i" class="column">
+        <div class="roww">
+          <p class="add-contact">
+            {{ meeting.participants[i].email }}
+          </p>
+          <span v-if="!meetingUpdated && !meeting.participants[i].__has_changes" class="green">
+            <img
+              @click="addContact(i)"
+              class="contact-img"
+              src="@/assets/images/add-contact.png"
+              alt=""
+            />
+          </span>
+          <span v-if="!meetingUpdated && !meeting.participants[i].__has_changes" class="red">
+            <img
+              src="@/assets/images/remove.svg"
+              class="contact-img"
+              @click="removeParticipant(i)"
+              alt=""
+            />
+          </span>
+        </div>
+
         <span v-if="meeting.participants[i].__has_changes">
           <img class="filter" src="@/assets/images/profile.png" alt="" />
         </span>
+
         <div v-if="addingContact && selectedIndex === i" class="contact-field-section">
           <div class="add-field-section__title">
             <p>
@@ -144,6 +148,7 @@
             <p @click="addingContact = !addingContact" style="color: #fa646a">Cancel</p>
           </div>
         </div>
+
         <div v-if="removingParticipant && selectedIndex === i" class="participant-field-section">
           <div class="add-field-section__title">
             <p>
@@ -281,6 +286,7 @@ export default {
   components: {
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
+    Modal: () => import(/* webpackPrefetch: true */ '@/components/Modal'),
   },
   watch: {
     // allOpps: 'test',
@@ -417,7 +423,12 @@ a {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  cursor: pointer;
+}
+.columnn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-direction: column;
 }
 .contact-img {
   height: 1.25rem;
@@ -431,6 +442,7 @@ a {
 }
 .green:hover {
   filter: invert(39%) sepia(96%) saturate(373%) hue-rotate(94deg) brightness(104%) contrast(94%);
+  cursor: pointer;
 }
 .filter {
   filter: invert(39%) sepia(96%) saturate(373%) hue-rotate(94deg) brightness(104%) contrast(94%);
@@ -450,6 +462,7 @@ a {
   img {
     filter: invert(46%) sepia(37%) saturate(832%) hue-rotate(308deg) brightness(104%) contrast(104%);
   }
+  cursor: pointer;
 }
 
 .add-contact {
@@ -459,14 +472,12 @@ a {
   cursor: text;
 }
 .contact-field-section {
-  z-index: 7;
-  position: absolute;
-  top: 15vh;
+  position: relative;
   right: 0.5rem;
   border-radius: 0.33rem;
   background-color: $white;
   min-width: 30vw;
-  overflow: visible;
+  overflow: scroll;
   box-shadow: 1px 1px 7px 2px $very-light-gray;
   &__title {
     display: flex;
@@ -507,14 +518,12 @@ a {
   }
 }
 .noupdate-field-section {
-  z-index: 7;
-  position: absolute;
-  top: 15vh;
+  position: relative;
   left: 0;
   border-radius: 0.33rem;
   background-color: $white;
   min-width: 16vw;
-  overflow: visible;
+  overflow: scroll;
   box-shadow: 1px 1px 7px 2px $very-light-gray;
   &__title {
     display: flex;
@@ -551,14 +560,12 @@ a {
   }
 }
 .participant-field-section {
-  z-index: 7;
-  position: absolute;
-  top: 15vh;
+  position: relative;
   right: 0.5rem;
   border-radius: 0.33rem;
   background-color: $white;
   min-width: 20vw;
-  overflow: visible;
+  overflow: scroll;
   box-shadow: 1px 1px 7px 2px $very-light-gray;
   &__title {
     display: flex;
@@ -594,17 +601,15 @@ a {
   }
 }
 .add-field-section {
-  z-index: 7;
-  position: absolute;
+  position: relative;
   right: 0.5rem;
-  top: 9vh;
   border-radius: 0.33rem;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   background-color: $white;
   min-width: 22vw;
-  overflow: visible;
+  overflow: scroll;
   box-shadow: 1px 1px 7px 2px $very-light-gray;
   &__title {
     display: flex;
