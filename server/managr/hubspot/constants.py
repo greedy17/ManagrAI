@@ -5,7 +5,19 @@ TOKEN_INFO_URI = "oauth/v1/access-tokens"
 REFRESH_TOKEN_URI = "oauth/v1/token"
 
 HUBSPOT_PROPERTIES_URI = "crm/v3/properties/"
-
+RESOURCE_SYNC_COMPANY = "Company"
+RESOURCE_SYNC_HUBSPOTCONTACT = "HubspotContact"
+RESOURCE_SYNC_DEAL = "Deal"
+HUBSPOT_URL_RESOURCE_MAP = {
+    RESOURCE_SYNC_COMPANY: "companies",
+    RESOURCE_SYNC_HUBSPOTCONTACT: "contacts",
+    RESOURCE_SYNC_DEAL: "deals",
+}
+HUBSPOT_OBJECT_FIELDS = "OBJECT_FIELDS"
+HUBSPOT_FIELD_SYNC = "HUBSPOT_FIELD_SYNC"
+HUBSPOT_RESOURCE_SYNC = "HUBSPOT_RESOURCE_SYNC"
+HUBSPOT_FIELD_SYNC_QUEUE = "HUBSPOT_FIELD_SYNC"
+HUBSPOT_RESOURCE_SYNC_QUEUE = "HUBSPOT_RESOURCE_SYNC"
 
 HUBSPOT_QUERY_LIMIT = 100
 if settings.USE_HUBSPOT:
@@ -68,12 +80,11 @@ if settings.USE_HUBSPOT:
 
 
 def HUBSPOT_SEARCH_URI(resource):
-    object_map = {
-        RESOURCE_SYNC_COMPANY: "companies",
-        RESOURCE_SYNC_HUBSPOTCONTACT: "contacts",
-        RESOURCE_SYNC_DEAL: "deals",
-    }
-    return f"{BASE_URL}/crm/v3/objects/{object_map[resource]}/search"
+    return f"{BASE_URL}/crm/v3/objects/{HUBSPOT_URL_RESOURCE_MAP[resource]}/search"
+
+
+def HUBSPOT_ASSOCIATIONS_READ_URI(resource, associated_resource):
+    return f"{BASE_URL}/crm/v3/associations/{HUBSPOT_URL_RESOURCE_MAP[resource]}/{HUBSPOT_URL_RESOURCE_MAP[associated_resource]}/batch/read"
 
 
 def HUBSPOT_OBJECTS_URI(
@@ -92,13 +103,3 @@ def HUBSPOT_SEARCH_BODY(fields, filters, limit):
     fields = set(fields)
     return {"properties": list(fields), "filters": filters, "limit": limit}
 
-
-RESOURCE_SYNC_COMPANY = "Company"
-RESOURCE_SYNC_HUBSPOTCONTACT = "HubspotContact"
-RESOURCE_SYNC_DEAL = "Deal"
-
-HUBSPOT_OBJECT_FIELDS = "OBJECT_FIELDS"
-HUBSPOT_FIELD_SYNC = "HUBSPOT_FIELD_SYNC"
-HUBSPOT_RESOURCE_SYNC = "HUBSPOT_RESOURCE_SYNC"
-HUBSPOT_FIELD_SYNC_QUEUE = "HUBSPOT_FIELD_SYNC"
-HUBSPOT_RESOURCE_SYNC_QUEUE = "HUBSPOT_RESOURCE_SYNC"

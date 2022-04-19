@@ -92,6 +92,14 @@ class HubspotAuthAccountAdapter:
 
         return data
 
+    def get_associated_resource(self, resource, associated_resource, resource_id):
+        url = hubspot_consts.HUBSPOT_ASSOCIATIONS_READ_URI(resource, associated_resource)
+        headers = hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token)
+        data = {"inputs": [{"id": resource_id}]}
+        with Client as client:
+            res = client.post(url, data=json.dumps(data), headers=headers,)
+            return self._handle_response(res)
+
     # def format_validation_rules(
     #     self, hubspot_account_id, user_id, res_data=[],
     # ):
