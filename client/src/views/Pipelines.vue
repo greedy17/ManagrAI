@@ -2179,6 +2179,7 @@ h3 {
   left: 0;
 }
 .table-cell {
+  z-index: 0;
   display: table-cell;
   position: sticky;
   min-width: 12vw;
