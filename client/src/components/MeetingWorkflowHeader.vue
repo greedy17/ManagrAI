@@ -1,12 +1,5 @@
 <template>
   <div class="table-row">
-    <!-- <div style="padding: 2vh" class="table-cell-checkbox-header">
-      <div>
-        <input type="checkbox" id="checkAll" />
-        <label for="checkAll"></label>
-      </div>
-    </div> -->
-
     <div class="cell-name-header">Meeting Title</div>
     <div class="table-cell-header" v-for="(column, i) in columns" :key="i">
       {{ column }}
@@ -197,5 +190,20 @@ export default {
   img {
     margin-left: 0.5rem;
   }
+}
+.table-cell-header {
+  display: table-cell;
+  padding: 1.25vh 3vh;
+  border: none;
+  border-bottom: 3px solid $light-orange-gray;
+  border-radius: 2px;
+  z-index: 2;
+  top: 0;
+  position: sticky;
+  background-color: $off-white;
+  font-weight: bold;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  color: $base-gray;
 }
 </style>

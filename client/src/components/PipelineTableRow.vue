@@ -319,6 +319,17 @@ export default {
   position: sticky;
   background-color: $off-white;
 }
+.table-cell-checkbox {
+  display: table-cell;
+  padding: 2vh;
+  width: 3.75vw;
+  border: none;
+  left: 0;
+  position: sticky;
+  z-index: 1;
+  border-bottom: 1px solid $soft-gray;
+  background-color: $off-white;
+}
 .cell-name-header {
   display: table-cell;
   padding: 3vh;

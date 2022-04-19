@@ -1,11 +1,5 @@
 <template>
   <div class="table-row">
-    <!-- <div class="table-cell-checkbox">
-      <div>
-        <input type="checkbox" id="index" />
-        <label for="index"></label>
-      </div>
-    </div> -->
     <div class="table-cell">
       <div v-if="!meeting.event_data">
         <div>
@@ -36,31 +30,35 @@
     </div>
 
     <div class="table-cell">
-      <div v-for="(participant, i) in meeting.participants" :key="i" class="roww">
-        <p class="add-contact">
-          {{ meeting.participants[i].email }}
-        </p>
-        <span v-if="!meetingUpdated && !meeting.participants[i].__has_changes" class="green">
-          <img
-            @click="addContact(i)"
-            class="contact-img"
-            src="@/assets/images/add-contact.png"
-            alt=""
-          />
-        </span>
-        <span v-if="!meetingUpdated && !meeting.participants[i].__has_changes" class="red">
-          <img
-            src="@/assets/images/remove.svg"
-            class="contact-img"
-            @click="removeParticipant(i)"
-            alt=""
-          />
-        </span>
+      <div v-for="(participant, i) in meeting.participants" :key="i" class="column">
+        <div class="roww">
+          <p class="add-contact">
+            {{ meeting.participants[i].email }}
+          </p>
+          <span v-if="!meetingUpdated && !meeting.participants[i].__has_changes" class="green">
+            <img
+              @click="addContact(i)"
+              class="contact-img"
+              src="@/assets/images/add-contact.png"
+              alt=""
+            />
+          </span>
+          <span v-if="!meetingUpdated && !meeting.participants[i].__has_changes" class="red">
+            <img
+              src="@/assets/images/remove.svg"
+              class="contact-img"
+              @click="removeParticipant(i)"
+              alt=""
+            />
+          </span>
+        </div>
+
         <span v-if="meeting.participants[i].__has_changes">
           <img class="filter" src="@/assets/images/profile.png" alt="" />
         </span>
+
         <div v-if="addingContact && selectedIndex === i" class="contact-field-section">
-          <div class="add-field-section__title">
+          <div class="contact-field-section__title">
             <p>
               Add <span>"{{ meeting.participants[i].email }}"</span> to your Contacts
             </p>
@@ -91,6 +89,25 @@
                     <p>No results.</p>
                     <!-- @select="$emit('value-selected', $event.value)"
                       v-model="inputValue" -->
+                  </template>
+                </Multiselect>
+
+                <Multiselect
+                  v-if="field.apiName === 'OwnerId'"
+                  placeholder="Select Owner"
+                  style="width: 14vw"
+                  v-model="selectedOwner"
+                  @select="
+                    setUpdateValues(field.apiName, $event.salesforce_account_ref.salesforce_id)
+                  "
+                  :options="owners"
+                  openDirection="below"
+                  selectLabel="Enter"
+                  label="full_name"
+                  track-by="id"
+                >
+                  <template slot="noResult">
+                    <p>No results.</p>
                   </template>
                 </Multiselect>
               </div>
@@ -144,6 +161,7 @@
             <p @click="addingContact = !addingContact" style="color: #fa646a">Cancel</p>
           </div>
         </div>
+
         <div v-if="removingParticipant && selectedIndex === i" class="participant-field-section">
           <div class="add-field-section__title">
             <p>
@@ -182,7 +200,9 @@
           alt=""
         />
       </p>
-      <p v-else-if="meetingUpdated">{{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}</p>
+      <p v-else-if="meetingUpdated">
+        {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
+      </p>
       <button @click="addingOpp = !addingOpp" v-else class="add-button">Map to Opportunity</button>
       <!-- <button disabled class="add-button">Map to Opportunity (coming soon)</button> -->
 
@@ -227,27 +247,29 @@
     </div>
     <div v-if="!meetingUpdated" class="table-cell">
       <p v-if="!resourceId && !meetingLoading">Please map meeting in order to take action.</p>
-      <div v-if="resourceId && !meetingLoading">
-        <button @click="$emit('update-Opportunity', workflowId, resourceId)" class="add-button">
-          Update Opportunity
-        </button>
-        <button @click="noUpdate = !noUpdate" class="no-update">No update needed</button>
-      </div>
-      <div v-if="noUpdate" class="noupdate-field-section">
-        <div class="add-field-section__title">
-          <p>No Update Needed</p>
-          <img
-            src="@/assets/images/closer.png"
-            style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
-            @click="noUpdate = !noUpdate"
-          />
+      <div>
+        <div class="column" v-if="resourceId && !meetingLoading">
+          <button @click="$emit('update-Opportunity', workflowId, resourceId)" class="add-button">
+            Update Opportunity
+          </button>
+          <button @click="noUpdate = !noUpdate" class="no-update">No update needed</button>
         </div>
+        <div v-if="noUpdate" class="noupdate-field-section">
+          <div class="noupdate-field-section__title">
+            <p>No Update Needed</p>
+            <img
+              src="@/assets/images/closer.png"
+              style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
+              @click="noUpdate = !noUpdate"
+            />
+          </div>
 
-        <div class="noupdate-field-section__body">Are you sure ?</div>
+          <div class="noupdate-field-section__body">Are you sure ?</div>
 
-        <div class="noupdate-field-section__footer">
-          <p @click="onNoUpdate">Yes</p>
-          <p @click="noUpdate = !noUpdate" style="color: #fa646a">No</p>
+          <div class="noupdate-field-section__footer">
+            <p @click="onNoUpdate">Yes</p>
+            <p @click="noUpdate = !noUpdate" style="color: #fa646a">No</p>
+          </div>
         </div>
       </div>
       <div v-if="meetingLoading">
@@ -275,12 +297,14 @@ export default {
       selectedIndex: null,
       addingContact: false,
       selectedAccount: null,
+      selectedOwner: null,
       formData: {},
     }
   },
   components: {
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
+    Modal: () => import(/* webpackPrefetch: true */ '@/components/Modal'),
   },
   watch: {
     // allOpps: 'test',
@@ -296,14 +320,14 @@ export default {
     dropdowns: {},
     contactFields: {},
     accounts: {},
+    owners: {},
   },
   created() {},
   computed: {
     hasLastName() {
       let lastName = null
-      this.contactFields.filter((field) => field.apiName === 'LastName')
-        ? (lastName = this.contactFields.filter((field) => field.apiName === 'LastName')[0].apiName)
-        : (lastName = null)
+      lastName = this.contactFields.filter((field) => field.apiName === 'LastName')
+      lastName.length ? (lastName = lastName[0].apiName) : (lastName = null)
       return lastName
     },
   },
@@ -401,23 +425,40 @@ a {
   color: $dark-green;
   font-weight: bold;
 }
-
+.invert {
+  filter: invert(80%);
+  cursor: pointer;
+}
+.add-button {
+  border: none;
+  max-height: 4.5vh;
+  min-height: 2rem;
+  padding: 0.5rem 1.25rem;
+  margin-right: 1rem;
+  border-radius: 0.2rem;
+  background-color: $dark-green;
+  cursor: pointer;
+  color: white;
+  transition: all 0.3s;
+}
 .no-update {
   background-color: $base-gray;
   color: white;
   border: none;
-  padding: 0.25rem 0.6rem;
   border-radius: 0.2rem;
-  margin-top: 0.5rem;
-  height: 4.5vh;
-  width: 8.5rem;
+  max-height: 4.5vh;
+  min-height: 2rem;
+  padding: 0.5rem 1.25rem;
   cursor: pointer;
 }
 .roww {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  cursor: pointer;
+}
+.columnn {
+  display: flex;
+  flex-direction: column;
 }
 .contact-img {
   height: 1.25rem;
@@ -431,6 +472,7 @@ a {
 }
 .green:hover {
   filter: invert(39%) sepia(96%) saturate(373%) hue-rotate(94deg) brightness(104%) contrast(94%);
+  cursor: pointer;
 }
 .filter {
   filter: invert(39%) sepia(96%) saturate(373%) hue-rotate(94deg) brightness(104%) contrast(94%);
@@ -450,6 +492,7 @@ a {
   img {
     filter: invert(46%) sepia(37%) saturate(832%) hue-rotate(308deg) brightness(104%) contrast(104%);
   }
+  cursor: pointer;
 }
 
 .add-contact {
@@ -459,19 +502,19 @@ a {
   cursor: text;
 }
 .contact-field-section {
-  z-index: 7;
   position: absolute;
-  top: 15vh;
+  z-index: 7;
   right: 0.5rem;
   border-radius: 0.33rem;
   background-color: $white;
   min-width: 30vw;
-  overflow: visible;
+  overflow: scroll;
   box-shadow: 1px 1px 7px 2px $very-light-gray;
   &__title {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 0.5rem;
     color: $base-gray;
     background-color: $off-white;
     letter-spacing: 0.4px;
@@ -507,18 +550,19 @@ a {
   }
 }
 .noupdate-field-section {
-  z-index: 7;
   position: absolute;
-  top: 15vh;
-  left: 0;
+  z-index: 7;
+  left: 1.5rem;
+  top: 10vh;
   border-radius: 0.33rem;
   background-color: $white;
-  min-width: 16vw;
-  overflow: visible;
+  min-width: 20vw;
+  overflow: scroll;
   box-shadow: 1px 1px 7px 2px $very-light-gray;
   &__title {
     display: flex;
     justify-content: space-between;
+    padding: 0.5rem;
     align-items: center;
     color: $base-gray;
     background-color: $off-white;
@@ -551,19 +595,19 @@ a {
   }
 }
 .participant-field-section {
-  z-index: 7;
   position: absolute;
-  top: 15vh;
+  z-index: 7;
   right: 0.5rem;
   border-radius: 0.33rem;
   background-color: $white;
   min-width: 20vw;
-  overflow: visible;
+  overflow: scroll;
   box-shadow: 1px 1px 7px 2px $very-light-gray;
   &__title {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 0.5rem;
     color: $base-gray;
     background-color: $off-white;
     letter-spacing: 0.4px;
@@ -594,22 +638,22 @@ a {
   }
 }
 .add-field-section {
-  z-index: 7;
   position: absolute;
+  z-index: 7;
   right: 0.5rem;
-  top: 9vh;
   border-radius: 0.33rem;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   background-color: $white;
   min-width: 22vw;
-  overflow: visible;
+  overflow: scroll;
   box-shadow: 1px 1px 7px 2px $very-light-gray;
   &__title {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 0.5rem;
     color: $base-gray;
     background-color: $off-white;
     letter-spacing: 0.4px;
@@ -637,5 +681,24 @@ a {
       font-weight: bold;
     }
   }
+}
+
+.table-row {
+  display: table-row;
+  left: 0;
+}
+.table-cell {
+  display: table-cell;
+  position: relative;
+  min-width: 12vw;
+  background-color: $off-white;
+  padding: 2vh 3vh;
+  border: none;
+  border-bottom: 1px solid $soft-gray;
+  font-size: 13px;
+}
+.table-cell:hover {
+  cursor: text;
+  background-color: white;
 }
 </style> 
