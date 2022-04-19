@@ -78,10 +78,7 @@ def direct_to_block_set(context):
         block_builders.actions_block(
             [
                 block_builders.simple_button_block(
-                    "Complete in Slack",
-                    "complete_in_slack",
-                    action_id=slack_context,
-                    style="danger",
+                    "Complete in Slack", "complete_in_slack", action_id=slack_context,
                 ),
                 block_builders.simple_button_block(
                     "Complete in Managr", "complete_in_managr", url=managr_url, style="primary"
@@ -607,7 +604,6 @@ def initial_alert_message(context):
                             f"config_id={config_id}",
                         ],
                     ),
-                    style="danger",
                 ),
                 block_builders.simple_button_block(
                     "Complete in Managr",
