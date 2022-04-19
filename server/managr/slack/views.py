@@ -315,7 +315,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
         methods=["get"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
-        url_path="list-user-channels",
+        url_path="channel-details",
     )
     def slack_channel_details(self, request, *args, **kwargs):
         organization_slack = request.user.organization.slack_integration
