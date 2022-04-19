@@ -38,7 +38,6 @@ from managr.slack.helpers import block_builders
 from managr.slack.helpers.utils import action_with_params
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers.exceptions import CannotSendToChannel
-from managr.slack.helpers.utils import action_with_params
 from managr.slack.models import UserSlackIntegration
 
 from ..routes import routes
