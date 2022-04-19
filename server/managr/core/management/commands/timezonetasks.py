@@ -14,7 +14,7 @@ class Command(BaseCommand):
         if options["users"]:
             for t in options["users"]:
                 user = User.objects.filter(email=t).first()
-                # emit_check_reminders(str(user.id), f"reminders-{user.email}-{str(uuid.uuid4())}")
+                emit_check_reminders(str(user.id), f"reminders-{user.email}-{str(uuid.uuid4())}")
 
                 emit_timezone_tasks(
                     str(user.id), f"timezone_tasks-{user.email}-{str(uuid.uuid4())}"
@@ -27,7 +27,7 @@ class Command(BaseCommand):
         else:
             users = User.objects.filter(is_active=True)
             for user in users:
-                # emit_check_reminders(str(user.id), f"reminders-{user.email}-{str(uuid.uuid4())}")
+                emit_check_reminders(str(user.id), f"reminders-{user.email}-{str(uuid.uuid4())}")
                 emit_timezone_tasks(
                     str(user.id), f"emit_timezone_tasks-{user.email}-{str(uuid.uuid4())}"
                 )

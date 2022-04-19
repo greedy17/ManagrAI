@@ -1,14 +1,14 @@
 <template>
   <div class="table-row">
-    <div class="table-cell-checkbox">
+    <!-- <div class="table-cell-checkbox">
       <div>
         <input type="checkbox" id="index" />
         <label for="index"></label>
       </div>
-    </div>
-    <div style="min-width: 22vw" class="table-cell cell-name">
+    </div> -->
+    <div class="table-cell">
       <div v-if="!meeting.event_data">
-        <div @click="test">
+        <div>
           <p style="letter-spacing: 0.25px; font-size: 15px; margin-bottom: 3px">
             {{ meeting.topic ? meeting.topic : 'Meeting' }}
           </p>
@@ -36,17 +36,155 @@
     </div>
 
     <div class="table-cell">
-      <p v-for="(participant, i) in meeting.participants" :key="i">
-        {{ meeting.participants[i].email }}
-      </p>
+      <div v-for="(participant, i) in meeting.participants" :key="i" class="roww">
+        <p class="add-contact">
+          {{ meeting.participants[i].email }}
+        </p>
+        <span v-if="!meetingUpdated && !meeting.participants[i].__has_changes" class="green">
+          <img
+            @click="addContact(i)"
+            class="contact-img"
+            src="@/assets/images/add-contact.png"
+            alt=""
+          />
+        </span>
+        <span v-if="!meetingUpdated && !meeting.participants[i].__has_changes" class="red">
+          <img
+            src="@/assets/images/remove.svg"
+            class="contact-img"
+            @click="removeParticipant(i)"
+            alt=""
+          />
+        </span>
+        <span v-if="meeting.participants[i].__has_changes">
+          <img class="filter" src="@/assets/images/profile.png" alt="" />
+        </span>
+        <div v-if="addingContact && selectedIndex === i" class="contact-field-section">
+          <div class="add-field-section__title">
+            <p>
+              Add <span>"{{ meeting.participants[i].email }}"</span> to your Contacts
+            </p>
+            <img
+              src="@/assets/images/closer.png"
+              style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
+              @click="addingContact = !addingContact"
+            />
+          </div>
+
+          <div v-if="hasLastName" class="contact-field-section__body">
+            <div v-for="(field, i) in contactFields" :key="i">
+              <div v-if="field.dataType === 'Reference'">
+                <p>{{ field.referenceDisplayLabel }}:</p>
+                <Multiselect
+                  v-if="field.apiName === 'AccountId'"
+                  placeholder="Select Account"
+                  @select="setUpdateValues(field.apiName, $event.integration_id)"
+                  v-model="selectedAccount"
+                  style="width: 14vw"
+                  :options="accounts"
+                  openDirection="below"
+                  selectLabel="Enter"
+                  label="name"
+                  track-by="integration_id"
+                >
+                  <template slot="noResult">
+                    <p>No results.</p>
+                    <!-- @select="$emit('value-selected', $event.value)"
+                      v-model="inputValue" -->
+                  </template>
+                </Multiselect>
+              </div>
+              <div
+                v-else-if="
+                  field.dataType === 'TextArea' ||
+                  (field.length > 250 && field.dataType === 'String')
+                "
+              >
+                <p>{{ field.referenceDisplayLabel }}:</p>
+                <textarea
+                  @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                  ccols="30"
+                  rows="4"
+                  style="width: 26.25vw; border-radius: 0.4rem; padding: 7px"
+                >
+                </textarea>
+              </div>
+              <div v-else-if="field.dataType === 'String' || field.dataType === 'Email'">
+                <p>{{ field.referenceDisplayLabel }}:</p>
+                <input
+                  @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                  type="text"
+                />
+              </div>
+            </div>
+          </div>
+          <div style="margin-left: 1rem; padding: 1rem" class="contact-field-section__body" v-else>
+            Add "Last Name" to your<router-link class="link" :to="{ name: 'UpdateContacts' }"
+              >contact form</router-link
+            >in order to add Contacts.
+          </div>
+
+          <div class="contact-field-section__footer">
+            <p
+              v-if="hasLastName"
+              @click="
+                ;(addingContact = !addingContact),
+                  $emit(
+                    'add-participant',
+                    workflowId,
+                    meeting.participants[i]._tracking_id,
+                    formData,
+                  )
+              "
+              style="color: #199e54"
+            >
+              Add
+            </p>
+            <p v-else style="color: #aaaaaa">Add</p>
+            <p @click="addingContact = !addingContact" style="color: #fa646a">Cancel</p>
+          </div>
+        </div>
+        <div v-if="removingParticipant && selectedIndex === i" class="participant-field-section">
+          <div class="add-field-section__title">
+            <p>
+              Remove <span>"{{ meeting.participants[i].email }}"</span>
+            </p>
+            <img
+              src="@/assets/images/closer.png"
+              style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
+              @click="removingParticipant = !removingParticipant"
+            />
+          </div>
+
+          <div class="participant-field-section__body">
+            <p>Are you sure ?</p>
+          </div>
+
+          <div class="participant-field-section__footer">
+            <p
+              @click="$emit('remove-participant', workflowId, meeting.participants[i]._tracking_id)"
+            >
+              Yes
+            </p>
+            <p @click="removingParticipant = !removingParticipant" style="color: #fa646a">No</p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="table-cell">
-      <p v-if="resourceId">
+      <p class="roww" @click="addingOpp = !addingOpp" v-if="resourceId && !meetingUpdated">
         {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
+        <img
+          class="invert"
+          style="height: 0.6rem; margin-left: 0.2rem"
+          src="@/assets/images/edit.png"
+          alt=""
+        />
       </p>
-      <!-- <button @click="addingOpp = !addingOpp" v-else class="add-button">Map to Opportunity</button> -->
-      <button disabled class="add-button">Map to Opportunity (coming soon)</button>
+      <p v-else-if="meetingUpdated">{{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}</p>
+      <button @click="addingOpp = !addingOpp" v-else class="add-button">Map to Opportunity</button>
+      <!-- <button disabled class="add-button">Map to Opportunity (coming soon)</button> -->
 
       <div v-if="addingOpp" class="add-field-section">
         <div class="add-field-section__title">
@@ -62,6 +200,7 @@
           <Multiselect
             style="width: 20vw"
             v-model="mappedOpp"
+            @select="selectOpp($event)"
             placeholder="Select Opportunity"
             selectLabel="Enter"
             label="name"
@@ -79,18 +218,46 @@
         </div>
 
         <div v-if="mappedOpp" class="add-field-section__footer">
-          <p @click="test">Add</p>
+          <p @click="mapOpp">Add</p>
         </div>
         <div v-else style="cursor: text" class="add-field-section__footer">
           <p style="color: gray; cursor: text">Add</p>
         </div>
       </div>
     </div>
-    <div class="table-cell">
-      <button disabled v-if="resourceId" class="add-button">
-        Update Opportunity (coming soon)
-      </button>
-      <p v-else>Please map meeting in order to take action.</p>
+    <div v-if="!meetingUpdated" class="table-cell">
+      <p v-if="!resourceId && !meetingLoading">Please map meeting in order to take action.</p>
+      <div v-if="resourceId && !meetingLoading">
+        <button @click="$emit('update-Opportunity', workflowId, resourceId)" class="add-button">
+          Update Opportunity
+        </button>
+        <button @click="noUpdate = !noUpdate" class="no-update">No update needed</button>
+      </div>
+      <div v-if="noUpdate" class="noupdate-field-section">
+        <div class="add-field-section__title">
+          <p>No Update Needed</p>
+          <img
+            src="@/assets/images/closer.png"
+            style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
+            @click="noUpdate = !noUpdate"
+          />
+        </div>
+
+        <div class="noupdate-field-section__body">Are you sure ?</div>
+
+        <div class="noupdate-field-section__footer">
+          <p @click="onNoUpdate">Yes</p>
+          <p @click="noUpdate = !noUpdate" style="color: #fa646a">No</p>
+        </div>
+      </div>
+      <div v-if="meetingLoading">
+        <div>
+          <PipelineLoader />
+        </div>
+      </div>
+    </div>
+    <div v-else class="table-cell">
+      <p class="success">Meeting Logged <img src="@/assets/images/complete.png" alt="" /></p>
     </div>
   </div>
 </template>
@@ -101,14 +268,74 @@ export default {
     return {
       fields: ['topic', 'participants_count', 'participants.email'],
       addingOpp: false,
+      noUpdate: false,
       mappedOpp: null,
+      resource: null,
+      removingParticipant: null,
+      selectedIndex: null,
+      addingContact: false,
+      selectedAccount: null,
+      formData: {},
     }
   },
   components: {
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+    PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
+  },
+  watch: {
+    // allOpps: 'test',
+  },
+  props: {
+    meeting: {},
+    resourceId: {},
+    allOpps: {},
+    index: {},
+    workflowId: {},
+    meetingUpdated: {},
+    meetingLoading: {},
+    dropdowns: {},
+    contactFields: {},
+    accounts: {},
   },
   created() {},
+  computed: {
+    hasLastName() {
+      let lastName = null
+      this.contactFields.filter((field) => field.apiName === 'LastName')
+        ? (lastName = this.contactFields.filter((field) => field.apiName === 'LastName')[0].apiName)
+        : (lastName = null)
+      return lastName
+    },
+  },
+
   methods: {
+    test() {
+      console.log(this.meetingUpdated)
+    },
+    setUpdateValues(key, val) {
+      if (val) {
+        this.formData[key] = val
+      }
+    },
+    addContact(index) {
+      this.addingContact = !this.addingContact
+      this.selectedIndex = index
+    },
+    onNoUpdate() {
+      this.noUpdate = !this.noUpdate
+      this.$emit('no-update', this.workflowId, this.resourceId)
+    },
+    removeParticipant(index) {
+      this.removingParticipant = !this.removingParticipant
+      this.selectedIndex = index
+    },
+    selectOpp(val) {
+      this.resource = val.id
+    },
+    mapOpp() {
+      this.$emit('map-opp', this.workflowId, this.resource, 'Opportunity')
+      this.addingOpp = !this.addingOpp
+    },
     formatUnix(unix) {
       let date = new Date(unix * 1000)
       let hours = date.getHours()
@@ -148,18 +375,224 @@ export default {
       return noSeconds
     },
   },
-  props: {
-    meeting: {},
-    resourceId: {},
-    allOpps: {},
-    index: {},
-  },
 }
 </script>
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+input {
+  border: 1px solid #e8e8e8;
+  border-radius: 0.3rem;
+  background-color: white;
+  min-height: 2.5rem;
+  width: 14vw;
+}
+.link {
+  border-bottom: 2px solid $dark-green;
+  padding-bottom: 2px;
+  padding: 2px 0px 2px 0px;
+  margin-left: -0.1rem;
+}
+a {
+  text-decoration: none;
+  padding: 0;
+  margin: 0;
+  color: $dark-green;
+  font-weight: bold;
+}
+
+.no-update {
+  background-color: $base-gray;
+  color: white;
+  border: none;
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.2rem;
+  margin-top: 0.5rem;
+  height: 4.5vh;
+  width: 8.5rem;
+  cursor: pointer;
+}
+.roww {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  cursor: pointer;
+}
+.contact-img {
+  height: 1.25rem;
+  margin-right: 0.2rem;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  border: 1px solid #e8e8e8;
+}
+.green {
+  margin-left: 0.2rem;
+}
+.green:hover {
+  filter: invert(39%) sepia(96%) saturate(373%) hue-rotate(94deg) brightness(104%) contrast(94%);
+}
+.filter {
+  filter: invert(39%) sepia(96%) saturate(373%) hue-rotate(94deg) brightness(104%) contrast(94%);
+  height: 1rem;
+  cursor: text;
+}
+.success {
+  display: flex;
+  align-items: center;
+  img {
+    height: 1rem;
+    filter: invert(40%) sepia(95%) saturate(370%) hue-rotate(90deg) brightness(54%) contrast(94%);
+    margin-left: 0.25rem;
+  }
+}
+.red:hover {
+  img {
+    filter: invert(46%) sepia(37%) saturate(832%) hue-rotate(308deg) brightness(104%) contrast(104%);
+  }
+}
+
+.add-contact {
+  img {
+    height: 0.6rem;
+  }
+  cursor: text;
+}
+.contact-field-section {
+  z-index: 7;
+  position: absolute;
+  top: 15vh;
+  right: 0.5rem;
+  border-radius: 0.33rem;
+  background-color: $white;
+  min-width: 30vw;
+  overflow: visible;
+  box-shadow: 1px 1px 7px 2px $very-light-gray;
+  &__title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: $base-gray;
+    background-color: $off-white;
+    letter-spacing: 0.4px;
+    font-weight: bold;
+    font-size: 14px;
+    width: 100%;
+  }
+  &__body {
+    max-width: 30vw;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin: 0.5rem;
+    gap: 0.5rem;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    margin-top: 1rem;
+    padding: 0rem 0.5rem;
+    width: 100%;
+    min-height: 6vh;
+    border-top: 1px solid $soft-gray;
+    p {
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+      color: $dark-green;
+    }
+  }
+}
+.noupdate-field-section {
+  z-index: 7;
+  position: absolute;
+  top: 15vh;
+  left: 0;
+  border-radius: 0.33rem;
+  background-color: $white;
+  min-width: 16vw;
+  overflow: visible;
+  box-shadow: 1px 1px 7px 2px $very-light-gray;
+  &__title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: $base-gray;
+    background-color: $off-white;
+    letter-spacing: 0.4px;
+    font-weight: bold;
+    font-size: 14px;
+    width: 100%;
+  }
+  &__body {
+    height: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    margin-top: 1rem;
+    padding: 0rem 0.5rem;
+    width: 100%;
+    min-height: 6vh;
+    border-top: 1px solid $soft-gray;
+    p {
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+      color: $dark-green;
+    }
+  }
+}
+.participant-field-section {
+  z-index: 7;
+  position: absolute;
+  top: 15vh;
+  right: 0.5rem;
+  border-radius: 0.33rem;
+  background-color: $white;
+  min-width: 20vw;
+  overflow: visible;
+  box-shadow: 1px 1px 7px 2px $very-light-gray;
+  &__title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: $base-gray;
+    background-color: $off-white;
+    letter-spacing: 0.4px;
+    font-weight: bold;
+    font-size: 14px;
+    width: 100%;
+  }
+  &__body {
+    height: 2rem;
+    display: flex;
+    justify-content: center;
+  }
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    margin-top: 1rem;
+    padding: 0rem 0.5rem;
+    width: 100%;
+    min-height: 6vh;
+    border-top: 1px solid $soft-gray;
+    p {
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+      color: $dark-green;
+    }
+  }
+}
 .add-field-section {
   z-index: 7;
   position: absolute;

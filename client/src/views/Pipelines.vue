@@ -167,17 +167,19 @@
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
-            <div v-else-if="apiName === 'OwnerId'">
+            <div v-else-if="field.apiName === 'OwnerId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <Multiselect
                 placeholder="Select Owner"
                 v-model="currentVals[field.apiName]"
                 :options="allUsers"
-                @select="setUpdateValues(field.apiName, $event.value)"
+                @select="
+                  setUpdateValues(field.apiName, $event.salesforce_account_ref.salesforce_id)
+                "
                 openDirection="below"
                 style="width: 13vw"
                 selectLabel="Enter"
-                :track-by="salesforce_account_ref ? salesforce_account_ref.salesforce_id : ''"
+                track-by="salesforce_account_ref.salesforce_id"
                 label="full_name"
               >
                 <template slot="noResult">
@@ -186,18 +188,18 @@
               </Multiselect>
             </div>
 
-            <div v-else-if="apiName === 'AccountId'">
+            <div v-else-if="field.apiName === 'AccountId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
 
               <Multiselect
                 placeholder="Select Account"
                 v-model="currentVals[field.apiName]"
                 :options="allAccounts"
-                @select="setUpdateValues(field.apiName, $event.value)"
+                @select="setUpdateValues(field.apiName, $event.integration_id)"
                 openDirection="below"
                 style="width: 13vw"
                 selectLabel="Enter"
-                :track-by="integration_id"
+                track-by="integration_id"
                 label="name"
               >
                 <template slot="noResult">
@@ -360,14 +362,16 @@
             <div v-else-if="field.apiName === 'OwnerId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <Multiselect
-                :placeholder="`${currentVals[field.apiName]}`"
+                placeholder="Select Owner"
                 v-model="currentVals[field.apiName]"
                 :options="allUsers"
-                @select="setUpdateValues(field.apiName, $event.value)"
+                @select="
+                  setUpdateValues(field.apiName, $event.salesforce_account_ref.salesforce_id)
+                "
                 openDirection="below"
                 style="width: 13vw"
                 selectLabel="Enter"
-                :track-by="salesforce_account_ref ? salesforce_account_ref.salesforce_id : ''"
+                track-by="salesforce_account_ref.salesforce_id"
                 label="full_name"
               >
                 <template slot="noResult">
@@ -380,14 +384,14 @@
               <p>{{ field.referenceDisplayLabel }}:</p>
 
               <Multiselect
-                :placeholder="`${currentVals[field.apiName]}`"
+                placeholder="Select Account"
                 v-model="currentVals[field.apiName]"
                 :options="allAccounts"
-                @select="setUpdateValues(field.apiName, $event.value)"
+                @select="setUpdateValues(field.apiName, $event.integration_id)"
                 openDirection="below"
                 style="width: 13vw"
                 selectLabel="Enter"
-                :track-by="integration_id"
+                track-by="integration_id"
                 label="name"
               >
                 <template slot="noResult">
@@ -398,7 +402,11 @@
           </section>
         </div>
         <div class="flex-end-opp">
-          <div style="display: flex; align-items: center">
+          <div v-if="updatingMeeting" style="display: flex; align-items: center">
+            <button @click="onUpdateMeeting" class="add-button__">Update</button>
+            <p @click="resetEdit" class="cancel">Cancel</p>
+          </div>
+          <div v-else style="display: flex; align-items: center">
             <button @click="updateResource()" class="add-button__">Update</button>
             <p @click="resetEdit" class="cancel">Cancel</p>
           </div>
@@ -722,9 +730,20 @@
           <MeetingWorkflow
             v-for="(meeting, i) in meetings"
             :key="i"
+            @map-opp="mapOpp"
+            @update-Opportunity="updateMeeting"
+            @no-update="NoMeetingUpdate"
+            @remove-participant="removeParticipant"
+            @add-participant="addParticipant"
+            :dropdowns="picklistQueryOptsContacts"
+            :contactFields="updateContactForm"
             :meeting="meeting.meeting_ref"
+            :workflowId="meeting.id"
             :resourceId="meeting.resource_id"
+            :meetingUpdated="meeting.is_completed"
             :allOpps="allOpps"
+            :accounts="allAccounts"
+            :meetingLoading="meetingLoading"
             :index="i"
           />
         </div>
@@ -795,7 +814,12 @@ export default {
   data() {
     return {
       id: this.$route.params.id,
+      referenceName: null,
       key: 0,
+      meetingKey: 0,
+      updatingMeeting: false,
+      meetingWorkflowId: null,
+      meetingLoading: null,
       updatingOpps: false,
       oppInstanceId: null,
       oppId: null,
@@ -838,12 +862,15 @@ export default {
       updateOppForm: null,
       oppFormCopy: null,
       createOppForm: null,
+      updateContactForm: null,
       oppFields: [],
       instanceId: null,
+      contactInstanceId: null,
       formData: {},
       noteTitle: '',
       noteInfo: '',
       picklistQueryOpts: {},
+      picklistQueryOptsContacts: {},
       instanceIds: [],
       allAccounts: null,
       allUsers: null,
@@ -973,12 +1000,69 @@ export default {
     async getMeetingList() {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
+        console.log(res.results)
         this.meetings = res.results
       } catch (e) {
         console.log(e)
       } finally {
       }
     },
+    async mapOpp(workflow, resource, resourceType) {
+      this.meetingLoading = true
+      try {
+        const res = await MeetingWorkflows.api
+          .mapMeeting(workflow, resource, resourceType)
+          .then(() => {
+            this.getMeetingList()
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.meetingLoading = false
+        }, 500)
+      }
+    },
+    async removeParticipant(workflow, participant) {
+      this.meetingLoading = true
+      try {
+        const res = await MeetingWorkflows.api.removeParticipant(workflow, participant).then(() => {
+          this.getMeetingList()
+        })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.meetingLoading = false
+        }, 500)
+      }
+    },
+    async addParticipant(workflow, participant, data) {
+      this.meetingLoading = true
+      try {
+        const res = await MeetingWorkflows.api
+          .updateParticipant({
+            workflow_id: workflow,
+            tracking_id: participant,
+            form_data: data,
+          })
+          .then(() => {
+            this.getMeetingList()
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.meetingLoading = false
+          this.$Alert.alert({
+            type: 'success',
+            timeout: 2000,
+            message: 'Contact Added Successfully',
+          })
+        }, 500)
+      }
+    },
+
     selectMeeting(name) {
       this.currentList = name
       this.showList = false
@@ -1102,16 +1186,19 @@ export default {
       this.activeFilters.push(this.currentFilter)
     },
     valueSelected(value, name) {
+      console.log(value)
       let users = this.allUsers.filter((user) => user.salesforce_account_ref)
       let user = null
       if (name === 'OwnerId') {
+        this.referenceName = name
         user = users.filter((user) => user.salesforce_account_ref.salesforce_id === value)
         this.filterValues.push(user[0].full_name)
+        console.log(this.filterValues)
       } else if (name === 'AccountId') {
         let account = this.allAccounts.filter((account) => account.integration_id === value)
         this.filterValues.push(account[0].name)
       } else {
-        this.filterValues.push(value)
+        this.filterValues.push(value.value)
       }
     },
     selectFilter(name, type, label) {
@@ -1464,8 +1551,89 @@ export default {
     resetAddOpp() {
       this.addOppModalOpen = !this.addOppModalOpen
     },
+    async updateContactInstance() {
+      try {
+        const res = await SObjects.api.createFormInstance({
+          resourceType: 'Contact',
+          formType: 'UPDATE',
+        })
+        // this.addOppModalOpen = true
+        this.contactInstanceId = res.form_id
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    async NoMeetingUpdate(meetingWorkflow) {
+      this.meetingLoading = true
+      try {
+        const res = await MeetingWorkflows.api
+          .updateWorkflow({
+            workflow_id: meetingWorkflow,
+            form_data: {
+              meeting_type: 'No Update',
+              meeting_comments: 'No Update',
+            },
+          })
+          .then(() => {
+            this.getMeetingList()
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.meetingLoading = false
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 2000,
+          message: 'Meeting Logged successfully',
+          sub: 'No update necessary',
+        })
+      }
+    },
+    async updateMeeting(meetingWorkflow, id) {
+      this.currentVals = []
+      this.editOpModalOpen = true
+      this.updatingMeeting = true
+      this.meetingWorkflowId = meetingWorkflow
+      try {
+        const res = await SObjects.api.createFormInstance({
+          resourceType: 'Opportunity',
+          formType: 'UPDATE',
+          resourceId: id,
+        })
+        this.currentVals = res.current_values
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    async onUpdateMeeting() {
+      this.meetingLoading = true
+      this.editOpModalOpen = false
+      try {
+        const res = await MeetingWorkflows.api
+          .updateWorkflow({
+            workflow_id: this.meetingWorkflowId,
+            form_data: this.formData,
+          })
+          .then((res) => {
+            console.log(res)
+            this.getMeetingList()
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.updatingMeeting = false
+        this.meetingLoading = false
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 2000,
+          message: 'Meeting Logged successfully',
+          sub: 'Opportunity updated',
+        })
+      }
+    },
     async createFormInstance(id, alertInstanceId = null) {
       this.currentVals = []
+      this.updatingMeeting = false
       this.editOpModalOpen = true
       this.alertInstanceId = alertInstanceId
       try {
@@ -1708,8 +1876,29 @@ export default {
         this.createOppForm = res.filter(
           (obj) => obj.formType === 'CREATE' && obj.resource === 'Opportunity',
         )
+        this.updateContactForm = res.filter(
+          (obj) => obj.formType === 'UPDATE' && obj.resource === 'Contact',
+        )
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
         this.createOppForm = this.createOppForm[0].fieldsRef
+        this.updateContactForm = this.updateContactForm[0].fieldsRef
+
+        for (let i = 0; i < this.updateContactForm.length; i++) {
+          if (
+            this.updateContactForm[i].dataType === 'Picklist' ||
+            this.updateContactForm[i].dataType === 'MultiPicklist'
+          ) {
+            this.picklistQueryOptsContacts[this.updateContactForm[i].apiName] =
+              this.updateContactForm[i].apiName
+          } else if (this.updateContactForm[i].dataType === 'Reference') {
+            this.picklistQueryOptsContacts[this.updateContactForm[i].referenceDisplayLabel] =
+              this.updateContactForm[i].referenceDisplayLabel
+          }
+        }
+        for (let i in this.picklistQueryOptsContacts) {
+          this.picklistQueryOptsContacts[i] = this.listPicklists(i, { picklistFor: i })
+        }
+
         for (let i = 0; i < this.oppFormCopy.length; i++) {
           if (
             this.oppFormCopy[i].dataType === 'Picklist' ||
@@ -1739,6 +1928,9 @@ export default {
             field.apiName !== 'AccountId' &&
             field.apiName !== 'OwnerId',
         )
+        this.updateContactForm = this.updateContactForm.filter(
+          (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+        )
       } catch (error) {
         console.log(error)
       }
@@ -1746,7 +1938,7 @@ export default {
     async getUsers() {
       try {
         const res = await SObjects.api.getObjects('User')
-        this.allUsers = res.results
+        this.allUsers = res.results.filter((user) => user.has_salesforce_integration)
       } catch (e) {
         console.log(e)
       }
@@ -1984,6 +2176,7 @@ h3 {
 }
 .table-row {
   display: table-row;
+  left: 0;
 }
 .table-cell {
   display: table-cell;

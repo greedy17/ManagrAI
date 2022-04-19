@@ -30,6 +30,7 @@ from rest_framework.decorators import (
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from managr.core.models import User
+from managr.slack import constants as slack_const
 from managr.api.emails import send_html_email
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.models import OrgCustomSlackForm
@@ -59,6 +60,7 @@ from .background import (
     emit_add_update_to_sf,
     _send_instant_alert,
     _process_pipeline_sync,
+    emit_meeting_workflow_tracker,
 )
 from managr.salesforce.utils import process_text_field_format
 from managr.salesforce import constants as sf_consts
@@ -777,3 +779,171 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             Q(user=user, datetime_created__range=(start, end))
         )
         return meetings
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="map-workflow",
+    )
+    def map_workflow(self, request, *args, **kwargs):
+        request_data = self.request.data
+        workflow = MeetingWorkflow.objects.get(id=request_data.get("workflow_id"))
+        resource_id = request_data.get("resource_id")
+        resource_type = request_data.get("resource_type")
+        workflow.resource_id = resource_id
+        workflow.resource_type = resource_type
+        workflow.save()
+        workflow.add_form(
+            resource_type,
+            slack_const.FORM_TYPE_UPDATE,
+        )
+        data = MeetingWorkflowSerializer(instance=workflow).data
+        return Response(data=data)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="update-participant",
+    )
+    def update_participant(self, request, *args, **kwargs):
+        from managr.organization.models import ContactAdapter
+
+        request_data = self.request.data
+        workflow = MeetingWorkflow.objects.get(id=request_data.get("workflow_id"))
+        meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
+        contact = dict(
+            *filter(
+                lambda contact: contact["_tracking_id"] == request_data.get("tracking_id"),
+                meeting.participants,
+            )
+        )
+        form = (
+            workflow.forms.get(id=contact["_form"])
+            if workflow.meeting
+            else OrgCustomSlackFormInstance.objects.get(id=contact.get("_form"))
+        )
+        form.save_form(request_data.get("form_data"), False)
+        user_id = workflow.user.id if type else workflow.user_id
+        # reconstruct the current data with the updated data
+        adapter = ContactAdapter.from_api(
+            {**contact.get("secondary_data", {}), **form.saved_data}, str(user_id)
+        )
+        new_contact = {
+            **contact,
+            **adapter.as_dict,
+            "id": contact.get("id", None),
+            "__has_changes": True,
+        }
+        if workflow.non_zoom_meeting is not None:
+            part_index = None
+            print(workflow)
+            for index, participant in enumerate(workflow.participants):
+                if participant["_tracking_id"] == new_contact["_tracking_id"]:
+                    part_index = index
+                    break
+            workflow.participants = [
+                *workflow.participants[:part_index],
+                new_contact,
+                *workflow.participants[part_index + 1 :],
+            ]
+            workflow.save()
+        else:
+            part_index = None
+            for index, participant in enumerate(meeting.participants):
+                if participant["_tracking_id"] == new_contact["_tracking_id"]:
+                    part_index = index
+                    break
+            meeting.participants = [
+                *meeting.participants[:part_index],
+                new_contact,
+                *meeting.participants[part_index + 1 :],
+            ]
+            meeting.save()
+        data = meeting.participants
+        return Response(data=data)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="remove-participant",
+    )
+    def remove_participant(self, request, *args, **kwargs):
+        request_data = self.request.data
+        workflow = MeetingWorkflow.objects.get(id=request_data.get("workflow_id"))
+        meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
+        for i, part in enumerate(meeting.participants):
+            if part["_tracking_id"] == request_data.get("tracking_id"):
+                # remove its form if it exists
+                if part["_form"] not in [None, ""]:
+                    workflow.forms.filter(id=part["_form"]).delete()
+                del meeting.participants[i]
+                break
+        meeting.save()
+        return Response()
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="update-workflow",
+    )
+    def update_workflow(self, request, *args, **kwargs):
+        request_data = self.request.data
+        user = request.user
+        workflow = MeetingWorkflow.objects.get(id=request_data.get("workflow_id"))
+
+        forms = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING)
+        current_form_ids = []
+        if len(forms):
+            for form in forms:
+                current_form_ids.append(str(form.id))
+                form.save_form(request_data.get("form_data"))
+        # otherwise we save the meeting review form
+        else:
+            form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
+            current_form_ids.append(str(form.id))
+            form.save_form(request_data.get("form_data"), False)
+        if workflow.meeting:
+            contact_forms = workflow.forms.filter(
+                template__resource=slack_const.FORM_RESOURCE_CONTACT
+            )
+        else:
+            contact_ids = [
+                participant["_form"] for participant in workflow.non_zoom_meeting.participants
+            ]
+            contact_forms = OrgCustomSlackFormInstance.objects.filter(id__in=contact_ids)
+        ops = [
+            f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}",
+            f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}",
+            # save meeting data
+        ]
+
+        for form in contact_forms:
+            if form.template.form_type == slack_const.FORM_TYPE_CREATE:
+                ops.append(
+                    f"{sf_consts.MEETING_REVIEW__CREATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
+                )
+            else:
+                ops.append(
+                    f"{sf_consts.MEETING_REVIEW__UPDATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
+                )
+
+        # emit all events
+        print(ops)
+        if len(workflow.operations_list):
+            workflow.operations_list = [*workflow.operations_list, *ops]
+        else:
+            workflow.operations_list = ops
+
+        if len(user.slack_integration.realtime_alert_configs):
+            _send_instant_alert(current_form_ids)
+
+        workflow.save()
+        workflow.begin_tasks()
+        emit_meeting_workflow_tracker(str(workflow.id))
+        serializer = MeetingWorkflowSerializer(instance=workflow)
+        data = {"success": True, "workflow": serializer.data}
+        return Response(data=data)

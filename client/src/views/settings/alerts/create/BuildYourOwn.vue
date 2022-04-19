@@ -253,7 +253,27 @@
           <div class="crm">
             <h4 style="margin-top: 2rem">Add CRM values</h4>
             <div @click="addCount()">
-              <DropDownSearch
+              <Multiselect
+                :class="!templateBounce && fieldBounce && clickCount === 0 ? 'bouncy' : ''"
+                placeholder="Select Channel"
+                v-model="crmValue"
+                @input="bindText(`${selectedResourceType}.${$event.apiName}`)"
+                :options="fields.list"
+                openDirection="below"
+                style="min-width: 13vw"
+                selectLabel="Enter"
+                track-by="apiName"
+                label="referenceDisplayLabel"
+              >
+                <template slot="noResult">
+                  <p>No results.</p>
+                </template>
+                <template slot="afterList">
+                  <p class="load-more" @click="fieldNextPage">Load More</p>
+                </template>
+              </Multiselect>
+
+              <!-- <DropDownSearch
                 :class="!templateBounce && fieldBounce && clickCount === 0 ? 'bouncy' : ''"
                 :items="fields.list"
                 @input="bindText(`${selectedResourceType}.${$event}`)"
@@ -265,7 +285,7 @@
                 @load-more="fieldNextPage"
                 @search-term="onSearchFields"
                 auto
-              />
+              /> -->
             </div>
           </div>
         </div>
@@ -344,7 +364,22 @@
                   <div v-if="form.field.recurrenceFrequency.value == 'WEEKLY'">
                     <FormField>
                       <template v-slot:input>
-                        <DropDownSearch
+                        <Multiselect
+                          placeholder="Select a Day"
+                          v-model="selectedDay"
+                          :options="weeklyOpts"
+                          openDirection="below"
+                          style="min-width: 13vw"
+                          selectLabel="Enter"
+                          track-by="value"
+                          label="key"
+                        >
+                          <template slot="noResult">
+                            <p>No results.</p>
+                          </template>
+                        </Multiselect>
+
+                        <!-- <DropDownSearch
                           :items.sync="weeklyOpts"
                           :itemsRef.sync="form.field._recurrenceDay.value"
                           v-model="form.field.recurrenceDay.value"
@@ -354,24 +389,9 @@
                           nullDisplay="Select Day"
                           searchable
                           local
-                        />
+                        /> -->
                       </template>
                     </FormField>
-                    <!-- <div :key="value" v-for="(key, value) in weeklyOpts">
-                      <span class="delivery__row">
-                        <input
-                          type="radio"
-                          :value="key.value"
-                          id="value"
-                          v-model="form.field.recurrenceDay.value"
-                          style="height: 1rem"
-                          @click="setDay(key)"
-                        />
-                        <label style="margin-left: -3rem; margin-top: 0.5rem" for="value">{{
-                          key.key
-                        }}</label>
-                      </span>
-                    </div> -->
                   </div>
 
                   <FormField
@@ -383,7 +403,7 @@
                     small
                   />
 
-                  <p
+                  <!-- <p
                     @click="removeDay"
                     v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
                     :class="form.field.recurrenceDay.value ? 'selected__item' : 'visible'"
@@ -407,7 +427,7 @@
                       alt=""
                     />
                     {{ convertToDay(form.field.recurrenceDay.value) }}
-                  </p>
+                  </p> -->
                 </div>
               </div>
 
@@ -446,7 +466,27 @@
                 </div> -->
                 <FormField :errors="form.field.alertTargets.errors">
                   <template v-slot:input>
-                    <DropDownSearch
+                    <Multiselect
+                      placeholder="Select Users"
+                      @input="mapIds"
+                      v-model="selectedUsers"
+                      :options="userTargetsOpts"
+                      openDirection="below"
+                      style="min-width: 13vw"
+                      selectLabel="Enter"
+                      track-by="id"
+                      label="fullName"
+                      :multiple="true"
+                    >
+                      <template slot="noResult">
+                        <p>No results.</p>
+                      </template>
+                      <template slot="afterList">
+                        <p class="load-more" @click="onUsersNextPage">Load More</p>
+                      </template>
+                    </Multiselect>
+
+                    <!-- <DropDownSearch
                       :items.sync="userTargetsOpts"
                       :itemsRef.sync="form.field._alertTargets.value"
                       v-model="form.field.alertTargets.value"
@@ -461,10 +501,10 @@
                       :hasNext="!!users.pagination.hasNextPage"
                       @load-more="onUsersNextPage"
                       @search-term="onSearchUsers"
-                    />
+                    /> -->
                   </template>
                 </FormField>
-                <div style="margin-top: -0.5rem" class="items_height">
+                <!-- <div style="margin-top: -0.5rem" class="items_height">
                   <p
                     :key="i"
                     v-for="(item, i) in form.field.alertTargets.value"
@@ -478,7 +518,7 @@
                     />
                     {{ checkInteger(item) }}
                   </p>
-                </div>
+                </div> -->
               </div>
 
               <div
@@ -541,7 +581,31 @@
                 <div v-else>
                   <FormField>
                     <template v-slot:input>
-                      <DropDownSearch
+                      <Multiselect
+                        placeholder="Select Channel"
+                        v-model="selectedChannel"
+                        @input="setRecipient"
+                        :options="userChannelOpts.channels"
+                        openDirection="below"
+                        style="min-width: 13vw"
+                        selectLabel="Enter"
+                        track-by="id"
+                        label="name"
+                      >
+                        <template slot="noResult">
+                          <p>No results.</p>
+                        </template>
+                        <template slot="afterList">
+                          <p
+                            class="load-more"
+                            @click="listUserChannels(userChannelOpts.nextCursor)"
+                          >
+                            Load More
+                          </p>
+                        </template>
+                      </Multiselect>
+
+                      <!-- <DropDownSearch
                         :items.sync="userChannelOpts.channels"
                         :itemsRef.sync="form.field._recipients.value"
                         v-model="form.field.recipients.value"
@@ -563,10 +627,10 @@
                           />
                           {{ option['name'] }}
                         </template>
-                      </DropDownSearch>
+                      </DropDownSearch> -->
                     </template>
                   </FormField>
-
+                  <!-- 
                   <p
                     v-if="form.field.recipients.value.length > 0"
                     @click="removeTarget"
@@ -578,7 +642,7 @@
                       alt=""
                     />
                     {{ form.field._recipients.value.name }}
-                  </p>
+                  </p> -->
                 </div>
               </div>
             </div>
@@ -801,9 +865,12 @@ export default {
     CollectionSearch,
     ProgressBar,
     CheckBox,
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {
     return {
+      selectedDay: null,
+      crmValue: null,
       channelOpts: new SlackListResponse(),
       userChannelOpts: new SlackListResponse(),
       channelName: '',
@@ -885,8 +952,18 @@ export default {
         }
       },
     },
+    selectedDay: function () {
+      this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDay.value =
+        this.selectedDay
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value =
+        this.selectedDay.value
+    },
   },
   methods: {
+    mapIds() {
+      let mappedIds = this.selectedUsers.map((user) => user.id)
+      this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value = mappedIds
+    },
     positiveDay(num) {
       if (num < 0) {
         return (num *= -1) + ' days in the past.'
@@ -1164,11 +1241,11 @@ export default {
         )
       }
     },
-    setRecipients(obj) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value.push(obj)
-    },
-    setRecipient(obj) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = obj
+    setRecipient() {
+      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value =
+        this.selectedChannel
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
+        this.selectedChannel.id
     },
     changeType(val) {
       this.recipientType = val
@@ -1376,6 +1453,14 @@ export default {
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
+.load-more {
+  text-align: center;
+  font-size: 13px;
+}
+.load-more:hover {
+  color: $dark-green;
+  cursor: pointer;
+}
 ::placeholder {
   color: $panther-silver;
   font-size: 0.75rem;
@@ -1394,9 +1479,8 @@ export default {
   background-color: white;
   border: none;
   width: 70%;
+  border: 1px solid #e8e8e8;
   // padding: 0 0 0 1rem;
-
-  box-shadow: 3px 4px 7px $very-light-gray;
 }
 .bottom_locked {
   display: flex;
@@ -1500,22 +1584,21 @@ button img {
   width: 12vw;
   background-color: white;
   color: $panther;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  border: none;
+  border: 1px solid #e8e8e8;
 }
 ::v-deep .input-form__large {
   width: 12vw;
   background-color: white;
   color: $panther;
+  border: 1px solid #e8e8e8;
 }
 ::v-deep .collection-search .collection-search__form .collection-search__input .search__input {
-  @include input-field();
   height: 2.5rem;
-  border: none;
+  border: 1px solid #e8e8e8 !important;
   width: 10rem;
   padding: 0 0 0 1rem;
   margin: 1rem;
-  box-shadow: 3px 4px 7px $very-light-gray;
+  // box-shadow: 3px 4px 7px $very-light-gray;
 }
 
 .filtered {
@@ -1794,16 +1877,6 @@ button img {
 .space__ {
   height: 16vh;
 }
-// ::-webkit-scrollbar {
-//   background-color: $panther;
-//   -webkit-appearance: none;
-//   width: 4px;
-//   height: 100%;
-// }
-// ::-webkit-scrollbar-thumb {
-//   border-radius: 2px;
-//   background-color: $panther-silver;
-// }
 .plus_button {
   border: none;
   box-shadow: 3px 4px 7px $very-light-gray;

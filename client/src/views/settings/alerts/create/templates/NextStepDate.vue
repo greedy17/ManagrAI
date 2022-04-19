@@ -138,7 +138,16 @@
                       selectLabel="Enter"
                       track-by="id"
                       label="name"
-                    />
+                    >
+                      <template slot="noResult">
+                        <p>No results.</p>
+                      </template>
+                      <template slot="afterList">
+                        <p class="load-more" @click="listUserChannels(userChannelOpts.nextCursor)">
+                          Load More
+                        </p>
+                      </template>
+                    </Multiselect>
                   </template>
                 </FormField>
               </div>
@@ -804,6 +813,15 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
+.load-more {
+  text-align: center;
+  font-size: 13px;
+}
+.load-more:hover {
+  color: $dark-green;
+  cursor: pointer;
+}
+
 @keyframes bounce {
   0% {
     transform: translateY(0);
@@ -1220,10 +1238,10 @@ textarea {
     font-size: 11px;
   }
 }
-.alerts-page__message-options-body__bindings__fields {
-  // margin: 3rem 0rem;
-  // width: 40rem;
-}
+// .alerts-page__message-options-body__bindings__fields {
+//   margin: 3rem 0rem;
+//   width: 40rem;
+// }
 .green {
   color: #ddad3c;
 }

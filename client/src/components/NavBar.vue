@@ -33,11 +33,6 @@
                 >Team</router-link
               >
             </li>
-            <li>
-              <router-link exact-active-class="active" :to="{ name: 'Forecasting' }"
-                >Forecast (coming soon)</router-link
-              >
-            </li>
           </ul>
         </div>
 
@@ -64,11 +59,6 @@
                 >Team</router-link
               >
             </li>
-            <li>
-              <router-link exact-active-class="active" :to="{ name: 'Forecasting' }"
-                >Forecast (coming soon)</router-link
-              >
-            </li>
           </ul>
         </div>
 
@@ -87,11 +77,6 @@
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Pipelines' }"
                 >Pipeline</router-link
-              >
-            </li>
-            <li>
-              <router-link exact-active-class="active" :to="{ name: 'Forecasting' }"
-                >Forecast (coming soon)</router-link
               >
             </li>
           </ul>
@@ -118,11 +103,6 @@
             <li v-if="!isOnboarding">
               <router-link exact-active-class="active" :to="{ name: 'Pipelines' }"
                 >Pipeline</router-link
-              >
-            </li>
-            <li v-if="!isOnboarding">
-              <router-link exact-active-class="active" :to="{ name: 'Forecasting' }"
-                >Forecast (coming soon)</router-link
               >
             </li>
           </ul>

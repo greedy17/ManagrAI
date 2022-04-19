@@ -1239,10 +1239,12 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False, bulk=False):
     resource_name = main_form.resource_object.name if main_form.resource_object.name else ""
     slack_access_token = user.organization.slack_integration.access_token
     title = (
-        "*Meeting Recap* :zap:" if manager_recap else f"*{main_form.template.resource} Recap* :zap:"
+        ":zap: *Instant Update:* Meeting Logged"
+        if manager_recap
+        else f":zap: *{main_form.template.resource} Recap*"
     )
     if bulk:
-        title = "*Bulk Update* :zap:"
+        title = ":zap: *Bulk Update* "
         text = ""
         for index, form in enumerate(submitted_forms):
             text += f"{form.resource_object.name}"
@@ -1258,7 +1260,7 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False, bulk=False):
             text,
             action_id=action_with_params(
                 slack_consts.VIEW_RECAP,
-                params=[f"u={str(user.id)}", f"form_ids={'.'.join(form_ids)}"],
+                params=[f"u={str(user.id)}", f"form_ids={','.join(form_ids)}"],
             ),
         ),
         block_builders.context_block(f"{main_form.template.resource} owned by {user.full_name}"),
@@ -1382,6 +1384,7 @@ def create_alert_string(operator, data_type, config_value, saved_value, old_valu
             return alert_string
         elif (
             data_type == "date"
+            and old_value is not None
             and datetime.strptime(saved_value, "%Y-%m-%d").month
             != datetime.strptime(old_value, "%Y-%m-%d").month
         ):
@@ -1417,12 +1420,13 @@ def _send_instant_alert(form_ids):
         if api_name in new_data.keys():
             for object in configs[str(field["id"])].values():
                 if api_name in list(object.values()):
+                    old_value = old_data[api_name] if len(old_data) else None
                     value_check = create_alert_string(
                         object["operator"],
                         object["data_type"],
                         object["value"],
                         new_data[api_name],
-                        old_data[api_name],
+                        old_value,
                         object["title"],
                     )
                     if value_check:
@@ -1446,7 +1450,7 @@ def _send_instant_alert(form_ids):
                 f"_{main_form.template.resource}_ *{resource_name}*",
                 action_id=action_with_params(
                     slack_consts.VIEW_RECAP,
-                    params=[f"u={str(user.id)}", f"form_ids={'.'.join(form_ids)}"],
+                    params=[f"u={str(user.id)}", f"form_ids={','.join(form_ids)}"],
                 ),
             ),
             block_builders.context_block(

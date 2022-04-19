@@ -36,8 +36,8 @@ p {
 .lds-ring {
   display: inline-block;
   position: relative;
-  width: 80px;
-  height: 80px;
+  width: 2rem;
+  height: 2rem;
 }
 .lds-ring div {
   box-sizing: border-box;

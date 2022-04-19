@@ -100,15 +100,14 @@ class AlertTemplateViewSet(
             while True:
                 sf = self.request.user.salesforce_account
                 try:
-                    res = sf.adapter_class.execute_alert_query(
-                        template.url_str(self.request.user, config.id), template.resource_type
-                    )
-
-                    res_data = [item.integration_id for item in res]
-
-                    logger.info(
-                        f"Pulled total {len(res)} from request for {template.resource_type} matching alert query"
-                    )
+                    users = config.target_users
+                    res_data = []
+                    for user in users:
+                        if hasattr(user, "salesforce_account"):
+                            res = sf.adapter_class.execute_alert_query(
+                                template.url_str(user, config.id), template.resource_type
+                            )
+                            res_data.extend([item.integration_id for item in res])
                     break
                 except TokenExpired:
                     if attempts >= 5:
@@ -219,9 +218,7 @@ class AlertConfigViewSet(
                 id=last_instance.template.id
             ).values()[0]
             instances = alert_models.AlertInstance.objects.filter(
-                user=user,
-                config__id=config_id,
-                invocation=last_instance.invocation,
+                user=user, config__id=config_id, invocation=last_instance.invocation,
             )
             return Response(data={"instances": instances.values(), "template": template})
 
@@ -279,8 +276,7 @@ class AlertOperandViewSet(
 
 
 class AlertInstanceViewSet(
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet,
+    mixins.ListModelMixin, viewsets.GenericViewSet,
 ):
     filter_backends = (
         DjangoFilterBackend,
@@ -327,14 +323,6 @@ class RealTimeAlertViewSet(
                     configs = user.slack_integration.realtime_alert_configs
                     if str(field.id) in configs.keys():
                         if current_config["title"] in configs[str(field.id)].keys():
-                            if (
-                                str(manager.id)
-                                not in configs[str(field.id)][title]["recipients"].keys()
-                            ):
-                                configs[str(field.id)][title]["recipients"][
-                                    str(manager.id)
-                                ] = data.get("recipients")
-                        else:
                             configs[str(field.id)][title] = current_config
 
                     else:

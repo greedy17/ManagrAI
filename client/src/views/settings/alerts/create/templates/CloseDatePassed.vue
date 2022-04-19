@@ -419,7 +419,6 @@ export default {
     },
     mapIds() {
       let mappedIds = this.selectedUsers.map((user) => user.id)
-      console.log(mappedIds)
       this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value = mappedIds
     },
     getUser(userInfo) {
