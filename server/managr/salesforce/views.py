@@ -777,7 +777,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         end = curr_date.replace(hour=23, minute=59)
         meetings = MeetingWorkflow.objects.filter(
             Q(user=user, datetime_created__range=(start, end))
-        )
+        ).order_by("-datetime_created")
         return meetings
 
     @action(
@@ -795,8 +795,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type,
-            slack_const.FORM_TYPE_UPDATE,
+            resource_type, slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)
@@ -838,7 +837,6 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         }
         if workflow.non_zoom_meeting is not None:
             part_index = None
-            print(workflow)
             for index, participant in enumerate(workflow.participants):
                 if participant["_tracking_id"] == new_contact["_tracking_id"]:
                     part_index = index
@@ -932,7 +930,6 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
                 )
 
         # emit all events
-        print(ops)
         if len(workflow.operations_list):
             workflow.operations_list = [*workflow.operations_list, *ops]
         else:
