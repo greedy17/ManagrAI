@@ -647,14 +647,14 @@ export default {
       }
     },
   },
-  async created() {
-    // populate values for stand alone fields
-    // for this version only allowing edit of certain fields or delete of array items
-    if (this.alert) {
-      this.templateTitleField.value = this.alert.title
-      this.messageTemplateForm.field.body.value = this.alert.messageTemplateRef.body
-    }
-  },
+  // async created() {
+  //   // populate values for stand alone fields
+  //   // for this version only allowing edit of certain fields or delete of array items
+  //   if (this.alert) {
+  //     this.templateTitleField.value = this.alert.title
+  //     this.messageTemplateForm.field.body.value = this.alert.messageTemplateRef.body
+  //   }
+  // },
 }
 </script>
 
