@@ -2082,7 +2082,7 @@ export default {
     ) {
       this.templates.list.length
         ? (this.currentList = this.templates.list.filter((temp) => temp.id === this.id)[0].title)
-        : (this.currentList = '...')
+        : (this.currentList = 'Workflow...')
       this.updateCounter += 1
     }
   },
