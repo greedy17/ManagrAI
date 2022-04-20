@@ -243,8 +243,8 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                 else:
                     memo[p.get("user_email")] = len(participants)
                     participants.append(p)
-
-        if settings.IN_DEV or settings.IN_STAGING:
+        print(participants)
+        if settings.IN_STAGING:
             participants.append(
                 {
                     "name": "maybe mike",
@@ -258,6 +258,17 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                     "id": "",
                     "user_email": f"{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}@{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}.com",
                 }
+            )
+        if settings.IN_DEV:
+            participants.append(
+                {
+                    "name": "maybe mike",
+                    "id": "",
+                    "user_email": f"{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}@{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}.com",
+                }
+            )
+            participants.append(
+                {"name": "Zachary Bradley", "id": "", "user_email": "zachbradleydev@gmail.com",}
             )
         contact_forms = []
         if len(participants):
