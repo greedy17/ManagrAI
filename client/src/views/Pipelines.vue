@@ -1001,10 +1001,15 @@ export default {
     tester() {
       console.log(this.templates.list)
     },
+    // setInitialForm() {
+    //   this.formData = {
+    //     meeting_type: 'N/A',
+    //     meeting_comments: 'N/A',
+    //   }
+    // },
     async getMeetingList() {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
-        console.log(res.results)
         this.meetings = res.results
       } catch (e) {
         console.log(e)
@@ -1636,6 +1641,7 @@ export default {
       }
     },
     async createFormInstance(id, alertInstanceId = null) {
+      // this.setInitialForm()
       this.currentVals = []
       this.updatingMeeting = false
       this.editOpModalOpen = true
@@ -1787,6 +1793,7 @@ export default {
           })
         this.updateList = []
         this.formData = {}
+        // this.setInitialForm()
         this.$Alert.alert({
           type: 'success',
           timeout: 1000,
@@ -2249,7 +2256,7 @@ h3 {
   flex-wrap: wrap;
   gap: 0.25rem;
   padding: 0.5rem;
-  overflow-y: scroll;
+  overflow: auto;
   max-height: 56vh;
   border-radius: 0.25rem;
   border-bottom: 3px solid $white;
@@ -2259,6 +2266,13 @@ h3 {
   div {
     margin-right: 0.25rem;
   }
+}
+ul::-webkit-scrollbar {
+  width: 0 !important;
+  display: none;
+  overflow: -moz-scrollbars-none;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 .note-section {
   padding: 0.5rem 1rem;
@@ -2649,7 +2663,7 @@ main:hover > span {
   background-color: $white;
   min-width: 20vw;
   max-height: 70vh;
-  overflow: scroll;
+  overflow-x: clip;
   margin-right: 0.5rem;
   box-shadow: 1px 1px 7px 2px $very-light-gray;
   &__title {
@@ -2734,5 +2748,13 @@ textarea {
 }
 a {
   text-decoration: none;
+}
+::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: 4px;
+}
+::-webkit-scrollbar-thumb {
+  border-radius: 2px;
+  background-color: $soft-gray;
 }
 </style>

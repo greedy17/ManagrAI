@@ -466,7 +466,7 @@
             <div style="width: 100%" v-if="showMeetingList">
               <button @click="selectMeeting('Today\'s meetings')" class="list-button">
                 Today's meetings
-                <span class="filter" v-if="currentList === 'Today\'s meetings'"> active</span>
+                <span class="filter" v-if="currentList === 'Today\'s Meetings'"> active</span>
               </button>
             </div>
             <p @click="showWorkflowList = !showWorkflowList" class="list-section__sub-title">
@@ -530,6 +530,7 @@
             :meeting="meeting.meeting_ref"
             :workflowId="meeting.id"
             :resourceId="meeting.resource_id"
+            :resourceType="meeting.resource_type"
             :meetingUpdated="meeting.is_completed"
             :allOpps="allOpps"
             :owners="allUsers"
@@ -756,7 +757,6 @@ export default {
     async getMeetingList() {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
-        console.log(res.results)
         this.meetings = res.results
       } catch (e) {
         console.log(e)
@@ -1739,15 +1739,7 @@ export default {
       this.addOppModalOpen = true
     },
     closeDatesThisMonth() {
-      this.allOpps = this.originalList
-      this.selectedWorkflow = false
-      this.selectedMeeting = false
-      this.allOpps = this.allOpps.filter(
-        (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth,
-      )
-      this.currentList = 'Closing this month'
-      this.showList = !this.showList
-      this.closeFilterSelection()
+      this.$router.replace({ path: '/Pipelines' })
     },
     stillThisMonth() {
       this.allOpps = this.originalList
@@ -1757,15 +1749,7 @@ export default {
       this.currentList = 'Closing this month'
     },
     closeDatesNextMonth() {
-      this.allOpps = this.originalList
-      this.selectedWorkflow = false
-      this.selectedMeeting = false
-      this.allOpps = this.allOpps.filter(
-        (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth + 1,
-      )
-      this.currentList = 'Closing next month'
-      this.showList = !this.showList
-      this.closeFilterSelection()
+      this.$router.replace({ path: '/Pipelines' })
     },
     stillNextMonth() {
       this.allOpps = this.originalList

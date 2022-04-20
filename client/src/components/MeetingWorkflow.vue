@@ -31,11 +31,18 @@
 
     <div class="table-cell">
       <div v-for="(participant, i) in meeting.participants" :key="i" class="column">
-        <div class="roww">
+        <div v-if="!meeting.participants[i].id" class="roww">
           <p class="add-contact">
             {{ meeting.participants[i].email }}
           </p>
-          <span v-if="!meetingUpdated && !meeting.participants[i].__has_changes" class="green">
+          <span
+            v-if="
+              !meetingUpdated &&
+              !meeting.participants[i].__has_changes &&
+              (!resourceType || resourceType === 'Opportunity')
+            "
+            class="green"
+          >
             <img
               @click="addContact(i)"
               class="contact-img"
@@ -43,7 +50,14 @@
               alt=""
             />
           </span>
-          <span v-if="!meetingUpdated && !meeting.participants[i].__has_changes" class="red">
+          <span
+            v-if="
+              !meetingUpdated &&
+              !meeting.participants[i].__has_changes &&
+              (!resourceType || resourceType === 'Opportunity')
+            "
+            class="red"
+          >
             <img
               src="@/assets/images/remove.svg"
               class="contact-img"
@@ -51,11 +65,21 @@
               alt=""
             />
           </span>
+          <span v-if="meeting.participants[i].__has_changes">
+            <img class="filter" src="@/assets/images/profile.png" alt="" />
+          </span>
         </div>
 
-        <span v-if="meeting.participants[i].__has_changes">
-          <img class="filter" src="@/assets/images/profile.png" alt="" />
-        </span>
+        <div v-else class="roww">
+          <p class="add-contact">
+            {{ meeting.participants[i].email }}
+          </p>
+          <img
+            style="height: 0.75rem; margin-left: 0.25rem"
+            src="@/assets/images/salesforce.png"
+            alt=""
+          />
+        </div>
 
         <div v-if="addingContact && selectedIndex === i" class="contact-field-section">
           <div class="contact-field-section__title">
@@ -126,13 +150,55 @@
                 >
                 </textarea>
               </div>
-              <div v-else-if="field.dataType === 'String' || field.dataType === 'Email'">
+              <div
+                v-else-if="
+                  field.dataType === 'String' ||
+                  field.dataType === 'Email' ||
+                  field.dataType === 'Date' ||
+                  field.dataType === 'DateTime'
+                "
+              >
                 <p>{{ field.referenceDisplayLabel }}:</p>
                 <input
                   @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
                   type="text"
                 />
               </div>
+              <div
+                v-else-if="
+                  field.dataType === 'Phone' ||
+                  field.dataType === 'Double' ||
+                  field.dataType === 'Currency'
+                "
+              >
+                <p>{{ field.referenceDisplayLabel }}:</p>
+                <input
+                  type="number"
+                  @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                />
+              </div>
+              <!-- <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
+                  <p>{{ field.referenceDisplayLabel }}:</p>
+                  <Multiselect
+                    :v-model="currentVals.length ? currentVals[0][field.apiName]: null"
+                    :options="picklistQueryOpts[field.apiName]"
+                    @select="
+                      setUpdateValues(
+                        field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+                        $event.value,
+                      )
+                    "
+                    openDirection="below"
+                    style="width: 13vw"
+                    selectLabel="Enter"
+                    track-by="value"
+                    label="label"
+                  >
+                    <template slot="noResult">
+                      <p>No results.</p>
+                    </template>
+                  </Multiselect>
+                </div> -->
             </div>
           </div>
           <div style="margin-left: 1rem; padding: 1rem" class="contact-field-section__body" v-else>
@@ -180,7 +246,10 @@
 
           <div class="participant-field-section__footer">
             <p
-              @click="$emit('remove-participant', workflowId, meeting.participants[i]._tracking_id)"
+              @click="
+                ;(removingParticipant = !removingParticipant),
+                  $emit('remove-participant', workflowId, meeting.participants[i]._tracking_id)
+              "
             >
               Yes
             </p>
@@ -191,60 +260,71 @@
     </div>
 
     <div class="table-cell">
-      <p class="roww" @click="addingOpp = !addingOpp" v-if="resourceId && !meetingUpdated">
-        {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
-        <img
-          class="invert"
-          style="height: 0.6rem; margin-left: 0.2rem"
-          src="@/assets/images/edit.png"
-          alt=""
-        />
-      </p>
-      <p v-else-if="meetingUpdated">
-        {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
-      </p>
-      <button @click="addingOpp = !addingOpp" v-else class="add-button">Map to Opportunity</button>
-      <!-- <button disabled class="add-button">Map to Opportunity (coming soon)</button> -->
-
-      <div v-if="addingOpp" class="add-field-section">
-        <div class="add-field-section__title">
-          <p>Map to Opportunity</p>
+      <div v-if="!resourceType || resourceType === 'Opportunity'">
+        <p class="roww" @click="addingOpp = !addingOpp" v-if="resourceId && !meetingUpdated">
+          {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
           <img
-            src="@/assets/images/closer.png"
-            style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
-            @click="addingOpp = !addingOpp"
+            class="invert"
+            style="height: 0.6rem; margin-left: 0.2rem"
+            src="@/assets/images/edit.png"
+            alt=""
           />
-        </div>
+        </p>
+        <p v-else-if="meetingUpdated">
+          {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
+        </p>
+        <button @click="addingOpp = !addingOpp" v-else class="add-button">
+          Map to Opportunity
+        </button>
 
-        <div class="add-field-section__body">
-          <Multiselect
-            style="width: 20vw"
-            v-model="mappedOpp"
-            @select="selectOpp($event)"
-            placeholder="Select Opportunity"
-            selectLabel="Enter"
-            label="name"
-            openDirection="below"
-            track-by="id"
-            :options="allOpps"
-          >
-            <template slot="noResult">
-              <div class="row">
-                <p>No results</p>
-                <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
-              </div>
-            </template>
-          </Multiselect>
-        </div>
+        <div v-if="addingOpp" class="add-field-section">
+          <div class="add-field-section__title">
+            <p>Map to Opportunity</p>
+            <img
+              src="@/assets/images/closer.png"
+              style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
+              @click="addingOpp = !addingOpp"
+            />
+          </div>
 
-        <div v-if="mappedOpp" class="add-field-section__footer">
-          <p @click="mapOpp">Add</p>
-        </div>
-        <div v-else style="cursor: text" class="add-field-section__footer">
-          <p style="color: gray; cursor: text">Add</p>
+          <div class="add-field-section__body">
+            <Multiselect
+              style="width: 20vw"
+              v-model="mappedOpp"
+              @select="selectOpp($event)"
+              placeholder="Select Opportunity"
+              selectLabel="Enter"
+              label="name"
+              openDirection="below"
+              track-by="id"
+              :options="allOpps"
+            >
+              <template slot="noResult">
+                <div class="row">
+                  <p>No results</p>
+                  <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
+                </div>
+              </template>
+            </Multiselect>
+          </div>
+
+          <div v-if="mappedOpp" class="add-field-section__footer">
+            <p @click="mapOpp">Add</p>
+          </div>
+          <div v-else style="cursor: text" class="add-field-section__footer">
+            <p style="color: gray; cursor: text">Add</p>
+          </div>
         </div>
       </div>
+
+      <div v-else>
+        <small>
+          Looks like this meeting is mapped to an {{ resourceType }}. <br />
+          We only support Opportunities at the moment.
+        </small>
+      </div>
     </div>
+
     <div v-if="!meetingUpdated" class="table-cell">
       <p v-if="!resourceId && !meetingLoading">Please map meeting in order to take action.</p>
       <div>
@@ -284,6 +364,8 @@
   </div>
 </template>
 <script>
+import { SObjects } from '@/services/salesforce'
+
 export default {
   name: 'MeetingWorkflow',
   data() {
@@ -299,6 +381,7 @@ export default {
       selectedAccount: null,
       selectedOwner: null,
       formData: {},
+      currentVals: [],
     }
   },
   components: {
@@ -306,12 +389,10 @@ export default {
     PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
     Modal: () => import(/* webpackPrefetch: true */ '@/components/Modal'),
   },
-  watch: {
-    // allOpps: 'test',
-  },
   props: {
     meeting: {},
     resourceId: {},
+    resourceType: {},
     allOpps: {},
     index: {},
     workflowId: {},
@@ -322,7 +403,6 @@ export default {
     accounts: {},
     owners: {},
   },
-  created() {},
   computed: {
     hasLastName() {
       let lastName = null
@@ -331,10 +411,18 @@ export default {
       return lastName
     },
   },
-
   methods: {
-    test() {
-      console.log(this.meetingUpdated)
+    async getCurrentVal() {
+      try {
+        const res = await SObjects.api.createFormInstance({
+          resourceType: 'Opportunity',
+          formType: 'UPDATE',
+          resourceId: this.resourceId,
+        })
+        this.currentVals.push(res.current_values)
+      } catch (e) {
+        console.log(e)
+      }
     },
     setUpdateValues(key, val) {
       if (val) {
@@ -405,6 +493,10 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+input:focus {
+  outline: none;
+  cursor: text;
+}
 input {
   border: 1px solid #e8e8e8;
   border-radius: 0.3rem;

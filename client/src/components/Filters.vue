@@ -55,6 +55,15 @@ export default {
 @import '@/styles/variables';
 // @import '@/styles/buttons';
 
+input[type='search'] {
+  border: none;
+  background-color: white;
+  padding: 4px;
+  margin: 0;
+}
+input[type='search']:focus {
+  outline: none;
+}
 ::placeholder {
   color: $very-light-gray;
 }
