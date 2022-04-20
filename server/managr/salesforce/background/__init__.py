@@ -38,7 +38,6 @@ from managr.slack.helpers import block_builders
 from managr.slack.helpers.utils import action_with_params
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers.exceptions import CannotSendToChannel
-from managr.slack.helpers.utils import action_with_params
 from managr.slack.models import UserSlackIntegration
 
 from ..routes import routes
@@ -585,12 +584,16 @@ def _process_add_call_to_sf(workflow_id, *args):
     if not hasattr(user, "salesforce_account"):
         return logger.exception("User does not have a salesforce account cannot push to sf")
     review_form = workflow.forms.filter(template__form_type=slack_consts.FORM_TYPE_UPDATE).first()
+    subject = review_form.saved_data.get("meeting_type")
+    description = review_form.saved_data.get("meeting_comments")
     if workflow.meeting:
+        title = workflow.meeting.topic if subject is None else subject
         user_timezone = user.zoom_account.timezone
         start_time = workflow.meeting.start_time
         end_time = workflow.meeting.end_time
 
     else:
+        title = workflow.non_zoom_meeting.event_data["title"] if subject is None else subject
         user_timezone = user.timezone
         start_time = datetime.utcfromtimestamp(
             int(workflow.non_zoom_meeting.event_data["times"]["start_time"])
@@ -610,9 +613,10 @@ def _process_add_call_to_sf(workflow_id, *args):
         if end_time
         else end_time
     )
+    print(title)
     data = dict(
-        Subject=f"Zoom Meeting - {review_form.saved_data.get('meeting_type')}",
-        Description=f"{review_form.saved_data.get('meeting_comments')}, this meeting started on {formatted_start} and ended on {formatted_end} ",
+        Subject=f"Zoom Meeting - {title}",
+        Description=f"{'No comments' if description is None else description}, this meeting started on {formatted_start} and ended on {formatted_end} ",
         WhatId=workflow.resource.integration_id,
         ActivityDate=start_time.strftime("%Y-%m-%d"),
         Status="Completed",
@@ -1372,22 +1376,22 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False, bulk=False):
 
 def create_alert_string(operator, data_type, config_value, saved_value, old_value, title):
     alert_string = f"{title}"
+    if data_type == "date":
+        saved_value = datetime.strptime(saved_value, "%Y-%m-%d")
+        old_value = datetime.strptime(old_value, "%Y-%m-%d")
     if operator == "==":
         if data_type == "string" and saved_value == config_value and saved_value != old_value:
             return alert_string
     elif operator == "<=":
-        return
+        if saved_value <= config_value:
+            return alert_string
     elif operator == ">=":
-        return
+        if saved_value >= config_value:
+            return alert_string
     elif operator == "!=":
         if data_type == "string" and saved_value != config_value:
             return alert_string
-        elif (
-            data_type == "date"
-            and old_value is not None
-            and datetime.strptime(saved_value, "%Y-%m-%d").month
-            != datetime.strptime(old_value, "%Y-%m-%d").month
-        ):
+        elif data_type == "date" and old_value is not None and saved_value.month != old_value.month:
             return alert_string
     return None
 

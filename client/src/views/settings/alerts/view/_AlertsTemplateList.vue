@@ -238,30 +238,28 @@ export default {
     }
   },
   // mounted() {
-  //   setTimeout(() => {
-  //     this.showLoader = false
-  //   }, 2000)
+  //   console.log(this.hasRecapChannel)
   // },
   async created() {
     this.templates.refresh()
+    this.getZoomChannel()
+    this.getRecapChannel()
+    await this.listUserChannels()
     this.userConfigForm = new UserConfigForm({
       activatedManagrConfigs: this.user.activatedManagrConfigs,
     })
-    await this.listUserChannels()
-    if (this.hasRecapChannel) {
-      this.currentRecapChannel = this.userChannelOpts.channels.filter(
-        (channel) => channel.id === this.hasRecapChannel,
-      )[0].name
-    }
-    if (this.zoomChannel) {
-      this.currentZoomChannel = this.userChannelOpts.channels.filter(
-        (channel) => channel.id === this.zoomChannel,
-      )[0].name
-    }
   },
   methods: {
     test() {
       console.log(this.templates)
+    },
+    async getRecapChannel() {
+      const res = await SlackOAuth.api.channelDetails(this.hasRecapChannel)
+      this.currentRecapChannel = res.channel.name
+    },
+    async getZoomChannel() {
+      const res = await SlackOAuth.api.channelDetails(this.zoomChannel)
+      this.currentZoomChannel = res.channel.name
     },
     logChannels() {
       console.log(this.userChannelOpts)

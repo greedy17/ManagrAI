@@ -319,6 +319,17 @@ export default {
   position: sticky;
   background-color: $off-white;
 }
+.table-cell-checkbox {
+  display: table-cell;
+  padding: 2vh;
+  width: 3.75vw;
+  border: none;
+  left: 0;
+  position: sticky;
+  z-index: 1;
+  border-bottom: 1px solid $soft-gray;
+  background-color: $off-white;
+}
 .cell-name-header {
   display: table-cell;
   padding: 3vh;
@@ -423,6 +434,7 @@ input[type='checkbox'] + label::before {
 .name-cell-edit-note-button-1:hover {
   transform: scale(1.03);
   box-shadow: 1px 1px 1px $soft-gray;
+  cursor: pointer;
 }
 .name-cell-edit-note-button-1 {
   height: 1.5rem;

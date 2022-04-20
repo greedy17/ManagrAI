@@ -201,4 +201,19 @@ export default {
   letter-spacing: 0.5px;
   color: $base-gray;
 }
+.table-cell-header {
+  display: table-cell;
+  padding: 1.25vh 3vh;
+  border: none;
+  border-bottom: 3px solid $light-orange-gray;
+  border-radius: 2px;
+  z-index: 2;
+  top: 0;
+  position: sticky;
+  background-color: $off-white;
+  font-weight: bold;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  color: $base-gray;
+}
 </style>
