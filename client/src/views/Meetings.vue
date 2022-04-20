@@ -434,12 +434,6 @@
           <div v-outside-click="closeListSelect" v-show="showList" class="list-section">
             <div class="list-section__title flex-row-spread">
               <p>{{ currentList }}</p>
-              <!-- <img
-                @click="showList = !showList"
-                class="exit"
-                src="@/assets/images/close.png"
-                alt=""
-              /> -->
             </div>
             <p @click="showPopularList = !showPopularList" class="list-section__sub-title">
               Standard Lists
@@ -470,13 +464,10 @@
               />
             </p>
             <div style="width: 100%" v-if="showMeetingList">
-              <router-link class="list-button" :to="{ name: 'Meetings' }"
-                >Today's meetings</router-link
-              >
-              <!-- <button @click="selectMeeting('Today\'s meetings')" class="list-button">
+              <button @click="selectMeeting('Today\'s meetings')" class="list-button">
                 Today's meetings
-                <span class="filter" v-if="currentList === 'Today\'s meetings'"> active</span>
-              </button> -->
+                <span class="filter" v-if="currentList === 'Today\'s Meetings'"> active</span>
+              </button>
             </div>
             <p @click="showWorkflowList = !showWorkflowList" class="list-section__sub-title">
               Workflows
@@ -495,142 +486,7 @@
                   </button>
                 </router-link>
               </div>
-              <!-- <button
-                :key="i"
-                v-for="(template, i) in templates.list"
-                @click="selectList(template.title, template.id)"
-                class="list-button"
-              >
-                {{ template.title }}
-                <span class="filter" v-if="currentList === template.title"> active</span>
-              </button> -->
             </div>
-          </div>
-
-          <div
-            v-for="(filter, i) in activeFilters"
-            :key="i"
-            @mouseenter="hoveredIndex = i"
-            @mouseleave="hoveredIndex = null"
-            class="main"
-          >
-            <strong style="font-size: 14px">{{ filter }}</strong>
-            <small style="font-weight: 400px; margin-left: 0.2rem">{{ currentOperators[i] }}</small>
-            <small style="margin-left: 0.2rem">{{ filterValues[i] }}</small>
-            <span v-if="hoveredIndex === i" class="selected-filters__close"
-              ><img src="@/assets/images/close.png" @click="removeFilter(filter, i)" alt=""
-            /></span>
-          </div>
-
-          <section v-if="filterSelected" style="position: relative">
-            <main class="main__before">
-              <small
-                ><strong>{{ currentFilter }}</strong></small
-              >
-              <small style="margin-left: 0.2rem">{{ currentOperators[-1] }}</small>
-            </main>
-            <div>
-              <FilterSelection
-                @filter-added="applyFilter"
-                @operator-selected="addOperator"
-                @value-selected="valueSelected"
-                @close-selection="closeFilterSelection"
-                :type="filterType"
-                :filterName="currentFilter"
-                :dropdowns="picklistQueryOpts"
-                :apiName="filterApiName"
-                :accounts="allAccounts"
-                :owners="allUsers"
-              />
-            </div>
-          </section>
-
-          <section style="position: relative">
-            <button
-              v-if="activeFilters.length < 4 && !selectedMeeting"
-              @click.stop="addingFilter"
-              class="add-filter-button"
-            >
-              <img
-                src="@/assets/images/plusOne.png"
-                style="height: 0.8rem; margin-right: 0.25rem"
-                alt=""
-              />Add filter
-            </button>
-            <div v-outside-click="closeFilters" v-if="filtering">
-              <Filters @select-filter="selectFilter" :filterFields="filterFields" />
-            </div>
-          </section>
-        </div>
-        <div v-else>
-          <div v-if="!updatingOpps" class="bulk-action">
-            <div v-if="!closeDateSelected && !advanceStageSelected && !forecastSelected">
-              <!-- <p class="bulk-action__title">Select Update or<span class="cancel">cancel</span></p> -->
-              <div class="flex-row">
-                <button @click="closeDateSelected = !closeDateSelected" class="select-btn">
-                  Push Close Date
-                  <img
-                    src="@/assets/images/date.png"
-                    style="height: 1.25rem; margin-left: 0.25rem"
-                    alt=""
-                  />
-                </button>
-                <button @click="advanceStageSelected = !advanceStageSelected" class="select-btn">
-                  Advance Stage
-                  <img
-                    src="@/assets/images/stairs.png"
-                    style="height: 1.25rem; margin-left: 0.25rem"
-                    alt=""
-                  />
-                </button>
-                <button @click="forecastSelected = !forecastSelected" class="select-btn">
-                  Change Forecast
-                  <img
-                    src="@/assets/images/monetary.png"
-                    style="height: 1.1rem; width: 1.35rem; margin-left: 0.25rem"
-                    alt=""
-                  />
-                </button>
-              </div>
-            </div>
-            <div class="flex-row-pad" v-if="closeDateSelected">
-              <p style="font-size: 14px">How many days ?:</p>
-              <input class="number-input" v-model="daysForward" type="number" />
-              <button :disabled="!daysForward" class="add-button" @click="pushCloseDate">
-                Push Close Date
-              </button>
-            </div>
-            <div class="flex-row-pad" v-if="advanceStageSelected">
-              <p style="font-size: 14px">Select Stage:</p>
-              <select
-                style="margin-left: 0.5rem; margin-right: 0.5rem"
-                @input=";(value = $event.target.value), setStage(value)"
-                id="update-input"
-              >
-                <option v-for="(stage, i) in allStages" :key="i" :value="stage.value">
-                  <p>{{ stage.label }}</p>
-                </option>
-              </select>
-              <button @click="advanceStage()" class="add-button">Advance Stage</button>
-            </div>
-            <div class="flex-row-pad" v-if="forecastSelected">
-              <p style="font-size: 14px">Select Forecast:</p>
-              <select
-                style="margin-left: 0.5rem; margin-right: 0.5rem"
-                @input=";(value = $event.target.value), setForecast(value)"
-                id="update-input"
-              >
-                <option v-for="(forecast, i) in allForecasts" :key="i" :value="forecast.value">
-                  <p>{{ forecast.label }}</p>
-                </option>
-              </select>
-              <button @click="changeForecast(currentCheckList)" class="add-button">
-                Change Forecast
-              </button>
-            </div>
-          </div>
-          <div class="bulk-action" v-else>
-            <SkeletonBox width="400px" height="22px" />
           </div>
         </div>
         <div class="flex-row">
@@ -653,81 +509,12 @@
       </section>
       <div class="results">
         <h6 style="color: #9b9b9b">
-          {{ currentList }}:
-          <span>{{
-            selectedWorkflow
-              ? currentWorkflow.length
-              : selectedMeeting
-              ? meetings.length
-              : allOpps.length
-          }}</span>
+          Today's Meetings:
+          <span>{{ meetings.length }}</span>
         </h6>
       </div>
-      <!-- <p @click="tester">test</p> -->
-      <section
-        v-show="!selectedWorkflow && !selectedMeeting && !loadingWorkflows"
-        class="table-section"
-      >
-        <div class="table">
-          <PipelineHeader
-            :oppFields="oppFields"
-            @check-all="onCheckAll"
-            @sort-opps="sortOpps"
-            @set-opps="setOpps"
-            @sort-opps-reverse="sortOppsReverse"
-            :allSelected="allSelected"
-          />
-          <PipelineTableRow
-            ref="pipelineTableChild"
-            :key="i"
-            v-for="(opp, i) in allOppsFiltered"
-            @create-form="createFormInstance(opp.id)"
-            @get-notes="getNotes(opp.id)"
-            @checked-box="selectPrimaryCheckbox(opp.id)"
-            :opp="opp"
-            :index="i"
-            :oppFields="oppFields"
-            :primaryCheckList="primaryCheckList"
-            :updateList="updateList"
-            :stageData="newStage"
-            :closeDateData="daysForward"
-            :ForecastCategoryNameData="newForecast"
-          />
-        </div>
-      </section>
-      <section
-        v-if="
-          selectedWorkflow && currentWorkflow.length > 0 && !selectedMeeting && !loadingWorkflows
-        "
-        class="table-section"
-      >
-        <div class="table">
-          <WorkflowHeader
-            :oppFields="oppFields"
-            @check-all="onCheckAllWorkflows"
-            :allWorkflowsSelected="allWorkflowsSelected"
-            @sort-opps-workflows="sortWorkflows"
-            @sort-opps-reverse-workflows="sortWorkflowsReverse"
-          />
-          <WorkflowRow
-            :key="i"
-            ref="workflowTableChild"
-            v-for="(workflow, i) in filteredWorkflows"
-            @create-form="createFormInstance(workflow.id)"
-            @get-notes="getNotes(workflow.id)"
-            @checked-box="selectWorkflowCheckbox(workflow.id)"
-            :workflow="workflow"
-            :index="i + 1 * 1000"
-            :oppFields="oppFields"
-            :workflowCheckList="workflowCheckList"
-            :updateWorkflowList="updateList"
-            :stageData="newStage"
-            :closeDateData="daysForward"
-            :ForecastCategoryNameData="newForecast"
-          />
-        </div>
-      </section>
-      <section style="min-height: 74vh" v-if="selectedMeeting" class="table-section">
+
+      <section class="table-section">
         <div class="table">
           <MeetingWorkflowHeader />
           <MeetingWorkflow
@@ -743,6 +530,7 @@
             :meeting="meeting.meeting_ref"
             :workflowId="meeting.id"
             :resourceId="meeting.resource_id"
+            :resourceType="meeting.resource_type"
             :meetingUpdated="meeting.is_completed"
             :allOpps="allOpps"
             :owners="allUsers"
@@ -752,30 +540,9 @@
           />
         </div>
       </section>
-      <section
-        v-if="
-          currentWorkflow && currentWorkflow.length < 1 && selectedWorkflow && !loadingWorkflows
-        "
-        class="empty-table-section"
-      >
-        <div>
-          <div class="empty-table">
-            <div class="table-row">
-              <div class="flex-row table-cell-header">
-                <h5 style="margin-left: 1rem">No results for the {{ currentList }} workflow.</h5>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      <section v-if="loadingWorkflows" class="empty-table-section">
-        <div>
-          <PipelineLoader />
-        </div>
-      </section>
     </div>
     <div v-if="loading">
-      <Loader loaderText="Pulling in your latest Salesforce data" />
+      <Loader loaderText="Pulling in your meetings" />
     </div>
     <!-- <router-view :key="$route.fullPath"></router-view> -->
   </div>
@@ -785,35 +552,21 @@ import { SObjects, SObjectPicklist, MeetingWorkflows } from '@/services/salesfor
 import AlertTemplate from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
 import SlackOAuth from '@/services/slack'
-import PipelineNameSection from '@/components/PipelineNameSection'
-import PipelineField from '@/components/PipelineField'
-import PipelineTableRow from '@/components/PipelineTableRow'
-import PipelineHeader from '@/components/PipelineHeader'
+
+import MeetingWorkflow from '@/components/MeetingWorkflow'
+import MeetingWorkflowHeader from '@/components/MeetingWorkflowHeader'
 import User from '@/services/users'
-import WorkflowRow from '@/components/WorkflowRow'
-import WorkflowHeader from '@/components/WorkflowHeader'
-// import MeetikngWorkflowHeader from '@/components/MeetingWorkflowHeader'
-// import MeetingWorkflow from '@/components/MeetingWorkflow'
 
 export default {
-  name: 'Pipelines',
+  name: 'Meetings',
   components: {
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     SkeletonBox: () => import(/* webpackPrefetch: true */ '@/components/SkeletonBox'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
-    PipelineNameSection,
-    PipelineField,
-    PipelineTableRow,
-    PipelineHeader,
-    WorkflowHeader,
-    WorkflowRow,
+    MeetingWorkflowHeader,
+    MeetingWorkflow,
     PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
     Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
-    Filters: () => import(/* webpackPrefetch: true */ '@/components/Filters'),
-    FilterSelection: () => import(/* webpackPrefetch: true */ '@/components/FilterSelection'),
-    MeetingWorkflowHeader: () =>
-      import(/* webpackPrefetch: true */ '@/components/MeetingWorkflowHeader'),
-    MeetingWorkflow: () => import(/* webpackPrefetch: true */ '@/components/MeetingWorkflow'),
   },
   data() {
     return {
@@ -857,7 +610,7 @@ export default {
       refreshId: null,
       filterText: '',
       workflowFilterText: '',
-      currentList: 'All Opportunities',
+      currentList: "Today's Meetings",
       alertInstanceId: null,
       showList: false,
       showWorkflowList: true,
@@ -1001,12 +754,6 @@ export default {
     tester() {
       console.log(this.templates.list)
     },
-    // setInitialForm() {
-    //   this.formData = {
-    //     meeting_type: 'N/A',
-    //     meeting_comments: 'N/A',
-    //   }
-    // },
     async getMeetingList() {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
@@ -1641,7 +1388,6 @@ export default {
       }
     },
     async createFormInstance(id, alertInstanceId = null) {
-      // this.setInitialForm()
       this.currentVals = []
       this.updatingMeeting = false
       this.editOpModalOpen = true
@@ -1793,7 +1539,6 @@ export default {
           })
         this.updateList = []
         this.formData = {}
-        // this.setInitialForm()
         this.$Alert.alert({
           type: 'success',
           timeout: 1000,
@@ -1994,15 +1739,7 @@ export default {
       this.addOppModalOpen = true
     },
     closeDatesThisMonth() {
-      this.allOpps = this.originalList
-      this.selectedWorkflow = false
-      this.selectedMeeting = false
-      this.allOpps = this.allOpps.filter(
-        (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth,
-      )
-      this.currentList = 'Closing this month'
-      this.showList = !this.showList
-      this.closeFilterSelection()
+      this.$router.replace({ path: '/Pipelines' })
     },
     stillThisMonth() {
       this.allOpps = this.originalList
@@ -2012,15 +1749,7 @@ export default {
       this.currentList = 'Closing this month'
     },
     closeDatesNextMonth() {
-      this.allOpps = this.originalList
-      this.selectedWorkflow = false
-      this.selectedMeeting = false
-      this.allOpps = this.allOpps.filter(
-        (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth + 1,
-      )
-      this.currentList = 'Closing next month'
-      this.showList = !this.showList
-      this.closeFilterSelection()
+      this.$router.replace({ path: '/Pipelines' })
     },
     stillNextMonth() {
       this.allOpps = this.originalList
@@ -2046,10 +1775,6 @@ export default {
       let newDate = input.replace(pattern, '$2/$3/$1')
       return newDate.split('T')[0]
     },
-  },
-  props: ['title'],
-  mounted() {
-    this.selectList()
   },
 }
 </script>
@@ -2162,6 +1887,7 @@ h3 {
 .table-section {
   margin: 0;
   padding: 0;
+  min-height: 74vh;
   max-height: 76vh;
   overflow: scroll;
   margin-top: 0.5rem;
@@ -2169,13 +1895,7 @@ h3 {
   box-shadow: 2px 2px 20px 2px $soft-gray;
   background-color: $off-white;
 }
-.empty-table-section {
-  height: 30vh;
-  margin-top: 2rem;
-  border-radius: 5px;
-  box-shadow: 1px 1px 20px 1px $soft-gray;
-  background-color: $off-white;
-}
+
 .table {
   display: table;
   overflow: scroll;
@@ -2190,7 +1910,6 @@ h3 {
   left: 0;
 }
 .table-cell {
-  z-index: 0;
   display: table-cell;
   position: sticky;
   min-width: 12vw;
@@ -2199,17 +1918,6 @@ h3 {
   border: none;
   border-bottom: 1px solid $soft-gray;
   font-size: 13px;
-}
-.table-cell-wide {
-  display: table-cell;
-  position: sticky;
-  min-width: 26vw;
-  background-color: $off-white;
-  padding: 2vh 3vh;
-  border: none;
-  border-bottom: 1px solid $soft-gray;
-  font-size: 13px;
-  overflow: scroll;
 }
 .table-cell:hover {
   cursor: text;
@@ -2256,7 +1964,7 @@ h3 {
   flex-wrap: wrap;
   gap: 0.25rem;
   padding: 0.5rem;
-  overflow: auto;
+  overflow-y: scroll;
   max-height: 56vh;
   border-radius: 0.25rem;
   border-bottom: 3px solid $white;
@@ -2266,13 +1974,6 @@ h3 {
   div {
     margin-right: 0.25rem;
   }
-}
-ul::-webkit-scrollbar {
-  width: 0 !important;
-  display: none;
-  overflow: -moz-scrollbars-none;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
 }
 .note-section {
   padding: 0.5rem 1rem;
@@ -2301,25 +2002,11 @@ ul::-webkit-scrollbar {
   border: none;
   left: 0;
   position: sticky;
-  z-index: 1;
+
   border-bottom: 1px solid $soft-gray;
   background-color: $off-white;
 }
-.table-cell-header {
-  display: table-cell;
-  padding: 1.25vh 3vh;
-  border: none;
-  border-bottom: 3px solid $light-orange-gray;
-  border-radius: 2px;
-  z-index: 2;
-  top: 0;
-  position: sticky;
-  background-color: $off-white;
-  font-weight: bold;
-  font-size: 13px;
-  letter-spacing: 0.5px;
-  color: $base-gray;
-}
+
 .table-cell-header-wide {
   display: table-cell;
   padding: 0.25rem;
@@ -2328,7 +2015,7 @@ ul::-webkit-scrollbar {
   border: none;
   border-bottom: 3px solid $light-orange-gray;
   border-radius: 2px;
-  z-index: 2;
+
   top: 0;
   position: sticky;
   background-color: $off-white;
@@ -2355,7 +2042,7 @@ ul::-webkit-scrollbar {
   border: none;
   border-bottom: 3px solid $light-orange-gray;
   border-radius: 2px;
-  z-index: 3;
+
   left: 3.5vw;
   top: 0;
   position: sticky;
@@ -2370,7 +2057,7 @@ ul::-webkit-scrollbar {
   padding: 1.25vh;
   border: none;
   border-bottom: 3px solid $light-orange-gray;
-  z-index: 3;
+
   width: 4vw;
   top: 0;
   left: 0;
@@ -2383,7 +2070,6 @@ ul::-webkit-scrollbar {
   letter-spacing: 0.25px;
   position: sticky;
   left: 3.5vw;
-  z-index: 2;
 }
 input[type='search'] {
   border: none;
@@ -2577,6 +2263,9 @@ section {
   height: 60vh;
   filter: invert(99%);
 }
+.invert {
+  filter: invert(99%);
+}
 .gray {
   filter: invert(44%);
 }
@@ -2663,7 +2352,7 @@ main:hover > span {
   background-color: $white;
   min-width: 20vw;
   max-height: 70vh;
-  overflow-x: clip;
+  overflow: scroll;
   margin-right: 0.5rem;
   box-shadow: 1px 1px 7px 2px $very-light-gray;
   &__title {
@@ -2748,13 +2437,5 @@ textarea {
 }
 a {
   text-decoration: none;
-}
-::-webkit-scrollbar {
-  -webkit-appearance: none;
-  width: 4px;
-}
-::-webkit-scrollbar-thumb {
-  border-radius: 2px;
-  background-color: $soft-gray;
 }
 </style>

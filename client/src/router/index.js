@@ -160,6 +160,11 @@ export default new Router({
       component: () => import('@/views/Pipelines')
     },
     {
+      path: '/meetings',
+      name: 'Meetings',
+      component: () => import('@/views/Meetings')
+    },
+    {
       path: '/forecasting',
       name: 'Forecasting',
       component: () =>
