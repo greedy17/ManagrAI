@@ -301,8 +301,11 @@
             <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <Multiselect
-                :placeholder="`${currentVals[field.apiName]}`"
-                v-model="currentVals[field.apiName]"
+                :placeholder="
+                  `${currentVals[field.apiName]}` !== 'null'
+                    ? `${currentVals[field.apiName]}`
+                    : `Select ${field.referenceDisplayLabel}`
+                "
                 :options="picklistQueryOpts[field.apiName]"
                 @select="
                   setUpdateValues(
@@ -311,6 +314,7 @@
                   )
                 "
                 openDirection="below"
+                :loading="dropdownLoading"
                 style="width: 13vw"
                 selectLabel="Enter"
                 track-by="value"
@@ -362,8 +366,8 @@
             <div v-else-if="field.apiName === 'OwnerId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <Multiselect
-                placeholder="Select Owner"
-                v-model="currentVals[field.apiName]"
+                :placeholder="currentOwner"
+                v-model="selectedOwner"
                 :options="allUsers"
                 @select="
                   setUpdateValues(field.apiName, $event.salesforce_account_ref.salesforce_id)
@@ -373,6 +377,7 @@
                 selectLabel="Enter"
                 track-by="salesforce_account_ref.salesforce_id"
                 label="full_name"
+                :loading="dropdownLoading"
               >
                 <template slot="noResult">
                   <p>No results.</p>
@@ -384,8 +389,8 @@
               <p>{{ field.referenceDisplayLabel }}:</p>
 
               <Multiselect
-                placeholder="Select Account"
-                v-model="currentVals[field.apiName]"
+                :placeholder="currentAccount"
+                v-model="selectedAccount"
                 :options="allAccounts"
                 @select="setUpdateValues(field.apiName, $event.integration_id)"
                 openDirection="below"
@@ -393,6 +398,7 @@
                 selectLabel="Enter"
                 track-by="integration_id"
                 label="name"
+                :loading="dropdownLoading"
               >
                 <template slot="noResult">
                   <p>No results.</p>
@@ -449,10 +455,12 @@
                 alt=""
               />
             </p>
-            <button v-if="showPopularList" @click="allOpportunities" class="list-button">
-              All Opportunities
-              <span class="filter" v-if="currentList === 'All Opportunities'"> active</span>
-            </button>
+            <router-link style="width: 100%" v-bind:to="'/pipelines/'">
+              <button v-if="showPopularList" @click="allOpportunities" class="list-button">
+                All Opportunities
+                <span class="filter" v-if="currentList === 'All Opportunities'"> active</span>
+              </button>
+            </router-link>
             <button v-if="showPopularList" @click="closeDatesThisMonth" class="list-button">
               Closing this month
               <span class="filter" v-if="currentList === 'Closing this month'"> active</span>
@@ -470,9 +478,9 @@
               />
             </p>
             <div style="width: 100%" v-if="showMeetingList">
-              <router-link class="list-button" :to="{ name: 'Meetings' }"
-                >Today's meetings</router-link
-              >
+              <router-link :to="{ name: 'Meetings' }">
+                <button class="list-button">Today's meetings</button>
+              </router-link>
               <!-- <button @click="selectMeeting('Today\'s meetings')" class="list-button">
                 Today's meetings
                 <span class="filter" v-if="currentList === 'Today\'s meetings'"> active</span>
@@ -664,6 +672,7 @@
         </h6>
       </div>
       <!-- <p @click="tester">test</p> -->
+
       <section
         v-show="!selectedWorkflow && !selectedMeeting && !loadingWorkflows"
         class="table-section"
@@ -695,6 +704,7 @@
           />
         </div>
       </section>
+
       <section
         v-if="
           selectedWorkflow && currentWorkflow.length > 0 && !selectedMeeting && !loadingWorkflows
@@ -727,7 +737,7 @@
           />
         </div>
       </section>
-      <section style="min-height: 74vh" v-if="selectedMeeting" class="table-section">
+      <!-- <section style="min-height: 74vh" v-if="selectedMeeting" class="table-section">
         <div class="table">
           <MeetingWorkflowHeader />
           <MeetingWorkflow
@@ -751,7 +761,7 @@
             :index="i"
           />
         </div>
-      </section>
+      </section> -->
       <section
         v-if="
           currentWorkflow && currentWorkflow.length < 1 && selectedWorkflow && !loadingWorkflows
@@ -821,6 +831,11 @@ export default {
       referenceName: null,
       key: 0,
       meetingKey: 0,
+      updateCounter: 0,
+      selectedAccount: null,
+      selectedOwner: null,
+      currentOwner: null,
+      currentAccount: null,
       updatingMeeting: false,
       meetingWorkflowId: null,
       meetingLoading: null,
@@ -846,6 +861,7 @@ export default {
       daysForward: null,
       allOpps: null,
       loading: false,
+      dropdownLoading: false,
       loadingWorkflows: false,
       templates: CollectionManager.create({ ModelClass: AlertTemplate }),
       users: CollectionManager.create({ ModelClass: User }),
@@ -983,11 +999,9 @@ export default {
     updateList: {
       async handler(currList) {
         if (currList.length === 0 && this.recapList.length) {
-          console.log(this.recapList.length)
           let bulk = true ? this.recapList.length > 1 : false
           try {
             const res = await SObjects.api.sendRecap(bulk, this.recapList)
-            console.log(res)
           } catch (e) {
             console.log(e)
           } finally {
@@ -1195,14 +1209,12 @@ export default {
       this.activeFilters.push(this.currentFilter)
     },
     valueSelected(value, name) {
-      console.log(value)
       let users = this.allUsers.filter((user) => user.salesforce_account_ref)
       let user = null
       if (name === 'OwnerId') {
         this.referenceName = name
         user = users.filter((user) => user.salesforce_account_ref.salesforce_id === value)
         this.filterValues.push(user[0].full_name)
-        console.log(this.filterValues)
       } else if (name === 'AccountId') {
         let account = this.allAccounts.filter((account) => account.integration_id === value)
         this.filterValues.push(account[0].name)
@@ -1624,7 +1636,6 @@ export default {
             form_data: this.formData,
           })
           .then((res) => {
-            console.log(res)
             this.getMeetingList()
           })
       } catch (e) {
@@ -1642,6 +1653,7 @@ export default {
     },
     async createFormInstance(id, alertInstanceId = null) {
       // this.setInitialForm()
+      this.dropdownLoading = true
       this.currentVals = []
       this.updatingMeeting = false
       this.editOpModalOpen = true
@@ -1655,8 +1667,16 @@ export default {
         this.currentVals = res.current_values
         this.oppId = id
         this.instanceId = res.form_id
+        this.currentOwner = this.allUsers.filter(
+          (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
+        )[0].full_name
+        this.currentAccount = this.allAccounts.filter(
+          (account) => account.integration_id === this.currentVals['AccountId'],
+        )[0].name
       } catch (e) {
         console.log(e)
+      } finally {
+        this.dropdownLoading = false
       }
     },
     async createOppInstance() {
@@ -1836,13 +1856,9 @@ export default {
       this.getAllForms()
     },
     async selectList() {
-      // this.currentList = this.templates.list.filter((temp) => temp.id === this.id)[0].title
-      if (this.id) {
+      if (this.id && this.id !== 'Closing-this-month' && this.id !== 'Closing-next-month') {
         this.loadingWorkflows = true
         this.refreshId = this.id
-        setTimeout(() => {
-          this.currentList = this.templates.list.filter((temp) => temp.id === this.id)[0].title
-        }, 1000)
         try {
           let res = await AlertTemplate.api.runAlertTemplateNow(this.id, {
             fromWorkflow: true,
@@ -1858,6 +1874,11 @@ export default {
         } finally {
           this.selectedWorkflow = true
           this.loadingWorkflows = false
+          this.templates.list.length
+            ? (this.currentList = this.templates.list.filter(
+                (temp) => temp.id === this.id,
+              )[0].title)
+            : (this.currentList = 'Worklow...')
         }
       }
     },
@@ -2001,7 +2022,7 @@ export default {
         (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth,
       )
       this.currentList = 'Closing this month'
-      this.showList = !this.showList
+      this.showList = false
       this.closeFilterSelection()
     },
     stillThisMonth() {
@@ -2019,7 +2040,7 @@ export default {
         (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth + 1,
       )
       this.currentList = 'Closing next month'
-      this.showList = !this.showList
+      this.showList = false
       this.closeFilterSelection()
     },
     stillNextMonth() {
@@ -2036,7 +2057,6 @@ export default {
       this.currentList = 'All Opportunities'
       this.showList = !this.showList
       this.closeFilterSelection()
-      this.$router.replace({ path: '/Pipelines' })
     },
     formatDateTime(input) {
       var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
@@ -2047,7 +2067,25 @@ export default {
       return newDate.split('T')[0]
     },
   },
-  props: ['title'],
+  beforeUpdate() {
+    if (this.id === 'Closing-this-month' && this.updateCounter < 2) {
+      this.closeDatesThisMonth()
+      this.updateCounter += 1
+    } else if (this.id === 'Closing-next-month' && this.updateCounter < 2) {
+      this.closeDatesNextMonth()
+      this.updateCounter += 1
+    } else if (
+      this.id &&
+      this.id !== 'Closing-next-month' &&
+      this.id !== 'Closing-next-month' &&
+      this.updateCounter < 10
+    ) {
+      this.templates.list.length
+        ? (this.currentList = this.templates.list.filter((temp) => temp.id === this.id)[0].title)
+        : (this.currentList = 'Workflow...')
+      this.updateCounter += 1
+    }
+  },
   mounted() {
     this.selectList()
   },
@@ -2169,6 +2207,23 @@ h3 {
   box-shadow: 2px 2px 20px 2px $soft-gray;
   background-color: $off-white;
 }
+.table-section::-webkit-scrollbar {
+  width: 0px; /* Mostly for vertical scrollbars */
+  height: 8px; /* Mostly for horizontal scrollbars */
+}
+.table-section::-webkit-scrollbar-thumb {
+  background-image: linear-gradient(100deg, $darker-green 0%, $lighter-green 99%);
+  box-shadow: inset 4px 4px 8px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 0.3rem;
+}
+.table-section::-webkit-scrollbar-track {
+  // background: $soft-gray;
+  box-shadow: inset 4px 4px 8px 0 $soft-gray;
+  border-radius: 0.3rem;
+}
+.table-section::-webkit-scrollbar-track-piece:end {
+  margin-right: 50vw;
+}
 .empty-table-section {
   height: 30vh;
   margin-top: 2rem;
@@ -2219,7 +2274,9 @@ h3 {
   background-color: $white;
   overflow: hidden;
   min-width: 32vw;
-  min-height: 60vh;
+  max-width: 40vw;
+  min-height: 44vh;
+  max-height: 80vh;
   align-items: center;
   border-radius: 0.3rem;
   padding: 0.25rem;
@@ -2267,13 +2324,6 @@ h3 {
     margin-right: 0.25rem;
   }
 }
-ul::-webkit-scrollbar {
-  width: 0 !important;
-  display: none;
-  overflow: -moz-scrollbars-none;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
 .note-section {
   padding: 0.5rem 1rem;
   margin-bottom: 0.25rem;
@@ -2282,9 +2332,9 @@ ul::-webkit-scrollbar {
   overflow: scroll;
   &__title {
     font-size: 16px;
-    font-weight: bold;
+    font-weight: bolder;
     color: $dark-green;
-    letter-spacing: 1px;
+    letter-spacing: 1.2px;
   }
   &__body {
     color: $base-gray;
@@ -2308,23 +2358,6 @@ ul::-webkit-scrollbar {
 .table-cell-header {
   display: table-cell;
   padding: 1.25vh 3vh;
-  border: none;
-  border-bottom: 3px solid $light-orange-gray;
-  border-radius: 2px;
-  z-index: 2;
-  top: 0;
-  position: sticky;
-  background-color: $off-white;
-  font-weight: bold;
-  font-size: 13px;
-  letter-spacing: 0.5px;
-  color: $base-gray;
-}
-.table-cell-header-wide {
-  display: table-cell;
-  padding: 0.25rem;
-  padding: 1.25vh 2.5vh;
-  min-width: 3rem;
   border: none;
   border-bottom: 3px solid $light-orange-gray;
   border-radius: 2px;
@@ -2663,7 +2696,7 @@ main:hover > span {
   background-color: $white;
   min-width: 20vw;
   max-height: 70vh;
-  overflow-x: clip;
+  overflow: scroll;
   margin-right: 0.5rem;
   box-shadow: 1px 1px 7px 2px $very-light-gray;
   &__title {
@@ -2675,15 +2708,17 @@ main:hover > span {
     letter-spacing: 0.25px;
     padding-left: 0.75rem;
     font-weight: bold;
-    font-size: 15px;
+    font-size: 16px;
     width: 100%;
   }
   &__sub-title {
     font-size: 12px;
+    letter-spacing: 0.3px;
     font-weight: bold;
     display: flex;
     align-items: center;
     margin-left: 0.75rem;
+    margin-top: 1rem;
     color: $base-gray;
     cursor: pointer;
     width: 100%;
@@ -2706,7 +2741,7 @@ main:hover > span {
   color: $mid-gray;
   cursor: pointer;
   font-size: 11px;
-  font-weight: bold;
+  font-weight: bolder;
 }
 .list-button:hover {
   color: $dark-green;
@@ -2748,13 +2783,5 @@ textarea {
 }
 a {
   text-decoration: none;
-}
-::-webkit-scrollbar {
-  -webkit-appearance: none;
-  width: 4px;
-}
-::-webkit-scrollbar-thumb {
-  border-radius: 2px;
-  background-color: $soft-gray;
 }
 </style>

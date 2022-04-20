@@ -56,7 +56,14 @@ class AlertTemplateViewSet(
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
-        return alert_models.AlertTemplate.objects.for_user(self.request.user)
+        user = self.request.user
+        user_created = alert_models.AlertTemplate.objects.for_user(user)
+        # user_targeted = alert_models.AlertTemplate.objects.filter(
+        #     configs__alert_targets__contains=[str(user.id)]
+        # ).exclude(user=user)
+
+        return user_created
+        # return alert_models.AlertTemplate.objects.for_user(self.request.user)
 
     def get_serializer_class(self, *args, **kwargs):
         if self.request.method == "POST":

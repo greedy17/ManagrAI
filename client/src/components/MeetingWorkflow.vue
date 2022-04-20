@@ -30,21 +30,25 @@
     </div>
 
     <div class="table-cell">
-      <div v-for="(participant, i) in meeting.participants" :key="i" class="column">
-        <div v-if="!meeting.participants[i].id" class="roww">
+      <div
+        v-for="(participant, participantIndex) in participants"
+        :key="participantIndex"
+        class="column"
+      >
+        <div v-if="!meeting.participants[participantIndex].id" class="roww">
           <p class="add-contact">
-            {{ meeting.participants[i].email }}
+            {{ meeting.participants[participantIndex].email }}
           </p>
           <span
             v-if="
               !meetingUpdated &&
-              !meeting.participants[i].__has_changes &&
+              !meeting.participants[participantIndex].__has_changes &&
               (!resourceType || resourceType === 'Opportunity')
             "
             class="green"
           >
             <img
-              @click="addContact(i)"
+              @click="addContact(participantIndex)"
               class="contact-img"
               src="@/assets/images/add-contact.png"
               alt=""
@@ -53,7 +57,7 @@
           <span
             v-if="
               !meetingUpdated &&
-              !meeting.participants[i].__has_changes &&
+              !meeting.participants[participantIndex].__has_changes &&
               (!resourceType || resourceType === 'Opportunity')
             "
             class="red"
@@ -61,18 +65,18 @@
             <img
               src="@/assets/images/remove.svg"
               class="contact-img"
-              @click="removeParticipant(i)"
+              @click="removeParticipant(participantIndex)"
               alt=""
             />
           </span>
-          <span v-if="meeting.participants[i].__has_changes">
+          <span v-if="meeting.participants[participantIndex].__has_changes">
             <img class="filter" src="@/assets/images/profile.png" alt="" />
           </span>
         </div>
 
         <div v-else class="roww">
           <p class="add-contact">
-            {{ meeting.participants[i].email }}
+            {{ meeting.participants[participantIndex].email }}
           </p>
           <img
             style="height: 0.75rem; margin-left: 0.25rem"
@@ -81,10 +85,13 @@
           />
         </div>
 
-        <div v-if="addingContact && selectedIndex === i" class="contact-field-section">
+        <div
+          v-if="addingContact && selectedIndex === participantIndex"
+          class="contact-field-section"
+        >
           <div class="contact-field-section__title">
             <p>
-              Add <span>"{{ meeting.participants[i].email }}"</span> to your Contacts
+              Add <span>"{{ meeting.participants[participantIndex].email }}"</span> to your Contacts
             </p>
             <img
               src="@/assets/images/closer.png"
@@ -162,6 +169,12 @@
                 <input
                   @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
                   type="text"
+                  :placeholder="
+                    `${meeting.participants[participantIndex].secondary_data[field.apiName]}` ===
+                    'null'
+                      ? `Enter ${field.referenceDisplayLabel}`
+                      : `${meeting.participants[participantIndex].secondary_data[field.apiName]}`
+                  "
                 />
               </div>
               <div
@@ -175,6 +188,12 @@
                 <input
                   type="number"
                   @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                  :placeholder="
+                    `${meeting.participants[participantIndex].secondary_data[field.apiName]}` ===
+                    'null'
+                      ? `Enter ${field.referenceDisplayLabel}`
+                      : `${meeting.participants[participantIndex].secondary_data[field.apiName]}`
+                  "
                 />
               </div>
               <!-- <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
@@ -215,7 +234,7 @@
                   $emit(
                     'add-participant',
                     workflowId,
-                    meeting.participants[i]._tracking_id,
+                    meeting.participants[participantIndex]._tracking_id,
                     formData,
                   )
               "
@@ -228,10 +247,13 @@
           </div>
         </div>
 
-        <div v-if="removingParticipant && selectedIndex === i" class="participant-field-section">
-          <div class="add-field-section__title">
+        <div
+          v-if="removingParticipant && selectedIndex === participantIndex"
+          class="participant-field-section"
+        >
+          <div class="participant-field-section__title">
             <p>
-              Remove <span>"{{ meeting.participants[i].email }}"</span>
+              Remove <span>"{{ meeting.participants[participantIndex].email }}"</span>
             </p>
             <img
               src="@/assets/images/closer.png"
@@ -248,7 +270,11 @@
             <p
               @click="
                 ;(removingParticipant = !removingParticipant),
-                  $emit('remove-participant', workflowId, meeting.participants[i]._tracking_id)
+                  $emit(
+                    'remove-participant',
+                    workflowId,
+                    meeting.participants[participantIndex]._tracking_id,
+                  )
               "
             >
               Yes
@@ -402,6 +428,8 @@ export default {
     contactFields: {},
     accounts: {},
     owners: {},
+    index: {},
+    participants: {},
   },
   computed: {
     hasLastName() {
@@ -411,15 +439,19 @@ export default {
       return lastName
     },
   },
+  mounted() {
+    if (this.resourceId) {
+      this.getCurrentVals()
+    }
+  },
   methods: {
-    async getCurrentVal() {
+    async getCurrentVals() {
       try {
         const res = await SObjects.api.createFormInstance({
-          resourceType: 'Opportunity',
+          resourceType: 'Contact',
           formType: 'UPDATE',
           resourceId: this.resourceId,
         })
-        this.currentVals.push(res.current_values)
       } catch (e) {
         console.log(e)
       }
@@ -732,13 +764,15 @@ a {
 .add-field-section {
   position: absolute;
   z-index: 7;
+  top: 10vh;
   right: 0.5rem;
   border-radius: 0.33rem;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   background-color: $white;
-  min-width: 22vw;
+  min-width: 25vw;
+  height: auto;
   overflow: scroll;
   box-shadow: 1px 1px 7px 2px $very-light-gray;
   &__title {
@@ -755,7 +789,7 @@ a {
     width: 100%;
   }
   &__body {
-    min-height: 3rem;
+    min-height: 8rem;
     padding-left: 1rem;
     margin-top: 1rem;
   }
@@ -765,7 +799,7 @@ a {
     justify-content: center;
     margin-top: 1rem;
     width: 100%;
-    min-height: 6vh;
+    min-height: 2rem;
     border-top: 1px solid $soft-gray;
     p {
       cursor: pointer;

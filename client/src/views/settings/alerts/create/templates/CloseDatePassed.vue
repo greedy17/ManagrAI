@@ -94,6 +94,7 @@
                   track-by="id"
                   label="fullName"
                   :multiple="true"
+                  :closeOnSelect="false"
                 >
                   <template slot="noResult">
                     <p>No results.</p>

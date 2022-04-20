@@ -447,14 +447,20 @@
               All Opportunities
               <span class="filter" v-if="currentList === 'All Opportunities'"> active</span>
             </button>
-            <button v-if="showPopularList" @click="closeDatesThisMonth" class="list-button">
-              Closing this month
-              <span class="filter" v-if="currentList === 'Closing this month'"> active</span>
-            </button>
-            <button v-if="showPopularList" @click="closeDatesNextMonth" class="list-button">
-              Closing next month
-              <span class="filter" v-if="currentList === 'Closing next month'"> active</span>
-            </button>
+            <router-link style="width: 100%" v-bind:to="'/pipelines/' + 'Closing-this-month'">
+              <button v-if="showPopularList" class="list-button">
+                Closing this month
+                <span class="filter" v-if="currentList === 'Closing this month'"> active</span>
+              </button>
+            </router-link>
+
+            <router-link style="width: 100%" v-bind:to="'/pipelines/' + 'Closing-next-month'">
+              <button v-if="showPopularList" class="list-button">
+                Closing next month
+                <span class="filter" v-if="currentList === 'Closing next month'"> active</span>
+              </button>
+            </router-link>
+
             <p @click="showMeetingList = !showMeetingList" class="list-section__sub-title">
               Meetings
               <img v-if="showMeetingList" src="@/assets/images/downArrow.png" alt="" /><img
@@ -528,6 +534,7 @@
             :dropdowns="picklistQueryOptsContacts"
             :contactFields="updateContactForm"
             :meeting="meeting.meeting_ref"
+            :participants="meeting.meeting_ref.participants"
             :workflowId="meeting.id"
             :resourceId="meeting.resource_id"
             :resourceType="meeting.resource_type"
@@ -736,11 +743,9 @@ export default {
     updateList: {
       async handler(currList) {
         if (currList.length === 0 && this.recapList.length) {
-          console.log(this.recapList.length)
           let bulk = true ? this.recapList.length > 1 : false
           try {
             const res = await SObjects.api.sendRecap(bulk, this.recapList)
-            console.log(res)
           } catch (e) {
             console.log(e)
           } finally {
@@ -942,14 +947,12 @@ export default {
       this.activeFilters.push(this.currentFilter)
     },
     valueSelected(value, name) {
-      console.log(value)
       let users = this.allUsers.filter((user) => user.salesforce_account_ref)
       let user = null
       if (name === 'OwnerId') {
         this.referenceName = name
         user = users.filter((user) => user.salesforce_account_ref.salesforce_id === value)
         this.filterValues.push(user[0].full_name)
-        console.log(this.filterValues)
       } else if (name === 'AccountId') {
         let account = this.allAccounts.filter((account) => account.integration_id === value)
         this.filterValues.push(account[0].name)
@@ -1371,7 +1374,6 @@ export default {
             form_data: this.formData,
           })
           .then((res) => {
-            console.log(res)
             this.getMeetingList()
           })
       } catch (e) {
