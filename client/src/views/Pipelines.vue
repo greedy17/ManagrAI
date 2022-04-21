@@ -863,7 +863,10 @@ export default {
       loading: false,
       dropdownLoading: false,
       loadingWorkflows: false,
-      templates: CollectionManager.create({ ModelClass: AlertTemplate }),
+      templates: CollectionManager.create({
+        ModelClass: AlertTemplate,
+        filters: { forPipeline: true },
+      }),
       users: CollectionManager.create({ ModelClass: User }),
       currentWorkflow: null,
       selectedWorkflow: false,
@@ -1866,6 +1869,7 @@ export default {
           this.currentWorkflow = this.allOpps.filter((opp) =>
             res.data.ids.includes(opp.integration_id),
           )
+          console.log(this.templates.list[0].user)
           if (this.currentWorkflow.length < 1) {
             this.updateWorkflow(this.id)
           }

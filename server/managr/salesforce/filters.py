@@ -65,3 +65,4 @@ class SalesforceSObjectFilterSet(FilterSet):
             else:
                 qs = qs.filter(**{new_query: filter[2]})
         return qs
+
