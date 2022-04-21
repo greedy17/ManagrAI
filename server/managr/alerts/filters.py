@@ -24,10 +24,12 @@ class AlertTemplateFilterSet(FilterSet):
     for_pipeline = django_filters.BooleanFilter(method="by_pipeline")
 
     def by_pipeline(self, qs, name, value):
-        if value:
-            user = qs[0].user
+        user = qs[0].user
+        if value and user.user_level == "REP":
             user_targeted = AlertTemplate.objects.filter(
                 configs__alert_targets__contains=[str(user.id)]
             ).exclude(user=user)
 
             return qs | user_targeted
+        else:
+            return qs
