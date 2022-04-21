@@ -242,7 +242,7 @@
           />
         </div>
         <div class="opp-modal">
-          <section :key="field.id" v-for="field in oppFormCopy">
+          <section :key="i" v-for="(field, i) in oppFormCopy">
             <div v-if="field.apiName === 'meeting_type'">
               <p>Note Title:</p>
               <textarea
@@ -298,6 +298,7 @@
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
+            <!-- v-model="formData[field.apiName.value]" -->
             <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <Multiselect
@@ -313,6 +314,7 @@
                     $event.value,
                   )
                 "
+                v-model="dropdownVal[field.apiName]"
                 openDirection="below"
                 :loading="dropdownLoading"
                 style="width: 13vw"
@@ -828,6 +830,7 @@ export default {
   data() {
     return {
       id: this.$route.params.id,
+      dropdownVal: {},
       referenceName: null,
       key: 0,
       meetingKey: 0,
@@ -1667,6 +1670,7 @@ export default {
           formType: 'UPDATE',
           resourceId: id,
         })
+        console.log(res.current_values)
         this.currentVals = res.current_values
         this.oppId = id
         this.instanceId = res.form_id

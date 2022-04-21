@@ -313,6 +313,7 @@
                     $event.value,
                   )
                 "
+                v-model="dropdownVal[field.apiName]"
                 openDirection="below"
                 :loading="dropdownLoading"
                 style="width: 13vw"
@@ -584,6 +585,7 @@ export default {
   data() {
     return {
       id: this.$route.params.id,
+      dropdownVal: {},
       referenceName: null,
       key: 0,
       meetingKey: 0,
