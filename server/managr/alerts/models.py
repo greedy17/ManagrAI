@@ -24,6 +24,10 @@ from managr.salesforce.adapter.exceptions import TokenExpired
 logger = logging.getLogger("managr")
 
 
+def default_days():
+    return [0]
+
+
 class AlertTemplateQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.is_superuser:
@@ -330,6 +334,7 @@ class AlertConfig(TimeStampModel):
         max_length=255, default="WEEKLY", help_text="Weekly/Monthly will run on these days"
     )
     recurrence_day = models.SmallIntegerField(help_text="day of week/ month")
+    recurrence_days = ArrayField(models.SmallIntegerField(), default=default_days)
     recipients = ArrayField(
         models.CharField(max_length=255),
         default=list,
