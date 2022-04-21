@@ -588,7 +588,7 @@
                         @input="setRecipient"
                         :options="userChannelOpts.channels"
                         openDirection="below"
-                        style="min-width: 13vw"
+                        style="width: 14vw"
                         selectLabel="Enter"
                         track-by="id"
                         label="name"
@@ -877,6 +877,7 @@ export default {
       channelName: '',
       message: 'Hey { __Recipient.full_name }, your deal { Opportunity.Name }',
       templateBounce: true,
+      selectedUsers: null,
       fieldBounce: true,
       clickCount: 0,
       newChannel: {},
@@ -1539,6 +1540,9 @@ button img {
   display: flex;
   align-items: center;
   flex-direction: column;
+}
+::v-deep .multiselect__tags {
+  max-width: 18vw;
 }
 ::v-deep .ql-toolbar .ql-stroke {
   fill: none;

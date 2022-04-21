@@ -349,7 +349,7 @@ def get_random_no_update_message(topic):
         f"Gotcha, {topic} has no updates",
         f"10-4 {topic} needs no updating",
         f"Cool, no updated needed for {topic}",
-        f"Ok dokie, {topic} needs no updates",
+        f"Okie dokie, {topic} needs no updates",
     ]
     idx = random.randint(0, len(RANDOM_NO_CHANGE_RESPONSES) - 1)
     return RANDOM_NO_CHANGE_RESPONSES[idx]

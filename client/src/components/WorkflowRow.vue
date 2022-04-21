@@ -22,7 +22,7 @@
       <div class="flex-row-spread">
         <div>
           <div
-            class="flex-col"
+            class="flex-column"
             v-if="
               updateWorkflowList.includes(workflow.id) || updatedWorkflowList.includes(workflow.id)
             "
@@ -89,12 +89,34 @@
         />
       </div>
     </div>
+    <div :key="field.id" v-for="field in extraPipelineFields" class="table-cell">
+      <SkeletonBox
+        v-if="updateWorkflowList.includes(workflow.id) || updatedWorkflowList.includes(workflow.id)"
+        width="100px"
+        height="14px"
+      />
+
+      <div class="limit-cell-height" v-else-if="!updateWorkflowList.includes(workflow.id)">
+        <PipelineField
+          style="direction: ltr"
+          :apiName="field.apiName"
+          :dataType="field.dataType"
+          :fieldData="
+            field.apiName.includes('__c')
+              ? workflow['secondary_data'][field.apiName]
+              : workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+          "
+          :lastStageUpdate="workflow['last_stage_update']"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import PipelineNameSection from '@/components/PipelineNameSection'
 import PipelineField from '@/components/PipelineField'
+import { CollectionManager } from '@thinknimble/tn-models'
 import { SObjects, SObjectField } from '@/services/salesforce'
 
 export default {
@@ -108,6 +130,13 @@ export default {
     return {
       updatedWorkflowList: [],
       newCloseDate: null,
+      objectFields: CollectionManager.create({
+        ModelClass: SObjectField,
+        pagination: { size: 300 },
+        filters: {
+          salesforceObject: 'Opportunity',
+        },
+      }),
     }
   },
   props: {
@@ -122,6 +151,19 @@ export default {
   },
   watch: {
     closeDateData: 'futureDate',
+  },
+  async created() {
+    await this.objectFields.refresh()
+  },
+  computed: {
+    extraPipelineFields() {
+      let extras = []
+      extras = this.objectFields.list.filter((field) => this.hasExtraFields.includes(field.id))
+      return extras
+    },
+    hasExtraFields() {
+      return this.$store.state.user.salesforceAccountRef.extraPipelineFields
+    },
   },
   methods: {
     emitCreateForm() {

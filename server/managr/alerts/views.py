@@ -36,7 +36,7 @@ from .background import _process_check_alert
 
 from . import models as alert_models
 from . import serializers as alert_serializers
-from .filters import AlertInstanceFilterSet
+from .filters import AlertInstanceFilterSet, AlertTemplateFilterSet
 from managr.core.models import User
 
 logger = logging.getLogger("managr")
@@ -52,18 +52,20 @@ class AlertTemplateViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
+    filter_backends = (
+        DjangoFilterBackend,
+        filters.SearchFilter,
+    )
     serializer_class = alert_serializers.AlertTemplateSerializer
     permission_classes = (permissions.IsAuthenticated,)
+    filter_class = AlertTemplateFilterSet
 
     def get_queryset(self):
-        user = self.request.user
-        user_created = alert_models.AlertTemplate.objects.for_user(user)
-        # user_targeted = alert_models.AlertTemplate.objects.filter(
-        #     configs__alert_targets__contains=[str(user.id)]
-        # ).exclude(user=user)
-
-        return user_created
-        # return alert_models.AlertTemplate.objects.for_user(self.request.user)
+        if self.request.data.get("from_workflow", False):
+            return alert_models.AlertTemplate.objects.filter(
+                user__organization=self.request.user.organization
+            )
+        return alert_models.AlertTemplate.objects.for_user(self.request.user)
 
     def get_serializer_class(self, *args, **kwargs):
         if self.request.method == "POST":
@@ -107,6 +109,14 @@ class AlertTemplateViewSet(
             while True:
                 sf = self.request.user.salesforce_account
                 try:
+                    if template.user != self.request.user:
+                        if hasattr(self.request.user, "salesforce_account"):
+                            res = sf.adapter_class.execute_alert_query(
+                                template.url_str(self.request.user, config.id),
+                                template.resource_type,
+                            )
+                            res_data = [item.integration_id for item in res]
+                            break
                     users = config.target_users
                     res_data = []
                     for user in users:

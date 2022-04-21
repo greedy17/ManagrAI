@@ -162,6 +162,7 @@ class CustomUserAdmin(UserAdmin):
                     "role",
                     "timezone",
                     "reminders",
+                    "activated_managr_configs",
                 )
             },
         ),
