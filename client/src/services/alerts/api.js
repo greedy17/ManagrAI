@@ -7,6 +7,7 @@ export default class AlertTemplateAPI extends ModelAPI {
   static FILTERS_MAP = {
     page: ApiFilter.create({ key: 'page' }),
     pageSize: ApiFilter.create({ key: 'page_size' }),
+    forPipeline: ApiFilter.create({ key: 'for_pipeline' }),
   }
   get client() {
     return apiClient()
