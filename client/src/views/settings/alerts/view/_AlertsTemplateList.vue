@@ -242,8 +242,12 @@ export default {
   // },
   async created() {
     this.templates.refresh()
-    this.getZoomChannel()
-    this.getRecapChannel()
+    if (this.zoomChannel) {
+      this.getZoomChannel()
+    }
+    if (this.hasRecapChannel) {
+      this.getRecapChannel()
+    }
     await this.listUserChannels()
     this.userConfigForm = new UserConfigForm({
       activatedManagrConfigs: this.user.activatedManagrConfigs,
