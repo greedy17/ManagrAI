@@ -301,8 +301,11 @@
             <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <Multiselect
-                :placeholder="`${currentVals[field.apiName]}`"
-                v-model="currentVals[field.apiName]"
+                :placeholder="
+                  `${currentVals[field.apiName]}` !== 'null'
+                    ? `${currentVals[field.apiName]}`
+                    : `Select ${field.referenceDisplayLabel}`
+                "
                 :options="picklistQueryOpts[field.apiName]"
                 @select="
                   setUpdateValues(
@@ -311,6 +314,7 @@
                   )
                 "
                 openDirection="below"
+                :loading="dropdownLoading"
                 style="width: 13vw"
                 selectLabel="Enter"
                 track-by="value"
@@ -362,8 +366,8 @@
             <div v-else-if="field.apiName === 'OwnerId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <Multiselect
-                placeholder="Select Owner"
-                v-model="currentVals[field.apiName]"
+                :placeholder="currentOwner"
+                v-model="selectedOwner"
                 :options="allUsers"
                 @select="
                   setUpdateValues(field.apiName, $event.salesforce_account_ref.salesforce_id)
@@ -373,6 +377,7 @@
                 selectLabel="Enter"
                 track-by="salesforce_account_ref.salesforce_id"
                 label="full_name"
+                :loading="dropdownLoading"
               >
                 <template slot="noResult">
                   <p>No results.</p>
@@ -384,8 +389,8 @@
               <p>{{ field.referenceDisplayLabel }}:</p>
 
               <Multiselect
-                placeholder="Select Account"
-                v-model="currentVals[field.apiName]"
+                :placeholder="currentAccount"
+                v-model="selectedAccount"
                 :options="allAccounts"
                 @select="setUpdateValues(field.apiName, $event.integration_id)"
                 openDirection="below"
@@ -393,6 +398,7 @@
                 selectLabel="Enter"
                 track-by="integration_id"
                 label="name"
+                :loading="dropdownLoading"
               >
                 <template slot="noResult">
                   <p>No results.</p>
@@ -581,6 +587,7 @@ export default {
       referenceName: null,
       key: 0,
       meetingKey: 0,
+      dropdownLoading: false,
       updatingMeeting: false,
       meetingWorkflowId: null,
       meetingLoading: null,
@@ -1349,6 +1356,7 @@ export default {
       }
     },
     async updateMeeting(meetingWorkflow, id) {
+      this.dropdownLoading = true
       this.currentVals = []
       this.editOpModalOpen = true
       this.updatingMeeting = true
@@ -1362,6 +1370,8 @@ export default {
         this.currentVals = res.current_values
       } catch (e) {
         console.log(e)
+      } finally {
+        this.dropdownLoading = false
       }
     },
     async onUpdateMeeting() {
@@ -1390,6 +1400,7 @@ export default {
       }
     },
     async createFormInstance(id, alertInstanceId = null) {
+      this.dropdownLoading = true
       this.currentVals = []
       this.updatingMeeting = false
       this.editOpModalOpen = true
@@ -1405,6 +1416,8 @@ export default {
         this.instanceId = res.form_id
       } catch (e) {
         console.log(e)
+      } finally {
+        this.dropdownLoading = true
       }
     },
     async createOppInstance() {
