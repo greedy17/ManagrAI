@@ -481,10 +481,7 @@ class SalesforceSObjectViewSet(
             except Exception as e:
                 logger.info(f"UPDATE ERROR {e}")
                 break
-        if (
-            all_form_data.get("meeting_comments") is not None
-            and all_form_data.get("meeting_type") is not None
-        ):
+        if all_form_data.get("meeting_comments") is not None:
             emit_add_update_to_sf(str(main_form.id))
         if len(user.slack_integration.realtime_alert_configs):
             _send_instant_alert([form_id])

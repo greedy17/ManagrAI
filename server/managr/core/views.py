@@ -581,6 +581,7 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
             slack_id, u.organization.slack_integration.access_token
         ).json()
         channel = channel_res.get("channel", {}).get("id")
+        logger.info(f"User {user.id} activation link: {user.activation_link}")
         blocks = [
             block_builders.section_with_button_block(
                 "Register", "register", text, url=user.activation_link

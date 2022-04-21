@@ -218,6 +218,7 @@
             track-by="id"
             :options="objectFields.list"
             :multiple="true"
+            :closeOnSelect="false"
           >
             <template slot="noResult">
               <div class="row">
@@ -460,7 +461,23 @@ export default {
     }
   }
 }
-
+.table-cell-header-wide {
+  display: table-cell;
+  padding: 0.25rem;
+  padding: 1.25vh 2.5vh;
+  min-width: 3rem;
+  border: none;
+  border-bottom: 3px solid $light-orange-gray;
+  border-radius: 2px;
+  z-index: 2;
+  top: 0;
+  position: sticky;
+  background-color: $off-white;
+  font-weight: bold;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  color: $base-gray;
+}
 .sort-img-visible {
   display: flex;
   flex-direction: row;

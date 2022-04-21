@@ -301,8 +301,11 @@
             <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <Multiselect
-                :placeholder="`${currentVals[field.apiName]}`"
-                v-model="currentVals[field.apiName]"
+                :placeholder="
+                  `${currentVals[field.apiName]}` !== 'null'
+                    ? `${currentVals[field.apiName]}`
+                    : `Select ${field.referenceDisplayLabel}`
+                "
                 :options="picklistQueryOpts[field.apiName]"
                 @select="
                   setUpdateValues(
@@ -311,6 +314,7 @@
                   )
                 "
                 openDirection="below"
+                :loading="dropdownLoading"
                 style="width: 13vw"
                 selectLabel="Enter"
                 track-by="value"
@@ -362,8 +366,8 @@
             <div v-else-if="field.apiName === 'OwnerId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <Multiselect
-                placeholder="Select Owner"
-                v-model="currentVals[field.apiName]"
+                :placeholder="currentOwner"
+                v-model="selectedOwner"
                 :options="allUsers"
                 @select="
                   setUpdateValues(field.apiName, $event.salesforce_account_ref.salesforce_id)
@@ -373,6 +377,7 @@
                 selectLabel="Enter"
                 track-by="salesforce_account_ref.salesforce_id"
                 label="full_name"
+                :loading="dropdownLoading"
               >
                 <template slot="noResult">
                   <p>No results.</p>
@@ -384,8 +389,8 @@
               <p>{{ field.referenceDisplayLabel }}:</p>
 
               <Multiselect
-                placeholder="Select Account"
-                v-model="currentVals[field.apiName]"
+                :placeholder="currentAccount"
+                v-model="selectedAccount"
                 :options="allAccounts"
                 @select="setUpdateValues(field.apiName, $event.integration_id)"
                 openDirection="below"
@@ -393,6 +398,7 @@
                 selectLabel="Enter"
                 track-by="integration_id"
                 label="name"
+                :loading="dropdownLoading"
               >
                 <template slot="noResult">
                   <p>No results.</p>
@@ -447,14 +453,20 @@
               All Opportunities
               <span class="filter" v-if="currentList === 'All Opportunities'"> active</span>
             </button>
-            <button v-if="showPopularList" @click="closeDatesThisMonth" class="list-button">
-              Closing this month
-              <span class="filter" v-if="currentList === 'Closing this month'"> active</span>
-            </button>
-            <button v-if="showPopularList" @click="closeDatesNextMonth" class="list-button">
-              Closing next month
-              <span class="filter" v-if="currentList === 'Closing next month'"> active</span>
-            </button>
+            <router-link style="width: 100%" v-bind:to="'/pipelines/' + 'Closing-this-month'">
+              <button v-if="showPopularList" class="list-button">
+                Closing this month
+                <span class="filter" v-if="currentList === 'Closing this month'"> active</span>
+              </button>
+            </router-link>
+
+            <router-link style="width: 100%" v-bind:to="'/pipelines/' + 'Closing-next-month'">
+              <button v-if="showPopularList" class="list-button">
+                Closing next month
+                <span class="filter" v-if="currentList === 'Closing next month'"> active</span>
+              </button>
+            </router-link>
+
             <p @click="showMeetingList = !showMeetingList" class="list-section__sub-title">
               Meetings
               <img v-if="showMeetingList" src="@/assets/images/downArrow.png" alt="" /><img
@@ -528,6 +540,7 @@
             :dropdowns="picklistQueryOptsContacts"
             :contactFields="updateContactForm"
             :meeting="meeting.meeting_ref"
+            :participants="meeting.meeting_ref.participants"
             :workflowId="meeting.id"
             :resourceId="meeting.resource_id"
             :resourceType="meeting.resource_type"
@@ -574,6 +587,7 @@ export default {
       referenceName: null,
       key: 0,
       meetingKey: 0,
+      dropdownLoading: false,
       updatingMeeting: false,
       meetingWorkflowId: null,
       meetingLoading: null,
@@ -736,11 +750,9 @@ export default {
     updateList: {
       async handler(currList) {
         if (currList.length === 0 && this.recapList.length) {
-          console.log(this.recapList.length)
           let bulk = true ? this.recapList.length > 1 : false
           try {
             const res = await SObjects.api.sendRecap(bulk, this.recapList)
-            console.log(res)
           } catch (e) {
             console.log(e)
           } finally {
@@ -942,14 +954,12 @@ export default {
       this.activeFilters.push(this.currentFilter)
     },
     valueSelected(value, name) {
-      console.log(value)
       let users = this.allUsers.filter((user) => user.salesforce_account_ref)
       let user = null
       if (name === 'OwnerId') {
         this.referenceName = name
         user = users.filter((user) => user.salesforce_account_ref.salesforce_id === value)
         this.filterValues.push(user[0].full_name)
-        console.log(this.filterValues)
       } else if (name === 'AccountId') {
         let account = this.allAccounts.filter((account) => account.integration_id === value)
         this.filterValues.push(account[0].name)
@@ -1346,6 +1356,7 @@ export default {
       }
     },
     async updateMeeting(meetingWorkflow, id) {
+      this.dropdownLoading = true
       this.currentVals = []
       this.editOpModalOpen = true
       this.updatingMeeting = true
@@ -1359,6 +1370,8 @@ export default {
         this.currentVals = res.current_values
       } catch (e) {
         console.log(e)
+      } finally {
+        this.dropdownLoading = false
       }
     },
     async onUpdateMeeting() {
@@ -1371,7 +1384,6 @@ export default {
             form_data: this.formData,
           })
           .then((res) => {
-            console.log(res)
             this.getMeetingList()
           })
       } catch (e) {
@@ -1388,6 +1400,7 @@ export default {
       }
     },
     async createFormInstance(id, alertInstanceId = null) {
+      this.dropdownLoading = true
       this.currentVals = []
       this.updatingMeeting = false
       this.editOpModalOpen = true
@@ -1403,6 +1416,8 @@ export default {
         this.instanceId = res.form_id
       } catch (e) {
         console.log(e)
+      } finally {
+        this.dropdownLoading = true
       }
     },
     async createOppInstance() {
