@@ -459,7 +459,7 @@ class NylasAuthAccount(TimeStampModel):
             return self._handle_response(events)
         except Exception as e:
             logger.info(f"Nylas api exception: {e}")
-            return e
+            return None
 
 
 class NotificationQuerySet(models.QuerySet):

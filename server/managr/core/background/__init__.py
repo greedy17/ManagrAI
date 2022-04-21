@@ -9,6 +9,8 @@ import requests
 from datetime import datetime, timezone
 import re
 from background_task import background
+from django.conf import settings
+
 from django.db.models import Q
 from django.utils import timezone
 from managr.salesforce.adapter.exceptions import TokenExpired
@@ -102,11 +104,15 @@ def non_zoom_meeting_message(workflow_id, user_id, user_tz, non_zoom_end_times):
     # user_7am_naive = timezone.now()
     # user_7am = timezone.make_aware(user_7am_naive, timezone=pytz.timezone(user_tz))
     current_time = datetime.now()
-    utc_time_from_user_7_am = current_time.astimezone(pytz.timezone("UTC"))
-    time_difference = local_end - utc_time_from_user_7_am
-    # seconds = a_timedelta.total_seconds()
-    seconds = time_difference.total_seconds()
-    seconds = int(seconds)
+    local_current = current_time.astimezone(pytz.timezone("UTC"))
+    if local_end < local_current:
+        seconds = local_current
+        time_difference = "Meeting passed current time"
+    else:
+        time_difference = local_end - local_current
+        # seconds = a_timedelta.total_seconds()
+        seconds = time_difference.total_seconds()
+        seconds = int(seconds)
     logger.info(
         f"NON ZOOM MEETING SCHEDULER: \n END TIME: {non_zoom_end_times}\n LOCAL END: {local_end}\n CURRENT TIME: {current_time} \n TIME DIFFERENCE: {time_difference}"
     )
@@ -823,9 +829,29 @@ TIMEZONE_TASK_FUNCTION = {
 }
 
 
+def TESTING_TIMEZONE_TIMES(user_id):
+    user = User.objects.get(id=user_id)
+    keys = TIMEZONE_TASK_FUNCTION.keys()
+    user_timezone = pytz.timezone(user.timezone)
+    currenttime = datetime.today().time()
+    current = pytz.utc.localize(datetime.combine(datetime.today(), currenttime)).astimezone(
+        user_timezone
+    )
+    minute = 30 if current.minute <= 30 else 00
+    hour = current.hour if minute == 30 else current.hour + 1
+    time_obj = {"HOUR": hour, "MINUTE": minute}
+    obj = {}
+    for name in keys:
+        obj[name] = time_obj
+    return obj
+
+
 @background()
 def timezone_tasks(user_id):
-    tasks = core_consts.TIMEZONE_TASK_TIMES
+    if settings.IN_DEV:
+        tasks = TESTING_TIMEZONE_TIMES(user_id)
+    else:
+        tasks = core_consts.TIMEZONE_TASK_TIMES
     user = User.objects.get(id=user_id)
     for key in tasks.keys():
         check = check_for_time(user.timezone, tasks[key]["HOUR"], tasks[key]["MINUTE"])
