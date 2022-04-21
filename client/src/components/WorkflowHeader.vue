@@ -216,4 +216,44 @@ export default {
   letter-spacing: 0.5px;
   color: $base-gray;
 }
+input[type='checkbox']:checked + label::after {
+  content: '';
+  position: absolute;
+  width: 1ex;
+  height: 0.3ex;
+  background: rgba(0, 0, 0, 0);
+  top: 0.9ex;
+  left: 0.4ex;
+  border: 2px solid $dark-green;
+  border-top: none;
+  border-right: none;
+  -webkit-transform: rotate(-45deg);
+  -moz-transform: rotate(-45deg);
+  -o-transform: rotate(-45deg);
+  -ms-transform: rotate(-45deg);
+  transform: rotate(-45deg);
+}
+input[type='checkbox'] {
+  line-height: 2.1ex;
+}
+input[type='checkbox'] {
+  position: absolute;
+  left: -999em;
+}
+input[type='checkbox'] + label {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+input[type='checkbox'] + label::before {
+  content: '';
+  display: inline-block;
+  vertical-align: -22%;
+  height: 1.75ex;
+  width: 1.75ex;
+  background-color: white;
+  border: 1px solid rgb(182, 180, 180);
+  border-radius: 4px;
+  margin-right: 0.5em;
+}
 </style>

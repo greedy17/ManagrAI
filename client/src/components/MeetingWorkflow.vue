@@ -169,7 +169,7 @@
                 <input
                   @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
                   type="text"
-                  :placeholder="
+                  :value="
                     `${meeting.participants[participantIndex].secondary_data[field.apiName]}` ===
                     'null'
                       ? `Enter ${field.referenceDisplayLabel}`
@@ -188,7 +188,7 @@
                 <input
                   type="number"
                   @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-                  :placeholder="
+                  :value="
                     `${meeting.participants[participantIndex].secondary_data[field.apiName]}` ===
                     'null'
                       ? `Enter ${field.referenceDisplayLabel}`

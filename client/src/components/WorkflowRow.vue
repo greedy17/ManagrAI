@@ -22,7 +22,7 @@
       <div class="flex-row-spread">
         <div>
           <div
-            class="flex-col"
+            class="flex-column"
             v-if="
               updateWorkflowList.includes(workflow.id) || updatedWorkflowList.includes(workflow.id)
             "
