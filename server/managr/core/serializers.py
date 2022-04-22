@@ -90,6 +90,7 @@ class UserSerializer(serializers.ModelSerializer):
             "timezone",
             "activated_managr_configs",
             "onboarding",
+            "crm",
         )
 
     read_only_fields = (

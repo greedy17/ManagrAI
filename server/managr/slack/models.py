@@ -4,10 +4,12 @@ from django.db import models
 from django.db.models.constraints import UniqueConstraint
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
+from django.forms import UUIDField
 
 from managr.salesforce.models import SObjectField
+from managr.hubspot.models import HObjectField
 from managr.salesforce.adapter.exceptions import TokenExpired, InvalidRefreshToken
-
+from managr.core import constants as core_consts
 from . import constants as slack_consts
 
 from managr.core.models import TimeStampModel
@@ -432,8 +434,30 @@ class OrgCustomSlackFormInstance(TimeStampModel):
 
 class FormField(TimeStampModel):
     field = models.ForeignKey(
-        "salesforce.SObjectField", on_delete=models.CASCADE, related_name="forms"
+        "salesforce.SObjectField",
+        on_delete=models.CASCADE,
+        related_name="forms",
+        null=True,
+        blank=True,
+    )
+    field_id_ref = models.CharField(blank=True, null=True, max_length=255)
+    field_source = models.CharField(
+        choices=core_consts.CRM_CHOICES, blank=True, null=True, max_length=255
     )
     form = models.ForeignKey("slack.OrgCustomSlackForm", on_delete=models.CASCADE,)
     order = models.IntegerField(default=0)
     include_in_recap = models.BooleanField(default=True)
+
+    @property
+    def field_ref(self):
+        if self.field_source == "SALESFORCE":
+            return SObjectField.objects.get(id=self.field_id)
+        else:
+            return HObjectField.objects.get(id=self.field_id)
+
+    def add_new_field_data(self):
+        self.field_id_ref = str(self.field.id)
+        self.field_source = "HUBSPOT" if self.field is None else "SALESFORCE"
+        self.save()
+        return
+

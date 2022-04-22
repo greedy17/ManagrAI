@@ -198,6 +198,7 @@ class User(AbstractUser, TimeStampModel):
         blank=True,
         help_text="Object for reminder setting",
     )
+    crm = models.CharField(choices=core_consts.CRM_CHOICES, max_length=25, null=True, blank=True)
     objects = UserManager()
 
     @property
@@ -295,6 +296,13 @@ class User(AbstractUser, TimeStampModel):
             return not zoom_acct.is_revoked
         else:
             return False
+
+    @property
+    def crm_account(self):
+        if self.crm == "SALESFORCE":
+            return self.salesforce_account
+        else:
+            return self.hubspot_account
 
     @property
     def has_slack_integration(self):
