@@ -339,7 +339,6 @@ class AlertConfigWriteSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "recurrence_frequency",
-            "recurrence_day",
             "recurrence_days",
             "recipients",
             "recipient_type",
@@ -402,7 +401,6 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
         new_groups = validated_data.pop("new_groups", [])
         message_template = validated_data.pop("message_template")
         new_configs = validated_data.pop("new_configs", [])
-
         data = super().create(validated_data, *args, **kwargs)
         message_template = AlertMessageTemplateWriteSerializer(
             data={**message_template, "template": data.id}
@@ -417,10 +415,15 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
             _new_groups.save()
         if len(new_configs):
             new_configs = list(map(lambda x: {**x, "template": data.id}, new_configs))
-
+            print(new_configs)
             _new_configs = AlertConfigWriteSerializer(
                 data=new_configs, many=True, context=self.context,
             )
-            _new_configs.is_valid(raise_exception=True)
-            _new_configs.save()
+            print(_new_configs)
+            try:
+                _new_configs.is_valid(raise_exception=True)
+
+                _new_configs.save()
+            except Exception as e:
+                print(f"ERROR {e}")
         return data

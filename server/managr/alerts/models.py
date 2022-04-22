@@ -333,7 +333,7 @@ class AlertConfig(TimeStampModel):
     recurrence_frequency = models.CharField(
         max_length=255, default="WEEKLY", help_text="Weekly/Monthly will run on these days"
     )
-    recurrence_day = models.SmallIntegerField(help_text="day of week/ month")
+    recurrence_day = models.SmallIntegerField(help_text="day of week/ month", null=True, blank=True)
     recurrence_days = ArrayField(models.SmallIntegerField(), default=default_days)
     recipients = ArrayField(
         models.CharField(max_length=255),
@@ -363,10 +363,10 @@ class AlertConfig(TimeStampModel):
         """
         if self.recurrence_frequency == "WEEKLY":
             today_weekday = timezone.now().weekday()
-            if today_weekday != int(self.recurrence_day):
+            if today_weekday in self.recurrence_days:
                 # calculate the specific date wanted based on day of week
-                day_diff = int(self.recurrence_day) - today_weekday
-                return timezone.now() + timezone.timedelta(days=day_diff)
+                # day_diff = int(self.recurrence_day) - today_weekday
+                return timezone.now()
             return timezone.now()
         elif self.recurrence_frequency == "MONTHLY":
             d = timezone.now()

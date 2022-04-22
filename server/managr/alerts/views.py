@@ -77,6 +77,7 @@ class AlertTemplateViewSet(
         data = request.data
         serializer = alert_serializers.AlertTemplateWriteSerializer(data=data, context=request)
         serializer.is_valid(raise_exception=True)
+
         serializer.save()
         readSerializer = self.serializer_class(instance=serializer.instance)
         return Response(data=readSerializer.data)
@@ -212,6 +213,7 @@ class AlertConfigViewSet(
 
     def create(self, request, *args, **kwargs):
         data = request.data
+        print(data)
         serializer = alert_serializers.AlertConfigWriteSerializer(data=data, context=request)
         serializer.is_valid(raise_exception=True)
         serializer.save()

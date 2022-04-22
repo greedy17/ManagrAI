@@ -18,10 +18,10 @@ export class AlertConfigForm extends Form {
   static recurrenceFrequency = new FormField({ value: 'WEEKLY' })
   static recurrenceDays = new FormField({ value: [] })
   static recurrenceDay = new FormField({
-    validators: [
-      new MinimumValueValidator({ min: 0, message: 'Please add values 0 - 31' }),
-      new MaximumValueValidator({ max: 31, message: 'Please add values 0 - 31' }),
-    ],
+    // validators: [
+    //   new MinimumValueValidator({ min: 0, message: 'Please add values 0 - 31' }),
+    //   new MaximumValueValidator({ max: 31, message: 'Please add values 0 - 31' }),
+    // ],
   })
   static recipients = new FormField({ validators: [new RequiredValidator()], value: [] })
   static alertTargets = new FormField({ validators: [new RequiredValidator()], value: [] })
