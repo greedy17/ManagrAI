@@ -16,9 +16,9 @@ import AlertTemplate from '.'
 
 export class AlertConfigForm extends Form {
   static recurrenceFrequency = new FormField({ value: 'WEEKLY' })
+  static recurrenceDays = new FormField({ value: [] })
   static recurrenceDay = new FormField({
     validators: [
-      new RequiredValidator(),
       new MinimumValueValidator({ min: 0, message: 'Please add values 0 - 31' }),
       new MaximumValueValidator({ max: 31, message: 'Please add values 0 - 31' }),
     ],
@@ -31,6 +31,7 @@ export class AlertConfigForm extends Form {
   static _recipients = new FormField({ value: [] })
   // Keeping a private copy of the dropdown ref obj for later use
   static _recurrenceDay = new FormField({ value: null })
+  static _recurrenceDays = new FormField({ value: null })
   // Keeping a private copy of the dropdown ref obj for later use
   static _alertTargets = new FormField({ value: [] })
 
@@ -50,6 +51,7 @@ export class AlertConfigForm extends Form {
     delete val['_recipients']
     delete val['_alertTargets']
     delete val['_recurrenceDay']
+    delete val['_recurrenceDays']
     return val
   }
 }

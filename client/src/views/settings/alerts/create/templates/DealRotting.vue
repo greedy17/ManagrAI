@@ -19,11 +19,7 @@
           :key="i"
           v-for="(form, i) in alertTemplateForm.field.alertConfig.groups"
         >
-          <div
-            style="margin-top: 1rem"
-            class="delivery__row"
-            :errors="form.field.recurrenceDay.errors"
-          >
+          <div style="margin-top: 1rem" class="delivery__row">
             <div style="margin-bottom: 0.5rem" class="row__">
               <label :class="form.field.recurrenceFrequency.value == 'WEEKLY' ? 'green' : ''"
                 >Weekly</label
@@ -49,14 +45,15 @@
                 <template v-slot:input>
                   <Multiselect
                     placeholder="Select Day"
-                    @input="setDay"
+                    @input="setDays"
                     v-model="selectedDay"
                     :options="weeklyOpts"
                     openDirection="below"
                     style="min-width: 13vw"
                     selectLabel="Enter"
-                    track-by="vlue"
+                    track-by="value"
                     label="key"
+                    :multiple="true"
                   >
                     <template slot="noResult">
                       <p>No results.</p>
@@ -583,11 +580,11 @@ export default {
       this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
         this.selectedChannel.id
     },
-    setDay() {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDay.value =
+    setDays() {
+      this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDays.value =
         this.selectedDay
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value =
-        this.selectedDay.value
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value =
+        this.selectedDay.map((day) => day.value)
     },
     mapIds() {
       let mappedIds = this.selectedUsers.map((user) => user.id)
@@ -850,6 +847,9 @@ export default {
 .load-more:hover {
   color: $dark-green;
   cursor: pointer;
+}
+::v-deep .multiselect__tags {
+  max-width: 18vw;
 }
 @keyframes bounce {
   0% {
