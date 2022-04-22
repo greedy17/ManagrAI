@@ -371,13 +371,13 @@ class AlertConfig(TimeStampModel):
         elif self.recurrence_frequency == "MONTHLY":
             d = timezone.now()
             d_range = monthrange(d.year, d.month)
-            if self.recurrence_day > d_range[1]:
+            if self.recurrence_days[0] > d_range[1]:
                 # aka if the month does not have 31 or is 28 and is greater than 28 days
-                diff = self.recurrence_day - d_range[1]
+                diff = self.recurrence_days[0] - d_range[1]
 
                 return timezone() + relativedelta(days=diff)
             else:
-                return datetime.datetime(year=d.year, month=d.month, day=self.recurrence_day)
+                return datetime.datetime(year=d.year, month=d.month, day=self.recurrence_day[0])
 
         return timezone.now()
 
