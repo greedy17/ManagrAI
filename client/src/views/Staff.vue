@@ -1,6 +1,7 @@
 <template>
   <div class="staff">
     <div class="staff__drawer">
+      <h1>Organizations</h1>
       <div :key="i" v-for="(org, i) in organizations.list">
         <h2 @click="selected_org = org.id">{{ org.name }}</h2>
       </div>
@@ -25,17 +26,22 @@
           <hr />
           <div class="form__List">
             <div :key="i" class="field__list_item" v-for="(workflow, i) in orgMeetingWorkflows">
-              <p>{{ 'event_data' in workflow.meeting_ref ? 'Google Meet' : 'Zoom Meeting' }}</p>
-              <p>{{ workflow }}</p>
+              <h4>
+                {{ 'event_data' in workflow.meeting_ref ? 'Google Meet' : 'Zoom Meeting' }} --
+                {{
+                  'event_data' in workflow.meeting_ref
+                    ? workflow.meeting_ref['event_data']['title']
+                    : workflow.meeting_ref.topic
+                }}
+              </h4>
               <ul>
                 <li
-                  v-for="(i, participant) in workflow.meeting_ref.participants.values()"
+                  v-for="(participant, index) in workflow.meeting_ref.participants"
                   :key="participant['email']"
                 >
-                  {{ participant }}
+                  {{ participant['email'] }}
                 </li>
               </ul>
-              <p>{{ workflow }}</p>
             </div>
           </div>
         </template>
@@ -81,7 +87,6 @@ export default {
       try {
         let res = await MeetingWorkflows.api.getMeetingList()
         this.allMeetingWorkflows = res.results
-        console.log(this.allMeetingWorkflows)
       } catch (e) {
         console.log(e)
       }
@@ -93,11 +98,8 @@ export default {
       return this.allMeetingWorkflows.filter((workflow) => workflow.org_ref.id == org_id)
     },
     showOrgData(org_id) {
-      console.log(org_id)
       this.orgForms = this.filterOrgForms(org_id)
-      console.log(this.orgForms)
       this.orgMeetingWorkflows = this.filterMeetingWorkflow(org_id)
-      console.log(this.orgMeetingWorkflows)
     },
   },
   created() {
@@ -107,7 +109,7 @@ export default {
   },
   watch: {
     organizations() {
-      this.selected_org = organizations[0].id
+      this.selected_org = this.organizations[0].id
     },
     selected_org() {
       this.showOrgData(this.selected_org)
