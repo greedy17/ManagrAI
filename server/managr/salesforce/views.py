@@ -239,8 +239,8 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
     def get_sobject_picklist_values(self, request, *args, **kwargs):
         user = self.request.user
-        sobject_id = self.request.GET.get("sobject_id")
-        print(sobject_id)
+        sobject_id = request.GET.get("sobject_id")
+        value = request.GET.get("value", None)
         sobject_field = SObjectField.objects.get(id=sobject_id)
         attempts = 1
         while True:
@@ -250,7 +250,7 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
                 res = sf_adapter.list_relationship_data(
                     sobject_field.display_value_keys["api_name"],
                     sobject_field.display_value_keys["name_fields"],
-                    None,
+                    value,
                     sobject_field.salesforce_object,
                 )
                 break
