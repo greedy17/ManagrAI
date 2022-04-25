@@ -581,11 +581,11 @@ export default {
         this.selectedChannel.id
     },
     setDays() {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDays.value =
-        this.selectedDay
+      // this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDays.value =
+      //   this.selectedDay
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
       this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value =
         this.selectedDay.map((day) => day.value)
-      console.log(this.alertTemplateForm.errors)
     },
     mapIds() {
       let mappedIds = this.selectedUsers.map((user) => user.id)
@@ -598,7 +598,6 @@ export default {
     async onSave() {
       this.savingTemplate = true
       this.alertTemplateForm.validate()
-      
       if (this.alertTemplateForm.isValid) {
         try {
           const res = await AlertTemplate.api.createAlertTemplate({

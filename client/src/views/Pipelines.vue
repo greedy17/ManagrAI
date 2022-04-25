@@ -193,7 +193,7 @@
 
               <Multiselect
                 placeholder="Select Account"
-                v-model="currentVals[field.apiName]"
+                v-model="selectedAccount"
                 :options="allAccounts"
                 @select="setUpdateValues(field.apiName, $event.integration_id)"
                 openDirection="below"
@@ -896,6 +896,7 @@ export default {
       noteTitle: '',
       noteInfo: '',
       picklistQueryOpts: {},
+      createQueryOpts: {},
       picklistQueryOptsContacts: {},
       instanceIds: [],
       allAccounts: null,
@@ -1019,14 +1020,8 @@ export default {
   },
   methods: {
     tester() {
-      console.log(this.templates.list)
+      console.log(this.oppFields)
     },
-    // setInitialForm() {
-    //   this.formData = {
-    //     meeting_type: 'N/A',
-    //     meeting_comments: 'N/A',
-    //   }
-    // },
     async getMeetingList() {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
@@ -1538,6 +1533,14 @@ export default {
         console.log(e)
       }
     },
+    async listPicklists(type, query_params) {
+      try {
+        const res = await SObjectPicklist.api.listPicklists(query_params)
+        this.picklistQueryOpts[type] = res.length ? res[0]['values'] : []
+      } catch (e) {
+        console.log(e)
+      }
+    },
     async listStages() {
       try {
         const res = await SObjectPicklist.api.listPicklists({
@@ -1658,7 +1661,6 @@ export default {
       }
     },
     async createFormInstance(id, alertInstanceId = null) {
-      // this.setInitialForm()
       this.dropdownLoading = true
       this.currentVals = []
       this.updatingMeeting = false
@@ -1670,7 +1672,6 @@ export default {
           formType: 'UPDATE',
           resourceId: id,
         })
-        console.log(res.current_values)
         this.currentVals = res.current_values
         this.oppId = id
         this.instanceId = res.form_id
@@ -1687,6 +1688,9 @@ export default {
       }
     },
     async createOppInstance() {
+      this.currentVals = []
+      this.selectedAccount = null
+      this.selectedOwner = null
       try {
         const res = await SObjects.api.createFormInstance({
           resourceType: 'Opportunity',
@@ -1773,11 +1777,13 @@ export default {
         } catch (e) {
           console.log(e)
         } finally {
-          this.getObjects()
+          // this.getObjects()
           User.api.getUser(this.user.id).then((response) => {
             this.$store.commit('UPDATE_USER', response)
           })
-          this.loading = false
+          setTimeout(() => {
+            this.loading = false
+          }, 1000)
           this.$Alert.alert({
             type: 'success',
             timeout: 3000,
@@ -1794,7 +1800,7 @@ export default {
       } catch (e) {
         console.log(e)
       } finally {
-        this.getObjects()
+        // this.getObjects()
         this.loading = false
         this.$Alert.alert({
           type: 'success',
@@ -1873,7 +1879,7 @@ export default {
           this.currentWorkflow = this.allOpps.filter((opp) =>
             res.data.ids.includes(opp.integration_id),
           )
-          console.log(this.templates.list[0].user)
+
           if (this.currentWorkflow.length < 1) {
             this.updateWorkflow(this.id)
           }
@@ -1950,9 +1956,27 @@ export default {
               this.oppFormCopy[i].referenceDisplayLabel
           }
         }
+
         for (let i in this.picklistQueryOpts) {
           this.picklistQueryOpts[i] = this.listPicklists(i, { picklistFor: i })
         }
+
+        for (let i = 0; i < this.createOppForm.length; i++) {
+          if (
+            this.createOppForm[i].dataType === 'Picklist' ||
+            this.createOppForm[i].dataType === 'MultiPicklist'
+          ) {
+            this.createQueryOpts[this.createOppForm[i].apiName] = this.createOppForm[i].apiName
+          } else if (this.createOppForm[i].dataType === 'Reference') {
+            this.createQueryOpts[this.createOppForm[i].referenceDisplayLabel] =
+              this.createOppForm[i].referenceDisplayLabel
+          }
+        }
+
+        for (let i in this.createQueryOpts) {
+          this.createQueryOpts[i] = this.listPicklists(i, { picklistFor: i })
+        }
+
         this.filterFields = this.updateOppForm[0].fieldsRef.filter(
           (field) =>
             field.apiName !== 'meeting_type' &&
