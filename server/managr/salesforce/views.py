@@ -239,8 +239,9 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
     def get_sobject_picklist_values(self, request, *args, **kwargs):
         user = self.request.user
-        data = self.request.data
-        sobject_field = SObjectField.objects.get(id=data.get("sobject_id"))
+        sobject_id = self.request.GET.get("sobject_id")
+        print(sobject_id)
+        sobject_field = SObjectField.objects.get(id=sobject_id)
         attempts = 1
         while True:
             sf_account = user.salesforce_account
@@ -827,7 +828,8 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type, slack_const.FORM_TYPE_UPDATE,
+            resource_type,
+            slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)

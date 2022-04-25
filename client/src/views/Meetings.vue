@@ -600,6 +600,7 @@ export default {
       workflowCheckList: [],
       allSelected: false,
       allWorkflowsSelected: false,
+      createQueryOpts: {},
       updateList: [],
       recapList: [],
       currentVals: [],
@@ -1595,7 +1596,7 @@ export default {
           message: 'Opportunity created successfully!',
         })
       }
-      this.getAllForms()
+      // this.getAllForms()
     },
     async selectList() {
       // this.currentList = this.templates.list.filter((temp) => temp.id === this.id)[0].title
@@ -1683,9 +1684,27 @@ export default {
               this.oppFormCopy[i].referenceDisplayLabel
           }
         }
+
         for (let i in this.picklistQueryOpts) {
           this.picklistQueryOpts[i] = this.listPicklists(i, { picklistFor: i })
         }
+
+        for (let i = 0; i < this.createOppForm.length; i++) {
+          if (
+            this.createOppForm[i].dataType === 'Picklist' ||
+            this.createOppForm[i].dataType === 'MultiPicklist'
+          ) {
+            this.createQueryOpts[this.createOppForm[i].apiName] = this.createOppForm[i].apiName
+          } else if (this.createOppForm[i].dataType === 'Reference') {
+            this.createQueryOpts[this.createOppForm[i].referenceDisplayLabel] =
+              this.createOppForm[i].referenceDisplayLabel
+          }
+        }
+
+        for (let i in this.createQueryOpts) {
+          this.createQueryOpts[i] = this.listPicklists(i, { picklistFor: i })
+        }
+
         this.filterFields = this.updateOppForm[0].fieldsRef.filter(
           (field) =>
             field.apiName !== 'meeting_type' &&

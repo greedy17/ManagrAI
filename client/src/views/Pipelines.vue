@@ -673,7 +673,7 @@
           }}</span>
         </h6>
       </div>
-      <!-- <p @click="tester">test</p> -->
+      <!-- <p @click="tester('fdafcaae-eea5-4fbf-b0bf-a5e7636874af')">test</p> -->
 
       <section
         v-show="!selectedWorkflow && !selectedMeeting && !loadingWorkflows"
@@ -1019,8 +1019,16 @@ export default {
     },
   },
   methods: {
-    tester() {
-      console.log(this.oppFields)
+    async tester() {
+      try {
+        const res = await SObjects.api.getSobjectPicklistValues({
+          sobject_id: 'fdafcaae-eea5-4fbf-b0bf-a5e7636874af',
+        })
+        console.log(res)
+        console.log(this.allAccounts)
+      } catch (e) {
+        console.log(e)
+      }
     },
     async getMeetingList() {
       try {
