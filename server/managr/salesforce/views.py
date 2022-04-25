@@ -231,6 +231,40 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         sf.save()
         return Response()
 
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="sobject-picklist-values",
+    )
+    def get_sobject_picklist_values(self, request, *args, **kwargs):
+        user = self.request.user
+        data = self.request.data
+        sobject_field = SObjectField.objects.get(id=data.get("sobject_id"))
+        attempts = 1
+        while True:
+            sf_account = user.salesforce_account
+            sf_adapter = sf_account.adapter_class
+            try:
+                res = sf_adapter.list_relationship_data(
+                    sobject_field.display_value_keys["api_name"],
+                    sobject_field.display_value_keys["name_fields"],
+                    None,
+                    sobject_field.salesforce_object,
+                )
+                break
+            except TokenExpired:
+                if attempts >= 5:
+                    return logger.exception(
+                        f"Failed to retrieve reference data for {sobject_field.display_value_keys['api_name']} data for user {str(user.id)} after {attempts} tries"
+                    )
+                else:
+                    sf_account.regenerate_token()
+                    attempts += 1
+
+        data = list(map(lambda val: {"name": val.get("Name"), "id": val.get("Id")}, res))
+        return Response(data=data)
+
 
 class SObjectPicklistViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     serializer_class = SObjectPicklistSerializer
