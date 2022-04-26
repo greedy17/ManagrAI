@@ -77,7 +77,7 @@ def convert_local_time_to_unix(timezone, hr, minute):
     user_timezone = pytz.timezone(timezone)
 
     current = pytz.utc.localize(current_time).astimezone(user_timezone)
-    unixtime = time.mktime(current.replace(hour=hr, minute=minute).timetuple())
+    unixtime = current.replace(hour=hr, minute=minute).timestamp()
     return unixtime
 
 
