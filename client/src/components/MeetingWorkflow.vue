@@ -107,14 +107,15 @@
                 <Multiselect
                   v-if="field.apiName === 'AccountId'"
                   placeholder="Select Account"
-                  @select="setUpdateValues(field.apiName, $event.integration_id)"
+                  @search-change="$emit('filter-accounts', $event)"
+                  @select="setUpdateValues(field.apiName, $event.id)"
                   v-model="selectedAccount"
                   style="width: 14vw"
                   :options="accounts"
                   openDirection="below"
                   selectLabel="Enter"
                   label="name"
-                  track-by="integration_id"
+                  track-by="id"
                 >
                   <template slot="noResult">
                     <p>No results.</p>

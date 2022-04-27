@@ -350,6 +350,7 @@
             @no-update="NoMeetingUpdate"
             @remove-participant="removeParticipant"
             @add-participant="addParticipant"
+            @filter-accounts="getAccounts"
             :dropdowns="picklistQueryOptsContacts"
             :contactFields="updateContactForm"
             :meeting="meeting.meeting_ref"
