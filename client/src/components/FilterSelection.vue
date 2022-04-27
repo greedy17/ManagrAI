@@ -130,12 +130,13 @@
           placeholder="Select Account"
           style="max-width: 20vw"
           v-model="inputValue"
-          @select="$emit('value-selected', `${$event.integration_id}`, apiName)"
+          @search-change="$emit('filter-accounts', $event)"
+          @select="$emit('value-selected', `${$event.id}`, apiName)"
           :options="accounts"
           openDirection="below"
           selectLabel="Enter"
           label="name"
-          track-by="integration_id"
+          track-by="id"
         >
           <template slot="noResult">
             <p>No results.</p>
@@ -186,7 +187,7 @@
                 : apiName === 'OwnerId'
                 ? inputValue.salesforce_account_ref.salesforce_id
                 : apiName === 'AccountId'
-                ? inputValue.integration_id
+                ? inputValue.id
                 : inputValue,
             )
           "

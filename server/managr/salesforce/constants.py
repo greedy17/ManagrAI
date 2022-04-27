@@ -39,6 +39,7 @@ REMOVE_OWNER_ID = {
     "OpportunityLineItem",
 }
 
+ADD_RESOURCE_TYPE_FIELDS = ["RecordType"]
 
 # SF CUSTOM URI QUERIES
 def SALESFORCE_RESOURCE_QUERY_URI(
@@ -48,9 +49,16 @@ def SALESFORCE_RESOURCE_QUERY_URI(
     childRelationshipFields=[],
     additional_filters=[],
     limit=SALESFORCE_QUERY_LIMIT,
+    SobjectType=None,
 ):
     # make a set to remove duplicates
     fields = set(fields)
+    print(len(additional_filters))
+    if resource in ADD_RESOURCE_TYPE_FIELDS:
+        if len(additional_filters):
+            additional_filters.append(f"AND SobjectType = '{SobjectType}'")
+        else:
+            additional_filters.append(f"SobjectType = '{SobjectType}'")
     url = f"{CUSTOM_BASE_URI}/query/?q=SELECT {','.join(fields)}"
     if len(childRelationshipFields):
         for rel, v in childRelationshipFields.items():

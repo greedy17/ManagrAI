@@ -18,8 +18,8 @@ def init_alert_check():
     configs = AlertConfig.objects.filter(
         Q(template__user__is_active=True, template__is_active=True)
         & Q(
-            Q(recurrence_frequency="WEEKLY", recurrence_day=timezone.now().weekday())
-            | Q(recurrence_frequency="MONTHLY", recurrence_day=timezone.now().day)
+            Q(recurrence_frequency="WEEKLY", recurrence_days__contains=timezone.now().weekday())
+            | Q(recurrence_frequency="MONTHLY", recurrence_days__contains=timezone.now().day)
         )
     )
     for config in configs:

@@ -107,14 +107,15 @@
                 <Multiselect
                   v-if="field.apiName === 'AccountId'"
                   placeholder="Select Account"
-                  @select="setUpdateValues(field.apiName, $event.integration_id)"
+                  @search-change="$emit('filter-accounts', $event)"
+                  @select="setUpdateValues(field.apiName, $event.id)"
                   v-model="selectedAccount"
                   style="width: 14vw"
                   :options="accounts"
                   openDirection="below"
                   selectLabel="Enter"
                   label="name"
-                  track-by="integration_id"
+                  track-by="id"
                 >
                   <template slot="noResult">
                     <p>No results.</p>
@@ -336,7 +337,7 @@
       <p
         class="roww"
         @click="addingOpp = !addingOpp"
-        v-if="resourceId && !meetingUpdated && resourceType === 'Opportunity'"
+        v-if="resourceId && resourceType === 'Opportunity' && !meetingUpdated"
       >
         {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
         <img
@@ -349,6 +350,11 @@
       <p v-else-if="meetingUpdated">
         {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
       </p>
+      <div v-else-if="resourceId && resourceType !== 'Opportunity' && !meetingUpdated">
+        <button @click="addingOpp = !addingOpp" class="add-button">Map to Opportunity</button>
+        <small>currently mapped to {{ resourceType }}</small>
+      </div>
+
       <button @click="addingOpp = !addingOpp" v-else class="add-button">Map to Opportunity</button>
 
       <div v-if="addingOpp" class="add-field-section">
@@ -376,7 +382,6 @@
             <template slot="noResult">
               <div class="row">
                 <p>No results</p>
-                <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
               </div>
             </template>
           </Multiselect>
@@ -392,7 +397,13 @@
     </div>
 
     <div v-if="!meetingUpdated" class="table-cell">
-      <p v-if="!resourceId && !meetingLoading">Please map meeting in order to take action.</p>
+      <p
+        v-if="
+          (!resourceId && !meetingLoading) || (resourceType !== 'Opportunity' && !meetingLoading)
+        "
+      >
+        Please map meeting in order to take action.
+      </p>
       <div>
         <div class="column" v-if="resourceId && !meetingLoading">
           <button @click="$emit('update-Opportunity', workflowId, resourceId)" class="add-button">
