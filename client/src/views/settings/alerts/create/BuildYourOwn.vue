@@ -367,6 +367,7 @@
                         <Multiselect
                           placeholder="Select a Day"
                           v-model="selectedDay"
+                          @select="setDay"
                           :options="weeklyOpts"
                           openDirection="below"
                           style="min-width: 13vw"
@@ -1232,8 +1233,11 @@ export default {
     onPreviousPage() {
       this.pageNumber >= 1 ? (this.pageNumber -= 1) : (this.pageNumber = this.pageNumber)
     },
-    setDay(obj) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDay.value = obj
+    setDay() {
+      this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDay.value =
+        this.selectedDay[0]
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value =
+        this.selectedDay.map((day) => day.value)
     },
     setPipelines(obj) {
       if (this.alertTemplateForm.field.alertConfig.groups[0].field._alertTargets.value.lenght < 1) {

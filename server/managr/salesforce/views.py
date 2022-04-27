@@ -231,6 +231,41 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         sf.save()
         return Response()
 
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="sobject-picklist-values",
+    )
+    def get_sobject_picklist_values(self, request, *args, **kwargs):
+        user = self.request.user
+        sobject_id = request.GET.get("sobject_id")
+        value = request.GET.get("value", None)
+        sobject_field = SObjectField.objects.get(id=sobject_id)
+        attempts = 1
+        while True:
+            sf_account = user.salesforce_account
+            sf_adapter = sf_account.adapter_class
+            try:
+                res = sf_adapter.list_relationship_data(
+                    sobject_field.display_value_keys["api_name"],
+                    sobject_field.display_value_keys["name_fields"],
+                    value,
+                    sobject_field.salesforce_object,
+                )
+                break
+            except TokenExpired:
+                if attempts >= 5:
+                    return logger.exception(
+                        f"Failed to retrieve reference data for {sobject_field.display_value_keys['api_name']} data for user {str(user.id)} after {attempts} tries"
+                    )
+                else:
+                    sf_account.regenerate_token()
+                    attempts += 1
+
+        data = list(map(lambda val: {"name": val.get("Name"), "id": val.get("Id")}, res))
+        return Response(data=data)
+
 
 class SObjectPicklistViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     serializer_class = SObjectPicklistSerializer
@@ -793,7 +828,8 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type, slack_const.FORM_TYPE_UPDATE,
+            resource_type,
+            slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)

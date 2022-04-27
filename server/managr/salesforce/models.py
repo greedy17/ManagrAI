@@ -261,7 +261,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
                 )
             else:
                 user_id = str(self.salesforce_account.user.id)
-                action_query = f"{slack_consts.GET_EXTERNAL_RELATIONSHIP_OPTIONS}?u={user_id}&relationship={self.display_value_keys['api_name']}&fields={','.join(self.display_value_keys['name_fields'])}"
+                action_query = f"{slack_consts.GET_EXTERNAL_RELATIONSHIP_OPTIONS}?u={user_id}&relationship={self.display_value_keys['api_name']}&fields={','.join(self.display_value_keys['name_fields'])}&resource={self.salesforce_object}"
             return block_builders.external_select(
                 f"*{display_name}*",
                 action_query,
