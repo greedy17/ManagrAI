@@ -1767,7 +1767,6 @@ export default {
           this.currentWorkflow = this.allOpps.filter((opp) =>
             res.data.ids.includes(opp.integration_id),
           )
-
           if (this.currentWorkflow.length < 1) {
             this.updateWorkflow(this.id)
           }

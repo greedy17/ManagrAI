@@ -19,11 +19,18 @@ class Command(BaseCommand):
         if options["users"]:
             for t in options["users"]:
                 user = User.objects.filter(email=t).first()
-                emit_check_reminders(str(user.id), f"reminders-{user.email}-{str(uuid.uuid4())}")
+                if options["meetings"]:
+                    emit_process_non_zoom_meetings(
+                        str(user.id), f"non-zoom-meetings-{user.email}-{str(uuid.uuid4())}"
+                    )
+                else:
+                    emit_check_reminders(
+                        str(user.id), f"reminders-{user.email}-{str(uuid.uuid4())}"
+                    )
 
-                emit_timezone_tasks(
-                    str(user.id), f"timezone_tasks-{user.email}-{str(uuid.uuid4())}"
-                )
+                    emit_timezone_tasks(
+                        str(user.id), f"timezone_tasks-{user.email}-{str(uuid.uuid4())}"
+                    )
                 self.stdout.write(
                     self.style.SUCCESS(
                         "Checking Timezone Dependant Task for: {}".format(user.email,)

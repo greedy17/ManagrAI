@@ -156,6 +156,20 @@
                   style="width: 26.25vw; border-radius: 0.4rem; padding: 7px"
                 >
                 </textarea>
+
+                <p style="display: none">
+                  {{
+                    meeting.participants[participantIndex].secondary_data[field.apiName] ===
+                      'null' ||
+                    meeting.participants[participantIndex].secondary_data[field.apiName] ===
+                      'undefined'
+                      ? null
+                      : setUpdateValues(
+                          field.apiName,
+                          meeting.participants[participantIndex].secondary_data[field.apiName],
+                        )
+                  }}
+                </p>
               </div>
               <div
                 v-else-if="
@@ -169,14 +183,31 @@
                 <input
                   @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
                   type="text"
-                  :value="
+                  :placeholder="
                     `${meeting.participants[participantIndex].secondary_data[field.apiName]}` ===
-                    'null'
+                      'null' ||
+                    `${meeting.participants[participantIndex].secondary_data[field.apiName]}` ===
+                      'undefined'
                       ? `Enter ${field.referenceDisplayLabel}`
                       : `${meeting.participants[participantIndex].secondary_data[field.apiName]}`
                   "
                 />
+
+                <p style="display: none">
+                  {{
+                    meeting.participants[participantIndex].secondary_data[field.apiName] ===
+                      'null' ||
+                    meeting.participants[participantIndex].secondary_data[field.apiName] ===
+                      'undefined'
+                      ? null
+                      : setUpdateValues(
+                          field.apiName,
+                          meeting.participants[participantIndex].secondary_data[field.apiName],
+                        )
+                  }}
+                </p>
               </div>
+
               <div
                 v-else-if="
                   field.dataType === 'Phone' ||
@@ -188,13 +219,29 @@
                 <input
                   type="number"
                   @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-                  :value="
+                  :placeholder="
                     `${meeting.participants[participantIndex].secondary_data[field.apiName]}` ===
-                    'null'
+                      'null' ||
+                    `${meeting.participants[participantIndex].secondary_data[field.apiName]}` ===
+                      'undefined'
                       ? `Enter ${field.referenceDisplayLabel}`
                       : `${meeting.participants[participantIndex].secondary_data[field.apiName]}`
                   "
                 />
+
+                <p style="display: none">
+                  {{
+                    meeting.participants[participantIndex].secondary_data[field.apiName] ===
+                      'null' ||
+                    meeting.participants[participantIndex].secondary_data[field.apiName] ===
+                      'undefined'
+                      ? null
+                      : setUpdateValues(
+                          field.apiName,
+                          meeting.participants[participantIndex].secondary_data[field.apiName],
+                        )
+                  }}
+                </p>
               </div>
               <!-- <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
                   <p>{{ field.referenceDisplayLabel }}:</p>
@@ -334,7 +381,6 @@
             <template slot="noResult">
               <div class="row">
                 <p>No results</p>
-                <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
               </div>
             </template>
           </Multiselect>
@@ -347,13 +393,6 @@
           <p style="color: gray; cursor: text">Add</p>
         </div>
       </div>
-
-      <!-- <div v-else>
-        <small>
-          Looks like this meeting is mapped to an {{ resourceType }}. <br />
-          We only support Opportunities at the moment.
-        </small>
-      </div> -->
     </div>
 
     <div v-if="!meetingUpdated" class="table-cell">
