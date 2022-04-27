@@ -180,7 +180,7 @@ export class SObjectFormBuilderAPI extends ModelAPI {
   }
   async getSobjectPicklistValues(sobject_id, value) {
     try {
-      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'fields/sobject-picklist-values/', { params: { sobject_id: sobject_id, value: value } })
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'fields/sobject-picklist-values/', { params: sobject_id, value })
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error syncing resources' })(e)

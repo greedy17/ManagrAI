@@ -115,7 +115,6 @@
             <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <Multiselect
-                :placeholder="`Select ${field.referenceDisplayLabel}`"
                 v-model="currentVals[field.apiName]"
                 :options="picklistQueryOpts[field.apiName]"
                 @select="
@@ -132,6 +131,12 @@
               >
                 <template slot="noResult">
                   <p>No results.</p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    {{ `${field.referenceDisplayLabel}` }}
+                  </p>
                 </template>
               </Multiselect>
             </div>
@@ -170,8 +175,7 @@
             <div v-else-if="field.apiName === 'OwnerId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <Multiselect
-                placeholder="Select Owner"
-                v-model="currentVals[field.apiName]"
+                v-model="selectedOwner"
                 :options="allUsers"
                 @select="
                   setUpdateValues(field.apiName, $event.salesforce_account_ref.salesforce_id)
@@ -185,6 +189,12 @@
                 <template slot="noResult">
                   <p>No results.</p>
                 </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    {{ currentOwner }}
+                  </p>
+                </template>
               </Multiselect>
             </div>
 
@@ -192,18 +202,24 @@
               <p>{{ field.referenceDisplayLabel }}:</p>
 
               <Multiselect
-                placeholder="Select Account"
-                v-model="currentVals[field.apiName]"
+                v-model="selectedAccount"
                 :options="allAccounts"
-                @select="setUpdateValues(field.apiName, $event.integration_id)"
+                @search-change="getAccounts($event)"
+                @select="setUpdateValues(field.apiName, $event.id)"
                 openDirection="below"
                 style="width: 13vw"
                 selectLabel="Enter"
-                track-by="integration_id"
+                track-by="id"
                 label="name"
               >
                 <template slot="noResult">
                   <p>No results.</p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    {{ currentAccount }}
+                  </p>
                 </template>
               </Multiselect>
             </div>
@@ -215,211 +231,7 @@
         </div>
       </div>
     </Modal>
-    <Modal
-      v-if="editOpModalOpen"
-      dimmed
-      @close-modal="
-        () => {
-          $emit('cancel'), resetEdit()
-        }
-      "
-    >
-      <div class="opp-modal-container">
-        <div class="flex-row-spread header">
-          <div class="flex-row">
-            <img
-              src="@/assets/images/logo.png"
-              style="height: 1.75rem; margin-left: 0.5rem; margin-right: 0.25rem"
-              alt=""
-            />
-            <h2>Update Opportunity</h2>
-          </div>
-          <img
-            src="@/assets/images/closer.png"
-            style="height: 1.5rem; margin-top: -1rem; margin-right: 0.75rem; cursor: pointer"
-            @click="resetEdit"
-            alt=""
-          />
-        </div>
-        <div class="opp-modal">
-          <section :key="field.id" v-for="field in oppFormCopy">
-            <div v-if="field.apiName === 'meeting_type'">
-              <p>Note Title:</p>
-              <textarea
-                id="user-input"
-                cols="30"
-                rows="2"
-                style="width: 26.25vw; border-radius: 0.2rem"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-              >
-              </textarea>
-            </div>
-            <div v-else-if="field.apiName === 'meeting_comments'">
-              <p>Notes:</p>
-              <textarea
-                id="user-input"
-                ccols="30"
-                rows="4"
-                style="width: 26.25vw; border-radius: 0.2rem"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-              >
-              </textarea>
-            </div>
-            <div
-              v-else-if="
-                field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
-              "
-            >
-              <p>{{ field.referenceDisplayLabel }}:</p>
-              <textarea
-                id="user-input"
-                ccols="30"
-                rows="4"
-                :placeholder="currentVals[field.apiName]"
-                style="width: 26.25vw; border-radius: 0.4rem; padding: 7px"
-                v-model="currentVals[field.apiName]"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-              >
-              </textarea>
-            </div>
-            <div
-              v-else-if="
-                (field.dataType === 'String' && field.apiName !== 'meeting_type') ||
-                (field.dataType === 'String' && field.apiName !== 'meeting_comments') ||
-                (field.dataType === 'String' && field.apiName !== 'NextStep')
-              "
-            >
-              <p>{{ field.referenceDisplayLabel }}:</p>
-              <input
-                id="user-input"
-                type="text"
-                :placeholder="currentVals[field.apiName]"
-                v-model="currentVals[field.apiName]"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-              />
-            </div>
-            <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
-              <Multiselect
-                :placeholder="
-                  `${currentVals[field.apiName]}` !== 'null'
-                    ? `${currentVals[field.apiName]}`
-                    : `Select ${field.referenceDisplayLabel}`
-                "
-                :options="picklistQueryOpts[field.apiName]"
-                @select="
-                  setUpdateValues(
-                    field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-                    $event.value,
-                  )
-                "
-                v-model="dropdownVal[field.apiName]"
-                openDirection="below"
-                :loading="dropdownLoading"
-                style="width: 13vw"
-                selectLabel="Enter"
-                track-by="value"
-                label="label"
-              >
-                <template slot="noResult">
-                  <p>No results.</p>
-                </template>
-              </Multiselect>
-            </div>
-            <div v-else-if="field.dataType === 'Date'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
-              <input
-                type="text"
-                onfocus="(this.type='date')"
-                onblur="(this.type='text')"
-                :placeholder="currentVals[field.apiName]"
-                v-model="currentVals[field.apiName]"
-                id="user-input"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-              />
-            </div>
-            <div v-else-if="field.dataType === 'DateTime'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
-              <input
-                type="datetime-local"
-                id="start"
-                v-model="currentVals[field.apiName]"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-              />
-            </div>
-            <div
-              v-else-if="
-                field.dataType === 'Phone' ||
-                field.dataType === 'Double' ||
-                field.dataType === 'Currency'
-              "
-            >
-              <p>{{ field.referenceDisplayLabel }}:</p>
-              <input
-                id="user-input"
-                type="number"
-                v-model="currentVals[field.apiName]"
-                :placeholder="currentVals[field.apiName]"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-              />
-            </div>
 
-            <div v-else-if="field.apiName === 'OwnerId'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
-              <Multiselect
-                :placeholder="currentOwner"
-                v-model="selectedOwner"
-                :options="allUsers"
-                @select="
-                  setUpdateValues(field.apiName, $event.salesforce_account_ref.salesforce_id)
-                "
-                openDirection="below"
-                style="width: 13vw"
-                selectLabel="Enter"
-                track-by="salesforce_account_ref.salesforce_id"
-                label="full_name"
-                :loading="dropdownLoading"
-              >
-                <template slot="noResult">
-                  <p>No results.</p>
-                </template>
-              </Multiselect>
-            </div>
-
-            <div v-else-if="field.apiName === 'AccountId'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
-
-              <Multiselect
-                :placeholder="currentAccount"
-                v-model="selectedAccount"
-                :options="allAccounts"
-                @select="setUpdateValues(field.apiName, $event.integration_id)"
-                openDirection="below"
-                style="width: 13vw"
-                selectLabel="Enter"
-                track-by="integration_id"
-                label="name"
-                :loading="dropdownLoading"
-              >
-                <template slot="noResult">
-                  <p>No results.</p>
-                </template>
-              </Multiselect>
-            </div>
-          </section>
-        </div>
-        <div class="flex-end-opp">
-          <div v-if="updatingMeeting" style="display: flex; align-items: center">
-            <button @click="onUpdateMeeting" class="add-button__">Update</button>
-            <p @click="resetEdit" class="cancel">Cancel</p>
-          </div>
-          <div v-else style="display: flex; align-items: center">
-            <button @click="updateResource()" class="add-button__">Update</button>
-            <p @click="resetEdit" class="cancel">Cancel</p>
-          </div>
-        </div>
-      </div>
-    </Modal>
     <div ref="pipelines" v-if="!loading">
       <section class="flex-row-spread">
         <div v-if="!workflowCheckList.length && !primaryCheckList.length" class="flex-row">
@@ -631,6 +443,12 @@ export default {
       alertInstanceId: null,
       showList: false,
       showWorkflowList: true,
+      loadingAccounts: false,
+      accountSobjectId: null,
+      currentOwner: null,
+      currentAccount: null,
+      selectedAccount: null,
+      selectedOwner: null,
       showPopularList: true,
       notes: [],
       updateOppForm: null,
@@ -676,6 +494,11 @@ export default {
         referenceDisplayLabel: 'Last Modified Date',
       },
     }
+  },
+  mounted() {
+    setTimeout(() => {
+      this.getInitialAccounts()
+    }, 1000)
   },
   computed: {
     currentCheckList() {
@@ -744,10 +567,10 @@ export default {
     this.listStages()
     this.listForecast()
     this.resourceSync()
-    this.getAccounts()
     this.getUsers()
   },
   watch: {
+    accountSobjectId: 'getAccounts',
     primaryCheckList: 'closeAll',
     workflowCheckList: 'closeAll',
     updateList: {
@@ -1404,23 +1227,36 @@ export default {
     },
     async createFormInstance(id, alertInstanceId = null) {
       this.dropdownLoading = true
+      this.editOpModalOpen = true
       this.currentVals = []
       this.updatingMeeting = false
-      this.editOpModalOpen = true
+      this.currentOwner = null
+      this.currentAccount = null
       this.alertInstanceId = alertInstanceId
+      this.oppId = id
       try {
-        const res = await SObjects.api.createFormInstance({
-          resourceType: 'Opportunity',
-          formType: 'UPDATE',
-          resourceId: id,
-        })
-        this.currentVals = res.current_values
-        this.oppId = id
-        this.instanceId = res.form_id
+        const res = await SObjects.api
+          .createFormInstance({
+            resourceType: 'Opportunity',
+            formType: 'UPDATE',
+            resourceId: id,
+          })
+          .then((res) => {
+            this.currentVals = res.current_values
+            this.instanceId = res.form_id
+            this.currentOwner = this.allUsers.filter(
+              (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
+            )[0].full_name
+            this.allOpps.filter((opp) => opp.id === this.oppId)[0].account_ref
+              ? (this.currentAccount = this.allOpps.filter(
+                  (opp) => opp.id === this.oppId,
+                )[0].account_ref.name)
+              : (this.currentAccount = 'Select Account')
+          })
       } catch (e) {
         console.log(e)
       } finally {
-        this.dropdownLoading = true
+        this.dropdownLoading = false
       }
     },
     async createOppInstance() {
@@ -1712,6 +1548,13 @@ export default {
             !field.apiName.includes('__c'),
         )
         this.filterFields = [...this.filterFields, this.ladFilter, this.lmdFilter]
+
+        this.updateOppForm[0].fieldsRef.filter((field) => field.apiName === 'AccountId')
+          ? (this.accountSobjectId = this.updateOppForm[0].fieldsRef.filter(
+              (field) => field.apiName === 'AccountId',
+            )[0].id)
+          : (this.accountSobjectId = null)
+
         this.oppFields = this.updateOppForm[0].fieldsRef.filter(
           (field) =>
             field.apiName !== 'meeting_type' &&
@@ -1727,6 +1570,7 @@ export default {
         console.log(error)
       }
     },
+
     async getUsers() {
       try {
         const res = await SObjects.api.getObjects('User')
@@ -1735,12 +1579,31 @@ export default {
         console.log(e)
       }
     },
-    async getAccounts() {
+    async getInitialAccounts() {
+      this.loadingAccounts = true
       try {
-        const res = await SObjects.api.getObjects('Account')
-        this.allAccounts = res.results
+        const res = await SObjects.api.getSobjectPicklistValues({
+          sobject_id: this.accountSobjectId,
+        })
+        this.allAccounts = res
       } catch (e) {
         console.log(e)
+      } finally {
+        this.loadingAccounts = false
+      }
+    },
+    async getAccounts(val) {
+      this.loadingAccounts = true
+      try {
+        const res = await SObjects.api.getSobjectPicklistValues({
+          sobject_id: this.accountSobjectId,
+          value: val,
+        })
+        this.allAccounts = res
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.loadingAccounts = false
       }
     },
     async getObjects() {
@@ -1817,6 +1680,19 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 1rem;
+    margin-right: 0.25rem;
+    filter: invert(70%);
+  }
+}
 
 .results {
   margin: 0;

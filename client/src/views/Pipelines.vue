@@ -115,7 +115,6 @@
             <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <Multiselect
-                :placeholder="`Select ${field.referenceDisplayLabel}`"
                 v-model="currentVals[field.apiName]"
                 :options="picklistQueryOpts[field.apiName]"
                 @select="
@@ -132,6 +131,12 @@
               >
                 <template slot="noResult">
                   <p>No results.</p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    {{ `${field.referenceDisplayLabel}` }}
+                  </p>
                 </template>
               </Multiselect>
             </div>
@@ -170,8 +175,7 @@
             <div v-else-if="field.apiName === 'OwnerId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <Multiselect
-                placeholder="Select Owner"
-                v-model="currentVals[field.apiName]"
+                v-model="selectedOwner"
                 :options="allUsers"
                 @select="
                   setUpdateValues(field.apiName, $event.salesforce_account_ref.salesforce_id)
@@ -185,6 +189,12 @@
                 <template slot="noResult">
                   <p>No results.</p>
                 </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    Select Owner
+                  </p>
+                </template>
               </Multiselect>
             </div>
 
@@ -192,18 +202,24 @@
               <p>{{ field.referenceDisplayLabel }}:</p>
 
               <Multiselect
-                placeholder="Select Account"
                 v-model="selectedAccount"
                 :options="allAccounts"
-                @select="setUpdateValues(field.apiName, $event.integration_id)"
+                @search-change="getAccounts($event)"
+                @select="setUpdateValues(field.apiName, $event.id)"
                 openDirection="below"
                 style="width: 13vw"
                 selectLabel="Enter"
-                track-by="integration_id"
+                track-by="id"
                 label="name"
               >
                 <template slot="noResult">
                   <p>No results.</p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    Select Account
+                  </p>
                 </template>
               </Multiselect>
             </div>
@@ -302,11 +318,6 @@
             <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <Multiselect
-                :placeholder="
-                  `${currentVals[field.apiName]}` !== 'null'
-                    ? `${currentVals[field.apiName]}`
-                    : `Select ${field.referenceDisplayLabel}`
-                "
                 :options="picklistQueryOpts[field.apiName]"
                 @select="
                   setUpdateValues(
@@ -324,6 +335,17 @@
               >
                 <template slot="noResult">
                   <p>No results.</p>
+                </template>
+
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    {{
+                      `${currentVals[field.apiName]}` !== 'null'
+                        ? `${currentVals[field.apiName]}`
+                        : `${field.referenceDisplayLabel}`
+                    }}
+                  </p>
                 </template>
               </Multiselect>
             </div>
@@ -368,7 +390,6 @@
             <div v-else-if="field.apiName === 'OwnerId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <Multiselect
-                :placeholder="currentOwner"
                 v-model="selectedOwner"
                 :options="allUsers"
                 @select="
@@ -384,6 +405,12 @@
                 <template slot="noResult">
                   <p>No results.</p>
                 </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    {{ currentOwner }}
+                  </p>
+                </template>
               </Multiselect>
             </div>
 
@@ -391,19 +418,26 @@
               <p>{{ field.referenceDisplayLabel }}:</p>
 
               <Multiselect
-                :placeholder="currentAccount"
                 v-model="selectedAccount"
                 :options="allAccounts"
-                @select="setUpdateValues(field.apiName, $event.integration_id)"
+                @search-change="getAccounts($event)"
+                @select="setUpdateValues(field.apiName, $event.id)"
                 openDirection="below"
                 style="width: 13vw"
                 selectLabel="Enter"
                 track-by="integration_id"
                 label="name"
-                :loading="dropdownLoading"
+                :loading="dropdownLoading || loadingAccounts"
               >
                 <template slot="noResult">
                   <p>No results.</p>
+                </template>
+
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    {{ currentAccount }}
+                  </p>
                 </template>
               </Multiselect>
             </div>
@@ -545,6 +579,7 @@
                 @operator-selected="addOperator"
                 @value-selected="valueSelected"
                 @close-selection="closeFilterSelection"
+                @filter-accounts="getAccounts"
                 :type="filterType"
                 :filterName="currentFilter"
                 :dropdowns="picklistQueryOpts"
@@ -557,7 +592,7 @@
 
           <section style="position: relative">
             <button
-              v-if="activeFilters.length < 4 && !selectedMeeting"
+              v-if="activeFilters.length < 4"
               @click.stop="addingFilter"
               class="add-filter-button"
             >
@@ -664,21 +699,11 @@
       <div class="results">
         <h6 style="color: #9b9b9b">
           {{ currentList }}:
-          <span>{{
-            selectedWorkflow
-              ? currentWorkflow.length
-              : selectedMeeting
-              ? meetings.length
-              : allOpps.length
-          }}</span>
+          <span>{{ selectedWorkflow ? currentWorkflow.length : allOpps.length }}</span>
         </h6>
       </div>
-      <!-- <p @click="tester('fdafcaae-eea5-4fbf-b0bf-a5e7636874af')">test</p> -->
-
-      <section
-        v-show="!selectedWorkflow && !selectedMeeting && !loadingWorkflows"
-        class="table-section"
-      >
+      <!-- <p @click="tester">test</p> -->
+      <section v-show="!selectedWorkflow && !loadingWorkflows" class="table-section">
         <div class="table">
           <PipelineHeader
             :oppFields="oppFields"
@@ -708,9 +733,7 @@
       </section>
 
       <section
-        v-if="
-          selectedWorkflow && currentWorkflow.length > 0 && !selectedMeeting && !loadingWorkflows
-        "
+        v-if="selectedWorkflow && currentWorkflow.length > 0 && !loadingWorkflows"
         class="table-section"
       >
         <div class="table">
@@ -739,31 +762,6 @@
           />
         </div>
       </section>
-      <!-- <section style="min-height: 74vh" v-if="selectedMeeting" class="table-section">
-        <div class="table">
-          <MeetingWorkflowHeader />
-          <MeetingWorkflow
-            v-for="(meeting, i) in meetings"
-            :key="i"
-            @map-opp="mapOpp"
-            @update-Opportunity="updateMeeting"
-            @no-update="NoMeetingUpdate"
-            @remove-participant="removeParticipant"
-            @add-participant="addParticipant"
-            :dropdowns="picklistQueryOptsContacts"
-            :contactFields="updateContactForm"
-            :meeting="meeting.meeting_ref"
-            :workflowId="meeting.id"
-            :resourceId="meeting.resource_id"
-            :meetingUpdated="meeting.is_completed"
-            :allOpps="allOpps"
-            :owners="allUsers"
-            :accounts="allAccounts"
-            :meetingLoading="meetingLoading"
-            :index="i"
-          />
-        </div>
-      </section> -->
       <section
         v-if="
           currentWorkflow && currentWorkflow.length < 1 && selectedWorkflow && !loadingWorkflows
@@ -789,7 +787,6 @@
     <div v-if="loading">
       <Loader loaderText="Pulling in your latest Salesforce data" />
     </div>
-    <!-- <router-view :key="$route.fullPath"></router-view> -->
   </div>
 </template>
 <script>
@@ -804,8 +801,6 @@ import PipelineHeader from '@/components/PipelineHeader'
 import User from '@/services/users'
 import WorkflowRow from '@/components/WorkflowRow'
 import WorkflowHeader from '@/components/WorkflowHeader'
-// import MeetikngWorkflowHeader from '@/components/MeetingWorkflowHeader'
-// import MeetingWorkflow from '@/components/MeetingWorkflow'
 
 export default {
   name: 'Pipelines',
@@ -823,17 +818,11 @@ export default {
     Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
     Filters: () => import(/* webpackPrefetch: true */ '@/components/Filters'),
     FilterSelection: () => import(/* webpackPrefetch: true */ '@/components/FilterSelection'),
-    MeetingWorkflowHeader: () =>
-      import(/* webpackPrefetch: true */ '@/components/MeetingWorkflowHeader'),
-    MeetingWorkflow: () => import(/* webpackPrefetch: true */ '@/components/MeetingWorkflow'),
   },
   data() {
     return {
       id: this.$route.params.id,
       dropdownVal: {},
-      referenceName: null,
-      key: 0,
-      meetingKey: 0,
       updateCounter: 0,
       selectedAccount: null,
       selectedOwner: null,
@@ -864,6 +853,8 @@ export default {
       daysForward: null,
       allOpps: null,
       loading: false,
+      loadingAccounts: false,
+      accountSobjectId: null,
       dropdownLoading: false,
       loadingWorkflows: false,
       templates: CollectionManager.create({
@@ -915,9 +906,7 @@ export default {
       filters: [],
       operatorsLength: 0,
       showMeetingList: true,
-      selectedMeeting: false,
       meetings: null,
-      multi: null,
       ladFilter: {
         apiName: 'LastActivityDate',
         dataType: 'Date',
@@ -997,10 +986,16 @@ export default {
     this.listStages()
     this.listForecast()
     this.resourceSync()
-    this.getAccounts()
     this.getUsers()
   },
+  mounted() {
+    this.selectList()
+    setTimeout(() => {
+      this.getInitialAccounts()
+    }, 1000)
+  },
   watch: {
+    accountSobjectId: 'getAccounts',
     primaryCheckList: 'closeAll',
     workflowCheckList: 'closeAll',
     updateList: {
@@ -1019,17 +1014,9 @@ export default {
     },
   },
   methods: {
-    async tester() {
-      try {
-        const res = await SObjects.api.getSobjectPicklistValues({
-          sobject_id: 'fdafcaae-eea5-4fbf-b0bf-a5e7636874af',
-        })
-        console.log(res)
-        console.log(this.allAccounts)
-      } catch (e) {
-        console.log(e)
-      }
-    },
+    // tester() {
+    //   console.log(this.allOpps)
+    // },
     async getMeetingList() {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
@@ -1038,69 +1025,6 @@ export default {
         console.log(e)
       } finally {
       }
-    },
-    async mapOpp(workflow, resource, resourceType) {
-      this.meetingLoading = true
-      try {
-        const res = await MeetingWorkflows.api
-          .mapMeeting(workflow, resource, resourceType)
-          .then(() => {
-            this.getMeetingList()
-          })
-      } catch (e) {
-        console.log(e)
-      } finally {
-        setTimeout(() => {
-          this.meetingLoading = false
-        }, 500)
-      }
-    },
-    async removeParticipant(workflow, participant) {
-      this.meetingLoading = true
-      try {
-        const res = await MeetingWorkflows.api.removeParticipant(workflow, participant).then(() => {
-          this.getMeetingList()
-        })
-      } catch (e) {
-        console.log(e)
-      } finally {
-        setTimeout(() => {
-          this.meetingLoading = false
-        }, 500)
-      }
-    },
-    async addParticipant(workflow, participant, data) {
-      this.meetingLoading = true
-      try {
-        const res = await MeetingWorkflows.api
-          .updateParticipant({
-            workflow_id: workflow,
-            tracking_id: participant,
-            form_data: data,
-          })
-          .then(() => {
-            this.getMeetingList()
-          })
-      } catch (e) {
-        console.log(e)
-      } finally {
-        setTimeout(() => {
-          this.meetingLoading = false
-          this.$Alert.alert({
-            type: 'success',
-            timeout: 2000,
-            message: 'Contact Added Successfully',
-          })
-        }, 500)
-      }
-    },
-
-    selectMeeting(name) {
-      this.currentList = name
-      this.showList = false
-      this.selectedMeeting = true
-      this.selectedWorkflow = false
-      this.closeFilterSelection()
     },
     setOpps() {
       User.api.getUser(this.user.id).then((response) => {
@@ -1221,11 +1145,10 @@ export default {
       let users = this.allUsers.filter((user) => user.salesforce_account_ref)
       let user = null
       if (name === 'OwnerId') {
-        this.referenceName = name
         user = users.filter((user) => user.salesforce_account_ref.salesforce_id === value)
         this.filterValues.push(user[0].full_name)
       } else if (name === 'AccountId') {
-        let account = this.allAccounts.filter((account) => account.integration_id === value)
+        let account = this.allAccounts.filter((account) => account.id === value)
         this.filterValues.push(account[0].name)
       } else {
         this.filterValues.push(value.value)
@@ -1541,14 +1464,6 @@ export default {
         console.log(e)
       }
     },
-    async listPicklists(type, query_params) {
-      try {
-        const res = await SObjectPicklist.api.listPicklists(query_params)
-        this.picklistQueryOpts[type] = res.length ? res[0]['values'] : []
-      } catch (e) {
-        console.log(e)
-      }
-    },
     async listStages() {
       try {
         const res = await SObjectPicklist.api.listPicklists({
@@ -1601,48 +1516,6 @@ export default {
         console.log(e)
       }
     },
-    async NoMeetingUpdate(meetingWorkflow) {
-      this.meetingLoading = true
-      try {
-        const res = await MeetingWorkflows.api
-          .updateWorkflow({
-            workflow_id: meetingWorkflow,
-            form_data: {
-              meeting_type: 'No Update',
-              meeting_comments: 'No Update',
-            },
-          })
-          .then(() => {
-            this.getMeetingList()
-          })
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.meetingLoading = false
-        this.$Alert.alert({
-          type: 'success',
-          timeout: 2000,
-          message: 'Meeting Logged successfully',
-          sub: 'No update necessary',
-        })
-      }
-    },
-    async updateMeeting(meetingWorkflow, id) {
-      this.currentVals = []
-      this.editOpModalOpen = true
-      this.updatingMeeting = true
-      this.meetingWorkflowId = meetingWorkflow
-      try {
-        const res = await SObjects.api.createFormInstance({
-          resourceType: 'Opportunity',
-          formType: 'UPDATE',
-          resourceId: id,
-        })
-        this.currentVals = res.current_values
-      } catch (e) {
-        console.log(e)
-      }
-    },
     async onUpdateMeeting() {
       this.meetingLoading = true
       this.editOpModalOpen = false
@@ -1670,25 +1543,32 @@ export default {
     },
     async createFormInstance(id, alertInstanceId = null) {
       this.dropdownLoading = true
+      this.editOpModalOpen = true
       this.currentVals = []
       this.updatingMeeting = false
-      this.editOpModalOpen = true
+      this.currentOwner = null
+      this.currentAccount = null
       this.alertInstanceId = alertInstanceId
+      this.oppId = id
       try {
-        const res = await SObjects.api.createFormInstance({
-          resourceType: 'Opportunity',
-          formType: 'UPDATE',
-          resourceId: id,
-        })
-        this.currentVals = res.current_values
-        this.oppId = id
-        this.instanceId = res.form_id
-        this.currentOwner = this.allUsers.filter(
-          (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
-        )[0].full_name
-        this.currentAccount = this.allAccounts.filter(
-          (account) => account.integration_id === this.currentVals['AccountId'],
-        )[0].name
+        const res = await SObjects.api
+          .createFormInstance({
+            resourceType: 'Opportunity',
+            formType: 'UPDATE',
+            resourceId: id,
+          })
+          .then((res) => {
+            this.currentVals = res.current_values
+            this.instanceId = res.form_id
+            this.currentOwner = this.allUsers.filter(
+              (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
+            )[0].full_name
+            this.allOpps.filter((opp) => opp.id === this.oppId)[0].account_ref
+              ? (this.currentAccount = this.allOpps.filter(
+                  (opp) => opp.id === this.oppId,
+                )[0].account_ref.name)
+              : (this.currentAccount = 'Select Account')
+          })
       } catch (e) {
         console.log(e)
       } finally {
@@ -1874,7 +1754,7 @@ export default {
           message: 'Opportunity created successfully!',
         })
       }
-      this.getAllForms()
+      // this.getAllForms()
     },
     async selectList() {
       if (this.id && this.id !== 'Closing-this-month' && this.id !== 'Closing-next-month') {
@@ -1992,6 +1872,13 @@ export default {
             !field.apiName.includes('__c'),
         )
         this.filterFields = [...this.filterFields, this.ladFilter, this.lmdFilter]
+
+        this.updateOppForm[0].fieldsRef.filter((field) => field.apiName === 'AccountId')
+          ? (this.accountSobjectId = this.updateOppForm[0].fieldsRef.filter(
+              (field) => field.apiName === 'AccountId',
+            )[0].id)
+          : (this.accountSobjectId = null)
+
         this.oppFields = this.updateOppForm[0].fieldsRef.filter(
           (field) =>
             field.apiName !== 'meeting_type' &&
@@ -2015,14 +1902,41 @@ export default {
         console.log(e)
       }
     },
-    async getAccounts() {
+    async getInitialAccounts() {
+      this.loadingAccounts = true
       try {
-        const res = await SObjects.api.getObjects('Account')
-        this.allAccounts = res.results
+        const res = await SObjects.api.getSobjectPicklistValues({
+          sobject_id: this.accountSobjectId,
+        })
+        this.allAccounts = res
       } catch (e) {
         console.log(e)
+      } finally {
+        this.loadingAccounts = false
       }
     },
+    async getAccounts(val) {
+      this.loadingAccounts = true
+      try {
+        const res = await SObjects.api.getSobjectPicklistValues({
+          sobject_id: this.accountSobjectId,
+          value: val,
+        })
+        this.allAccounts = res
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.loadingAccounts = false
+      }
+    },
+    // async getAccounts() {
+    //   try {
+    //     const res = await SObjects.api.getObjects('Account')
+    //     this.allAccounts = res.results
+    //   } catch (e) {
+    //     console.log(e)
+    //   }
+    // },
     async getObjects() {
       this.loading = true
       try {
@@ -2057,7 +1971,6 @@ export default {
     closeDatesThisMonth() {
       this.allOpps = this.originalList
       this.selectedWorkflow = false
-      this.selectedMeeting = false
       this.allOpps = this.allOpps.filter(
         (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth,
       )
@@ -2075,7 +1988,6 @@ export default {
     closeDatesNextMonth() {
       this.allOpps = this.originalList
       this.selectedWorkflow = false
-      this.selectedMeeting = false
       this.allOpps = this.allOpps.filter(
         (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth + 1,
       )
@@ -2092,7 +2004,6 @@ export default {
     },
     allOpportunities() {
       this.selectedWorkflow = false
-      this.selectedMeeting = false
       this.allOpps = this.originalList
       this.currentList = 'All Opportunities'
       this.showList = !this.showList
@@ -2126,14 +2037,24 @@ export default {
       this.updateCounter += 1
     }
   },
-  mounted() {
-    this.selectList()
-  },
 }
 </script>
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 1rem;
+    margin-right: 0.25rem;
+    filter: invert(70%);
+  }
+}
 
 .results {
   margin: 0;
@@ -2240,6 +2161,7 @@ h3 {
 .table-section {
   margin: 0;
   padding: 0;
+  min-height: 50vh;
   max-height: 76vh;
   overflow: scroll;
   margin-top: 0.5rem;

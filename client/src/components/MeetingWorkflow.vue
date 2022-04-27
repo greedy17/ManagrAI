@@ -286,69 +286,74 @@
     </div>
 
     <div class="table-cell">
-      <div v-if="!resourceType || resourceType === 'Opportunity'">
-        <p class="roww" @click="addingOpp = !addingOpp" v-if="resourceId && !meetingUpdated">
-          {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
+      <p
+        class="roww"
+        @click="addingOpp = !addingOpp"
+        v-if="resourceId && resourceType === 'Opportunity' && !meetingUpdated"
+      >
+        {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
+        <img
+          class="invert"
+          style="height: 0.6rem; margin-left: 0.2rem"
+          src="@/assets/images/edit.png"
+          alt=""
+        />
+      </p>
+      <p v-else-if="meetingUpdated">
+        {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
+      </p>
+      <div v-else-if="resourceId && resourceType !== 'Opportunity' && !meetingUpdated">
+        <button @click="addingOpp = !addingOpp" class="add-button">Map to Opportunity</button>
+        <small>currently mapped to {{ resourceType }}</small>
+      </div>
+
+      <button @click="addingOpp = !addingOpp" v-else class="add-button">Map to Opportunity</button>
+
+      <div v-if="addingOpp" class="add-field-section">
+        <div class="add-field-section__title">
+          <p>Map to Opportunity</p>
           <img
-            class="invert"
-            style="height: 0.6rem; margin-left: 0.2rem"
-            src="@/assets/images/edit.png"
-            alt=""
+            src="@/assets/images/closer.png"
+            style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
+            @click="addingOpp = !addingOpp"
           />
-        </p>
-        <p v-else-if="meetingUpdated">
-          {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
-        </p>
-        <button @click="addingOpp = !addingOpp" v-else class="add-button">
-          Map to Opportunity
-        </button>
+        </div>
 
-        <div v-if="addingOpp" class="add-field-section">
-          <div class="add-field-section__title">
-            <p>Map to Opportunity</p>
-            <img
-              src="@/assets/images/closer.png"
-              style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
-              @click="addingOpp = !addingOpp"
-            />
-          </div>
+        <div class="add-field-section__body">
+          <Multiselect
+            style="width: 20vw"
+            v-model="mappedOpp"
+            @select="selectOpp($event)"
+            placeholder="Select Opportunity"
+            selectLabel="Enter"
+            label="name"
+            openDirection="below"
+            track-by="id"
+            :options="allOpps"
+          >
+            <template slot="noResult">
+              <div class="row">
+                <p>No results</p>
+                <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
+              </div>
+            </template>
+          </Multiselect>
+        </div>
 
-          <div class="add-field-section__body">
-            <Multiselect
-              style="width: 20vw"
-              v-model="mappedOpp"
-              @select="selectOpp($event)"
-              placeholder="Select Opportunity"
-              selectLabel="Enter"
-              label="name"
-              openDirection="below"
-              track-by="id"
-              :options="allOpps"
-            >
-              <template slot="noResult">
-                <div class="row">
-                  <p>No results</p>
-                  <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
-                </div>
-              </template>
-            </Multiselect>
-          </div>
-
-          <div v-if="mappedOpp" class="add-field-section__footer">
-            <p @click="mapOpp">Add</p>
-          </div>
-          <div v-else style="cursor: text" class="add-field-section__footer">
-            <p style="color: gray; cursor: text">Add</p>
-          </div>
+        <div v-if="mappedOpp" class="add-field-section__footer">
+          <p @click="mapOpp">Add</p>
+        </div>
+        <div v-else style="cursor: text" class="add-field-section__footer">
+          <p style="color: gray; cursor: text">Add</p>
         </div>
       </div>
 
-      <div v-else>
+      <!-- <div v-else>
         <small>
           Looks like this meeting is mapped to an {{ resourceType }}. <br />
           We only support Opportunities at the moment.
         </small>
-      </div>
+      </div> -->
     </div>
 
     <div v-if="!meetingUpdated" class="table-cell">
