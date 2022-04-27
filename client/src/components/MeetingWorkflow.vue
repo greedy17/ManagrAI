@@ -357,7 +357,13 @@
     </div>
 
     <div v-if="!meetingUpdated" class="table-cell">
-      <p v-if="!resourceId && !meetingLoading">Please map meeting in order to take action.</p>
+      <p
+        v-if="
+          (!resourceId && !meetingLoading) || (resourceType !== 'Opportunity' && !meetingLoading)
+        "
+      >
+        Please map meeting in order to take action.
+      </p>
       <div>
         <div class="column" v-if="resourceId && !meetingLoading">
           <button @click="$emit('update-Opportunity', workflowId, resourceId)" class="add-button">
