@@ -53,9 +53,16 @@
       :key="i"
       v-for="(field, i) in oppFields"
       :class="
-        field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
+        field.dataType === 'TextArea' ||
+        (field.length > 250 &&
+          field.dataType === 'String' &&
+          (opp['secondary_data'][field.apiName] ||
+            opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]))
           ? 'table-cell-wide'
-          : 'table-cell'
+          : opp['secondary_data'][field.apiName] ||
+            opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+          ? 'table-cell'
+          : 'empty'
       "
     >
       <SkeletonBox
@@ -78,7 +85,16 @@
         />
       </div>
     </div>
-    <div :key="field.id" v-for="field in extraPipelineFields" class="table-cell">
+    <div
+      :key="field.id"
+      v-for="field in extraPipelineFields"
+      :class="
+        opp['secondary_data'][field.apiName] ||
+        opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+          ? 'table-cell'
+          : 'empty'
+      "
+    >
       <SkeletonBox
         v-if="updateList.includes(opp.id) || updatedList.includes(opp.id)"
         width="100px"
@@ -99,7 +115,7 @@
         />
       </div>
     </div>
-    <div style="background-color: white" class="table-cell-checkbox"></div>
+    <div class="table-cell-checkbox"></div>
   </div>
 </template>
 
@@ -278,6 +294,11 @@ export default {
 
 .table-row {
   display: table-row;
+}
+.empty {
+  display: table-cell;
+  background: white;
+  border: 1px solid $soft-gray;
 }
 .table-cell {
   display: table-cell;

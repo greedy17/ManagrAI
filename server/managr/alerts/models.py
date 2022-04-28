@@ -381,6 +381,11 @@ class AlertConfig(TimeStampModel):
 
         return timezone.now()
 
+    def add_to_recurrence_days(self):
+        if self.recurrence_frequency == "WEEKLY":
+            self.recurrence_days = [self.recurrence_day]
+        return self.save()
+
     @property
     def target_users(self):
         query = Q()
