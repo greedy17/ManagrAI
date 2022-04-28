@@ -116,6 +116,5 @@ export default {
   color: $dark-green;
 }
 .blank {
-  border: 1px dotted $very-light-gray;
 }
 </style>
