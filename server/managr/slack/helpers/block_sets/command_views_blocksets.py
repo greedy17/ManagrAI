@@ -28,6 +28,22 @@ from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.alerts.models import AlertInstance
 
 
+def resource_options(crm):
+    if crm == "SALESFORCE":
+        return [
+            block_builders.option("Opportunity", "Opportunity"),
+            block_builders.option("Account", "Account"),
+            block_builders.option("Lead", "Lead"),
+            block_builders.option("Contact", "Contact"),
+        ]
+    else:
+        return [
+            block_builders.option("Deal", "Deal"),
+            block_builders.option("Company", "Company"),
+            block_builders.option("Contact", "Contact"),
+        ]
+
+
 @block_set(required_context=["resource_type", "u"])
 def command_update_resource_interaction(context):
     # form = OrgCustomSlackFormInstances.objects.get(id=context.get("f"))
@@ -323,12 +339,7 @@ def update_modal_block_set(context, *args, **kwargs):
     blocks.append(
         block_builders.static_select(
             "Related to type",
-            [
-                block_builders.option("Opportunity", "Opportunity"),
-                block_builders.option("Account", "Account"),
-                block_builders.option("Lead", "Lead"),
-                block_builders.option("Contact", "Contact"),
-            ],
+            resource_options(user.crm),
             action_id=f"{slack_const.UPDATE_TASK_SELECTED_RESOURCE}?u={user_id}",
             block_id="managr_task_related_to_resource",
             initial_option=block_builders.option(resource_type, resource_type)
@@ -339,7 +350,7 @@ def update_modal_block_set(context, *args, **kwargs):
     if (not resource_id and resource_type) or (resource_id and resource_type):
         blocks.append(
             block_builders.external_select(
-                f"*Search for an {context.get('resource_type')}*",
+                f"*Search for a {context.get('resource_type')}*",
                 f"{slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource_type}&type={type}",
                 block_id="select_existing",
                 placeholder="Type to search",

@@ -77,10 +77,16 @@ class CustomHubspotContactAdmin(admin.ModelAdmin):
     ordering = ("-datetime_created",)
 
 
+class CustomHObjectField(admin.ModelAdmin):
+    model = HObjectField
+    list_display = ("id", "label")
+    list_filter = ("hubspot_object",)
+
+
 admin.site.register(HubspotAuthAccount, CustomHubspotAuthAccountAdmin)
 admin.site.register(HSObjectFieldsOperation, CustomSyncFieldOperationAdmin)
 admin.site.register(HSSyncOperation, CustomSyncOperationAdmin)
-admin.site.register(HObjectField)
+admin.site.register(HObjectField, CustomHObjectField)
 admin.site.register(Company, CustomCompanyAdmin)
 admin.site.register(Deal, CustomDealAdmin)
 admin.site.register(HubspotContact, CustomHubspotContactAdmin)

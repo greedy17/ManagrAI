@@ -216,13 +216,39 @@ FORM_RESOURCE_CONTACT = "Contact"
 FORM_RESOURCE_LEAD = "Lead"
 FORM_RESOURCE_OPPORTUNITYLINEITEM = "OpportunityLineItem"
 
+SALESFORCE_FORM_RESOURCES = [
+    FORM_RESOURCE_ACCOUNT,
+    FORM_RESOURCE_OPPORTUNITY,
+    FORM_RESOURCE_CONTACT,
+    FORM_RESOURCE_LEAD,
+    FORM_RESOURCE_OPPORTUNITYLINEITEM,
+]
+
+FORM_RESOURCE_DEAL = "Deal"
+FORM_RESOURCE_COMPANY = "Company"
+FORM_RESOURCE_HUBSPOTCONTACT = "HubspotContact"
+
 FORM_RESOURCES = (
-    (FORM_RESOURCE_OPPORTUNITY, "Opportunity"),
-    (FORM_RESOURCE_ACCOUNT, "Account"),
-    (FORM_RESOURCE_CONTACT, "Contact"),
-    (FORM_RESOURCE_LEAD, "Lead"),
-    (FORM_RESOURCE_OPPORTUNITYLINEITEM, "OpportunityLineItem"),
+    (
+        "Salesforce",
+        (
+            (FORM_RESOURCE_OPPORTUNITY, "Opportunity"),
+            (FORM_RESOURCE_ACCOUNT, "Account"),
+            (FORM_RESOURCE_CONTACT, "Contact"),
+            (FORM_RESOURCE_LEAD, "Lead"),
+            (FORM_RESOURCE_OPPORTUNITYLINEITEM, "OpportunityLineItem"),
+        ),
+    ),
+    (
+        "Hubspot",
+        (
+            (FORM_RESOURCE_DEAL, "Deal"),
+            (FORM_RESOURCE_COMPANY, "Company"),
+            (FORM_RESOURCE_HUBSPOTCONTACT, "HubspotContact"),
+        ),
+    ),
 )
+
 
 FORM_TYPE_CREATE = "CREATE"
 FORM_TYPE_UPDATE = "UPDATE"

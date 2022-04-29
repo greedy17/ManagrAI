@@ -20,7 +20,7 @@ from managr.slack.helpers.exceptions import (
     InvalidBlocksException,
     InvalidAccessToken,
 )
-
+from managr.slack import constants as slack_consts
 from .adapter.models import HubspotAuthAccountAdapter
 from .adapter.exceptions import (
     TokenExpired,
@@ -30,6 +30,7 @@ from .adapter.exceptions import (
     CannotRetreiveObjectType,
 )
 from . import constants as hs_consts
+from managr.slack.helpers import block_builders
 
 logger = logging.getLogger("managr")
 
@@ -490,6 +491,13 @@ class Deal(TimeStampModel, IntegrationModel):
     class Meta:
         ordering = ["-datetime_created"]
 
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.name, str(self.id))
+
+    def get_current_values(self):
+        return self
+
 
 class HubspotContactQuerySet(models.QuerySet):
     def for_user(self, user):
@@ -568,9 +576,195 @@ class HObjectField(TimeStampModel, IntegrationModel):
     hubspot_defined = models.BooleanField(default=False, null=True)
     modification_metadata = JSONField(blank=True, null=True, default=dict)
     form_field = models.BooleanField(default=False)
-
+    is_public = models.BooleanField(
+        default=False,
+        help_text="Indicates whether or not this is a managr_created field that is not part of the user's object fields",
+    )
     objects = HObjectFieldQuerySet.as_manager()
 
     def __str__(self):
         return f"{self.label} {self.hubspot_account} {self.hubspot_object}"
+
+    def to_slack_field(self, value=None, *args, **kwargs):
+        if self.data_type == "Picklist":
+            # stage has a special function so we add the action param can only use one action_id so serving this statically for now
+            action_id = None
+            if self.api_name == "StageName":
+                initial_option = dict(
+                    *map(
+                        lambda value: block_builders.option(value["text"]["text"], value["value"]),
+                        filter(
+                            lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                        ),
+                    ),
+                )
+
+                block = block_builders.static_select(
+                    f"*{self.reference_display_label}*",
+                    self.get_slack_options,
+                    action_id=action_id,
+                    initial_option=initial_option,
+                    block_id=self.api_name,
+                )
+            elif self.is_public:
+                block = block_builders.static_select(
+                    f"*{self.reference_display_label}*",
+                    self.get_slack_options,
+                    initial_option=dict(
+                        *map(
+                            lambda value: block_builders.option(
+                                value["text"]["text"], value["value"]
+                            ),
+                            filter(
+                                lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                            ),
+                        ),
+                    ),
+                    block_id=self.api_name,
+                )
+
+            else:
+                initial_option = None
+                if value:
+                    initial_option = dict(
+                        *map(
+                            lambda value: block_builders.option(
+                                value["text"]["text"], value["value"]
+                            ),
+                            filter(
+                                lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                            ),
+                        )
+                    )
+                user_id = str(self.salesforce_account.user.id)
+                action_query = (
+                    f"{slack_consts.GET_PICKLIST_OPTIONS}?u={user_id}&field={str(self.id)}"
+                )
+                block = block_builders.external_select(
+                    f"*{self.reference_display_label}*",
+                    action_query,
+                    block_id=self.api_name,
+                    initial_option=initial_option,
+                )
+
+            return block
+
+        elif self.data_type == "Reference":
+            # temporarily using id as display value need to sync display value as part of data
+            display_name = self.reference_display_label
+            initial_option = block_builders.option(value, value) if value else None
+            if self.is_public and not self.allow_multiple:
+                user_id = str(kwargs.get("user").id)
+                resource = self.relationship_name
+                action_query = (
+                    f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}"
+                )
+            elif self.is_public and self.allow_multiple:
+                user_id = str(kwargs.get("user").id)
+                resource = self.relationship_name
+                action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}&field_id={self.id}"
+                return block_builders.multi_external_select(
+                    f"_{self.reference_display_label}_",
+                    action_query,
+                    block_id=self.api_name,
+                    initial_options=None,
+                )
+            elif (
+                self.api_name == "PricebookEntryId"
+                and self.salesforce_object == "OpportunityLineItem"
+            ):
+                user_id = str(kwargs.get("user").id)
+                resource = self.relationship_name
+                action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}&field_id={self.id}&pricebook={kwargs.get('Pricebook2Id')}"
+                return block_builders.external_select(
+                    "*Products*", action_query, block_id=self.api_name, initial_option=None,
+                )
+            else:
+                user_id = str(self.salesforce_account.user.id)
+                action_query = f"{slack_consts.GET_EXTERNAL_RELATIONSHIP_OPTIONS}?u={user_id}&relationship={self.display_value_keys['api_name']}&fields={','.join(self.display_value_keys['name_fields'])}"
+            return block_builders.external_select(
+                f"*{display_name}*",
+                action_query,
+                block_id=self.api_name,
+                initial_option=initial_option,
+            )
+
+        elif self.data_type == "Date":
+            return block_builders.datepicker(
+                label=f"*{self.reference_display_label}*",
+                initial_date=value,
+                block_id=self.api_name,
+            )
+
+        elif self.data_type == "MultiPicklist":
+            initial_options = None
+            if value:
+                initial_options = list(
+                    filter(
+                        lambda opt: opt.get("value", None) in value.split(";"),
+                        self.get_slack_options,
+                    )
+                )
+            user_id = str(self.salesforce_account.user.id)
+            action_query = f"{slack_consts.GET_PICKLIST_OPTIONS}?u={user_id}&field={str(self.id)}"
+            return block_builders.multi_external_select(
+                f"*{self.reference_display_label}*",
+                action_query,
+                initial_options=initial_options,
+                block_id=self.api_name,
+            )
+
+        elif self.data_type == "Boolean":
+            return block_builders.checkbox_block(
+                " ",
+                [block_builders.option(self.reference_display_label, "true")],
+                action_id=self.api_name,
+                block_id=self.api_name,
+            )
+        elif self.data_type == "MultiChannelsSelect":
+            return [
+                block_builders.multi_channels_select_block(
+                    section_text=f"_{self.label}_", initial_channels=value, block_id=self.api_name
+                ),
+                block_builders.context_block("Please add @managr to channel for access"),
+            ]
+        elif self.data_type == "MultiConversationsSelect":
+            return [
+                block_builders.multi_conversations_select_block(
+                    section_text=f"_{self.label}_",
+                    initial_conversations=value,
+                    filter_opts={"include": ["private", "public"]},
+                    block_id=self.api_name,
+                ),
+                block_builders.context_block("Please add @managr to channel for access"),
+            ]
+        else:
+            if self.data_type == "DateTime":
+                # currently we do not support date time instead make it into text field with format as placeholder
+                return block_builders.input_block(
+                    self.reference_display_label,
+                    multiline=False,
+                    optional=not self.required,
+                    initial_value=value,
+                    block_id=self.api_name,
+                    placeholder="MM-DD-YYYY HH:MM AM/PM",
+                )
+
+            if self.data_type == "String" and self.length >= 250 or self.data_type == "TextArea":
+                # set these fields to be multiline
+
+                return block_builders.input_block(
+                    self.reference_display_label,
+                    multiline=True,
+                    optional=not self.required,
+                    initial_value=value,
+                    block_id=self.api_name,
+                )
+
+            return block_builders.input_block(
+                self.reference_display_label,
+                optional=not self.required,
+                initial_value=value,
+                block_id=self.api_name,
+            )
 

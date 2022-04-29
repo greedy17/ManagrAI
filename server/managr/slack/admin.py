@@ -2,7 +2,9 @@ from django.contrib import admin
 from django.urls import resolve
 from django.forms.models import ModelChoiceField
 from . import models as slack_models
+from . import constants as slack_consts
 from managr.salesforce import models as sf_models
+from managr.hubspot.models import HObjectField
 from django.db.models import Q
 
 
@@ -15,11 +17,19 @@ class CustomFormFieldInline(admin.StackedInline):
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         parent = self.get_parent_object_from_request(request)
+        print(parent.resource)
         if parent:
             if db_field.name == "field":
-                queryset = sf_models.SObjectField.objects.filter(
-                    Q(salesforce_account__user__organization=parent.organization)
-                    & Q(Q(salesforce_object=parent.resource) | Q(is_public=True))
+                queryset = (
+                    sf_models.SObjectField.objects.filter(
+                        Q(salesforce_account__user__organization=parent.organization)
+                        & Q(Q(salesforce_object=parent.resource) | Q(is_public=True))
+                    )
+                    if parent.resource not in slack_consts.SALESFORCE_FORM_RESOURCES
+                    else HObjectField.objects.filter(
+                        Q(hubspot_account__user__organization=parent.organization)
+                        & Q(Q(hubspot_object=parent.resource) | Q(is_public=True))
+                    )
                 )
                 return ModelChoiceField(queryset)
         else:
@@ -28,20 +38,13 @@ class CustomFormFieldInline(admin.StackedInline):
         return super(CustomFormField, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
     model = slack_models.FormField
-    fields = (
-        "field",
-        "order",
-    )
+    fields = ("order", "field_source", "field_id_ref")
     extra = 0
 
 
 class CustomFormField(admin.ModelAdmin):
     model = slack_models.FormField
-    list_display = (
-        "field",
-        "form",
-        "order",
-    )
+    list_display = ("form", "order", "field_id_ref")
     ordering = ("-datetime_created",)
 
 

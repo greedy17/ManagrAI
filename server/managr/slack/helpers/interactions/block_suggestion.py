@@ -4,9 +4,11 @@ import json
 from django.db.models import Q
 from managr.slack import constants as slack_const
 from managr.salesforce import constants as sf_consts
+from managr.hubspot import constants as hs_consts
 from managr.gong.models import GongCall
 from managr.core.models import User
 from managr.opportunity.models import Opportunity, Lead
+from managr.hubspot.models import Deal, Company, HubspotContact
 from managr.organization.models import (
     Organization,
     Account,
@@ -143,7 +145,13 @@ def process_get_local_resource_options(payload, context):
                 ],
             ],
         }
-
+    elif resource == hs_consts.RESOURCE_SYNC_DEAL:
+        return {
+            "options": [
+                *additional_opts,
+                *[l.as_slack_option for l in Deal.objects.filter(name__icontains=value)[:50]],
+            ],
+        }
     elif resource == slack_const.SLACK_ACTION_RESOURCE_ACTION_CHOICE:
         return {
             "options": [

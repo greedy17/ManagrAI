@@ -585,7 +585,6 @@ class SlackFormsViewSet(
 )
 def update_resource(request):
     # list of accepted commands for this fake endpoint
-    allowed_commands = ["opportunity", "account", "lead", "contact"]
     slack_id = request.data.get("user_id", None)
     if slack_id:
         slack = (
@@ -599,11 +598,17 @@ def update_resource(request):
                 }
             )
     user = slack.user
+    allowed_commands = (
+        ["opportunity", "account", "lead", "contact"]
+        if user.crm == "SALESFORCE"
+        else ["deal", "company", "contact"]
+    )
+
     text = request.data.get("text", "")
     if len(text):
         command_params = text.split(" ")
     else:
-        command_params = ["opportunity"]
+        command_params = ["opportunity"] if user.crm == "SALESFORCE" else ["deal"]
     resource_type = None
 
     if len(command_params):

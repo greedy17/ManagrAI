@@ -10,11 +10,11 @@ from .models import (
 
 
 class CustomFormFieldSerializer(serializers.ModelSerializer):
-    field_ref = SObjectFieldSerializer(source="field", read_only=True)
+    # field_ref = SObjectFieldSerializer(source="field", read_only=True, required=False)
 
     class Meta:
         model = FormField
-        fields = ("datetime_created", "order", "field", "form", "field_ref", "include_in_recap")
+        fields = ("datetime_created", "order", "form", "include_in_recap")
 
 
 class OrganizationSlackIntegrationSerializer(serializers.ModelSerializer):

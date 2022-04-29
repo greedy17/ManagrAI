@@ -1,4 +1,5 @@
 import logging
+from re import template
 from django.conf import settings
 from django.db import models
 from django.db.models.constraints import UniqueConstraint
@@ -258,26 +259,43 @@ class OrgCustomSlackFormInstance(TimeStampModel):
 
     @property
     def resource_object(self):
-        from managr.salesforce.routes import routes
+        from managr.salesforce.routes import routes as sf_routes
+        from managr.hubspot.routes import routes as hs_routes
 
+        routes = sf_routes if self.user.crm == "SALESFORCE" else hs_routes
         route = routes[self.resource_type]
         model_class = route["model"]
         model_object = model_class.objects.filter(id=self.resource_id).first()
         return model_object
 
     def get_user_fields(self):
-        template_fields = (
-            self.template.formfield_set.all()
-            .values_list("field__api_name", "field__salesforce_object",)
-            .order_by("order")
-        )
+        if self.user.crm == "SALESFORCE":
+            template_fields = (
+                self.template.formfield_set.all()
+                .values_list("field__api_name", "field__salesforce_object",)
+                .order_by("order")
+            )
+        else:
+            fields = self.template.formfield_set.all().order_by("order")
+            template_fields = [
+                (field.field_ref.name, field.field_ref.hubspot_object) for field in fields
+            ]
+        print(template_fields)
         user_fields = []
         # hack to maintain order
         for field in template_fields:
-            f = SObjectField.objects.get(
-                Q(api_name=field[0])
-                & Q(Q(salesforce_object=field[1]) | Q(salesforce_object__isnull=True))
-                & (Q(is_public=True) | Q(salesforce_account=self.user.salesforce_account))
+            f = (
+                SObjectField.objects.get(
+                    Q(api_name=field[0])
+                    & Q(Q(salesforce_object=field[1]) | Q(salesforce_object__isnull=True))
+                    & (Q(is_public=True) | Q(salesforce_account=self.user.salesforce_account))
+                )
+                if self.user.crm == "SALESFORCE"
+                else HObjectField.objects.get(
+                    Q(name=field[0])
+                    & Q(Q(hubspot_object=field[1]) | Q(hubspot_object__isnull=True))
+                    & (Q(is_public=True) | Q(hubspot_account=self.user.hubspot_account))
+                )
             )
             user_fields.append(f)
         if not template_fields:
@@ -343,7 +361,11 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         form_values = self.generate_form_values(data)
         form_blocks = []
         for field in user_fields:
-            val = form_values.get(field.api_name, None)
+            val = (
+                form_values.get(field.api_name, None)
+                if self.user.crm == "SALESFORCE"
+                else form_values.get(field.name, None)
+            )
             if field.is_public:
                 # pass in user as a kwarg
                 generated_field = field.to_slack_field(
@@ -451,9 +473,9 @@ class FormField(TimeStampModel):
     @property
     def field_ref(self):
         if self.field_source == "SALESFORCE":
-            return SObjectField.objects.get(id=self.field_id)
+            return SObjectField.objects.get(id=self.field_id_ref)
         else:
-            return HObjectField.objects.get(id=self.field_id)
+            return HObjectField.objects.get(id=self.field_id_ref)
 
     def add_new_field_data(self):
         self.field_id_ref = str(self.field.id)

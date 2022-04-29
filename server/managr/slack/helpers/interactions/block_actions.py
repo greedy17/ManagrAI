@@ -1116,7 +1116,9 @@ def process_show_update_resource_form(payload, context):
     )
     if slack_form:
         try:
-            index, block = block_finder("StageName", blocks)
+            index, block = (
+                block_finder("StageName", blocks) if user.crm else block_finder("dealstage")
+            )
         except ValueError:
             # did not find the block
             block = None
