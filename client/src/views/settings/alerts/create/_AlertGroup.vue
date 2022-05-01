@@ -3,7 +3,7 @@
     <!-- <span class="alert-group-row--label">create automation</span> -->
     <div class="centered">
       <div class="toggle__switch" v-if="form.field.groupOrder.value != 0">
-        <label class="alert-group-row__condition-label">AND</label>
+        <label>AND</label>
         <ToggleCheckBox
           @input="
             selectedCondition == 'AND' ? (selectedCondition = 'OR') : (selectedCondition = 'AND')
@@ -12,7 +12,7 @@
           offColor="#199e54"
           onColor="#199e54"
         />
-        <label class="alert-group-row__condition-label">OR</label>
+        <label>OR</label>
       </div>
     </div>
 
@@ -31,11 +31,11 @@
             v-if="form.field.alertOperands.groups.length > 1"
             :disabled="form.field.alertOperands.groups.length - 1 <= 0"
           >
-            <img src="@/assets/images/remove.svg" class="filtered__red" alt="" />
+            <img src="@/assets/images/trash.png" class="filtered" alt="" />
           </button>
 
           <button class="plus_button" @click="addOperandForm">
-            <img src="@/assets/images/add.svg" class="filtered" alt="" />
+            <img src="@/assets/images/plusOne.png" class="filtered" alt="" />
           </button>
         </div>
       </div>
@@ -139,19 +139,25 @@ export default {
     @include --icon();
   }
 }
+
+::v-deep input[type='checkbox'].toggle + div {
+  height: 20px;
+  width: 40px;
+  margin: 0rem 0.5rem;
+}
 .plus_button {
-  border: none;
-  box-shadow: 3px 4px 7px $very-light-gray;
+  border: 1px solid #e8e8e8;
   background-color: transparent;
-  border-radius: 50%;
-  padding: 0.25rem;
+  border-radius: 0.3rem;
+  padding: 0.1rem;
   display: flex;
   align-items: center;
   cursor: pointer;
-  font-weight: bold;
+  color: $dark-green;
 }
 .filtered {
-  filter: invert(40%) sepia(28%) saturate(6559%) hue-rotate(128deg) brightness(96%) contrast(80%);
+  filter: invert(80%);
+  height: 1rem;
 }
 .filtered__red {
   filter: invert(29%) sepia(33%) saturate(3647%) hue-rotate(348deg) brightness(94%) contrast(86%);
@@ -189,7 +195,9 @@ export default {
 .toggle__switch {
   display: flex;
   flex-direction: row;
-  margin: 1rem;
+  margin-bottom: 2rem;
+  font-size: 12px;
+  letter-spacing: 1px;
 }
 
 .remove_button {

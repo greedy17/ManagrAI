@@ -1,31 +1,30 @@
 <template>
   <div class="alerts-page">
-    <div class="spacer"></div>
     <div class="col">
-      <h2 style="color: black; margin-top: -0.5rem" class="title">Instant Updates</h2>
-      <p style="color: #5d5e5e" class="sub__">Activate the workflows that are relevant to you</p>
+      <h3>Instant Updates</h3>
+      <p class="sub__">Activate the workflows that are relevant to you</p>
     </div>
 
     <div class="alert_cards">
-      <div class="card__">
+      <div class="card">
         <div class="card__header">
-          <h3>Meeting<span style="color: #5f8cff"> Recaps</span></h3>
+          <h3>Meeting Recaps</h3>
         </div>
-        <div class="row">
-          <img style="height: 2rem; margin-right: 0.5rem" src="@/assets/images/zoom.png" alt="" />
+        <div class="card__body">
+          <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/zoom.png" alt="" />
           <img
-            style="height: 1.65rem; margin-right: 0.5rem"
+            style="height: 1rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
             class="filter-plus"
             alt=""
           />
           <img
-            style="height: 2rem; margin-right: 0.5rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/gmailCal.png"
             alt=""
           />
         </div>
-        <div style="margin-top: 2rem">
+        <div class="card__footer">
           <button
             v-if="hasSlackIntegration && !recapChannel"
             @click="goToZoomRecap"
@@ -34,34 +33,34 @@
             Activate
           </button>
 
-          <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="recapChannel">Activated</p>
+          <p class="active-workflow" v-else-if="recapChannel">Active</p>
         </div>
       </div>
 
-      <div class="card__">
+      <div class="card">
         <div class="card__header">
-          <h3>Deal <span style="color: #d8789f">Movement</span></h3>
+          <h3>Deal Movement</h3>
         </div>
 
-        <div class="row">
+        <div class="card__body">
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 1.5rem; margin-right: 1rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
           <img
-            style="height: 1.75rem; margin-right: 1rem; filter: invert(60%)"
+            style="height: 1rem; margin-right: 1rem; filter: invert(60%)"
             src="@/assets/images/plusOne.png"
             alt=""
           />
           <img
-            style="height: 2.25rem; margin-right: 1rem"
+            style="height: 1.5rem; margin-right: 1rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
         </div>
 
-        <div style="margin-top: 2rem">
+        <div class="card__footer">
           <button
             v-if="hasSalesforceIntegration && hasSlackIntegration"
             @click="goToStageAdvanced"
@@ -69,14 +68,6 @@
           >
             Activate
           </button>
-
-          <!-- <h4
-            style="margin-top: -0.5rem"
-            v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)"
-          >
-            Connect Slack & Salesforce to acivate
-          </h4> -->
-          <!-- <h4 style="margin-top: -0.5rem">Coming Soon</h4> -->
         </div>
       </div>
 
@@ -371,6 +362,20 @@ export default {
     transform: translateY(-6px);
   }
 }
+.active-workflow {
+  background-color: $lighter-green;
+  border: 2px solid $lighter-green;
+  color: $base-gray;
+  padding: 0.25rem 3rem;
+  border-radius: 0.3rem;
+  font-weight: bold;
+  font-size: 14px;
+}
+.filter-plus {
+  filter: invert(90%);
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+}
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
@@ -409,7 +414,7 @@ textarea {
   }
 }
 .alerts-page {
-  margin-left: 14vw;
+  margin-left: 10vw;
   margin-top: 3.5rem;
   &__previous-step {
     @include muted-font(12);
@@ -438,34 +443,41 @@ textarea {
 .alert_cards {
   display: flex;
   flex-direction: row;
-  justify-content: space-evenly;
+  justify-content: flex-start;
   align-items: center;
-  margin-top: 2rem;
+  margin-top: 0.5rem;
   flex-wrap: wrap;
 }
-.card__ {
-  background-color: $white;
-  border: none;
-  width: 20vw;
-  padding: 1.25rem;
-  margin-right: 1.25rem;
-  margin-bottom: 2rem;
-  border-radius: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  // @media only screen and (min-width: 768px) {
-  //   flex: 1 0 24%;
-  //   min-width: 21rem;
-  //   max-width: 30rem;
-  // }
 
-  &header {
+.card {
+  background-color: white;
+  box-shadow: 2px 2px 3px $very-light-gray;
+  border-radius: 0.5rem;
+  width: 24vw;
+  margin-right: 1rem;
+  margin-bottom: 1rem;
+  &__header {
+    height: 2rem;
+    padding: 1.25rem 1rem;
+    font-size: 13px;
     display: flex;
-    justify-content: center;
     align-items: center;
-    height: 3rem;
+    justify-content: flex-start;
+    border-bottom: 3px solid $soft-gray;
+  }
+  &__body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 5rem;
+    font-size: 13px;
+  }
+  &__footer {
+    display: flex;
+    align-items: center;
+    height: 2rem;
+    font-size: 14px;
+    justify-content: space-evenly;
   }
 }
 .alerts-page__settings {
@@ -544,9 +556,9 @@ textarea {
   margin-left: 0.5rem;
 }
 .sub__ {
-  font-size: 16px;
+  font-size: 14px;
   margin-top: -0.5rem;
-  color: $panther-silver;
+  color: $gray;
 }
 .title {
 }
@@ -646,9 +658,8 @@ input {
 .orange_button {
   background-color: $dark-green;
   color: white;
-  font-weight: bold;
-  font-size: 16px;
-  border-radius: 0.5rem;
+  font-size: 14px;
+  border-radius: 0.3rem;
   border: 2px solid $dark-green;
   padding: 0.25rem 1.5rem;
   cursor: pointer;

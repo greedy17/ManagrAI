@@ -33,13 +33,10 @@
       </div>
     </modal>
 
-    <h3
-      v-if="selectedStage"
-      style="padding-bottom: 0.5rem; border-bottom: 3px solid #199e54; font-size: 1.65rem"
-    >
+    <h3 v-if="selectedStage" style="padding-bottom: 0.25rem; border-bottom: 2px solid #199e54">
       {{ selectedStage }}
     </h3>
-    <h2 v-else-if="!selectedStage && !showLoader">Apply additional fields to stages</h2>
+    <h3 v-else-if="!selectedStage && !showLoader">Apply additional fields to stages</h3>
 
     <!-- <modal name="objects-modal" heading="Select a Stage">
       <div class="objects__">
@@ -77,9 +74,23 @@
     <div v-if="selectingStage">
       <div class="modal-container">
         <div style="text-align: center">
-          <h3>Select a stage</h3>
+          <h4>Select a stage</h4>
           <div class="centered">
-            <DropDownSearch
+            <Multiselect
+              :placeholder="selectedStage ? selectedStage : 'Select Stage'"
+              @input="setStage($event)"
+              :options="stages"
+              openDirection="below"
+              style="width: 14vw"
+              selectLabel="Enter"
+              track-by="value"
+              label="label"
+            >
+              <template slot="noResult">
+                <p>No results.</p>
+              </template>
+            </Multiselect>
+            <!-- <DropDownSearch
               :items.sync="stages"
               v-model="selectedStage"
               displayKey="label"
@@ -87,7 +98,7 @@
               nullDisplay="Select a Stage"
               searchable
               local
-            />
+            /> -->
           </div>
         </div>
         <div>
@@ -219,13 +230,9 @@
         </div>
       </template>
 
-      <div class="invert center-loader" v-if="showLoader">
-        <img src="@/assets/images/loading-gif.gif" class="invert" style="height: 8rem" alt="" />
+      <div class="center-loader" v-if="showLoader">
+        <Loader loaderText="Gathering your validations rules" />
       </div>
-      <!-- <div class="center-loader" v-if="showLoader">
-        
-        <div class="dot-flashing"></div>
-      </div> -->
 
       <div
         style="margin-top: 1rem"
@@ -257,7 +264,6 @@
           >
             <div
               class="stage__dropdown__stages__title"
-              style="color: white"
               @click="selectForm('Opportunity', 'STAGE_GATING', form.stage)"
             >
               {{ form.stage }}
@@ -296,10 +302,18 @@ import * as FORM_CONSTS from '@/services/slack'
 
 export default {
   name: 'SlackFormSettings',
-  components: { CustomSlackForm, PulseLoadingSpinnerButton, DropDownSearch, Paginator },
+  components: {
+    CustomSlackForm,
+    PulseLoadingSpinnerButton,
+    DropDownSearch,
+    Paginator,
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+    Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
+  },
   data() {
     return {
       ...FORM_CONSTS,
+      selectedStage: null,
       SOBJECTS_LIST,
       allForms: [],
       allFields: [],
@@ -370,6 +384,9 @@ export default {
   methods: {
     logForm(i) {
       console.log(i)
+    },
+    setStage(n) {
+      this.selectedStage = n.value
     },
     async refreshFormStages() {
       this.loadingStages = true
@@ -667,7 +684,7 @@ export default {
   justify-content: center;
   flex-direction: column;
   align-items: center;
-  height: 60vh;
+  // height: 60vh;
 }
 .invert {
   filter: invert(99%);
@@ -768,10 +785,11 @@ export default {
   flex-direction: column;
   justify-content: space-between;
   margin-top: 1rem;
-  border-radius: 1rem;
+  border-radius: 0.3rem;
   background-color: $white;
   color: $base-gray;
-  box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
+  box-shadow: 2px 3px 3px $soft-gray;
+  border: 1px solid #e8e8e8;
   &__box {
     &__title {
       text-align: center;
@@ -787,10 +805,12 @@ export default {
       min-height: 20rem;
     }
     &__button {
-      @include primary-button();
+      font-size: 14px;
+      border-radius: 0.3rem;
+      cursor: pointer;
       background-color: $dark-green;
       color: $white;
-      padding: 0.5rem 1rem;
+      padding: 0.5rem 1.5rem;
       margin: 1rem;
     }
   }
@@ -904,37 +924,40 @@ export default {
     min-height: 40vh;
     min-width: 28vw;
     padding: 6px 0 14px;
-    border-radius: 0.5rem;
-    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
+    border-radius: 0.3rem;
+    box-shadow: 2px 3px 3px $soft-gray;
+    border: 1px solid #e8e8e8;
     background-color: $white;
     overflow-y: scroll;
 
     &__header {
-      font-size: 1.25rem;
+      font-size: 16px;
       padding: 0.5rem;
       text-align: center;
     }
     &__stages {
       &__container {
         display: flex;
-        background-color: $dark-green;
+        border: 1px solid #e8e8e8;
+        font-weight: 400;
         height: 2.5rem;
         padding: 1rem;
         margin: 0.5rem;
         border-radius: 0.33rem;
-        font-size: 0.75rem;
+        font-size: 14px;
         cursor: pointer;
         align-items: center;
+
+        img {
+          filter: invert(80%);
+        }
 
         &--selected {
           color: white;
         }
       }
       &__title {
-        font-size: 1rem;
-        font-family: #{$bold-font-family};
         cursor: pointer;
-
         padding: 0.2rem;
         margin-bottom: 0.2rem;
         margin-top: 0.5rem;

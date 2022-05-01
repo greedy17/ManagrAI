@@ -4,28 +4,46 @@
       <template>
         <div class="forecast__collection">
           <div v-if="userLevel == 'MANAGER'" style="margin-top: -1.5rem" class="delivery__row">
-            <span style="margin-bottom: 0.5rem">Select Users:</span>
-
             <FormField>
               <template v-slot:input>
-                <DropDownSearch
-                  :items.sync="userList"
-                  v-model="realTimeAlertForm.field.pipelines.value"
-                  @input="realTimeAlertForm.field.pipelines.validate()"
-                  displayKey="fullName"
-                  valueKey="id"
-                  nullDisplay="Multi-select"
-                  searchable
-                  multi
-                  medium
-                />
+                <Multiselect
+                  placeholder="Select Users"
+                  @input="mapIds"
+                  v-model="selectedUsers"
+                  :options="userList"
+                  openDirection="below"
+                  style="width: 14vw"
+                  selectLabel="Enter"
+                  track-by="id"
+                  label="fullName"
+                  :multiple="true"
+                  :closeOnSelect="false"
+                >
+                  <template slot="noResult">
+                    <p>No results.</p>
+                  </template>
+                </Multiselect>
               </template>
             </FormField>
           </div>
 
           <div style="margin-bottom: 2.5rem; margin-top: 0.5rem" class="delivery__row">
-            <span style="margin-bottom: 0.5rem">Select Stage</span>
-            <DropDownSearch
+            <Multiselect
+              :placeholder="advancedStage ? advancedStage : 'Select Stage'"
+              @input="setStage($event)"
+              :options="stages"
+              openDirection="below"
+              style="width: 14vw"
+              selectLabel="Enter"
+              track-by="value"
+              label="label"
+            >
+              <template slot="noResult">
+                <p>No results.</p>
+              </template>
+            </Multiselect>
+
+            <!-- <DropDownSearch
               :items.sync="stages"
               v-model="advancedStage"
               displayKey="label"
@@ -33,7 +51,7 @@
               nullDisplay="Select a Stage"
               searchable
               local
-            />
+            /> -->
           </div>
 
           <div
@@ -42,19 +60,20 @@
               flex-direction: column;
               align-items: center;
               justify-content: flex-start;
-              margin-top: 0.5rem;
+              margin-top: -1.75rem;
             "
           >
+            <p>Slack Channel:</p>
             <div v-if="!channelName" class="row__">
-              <label :class="!create ? 'green' : ''">Select #channel</label>
+              <label :class="!create ? 'green' : ''">Select</label>
               <ToggleCheckBox
-                style="margin-left: 0.25rem; margin-right: 0.25rem"
+                style="margin-left: 0.5rem; margin-right: 0.5rem"
                 @input="changeCreate"
                 :value="create"
                 offColor="#199e54"
                 onColor="#199e54"
               />
-              <label :class="create ? 'green' : ''">Create #channel:</label>
+              <label :class="create ? 'green' : ''">Create</label>
             </div>
 
             <label v-else for="channel" style="font-weight: bold"
@@ -96,27 +115,26 @@
             <div style="margin-top: 0.5rem" v-else>
               <FormField>
                 <template v-slot:input>
-                  <DropDownSearch
-                    :items.sync="userChannelOpts.channels"
-                    v-model="realTimeAlertForm.field.recipients.value"
-                    displayKey="name"
-                    valueKey="id"
-                    nullDisplay="Channels"
-                    :hasNext="!!userChannelOpts.nextCursor"
-                    @load-more="listUserChannels(userChannelOpts.nextCursor)"
-                    searchable
-                    local
+                  <Multiselect
+                    placeholder="Select Channel"
+                    v-model="selectedChannel"
+                    @input="setRecipient"
+                    :options="userChannelOpts.channels"
+                    openDirection="below"
+                    style="width: 14vw"
+                    selectLabel="Enter"
+                    track-by="id"
+                    label="name"
                   >
-                    <template v-slot:tn-dropdown-option="{ option }">
-                      <img
-                        v-if="option.isPrivate == true"
-                        class="card-img"
-                        style="width: 1rem; height: 1rem; margin-right: 0.2rem"
-                        src="@/assets/images/lockAsset.png"
-                      />
-                      {{ option['name'] }}
+                    <template slot="noResult">
+                      <p>No results.</p>
                     </template>
-                  </DropDownSearch>
+                    <template slot="afterList">
+                      <p class="load-more" @click="listUserChannels(userChannelOpts.nextCursor)">
+                        Load More
+                      </p>
+                    </template>
+                  </Multiselect>
                 </template>
               </FormField>
             </div>
@@ -184,6 +202,7 @@ import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
   name: 'StageAdvanced',
   components: {
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     ExpandablePanel,
     DropDownSearch,
     ListContainer,
@@ -201,6 +220,8 @@ export default {
   },
   data() {
     return {
+      selectedUsers: null,
+      selectedChannel: null,
       channelOpts: new SlackListResponse(),
       userChannelOpts: new SlackListResponse(),
       savingTemplate: false,
@@ -216,7 +237,7 @@ export default {
       OPPORTUNITY: 'Opportunity',
       operandDate: '',
       searchQuery: '',
-      advancedStage: '',
+      advancedStage: null,
       searchText: '',
       recurrenceDay: '',
       searchChannels: '',
@@ -287,6 +308,18 @@ export default {
     this.getStageForms()
   },
   methods: {
+    mapIds() {
+      // this.realTimeAlertForm.field.pipelines.value
+      let mappedIds = this.selectedUsers.map((user) => user.id)
+      this.realTimeAlertForm.field.pipelines.value = mappedIds
+    },
+    setStage(n) {
+      this.advancedStage = n.value
+    },
+    setRecipient() {
+      this.realTimeAlertForm.field.recipients.value = this.selectedChannel.id
+      console.log(this.realTimeAlertForm.field.recipients.value)
+    },
     checkInteger(str) {
       return /\d/.test(str) ? this.user.fullName : str
     },
@@ -635,6 +668,10 @@ export default {
   color: $panther-silver;
   font-size: 0.75rem;
 }
+.load-more {
+  text-align: center;
+  font-size: 13px;
+}
 ::v-deep .input-content {
   width: 12vw;
   background-color: white;
@@ -680,7 +717,7 @@ img {
   height: 2.5rem;
   background-color: white;
   border: none;
-  width: 75%;
+  width: 14vw;
   text-align: center;
   margin-top: 0.5rem;
   box-shadow: 1px 1px 3px 0px $very-light-gray;

@@ -5,8 +5,8 @@
       <p style="color: #5d5e5e" class="sub__">Activate workflows related to deal movement</p>
     </div>
 
-    <div class="invert center-loader" v-if="showLoader">
-      <img src="@/assets/images/loading-gif.gif" class="invert" style="height: 8rem" alt="" />
+    <div class="center-loader" v-if="showLoader">
+      <Loader />
     </div>
 
     <div v-if="!showLoader" class="row">
@@ -94,7 +94,7 @@
           <div class="edit" @click="onAdvancing">
             <img
               src="@/assets/images/edit.png"
-              style="height: 1rem; filter: brightness(40%)"
+              style="height: 0.9rem; filter: invert(80%)"
               alt=""
             />
           </div>
@@ -113,7 +113,7 @@
           <div class="edit" @click="onCommit">
             <img
               src="@/assets/images/edit.png"
-              style="height: 1rem; filter: brightness(40%)"
+              style="height: 0.9rem; filter: invert(80%)"
               alt=""
             />
           </div>
@@ -132,7 +132,7 @@
           <div class="edit" @click="onPushing">
             <img
               src="@/assets/images/edit.png"
-              style="height: 1rem; filter: brightness(40%)"
+              style="height: 0.9rem; filter: invert(80%)"
               alt=""
             />
           </div>
@@ -151,7 +151,7 @@
           <div class="edit" @click="onWinning">
             <img
               src="@/assets/images/edit.png"
-              style="height: 1rem; filter: brightness(40%)"
+              style="height: 0.9rem; filter: invert(80%)"
               alt=""
             />
           </div>
@@ -239,6 +239,7 @@ import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
   name: 'DealMovement',
   components: {
+    Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
     ExpandablePanel,
     DropDownSearch,
     ListContainer,
@@ -540,19 +541,18 @@ h4 {
   margin-bottom: 1rem;
 }
 .edit {
-  border: none;
-  box-shadow: 1px 1px 1px $very-light-gray;
+  border: 1px solid #e8e8e8;
   background-color: transparent;
-  border-radius: 50%;
-  padding: 0.5rem;
+  border-radius: 0.25rem;
+  padding: 0.25rem;
   display: flex;
   align-items: center;
   cursor: pointer;
   transition: all 0.2s;
 }
 .edit:hover {
-  transform: scale(1.1);
-  box-shadow: 2px 3px 4px $very-light-gray;
+  transform: scale(1.025);
+  // box-shadow: 1px 1px 1px 1px $soft-gray;
 }
 .plus_button {
   border: none;
@@ -686,7 +686,7 @@ textarea {
   border-radius: 0.5rem;
   padding: 1rem;
   margin-top: 2.5rem;
-  max-width: 20vw;
+  width: 20vw;
   max-height: 27vh;
   margin-right: 2vw;
   &__header {
@@ -700,6 +700,7 @@ textarea {
     display: flex;
     align-items: center;
     justify-content: center;
+    height: 4rem;
     font-size: 13px;
   }
   &__footer {
@@ -717,20 +718,20 @@ textarea {
   padding: 0rem 0.75rem;
   margin-right: 1rem;
   box-shadow: 1px 1px 1px $very-light-gray;
-  background-color: $lighter-green;
-  border-radius: 7px;
-  color: $base-gray;
+  background-color: white;
+  border-radius: 0.2rem;
+  color: $dark-green;
   font-size: 12px;
   cursor: not-allowed;
 }
 .active {
   background-color: $lighter-green;
-  border-radius: 0.33rem;
+  border-radius: 0.2rem;
   border: none;
   padding: 0.25rem;
   font-size: 10px;
   margin-left: 0.5rem;
-  color: white;
+  color: $darker-green;
 }
 .btn {
   &--danger {

@@ -4,7 +4,7 @@
       <h2>
         <span>
           Upcoming
-          <span style="color: #ddad3c">Next Step</span>
+          <span style="color: #41b883">Next Step</span>
         </span>
       </h2>
       <p style="margin-top: -0.5rem">
@@ -83,15 +83,15 @@
                   style="margin: 0.25rem"
                   @input="changeCreate"
                   :value="create"
-                  offColor="#ddad3c"
-                  onColor="#ddad3c"
+                  offColor="#41b883"
+                  onColor="#41b883"
                 />
                 <label :class="create ? 'green' : ''">Create #channel</label>
               </div>
 
               <label v-else for="channel" style="font-weight: bold"
                 >Alert will send to
-                <span style="color: #ddad3c; font-size: 1.2rem">{{ channelName }}</span>
+                <span style="color: #41b883; font-size: 1.2rem">{{ channelName }}</span>
                 channel</label
               >
               <div
@@ -880,11 +880,10 @@ img {
   letter-spacing: 0.5px;
   height: 2.5rem;
   background-color: white;
-  border: none;
+  border: 1px solid #e8e8e8;
   width: 75%;
   text-align: center;
   margin-top: 1rem;
-  box-shadow: 1px 1px 3px 0px $very-light-gray;
 }
 .channels_height {
   height: 22vh;
@@ -950,7 +949,7 @@ img {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.25rem 1rem;
+  padding: 0.5rem 1.5rem;
   border-radius: 0.3rem;
   font-weight: bold;
   line-height: 1.14;
@@ -958,12 +957,10 @@ img {
   border-style: none;
   letter-spacing: 0.03rem;
   background-color: $soft-gray;
-  color: $panther-gray;
+  color: $gray;
   cursor: not-allowed;
-  height: 2rem;
-  width: 10rem;
-  font-weight: bold;
-  font-size: 1.02rem;
+
+  font-size: 14px;
 }
 .collection {
   background-color: $panther;
@@ -1094,8 +1091,8 @@ input {
   justify-content: space-evenly;
   flex-direction: row;
   background-color: white;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  border-radius: 0.75rem;
+  border: 1px solid #e8e8e8;
+  border-radius: 0.3rem;
   width: 75vw;
   padding: 2rem 2rem 1rem 5rem;
   margin-bottom: 1rem;
@@ -1244,7 +1241,7 @@ textarea {
 //   width: 40rem;
 // }
 .green {
-  color: #ddad3c;
+  color: #41b883;
 }
 .red {
   color: red;

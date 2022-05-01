@@ -1,13 +1,8 @@
 <template>
   <div class="alerts-page">
     <div style="display: flex; align-item: flex-start; flex-direction: column; margin-left: 12vw">
-      <h2>
-        <span>
-          Close Date
-          <span style="color: #199e54">Approaching</span>
-        </span>
-      </h2>
-      <p style="margin-top: -0.5rem">
+      <h3>Close Date Approaching</h3>
+      <p style="margin-top: -0.5rem; font-size: 14px; color: #9b9b9b">
         View and update all Opportunities with an upcoming close date
       </p>
     </div>
@@ -35,8 +30,8 @@
                     : (form.field.recurrenceFrequency.value = 'WEEKLY')
                 "
                 :value="form.field.recurrenceFrequency.value !== 'WEEKLY'"
-                offColor="#199e54"
-                onColor="#199e54"
+                offColor="#41b883"
+                onColor="#41b883"
                 style="margin-left: 0.25rem; margin-right: 0.25rem"
               />
               <label :class="form.field.recurrenceFrequency.value == 'MONTHLY' ? 'green' : ''"
@@ -122,15 +117,15 @@
                 style="margin-left: 0.25rem; margin-right: 0.25rem"
                 @input="changeCreate"
                 :value="create"
-                offColor="#199e54"
-                onColor="#199e54"
+                offColor="#41b883"
+                onColor="#41b883"
               />
               <label :class="create ? 'green' : ''">Create #channel</label>
             </div>
 
             <label v-else for="channel" style="font-weight: bold"
               >Alert will send to
-              <span style="color: #199e54; font-size: 1.2rem">{{ channelName }}</span>
+              <span style="color: #41b883; font-size: 1.2rem">{{ channelName }}</span>
               channel</label
             >
             <div
@@ -960,7 +955,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.25rem 1rem;
+  padding: 0.5rem 1.5rem;
   border-radius: 0.3rem;
   font-weight: bold;
   line-height: 1.14;
@@ -968,12 +963,10 @@ export default {
   border-style: none;
   letter-spacing: 0.03rem;
   background-color: $soft-gray;
-  color: $panther-gray;
+  color: $gray;
   cursor: not-allowed;
-  height: 2rem;
-  width: 10rem;
-  font-weight: bold;
-  font-size: 1.02rem;
+
+  font-size: 14px;
 }
 .collection {
   background-color: $panther;
@@ -1097,8 +1090,8 @@ input {
   justify-content: space-evenly;
   flex-direction: row;
   background-color: $white;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  border-radius: 0.75rem;
+  border: 1px solid #e8e8e8;
+  border-radius: 0.3rem;
   width: 75vw;
   padding: 2rem;
   margin-bottom: 1rem;

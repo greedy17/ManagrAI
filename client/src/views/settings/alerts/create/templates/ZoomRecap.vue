@@ -1,13 +1,10 @@
 <template>
   <div class="logZoomPage">
     <div style="display: flex; align-item: flex-start; flex-direction: column; margin-left: 19vw">
-      <h2>
-        <span>
-          Meeting
-          <span style="color: #5f8cff"> Recaps</span>
-        </span>
-      </h2>
-      <p style="margin-top: -0.5rem">Recieve meeting recaps from essential team members</p>
+      <h3>Meeting Recaps</h3>
+      <p style="margin-top: -0.5rem; font-size: 14px; color: #9b9b9b">
+        Recieve meeting recaps from essential team members
+      </p>
     </div>
 
     <div style="flex-direction: column" class="centered">
@@ -94,15 +91,15 @@
               style="margin: 0.25rem"
               @input="changeCreate"
               :value="create"
-              offColor="#5f8cff"
-              onColor="#5f8cff"
+              offColor="#41b883"
+              onColor="#41b883"
             />
             <label :class="create ? 'green' : ''">Create #channel</label>
           </div>
 
           <label v-else for="channel" style="font-weight: bold"
             >Alerts will send to
-            <span style="color: #5f8cff; font-size: 1.2rem">{{ channelName }}</span>
+            <span style="color: #41b883; font-size: 1.2rem">{{ channelName }}</span>
             channel</label
           >
           <div
@@ -507,7 +504,9 @@ export default {
   max-height: 10rem;
   width: 100%;
 }
-
+input[type='text']:focus {
+  outline: none;
+}
 .logZoomPage {
   height: 100vh;
   color: $base-gray;
@@ -520,8 +519,8 @@ export default {
   width: 60vw;
   padding: 3rem;
   background-color: $white;
-  border-radius: 0.5rem;
-  box-shadow: 3px 4px 7px $very-light-gray;
+  border-radius: 0.3rem;
+  border: 1px solid #e8e8e8;
   color: $base-gray;
 }
 .centered {
@@ -556,13 +555,13 @@ export default {
   font-size: 1.02rem;
 }
 .green {
-  color: #5f8cff;
+  color: #41b883;
 }
 .disabled__button {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.4rem 1rem;
+  padding: 0.5rem 1.5rem;
   border-radius: 0.3rem;
   font-weight: bold;
   line-height: 1.14;
@@ -570,12 +569,9 @@ export default {
   border-style: none;
   letter-spacing: 0.03rem;
   background-color: $soft-gray;
-  color: $panther-gray;
+  color: $gray;
   cursor: not-allowed;
-  height: 2rem;
-  width: 10rem;
-  font-weight: bold;
-  font-size: 1.02rem;
+  font-size: 14px;
 }
 input {
   // box-shadow: 3px 4px 7px $very-light-gray;

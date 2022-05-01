@@ -1,15 +1,18 @@
 <template>
   <div class="invite-users">
-    <h2 style="font-size: 1.5rem; color: #4d4e4c">Manage Your Team</h2>
+    <div class="invite-users__header">
+      <h3 style="color: #4d4e4c">Manage Your Team</h3>
 
-    <button class="invite_button" type="submit" @click="handleInvite">
-      Invite Member
-      <img
-        style="height: 0.8rem; margin-left: 0.25rem"
-        src="@/assets/images/slackLogo.png"
-        alt=""
-      />
-    </button>
+      <button class="invite_button" type="submit" @click="handleInvite">
+        Invite Member
+        <img
+          style="height: 0.8rem; margin-left: 0.25rem"
+          src="@/assets/images/slackLogo.png"
+          alt=""
+        />
+      </button>
+    </div>
+
     <Invite class="invite-users__inviter" :inviteOpen="inviteOpen" @cancel="handleCancel" />
 
     <!-- <button class="continue_button" type="submit" @click="handleContinue">Continue</button> -->
@@ -59,7 +62,13 @@ export default {
   &__logo {
     height: 5rem;
   }
-
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 60vw;
+    padding: 0.25rem;
+  }
   &__text {
     font-family: #{$base-font-family};
     width: 100%;
@@ -105,11 +114,11 @@ h2 {
   color: $dark-green;
   background-color: white;
   border-radius: 0.25rem;
-  box-shadow: 2px 2px 3px $very-light-gray;
+  transition: all 0.25s;
   padding: 0.75rem;
   font-weight: bolder;
   font-size: 14px;
-  border: none;
+  border: 1px solid #e8e8e8;
 }
 
 .continue_button {
@@ -128,5 +137,7 @@ h2 {
 .invite_button:hover,
 .continue_button:hover {
   cursor: pointer;
+  transform: scale(1.025);
+  box-shadow: 1px 2px 3px #e8e8e8;
 }
 </style>

@@ -1,13 +1,10 @@
 <template>
   <div class="alerts-page">
     <div style="display: flex; align-item: flex-start; flex-direction: column; margin-left: 12vw">
-      <h2>
-        <span>
-          Close Date
-          <span style="color: #fa646a">Passed</span>
-        </span>
-      </h2>
-      <p style="margin-top: -0.5rem">View and update all Opportunities with a passed close date</p>
+      <h3>Close Date Passed</h3>
+      <p style="margin-top: -0.5rem; font-size: 14px">
+        View and update all Opportunities with a passed close date
+      </p>
     </div>
 
     <div style="margin-top: 1rem" v-if="pageNumber === 0" class="alert__column">
@@ -33,8 +30,8 @@
                     : (form.field.recurrenceFrequency.value = 'WEEKLY')
                 "
                 :value="form.field.recurrenceFrequency.value !== 'WEEKLY'"
-                offColor="#fa646a"
-                onColor="#fa646a"
+                offColor="#41b883"
+                onColor="#41b883"
                 style="margin-left: 0.25rem; margin-right: 0.25rem"
               />
               <label :class="form.field.recurrenceFrequency.value == 'MONTHLY' ? 'green' : ''"
@@ -120,15 +117,15 @@
                 style="margin-left: 0.25rem; margin-right: 0.25rem"
                 @input="changeCreate"
                 :value="create"
-                offColor="#fa646a"
-                onColor="#fa646a"
+                offColor="#41b883"
+                onColor="#41b883"
               />
               <label :class="create ? 'green' : ''">Create #channel</label>
             </div>
 
             <label v-else for="channel" style="font-weight: bold"
               >Alert will send to
-              <span style="color: #fa646a; font-size: 1.2rem">{{ channelName }}</span>
+              <span style="color: #41b883; font-size: 14px">{{ channelName }}</span>
               channel</label
             >
             <div
@@ -1011,7 +1008,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.25rem 1rem;
+  padding: 0.5rem 1.5rem;
   border-radius: 0.3rem;
   font-weight: bold;
   line-height: 1.14;
@@ -1019,12 +1016,10 @@ export default {
   border-style: none;
   letter-spacing: 0.03rem;
   background-color: $soft-gray;
-  color: $panther-gray;
+  color: $gray;
   cursor: not-allowed;
-  height: 2rem;
-  width: 10rem;
-  font-weight: bold;
-  font-size: 1.02rem;
+
+  font-size: 14px;
 }
 .collection {
   background-color: $panther;
@@ -1146,9 +1141,10 @@ input {
   justify-content: space-evenly;
   flex-direction: row;
   background-color: $white;
-  box-shadow: 3px 4px 7px $very-light-gray;
+  // box-shadow: 3px 4px 7px $very-light-gray;
   color: $base-gray;
-  border-radius: 0.75rem;
+  border: 1px solid #e8e8e8;
+  border-radius: 0.3rem;
   width: 75vw;
   padding: 2rem;
   margin-bottom: 1rem;
@@ -1275,7 +1271,7 @@ textarea {
   // width: 40rem;
 }
 .green {
-  color: #fa646a;
+  color: #41b883;
 }
 .red {
   color: red;
@@ -1375,17 +1371,7 @@ textarea {
 .templates {
   border-bottom: 1px solid $gray;
 }
-.orange_button {
-  width: 7rem;
-  background-color: white;
-  color: $panther-orange;
-  font-weight: bold;
-  font-size: 16px;
-  height: 2rem;
-  border-radius: 0.5rem;
-  border: 2px solid white;
-  cursor: pointer;
-}
+
 .selected__item {
   padding: 0.5rem 1.2rem;
   background-color: transparent;

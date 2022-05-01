@@ -1,19 +1,23 @@
 <template>
   <div class="alert-operand-row">
-    <div style="margin-bottom: 2rem" class="centered" v-if="form.field.operandOrder.value != 0">
-      <label class="alert-operand-row__condition-label">AND</label>
+    <div
+      style="margin-bottom: 2rem"
+      class="toggle__switch"
+      v-if="form.field.operandOrder.value != 0"
+    >
+      <label>AND</label>
       <ToggleCheckBox
         @input="toggleSelectedCondition"
         :value="selectedCondition !== 'AND'"
         offColor="#199e54"
         onColor="#199e54"
       />
-      <label class="alert-operand-row__condition-label">OR</label>
+      <label>OR</label>
     </div>
 
     <div class="alert-operand-row__options">
       <div class="centered" style="flex-direction: column">
-        <p style="font-weight: bold">Select CRM Field:</p>
+        <p>Select CRM Field:</p>
 
         <FormField :errors="form.field.operandIdentifier.errors">
           <template v-slot:input>
@@ -64,7 +68,7 @@
         class="centered"
         style="flex-direction: column"
       >
-        <p style="font-weight: bold">Select an operator:</p>
+        <p>Select an operator:</p>
         <FormField :errors="form.field.operandOperator.errors">
           <template v-slot:input>
             <Multiselect
@@ -109,7 +113,7 @@
           style="flex-direction: column"
           v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'"
         >
-          <p style="font-weight: bold">Select a value:</p>
+          <p>Select a value:</p>
           <!-- <div :key="value" v-for="(key, value) in picklistOpts">
             <input
               v-model="form.field.operandValue.value"
@@ -168,7 +172,7 @@
             style="flex-direction: column"
             v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'"
           >
-            <p style="font-weight: bold">Select a value:</p>
+            <p>Select a value:</p>
 
             <FormField :errors="form.field.operandValue.errors">
               <template v-slot:input>
@@ -214,7 +218,7 @@
               v-if="selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME'"
             >
               <div style="text-align: center">
-                <p style="font-weight: bold">Select an operator:</p>
+                <p>Select an operator:</p>
                 <!-- <div :key="value" v-for="(key, value) in operatorOpts">
                 <input
                   v-model="form.field.operandOperator.value"
@@ -273,16 +277,16 @@
               <div>
                 <div
                   class="centered"
-                  style="margin-bottom: 0.8rem; margin-top: 0.75rem; margin-left: -1.5rem"
+                  style="margin-bottom: 0.8rem; margin-top: 0.75rem; margin-left: -1rem"
                 >
-                  <label class="alert-operand-row__condition-label">In the past</label>
+                  <label>In the past</label>
                   <ToggleCheckBox
                     @input="toggleSelectedOperand"
                     :value="MyOperand !== 'Negative'"
                     offColor="#199e54"
                     onColor="#199e54"
                   />
-                  <label class="alert-operand-row__condition-label">In the future</label>
+                  <label>In the future</label>
                 </div>
 
                 <FormField v-if="MyOperand === 'Negative'" :errors="form.field.operandValue.errors">
@@ -366,7 +370,7 @@
             </div>
 
             <div class="centered" style="flex-direction: column" v-else>
-              <p style="font-weight: bold">Enter value:</p>
+              <p>Enter value:</p>
               <FormField
                 @blur="form.field.operandValue.validate()"
                 :errors="form.field.operandValue.errors"
@@ -826,6 +830,14 @@ img {
   width: 50px;
   margin-left: 0.25rem;
   border-radius: 0.25rem;
+}
+.toggle__switch {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  margin-bottom: 2rem;
+  font-size: 12px;
+  letter-spacing: 1px;
 }
 .alert-operand-row {
   // @include standard-border();

@@ -2,28 +2,32 @@
   <div class="alerts-template-list">
     <Modal v-if="deleteOpen" dimmed>
       <div class="delete_modal">
-        <h2>Delete Workflow</h2>
-        <div>
+        <div class="delete_modal__header">
+          <h2>Delete Workflow</h2>
+          <img @click="deleteOpen = !deleteOpen" src="@/assets/images/close.png" alt="" />
+        </div>
+
+        <div class="delete_modal__body">
           <p>This action cannot be undone, are you sure ?</p>
-          <div class="center">
-            <button style="margin-right: 0.5rem" class="no__button" @click="deleteClose">No</button>
-            <button class="yes__button" @click.stop="onDeleteTemplate(deleteId)">Yes</button>
-          </div>
+        </div>
+
+        <div class="delete_modal__footer">
+          <button class="no__button" @click="deleteClose">No</button>
+          <button class="yes__button" @click.stop="onDeleteTemplate(deleteId)">Yes</button>
         </div>
       </div>
     </Modal>
-    <div class="spacer"></div>
 
     <div class="center__">
-      <h2 v-if="!editing" :class="templates.refreshing ? 'loading-title titles' : 'titles'">
+      <h3 v-if="!editing" :class="templates.refreshing ? 'loading-title titles' : 'titles'">
         Edit your Workflow Automation
-      </h2>
-      <h2 @click="test" v-else :class="templates.refreshing ? 'loading-title titles' : 'titles'">
+      </h3>
+      <h3 @click="test" v-else :class="templates.refreshing ? 'loading-title titles' : 'titles'">
         Saved Workflow Automations
-      </h2>
+      </h3>
       <p
         :class="templates.refreshing ? 'loading-title titles' : ''"
-        style="font-weight: bold; color: #5d5e5e; margin-top: -0.5rem; font-size: 0.95rem"
+        style="font-weight: bold; color: #aaaaaa; margin-top: -0.5rem; font-size: 13px"
       >
         Edit, Run, and Schedule your saved Automations
       </p>
@@ -62,11 +66,11 @@
 
       <transition name="fade">
         <div class="alert_cards" v-if="editing">
-          <div :key="i" v-for="(alert, i) in templates.list" class="card__">
-            <div :data-key="alert.id">
-              <h3 class="card__header">{{ alert.title.toUpperCase() }}</h3>
+          <div :key="i" v-for="(alert, i) in templates.list" class="added-collection">
+            <div class="added-collection__header" :data-key="alert.id">
+              <h3>{{ alert.title }}</h3>
             </div>
-            <div class="row">
+            <div class="added-collection__body">
               <button
                 :disabled="clicked.includes(alert.id)"
                 @click.stop="onRunAlertTemplateNow(alert.id)"
@@ -80,12 +84,12 @@
               <p style="margin-left: 0.5rem">Results: {{ alert.instances.length }}</p>
             </div> -->
             </div>
-            <div class="row__start">
-              <p style="margin: 0.5rem 0.5rem">Schedule:</p>
+            <div class="added-collection__footer">
+              <p style="font-size: 13px">Schedule:</p>
               <div class="row__">
                 <p
                   :class="!alert.isActive ? 'green' : ''"
-                  style="margin-right: 0.25rem; font-size: 0.8rem"
+                  style="margin-right: 0.5rem; font-size: 12px; letter-spacing: 1px"
                 >
                   OFF
                 </p>
@@ -93,43 +97,24 @@
                   @input="onToggleAlert(alert.id, alert.isActive)"
                   v-model="alert.isActive"
                   offColor="#aaaaaa"
-                  onColor="#199e54"
+                  onColor="#41b883"
                 />
                 <p
                   :class="alert.isActive ? 'green' : ''"
-                  style="margin-left: 0.25rem; font-size: 0.8rem"
+                  style="margin-left: 0.5rem; font-size: 12px; letter-spacing: 1px"
                 >
                   ON
                 </p>
               </div>
 
               <div class="row__two">
-                <img
-                  @click="makeAlertCurrent(alert)"
-                  src="@/assets/images/edit.png"
-                  style="
-                    height: 1.5rem;
-                    cursor: pointer;
-                    margin-right: 0.5rem;
-                    box-shadow: 1.5px 1px 2px #fafafa;
-                    border: none;
-                    border-radius: 50%;
-                    padding: 0.2rem;
-                  "
-                />
+                <span class="img-border">
+                  <img @click="makeAlertCurrent(alert)" src="@/assets/images/edit.png" />
+                </span>
 
-                <img
-                  src="@/assets/images/whitetrash.png"
-                  style="
-                    height: 1.5rem;
-                    cursor: pointer;
-                    box-shadow: 1.5px 1px 2px #fafafa;
-                    border: none;
-                    border-radius: 50%;
-                    padding: 0.2rem;
-                  "
-                  @click="deleteClosed(alert.id)"
-                />
+                <span class="img-border">
+                  <img src="@/assets/images/whitetrash.png" @click="deleteClosed(alert.id)" />
+                </span>
               </div>
             </div>
 
@@ -139,30 +124,38 @@
               </div>
             </template>
           </div>
-          <div v-if="zoomChannel" class="card__">
-            <h3 class="card__header">LOG MEETINGS</h3>
-            <div class="row">
+          <div v-if="zoomChannel" class="added-collection">
+            <div class="added-collection__header">
+              <h3>Log Meetings</h3>
+              <p></p>
+            </div>
+
+            <div class="added-collection__body">
               <button @click="goToLogZoom" class="green_button">Change Channel</button>
             </div>
-            <div>
+            <div class="added-collection__footer">
               <p>
                 Current channel:
-                <span style="font-weight: bold; color: #199e54">{{
-                  currentZoomChannel.toUpperCase()
+                <span style="font-weight: bold; color: #41b883; font-size: 13px">{{
+                  currentZoomChannel
                 }}</span>
               </p>
             </div>
           </div>
-          <div v-if="hasRecapChannel && userLevel !== 'REP'" class="card__">
-            <h3 class="card__header">MEETING RECAPS</h3>
-            <div class="row">
+
+          <div v-if="hasRecapChannel && userLevel !== 'REP'" class="added-collection">
+            <div class="added-collection__header">
+              <h3>Meeting Recaps</h3>
+            </div>
+
+            <div class="added-collection__body">
               <button @click="goToRecap" class="green_button">Change Channel/Pipelines</button>
             </div>
-            <div>
+            <div class="added-collection__footer">
               <p>
                 Current channel:
-                <span style="font-weight: bold; color: #199e54">{{
-                  currentRecapChannel.toUpperCase()
+                <span style="font-weight: bold; color: #41b883; font-size: 13px">{{
+                  currentRecapChannel
                 }}</span>
               </p>
             </div>
@@ -544,7 +537,7 @@ button:disabled {
   font-weight: bold;
 }
 .alert-links {
-  color: #199e54;
+  color: #41b883;
   border-bottom: 3px solid #19954e;
 }
 .activate-button {
@@ -572,15 +565,37 @@ button:disabled {
   align-items: center;
 }
 .delete_modal {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   background-color: $white;
   color: $base-gray;
-  border-radius: 0.5rem;
-  height: 28vh;
+  border-radius: 0.3rem;
   width: 40vw;
+  padding: 1rem;
+  &__header {
+    height: 3rem;
+    padding: 1rem 0rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 400;
+    border-bottom: 1px solid $soft-gray;
+    img {
+      height: 1rem;
+      margin-top: -1rem;
+      cursor: pointer;
+    }
+  }
+  &__body {
+    height: 4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  &__footer {
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 .edit__modal {
   background-color: white;
@@ -604,17 +619,17 @@ button:disabled {
   cursor: pointer;
   margin-right: 0.5rem;
   padding: 0.5rem;
-  font-weight: bold;
 }
 .no__button {
   width: 8vw;
-  background-color: $very-light-gray;
+  background-color: $soft-gray;
   border: none;
   border-radius: 0.25rem;
-  color: white;
+
   cursor: pointer;
   padding: 0.5rem;
-  font-weight: bold;
+
+  margin-right: 0.5rem;
 }
 .yes__button:hover,
 .no__button:hover {
@@ -629,7 +644,7 @@ button:disabled {
   @include header-subtitle();
 }
 .alerts-template-list {
-  margin-left: 18vw;
+  margin-left: 10vw;
   margin-top: 3.5rem;
   color: $base-gray;
   &__header {
@@ -646,10 +661,11 @@ button:disabled {
 .alert_cards {
   display: flex;
   flex-direction: row;
-  justify-content: space-evenly;
-  align-items: center;
-  margin-top: 2rem;
+  justify-content: flex-start;
+  align-items: flex-start;
+  margin-top: 1rem;
   flex-wrap: wrap;
+  padding: 0;
 }
 // .centered__cards {
 //   display: flex;
@@ -659,14 +675,45 @@ button:disabled {
 //   margin-top: 2rem;
 //   flex-wrap: wrap;
 // }
+.added-collection {
+  background-color: white;
+  box-shadow: 2px 2px 3px $very-light-gray;
+  border-radius: 0.5rem;
+  width: 22vw;
+  margin-right: 1rem;
+  margin-bottom: 1rem;
+  &__header {
+    max-height: 3rem;
+    padding: 1.75rem 1rem;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    border-bottom: 3px solid $soft-gray;
+  }
+  &__body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 5rem;
+    font-size: 13px;
+  }
+  &__footer {
+    display: flex;
+    align-items: center;
+    height: 3rem;
+    padding: 1rem;
+    font-size: 14px;
+    justify-content: space-evenly;
+  }
+}
 .card__ {
   background-color: white;
+  padding: 0;
   border: none;
-  min-width: 22vw;
-  max-width: 44vw;
+  width: 22vw;
   min-height: 25vh;
-  margin-right: 1rem;
-  margin-bottom: 2rem;
+  margin: 0rem 0.5rem 0.5rem 0rem;
   border-radius: 0.5rem;
   display: flex;
   flex-direction: column;
@@ -690,9 +737,9 @@ button:disabled {
   width: 20px;
   height: 30px;
 }
-img {
-  filter: invert(90%);
-}
+// img {
+//   filter: invert(90%);
+// }
 .pink {
   color: $candy;
 }
@@ -715,14 +762,25 @@ a {
   justify-content: center;
   margin: 0 0.5rem 0 0.5rem;
   color: $base-gray;
-  font-weight: 900;
+  font-weight: bold;
+}
+.img-border {
+  border: 1px solid #e8e8e8;
+  margin-right: 0.25rem;
+  border-radius: 0.2rem;
+  cursor: pointer;
+  padding: 0.1rem 0.3rem;
 }
 .row__two {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  margin: 1rem;
   width: 100%;
+  img {
+    height: 0.8rem;
+    cursor: pointer;
+    filter: invert(70%);
+  }
 }
 .row__start {
   display: flex;
@@ -737,7 +795,7 @@ a {
   border-radius: 0.25rem;
   padding: 0.5rem 1rem;
   font-weight: bold;
-  font-size: 16px;
+  font-size: 12px;
   border: none;
   cursor: pointer;
 }
@@ -776,8 +834,8 @@ a {
 }
 .center__ {
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: flex-start;
+  align-items: flex-start;
   flex-direction: column;
 }
 .centered {

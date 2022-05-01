@@ -9,13 +9,8 @@
         margin-left: 1.25rem;
       "
     >
-      <h2>
-        <span>
-          Log
-          <span style="color: #5f8cff"> Meetings</span>
-        </span>
-      </h2>
-      <p style="margin-top: -0.5rem">
+      <h3>Log Meetings</h3>
+      <p style="margin-top: -0.5rem; font-size: 14px; color: #9b9b9b">
         Log meetings and save attendees right after the meeting ends
       </p>
     </div>
@@ -29,15 +24,15 @@
               style="margin: 0.25rem"
               @input="changeCreate"
               :value="create"
-              offColor="#5f8cff"
-              onColor="#5f8cff"
+              offColor="#41b883"
+              onColor="#41b883"
             />
             <label :class="create ? 'green' : ''">Create #channel</label>
           </div>
 
           <label v-else for="channel" style="font-weight: bold"
             >Alerts will send to
-            <span style="color: #5f8cff; font-size: 1.2rem">{{ channelName }}</span>
+            <span style="color: #41b883; font-size: 1.2rem">{{ channelName }}</span>
             channel</label
           >
           <div
@@ -359,11 +354,21 @@ export default {
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
+.search__input {
+  min-height: 40px;
+  display: block;
+  padding: 8px 40px 8px 8px;
+  border-radius: 5px;
+  border: 1px solid #e8e8e8;
+  background: #fff;
+  font-size: 14px;
+  box-shadow: none;
+}
 img {
   filter: invert(70%);
 }
 .green {
-  color: #5f8cff;
+  color: #41b883;
 }
 ::placeholder {
   color: $panther-silver;
@@ -381,8 +386,11 @@ img {
   width: 450px;
   height: 225px;
   background-color: $white;
-  border-radius: 0.5rem;
-  box-shadow: 3px 4px 7px $very-light-gray;
+  border-radius: 0.3rem;
+  border: 1px solid #e8e8e8;
+}
+input[type='text']:focus {
+  outline: none;
 }
 .centered {
   margin-top: 4rem;

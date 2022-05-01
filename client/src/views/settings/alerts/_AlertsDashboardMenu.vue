@@ -2,7 +2,7 @@
   <div>
     <div v-if="userLevel == 'REP'" class="sidenav">
       <div style="margin-bottom: 2rem; margin-left: 0.5rem">
-        <h3 class="title">Workflow Automations</h3>
+        <h4 class="title">Workflow Automations</h4>
         <h5 style="margin-top: -0.65rem; color: #9b9b9b">Where Salesforce meets Slack</h5>
       </div>
 
@@ -10,7 +10,7 @@
         <div :class="isOnboarding ? 'onboarding row' : 'row'">
           <img
             src="@/assets/images/trophy.png"
-            style="height: 1.3rem; margin-right: 1rem; padding-left: 0.5rem"
+            style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
             alt=""
           />
           <h5>Popular</h5>
@@ -45,7 +45,7 @@
         <div class="row">
           <img
             src="@/assets/images/star.png"
-            style="height: 1.3rem; margin-right: 1rem; padding-left: 0.5rem"
+            style="height: .8rem; margin-right: 1rem; padding-left: 0.5rem"
             alt=""
           />
           <h5 @click="onboardComplete">
@@ -61,14 +61,12 @@
         <div :class="isOnboarding ? 'onboarding row' : 'row'">
           <img
             src="@/assets/images/star.png"
-            style="height: 1.3rem; margin-right: 1rem; padding-left: 0.5rem"
+            style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
             alt=""
           />
           <h5>
             Saved
-            <span style="margin-left: 0.5rem" class="counter">{{
-              alertsCount(templates.list.length)
-            }}</span>
+            <span class="counter">{{ alertsCount(templates.list.length) }}</span>
           </h5>
         </div>
       </router-link>
@@ -77,7 +75,7 @@
         <div :class="isOnboarding ? 'onboarding row' : 'row'">
           <img
             src="@/assets/images/build.png"
-            style="height: 1.2rem; margin-right: 1rem; padding-left: 0.5rem"
+            style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
             alt=""
           />
           <h5>Custom</h5>
@@ -90,7 +88,7 @@
       class="sidenav sidenav__background"
     >
       <div style="margin-bottom: 2rem; margin-left: 0.5rem">
-        <h3 class="title">Workflow Automations</h3>
+        <h4 class="title">Workflow Automations</h4>
         <h5 style="margin-top: -0.65rem; color: #9b9b9b">Let us do the work for you</h5>
       </div>
 
@@ -98,7 +96,7 @@
         <div class="row">
           <img
             src="@/assets/images/trophy.png"
-            style="height: 1.3rem; margin-right: 1rem; padding-left: 0.5rem"
+            style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
             alt=""
           />
           <h5>Popular</h5>
@@ -109,14 +107,12 @@
         <div class="row">
           <img
             src="@/assets/images/star.png"
-            style="height: 1.3rem; margin-right: 1rem; padding-left: 0.5rem"
+            style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
             alt=""
           />
           <h5>
             Saved
-            <span style="margin-left: 0.5rem" class="counter">{{
-              alertsCount(templates.list.length)
-            }}</span>
+            <span class="counter">{{ alertsCount(templates.list.length) }}</span>
           </h5>
         </div>
       </router-link>
@@ -125,7 +121,7 @@
         <div class="row">
           <img
             src="@/assets/images/build.png"
-            style="height: 1.2rem; margin-right: 1rem; padding-left: 0.5rem"
+            style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
             alt=""
           />
           <h5>Custom</h5>
@@ -135,7 +131,7 @@
       <!-- <div class="row" style="cursor: not-allowed">
         <img
           src="@/assets/images/sharing.png"
-          style="height: 1.3rem; margin-right: 1rem; padding-left: 0.5rem"
+          style="height: .8rem; margin-right: 1rem; padding-left: 0.5rem"
           alt=""
         />
         <h5>Shared<span class="coming-soon">coming soon</span></h5>
@@ -144,18 +140,18 @@
 
     <div v-else-if="userLevel == 'MANAGER'" class="sidenav sidenav__background">
       <div style="margin-bottom: 2rem; margin-left: 0.5rem">
-        <h3 class="title">Workflow Automations</h3>
+        <h4 class="title">Workflow Automations</h4>
         <h5 style="margin-top: -0.65rem; color: #9b9b9b">Let us do the work for you</h5>
       </div>
 
-      <div style="background-color: #ebfcf3; border-radius: 0.3rem; margin-bottom: 0.25rem">
+      <div style="background-color: #ebfcf5; border-radius: 0.3rem; margin-bottom: 0.25rem">
         <div @click="isPopular()" style="cursor: pointer; margin-left: 0.5rem" class="row">
-          <img src="@/assets/images/trophy.png" style="height: 1.3rem; margin-right: 1rem" alt="" />
+          <img src="@/assets/images/trophy.png" style="height: 0.8rem; margin-right: 1rem" alt="" />
 
           <h5>Popular</h5>
           <img
             src="@/assets/images/dropdown.png"
-            style="height: 1.25rem; margin-top: 0.25rem"
+            style="height: 0.8rem; margin-top: 0.25rem; filter: invert(10%)"
             alt=""
           />
         </div>
@@ -168,22 +164,22 @@
                 style="height: 0.9rem; margin-right: 0.25rem; margin-left: 1.75rem"
                 alt=""
               />
-              <h5 style="margin-left: 1rem">Instant Updates</h5>
+              <h5>Instant Updates</h5>
             </div>
           </router-link>
           <router-link
-            style="margin-top: -2rem"
+            style="margin-top: -1rem"
             exact-active-class="active"
             :to="{ name: 'CreateNew' }"
           >
-            <div style="margin-top: -0.25rem; height: 2.25rem" class="row">
+            <div style="height: 2.25rem" class="row">
               <img
                 src="@/assets/images/org.png"
                 style="height: 0.8rem; margin-right: 0.25rem; margin-left: 1.75rem"
                 alt=""
               />
 
-              <h5 style="margin-left: 1rem">Scheduled Updates</h5>
+              <h5>Scheduled Updates</h5>
             </div>
           </router-link>
         </div>
@@ -193,7 +189,7 @@
         <div class="row">
           <img
             src="@/assets/images/star.png"
-            style="height: 1.3rem; margin-right: 1rem; padding-left: 0.5rem"
+            style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
             alt=""
           />
           <h5>
@@ -209,7 +205,7 @@
         <div class="row">
           <img
             src="@/assets/images/build.png"
-            style="height: 1.2rem; margin-right: 1rem; padding-left: 0.5rem"
+            style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
             alt=""
           />
           <h5>Custom</h5>
@@ -388,7 +384,6 @@ h5 {
   width: 0;
   height: 0;
   border-color: $lighter-green transparent transparent transparent;
-
   border-width: 10px;
   border-style: solid;
 }
@@ -406,15 +401,16 @@ img {
   flex-direction: column;
 }
 .counter {
-  border: 2px solid $base-gray;
+  border: 1.5px solid $base-gray;
   border-radius: 0.3rem;
-  padding: 0.1rem 0.3rem;
-  font-size: 0.75rem;
+  padding: 0.125rem 0.4rem;
+  font-size: 10px;
   color: $base-gray;
+  margin-left: 0.25rem;
 }
 .sidenav {
   height: 100%;
-  width: 18vw;
+  width: 16vw;
   font-size: 0.85rem;
   position: fixed;
   left: 0;
@@ -454,16 +450,10 @@ a:hover div {
   background-color: $lighter-green;
   color: $darker-green;
   border-radius: 0.3rem;
-  img {
-    filter: none;
-  }
 }
 a:hover span {
   border-color: $darker-green;
   color: $darker-green;
-}
-.active img {
-  filter: none;
 }
 .active span {
   border-color: $darker-green;
@@ -476,9 +466,9 @@ a:hover span {
 .row {
   display: flex;
   flex-direction: row;
-  height: 3rem;
+  height: 2.25rem;
   align-items: center;
-  margin-top: 0.1rem;
-  margin-bottom: 0.1rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
 }
 </style>
