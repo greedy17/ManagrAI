@@ -348,7 +348,7 @@ export default {
   mounted() {
     setTimeout(() => {
       this.showLoader = false
-    }, 400)
+    }, 300)
   },
   computed: {
     realtimeConfigs() {

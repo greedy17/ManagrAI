@@ -619,9 +619,6 @@ export default {
         return num
       }
     },
-    goToSlackFormBuilder() {
-      this.$router.push({ name: 'Configure' })
-    },
     goToSmartAlerts() {
       this.$router.push({ name: 'ListTemplates' })
     },
@@ -832,9 +829,6 @@ export default {
         return 'N/A'
       }
     },
-  },
-  mounted() {
-    console.log(this.user)
   },
 }
 </script>

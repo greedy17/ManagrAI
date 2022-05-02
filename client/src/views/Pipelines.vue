@@ -2717,7 +2717,7 @@ main:hover > span {
   background-color: $off-white;
 }
 .filter {
-  color: #199e54;
+  color: #41b883;
   margin-left: 0.2rem;
 }
 .exit {
