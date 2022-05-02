@@ -1,9 +1,7 @@
 <template>
   <div class="update_opportunity">
     <div class="opportunity_title">
-      <h3 style="border-bottom: 3px solid #199e54; padding-bottom: 0.5rem; color: black">
-        Create <span>Contacts :</span>
-      </h3>
+      <h3>Create Contacts</h3>
       <p style="color: #5d5e5e; margin-top: -0.5rem">
         Select the Fields you’d like to display when creating Contacts via Slack
       </p>

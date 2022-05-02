@@ -9,8 +9,8 @@
             selectedCondition == 'AND' ? (selectedCondition = 'OR') : (selectedCondition = 'AND')
           "
           :value="selectedCondition !== 'AND'"
-          offColor="#199e54"
-          onColor="#199e54"
+          offColor="#41b883"
+          onColor="#41b883"
         />
         <label>OR</label>
       </div>

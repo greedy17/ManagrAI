@@ -12,11 +12,7 @@
       <div v-if="notes.length" class="modal-container">
         <div class="flex-row-spread">
           <div class="flex-row">
-            <img
-              src="@/assets/images/logo.png"
-              style="height: 1.75rem; margin-left: 0.5rem; margin-right: 0.25rem"
-              alt=""
-            />
+            <img src="@/assets/images/logo.png" class="logo" alt="" />
             <h3>Notes</h3>
           </div>
 
@@ -38,11 +34,7 @@
       <div v-else class="modal-container">
         <div class="flex-row-spread">
           <div class="flex-row">
-            <img
-              src="@/assets/images/logo.png"
-              style="height: 1.5rem; margin-left: 0.5rem; margin-right: 0.25rem"
-              alt=""
-            />
+            <img src="@/assets/images/logo.png" class="logo" alt="" />
             <h3>Notes</h3>
           </div>
           <img
@@ -69,12 +61,8 @@
       <div class="opp-modal-container">
         <div class="flex-row-spread header">
           <div class="flex-row">
-            <img
-              src="@/assets/images/logo.png"
-              style="height: 1.75rem; margin-left: 0.5rem; margin-right: 0.25rem"
-              alt=""
-            />
-            <h2>Create Opportunity</h2>
+            <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <h3>Create Opportunity</h3>
           </div>
 
           <img
@@ -176,7 +164,7 @@
               <p>{{ field.referenceDisplayLabel }}:</p>
               <Multiselect
                 v-model="selectedOwner"
-                :options="allUsers"
+                :options="picklistQueryOpts[field.referenceDisplayLabel]"
                 @select="
                   setUpdateValues(field.apiName, $event.salesforce_account_ref.salesforce_id)
                 "
@@ -243,12 +231,8 @@
       <div class="opp-modal-container">
         <div class="flex-row-spread header">
           <div class="flex-row">
-            <img
-              src="@/assets/images/logo.png"
-              style="height: 1.75rem; margin-left: 0.5rem; margin-right: 0.25rem"
-              alt=""
-            />
-            <h2>Update Opportunity</h2>
+            <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <h3>Update Opportunity</h3>
           </div>
           <img
             src="@/assets/images/closer.png"
@@ -389,6 +373,7 @@
 
             <div v-else-if="field.apiName === 'OwnerId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
+
               <Multiselect
                 v-model="selectedOwner"
                 :options="allUsers"
@@ -416,7 +401,6 @@
 
             <div v-else-if="field.apiName === 'AccountId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
-
               <Multiselect
                 v-model="selectedAccount"
                 :options="allAccounts"
@@ -1015,7 +999,7 @@ export default {
   },
   methods: {
     tester() {
-      console.log(this.allAccounts)
+      console.log(this.testingPicklist)
     },
     async getMeetingList() {
       try {
@@ -1464,6 +1448,17 @@ export default {
         console.log(e)
       }
     },
+    // async testingPicklist() {
+    //   try {
+    //     const res = await SObjectPicklist.api.listPicklists({
+    //       salesforceObject: 'Opportunity',
+    //       picklistFor: 'ForecastCategoryName',
+    //     })
+    //     console.log(res)
+    //   } catch (e) {
+    //     console.log(e)
+    //   }
+    // },
     async listStages() {
       try {
         const res = await SObjectPicklist.api.listPicklists({
@@ -1545,9 +1540,12 @@ export default {
       this.dropdownLoading = true
       this.editOpModalOpen = true
       this.currentVals = []
+      this.dropdownVal = {}
       this.updatingMeeting = false
       this.currentOwner = null
       this.currentAccount = null
+      this.selectedAccount = null
+      this.selectedOwner = null
       this.alertInstanceId = alertInstanceId
       this.oppId = id
       try {
@@ -2336,6 +2334,10 @@ h3 {
   letter-spacing: 0.5px;
   color: $base-gray;
 }
+[type='search']::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
 .limit-cell-height {
   max-height: 4rem;
   width: 110%;
@@ -2416,6 +2418,7 @@ section {
   display: flex;
   flex-direction: row;
   align-items: center;
+  letter-spacing: 1px;
 }
 .flex-row-pad {
   display: flex;
@@ -2749,5 +2752,12 @@ textarea {
 }
 a {
   text-decoration: none;
+}
+.logo {
+  height: 1.75rem;
+  margin-left: 0.5rem;
+  margin-right: 0.25rem;
+  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+    brightness(93%) contrast(89%);
 }
 </style>

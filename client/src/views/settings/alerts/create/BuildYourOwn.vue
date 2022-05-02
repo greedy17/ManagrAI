@@ -59,14 +59,14 @@
             <span
               v-if="selectedResourceType !== 'Account'"
               v-on:click="accountResource"
-              style="border-bottom: 2px solid #199e54; cursor: pointer"
+              style="border-bottom: 2px solid #41b883; cursor: pointer"
               >Account</span
             >
             <span v-if="selectedResourceType !== 'Account'">,</span>
             <span
               v-if="selectedResourceType !== 'Contact'"
               v-on:click="contactResource"
-              style="border-bottom: 2px solid #199e54; cursor: pointer"
+              style="border-bottom: 2px solid #41b883; cursor: pointer"
               >Contact</span
             >
             <span v-if="selectedResourceType !== 'Contact'">,</span>
@@ -78,7 +78,7 @@
             <span
               v-if="selectedResourceType !== 'Opportunity'"
               v-on:click="opportunityResource"
-              style="border-bottom: 2px solid #199e54; cursor: pointer"
+              style="border-bottom: 2px solid #41b883; cursor: pointer"
               >Opporunity</span
             >
             <span
@@ -89,7 +89,7 @@
             <span
               v-if="selectedResourceType !== 'Lead'"
               v-on:click="leadResource"
-              style="border-bottom: 2px solid #199e54; cursor: pointer"
+              style="border-bottom: 2px solid #41b883; cursor: pointer"
               >Lead</span
             >
           </h5>
@@ -124,7 +124,7 @@
                 min-width: 0%;
                 max-width: 25%;
                 width: 25%;
-                background: #199e54;
+                background: #41b883;
               "
             ></div>
           </div>
@@ -216,7 +216,7 @@
                 min-width: 0%;
                 max-width: 75%;
                 width: 75%;
-                background: #199e54;
+                background: #41b883;
               "
             ></div>
           </div>
@@ -226,7 +226,7 @@
             <!-- <p
               :class="templateBounce ? 'bouncy' : ''"
               @click="$refs.templateModal.openModal(), switchBounce()"
-              style="cursor: pointer; border-bottom: 3px solid #199e54"
+              style="cursor: pointer; border-bottom: 3px solid #41b883"
             >
               Popular Template
             </p> -->
@@ -252,7 +252,7 @@
 
             <p
               @click="viewingTemplate = !viewingTemplate"
-              style="cursor: pointer; border-bottom: 2px solid #199e54; font-size: 13px"
+              style="cursor: pointer; border-bottom: 2px solid #41b883; font-size: 13px"
             >
               View Template
             </p>
@@ -361,7 +361,7 @@
                 min-width: 0%;
                 max-width: 50%;
                 width: 50%;
-                background: #199e54;
+                background: #41b883;
               "
             ></div>
           </div>
@@ -386,8 +386,8 @@
                         : (form.field.recurrenceFrequency.value = 'WEEKLY')
                     "
                     :value="form.field.recurrenceFrequency.value !== 'WEEKLY'"
-                    offColor="#199e54"
-                    onColor="#199e54"
+                    offColor="#41b883"
+                    onColor="#41b883"
                   />
                   <label :class="form.field.recurrenceFrequency.value == 'MONTHLY' ? 'green' : ''"
                     >Monthly</label
@@ -514,7 +514,6 @@
                       track-by="id"
                       label="fullName"
                       :multiple="true"
-                      :closeOnSelect="false"
                     >
                       <template slot="noResult">
                         <p>No results.</p>
@@ -566,15 +565,15 @@
                     style="margin: 0.25rem"
                     @input="changeCreate"
                     :value="create"
-                    offColor="#199e54"
-                    onColor="#199e54"
+                    offColor="#41b883"
+                    onColor="#41b883"
                   />
                   <label :class="create ? 'green' : ''">Create #channel</label>
                 </div>
 
                 <label v-else for="channel" style="font-weight: bold"
                   >Alert will send to
-                  <span style="color: #199e54; font-size: 1.2rem">{{ channelName }}</span>
+                  <span style="color: #41b883; font-size: 1.2rem">{{ channelName }}</span>
                   channel</label
                 >
                 <div
@@ -706,7 +705,7 @@
                 min-width: 0%;
                 max-width: 100%;
                 width: 100%;
-                background: #199e54;
+                background: #41b883;
               "
             ></div>
           </div>

@@ -43,7 +43,9 @@
           >
             Activate
           </button>
-          <p class="active-workflow" v-else>Active</p>
+          <p class="active-workflow" v-else>
+            Active <img src="@/assets/images/configCheck.png" alt="" />
+          </p>
         </div>
       </div>
 
@@ -94,7 +96,7 @@
             class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Close Date Passed')"
           >
-            Active
+            Active <img src="@/assets/images/configCheck.png" alt="" />
           </h4>
         </div>
       </div>
@@ -148,7 +150,7 @@
             class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Update Forecast')"
           >
-            Active
+            Active <img src="@/assets/images/configCheck.png" alt="" />
           </h4>
         </div>
       </div>
@@ -202,7 +204,7 @@
             class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Deal Rotting')"
           >
-            Active
+            Active <img src="@/assets/images/configCheck.png" alt="" />
           </h4>
         </div>
       </div>
@@ -259,7 +261,7 @@
             class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Close Date Approaching')"
           >
-            Active
+            Active <img src="@/assets/images/configCheck.png" alt="" />
           </h4>
         </div>
       </div>
@@ -313,7 +315,7 @@
             class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Upcoming Next Step')"
           >
-            Active
+            Active <img src="@/assets/images/configCheck.png" alt="" />
           </h4>
         </div>
       </div>
@@ -880,13 +882,25 @@ input {
   cursor: pointer;
 }
 .active-workflow {
-  background-color: $lighter-green;
-  border: 2px solid $lighter-green;
-  color: $base-gray;
-  padding: 0.25rem 3rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 1.5rem;
+  margin-right: 1rem;
+  border: 1px solid $soft-gray;
+  background-color: white;
   border-radius: 0.3rem;
-  font-weight: bold;
-  font-size: 14px;
+  color: $dark-green;
+  font-size: 12px;
+  cursor: text;
+  img {
+    height: 1rem;
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
+    margin-left: 0.75rem;
+    margin-top: 0.1rem;
+  }
 }
 .cs__button {
   width: 9rem;

@@ -255,7 +255,7 @@
             class="centered"
           >
             <small>
-              <span style="color: #199e54">*</span> Need to edit your product form ? Save and
+              <span style="color: #41b883">*</span> Need to edit your product form ? Save and
               continue.</small
             >
           </div> -->
@@ -339,8 +339,8 @@
                   style="margin-left: 0.15rem; margin-right: 0.15rem"
                   :value="productSelected"
                   @input="productSelect"
-                  offColor="#199e54"
-                  onColor="#199e54"
+                  offColor="#41b883"
+                  onColor="#41b883"
                 />
                 <label style="margin-right: 0.15rem" :class="productSelected ? 'green' : 'label'"
                   >Products</label
@@ -405,7 +405,7 @@
         >
           <p class="section-title">
             Organize your form fields:
-            <span style="color: #199e54; font-size: 11px; margin-left: 0.5rem">*drag and drop</span>
+            <span style="color: #41b883; font-size: 11px; margin-left: 0.5rem">*drag and drop</span>
           </p>
           <div v-for="field in addedFields" :key="field.id">
             <div :class="unshownIds.includes(field.id) ? 'invisible' : 'centered'">
@@ -776,7 +776,7 @@
           <div v-if="formType !== 'STAGE_GATING'" class="recommend__header">
             <h4>
               Add More Fields
-              <span style="color: #199e54; font-size: 11px; margin-left: 0.5rem"
+              <span style="color: #41b883; font-size: 11px; margin-left: 0.5rem"
                 >*Recommendations listed</span
               >
             </h4>
@@ -867,9 +867,9 @@
           </div>
 
           <div class="recommend__validation" v-if="formType === 'STAGE_GATING'">
-            <p style="color: #199e54; font-size: 11px">*Previous Stage Validation Fields</p>
+            <p style="color: #41b883; font-size: 11px">*Previous Stage Validation Fields</p>
             <div v-if="!orderedStageForm.length">
-              <p style="color: #beb5cc; text-align: center">Nothing here.. (o^^)o</p>
+              <p style="font-size: 14px; text-align: center">Nothing here.. (o^^)o</p>
             </div>
             <div :key="key" v-for="(form, key) in orderedStageForm">
               <!-- <div style="margin-top: 1rem">
@@ -1413,8 +1413,8 @@ export default {
         return
       }
       this.addedFields.push({ ...field, order: this.addedFields.length, includeInRecap: true })
-      this.formFields.filters = { salesforceObject: this.resource }
-      this.formFields.refresh()
+      // this.formFields.filters = { salesforceObject: this.resource }
+      // this.formFields.refresh()
     },
     goBack() {
       this.$router.push({ name: 'Required' })

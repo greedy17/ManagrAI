@@ -1,10 +1,19 @@
 <template>
   <div class="logZoomPage">
-    <div style="display: flex; align-item: flex-start; flex-direction: column; margin-left: 19vw">
-      <h3>Meeting Recaps</h3>
-      <p style="margin-top: -0.5rem; font-size: 14px; color: #9b9b9b">
-        Recieve meeting recaps from essential team members
-      </p>
+    <div
+      style="display: flex; align-item: center; justify-content: space-between; margin: 0vw 19vw"
+    >
+      <div>
+        <h3>Meeting Recaps</h3>
+        <p style="margin-top: -0.5rem; font-size: 14px; color: #9b9b9b">
+          Recieve meeting recaps from essential team members
+        </p>
+      </div>
+
+      <button @click="$router.push({ name: 'CreateNew' })" class="back-button">
+        <img src="@/assets/images/back.png" alt="" />
+        Back to workflows
+      </button>
     </div>
 
     <div style="flex-direction: column" class="centered">
@@ -30,7 +39,6 @@
               track-by="id"
               label="fullName"
               :multiple="true"
-              :closeOnSelect="false"
             >
               <template slot="noResult">
                 <p>No results.</p>
@@ -155,15 +163,17 @@
                   label="name"
                 >
                   <template slot="noResult">
-                    <p>No results.</p>
+                    <p class="multi-slot">No results.</p>
                   </template>
                   <template slot="afterList">
-                    <p class="load-more" @click="listUserChannels(userChannelOpts.nextCursor)">
+                    <p
+                      class="multi-slot__more"
+                      @click="listUserChannels(userChannelOpts.nextCursor)"
+                    >
                       Load More
                     </p>
                   </template>
                 </Multiselect>
-
                 <!-- <DropDownSearch
                   :items.sync="userChannelOpts.channels"
                   v-model="recapChannel"
@@ -299,7 +309,7 @@ export default {
       }
       this.userIds = this.userIds.map((user) => user.id)
       const res = await SlackOAuth.api.updateRecapChannel(this.slackId, recap_channel, this.userIds)
-      console.log(res)
+
       this.createdZoomChannel = ''
       this.recapChannel = ''
       this.$router.push({ name: 'CreateNew' })
@@ -480,6 +490,48 @@ export default {
   }
   100% {
     transform: translateY(-6px);
+  }
+}
+.back-button {
+  font-size: 14px;
+  color: $dark-green;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  border: none;
+  cursor: pointer;
+  margin: 1rem 0rem 0rem 0rem;
+
+  img {
+    height: 1rem;
+    margin-right: 0.5rem;
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
+  }
+}
+
+.multi-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $dark-green;
+  font-weight: bold;
+  border-top: 1px solid #e8e8e8;
+  width: 100%;
+  padding: 0.5rem 0rem;
+  margin: 0;
+  &__more {
+    background-color: $base-gray;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-top: 1px solid #e8e8e8;
+    width: 100%;
+    padding: 0.75rem 0rem;
+    margin: 0;
+    cursor: pointer;
   }
 }
 .search__input {

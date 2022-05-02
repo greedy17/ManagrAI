@@ -1,10 +1,17 @@
 <template>
   <div class="alerts-page">
-    <div style="display: flex; align-item: flex-start; flex-direction: column; margin-left: 12vw">
-      <h3>Close Date Approaching</h3>
-      <p style="margin-top: -0.5rem; font-size: 14px; color: #9b9b9b">
-        View and update all Opportunities with an upcoming close date
-      </p>
+    <div class="alerts-header">
+      <div>
+        <h3>Close Date Approaching</h3>
+        <p style="margin-top: -0.5rem; font-size: 14px; color: #9b9b9b">
+          View and update all Opportunities with an upcoming close date
+        </p>
+      </div>
+
+      <button @click="$router.push({ name: 'CreateNew' })" class="back-button">
+        <img src="@/assets/images/back.png" alt="" />
+        Back to workflows
+      </button>
     </div>
 
     <div v-if="pageNumber === 0" class="alert__column">
@@ -44,17 +51,17 @@
                 <template v-slot:input>
                   <Multiselect
                     placeholder="Select Day"
-                    @input="setDay"
+                    @input="setDay($event)"
                     v-model="selectedDay"
                     :options="weeklyOpts"
                     openDirection="below"
-                    style="min-width: 13vw"
+                    style="width: 14vw"
                     selectLabel="Enter"
-                    track-by="vlue"
+                    track-by="value"
                     label="key"
                   >
                     <template slot="noResult">
-                      <p>No results.</p>
+                      <p class="multi-slot">No results.</p>
                     </template>
                   </Multiselect>
                 </template>
@@ -90,10 +97,9 @@
                   track-by="id"
                   label="fullName"
                   :multiple="true"
-                  :closeOnSelect="false"
                 >
                   <template slot="noResult">
-                    <p>No results.</p>
+                    <p class="multi-slot">No results.</p>
                   </template>
                 </Multiselect>
               </template>
@@ -172,15 +178,19 @@
                     selectLabel="Enter"
                     track-by="id"
                     label="name"
-                  />
-                  <template slot="noResult">
-                    <p>No results.</p>
-                  </template>
-                  <template slot="afterList">
-                    <p class="load-more" @click="listUserChannels(userChannelOpts.nextCursor)">
-                      Load More
-                    </p>
-                  </template>
+                  >
+                    <template slot="noResult">
+                      <p class="multi-slot">No results.</p>
+                    </template>
+                    <template slot="afterList">
+                      <p
+                        class="multi-slot__more"
+                        @click="listUserChannels(userChannelOpts.nextCursor)"
+                      >
+                        Load More
+                      </p>
+                    </template>
+                  </Multiselect>
                 </template>
               </FormField>
             </div>
@@ -377,7 +387,7 @@ export default {
     getUser(userInfo) {
       if (this.userIds.includes(userInfo)) {
         let selectedUser = this.users.list.filter((user) => user.id === userInfo)
-        console.log(selectedUser)
+
         return selectedUser[0].fullName
       } else {
         return userInfo
@@ -394,7 +404,7 @@ export default {
     },
     handleUpdate() {
       this.loading = true
-      console.log(this.userConfigForm.value)
+
       User.api
         .update(this.user.id, this.userConfigForm.value)
         .then((response) => {
@@ -586,11 +596,9 @@ export default {
       this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
         this.selectedChannel.id
     },
-    setDay() {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDay.value =
-        this.selectedDay
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value =
-        this.selectedDay.value
+    setDay(n) {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = n.value
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value.push(n.value)
     },
     mapIds() {
       let mappedIds = this.selectedUsers.map((user) => user.id)
@@ -861,7 +869,54 @@ export default {
   color: $panther-silver;
   font-size: 0.75rem;
 }
+.back-button {
+  font-size: 14px;
+  color: $dark-green;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  border: none;
+  cursor: pointer;
+  margin: 1rem 0rem 0rem 0rem;
 
+  img {
+    height: 1rem;
+    margin-right: 0.5rem;
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
+  }
+}
+.alerts-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: row;
+  padding: 0vw 12vw;
+}
+.multi-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $dark-green;
+  font-weight: bold;
+  border-top: 1px solid #e8e8e8;
+  width: 100%;
+  padding: 0.5rem 0rem;
+  margin: 0;
+  &__more {
+    background-color: $base-gray;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-top: 1px solid #e8e8e8;
+    width: 100%;
+    padding: 0.75rem 0rem;
+    margin: 0;
+    cursor: pointer;
+  }
+}
 ::v-deep .input-content {
   width: 12vw;
   background-color: white;

@@ -1,25 +1,24 @@
 <template>
   <div class="logZoomPage">
-    <div
-      style="
-        display: flex;
-        align-item: flex-start;
-        flex-direction: column;
-        width: 33vw;
-        margin-left: 1.25rem;
-      "
-    >
-      <h3>Log Meetings</h3>
-      <p style="margin-top: -0.5rem; font-size: 14px; color: #9b9b9b">
-        Log meetings and save attendees right after the meeting ends
-      </p>
+    <div class="zoom-header">
+      <div>
+        <h3>Log Meetings</h3>
+        <p style="margin-top: -0.5rem; font-size: 14px; color: #9b9b9b">
+          Log meetings and save attendees right after the meeting ends
+        </p>
+      </div>
+
+      <button @click="$router.push({ name: 'CreateNew' })" class="back-button">
+        <img src="@/assets/images/back.png" alt="" />
+        Back to workflows
+      </button>
     </div>
 
-    <div style="margin-top: -2rem" class="centered col">
+    <div style="margin-top: -2rem" class="flex-start">
       <div class="card centered">
         <div>
           <div v-if="!channelName" class="row">
-            <label :class="!create ? 'green' : ''">Select #channel</label>
+            <label :class="!create ? 'green' : ''">Select channel</label>
             <ToggleCheckBox
               style="margin: 0.25rem"
               @input="changeCreate"
@@ -27,7 +26,7 @@
               offColor="#41b883"
               onColor="#41b883"
             />
-            <label :class="create ? 'green' : ''">Create #channel</label>
+            <label :class="create ? 'green' : ''">Create channel</label>
           </div>
 
           <label v-else for="channel" style="font-weight: bold"
@@ -54,7 +53,7 @@
               @input="logNewName(channelName)"
             />
 
-            <div v-if="!channelCreated" v style="margin-top: 1.25rem">
+            <div v-if="!channelCreated" style="margin-top: 1.25rem">
               <button
                 v-if="channelName"
                 @click="createChannel(channelName)"
@@ -88,10 +87,13 @@
                   label="name"
                 >
                   <template slot="noResult">
-                    <p>No results.</p>
+                    <p class="multi-slot">No results.</p>
                   </template>
                   <template slot="afterList">
-                    <p class="load-more" @click="listUserChannels(userChannelOpts.nextCursor)">
+                    <p
+                      class="multi-slot__more"
+                      @click="listUserChannels(userChannelOpts.nextCursor)"
+                    >
                       Load More
                     </p>
                   </template>
@@ -135,7 +137,7 @@
           </div>
         </div>
       </div>
-      <div v-if="channelCreated || zoomChannel" style="margin-top: 2rem">
+      <div v-if="channelCreated || zoomChannel" class="flex-end">
         <div v-if="!create">
           <button class="green__button bouncy" @click="handleZoomUpdate(zoomChannel)">
             Activate Channel
@@ -354,6 +356,61 @@ export default {
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
+.flex-start {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  flex-direction: column;
+}
+.zoom-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: row;
+
+  width: 700px;
+}
+.back-button {
+  font-size: 14px;
+  color: $dark-green;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  border: none;
+  cursor: pointer;
+  margin: 1rem 0rem 0rem 0rem;
+
+  img {
+    height: 1rem;
+    margin-right: 0.5rem;
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
+  }
+}
+.multi-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $dark-green;
+  font-weight: bold;
+  border-top: 1px solid #e8e8e8;
+  width: 100%;
+  padding: 0.5rem 0rem;
+  margin: 0;
+  &__more {
+    background-color: $base-gray;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-top: 1px solid #e8e8e8;
+    width: 100%;
+    padding: 0.75rem 0rem;
+    margin: 0;
+    cursor: pointer;
+  }
+}
 .search__input {
   min-height: 40px;
   display: block;
@@ -369,6 +426,7 @@ img {
 }
 .green {
   color: #41b883;
+  font-weight: 400;
 }
 ::placeholder {
   color: $panther-silver;
@@ -382,8 +440,14 @@ img {
   align-items: center;
   flex-direction: column;
 }
+.flex-end {
+  margin-top: 2rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
 .card {
-  width: 450px;
+  width: 700px;
   height: 225px;
   background-color: $white;
   border-radius: 0.3rem;
@@ -430,20 +494,16 @@ input[type='text']:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.4rem 1rem;
+  padding: 0.5rem 1.5rem;
   border-radius: 0.3rem;
-  font-weight: bold;
   line-height: 1.14;
   text-indent: none;
   border-style: none;
   letter-spacing: 0.03rem;
   background-color: $soft-gray;
-  color: $panther-gray;
+  color: $gray;
   cursor: not-allowed;
-  height: 2rem;
-  width: 10rem;
-  font-weight: bold;
-  font-size: 1.02rem;
+  font-size: 16px;
 }
 input {
   box-shadow: 3px 4px 7px $very-light-gray;

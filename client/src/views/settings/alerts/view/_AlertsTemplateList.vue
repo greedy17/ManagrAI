@@ -57,9 +57,9 @@
             <div>
               <AlertsEditPanel :alert="currentAlert" />
             </div>
-            <button style="margin-bottom: 1.5rem" class="yes__button" @click="closeEdit">
-              Done
-            </button>
+            <div class="edit__modal__button">
+              <button @click="closeEdit">Done</button>
+            </div>
           </div>
         </div>
       </transition>
@@ -599,42 +599,67 @@ button:disabled {
 }
 .edit__modal {
   background-color: white;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  border-radius: 1rem;
+  border: 1px solid #e8e8e8;
+  border-radius: 0.3rem;
   color: $base-gray;
+  width: 100%;
   height: 70vh;
   overflow: scroll;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-direction: column;
+
+  &__button {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding: 0rem 2rem 1rem 0rem;
+    width: 100%;
+
+    button {
+      background-color: $dark-green;
+      border: none;
+      border-radius: 0.25rem;
+      color: white;
+      cursor: pointer;
+      padding: 0.5rem 2rem;
+    }
+  }
 }
 
-.yes__button {
-  width: 8vw;
-  background-color: $dark-green;
-  border: none;
-  border-radius: 0.25rem;
-  color: white;
-  cursor: pointer;
-  margin-right: 0.5rem;
-  padding: 0.5rem;
-}
 .no__button {
-  width: 8vw;
   background-color: $soft-gray;
+  outline: 1px solid $soft-gray;
   border: none;
-  border-radius: 0.25rem;
-
+  font-size: 16px;
+  border-radius: 0.3rem;
   cursor: pointer;
-  padding: 0.5rem;
-
+  padding: 0.4rem 2rem;
   margin-right: 0.5rem;
+  color: $base-gray;
 }
-.yes__button:hover,
-.no__button:hover {
-  filter: brightness(80%);
+.yes__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 2rem;
+  border-radius: 0.3rem;
+  line-height: 1.14;
+  text-indent: none;
+  border-style: none;
+  letter-spacing: 0.03rem;
+  color: white;
+  background-color: $dark-green;
+  outline: 1px solid $dark-green;
+  cursor: pointer;
+  font-size: 16px;
 }
+
+// .yes__button:hover,
+// .no__button:hover {
+//   filter: brightness(80%);
+// }
 .no-data {
   color: $gray;
   margin-left: 0.5rem;
@@ -765,11 +790,13 @@ a {
   font-weight: bold;
 }
 .img-border {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid #e8e8e8;
-  margin-right: 0.25rem;
   border-radius: 0.2rem;
   cursor: pointer;
-  padding: 0.1rem 0.3rem;
+  padding: 0.15rem 0.3rem;
 }
 .row__two {
   display: flex;
@@ -788,6 +815,10 @@ a {
   justify-content: flex-start;
   margin-top: 0.25rem;
   width: 100%;
+}
+.green_button:disabled {
+  background-color: $soft-gray;
+  color: $gray;
 }
 .green_button {
   color: white;

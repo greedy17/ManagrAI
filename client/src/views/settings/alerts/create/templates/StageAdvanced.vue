@@ -17,7 +17,6 @@
                   track-by="id"
                   label="fullName"
                   :multiple="true"
-                  :closeOnSelect="false"
                 >
                   <template slot="noResult">
                     <p>No results.</p>
@@ -318,14 +317,13 @@ export default {
     },
     setRecipient() {
       this.realTimeAlertForm.field.recipients.value = this.selectedChannel.id
-      console.log(this.realTimeAlertForm.field.recipients.value)
     },
     checkInteger(str) {
       return /\d/.test(str) ? this.user.fullName : str
     },
     handleUpdate() {
       this.loading = true
-      console.log(this.userConfigForm.value)
+
       User.api
         .update(this.user.id, this.userConfigForm.value)
         .then((response) => {

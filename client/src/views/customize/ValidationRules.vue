@@ -489,7 +489,6 @@ export default {
       })
 
       this.formStages = [...forms]
-      console.log(this.formStages)
     },
 
     async listPicklists(query_params = {}) {
@@ -540,7 +539,6 @@ export default {
           return f.id !== form.id
         })
         this.allForms = [...forms]
-        console.log(this.allForms)
       }
     },
 

@@ -1,39 +1,38 @@
 <template>
   <div class="tab">
-    <div class="tab__header">
-      <div class="tab__header-items">
-        <div class="tab__header-items__group tab__header-items__group">
-          <div
-            :class="{ 'tab__header-items__item--active': selectedTab == 'TEMPLATE' }"
-            @click="selectedTab = 'TEMPLATE'"
-            class="tab__header-items__item"
-          >
-            Workflow Title
-          </div>
-          <div
-            :class="{ 'tab__header-items__item--active': selectedTab == 'GROUPS' }"
-            @click="selectedTab = 'GROUPS'"
-            class="tab__header-items__item"
-          >
-            Conditions
-          </div>
-          <div
-            :class="{ 'tab__header-items__item--active': selectedTab == 'CONFIG' }"
-            @click="selectedTab = 'CONFIG'"
-            class="tab__header-items__item"
-          >
-            Delivery
-          </div>
-          <div
-            :class="{ 'tab__header-items__item--active': selectedTab == 'MESSAGE' }"
-            @click="selectedTab = 'MESSAGE'"
-            class="tab__header-items__item"
-          >
-            Message
-          </div>
+    <div class="tab__header-items">
+      <div class="tab__header-items__group">
+        <div
+          :class="{ 'tab__header-items__item--active': selectedTab == 'TEMPLATE' }"
+          @click="selectedTab = 'TEMPLATE'"
+          class="tab__header-items__item"
+        >
+          Workflow Title
+        </div>
+        <div
+          :class="{ 'tab__header-items__item--active': selectedTab == 'GROUPS' }"
+          @click="selectedTab = 'GROUPS'"
+          class="tab__header-items__item"
+        >
+          Conditions
+        </div>
+        <div
+          :class="{ 'tab__header-items__item--active': selectedTab == 'CONFIG' }"
+          @click="selectedTab = 'CONFIG'"
+          class="tab__header-items__item"
+        >
+          Delivery
+        </div>
+        <div
+          :class="{ 'tab__header-items__item--active': selectedTab == 'MESSAGE' }"
+          @click="selectedTab = 'MESSAGE'"
+          class="tab__header-items__item"
+        >
+          Message
         </div>
       </div>
     </div>
+
     <div class="tab__panel">
       <div style="display: flex; justify-content: center">
         <PulseLoadingSpinner v-if="savingInTab" />
@@ -47,7 +46,7 @@
             v-model="alert.resourceType"
           /> -->
           <!-- <h3>{{ alert.resourceType }}</h3> -->
-          <div v-if="!templateNames.includes(alert.title)" style="margin: 2rem">
+          <div v-if="!templateNames.includes(alert.title)">
             <h3>Edit workflow title:</h3>
             <FormField
               :id="`resource-title-${alert.id}`"
@@ -56,11 +55,11 @@
               v-model="templateTitleField.value"
             />
           </div>
-          <div v-else style="margin: 2rem">
-            <h2>{{ alert.title }}</h2>
+          <div v-else>
+            <h3>{{ alert.title }}</h3>
             <p class="even">
               Cant edit templated alert titles &nbsp;
-              <img src="@/assets/images/exclamation.png" style="height: 1.2rem" alt="" />
+              <img src="@/assets/images/exclamation.png" alt="" />
             </p>
           </div>
         </div>
@@ -68,12 +67,14 @@
           <div class="card-rows" v-for="(group, index) in alert.groupsRef" :key="index">
             <div class="group-card">
               <div style="display: flex; justify-content: flex-end; width: 100%">
-                <img
-                  @click.stop="onRemoveAlertGroup(group.id, index)"
-                  style="height: 1.25rem; cursor: pointer; filter: invert(90%)"
-                  src="@/assets/images/remove.png"
-                  alt=""
-                />
+                <div class="img-border">
+                  <img
+                    @click.stop="onRemoveAlertGroup(group.id, index)"
+                    style="height: 1rem; cursor: pointer; filter: invert(90%)"
+                    src="@/assets/images/trash.png"
+                    alt=""
+                  />
+                </div>
               </div>
 
               <div class="group-card__title">Workflow conditions group {{ index + 1 }}</div>
@@ -84,12 +85,15 @@
                   :key="i"
                   v-for="(operand, i) in group.operandsRef"
                 >
-                  <img
-                    class="remove-color"
-                    src="@/assets/images/remove.png"
-                    style="height: 1rem"
-                    alt=""
-                  />
+                  <span class="img-border">
+                    <img
+                      class="remove-color"
+                      src="@/assets/images/remove.png"
+                      style="height: 1rem"
+                      alt=""
+                    />
+                  </span>
+
                   <!-- <span style="margin-bottom: 1rem">
                     {{ operand.operandOrder != 0 ? operand.operandCondition : '' }}</span
                   > -->
@@ -140,7 +144,25 @@
               style="display: flex; align-items: flex-start; flex-direction: column; width: 100%"
             >
               <h3>Add CRM fields:</h3>
-              <DropDownSearch
+              <Multiselect
+                placeholder="Select field"
+                v-model="crmValue"
+                @input="bindText(`${alert.resourceType}.${$event.apiName}`)"
+                :options="fields.list"
+                openDirection="below"
+                style="width: 14vw"
+                selectLabel="Enter"
+                track-by="apiName"
+                label="referenceDisplayLabel"
+              >
+                <template slot="noResult">
+                  <p>No results.</p>
+                </template>
+                <template slot="afterList">
+                  <p class="load-more" @click="fieldNextPage">Load More</p>
+                </template>
+              </Multiselect>
+              <!-- <DropDownSearch
                 :items="fields.list"
                 @input="bindText(`${alert.resourceType}.${$event}`)"
                 displayKey="referenceDisplayLabel"
@@ -151,7 +173,7 @@
                 @load-more="fieldNextPage"
                 @search-term="onSearchFields"
                 auto
-              />
+              /> -->
             </div>
           </div>
           <!-- <div
@@ -166,13 +188,16 @@
             <div class="group-card">
               <div class="group-card__title">Delivery Options</div>
               <p class="row" :key="index" v-for="(config, index) in alert.configsRef">
-                <img
-                  class="remove-color"
-                  @click="onDeleteConfig(config.id, index)"
-                  src="@/assets/images/remove.png"
-                  style="height: 1rem"
-                  alt=""
-                />
+                <span class="img-border">
+                  <img
+                    class="remove-color"
+                    @click="onDeleteConfig(config.id, index)"
+                    src="@/assets/images/remove.png"
+                    style="height: 1rem"
+                    alt=""
+                  />
+                </span>
+
                 {{ 'Option ' + (index + 1) + ': ' }}
                 {{ getReadableConfig(config) }}
               </p>
@@ -271,6 +296,7 @@ export default {
     AlertOperandModal,
     AlertGroupModal,
     AlertSettingsModal,
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   props: {
     alert: {
@@ -288,6 +314,7 @@ export default {
       selectedTab: TABS[0].key,
       savedChanges: false,
       savingInTab: false,
+      crmValue: null,
       templateNames: [
         'Close Date Passed',
         'Close Date Approaching',
@@ -371,9 +398,7 @@ export default {
 
         {
           name: 'alert-operands-modal',
-          minHeight: 600,
-          minWidth: 600,
-          height: 600,
+          height: 375,
           width: 600,
         },
         {
@@ -404,9 +429,7 @@ export default {
         {
           name: 'alert-groups-modal',
 
-          minHeight: 600,
-          minWidth: 600,
-          height: 600,
+          height: 400,
           width: 600,
 
           adaptive: true,
@@ -432,10 +455,8 @@ export default {
 
         {
           name: 'alert-settings-modal',
-          minHeight: 600,
-          minWidth: 600,
-          height: 600,
-          width: 600,
+          height: 550,
+          width: 550,
         },
         {
           'before-close': (e) => {
@@ -490,9 +511,11 @@ export default {
       }
     },
     getReadableConfig(config) {
+      console.log(config)
       let recurrenceDayString = config.recurrenceDay
 
       if (config.recurrenceFrequency == 'WEEKLY') {
+        console.log(config)
         let day = this.weeklyOpts.find((opt) => opt.value == config.recurrenceDay)
           ? this.weeklyOpts.find((opt) => opt.value == config.recurrenceDay).key
           : config.recurrenceDay
@@ -679,6 +702,20 @@ export default {
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
+h3 {
+  font-weight: 400;
+  letter-spacing: 0.25px;
+}
+.img-border {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e8e8e8;
+  border-radius: 0.2rem;
+  cursor: pointer;
+  padding: 0.15rem 0.3rem;
+  margin-right: 0.5rem;
+}
 .revoke-button {
   font-size: 0.75rem;
   font-weight: bold;
@@ -738,56 +775,53 @@ export default {
   margin-top: 2rem;
 }
 .group-card {
-  border-radius: 0.75rem;
+  border-radius: 0.3rem;
   background-color: $white;
   padding: 1.2rem;
   width: 58%;
   margin-bottom: 2rem;
   color: $base-gray;
-  font-size: 0.85rem;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  transition: all 0.2s;
+  font-size: 14px;
+  border: 1px solid #e8e8e8;
 
   &__title {
     width: 100%;
     height: 2rem;
     text-align: center;
     font-size: 1.05rem;
-    font-weight: bold;
   }
 }
 
-.group-card:hover {
-  transform: scale(1.015);
-}
 .condition-button {
   background-color: $dark-green;
   color: white;
   border-radius: 0.25rem;
-  font-weight: bold;
   border: none;
   cursor: pointer;
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 1rem;
   margin: 0.5rem;
 }
 .row {
   display: flex;
   flex-direction: row;
   align-items: center;
-  font-weight: bold;
+
   cursor: pointer;
 }
 .even {
-  color: #beb5cc;
+  color: $gray;
   display: flex;
   flex-direction: row;
   align-items: center;
-  font-weight: bold;
-  cursor: not-allowed;
+  cursor: text;
+  font-size: 14px;
+  img {
+    height: 1rem;
+    filter: invert(70%);
+  }
 }
 .remove-color {
-  filter: invert(47%) sepia(73%) saturate(969%) hue-rotate(319deg) brightness(103%) contrast(96%);
-  margin-right: 0.25rem;
+  filter: invert(70%);
   cursor: pointer;
 }
 ::v-deep .ql-toolbar .ql-stroke {
@@ -808,15 +842,11 @@ export default {
   color: $panther;
 }
 ::v-deep .ql-container.ql-snow {
-  border-radius: 0.2rem;
-  border: none;
-  box-shadow: 3px 4px 7px $very-light-gray;
+  border: 1px solid #e8e8e8;
 }
 ::v-deep .ql-toolbar.ql-snow {
-  border-radius: 0.1rem;
   background-color: white;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  border: none;
+  border: 1px solid #e8e8e8;
   width: 24rem;
 }
 ::v-deep .ql-blank.ql-editor {
@@ -857,8 +887,8 @@ export default {
   display: flex;
   align-items: center;
   cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: bold;
+  font-size: 14px;
+
   padding-top: 0.2rem;
   margin-left: -0.1rem;
 }
@@ -870,7 +900,7 @@ export default {
   align-items: center;
   cursor: pointer;
   font-size: 0.9rem;
-  font-weight: bold;
+
   padding-top: 0.2rem;
   margin-left: -0.1rem;
 }
@@ -882,20 +912,20 @@ export default {
   align-items: center;
   cursor: pointer;
   font-size: 0.9rem;
-  font-weight: bold;
+
   padding-top: 0.2rem;
   margin-left: -0.1rem;
 }
 ::v-deep .input-content {
   border: none;
-  font-weight: bold;
+
   box-shadow: 3px 4px 7px $very-light-gray;
   color: $panther;
 }
 ::v-deep .input-content:focus {
   box-shadow: 3px 4px 7px $very-light-gray;
   border: none;
-  font-weight: bold;
+
   color: $base-gray;
 }
 ::v-deep .ls-container__list--horizontal {
@@ -909,34 +939,31 @@ export default {
   padding: 0.5rem 1rem;
   overflow: scroll;
   &__item {
-    padding: 1rem 3rem;
+    padding: 0.75rem 4rem;
     margin: 0.25rem;
     border-bottom: none;
-    color: #bcbcc1;
-    font-weight: normal;
+    color: $base-gray;
+    letter-spacing: 0.5px;
     cursor: pointer;
     &--active {
-      padding: 1rem 3rem;
-      color: $darker-green;
-      background-color: $lighter-green;
-      border-radius: 0.4rem;
-      font-weight: 900;
+      padding: 0.75rem 4rem;
+      // background-color: $lighter-green;
+      border-bottom: 3px solid $dark-green;
+      color: $dark-green;
       position: relative;
     }
-    &--active:after {
-      content: '';
-      background: $darker-green;
-      position: absolute;
-      bottom: 0.75rem;
-      left: 0;
-      height: 50%;
-      width: 3px;
-    }
+    // &--active:after {
+    //   content: '';
+    //   background: $dark-green;
+    //   position: absolute;
+    //   left: 0.75rem;
+    //   bottom: 0;
+    //   height: 50%;
+    //   width: 3px;
+    // }
   }
   &__item:hover {
-    background-color: $lighter-green;
-    color: $darker-green;
-    border-radius: 0.4rem;
+    color: $dark-green;
   }
   &__group {
     display: flex;
@@ -969,7 +996,8 @@ export default {
   padding: 0.25rem 0 0;
 }
 .alerts-template-list__content-message {
-  margin-left: 2rem;
+  font-size: 14px;
+  letter-spacing: 0.2px;
   padding-left: 0.5rem;
   height: 100%;
   &__form {

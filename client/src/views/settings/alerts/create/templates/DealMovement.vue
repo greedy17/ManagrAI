@@ -1,8 +1,15 @@
 <template>
   <div class="alerts-page">
-    <div v-if="!showLoader" class="col">
-      <h2 @click="log" style="color: black; margin-top: -0.5rem" class="title">Deal Movement</h2>
-      <p style="color: #5d5e5e" class="sub__">Activate workflows related to deal movement</p>
+    <div v-if="!showLoader" class="deal-header">
+      <div class="col">
+        <h2 @click="log" style="color: black; margin-top: -0.5rem" class="title">Deal Movement</h2>
+        <p style="color: #5d5e5e" class="sub__">Activate workflows related to deal movement</p>
+      </div>
+
+      <button @click="$router.push({ name: 'RealTime' })" class="back-button">
+        <img src="@/assets/images/back.png" alt="" />
+        Back to workflows
+      </button>
     </div>
 
     <div class="center-loader" v-if="showLoader">
@@ -512,6 +519,30 @@ export default {
 h4 {
   font-size: 14px;
 }
+.deal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: row;
+  padding-right: 5vw;
+}
+.back-button {
+  font-size: 14px;
+  color: $dark-green;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  border: none;
+  cursor: pointer;
+  margin: 1rem 0rem 0rem 0rem;
+
+  img {
+    height: 1rem;
+    margin-right: 0.5rem;
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
+  }
+}
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.5s;
@@ -600,8 +631,10 @@ textarea {
 .alert-row {
   display: flex;
   flex-direction: row;
-  justify-content: flex-start;
-  // align-items:
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+  // align-items: center;
+  padding: 0;
 }
 .filtered {
   filter: invert(33%) sepia(52%) saturate(2452%) hue-rotate(130deg) brightness(68%) contrast(80%);
@@ -685,7 +718,7 @@ textarea {
   box-shadow: 2px 2px 3px $very-light-gray;
   border-radius: 0.5rem;
   padding: 1rem;
-  margin-top: 2.5rem;
+  margin-top: 2rem;
   width: 20vw;
   max-height: 27vh;
   margin-right: 2vw;

@@ -1,5 +1,8 @@
 <template>
   <div class="alert-settings-modal">
+    <div class="alert-settings-modal__header">
+      <h2>Add Delivery Option</h2>
+    </div>
     <div class="row__save">
       <div class="alerts-page__settings__frequency">
         <label class="alerts-page__settings__frequency-label">Weekly</label>
@@ -10,26 +13,34 @@
               : (form.field.recurrenceFrequency.value = 'WEEKLY')
           "
           :value="form.field.recurrenceFrequency.value !== 'WEEKLY'"
-          offColor="#199e54"
-          onColor="#199e54"
+          offColor="#41b883"
+          onColor="#41b883"
         />
         <label class="alerts-page__settings__frequency-label">Monthly</label>
       </div>
-      <PulseLoadingSpinnerButton
-        text="save"
-        @click="onSave"
-        class="btn btn--primary"
-        :loading="isSaving"
-        :disabled="!form.isValid"
-      />
     </div>
     <div class="alerts-page__settings">
-      <div style="margin-right: 1rem" class="alerts-page__settings__day">
+      <div class="alerts-page__settings__day">
         <p>Select day:</p>
-        <div style="margin-top: -1rem" v-if="weeklyOrMonthly == 'WEEKLY'">
+        <div style="margin-top: -1.75rem" v-if="weeklyOrMonthly == 'WEEKLY'">
           <FormField>
             <template v-slot:input>
-              <DropDownSearch
+              <Multiselect
+                placeholder="Select Day"
+                @input="setDay"
+                v-model="selectedDay"
+                :options="weeklyOpts"
+                openDirection="below"
+                style="width: 16vw; margin-top: 1rem"
+                selectLabel="Enter"
+                track-by="vlue"
+                label="key"
+              >
+                <template slot="noResult">
+                  <p>No results.</p>
+                </template>
+              </Multiselect>
+              <!-- <DropDownSearch
                 :items.sync="weeklyOpts"
                 :itemsRef.sync="form.field._recurrenceDay.value"
                 v-model="form.field.recurrenceDay.value"
@@ -39,7 +50,7 @@
                 nullDisplay="Days"
                 searchable
                 local
-              />
+              /> -->
             </template>
           </FormField>
         </div>
@@ -52,11 +63,27 @@
           />
         </div>
       </div>
-      <div style="margin-right: 1rem" class="alerts-page__settings__target-users">
+      <div class="alerts-page__settings__target-users">
         <p>Select Users:</p>
-        <FormField style="margin-top: -1rem" :errors="form.field.alertTargets.errors">
+        <FormField style="margin-top: -1.75rem" :errors="form.field.alertTargets.errors">
           <template v-slot:input>
-            <DropDownSearch
+            <Multiselect
+              placeholder="Select Users"
+              @input="mapIds"
+              v-model="selectedUsers"
+              :options="userTargetsOpts"
+              openDirection="below"
+              style="width: 16vw; margin-top: 1rem"
+              selectLabel="Enter"
+              track-by="id"
+              label="fullName"
+              :multiple="true"
+            >
+              <template slot="noResult">
+                <p>No results.</p>
+              </template>
+            </Multiselect>
+            <!-- <DropDownSearch
               :items.sync="userTargetsOpts"
               :itemsRef.sync="form.field._alertTargets.value"
               v-model="form.field.alertTargets.value"
@@ -71,26 +98,26 @@
               :hasNext="!!users.pagination.hasNextPage"
               @load-more="onUsersNextPage"
               @search-term="onSearchUsers"
-            />
+            /> -->
           </template>
         </FormField>
       </div>
       <div style="margin-top: 1rem" class="alerts-page__settings__recipients">
         <div class="alerts-page__settings__recipient-type">
           <div v-if="!channelName" class="row__">
-            <label>Select #channel</label>
+            <label>Select channel</label>
             <ToggleCheckBox
               style="margin: 0.25rem"
               @input="changeCreate"
               :value="create"
-              offColor="#199e54"
-              onColor="#199e54"
+              offColor="#41b883"
+              onColor="#41b883"
             />
-            <label>Create #channel</label>
+            <label>Create channel</label>
           </div>
           <label v-else for="channel" style="font-weight: bold"
             >Alert will send to
-            <span style="color: #199e54; font-size: 1.2rem">{{ channelName }}</span>
+            <span style="color: #41b883; font-size: 14px">{{ channelName }}</span>
             channel</label
           >
         </div>
@@ -114,7 +141,7 @@
             @input="logNewName(channelName)"
           />
 
-          <div v-if="!channelCreated" v style="margin-top: 1.25rem">
+          <div v-if="!channelCreated">
             <button v-if="channelName" @click="createChannel(channelName)" class="purple__button">
               Create Channel
             </button>
@@ -125,7 +152,27 @@
         <div v-else>
           <FormField>
             <template v-slot:input>
-              <DropDownSearch
+              <Multiselect
+                placeholder="Select Channel"
+                v-model="selectedChannel"
+                @input="setRecipient"
+                :options="userChannelOpts.channels"
+                openDirection="below"
+                style="width: 16vw; margin-top: 1rem"
+                selectLabel="Enter"
+                track-by="id"
+                label="name"
+              >
+                <template slot="noResult">
+                  <p>No results.</p>
+                </template>
+                <template slot="afterList">
+                  <p class="load-more" @click="listUserChannels(userChannelOpts.nextCursor)">
+                    Load More
+                  </p>
+                </template>
+              </Multiselect>
+              <!-- <DropDownSearch
                 :items.sync="userChannelOpts.channels"
                 :itemsRef.sync="form.field._recipients.value"
                 v-model="form.field.recipients.value"
@@ -147,7 +194,7 @@
                   />
                   {{ option['name'] }}
                 </template>
-              </DropDownSearch>
+              </DropDownSearch> -->
             </template>
           </FormField>
 
@@ -165,6 +212,15 @@
           </p>
         </div>
       </div>
+    </div>
+    <div class="save-button">
+      <PulseLoadingSpinnerButton
+        text="save"
+        @click="onSave"
+        class="primary-button"
+        :loading="isSaving"
+        :disabled="!form.isValid"
+      />
     </div>
   </div>
 </template>
@@ -204,6 +260,7 @@ export default {
     DropDownSearch,
     FormField,
     PulseLoadingSpinnerButton,
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   props: {
     form: { type: AlertConfigForm },
@@ -218,6 +275,9 @@ export default {
       searchQuery: '',
       searchText: '',
       searchChannels: '',
+      selectedDay: null,
+      selectedUsers: null,
+      selectedChannel: null,
       users: CollectionManager.create({ ModelClass: User }),
       alertRecipientOpts: [
         { key: 'Myself', value: 'SELF' },
@@ -274,6 +334,22 @@ export default {
         }
       }
       this.isSaving = false
+    },
+    setDay() {
+      this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDay.value =
+        this.selectedDay
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value =
+        this.selectedDay.value
+    },
+    mapIds() {
+      let mappedIds = this.selectedUsers.map((user) => user.id)
+      this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value = mappedIds
+    },
+    setRecipient() {
+      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value =
+        this.selectedChannel
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
+        this.selectedChannel.id
     },
     async listChannels(cursor = null) {
       const res = await SlackOAuth.api.listChannels(cursor)
@@ -404,19 +480,14 @@ export default {
       }
       return value
     },
-    setRecipient(obj) {
-      this.form.field._recipients.value = obj
-    },
-    setRecipients(obj) {
-      this.form.field._recipients.value.push(obj)
-    },
+
     async onSearchUsers(v) {
       this.users.pagination = new Pagination()
       this.users.filters = {
         ...this.users.filters,
         search: v,
       }
-      console.log(this.users.filters)
+
       await this.users.refresh()
     },
     async onUsersNextPage() {
@@ -508,7 +579,9 @@ export default {
 .row__save {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  align-items: center;
+  justify-content: center;
+  height: 4rem;
 }
 .channels_height {
   height: 22vh;
@@ -518,22 +591,26 @@ export default {
   color: $panther-silver;
   font-size: 0.75rem;
 }
+h2 {
+  font-weight: 400;
+}
 .search__input {
   font-family: Lato-Regular, sans-serif;
   font-weight: normal;
   font-stretch: normal;
   font-style: normal;
   letter-spacing: normal;
-  font-size: 16px;
+  font-size: 14px;
   border-radius: 4px;
   line-height: 1.29;
   letter-spacing: 0.5px;
+  color: #4d4e4c;
   height: 2.5rem;
   background-color: white;
   border: none;
-  // padding: 0 0 0 1rem;
-  margin-top: 1rem;
-  box-shadow: 3px 4px 7px $very-light-gray;
+  width: 16vw;
+  margin: 0.5rem 0rem;
+  box-shadow: 1px 1px 3px 0px $very-light-gray;
 }
 .btn {
   &--danger {
@@ -550,26 +627,40 @@ export default {
     @include --icon();
   }
 }
+.primary-button {
+  padding: 0.4rem 1.5rem;
+  box-shadow: none;
+  font-weight: 400;
+}
+.primary-button:disabled {
+  background-color: $soft-gray;
+  color: $gray;
+}
 .alert-settings-modal {
-  padding: 1rem;
   overflow-y: scroll;
   height: 100%;
   max-height: 100%;
   background-color: $white;
   color: $base-gray;
-  font-family: $bold-font-family;
+  font-size: 14px;
+  font-family: Lato-Regular, sans-serif;
+  &__header {
+    outline: 1px solid #e8e8e8;
+    font-weight: 400;
+    padding: 0.5rem 1rem;
+    margin-bottom: 0.5rem;
+  }
 }
 ::v-deep .dropdown-search {
   margin: 1rem 0rem;
 }
 .alerts-page__settings {
   color: $base-gray;
-  margin: 2rem;
+  margin: 0.5rem 1rem;
   &__frequency {
     display: flex;
     align-items: center;
     &-label {
-      font-size: 0.75rem;
       margin: 0 0.5rem;
     }
   }
@@ -579,6 +670,15 @@ export default {
 }
 .invisible {
   display: none;
+}
+.save-button {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  width: 100%;
+
+  padding: 0rem 1rem 1rem 0rem;
+  height: 100px;
 }
 .selected__item {
   padding: 0.5rem 1.2rem;
@@ -594,6 +694,9 @@ export default {
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
+  label {
+    font-weight: 400;
+  }
 }
 .purple__button {
   display: flex;
@@ -601,7 +704,6 @@ export default {
   justify-content: center;
   padding: 1.25rem 1rem;
   border-radius: 0.3rem;
-  font-weight: bold;
   line-height: 1.14;
   text-indent: none;
   border-style: none;
@@ -611,26 +713,21 @@ export default {
   cursor: pointer;
   height: 2rem;
   width: 10rem;
-  font-weight: bold;
   font-size: 1.02rem;
 }
 .disabled__button {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.25rem 1rem;
+  padding: 0.5rem 1.5rem;
   border-radius: 0.3rem;
-  font-weight: bold;
   line-height: 1.14;
   text-indent: none;
   border-style: none;
   letter-spacing: 0.03rem;
-  background-color: $very-light-gray;
-  color: $panther-gray;
+  background-color: $soft-gray;
+  color: $gray;
   cursor: not-allowed;
-  height: 2rem;
-  width: 10rem;
-  font-weight: bold;
-  font-size: 1.02rem;
+  font-size: 14px;
 }
 </style>

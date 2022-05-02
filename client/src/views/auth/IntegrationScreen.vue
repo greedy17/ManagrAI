@@ -852,11 +852,14 @@ export default {
   }
 }
 .img-border {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid #e8e8e8;
-  margin-right: 0.25rem;
   border-radius: 0.2rem;
   cursor: pointer;
-  padding: 0.1rem 0.3rem;
+  padding: 0.15rem 0.3rem;
+  margin-right: 0.5rem;
 }
 .invert {
   filter: invert(80%);
