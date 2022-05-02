@@ -252,6 +252,17 @@ def process_get_external_picklist_options(payload, context):
         }
 
 
+@processor(required_context=["u", "resource_id"])
+def process_get_deal_stage_options(payload, context):
+    deal = Deal.objects.get(id=context.get("resource_id"))
+    user = User.objects.get(id=context.get("u"))
+    stages = deal.get_deal_stage_options(user.hubspot_account.access_token)
+
+    return {
+        "options": [block_builders.option(opt.get("label"), opt.get("value")) for opt in stages]
+    }
+
+
 @processor(required_context=["u", "relationship", "fields"])
 def process_get_external_relationship_options(payload, context):
     user = User.objects.get(pk=context["u"])
@@ -384,6 +395,7 @@ def handle_block_suggestion(payload):
         slack_const.GET_SOBJECT_LIST: process_get_sobject_list,
         slack_const.PROCESS_SHOW_ENGAGEMENT_MODEL: process_get_local_resource_options,
         slack_const.GET_PRICEBOOK_ENTRY_OPTIONS: process_get_pricebook_entry_options,
+        slack_const.GET_DEAL_STAGE_OPTIONS: process_get_deal_stage_options,
     }
     action_query_string = payload["action_id"]
     processed_string = process_action_id(action_query_string)

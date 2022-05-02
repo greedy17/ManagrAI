@@ -21,7 +21,7 @@ from managr.slack.helpers.exceptions import (
     InvalidAccessToken,
 )
 from managr.slack import constants as slack_consts
-from .adapter.models import HubspotAuthAccountAdapter
+from .adapter.models import HubspotAuthAccountAdapter, DealAdapter
 from .adapter.exceptions import (
     TokenExpired,
     InvalidFieldError,
@@ -492,11 +492,22 @@ class Deal(TimeStampModel, IntegrationModel):
         ordering = ["-datetime_created"]
 
     @property
+    def adapter_class(self):
+        data = self.__dict__
+        data["id"] = str(data.get("id"))
+        return DealAdapter(**data)
+
+    @property
     def as_slack_option(self):
         return block_builders.option(self.name, str(self.id))
 
     def get_current_values(self):
         return self
+
+    def get_deal_stage_options(self, access_token):
+        res = self.adapter_class.get_deal_stage_options(access_token)
+        stages = [{"label": stage["label"], "value": stage["label"]} for stage in res["stages"]]
+        return stages
 
 
 class HubspotContactQuerySet(models.QuerySet):
@@ -585,30 +596,50 @@ class HObjectField(TimeStampModel, IntegrationModel):
     def __str__(self):
         return f"{self.label} {self.hubspot_account} {self.hubspot_object}"
 
+    @property
+    def get_slack_options(self):
+        # non sf fields are created with is_public = True and may take options directly
+        if self.is_public and len(self.options):
+
+            return list(
+                map(
+                    lambda option: block_builders.option(option["label"], option["value"]),
+                    self.options,
+                )
+            )
+        elif not self.is_public and hasattr(self, "picklist_options"):
+            return self.picklist_options.as_slack_options
+        else:
+            return [block_builders.option("No Options", None)]
+
     def to_slack_field(self, value=None, *args, **kwargs):
-        if self.data_type == "Picklist":
+        if self.field_type == "radio":
             # stage has a special function so we add the action param can only use one action_id so serving this statically for now
             action_id = None
-            if self.api_name == "StageName":
-                initial_option = dict(
-                    *map(
-                        lambda value: block_builders.option(value["text"]["text"], value["value"]),
-                        filter(
-                            lambda opt: opt.get("value", None) == value, self.get_slack_options,
-                        ),
-                    ),
-                )
-
-                block = block_builders.static_select(
-                    f"*{self.reference_display_label}*",
-                    self.get_slack_options,
-                    action_id=action_id,
+            if self.name == "dealstage":
+                initial_option = None
+                if value:
+                    initial_option = dict(
+                        *map(
+                            lambda value: block_builders.option(
+                                value["text"]["text"], value["value"]
+                            ),
+                            filter(
+                                lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                            ),
+                        )
+                    )
+                user_id = str(self.hubspot_account.user.id)
+                action_query = f"{slack_consts.GET_DEAL_STAGE_OPTIONS}?u={user_id}&field={str(self.id)}&resource_id={kwargs.get('resource_id')}"
+                block = block_builders.external_select(
+                    f"*{self.label}*",
+                    action_query,
+                    block_id=self.name,
                     initial_option=initial_option,
-                    block_id=self.api_name,
                 )
             elif self.is_public:
                 block = block_builders.static_select(
-                    f"*{self.reference_display_label}*",
+                    f"*{self.label}*",
                     self.get_slack_options,
                     initial_option=dict(
                         *map(

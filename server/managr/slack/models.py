@@ -280,7 +280,6 @@ class OrgCustomSlackFormInstance(TimeStampModel):
             template_fields = [
                 (field.field_ref.name, field.field_ref.hubspot_object) for field in fields
             ]
-        print(template_fields)
         user_fields = []
         # hack to maintain order
         for field in template_fields:
@@ -369,7 +368,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
             if field.is_public:
                 # pass in user as a kwarg
                 generated_field = field.to_slack_field(
-                    val, user=self.user, resource=self.resource_type,
+                    val, user=self.user, resource=self.resource_type, resoure_id=self.resource_id,
                 )
                 if isinstance(generated_field, list):
                     form_blocks.extend(generated_field)
@@ -377,7 +376,10 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                     form_blocks.append(generated_field)
             else:
                 generated_field = field.to_slack_field(
-                    val, user=self.user, resource=self.resource_type, *args, **kwargs
+                    val,
+                    user=self.user,
+                    resource=self.resource_type,
+                    **{**kwargs, "resource_id": self.resource_id},
                 )
                 if isinstance(generated_field, list):
                     form_blocks.extend(generated_field)

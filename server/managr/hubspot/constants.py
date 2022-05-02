@@ -79,6 +79,10 @@ if settings.USE_HUBSPOT:
     }
 
 
+def HUBSPOT_PIPELINES_URI(pipeline_id):
+    return f"{BASE_URL}/crm/v3/pipelines/Deal/{pipeline_id}"
+
+
 def HUBSPOT_SEARCH_URI(resource):
     return f"{BASE_URL}/crm/v3/objects/{HUBSPOT_URL_RESOURCE_MAP[resource]}/search"
 

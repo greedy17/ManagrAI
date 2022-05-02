@@ -55,6 +55,7 @@ def process_action_id(action_string):
     output["params"] = {}
     if len(x) > 1:
         ps_list = x[1].split("&")
+        print(ps_list)
         for param_str in ps_list:
             b = param_str.split("=")
             output["params"][b[0]] = b[1]

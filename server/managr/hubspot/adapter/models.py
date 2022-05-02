@@ -509,6 +509,14 @@ class DealAdapter:
     def as_dict(self):
         return vars(self)
 
+    def get_deal_stage_options(self, access_token):
+        url = hubspot_consts.HUBSPOT_PIPELINES_URI(self.secondary_data["pipeline"])
+        headers = hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token)
+        with Client as client:
+            res = client.get(url, headers=headers,)
+            print(res.json())
+            return HubspotAuthAccountAdapter._handle_response(res)
+
 
 class HubspotContactAdapter:
     def __init__(self, **kwargs):
