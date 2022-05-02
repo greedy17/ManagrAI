@@ -402,10 +402,10 @@
           (!resourceId && !meetingLoading) || (resourceType !== 'Opportunity' && !meetingLoading)
         "
       >
-        Please map meeting in order to take action.
+        Please map meeting to an Opp in order to take action.
       </p>
       <div>
-        <div class="column" v-if="resourceId && !meetingLoading">
+        <div class="column" v-if="resourceId && !meetingLoading && resourceType === 'Opportunity'">
           <button @click="$emit('update-Opportunity', workflowId, resourceId)" class="add-button">
             Update Opportunity
           </button>

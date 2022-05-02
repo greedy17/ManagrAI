@@ -14,10 +14,10 @@
             label="referenceDisplayLabel"
           >
             <template slot="noResult">
-              <p>No results.</p>
+              <p class="multi-slot">No results.</p>
             </template>
             <template slot="afterList">
-              <p class="load-more" @click="objectFieldNextPage">Load More</p>
+              <p class="multi-slot__more" @click="objectFieldNextPage">Load More</p>
             </template>
           </Multiselect>
           <!-- <DropDownSearch
@@ -402,6 +402,31 @@ export default {
 
   &--icon {
     @include --icon();
+  }
+}
+
+.multi-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $dark-green;
+  font-weight: bold;
+  border-top: 1px solid #e8e8e8;
+  width: 100%;
+  padding: 0.5rem 0rem;
+  margin: 0;
+  &__more {
+    background-color: $base-gray;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-top: 1px solid #e8e8e8;
+    width: 100%;
+    padding: 0.75rem 0rem;
+    margin: 0;
+    cursor: pointer;
   }
 }
 .alert-operand-row {

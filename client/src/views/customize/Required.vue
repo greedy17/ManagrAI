@@ -1,57 +1,47 @@
 <template>
   <div class="customizations">
-    <div style="width: 61%">
-      <h2 style="color: 4d4e4c">Required Actions</h2>
-      <p
-        style="
-          font-weight: bold;
-          margin-top: -0.5rem;
-          margin-bottom: 2rem;
-          color: #5d5e5e;
-          font-size: 0.975rem;
-        "
-      >
-        Map Slack fields to the corresponding SFDC fields.
-      </p>
+    <div>
+      <h3 style="color: 4d4e4c">Required Actions</h3>
+      <p class="sub__">Map SFDC fields to their corresponding slack fields.</p>
     </div>
 
     <div class="customizations__cards">
       <div class="card">
         <div class="card__header">
-          <h3 class="title">Update <span style="color: #199e54">Opportunity</span></h3>
+          <h3>Update Opportunity</h3>
         </div>
         <!-- <img class="back-logo" src="@/assets/images/logo.png" /> -->
         <div class="card__body">
-          <img style="margin-right: 0.5rem" class="card-img" src="@/assets/images/salesforce.png" />
+          <img style="margin-right: 1rem" class="card-img" src="@/assets/images/salesforce.png" />
           <img
-            style="height: 1.5rem; margin-right: 0.5rem; filter: invert(60%)"
+            style="height: 1rem; margin-right: 1rem; filter: invert(60%)"
             src="@/assets/images/plusOne.png"
             alt=""
             id="plus"
           />
           <img style="height: 1.5rem" src="@/assets/images/slackLogo.png" />
         </div>
-        <div class="center">
+        <div class="card__footer">
           <button @click="goToUpdateOpp" class="green__button">View + Edit</button>
         </div>
       </div>
 
       <div class="card">
         <div class="card__header">
-          <h2 class="title">Create <span style="color: #5f8cff">Contacts</span></h2>
+          <h3>Create Contacts</h3>
         </div>
         <!-- <img class="back-logo" src="@/assets/images/logo.png" /> -->
         <div class="card__body">
-          <img style="margin-right: 0.5rem" class="card-img" src="@/assets/images/salesforce.png" />
+          <img style="margin-right: 1rem" class="card-img" src="@/assets/images/salesforce.png" />
           <img
-            style="height: 1.5rem; margin-right: 0.5rem; filter: invert(60%)"
+            style="height: 1rem; margin-right: 1rem; filter: invert(60%)"
             src="@/assets/images/plusOne.png"
             alt=""
             id="plus"
           />
           <img style="height: 1.5rem" src="@/assets/images/slackLogo.png" />
         </div>
-        <div class="center">
+        <div class="card__footer">
           <button @click="goToCreate" class="green__button">View + Edit</button>
         </div>
       </div>
@@ -103,14 +93,13 @@ export default {
   color: $base-gray;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   margin-top: 3.5rem;
-  margin-left: 18vw;
+  margin-left: 20vw;
   &__cards {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    padding: 1rem;
     border-radius: 0.5rem;
   }
   &__subtitle {
@@ -118,46 +107,46 @@ export default {
     margin-bottom: 2rem;
   }
 }
-
+.sub__ {
+  font-size: 14px;
+  margin-top: -0.5rem;
+  color: $gray;
+}
 .card {
   background-color: white;
-  border: none;
-  min-width: 24vw;
-  max-width: 44vw;
-  min-height: 25vh;
-  margin-right: 1rem;
-  margin-bottom: 2rem;
+  box-shadow: 2px 2px 3px $very-light-gray;
   border-radius: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  @media only screen and (min-width: 768px) {
-    flex: 1 0 24%;
-    min-width: 21rem;
-    max-width: 30rem;
-  }
-
+  width: 24vw;
+  margin-right: 1rem;
+  margin-bottom: 1rem;
   &__header {
+    height: 2rem;
+    padding: 1.25rem 1rem;
+    font-size: 13px;
     display: flex;
     align-items: center;
-    flex-direction: row;
-    justify-content: space-evenly;
-    height: 3rem;
+    justify-content: flex-start;
+    border-bottom: 3px solid $soft-gray;
   }
   &__body {
     display: flex;
-    flex-direction: row;
     align-items: center;
     justify-content: center;
-    margin: 0.5rem 0 1.25rem 0;
+    height: 5rem;
+    font-size: 13px;
   }
-  &__title {
-    margin: 0 0 0 1rem;
+  &__footer {
+    display: flex;
+    align-items: center;
+    height: 2rem;
+    font-size: 14px;
+    justify-content: space-evenly;
   }
 }
 
 .card-img {
-  width: 1.75rem;
+  width: 2rem;
+  height: 1.5rem;
 }
 
 .card-text {
@@ -201,8 +190,7 @@ export default {
 .green__button {
   border-radius: 0.33rem;
   padding: 0.5rem 1rem;
-  font-size: 15px;
-  font-weight: bold;
+  font-size: 14px;
   color: white;
   background-color: $dark-green;
   border: none;
