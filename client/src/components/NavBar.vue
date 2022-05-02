@@ -295,7 +295,7 @@ span {
   padding: 0.3rem 0.3rem 0.1rem 0.4rem;
   border-radius: 50%;
   img {
-    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+    filter: invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg) brightness(93%) contrast(89%);
   }
 }
 .profile-button {
@@ -340,7 +340,6 @@ nav {
   left: 0;
   z-index: 200;
   width: 100vw;
-  color: $base-gray;
   padding: 0.25rem 0 1rem 0;
   border-bottom: 3px solid $soft-gray;
   -webkit-backdrop-filter: blur(8px);
@@ -354,25 +353,22 @@ nav {
   align-items: flex-end;
   justify-content: center;
   cursor: pointer;
-  font-weight: 400;
-  font-size: 1.5rem;
   padding: 0.75rem;
+  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+    brightness(93%) contrast(89%);
 }
-
 .links {
   display: flex;
   flex-flow: row;
   margin-left: 26%;
   width: 28%;
 }
-
 .user-menu-dropdown {
   margin-left: auto;
   margin-right: 1rem;
   opacity: 0.6;
   position: relative;
 }
-
 .user-menu {
   position: absolute;
   right: 4rem;
@@ -392,7 +388,6 @@ nav {
     @include disable-text-select;
   }
 }
-
 .right {
   margin-left: auto;
   display: flex;
@@ -438,7 +433,6 @@ nav {
   height: 15px;
   fill: #484a6e;
 }
-
 .tooltip {
   position: relative;
   &__icon {
@@ -468,15 +462,16 @@ nav {
 .tip {
   font-size: 11px;
 }
-
 .tooltip:hover .tooltip__popup {
   visibility: visible;
 }
-
 ul {
   list-style-type: none;
   margin: 0;
   padding: 0;
+}
+ul:hover {
+  color: white;
 }
 
 li {
@@ -519,10 +514,15 @@ a {
   color: $base-gray;
   font-family: #{$base-font-family};
   font-weight: bold;
+
+  padding: 0.5rem 0.2rem;
+}
+a:hover {
+  color: white;
 }
 
 li:hover {
-  background-color: $lighter-green;
+  background-color: $dark-green;
   border-radius: 0.2rem;
   color: white;
 }

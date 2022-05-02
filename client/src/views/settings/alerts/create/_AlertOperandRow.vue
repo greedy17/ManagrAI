@@ -1,19 +1,23 @@
 <template>
   <div class="alert-operand-row">
-    <div style="margin-bottom: 2rem" class="centered" v-if="form.field.operandOrder.value != 0">
-      <label class="alert-operand-row__condition-label">AND</label>
+    <div
+      style="margin: 2rem 0.25rem"
+      class="toggle__switch"
+      v-if="form.field.operandOrder.value != 0"
+    >
+      <label>AND</label>
       <ToggleCheckBox
         @input="toggleSelectedCondition"
         :value="selectedCondition !== 'AND'"
-        offColor="#199e54"
-        onColor="#199e54"
+        offColor="#41b883"
+        onColor="#41b883"
       />
-      <label class="alert-operand-row__condition-label">OR</label>
+      <label>OR</label>
     </div>
 
     <div class="alert-operand-row__options">
       <div class="centered" style="flex-direction: column">
-        <p style="font-weight: bold">Select CRM Field:</p>
+        <p>Select CRM Field:</p>
 
         <FormField :errors="form.field.operandIdentifier.errors">
           <template v-slot:input>
@@ -22,41 +26,20 @@
               v-model="identity"
               :options="objectFields.list"
               openDirection="below"
-              style="min-width: 13vw"
+              style="width: 13vw"
               selectLabel="Enter"
               track-by="apiName"
               label="referenceDisplayLabel"
             >
               <template slot="noResult">
-                <p>No results.</p>
+                <p class="multi-slot">No results.</p>
               </template>
               <template slot="afterList">
-                <p class="load-more" @click="objectFieldNextPage">Load More</p>
+                <p class="multi-slot__more" @click="objectFieldNextPage">Load More</p>
               </template>
             </Multiselect>
-            <!-- <DropDownSearch
-              v-if="selectedOperandType == 'FIELD'"
-              :items.sync="objectFields.list"
-              :itemsRef.sync="form.field._operandIdentifier.value"
-              v-model="form.field.operandIdentifier.value"
-              displayKey="referenceDisplayLabel"
-              valueKey="apiName"
-              nullDisplay="Select Fields"
-              searchable
-              :hasNext="!!objectFields.pagination.hasNextPage"
-              @load-more="objectFieldNextPage"
-              @search-term="onSearchFields"
-              @input="form.field.operandIdentifier.validate()"
-            /> -->
           </template>
         </FormField>
-        <!-- <p
-          @click="removeIdentifier"
-          :class="form.field.operandIdentifier.value ? 'selected__item' : 'invisible'"
-        >
-          <img src="@/assets/images/remove.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
-          {{ form.field.operandIdentifier.value }}
-        </p> -->
       </div>
 
       <div
@@ -64,7 +47,7 @@
         class="centered"
         style="flex-direction: column"
       >
-        <p style="font-weight: bold">Select an operator:</p>
+        <p>Select an operator:</p>
         <FormField :errors="form.field.operandOperator.errors">
           <template v-slot:input>
             <Multiselect
@@ -72,26 +55,14 @@
               v-model="selectedOperator"
               :options="operatorOpts"
               openDirection="below"
-              style="min-width: 13vw"
+              style="width: 13vw"
               selectLabel="Enter"
               label="label"
             >
               <template slot="noResult">
-                <p>No results.</p>
+                <p class="multi-slot">No results.</p>
               </template>
             </Multiselect>
-
-            <!-- <DropDownSearch
-              :items.sync="operatorOpts"
-              :itemsRef.sync="form.field._operandOperator.value"
-              v-model="form.field.operandOperator.value"
-              @input="form.field.operandOperator.validate()"
-              displayKey="label"
-              valueKey="value"
-              nullDisplay="Select Operators"
-              searchable
-              local
-            /> -->
           </template>
         </FormField>
         <!-- <p
@@ -109,7 +80,7 @@
           style="flex-direction: column"
           v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'"
         >
-          <p style="font-weight: bold">Select a value:</p>
+          <p>Select a value:</p>
           <!-- <div :key="value" v-for="(key, value) in picklistOpts">
             <input
               v-model="form.field.operandValue.value"
@@ -128,12 +99,12 @@
                 v-model="selectedOperand"
                 :options="picklistOpts"
                 openDirection="below"
-                style="min-width: 13vw"
+                style="width: 13vw"
                 selectLabel="Enter"
                 label="label"
               >
                 <template slot="noResult">
-                  <p>No results.</p>
+                  <p class="multi-slot">No results.</p>
                 </template>
               </Multiselect>
 
@@ -168,7 +139,7 @@
             style="flex-direction: column"
             v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'"
           >
-            <p style="font-weight: bold">Select a value:</p>
+            <p>Select a value:</p>
 
             <FormField :errors="form.field.operandValue.errors">
               <template v-slot:input>
@@ -177,12 +148,12 @@
                   v-model="selectedOperand"
                   :options="valueOpts"
                   openDirection="below"
-                  style="min-width: 13vw"
+                  style="width: 13vw"
                   selectLabel="Enter"
                   label="label"
                 >
                   <template slot="noResult">
-                    <p>No results.</p>
+                    <p class="multi-slot">No results.</p>
                   </template>
                 </Multiselect>
                 <!-- <DropDownSearch
@@ -214,7 +185,7 @@
               v-if="selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME'"
             >
               <div style="text-align: center">
-                <p style="font-weight: bold">Select an operator:</p>
+                <p>Select an operator:</p>
                 <!-- <div :key="value" v-for="(key, value) in operatorOpts">
                 <input
                   v-model="form.field.operandOperator.value"
@@ -232,12 +203,12 @@
                       v-model="selectedOperator"
                       :options="operatorOpts"
                       openDirection="below"
-                      style="min-width: 13vw"
+                      style="width: 13vw"
                       selectLabel="Enter"
                       label="label"
                     >
                       <template slot="noResult">
-                        <p>No results.</p>
+                        <p class="multi-slot">No results.</p>
                       </template>
                     </Multiselect>
 
@@ -273,16 +244,16 @@
               <div>
                 <div
                   class="centered"
-                  style="margin-bottom: 0.8rem; margin-top: 0.75rem; margin-left: -1.5rem"
+                  style="margin-bottom: 0.8rem; margin-top: 0.75rem; margin-left: -1rem"
                 >
-                  <label class="alert-operand-row__condition-label">In the past</label>
+                  <label>In the past</label>
                   <ToggleCheckBox
                     @input="toggleSelectedOperand"
                     :value="MyOperand !== 'Negative'"
-                    offColor="#199e54"
-                    onColor="#199e54"
+                    offColor="#41b883"
+                    onColor="#41b883"
                   />
-                  <label class="alert-operand-row__condition-label">In the future</label>
+                  <label>In the future</label>
                 </div>
 
                 <FormField v-if="MyOperand === 'Negative'" :errors="form.field.operandValue.errors">
@@ -332,8 +303,8 @@
                   <ToggleCheckBox
                     @input="toggleSelectedOperand"
                     :value="MyOperand !== 'Negative'"
-                    offColor="#199e54"
-                    onColor="#199e54"
+                    offColor="#41b883"
+                    onColor="#41b883"
                   />
                   <label class="alert-operand-row__condition-label">In the Future</label>
                 </div>
@@ -366,7 +337,7 @@
             </div>
 
             <div class="centered" style="flex-direction: column" v-else>
-              <p style="font-weight: bold">Enter value:</p>
+              <p>Enter value:</p>
               <FormField
                 @blur="form.field.operandValue.validate()"
                 :errors="form.field.operandValue.errors"
@@ -764,6 +735,30 @@ export default {
 ::v-deep .input-form {
   width: 6rem;
 }
+.multi-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $dark-green;
+  font-weight: bold;
+  border-top: 1px solid #e8e8e8;
+  width: 100%;
+  padding: 0.5rem 0rem;
+  margin: 0;
+  &__more {
+    background-color: $base-gray;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-top: 1px solid #e8e8e8;
+    width: 100%;
+    padding: 0.75rem 0rem;
+    margin: 0;
+    cursor: pointer;
+  }
+}
 .load-more {
   text-align: center;
   font-size: 13px;
@@ -826,6 +821,19 @@ img {
   width: 50px;
   margin-left: 0.25rem;
   border-radius: 0.25rem;
+}
+.toggle__switch {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 2rem;
+  font-size: 12px;
+  letter-spacing: 1px;
+
+  label {
+    padding: 0rem 0.2rem;
+  }
 }
 .alert-operand-row {
   // @include standard-border();

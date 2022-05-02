@@ -172,8 +172,7 @@ export default {
   min-height: 15rem;
   height: auto;
   background-color: $white;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  border: none;
+  border: 1px solid #e8e8e8;
   border-radius: 0.5rem;
   color: $base-gray;
   display: flex;
@@ -192,6 +191,7 @@ export default {
 
 .update-button {
   background-color: $dark-green;
+  box-shadow: none;
   color: white;
   margin-top: 1.25rem;
   height: 2.5rem;

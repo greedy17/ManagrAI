@@ -218,7 +218,6 @@
             track-by="id"
             :options="objectFields.list"
             :multiple="true"
-            :closeOnSelect="false"
           >
             <template slot="noResult">
               <div class="row">

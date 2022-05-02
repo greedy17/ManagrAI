@@ -40,29 +40,33 @@
 
     <div class="alert__row">
       <div v-if="pageNumber === 0" class="alert__column__" style="margin-bottom: 1rem">
-        <h2 style="text-align: center; color: black; font-weight: bold">
-          Create a Custom Workflow
-        </h2>
+        <div class="workflow-header">
+          <h3>Create a Custom Workflow</h3>
+          <div class="button-space">
+            <button class="plus_button" @click="onAddAlertGroup">
+              <img src="@/assets/images/plusOne.png" class="filtered" alt="" />
+              Add Group
+            </button>
+          </div>
+        </div>
+
         <div v-if="pageNumber === 0">
           <!-- <p style="text-align: center; border-bottom: 2px solid #beb5cc; padding-bottom: 0.25rem">
         Object Type
       </p> -->
-          <h5
-            style="text-align: center; margin-top: -1rem; margin-left: 0.5rem; color: black"
-            class="title"
-          >
+          <h5 style="text-align: center; margin-top: -0.75rem; color: #4d4e4c" class="title">
             {{ alertTemplateForm.field.resourceType.value }} Selected. Switch to
             <span
               v-if="selectedResourceType !== 'Account'"
               v-on:click="accountResource"
-              style="border-bottom: 3px solid #199e54; cursor: pointer"
+              style="border-bottom: 2px solid #41b883; cursor: pointer"
               >Account</span
             >
             <span v-if="selectedResourceType !== 'Account'">,</span>
             <span
               v-if="selectedResourceType !== 'Contact'"
               v-on:click="contactResource"
-              style="border-bottom: 3px solid #199e54; cursor: pointer"
+              style="border-bottom: 2px solid #41b883; cursor: pointer"
               >Contact</span
             >
             <span v-if="selectedResourceType !== 'Contact'">,</span>
@@ -74,7 +78,7 @@
             <span
               v-if="selectedResourceType !== 'Opportunity'"
               v-on:click="opportunityResource"
-              style="border-bottom: 3px solid #199e54; cursor: pointer"
+              style="border-bottom: 2px solid #41b883; cursor: pointer"
               >Opporunity</span
             >
             <span
@@ -85,12 +89,12 @@
             <span
               v-if="selectedResourceType !== 'Lead'"
               v-on:click="leadResource"
-              style="border-bottom: 3px solid #199e54; cursor: pointer"
+              style="border-bottom: 2px solid #41b883; cursor: pointer"
               >Lead</span
             >
           </h5>
         </div>
-        <div
+        <!-- <div
           style="
             margin: auto;
             text-align: center;
@@ -120,11 +124,11 @@
                 min-width: 0%;
                 max-width: 25%;
                 width: 25%;
-                background: #199e54;
+                background: #41b883;
               "
             ></div>
           </div>
-        </div>
+        </div> -->
         <div :key="index" v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups">
           <div class="sf__collection">
             <AlertGroup
@@ -173,25 +177,22 @@
 
             <div class="fixed__right" v-if="alertTemplateForm.field.alertGroups.groups.length > 1">
               <button class="remove__group" @click="onRemoveAlertGroup(index)">
-                <img
-                  src="@/assets/images/trash.png"
-                  style="height: 1.25rem; margin-left: 0.25rem"
-                  alt=""
-                />
+                <img src="@/assets/images/trash.png" style="height: 0.85rem" alt="" />
               </button>
             </div>
           </div>
         </div>
-        <div style="margin-top: 0.5rem">
+        <!-- <div style="margin-top: 0.5rem">
           <button class="plus_button" @click="onAddAlertGroup">
             <img src="@/assets/images/add.svg" class="filtered" alt="" />
+            Add Group
           </button>
-        </div>
+        </div> -->
       </div>
 
       <div v-if="pageNumber === 2" class="alert__column">
-        <h2 style="text-align: center; color: black; font-weight: bold">Construct your Message</h2>
-        <div
+        <h3>Construct your Message</h3>
+        <!-- <div
           style="margin: auto; text-align: center; width: 36%; margin-bottom: 1rem"
           title="25.00%"
         >
@@ -215,20 +216,20 @@
                 min-width: 0%;
                 max-width: 75%;
                 width: 75%;
-                background: #199e54;
+                background: #41b883;
               "
             ></div>
           </div>
-        </div>
+        </div> -->
         <div class="collection__fields">
           <div class="message_titles">
-            <p
+            <!-- <p
               :class="templateBounce ? 'bouncy' : ''"
               @click="$refs.templateModal.openModal(), switchBounce()"
-              style="cursor: pointer; border-bottom: 3px solid #199e54"
+              style="cursor: pointer; border-bottom: 3px solid #41b883"
             >
               Popular Template
-            </p>
+            </p> -->
             <FormField
               id="message"
               :errors="alertTemplateForm.field.alertMessages.groups[0].field.body.errors"
@@ -241,26 +242,69 @@
                   :options="{
                     modules: { toolbar: { container: ['bold', 'italic', 'strike'] } },
                     placeholder:
-                      'Write your message from scratch, or build on top of the TEMPLATE...',
+                      'Write your message from scratch, or build on top of the template...',
                     theme: 'snow',
                   }"
                   class="message__box"
                 />
               </template>
             </FormField>
+
+            <p
+              @click="viewingTemplate = !viewingTemplate"
+              style="cursor: pointer; border-bottom: 2px solid #41b883; font-size: 13px"
+            >
+              View Template
+            </p>
+
+            <div class="template-card" v-if="viewingTemplate">
+              <div class="template-card__header">
+                <h3>Popular Message Template</h3>
+                <img
+                  @click="viewingTemplate = !viewingTemplate"
+                  style="height: 1rem"
+                  src="@/assets/images/close.png"
+                  alt=""
+                />
+              </div>
+
+              <div class="template-card__body">
+                <textarea
+                  style="
+                    height: 3rem;
+                    width: 90%;
+                    font-size: 12px;
+                    margin-right: 0.25rem;
+                    border: 1px solid #e8e8e8;
+                  "
+                  cols="20"
+                  rows="10"
+                >
+              Hey { __Recipient.full_name }, your deal { Opportunity.Name } ...continue writing here
+              </textarea
+                >
+                <button
+                  style="border: none; border: none; cursor: pointer; background: transparent"
+                  v-clipboard:copy="message"
+                  v-clipboard:success="onCopy"
+                  v-clipboard:error="onError"
+                >
+                  <img src="@/assets/images/copy.png" style="height: 1.25rem" alt="" />
+                </button>
+              </div>
+            </div>
           </div>
 
           <div class="crm">
-            <h4 style="margin-top: 2rem">Add CRM values</h4>
+            <h4 style="margin-top: 1rem">Add CRM Field Values:</h4>
             <div @click="addCount()">
               <Multiselect
-                :class="!templateBounce && fieldBounce && clickCount === 0 ? 'bouncy' : ''"
-                placeholder="Select Channel"
+                placeholder="Select field"
                 v-model="crmValue"
                 @input="bindText(`${selectedResourceType}.${$event.apiName}`)"
                 :options="fields.list"
                 openDirection="below"
-                style="min-width: 13vw"
+                style="width: 14vw"
                 selectLabel="Enter"
                 track-by="apiName"
                 label="referenceDisplayLabel"
@@ -292,8 +336,8 @@
       </div>
 
       <div v-if="pageNumber === 1" class="alert__column">
-        <h2 style="text-align: center; color: black">Select Delivery Options</h2>
-        <div
+        <h3>Select Delivery Options</h3>
+        <!-- <div
           style="margin: auto; text-align: center; width: 30%; margin-bottom: 1rem"
           title="25.00%"
         >
@@ -317,27 +361,19 @@
                 min-width: 0%;
                 max-width: 50%;
                 width: 50%;
-                background: #199e54;
+                background: #41b883;
               "
             ></div>
           </div>
-        </div>
-        <div class="collection__">
+        </div> -->
+        <div class="sf__collection">
           <template>
             <div
               class="delivery__row"
               :key="i"
               v-for="(form, i) in alertTemplateForm.field.alertConfig.groups"
             >
-              <div
-                style="
-                  display: flex;
-                  flex-direction: column;
-                  align-items: center;
-                  justify-content: center;
-                  padding: 0.5rem;
-                "
-              >
+              <div>
                 <div class="row__">
                   <label :class="form.field.recurrenceFrequency.value == 'WEEKLY' ? 'green' : ''"
                     >Weekly</label
@@ -350,8 +386,8 @@
                         : (form.field.recurrenceFrequency.value = 'WEEKLY')
                     "
                     :value="form.field.recurrenceFrequency.value !== 'WEEKLY'"
-                    offColor="#199e54"
-                    onColor="#199e54"
+                    offColor="#41b883"
+                    onColor="#41b883"
                   />
                   <label :class="form.field.recurrenceFrequency.value == 'MONTHLY' ? 'green' : ''"
                     >Monthly</label
@@ -370,7 +406,7 @@
                           @select="setDay"
                           :options="weeklyOpts"
                           openDirection="below"
-                          style="min-width: 13vw"
+                          style="width: 14vw"
                           selectLabel="Enter"
                           track-by="value"
                           label="key"
@@ -442,7 +478,7 @@
                   padding: 0.5rem;
                 "
               >
-                <span style="font-weight: bold; margin-bottom: 0.3rem">Select pipelines</span>
+                <span style="font-size: 13px; margin-bottom: 0.3rem">Select pipelines</span>
                 <!-- <input
                   class="search__input"
                   type="text"
@@ -473,12 +509,11 @@
                       v-model="selectedUsers"
                       :options="userTargetsOpts"
                       openDirection="below"
-                      style="min-width: 13vw"
+                      style="width: 14vw"
                       selectLabel="Enter"
                       track-by="id"
                       label="fullName"
                       :multiple="true"
-                      :closeOnSelect="false"
                     >
                       <template slot="noResult">
                         <p>No results.</p>
@@ -523,30 +558,22 @@
                 </div> -->
               </div>
 
-              <div
-                style="
-                  display: flex;
-                  flex-direction: column;
-                  align-items: center;
-                  justify-content: flex-start;
-                  padding: 0.5rem;
-                "
-              >
+              <div>
                 <div v-if="!channelName" class="row__">
                   <label :class="!create ? 'green' : ''">Select #channel</label>
                   <ToggleCheckBox
                     style="margin: 0.25rem"
                     @input="changeCreate"
                     :value="create"
-                    offColor="#199e54"
-                    onColor="#199e54"
+                    offColor="#41b883"
+                    onColor="#41b883"
                   />
                   <label :class="create ? 'green' : ''">Create #channel</label>
                 </div>
 
                 <label v-else for="channel" style="font-weight: bold"
                   >Alert will send to
-                  <span style="color: #199e54; font-size: 1.2rem">{{ channelName }}</span>
+                  <span style="color: #41b883; font-size: 1.2rem">{{ channelName }}</span>
                   channel</label
                 >
                 <div
@@ -572,7 +599,7 @@
                     <button
                       v-if="channelName"
                       @click="createChannel(channelName)"
-                      class="purple__button bouncy"
+                      class="gold__button bouncy"
                     >
                       Create Channel
                     </button>
@@ -653,10 +680,8 @@
       </div>
 
       <div class="alert__column" v-if="pageNumber === 3">
-        <h2 style="text-align: center; color: black; font-weight: bold">
-          Name and save your workflow
-        </h2>
-        <div
+        <h3>Name and save your workflow</h3>
+        <!-- <div
           style="margin: auto; text-align: center; width: 65%; margin-bottom: 1rem"
           title="25.00%"
         >
@@ -680,20 +705,15 @@
                 min-width: 0%;
                 max-width: 100%;
                 width: 100%;
-                background: #199e54;
+                background: #41b883;
               "
             ></div>
           </div>
-        </div>
+        </div> -->
         <template>
           <div
-            style="
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              flex-direction: column;
-            "
-            class="collection__small"
+            style="display: flex; justify-content: center; align-items: center"
+            class="sf__collection"
           >
             <h2>
               {{ alertTemplateForm.field.title.value ? alertTemplateForm.field.title.value : '' }}
@@ -727,7 +747,7 @@
                 .includes(false)
             "
             @click="onNextPage"
-            class="purple__button"
+            class="gold__button"
           >
             Next
           </button>
@@ -747,7 +767,7 @@
                 .includes(false)
             "
             @click="onNextPage"
-            class="purple__button"
+            class="gold__button"
           >
             Next
           </button>
@@ -766,7 +786,7 @@
                 .includes(false)
             "
             @click="onNextPage"
-            class="purple__button"
+            class="gold__button"
           >
             Next
           </button>
@@ -783,7 +803,7 @@
         <PulseLoadingSpinnerButton
           v-if="alertTemplateForm.isValid || savingTemplate"
           :loading="savingTemplate"
-          class="purple__button"
+          class="gold__button"
           text="Save Alert"
           @click.stop="onSave"
         />
@@ -873,6 +893,7 @@ export default {
     return {
       selectedDay: null,
       crmValue: null,
+      viewingTemplate: false,
       channelOpts: new SlackListResponse(),
       userChannelOpts: new SlackListResponse(),
       channelName: '',
@@ -1456,6 +1477,44 @@ export default {
     transform: translateY(-6px);
   }
 }
+input:focus {
+  outline: none !important;
+}
+.template-card {
+  position: absolute;
+  height: 20vh;
+  top: 40vh;
+  width: 100%;
+  background: white;
+  border-radius: 0.25rem;
+  box-shadow: 2px 2px 3px 2px $very-light-gray;
+  &__header {
+    padding-left: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    img {
+      padding-right: 0.5rem;
+      padding-top: -0.2rem;
+    }
+  }
+  &__body {
+    height: 3rem;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+  }
+}
+.message-end {
+  display: flex;
+  justify-content: flex-start;
+}
+.workflow-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
@@ -1484,9 +1543,8 @@ export default {
   height: 2.5rem;
   background-color: white;
   border: none;
-  width: 70%;
+  width: 14vw;
   border: 1px solid #e8e8e8;
-  // padding: 0 0 0 1rem;
 }
 .bottom_locked {
   display: flex;
@@ -1515,8 +1573,7 @@ export default {
 }
 .remove__group {
   padding: 0.25rem;
-  border: none;
-  box-shadow: 3px 4px 7px $very-light-gray;
+  border: 1px solid #e8e8e8;
   background-color: transparent;
   border-radius: 0.25rem;
   display: flex;
@@ -1536,13 +1593,14 @@ button img {
 }
 .message_titles {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   flex-direction: column;
+  position: relative;
 }
 .crm {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   flex-direction: column;
 }
 ::v-deep .multiselect__tags {
@@ -1566,20 +1624,15 @@ button img {
   color: $panther;
 }
 ::v-deep .ql-container.ql-snow {
-  border-radius: 0.3rem;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  border: none;
+  border: 1px solid #e8e8e8;
 }
 ::v-deep .ql-toolbar.ql-snow {
-  border-radius: 0.3rem;
-  border: none;
-  box-shadow: 3px 4px 7px $very-light-gray;
+  border: 1px solid #e8e8e8;
   background-color: white;
   margin-bottom: 0.1rem;
 }
 ::v-deep .ql-blank.ql-editor {
   background-color: white;
-  border-radius: 0.3rem;
 }
 ::v-deep .ql-container {
   background-color: white;
@@ -1590,28 +1643,26 @@ button img {
   background-color: $panther;
 }
 ::v-deep .input-content {
-  width: 12vw;
+  width: 14vw;
   background-color: white;
   color: $panther;
-  border: 1px solid #e8e8e8;
 }
 ::v-deep .input-form__large {
-  width: 12vw;
+  width: 14vw;
   background-color: white;
   color: $panther;
-  border: 1px solid #e8e8e8;
 }
-::v-deep .collection-search .collection-search__form .collection-search__input .search__input {
+::v-deep .collection-search .collection-search__form .collection-search__input {
   height: 2.5rem;
-  border: 1px solid #e8e8e8 !important;
-  width: 10rem;
+  width: 14vw;
   padding: 0 0 0 1rem;
-  margin: 1rem;
+
   // box-shadow: 3px 4px 7px $very-light-gray;
 }
 
 .filtered {
-  filter: invert(40%) sepia(28%) saturate(6559%) hue-rotate(128deg) brightness(96%) contrast(80%);
+  filter: invert(1%);
+  height: 1rem;
 }
 .channels_height {
   height: 22vh;
@@ -1748,15 +1799,15 @@ button img {
 .alert__column {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  justify-content: flex-start;
+  align-items: flex-start;
   border-radius: 0.5rem;
 }
 .alert__column__ {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  justify-content: flex-start;
+  align-items: flex-start;
   border-radius: 0.5rem;
 }
 .delivery__column {
@@ -1782,19 +1833,14 @@ button img {
   justify-content: center;
   flex-direction: column;
   background-color: $white;
-  border-radius: 0.75rem;
-  box-shadow: 3px 4px 7px $very-light-gray;
+  border-radius: 0.2rem;
+  // border: 1px solid #e8e8e8;
+  box-shadow: 2px 2px 3px $very-light-gray;
   width: 75vw;
   padding: 2rem;
   margin-bottom: 1rem;
 }
-.collection__ {
-  background-color: $white;
-  width: 75vw;
-  padding: 2rem;
-  border-radius: 0.75rem;
-  box-shadow: 3px 4px 7px $very-light-gray;
-}
+
 .option__collection {
   background-color: $white;
   justify-content: center;
@@ -1817,7 +1863,6 @@ button img {
 }
 .collection__fields {
   background-color: $white;
-  box-shadow: 3px 4px 7px $very-light-gray;
   display: flex;
   justify-content: space-evenly;
   flex-direction: row;
@@ -1825,6 +1870,7 @@ button img {
   border-radius: 0.5rem;
   height: 46vh;
   width: 70vw;
+  border: 1px solid #e8e8e8;
 }
 .collection__fields__ {
   background-color: $white;
@@ -1886,16 +1932,20 @@ button img {
 .space__ {
   height: 16vh;
 }
+.button-space {
+  padding: 2.5rem 1rem 0rem 0rem;
+}
 .plus_button {
+  // border: 1px solid #e8e8e8;
   border: none;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  background-color: transparent;
-  border-radius: 50%;
-  padding: 0.25rem;
+  background-color: $dark-green;
+  border-radius: 0.3rem;
+  padding: 0.4rem 1rem;
   display: flex;
   align-items: center;
+  font-size: 12px;
   cursor: pointer;
-  font-weight: bold;
+  color: white;
 }
 .header {
   font-weight: bold;
@@ -2107,7 +2157,7 @@ textarea {
   display: flex;
   flex-direction: row;
   align-items: center;
-  font-weight: bold;
+  font-size: 13px;
 }
 .message__box {
   margin-bottom: 2rem;
@@ -2187,12 +2237,11 @@ input {
   border-style: none;
   letter-spacing: 0.03rem;
   color: white;
-  background-color: $panther;
+  background-color: $dark-green;
   cursor: pointer;
   height: 2rem;
   width: 10rem;
-  font-weight: bold;
-  font-size: 1.02rem;
+  font-size: 12px;
 }
 .purple__button {
   display: flex;
@@ -2224,13 +2273,12 @@ input {
   text-indent: none;
   border-style: none;
   letter-spacing: 0.03rem;
-  background-color: $very-light-gray;
+  background-color: $soft-gray;
   color: $panther-gray;
   cursor: not-allowed;
   height: 2rem;
   width: 10rem;
-  font-weight: bold;
-  font-size: 1.02rem;
+  font-size: 12px;
 }
 .tooltip {
   position: relative;

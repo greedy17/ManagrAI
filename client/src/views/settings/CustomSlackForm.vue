@@ -20,50 +20,11 @@
 
     <div class="opportunity__row">
       <div :class="formType !== 'STAGE_GATING' ? 'collection_fields' : 'stage_fields'">
-        <div v-if="formType !== 'STAGE_GATING'" style="margin-bottom: -1rem">
-          <div
-            v-if="
-              requiredOpportunityFields.every((i) => addedFieldNames.includes(i)) ||
-              formType == 'STAGE_GATING'
-            "
-            style="
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              flex-direction: row;
-              margin-bottom: 3rem;
-            "
-          >
-            <img src="@/assets/images/slackLogo.png" style="height: 1.75rem" alt="" />
-            <img
-              class="filtered-green"
-              src="@/assets/images/link.png"
-              alt=""
-              style="height: 1rem; margin-left: 0.5rem; margin-right: 0.5rem"
-            />
-            <img src="@/assets/images/salesforce.png" style="height: 1.75rem" alt="" />
-          </div>
-          <div v-else style="margin-bottom: 1rem; margin-top: -1rem" class="row">
-            <div style="margin-right: 2rem" class="center">
-              <img style="height: 1.5rem" src="@/assets/images/slackLogo.png" alt="" />
-              <p>Fields you'll see in slack</p>
-            </div>
-            <div class="center">
-              <img
-                style="width: 2.5rem; height: 1.75rem"
-                src="@/assets/images/salesforce.png"
-                alt=""
-              />
-              <p>SFDC fields you'll be updating</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="center" v-else>
-          <h2 style="margin-bottom: 0.5rem">Add Stage Specific Fields</h2>
-          <p style="margin-top: -0.25rem; color: #beb5cc">
+        <div v-if="formType === 'STAGE_GATING'">
+          <p class="section-title">Add Stage Specific Fields</p>
+          <!-- <p style="margin-top: -0.25rem; color: #beb5cc">
             Be sure to save changes before adding another stage!
-          </p>
+          </p> -->
         </div>
         <div>
           <div v-if="formType === 'STAGE_GATING'">
@@ -78,86 +39,90 @@
                 class="default_button bouncy"
               >
                 Add Fields
+                <img src="@/assets/images/plusOne.png" alt="" />
               </button>
             </div>
           </div>
 
           <div v-if="resource === 'OpportunityLineItem'">
-            <div v-if="!addedFieldNames.includes('PricebookEntryId')" class="centered field-border">
-              <p style="margin-left: 0.5rem; font-weight: bold">
-                PricebookEntry <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
+            <div v-if="!addedFieldNames.includes('PricebookEntryId')" class="centered">
+              <p style="margin-left: 0.5rem">
+                PricebookEntry <span style="color: #fa646a">*</span>
               </p>
 
-              <img
-                src="@/assets/images/unlinked.png"
-                alt=""
-                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-              />
-              <DropDownSearch
-                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-                displayKey="referenceDisplayLabel"
-                valueKey="apiName"
-                nullDisplay="Search fields"
-                searchable
-                :loading="formFields.loadingNextPage"
-                :hasNext="!!formFields.pagination.hasNextPage"
-                v-model="priceValue"
-                @load-more="onFieldsNextPage"
-                @search-term="onSearchFields"
-                @input="
-                  (e) => {
-                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
-                  }
+              <Multiselect
+                placeholder="Select Pricebook field"
+                :options="
+                  formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))
                 "
-              />
+                @input="onAddField($event)"
+                openDirection="below"
+                style="width: 20vw"
+                selectLabel="Enter"
+                track-by="apiName"
+                label="referenceDisplayLabel"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+                <template slot="afterList">
+                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                </template>
+              </Multiselect>
             </div>
 
-            <div v-if="!addedFieldNames.includes('Quantity')" class="centered field-border">
-              <p style="margin-left: 0.5rem; font-weight: bold">
-                Quantity <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
-              </p>
+            <div v-if="!addedFieldNames.includes('Quantity')" class="centered">
+              <p style="margin-left: 0.5rem">Quantity <span style="color: #fa646a">*</span></p>
 
-              <img
-                src="@/assets/images/unlinked.png"
-                alt=""
-                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-              />
-
-              <DropDownSearch
-                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-                displayKey="referenceDisplayLabel"
-                valueKey="apiName"
-                nullDisplay="Search fields"
-                searchable
-                :loading="formFields.loadingNextPage"
-                :hasNext="!!formFields.pagination.hasNextPage"
-                v-model="quantityValue"
-                @load-more="onFieldsNextPage"
-                @search-term="onSearchFields"
-                @input="
-                  (e) => {
-                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
-                  }
+              <Multiselect
+                placeholder="Select Quantity field"
+                :options="
+                  formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))
                 "
-              />
+                @input="onAddField($event)"
+                openDirection="below"
+                style="width: 20vw"
+                selectLabel="Enter"
+                track-by="apiName"
+                label="referenceDisplayLabel"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+                <template slot="afterList">
+                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                </template>
+              </Multiselect>
             </div>
           </div>
         </div>
 
         <div v-if="resource === 'Contact'">
+          <p class="section-title">Select required form fields:</p>
           <div v-if="formType === 'CREATE'">
-            <div v-if="!addedFieldNames.includes('LastName')" class="centered field-border">
-              <p style="margin-left: 0.5rem; font-weight: bold">
-                Last Name <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
-              </p>
+            <div v-if="!addedFieldNames.includes('LastName')" class="centered">
+              <p style="margin-left: 0.5rem">Last Name <span style="color: #fa646a">*</span></p>
 
-              <img
-                src="@/assets/images/unlinked.png"
-                alt=""
-                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-              />
-
-              <DropDownSearch
+              <Multiselect
+                placeholder="Select your SFDC 'Last Name' field"
+                :options="
+                  formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))
+                "
+                @input="onAddField($event)"
+                openDirection="below"
+                style="width: 20vw"
+                selectLabel="Enter"
+                track-by="apiName"
+                label="referenceDisplayLabel"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+                <template slot="afterList">
+                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                </template>
+              </Multiselect>
+              <!-- <DropDownSearch
                 v-if="!addedFieldNames.includes('LastName')"
                 :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
                 displayKey="referenceDisplayLabel"
@@ -174,305 +139,198 @@
                     onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
                   }
                 "
-              />
+              /> -->
             </div>
-          </div>
-
-          <div
-            v-else-if="!addingFields && formType === 'UPDATE'"
-            style="
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              flex-direction: column;
-              margin-top: 0.5rem;
-            "
-          >
-            <button
-              @click="
-                () => {
-                  addingFields = !addingFields
-                }
-              "
-              class="default_button"
-            >
-              Add Fields
-            </button>
           </div>
         </div>
 
         <div v-if="resource === 'Lead'">
+          <p class="section-title">Select required form fields:</p>
           <div v-if="formType === 'CREATE'">
-            <div v-if="!addedFieldNames.includes('LastName')" class="centered field-border">
-              <p style="margin-left: 0.5rem; font-weight: bold">
-                Last Name<span style="color: #fa646a; font-size: 0.75rem"> (required)</span>
-              </p>
-
-              <img
-                src="@/assets/images/unlinked.png"
-                alt=""
-                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-              />
-
-              <DropDownSearch
-                v-if="!addedFieldNames.includes('LastName')"
-                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-                displayKey="referenceDisplayLabel"
-                valueKey="apiName"
-                nullDisplay="Search fields"
-                searchable
-                :loading="formFields.loadingNextPage"
-                :hasNext="!!formFields.pagination.hasNextPage"
-                v-model="leadLastNameValue"
-                @load-more="onFieldsNextPage"
-                @search-term="onSearchFields"
-                @input="
-                  (e) => {
-                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
-                  }
+            <div v-if="!addedFieldNames.includes('LastName')" class="centered">
+              <p style="margin-left: 0.5rem">Last Name<span style="color: #fa646a">*</span></p>
+              <Multiselect
+                placeholder="Select your SFDC 'Last Name' field"
+                :options="
+                  formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))
                 "
-              />
+                @input="onAddField($event)"
+                openDirection="below"
+                style="width: 20vw"
+                selectLabel="Enter"
+                track-by="apiName"
+                label="referenceDisplayLabel"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+                <template slot="afterList">
+                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                </template>
+              </Multiselect>
+              <!-- :hasNext="!!formFields.pagination.hasNextPage" -->
             </div>
-            <div v-if="!addedFieldNames.includes('Company')" class="centered field-border">
-              <p style="margin-left: 0.5rem; font-weight: bold">
-                Company<span style="color: #fa646a; font-size: 0.75rem"> (required)</span>
-              </p>
+            <div v-if="!addedFieldNames.includes('Company')" class="centered">
+              <p style="margin-left: 0.5rem">Company<span style="color: #fa646a">*</span></p>
 
-              <img
-                src="@/assets/images/unlinked.png"
-                alt=""
-                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-              />
-
-              <DropDownSearch
-                v-if="!addedFieldNames.includes('company')"
-                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-                displayKey="referenceDisplayLabel"
-                valueKey="apiName"
-                nullDisplay="Search fields"
-                searchable
-                :loading="formFields.loadingNextPage"
-                :hasNext="!!formFields.pagination.hasNextPage"
-                v-model="companyValue"
-                @load-more="onFieldsNextPage"
-                @search-term="onSearchFields"
-                @input="
-                  (e) => {
-                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
-                  }
+              <Multiselect
+                placeholder="Select your SFDC 'Company' field"
+                :options="
+                  formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))
                 "
-              />
+                @input="onAddField($event)"
+                openDirection="below"
+                style="width: 20vw"
+                selectLabel="Enter"
+                track-by="apiName"
+                label="referenceDisplayLabel"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+                <template slot="afterList">
+                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                </template>
+              </Multiselect>
             </div>
-            <div v-if="!addedFieldNames.includes('Status')" class="centered field-border">
-              <p style="margin-left: 0.5rem; font-weight: bold">
-                Status<span style="color: #fa646a; font-size: 0.75rem"> (required)</span>
-              </p>
+            <div v-if="!addedFieldNames.includes('Status')" class="centered">
+              <p style="margin-left: 0.5rem">Status<span style="color: #fa646a">*</span></p>
 
-              <img
-                src="@/assets/images/unlinked.png"
-                alt=""
-                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-              />
-
-              <DropDownSearch
-                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-                displayKey="referenceDisplayLabel"
-                valueKey="apiName"
-                nullDisplay="Search fields"
-                searchable
-                :loading="formFields.loadingNextPage"
-                :hasNext="!!formFields.pagination.hasNextPage"
-                v-model="statusValue"
-                @load-more="onFieldsNextPage"
-                @search-term="onSearchFields"
-                @input="
-                  (e) => {
-                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
-                  }
+              <Multiselect
+                placeholder="Select your SFDC 'Status' field"
+                :options="
+                  formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))
                 "
-              />
+                @input="onAddField($event)"
+                openDirection="below"
+                style="width: 20vw"
+                selectLabel="Enter"
+                track-by="apiName"
+                label="referenceDisplayLabel"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+                <template slot="afterList">
+                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                </template>
+              </Multiselect>
             </div>
-          </div>
-
-          <div
-            v-else-if="!addingFields && formType === 'UPDATE'"
-            style="
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              flex-direction: column;
-              margin-top: 0.5rem;
-            "
-          >
-            <button
-              @click="
-                () => {
-                  addingFields = !addingFields
-                }
-              "
-              class="default_button"
-            >
-              Add Fields
-            </button>
           </div>
         </div>
 
         <div v-if="resource === 'Account'">
+          <p class="section-title">Select required form fields:</p>
           <div v-if="formType === 'CREATE'">
-            <div v-if="!addedFieldNames.includes('Name')" class="centered field-border">
-              <p style="margin-left: 0.5rem; font-weight: bold">
-                Account Name <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
-              </p>
+            <div v-if="!addedFieldNames.includes('Name')" class="centered">
+              <p style="margin-left: 0.5rem">Account Name <span style="color: #fa646a">*</span></p>
 
-              <img
-                src="@/assets/images/unlinked.png"
-                alt=""
-                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-              />
-
-              <DropDownSearch
-                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-                displayKey="referenceDisplayLabel"
-                valueKey="apiName"
-                nullDisplay="Search fields"
-                searchable
-                :loading="formFields.loadingNextPage"
-                :hasNext="!!formFields.pagination.hasNextPage"
-                v-model="accountNameValue"
-                @load-more="onFieldsNextPage"
-                @search-term="onSearchFields"
-                @input="
-                  (e) => {
-                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
-                  }
+              <Multiselect
+                placeholder="Select your SFDC 'Account' field"
+                :options="
+                  formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))
                 "
-              />
+                @input="onAddField($event)"
+                openDirection="below"
+                style="width: 20vw"
+                selectLabel="Enter"
+                track-by="apiName"
+                label="referenceDisplayLabel"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+                <template slot="afterList">
+                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                </template>
+              </Multiselect>
             </div>
-          </div>
-
-          <div
-            v-else-if="!addingFields && formType === 'UPDATE'"
-            style="
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              flex-direction: column;
-              margin-top: 0.5rem;
-            "
-          >
-            <button
-              @click="
-                () => {
-                  addingFields = !addingFields
-                }
-              "
-              class="default_button"
-            >
-              Add Fields
-            </button>
           </div>
         </div>
 
         <div v-if="resource === 'Opportunity' && formType !== 'STAGE_GATING'">
-          <div v-if="!addedFieldLabels.includes('Name')" class="centered field-border">
-            <div class="row__">
-              <p style="margin-left: 0.5rem; font-weight: bold">
-                Name <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
-              </p>
-
-              <img
-                src="@/assets/images/unlinked.png"
-                alt=""
-                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-              />
-            </div>
-
-            <DropDownSearch
-              :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-              displayKey="referenceDisplayLabel"
-              valueKey="apiName"
-              nullDisplay="Search fields"
-              searchable
-              :loading="formFields.loadingNextPage"
-              :hasNext="!!formFields.pagination.hasNextPage"
-              v-model="amountValue"
-              @load-more="onFieldsNextPage"
-              @search-term="onSearchFields"
-              @input="
-                (e) => {
-                  onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
-                }
-              "
-            />
+          <!-- <div
+            v-if="userHasProducts && formType !== 'CREATE'"
+            style="margin-bottom: 1rem"
+            class="centered"
+          >
+            <small>
+              <span style="color: #41b883">*</span> Need to edit your product form ? Save and
+              continue.</small
+            >
+          </div> -->
+          <p class="section-title">Select required form fields:</p>
+          <div v-if="!addedFieldLabels.includes('Name')" class="centered">
+            <p style="margin-left: 0.5rem">Name: <span style="color: #fa646a">*</span></p>
+            <Multiselect
+              placeholder="Select your SFDC 'Name' field"
+              :options="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+              @input="onAddField($event)"
+              openDirection="below"
+              style="width: 20vw"
+              selectLabel="Enter"
+              track-by="apiName"
+              label="referenceDisplayLabel"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+              <template slot="afterList">
+                <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+              </template>
+            </Multiselect>
           </div>
 
-          <div v-if="!addedFieldNames.includes('StageName')" class="centered field-border">
+          <div v-if="!addedFieldNames.includes('StageName')" class="centered">
             <div class="row__">
-              <p style="margin-left: 0.5rem; font-weight: bold">
-                Stage <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
-              </p>
-
-              <img
-                src="@/assets/images/unlinked.png"
-                alt=""
-                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-              />
+              <p style="margin-left: 0.5rem">Stage <span style="color: #fa646a">*</span></p>
             </div>
-            <DropDownSearch
-              v-if="!addedFieldNames.includes('StageName')"
-              :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-              displayKey="referenceDisplayLabel"
-              valueKey="apiName"
-              nullDisplay="Search fields"
-              searchable
-              :loading="formFields.loadingNextPage"
-              :hasNext="!!formFields.pagination.hasNextPage"
-              v-model="stageValue"
-              @load-more="onFieldsNextPage"
-              @search-term="onSearchFields"
-              @input="
-                (e) => {
-                  onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
-                }
-              "
-            />
+            <Multiselect
+              placeholder="Select your SFDC 'Stage' field"
+              :options="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+              @input="onAddField($event)"
+              openDirection="below"
+              style="width: 20vw"
+              selectLabel="Enter"
+              track-by="apiName"
+              label="referenceDisplayLabel"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+              <template slot="afterList">
+                <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+              </template>
+            </Multiselect>
           </div>
 
-          <div v-if="!addedFieldNames.includes('CloseDate')" class="centered field-border">
+          <div v-if="!addedFieldNames.includes('CloseDate')" class="centered">
             <div class="row__">
-              <p style="margin-left: 0.5rem; font-weight: bold">
-                Close Date <span style="color: #fa646a; font-size: 0.75rem">(required)</span>
-              </p>
-
-              <img
-                src="@/assets/images/unlinked.png"
-                alt=""
-                style="height: 1rem; margin-left: 0.25rem; margin-right: 0.25rem"
-              />
+              <p style="margin-left: 0.5rem">Close Date <span style="color: #fa646a">*</span></p>
             </div>
 
-            <DropDownSearch
-              :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-              displayKey="referenceDisplayLabel"
-              valueKey="apiName"
-              nullDisplay="Search fields"
-              searchable
-              :loading="formFields.loadingNextPage"
-              :hasNext="!!formFields.pagination.hasNextPage"
-              v-model="closeValue"
-              @load-more="onFieldsNextPage"
-              @search-term="onSearchFields"
-              @input="
-                (e) => {
-                  onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
-                }
-              "
-            />
+            <Multiselect
+              placeholder="Select your SFDC 'Close Date' field"
+              :options="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+              @input="onAddField($event)"
+              openDirection="below"
+              style="width: 20vw"
+              selectLabel="Enter"
+              track-by="apiName"
+              label="referenceDisplayLabel"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+              <template slot="afterList">
+                <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+              </template>
+            </Multiselect>
           </div>
 
           <div
             v-if="!userHasProducts && !addedFieldNames.includes('Amount') && formType !== 'CREATE'"
-            class="centered field-border"
+            class="centered"
           >
             <div class="row__">
               <div style="margin-left: 0.5rem" class="centered">
@@ -481,39 +339,38 @@
                   style="margin-left: 0.15rem; margin-right: 0.15rem"
                   :value="productSelected"
                   @input="productSelect"
-                  offColor="#199e54"
-                  onColor="#199e54"
+                  offColor="#41b883"
+                  onColor="#41b883"
                 />
                 <label style="margin-right: 0.15rem" :class="productSelected ? 'green' : 'label'"
                   >Products</label
                 >
               </div>
-              <p style="font-size: 12px; color: #9b9b9b; margin-left: 0.5rem">{Optional}</p>
+              <p style="font-size: 12px; color: #9b9b9b; margin-left: 0.5rem">(Optional)</p>
             </div>
             <div v-if="!productSelected">
-              <DropDownSearch
-                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-                displayKey="referenceDisplayLabel"
-                valueKey="apiName"
-                nullDisplay="Search fields"
-                searchable
-                :loading="formFields.loadingNextPage"
-                :hasNext="!!formFields.pagination.hasNextPage"
-                v-model="amountValue"
-                @load-more="onFieldsNextPage"
-                @search-term="onSearchFields"
-                @input="
-                  (e) => {
-                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
-                  }
+              <Multiselect
+                placeholder="Select SFDC 'Amount' field"
+                :options="
+                  formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))
                 "
-              />
+                @input="onAddField($event)"
+                openDirection="below"
+                style="width: 16vw"
+                selectLabel="Enter"
+                track-by="apiName"
+                label="referenceDisplayLabel"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+                <template slot="afterList">
+                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                </template>
+              </Multiselect>
             </div>
 
             <div v-if="productSelected">Add products on the next page</div>
-          </div>
-          <div v-else-if="userHasProducts && formType !== 'CREATE'" class="centered field-border">
-            <p>Need to edit your Product form ? Save & continue.</p>
           </div>
 
           <!-- <div
@@ -534,179 +391,54 @@
               "
               class="default_button"
             >
-              Add Fields
+              Add more fields <img src="@/assets/images/plusOne.png" class="filtered-green" alt="">
             </button>
           </div> -->
         </div>
 
         <draggable
-          style="margin-top: 1rem"
+          style="margin-top: 0.5rem"
           v-model="addedFields"
           group="fields"
           @start="drag = true"
           @end="drag = false"
         >
-          <div
-            style="display: flex; flex-direction: row"
-            v-for="field in addedFields"
-            :key="field.id"
-          >
-            <div :class="unshownIds.includes(field.id) ? 'invisible' : 'centered field-border'">
-              <div
-                style="
-                  display: flex;
-                  flex-direction: row;
-                  align-items: center;
-                  margin-left: -0.5rem;
-                "
-              >
+          <p class="section-title">
+            Organize your form fields:
+            <span style="color: #41b883; font-size: 11px; margin-left: 0.5rem">*drag and drop</span>
+          </p>
+          <div v-for="field in addedFields" :key="field.id">
+            <div :class="unshownIds.includes(field.id) ? 'invisible' : 'centered'">
+              <div class="drag-item">
                 <img
                   :class="unshownIds.includes(field.id) ? 'invisible' : ''"
                   src="@/assets/images/drag.png"
                   id="drag"
-                  style="height: 1.85rem; width: 2rem; cursor: grab"
+                  style="height: 1rem; width: auto; cursor: grab"
                   alt=""
                 />
                 <p :class="unshownIds.includes(field.id) ? 'invisible' : ''">
                   {{ field.referenceDisplayLabel }}
                 </p>
-                <img
-                  class="filtered-green"
-                  src="@/assets/images/link.png"
-                  alt=""
-                  style="height: 1rem; margin-left: 0.5rem"
-                />
               </div>
 
-              <img
-                src="@/assets/images/remove.png"
-                style="height: 1.25rem; margin-right: 0.2rem"
-                alt=""
-                id="remove"
-                :class="unshownIds.includes(field.id) ? 'invisible' : ''"
-                @click="
-                  () => {
-                    onRemoveField(field)
-                  }
-                "
-              />
+              <div class="img-border">
+                <img
+                  src="@/assets/images/trash.png"
+                  alt=""
+                  id="remove"
+                  :class="unshownIds.includes(field.id) ? 'invisible' : 'invert'"
+                  @click="
+                    () => {
+                      onRemoveField(field)
+                    }
+                  "
+                />
+              </div>
             </div>
           </div>
         </draggable>
-        <div class="recommend" v-if="addingFields">
-          <div
-            @click="
-              () => {
-                addingFields = !addingFields
-              }
-            "
-            style="font-weight: bold; display: flex; justify-content: flex-end; cursor: pointer"
-          >
-            x
-          </div>
 
-          <h4 v-if="formType !== 'STAGE_GATING'">Recommended Fields:</h4>
-          <div v-else>
-            <DropDownSearch
-              :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-              displayKey="referenceDisplayLabel"
-              valueKey="apiName"
-              nullDisplay="Search fields"
-              searchable
-              :loading="formFields.loadingNextPage"
-              :hasNext="!!formFields.pagination.hasNextPage"
-              v-model="nameValue"
-              @load-more="onFieldsNextPage"
-              @search-term="onSearchFields"
-              @input="
-                (e) => {
-                  onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
-                }
-              "
-            />
-
-            <h4>Previous Stage Fields:</h4>
-          </div>
-          <div
-            v-if="resource === 'Opportunity' && formType !== 'STAGE_GATING'"
-            class="recommendations"
-          >
-            <p>Amount,</p>
-            &nbsp;
-            <p>Account,</p>
-            &nbsp;
-            <p>Forecast Category,</p>
-            &nbsp;
-            <p>Next Step,</p>
-            &nbsp;
-            <p>Next Step Date</p>
-          </div>
-          <div v-else-if="resource === 'Contact'" class="recommendations">
-            <p>First Name,</p>
-            &nbsp;
-            <p>Title,</p>
-            &nbsp;
-            <p>Email,</p>
-            &nbsp;
-            <p>Phone,</p>
-            &nbsp;
-            <p>Account Name</p>
-          </div>
-          <div v-else-if="resource === 'Lead'" class="recommendations">
-            <p>Title,</p>
-            &nbsp;
-            <p>Email,</p>
-            &nbsp;
-            <p>Phone</p>
-          </div>
-          <div v-else-if="resource === 'Account'" class="recommendations">
-            <p>Account Type</p>
-          </div>
-          <div v-else-if="resource === 'OpportunityLineItem'" class="recommendations">
-            <p>Line Description</p>
-          </div>
-
-          <div v-if="formType === 'STAGE_GATING'">
-            <div v-if="!orderedStageForm.length">
-              <p style="font-weight: bold; color: #beb5cc; text-align: center">
-                Nothing here.. (o^^)o
-              </p>
-            </div>
-            <div :key="key" v-for="(form, key) in orderedStageForm">
-              <div style="margin-top: 1rem">
-                <i style="text-transform: uppercase; font-size: 12px; color: #beb5cc"
-                  >Fields from <strong>{{ form.stage }}</strong> stage</i
-                >
-              </div>
-              <div class="stages-list">
-                <div :key="key" v-for="(val, key) in form.fieldsRef">
-                  <ul>
-                    <li>{{ val.referenceDisplayLabel }}</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <DropDownSearch
-            v-if="formType !== 'STAGE_GATING'"
-            :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-            displayKey="referenceDisplayLabel"
-            valueKey="apiName"
-            nullDisplay="Search fields"
-            searchable
-            :loading="formFields.loadingNextPage"
-            :hasNext="!!formFields.pagination.hasNextPage"
-            v-model="addingFieldValue"
-            @load-more="onFieldsNextPage"
-            @search-term="onSearchFields"
-            @input="
-              (e) => {
-                onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
-              }
-            "
-          />
-        </div>
         <div
           v-if="resource === 'Opportunity'"
           style="display: flex; align-items: center; justify-content: center"
@@ -720,7 +452,8 @@
             "
             class="default_button"
           >
-            Add Fields
+            Add more fields
+            <img src="@/assets/images/plusOne.png" alt="" />
           </button>
         </div>
 
@@ -747,11 +480,31 @@
             "
             class="default_button"
           >
-            Add Fields
+            Add more fields
+            <img src="@/assets/images/plusOne.png" alt="" />
           </button>
-          <span style="color: #beb5cc; font-size: 0.85rem; margin-top: 0.25rem"
-            >(Recommended!)</span
+        </div>
+        <div
+          v-else-if="!addingFields && formType === 'UPDATE' && resource === 'Contact'"
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            margin-top: 0.5rem;
+          "
+        >
+          <button
+            @click="
+              () => {
+                addingFields = !addingFields
+              }
+            "
+            class="default_button"
           >
+            Add fields
+            <img src="@/assets/images/plusOne.png" alt="" />
+          </button>
         </div>
 
         <div
@@ -775,10 +528,32 @@
             "
             class="default_button"
           >
-            Add Fields
+            Add more fields
+            <img src="@/assets/images/plusOne.png" alt="" />
           </button>
         </div>
-
+        <div
+          v-else-if="!addingFields && formType === 'UPDATE' && resource === 'Lead'"
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            margin-top: 0.5rem;
+          "
+        >
+          <button
+            @click="
+              () => {
+                addingFields = !addingFields
+              }
+            "
+            class="default_button"
+          >
+            Add more fields
+            <img src="@/assets/images/plusOne.png" alt="" />
+          </button>
+        </div>
         <div
           v-else-if="
             resource === 'Lead' &&
@@ -801,7 +576,8 @@
             "
             class="default_button"
           >
-            Add Fields
+            Add more fields
+            <img src="@/assets/images/plusOne.png" alt="" />
           </button>
         </div>
 
@@ -828,7 +604,31 @@
             "
             class="default_button"
           >
-            Add Fields
+            Add more fields
+            <img src="@/assets/images/plusOne.png" alt="" />
+          </button>
+        </div>
+
+        <div
+          v-else-if="!addingFields && formType === 'UPDATE' && resource === 'Account'"
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            margin-top: 0.5rem;
+          "
+        >
+          <button
+            @click="
+              () => {
+                addingFields = !addingFields
+              }
+            "
+            class="default_button"
+          >
+            Add more fields
+            <img src="@/assets/images/plusOne.png" alt="" />
           </button>
         </div>
 
@@ -842,37 +642,33 @@
                 (formType === 'CREATE' && resource === 'Contact')
               )
             "
-            style="margin-right: 0.5rem; cursor: pointer"
+            style="margin-right: 0.5rem"
             @click="goToOptional"
-            class="disabled"
+            class="disabled__"
           >
-            back
+            Back
           </button>
           <button
             v-if="
               (formType === 'UPDATE' && resource === 'Opportunity') ||
               (formType === 'CREATE' && resource === 'Contact')
             "
-            style="margin-right: 0.5rem; cursor: pointer"
+            style="margin-right: 0.5rem"
             @click="goBack"
-            class="disabled"
+            class="disabled__"
           >
-            back
+            Back
           </button>
           <button
             v-if="resource === 'OpportunityLineItem'"
-            style="margin-right: 0.5rem; cursor: pointer"
+            style="margin-right: 0.5rem"
             @click="goToUpdateOpp"
-            class="disabled"
+            class="disabled__"
           >
-            back
+            Back
           </button>
           <div class="row__" v-if="formType === 'STAGE_GATING'">
-            <button
-              style="margin-right: 0.5rem; cursor: pointer"
-              @click="goToValidations"
-              class="disabled"
-            >
+            <button style="margin-right: 0.5rem" @click="goToValidations" class="disabled__">
               Cancel
             </button>
             <PulseLoadingSpinnerButton
@@ -924,7 +720,7 @@
             >
               Save + Continue to products
             </button>
-            <button v-else class="disabled__">Save + Continue to products</button>
+            <button v-else class="disabled">Save + Continue to products</button>
           </div>
 
           <PulseLoadingSpinnerButton
@@ -975,6 +771,139 @@
             :disabled="!addedFieldNames.includes('Name')"
           /> -->
         </div>
+
+        <div class="recommend" v-if="addingFields">
+          <div v-if="formType !== 'STAGE_GATING'" class="recommend__header">
+            <h4>
+              Add More Fields
+              <span style="color: #41b883; font-size: 11px; margin-left: 0.5rem"
+                >*Recommendations listed</span
+              >
+            </h4>
+            <img
+              @click="
+                () => {
+                  addingFields = !addingFields
+                }
+              "
+              height="1rem"
+              src="@/assets/images/close.png"
+              alt=""
+            />
+          </div>
+          <div class="recommend__header" v-else>
+            <h4>Add Fields</h4>
+            <img
+              @click="
+                () => {
+                  addingFields = !addingFields
+                }
+              "
+              height="1rem"
+              src="@/assets/images/close.png"
+              alt=""
+            />
+          </div>
+          <div v-if="formType === 'STAGE_GATING'" class="recommend__body">
+            <Multiselect
+              placeholder="Select Validation Fields"
+              :options="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+              @input="onAddField($event)"
+              openDirection="below"
+              style="width: 20vw; margin-top: 1.5rem"
+              selectLabel="Enter"
+              track-by="apiName"
+              label="referenceDisplayLabel"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+              <template slot="afterList">
+                <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+              </template>
+            </Multiselect>
+          </div>
+
+          <div v-else>
+            <div
+              class="recommend__body"
+              v-if="resource === 'Opportunity' && formType !== 'STAGE_GATING'"
+            >
+              &nbsp;
+              <p>Amount</p>
+              &nbsp;
+              <p>Account</p>
+              &nbsp;
+              <p>Forecast Category</p>
+              &nbsp;
+              <p>Next Step</p>
+              &nbsp;
+              <p>Next Step Date</p>
+            </div>
+            <div class="recommend__body" v-else-if="resource === 'Contact'">
+              <p>First Name</p>
+              &nbsp;
+              <p>Title</p>
+              &nbsp;
+              <p>Email</p>
+              &nbsp;
+              <p>Phone</p>
+              &nbsp;
+              <p>Account Name</p>
+            </div>
+            <div class="recommend__body" v-else-if="resource === 'Lead'">
+              <p>Title</p>
+              &nbsp;
+              <p>Email</p>
+              &nbsp;
+              <p>Phone</p>
+            </div>
+            <div class="recommend__body" v-else-if="resource === 'Account'">
+              <p>Account Type</p>
+            </div>
+            <div class="recommend__body" v-else-if="resource === 'OpportunityLineItem'">
+              <p>Line Description</p>
+            </div>
+          </div>
+
+          <div class="recommend__validation" v-if="formType === 'STAGE_GATING'">
+            <p style="color: #41b883; font-size: 11px">*Previous Stage Validation Fields</p>
+            <div v-if="!orderedStageForm.length">
+              <p style="font-size: 14px; text-align: center">Nothing here.. (o^^)o</p>
+            </div>
+            <div :key="key" v-for="(form, key) in orderedStageForm">
+              <!-- <div style="margin-top: 1rem">
+                <i style="text-transform: uppercase; font-size: 12px; color: #beb5cc"
+                  >Fields from <strong>{{ form.stage }}</strong> stage</i
+                >
+              </div> -->
+              <div class="stages-list">
+                <div :key="key" v-for="(val, key) in form.fieldsRef">
+                  <p>{{ val.referenceDisplayLabel }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="recommend__body" v-if="formType !== 'STAGE_GATING'">
+            <Multiselect
+              placeholder="Select/search additional fields"
+              :options="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+              @input="onAddField($event)"
+              openDirection="below"
+              style="width: 20vw; margin-top: -1.5rem"
+              selectLabel="Enter"
+              track-by="apiName"
+              label="referenceDisplayLabel"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+              <template slot="afterList">
+                <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+              </template>
+            </Multiselect>
+          </div>
+        </div>
       </div>
 
       <div
@@ -986,7 +915,7 @@
             display: flex;
             flex-direction: row;
             justify-content: space-between;
-            margin-top: -2rem;
+            margin-top: -0.75rem;
           "
         >
           <div style="display: flex; flex-direction: row; align-items: center">
@@ -1009,38 +938,34 @@
               filter: invert(90%);
             "
           >
-            <img src="@/assets/images/share.png" style="height: 1.2rem" alt="" />
-            <img
-              src="@/assets/images/clear.png"
-              style="height: 1.3rem; margin-left: 0.2rem"
-              alt=""
-            />
+            <img src="@/assets/images/share.png" style="height: 1rem" alt="" />
+            <img src="@/assets/images/clear.png" style="height: 1rem; margin-left: 0.5rem" alt="" />
           </div>
         </div>
 
         <h1 class="example-text">SLACK PREVIEW</h1>
         <div v-if="resource !== 'OpportunityLineItem'">
-          <p>Note Subject <span style="color: #beb5cc">(optional)</span></p>
+          <p>Note Subject: <span style="color: #beb5cc">(optional)</span></p>
           <textarea
             disabled
             name=""
             id=""
             cols="30"
-            rows="2"
-            style="width: 100%; border-radius: 0.25rem"
+            rows="3"
+            style="width: 100%; border-radius: 0.25rem; resize: none"
           >
 “Meeting Subject goes here” (lives in Tasks)
           </textarea>
         </div>
         <div v-if="resource !== 'OpportunityLineItem'">
-          <p>Notes <span style="color: #beb5cc">(optional)</span></p>
+          <p>Note: <span style="color: #beb5cc">(optional)</span></p>
           <textarea
             disabled
             name=""
             id=""
             cols="30"
             rows="4"
-            style="width: 100%; border-radius: 0.25rem"
+            style="width: 100%; border-radius: 0.25rem; resize: none"
           >
 “Meeting Notes go here” (lives in Tasks)
           </textarea>
@@ -1137,7 +1062,7 @@
             />
           </div>
         </div>
-        <div class="example-footer">
+        <div class="example--footer">
           <div style="margin-top: 1rem">
             <button class="close">Close</button>
             <button class="save">Update</button>
@@ -1158,7 +1083,7 @@ import Modal from '@/components/Modal'
 
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
 import CollectionSearch from '@thinknimble/collection-search'
-import DropDownSearch from '@/components/DropDownSearch'
+
 import CustomDropDown from '@/components/CustomDropDown'
 import Paginator from '@thinknimble/paginator'
 import ActionChoice from '@/services/action-choices'
@@ -1181,7 +1106,7 @@ export default {
     ListItem,
     ListContainer,
     Modal,
-    DropDownSearch,
+
     CustomDropDown,
     draggable,
     ToggleCheckBox,
@@ -1488,8 +1413,8 @@ export default {
         return
       }
       this.addedFields.push({ ...field, order: this.addedFields.length, includeInRecap: true })
-      this.formFields.filters = { salesforceObject: this.resource }
-      this.formFields.refresh()
+      // this.formFields.filters = { salesforceObject: this.resource }
+      // this.formFields.refresh()
     },
     goBack() {
       this.$router.push({ name: 'Required' })
@@ -1668,25 +1593,60 @@ export default {
     transform: translateY(-6px);
   }
 }
-
+.section-title {
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #e8e8e8;
+  padding-bottom: 0.2rem;
+}
+.multi-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $dark-green;
+  font-weight: bold;
+  border-top: 1px solid #e8e8e8;
+  width: 100%;
+  padding: 0.5rem 0rem;
+  margin: 0;
+  &__more {
+    background-color: $base-gray;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-top: 1px solid #e8e8e8;
+    width: 100%;
+    padding: 0.75rem 0rem;
+    margin: 0;
+    cursor: pointer;
+  }
+}
+.invert {
+  filter: invert(80%);
+  height: 1rem;
+}
+.img-border {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e8e8e8;
+  border-radius: 0.2rem;
+  cursor: pointer;
+  padding: 0.15rem 0.3rem;
+}
 .center-loader {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
 }
-.invert {
-  filter: invert(99%);
-}
-
 .label {
   font-size: 0.85rem;
-  font-weight: bold;
 }
 .green {
   color: $dark-green;
   font-size: 0.85rem;
-  font-weight: bold;
 }
 .or_button {
   background: transparent;
@@ -1696,18 +1656,21 @@ export default {
   margin-left: 0.25rem;
 }
 .default_button {
-  font-weight: bold;
-  padding: 0.3rem 0.75rem;
+  padding: 0.5rem 1rem;
   margin-top: 0.5rem;
   border-radius: 0.2rem;
   border: none;
   cursor: pointer;
-  color: $white;
-  background: $dark-green;
+  color: $dark-green;
+  background: white;
+
+  img {
+    height: 0.75rem;
+    filter: invert(39%) sepia(96%) saturate(373%) hue-rotate(94deg) brightness(75%) contrast(94%);
+  }
 }
 .name_button {
   font-size: 0px;
-  font-weight: bold;
   padding: 0.3rem 0.75rem;
   margin-top: 0.5rem;
   border-radius: 0.2rem;
@@ -1733,7 +1696,6 @@ export default {
 }
 .stage_button {
   font-size: 0px;
-  font-weight: bold;
   padding: 0.3rem 0.75rem;
   margin-top: 0.5rem;
   border-radius: 0.2rem;
@@ -1758,7 +1720,6 @@ export default {
 }
 .closeDate_button {
   font-size: 0px;
-  font-weight: bold;
   padding: 0.3rem 0.75rem;
   margin-top: 0.5rem;
   border-radius: 0.2rem;
@@ -1791,20 +1752,50 @@ export default {
   border-radius: 0.1rem;
 }
 .recommend {
-  background-color: $panther-gray;
-  padding: 0.25rem 0.5rem 1rem 0.25rem;
-  border-radius: 0.25rem;
-  margin-top: 0.5rem;
-  color: white;
+  position: absolute;
+  top: 12vh;
+  right: 3vw;
+  background-color: white;
+  border-radius: 0.3rem;
+  border: 1px solid #e8e8e8;
+  box-shadow: 1px 1px 4px 1px $very-light-gray;
+  height: 40vh;
+  width: 30vw;
+  &__validation {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 0rem 1rem;
+  }
+  &__header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid #e8e8e8;
+    height: 4rem;
+    padding: 1rem;
+
+    letter-spacing: 0.5px;
+    img {
+      height: 1rem;
+      filter: invert(30%);
+    }
+  }
+
+  &__body {
+    height: 5rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-evenly;
+    flex-direction: row;
+    margin-top: -0.5rem;
+    font-size: 14px;
+    padding: 0.5rem;
+  }
 }
-.recommendations {
-  display: flex;
-  align-items: center;
-  flex-direction: row;
-  font-size: 0.9rem;
-  margin-top: -1rem;
-  color: $panther-silver;
-}
+
 .margin-top {
   margin-top: 8rem;
 }
@@ -1816,7 +1807,6 @@ export default {
   cursor: pointer;
   color: $dark-green;
   background-color: white;
-  font-weight: bold;
 }
 .bouncy {
   animation: bounce 0.2s infinite alternate;
@@ -1832,7 +1822,7 @@ export default {
   background-color: $panther-gray;
   color: $panther-silver;
   border-radius: 0.25rem;
-  font-size: 0.75rem;
+  font-size: 14px;
   padding: 2px;
   margin-left: 0.2rem;
   margin-right: 0.5rem;
@@ -1876,18 +1866,14 @@ export default {
 #remove {
   filter: invert(60%);
 }
-.field-border {
-  box-shadow: 1px 1px 4px 1px $very-light-gray;
-  margin-bottom: 0.25rem;
+.drag-item {
   display: flex;
   align-items: center;
-  padding: 0.3rem;
+  flex-direction: row;
+  padding: 0.2rem 0rem;
   border-radius: 0.2rem;
-  height: 3rem;
-  width: 100%;
 }
 .option {
-  font-weight: bold;
   background: transparent;
   color: white;
   padding-bottom: 0.15rem;
@@ -1933,9 +1919,11 @@ export default {
 }
 
 .slack-form-builder {
-  display: flex;
-  flex-direction: column;
-  position: relative;
+  // display: flex;
+  // flex-direction: column;
+  // align-items: flex-start;
+  // justify-content: space-evenly;
+  padding: 0rem 3rem;
   color: $base-gray;
   &__sf-fields,
   &__sf-validations {
@@ -1950,7 +1938,6 @@ export default {
   &__sf-field {
     padding: 0.25rem;
     font-size: 0.85rem;
-    font-weight: bold;
     font-display: #{$bold-font-family};
     background-color: $panther;
     &:hover {
@@ -1963,7 +1950,6 @@ export default {
   &__required {
     padding: 0.25rem;
     font-size: 0.85rem;
-    font-weight: bold;
     font-display: #{$bold-font-family};
     background-color: $panther;
     &:hover {
@@ -1992,7 +1978,7 @@ export default {
     display: flex;
     justify-content: flex-start;
     width: 11rem;
-    font-size: 0.75rem;
+    font-size: 14px;
     margin-top: 1rem;
   }
   &__text {
@@ -2049,11 +2035,10 @@ export default {
   }
 
   &__body {
-    font-size: 0.75rem;
+    font-size: 14px;
   }
 
   &__label {
-    font-weight: bold;
   }
 
   &__right {
@@ -2111,11 +2096,16 @@ export default {
 }
 
 .primary-button {
-  width: 6rem;
+  padding: 0.4rem 1.5rem;
+  box-shadow: none;
+  font-weight: 400;
+}
+.primary-button:disabled {
+  background-color: $soft-gray;
 }
 
 .field-title {
-  font-size: 0.75rem;
+  font-size: 14px;
   margin-left: 1rem;
 
   &__bold {
@@ -2136,7 +2126,12 @@ export default {
   }
 }
 .stages-list {
-  top: 0.1rem;
+  margin-top: -1rem;
+  font-size: 11px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
 }
 
 .space {
@@ -2155,45 +2150,40 @@ img:hover {
   cursor: pointer;
 }
 .close {
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 1.5rem;
   background: transparent;
   color: $panther-gray;
   border: 2px solid $soft-gray;
   border-radius: 0.25rem;
-  font-weight: bold;
   opacity: 0.8;
 }
 .save {
-  padding: 0.5rem 1rem;
+  padding: 0.6rem 1.5rem;
   background-color: $dark-green;
   color: white;
   border: none;
   border-radius: 0.25rem;
   margin-left: 0.5rem;
-  font-weight: bold;
   cursor: pointer;
 }
 .disabled {
   padding: 0.5rem 1rem;
   min-width: 6rem;
-  background-color: $very-light-gray;
+  background-color: $soft-gray;
   color: $panther-gray;
   border: none;
   border-radius: 0.25rem;
   margin-left: 0.5rem;
-  font-weight: bold;
   opacity: 0.8;
+  cursor: text;
 }
 .disabled__ {
-  padding: 0.5rem 1rem;
-  min-width: 6rem;
-  background-color: $very-light-gray;
-  color: $panther-gray;
+  background-color: transparent;
+  font-size: 14px;
+  color: $dark-green;
   border: none;
-  border-radius: 0.25rem;
-  margin-left: 0.5rem;
-  font-weight: bold;
-  opacity: 0.8;
+  letter-spacing: 1px;
+  cursor: pointer;
 }
 .example-footer {
   border-top: 1px solid $very-light-gray;
@@ -2205,44 +2195,51 @@ img:hover {
   height: 10%;
 }
 .example--footer {
-  background-color: $white;
+  position: sticky;
   display: flex;
-  align-items: flex-end;
+  flex-direction: row;
+  align-items: center;
   justify-content: flex-end;
   margin-top: auto;
-  margin-bottom: -1rem;
-  width: 100%;
-  min-height: 5rem;
+  bottom: 0;
+  padding: 1rem 0rem;
+  background-color: white;
+  outline: 1px solid white;
+  z-index: 2;
 }
 .example-text {
   position: absolute;
   bottom: 180px;
   left: 50px;
-  opacity: 0.05;
+  opacity: 0.1;
   filter: alpha(opacity=50);
   font-size: 3.5rem;
   transform: rotate(-45deg);
 }
+::v-deep .multiselect__content {
+  max-height: 28vh;
+}
 .collection_fields {
   background-color: $white;
-  padding: 2rem 1rem;
-  margin: 1rem;
-  border-radius: 0.5rem;
-  height: 64vh;
-  min-width: 34vw;
-  overflow-y: scroll;
+  padding: 2rem 2rem 0rem 2rem;
+  margin: 0.5rem 1rem;
+  border-radius: 0.3rem;
+  border: 1px solid #e8e8e8;
+  overflow: auto;
+  height: 72vh;
+  width: 42vw;
   display: flex;
   flex-direction: column;
   position: relative;
-  box-shadow: 3px 4px 7px $very-light-gray;
+  // box-shadow: 3px 4px 7px $very-light-gray;
 }
 .stage_fields {
   background-color: $white;
-  padding: 2rem 1rem;
+  padding: 3rem 1rem;
   margin: -1.5rem 1rem 0rem 0rem;
   border-radius: 0.5rem;
-  height: 64vh;
-  min-width: 28vw;
+  height: 74vh;
+  width: 36vw;
   overflow-y: scroll;
   display: flex;
   flex-direction: column;
@@ -2269,23 +2266,15 @@ img:hover {
 .opportunity__row {
   display: flex;
   flex-direction: row;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
 }
 
 .required__fields {
   color: $panther-orange;
 }
-::-webkit-scrollbar {
-  -webkit-appearance: none;
-  width: 6px;
-}
-::-webkit-scrollbar-thumb {
-  border-radius: 2px;
-  background-color: $soft-gray;
-}
+
 .popular_fields {
-  font-weight: bold;
   text-align: center;
 }
 .popularModal {
@@ -2299,7 +2288,6 @@ img:hover {
   justify-content: center;
   padding: 0.4rem 1rem;
   border-radius: 0.3rem;
-  font-weight: bold;
   line-height: 1.14;
   text-indent: none;
   border-style: none;
@@ -2309,7 +2297,6 @@ img:hover {
   cursor: pointer;
   height: 2rem;
   width: 10rem;
-  font-weight: bold;
   font-size: 1.02rem;
   margin-right: 0.5rem;
 }
@@ -2319,7 +2306,6 @@ img:hover {
   justify-content: center;
   padding: 0.4rem 1rem;
   border-radius: 0.3rem;
-  font-weight: bold;
   line-height: 1.14;
   text-indent: none;
   border-style: none;
@@ -2329,7 +2315,6 @@ img:hover {
   cursor: not-allowed;
   height: 2rem;
   width: 10rem;
-  font-weight: bold;
   font-size: 1.02rem;
   margin-right: 0.5rem;
 }
@@ -2339,7 +2324,6 @@ img:hover {
   justify-content: center;
   padding: 0.4rem 1rem;
   border-radius: 0.3rem;
-  font-weight: bold;
   line-height: 1.14;
   text-indent: none;
   border-style: none;
@@ -2349,7 +2333,6 @@ img:hover {
   cursor: pointer;
   height: 2rem;
   width: 10rem;
-  font-weight: bold;
   font-size: 1.02rem;
   margin-right: 0.5rem;
 }

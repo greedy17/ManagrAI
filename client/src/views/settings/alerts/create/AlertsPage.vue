@@ -1,7 +1,7 @@
 <template>
   <div class="alerts-page">
     <div v-if="isOnboarding && !isAdmin" class="col">
-      <h2 class="title">Popular Workflow Automations</h2>
+      <h3>Popular Workflow Automations</h3>
       <p style="margin-top: -0.5rem" class="sub__">Step 2/2: Activate at least 3 workflows</p>
       <button
         class="orange_button bouncy"
@@ -12,31 +12,30 @@
       </button>
     </div>
     <div v-else class="col">
-      <h2 class="title">Popular Workflow Automations</h2>
-      <p style="color: #5d5e5e" class="sub__">Activate the workflows that are relevant to you</p>
+      <h3>Popular Workflow Automations</h3>
+      <p class="sub__">Activate the workflows that are relevant to you</p>
     </div>
 
     <div class="alert_cards">
-      <div class="card__">
+      <div class="card">
         <div class="card__header">
-          <h3>Log <span style="color: #5f8cff">Meetings</span></h3>
+          <h3>Log Meetings</h3>
         </div>
-        <div class="row">
-          <img style="height: 2rem; margin-right: 1rem" src="@/assets/images/zoom.png" alt="" />
-          <!-- <img
-            style="height: 1.65rem; margin-right: 0.5rem"
+        <div class="card__body">
+          <img style="height: 1.75rem; margin-right: 1rem" src="@/assets/images/zoom.png" alt="" />
+          <img
+            style="height: 1rem; margin-right: 1rem"
             src="@/assets/images/plusOne.png"
             class="filter-plus"
             alt=""
-          /> -->
-
+          />
           <img
-            style="height: 2rem; margin-right: 0.5rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/gmailCal.png"
             alt=""
           />
         </div>
-        <div style="margin-top: 2rem">
+        <div class="card__footer">
           <button
             v-if="!hasZoomChannel"
             @click="goToLogZoom"
@@ -44,41 +43,41 @@
           >
             Activate
           </button>
-          <p style="margin-top: -0.5rem; font-weight: 900" v-else>Activated</p>
+          <p class="active-workflow" v-else>
+            Active <img src="@/assets/images/configCheck.png" alt="" />
+          </p>
         </div>
       </div>
 
       <div
         :class="
-          !(hasZoomChannel || recapChannel) && isOnboarding && !isAdmin
-            ? 'onboarding card__'
-            : 'card__'
+          !(hasZoomChannel || recapChannel) && isOnboarding && !isAdmin ? 'onboarding card' : 'card'
         "
       >
         <div class="card__header">
-          <h3>Close Date <span style="color: #fa646a">Passed</span></h3>
+          <h3>Close Date Passed</h3>
         </div>
 
-        <div class="row">
+        <div class="card__body">
           <img
-            style="height: 2rem; margin-right: 0.5rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
           <img
-            style="height: 1.65rem; margin-right: 0.5rem"
+            style="height: 1rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
             class="filter-plus"
             alt=""
           />
           <img
-            style="height: 2rem; margin-right: 0.5rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
         </div>
 
-        <div style="margin-top: 2rem">
+        <div class="card__footer">
           <button
             v-if="
               hasSalesforceIntegration &&
@@ -90,17 +89,14 @@
           >
             Activate
           </button>
-          <h4
-            style="margin-top: -0.5rem"
-            v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)"
-          >
+          <h4 v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)">
             Connect Slack & Salesforce to acivate
           </h4>
           <h4
-            style="margin-top: -0.5rem"
+            class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Close Date Passed')"
           >
-            Activated
+            Active <img src="@/assets/images/configCheck.png" alt="" />
           </h4>
         </div>
       </div>
@@ -108,34 +104,34 @@
       <div
         :class="
           !user.activatedManagrConfigs.includes('Close Date Passed') && isOnboarding && !isAdmin
-            ? 'card__ onboarding'
-            : 'card__'
+            ? 'card onboarding'
+            : 'card'
         "
       >
         <div class="card__header">
-          <h3>Update <span style="color: #199e54">Forecast</span></h3>
+          <h3>Update Forecast</h3>
         </div>
 
-        <div class="row">
+        <div class="card__body">
           <img
-            style="height: 2rem; margin-right: 0.5rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
           <img
-            style="height: 1.65rem; margin-right: 0.5rem"
+            style="height: 1rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
             class="filter-plus"
             alt=""
           />
           <img
-            style="height: 2rem; margin-right: 0.5rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
         </div>
 
-        <div style="margin-top: 2rem">
+        <div class="card__footer">
           <button
             v-if="
               hasSalesforceIntegration &&
@@ -147,17 +143,14 @@
           >
             Activate
           </button>
-          <h4
-            style="margin-top: -0.5rem"
-            v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)"
-          >
+          <h4 v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)">
             Connect Slack & Salesforce to acivate
           </h4>
           <h4
-            style="margin-top: -0.5rem"
+            class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Update Forecast')"
           >
-            Activated
+            Active <img src="@/assets/images/configCheck.png" alt="" />
           </h4>
         </div>
       </div>
@@ -165,34 +158,34 @@
       <div
         :class="
           !user.activatedManagrConfigs.includes('Update Forecast') && isOnboarding && !isAdmin
-            ? 'card__ onboarding'
-            : 'card__'
+            ? 'card onboarding'
+            : 'card'
         "
       >
         <div class="card__header">
-          <h3>Deal <span style="color: #fa646a">Rotting</span></h3>
+          <h3>Deal Rotting</h3>
         </div>
 
-        <div class="row">
+        <div class="card__body">
           <img
-            style="height: 2rem; margin-right: 0.5rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
           <img
-            style="height: 1.65rem; margin-right: 0.5rem"
+            style="height: 1rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
             class="filter-plus"
             alt=""
           />
           <img
-            style="height: 2rem; margin-right: 0.5rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
         </div>
 
-        <div style="margin-top: 2rem">
+        <div class="card__footer">
           <button
             v-if="
               hasSalesforceIntegration &&
@@ -204,17 +197,14 @@
           >
             Activate
           </button>
-          <h4
-            style="margin-top: -0.5rem"
-            v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)"
-          >
+          <h4 v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)">
             Connect Slack & Salesforce to acivate
           </h4>
           <h4
-            style="margin-top: -0.5rem"
+            class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Deal Rotting')"
           >
-            Activated
+            Active <img src="@/assets/images/configCheck.png" alt="" />
           </h4>
         </div>
       </div>
@@ -222,34 +212,34 @@
       <div
         :class="
           !user.activatedManagrConfigs.includes('Update Forecast') && isOnboarding && !isAdmin
-            ? 'card__ onboarding'
-            : 'card__'
+            ? 'card onboarding'
+            : 'card'
         "
       >
         <div class="card__header">
-          <h3>Close Date<span style="color: #199e54"> Approaching</span></h3>
+          <h3>Close Date Approaching</h3>
         </div>
 
-        <div class="row">
+        <div class="card__body">
           <img
-            style="height: 2rem; margin-right: 0.5rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
           <img
-            style="height: 1.65rem; margin-right: 0.5rem"
+            style="height: 1rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
             class="filter-plus"
             alt=""
           />
           <img
-            style="height: 2rem; margin-right: 0.5rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
         </div>
 
-        <div style="margin-top: 2rem">
+        <div class="card__footer">
           <button
             v-if="
               hasSalesforceIntegration &&
@@ -268,10 +258,10 @@
             Connect Slack & Salesforce to acivate
           </h4>
           <h4
-            style="margin-top: -0.5rem"
+            class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Close Date Approaching')"
           >
-            Activated
+            Active <img src="@/assets/images/configCheck.png" alt="" />
           </h4>
         </div>
       </div>
@@ -279,34 +269,34 @@
       <div
         :class="
           !user.activatedManagrConfigs.includes('Update Forecast') && isOnboarding && !isAdmin
-            ? 'card__ onboarding'
-            : 'card__'
+            ? 'card onboarding'
+            : 'card'
         "
       >
         <div class="card__header">
-          <h3>Upcoming<span style="color: #ddad3c"> Next Step</span></h3>
+          <h3>Upcoming Next Step</h3>
         </div>
 
-        <div class="row">
+        <div class="card__body">
           <img
-            style="height: 2rem; margin-right: 0.5rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/slackLogo.png"
             alt=""
           />
           <img
-            style="height: 1.65rem; margin-right: 0.5rem"
+            style="height: 1rem; margin-right: 0.5rem"
             src="@/assets/images/plusOne.png"
             class="filter-plus"
             alt=""
           />
           <img
-            style="height: 2rem; margin-right: 0.5rem"
+            style="height: 1.5rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
         </div>
 
-        <div style="margin-top: 2rem">
+        <div class="card__footer">
           <button
             v-if="
               hasSalesforceIntegration &&
@@ -318,17 +308,14 @@
           >
             Activate
           </button>
-          <h4
-            style="margin-top: -0.5rem"
-            v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)"
-          >
+          <h4 v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)">
             Connect Slack & Salesforce to acivate
           </h4>
           <h4
-            style="margin-top: -0.5rem"
+            class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Upcoming Next Step')"
           >
-            Activated
+            Active <img src="@/assets/images/configCheck.png" alt="" />
           </h4>
         </div>
       </div>
@@ -641,7 +628,7 @@ h3 {
   }
 }
 .alerts-page {
-  margin-left: 14vw;
+  margin-left: 10vw;
   margin-top: 3.5rem;
   color: $base-gray;
   &__previous-step {
@@ -671,36 +658,45 @@ h3 {
 .alert_cards {
   display: flex;
   flex-direction: row;
-  justify-content: space-evenly;
+  justify-content: flex-start;
   align-items: center;
   flex-wrap: wrap;
-  padding: 0.5rem;
+  margin-top: 0.5rem;
+  padding-right: 0.5rem;
+  padding-bottom: 0.5rem;
 }
-.card__ {
-  background-color: $white;
-  border: none;
-  width: 20vw;
-  padding: 1.25rem;
-  margin-right: 1.25rem;
-  margin-bottom: 1rem;
+.card {
+  background-color: white;
+  box-shadow: 2px 2px 3px $very-light-gray;
   border-radius: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  // @media only screen and (min-width: 768px) {
-  //   flex: 1 0 24%;
-  //   min-width: 21rem;
-  //   max-width: 30rem;
-  // }
-
-  &header {
+  width: 22vw;
+  margin-right: 1rem;
+  margin-bottom: 1rem;
+  &__header {
+    height: 2rem;
+    padding: 1.25rem 1rem;
+    font-size: 13px;
     display: flex;
-    justify-content: center;
     align-items: center;
-    height: 3rem;
+    justify-content: flex-start;
+    border-bottom: 3px solid $soft-gray;
+  }
+  &__body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 5rem;
+    font-size: 13px;
+  }
+  &__footer {
+    display: flex;
+    align-items: center;
+    height: 2rem;
+    font-size: 14px;
+    justify-content: space-evenly;
   }
 }
+
 .alerts-page__settings {
   display: flex;
   align-items: center;
@@ -780,9 +776,9 @@ h3 {
   margin-left: 0.5rem;
 }
 .sub__ {
-  font-size: 16px;
+  font-size: 14px;
   margin-top: -0.5rem;
-  color: $panther-silver;
+  color: $gray;
 }
 .title {
   color: $base-gray;
@@ -799,7 +795,6 @@ h3 {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  margin-left: 0.75rem;
 }
 .row {
   display: flex;
@@ -880,12 +875,32 @@ input {
 .orange_button {
   background-color: $dark-green;
   color: white;
-  font-weight: bold;
-  font-size: 15px;
-  border-radius: 0.33rem;
+  font-size: 14px;
+  border-radius: 0.3rem;
   border: 2px solid $dark-green;
   padding: 0.25rem 1.25rem;
   cursor: pointer;
+}
+.active-workflow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 1.5rem;
+  margin-right: 1rem;
+  border: 1px solid $soft-gray;
+  background-color: white;
+  border-radius: 0.3rem;
+  color: $dark-green;
+  font-size: 12px;
+  cursor: text;
+  img {
+    height: 1rem;
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
+    margin-left: 0.75rem;
+    margin-top: 0.1rem;
+  }
 }
 .cs__button {
   width: 9rem;

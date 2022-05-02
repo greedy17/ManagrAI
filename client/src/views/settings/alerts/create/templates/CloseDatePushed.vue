@@ -8,17 +8,22 @@
 
             <FormField>
               <template v-slot:input>
-                <DropDownSearch
-                  :items.sync="userList"
-                  v-model="realTimeAlertForm.field.pipelines.value"
-                  @input="realTimeAlertForm.field.pipelines.validate()"
-                  displayKey="fullName"
-                  valueKey="id"
-                  nullDisplay="Multi-select"
-                  searchable
-                  multi
-                  medium
-                />
+                <Multiselect
+                  placeholder="Select Users"
+                  @input="mapIds"
+                  v-model="selectedUsers"
+                  :options="userList"
+                  openDirection="below"
+                  style="width: 14vw"
+                  selectLabel="Enter"
+                  track-by="id"
+                  label="fullName"
+                  :multiple="true"
+                >
+                  <template slot="noResult">
+                    <p>No results.</p>
+                  </template>
+                </Multiselect>
               </template>
             </FormField>
           </div>
@@ -29,19 +34,20 @@
               flex-direction: column;
               align-items: center;
               justify-content: flex-start;
-              margin-top: 1.5rem;
+              -margin-top: 1.5rem;
             "
           >
+            <p>Slack Channel:</p>
             <div v-if="!channelName" class="row__">
-              <label :class="!create ? 'green' : ''">Select #channel</label>
+              <label :class="!create ? 'green' : ''">Select</label>
               <ToggleCheckBox
-                style="margin-left: 0.25rem; margin-right: 0.25rem"
+                style="margin-left: 0.5rem; margin-right: 0.5rem"
                 @input="changeCreate"
                 :value="create"
                 offColor="#199e54"
                 onColor="#199e54"
               />
-              <label :class="create ? 'green' : ''">Create #channel:</label>
+              <label :class="create ? 'green' : ''">Create</label>
             </div>
 
             <label v-else for="channel" style="font-weight: bold"
@@ -83,27 +89,26 @@
             <div style="margin-top: 0.5rem" v-else>
               <FormField>
                 <template v-slot:input>
-                  <DropDownSearch
-                    :items.sync="userChannelOpts.channels"
-                    v-model="realTimeAlertForm.field.recipients.value"
-                    displayKey="name"
-                    valueKey="id"
-                    nullDisplay="Channels"
-                    :hasNext="!!userChannelOpts.nextCursor"
-                    @load-more="listUserChannels(userChannelOpts.nextCursor)"
-                    searchable
-                    local
+                  <Multiselect
+                    placeholder="Select Channel"
+                    v-model="selectedChannel"
+                    @input="setRecipient"
+                    :options="userChannelOpts.channels"
+                    openDirection="below"
+                    style="width: 14vw"
+                    selectLabel="Enter"
+                    track-by="id"
+                    label="name"
                   >
-                    <template v-slot:tn-dropdown-option="{ option }">
-                      <img
-                        v-if="option.isPrivate == true"
-                        class="card-img"
-                        style="width: 1rem; height: 1rem; margin-right: 0.2rem"
-                        src="@/assets/images/lockAsset.png"
-                      />
-                      {{ option['name'] }}
+                    <template slot="noResult">
+                      <p>No results.</p>
                     </template>
-                  </DropDownSearch>
+                    <template slot="afterList">
+                      <p class="load-more" @click="listUserChannels(userChannelOpts.nextCursor)">
+                        Load More
+                      </p>
+                    </template>
+                  </Multiselect>
                 </template>
               </FormField>
             </div>
@@ -180,9 +185,12 @@ export default {
     PulseLoadingSpinnerButton,
     Modal,
     SmartAlertTemplateBuilder,
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {
     return {
+      selectedUsers: null,
+      selectedChannel: null,
       channelOpts: new SlackListResponse(),
       userChannelOpts: new SlackListResponse(),
       savingTemplate: false,
@@ -257,12 +265,19 @@ export default {
   },
 
   methods: {
+    mapIds() {
+      let mappedIds = this.selectedUsers.map((user) => user.id)
+      this.realTimeAlertForm.field.pipelines.value = mappedIds
+    },
+    setRecipient() {
+      this.realTimeAlertForm.field.recipients.value = this.selectedChannel.id
+    },
     checkInteger(str) {
       return /\d/.test(str) ? this.user.fullName : str
     },
     handleUpdate() {
       this.loading = true
-      console.log(this.userConfigForm.value)
+
       User.api
         .update(this.user.id, this.userConfigForm.value)
         .then((response) => {
@@ -577,6 +592,10 @@ export default {
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
+.load-more {
+  text-align: center;
+  font-size: 13px;
+}
 ::placeholder {
   color: $panther-silver;
   font-size: 0.75rem;
@@ -626,7 +645,7 @@ img {
   height: 2.5rem;
   background-color: white;
   border: none;
-  width: 75%;
+  width: 14vw;
   text-align: center;
   margin-top: 0.5rem;
   box-shadow: 1px 1px 3px 0px $very-light-gray;

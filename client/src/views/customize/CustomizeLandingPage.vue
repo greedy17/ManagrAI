@@ -11,35 +11,27 @@
         "
       >
         <!-- <img src="@/assets/images/map.png" style="height: 1.5rem" alt="" /> -->
-        <h2 class="title">Manage Actions</h2>
+        <h3 class="title">Manage Actions</h3>
         <h5 style="margin-top: -0.5rem">Where Salesforce meets Slack</h5>
       </div>
       <router-link exact-active-class="active" :to="{ name: 'Required' }">
         <div class="row">
-          <img
-            src="@/assets/images/warning.png"
-            style="height: 1.25rem; margin-right: 1rem"
-            alt=""
-          />
-          <h4>Required</h4>
+          <img src="@/assets/images/warning.png" style="height: 1rem; margin-right: 1rem" alt="" />
+          <h5>Required</h5>
         </div>
       </router-link>
 
       <router-link exact-active-class="active" :to="{ name: 'Custom' }">
         <div class="row">
-          <img
-            src="@/assets/images/optional.png"
-            style="height: 1.25rem; margin-right: 1rem"
-            alt=""
-          />
-          <h4>Optional</h4>
+          <img src="@/assets/images/optional.png" style="height: 1rem; margin-right: 1rem" alt="" />
+          <h5>Optional</h5>
         </div>
       </router-link>
 
       <router-link exact-active-class="active" :to="{ name: 'ValidationRules' }">
         <div class="row">
-          <img src="@/assets/images/gavel.png" style="height: 1.25rem; margin-right: 1rem" alt="" />
-          <h4>Validation Rules</h4>
+          <img src="@/assets/images/gavel.png" style="height: 1rem; margin-right: 1rem" alt="" />
+          <h5>Validation Rules</h5>
         </div>
       </router-link>
     </div>
@@ -226,7 +218,7 @@ img {
 }
 .sidenav {
   height: 100%;
-  width: 18vw;
+  width: 16vw;
   font-size: 0.85rem;
   position: fixed;
   left: 0;
@@ -248,7 +240,7 @@ a:hover {
   cursor: pointer;
 }
 .active div {
-  color: $darker-green;
+  color: $base-gray;
   background-color: $lighter-green;
   border-radius: 0.3rem;
   font-weight: bold;
@@ -256,16 +248,14 @@ a:hover {
 }
 .active div:after {
   content: '';
-  background: $darker-green;
+  background: $base-gray;
   position: absolute;
   bottom: 0.65rem;
   left: 0;
   height: 50%;
   width: 3px;
 }
-.active img {
-  filter: none;
-}
+
 .title {
   color: $base-gray;
   font-weight: bold;
@@ -275,17 +265,14 @@ a:hover {
   flex-direction: row;
   align-items: center;
   margin-top: 0.1rem;
-  margin-bottom: 0.1rem;
+  margin-bottom: 0.25rem;
   padding-left: 0.5rem;
-  height: 3rem;
+  height: 2.5rem;
 }
 .row:hover {
   background-color: $lighter-green;
-  color: $darker-green;
+  color: $base-gray;
   border-radius: 0.3rem;
-  img {
-    filter: none;
-  }
 }
 </style>
 

@@ -3,7 +3,7 @@
     <div v-if="userLevel == 'REP'">
       <div>
         <div class="welcome">
-          <h1>Hi, {{ user.fullName }}</h1>
+          <h2>Hi, {{ user.fullName }}</h2>
 
           <div style="margin-top: -1.5rem" class="row">
             <div
@@ -13,9 +13,9 @@
                 hasNylasIntegration &&
                 hasSalesforceIntegration
               "
-              style="margin-top: 1rem; margin-right: 1rem"
+              style="margin-right: 1rem; font-size: 14px"
             >
-              Connect Managr to your favorite apps
+              <p>Connect Managr to your favorite apps:</p>
             </div>
             <div v-else>Step 1/2. Connect the required apps.</div>
           </div>
@@ -26,16 +26,11 @@
         <div class="card">
           <div class="required__header">
             <div class="card__header">
-              <img class="card-img" src="@/assets/images/salesforce.png" />
-              <h2 class="card__title">Salesforce</h2>
-              <img
-                v-if="hasSalesforceIntegration"
-                class="dot"
-                src="@/assets/images/dot.png"
-                alt=""
-              />
+              <img style="width: 1.5rem" src="@/assets/images/salesforce.png" />
+              <h3 class="card__title">Salesforce</h3>
             </div>
           </div>
+
           <div>
             <p class="card-text">Sync Accounts, Opportunities, & Contacts</p>
           </div>
@@ -43,22 +38,21 @@
             <PulseLoadingSpinnerButton
               v-if="!hasSalesforceIntegration"
               @click="onGetAuthLink('SALESFORCE')"
-              class="orange_button test"
+              class="orange_button"
               style="margin-left: 0.5rem"
               text="Connect"
               :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
               >Connect</PulseLoadingSpinnerButton
             >
-            <div v-else class="dropdown-container" tabindex="1">
-              <div class="three-dots"></div>
-              <div class="dropdown">
-                <button
-                  class="revoke-button"
-                  :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
+
+            <div v-else class="card__footer">
+              <div class="img-border">
+                <img
                   @click="onRevoke('SALESFORCE')"
-                >
-                  revoke
-                </button>
+                  src="@/assets/images/revoke.png"
+                  height="16"
+                  alt=""
+                />
               </div>
             </div>
           </div>
@@ -67,19 +61,8 @@
         <div :class="!hasSalesforceIntegration ? 'card onboarding' : 'card'">
           <div class="required__header">
             <div class="card__header">
-              <img style="height: 3rem" src="@/assets/images/slackLogo.png" />
-              <h2 class="card__title">Slack</h2>
-              <img
-                v-if="
-                  !(
-                    (!orgHasSlackIntegration && userCanIntegrateSlack) ||
-                    (orgHasSlackIntegration && !hasSlackIntegration)
-                  )
-                "
-                class="dot"
-                src="@/assets/images/dot.png"
-                alt=""
-              />
+              <img style="height: 1rem" src="@/assets/images/slackLogo.png" />
+              <h3 class="card__title">Slack</h3>
             </div>
           </div>
           <p class="card-text">Interact with Managr through Slack</p>
@@ -99,24 +82,17 @@
           </div>
 
           <div v-else class="card__body">
-            <div class="dropdown-container" tabindex="1">
-              <div class="three-dots"></div>
-              <div class="dropdown">
-                <button
-                  :loading="generatingToken && selectedIntegration == 'SLACK'"
-                  @click="onRevoke('SLACK')"
-                  class="revoke-button"
-                >
-                  revoke
-                </button>
-                <button
-                  :loading="generatingToken && selectedIntegration == 'SLACK'"
-                  @click="onGetAuthLink('SLACK')"
-                  class="plain-button"
-                >
-                  refresh
-                </button>
-              </div>
+            <div class="img-border">
+              <img @click="onRevoke('SLACK')" src="@/assets/images/revoke.png" height="16" alt="" />
+            </div>
+            <div class="img-border">
+              <img
+                @click="onGetAuthLink('SLACK')"
+                src="@/assets/images/refresh.png"
+                height="16"
+                class="invert"
+                alt=""
+              />
             </div>
           </div>
         </div>
@@ -130,14 +106,9 @@
           "
         >
           <div class="card__header">
-            <img
-              class="card-img"
-              src="@/assets/images/gmailCal.png"
-              style="margin-right: 1rem; height: 2.5rem; width: 2.5rem"
-            />
-            <img class="card-img" src="@/assets/images/outlookMail.png" style="height: 3rem" />
-            <h2 class="card__title">Calendar</h2>
-            <img v-if="hasNylasIntegration" class="dot" src="@/assets/images/dot.png" alt="" />
+            <img src="@/assets/images/gmailCal.png" style="margin-right: 1rem; height: 1rem" />
+            <img src="@/assets/images/outlookMail.png" style="height: 1rem" />
+            <h3 class="card__title">Calendar</h3>
           </div>
 
           <p class="card-text">Accesses your upcoming meetings + attendees</p>
@@ -158,17 +129,8 @@
             ></PulseLoadingSpinnerButton>
           </div>
           <div v-else class="card__body">
-            <div class="dropdown-container" tabindex="1">
-              <div class="three-dots"></div>
-              <div class="dropdown">
-                <button
-                  class="revoke-button"
-                  :loading="generatingToken && selectedIntegration == 'NYLAS'"
-                  @click="onRevoke('NYLAS')"
-                >
-                  revoke
-                </button>
-              </div>
+            <div class="img-border">
+              <img @click="onRevoke('NYLAS')" src="@/assets/images/revoke.png" height="16" alt="" />
             </div>
           </div>
           <!-- <div style="margin-bottom: 0.5rem; width: 15rem">
@@ -182,9 +144,8 @@
 
         <div v-if="hasNylasIntegration" class="card">
           <div class="card__header">
-            <img class="card-img card-img__radius" src="@/assets/images/zoom.png" />
-            <h2 class="card__title">Zoom</h2>
-            <img v-if="hasZoomIntegration" class="dot" src="@/assets/images/dot.png" alt="" />
+            <img style="height: 1rem" src="@/assets/images/zoom.png" />
+            <h3 class="card__title">Zoom</h3>
           </div>
           <p class="card-text">Activates the zoom meeting workflow automation.</p>
           <div v-if="!hasZoomIntegration" class="card__body">
@@ -201,24 +162,17 @@
           </div>
 
           <div v-else class="card__body">
-            <div class="dropdown-container" tabindex="1">
-              <div class="three-dots"></div>
-              <div class="dropdown">
-                <button
-                  :loading="generatingToken && selectedIntegration == 'ZOOM'"
-                  @click="onRevoke('ZOOM')"
-                  class="revoke-button"
-                >
-                  revoke
-                </button>
-                <button
-                  :loading="generatingToken && selectedIntegration == 'ZOOM'"
-                  @click="onGetAuthLink('ZOOM')"
-                  class="plain-button"
-                >
-                  refresh
-                </button>
-              </div>
+            <div class="img-border">
+              <img @click="onRevoke('ZOOM')" src="@/assets/images/revoke.png" height="16" alt="" />
+            </div>
+            <div class="img-border">
+              <img
+                @click="onGetAuthLink('ZOOM')"
+                src="@/assets/images/refresh.png"
+                height="16"
+                class="invert"
+                alt=""
+              />
             </div>
           </div>
         </div>
@@ -250,7 +204,7 @@
 
         <div v-if="!user.onboarding" class="card">
           <div class="card__header">
-            <img style="height: 1.5rem" src="@/assets/images/outreach.webp" />
+            <img style="height: 1rem" src="@/assets/images/outreach.webp" />
           </div>
           <p class="card-text">Add Contacts to Sequences</p>
           <div class="card__body">
@@ -263,13 +217,24 @@
               text="Connect"
               :loading="generatingToken && selectedIntegration == 'OUTREACH'"
             ></PulseLoadingSpinnerButton>
+
             <div v-else class="card__body">
-              <div class="dropdown-container" tabindex="1">
-                <div class="three-dots"></div>
-                <div class="dropdown">
-                  <button @click="onRevoke('OUTREACH')" class="revoke-button">revoke</button>
-                  <button @click="onGetAuthLink('OUTREACH')" class="plain-button">refresh</button>
-                </div>
+              <div class="img-border">
+                <img
+                  @click="onRevoke('OUTREACH')"
+                  src="@/assets/images/revoke.png"
+                  height="16"
+                  alt=""
+                />
+              </div>
+              <div class="img-border">
+                <img
+                  @click="onGetAuthLink('OUTREACH')"
+                  src="@/assets/images/refresh.png"
+                  height="16"
+                  class="invert"
+                  alt=""
+                />
               </div>
             </div>
           </div>
@@ -279,11 +244,11 @@
 
     <div v-else>
       <div class="welcome">
-        <h1>Hi, {{ user.fullName }}</h1>
+        <h2>Hi, {{ user.fullName }}</h2>
 
         <div style="margin-top: -1.5rem" class="row">
-          <div style="margin-top: 1rem; margin-right: 1rem">
-            Connect Managr to your favorite apps
+          <div style="margin-right: 1rem; font-size: 14px">
+            <p>Connect Managr to your favorite apps:</p>
           </div>
         </div>
       </div>
@@ -292,8 +257,8 @@
         <div class="card">
           <div class="required__header">
             <div class="card__header">
-              <img class="card-img" src="@/assets/images/salesforce.png" />
-              <h2 class="card__title">Salesforce</h2>
+              <img style="width: 1.5rem" src="@/assets/images/salesforce.png" />
+              <h3 class="card__title">Salesforce</h3>
             </div>
           </div>
 
@@ -311,18 +276,14 @@
               >Connect</PulseLoadingSpinnerButton
             >
 
-            <div v-else class="card__body">
-              <div class="dropdown-container" tabindex="1">
-                <div class="three-dots"></div>
-                <div class="dropdown">
-                  <button
-                    :loading="generatingToken && selectedIntegration == 'ZOOM'"
-                    @click="onRevoke('SALESFORCE')"
-                    class="revoke-button"
-                  >
-                    revoke
-                  </button>
-                </div>
+            <div v-else class="card__footer">
+              <div class="img-border">
+                <img
+                  @click="onRevoke('SALESFORCE')"
+                  src="@/assets/images/revoke.png"
+                  height="16"
+                  alt=""
+                />
               </div>
             </div>
           </div>
@@ -331,8 +292,8 @@
         <div class="card">
           <div class="required__header">
             <div class="card__header">
-              <img style="height: 3rem" src="@/assets/images/slackLogo.png" />
-              <h2 class="card__title">Slack</h2>
+              <img style="height: 1rem" src="@/assets/images/slackLogo.png" />
+              <h3 class="card__title">Slack</h3>
             </div>
             <!-- <p
               v-if="
@@ -360,24 +321,22 @@
             ></PulseLoadingSpinnerButton>
 
             <div v-else class="card__body">
-              <div class="dropdown-container" tabindex="1">
-                <div class="three-dots"></div>
-                <div class="dropdown">
-                  <button
-                    :loading="generatingToken && selectedIntegration == 'ZOOM'"
-                    @click="onRevoke('SLACK')"
-                    class="revoke-button"
-                  >
-                    revoke
-                  </button>
-                  <button
-                    :loading="generatingToken && selectedIntegration == 'ZOOM'"
-                    @click="onRefreshSlack"
-                    class="plain-button"
-                  >
-                    refresh
-                  </button>
-                </div>
+              <div class="img-border">
+                <img
+                  @click="onRevoke('SLACK')"
+                  src="@/assets/images/revoke.png"
+                  height="16"
+                  alt=""
+                />
+              </div>
+              <div class="img-border">
+                <img
+                  @click="onGetAuthLink('SLACK')"
+                  src="@/assets/images/refresh.png"
+                  height="16"
+                  class="invert"
+                  alt=""
+                />
               </div>
             </div>
           </div>
@@ -385,8 +344,8 @@
 
         <div class="card">
           <div class="card__header">
-            <img class="card-img card-img__radius" src="@/assets/images/zoom.png" />
-            <h2 class="card__title">Zoom</h2>
+            <img style="height: 1rem" src="@/assets/images/zoom.png" />
+            <h3 class="card__title">Zoom</h3>
           </div>
 
           <p class="card-text">Activates the meeting workflow automation.</p>
@@ -399,13 +358,24 @@
               text="Connect"
               :loading="generatingToken && selectedIntegration == 'ZOOM'"
             ></PulseLoadingSpinnerButton>
+
             <div v-else class="card__body">
-              <div class="dropdown-container" tabindex="1">
-                <div class="three-dots"></div>
-                <div class="dropdown">
-                  <button @click="onRevoke('ZOOM')" class="revoke-button">revoke</button>
-                  <button @click="onGetAuthLink('ZOOM')" class="plain-button">refresh</button>
-                </div>
+              <div class="img-border">
+                <img
+                  @click="onRevoke('ZOOM')"
+                  src="@/assets/images/revoke.png"
+                  height="16"
+                  alt=""
+                />
+              </div>
+              <div class="img-border">
+                <img
+                  @click="onGetAuthLink('ZOOM')"
+                  src="@/assets/images/refresh.png"
+                  height="16"
+                  class="invert"
+                  alt=""
+                />
               </div>
             </div>
           </div>
@@ -413,13 +383,9 @@
 
         <div class="card">
           <div class="card__header">
-            <img
-              class="card-img"
-              src="@/assets/images/gmailCal.png"
-              style="margin-right: 1rem; height: 2.5rem; width: 2.5rem"
-            />
-            <img class="card-img" src="@/assets/images/outlookMail.png" style="height: 3rem" />
-            <h2 class="card__title">Calendar</h2>
+            <img src="@/assets/images/gmailCal.png" style="margin-right: 1rem; height: 1rem" />
+            <img src="@/assets/images/outlookMail.png" style="height: 1rem" />
+            <h3 class="card__title">Calendar</h3>
           </div>
 
           <p class="card-text">Accesses your upcoming meetings + attendees</p>
@@ -433,11 +399,13 @@
               :loading="generatingToken && selectedIntegration == 'NYLAS'"
             ></PulseLoadingSpinnerButton>
             <div v-else class="card__body">
-              <div class="dropdown-container" tabindex="1">
-                <div class="three-dots"></div>
-                <div class="dropdown">
-                  <button @click="onRevoke('NYLAS')" class="revoke-button">revoke</button>
-                </div>
+              <div class="img-border">
+                <img
+                  @click="onRevoke('NYLAS')"
+                  src="@/assets/images/revoke.png"
+                  height="16"
+                  alt=""
+                />
               </div>
             </div>
           </div>
@@ -452,7 +420,7 @@
 
         <div class="card">
           <div class="card__header">
-            <img class="filter-loft" style="height: 1.5rem" src="@/assets/images/salesloft.svg" />
+            <img class="filter-loft" style="height: 1rem" src="@/assets/images/salesloft.svg" />
           </div>
           <p class="card-text">Add Contacts to Cadences</p>
           <div class="card__body">
@@ -466,11 +434,13 @@
               :loading="generatingToken && selectedIntegration == 'SALESLOFT'"
             ></PulseLoadingSpinnerButton>
             <div v-else-if="hasSalesloftIntegration" class="card__body">
-              <div class="dropdown-container" tabindex="1">
-                <div class="three-dots"></div>
-                <div class="dropdown">
-                  <button @click="onRevoke('SALESLOFT')" class="revoke-button">revoke</button>
-                </div>
+              <div class="img-border">
+                <img
+                  @click="onRevoke('SALESLOFT')"
+                  src="@/assets/images/revoke.png"
+                  height="16"
+                  alt=""
+                />
               </div>
             </div>
           </div>
@@ -478,7 +448,7 @@
 
         <div class="card">
           <div class="card__header">
-            <img style="height: 1.5rem" src="@/assets/images/outreach.webp" />
+            <img style="height: 1rem" src="@/assets/images/outreach.webp" />
           </div>
           <p class="card-text">Add Contacts to Sequences</p>
           <div class="card__body">
@@ -492,12 +462,22 @@
               :loading="generatingToken && selectedIntegration == 'OUTREACH'"
             ></PulseLoadingSpinnerButton>
             <div v-else class="card__body">
-              <div class="dropdown-container" tabindex="1">
-                <div class="three-dots"></div>
-                <div class="dropdown">
-                  <button @click="onRevoke('OUTREACH')" class="revoke-button">revoke</button>
-                  <button @click="onGetAuthLink('OUTREACH')" class="plain-button">refresh</button>
-                </div>
+              <div class="img-border">
+                <img
+                  @click="onRevoke('OUTREACH')"
+                  src="@/assets/images/revoke.png"
+                  height="16"
+                  alt=""
+                />
+              </div>
+              <div class="img-border">
+                <img
+                  @click="onGetAuthLink('OUTREACH')"
+                  src="@/assets/images/refresh.png"
+                  height="16"
+                  class="invert"
+                  alt=""
+                />
               </div>
             </div>
           </div>
@@ -507,8 +487,8 @@
           <div class="card__header">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="100"
-              height="35"
+              width="50"
+              height="18"
               viewBox="0 0 86 30"
               preserveAspectRatio="xMinYMid meet"
             >
@@ -535,12 +515,15 @@
               text="Connect"
               :loading="generatingToken && selectedIntegration == 'GONG'"
             ></PulseLoadingSpinnerButton>
+
             <div v-else class="card__body">
-              <div class="dropdown-container" tabindex="1">
-                <div class="three-dots"></div>
-                <div class="dropdown">
-                  <button @click="onRevoke('GONG')" class="revoke-button">revoke</button>
-                </div>
+              <div class="img-border">
+                <img
+                  @click="onRevoke('GONG')"
+                  src="@/assets/images/revoke.png"
+                  height="16"
+                  alt=""
+                />
               </div>
             </div>
           </div>
@@ -549,7 +532,7 @@
         <div class="card">
           <div class="card__header">
             <img style="width: 4rem" src="@/assets/images/hubspott.png" />
-            <h2 class="card__title">Hubspot</h2>
+            <h3 class="card__title">Hubspot</h3>
           </div>
           <p class="card-text">Sync Companies, Deals, and Contacts</p>
           <div class="card__body">
@@ -559,8 +542,8 @@
 
         <div class="card">
           <div class="card__header">
-            <img style="height: 3.5rem" src="@/assets/images/teamsLogo.png" />
-            <h2 class="card__title">Teams</h2>
+            <img style="height: 1.5rem" src="@/assets/images/teamsLogo.png" />
+            <h3 class="card__title">Teams</h3>
           </div>
           <p class="card-text">Interact with Managr through Teams</p>
           <div class="card__body">
@@ -570,8 +553,8 @@
 
         <div class="card">
           <div class="card__header">
-            <img style="height: 3rem" src="@/assets/images/googleDrive.png" />
-            <h2 class="card__title">Google Drive</h2>
+            <img style="height: 1rem" src="@/assets/images/googleDrive.png" />
+            <h3 class="card__title">Google Drive</h3>
           </div>
           <p class="card-text">Enable battlecards and playbooks</p>
           <div class="card__body">
@@ -582,7 +565,7 @@
     </div>
 
     <img style="margin-top: 1rem" class="lock" src="@/assets/images/blackLock.png" />
-    <p class="privacy"><strong>SOC2</strong> certified, and <strong>GDPR</strong> compliant</p>
+    <p class="privacy">SOC2 certified, and GDPR compliant</p>
     <!-- <p>
       <a href="https://managr.ai/terms-of-service" target="_blank">Terms of Service</a>
       |
@@ -635,9 +618,6 @@ export default {
       } else {
         return num
       }
-    },
-    goToSlackFormBuilder() {
-      this.$router.push({ name: 'Configure' })
     },
     goToSmartAlerts() {
       this.$router.push({ name: 'ListTemplates' })
@@ -850,9 +830,6 @@ export default {
       }
     },
   },
-  mounted() {
-    console.log(this.user)
-  },
 }
 </script>
 
@@ -868,32 +845,33 @@ export default {
     transform: translateY(-6px);
   }
 }
+.img-border {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e8e8e8;
+  border-radius: 0.2rem;
+  cursor: pointer;
+  padding: 0.15rem 0.3rem;
+  margin-right: 0.5rem;
+}
+.invert {
+  filter: invert(80%);
+}
 .filter-loft {
   filter: invert(40%) sepia(96%) brightness(101%) contrast(82%);
 }
 .filtered-green {
   filter: invert(39%) sepia(96%) saturate(373%) hue-rotate(94deg) brightness(104%) contrast(94%);
 }
-.dot {
-  filter: invert(40%) sepia(96%) saturate(431%) hue-rotate(94deg) brightness(101%) contrast(82%);
-  height: 0.4rem;
-  border-radius: 50%;
-  margin-left: 0.4rem;
-  margin-bottom: 0.2rem;
-}
+
 .onboarding {
   filter: blur(10px);
 }
 .test {
   animation: bounce 0.2s infinite alternate;
 }
-.three-dots:after {
-  cursor: pointer;
-  color: $base-gray;
-  content: '\2026';
-  font-size: 3rem;
-  padding-left: 6rem;
-}
+
 .dropdown {
   right: 10px;
   box-shadow: 0px 0px 1px 3px $soft-gray;
@@ -929,15 +907,15 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 1.5rem;
+  padding: 1rem 2rem;
   &__cards {
     display: flex;
+    flex-direction: row;
+    padding: 0.5rem 1.5rem;
     flex-wrap: wrap;
-    justify-content: center;
-    border-radius: 0.4rem;
-    padding: 1rem 4rem;
-    width: 94vw;
-    margin-top: -2rem;
+    justify-content: flex-start;
+    width: 96vw;
+    margin-top: -1rem;
   }
   &__subtitle {
     font-size: 14px;
@@ -963,18 +941,19 @@ export default {
 .card {
   background-color: $white;
   padding: 1rem 2rem 0.5rem 2rem;
-  border: none;
+  border: 1px solid #e8e8e8;
   margin-right: 1rem;
   margin-bottom: 1rem;
   border-radius: 0.5rem;
   display: flex;
   flex-direction: column;
-  box-shadow: 4px 5px 9px $very-light-gray;
-  @media only screen and (min-width: 768px) {
-    flex: 1 0 24%;
-    min-width: 21rem;
-    max-width: 24rem;
-  }
+  width: 22vw;
+  height: auto;
+  // @media only screen and (min-width: 768px) {
+  //   flex: 1 0 24%;
+  //   min-width: 21rem;
+  //   max-width: 24rem;
+  // }
 
   &__header {
     display: flex;
@@ -1025,12 +1004,11 @@ export default {
 }
 
 .card-img {
-  width: 3rem;
+  width: 2rem;
 }
 
 .card-text {
   font-size: 14px;
-  font-weight: bold;
   color: $panther-gray;
   text-align: center;
 }
@@ -1090,13 +1068,12 @@ export default {
 }
 
 .privacy {
-  font-family: #{$bold-font-family};
   color: $base-gray;
-  font-size: 16px;
+  font-size: 12px;
 }
 
 .lock {
-  height: 2rem;
+  height: 1rem;
 }
 .note {
   font: lato-bold;
@@ -1146,11 +1123,7 @@ a {
   display: flex;
   align-items: flex-start;
   flex-direction: column;
-  margin: 1rem 5rem;
-  margin-bottom: 2rem;
-  // @media only screen and (max-width: 1250px) {
-  //   margin-left: 15%;
-  // }
+  margin: 1.5rem;
 }
 .back-logo {
   position: absolute;

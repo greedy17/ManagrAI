@@ -98,11 +98,11 @@ export default new Router({
       name: 'ProductForm',
       component: () => import('@/views/customize/ProductForm')
     },
-    {
-      path: '/configure',
-      name: 'Configure',
-      component: () => import('@/views/auth/Configure')
-    },
+    // {
+    //   path: '/configure',
+    //   name: 'Configure',
+    //   component: () => import('@/views/auth/Configure')
+    // },
     {
       path: '/create-contacts',
       name: 'CreateContacts',

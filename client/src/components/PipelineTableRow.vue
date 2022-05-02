@@ -298,7 +298,10 @@ export default {
 .empty {
   display: table-cell;
   background: white;
-  border: 1px solid $soft-gray;
+  min-width: 12vw;
+  border-left: 1px solid $soft-gray;
+  border-right: 1px solid $soft-gray;
+  border-bottom: 1px solid $soft-gray;
 }
 .table-cell {
   display: table-cell;

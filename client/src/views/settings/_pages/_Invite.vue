@@ -12,7 +12,7 @@
       <form class="invite-form" @submit.prevent="handleInvite">
         <div class="header">
           <h2 class="invite-form__title">Invite Users via Slack</h2>
-          <h2 class="invite-form__subtitle" style="color: #199e54">
+          <h2 class="invite-form__subtitle">
             {{ $store.state.user.organizationRef.name }}
           </h2>
         </div>
@@ -562,7 +562,7 @@ form,
   margin-top: 2.5rem;
   width: 15vw;
   font-size: 16px;
-  font-weight: bold;
+  box-shadow: none;
 }
 button {
   @include primary-button();
@@ -595,6 +595,9 @@ button {
     font-weight: bold;
     text-align: left;
   }
+  &__subtitle {
+    color: $dark-green;
+  }
   &__actions {
     display: flex;
     flex-direction: column;
@@ -616,12 +619,13 @@ button {
   }
   &__container {
     background-color: $white;
-    border: none;
+    border: 1px solid #e8e8e8;
     color: $base-gray;
-    min-width: 60vw;
+    width: 60vw;
+    height: 60vh;
+    overflow: scroll;
     padding: 1.5rem 0rem 1.5rem 1rem;
     border-radius: 5px;
-    box-shadow: 3px 4px 7px $very-light-gray;
     display: flex;
     align-items: flex-start;
     flex-direction: column;

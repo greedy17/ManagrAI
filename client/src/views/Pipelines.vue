@@ -12,12 +12,8 @@
       <div v-if="notes.length" class="modal-container">
         <div class="flex-row-spread">
           <div class="flex-row">
-            <img
-              src="@/assets/images/logo.png"
-              style="height: 1.75rem; margin-left: 0.5rem; margin-right: 0.25rem"
-              alt=""
-            />
-            <h2>Notes</h2>
+            <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <h3>Notes</h3>
           </div>
 
           <img
@@ -38,16 +34,12 @@
       <div v-else class="modal-container">
         <div class="flex-row-spread">
           <div class="flex-row">
-            <img
-              src="@/assets/images/logo.png"
-              style="height: 1.5rem; margin-left: 0.5rem; margin-right: 0.25rem"
-              alt=""
-            />
-            <h2>Notes</h2>
+            <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <h3>Notes</h3>
           </div>
           <img
             src="@/assets/images/closer.png"
-            style="height: 1.75rem; margin-top: -0.5rem; margin-right: 0.5rem; cursor: pointer"
+            style="height: 1.5rem; margin-top: -0.5rem; margin-right: 0.5rem; cursor: pointer"
             @click="resetNotes"
             alt=""
           />
@@ -69,12 +61,8 @@
       <div class="opp-modal-container">
         <div class="flex-row-spread header">
           <div class="flex-row">
-            <img
-              src="@/assets/images/logo.png"
-              style="height: 1.75rem; margin-left: 0.5rem; margin-right: 0.25rem"
-              alt=""
-            />
-            <h2>Create Opportunity</h2>
+            <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <h3>Create Opportunity</h3>
           </div>
 
           <img
@@ -98,7 +86,7 @@
                 id="user-input"
                 ccols="30"
                 rows="4"
-                style="width: 26.25vw; border-radius: 0.4rem"
+                style="width: 36.5vw; border-radius: 0.4rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
               </textarea>
@@ -124,7 +112,7 @@
                   )
                 "
                 openDirection="below"
-                style="width: 13vw"
+                style="width: 18vw"
                 selectLabel="Enter"
                 track-by="value"
                 label="label"
@@ -176,12 +164,12 @@
               <p>{{ field.referenceDisplayLabel }}:</p>
               <Multiselect
                 v-model="selectedOwner"
-                :options="allUsers"
+                :options="picklistQueryOpts[field.referenceDisplayLabel]"
                 @select="
                   setUpdateValues(field.apiName, $event.salesforce_account_ref.salesforce_id)
                 "
                 openDirection="below"
-                style="width: 13vw"
+                style="width: 18vw"
                 selectLabel="Enter"
                 track-by="salesforce_account_ref.salesforce_id"
                 label="full_name"
@@ -207,7 +195,7 @@
                 @search-change="getAccounts($event)"
                 @select="setUpdateValues(field.apiName, $event.id)"
                 openDirection="below"
-                style="width: 13vw"
+                style="width: 18vw"
                 selectLabel="Enter"
                 track-by="id"
                 label="name"
@@ -243,12 +231,8 @@
       <div class="opp-modal-container">
         <div class="flex-row-spread header">
           <div class="flex-row">
-            <img
-              src="@/assets/images/logo.png"
-              style="height: 1.75rem; margin-left: 0.5rem; margin-right: 0.25rem"
-              alt=""
-            />
-            <h2>Update Opportunity</h2>
+            <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <h3>Update Opportunity</h3>
           </div>
           <img
             src="@/assets/images/closer.png"
@@ -265,7 +249,7 @@
                 id="user-input"
                 cols="30"
                 rows="2"
-                style="width: 26.25vw; border-radius: 0.2rem"
+                style="width: 36.5vw; border-radius: 0.2rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
               </textarea>
@@ -276,7 +260,7 @@
                 id="user-input"
                 ccols="30"
                 rows="4"
-                style="width: 26.25vw; border-radius: 0.2rem"
+                style="width: 36.5vw; border-radius: 0.2rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
               </textarea>
@@ -292,7 +276,7 @@
                 ccols="30"
                 rows="4"
                 :placeholder="currentVals[field.apiName]"
-                style="width: 26.25vw; border-radius: 0.4rem; padding: 7px"
+                style="width: 36.5vw; border-radius: 0.4rem; padding: 7px"
                 v-model="currentVals[field.apiName]"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
@@ -328,7 +312,7 @@
                 v-model="dropdownVal[field.apiName]"
                 openDirection="below"
                 :loading="dropdownLoading"
-                style="width: 13vw"
+                style="width: 18vw"
                 selectLabel="Enter"
                 track-by="value"
                 label="label"
@@ -389,6 +373,7 @@
 
             <div v-else-if="field.apiName === 'OwnerId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
+
               <Multiselect
                 v-model="selectedOwner"
                 :options="allUsers"
@@ -396,7 +381,7 @@
                   setUpdateValues(field.apiName, $event.salesforce_account_ref.salesforce_id)
                 "
                 openDirection="below"
-                style="width: 13vw"
+                style="width: 18vw"
                 selectLabel="Enter"
                 track-by="salesforce_account_ref.salesforce_id"
                 label="full_name"
@@ -416,14 +401,13 @@
 
             <div v-else-if="field.apiName === 'AccountId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
-
               <Multiselect
                 v-model="selectedAccount"
                 :options="allAccounts"
                 @search-change="getAccounts($event)"
                 @select="setUpdateValues(field.apiName, $event.id)"
                 openDirection="below"
-                style="width: 13vw"
+                style="width: 18vw"
                 selectLabel="Enter"
                 track-by="integration_id"
                 label="name"
@@ -1014,9 +998,9 @@ export default {
     },
   },
   methods: {
-    // tester() {
-    //   console.log(this.allOpps)
-    // },
+    tester() {
+      console.log(this.testingPicklist)
+    },
     async getMeetingList() {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
@@ -1464,6 +1448,17 @@ export default {
         console.log(e)
       }
     },
+    // async testingPicklist() {
+    //   try {
+    //     const res = await SObjectPicklist.api.listPicklists({
+    //       salesforceObject: 'Opportunity',
+    //       picklistFor: 'ForecastCategoryName',
+    //     })
+    //     console.log(res)
+    //   } catch (e) {
+    //     console.log(e)
+    //   }
+    // },
     async listStages() {
       try {
         const res = await SObjectPicklist.api.listPicklists({
@@ -1545,9 +1540,12 @@ export default {
       this.dropdownLoading = true
       this.editOpModalOpen = true
       this.currentVals = []
+      this.dropdownVal = {}
       this.updatingMeeting = false
       this.currentOwner = null
       this.currentAccount = null
+      this.selectedAccount = null
+      this.selectedOwner = null
       this.alertInstanceId = alertInstanceId
       this.oppId = id
       try {
@@ -1803,6 +1801,7 @@ export default {
     async getAllForms() {
       try {
         let res = await SlackOAuth.api.getOrgCustomForm()
+
         this.updateOppForm = res.filter(
           (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
         )
@@ -1872,8 +1871,12 @@ export default {
         )
         this.filterFields = [...this.filterFields, this.ladFilter, this.lmdFilter]
 
-        this.updateOppForm[0].fieldsRef.filter((field) => field.apiName === 'AccountId')
+        this.updateOppForm[0].fieldsRef.filter((field) => field.apiName === 'AccountId').length
           ? (this.accountSobjectId = this.updateOppForm[0].fieldsRef.filter(
+              (field) => field.apiName === 'AccountId',
+            )[0].id)
+          : this.createOppForm.filter((field) => field.apiName === 'AccountId').length
+          ? (this.accountSobjectId = this.createOppForm.filter(
               (field) => field.apiName === 'AccountId',
             )[0].id)
           : (this.accountSobjectId = null)
@@ -2241,7 +2244,7 @@ h3 {
   align-items: center;
   border-radius: 0.3rem;
   padding: 0.25rem;
-  box-shadow: 2px 2px 10px 2px $base-gray;
+  border: 1px solid #e8e8e8;
 }
 .close-button {
   border-radius: 50%;
@@ -2261,14 +2264,14 @@ h3 {
   overflow: hidden;
   background-color: white;
   // min-height: 80vh;
-  max-width: 34vw;
+  width: 40vw;
   align-items: center;
   border-radius: 0.6rem;
   padding: 1rem;
-  box-shadow: 1px 3px 7px $base-gray;
+  border: 1px solid #e8e8e8;
 }
 .opp-modal {
-  max-width: 30vw;
+  width: 40vw;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -2276,7 +2279,7 @@ h3 {
   padding: 0.5rem;
   overflow: auto;
   max-height: 56vh;
-  border-radius: 0.25rem;
+  border-radius: 0.3rem;
   border-bottom: 3px solid $white;
   color: $base-gray;
   font-size: 16px;
@@ -2330,6 +2333,10 @@ h3 {
   font-size: 13px;
   letter-spacing: 0.5px;
   color: $base-gray;
+}
+[type='search']::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
 }
 .limit-cell-height {
   max-height: 4rem;
@@ -2411,6 +2418,7 @@ section {
   display: flex;
   flex-direction: row;
   align-items: center;
+  letter-spacing: 1px;
 }
 .flex-row-pad {
   display: flex;
@@ -2545,7 +2553,7 @@ section {
   border-radius: 0.3rem;
   background-color: white;
   min-height: 2.5rem;
-  width: 13vw;
+  width: 18vw;
 }
 #user-input:focus {
   outline: 1px solid $lighter-green;
@@ -2709,7 +2717,7 @@ main:hover > span {
   background-color: $off-white;
 }
 .filter {
-  color: #199e54;
+  color: #41b883;
   margin-left: 0.2rem;
 }
 .exit {
@@ -2744,5 +2752,12 @@ textarea {
 }
 a {
   text-decoration: none;
+}
+.logo {
+  height: 1.75rem;
+  margin-left: 0.5rem;
+  margin-right: 0.25rem;
+  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+    brightness(93%) contrast(89%);
 }
 </style>
