@@ -403,7 +403,7 @@
                         <Multiselect
                           placeholder="Select a Day"
                           v-model="selectedDay"
-                          @select="setDay"
+                          @select="setDay($event)"
                           :options="weeklyOpts"
                           openDirection="below"
                           style="width: 14vw"
@@ -892,6 +892,7 @@ export default {
   data() {
     return {
       selectedDay: null,
+      selectedChannel: null,
       crmValue: null,
       viewingTemplate: false,
       channelOpts: new SlackListResponse(),
@@ -1254,11 +1255,9 @@ export default {
     onPreviousPage() {
       this.pageNumber >= 1 ? (this.pageNumber -= 1) : (this.pageNumber = this.pageNumber)
     },
-    setDay() {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDay.value =
-        this.selectedDay[0]
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value =
-        this.selectedDay.map((day) => day.value)
+    setDay(n) {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value.push(n.value)
     },
     setPipelines(obj) {
       if (this.alertTemplateForm.field.alertConfig.groups[0].field._alertTargets.value.lenght < 1) {
