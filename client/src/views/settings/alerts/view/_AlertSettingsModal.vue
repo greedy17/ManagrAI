@@ -33,7 +33,7 @@
                 openDirection="below"
                 style="width: 16vw; margin-top: 1rem"
                 selectLabel="Enter"
-                track-by="vlue"
+                track-by="value"
                 label="key"
               >
                 <template slot="noResult">
@@ -158,7 +158,7 @@
                 @input="setRecipient($event)"
                 :options="userChannelOpts.channels"
                 openDirection="below"
-                style="width: 16vw; margin-top: 1rem"
+                style="width: 16vw; margin-top: 0.5rem"
                 selectLabel="Enter"
                 track-by="id"
                 label="name"
@@ -212,15 +212,15 @@
           </p>
         </div>
       </div>
-    </div>
-    <div class="save-button">
-      <PulseLoadingSpinnerButton
-        text="save"
-        @click="onSave"
-        class="primary-button"
-        :loading="isSaving"
-        :disabled="!form.isValid"
-      />
+      <div class="save-button">
+        <PulseLoadingSpinnerButton
+          text="save"
+          @click="onSave"
+          class="primary-button"
+          :loading="isSaving"
+          :disabled="!form.isValid"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -336,20 +336,16 @@ export default {
       this.isSaving = false
     },
     setDay(n) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value.push(n.value)
+      this.form.field.recurrenceDay.value = 0
+      this.form.field.recurrenceDays.value.push(n.value)
     },
 
     mapIds() {
       let mappedIds = this.selectedUsers.map((user) => user.id)
-      this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value = mappedIds
+      this.form.field.alertTargets.value = mappedIds
     },
     setRecipient(n) {
-      console.log(n)
-      // this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value =
-      //   this.selectedChannel
-      // this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
-      //   this.selectedChannel.id
+      this.form.field.recipients.value = n.id
     },
     async listChannels(cursor = null) {
       const res = await SlackOAuth.api.listChannels(cursor)
@@ -676,8 +672,7 @@ h2 {
   align-items: flex-end;
   justify-content: flex-end;
   width: 100%;
-
-  padding: 0rem 1rem 1rem 0rem;
+  padding: 0rem 1rem 3rem 0rem;
   height: 100px;
 }
 .selected__item {

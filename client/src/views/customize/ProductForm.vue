@@ -7,7 +7,7 @@
       <p style="color: #5d5e5e; margin-top: -0.5rem">Map your Product fields</p>
     </div>
 
-    <div v-if="userHasProducts" class="box__content--expanded">
+    <div class="box__content--expanded">
       <CustomSlackForm
         :show-validations="showValidations"
         :formType="CREATE"
@@ -23,7 +23,7 @@
       />
     </div>
 
-    <div v-else class="box__content--expanded">
+    <!-- <div v-else class="box__content--expanded">
       <CustomSlackForm
         :show-validations="showValidations"
         :formType="CREATE"
@@ -41,7 +41,7 @@
         :loading="formFields.refreshing"
         :stageForms="formStages"
       />
-    </div>
+    </div> -->
   </div>
 </template>
 

@@ -212,7 +212,6 @@ export default {
     },
     tester(n) {
       this.registrationForm.field.role.value = n.key
-      console.log(n)
     },
     async onSubmit() {
       this.registrationForm.validate()
