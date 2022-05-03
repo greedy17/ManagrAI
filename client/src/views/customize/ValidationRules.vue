@@ -33,10 +33,13 @@
       </div>
     </modal>
 
-    <h3 v-if="selectedStage" style="padding-bottom: 0.25rem; border-bottom: 2px solid #199e54">
-      {{ selectedStage }}
+    <h3 style="text-align: center" v-if="selectedStage">
+      <span style="color: #41b883; margin-left: 0.25rem">{{ selectedStage }}</span> Validation Rules
     </h3>
-    <h3 v-else-if="!selectedStage && !showLoader">Apply additional fields to stages</h3>
+    <div class="header" v-else-if="!selectedStage && !showLoader">
+      <h3>Validation Rules</h3>
+      <p>Apply additional fields to stages</p>
+    </div>
 
     <!-- <modal name="objects-modal" heading="Select a Stage">
       <div class="objects__">
@@ -73,33 +76,24 @@
     </div> -->
     <div v-if="selectingStage">
       <div class="modal-container">
-        <div style="text-align: center">
-          <h4>Select a stage</h4>
-          <div class="centered">
-            <Multiselect
-              :placeholder="selectedStage ? selectedStage : 'Select Stage'"
-              @input="setStage($event)"
-              :options="stages"
-              openDirection="below"
-              style="width: 14vw"
-              selectLabel="Enter"
-              track-by="value"
-              label="label"
-            >
-              <template slot="noResult">
-                <p>No results.</p>
-              </template>
-            </Multiselect>
-            <!-- <DropDownSearch
-              :items.sync="stages"
-              v-model="selectedStage"
-              displayKey="label"
-              valueKey="value"
-              nullDisplay="Select a Stage"
-              searchable
-              local
-            /> -->
-          </div>
+        <div class="modal-container__header">
+          <h3>Select a stage</h3>
+        </div>
+        <div class="modal-container__body">
+          <Multiselect
+            :placeholder="selectedStage ? selectedStage : 'Select Stage'"
+            @input="setStage($event)"
+            :options="stages"
+            openDirection="below"
+            style="width: 20vw"
+            selectLabel="Enter"
+            track-by="value"
+            label="label"
+          >
+            <template slot="noResult">
+              <p>No results.</p>
+            </template>
+          </Multiselect>
         </div>
         <div>
           <div style="display: flex; justify-content: flex-end; align-items: center">
@@ -121,11 +115,7 @@
             </div>
 
             <button
-              :class="
-                !this.selectedStage
-                  ? 'modal-container__box__button'
-                  : 'modal-container__box__button bouncy'
-              "
+              class="modal-container__box__button"
               @click="
                 () => {
                   this.selectingStage = !this.selectingStage
@@ -136,7 +126,7 @@
               "
               :disabled="!this.selectedStage"
             >
-              Select
+              Continue
             </button>
           </div>
         </div>
@@ -226,6 +216,7 @@
             :loading="formFields.refreshing"
             :stageForms="formStages"
             :managrFields="publicFields"
+            @cancel-selected="changeSelected"
           />
         </div>
       </template>
@@ -269,8 +260,8 @@
               {{ form.stage }}
             </div>
 
-            <div class="stage__dropdown__stages__x" @click.prevent="deleteForm(form)">
-              <img src="@/assets/images/remove.png" style="height: 1rem" alt="" />
+            <div class="img-border" @click.prevent="deleteForm(form)">
+              <img src="@/assets/images/trash.png" alt="" />
             </div>
           </div>
         </div>
@@ -384,6 +375,10 @@ export default {
   methods: {
     logForm(i) {
       console.log(i)
+    },
+    changeSelected() {
+      this.selectedForm = null
+      this.selectingStage = !this.selectingStage
     },
     setStage(n) {
       this.selectedStage = n.value
@@ -645,7 +640,19 @@ export default {
   position: absolute;
   top: 0;
 }
+.img-border {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
+  border-radius: 0.2rem;
+  cursor: pointer;
+
+  img {
+    height: 1rem;
+    filter: invert(80%);
+  }
+}
 .dot-flashing::before {
   left: -15px;
   width: 14px;
@@ -667,7 +674,14 @@ export default {
   animation: dotFlashing 1s infinite alternate;
   animation-delay: 1s;
 }
-
+.header {
+  width: 50vw;
+  p {
+    font-size: 14px;
+    color: $gray;
+    margin-top: -0.75rem;
+  }
+}
 @keyframes dotFlashing {
   0% {
     background-color: $dark-green;
@@ -778,7 +792,6 @@ export default {
 }
 .modal-container {
   min-height: 50vh;
-  width: 30vw;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -786,8 +799,19 @@ export default {
   border-radius: 0.3rem;
   background-color: $white;
   color: $base-gray;
-  box-shadow: 2px 3px 3px $soft-gray;
+  width: 50vw;
   border: 1px solid #e8e8e8;
+
+  &__header {
+    padding: 0.1rem 1rem;
+    border-bottom: 1px solid #e8e8e8;
+    font-weight: 400;
+  }
+  &__body {
+    height: 20vh;
+    display: flex;
+    justify-content: center;
+  }
   &__box {
     &__title {
       text-align: center;
@@ -812,6 +836,15 @@ export default {
       margin: 1rem;
     }
   }
+}
+button:disabled {
+  font-size: 14px;
+  border-radius: 0.3rem;
+  cursor: pointer;
+  background-color: $soft-gray;
+  color: $gray;
+  padding: 0.5rem 1.5rem;
+  margin: 1rem;
 }
 
 .box__footer {
@@ -920,38 +953,34 @@ export default {
   }
   &__dropdown {
     min-height: 40vh;
-    min-width: 28vw;
-    padding: 6px 0 14px;
+    width: 50vw;
     border-radius: 0.3rem;
-    box-shadow: 2px 3px 3px $soft-gray;
+    // box-shadow: 2px 3px 3px $soft-gray;
     border: 1px solid #e8e8e8;
     background-color: $white;
     overflow-y: scroll;
 
     &__header {
       font-size: 16px;
-      padding: 0.5rem;
-      text-align: center;
+      padding: 1rem;
+      border-bottom: 1px solid #e8e8e8;
     }
     &__stages {
       &__container {
         display: flex;
         border: 1px solid #e8e8e8;
+        width: 99%;
+        padding: 0rem 0.4rem 0.2rem 0.3rem;
         font-weight: 400;
-        height: 2.5rem;
-        padding: 1rem;
-        margin: 0.5rem;
-        border-radius: 0.33rem;
+        margin: 0.25rem;
+        border-radius: 0.3rem;
         font-size: 14px;
         cursor: pointer;
         align-items: center;
-
-        img {
-          filter: invert(80%);
-        }
+        justify-content: flex-start;
 
         &--selected {
-          color: white;
+          color: $dark-green;
         }
       }
       &__title {
@@ -962,7 +991,7 @@ export default {
         width: 100%;
       }
       &__title:hover {
-        color: $very-light-gray;
+        color: $dark-green;
       }
       &__x {
         z-index: 1000;

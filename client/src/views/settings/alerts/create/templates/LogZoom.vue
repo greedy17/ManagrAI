@@ -135,9 +135,21 @@
               {{ getChannelName(zoomChannel) }}
             </p> -->
           </div>
+          <div style="margin-top: 1.5rem" v-if="channelCreated || zoomChannel">
+            <div v-if="!create">
+              <button class="green__button bouncy" @click="handleZoomUpdate(zoomChannel)">
+                Activate Channel
+              </button>
+            </div>
+            <div v-else>
+              <button class="green__button bouncy" @click="handleZoomUpdate(createdZoomChannel)">
+                Activate Channel
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-      <div v-if="channelCreated || zoomChannel" class="flex-end">
+      <!-- <div v-if="channelCreated || zoomChannel" class="flex-end">
         <div v-if="!create">
           <button class="green__button bouncy" @click="handleZoomUpdate(zoomChannel)">
             Activate Channel
@@ -148,7 +160,7 @@
             Activate Channel
           </button>
         </div>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
@@ -448,7 +460,7 @@ img {
 }
 .card {
   width: 700px;
-  height: 225px;
+  height: 250px;
   background-color: $white;
   border-radius: 0.3rem;
   border: 1px solid #e8e8e8;

@@ -1,8 +1,10 @@
 <template>
   <div class="registration">
     <div class="registration-card">
-      <img class="logo" src="@/assets/images/logo.png" />
-      <h1>Register</h1>
+      <div class="header">
+        <img class="logo" src="@/assets/images/logo.png" />
+        <h2>Register</h2>
+      </div>
 
       <template v-if="!isLoading">
         <template v-if="errorValidatingEmail">
@@ -72,7 +74,7 @@
               <div style="width: 100%; text-align: center">
                 <p>
                   Your timezone:
-                  <span style="color: #199e54; font-weight: bold">{{ userTime }}</span>
+                  <span style="color: #41b883; font-weight: bold">{{ userTime }}</span>
                 </p>
                 <p v-if="!changeZone" @click="selectZone" class="time">Change timezone ?</p>
                 <p v-else @click="selectZone" class="time">Select your timezone:</p>
@@ -80,13 +82,27 @@
 
               <FormField v-if="changeZone">
                 <template v-slot:input>
-                  <DropDownSearch
+                  <Multiselect
+                    placeholder="Select time zone"
+                    @input="test($event)"
+                    v-model="selectedZone"
+                    :options="timezones"
+                    openDirection="below"
+                    style="width: 16vw"
+                    selectLabel="Enter"
+                    label="key"
+                  >
+                    <template slot="noResult">
+                      <p>No results.</p>
+                    </template>
+                  </Multiselect>
+                  <!-- <DropDownSearch
                     :items.sync="timezones"
                     v-model="registrationForm.field.timezone.value"
                     nullDisplay="Select your timezone"
                     searchable
                     local
-                  />
+                  /> -->
                 </template>
               </FormField>
             </div>
@@ -128,6 +144,7 @@ export default {
     FormField,
     ComponentLoadingSVG,
     DropDownSearch,
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {
     return {
@@ -144,6 +161,8 @@ export default {
       timezones: moment.tz.names(),
       userTime: moment.tz.guess(),
       changeZone: false,
+      userRole: null,
+      selectedZone: null,
     }
   },
   async created() {
@@ -157,6 +176,12 @@ export default {
   methods: {
     selectZone() {
       this.changeZone = !this.changeZone
+    },
+    test(n) {
+      this.registrationForm.field.timezone.value = n.value
+    },
+    tester(n) {
+      this.registrationForm.field.role.value = n.value
     },
     async retrieveEmail(id, token) {
       this.isLoading = true
@@ -234,12 +259,11 @@ export default {
   margin: 1.5rem auto;
 
   &__text {
-    color: $panther;
+    color: $base-gray;
     font-family: #{$base-font-family};
-    width: 100%;
-    max-width: 20rem;
-    margin-bottom: 4rem;
+    margin-bottom: 1rem;
     text-align: center;
+    font-size: 14px;
   }
   &__input {
     @include input-field-white();
@@ -257,20 +281,44 @@ export default {
     width: 19rem;
     border-radius: 3px;
     margin-top: 1rem;
+    box-shadow: none;
   }
 }
 .logo {
-  height: 4rem;
+  height: 2rem;
   margin-left: 37%;
+  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+    brightness(93%) contrast(89%);
 }
-
+input:focus {
+  outline: none;
+}
 .divider {
   height: 1px;
   background-color: #aaa;
   width: 100%;
   margin: 1rem;
 }
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
+  img {
+    height: 1.5rem;
+    margin-right: 0.25rem;
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
+  }
+}
+.time {
+  color: $base-gray;
+  cursor: pointer;
+  font-size: 14px;
+}
+.time:hover {
+  color: $gray;
+}
 .errors {
   width: 100%;
   padding: 1rem;
@@ -317,11 +365,12 @@ button {
   justify-content: space-evenly;
   flex-direction: row;
   flex-wrap: wrap;
-  border-radius: 0.5rem;
-  background-color: $panther;
-  padding: 3rem;
+  border-radius: 0.3rem;
+  background-color: white;
+  border: 1px solid #e8e8e8;
+  padding: 2rem;
   width: 50vw;
-  color: white;
+  color: $base-gray;
 }
 
 a {
