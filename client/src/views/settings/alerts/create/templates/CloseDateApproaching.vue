@@ -59,7 +59,6 @@
                     selectLabel="Enter"
                     track-by="value"
                     label="key"
-                    :multiple="true"
                   >
                     <template slot="noResult">
                       <p class="multi-slot">No results.</p>
