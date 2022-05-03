@@ -27,7 +27,7 @@
             <template v-slot:input>
               <Multiselect
                 placeholder="Select Day"
-                @input="setDay"
+                @input="setDay($event)"
                 v-model="selectedDay"
                 :options="weeklyOpts"
                 openDirection="below"
@@ -155,7 +155,7 @@
               <Multiselect
                 placeholder="Select Channel"
                 v-model="selectedChannel"
-                @input="setRecipient"
+                @input="setRecipient($event)"
                 :options="userChannelOpts.channels"
                 openDirection="below"
                 style="width: 16vw; margin-top: 1rem"
@@ -335,21 +335,21 @@ export default {
       }
       this.isSaving = false
     },
-    setDay() {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDay.value =
-        this.selectedDay
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value =
-        this.selectedDay.value
+    setDay(n) {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value.push(n.value)
     },
+
     mapIds() {
       let mappedIds = this.selectedUsers.map((user) => user.id)
       this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value = mappedIds
     },
-    setRecipient() {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value =
-        this.selectedChannel
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
-        this.selectedChannel.id
+    setRecipient(n) {
+      console.log(n)
+      // this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value =
+      //   this.selectedChannel
+      // this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
+      //   this.selectedChannel.id
     },
     async listChannels(cursor = null) {
       const res = await SlackOAuth.api.listChannels(cursor)

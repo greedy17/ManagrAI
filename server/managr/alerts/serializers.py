@@ -339,6 +339,7 @@ class AlertConfigWriteSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "recurrence_frequency",
+            "recurrence_day",
             "recurrence_days",
             "recipients",
             "recipient_type",
@@ -415,11 +416,9 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
             _new_groups.save()
         if len(new_configs):
             new_configs = list(map(lambda x: {**x, "template": data.id}, new_configs))
-            print(new_configs)
             _new_configs = AlertConfigWriteSerializer(
                 data=new_configs, many=True, context=self.context,
             )
-            print(_new_configs)
             try:
                 _new_configs.is_valid(raise_exception=True)
 

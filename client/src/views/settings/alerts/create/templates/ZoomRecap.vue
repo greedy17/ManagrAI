@@ -34,7 +34,7 @@
               v-model="userIds"
               :options="userList"
               openDirection="below"
-              style="min-width: 13vw"
+              style="width: 14vw"
               selectLabel="Enter"
               track-by="id"
               label="fullName"

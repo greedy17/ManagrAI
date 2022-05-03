@@ -88,7 +88,7 @@
                   v-model="selectedUsers"
                   :options="userTargetsOpts"
                   openDirection="below"
-                  style="min-width: 13vw"
+                  style="width: 14vw"
                   selectLabel="Enter"
                   track-by="id"
                   label="fullName"
@@ -826,6 +826,8 @@ export default {
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
       'Hey  <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong>, hasnt been touched since <strong>{ Opportunity.LastActivityDate }</strong>'
     this.repsPipeline()
+    this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
+    this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = [0]
   },
 }
 </script>
