@@ -10,9 +10,7 @@
 
       <button type="submit">Send Link</button>
       <div style="margin-top: 1rem">
-        <router-link :to="{ name: 'Login' }">
-          Back to login
-        </router-link>
+        <router-link :to="{ name: 'Login' }"> Back to login </router-link>
       </div>
     </form>
   </div>
@@ -34,7 +32,7 @@ export default {
       this.loading = true
       User.api
         .requestPasswordReset(this.email)
-        .then(response => {
+        .then((response) => {
           this.$Alert.alert({
             type: 'success',
             message: 'Please check your email for instructions on how to reset password',
@@ -43,7 +41,7 @@ export default {
 
           this.$router.push({ name: 'Login' })
         })
-        .catch(error => {
+        .catch((error) => {
           this.$Alert.alert({
             type: 'error',
             message: 'There was an error, please try again',
@@ -77,7 +75,7 @@ export default {
           // element is already on the DOM by this point (it is always present, see template).
           setTimeout(() => this.$refs.passwordInput.focus(), 0)
         })
-        .catch(error => {
+        .catch((error) => {
           if (error.response.status >= 500) {
             this.errors[500] = true
             this.success = false
@@ -105,7 +103,7 @@ export default {
       let loginPromise = User.api.login(this.email, this.password)
 
       loginPromise
-        .then(response => {
+        .then((response) => {
           // NOTE(Bruno 4-21-20): currently everyone logged in is a 'Manager', when this changes there may be a need to update below code
           let token = response.data.token
           let userData = response.data
@@ -120,7 +118,7 @@ export default {
           }
           this.success = true
         })
-        .catch(error => {
+        .catch((error) => {
           if (error.response.status >= 500) {
             this.errors[500] = true
             this.success = false
@@ -169,19 +167,22 @@ export default {
   display: flex;
   flex-flow: row;
   justify-content: center;
-
+  margin-top: 4rem;
   &__title {
     padding: 0 1rem 1rem 1rem;
   }
 }
 
 h2 {
-  @include base-font-styles();
-  font-weight: bold;
-  color: $main-font-gray;
+  // @include base-font-styles();
+  font-size: 16px;
+  color: $base-gray;
   text-align: center;
 }
-
+a {
+  text-decoration: none;
+  color: $dark-green;
+}
 form {
   @include standard-border();
   margin-top: 3.125rem;
@@ -200,6 +201,7 @@ input {
   width: 15.65rem;
   display: block;
   margin: 0.625rem 0;
+  border: 1px solid #e8e8e8;
 
   &:disabled {
     border: 2px solid $dark-green;
@@ -211,6 +213,7 @@ button {
   margin-top: 1.25rem;
   height: 1.875rem;
   width: 9.375rem;
+  box-shadow: none;
 }
 
 .hidden {

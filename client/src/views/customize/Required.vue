@@ -2,7 +2,7 @@
   <div class="customizations">
     <div>
       <h3 style="color: 4d4e4c">Required Actions</h3>
-      <p class="sub__">Map SFDC fields to their corresponding slack fields.</p>
+      <p class="sub__">Map SFDC fields to their corresponding Slack fields.</p>
     </div>
 
     <div class="customizations__cards">

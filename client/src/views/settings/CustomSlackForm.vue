@@ -104,7 +104,7 @@
               <p style="margin-left: 0.5rem">Last Name <span style="color: #fa646a">*</span></p>
 
               <Multiselect
-                placeholder="Select your SFDC 'Last Name' field"
+                placeholder="Search for 'Last Name'"
                 :options="
                   formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))
                 "
@@ -150,7 +150,7 @@
             <div v-if="!addedFieldNames.includes('LastName')" class="centered">
               <p style="margin-left: 0.5rem">Last Name<span style="color: #fa646a">*</span></p>
               <Multiselect
-                placeholder="Select your SFDC 'Last Name' field"
+                placeholder="Search for 'Last Name'"
                 :options="
                   formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))
                 "
@@ -174,7 +174,7 @@
               <p style="margin-left: 0.5rem">Company<span style="color: #fa646a">*</span></p>
 
               <Multiselect
-                placeholder="Select your SFDC 'Company' field"
+                placeholder="Search for 'Company'"
                 :options="
                   formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))
                 "
@@ -197,7 +197,7 @@
               <p style="margin-left: 0.5rem">Status<span style="color: #fa646a">*</span></p>
 
               <Multiselect
-                placeholder="Select your SFDC 'Status' field"
+                placeholder="Search for 'Status'"
                 :options="
                   formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))
                 "
@@ -226,7 +226,7 @@
               <p style="margin-left: 0.5rem">Account Name <span style="color: #fa646a">*</span></p>
 
               <Multiselect
-                placeholder="Select your SFDC 'Account' field"
+                placeholder="Select for 'Account' "
                 :options="
                   formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))
                 "
@@ -263,7 +263,7 @@
           <div v-if="!addedFieldLabels.includes('Name')" class="centered">
             <p style="margin-left: 0.5rem">Name: <span style="color: #fa646a">*</span></p>
             <Multiselect
-              placeholder="Select your SFDC 'Name' field"
+              placeholder="Search for 'Name'"
               :options="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
               @input="onAddField($event)"
               openDirection="below"
@@ -286,7 +286,7 @@
               <p style="margin-left: 0.5rem">Stage <span style="color: #fa646a">*</span></p>
             </div>
             <Multiselect
-              placeholder="Select your SFDC 'Stage' field"
+              placeholder="Search for 'Stage'"
               :options="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
               @input="onAddField($event)"
               openDirection="below"
@@ -310,7 +310,7 @@
             </div>
 
             <Multiselect
-              placeholder="Select your SFDC 'Close Date' field"
+              placeholder="Search for 'Close Date'"
               :options="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
               @input="onAddField($event)"
               openDirection="below"
@@ -350,7 +350,7 @@
             </div>
             <div v-if="!productSelected">
               <Multiselect
-                placeholder="Select SFDC 'Amount' field"
+                placeholder="Search for 'Amount'"
                 :options="
                   formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))
                 "
@@ -396,6 +396,11 @@
           </div> -->
         </div>
 
+        <p class="section-title">
+          Organize your form fields:
+          <span style="color: #41b883; font-size: 11px; margin-left: 0.5rem">*drag and drop</span>
+        </p>
+
         <draggable
           style="margin-top: 0.5rem"
           v-model="addedFields"
@@ -403,10 +408,6 @@
           @start="drag = true"
           @end="drag = false"
         >
-          <p class="section-title">
-            Organize your form fields:
-            <span style="color: #41b883; font-size: 11px; margin-left: 0.5rem">*drag and drop</span>
-          </p>
           <div v-for="field in addedFields" :key="field.id">
             <div :class="unshownIds.includes(field.id) ? 'invisible' : 'centered'">
               <div class="drag-item">
@@ -774,12 +775,7 @@
 
         <div class="recommend" v-if="addingFields">
           <div v-if="formType !== 'STAGE_GATING'" class="recommend__header">
-            <h4>
-              Add More Fields
-              <span style="color: #41b883; font-size: 11px; margin-left: 0.5rem"
-                >*Recommendations listed</span
-              >
-            </h4>
+            <h4>Add More Fields</h4>
             <img
               @click="
                 () => {
@@ -824,73 +820,31 @@
             </Multiselect>
           </div>
 
-          <div v-else>
-            <div
-              class="recommend__body"
-              v-if="resource === 'Opportunity' && formType !== 'STAGE_GATING'"
-            >
-              &nbsp;
-              <p>Amount</p>
-              &nbsp;
-              <p>Account</p>
-              &nbsp;
-              <p>Forecast Category</p>
-              &nbsp;
-              <p>Next Step</p>
-              &nbsp;
-              <p>Next Step Date</p>
-            </div>
-            <div class="recommend__body" v-else-if="resource === 'Contact'">
-              <p>First Name</p>
-              &nbsp;
-              <p>Title</p>
-              &nbsp;
-              <p>Email</p>
-              &nbsp;
-              <p>Phone</p>
-              &nbsp;
-              <p>Account Name</p>
-            </div>
-            <div class="recommend__body" v-else-if="resource === 'Lead'">
-              <p>Title</p>
-              &nbsp;
-              <p>Email</p>
-              &nbsp;
-              <p>Phone</p>
-            </div>
-            <div class="recommend__body" v-else-if="resource === 'Account'">
-              <p>Account Type</p>
-            </div>
-            <div class="recommend__body" v-else-if="resource === 'OpportunityLineItem'">
-              <p>Line Description</p>
-            </div>
-          </div>
-
-          <div class="recommend__validation" v-if="formType === 'STAGE_GATING'">
+          <!-- <div class="recommend__validation" v-if="formType === 'STAGE_GATING'">
             <p style="color: #41b883; font-size: 11px">*Previous Stage Validation Fields</p>
             <div v-if="!orderedStageForm.length">
               <p style="font-size: 14px; text-align: center">Nothing here.. (o^^)o</p>
             </div>
             <div :key="key" v-for="(form, key) in orderedStageForm">
-              <!-- <div style="margin-top: 1rem">
+              <div style="margin-top: 1rem">
                 <i style="text-transform: uppercase; font-size: 12px; color: #beb5cc"
                   >Fields from <strong>{{ form.stage }}</strong> stage</i
                 >
-              </div> -->
+              </div>
               <div class="stages-list">
                 <div :key="key" v-for="(val, key) in form.fieldsRef">
                   <p>{{ val.referenceDisplayLabel }}</p>
                 </div>
               </div>
             </div>
-          </div>
+          </div> -->
           <div class="recommend__body" v-if="formType !== 'STAGE_GATING'">
             <Multiselect
-              placeholder="Select/search additional fields"
+              placeholder="Search fields"
               :options="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
               @input="onAddField($event)"
               openDirection="below"
-              style="width: 20vw; margin-top: -1.5rem"
+              style="width: 20vw; margin-top: 1rem"
               selectLabel="Enter"
               track-by="apiName"
               label="referenceDisplayLabel"
@@ -1432,7 +1386,7 @@ export default {
       this.$router.push({ name: 'UpdateOpportunity' })
     },
     goToValidations() {
-      this.$router.push({ name: 'ValidationRules' })
+      this.$emit('cancel-selected')
     },
     onRemoveField(field) {
       // remove from the array if  it exists
@@ -1559,7 +1513,7 @@ export default {
             message: 'Form Added Succesfully!',
             timeout: 2000,
           })
-          if (this.resource !== 'Opportunity' && this.formType !== 'UPATE') {
+          if (!userHasProducts || !productSelected) {
             this.$router.push({ name: 'Required' })
           }
         })

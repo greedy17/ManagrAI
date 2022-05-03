@@ -5,7 +5,7 @@
       <p style="margin-top: -0.5rem" class="sub__">Step 2/2: Activate at least 3 workflows</p>
       <button
         class="orange_button bouncy"
-        v-if="isOnboarding && user.activatedManagrConfigs.includes('Update Forecast')"
+        v-if="isOnboarding && user.activatedManagrConfigs.includes('Close Date Passed')"
         @click="onboardComplete"
       >
         Complete Onboarding
@@ -157,7 +157,7 @@
 
       <div
         :class="
-          !user.activatedManagrConfigs.includes('Update Forecast') && isOnboarding && !isAdmin
+          !user.activatedManagrConfigs.includes('Close Date Passed') && isOnboarding && !isAdmin
             ? 'card onboarding'
             : 'card'
         "
@@ -211,7 +211,7 @@
 
       <div
         :class="
-          !user.activatedManagrConfigs.includes('Update Forecast') && isOnboarding && !isAdmin
+          !user.activatedManagrConfigs.includes('Close Date Passed') && isOnboarding && !isAdmin
             ? 'card onboarding'
             : 'card'
         "
@@ -268,7 +268,7 @@
 
       <div
         :class="
-          !user.activatedManagrConfigs.includes('Update Forecast') && isOnboarding && !isAdmin
+          !user.activatedManagrConfigs.includes('Close Date Passed') && isOnboarding && !isAdmin
             ? 'card onboarding'
             : 'card'
         "

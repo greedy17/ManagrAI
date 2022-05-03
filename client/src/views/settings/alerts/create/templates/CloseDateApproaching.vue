@@ -597,7 +597,7 @@ export default {
         this.selectedChannel.id
     },
     setDay(n) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = n.value
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
       this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value.push(n.value)
     },
     mapIds() {
