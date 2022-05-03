@@ -211,7 +211,8 @@ export default {
       this.registrationForm.field.timezone.value = n.value
     },
     tester(n) {
-      this.registrationForm.field.role.value = n.value
+      this.registrationForm.field.role.value = n.key
+      console.log(n)
     },
     async onSubmit() {
       this.registrationForm.validate()
