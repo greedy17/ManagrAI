@@ -239,7 +239,7 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
     def get_sobject_picklist_values(self, request, *args, **kwargs):
         user = self.request.user
-        sobject_id = request.GET.get("sobject_id")
+        sobject_id = request.GET.get("sobject_id", None)
         value = request.GET.get("value", None)
         sobject_field = SObjectField.objects.get(id=sobject_id)
         attempts = 1
@@ -262,6 +262,10 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
                 else:
                     sf_account.regenerate_token()
                     attempts += 1
+            except Exception as e:
+                return logger.exception(
+                    f"Failed to retrieve reference data for {sobject_field.display_value_keys['api_name']} data for user {str(user.id)} after {attempts} tries: {e}"
+                )
 
         data = list(map(lambda val: {"name": val.get("Name"), "id": val.get("Id")}, res))
         return Response(data=data)
@@ -828,8 +832,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type,
-            slack_const.FORM_TYPE_UPDATE,
+            resource_type, slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)
