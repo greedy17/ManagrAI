@@ -1,12 +1,13 @@
 <template>
   <div class="registration">
     <div class="registration-card">
-      <img class="logo" src="@/assets/images/logo.png" />
-      <h1>Register</h1>
+      <div class="header">
+        <img class="logo" src="@/assets/images/logo.png" />
+        <h2>Register</h2>
+      </div>
 
       <div class="registration__text">Create and customize your Managr account within minutes.</div>
       <!-- <form @submit.prevent="onSubmit"> -->
-      <div></div>
       <div class="registration__form">
         <div class="form-card">
           <FormField
@@ -64,7 +65,22 @@
 
           <FormField :errors="registrationForm.field.role.errors" label="Role">
             <template v-slot:input>
-              <DropDownSearch
+              <Multiselect
+                placeholder="Select User Role"
+                @input="tester($event)"
+                v-model="userRole"
+                :options="userRoles"
+                openDirection="below"
+                style="width: 18vw"
+                selectLabel="Enter"
+                label="name"
+              >
+                <template slot="noResult">
+                  <p>No results.</p>
+                </template>
+              </Multiselect>
+
+              <!-- <DropDownSearch
                 :items="userRoles"
                 valueKey="key"
                 displayKey="name"
@@ -73,13 +89,13 @@
                 class="invite-form__dropdown"
                 nullDisplay="Select user role"
                 @input="registrationForm.field.role.validate()"
-              />
+              /> -->
             </template>
           </FormField>
 
           <div style="width: 100%; text-align: center">
             <p>
-              Your timezone: <span style="color: #199e54; font-weight: bold">{{ userTime }}</span>
+              Your timezone: <span style="color: #41b883; font-weight: bold">{{ userTime }}</span>
             </p>
             <p v-if="!changeZone" @click="selectZone" class="time">Change timezone ?</p>
             <p v-else @click="selectZone" class="time">Select your timezone:</p>
@@ -87,13 +103,28 @@
 
           <FormField v-if="changeZone">
             <template v-slot:input>
-              <DropDownSearch
+              <Multiselect
+                placeholder="Select time zone"
+                @input="test($event)"
+                v-model="selectedZone"
+                :options="timezones"
+                openDirection="below"
+                style="width: 16vw"
+                selectLabel="Enter"
+                label="key"
+              >
+                <template slot="noResult">
+                  <p>No results.</p>
+                </template>
+              </Multiselect>
+
+              <!-- <DropDownSearch
                 :items.sync="timezones"
                 v-model="registrationForm.field.timezone.value"
                 nullDisplay="Select your timezone"
                 searchable
                 local
-              />
+              /> -->
             </template>
           </FormField>
         </div>
@@ -144,6 +175,7 @@ export default {
     managrDropdown,
     Button,
     DropDownSearch,
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {
     return {
@@ -154,6 +186,8 @@ export default {
       timezones: moment.tz.names(),
       userTime: moment.tz.guess(),
       changeZone: false,
+      userRole: null,
+      selectedZone: null,
     }
   },
   created() {
@@ -172,6 +206,12 @@ export default {
   methods: {
     selectZone() {
       this.changeZone = !this.changeZone
+    },
+    test(n) {
+      this.registrationForm.field.timezone.value = n.value
+    },
+    tester(n) {
+      this.registrationForm.field.role.value = n.value
     },
     async onSubmit() {
       this.registrationForm.validate()
@@ -230,10 +270,11 @@ export default {
   margin: 1.5rem auto;
 
   &__text {
-    color: $panther-gray;
+    color: $base-gray;
     font-family: #{$base-font-family};
     margin-bottom: 1rem;
     text-align: center;
+    font-size: 14px;
   }
   &__input {
     @include input-field-white();
@@ -244,7 +285,7 @@ export default {
   &__privacy {
     padding: 0.5rem 1rem;
     font-size: 0.75rem;
-    margin-top: 1rem;
+    margin-top: 0.5rem;
   }
 
   &__button {
@@ -252,20 +293,30 @@ export default {
     width: 19rem;
     border-radius: 3px;
     margin-top: 1rem;
+    box-shadow: none;
   }
 }
-.logo {
-  height: 4rem;
-  margin-left: 37%;
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    height: 1.5rem;
+    margin-right: 0.25rem;
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
+  }
 }
+
 .time {
-  color: $very-light-gray;
+  color: $base-gray;
   cursor: pointer;
-  filter: opacity(60%);
-  font-size: 0.9rem;
+  font-size: 14px;
 }
 .time:hover {
-  color: white;
+  color: $gray;
 }
 .dropdown {
   align-items: center;
@@ -301,11 +352,12 @@ export default {
   justify-content: space-evenly;
   flex-direction: row;
   flex-wrap: wrap;
-  border-radius: 0.5rem;
-  background-color: $panther;
-  padding: 3rem;
+  border-radius: 0.3rem;
+  background-color: white;
+  border: 1px solid #e8e8e8;
+  padding: 2rem;
   width: 50vw;
-  color: white;
+  color: $base-gray;
 }
 .divider {
   height: 1px;
@@ -320,13 +372,6 @@ export default {
   background-color: rgb(155, 21, 21);
   color: white;
   font-weight: 500;
-}
-
-h1 {
-  font-weight: bold;
-  color: $main-font-gray;
-  text-align: center;
-  font-size: 1.6rem;
 }
 
 .registration__form {

@@ -57,7 +57,7 @@
         </div>
       </router-link> -->
 
-      <router-link exact-active-class="active" :to="{ name: 'ListTemplates' }">
+      <router-link v-if="!isOnboarding" exact-active-class="active" :to="{ name: 'ListTemplates' }">
         <div :class="isOnboarding ? 'onboarding row' : 'row'">
           <img
             src="@/assets/images/star.png"
@@ -65,13 +65,13 @@
             alt=""
           />
           <h5>
-            Saved
+            Active
             <span class="counter">{{ alertsCount(templates.list.length) }}</span>
           </h5>
         </div>
       </router-link>
 
-      <router-link exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
+      <router-link v-if="!isOnboarding" exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
         <div :class="isOnboarding ? 'onboarding row' : 'row'">
           <img
             src="@/assets/images/build.png"
@@ -111,7 +111,7 @@
             alt=""
           />
           <h5>
-            Saved
+            Active
             <span class="counter">{{ alertsCount(templates.list.length) }}</span>
           </h5>
         </div>
@@ -193,7 +193,7 @@
             alt=""
           />
           <h5>
-            Saved
+            Active
             <span style="margin-left: 0.5rem" class="counter">{{
               alertsCount(templates.list.length)
             }}</span>

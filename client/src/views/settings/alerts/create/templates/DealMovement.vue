@@ -99,11 +99,7 @@
         </section>
         <section class="added-collection__footer">
           <div class="edit" @click="onAdvancing">
-            <img
-              src="@/assets/images/edit.png"
-              style="height: 0.9rem; filter: invert(80%)"
-              alt=""
-            />
+            <img src="@/assets/images/edit.png" alt="" />
           </div>
         </section>
       </div>
@@ -118,11 +114,7 @@
         </section>
         <section class="added-collection__footer">
           <div class="edit" @click="onCommit">
-            <img
-              src="@/assets/images/edit.png"
-              style="height: 0.9rem; filter: invert(80%)"
-              alt=""
-            />
+            <img src="@/assets/images/edit.png" alt="" />
           </div>
         </section>
       </div>
@@ -137,11 +129,7 @@
         </section>
         <section class="added-collection__footer">
           <div class="edit" @click="onPushing">
-            <img
-              src="@/assets/images/edit.png"
-              style="height: 0.9rem; filter: invert(80%)"
-              alt=""
-            />
+            <img src="@/assets/images/edit.png" alt="" />
           </div>
         </section>
       </div>
@@ -156,11 +144,7 @@
         </section>
         <section class="added-collection__footer">
           <div class="edit" @click="onWinning">
-            <img
-              src="@/assets/images/edit.png"
-              style="height: 0.9rem; filter: invert(80%)"
-              alt=""
-            />
+            <img src="@/assets/images/edit.png" alt="" />
           </div>
         </section>
       </div>
@@ -579,12 +563,12 @@ h4 {
   display: flex;
   align-items: center;
   cursor: pointer;
-  transition: all 0.2s;
+  img {
+    height: 1rem;
+    filter: invert(80%);
+  }
 }
-.edit:hover {
-  transform: scale(1.025);
-  // box-shadow: 1px 1px 1px 1px $soft-gray;
-}
+
 .plus_button {
   border: none;
   // box-shadow: 3px 4px 2px $very-light-gray;
@@ -632,7 +616,7 @@ textarea {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  justify-content: space-evenly;
+  justify-content: flex-start;
   // align-items: center;
   padding: 0;
 }

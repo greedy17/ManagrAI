@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div style="margin-top: 4rem">
     <div class="sidenav">
       <div
         style="
