@@ -59,6 +59,7 @@
                     selectLabel="Enter"
                     track-by="value"
                     label="key"
+                    :multiple="true"
                   >
                     <template slot="noResult">
                       <p class="multi-slot">No results.</p>
@@ -92,7 +93,7 @@
                   v-model="selectedUsers"
                   :options="userTargetsOpts"
                   openDirection="below"
-                  style="min-width: 13vw"
+                  style="width: 14vw"
                   selectLabel="Enter"
                   track-by="id"
                   label="fullName"
@@ -174,7 +175,7 @@
                     @input="setRecipient"
                     :options="userChannelOpts.channels"
                     openDirection="below"
-                    style="min-width: 13vw"
+                    style="width: 14vw"
                     selectLabel="Enter"
                     track-by="id"
                     label="name"
@@ -600,6 +601,14 @@ export default {
       this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
       this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value.push(n.value)
     },
+    // setDay(n) {
+    //   this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
+    //   let days = []
+    //   n.forEach((day) => days.push(day.value))
+    //   let newDays = [...new Set(days)]
+    //   this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = newDays
+    //   console.log(this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value)
+    // },
     mapIds() {
       let mappedIds = this.selectedUsers.map((user) => user.id)
       console.log(mappedIds)
@@ -831,6 +840,8 @@ export default {
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
       'Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has an upcoming close date of <strong>{ Opportunity.CloseDate }</strong>. Please update it!'
     this.repsPipeline()
+    this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
+    this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = [0]
   },
 }
 </script>

@@ -92,7 +92,7 @@
                   v-model="selectedUsers"
                   :options="userTargetsOpts"
                   openDirection="below"
-                  style="min-width: 13vw"
+                  style="width: 14vw"
                   selectLabel="Enter"
                   track-by="id"
                   label="fullName"
@@ -890,6 +890,8 @@ export default {
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
       'Please update the forecast for <strong>{ Opportunity.Name }</strong> ! it’s expected to close on <strong>{ Opportunity.CloseDate }</strong> and forecasted as <strong>{ Opportunity.ForecastCategoryName }</strong> - please either move to Commit or update the Close Date.<br><br> <strong>Next Step</strong>: { Opportunity.NextStep }'
     this.repsPipeline()
+    this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
+    this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = [0]
   },
 }
 </script>

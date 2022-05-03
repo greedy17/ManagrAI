@@ -17,9 +17,9 @@
     </div>
 
     <div v-if="!showLoader" class="row">
-      <div v-if="!advancedConfigActive" class="stage-item">
+      <div v-if="!advancedConfigActive" @click="onAdvancing" class="stage-item">
         <p>Stage Advanced</p>
-        <button class="plus_button" @click="onAdvancing">
+        <button class="plus_button">
           <img src="@/assets/images/add.svg" alt="" />
         </button>
       </div>
