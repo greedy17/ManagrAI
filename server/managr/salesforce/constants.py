@@ -53,7 +53,6 @@ def SALESFORCE_RESOURCE_QUERY_URI(
 ):
     # make a set to remove duplicates
     fields = set(fields)
-    print(len(additional_filters))
     if resource in ADD_RESOURCE_TYPE_FIELDS:
         if len(additional_filters):
             additional_filters.append(f"AND SobjectType = '{SobjectType}'")
