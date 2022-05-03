@@ -59,6 +59,7 @@
                     selectLabel="Enter"
                     track-by="value"
                     label="key"
+                    :multiple="true"
                   >
                     <template slot="noResult">
                       <p class="multi-slot">No results.</p>
@@ -596,18 +597,18 @@ export default {
       this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
         this.selectedChannel.id
     },
-    setDay(n) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value.push(n.value)
-    },
     // setDay(n) {
     //   this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
-    //   let days = []
-    //   n.forEach((day) => days.push(day.value))
-    //   let newDays = [...new Set(days)]
-    //   this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = newDays
-    //   console.log(this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value)
+    //   this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value.push(n.value)
     // },
+    setDay(n) {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
+      let days = []
+      n.forEach((day) => days.push(day.value))
+      let newDays = [...new Set(days)]
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = newDays
+      console.log(this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value)
+    },
     mapIds() {
       let mappedIds = this.selectedUsers.map((user) => user.id)
       console.log(mappedIds)

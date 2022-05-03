@@ -1906,15 +1906,17 @@ export default {
     },
     async getInitialAccounts() {
       this.loadingAccounts = true
-      try {
-        const res = await SObjects.api.getSobjectPicklistValues({
-          sobject_id: this.accountSobjectId,
-        })
-        this.allAccounts = res
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.loadingAccounts = false
+      if (this.accountSobjectId) {
+        try {
+          const res = await SObjects.api.getSobjectPicklistValues({
+            sobject_id: this.accountSobjectId,
+          })
+          this.allAccounts = res
+        } catch (e) {
+          console.log(e)
+        } finally {
+          this.loadingAccounts = false
+        }
       }
     },
     async getAccounts(val) {

@@ -1513,7 +1513,7 @@ export default {
             message: 'Form Added Succesfully!',
             timeout: 2000,
           })
-          if (!userHasProducts || !productSelected) {
+          if (!this.userHasProducts || !this.productSelected) {
             this.$router.push({ name: 'Required' })
           }
         })
