@@ -757,13 +757,13 @@ export default {
 @import '@/styles/buttons';
 
 ::v-deep .input-content {
-  width: 6rem;
+  width: 13vw;
   border: 1px solid #e8e8e8 !important;
   background-color: white;
   box-shadow: none !important;
 }
 ::v-deep .input-form {
-  width: 6rem;
+  width: 13vw;
 }
 .multi-slot {
   display: flex;

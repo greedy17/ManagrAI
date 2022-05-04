@@ -528,6 +528,7 @@
                       track-by="id"
                       label="fullName"
                       :multiple="true"
+                      :closeOnSelect="false"
                     >
                       <template slot="noResult">
                         <p class="multi-slot">No results.</p>
@@ -759,7 +760,7 @@
     <div class="bottom_locked">
       <button
         @click="onPreviousPage"
-        :class="pageNumber === 0 ? 'disabled__button' : 'gold__button'"
+        :class="pageNumber === 0 ? 'disabled__button' : 'prev-button'"
         style="margin-right: 0.5rem"
       >
         Prev
@@ -1585,6 +1586,24 @@ input:focus {
 ::placeholder {
   color: $panther-silver;
   font-size: 0.75rem;
+}
+.prev-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 1rem;
+  border-radius: 0.3rem;
+  font-weight: bold;
+  line-height: 1.14;
+  text-indent: none;
+  border-style: none;
+  letter-spacing: 0.03rem;
+  color: white;
+  background-color: $base-gray;
+  cursor: pointer;
+  height: 2rem;
+  width: 10rem;
+  font-size: 12px;
 }
 .search__input {
   font-family: Lato-Regular, sans-serif;
