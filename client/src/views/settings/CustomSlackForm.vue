@@ -68,6 +68,13 @@
                 <template slot="afterList">
                   <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
                 </template>
+
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    Select Pricebook field
+                  </p>
+                </template>
               </Multiselect>
             </div>
 
@@ -91,6 +98,12 @@
                 </template>
                 <template slot="afterList">
                   <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    Select Quantity field
+                  </p>
                 </template>
               </Multiselect>
             </div>
@@ -120,6 +133,12 @@
                 </template>
                 <template slot="afterList">
                   <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    Search for 'Last Name'
+                  </p>
                 </template>
               </Multiselect>
               <!-- <DropDownSearch
@@ -167,6 +186,12 @@
                 <template slot="afterList">
                   <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
                 </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    Search for 'Last Name'
+                  </p>
+                </template>
               </Multiselect>
               <!-- :hasNext="!!formFields.pagination.hasNextPage" -->
             </div>
@@ -191,6 +216,12 @@
                 <template slot="afterList">
                   <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
                 </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    Search for 'Company'
+                  </p>
+                </template>
               </Multiselect>
             </div>
             <div v-if="!addedFieldNames.includes('Status')" class="centered">
@@ -214,6 +245,12 @@
                 <template slot="afterList">
                   <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
                 </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    Search for 'Status'
+                  </p>
+                </template>
               </Multiselect>
             </div>
           </div>
@@ -226,7 +263,7 @@
               <p style="margin-left: 0.5rem">Account Name <span style="color: #fa646a">*</span></p>
 
               <Multiselect
-                placeholder="Select for 'Account' "
+                placeholder="Search for Account"
                 :options="
                   formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))
                 "
@@ -242,6 +279,12 @@
                 </template>
                 <template slot="afterList">
                   <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    Search for 'Account'
+                  </p>
                 </template>
               </Multiselect>
             </div>
@@ -278,6 +321,12 @@
               <template slot="afterList">
                 <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
               </template>
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.png" alt="" />
+                  Search for 'Name'
+                </p>
+              </template>
             </Multiselect>
           </div>
 
@@ -300,6 +349,12 @@
               </template>
               <template slot="afterList">
                 <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+              </template>
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.png" alt="" />
+                  Search for 'Stage'
+                </p>
               </template>
             </Multiselect>
           </div>
@@ -324,6 +379,12 @@
               </template>
               <template slot="afterList">
                 <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+              </template>
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.png" alt="" />
+                  Search for 'Close Date'
+                </p>
               </template>
             </Multiselect>
           </div>
@@ -366,6 +427,12 @@
                 </template>
                 <template slot="afterList">
                   <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    Search for 'Amount'
+                  </p>
                 </template>
               </Multiselect>
             </div>
@@ -802,7 +869,7 @@
           </div>
           <div v-if="formType === 'STAGE_GATING'" class="recommend__body">
             <Multiselect
-              placeholder="Select Validation Fields"
+              placeholder="Search for Validation Fields"
               :options="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
               @input="onAddField($event)"
               openDirection="below"
@@ -816,6 +883,12 @@
               </template>
               <template slot="afterList">
                 <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+              </template>
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.png" alt="" />
+                  Search for Validation Fields
+                </p>
               </template>
             </Multiselect>
           </div>
@@ -840,7 +913,7 @@
           </div> -->
           <div class="recommend__body" v-if="formType !== 'STAGE_GATING'">
             <Multiselect
-              placeholder="Search fields"
+              placeholder="Search Fields"
               :options="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
               @input="onAddField($event)"
               openDirection="below"
@@ -854,6 +927,12 @@
               </template>
               <template slot="afterList">
                 <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+              </template>
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.png" alt="" />
+                  Search Fields
+                </p>
               </template>
             </Multiselect>
           </div>
@@ -1556,9 +1635,9 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: $dark-green;
+  color: $gray;
   font-weight: bold;
-  border-top: 1px solid #e8e8e8;
+
   width: 100%;
   padding: 0.5rem 0rem;
   margin: 0;
@@ -2048,7 +2127,18 @@ export default {
   padding-top: 4rem;
   padding-bottom: 1rem;
 }
-
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 1rem;
+    margin-right: 0.25rem;
+    filter: invert(70%);
+  }
+}
 .primary-button {
   padding: 0.4rem 1.5rem;
   box-shadow: none;

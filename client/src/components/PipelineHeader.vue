@@ -220,10 +220,7 @@
             :multiple="true"
           >
             <template slot="noResult">
-              <div class="row">
-                <p>No results</p>
-                <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
-              </div>
+              <p class="multi-slot">No results.</p>
             </template>
           </Multiselect>
         </div>
@@ -458,6 +455,29 @@ export default {
       // color: $dark-green;
       font-weight: bold;
     }
+  }
+}
+.multi-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $gray;
+  font-weight: bold;
+  width: 100%;
+  padding: 0.5rem 0rem;
+  margin: 0;
+  &__more {
+    background-color: $base-gray;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-top: 1px solid #e8e8e8;
+    width: 100%;
+    padding: 0.75rem 0rem;
+    margin: 0;
+    cursor: pointer;
   }
 }
 .table-cell-header-wide {

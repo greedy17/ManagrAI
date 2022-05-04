@@ -1,6 +1,6 @@
 <template>
   <div class="customizations">
-    <div>
+    <div @click="test">
       <h3 style="color: 4d4e4c">Required Actions</h3>
       <p class="sub__">Map SFDC fields to their corresponding Slack fields.</p>
     </div>
@@ -9,6 +9,9 @@
       <div class="card">
         <div class="card__header">
           <h3>Update Opportunity</h3>
+          <p class="active-workflow" v-if="activeUpdateOpportunityForm">
+            Active <img src="@/assets/images/configCheck.png" alt="" />
+          </p>
         </div>
         <!-- <img class="back-logo" src="@/assets/images/logo.png" /> -->
         <div class="card__body">
@@ -29,6 +32,9 @@
       <div class="card">
         <div class="card__header">
           <h3>Create Contacts</h3>
+          <p v-if="activeCreateContactForm" class="active-workflow">
+            Active <img src="@/assets/images/configCheck.png" alt="" />
+          </p>
         </div>
         <!-- <img class="back-logo" src="@/assets/images/logo.png" /> -->
         <div class="card__body">
@@ -50,15 +56,22 @@
 </template>
 
 <script>
-import Modal from '@/components/Modal'
+import SlackOAuth from '@/services/slack'
 
 export default {
   name: 'Required',
-  components: {
-    Modal,
-  },
+  components: {},
   data() {
-    return {}
+    return {
+      createContactForm: null,
+      updateOpportunityForm: null,
+      activeUpdateOpportunityForm: null,
+      activeCreateContactForm: null,
+    }
+  },
+  watch: {
+    updateOpportunityForm: 'hasOppForm',
+    createContactForm: 'hasContactForm',
   },
   computed: {
     orgHasSlackIntegration() {
@@ -68,7 +81,43 @@ export default {
       return this.$store.state.user
     },
   },
+  created() {
+    this.getForms()
+  },
   methods: {
+    hasOppForm() {
+      let fields = this.updateOpportunityForm[0].fieldsRef.filter(
+        (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+      )
+      if (fields.length > 2) {
+        this.activeUpdateOpportunityForm = true
+      }
+    },
+    hasContactForm() {
+      let fields = this.createContactForm[0].fieldsRef.filter(
+        (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+      )
+      if (fields.length > 0) {
+        this.activeCreateContactForm = true
+      }
+    },
+    async getForms() {
+      try {
+        let res = await SlackOAuth.api.getOrgCustomForm()
+        this.createContactForm = res.filter(
+          (form) => form.formType === 'CREATE' && form.resource === 'Contact',
+        )
+        this.updateOpportunityForm = res.filter(
+          (form) => form.formType === 'UPDATE' && form.resource === 'Opportunity',
+        )
+      } catch (error) {
+        console.log(error)
+      }
+    },
+    test() {
+      // console.log(this.createContactForm)
+      console.log(this.updateOpportunityForm[0].fields.length)
+    },
     goToUpdateOpp() {
       this.$router.push({ name: 'UpdateOpportunity' })
     },
@@ -125,7 +174,7 @@ export default {
     font-size: 13px;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: space-between;
     border-bottom: 3px solid $soft-gray;
   }
   &__body {
@@ -143,7 +192,27 @@ export default {
     justify-content: space-evenly;
   }
 }
-
+.active-workflow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem;
+  margin-left: 0.5rem;
+  border: 1px solid $soft-gray;
+  background-color: white;
+  border-radius: 0.3rem;
+  color: $dark-green;
+  font-size: 12px;
+  cursor: text;
+  img {
+    height: 1rem;
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
+    margin-left: 0.5rem;
+    // margin-top: 0.1rem;
+  }
+}
 .card-img {
   width: 2rem;
   height: 1.5rem;

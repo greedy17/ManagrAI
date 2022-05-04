@@ -59,6 +59,8 @@
                     selectLabel="Enter"
                     track-by="value"
                     label="key"
+                    :multiple="true"
+                    :closeOnSelect="false"
                   >
                     <template slot="noResult">
                       <p class="multi-slot">No results.</p>
@@ -268,25 +270,15 @@
  * Components
  * */
 // Pacakges
-import 'quill/dist/quill.core.css'
-import 'quill/dist/quill.snow.css'
-import 'quill/dist/quill.bubble.css'
 
-import { quillEditor } from 'vue-quill-editor'
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 //Internal
 import FormField from '@/components/forms/FormField'
 import PassedAlertGroup from '@/views/settings/alerts/create/PassedAlertGroup'
-import AlertSummary from '@/views/settings/alerts/create/_AlertSummary'
-import ListContainer from '@/components/ListContainer'
+
 import ListItem from '@/components/ListItem'
-import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotificationTemplate'
-import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePreview'
-import DropDownSearch from '@/components/DropDownSearch'
-import ExpandablePanel from '@/components/ExpandablePanel'
-import Modal from '@/components/Modal'
-import SmartAlertTemplateBuilder from '@/views/settings/alerts/create/SmartAlertTemplateBuilder'
+
 import { UserConfigForm } from '@/services/users/forms'
 
 /**
@@ -297,37 +289,20 @@ import AlertTemplate, {
   AlertGroupForm,
   AlertTemplateForm,
   AlertConfigForm,
-  AlertMessageTemplateForm,
-  AlertOperandForm,
 } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
-import {
-  SObjectField,
-  SObjectValidations,
-  SObjectPicklist,
-  NON_FIELD_ALERT_OPTS,
-  SOBJECTS_LIST,
-} from '@/services/salesforce'
+import { SObjectField, NON_FIELD_ALERT_OPTS, SOBJECTS_LIST } from '@/services/salesforce'
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
   name: 'CloseDatePassed',
   components: {
-    ExpandablePanel,
-    DropDownSearch,
-    ListContainer,
-    ListItem,
-    SlackMessagePreview,
     PassedAlertGroup,
-    SlackNotificationTemplate,
-    quillEditor,
     ToggleCheckBox,
     FormField,
-    AlertSummary,
     PulseLoadingSpinnerButton,
-    Modal,
-    SmartAlertTemplateBuilder,
+
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {
@@ -431,7 +406,7 @@ export default {
     getUser(userInfo) {
       if (this.userIds.includes(userInfo)) {
         let selectedUser = this.users.list.filter((user) => user.id === userInfo)
-        console.log(selectedUser)
+
         return selectedUser[0].fullName
       } else {
         return userInfo
@@ -448,7 +423,7 @@ export default {
     },
     handleUpdate() {
       this.loading = true
-      console.log(this.userConfigForm.value)
+
       User.api
         .update(this.user.id, this.userConfigForm.value)
         .then((response) => {
@@ -640,9 +615,17 @@ export default {
       this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
         this.selectedChannel.id
     },
+    // setDay(n) {
+    //   this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
+    //   this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value.push(n.value)
+    // },
     setDay(n) {
       this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value.push(n.value)
+      let days = []
+      n.forEach((day) => days.push(day.value))
+      let newDays = [...new Set(days)]
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = newDays
+      console.log(this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value)
     },
     setPipelines(obj) {
       this.alertTemplateForm.field.alertConfig.groups[0].field._alertTargets.value.push(obj)
@@ -936,9 +919,8 @@ input[type='text']:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: $dark-green;
+  color: $gray;
   font-weight: bold;
-  border-top: 1px solid #e8e8e8;
   width: 100%;
   padding: 0.5rem 0rem;
   margin: 0;

@@ -409,9 +409,8 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: $dark-green;
+  color: $gray;
   font-weight: bold;
-  border-top: 1px solid #e8e8e8;
   width: 100%;
   padding: 0.5rem 0rem;
   margin: 0;
