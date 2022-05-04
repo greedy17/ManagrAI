@@ -52,7 +52,7 @@
                   <Multiselect
                     placeholder="Select Day"
                     @input="setDay($event)"
-                    v-model="selectedDay"
+                    v-model="selectedDays"
                     :options="weeklyOpts"
                     openDirection="below"
                     style="width: 14vw"
@@ -64,6 +64,12 @@
                   >
                     <template slot="noResult">
                       <p class="multi-slot">No results.</p>
+                    </template>
+                    <template slot="placeholder">
+                      <p class="slot-icon">
+                        <img src="@/assets/images/search.png" alt="" />
+                        Select Days
+                      </p>
                     </template>
                   </Multiselect>
                 </template>
@@ -102,6 +108,12 @@
                 >
                   <template slot="noResult">
                     <p class="multi-slot">No results.</p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.png" alt="" />
+                      Select Users
+                    </p>
                   </template>
                 </Multiselect>
                 <!-- <DropDownSearch
@@ -205,6 +217,12 @@
                         @click="listUserChannels(userChannelOpts.nextCursor)"
                       >
                         Load More
+                      </p>
+                    </template>
+                    <template slot="placeholder">
+                      <p class="slot-icon">
+                        <img src="@/assets/images/search.png" alt="" />
+                        Select Channels
                       </p>
                     </template>
                   </Multiselect>
@@ -930,7 +948,18 @@ export default {
       brightness(93%) contrast(89%);
   }
 }
-
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 1rem;
+    margin-right: 0.25rem;
+    filter: invert(70%);
+  }
+}
 .multi-slot {
   display: flex;
   align-items: center;

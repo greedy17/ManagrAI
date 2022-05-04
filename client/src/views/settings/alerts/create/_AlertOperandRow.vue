@@ -37,6 +37,12 @@
               <template slot="afterList">
                 <p class="multi-slot__more" @click="objectFieldNextPage">Load More</p>
               </template>
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.png" alt="" />
+                  Select Field
+                </p>
+              </template>
             </Multiselect>
           </template>
         </FormField>
@@ -61,6 +67,12 @@
             >
               <template slot="noResult">
                 <p class="multi-slot">No results.</p>
+              </template>
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.png" alt="" />
+                  Select Operator
+                </p>
               </template>
             </Multiselect>
           </template>
@@ -106,6 +118,12 @@
                 <template slot="noResult">
                   <p class="multi-slot">No results.</p>
                 </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    Select Value
+                  </p>
+                </template>
               </Multiselect>
 
               <!-- <DropDownSearch
@@ -144,7 +162,7 @@
             <FormField :errors="form.field.operandValue.errors">
               <template v-slot:input>
                 <Multiselect
-                  placeholder="Select val test"
+                  placeholder="Select value"
                   v-model="selectedOperand"
                   :options="valueOpts"
                   openDirection="below"
@@ -154,6 +172,12 @@
                 >
                   <template slot="noResult">
                     <p class="multi-slot">No results.</p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.png" alt="" />
+                      Select Value
+                    </p>
                   </template>
                 </Multiselect>
                 <!-- <DropDownSearch
@@ -209,6 +233,12 @@
                     >
                       <template slot="noResult">
                         <p class="multi-slot">No results.</p>
+                      </template>
+                      <template slot="placeholder">
+                        <p class="slot-icon">
+                          <img src="@/assets/images/search.png" alt="" />
+                          Select Operator
+                        </p>
                       </template>
                     </Multiselect>
 
@@ -759,6 +789,20 @@ export default {
     cursor: pointer;
   }
 }
+
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 1rem;
+    margin-right: 0.25rem;
+    filter: invert(70%);
+  }
+}
+
 .load-more {
   text-align: center;
   font-size: 13px;

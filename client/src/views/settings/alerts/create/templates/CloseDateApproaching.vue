@@ -50,7 +50,7 @@
               <FormField>
                 <template v-slot:input>
                   <Multiselect
-                    placeholder="Select Day"
+                    placeholder="Select Days"
                     @input="setDay($event)"
                     v-model="selectedDay"
                     :options="weeklyOpts"
@@ -64,6 +64,12 @@
                   >
                     <template slot="noResult">
                       <p class="multi-slot">No results.</p>
+                    </template>
+                    <template slot="placeholder">
+                      <p class="slot-icon">
+                        <img src="@/assets/images/search.png" alt="" />
+                        Select Days
+                      </p>
                     </template>
                   </Multiselect>
                 </template>
@@ -102,6 +108,12 @@
                 >
                   <template slot="noResult">
                     <p class="multi-slot">No results.</p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.png" alt="" />
+                      Select Users
+                    </p>
                   </template>
                 </Multiselect>
               </template>
@@ -190,6 +202,12 @@
                         @click="listUserChannels(userChannelOpts.nextCursor)"
                       >
                         Load More
+                      </p>
+                    </template>
+                    <template slot="placeholder">
+                      <p class="slot-icon">
+                        <img src="@/assets/images/search.png" alt="" />
+                        Select Channel
                       </p>
                     </template>
                   </Multiselect>
@@ -868,6 +886,18 @@ export default {
     margin-right: 0.5rem;
     filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
       brightness(93%) contrast(89%);
+  }
+}
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 1rem;
+    margin-right: 0.25rem;
+    filter: invert(70%);
   }
 }
 .alerts-header {

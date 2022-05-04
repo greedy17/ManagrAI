@@ -118,7 +118,7 @@
                 label="label"
               >
                 <template slot="noResult">
-                  <p>No results.</p>
+                  <p class="multi-slot">No results.</p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -175,7 +175,7 @@
                 label="full_name"
               >
                 <template slot="noResult">
-                  <p>No results.</p>
+                  <p class="multi-slot">No results.</p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -201,7 +201,7 @@
                 label="name"
               >
                 <template slot="noResult">
-                  <p>No results.</p>
+                  <p class="multi-slot">No results.</p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -318,7 +318,7 @@
                 label="label"
               >
                 <template slot="noResult">
-                  <p>No results.</p>
+                  <p class="multi-slot">No results.</p>
                 </template>
 
                 <template slot="placeholder">
@@ -388,7 +388,7 @@
                 :loading="dropdownLoading"
               >
                 <template slot="noResult">
-                  <p>No results.</p>
+                  <p class="multi-slot">No results.</p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -414,7 +414,7 @@
                 :loading="dropdownLoading || loadingAccounts"
               >
                 <template slot="noResult">
-                  <p>No results.</p>
+                  <p class="multi-slot">No results.</p>
                 </template>
 
                 <template slot="placeholder">

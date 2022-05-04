@@ -46,7 +46,7 @@
               <FormField>
                 <template v-slot:input>
                   <Multiselect
-                    placeholder="Select Day"
+                    placeholder="Select Days"
                     @input="setDay($event)"
                     v-model="selectedDay"
                     :options="weeklyOpts"
@@ -60,6 +60,12 @@
                   >
                     <template slot="noResult">
                       <p class="multi-slot">No results.</p>
+                    </template>
+                    <template slot="placeholder">
+                      <p class="slot-icon">
+                        <img src="@/assets/images/search.png" alt="" />
+                        Select Days
+                      </p>
                     </template>
                   </Multiselect>
                 </template>
@@ -98,6 +104,12 @@
                 >
                   <template slot="noResult">
                     <p class="multi-slot">No results.</p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.png" alt="" />
+                      Select Users
+                    </p>
                   </template>
                 </Multiselect>
               </template>
@@ -186,6 +198,12 @@
                         @click="listUserChannels(userChannelOpts.nextCursor)"
                       >
                         Load More
+                      </p>
+                    </template>
+                    <template slot="placeholder">
+                      <p class="slot-icon">
+                        <img src="@/assets/images/search.png" alt="" />
+                        Select Channel
                       </p>
                     </template>
                   </Multiselect>
@@ -879,6 +897,18 @@ export default {
 }
 img {
   filter: invert(60%);
+}
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 1rem;
+    margin-right: 0.25rem;
+    filter: invert(70%);
+  }
 }
 .search__input {
   font-family: Lato-Regular, sans-serif;
