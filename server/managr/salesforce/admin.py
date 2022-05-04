@@ -55,15 +55,15 @@ class CustomMeetingWorkflow(admin.ModelAdmin):
     model = models.MeetingWorkflow
     inlines = (CustomFormInstanceInline,)
     list_filter = ("user__email",)
-    list_display = (
-        "datetime_created",
-        "user",
-        "progress",
-        "meeting",
-        "non_zoom_meeting",
-    )
+    list_display = ("datetime_created", "user", "progress", "meeting", "get_non_zoom_title")
     readonly_fields = ["user", "meeting", "non_zoom_meeting"]
     ordering = ("-datetime_created",)
+
+    def get_non_zoom_title(self, obj):
+        if obj.non_zoom_meeting is not None:
+            return obj.non_zoom_meeting.event_data["title"]
+        else:
+            return None
 
 
 class CustomSObjectField(admin.ModelAdmin):
