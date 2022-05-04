@@ -180,9 +180,6 @@ export default {
     test(n) {
       this.registrationForm.field.timezone.value = n.value
     },
-    tester(n) {
-      this.registrationForm.field.role.value = n.value
-    },
     async retrieveEmail(id, token) {
       this.isLoading = true
       try {

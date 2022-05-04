@@ -14,7 +14,7 @@
           label="label"
         >
           <template slot="noResult">
-            <p>No results.</p>
+            <p class="multi-slot">No results.</p>
           </template>
         </Multiselect>
 
@@ -350,7 +350,29 @@ export default {
     filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
   }
 }
-
+.multi-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $gray;
+  font-weight: bold;
+  width: 100%;
+  padding: 0.5rem 0rem;
+  margin: 0;
+  &__more {
+    background-color: $base-gray;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-top: 1px solid #e8e8e8;
+    width: 100%;
+    padding: 0.75rem 0rem;
+    margin: 0;
+    cursor: pointer;
+  }
+}
 .filter-search-bar {
   height: 4.5vh;
   background-color: transparent;

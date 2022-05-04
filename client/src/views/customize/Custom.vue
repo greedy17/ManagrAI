@@ -9,6 +9,9 @@
       <div class="card">
         <div class="card__header">
           <h3>Create Opportunity</h3>
+          <p class="active-workflow" v-if="hasCreateOppForm">
+            Active <img src="@/assets/images/configCheck.png" alt="" />
+          </p>
         </div>
 
         <div class="card__body">
@@ -38,6 +41,9 @@
       <div class="card">
         <div class="card__header">
           <h3>Update Contacts</h3>
+          <p class="active-workflow" v-if="hasUpdateContactForm">
+            Active <img src="@/assets/images/configCheck.png" alt="" />
+          </p>
         </div>
 
         <div class="card__body">
@@ -67,6 +73,9 @@
       <div class="card">
         <div class="card__header">
           <h3>Create Lead</h3>
+          <p class="active-workflow" v-if="hasCreateLeadForm">
+            Active <img src="@/assets/images/configCheck.png" alt="" />
+          </p>
         </div>
 
         <div class="card__body">
@@ -96,6 +105,9 @@
       <div class="card">
         <div class="card__header">
           <h3>Update Lead</h3>
+          <p class="active-workflow" v-if="hasUpdateLeadForm">
+            Active <img src="@/assets/images/configCheck.png" alt="" />
+          </p>
         </div>
 
         <div class="card__body">
@@ -125,6 +137,9 @@
       <div class="card">
         <div class="card__header">
           <h3>Create Account</h3>
+          <p class="active-workflow" v-if="hasCreateAccountForm">
+            Active <img src="@/assets/images/configCheck.png" alt="" />
+          </p>
         </div>
 
         <div class="card__body">
@@ -154,6 +169,9 @@
       <div class="card">
         <div class="card__header">
           <h3>Update Account</h3>
+          <p class="active-workflow" v-if="hasUpdateAccountForm">
+            Active <img src="@/assets/images/configCheck.png" alt="" />
+          </p>
         </div>
 
         <div class="card__body">
@@ -185,16 +203,40 @@
 </template>
 
 <script>
-import Modal from '@/components/Modal'
+import SlackOAuth from '@/services/slack'
 
 export default {
   name: 'Custom',
-  components: {
-    Modal,
+  components: {},
+  watch: {
+    createOppForm: 'checkCreateOpp',
+    updateContactForm: 'checkUpdateContact',
+    createLeadForm: 'checkCreateLead',
+    createAccountForm: 'checkCreateAccount',
+    updateLeadForm: 'checkUpdateLead',
+    updateAccountForm: 'checkUpdateAccount',
   },
   data() {
-    return {}
+    return {
+      hasCreateOppForm: null,
+      hasUpdateContactForm: null,
+      hasCreateLeadForm: null,
+      hasCreateAccountForm: null,
+      hasUpdateLeadForm: null,
+      hasUpdateAccountForm: null,
+
+      createOppForm: null,
+      updateContactForm: null,
+      createLeadForm: null,
+      createAccountForm: null,
+      updateLeadForm: null,
+      updateAccountForm: null,
+    }
   },
+  created() {
+    this.getForms()
+  },
+
   computed: {
     orgHasSlackIntegration() {
       return !!this.$store.state.user.organizationRef.slackIntegration
@@ -204,6 +246,80 @@ export default {
     },
   },
   methods: {
+    async getForms() {
+      try {
+        let res = await SlackOAuth.api.getOrgCustomForm()
+        this.createOppForm = res.filter(
+          (form) => form.formType === 'CREATE' && form.resource === 'Opportunity',
+        )
+        this.updateContactForm = res.filter(
+          (form) => form.formType === 'UPDATE' && form.resource === 'Contact',
+        )
+        this.createLeadForm = res.filter(
+          (form) => form.formType === 'CREATE' && form.resource === 'Lead',
+        )
+        this.createAccountForm = res.filter(
+          (form) => form.formType === 'CREATE' && form.resource === 'Account',
+        )
+        this.updateLeadForm = res.filter(
+          (form) => form.formType === 'UPDATE' && form.resource === 'Lead',
+        )
+        this.updateAccountForm = res.filter(
+          (form) => form.formType === 'UPDATE' && form.resource === 'Account',
+        )
+      } catch (error) {
+        console.log(error)
+      }
+    },
+    checkCreateOpp() {
+      let fields = this.createOppForm[0].fieldsRef.filter(
+        (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+      )
+      if (fields.length > 0) {
+        this.hasCreateOppForm = true
+      }
+    },
+    checkUpdateContact() {
+      let fields = this.updateContactForm[0].fieldsRef.filter(
+        (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+      )
+      if (fields.length > 0) {
+        this.hasUpdateContactForm = true
+      }
+    },
+    checkCreateLead() {
+      let fields = this.createLeadForm[0].fieldsRef.filter(
+        (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+      )
+      if (fields.length > 0) {
+        this.hasCreateLeadForm = true
+      }
+    },
+    checkCreateAccount() {
+      let fields = this.createAccountForm[0].fieldsRef.filter(
+        (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+      )
+      if (fields.length > 0) {
+        this.hasCreateAccountForm = true
+      }
+    },
+    checkUpdateLead() {
+      let fields = this.updateLeadForm[0].fieldsRef.filter(
+        (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+      )
+      if (fields.length > 0) {
+        this.hasUpdateLeadForm = true
+      }
+    },
+    checkUpdateAccount() {
+      let fields = this.updateAccountForm[0].fieldsRef.filter(
+        (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+      )
+      if (fields.length > 0) {
+        this.hasUpdateAccountForm = true
+      }
+    },
+
     goToUpdateOpp() {
       this.$router.push({ name: 'UpdateOpportunity' })
     },
@@ -235,6 +351,27 @@ export default {
   border-radius: 0.3rem;
   padding: 0.5rem 1rem;
   cursor: pointer;
+}
+.active-workflow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem;
+  margin-left: 0.5rem;
+  border: 1px solid $soft-gray;
+  background-color: white;
+  border-radius: 0.3rem;
+  color: $dark-green;
+  font-size: 12px;
+  cursor: text;
+  img {
+    height: 1rem;
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
+    margin-left: 0.5rem;
+    // margin-top: 0.1rem;
+  }
 }
 .customizations {
   color: $base-gray;
@@ -281,7 +418,7 @@ export default {
     font-size: 13px;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: space-between;
     border-bottom: 3px solid $soft-gray;
   }
   &__body {

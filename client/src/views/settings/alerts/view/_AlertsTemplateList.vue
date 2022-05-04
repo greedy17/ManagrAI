@@ -181,11 +181,9 @@
 // Pacakges
 
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
-import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
 
 //Internal
 
-import ExpandablePanel from '@/components/ExpandablePanel'
 import FormField from '@/components/forms/FormField'
 import AlertsEditPanel from '@/views/settings/alerts/view/_AlertsEditPanel'
 /**
@@ -202,8 +200,6 @@ import AlertTemplate from '@/services/alerts/'
 export default {
   name: 'AlertsTemplateList',
   components: {
-    ExpandablePanel,
-    PulseLoadingSpinner,
     ToggleCheckBox,
     FormField,
     AlertsEditPanel,

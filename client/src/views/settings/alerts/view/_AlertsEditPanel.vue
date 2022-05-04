@@ -511,15 +511,13 @@ export default {
       }
     },
     getReadableConfig(config) {
-      console.log(config)
       let recurrenceDayString = config.recurrenceDay
 
       if (config.recurrenceFrequency == 'WEEKLY') {
-        console.log(config)
-        let day = this.weeklyOpts.find((opt) => opt.value == config.recurrenceDay)
-          ? this.weeklyOpts.find((opt) => opt.value == config.recurrenceDay).key
-          : config.recurrenceDay
-        recurrenceDayString = `Run every ${day} (Weekly)`
+        // let day = this.weeklyOpts.find((opt) => opt.value == config.recurrenceDay)
+        //   ? this.weeklyOpts.find((opt) => opt.value == config.recurrenceDay).key
+        //   : config.recurrenceDay
+        recurrenceDayString = `Run your selected days (Weekly)`
       } else if ((config.recurrenceFrequency = 'MONTHLY')) {
         let day = config.recurrenceDay
         recurrenceDayString = `Run every ${this.addSuffix(day)} Monthly`

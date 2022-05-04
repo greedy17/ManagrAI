@@ -561,3 +561,7 @@ class MeetingPrepInstance(TimeStampModel):
 
     class Meta:
         ordering = ["datetime_created"]
+
+    @property
+    def title(self):
+        return self.event_data["title"]

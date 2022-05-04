@@ -352,7 +352,7 @@
             @add-participant="addParticipant"
             @filter-accounts="getAccounts"
             :dropdowns="picklistQueryOptsContacts"
-            :contactFields="updateContactForm"
+            :contactFields="createContactForm"
             :meeting="meeting.meeting_ref"
             :participants="meeting.meeting_ref.participants"
             :workflowId="meeting.id"
@@ -455,7 +455,7 @@ export default {
       updateOppForm: null,
       oppFormCopy: null,
       createOppForm: null,
-      updateContactForm: null,
+      createContactForm: null,
       oppFields: [],
       instanceId: null,
       contactInstanceId: null,
@@ -496,11 +496,11 @@ export default {
       },
     }
   },
-  mounted() {
-    setTimeout(() => {
-      this.getInitialAccounts()
-    }, 1000)
-  },
+  // mounted() {
+  //   setTimeout(() => {
+  //     this.getInitialAccounts()
+  //   }, 1000)
+  // },
   computed: {
     currentCheckList() {
       if (this.primaryCheckList.length > 0) {
@@ -571,7 +571,7 @@ export default {
     this.getUsers()
   },
   watch: {
-    accountSobjectId: 'getAccounts',
+    accountSobjectId: 'getInitialAccounts',
     primaryCheckList: 'closeAll',
     workflowCheckList: 'closeAll',
     updateList: {
@@ -1487,23 +1487,23 @@ export default {
         this.createOppForm = res.filter(
           (obj) => obj.formType === 'CREATE' && obj.resource === 'Opportunity',
         )
-        this.updateContactForm = res.filter(
+        this.createContactForm = res.filter(
           (obj) => obj.formType === 'UPDATE' && obj.resource === 'Contact',
         )
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
         this.createOppForm = this.createOppForm[0].fieldsRef
-        this.updateContactForm = this.updateContactForm[0].fieldsRef
+        this.createContactForm = this.createContactForm[0].fieldsRef
 
-        for (let i = 0; i < this.updateContactForm.length; i++) {
+        for (let i = 0; i < this.createContactForm.length; i++) {
           if (
-            this.updateContactForm[i].dataType === 'Picklist' ||
-            this.updateContactForm[i].dataType === 'MultiPicklist'
+            this.createContactForm[i].dataType === 'Picklist' ||
+            this.createContactForm[i].dataType === 'MultiPicklist'
           ) {
-            this.picklistQueryOptsContacts[this.updateContactForm[i].apiName] =
-              this.updateContactForm[i].apiName
-          } else if (this.updateContactForm[i].dataType === 'Reference') {
-            this.picklistQueryOptsContacts[this.updateContactForm[i].referenceDisplayLabel] =
-              this.updateContactForm[i].referenceDisplayLabel
+            this.picklistQueryOptsContacts[this.createContactForm[i].apiName] =
+              this.createContactForm[i].apiName
+          } else if (this.createContactForm[i].dataType === 'Reference') {
+            this.picklistQueryOptsContacts[this.createContactForm[i].referenceDisplayLabel] =
+              this.createContactForm[i].referenceDisplayLabel
           }
         }
         for (let i in this.picklistQueryOptsContacts) {
@@ -1564,7 +1564,7 @@ export default {
             field.apiName !== 'AccountId' &&
             field.apiName !== 'OwnerId',
         )
-        this.updateContactForm = this.updateContactForm.filter(
+        this.createContactForm = this.createContactForm.filter(
           (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
         )
       } catch (error) {
@@ -1582,15 +1582,17 @@ export default {
     },
     async getInitialAccounts() {
       this.loadingAccounts = true
-      try {
-        const res = await SObjects.api.getSobjectPicklistValues({
-          sobject_id: this.accountSobjectId,
-        })
-        this.allAccounts = res
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.loadingAccounts = false
+      if (this.accountSobjectId) {
+        try {
+          const res = await SObjects.api.getSobjectPicklistValues({
+            sobject_id: this.accountSobjectId,
+          })
+          this.allAccounts = res
+        } catch (e) {
+          console.log(e)
+        } finally {
+          this.loadingAccounts = false
+        }
       }
     },
     async getAccounts(val) {

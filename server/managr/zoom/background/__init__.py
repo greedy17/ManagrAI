@@ -243,7 +243,6 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                 else:
                     memo[p.get("user_email")] = len(participants)
                     participants.append(p)
-        print(participants)
         if settings.IN_STAGING:
             participants.append(
                 {
