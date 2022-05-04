@@ -1,6 +1,211 @@
 <template>
   <div class="pipelines">
     <Modal
+      v-if="editOpModalOpen"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), resetEdit()
+        }
+      "
+    >
+      <div class="opp-modal-container">
+        <div class="flex-row-spread header">
+          <div class="flex-row">
+            <img
+              src="@/assets/images/logo.png"
+              style="height: 1.75rem; margin-left: 0.5rem; margin-right: 0.25rem"
+              alt=""
+            />
+            <h2>Update Opportunity</h2>
+          </div>
+          <img
+            src="@/assets/images/closer.png"
+            style="height: 1.5rem; margin-top: -1rem; margin-right: 0.75rem; cursor: pointer"
+            @click="resetEdit"
+            alt=""
+          />
+        </div>
+        <div class="opp-modal">
+          <section :key="field.id" v-for="field in oppFormCopy">
+            <div v-if="field.apiName === 'meeting_type'">
+              <p>Note Title:</p>
+              <textarea
+                id="user-input"
+                cols="30"
+                rows="2"
+                style="width: 26.25vw; border-radius: 0.2rem"
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+              >
+              </textarea>
+            </div>
+            <div v-else-if="field.apiName === 'meeting_comments'">
+              <p>Notes:</p>
+              <textarea
+                id="user-input"
+                ccols="30"
+                rows="4"
+                style="width: 26.25vw; border-radius: 0.2rem"
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+              >
+              </textarea>
+            </div>
+            <div
+              v-else-if="
+                field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
+              "
+            >
+              <p>{{ field.referenceDisplayLabel }}:</p>
+              <textarea
+                id="user-input"
+                ccols="30"
+                rows="4"
+                :placeholder="currentVals[field.apiName]"
+                style="width: 26.25vw; border-radius: 0.4rem; padding: 7px"
+                v-model="currentVals[field.apiName]"
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+              >
+              </textarea>
+            </div>
+            <div
+              v-else-if="
+                (field.dataType === 'String' && field.apiName !== 'meeting_type') ||
+                (field.dataType === 'String' && field.apiName !== 'meeting_comments') ||
+                (field.dataType === 'String' && field.apiName !== 'NextStep')
+              "
+            >
+              <p>{{ field.referenceDisplayLabel }}:</p>
+              <input
+                id="user-input"
+                type="text"
+                :placeholder="currentVals[field.apiName]"
+                v-model="currentVals[field.apiName]"
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+              />
+            </div>
+            <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
+              <p>{{ field.referenceDisplayLabel }}:</p>
+              <Multiselect
+                :placeholder="
+                  `${currentVals[field.apiName]}` !== 'null'
+                    ? `${currentVals[field.apiName]}`
+                    : `Select ${field.referenceDisplayLabel}`
+                "
+                :options="picklistQueryOpts[field.apiName]"
+                @select="
+                  setUpdateValues(
+                    field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+                    $event.value,
+                  )
+                "
+                v-model="dropdownVal[field.apiName]"
+                openDirection="below"
+                :loading="dropdownLoading"
+                style="width: 13vw"
+                selectLabel="Enter"
+                track-by="value"
+                label="label"
+              >
+                <template slot="noResult">
+                  <p>No results.</p>
+                </template>
+              </Multiselect>
+            </div>
+            <div v-else-if="field.dataType === 'Date'">
+              <p>{{ field.referenceDisplayLabel }}:</p>
+              <input
+                type="text"
+                onfocus="(this.type='date')"
+                onblur="(this.type='text')"
+                :placeholder="currentVals[field.apiName]"
+                v-model="currentVals[field.apiName]"
+                id="user-input"
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+              />
+            </div>
+            <div v-else-if="field.dataType === 'DateTime'">
+              <p>{{ field.referenceDisplayLabel }}:</p>
+              <input
+                type="datetime-local"
+                id="start"
+                v-model="currentVals[field.apiName]"
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+              />
+            </div>
+            <div
+              v-else-if="
+                field.dataType === 'Phone' ||
+                field.dataType === 'Double' ||
+                field.dataType === 'Currency'
+              "
+            >
+              <p>{{ field.referenceDisplayLabel }}:</p>
+              <input
+                id="user-input"
+                type="number"
+                v-model="currentVals[field.apiName]"
+                :placeholder="currentVals[field.apiName]"
+                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+              />
+            </div>
+
+            <div v-else-if="field.apiName === 'OwnerId'">
+              <p>{{ field.referenceDisplayLabel }}:</p>
+              <Multiselect
+                :placeholder="currentOwner"
+                v-model="selectedOwner"
+                :options="allUsers"
+                @select="
+                  setUpdateValues(field.apiName, $event.salesforce_account_ref.salesforce_id)
+                "
+                openDirection="below"
+                style="width: 13vw"
+                selectLabel="Enter"
+                track-by="salesforce_account_ref.salesforce_id"
+                label="full_name"
+                :loading="dropdownLoading"
+              >
+                <template slot="noResult">
+                  <p>No results.</p>
+                </template>
+              </Multiselect>
+            </div>
+
+            <div v-else-if="field.apiName === 'AccountId'">
+              <p>{{ field.referenceDisplayLabel }}:</p>
+
+              <Multiselect
+                :placeholder="currentAccount"
+                v-model="selectedAccount"
+                :options="allAccounts"
+                @select="setUpdateValues(field.apiName, $event.integration_id)"
+                openDirection="below"
+                style="width: 13vw"
+                selectLabel="Enter"
+                track-by="integration_id"
+                label="name"
+                :loading="dropdownLoading"
+              >
+                <template slot="noResult">
+                  <p>No results.</p>
+                </template>
+              </Multiselect>
+            </div>
+          </section>
+        </div>
+        <div class="flex-end-opp">
+          <div v-if="updatingMeeting" style="display: flex; align-items: center">
+            <button @click="onMakeMeetingUpdate" class="add-button__">Update</button>
+            <p @click="resetEdit" class="cancel">Cancel</p>
+          </div>
+          <div v-else style="display: flex; align-items: center">
+            <button @click="updateResource()" class="add-button__">Update</button>
+            <p @click="resetEdit" class="cancel">Cancel</p>
+          </div>
+        </div>
+      </div>
+    </Modal>
+    <Modal
       v-if="modalOpen"
       dimmed
       @close-modal="
@@ -1201,7 +1406,7 @@ export default {
         this.dropdownLoading = false
       }
     },
-    async onUpdateMeeting() {
+    async onMakeMeetingUpdate() {
       this.meetingLoading = true
       this.editOpModalOpen = false
       try {
@@ -1488,7 +1693,7 @@ export default {
           (obj) => obj.formType === 'CREATE' && obj.resource === 'Opportunity',
         )
         this.createContactForm = res.filter(
-          (obj) => obj.formType === 'UPDATE' && obj.resource === 'Contact',
+          (obj) => obj.formType === 'CREATE' && obj.resource === 'Contact',
         )
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
         this.createOppForm = this.createOppForm[0].fieldsRef

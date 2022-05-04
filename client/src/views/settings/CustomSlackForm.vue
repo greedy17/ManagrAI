@@ -839,61 +839,62 @@
             :disabled="!addedFieldNames.includes('Name')"
           /> -->
         </div>
+      </div>
 
-        <div class="recommend" v-if="addingFields">
-          <div v-if="formType !== 'STAGE_GATING'" class="recommend__header">
-            <h4>Add More Fields</h4>
-            <img
-              @click="
-                () => {
-                  addingFields = !addingFields
-                }
-              "
-              height="1rem"
-              src="@/assets/images/close.png"
-              alt=""
-            />
-          </div>
-          <div class="recommend__header" v-else>
-            <h4>Add Fields</h4>
-            <img
-              @click="
-                () => {
-                  addingFields = !addingFields
-                }
-              "
-              height="1rem"
-              src="@/assets/images/close.png"
-              alt=""
-            />
-          </div>
-          <div v-if="formType === 'STAGE_GATING'" class="recommend__body">
-            <Multiselect
-              placeholder="Search for Validation Fields"
-              :options="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-              @input="onAddField($event)"
-              openDirection="below"
-              style="width: 20vw; margin-top: 1.5rem"
-              selectLabel="Enter"
-              track-by="apiName"
-              label="referenceDisplayLabel"
-            >
-              <template slot="noResult">
-                <p class="multi-slot">No results.</p>
-              </template>
-              <template slot="afterList">
-                <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
-              </template>
-              <template slot="placeholder">
-                <p class="slot-icon">
-                  <img src="@/assets/images/search.png" alt="" />
-                  Search for Validation Fields
-                </p>
-              </template>
-            </Multiselect>
-          </div>
+      <div class="recommend" v-if="addingFields">
+        <div v-if="formType !== 'STAGE_GATING'" class="recommend__header">
+          <h4>Add More Fields</h4>
+          <img
+            @click="
+              () => {
+                addingFields = !addingFields
+              }
+            "
+            height="1rem"
+            src="@/assets/images/close.png"
+            alt=""
+          />
+        </div>
+        <div class="recommend__header" v-else>
+          <h4>Add Fields</h4>
+          <img
+            @click="
+              () => {
+                addingFields = !addingFields
+              }
+            "
+            height="1rem"
+            src="@/assets/images/close.png"
+            alt=""
+          />
+        </div>
+        <div v-if="formType === 'STAGE_GATING'" class="recommend__body">
+          <Multiselect
+            placeholder="Search for Validation Fields"
+            :options="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+            @input="onAddField($event)"
+            openDirection="below"
+            style="width: 20vw; margin-top: 1.5rem"
+            selectLabel="Enter"
+            track-by="apiName"
+            label="referenceDisplayLabel"
+          >
+            <template slot="noResult">
+              <p class="multi-slot">No results.</p>
+            </template>
+            <template slot="afterList">
+              <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+            </template>
+            <template slot="placeholder">
+              <p class="slot-icon">
+                <img src="@/assets/images/search.png" alt="" />
+                Search for Validation Fields
+              </p>
+            </template>
+          </Multiselect>
+        </div>
 
-          <!-- <div class="recommend__validation" v-if="formType === 'STAGE_GATING'">
+        <!-- <div class="recommend__validation" v-if="formType === 'STAGE_GATING'">
             <p style="color: #41b883; font-size: 11px">*Previous Stage Validation Fields</p>
             <div v-if="!orderedStageForm.length">
               <p style="font-size: 14px; text-align: center">Nothing here.. (o^^)o</p>
@@ -911,31 +912,30 @@
               </div>
             </div>
           </div> -->
-          <div class="recommend__body" v-if="formType !== 'STAGE_GATING'">
-            <Multiselect
-              placeholder="Search Fields"
-              :options="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-              @input="onAddField($event)"
-              openDirection="below"
-              style="width: 20vw; margin-top: 1rem"
-              selectLabel="Enter"
-              track-by="apiName"
-              label="referenceDisplayLabel"
-            >
-              <template slot="noResult">
-                <p class="multi-slot">No results.</p>
-              </template>
-              <template slot="afterList">
-                <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
-              </template>
-              <template slot="placeholder">
-                <p class="slot-icon">
-                  <img src="@/assets/images/search.png" alt="" />
-                  Search Fields
-                </p>
-              </template>
-            </Multiselect>
-          </div>
+        <div class="recommend__body" v-if="formType !== 'STAGE_GATING'">
+          <Multiselect
+            placeholder="Search Fields"
+            :options="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
+            @input="onAddField($event)"
+            openDirection="below"
+            style="width: 20vw; margin-top: 1rem"
+            selectLabel="Enter"
+            track-by="apiName"
+            label="referenceDisplayLabel"
+          >
+            <template slot="noResult">
+              <p class="multi-slot">No results.</p>
+            </template>
+            <template slot="afterList">
+              <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+            </template>
+            <template slot="placeholder">
+              <p class="slot-icon">
+                <img src="@/assets/images/search.png" alt="" />
+                Search Fields
+              </p>
+            </template>
+          </Multiselect>
         </div>
       </div>
 
@@ -1386,9 +1386,46 @@ export default {
       console.log(this.formFields.list)
       console.log(this.addedFieldNames)
     },
-    goToProducts() {
-      this.onSave()
-      this.$router.push({ name: 'ProductForm' })
+
+    async goToProducts() {
+      if (
+        (this.resource == 'Opportunity' || this.resource == 'Account') &&
+        this.customForm.formType == FORM_CONSTS.MEETING_REVIEW
+      ) {
+        if (!this.meetingType.length && !this.actionChoices.length) {
+          this.$Alert.alert({
+            type: 'error',
+            message: 'Please enter a Meeting Type',
+            timeout: 1000,
+          })
+          return
+        }
+      }
+      this.savingForm = true
+
+      let fields = new Set([...this.addedFields.map((f) => f.id)])
+      fields = Array.from(fields).filter((f) => !this.removedFields.map((f) => f.id).includes(f))
+      let fields_ref = this.addedFields.filter((f) => fields.includes(f.id))
+
+      SlackOAuth.api
+        .postOrgCustomForm({
+          ...this.customForm,
+          fields: fields,
+          removedFields: this.removedFields,
+          fields_ref: fields_ref,
+        })
+        .then((res) => {
+          this.$emit('update:selectedForm', res)
+          this.$Alert.alert({
+            type: 'success',
+            message: 'Form Added Succesfully!',
+            timeout: 1000,
+          })
+        })
+        .finally(() => {
+          this.savingForm = false
+          this.$router.push({ name: 'ProductForm' })
+        })
     },
     lowerCase(word1, word2) {
       return (word1 + ' ' + word2)
@@ -1518,7 +1555,7 @@ export default {
             this.$Alert.alert({
               type: 'error',
               message: 'Please enter a Meeting Type',
-              timeout: 2000,
+              timeout: 1000,
             })
             return
           } else {
@@ -1533,7 +1570,7 @@ export default {
                 this.$Alert.alert({
                   type: 'success',
                   message: 'New meeting type created',
-                  timeout: 2000,
+                  timeout: 1000,
                 })
               })
               .finally((this.loadingMeetingTypes = false))
@@ -1567,7 +1604,7 @@ export default {
           this.$Alert.alert({
             type: 'error',
             message: 'Please enter a Meeting Type',
-            timeout: 2000,
+            timeout: 1000,
           })
           return
         }
@@ -1577,7 +1614,7 @@ export default {
       let fields = new Set([...this.addedFields.map((f) => f.id)])
       fields = Array.from(fields).filter((f) => !this.removedFields.map((f) => f.id).includes(f))
       let fields_ref = this.addedFields.filter((f) => fields.includes(f.id))
-      console.log(this.customForm)
+
       SlackOAuth.api
         .postOrgCustomForm({
           ...this.customForm,
@@ -1590,19 +1627,17 @@ export default {
           this.$Alert.alert({
             type: 'success',
             message: 'Form Added Succesfully!',
-            timeout: 2000,
+            timeout: 1000,
           })
-          if (!this.userHasProducts || !this.productSelected) {
-            this.$router.push({ name: 'Required' })
-          }
         })
         .finally(() => {
           this.savingForm = false
+          if (this.formType !== 'STAGE_GATING') {
+            this.$router.push({ name: 'Required' })
+          } else {
+            this.$router.go()
+          }
         })
-
-      if (this.formType === 'STAGE_GATING') {
-        this.$router.go()
-      }
     },
   },
 }
@@ -1786,8 +1821,9 @@ export default {
 }
 .recommend {
   position: absolute;
-  top: 12vh;
-  right: 3vw;
+  bottom: 20vh;
+  left: 12vw;
+  z-index: 5;
   background-color: white;
   border-radius: 0.3rem;
   border: 1px solid #e8e8e8;

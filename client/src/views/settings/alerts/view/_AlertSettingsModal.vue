@@ -26,7 +26,7 @@
           <FormField>
             <template v-slot:input>
               <Multiselect
-                placeholder="Select Day"
+                placeholder="Select Days"
                 @input="setDay($event)"
                 v-model="selectedDay"
                 :options="weeklyOpts"
@@ -35,9 +35,17 @@
                 selectLabel="Enter"
                 track-by="value"
                 label="key"
+                :multiple="true"
+                :closeOnSelect="false"
               >
                 <template slot="noResult">
                   <p>No results.</p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    Select Days
+                  </p>
                 </template>
               </Multiselect>
               <!-- <DropDownSearch
@@ -80,7 +88,13 @@
               :multiple="true"
             >
               <template slot="noResult">
-                <p>No results.</p>
+                <p class="multi-slot">No results.</p>
+              </template>
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.png" alt="" />
+                  Select Users
+                </p>
               </template>
             </Multiselect>
             <!-- <DropDownSearch
@@ -164,11 +178,17 @@
                 label="name"
               >
                 <template slot="noResult">
-                  <p>No results.</p>
+                  <p class="multi-slot">No results.</p>
                 </template>
                 <template slot="afterList">
-                  <p class="load-more" @click="listUserChannels(userChannelOpts.nextCursor)">
+                  <p class="multi-slot__more" @click="listUserChannels(userChannelOpts.nextCursor)">
                     Load More
+                  </p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    Select Channel
                   </p>
                 </template>
               </Multiselect>
@@ -195,21 +215,8 @@
                   {{ option['name'] }}
                 </template>
               </DropDownSearch> -->
-            </template>
-          </FormField>
-
-          <p
-            v-if="form.field.recipients.value.length > 0"
-            @click="removeTarget"
-            :class="form.field.recipients.value ? 'selected__item' : 'visible'"
+            </template></FormField
           >
-            <img
-              src="@/assets/images/remove.png"
-              style="height: 1rem; margin-right: 0.25rem"
-              alt=""
-            />
-            {{ form.field._recipients.value.name }}
-          </p>
         </div>
       </div>
       <div class="save-button">
@@ -335,11 +342,17 @@ export default {
       }
       this.isSaving = false
     },
+    // setDay(n) {
+    //   this.form.field.recurrenceDay.value = 0
+    //   this.form.field.recurrenceDays.value.push(n.value)
+    // },
     setDay(n) {
       this.form.field.recurrenceDay.value = 0
-      this.form.field.recurrenceDays.value.push(n.value)
+      let days = []
+      n.forEach((day) => days.push(day.value))
+      let newDays = [...new Set(days)]
+      this.form.field.recurrenceDays.value = newDays
     },
-
     mapIds() {
       let mappedIds = this.selectedUsers.map((user) => user.id)
       this.form.field.alertTargets.value = mappedIds
@@ -579,6 +592,42 @@ export default {
   justify-content: center;
   height: 4rem;
 }
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 1rem;
+    margin-right: 0.25rem;
+    filter: invert(70%);
+  }
+}
+.multi-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $gray;
+  font-weight: bold;
+
+  width: 100%;
+  padding: 0.5rem 0rem;
+  margin: 0;
+  &__more {
+    background-color: $base-gray;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-top: 1px solid #e8e8e8;
+    width: 100%;
+    padding: 0.75rem 0rem;
+    margin: 0;
+    cursor: pointer;
+  }
+}
 .channels_height {
   height: 22vh;
   overflow-y: scroll;
@@ -672,8 +721,8 @@ h2 {
   align-items: flex-end;
   justify-content: flex-end;
   width: 100%;
-  padding: 0rem 1rem 3rem 0rem;
-  height: 100px;
+  padding: 0rem 1rem 0rem 0rem;
+  height: 170px;
 }
 .selected__item {
   padding: 0.5rem 1.2rem;

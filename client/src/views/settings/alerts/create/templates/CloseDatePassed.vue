@@ -106,6 +106,7 @@
                   track-by="id"
                   label="fullName"
                   :multiple="true"
+                  :closeOnSelect="false"
                 >
                   <template slot="noResult">
                     <p class="multi-slot">No results.</p>
@@ -643,7 +644,6 @@ export default {
       n.forEach((day) => days.push(day.value))
       let newDays = [...new Set(days)]
       this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = newDays
-      console.log(this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value)
     },
     setPipelines(obj) {
       this.alertTemplateForm.field.alertConfig.groups[0].field._alertTargets.value.push(obj)

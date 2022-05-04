@@ -17,6 +17,7 @@
                   track-by="id"
                   label="fullName"
                   :multiple="true"
+                  :closeOnSelect="false"
                 >
                   <template slot="noResult">
                     <p class="multi-slot">No results.</p>
@@ -140,11 +141,13 @@
                     label="name"
                   >
                     <template slot="noResult">
-                      <p>No results.</p>
+                      <p class="multi-slot">No results.</p>
                     </template>
-                    <template slot="afterList">
-                      <p class="load-more" @click="listUserChannels(userChannelOpts.nextCursor)">
-                        Load More
+
+                    <template slot="placeholder">
+                      <p class="slot-icon">
+                        <img src="@/assets/images/search.png" alt="" />
+                        Select Channel
                       </p>
                     </template>
                   </Multiselect>
