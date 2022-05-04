@@ -323,6 +323,7 @@ class RealTimeAlertViewSet(
         from managr.salesforce.models import SObjectField
 
         data = request.data
+        print(data)
         manager = User.objects.get(id=data.get("user"))
         api_name = data.get("api_name", None)
         if api_name:
@@ -341,9 +342,7 @@ class RealTimeAlertViewSet(
                 if hasattr(user, "slack_integration"):
                     configs = user.slack_integration.realtime_alert_configs
                     if str(field.id) in configs.keys():
-                        if current_config["title"] in configs[str(field.id)].keys():
-                            configs[str(field.id)][title] = current_config
-
+                        configs[str(field.id)][title] = current_config
                     else:
                         new_config = {current_config["title"]: current_config}
                         configs[str(field.id)] = new_config

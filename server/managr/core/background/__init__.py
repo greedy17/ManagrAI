@@ -776,7 +776,7 @@ def generate_reminder_message(user_id):
                 "meeting_reminder", {"u": str(user.id), "not_completed": meetings["uncompleted"]}
             )
     title = (
-        "*Reminder:* Your team has uncommpleted tasks from today"
+        "*Reminder:* Your team has uncompleted tasks from today"
         if user.user_level == "MANAGER"
         else "*Reminder:* Uncompleted tasks from today"
     )
