@@ -17,6 +17,21 @@
         </div>
       </div>
     </Modal>
+    <div v-if="!alertsCount(templates.list.length)">
+      <h3
+        class="bouncy"
+        style="
+          color: #5d5e5e;
+          font-weight: bold;
+          text-align: center;
+          margin-top: 16vh;
+          font-size: 3rem;
+        "
+      >
+        0
+      </h3>
+      <p style="font-weight: bold; color: #5d5e5e; text-align: center">Nothing here.. (o^^)o</p>
+    </div>
 
     <div class="center__">
       <h3 v-if="!editing" :class="templates.refreshing ? 'loading-title titles' : 'titles'">
@@ -31,7 +46,7 @@
       >
         Edit, Run, and Schedule your saved Automations
       </p>
-      <div v-if="!alertsCount(templates.list.length)">
+      <!-- <div v-if="!alertsCount(templates.list.length)">
         <h3
           class="bouncy"
           style="
@@ -45,7 +60,7 @@
           0
         </h3>
         <p style="font-weight: bold; color: #5d5e5e; text-align: center">Nothing here.. (o^^)o</p>
-      </div>
+      </div> -->
     </div>
     <template
       style="margin-top: -1rem"
