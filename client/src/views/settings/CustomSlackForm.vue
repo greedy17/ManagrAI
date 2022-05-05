@@ -36,7 +36,7 @@
                     addingFields = !addingFields
                   }
                 "
-                class="default_button bouncy"
+                class="default_button"
               >
                 Add Fields
                 <img src="@/assets/images/plusOne.png" alt="" />
@@ -1822,12 +1822,12 @@ export default {
 .recommend {
   position: absolute;
   bottom: 20vh;
-  left: 12vw;
+  left: 34vw;
   z-index: 5;
   background-color: white;
   border-radius: 0.3rem;
   border: 1px solid #e8e8e8;
-  box-shadow: 1px 1px 4px 1px $very-light-gray;
+  box-shadow: 1px 2px 2px $very-light-gray;
   height: 40vh;
   width: 30vw;
   &__validation {
@@ -2324,7 +2324,8 @@ img:hover {
   display: flex;
   flex-direction: column;
   position: relative;
-  box-shadow: 3px 4px 7px $very-light-gray;
+  border: 1px solid #e8e8e8;
+  // box-shadow: 1px 2px 2px $very-light-gray;
 }
 .fields_title {
   background-color: $panther;

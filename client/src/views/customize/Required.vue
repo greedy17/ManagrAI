@@ -143,8 +143,8 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  margin-top: 3.5rem;
-  margin-left: 20vw;
+  margin-top: 2rem;
+  margin-left: 25vw;
   &__cards {
     display: flex;
     flex-wrap: wrap;
@@ -161,13 +161,18 @@ export default {
   margin-top: -0.5rem;
   color: $gray;
 }
+.card:hover {
+  box-shadow: 1px 2px 2px $very-light-gray;
+  transform: scale(1.015);
+}
 .card {
   background-color: white;
-  box-shadow: 2px 2px 3px $very-light-gray;
+  border: 1px solid #e8e8e8;
   border-radius: 0.5rem;
   width: 24vw;
   margin-right: 1rem;
   margin-bottom: 1rem;
+  transition: all 0.25s;
   &__header {
     height: 2rem;
     padding: 1.25rem 1rem;
@@ -175,7 +180,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 3px solid $soft-gray;
+    border-bottom: 2px solid $soft-gray;
   }
   &__body {
     display: flex;

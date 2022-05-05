@@ -2085,13 +2085,13 @@ select {
   border-radius: 0;
 }
 .select-btn {
-  border: none;
+  border: 1px solid #e8e8e8;
   min-height: 4.5vh;
   padding: 0.5rem 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 1px 1px 2px $very-light-gray;
+  // box-shadow: 1px 1px 2px $very-light-gray;
   border-radius: 0.25rem;
   background-color: white;
   cursor: pointer;
@@ -2105,8 +2105,8 @@ select {
   }
 }
 .select-btn:hover {
-  transform: scale(1.02);
-  box-shadow: 1px 2px 3px $very-light-gray;
+  transform: scale(1.015);
+  box-shadow: 1px 1px 2px $very-light-gray;
 }
 input[type='checkbox']:checked + label::after {
   content: '';
@@ -2170,7 +2170,7 @@ h3 {
   overflow: scroll;
   margin-top: 0.5rem;
   border-radius: 5px;
-  box-shadow: 2px 2px 20px 2px $soft-gray;
+  box-shadow: 1px 2px 20px 2px $soft-gray;
   background-color: $off-white;
 }
 .table-section::-webkit-scrollbar {
@@ -2194,7 +2194,8 @@ h3 {
   height: 30vh;
   margin-top: 2rem;
   border-radius: 5px;
-  box-shadow: 1px 1px 20px 1px $soft-gray;
+  border: 1px solid #e8e8e8;
+  // box-shadow: 1px 1px 20px 1px $soft-gray;
   background-color: $off-white;
 }
 .table {
@@ -2324,8 +2325,8 @@ h3 {
 .table-cell-header {
   display: table-cell;
   padding: 1.25vh 3vh;
-  border: none;
-  border-bottom: 3px solid $light-orange-gray;
+
+  border-bottom: 1px solid $light-orange-gray;
   border-radius: 2px;
   z-index: 2;
   top: 0;
@@ -2534,8 +2535,8 @@ section {
 .search-bar {
   height: 4.5vh;
   background-color: $off-white;
-  box-shadow: 1px 1px 1px $very-light-gray;
-  border: 1px solid $soft-gray;
+  // box-shadow: 1px 1px 1px $very-light-gray;
+  border: 1px solid #e8e8e8;
   display: flex;
   align-items: center;
   padding: 2px;
@@ -2660,7 +2661,7 @@ main:hover > span {
   position: absolute;
   top: 20vh;
   left: 1rem;
-  border-radius: 0.33rem;
+  border-radius: 0.25rem;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -2669,7 +2670,7 @@ main:hover > span {
   max-height: 70vh;
   overflow: scroll;
   margin-right: 0.5rem;
-  box-shadow: 1px 1px 7px 2px $very-light-gray;
+  box-shadow: 1px 1px 2px 2px $very-light-gray;
   &__title {
     position: sticky;
     top: 0;

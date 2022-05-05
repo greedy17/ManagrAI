@@ -315,23 +315,25 @@ span {
   align-items: center;
   justify-content: center;
 }
+
 .logout {
-  border: none;
+  border: 1px solid #e8e8e8;
   padding: 0.25rem 0.5rem;
   margin-top: 0.75rem;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  box-shadow: 1px 1px 2px $very-light-gray;
-  border-radius: 0.5rem;
+  // box-shadow: 1px 1px 2px $very-light-gray;
+  border-radius: 0.3rem;
   background-color: $soft-gray;
   cursor: pointer;
   color: $base-gray;
   font-weight: bold;
+  // transition: all .5s;
 }
 nav {
-  height: 4rem;
+  height: 3.5rem;
   display: flex;
   flex-flow: row;
   align-items: center;
@@ -341,19 +343,19 @@ nav {
   z-index: 200;
   width: 100vw;
   padding: 0.25rem 0 1rem 0;
-  border-bottom: 3px solid $soft-gray;
+  border-bottom: 2px solid $soft-gray;
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
 .logo {
-  margin-left: 1.5rem;
-  margin-right: 2.25rem;
+  margin-left: 0.5rem;
+  margin-right: 1rem;
   display: flex;
   flex-direction: row;
   align-items: flex-end;
   justify-content: center;
   cursor: pointer;
-  padding: 0.75rem;
+  padding: 0.5rem;
   filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
     brightness(93%) contrast(89%);
 }
@@ -418,7 +420,7 @@ nav {
   flex-direction: row;
   justify-content: space-evenly;
   position: relative;
-  margin-right: 1rem;
+  margin-right: 0.75rem;
 }
 .icon {
   width: 20px;
@@ -478,7 +480,7 @@ li {
   display: inline;
   letter-spacing: 0.4px;
   text-align: center;
-  margin-right: 1rem;
+  margin-right: 0.75rem;
   font-size: 13px;
   padding: 0.5rem;
   @media only screen and (max-width: 800px) {
@@ -514,7 +516,6 @@ a {
   color: $base-gray;
   font-family: #{$base-font-family};
   font-weight: bold;
-
   padding: 0.5rem 0.2rem;
 }
 a:hover {
@@ -530,8 +531,8 @@ li:hover {
   margin-top: 1rem;
 }
 .active {
-  border-bottom: 3px solid $dark-green;
+  border-bottom: 2.25px solid $dark-green;
   color: $dark-green;
-  padding-bottom: 1rem;
+  padding-bottom: 0.9rem;
 }
 </style>

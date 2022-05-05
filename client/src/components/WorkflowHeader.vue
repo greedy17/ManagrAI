@@ -347,7 +347,7 @@ export default {
   display: table-cell;
   padding: 2vh 1vh;
   border: none;
-  border-bottom: 3px solid $light-orange-gray;
+  border-bottom: 1px solid $light-orange-gray;
   z-index: 3;
   width: 4vw;
   top: 0;
@@ -361,7 +361,7 @@ export default {
   padding: 1.25vh 2.5vh;
   min-width: 3rem;
   border: none;
-  border-bottom: 3px solid $light-orange-gray;
+  border-bottom: 1px solid $light-orange-gray;
   border-radius: 2px;
   z-index: 2;
   top: 0;
@@ -376,7 +376,7 @@ export default {
   display: table-cell;
   padding: 3vh;
   border: none;
-  border-bottom: 3px solid $light-orange-gray;
+  border-bottom: 1px solid $light-orange-gray;
   border-radius: 2px;
   z-index: 3;
   left: 3.5vw;
@@ -392,7 +392,7 @@ export default {
   display: table-cell;
   padding: 1.25vh 3vh;
   border: none;
-  border-bottom: 3px solid $light-orange-gray;
+  border-bottom: 1px solid $light-orange-gray;
   border-radius: 2px;
   z-index: 2;
   top: 0;

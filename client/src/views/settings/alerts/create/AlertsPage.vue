@@ -608,9 +608,7 @@ export default {
 textarea {
   @extend .textarea;
 }
-h3 {
-  font-size: 1.1rem;
-}
+
 .box__header {
   &__status {
     display: flex;
@@ -662,21 +660,27 @@ h3 {
   padding-right: 0.5rem;
   padding-bottom: 0.5rem;
 }
+.card:hover {
+  box-shadow: 1px 2px 2px $very-light-gray;
+  transform: scale(1.015);
+}
 .card {
   background-color: white;
-  box-shadow: 2px 2px 3px $very-light-gray;
+  border: 1px solid #e8e8e8;
   border-radius: 0.5rem;
   width: 22vw;
   margin-right: 1rem;
   margin-bottom: 1rem;
+  transition: all 0.25s;
   &__header {
     height: 2rem;
     padding: 1.25rem 1rem;
-    font-size: 13px;
+    font-size: 12px;
+    font-weight: 400;
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    border-bottom: 3px solid $soft-gray;
+    border-bottom: 2px solid $soft-gray;
   }
   &__body {
     display: flex;
