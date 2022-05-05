@@ -118,9 +118,7 @@
                   track-by="id"
                 >
                   <template slot="noResult">
-                    <p>No results.</p>
-                    <!-- @select="$emit('value-selected', $event.value)"
-                      v-model="inputValue" -->
+                    <p class="multi-slot">No results.</p>
                   </template>
                 </Multiselect>
 
@@ -139,7 +137,7 @@
                   track-by="id"
                 >
                   <template slot="noResult">
-                    <p>No results.</p>
+                    <p class="multi-slot">No results.</p>
                   </template>
                 </Multiselect>
               </div>
@@ -269,7 +267,7 @@
             </div>
           </div>
           <div style="margin-left: 1rem; padding: 1rem" class="contact-field-section__body" v-else>
-            Add "Last Name" to your<router-link class="link" :to="{ name: 'UpdateContacts' }"
+            Add "Last Name" to your<router-link class="link" :to="{ name: 'CreateContacts' }"
               >contact form</router-link
             >in order to add Contacts.
           </div>
@@ -380,9 +378,7 @@
             :options="allOpps"
           >
             <template slot="noResult">
-              <div class="row">
-                <p>No results</p>
-              </div>
+              <p class="multi-slot">No results.</p>
             </template>
           </Multiselect>
         </div>
@@ -500,7 +496,7 @@ export default {
       try {
         const res = await SObjects.api.createFormInstance({
           resourceType: 'Contact',
-          formType: 'UPDATE',
+          formType: 'CREATE',
           resourceId: this.resourceId,
         })
       } catch (e) {
@@ -653,6 +649,7 @@ a {
   filter: invert(39%) sepia(96%) saturate(373%) hue-rotate(94deg) brightness(104%) contrast(94%);
   height: 1rem;
   cursor: text;
+  margin-left: 0.25rem;
 }
 .success {
   display: flex;
@@ -679,10 +676,11 @@ a {
 .contact-field-section {
   position: absolute;
   z-index: 7;
-  right: 0.5rem;
+  right: 0;
+  top: 0;
   border-radius: 0.33rem;
   background-color: $white;
-  min-width: 30vw;
+  width: 46vw;
   overflow: scroll;
   box-shadow: 1px 1px 7px 2px $very-light-gray;
   &__title {
@@ -698,7 +696,6 @@ a {
     width: 100%;
   }
   &__body {
-    max-width: 30vw;
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -711,10 +708,10 @@ a {
     display: flex;
     align-items: center;
     justify-content: space-around;
-    margin-top: 1rem;
-    padding: 0rem 0.5rem;
+    margin-top: 0.5rem;
+    padding: 0.75rem 0.5rem;
     width: 100%;
-    min-height: 6vh;
+    height: 2rem;
     border-top: 1px solid $soft-gray;
     p {
       cursor: pointer;
@@ -722,6 +719,29 @@ a {
       font-size: 14px;
       color: $dark-green;
     }
+  }
+}
+.multi-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $gray;
+  font-weight: bold;
+  width: 100%;
+  padding: 0.5rem 0rem;
+  margin: 0;
+  &__more {
+    background-color: $base-gray;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-top: 1px solid #e8e8e8;
+    width: 100%;
+    padding: 0.75rem 0rem;
+    margin: 0;
+    cursor: pointer;
   }
 }
 .noupdate-field-section {

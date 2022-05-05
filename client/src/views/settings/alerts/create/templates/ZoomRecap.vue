@@ -30,7 +30,7 @@
           <p style="text-align: center; font-weight: bold">Select Users</p>
           <div>
             <Multiselect
-              placeholder="Select Channel"
+              placeholder="Select Users"
               v-model="userIds"
               :options="userList"
               openDirection="below"
@@ -39,9 +39,16 @@
               track-by="id"
               label="fullName"
               :multiple="true"
+              :closeOnSelect="false"
             >
               <template slot="noResult">
                 <p>No results.</p>
+              </template>
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.png" alt="" />
+                  Select Users
+                </p>
               </template>
             </Multiselect>
 
@@ -171,6 +178,12 @@
                       @click="listUserChannels(userChannelOpts.nextCursor)"
                     >
                       Load More
+                    </p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.png" alt="" />
+                      Select Channel
                     </p>
                   </template>
                 </Multiselect>
@@ -586,6 +599,18 @@ input[type='text']:focus {
   flex-direction: row;
   align-items: center;
   font-weight: bold;
+}
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 1rem;
+    margin-right: 0.25rem;
+    filter: invert(70%);
+  }
 }
 .green__button {
   display: flex;

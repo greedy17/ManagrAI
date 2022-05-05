@@ -79,6 +79,7 @@ export class AlertConfig extends Model {
   static templateRef = new fields.ModelField({ ModelClass: AlertTemplateRef })
   static recurrenceFrequency = new fields.CharField({})
   static recurrenceDay = new fields.IntegerField({})
+  static recurrenceDays = new fields.ArrayField({ type: new fields.IntegerField() })
   static recipients = new fields.ArrayField({ type: new fields.CharField() })
   static recipientType = new fields.CharField({})
   static alertTargetsRef = new fields.Field({})

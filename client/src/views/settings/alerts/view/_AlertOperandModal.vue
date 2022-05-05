@@ -147,7 +147,8 @@ export default {
     align-items: flex-end;
     justify-content: flex-end;
     padding-right: 1rem;
-    height: 100px;
+    height: 200px;
+    width: 100%;
   }
 }
 </style>

@@ -28,6 +28,11 @@
             <div class="card__header">
               <img style="width: 1.5rem" src="@/assets/images/salesforce.png" />
               <h3 class="card__title">Salesforce</h3>
+              <img
+                class="filter-dot"
+                src="@/assets/images/dot.png"
+                v-if="hasSalesforceIntegration"
+              />
             </div>
           </div>
 
@@ -63,6 +68,11 @@
             <div class="card__header">
               <img style="height: 1rem" src="@/assets/images/slackLogo.png" />
               <h3 class="card__title">Slack</h3>
+              <img
+                class="filter-dot"
+                src="@/assets/images/dot.png"
+                v-if="orgHasSlackIntegration || !hasSlackIntegration"
+              />
             </div>
           </div>
           <p class="card-text">Interact with Managr through Slack</p>
@@ -109,6 +119,7 @@
             <img src="@/assets/images/gmailCal.png" style="margin-right: 1rem; height: 1rem" />
             <img src="@/assets/images/outlookMail.png" style="height: 1rem" />
             <h3 class="card__title">Calendar</h3>
+            <img class="filter-dot" src="@/assets/images/dot.png" v-if="hasNylasIntegration" />
           </div>
 
           <p class="card-text">Accesses your upcoming meetings + attendees</p>
@@ -146,6 +157,7 @@
           <div class="card__header">
             <img style="height: 1rem" src="@/assets/images/zoom.png" />
             <h3 class="card__title">Zoom</h3>
+            <img class="filter-dot" src="@/assets/images/dot.png" v-if="hasZoomIntegration" />
           </div>
           <p class="card-text">Activates the zoom meeting workflow automation.</p>
           <div v-if="!hasZoomIntegration" class="card__body">
@@ -259,6 +271,11 @@
             <div class="card__header">
               <img style="width: 1.5rem" src="@/assets/images/salesforce.png" />
               <h3 class="card__title">Salesforce</h3>
+              <img
+                class="filter-dot"
+                src="@/assets/images/dot.png"
+                v-if="hasSalesforceIntegration"
+              />
             </div>
           </div>
 
@@ -294,6 +311,11 @@
             <div class="card__header">
               <img style="height: 1rem" src="@/assets/images/slackLogo.png" />
               <h3 class="card__title">Slack</h3>
+              <img
+                class="filter-dot"
+                src="@/assets/images/dot.png"
+                v-if="orgHasSlackIntegration || !hasSlackIntegration"
+              />
             </div>
             <!-- <p
               v-if="
@@ -346,6 +368,7 @@
           <div class="card__header">
             <img style="height: 1rem" src="@/assets/images/zoom.png" />
             <h3 class="card__title">Zoom</h3>
+            <img class="filter-dot" src="@/assets/images/dot.png" v-if="hasZoomIntegration" />
           </div>
 
           <p class="card-text">Activates the meeting workflow automation.</p>
@@ -386,6 +409,7 @@
             <img src="@/assets/images/gmailCal.png" style="margin-right: 1rem; height: 1rem" />
             <img src="@/assets/images/outlookMail.png" style="height: 1rem" />
             <h3 class="card__title">Calendar</h3>
+            <img class="filter-dot" src="@/assets/images/dot.png" v-if="hasNylasIntegration" />
           </div>
 
           <p class="card-text">Accesses your upcoming meetings + attendees</p>
@@ -421,6 +445,7 @@
         <div class="card">
           <div class="card__header">
             <img class="filter-loft" style="height: 1rem" src="@/assets/images/salesloft.svg" />
+            <img class="filter-dot" src="@/assets/images/dot.png" v-if="hasSalesloftIntegration" />
           </div>
           <p class="card-text">Add Contacts to Cadences</p>
           <div class="card__body">
@@ -449,6 +474,7 @@
         <div class="card">
           <div class="card__header">
             <img style="height: 1rem" src="@/assets/images/outreach.webp" />
+            <img class="filter-dot" src="@/assets/images/dot.png" v-if="hasOutreachIntegration" />
           </div>
           <p class="card-text">Add Contacts to Sequences</p>
           <div class="card__body">
@@ -503,6 +529,7 @@
                 ></path>
               </g>
             </svg>
+            <img class="filter-dot" src="@/assets/images/dot.png" v-if="hasGongIntegration" />
           </div>
           <p class="card-text">Access call recordings and insights</p>
           <div class="card__body">
@@ -551,7 +578,7 @@
           </div>
         </div>
 
-        <div class="card">
+        <!-- <div class="card">
           <div class="card__header">
             <img style="height: 1rem" src="@/assets/images/googleDrive.png" />
             <h3 class="card__title">Google Drive</h3>
@@ -560,7 +587,7 @@
           <div class="card__body">
             <p style="color: #beb5cc">Coming Soon</p>
           </div>
-        </div>
+        </div> -->
       </div>
     </div>
 
@@ -854,6 +881,12 @@ export default {
   cursor: pointer;
   padding: 0.15rem 0.3rem;
   margin-right: 0.5rem;
+}
+.filter-dot {
+  height: 0.4rem;
+  filter: invert(80%);
+  margin-left: 0.5rem;
+  filter: invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg) brightness(93%) contrast(89%);
 }
 .invert {
   filter: invert(80%);

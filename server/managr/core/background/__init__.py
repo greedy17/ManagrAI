@@ -435,7 +435,7 @@ def meeting_prep(processed_data, user_id, invocation=1, from_task=False):
             meeting_workflow = MeetingWorkflow.objects.create(
                 non_zoom_meeting=meeting_prep_instance, user=user,
             )
-
+            meeting_workflow.forms.set(contact_forms)
             # Sending end_times, workflow_id, and user values to emit function
             non_zoom_end_times = processed_data.get("times").get("end_time")
             workflow_id = str(meeting_workflow.id)
@@ -776,7 +776,7 @@ def generate_reminder_message(user_id):
                 "meeting_reminder", {"u": str(user.id), "not_completed": meetings["uncompleted"]}
             )
     title = (
-        "*Reminder:* Your team has uncommpleted tasks from today"
+        "*Reminder:* Your team has uncompleted tasks from today"
         if user.user_level == "MANAGER"
         else "*Reminder:* Uncompleted tasks from today"
     )

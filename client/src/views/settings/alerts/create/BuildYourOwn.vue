@@ -310,10 +310,16 @@
                 label="referenceDisplayLabel"
               >
                 <template slot="noResult">
-                  <p>No results.</p>
+                  <p class="multi-slot">No results.</p>
                 </template>
                 <template slot="afterList">
-                  <p class="load-more" @click="fieldNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="fieldNextPage">Load More</p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    Select Field
+                  </p>
                 </template>
               </Multiselect>
 
@@ -403,16 +409,24 @@
                         <Multiselect
                           placeholder="Select a Day"
                           v-model="selectedDay"
-                          @select="setDay($event)"
+                          @input="setDay($event)"
                           :options="weeklyOpts"
                           openDirection="below"
                           style="width: 14vw"
                           selectLabel="Enter"
                           track-by="value"
                           label="key"
+                          :multiple="true"
+                          :closeOnSelect="false"
                         >
                           <template slot="noResult">
-                            <p>No results.</p>
+                            <p class="multi-slot">No results.</p>
+                          </template>
+                          <template slot="placeholder">
+                            <p class="slot-icon">
+                              <img src="@/assets/images/search.png" alt="" />
+                              Select a Day
+                            </p>
                           </template>
                         </Multiselect>
 
@@ -514,12 +528,19 @@
                       track-by="id"
                       label="fullName"
                       :multiple="true"
+                      :closeOnSelect="false"
                     >
                       <template slot="noResult">
-                        <p>No results.</p>
+                        <p class="multi-slot">No results.</p>
                       </template>
                       <template slot="afterList">
-                        <p class="load-more" @click="onUsersNextPage">Load More</p>
+                        <p class="multi-slot__more" @click="onUsersNextPage">Load More</p>
+                      </template>
+                      <template slot="placeholder">
+                        <p class="slot-icon">
+                          <img src="@/assets/images/search.png" alt="" />
+                          Select Users
+                        </p>
                       </template>
                     </Multiselect>
 
@@ -622,14 +643,20 @@
                         label="name"
                       >
                         <template slot="noResult">
-                          <p>No results.</p>
+                          <p class="multi-slot">No results.</p>
                         </template>
                         <template slot="afterList">
                           <p
-                            class="load-more"
+                            class="multi-slot__more"
                             @click="listUserChannels(userChannelOpts.nextCursor)"
                           >
                             Load More
+                          </p>
+                        </template>
+                        <template slot="placeholder">
+                          <p class="slot-icon">
+                            <img src="@/assets/images/search.png" alt="" />
+                            Select Channel
                           </p>
                         </template>
                       </Multiselect>
@@ -733,7 +760,7 @@
     <div class="bottom_locked">
       <button
         @click="onPreviousPage"
-        :class="pageNumber === 0 ? 'disabled__button' : 'gold__button'"
+        :class="pageNumber === 0 ? 'disabled__button' : 'prev-button'"
         style="margin-right: 0.5rem"
       >
         Prev
@@ -977,12 +1004,12 @@ export default {
         }
       },
     },
-    selectedDay: function () {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDay.value =
-        this.selectedDay
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value =
-        this.selectedDay.value
-    },
+    // selectedDay: function () {
+    //   this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDay.value =
+    //     this.selectedDay
+    //   this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value =
+    //     this.selectedDay.value
+    // },
   },
   methods: {
     mapIds() {
@@ -1255,9 +1282,17 @@ export default {
     onPreviousPage() {
       this.pageNumber >= 1 ? (this.pageNumber -= 1) : (this.pageNumber = this.pageNumber)
     },
+    // setDay(n) {
+    //   this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
+    //   this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value.push(n.value)
+    // },
     setDay(n) {
       this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value.push(n.value)
+      let days = []
+      n.forEach((day) => days.push(day.value))
+      let newDays = [...new Set(days)]
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = newDays
+      console.log(this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value)
     },
     setPipelines(obj) {
       if (this.alertTemplateForm.field.alertConfig.groups[0].field._alertTargets.value.lenght < 1) {
@@ -1504,6 +1539,29 @@ input:focus {
     align-items: center;
   }
 }
+.multi-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $gray;
+  font-weight: bold;
+  width: 100%;
+  padding: 0.5rem 0rem;
+  margin: 0;
+  &__more {
+    background-color: $base-gray;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-top: 1px solid #e8e8e8;
+    width: 100%;
+    padding: 0.75rem 0rem;
+    margin: 0;
+    cursor: pointer;
+  }
+}
 .message-end {
   display: flex;
   justify-content: flex-start;
@@ -1528,6 +1586,24 @@ input:focus {
 ::placeholder {
   color: $panther-silver;
   font-size: 0.75rem;
+}
+.prev-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 1rem;
+  border-radius: 0.3rem;
+  font-weight: bold;
+  line-height: 1.14;
+  text-indent: none;
+  border-style: none;
+  letter-spacing: 0.03rem;
+  color: white;
+  background-color: $base-gray;
+  cursor: pointer;
+  height: 2rem;
+  width: 10rem;
+  font-size: 12px;
 }
 .search__input {
   font-family: Lato-Regular, sans-serif;
@@ -1596,6 +1672,18 @@ button img {
   justify-content: center;
   flex-direction: column;
   position: relative;
+}
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 1rem;
+    margin-right: 0.25rem;
+    filter: invert(70%);
+  }
 }
 .crm {
   display: flex;

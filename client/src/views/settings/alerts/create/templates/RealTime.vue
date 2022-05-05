@@ -115,62 +115,26 @@
  * Components
  * */
 // Pacakges
-import 'quill/dist/quill.core.css'
-import 'quill/dist/quill.snow.css'
-import 'quill/dist/quill.bubble.css'
 
-import { quillEditor } from 'vue-quill-editor'
-import ToggleCheckBox from '@thinknimble/togglecheckbox'
 //Internal
-import FormField from '@/components/forms/FormField'
+
 import AlertGroup from '@/views/settings/alerts/create/_AlertGroup'
-import AlertSummary from '@/views/settings/alerts/create/_AlertSummary'
-import ListContainer from '@/components/ListContainer'
-import ListItem from '@/components/ListItem'
-import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotificationTemplate'
-import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePreview'
-import DropDownSearch from '@/components/DropDownSearch'
-import ExpandablePanel from '@/components/ExpandablePanel'
-import Modal from '@/components/Modal'
 
 /**
  * Services
  */
 
-import AlertTemplate, {
-  AlertGroupForm,
-  AlertTemplateForm,
-  AlertConfigForm,
-  AlertMessageTemplateForm,
-  AlertOperandForm,
-} from '@/services/alerts/'
+import AlertTemplate, { AlertTemplateForm } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
-import {
-  SObjectField,
-  SObjectValidations,
-  SObjectPicklist,
-  NON_FIELD_ALERT_OPTS,
-  SOBJECTS_LIST,
-} from '@/services/salesforce'
+import { SObjectField, NON_FIELD_ALERT_OPTS, SOBJECTS_LIST } from '@/services/salesforce'
 import User from '@/services/users'
-import SlackOAuth, { SlackListResponse } from '@/services/slack'
+import { SlackListResponse } from '@/services/slack'
 
 export default {
   name: 'RealTime',
   components: {
-    ExpandablePanel,
-    DropDownSearch,
-    ListContainer,
-    ListItem,
-    SlackMessagePreview,
     AlertGroup,
-    SlackNotificationTemplate,
-    quillEditor,
-    ToggleCheckBox,
-    FormField,
-    AlertSummary,
-    Modal,
   },
   data() {
     return {
@@ -338,9 +302,6 @@ export default {
         this.alertTemplateForm.field.resourceType.value = val
       },
     },
-  },
-  mounted() {
-    console.log(this.user)
   },
 }
 </script>

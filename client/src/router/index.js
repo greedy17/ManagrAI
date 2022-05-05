@@ -165,12 +165,6 @@ export default new Router({
       component: () => import('@/views/Meetings')
     },
     {
-      path: '/forecasting',
-      name: 'Forecasting',
-      component: () =>
-        import('@/views/Forecasting')
-    },
-    {
       path: '/deal-movement',
       name: 'DealMovement',
       component: () =>

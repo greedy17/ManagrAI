@@ -91,7 +91,14 @@
             label="label"
           >
             <template slot="noResult">
-              <p>No results.</p>
+              <p class="multi-slot">No results.</p>
+            </template>
+
+            <template slot="placeholder">
+              <p class="slot-icon">
+                <img src="@/assets/images/search.png" alt="" />
+                {{ selectedStage ? selectedStage : 'Select Stage' }}
+              </p>
             </template>
           </Multiselect>
         </div>
@@ -632,7 +639,43 @@ export default {
   animation: dotFlashing 1s infinite linear alternate;
   animation-delay: 0.5s;
 }
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 1.25rem;
+    padding-right: 0.25rem;
+    padding-bottom: 0.5rem;
+    filter: invert(70%);
+  }
+}
+.multi-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $gray;
+  font-weight: bold;
 
+  width: 100%;
+  padding: 0.5rem 0rem;
+  margin: 0;
+  &__more {
+    background-color: $base-gray;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-top: 1px solid #e8e8e8;
+    width: 100%;
+    padding: 0.75rem 0rem;
+    margin: 0;
+    cursor: pointer;
+  }
+}
 .dot-flashing::before,
 .dot-flashing::after {
   content: '';
