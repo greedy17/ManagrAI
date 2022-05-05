@@ -150,6 +150,14 @@
                         Select Channel
                       </p>
                     </template>
+                    <template slot="afterList">
+                      <p
+                        class="multi-slot__more"
+                        @click="listUserChannels(userChannelOpts.nextCursor)"
+                      >
+                        Load More
+                      </p>
+                    </template>
                   </Multiselect>
                 </template>
               </FormField>
