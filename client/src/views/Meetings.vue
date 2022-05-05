@@ -1933,9 +1933,10 @@ select {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 1px 1px 2px $very-light-gray;
+  // box-shadow: 1px 1px 2px $very-light-gray;
   border-radius: 0.25rem;
   background-color: white;
+  border: 1px solid #e8e8e8;
   cursor: pointer;
   color: $dark-green;
   letter-spacing: 0.2px;
@@ -2133,7 +2134,7 @@ h3 {
   padding: 1.25vh 2.5vh;
   min-width: 3rem;
   border: none;
-  border-bottom: 3px solid $light-orange-gray;
+  border-bottom: 1px solid $light-orange-gray;
   border-radius: 2px;
 
   top: 0;
@@ -2160,7 +2161,7 @@ h3 {
   display: table-cell;
   padding: 1.25vh 3vh;
   border: none;
-  border-bottom: 3px solid $light-orange-gray;
+  border-bottom: 1px solid $light-orange-gray;
   border-radius: 2px;
 
   left: 3.5vw;
@@ -2176,7 +2177,7 @@ h3 {
   display: table-cell;
   padding: 1.25vh;
   border: none;
-  border-bottom: 3px solid $light-orange-gray;
+  border-bottom: 1px solid $light-orange-gray;
 
   width: 4vw;
   top: 0;
@@ -2336,8 +2337,8 @@ section {
 .search-bar {
   height: 4.5vh;
   background-color: $off-white;
-  box-shadow: 1px 1px 1px $very-light-gray;
-  border: 1px solid $soft-gray;
+  // box-shadow: 1px 1px 1px $very-light-gray;
+  border: 1px solid #e8e8e8;
   display: flex;
   align-items: center;
   padding: 2px;

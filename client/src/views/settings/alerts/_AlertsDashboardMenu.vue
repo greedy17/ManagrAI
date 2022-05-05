@@ -144,8 +144,8 @@
         <h5 style="margin-top: -0.65rem; color: #9b9b9b">Let us do the work for you</h5>
       </div>
 
-      <div style="background-color: #ebfcf5; border-radius: 0.3rem; margin-bottom: 0.25rem">
-        <div @click="isPopular()" style="cursor: pointer; margin-left: 0.5rem" class="row">
+      <div style="border-radius: 0.3rem; margin-bottom: 0.25rem">
+        <!-- <div @click="isPopular()" style="cursor: pointer; margin-left: 0.5rem" class="row">
           <img src="@/assets/images/trophy.png" style="height: 0.8rem; margin-right: 1rem" alt="" />
 
           <h5>Popular</h5>
@@ -154,14 +154,14 @@
             style="height: 0.8rem; margin-top: 0.25rem; filter: invert(10%)"
             alt=""
           />
-        </div>
+        </div> -->
 
-        <div v-if="popular" style="margin-top: -0.25rem" class="col">
+        <div style="margin-top: -0.25rem" class="col">
           <router-link exact-active-class="active" :to="{ name: 'RealTime' }">
             <div style="height: 2.25rem" class="row">
               <img
                 src="@/assets/images/bolt.png"
-                style="height: 0.9rem; margin-right: 0.25rem; margin-left: 1.75rem"
+                style="height: 0.9rem; margin-right: 1rem; margin-left: 1rem"
                 alt=""
               />
               <h5>Instant Updates</h5>
@@ -175,7 +175,7 @@
             <div style="height: 2.25rem" class="row">
               <img
                 src="@/assets/images/org.png"
-                style="height: 0.8rem; margin-right: 0.25rem; margin-left: 1.75rem"
+                style="height: 0.8rem; margin-right: 1rem; margin-left: 1rem"
                 alt=""
               />
 
@@ -401,12 +401,12 @@ img {
   flex-direction: column;
 }
 .counter {
-  border: 1.5px solid $base-gray;
-  border-radius: 0.3rem;
+  border: 1px solid $base-gray;
+  border-radius: 0.2rem;
   padding: 0.125rem 0.4rem;
   font-size: 10px;
   color: $base-gray;
-  margin-left: 0.25rem;
+  margin-left: 1.5rem;
 }
 .sidenav {
   height: 100%;
@@ -415,7 +415,7 @@ img {
   position: fixed;
   left: 0;
   background-color: #fafbfc;
-  border-right: 3px solid $soft-gray;
+  border-right: 2px solid $soft-gray;
   color: $base-gray;
   overflow-x: hidden;
   padding: 1rem;
@@ -430,34 +430,50 @@ a:hover {
   border-radius: 0.2rem;
   cursor: pointer;
 }
+.active div:hover {
+  color: white;
+  img {
+    filter: none;
+  }
+}
 .active div {
-  color: $darker-green;
-  background-color: $lighter-green;
-  border-radius: 0.3rem;
+  color: white;
+  background-color: $dark-green;
+  border-radius: 0.2rem;
   font-weight: bold;
   position: relative;
+  img {
+    filter: none;
+  }
+  span {
+    color: white !important;
+    border: 1px solid white !important;
+  }
 }
 .active div:after {
   content: '';
   background: $darker-green;
   position: absolute;
-  bottom: 0.65rem;
+  bottom: 0.3rem;
   left: 0;
-  height: 50%;
+  height: 70%;
   width: 3px;
 }
 a:hover div {
-  background-color: $lighter-green;
-  color: $darker-green;
-  border-radius: 0.3rem;
+  color: $dark-green;
+  border-radius: 0.2rem;
+  img {
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
+  }
 }
 a:hover span {
-  border-color: $darker-green;
-  color: $darker-green;
+  border-color: $dark-green;
+  color: $dark-green;
 }
 .active span {
-  border-color: $darker-green;
-  color: $darker-green;
+  border-color: white;
+  color: $white;
 }
 .title {
   color: $base-gray;
@@ -468,7 +484,7 @@ a:hover span {
   flex-direction: row;
   height: 2.25rem;
   align-items: center;
-  margin-top: 0.25rem;
-  margin-bottom: 0.25rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 </style>

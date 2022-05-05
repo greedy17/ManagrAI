@@ -63,9 +63,16 @@
       :key="i"
       v-for="(field, i) in oppFields"
       :class="
-        field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
+        field.dataType === 'TextArea' ||
+        (field.length > 250 &&
+          field.dataType === 'String' &&
+          (workflow['secondary_data'][field.apiName] ||
+            workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]))
           ? 'table-cell-wide'
-          : 'table-cell'
+          : workflow['secondary_data'][field.apiName] ||
+            workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+          ? 'table-cell'
+          : 'empty'
       "
     >
       <SkeletonBox
@@ -89,7 +96,16 @@
         />
       </div>
     </div>
-    <div :key="field.id" v-for="field in extraPipelineFields" class="table-cell">
+    <div
+      :key="field.id"
+      v-for="field in extraPipelineFields"
+      :class="
+        workflow['secondary_data'][field.apiName] ||
+        workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+          ? 'table-cell'
+          : 'empty'
+      "
+    >
       <SkeletonBox
         v-if="updateWorkflowList.includes(workflow.id) || updatedWorkflowList.includes(workflow.id)"
         width="100px"
@@ -288,6 +304,14 @@ export default {
 
 .table-row {
   display: table-row;
+}
+.empty {
+  display: table-cell;
+  background: white;
+  min-width: 12vw;
+  border-left: 1px solid $soft-gray;
+  border-right: 1px solid $soft-gray;
+  border-bottom: 1px solid $soft-gray;
 }
 .table-cell {
   display: table-cell;
