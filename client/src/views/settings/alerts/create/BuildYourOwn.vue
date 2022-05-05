@@ -1483,6 +1483,8 @@ export default {
   beforeMount() {
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
     this.repsPipeline()
+    this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = [0]
+    this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
   },
   updated() {
     this.alertTemplateForm.field.isActive.value = true
@@ -1922,7 +1924,7 @@ button img {
   background-color: $white;
   border-radius: 0.2rem;
   // border: 1px solid #e8e8e8;
-  box-shadow: 2px 2px 3px $very-light-gray;
+  border: 1px solid #e8e8e8;
   width: 75vw;
   padding: 2rem;
   margin-bottom: 1rem;

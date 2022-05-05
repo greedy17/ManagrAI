@@ -1331,10 +1331,6 @@ textarea {
     font-size: 11px;
   }
 }
-.alerts-page__message-options-body__bindings__fields {
-  // margin: 3rem 0rem;
-  // width: 40rem;
-}
 .green {
   color: $dark-green;
 }

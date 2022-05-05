@@ -3,9 +3,9 @@
     <div v-if="userLevel == 'REP'">
       <div>
         <div class="welcome">
-          <h2>Hi, {{ user.fullName }}</h2>
+          <h3>Hi, {{ user.fullName }}</h3>
 
-          <div style="margin-top: -1.5rem" class="row">
+          <div>
             <div
               v-if="
                 (!(!orgHasSlackIntegration && userCanIntegrateSlack) ||
@@ -13,9 +13,12 @@
                 hasNylasIntegration &&
                 hasSalesforceIntegration
               "
-              style="margin-right: 1rem; font-size: 14px"
             >
-              <p>Connect Managr to your favorite apps:</p>
+              <p>
+                Connect
+                <span> <img src="@/assets/images/logo.png" height=".5" alt="" /> Managr</span> to
+                your favorite apps
+              </p>
             </div>
             <div v-else>Step 1/2. Connect the required apps.</div>
           </div>
@@ -256,11 +259,15 @@
 
     <div v-else>
       <div class="welcome">
-        <h2>Hi, {{ user.fullName }}</h2>
+        <h3>Hi, {{ user.fullName }}</h3>
 
-        <div style="margin-top: -1.5rem" class="row">
-          <div style="margin-right: 1rem; font-size: 14px">
-            <p>Connect Managr to your favorite apps:</p>
+        <div>
+          <div>
+            <p>
+              Connect
+              <span> <img src="@/assets/images/logo.png" height="9px" alt="" /> managr</span> to
+              your favorite apps
+            </p>
           </div>
         </div>
       </div>
@@ -971,6 +978,10 @@ export default {
   align-items: center;
   justify-content: center;
 }
+.card:hover {
+  transform: scale(1.015);
+  box-shadow: 1px 2px 2px $very-light-gray;
+}
 .card {
   background-color: $white;
   padding: 1rem 2rem 0.5rem 2rem;
@@ -982,6 +993,7 @@ export default {
   flex-direction: column;
   width: 22vw;
   height: auto;
+  transition: all 0.25s;
   // @media only screen and (min-width: 768px) {
   //   flex: 1 0 24%;
   //   min-width: 21rem;
@@ -1154,9 +1166,19 @@ a {
 }
 .welcome {
   display: flex;
-  align-items: flex-start;
-  flex-direction: column;
-  margin: 1.5rem;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin: 1.5rem 3.5rem 1rem 1.75rem;
+  h3 {
+    font-size: 19px;
+    font-weight: 500;
+  }
+
+  p {
+    font-size: 14px;
+    letter-spacing: 0.1px;
+  }
 }
 .back-logo {
   position: absolute;

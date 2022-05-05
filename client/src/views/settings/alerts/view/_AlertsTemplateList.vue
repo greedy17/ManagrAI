@@ -696,13 +696,19 @@ button:disabled {
 //   margin-top: 2rem;
 //   flex-wrap: wrap;
 // }
+.added-collection:hover {
+  box-shadow: 1px 2px 2px $very-light-gray;
+  transform: scale(1.015);
+}
+
 .added-collection {
   background-color: white;
-  box-shadow: 2px 2px 3px $very-light-gray;
-  border-radius: 0.5rem;
+  border-radius: 0.3rem;
+  border: 1px solid #e8e8e8;
   width: 22vw;
   margin-right: 1rem;
   margin-bottom: 1rem;
+  transition: all 0.25s;
   &__header {
     max-height: 3rem;
     padding: 1.75rem 1rem;
@@ -710,7 +716,7 @@ button:disabled {
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    border-bottom: 3px solid $soft-gray;
+    border-bottom: 2px solid $soft-gray;
   }
   &__body {
     display: flex;

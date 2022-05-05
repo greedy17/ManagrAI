@@ -218,16 +218,16 @@ img {
 }
 .sidenav {
   height: 100%;
-  width: 16vw;
+  width: 15.5vw;
   font-size: 0.85rem;
   position: fixed;
   left: 0;
   background-color: #fafbfc;
-  border-right: 3px solid $soft-gray;
+  border-right: 2px solid $soft-gray;
   color: $gray;
   overflow-x: hidden;
   padding: 1rem;
-  margin-top: -1rem;
+  margin-top: -1.5rem;
 }
 a {
   text-decoration: none;
@@ -239,20 +239,30 @@ a:hover {
   border-radius: 0.2rem;
   cursor: pointer;
 }
+.active div:hover {
+  img {
+    filter: none;
+  }
+  color: white;
+}
 .active div {
   color: $base-gray;
-  background-color: $lighter-green;
-  border-radius: 0.3rem;
+  background-color: $dark-green;
+  border-radius: 0.2rem;
   font-weight: bold;
   position: relative;
+  color: white;
+  img {
+    filter: none;
+  }
 }
 .active div:after {
   content: '';
-  background: $base-gray;
+  background: $darker-green;
   position: absolute;
-  bottom: 0.65rem;
+  bottom: 0.4rem;
   left: 0;
-  height: 50%;
+  height: 70%;
   width: 3px;
 }
 
@@ -270,9 +280,11 @@ a:hover {
   height: 2.5rem;
 }
 .row:hover {
-  background-color: $lighter-green;
-  color: $base-gray;
-  border-radius: 0.3rem;
+  img {
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
+  }
+  color: $dark-green;
 }
 </style>
 
