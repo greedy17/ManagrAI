@@ -360,9 +360,21 @@ export default {
   },
 
   mounted() {
+<<<<<<< HEAD
     this.form.field.operandOperator.value = '='
     this.form.field._operandOperator.value = { label: '= (Equals)', value: '=' }
     this.form.field.operandValue.value = '0'
+=======
+    if (this.form.field.operandOrder.value === 1) {
+      this.form.field.operandOperator.value = '='
+      this.form.field._operandOperator.value = { label: '= (Equal)', value: '=' }
+      this.form.field.operandValue.value = '0'
+    } else if (this.form.field.operandOrder.value === 0) {
+      this.form.field.operandOperator.value = '='
+      this.form.field._operandOperator.value = { label: '= (Equal)', value: '=' }
+      this.form.field.operandValue.value = '0'
+    }
+>>>>>>> f69864015258e25791a55dfbc016cfaba288e76e
   },
 }
 </script>
