@@ -17,21 +17,6 @@
         </div>
       </div>
     </Modal>
-    <div v-if="!alertsCount(templates.list.length)">
-      <h3
-        class="bouncy"
-        style="
-          color: #5d5e5e;
-          font-weight: bold;
-          text-align: center;
-          margin-top: 16vh;
-          font-size: 3rem;
-        "
-      >
-        0
-      </h3>
-      <p style="font-weight: bold; color: #5d5e5e; text-align: center">Nothing here.. (o^^)o</p>
-    </div>
 
     <div class="center__">
       <h3 v-if="!editing" :class="templates.refreshing ? 'loading-title titles' : 'titles'">
@@ -62,19 +47,30 @@
         <p style="font-weight: bold; color: #5d5e5e; text-align: center">Nothing here.. (o^^)o</p>
       </div> -->
     </div>
+    <div v-if="!alertsCount(templates.list.length)">
+      <h3
+        class="bouncy"
+        style="
+          color: #5d5e5e;
+          font-weight: bold;
+          text-align: center;
+          margin-top: 16vh;
+          font-size: 3rem;
+        "
+      >
+        0
+      </h3>
+      <p style="font-weight: bold; color: #5d5e5e; text-align: center">Nothing here.. (o^^)o</p>
+    </div>
     <template
       style="margin-top: -1rem"
       v-if="!templates.refreshing && alertsCount(templates.list.length)"
     >
       <transition name="fade">
-        <div class="middle" v-if="!editing">
-          <div class="edit__modal">
-            <div>
-              <AlertsEditPanel :alert="currentAlert" />
-            </div>
-            <div class="edit__modal__button">
-              <button @click="closeEdit">Done</button>
-            </div>
+        <div v-if="!editing" class="edit__modal">
+          <AlertsEditPanel :alert="currentAlert" />
+          <div class="edit__modal__button">
+            <button @click="closeEdit">Done</button>
           </div>
         </div>
       </transition>
@@ -614,12 +610,13 @@ button:disabled {
   border-radius: 0.3rem;
   color: $base-gray;
   width: 100%;
-  height: 70vh;
+  height: 74vh;
   overflow: scroll;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-direction: column;
+  padding: none;
 
   &__button {
     display: flex;
