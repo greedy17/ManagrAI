@@ -727,11 +727,12 @@ a {
   justify-content: center;
   color: $gray;
   font-weight: bold;
+
   width: 100%;
   padding: 0.5rem 0rem;
   margin: 0;
   &__more {
-    background-color: $base-gray;
+    background-color: $dark-green;
     color: white;
     display: flex;
     align-items: center;

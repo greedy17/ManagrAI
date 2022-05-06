@@ -11,10 +11,10 @@
     >
       <form class="invite-form" @submit.prevent="handleInvite">
         <div class="header">
-          <h2 class="invite-form__title">Invite Users via Slack</h2>
-          <h2 class="invite-form__subtitle">
+          <h3 class="invite-form__title">Invite Users via Slack</h3>
+          <h4 class="invite-form__subtitle">
             {{ $store.state.user.organizationRef.name }}
-          </h2>
+          </h4>
         </div>
 
         <div
@@ -36,10 +36,18 @@
                   label="realName"
                 >
                   <template slot="noResult">
-                    <p>No results.</p>
+                    <p class="multi-slot">No results.</p>
                   </template>
                   <template slot="afterList">
-                    <p class="load-more" @click="listUsers(slackMembers.nextCursor)">Load More</p>
+                    <p class="multi-slot__more" @click="listUsers(slackMembers.nextCursor)">
+                      Load More
+                    </p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.png" alt="" />
+                      Select Slack User
+                    </p>
                   </template>
                 </Multiselect>
                 <!-- <DropDownSearch
@@ -72,7 +80,13 @@
                   label="key"
                 >
                   <template slot="noResult">
-                    <p>No results.</p>
+                    <p class="multi-slot">No results.</p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.png" alt="" />
+                      Select User Level
+                    </p>
                   </template>
                 </Multiselect>
                 <!-- 
@@ -452,6 +466,42 @@ export default {
 .col {
   display: flex;
   flex-direction: column;
+}
+.multi-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $gray;
+  font-weight: bold;
+
+  width: 100%;
+  padding: 0.5rem 0rem;
+  margin: 0;
+  &__more {
+    background-color: $dark-green;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-top: 1px solid #e8e8e8;
+    width: 100%;
+    padding: 0.75rem 0rem;
+    margin: 0;
+    cursor: pointer;
+  }
+}
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 1rem;
+    margin-right: 0.25rem;
+    filter: invert(70%);
+  }
 }
 .section-header {
   font-size: 15px;
