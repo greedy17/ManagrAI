@@ -321,6 +321,10 @@ export default {
       await this.users.refresh()
     }
   },
+  beforeMount() {
+    this.form.field.recurrenceDay.value = 0
+    this.form.field.recurrenceDays.value = [0]
+  },
   methods: {
     async onSave() {
       this.isSaving = true
