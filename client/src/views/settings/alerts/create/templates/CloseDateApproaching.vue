@@ -918,7 +918,7 @@ export default {
   padding: 0.5rem 0rem;
   margin: 0;
   &__more {
-    background-color: $base-gray;
+    background-color: $dark-green;
     color: white;
     display: flex;
     align-items: center;

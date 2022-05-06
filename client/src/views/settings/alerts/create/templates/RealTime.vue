@@ -42,6 +42,9 @@
       <div class="card">
         <div class="card__header">
           <h3>Deal Movement</h3>
+          <p class="active-workflow-small" v-if="hasRealTimeConfigs">
+            Active <img src="@/assets/images/configCheck.png" alt="" />
+          </p>
         </div>
 
         <div class="card__body">
@@ -204,6 +207,9 @@ export default {
       }
       return arr
     },
+    hasRealTimeConfigs() {
+      return !!this.user.slackAccount.realtimeAlertConfigs
+    },
     hasSalesforceIntegration() {
       return !!this.$store.state.user.salesforceAccount
     },
@@ -346,6 +352,26 @@ export default {
     margin-top: 0.1rem;
   }
 }
+.active-workflow-small {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid $soft-gray;
+  background-color: white;
+  border-radius: 0.3rem;
+  color: $dark-green;
+  font-size: 11px;
+  cursor: text;
+  img {
+    height: 0.8rem;
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
+    margin-left: 0.75rem;
+    margin-top: 0.1rem;
+  }
+}
 .filter-plus {
   filter: invert(90%);
   margin-left: 0.5rem;
@@ -440,7 +466,7 @@ textarea {
     font-size: 13px;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: space-between;
     border-bottom: 2px solid $soft-gray;
   }
   &__body {

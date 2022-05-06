@@ -2,9 +2,9 @@
   <div class="alerts-page">
     <div class="alerts-header">
       <div>
-        <h3>Upcoming Next Step</h3>
+        <h3>Required Field Empty</h3>
         <p style="margin-top: -0.5rem; font-size: 14px">
-          View and update all Opportunities with Next Steps due this Week
+          View and update all Opportunities with required fields that have not been filled out
         </p>
       </div>
 
@@ -22,8 +22,8 @@
             :key="index"
             v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
           >
-            <span style="margin-bottom: 0.5rem">Select your Next Step Date Field</span>
-            <NextAlertGroup
+            <span style="margin-bottom: 0.5rem">Select your Field</span>
+            <EmptyAlertGroup
               :form="alertGroup"
               :resourceType="alertTemplateForm.field.resourceType.value"
             />
@@ -184,7 +184,6 @@
         "
         text="Activate alert"
         @click.stop="onSave"
-        :disabled="!alertTemplateForm.isValid"
       />
     </div>
   </div>
@@ -200,7 +199,7 @@ import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 //Internal
 import FormField from '@/components/forms/FormField'
-import NextAlertGroup from '@/views/settings/alerts/create/NextAlertGroup'
+import EmptyAlertGroup from '@/views/settings/alerts/create/EmptyAlertGroup'
 import { UserConfigForm } from '@/services/users/forms'
 
 /**
@@ -218,15 +217,12 @@ import { SObjectField, NON_FIELD_ALERT_OPTS, SOBJECTS_LIST } from '@/services/sa
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
-  name: 'NextStep',
+  name: 'RequiredFieldEmpty',
   components: {
-    NextAlertGroup,
-
+    EmptyAlertGroup,
     ToggleCheckBox,
     FormField,
-
     PulseLoadingSpinnerButton,
-
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {
@@ -763,10 +759,10 @@ export default {
   },
   beforeMount() {
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
-    this.alertTemplateForm.field.title.value = 'Upcoming Next Step'
+    this.alertTemplateForm.field.title.value = 'Required Field Empty'
     this.alertTemplateForm.field.isActive.value = true
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
-      'Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has an upcoming Next Step Date due this week.'
+      'Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has a required field that has not been filled out.'
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceFrequency.value = 'WEEKLY'
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = [

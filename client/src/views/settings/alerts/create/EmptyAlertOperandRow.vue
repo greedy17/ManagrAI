@@ -163,7 +163,7 @@ export default {
    * the object multiple levels deep (this current implementation could be seen as incorrect)
    *
    */
-  name: 'NextAlertOperandRow',
+  name: 'EmptyAlertOperandRow',
   components: {
     ListContainer,
     ToggleCheckBox,
@@ -360,9 +360,11 @@ export default {
   },
 
   mounted() {
-    this.form.field.operandOperator.value = '='
-    this.form.field._operandOperator.value = { label: '= (Equals)', value: '=' }
-    this.form.field.operandValue.value = '0'
+    if (this.form.field.operandOrder.value === 0) {
+      this.form.field.operandOperator.value = '='
+      this.form.field._operandOperator.value = { label: '= (Equals)', value: '=' }
+      this.form.field.operandValue.value = 'null'
+    }
   },
 }
 </script>

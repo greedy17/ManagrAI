@@ -319,6 +319,60 @@
           </h4>
         </div>
       </div>
+
+      <div
+        :class="
+          !user.activatedManagrConfigs.includes('Required Field Empty') && isOnboarding && !isAdmin
+            ? 'card onboarding'
+            : 'card'
+        "
+      >
+        <div class="card__header">
+          <h3>Required Field Empty</h3>
+        </div>
+
+        <div class="card__body">
+          <img
+            style="height: 1.5rem; margin-right: 0.5rem"
+            src="@/assets/images/slackLogo.png"
+            alt=""
+          />
+          <img
+            style="height: 1rem; margin-right: 0.5rem"
+            src="@/assets/images/plusOne.png"
+            class="filter-plus"
+            alt=""
+          />
+          <img
+            style="height: 1.5rem; margin-right: 0.5rem"
+            src="@/assets/images/salesforce.png"
+            alt=""
+          />
+        </div>
+
+        <div class="card__footer">
+          <button
+            v-if="
+              hasSalesforceIntegration &&
+              hasSlackIntegration &&
+              !user.activatedManagrConfigs.includes('Required Field Empty')
+            "
+            @click="goToEmptyField"
+            class="orange_button"
+          >
+            Activate
+          </button>
+          <h4 v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)">
+            Connect Slack & Salesforce to acivate
+          </h4>
+          <h4
+            class="active-workflow"
+            v-else-if="user.activatedManagrConfigs.includes('Required Field Empty')"
+          >
+            Active <img src="@/assets/images/configCheck.png" alt="" />
+          </h4>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -450,6 +504,9 @@ export default {
     },
     goToNextStep() {
       this.$router.push({ name: 'NextStep' })
+    },
+    goToEmptyField() {
+      this.$router.push({ name: 'RequiredFieldEmpty' })
     },
     getWorkflowIds(arr1, arr2) {
       return arr1.some((item) => arr2.includes(item))

@@ -129,6 +129,11 @@ export default new Router({
       component: () => import('@/views/settings/alerts/create/templates/NextStepDate')
     },
     {
+      path: '/empty-field',
+      name: 'RequiredFieldEmpty',
+      component: () => import('@/views/settings/alerts/create/templates/RequiredFieldEmpty')
+    },
+    {
       path: '/close-date-approaching',
       name: 'CloseDateApproaching',
       component: () => import('@/views/settings/alerts/create/templates/CloseDateApproaching')
