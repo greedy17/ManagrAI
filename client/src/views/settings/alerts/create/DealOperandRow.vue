@@ -19,20 +19,6 @@
       >
         <FormField :errors="form.field.operandIdentifier.errors">
           <template v-slot:input>
-            <DropDownSearch
-              v-if="selectedOperandType == 'FIELD'"
-              :items="objectFields.list"
-              :itemsRef.sync="form.field._operandIdentifier.value"
-              v-model="form.field.operandIdentifier.value"
-              displayKey="referenceDisplayLabel"
-              valueKey="apiName"
-              nullDisplay="Search SFDC fields"
-              searchable
-              :hasNext="!!objectFields.pagination.hasNextPage"
-              @load-more="objectFieldNextPage"
-              @search-term="onSearchFields"
-              @input="form.field.operandIdentifier.validate()"
-            />
           </template>
         </FormField>
       </div>
@@ -43,17 +29,6 @@
       >
         <FormField :errors="form.field.operandOperator.errors">
           <template v-slot:input>
-            <DropDownSearch
-              :items.sync="operatorOpts"
-              :itemsRef.sync="form.field._operandOperator.value"
-              v-model="form.field.operandOperator.value"
-              @input="form.field.operandOperator.validate()"
-              displayKey="label"
-              valueKey="value"
-              nullDisplay="Select an Operator"
-              searchable
-              local
-            />
           </template>
         </FormField>
       </div>
@@ -63,17 +38,6 @@
           :errors="form.field.operandValue.errors"
         >
           <template v-slot:input>
-            <DropDownSearch
-              :items.sync="picklistOpts"
-              :itemsRef.sync="form.field._operandValue.value"
-              v-model="form.field.operandValue.value"
-              displayKey="label"
-              valueKey="value"
-              nullDisplay="Select a value"
-              searchable
-              local
-              v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'"
-            />
           </template>
         </FormField>
         <template v-else>
@@ -82,17 +46,6 @@
             :errors="form.field.operandValue.errors"
           >
             <template v-slot:input>
-              <DropDownSearch
-                :items.sync="valueOpts"
-                :itemsRef.sync="form.field._operandValue.value"
-                v-model="form.field.operandValue.value"
-                displayKey="label"
-                valueKey="value"
-                nullDisplay="Select a value"
-                searchable
-                local
-                v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'"
-              />
             </template>
           </FormField>
           <div v-else>
@@ -162,7 +115,6 @@ import ToggleCheckBox from '@thinknimble/togglecheckbox'
 //Internal
 import ListContainer from '@/components/ListContainer'
 import FormField from '@/components/forms/FormField'
-import DropDownSearch from '@/components/DropDownSearch'
 /**
  * Services
  */
@@ -193,7 +145,7 @@ export default {
    *
    */
   name: 'DealOperandRow',
-  components: { ListContainer, ToggleCheckBox, DropDownSearch, FormField },
+  components: { ListContainer, ToggleCheckBox, FormField },
   props: {
     form: { type: AlertOperandForm },
     resourceType: { type: String },

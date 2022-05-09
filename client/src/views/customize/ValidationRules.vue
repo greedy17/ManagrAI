@@ -156,62 +156,6 @@
     </div>
 
     <div :key="route_name_key" class="centered__stage">
-      <!-- <div @click.prevent="toggleSelectedFormResource(resource)" class="box-updated__header">
-            <span class="box-updated__title">
-              {{ resource }}
-              <img
-                v-if="selectedTab && isVisible"
-                style="height: 1rem; margin-left: 1rem"
-                src="@/assets/images/tooltipgray.png"
-                @click.prevent.stop="toggleRequiredModal"
-              />
-            </span>
-          </div> -->
-
-      <!-- <div :class="resource ? 'search_buttons_row' : ''">
-        <DropDownSearch
-          :items.sync="SOBJECTS_LIST"
-          v-model="resource"
-          displayKey="key"
-          valueKey="value"
-          nullDisplay="Select salesforce object"
-          class="search"
-        />
-
-        <div class="row">
-          <div v-if="resource">
-            <button
-              @click="selectForm(resource, UPDATE)"
-              class="buttons__"
-              :class="this.formType == UPDATE ? 'activeTab' : 'buttons__'"
-            >
-              <img src="@/assets/images/edit.png" alt="update" />
-              {{ ` Update ${resource}` }}
-            </button>
-
-            <button
-              @click="selectForm(resource, CREATE)"
-              :class="this.formType == CREATE ? 'activeTab' : 'buttons__'"
-            >
-              <img src="@/assets/images/create.png" alt="create" />
-              {{ ` Create ${resource}` }}
-            </button>
-            <button
-              @click="openStageDropDown"
-              v-if="resource == OPPORTUNITY"
-              :class="this.formType == STAGE_GATING ? 'activeTab' : 'buttons__'"
-            >
-              <img src="@/assets/images/stageStairs.png" alt="" />
-              Stage Related Fields
-            </button>
-            <img
-              style="cursor: pointer"
-              src="@/assets/images/info.png"
-              @click.prevent.stop="toggleObjectsModal"
-            />
-          </div>
-        </div>
-      </div> -->
       <template v-if="selectedForm">
         <div class="box__content--expanded">
           <CustomSlackForm
@@ -294,7 +238,6 @@ import CustomSlackForm from '@/views/settings/CustomSlackForm'
 import { mapState } from 'vuex'
 import SlackOAuth, { salesforceFields } from '@/services/slack'
 import { SObjectField, SObjectValidation, SObjectPicklist } from '@/services/salesforce'
-import DropDownSearch from '@/components/DropDownSearch'
 import SObjectFormBuilderAPI, { SOBJECTS_LIST } from '@/services/salesforce'
 import * as FORM_CONSTS from '@/services/slack'
 
@@ -303,7 +246,6 @@ export default {
   components: {
     CustomSlackForm,
     PulseLoadingSpinnerButton,
-    DropDownSearch,
     Paginator,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),

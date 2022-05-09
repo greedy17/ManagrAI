@@ -40,15 +40,7 @@
           </div>
           <div class="modal-container__box__content">
             <div class="box__content-select">
-              <DropDownSearch
-                :items.sync="stages"
-                v-model="selectedStage"
-                displayKey="label"
-                valueKey="value"
-                nullDisplay="Select a Stage"
-                searchable
-                local
-              />
+              
             </div>
           </div>
 
@@ -145,14 +137,6 @@
           </div> -->
 
       <!-- <div :class="resource ? 'search_buttons_row' : ''">
-        <DropDownSearch
-          :items.sync="SOBJECTS_LIST"
-          v-model="resource"
-          displayKey="key"
-          valueKey="value"
-          nullDisplay="Select salesforce object"
-          class="search"
-        />
 
         <div class="row">
           <div v-if="resource">
@@ -254,13 +238,12 @@ import CustomSlackForm from '@/views/settings/CustomSlackForm'
 import { mapState } from 'vuex'
 import SlackOAuth, { salesforceFields } from '@/services/slack'
 import { SObjectField, SObjectValidation, SObjectPicklist } from '@/services/salesforce'
-import DropDownSearch from '@/components/DropDownSearch'
 import SObjectFormBuilderAPI, { SOBJECTS_LIST } from '@/services/salesforce'
 import * as FORM_CONSTS from '@/services/slack'
 
 export default {
   name: 'SlackFormSettings',
-  components: { CustomSlackForm, PulseLoadingSpinnerButton, DropDownSearch, Paginator },
+  components: { CustomSlackForm, PulseLoadingSpinnerButton, Paginator },
   data() {
     return {
       ...FORM_CONSTS,

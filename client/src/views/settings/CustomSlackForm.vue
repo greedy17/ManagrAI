@@ -141,24 +141,6 @@
                   </p>
                 </template>
               </Multiselect>
-              <!-- <DropDownSearch
-                v-if="!addedFieldNames.includes('LastName')"
-                :items="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-                displayKey="referenceDisplayLabel"
-                valueKey="apiName"
-                nullDisplay="Search fields"
-                searchable
-                :loading="formFields.loadingNextPage"
-                :hasNext="!!formFields.pagination.hasNextPage"
-                v-model="lastNameValue"
-                @load-more="onFieldsNextPage"
-                @search-term="onSearchFields"
-                @input="
-                  (e) => {
-                    onAddField(this.formFields.list.filter((field) => field.apiName === e)[0])
-                  }
-                "
-              /> -->
             </div>
           </div>
         </div>

@@ -79,17 +79,6 @@
                   <p>No results.</p>
                 </template>
               </Multiselect>
-
-              <!-- <DropDownSearch
-                :items="userRoles"
-                valueKey="key"
-                displayKey="name"
-                v-model="registrationForm.field.role.value"
-                :itemsRef="userRoles"
-                class="invite-form__dropdown"
-                nullDisplay="Select user role"
-                @input="registrationForm.field.role.validate()"
-              /> -->
             </template>
           </FormField>
 
@@ -117,14 +106,6 @@
                   <p>No results.</p>
                 </template>
               </Multiselect>
-
-              <!-- <DropDownSearch
-                :items.sync="timezones"
-                v-model="registrationForm.field.timezone.value"
-                nullDisplay="Select your timezone"
-                searchable
-                local
-              /> -->
             </template>
           </FormField>
         </div>
@@ -161,20 +142,16 @@ import TNDropdown from '@/components/TNDropdown'
 import managrDropdown from '@/components/managrDropdown'
 import Button from '@thinknimble/button'
 import FormField from '@/components/forms/FormField'
-import DropDownSelect from '@thinknimble/dropdownselect'
-import DropDownSearch from '@/components/DropDownSearch'
 import moment from 'moment-timezone'
 
 export default {
   name: 'Registration',
   components: {
     FormField,
-    DropDownSelect,
     GoogleButton,
     TNDropdown,
     managrDropdown,
     Button,
-    DropDownSearch,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {

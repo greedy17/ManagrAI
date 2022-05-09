@@ -26,7 +26,6 @@ import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button
 //Internal
 import ListContainer from '@/components/ListContainer'
 import FormField from '@/components/forms/FormField'
-import DropDownSearch from '@/components/DropDownSearch'
 /**
  * Services
  */
@@ -43,7 +42,6 @@ export default {
   components: {
     ListContainer,
     ToggleCheckBox,
-    DropDownSearch,
     FormField,
     AlertGroup,
     PulseLoadingSpinnerButton,

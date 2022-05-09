@@ -51,19 +51,6 @@
                 </p>
               </template>
             </Multiselect>
-
-            <!-- <DropDownSearch
-              @input="checkIds"
-              :items.sync="userList"
-              v-model="userIds"
-              displayKey="fullName"
-              valueKey="id"
-              nullDisplay="Users"
-              searchable
-              local
-              multi
-            >
-            </DropDownSearch> -->
           </div>
           <!-- <div class="items_height">
               <p
@@ -187,27 +174,6 @@
                     </p>
                   </template>
                 </Multiselect>
-                <!-- <DropDownSearch
-                  :items.sync="userChannelOpts.channels"
-                  v-model="recapChannel"
-                  displayKey="name"
-                  valueKey="id"
-                  nullDisplay="Channels"
-                  :hasNext="!!userChannelOpts.nextCursor"
-                  @load-more="listUserChannels(userChannelOpts.nextCursor)"
-                  searchable
-                  local
-                >
-                  <template v-slot:tn-dropdown-option="{ option }">
-                    <img
-                      v-if="option.isPrivate == true"
-                      class="card-img"
-                      style="width: 1.2rem; height: 1rem; margin-right: 0.2rem"
-                      src="@/assets/images/lock.png"
-                    />
-                    {{ option['name'] }}
-                  </template>
-                </DropDownSearch> -->
               </template>
             </FormField>
 
@@ -246,7 +212,6 @@
 <script>
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import FormField from '@/components/forms/FormField'
-import DropDownSearch from '@/components/DropDownSearch'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
 import User from '@/services/users'
@@ -254,7 +219,6 @@ import User from '@/services/users'
 export default {
   name: 'ZoomRecap',
   components: {
-    DropDownSearch,
     ToggleCheckBox,
     FormField,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),

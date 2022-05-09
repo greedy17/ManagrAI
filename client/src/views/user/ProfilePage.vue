@@ -31,15 +31,6 @@
             label="key"
             track-by="value"
           />
-
-          <!-- <DropDownSearch
-            :items.sync="timezones"
-            v-model="profileForm.field.timezone.value"
-            nullDisplay="Select your timezone"
-            searchable
-            local
-            @input="profileForm.field.timezone.validate(), test()"
-          /> -->
         </template>
       </FormField>
 
@@ -59,7 +50,6 @@
 <script>
 import User from '@/services/users'
 import { UserProfileForm } from '@/services/users/forms'
-import DropDownSearch from '@/components/DropDownSearch'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 
 import FormField from '@/components/forms/FormField'
@@ -70,7 +60,6 @@ export default {
   name: 'ProfilePage',
   components: {
     FormField,
-    DropDownSearch,
     PulseLoadingSpinnerButton,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },

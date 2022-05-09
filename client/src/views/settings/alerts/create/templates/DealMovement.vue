@@ -196,7 +196,6 @@ import ListContainer from '@/components/ListContainer'
 import ListItem from '@/components/ListItem'
 import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotificationTemplate'
 import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePreview'
-import DropDownSearch from '@/components/DropDownSearch'
 import ExpandablePanel from '@/components/ExpandablePanel'
 import Modal from '@/components/Modal'
 import MovedToCommit from '@/views/settings/alerts/create/templates/MovedToCommit'
@@ -232,7 +231,6 @@ export default {
   components: {
     Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
     ExpandablePanel,
-    DropDownSearch,
     ListContainer,
     ListItem,
     SlackMessagePreview,

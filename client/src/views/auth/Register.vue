@@ -96,13 +96,6 @@
                       <p>No results.</p>
                     </template>
                   </Multiselect>
-                  <!-- <DropDownSearch
-                    :items.sync="timezones"
-                    v-model="registrationForm.field.timezone.value"
-                    nullDisplay="Select your timezone"
-                    searchable
-                    local
-                  /> -->
                 </template>
               </FormField>
             </div>
@@ -134,7 +127,6 @@ import User, { RepRegistrationForm } from '@/services/users'
 import Button from '@thinknimble/button'
 import FormField from '@/components/forms/FormField'
 import ComponentLoadingSVG from '@/components/ComponentLoadingSVG'
-import DropDownSearch from '@/components/DropDownSearch'
 import moment from 'moment-timezone'
 
 export default {
@@ -143,7 +135,6 @@ export default {
     Button,
     FormField,
     ComponentLoadingSVG,
-    DropDownSearch,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {

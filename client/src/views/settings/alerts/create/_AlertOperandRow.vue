@@ -125,17 +125,6 @@
                   </p>
                 </template>
               </Multiselect>
-
-              <!-- <DropDownSearch
-                :items.sync="picklistOpts"
-                :itemsRef.sync="form.field._operandValue.value"
-                v-model="form.field.operandValue.value"
-                displayKey="label"
-                valueKey="value"
-                nullDisplay="Select a value"
-                searchable
-                local
-              /> -->
             </template>
           </FormField>
           <!-- <p
@@ -180,16 +169,6 @@
                     </p>
                   </template>
                 </Multiselect>
-                <!-- <DropDownSearch
-                  :items.sync="valueOpts"
-                  :itemsRef.sync="form.field._operandValue.value"
-                  v-model="form.field.operandValue.value"
-                  displayKey="label"
-                  valueKey="value"
-                  nullDisplay="Select a value"
-                  searchable
-                  local
-                /> -->
               </template>
             </FormField>
             <!-- <p :class="form.field.operandValue.value ? 'selected__item' : ''">
@@ -241,18 +220,6 @@
                         </p>
                       </template>
                     </Multiselect>
-
-                    <!-- <DropDownSearch
-                      :items.sync="operatorOpts"
-                      :itemsRef.sync="form.field._operandOperator.value"
-                      v-model="form.field.operandOperator.value"
-                      @input="form.field.operandOperator.validate()"
-                      displayKey="label"
-                      valueKey="value"
-                      nullDisplay="Select Operators"
-                      searchable
-                      local
-                    /> -->
                   </template>
                 </FormField>
                 <!-- <p
@@ -396,7 +363,6 @@ import ToggleCheckBox from '@thinknimble/togglecheckbox'
 //Internal
 import ListContainer from '@/components/ListContainer'
 import FormField from '@/components/forms/FormField'
-import DropDownSearch from '@/components/DropDownSearch'
 /**
  * Services
  */
@@ -431,7 +397,6 @@ export default {
   components: {
     ListContainer,
     ToggleCheckBox,
-    DropDownSearch,
     FormField,
     CollectionSearch,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),

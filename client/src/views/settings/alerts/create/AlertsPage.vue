@@ -398,7 +398,6 @@ import ListItem from '@/components/ListItem'
 import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotificationTemplate'
 import { UserOnboardingForm } from '@/services/users/forms'
 import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePreview'
-import DropDownSearch from '@/components/DropDownSearch'
 import ExpandablePanel from '@/components/ExpandablePanel'
 import Modal from '@/components/Modal'
 
@@ -429,7 +428,6 @@ export default {
   name: 'AlertsPage',
   components: {
     ExpandablePanel,
-    DropDownSearch,
     ListContainer,
     ListItem,
     SlackMessagePreview,

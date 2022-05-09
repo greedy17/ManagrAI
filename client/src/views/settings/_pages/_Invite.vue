@@ -50,18 +50,6 @@
                     </p>
                   </template>
                 </Multiselect>
-                <!-- <DropDownSearch
-                  :items.sync="slackMembers.members"
-                  v-model="userInviteForm.field.slackId.value"
-                  displayKey="realName"
-                  valueKey="id"
-                  nullDisplay="Search Users"
-                  :hasNext="!!slackMembers.nextCursor"
-                  @load-more="listUsers(slackMembers.nextCursor)"
-                  searchable
-                  local
-                >
-                </DropDownSearch> -->
               </template>
             </FormField>
           </div>
@@ -89,36 +77,10 @@
                     </p>
                   </template>
                 </Multiselect>
-                <!-- 
-                <DropDownSearch
-                  :items.sync="userTypes"
-                  v-model="userInviteForm.field.userLevel.value"
-                  nullDisplay="Select User Level"
-                  local
-                  searchable
-                  valueKey="value"
-                  @input="userInviteForm.field.userLevel.validate()"
-                /> -->
               </template>
             </FormField>
           </div>
         </div>
-        <!-- <div class="dropdown">
-          <FormField :errors="userInviteForm.field.role.errors" label="Role">
-            <template v-slot:input>
-              <DropDownSelect
-                :items="userRoles"
-                valueKey="key"
-                displayKey="name"
-                v-model="userInviteForm.field.role.value"
-                :itemsRef="userRoles"
-                class="invite-form__dropdown"
-                nullDisplay="Select user role"
-                @input="userInviteForm.field.role.validate()"
-              />
-            </template>
-          </FormField>
-        </div> -->
         <div class="invite-form__actions">
           <!-- <div @click="onConfirmSlackInvite" style="display: flex; align-items: center">
             <CheckBox :checked="userInviteForm.field.slackInvite.value" />
@@ -284,7 +246,6 @@
 <script>
 import User from '@/services/users'
 import { UserInviteForm } from '@/services/users/forms'
-import DropDownSelect from '@thinknimble/dropdownselect'
 import Organization from '@/services/organizations'
 import CollectionManager from '@/services/collectionManager'
 import Modal from '../../../components/InviteModal'
@@ -293,12 +254,9 @@ import CheckBox from '@/components/CheckBoxUpdated'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import FormField from '@/components/forms/FormField'
 import SlackOAuth, { SlackUserList } from '@/services/slack'
-import DropDownSearch from '@/components/DropDownSearch'
 export default {
   name: 'Invite',
   components: {
-    DropDownSelect,
-    DropDownSearch,
     Modal,
     PulseLoadingSpinnerButton,
     FormField,

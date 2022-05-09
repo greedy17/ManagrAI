@@ -35,20 +35,6 @@
               </template>
             </FormField>
           </div>
-
-          <!-- <div style="margin-bottom: 2.5rem; margin-top: 0.5rem" class="delivery__row">
-            <span style="margin-bottom: 0.5rem">Select Stage</span>
-            <DropDownSearch
-              :items.sync="stages"
-              v-model="advancedStage"
-              displayKey="label"
-              valueKey="value"
-              nullDisplay="Select a Stage"
-              searchable
-              local
-            />
-          </div> -->
-
           <div
             style="
               display: flex;
@@ -181,7 +167,6 @@ import ListContainer from '@/components/ListContainer'
 import ListItem from '@/components/ListItem'
 import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotificationTemplate'
 import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePreview'
-import DropDownSearch from '@/components/DropDownSearch'
 import ExpandablePanel from '@/components/ExpandablePanel'
 import Modal from '@/components/Modal'
 import SmartAlertTemplateBuilder from '@/views/settings/alerts/create/SmartAlertTemplateBuilder'
@@ -206,7 +191,6 @@ export default {
   name: 'ClosedWon',
   components: {
     ExpandablePanel,
-    DropDownSearch,
     ListContainer,
     ListItem,
     SlackMessagePreview,

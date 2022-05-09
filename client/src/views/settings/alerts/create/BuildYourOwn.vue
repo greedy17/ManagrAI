@@ -322,20 +322,6 @@
                   </p>
                 </template>
               </Multiselect>
-
-              <!-- <DropDownSearch
-                :class="!templateBounce && fieldBounce && clickCount === 0 ? 'bouncy' : ''"
-                :items="fields.list"
-                @input="bindText(`${selectedResourceType}.${$event}`)"
-                displayKey="referenceDisplayLabel"
-                valueKey="apiName"
-                nullDisplay="Search Fields"
-                searchable
-                :hasNext="!!fields.pagination.hasNextPage"
-                @load-more="fieldNextPage"
-                @search-term="onSearchFields"
-                auto
-              /> -->
             </div>
           </div>
         </div>
@@ -429,18 +415,6 @@
                             </p>
                           </template>
                         </Multiselect>
-
-                        <!-- <DropDownSearch
-                          :items.sync="weeklyOpts"
-                          :itemsRef.sync="form.field._recurrenceDay.value"
-                          v-model="form.field.recurrenceDay.value"
-                          @input="form.field.recurrenceDay.validate()"
-                          displayKey="key"
-                          valueKey="value"
-                          nullDisplay="Select Day"
-                          searchable
-                          local
-                        /> -->
                       </template>
                     </FormField>
                   </div>
@@ -543,23 +517,6 @@
                         </p>
                       </template>
                     </Multiselect>
-
-                    <!-- <DropDownSearch
-                      :items.sync="userTargetsOpts"
-                      :itemsRef.sync="form.field._alertTargets.value"
-                      v-model="form.field.alertTargets.value"
-                      @input="form.field.alertTargets.validate()"
-                      displayKey="fullName"
-                      valueKey="id"
-                      nullDisplay="Mulit-select"
-                      searchable
-                      multi
-                      medium
-                      :loading="users.loadingNextPage"
-                      :hasNext="!!users.pagination.hasNextPage"
-                      @load-more="onUsersNextPage"
-                      @search-term="onSearchUsers"
-                    /> -->
                   </template>
                 </FormField>
                 <!-- <div style="margin-top: -0.5rem" class="items_height">
@@ -660,30 +617,6 @@
                           </p>
                         </template>
                       </Multiselect>
-
-                      <!-- <DropDownSearch
-                        :items.sync="userChannelOpts.channels"
-                        :itemsRef.sync="form.field._recipients.value"
-                        v-model="form.field.recipients.value"
-                        @input="form.field.recipients.validate()"
-                        displayKey="name"
-                        valueKey="id"
-                        nullDisplay="Channels"
-                        :hasNext="!!userChannelOpts.nextCursor"
-                        @load-more="listUserChannels(userChannelOpts.nextCursor)"
-                        searchable
-                        local
-                      >
-                        <template v-slot:tn-dropdown-option="{ option }">
-                          <img
-                            v-if="option.isPrivate == true"
-                            class="card-img"
-                            style="width: 1rem; height: 1rem; margin-right: 0.2rem"
-                            src="@/assets/images/lockAsset.png"
-                          />
-                          {{ option['name'] }}
-                        </template>
-                      </DropDownSearch> -->
                     </template>
                   </FormField>
                   <!-- 
@@ -866,7 +799,6 @@ import ListContainer from '@/components/ListContainer'
 import ListItem from '@/components/ListItem'
 import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotificationTemplate'
 import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePreview'
-import DropDownSearch from '@/components/DropDownSearch'
 import ExpandablePanel from '@/components/ExpandablePanel'
 import Modal from '@/components/Modal'
 import ProgressBar from '@/components/ProgressBar'
@@ -899,7 +831,6 @@ export default {
   name: 'AlertsPage',
   components: {
     ExpandablePanel,
-    DropDownSearch,
     ListContainer,
     ListItem,
     SlackMessagePreview,

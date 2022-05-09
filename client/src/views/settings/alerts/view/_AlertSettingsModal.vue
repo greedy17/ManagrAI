@@ -48,17 +48,6 @@
                   </p>
                 </template>
               </Multiselect>
-              <!-- <DropDownSearch
-                :items.sync="weeklyOpts"
-                :itemsRef.sync="form.field._recurrenceDay.value"
-                v-model="form.field.recurrenceDay.value"
-                @input="form.field.recurrenceDay.validate()"
-                displayKey="key"
-                valueKey="value"
-                nullDisplay="Days"
-                searchable
-                local
-              /> -->
             </template>
           </FormField>
         </div>
@@ -97,22 +86,6 @@
                 </p>
               </template>
             </Multiselect>
-            <!-- <DropDownSearch
-              :items.sync="userTargetsOpts"
-              :itemsRef.sync="form.field._alertTargets.value"
-              v-model="form.field.alertTargets.value"
-              @input="form.field.alertTargets.validate()"
-              displayKey="fullName"
-              valueKey="id"
-              nullDisplay="Users"
-              searchable
-              multi
-              medium
-              :loading="users.loadingNextPage"
-              :hasNext="!!users.pagination.hasNextPage"
-              @load-more="onUsersNextPage"
-              @search-term="onSearchUsers"
-            /> -->
           </template>
         </FormField>
       </div>
@@ -192,29 +165,6 @@
                   </p>
                 </template>
               </Multiselect>
-              <!-- <DropDownSearch
-                :items.sync="userChannelOpts.channels"
-                :itemsRef.sync="form.field._recipients.value"
-                v-model="form.field.recipients.value"
-                @input="form.field.recipients.validate()"
-                displayKey="name"
-                valueKey="id"
-                nullDisplay="Channels"
-                :hasNext="!!userChannelOpts.nextCursor"
-                @load-more="listUserChannels(userChannelOpts.nextCursor)"
-                searchable
-                local
-              >
-                <template v-slot:tn-dropdown-option="{ option }">
-                  <img
-                    v-if="option.isPrivate == true"
-                    class="card-img"
-                    style="width: 1rem; height: 1rem; margin-right: 0.2rem"
-                    src="@/assets/images/lockAsset.png"
-                  />
-                  {{ option['name'] }}
-                </template>
-              </DropDownSearch> -->
             </template></FormField
           >
         </div>
@@ -243,7 +193,6 @@ import ToggleCheckBox from '@thinknimble/togglecheckbox'
 //Internal
 import ListContainer from '@/components/ListContainer'
 import FormField from '@/components/forms/FormField'
-import DropDownSearch from '@/components/DropDownSearch'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 /**
  * Services
@@ -264,7 +213,6 @@ export default {
   components: {
     ListContainer,
     ToggleCheckBox,
-    DropDownSearch,
     FormField,
     PulseLoadingSpinnerButton,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),

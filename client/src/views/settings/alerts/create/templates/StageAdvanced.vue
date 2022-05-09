@@ -56,16 +56,6 @@
                 </p>
               </template>
             </Multiselect>
-
-            <!-- <DropDownSearch
-              :items.sync="stages"
-              v-model="advancedStage"
-              displayKey="label"
-              valueKey="value"
-              nullDisplay="Select a Stage"
-              searchable
-              local
-            /> -->
           </div>
 
           <div
@@ -202,7 +192,6 @@ import ListContainer from '@/components/ListContainer'
 import ListItem from '@/components/ListItem'
 import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotificationTemplate'
 import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePreview'
-import DropDownSearch from '@/components/DropDownSearch'
 import ExpandablePanel from '@/components/ExpandablePanel'
 import Modal from '@/components/Modal'
 import SmartAlertTemplateBuilder from '@/views/settings/alerts/create/SmartAlertTemplateBuilder'
@@ -228,7 +217,6 @@ export default {
   components: {
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     ExpandablePanel,
-    DropDownSearch,
     ListContainer,
     ListItem,
     SlackMessagePreview,

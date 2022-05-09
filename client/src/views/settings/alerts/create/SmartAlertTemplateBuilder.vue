@@ -2,16 +2,6 @@
   <div>
     <FormField :errors="alertTemplateForm.field.title.errors">
       <template v-slot:input>
-        <DropDownSearch
-          :items.sync="nameOptions"
-          v-model="alertTemplateForm.field.title.value"
-          displayKey="key"
-          valueKey="value"
-          nullDisplay="Select Alert Type"
-          searchable
-          local
-          @input="alertTemplateForm.field.title.validate()"
-        />
       </template>
     </FormField>
   </div>
@@ -19,7 +9,6 @@
 
 <script>
 import FormField from '@/components/forms/FormField'
-import DropDownSearch from '@/components/DropDownSearch'
 import ExpandablePanel from '@/components/ExpandablePanel'
 
 import AlertTemplate, {
@@ -43,7 +32,6 @@ import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
   name: 'SmartAlertTemplateBuilder',
   components: {
-    DropDownSearch,
     FormField,
     ExpandablePanel,
   },

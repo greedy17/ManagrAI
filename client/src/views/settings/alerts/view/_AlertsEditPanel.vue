@@ -166,18 +166,6 @@
                   </p>
                 </template>
               </Multiselect>
-              <!-- <DropDownSearch
-                :items="fields.list"
-                @input="bindText(`${alert.resourceType}.${$event}`)"
-                displayKey="referenceDisplayLabel"
-                valueKey="apiName"
-                nullDisplay="Search fields"
-                searchable
-                :hasNext="!!fields.pagination.hasNextPage"
-                @load-more="fieldNextPage"
-                @search-term="onSearchFields"
-                auto
-              /> -->
             </div>
           </div>
           <!-- <div
@@ -241,7 +229,6 @@ import ListItem from '@/components/ListItem'
 import FormField from '@/components/forms/FormField'
 import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotificationTemplate'
 import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePreview'
-import DropDownSearch from '@/components/DropDownSearch'
 /**
  * Services
  *
@@ -296,7 +283,6 @@ export default {
     ListItem,
     ListContainer,
     PulseLoadingSpinner,
-    DropDownSearch,
     AlertOperandModal,
     AlertGroupModal,
     AlertSettingsModal,

@@ -36,13 +36,12 @@ import CustomSlackForm from '@/views/settings/CustomSlackForm'
 import { mapState } from 'vuex'
 import SlackOAuth, { salesforceFields } from '@/services/slack'
 import { SObjectField, SObjectValidation, SObjectPicklist } from '@/services/salesforce'
-import DropDownSearch from '@/components/DropDownSearch'
 import { SOBJECTS_LIST } from '@/services/salesforce'
 import * as FORM_CONSTS from '@/services/slack'
 
 export default {
   name: 'CreateContacts',
-  components: { CustomSlackForm, PulseLoadingSpinnerButton, DropDownSearch, Paginator },
+  components: { CustomSlackForm, PulseLoadingSpinnerButton, Paginator },
   data() {
     return {
       ...FORM_CONSTS,
