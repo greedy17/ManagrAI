@@ -200,90 +200,6 @@ export default {
       this.newCloseDate = dateString
       console.log(this.newCloseDate)
     },
-    async onAdvanceStage() {
-      if (this.primaryCheckList.includes(this.opp.id)) {
-        this.updatedList.push(this.opp.id)
-        try {
-          const res = await SObjects.api
-            .createFormInstance({
-              resourceType: 'Opportunity',
-              formType: 'UPDATE',
-              resourceId: this.opp.id,
-            })
-            .then(async (res) => {
-              const response = await SObjects.api.updateResource({
-                form_id: res.form_id,
-                form_data: { StageName: this.stageData },
-              })
-            })
-        } catch (e) {
-          console.log(e)
-        } finally {
-          this.updatedList = []
-          this.$Alert.alert({
-            type: 'success',
-            timeout: 750,
-            message: 'Salesforce update successful!',
-          })
-        }
-      }
-    },
-    async onPushCloseDate() {
-      if (this.primaryCheckList.includes(this.opp.id)) {
-        this.updatedList.push(this.opp.id)
-        try {
-          const res = await SObjects.api
-            .createFormInstance({
-              resourceType: 'Opportunity',
-              formType: 'UPDATE',
-              resourceId: this.opp.id,
-            })
-            .then(async (res) => {
-              const response = await SObjects.api.updateResource({
-                form_id: res.form_id,
-                form_data: { CloseDate: this.newCloseDate },
-              })
-            })
-        } catch (e) {
-          console.log(e)
-        } finally {
-          this.updatedList = []
-          this.$Alert.alert({
-            type: 'success',
-            timeout: 750,
-            message: 'Salesforce update successful!',
-          })
-        }
-      }
-    },
-    async onChangeForecast() {
-      if (this.primaryCheckList.includes(this.opp.id)) {
-        this.updatedList.push(this.opp.id)
-        try {
-          const res = await SObjects.api
-            .createFormInstance({
-              resourceType: 'Opportunity',
-              formType: 'UPDATE',
-              resourceId: this.opp.id,
-            })
-            .then(async (res) => {
-              const response = await SObjects.api.updateResource({
-                form_id: res.form_id,
-                form_data: { ForecastCategoryName: this.ForecastCategoryNameData },
-              })
-            })
-        } catch (e) {
-          console.log(e)
-        } finally {
-          this.updatedList = []
-          this.$Alert.alert({
-            type: 'success',
-            timeout: 750,
-            message: 'Salesforce update successful!',
-          })
-        }
-      }
-    },
   },
 }
 </script>
@@ -475,17 +391,4 @@ input[type='checkbox'] + label::before {
     height: 1.2rem;
   }
 }
-// ::-webkit-scrollbar {
-//   background-color: $off-white;
-//   -webkit-appearance: none;
-//   height: 100%;
-//   width: 3px;
-// }
-// ::-webkit-scrollbar-thumb {
-//   border-radius: 3px;
-//   background-color: $very-light-gray;
-// }
-// ::-webkit-scrollbar-track {
-//   margin-top: 1rem;
-// }
 </style>

@@ -280,9 +280,6 @@ export default {
     },
   },
   methods: {
-    test() {
-      console.log(this.extraFields)
-    },
     async removeField(id) {
       try {
         const res = await SObjects.api.removeExtraField({
@@ -307,9 +304,6 @@ export default {
     cancelRemoveField() {
       this.removingField = false
       this.removingIndex = null
-    },
-    nextPage() {
-      this.objectFields.nextPage()
     },
     addField() {
       this.addingField = true
@@ -452,7 +446,6 @@ export default {
     border-top: 1px solid $soft-gray;
     p {
       cursor: pointer;
-      // color: $dark-green;
       font-weight: bold;
     }
   }

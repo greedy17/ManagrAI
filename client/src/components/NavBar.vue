@@ -179,22 +179,15 @@
 </template>
 
 <script>
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 
-import AlertTemplate, {
-  AlertGroupForm,
-  AlertTemplateForm,
-  AlertConfigForm,
-  AlertMessageTemplateForm,
-  AlertOperandForm,
-} from '@/services/alerts/'
+import AlertTemplate from '@/services/alerts/'
 
 export default {
   name: 'NavBar',
   components: {
     CollectionManager,
   },
-  props: {},
   data() {
     return {
       showMenus: {
@@ -227,47 +220,17 @@ export default {
   },
 
   methods: {
-    toggleDropDown() {
-      this.dropdownOpen = !this.dropdownOpen
-    },
-    toggleTooltip() {
-      this.tooltipOpen = !this.tooltipOpen
-    },
-    routeToSelected(selected) {
-      if (selected == 'logout') {
-        this.logOut()
-      } else {
-        this.$router.push({ name: selected })
-      }
-    },
-
-    routeToSettings() {
-      this.$router.push({ name: 'Integrations' })
-    },
     logOut() {
       this.$store.dispatch('logoutUser')
       this.$router.push({ name: 'Login' })
     },
   },
-  watch: {},
   computed: {
     userIsLoggedIn() {
       return this.$store.getters.userIsLoggedIn
     },
     isAdmin() {
       return this.userIsLoggedIn && this.$store.state.user.isAdmin
-    },
-    hasSlack() {
-      return this.$store.state.user.slackRef
-    },
-    hasSalesforce() {
-      return this.$store.state.user.hasSalesforceIntegration
-    },
-    hasZoom() {
-      return this.$store.state.user.hasZoomIntegration
-    },
-    hasNylas() {
-      return this.$store.state.user.nylasRef
     },
     user() {
       return this.$store.state.user
@@ -322,13 +285,11 @@ span {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  // box-shadow: 1px 1px 2px $very-light-gray;
   border-radius: 0.3rem;
   background-color: $soft-gray;
   cursor: pointer;
   color: $base-gray;
   font-weight: bold;
-  // transition: all .5s;
 }
 nav {
   height: 3.5rem;

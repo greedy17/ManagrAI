@@ -8,10 +8,8 @@
           </p>
           <span style="color: #9b9b9b; font-size: 11px">
             Time: {{ meeting.start_time ? formatDateTimeToTime(meeting.start_time) : '' }}
-            <!-- {{ meeting.end_time ? formatDateTimeToTime(meeting.end_time) : '' }} -->
           </span>
         </div>
-        <!-- <div style="color: #9b9b9b; font-size: 11px; margin-top: 3px">owner:</div> -->
       </div>
 
       <div v-else>
@@ -242,28 +240,6 @@
                   }}
                 </p>
               </div>
-              <!-- <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
-                  <p>{{ field.referenceDisplayLabel }}:</p>
-                  <Multiselect
-                    :v-model="currentVals.length ? currentVals[0][field.apiName]: null"
-                    :options="picklistQueryOpts[field.apiName]"
-                    @select="
-                      setUpdateValues(
-                        field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-                        $event.value,
-                      )
-                    "
-                    openDirection="below"
-                    style="width: 13vw"
-                    selectLabel="Enter"
-                    track-by="value"
-                    label="label"
-                  >
-                    <template slot="noResult">
-                      <p>No results.</p>
-                    </template>
-                  </Multiselect>
-                </div> -->
             </div>
           </div>
           <div style="margin-left: 1rem; padding: 1rem" class="contact-field-section__body" v-else>
@@ -533,17 +509,6 @@ export default {
       let minutes = '0' + date.getMinutes()
       let formattedTime = hours + ':' + minutes.substr(-2)
       return formattedTime
-    },
-    test() {
-      console.log(this.mappedOpp.id)
-    },
-    formatDateTime(input) {
-      var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
-      if (!input || !input.match(pattern)) {
-        return null
-      }
-      let newDate = input.replace(pattern, '$2/$3/$1')
-      return newDate.split('T')[0]
     },
     formatDateTimeToTime(input) {
       let preDate = new Date(input)

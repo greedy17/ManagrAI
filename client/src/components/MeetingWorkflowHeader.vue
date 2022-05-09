@@ -15,9 +15,6 @@ export default {
       columns: ['# of Attendees', 'Attendees', 'Account/Opportunity', 'Actions'],
     }
   },
-  components: {},
-  computed: {},
-  methods: {},
 }
 </script>
 
@@ -119,7 +116,6 @@ export default {
     border-top: 1px solid $soft-gray;
     p {
       cursor: pointer;
-      // color: $dark-green;
       font-weight: bold;
     }
   }

@@ -102,9 +102,7 @@ export default {
 
 .modal {
   margin: 2vh 0;
-  // border: 1px solid $soft-gray; // soft-gray
   z-index: 1001;
-  // background: $white;
   display: flex;
   flex-flow: column;
   box-sizing: border-box;

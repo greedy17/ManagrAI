@@ -47,8 +47,5 @@ export default {
   border-radius: 0.25rem;
   box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.35);
   cursor: pointer;
-
-  &__img {
-  }
 }
 </style>

@@ -1,4 +1,6 @@
 <template>
+  <!-- This file should not be used anywhere in the future. 
+  When that happens, delete this file. -->
   <div
     class="tn-input"
     :class="{

@@ -274,12 +274,6 @@ export default {
       this.removingField = true
       this.removingIndex = i
     },
-    nextPage() {
-      this.objectFields.nextPage()
-    },
-    addField() {
-      this.addingField = true
-    },
     closeAddField() {
       this.addingField = false
       this.extraFields = []
@@ -290,26 +284,6 @@ export default {
     },
     emitSetOpps() {
       this.$emit('set-opps')
-    },
-    async addExtraFields() {
-      for (let i = 0; i < this.extraFieldObjs.length; i++) {
-        this.extraFields.push(this.extraFieldObjs[i].id)
-      }
-      try {
-        const res = await SObjects.api.addExtraFields({
-          field_ids: this.extraFields,
-        })
-        this.$Alert.alert({
-          type: 'success',
-          timeout: 1000,
-          message: 'Field added successfully',
-        })
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.closeAddField()
-        this.emitSetOpps()
-      }
     },
   },
   props: {
