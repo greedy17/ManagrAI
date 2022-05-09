@@ -179,7 +179,6 @@
 </template>
 
 <script>
-import DropDownMenu from '@/components/forms/DropDownMenu'
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
 
 import AlertTemplate, {
@@ -193,7 +192,6 @@ import AlertTemplate, {
 export default {
   name: 'NavBar',
   components: {
-    DropDownMenu,
     CollectionManager,
   },
   props: {},
