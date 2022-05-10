@@ -21,7 +21,6 @@
           style="display: flex; justify-content: center; flex-direction: column; margin-top: -3rem"
         >
           <div style="display: flex; align-items: flex-start; flex-direction: column">
-            <!-- <p style="margin-left: -2.2rem">Slack Users:</p> -->
             <FormField>
               <template v-slot:input>
                 <Multiselect
@@ -54,7 +53,6 @@
             </FormField>
           </div>
           <div style="display: flex; align-items: flex-start; flex-direction: column">
-            <!-- <p style="margin-left: -2.2rem">User Level:</p> -->
             <FormField>
               <template v-slot:input>
                 <Multiselect
@@ -82,10 +80,6 @@
           </div>
         </div>
         <div class="invite-form__actions">
-          <!-- <div @click="onConfirmSlackInvite" style="display: flex; align-items: center">
-            <CheckBox :checked="userInviteForm.field.slackInvite.value" />
-            <span style="margin-top: 0.25rem; margin-left: 0.25rem">Send Slack Invite</span>
-          </div> -->
           <template>
             <PulseLoadingSpinnerButton
               @click="handleInvite"
@@ -176,9 +170,6 @@
             <img src="@/assets/images/gmailCal.png" alt="" style="height: 0.8rem" />
           </span>
         </div>
-        <!-- <div style="color: white" class="invite-list__section__item invite-list__status">
-          Active workflows: {{user.}}
-        </div> -->
       </div>
       <div v-for="member in team.list" :key="member.id" class="invite-list__section__container">
         <template v-if="member.id !== user.id">
@@ -235,9 +226,6 @@
               <img src="@/assets/images/gmailCal.png" alt="" style="height: 0.8rem" />
             </span>
           </div>
-          <!-- <div class="invite-list__section__item invite-list__status">
-            <p>3</p>
-          </div> -->
         </template>
       </div>
     </div>
@@ -249,7 +237,6 @@ import { UserInviteForm } from '@/services/users/forms'
 import Organization from '@/services/organizations'
 import CollectionManager from '@/services/collectionManager'
 import Modal from '../../../components/InviteModal'
-import Button from '@thinknimble/button'
 import CheckBox from '@/components/CheckBoxUpdated'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import FormField from '@/components/forms/FormField'
@@ -297,7 +284,6 @@ export default {
       }),
     }
   },
-  watch: {},
   async created() {
     this.refresh()
     await this.listUsers()
@@ -307,11 +293,7 @@ export default {
       this.userInviteForm.field.slackId.value = this.selectedMember.id
     },
     mapUserLevel() {
-      console.log(this.selectedLevel.value)
       this.userInviteForm.field.userLevel.value = this.selectedLevel.value
-    },
-    console(wrd) {
-      console.log(wrd)
     },
     async listUsers(cursor = null) {
       const res = await SlackOAuth.api.listUsers(cursor)
@@ -320,21 +302,6 @@ export default {
         responseMetadata: { nextCursor: res.nextCursor },
       })
       this.slackMembers = results
-      // console.log(res)
-      // console.log(results)
-      // console.log(this.slackMembers)
-    },
-    onConfirmSlackInvite() {
-      if (!this.userInviteForm.field.slackInvite.value) {
-        let confirmSlack = confirm(
-          'This will post a message to the channel you selected tagging the user to sign up',
-        )
-        if (confirmSlack) {
-          this.userInviteForm.field.slackInvite.value = true
-        }
-      } else {
-        this.userInviteForm.field.slackInvite.value = false
-      }
     },
     async refresh() {
       this.user = this.$store.state.user
@@ -402,9 +369,6 @@ export default {
       return this.$store.state.user.isStaff
     },
   },
-  // beforeMount() {
-  //   console.log(this.user)
-  // },
 }
 </script>
 <style lang="scss" scoped>
@@ -536,7 +500,6 @@ export default {
   display: flex;
   flex-flow: row;
   justify-content: center;
-  // height: 80vh;
   width: 80%;
 }
 /*
@@ -548,13 +511,8 @@ Override dropdown select input field
   min-width: 17vw;
   margin-left: -2.2rem;
 }
-// ::v-deep .tn-dropdown__options__option {
-//   color: $base-gray;
-//   font-weight: bold;
-// }
 form,
 .success-prompt {
-  //   margin-top: 3.125rem;
   width: 100%;
   background-color: $white;
   height: 50vh;
@@ -586,7 +544,6 @@ button {
   min-height: 64vh;
   display: flex;
   align-items: center;
-  // justify-content: center;
   flex-direction: column;
   background-color: white;
   color: $base-gray;
@@ -622,7 +579,6 @@ button {
 }
 .invite-list {
   &__title {
-    // font-weight: bold;
     margin-bottom: 2rem;
   }
   &__container {

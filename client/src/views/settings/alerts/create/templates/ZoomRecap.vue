@@ -52,38 +52,6 @@
               </template>
             </Multiselect>
           </div>
-          <!-- <div class="items_height">
-              <p
-                :key="i"
-                v-for="(item, i) in form.field.alertTargets.value"
-                :class="form.field.alertTargets.value ? 'selected__item' : ''"
-                @click="removeItemFromTargetArray(item)"
-              >
-                <img
-                  src="@/assets/images/remove.png"
-                  style="height: 1rem; margin-right: 0.25rem"
-                  alt=""
-                />
-                {{ item.length ? checkInteger(item) : '' }}
-              </p>
-            </div> -->
-
-          <!-- <div v-if="userIds.length > 0" class="items_height">
-            <p
-              :key="item"
-              v-for="item in userIds"
-              @click="removeUser(item)"
-              :class="userIds.length > 0 ? 'selected__items' : 'visible'"
-              style="margin-top: 1.5rem"
-            >
-              <img
-                src="@/assets/images/remove.png"
-                style="height: 1rem; margin-right: 0.25rem"
-                alt=""
-              />
-              {{ getUserName(item) }}
-            </p>
-          </div> -->
         </div>
 
         <div>
@@ -176,20 +144,6 @@
                 </Multiselect>
               </template>
             </FormField>
-
-            <!-- <p
-              v-if="recapChannel"
-              @click="removeRecapChannel"
-              :class="recapChannel ? 'selected__item' : 'visible'"
-              style="margin-top: -0.25rem"
-            >
-              <img
-                src="@/assets/images/remove.png"
-                style="height: 1rem; margin-right: 0.25rem; margin-top: 0.25rem"
-                alt=""
-              />
-              {{ getChannelName(recapChannel) }}
-            </p> -->
           </div>
         </div>
       </div>
@@ -234,7 +188,6 @@ export default {
       recapChannel: '',
       recapChannelId: '',
       createdZoomChannel: '',
-      // test: '',
       userIds: [],
       pipelines: [],
       users: CollectionManager.create({ ModelClass: User }),
@@ -259,27 +212,6 @@ export default {
     }
   },
   methods: {
-    test() {
-      console.log(this.userList)
-    },
-    removeItemFromTargetArray(item) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value =
-        this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.filter(
-          (i) => i !== item,
-        )
-    },
-    checkInteger(str) {
-      return /\d/.test(str) ? this.user.fullName : str
-    },
-    removeUser(id) {
-      this.userIds = this.userIds.filter((i) => i !== id)
-    },
-    checkIds() {
-      console.log(this.userIds)
-    },
-    setChannel(obj) {
-      this.recapChannelId = obj.id
-    },
     async handleRecapUpdate(recap_channel) {
       if (typeof recap_channel === 'object') {
         recap_channel = recap_channel.id
@@ -297,9 +229,6 @@ export default {
         timeout: 2000,
       })
     },
-    removeRecapChannel() {
-      this.recapChannel = ''
-    },
     logNewName(str) {
       let new_str = ''
       new_str = str.replace(/\s+/g, '-').toLowerCase()
@@ -307,12 +236,6 @@ export default {
     },
     changeCreate() {
       this.create = !this.create
-    },
-    getChannelName(id) {
-      return this.userChannelOpts.channels.filter((channel) => channel.id == id)[0].name
-    },
-    getUserName(id) {
-      return this.userTargetsOpts.filter((user) => user.id == id)[0].fullName
     },
     async listUserChannels(cursor = null) {
       const res = await SlackOAuth.api.listUserChannels(cursor)
@@ -411,32 +334,6 @@ export default {
     },
     slackId() {
       return this.$store.state.user.slackRef.slackId
-    },
-    userTargetsOpts() {
-      if (this.user.userLevel == 'MANAGER') {
-        return [
-          ...this.alertTargetOpts.map((opt) => {
-            return {
-              id: opt.value,
-              fullName: opt.key,
-            }
-          }),
-          ...this.users.list,
-        ]
-      } else {
-        return [{ fullName: 'Myself', id: 'SELF' }]
-      }
-    },
-    async onSearchUsers(v) {
-      this.users.pagination = new Pagination()
-      this.users.filters = {
-        ...this.users.filters,
-        search: v,
-      }
-      await this.users.refresh()
-    },
-    async onUsersNextPage() {
-      await this.users.addNextPage()
     },
   },
 }
@@ -615,7 +512,6 @@ input[type='text']:focus {
   font-size: 14px;
 }
 input {
-  // box-shadow: 3px 4px 7px $very-light-gray;
   border: 1px solid #e8e8e8;
   border-radius: 0.25rem;
   margin-top: 0.5rem;
@@ -647,27 +543,4 @@ img {
 .visible {
   display: none;
 }
-// .dropdown {
-//   font-family: Lato-Regular, sans-serif;
-//   font-weight: normal;
-//   font-stretch: normal;
-//   font-style: normal;
-//   letter-spacing: normal;
-//   font-size: 16px;
-//   border-radius: 4px;
-//   line-height: 1;
-//   letter-spacing: 0.5px;
-//   color: #4d4e4c;
-//   height: 2.5rem;
-//   background-color: white;
-//   border: 1px solid #5d5e5e;
-//   width: 12vw;
-//   // padding: 0 0 0 1rem;
-//   margin: 1rem;
-//   -webkit-box-shadow: 1px 4px 7px black;
-//   box-shadow: 1px 4px 7px black;
-//   padding: 0.5rem 1rem;
-//   cursor: pointer;
-//   margin-top: -0.5rem;
-// }
 </style>

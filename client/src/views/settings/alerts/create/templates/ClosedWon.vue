@@ -302,21 +302,6 @@ export default {
     setRecipient() {
       this.realTimeAlertForm.field.recipients.value = this.selectedChannel.id
     },
-    checkInteger(str) {
-      return /\d/.test(str) ? this.user.fullName : str
-    },
-    handleUpdate() {
-      this.loading = true
-
-      User.api
-        .update(this.user.id, this.userConfigForm.value)
-        .then((response) => {
-          this.$store.dispatch('updateUser', User.fromAPI(response.data))
-        })
-        .catch((e) => {
-          console.log(e)
-        })
-    },
     changeCreate() {
       this.create = !this.create
     },
@@ -327,34 +312,6 @@ export default {
         responseMetadata: { nextCursor: res.nextCursor },
       })
       this.userChannelOpts = results
-    },
-    onConvert(val) {
-      let newVal = ''
-      if (val == 0) {
-        newVal = 'Monday'
-      } else if (val == 1) {
-        newVal = 'Tuesday'
-      } else if (val == 2) {
-        newVal = 'Wednesday'
-      } else if (val == 3) {
-        newVal = 'Thursday'
-      } else if (val == 4) {
-        newVal = 'Friday'
-      } else if (val == 5) {
-        newVal = 'Saturday'
-      } else if (val == 6) {
-        newVal = 'Sunday'
-      }
-      return newVal
-    },
-    onNextPage() {
-      this.pageNumber <= 0 ? (this.pageNumber += 1) : (this.pageNumber = this.pageNumber)
-    },
-    onPreviousPage() {
-      this.pageNumber >= 1 ? (this.pageNumber -= 1) : (this.pageNumber = this.pageNumber)
-    },
-    goToTemplates() {
-      this.$router.push({ name: 'CreateNew' })
     },
     async createChannel(name) {
       const res = await SlackOAuth.api.createChannel(name)
@@ -477,43 +434,7 @@ export default {
         this.savingTemplate = false
       }
     },
-    bindText(val) {
-      this.$refs['message-body'].quill.focus()
-      let start = 0
-      if (this.editor.selection.lastRange) {
-        start = this.editor.selection.lastRange.index
-      }
-      this.editor.insertText(start, `{ ${val} }`)
-    },
 
-    async onSearchFields(v) {
-      this.fields.pagination = new Pagination()
-      this.fields.filters = {
-        ...this.fields.filters,
-        search: v,
-      }
-      await this.fields.refresh()
-    },
-    async fieldNextPage() {
-      await this.fields.addNextPage()
-    },
-    async onSearchUsers(v) {
-      this.users.pagination = new Pagination()
-      this.users.filters = {
-        ...this.users.filters,
-        search: v,
-      }
-      await this.users.refresh()
-    },
-    async onUsersNextPage() {
-      await this.users.addNextPage()
-    },
-    showList() {
-      this.listVisible = !this.listVisible
-    },
-    showDropDown() {
-      this.dropdownVisible = !this.dropdownVisible
-    },
     getStageForms() {
       // users can only create one form for the stage orderd by stage
       let forms = []
@@ -541,75 +462,6 @@ export default {
     },
   },
   computed: {
-    userTargetsOpts() {
-      if (this.user.userLevel == 'MANAGER') {
-        return [
-          ...this.alertTargetOpts.map((opt) => {
-            return {
-              id: opt.value,
-              fullName: opt.key,
-            }
-          }),
-          ...this.users.list,
-        ]
-      } else {
-        return [{ fullName: 'Myself', id: 'SELF' }]
-      }
-    },
-    recipientOpts() {
-      if (this.user.userLevel == 'MANAGER') {
-        return [
-          ...this.alertRecipientOpts.map((opt) => {
-            return {
-              id: opt.value,
-              fullName: opt.key,
-            }
-          }),
-          ...this.users.list,
-        ]
-      } else {
-        return [{ fullName: 'Myself', id: 'SELF' }]
-      }
-    },
-    filteredUserTargets() {
-      if (this.searchQuery) {
-        return this.userTargetsOpts.filter((key) => {
-          return key.fullName.toLowerCase().startsWith(this.searchQuery.toLowerCase())
-        })
-      } else {
-        return this.userTargetsOpts
-      }
-    },
-    filteredRecipients() {
-      if (this.searchText) {
-        return this.recipientOpts.filter((key) => {
-          return key.fullName.toLowerCase().startsWith(this.searchText.toLowerCase())
-        })
-      } else {
-        return this.recipientOpts
-      }
-    },
-    filteredChannels() {
-      if (this.searchChannels) {
-        return this.reversedChannels.filter((key) => {
-          return key.name.toLowerCase().startsWith(this.searchChannels.toLowerCase())
-        })
-      } else {
-        return this.reversedChannels
-      }
-    },
-    reversedChannels() {
-      return this.channelOpts.channels.reverse()
-    },
-    formValue() {
-      return this.alertTemplateForm.value
-    },
-    editor() {
-      return this.$refs['message-body'].quill
-    },
-    selection() {
-      return this.editor.selection.lastRange
-    },
     user() {
       return this.$store.state.user
     },
@@ -933,10 +785,6 @@ input {
   border-bottom: 2px solid $soft-gray;
 }
 .forecast__collection {
-  //   display: flex;
-  //   align-items: flex-start;
-  //   justify-content: space-evenly;
-  //   flex-direction: row;
   background-color: white;
   box-shadow: 3px 4px 7px $very-light-gray;
   border-radius: 0.75rem;
@@ -1094,10 +942,6 @@ textarea {
     font-size: 11px;
   }
 }
-.alerts-page__message-options-body__bindings__fields {
-  // margin: 3rem 0rem;
-  // width: 40rem;
-}
 .green {
   color: $dark-green;
 }
@@ -1210,15 +1054,5 @@ textarea {
   border: 2px solid white;
   cursor: pointer;
 }
-// ::-webkit-scrollbar {
-//   background-color: $panther;
-//   -webkit-appearance: none;
-//   width: 4px;
-//   height: 100%;
-// }
-// ::-webkit-scrollbar-thumb {
-//   border-radius: 2px;
-//   background-color: $panther-silver;
-// }
 </style>
 

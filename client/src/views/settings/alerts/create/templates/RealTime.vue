@@ -75,40 +75,6 @@
           </button>
         </div>
       </div>
-
-      <!-- <div class="card__">
-        <div class="card__header">
-          <h3>Closed <span style="color: #199e54">Won</span></h3>
-        </div>
-
-        <div class="row">
-          <img
-            style="height: 2.25rem; margin-right: 1rem"
-            src="@/assets/images/slackLogo.png"
-            alt=""
-          />
-          <img
-            style="height: 1.75rem; margin-right: 1rem; filter: invert(60%)"
-            src="@/assets/images/plusOne.png"
-            alt=""
-          />
-          <img
-            style="height: 2.25rem; margin-right: 1rem"
-            src="@/assets/images/salesforce.png"
-            alt=""
-          />
-        </div>
-
-        <div style="margin-top: 2rem">
-          <button
-            v-if="hasSalesforceIntegration && hasSlackIntegration"
-            @click="goToClosedWon"
-            class="orange_button"
-          >
-            Activate
-          </button>
-        </div>
-      </div> -->
     </div>
   </div>
 </template>
@@ -129,7 +95,7 @@ import AlertGroup from '@/views/settings/alerts/create/_AlertGroup'
 
 import AlertTemplate, { AlertTemplateForm } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 import { SObjectField, NON_FIELD_ALERT_OPTS, SOBJECTS_LIST } from '@/services/salesforce'
 import User from '@/services/users'
 import { SlackListResponse } from '@/services/slack'
@@ -159,146 +125,25 @@ export default {
     this.templates.refresh()
   },
   methods: {
-    showList() {
-      this.listVisible = !this.listVisible
-    },
-    showDropDown() {
-      this.dropdownVisible = !this.dropdownVisible
-    },
-    goToCloseDateApproaching() {
-      this.$router.push({ name: 'CloseDateApproaching' })
-    },
-    goToClosedWon() {
-      this.$router.push({ name: 'ClosedWon' })
-    },
-    goToCloseDatePassed() {
-      this.$router.push({ name: 'CloseDatePassed' })
-    },
     goToStageAdvanced() {
       this.$router.push({ name: 'DealMovement' })
-    },
-    goToMeetingLogged() {
-      this.$router.push({ name: 'MeetingLogged' })
-    },
-    goToDealRotting() {
-      this.$router.push({ name: 'DealRotting' })
-    },
-    goToUpdateForecast() {
-      this.$router.push({ name: 'UpdateForecast' })
-    },
-    goToLogZoom() {
-      this.$router.push({ name: 'LogZoom' })
     },
     goToZoomRecap() {
       this.$router.push({ name: 'ZoomRecap' })
     },
-    goToNextStep() {
-      this.$router.push({ name: 'NextStep' })
-    },
-    getWorkflowIds(arr1, arr2) {
-      return arr1.some((item) => arr2.includes(item))
-    },
   },
   computed: {
-    workFlowIds() {
-      let arr = []
-      for (let i = 0; i < this.templates.list.length; i) {
-        arr.push(this.templates.list[i].id)
-      }
-      return arr
-    },
     hasRealTimeConfigs() {
       return !!this.user.slackAccount.realtimeAlertConfigs
     },
     hasSalesforceIntegration() {
       return !!this.$store.state.user.salesforceAccount
     },
-    hasZoomIntegration() {
-      return !!this.$store.state.user.zoomAccount && this.$store.state.user.hasZoomIntegration
-    },
-    hasGongIntegration() {
-      return !!this.$store.state.user.gongAccount && this.$store.state.user.hasGongIntegration
-    },
-    hasSalesloftIntegration() {
-      return (
-        !!this.$store.state.user.salesloftAccount && this.$store.state.user.hasSalesloftIntegration
-      )
-    },
-    orgHasSlackIntegration() {
-      return !!this.$store.state.user.organizationRef.slackIntegration
-    },
     hasSlackIntegration() {
       return !!this.$store.state.user.slackRef
     },
-    hasNylasIntegration() {
-      return !!this.$store.state.user.nylas
-    },
-    userCanIntegrateSlack() {
-      return this.$store.state.user.isAdmin
-    },
     recapChannel() {
       return this.$store.state.user.slackAccount.recapChannel
-    },
-    userTargetsOpts() {
-      if (this.user.userLevel == 'MANAGER') {
-        return [
-          ...this.alertTargetOpts.map((opt) => {
-            return {
-              id: opt.value,
-              fullName: opt.key,
-            }
-          }),
-          ...this.users.list,
-        ]
-      } else {
-        return [{ fullName: 'Myself', id: 'SELF' }]
-      }
-    },
-    recipientOpts() {
-      if (this.user.userLevel == 'MANAGER') {
-        return [
-          ...this.alertRecipientOpts.map((opt) => {
-            return {
-              id: opt.value,
-              fullName: opt.key,
-            }
-          }),
-          ...this.users.list,
-        ]
-      } else {
-        return [{ fullName: 'Myself', id: 'SELF' }]
-      }
-    },
-    formValue() {
-      return this.alertTemplateForm.value
-    },
-    editor() {
-      return this.$refs['message-body'].quill
-    },
-    selection() {
-      return this.editor.selection.lastRange
-    },
-    alertObj() {
-      return {
-        title: this.formValue.title,
-        message: this.formValue.alertMessages[0].body,
-        resourceType: this.selectedResourceType,
-      }
-    },
-    user() {
-      return this.$store.state.user
-    },
-    isAdmin() {
-      return this.$store.state.user.isAdmin
-    },
-    hasZoomChannel() {
-      return this.$store.state.user.slackAccount.zoomChannel
-    },
-    userLevel() {
-      return this.$store.state.user.userLevel
-    },
-    isOnboarding() {
-      return this.$store.state.user.onboarding
     },
     selectedResourceType: {
       get() {
@@ -525,10 +370,6 @@ textarea {
     font-size: 11px;
   }
 }
-.alerts-page__message-options-body__bindings__fields {
-  // margin: 3rem 0rem;
-  // width: 40rem;
-}
 .gray {
   color: $gray;
 }
@@ -563,8 +404,6 @@ textarea {
   font-size: 14px;
   margin-top: -0.5rem;
   color: $gray;
-}
-.title {
 }
 .group {
   display: flex;

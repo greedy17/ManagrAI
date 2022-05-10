@@ -106,19 +106,6 @@
                 </Multiselect>
               </template>
             </FormField>
-
-            <!-- <p
-              v-if="zoomChannel"
-              @click="removeZoomChannel"
-              :class="zoomChannel ? 'selected__item' : 'visible'"
-            >
-              <img
-                src="@/assets/images/remove.png"
-                style="height: 1rem; margin-right: 0.25rem; margin-top: 0.25rem"
-                alt=""
-              />
-              {{ getChannelName(zoomChannel) }}
-            </p> -->
           </div>
           <div style="margin-top: 1.5rem" v-if="channelCreated || zoomChannel">
             <div v-if="!create">
@@ -134,18 +121,6 @@
           </div>
         </div>
       </div>
-      <!-- <div v-if="channelCreated || zoomChannel" class="flex-end">
-        <div v-if="!create">
-          <button class="green__button bouncy" @click="handleZoomUpdate(zoomChannel)">
-            Activate Channel
-          </button>
-        </div>
-        <div v-else>
-          <button class="green__button bouncy" @click="handleZoomUpdate(createdZoomChannel)">
-            Activate Channel
-          </button>
-        </div>
-      </div> -->
     </div>
   </div>
 </template>
@@ -186,10 +161,6 @@ export default {
     }
   },
   methods: {
-    test() {
-      console.log(this.userChannelOpts.channels)
-      console.log(this.zoomChannel)
-    },
     async handleZoomUpdate(zoom_channel) {
       if (typeof zoom_channel === 'object') {
         zoom_channel = zoom_channel.id
@@ -205,9 +176,6 @@ export default {
         timeout: 2000,
       })
     },
-    removeZoomChannel() {
-      this.zoomChannel = ''
-    },
     logNewName(str) {
       let new_str = ''
       new_str = str.replace(/\s+/g, '-').toLowerCase()
@@ -215,9 +183,6 @@ export default {
     },
     changeCreate() {
       this.create = !this.create
-    },
-    getChannelName(id) {
-      return this.userChannelOpts.channels.filter((channel) => channel.id == id)[0].name
     },
     async listUserChannels(cursor = null) {
       const res = await SlackOAuth.api.listUserChannels(cursor)

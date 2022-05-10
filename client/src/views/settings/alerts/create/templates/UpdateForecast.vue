@@ -213,19 +213,6 @@
                   </Multiselect>
                 </template>
               </FormField>
-
-              <!-- <p
-                v-if="form.field.recipients.value.length > 0"
-                @click="removeTarget"
-                :class="form.field.recipients.value ? 'selected__item' : 'visible'"
-              >
-                <img
-                  src="@/assets/images/remove.png"
-                  style="height: 1rem; margin-right: 0.25rem"
-                  alt=""
-                />
-                {{ form.field._recipients.value.name }}
-              </p> -->
             </div>
           </div>
         </div>
@@ -394,15 +381,6 @@ export default {
     },
   },
   methods: {
-    getUser(userInfo) {
-      if (this.userIds.includes(userInfo)) {
-        let selectedUser = this.users.list.filter((user) => user.id === userInfo)
-
-        return selectedUser[0].fullName
-      } else {
-        return userInfo
-      }
-    },
     repsPipeline() {
       if (this.userLevel !== 'MANAGER') {
         this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
@@ -656,105 +634,8 @@ export default {
         }
       }
     },
-    bindText(val) {
-      this.$refs['message-body'].quill.focus()
-      let start = 0
-      if (this.editor.selection.lastRange) {
-        start = this.editor.selection.lastRange.index
-      }
-      this.editor.insertText(start, `{ ${val} }`)
-    },
-    onAddAlertGroup() {
-      // length determines order
-      const order = this.alertTemplateForm.field.alertGroups.groups.length
-      if (order >= 3) {
-        this.$Alert.alert({ message: 'You can only add 3 groups', timeout: 2000 })
-        return
-      }
-      // set next order
-
-      this.alertTemplateForm.addToArray('alertGroups', new AlertGroupForm())
-      this.alertTemplateForm.field.alertGroups.groups[order].field.groupOrder.value = order
-    },
-    onAddAlertSetting() {
-      if (this.alertTemplateForm.field.alertConfig.groups.length >= 3) {
-        this.$Alert.alert({ message: 'You can only add 3 configurations', timeout: 2000 })
-        return
-      }
-      this.alertTemplateForm.addToArray('alertConfig', new AlertConfigForm())
-    },
-    onRemoveAlertGroup(i) {
-      // get order and update options
-
-      if (this.alertTemplateForm.field.alertGroups.groups.length - 1 <= 0) {
-        return
-      }
-
-      const order = this.alertTemplateForm.field.alertGroups.groups[i].field.groupOrder.value
-
-      this.alertTemplateForm.removeFromArray('alertGroups', i)
-
-      let greaterThan = this.alertTemplateForm.field.alertGroups.groups.slice(i)
-
-      greaterThan.forEach((el, index) => {
-        el.field.groupOrder.value = order + index
-      })
-    },
-    onRemoveSetting(i) {
-      if (this.alertTemplateForm.field.alertConfig.groups.length - 1 <= 0) {
-        return
-      }
-      this.alertTemplateForm.removeFromArray('alertConfig', i)
-    },
-    async onSearchFields(v) {
-      this.fields.pagination = new Pagination()
-      this.fields.filters = {
-        ...this.fields.filters,
-        search: v,
-      }
-      await this.fields.refresh()
-    },
-    async fieldNextPage() {
-      await this.fields.addNextPage()
-    },
-    async onSearchUsers(v) {
-      this.users.pagination = new Pagination()
-      this.users.filters = {
-        ...this.users.filters,
-        search: v,
-      }
-      await this.users.refresh()
-    },
-    async onUsersNextPage() {
-      await this.users.addNextPage()
-    },
-    showList() {
-      this.listVisible = !this.listVisible
-    },
-    showDropDown() {
-      this.dropdownVisible = !this.dropdownVisible
-    },
-    setAlertValues(date, name) {
-      this.alertTemplateForm.field.title = name
-      this.alertTemplateForm.alertGroups.groups[0].fields.alertOperands.groups[0].fields.operandValue.value =
-        date
-      this.alertTemplateForm.alertGroups.groups[0].fields.alertOperands.groups[0].fields.operandOperator.value =
-        '<='
-      if (date >= 0) {
-        this.alertGroups.groups[0].fields.alertOperands.groups[0].fields.field.operandOperator.value =
-          '='
-      }
-    },
-    setRecurrenceDay(val) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = val
-    },
   },
   computed: {
-    userIds() {
-      return this.users.list.map((field) => {
-        return field.id
-      })
-    },
     userLevel() {
       return this.$store.state.user.userLevel
     },
@@ -771,67 +652,6 @@ export default {
         ]
       } else {
         return [{ fullName: 'Myself', id: 'SELF' }]
-      }
-    },
-    recipientOpts() {
-      if (this.user.userLevel == 'MANAGER') {
-        return [
-          ...this.alertRecipientOpts.map((opt) => {
-            return {
-              id: opt.value,
-              fullName: opt.key,
-            }
-          }),
-          ...this.users.list,
-        ]
-      } else {
-        return [{ fullName: 'Myself', id: 'SELF' }]
-      }
-    },
-    filteredUserTargets() {
-      if (this.searchQuery) {
-        return this.userTargetsOpts.filter((key) => {
-          return key.fullName.toLowerCase().startsWith(this.searchQuery.toLowerCase())
-        })
-      } else {
-        return this.userTargetsOpts
-      }
-    },
-    filteredRecipients() {
-      if (this.searchText) {
-        return this.recipientOpts.filter((key) => {
-          return key.fullName.toLowerCase().startsWith(this.searchText.toLowerCase())
-        })
-      } else {
-        return this.recipientOpts
-      }
-    },
-    filteredChannels() {
-      if (this.searchChannels) {
-        return this.reversedChannels.filter((key) => {
-          return key.name.toLowerCase().startsWith(this.searchChannels.toLowerCase())
-        })
-      } else {
-        return this.reversedChannels
-      }
-    },
-    reversedChannels() {
-      return this.channelOpts.channels.reverse()
-    },
-    formValue() {
-      return this.alertTemplateForm.value
-    },
-    editor() {
-      return this.$refs['message-body'].quill
-    },
-    selection() {
-      return this.editor.selection.lastRange
-    },
-    alertObj() {
-      return {
-        title: this.formValue.title,
-        message: this.formValue.alertMessages[0].body,
-        resourceType: this.selectedResourceType,
       }
     },
     user() {
@@ -1347,10 +1167,6 @@ textarea {
     font-size: 11px;
   }
 }
-.alerts-page__message-options-body__bindings__fields {
-  // margin: 3rem 0rem;
-  // width: 40rem;
-}
 .green {
   color: $dark-green;
 }
@@ -1463,14 +1279,4 @@ textarea {
   border: 2px solid white;
   cursor: pointer;
 }
-// ::-webkit-scrollbar {
-//   background-color: $panther;
-//   -webkit-appearance: none;
-//   width: 4px;
-//   height: 100%;
-// }
-// ::-webkit-scrollbar-thumb {
-//   border-radius: 2px;
-//   background-color: $panther-silver;
-// }
 </style>
