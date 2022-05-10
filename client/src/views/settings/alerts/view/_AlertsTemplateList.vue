@@ -31,21 +31,6 @@
       >
         Edit, Run, and Schedule your saved Automations
       </p>
-      <!-- <div v-if="!alertsCount(templates.list.length)">
-        <h3
-          class="bouncy"
-          style="
-            color: #5d5e5e;
-            font-weight: bold;
-            text-align: center;
-            margin-top: 16vh;
-            font-size: 3rem;
-          "
-        >
-          0
-        </h3>
-        <p style="font-weight: bold; color: #5d5e5e; text-align: center">Nothing here.. (o^^)o</p>
-      </div> -->
     </div>
     <div v-if="!alertsCount(templates.list.length)">
       <h3
@@ -89,11 +74,6 @@
               >
                 Run now
               </button>
-              <!-- <div class="centered">
-              <button @click="onTest(alert.id)" class="test-button">Test Alert</button>
-
-              <p style="margin-left: 0.5rem">Results: {{ alert.instances.length }}</p>
-            </div> -->
             </div>
             <div class="added-collection__footer">
               <p style="font-size: 13px">Schedule:</p>
@@ -174,11 +154,6 @@
         </div>
       </transition>
     </template>
-
-    <!-- <div class="center-loader" v-else>
-      <div class="dot-flashing"></div>
-    </div> -->
-
     <div class="center-loader" v-if="templates.refreshing && alertsCount(templates.list.length)">
       <Loader loaderText="Gathering your workflows" />
     </div>
@@ -237,9 +212,6 @@ export default {
       pageLoaded: false,
     }
   },
-  // mounted() {
-  //   console.log(this.hasRecapChannel)
-  // },
   async created() {
     this.templates.refresh()
     if (this.zoomChannel) {
@@ -264,9 +236,6 @@ export default {
     async getZoomChannel() {
       const res = await SlackOAuth.api.channelDetails(this.zoomChannel)
       this.currentZoomChannel = res.channel.name
-    },
-    logChannels() {
-      console.log(this.userChannelOpts)
     },
     deletedTitle(id) {
       let newList = []
@@ -300,12 +269,6 @@ export default {
     },
     goToRecap() {
       this.$router.push({ name: 'ZoomRecap' })
-    },
-    hideCard() {
-      this.isHiding = true
-    },
-    goToTemplates() {
-      this.$router.push({ name: 'CreateNew' })
     },
     makeAlertCurrent(val) {
       this.currentAlert = val
@@ -354,22 +317,6 @@ export default {
         })
       }
     },
-    async onTest(id) {
-      try {
-        await AlertTemplate.api.testAlertTemplate(id)
-        this.$Alert.alert({
-          message: `Alert has been initiated to test against your data only`,
-          type: 'success',
-          timeout: 2000,
-        })
-      } catch {
-        this.$Alert.alert({
-          message: 'There was an error testing your alert',
-          type: 'error',
-          timeout: 2000,
-        })
-      }
-    },
     async onToggleAlert(id, value) {
       try {
         await AlertTemplate.api.updateAlertTemplate(id, { is_active: value })
@@ -408,9 +355,6 @@ export default {
   computed: {
     user() {
       return this.$store.state.user
-    },
-    hasSlack() {
-      return this.$store.state.user.slackAccount
     },
     hasRecapChannel() {
       return this.$store.state.user.slackAccount.recapChannel
@@ -663,11 +607,6 @@ button:disabled {
   cursor: pointer;
   font-size: 16px;
 }
-
-// .yes__button:hover,
-// .no__button:hover {
-//   filter: brightness(80%);
-// }
 .no-data {
   color: $gray;
   margin-left: 0.5rem;
@@ -700,14 +639,6 @@ button:disabled {
   flex-wrap: wrap;
   padding: 0;
 }
-// .centered__cards {
-//   display: flex;
-//   flex-direction: row;
-//   justify-content: space-evenly;
-//   align-items: center;
-//   margin-top: 2rem;
-//   flex-wrap: wrap;
-// }
 .added-collection:hover {
   box-shadow: 1px 2px 2px $very-light-gray;
   transform: scale(1.015);
@@ -776,9 +707,6 @@ button:disabled {
   width: 20px;
   height: 30px;
 }
-// img {
-//   filter: invert(90%);
-// }
 .pink {
   color: $candy;
 }
@@ -904,14 +832,4 @@ a {
 .loading-title {
   display: none;
 }
-// ::-webkit-scrollbar {
-//   background-color: $panther;
-//   -webkit-appearance: none;
-//   width: 4px;
-//   height: 100%;
-// }
-// ::-webkit-scrollbar-thumb {
-//   border-radius: 2px;
-//   background-color: $panther-silver;
-// }
 </style>

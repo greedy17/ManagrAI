@@ -83,7 +83,6 @@ export default {
       this.isSaving = false
     },
   },
-  computed: {},
 }
 </script>
 

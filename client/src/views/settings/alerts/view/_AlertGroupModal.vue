@@ -29,7 +29,7 @@ import FormField from '@/components/forms/FormField'
 /**
  * Services
  */
-import { AlertOperandForm, AlertGroupForm, AlertGroup as AlertGroupModel } from '@/services/alerts/'
+import { AlertGroupForm, AlertGroup as AlertGroupModel } from '@/services/alerts/'
 
 export default {
   /**
@@ -79,7 +79,6 @@ export default {
       this.isSaving = false
     },
   },
-  computed: {},
 }
 </script>
 

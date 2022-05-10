@@ -38,12 +38,6 @@
       </div>
       <div class="alerts-template-list__content">
         <div v-if="selectedTab == 'TEMPLATE'" class="alerts-template-list__content-template">
-          <!-- <FormField
-            :id="`resource-type-${alert.id}`"
-            :disabled="true"
-            v-model="alert.resourceType"
-          /> -->
-          <!-- <h3>{{ alert.resourceType }}</h3> -->
           <div v-if="!templateNames.includes(alert.title)">
             <h4>Edit workflow title:</h4>
             <FormField
@@ -91,10 +85,6 @@
                       alt=""
                     />
                   </span>
-
-                  <!-- <span style="margin-bottom: 1rem">
-                    {{ operand.operandOrder != 0 ? operand.operandCondition : '' }}</span
-                  > -->
                   {{ 'Condition ' + (i + 1) + ': ' }}
                   {{ getReadableOperandRow(operand) }}
                 </p>
@@ -168,12 +158,6 @@
               </Multiselect>
             </div>
           </div>
-          <!-- <div
-            class="alerts-template-list__content-message__preview"
-            style="width: 40rem; height: 20rem; overflow-y: scroll"
-          >
-            <SlackMessagePreview :alert="alertObj" />
-          </div> -->
         </div>
         <div v-if="selectedTab == 'CONFIG'" class="alerts-template-list__content-settings">
           <div class="card-rows">
@@ -218,7 +202,6 @@ import 'quill/dist/quill.bubble.css'
 import debounce from 'lodash.debounce'
 import { quillEditor } from 'vue-quill-editor'
 import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
-import moment from 'moment'
 
 //Internal
 import AlertOperandModal from '@/views/settings/alerts/view/_AlertOperandModal'
@@ -234,38 +217,25 @@ import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePrev
  *
  */
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
-import { toNumberSuffix } from '@/services/filters'
-import Form, { FormArray, FormField as FormFieldService } from '@thinknimble/tn-forms'
-import {
-  MustMatchValidator,
-  EmailValidator,
-  RequiredValidator,
-  MinLengthValidator,
-  Validator,
-} from '@thinknimble/tn-validators'
+import { FormField as FormFieldService } from '@thinknimble/tn-forms'
+import { RequiredValidator } from '@thinknimble/tn-validators'
 
 import AlertTemplate, {
   AlertMessageTemplate,
   AlertConfig,
   AlertGroup,
   AlertGroupForm,
-  AlertTemplateForm,
   AlertConfigForm,
   AlertMessageTemplateForm,
   AlertGroupOperand,
   AlertOperandForm,
 } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
-import { SObjectField, SObjectValidations, SObjectPicklist } from '@/services/salesforce'
+import { SObjectField } from '@/services/salesforce'
 import {
   ALERT_DATA_TYPE_MAP,
   INPUT_TYPE_MAP,
-  INTEGER,
   STRING,
-  DATE,
-  DECIMAL,
-  BOOLEAN,
-  DATETIME,
 } from '@/services/salesforce/models'
 const TABS = [
   { key: 'TEMPLATE', label: 'Workflow Title' },
@@ -360,22 +330,11 @@ export default {
     },
   },
   computed: {
-    alertObj() {
-      return {
-        title: this.templateTitleField.value,
-        message: this.messageTemplateForm.field.body.value,
-        resourceType: this.alert.resourceType,
-      }
-    },
-
     editor() {
       return this.$refs['message-body'].quill
     },
   },
   methods: {
-    logAlert(i) {
-      console.log(i)
-    },
     onShowOperandModal(groupIndex) {
       let newForm = new AlertOperandForm({
         operandOrder: this.alert.groupsRef[groupIndex].operandsRef.length,
@@ -465,12 +424,6 @@ export default {
         return STRING
       }
     },
-    getInputType(type) {
-      if (type && INPUT_TYPE_MAP[type.dataType]) {
-        return INPUT_TYPE_MAP[type.dataType]
-      }
-      return 'text'
-    },
     getReadableOperandRow(rowData) {
       let operandOperator = rowData.operandOperator
       let value = rowData.operandValue
@@ -504,9 +457,6 @@ export default {
       let recurrenceDayString = config.recurrenceDay
 
       if (config.recurrenceFrequency == 'WEEKLY') {
-        // let day = this.weeklyOpts.find((opt) => opt.value == config.recurrenceDay)
-        //   ? this.weeklyOpts.find((opt) => opt.value == config.recurrenceDay).key
-        //   : config.recurrenceDay
         recurrenceDayString = `Run your selected days (Weekly)`
       } else if ((config.recurrenceFrequency = 'MONTHLY')) {
         let day = config.recurrenceDay
@@ -586,14 +536,6 @@ export default {
           console.log(e)
         }
       }
-    },
-    async onSearchFields(v) {
-      this.fields.pagination = new Pagination()
-      this.fields.filters = {
-        ...this.fields.filters,
-        search: v,
-      }
-      await this.fields.refresh()
     },
     async fieldNextPage() {
       await this.fields.addNextPage()
@@ -941,7 +883,6 @@ h3 {
 }
 ::v-deep .input-content {
   border: 1px solid #e8e8e8;
-  // box-shadow: 3px 4px 7px $very-light-gray;
   color: $panther;
 }
 
@@ -970,15 +911,6 @@ h3 {
       color: white;
       position: relative;
     }
-    // &--active:after {
-    //   content: '';
-    //   background: $darker-green;
-    //   position: absolute;
-    //   left: 0;
-    //   bottom: 0.3rem;
-    //   height: 70%;
-    //   width: 3px;
-    // }
     &--active:hover {
       color: white !important;
     }
@@ -989,8 +921,6 @@ h3 {
   &__group {
     display: flex;
     padding: 0.75rem;
-    &__items {
-    }
     &--large {
       flex: 1.5 0 auto;
     }
@@ -1030,8 +960,6 @@ h3 {
     align-items: flex-start;
     height: 100%;
   }
-  &__preview {
-  }
 }
 .left {
   margin-bottom: 5rem;
@@ -1040,14 +968,4 @@ h3 {
   display: flex;
   align-items: center;
 }
-// ::-webkit-scrollbar {
-//   background-color: $panther;
-//   -webkit-appearance: none;
-//   width: 4px;
-//   height: 100%;
-// }
-// ::-webkit-scrollbar-thumb {
-//   border-radius: 2px;
-//   background-color: $panther-silver;
-// }
 </style>
