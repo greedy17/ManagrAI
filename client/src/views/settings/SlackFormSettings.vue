@@ -89,96 +89,13 @@
     <h1 v-else style="color: black; padding-bottom: 0.5rem; border-bottom: 3px solid #199e54">
       Stage Specific Forms
     </h1>
-    <!-- <modal name="objects-modal" heading="Select a Stage">
-      <div class="objects__">
-        <img class="tooltip image" src="@/assets/images/toolTip.png" @click="toggleObjectsModal" />
-        <div class="required__title">Forms</div>
-        <div>
-          <p class="mar">
-            <strong>Update:</strong>
-            This form appears whenever you see the “Update” button
-          </p>
-
-          <p class="mar">
-            <strong>Create:</strong>
-            This form is triggered when you run the slack command, "managr-create"
-          </p>
-          <p class="mar">
-            <strong>Stage Related Fields:</strong>
-            Additional fields needed to advance Stages
-          </p>
-        </div>
-      </div>
-    </modal> -->
-
-    <!-- <div class="header__container" v-if="!resource">
-      <div class="col" style="margin-top: 4rem">
-        <h3 class="header__title">Select a Salesforce Object</h3>
-        <h3 class="muted">
-          <strong style="font-size: 17px">Pro-tip:</strong> Start with the
-          <strong style="font-size: 16px; color: #cc3873">Opportunity</strong> and
-          <strong style="font-size: 16px; color: #cc3873">Contact</strong>
-          objects, they are the most used.
-        </h3>
-      </div>
-    </div> -->
 
     <div class="centered__stage">
-      <!-- <div @click.prevent="toggleSelectedFormResource(resource)" class="box-updated__header">
-            <span class="box-updated__title">
-              {{ resource }}
-              <img
-                v-if="selectedTab && isVisible"
-                style="height: 1rem; margin-left: 1rem"
-                src="@/assets/images/tooltipgray.png"
-                @click.prevent.stop="toggleRequiredModal"
-              />
-            </span>
-          </div> -->
-
-      <!-- <div :class="resource ? 'search_buttons_row' : ''">
-
-        <div class="row">
-          <div v-if="resource">
-            <button
-              @click="selectForm(resource, UPDATE)"
-              class="buttons__"
-              :class="this.formType == UPDATE ? 'activeTab' : 'buttons__'"
-            >
-              <img src="@/assets/images/edit.png" alt="update" />
-              {{ ` Update ${resource}` }}
-            </button>
-
-            <button
-              @click="selectForm(resource, CREATE)"
-              :class="this.formType == CREATE ? 'activeTab' : 'buttons__'"
-            >
-              <img src="@/assets/images/create.png" alt="create" />
-              {{ ` Create ${resource}` }}
-            </button>
-            <button
-              @click="openStageDropDown"
-              v-if="resource == OPPORTUNITY"
-              :class="this.formType == STAGE_GATING ? 'activeTab' : 'buttons__'"
-            >
-              <img src="@/assets/images/stageStairs.png" alt="" />
-              Stage Related Fields
-            </button>
-            <img
-              style="cursor: pointer"
-              src="@/assets/images/info.png"
-              @click.prevent.stop="toggleObjectsModal"
-            />
-          </div>
-        </div>
-      </div> -->
-
       <div
         v-if="stageDropDownOpen && resource == 'Opportunity'"
         :class="selectedStage ? 'small__stage__dropdown' : 'stage__dropdown'"
       >
         <div>
-          <!-- <div v-if="selectedStage">{{ selectedStage }} Form</div> -->
           <div class="stage__dropdown__header">Your Stage Gate Forms</div>
           <div
             v-for="(form, i) in formStages"
@@ -221,12 +138,6 @@
         </div>
       </template>
     </div>
-    <!-- 
-    <div class="tip-continue" v-if="resource">
-      <button class="primary-button">
-        <router-link :to="{ name: 'ListTemplates' }">Continue to Smart Alerts </router-link>
-      </button>
-    </div> -->
   </div>
 </template>
 
@@ -238,7 +149,7 @@ import CustomSlackForm from '@/views/settings/CustomSlackForm'
 import { mapState } from 'vuex'
 import SlackOAuth, { salesforceFields } from '@/services/slack'
 import { SObjectField, SObjectValidation, SObjectPicklist } from '@/services/salesforce'
-import SObjectFormBuilderAPI, { SOBJECTS_LIST } from '@/services/salesforce'
+import { SOBJECTS_LIST } from '@/services/salesforce'
 import * as FORM_CONSTS from '@/services/slack'
 
 export default {
@@ -277,7 +188,6 @@ export default {
       started: false,
     }
   },
-  watch: {},
   async created() {
     try {
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
@@ -298,9 +208,6 @@ export default {
 
   computed: {
     ...mapState(['user']),
-    selectedFormType() {
-      return this.selectedForm ? this.selectedForm.formType : null
-    },
 
     currentStagesWithForms() {
       return this.formStages.map((sf) => sf.stage)
@@ -329,37 +236,15 @@ export default {
       }
     },
 
-    nextPage() {
-      this.formFields.nextPage()
-    },
-    previousPage() {
-      this.formFields.prevPage()
-    },
     nextValidation() {
       this.validations.nextPage()
     },
     previousValidation() {
       this.validations.prevPage()
     },
-    async searchFields() {
-      this.loading = true
-
-      this.formFields.filters = {
-        search: this.search,
-        salesforceObject: this.resource,
-        ...this.fieldParam,
-      }
-      this.formFields.refresh()
-
-      this.loading = false
-    },
 
     toggleRequiredModal() {
       this.$modal.show('required-modal')
-    },
-
-    toggleObjectsModal() {
-      this.$modal.show('objects-modal')
     },
 
     async selectForm(resource, formType, stage = '') {
@@ -379,18 +264,6 @@ export default {
           message: 'There was an error gathering fields',
           type: 'error',
           timeout: 3000,
-        })
-      }
-    },
-    async listValidations(query_params = {}) {
-      try {
-        this.validations.filters = query_params
-        this.validations.refresh()
-      } catch {
-        this.$Alert.alert({
-          type: 'error',
-          timeout: 2000,
-          message: 'There was an error gathering validations',
         })
       }
     },
@@ -459,13 +332,6 @@ export default {
         this.allForms = [...forms]
         console.log(this.allForms)
       }
-    },
-
-    openStageDropDown() {
-      this.resource = 'Opportunity'
-      this.formType = 'STAGE_GATING'
-      this.getStageForms()
-      this.stageDropDownOpen = !this.stageDropDownOpen
     },
 
     async onAddForm() {
@@ -755,7 +621,6 @@ export default {
     margin-top: 16rem;
     width: 30vw;
 
-    // margin: 2px 270px 49px 108px;
     padding: 6px 0 14px;
     border-radius: 0.5rem;
     box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);

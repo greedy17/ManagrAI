@@ -22,9 +22,6 @@
       <div :class="formType !== 'STAGE_GATING' ? 'collection_fields' : 'stage_fields'">
         <div v-if="formType === 'STAGE_GATING'">
           <p class="section-title">Add Stage Specific Fields</p>
-          <!-- <p style="margin-top: -0.25rem; color: #beb5cc">
-            Be sure to save changes before adding another stage!
-          </p> -->
         </div>
         <div>
           <div v-if="formType === 'STAGE_GATING'">
@@ -175,7 +172,6 @@
                   </p>
                 </template>
               </Multiselect>
-              <!-- :hasNext="!!formFields.pagination.hasNextPage" -->
             </div>
             <div v-if="!addedFieldNames.includes('Company')" class="centered">
               <p style="margin-left: 0.5rem">Company<span style="color: #fa646a">*</span></p>
@@ -274,16 +270,6 @@
         </div>
 
         <div v-if="resource === 'Opportunity' && formType !== 'STAGE_GATING'">
-          <!-- <div
-            v-if="userHasProducts && formType !== 'CREATE'"
-            style="margin-bottom: 1rem"
-            class="centered"
-          >
-            <small>
-              <span style="color: #41b883">*</span> Need to edit your product form ? Save and
-              continue.</small
-            >
-          </div> -->
           <p class="section-title">Select required form fields:</p>
           <div v-if="!addedFieldLabels.includes('Name')" class="centered">
             <p style="margin-left: 0.5rem">Name: <span style="color: #fa646a">*</span></p>
@@ -421,28 +407,6 @@
 
             <div v-if="productSelected">Add products on the next page</div>
           </div>
-
-          <!-- <div
-            v-else-if="!addingFields && formType === 'UPDATE'"
-            style="
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              flex-direction: column;
-              margin-top: 0.5rem;
-            "
-          >
-            <button
-              @click="
-                () => {
-                  addingFields = !addingFields
-                }
-              "
-              class="default_button"
-            >
-              Add more fields <img src="@/assets/images/plusOne.png" class="filtered-green" alt="">
-            </button>
-          </div> -->
         </div>
 
         <p class="section-title">
@@ -810,16 +774,6 @@
             text="Save"
             :loading="savingForm"
           />
-          <!-- 
-          <PulseLoadingSpinnerButton
-            v-if="resource === 'Account'"
-            @click="onSave"
-            class="primary-button"
-            :class="!addedFieldNames.includes('Name') ? 'primary-button' : 'primary-button'"
-            text="Save"
-            :loading="savingForm"
-            :disabled="!addedFieldNames.includes('Name')"
-          /> -->
         </div>
       </div>
 
@@ -875,25 +829,6 @@
             </template>
           </Multiselect>
         </div>
-
-        <!-- <div class="recommend__validation" v-if="formType === 'STAGE_GATING'">
-            <p style="color: #41b883; font-size: 11px">*Previous Stage Validation Fields</p>
-            <div v-if="!orderedStageForm.length">
-              <p style="font-size: 14px; text-align: center">Nothing here.. (o^^)o</p>
-            </div>
-            <div :key="key" v-for="(form, key) in orderedStageForm">
-              <div style="margin-top: 1rem">
-                <i style="text-transform: uppercase; font-size: 12px; color: #beb5cc"
-                  >Fields from <strong>{{ form.stage }}</strong> stage</i
-                >
-              </div>
-              <div class="stages-list">
-                <div :key="key" v-for="(val, key) in form.fieldsRef">
-                  <p>{{ val.referenceDisplayLabel }}</p>
-                </div>
-              </div>
-            </div>
-          </div> -->
         <div class="recommend__body" v-if="formType !== 'STAGE_GATING'">
           <Multiselect
             placeholder="Search Fields"
@@ -986,7 +921,6 @@
           </textarea>
         </div>
         <div v-for="field in addedFields" :key="field.id">
-          <!-- <p>{{ field.dataType }}</p> -->
           <div
             v-if="
               field.dataType === 'String' ||
@@ -1106,7 +1040,7 @@ import draggable from 'vuedraggable'
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 
 import SlackOAuth, { salesforceFields } from '@/services/slack'
-import { SObjectField, SObjectValidations, SObjectPicklist } from '@/services/salesforce'
+import { SObjectField } from '@/services/salesforce'
 
 import * as FORM_CONSTS from '@/services/slack'
 
@@ -1300,19 +1234,6 @@ export default {
   },
 
   computed: {
-    orderedStageForm() {
-      let forms = []
-      if (this.customForm.stage) {
-        let index = this.stageForms.findIndex((f) => f.stage == this.customForm.stage)
-        if (~index) {
-          forms = this.stageForms.slice(0, index)
-        }
-      }
-      return forms
-    },
-    sfFieldsAvailableToAdd() {
-      return this.fields
-    },
     currentFields() {
       return this.customForm ? this.customForm.fields : []
     },
@@ -1330,9 +1251,6 @@ export default {
       return this.addedFields.map((field) => {
         return field.referenceDisplayLabel
       })
-    },
-    selectedFormResourceType() {
-      return `${this.formType}.${this.resource}`
     },
     unshownIds() {
       return [
@@ -1352,23 +1270,7 @@ export default {
   created() {
     this.getActionChoices()
   },
-  // async beforeCreate() {
-  //   try {
-  //     this.formFields = CollectionManager.create({
-  //       ModelClass: SObjectField,
-  //       pagination: { size: 500 },
-  //     })
-  //     this.formFields.refresh()
-  //   } catch (e) {
-  //     console.log(e)
-  //   }
-  // },
   methods: {
-    test() {
-      console.log(this.formFields.list)
-      console.log(this.addedFieldNames)
-    },
-
     async goToProducts() {
       if (
         (this.resource == 'Opportunity' || this.resource == 'Account') &&
@@ -1428,23 +1330,8 @@ export default {
         })
         .finally((this.loadingMeetingTypes = false))
     },
-    async onSearchFields(v) {
-      this.formFields.pagination = new Pagination()
-      this.formFields.filters = {
-        ...this.formFields.filters,
-        search: v,
-      }
-      await this.formFields.refresh()
-    },
     async onFieldsNextPage() {
       await this.formFields.addNextPage()
-    },
-
-    nextPage() {
-      this.formFields.nextPage()
-    },
-    previousPage() {
-      this.formFields.prevPage()
     },
     canRemoveField(field) {
       // If form is create required fields cannot be removed
@@ -1474,12 +1361,6 @@ export default {
     goToOptional() {
       this.$router.push({ name: 'Custom' })
     },
-    goToCustomize() {
-      this.$router.push({ name: 'CustomizeLandingPage' })
-    },
-    goToContacts() {
-      this.$router.push({ name: 'CreateContacts' })
-    },
     goToUpdateOpp() {
       this.$router.push({ name: 'UpdateOpportunity' })
     },
@@ -1497,86 +1378,6 @@ export default {
         this.removedFields = [this.removedFields, field]
       }
     },
-    onMoveFieldUp(field, index) {
-      // Disallow move if this is the first field
-      if (index === 0) {
-        return
-      }
-
-      // Make a copy of fields and do the swap
-      const newFields = [...this.addedFields]
-      newFields[index] = this.addedFields[index - 1]
-      newFields[index - 1] = field
-
-      // Apply update to the view model
-      this.addedFields = newFields
-    },
-    onMoveFieldDown(field, index) {
-      // Disallow move if this is the last field
-      if (index + 1 === this.addedFields.length) {
-        return
-      }
-
-      // Make a copy of slides and do the swap
-      const newFields = [...this.addedFields]
-      newFields[index] = this.addedFields[index + 1]
-      newFields[index + 1] = field
-
-      // Apply update to the view model
-      this.addedFields = newFields
-    },
-
-    async updateMeeting(e) {
-      if (e.keyCode == 13 && this.meetingType.length) {
-        this.loadingMeetingTypes = true
-        if (
-          (this.resource == 'Opportunity' || this.resource == 'Account') &&
-          this.customForm.formType == FORM_CONSTS.MEETING_REVIEW
-        ) {
-          if (!this.meetingType.length && !this.actionChoices.length) {
-            this.$Alert.alert({
-              type: 'error',
-              message: 'Please enter a Meeting Type',
-              timeout: 1000,
-            })
-            return
-          } else {
-            const obj = {
-              title: this.meetingType,
-              organization: this.$store.state.user.organization,
-            }
-
-            await ActionChoice.api
-              .create(obj)
-              .then((res) => {
-                this.$Alert.alert({
-                  type: 'success',
-                  message: 'New meeting type created',
-                  timeout: 1000,
-                })
-              })
-              .finally((this.loadingMeetingTypes = false))
-
-            this.getActionChoices()
-            this.meetingType = ''
-          }
-        }
-      }
-    },
-    async removeMeetingType(id) {
-      if (!this.$store.state.user.isAdmin) {
-        return
-      }
-      try {
-        await ActionChoice.api.delete(id)
-        await this.getActionChoices()
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.loadingMeetingTypes = false
-      }
-    },
-
     async onSave() {
       if (
         (this.resource == 'Opportunity' || this.resource == 'Account') &&
@@ -1885,16 +1686,6 @@ export default {
   height: 2.5rem;
   box-shadow: none !important;
 }
-// ::v-deep .tn-dropdown__selection-container:after {
-//   position: absolute;
-//   content: '';
-//   top: 12px;
-//   right: 1em;
-//   width: 0;
-//   height: 0;
-//   border: 5px solid transparent;
-//   border-color: rgb(173, 171, 171) transparent transparent transparent;
-// }
 .invisible {
   display: none;
 }
@@ -1970,10 +1761,6 @@ export default {
 }
 
 .slack-form-builder {
-  // display: flex;
-  // flex-direction: column;
-  // align-items: flex-start;
-  // justify-content: space-evenly;
   padding: 0rem 3rem;
   color: $base-gray;
   &__sf-fields,
@@ -2011,7 +1798,6 @@ export default {
   }
 
   &__form {
-    // flex: 10;
     width: 26vw;
     padding: 2rem;
     box-shadow: 0 5px 10px 0 rgba(132, 132, 132, 0.26);
@@ -2087,9 +1873,6 @@ export default {
 
   &__body {
     font-size: 14px;
-  }
-
-  &__label {
   }
 
   &__right {
@@ -2293,7 +2076,6 @@ img:hover {
   display: flex;
   flex-direction: column;
   position: relative;
-  // box-shadow: 3px 4px 7px $very-light-gray;
 }
 .stage_fields {
   background-color: $white;
@@ -2307,7 +2089,6 @@ img:hover {
   flex-direction: column;
   position: relative;
   border: 1px solid #e8e8e8;
-  // box-shadow: 1px 2px 2px $very-light-gray;
 }
 .fields_title {
   background-color: $panther;
