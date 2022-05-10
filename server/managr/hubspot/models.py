@@ -607,8 +607,13 @@ class HObjectField(TimeStampModel, IntegrationModel):
                     self.options,
                 )
             )
-        elif not self.is_public and hasattr(self, "picklist_options"):
-            return self.picklist_options.as_slack_options
+        elif not self.is_public and len(self.options):
+            return list(
+                map(
+                    lambda option: block_builders.option(option["label"], option["value"]),
+                    self.options,
+                )
+            )
         else:
             return [block_builders.option("No Options", None)]
 
@@ -651,7 +656,7 @@ class HObjectField(TimeStampModel, IntegrationModel):
                             ),
                         ),
                     ),
-                    block_id=self.api_name,
+                    block_id=self.name,
                 )
 
             else:
@@ -674,13 +679,13 @@ class HObjectField(TimeStampModel, IntegrationModel):
                 block = block_builders.external_select(
                     f"*{self.reference_display_label}*",
                     action_query,
-                    block_id=self.api_name,
+                    block_id=self.name,
                     initial_option=initial_option,
                 )
 
             return block
 
-        elif self.data_type == "Reference":
+        elif self.field_type == "Reference":
             # temporarily using id as display value need to sync display value as part of data
             display_name = self.reference_display_label
             initial_option = block_builders.option(value, value) if value else None
@@ -697,37 +702,34 @@ class HObjectField(TimeStampModel, IntegrationModel):
                 return block_builders.multi_external_select(
                     f"_{self.reference_display_label}_",
                     action_query,
-                    block_id=self.api_name,
+                    block_id=self.name,
                     initial_options=None,
                 )
             elif (
-                self.api_name == "PricebookEntryId"
-                and self.salesforce_object == "OpportunityLineItem"
+                self.name == "PricebookEntryId" and self.salesforce_object == "OpportunityLineItem"
             ):
                 user_id = str(kwargs.get("user").id)
                 resource = self.relationship_name
                 action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}&field_id={self.id}&pricebook={kwargs.get('Pricebook2Id')}"
                 return block_builders.external_select(
-                    "*Products*", action_query, block_id=self.api_name, initial_option=None,
+                    "*Products*", action_query, block_id=self.name, initial_option=None,
                 )
             else:
                 user_id = str(self.salesforce_account.user.id)
-                action_query = f"{slack_consts.GET_EXTERNAL_RELATIONSHIP_OPTIONS}?u={user_id}&relationship={self.display_value_keys['api_name']}&fields={','.join(self.display_value_keys['name_fields'])}"
+                action_query = f"{slack_consts.GET_EXTERNAL_RELATIONSHIP_OPTIONS}?u={user_id}&relationship={self.display_value_keys['name']}&fields={','.join(self.display_value_keys['name_fields'])}"
             return block_builders.external_select(
                 f"*{display_name}*",
                 action_query,
-                block_id=self.api_name,
+                block_id=self.name,
                 initial_option=initial_option,
             )
 
-        elif self.data_type == "Date":
+        elif self.field_type == "Date":
             return block_builders.datepicker(
-                label=f"*{self.reference_display_label}*",
-                initial_date=value,
-                block_id=self.api_name,
+                label=f"*{self.reference_display_label}*", initial_date=value, block_id=self.name,
             )
 
-        elif self.data_type == "MultiPicklist":
+        elif self.field_type == "select":
             initial_options = None
             if value:
                 initial_options = list(
@@ -736,52 +738,52 @@ class HObjectField(TimeStampModel, IntegrationModel):
                         self.get_slack_options,
                     )
                 )
-            user_id = str(self.salesforce_account.user.id)
+            user_id = str(self.hubspot_account.user.id)
             action_query = f"{slack_consts.GET_PICKLIST_OPTIONS}?u={user_id}&field={str(self.id)}"
             return block_builders.multi_external_select(
-                f"*{self.reference_display_label}*",
+                f"*{self.label}*",
                 action_query,
                 initial_options=initial_options,
-                block_id=self.api_name,
+                block_id=self.name,
             )
 
-        elif self.data_type == "Boolean":
+        elif self.field_type == "Boolean":
             return block_builders.checkbox_block(
                 " ",
                 [block_builders.option(self.reference_display_label, "true")],
-                action_id=self.api_name,
-                block_id=self.api_name,
+                action_id=self.name,
+                block_id=self.name,
             )
-        elif self.data_type == "MultiChannelsSelect":
+        elif self.field_type == "MultiChannelsSelect":
             return [
                 block_builders.multi_channels_select_block(
-                    section_text=f"_{self.label}_", initial_channels=value, block_id=self.api_name
+                    section_text=f"_{self.label}_", initial_channels=value, block_id=self.name
                 ),
                 block_builders.context_block("Please add @managr to channel for access"),
             ]
-        elif self.data_type == "MultiConversationsSelect":
+        elif self.field_type == "MultiConversationsSelect":
             return [
                 block_builders.multi_conversations_select_block(
                     section_text=f"_{self.label}_",
                     initial_conversations=value,
                     filter_opts={"include": ["private", "public"]},
-                    block_id=self.api_name,
+                    block_id=self.name,
                 ),
                 block_builders.context_block("Please add @managr to channel for access"),
             ]
         else:
-            if self.data_type == "DateTime":
+            if self.field_type == "DateTime":
                 # currently we do not support date time instead make it into text field with format as placeholder
                 return block_builders.input_block(
                     self.reference_display_label,
                     multiline=False,
                     optional=not self.required,
                     initial_value=value,
-                    block_id=self.api_name,
+                    block_id=self.name,
                     placeholder="MM-DD-YYYY HH:MM AM/PM",
                 )
 
-            if self.data_type == "String" and self.length >= 250 or self.data_type == "TextArea":
+            if self.field_type == "String" and self.length >= 250 or self.field_type == "TextArea":
                 # set these fields to be multiline
 
                 return block_builders.input_block(
@@ -789,13 +791,13 @@ class HObjectField(TimeStampModel, IntegrationModel):
                     multiline=True,
                     optional=not self.required,
                     initial_value=value,
-                    block_id=self.api_name,
+                    block_id=self.name,
                 )
 
             return block_builders.input_block(
                 self.reference_display_label,
                 optional=not self.required,
                 initial_value=value,
-                block_id=self.api_name,
+                block_id=self.name,
             )
 
