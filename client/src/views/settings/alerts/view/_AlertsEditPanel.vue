@@ -1,35 +1,33 @@
 <template>
   <div class="tab">
-    <div class="tab__header-items">
-      <div class="tab__header-items__group">
-        <div
-          :class="{ 'tab__header-items__item--active': selectedTab == 'TEMPLATE' }"
-          @click="selectedTab = 'TEMPLATE'"
-          class="tab__header-items__item"
-        >
-          Workflow Title
-        </div>
-        <div
-          :class="{ 'tab__header-items__item--active': selectedTab == 'GROUPS' }"
-          @click="selectedTab = 'GROUPS'"
-          class="tab__header-items__item"
-        >
-          Conditions
-        </div>
-        <div
-          :class="{ 'tab__header-items__item--active': selectedTab == 'CONFIG' }"
-          @click="selectedTab = 'CONFIG'"
-          class="tab__header-items__item"
-        >
-          Delivery
-        </div>
-        <div
-          :class="{ 'tab__header-items__item--active': selectedTab == 'MESSAGE' }"
-          @click="selectedTab = 'MESSAGE'"
-          class="tab__header-items__item"
-        >
-          Message
-        </div>
+    <div class="tab__header-items__group">
+      <div
+        :class="{ 'tab__header-items__item--active': selectedTab == 'TEMPLATE' }"
+        @click="selectedTab = 'TEMPLATE'"
+        class="tab__header-items__item"
+      >
+        Workflow Title
+      </div>
+      <div
+        :class="{ 'tab__header-items__item--active': selectedTab == 'GROUPS' }"
+        @click="selectedTab = 'GROUPS'"
+        class="tab__header-items__item"
+      >
+        Conditions
+      </div>
+      <div
+        :class="{ 'tab__header-items__item--active': selectedTab == 'CONFIG' }"
+        @click="selectedTab = 'CONFIG'"
+        class="tab__header-items__item"
+      >
+        Delivery
+      </div>
+      <div
+        :class="{ 'tab__header-items__item--active': selectedTab == 'MESSAGE' }"
+        @click="selectedTab = 'MESSAGE'"
+        class="tab__header-items__item"
+      >
+        Message
       </div>
     </div>
 
@@ -47,7 +45,7 @@
           /> -->
           <!-- <h3>{{ alert.resourceType }}</h3> -->
           <div v-if="!templateNames.includes(alert.title)">
-            <h3>Edit workflow title:</h3>
+            <h4>Edit workflow title:</h4>
             <FormField
               :id="`resource-title-${alert.id}`"
               :errors="templateTitleField.errors"
@@ -110,13 +108,12 @@
                 </div>
               </div>
             </div>
-
-            <img
-              src="@/assets/images/add.png"
-              style="height: 1.5rem; margin-bottom: 1rem; cursor: pointer"
-              alt=""
-              @click="onShowGroupModal()"
-            />
+          </div>
+          <div
+            v-if="!alert.groupsRef.length"
+            style="display: flex; justify-content: center; width: 100%; margin-bottom: -1rem"
+          >
+            <button class="condition-button" @click="onShowGroupModal()">Add Group</button>
           </div>
         </div>
         <div v-if="selectedTab == 'MESSAGE'" class="alerts-template-list__content-message">
@@ -154,12 +151,16 @@
                 selectLabel="Enter"
                 track-by="apiName"
                 label="referenceDisplayLabel"
+                :loading="dropdownLoading"
               >
                 <template slot="noResult">
                   <p class="multi-slot">No results.</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="fieldNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="fieldNextPage">
+                    Load More
+                    <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -312,6 +313,7 @@ export default {
   },
   data() {
     return {
+      dropdownLoading: false,
       templateTitleField: new FormFieldService({ validators: [new RequiredValidator()] }),
       executeUpdateTemplate: debounce(this.updateTemplate, 900),
       executeUpdateMessageTemplate: debounce(this.updateMessageTemplate, 900),
@@ -436,7 +438,7 @@ export default {
           name: 'alert-groups-modal',
 
           height: 400,
-          width: 600,
+          width: 800,
 
           adaptive: true,
         },
@@ -612,7 +614,11 @@ export default {
       await this.fields.refresh()
     },
     async fieldNextPage() {
+      this.dropdownLoading = true
       await this.fields.addNextPage()
+      setTimeout(() => {
+        this.dropdownLoading = false
+      })
     },
 
     bindText(val) {
@@ -751,7 +757,7 @@ h3 {
   right: 10px;
   border-radius: 0.25rem;
   border: none;
-  background-color: $panther-gray;
+  background-color: white;
   outline: none;
   opacity: 0;
   z-index: -1;
@@ -776,14 +782,14 @@ h3 {
   align-items: center;
   justify-content: center;
   color: $gray;
-  font-weight: bold;
-
+  font-size: 12px;
   width: 100%;
   padding: 0.5rem 0rem;
   margin: 0;
+  cursor: text;
   &__more {
-    background-color: $base-gray;
-    color: white;
+    background-color: white;
+    color: $dark-green;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -793,6 +799,13 @@ h3 {
     padding: 0.75rem 0rem;
     margin: 0;
     cursor: pointer;
+
+    img {
+      height: 0.8rem;
+      margin-left: 0.25rem;
+      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+        brightness(93%) contrast(89%);
+    }
   }
 }
 .dropdown-container:focus {
@@ -956,17 +969,11 @@ h3 {
   margin-left: -0.1rem;
 }
 ::v-deep .input-content {
-  border: none;
-
-  box-shadow: 3px 4px 7px $very-light-gray;
+  border: 1px solid #e8e8e8;
+  // box-shadow: 3px 4px 7px $very-light-gray;
   color: $panther;
 }
-::v-deep .input-content:focus {
-  box-shadow: 3px 4px 7px $very-light-gray;
-  border: none;
 
-  color: $base-gray;
-}
 ::v-deep .ls-container__list--horizontal {
   background-color: transparent;
 }
@@ -975,37 +982,42 @@ h3 {
 }
 .tab__header-items {
   display: flex;
-  padding: 0.5rem 1rem;
   overflow: scroll;
   &__item {
-    padding: 0.75rem 4rem;
-    margin: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    padding: 0.5rem;
     border-bottom: none;
     color: $base-gray;
     letter-spacing: 0.5px;
     cursor: pointer;
+    width: 17vw;
     &--active {
-      padding: 0.75rem 4rem;
-      // background-color: $lighter-green;
-      border-bottom: 3px solid $dark-green;
-      color: $dark-green;
+      background-color: $dark-green;
+      border-radius: 0.2rem;
+      color: white;
       position: relative;
     }
     // &--active:after {
     //   content: '';
-    //   background: $dark-green;
+    //   background: $darker-green;
     //   position: absolute;
-    //   left: 0.75rem;
-    //   bottom: 0;
-    //   height: 50%;
+    //   left: 0;
+    //   bottom: 0.3rem;
+    //   height: 70%;
     //   width: 3px;
     // }
+    &--active:hover {
+      color: white !important;
+    }
   }
   &__item:hover {
     color: $dark-green;
   }
   &__group {
     display: flex;
+    padding: 0.75rem;
     &__items {
     }
     &--large {
@@ -1032,12 +1044,14 @@ h3 {
   }
 }
 .tab__panel {
-  padding: 0.25rem 0 0;
+  padding: 0.5rem 3rem;
 }
 .alerts-template-list__content-message {
   font-size: 14px;
   letter-spacing: 0.2px;
-  padding-left: 0.5rem;
+  display: flex;
+  justify-content: flex-start;
+  padding: 0.5rem 2rem;
   height: 100%;
   &__form {
     display: flex;

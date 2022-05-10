@@ -1,6 +1,6 @@
 <template>
   <div class="alerts-page">
-    <div v-if="isOnboarding && !isAdmin" class="col">
+    <div v-if="isOnboarding && !isAdmin && userLevel !== 'MANAGER'" class="col">
       <h3>Popular Workflow Automations</h3>
       <p style="margin-top: -0.5rem" class="sub__">Step 2/2: Activate at least 3 workflows</p>
       <button
@@ -39,7 +39,11 @@
           <button
             v-if="!hasZoomChannel"
             @click="goToLogZoom"
-            :class="!isAdmin && isOnboarding ? 'orange_button bouncy' : 'orange_button'"
+            :class="
+              !isAdmin && userlevel !== 'MANAGER' && isOnboarding
+                ? 'orange_button bouncy'
+                : 'orange_button'
+            "
           >
             Activate
           </button>
@@ -51,7 +55,9 @@
 
       <div
         :class="
-          !(hasZoomChannel || recapChannel) && isOnboarding && !isAdmin ? 'onboarding card' : 'card'
+          !(hasZoomChannel || recapChannel) && isOnboarding && !isAdmin && userLevel !== 'MANAGER'
+            ? 'onboarding card'
+            : 'card'
         "
       >
         <div class="card__header">
@@ -85,7 +91,11 @@
               !user.activatedManagrConfigs.includes('Close Date Passed')
             "
             @click="goToCloseDatePassed"
-            :class="!isAdmin && isOnboarding ? 'orange_button bouncy' : 'orange_button'"
+            :class="
+              !isAdmin && userLevel !== 'MANAGER' && isOnboarding
+                ? 'orange_button bouncy'
+                : 'orange_button'
+            "
           >
             Activate
           </button>
@@ -103,7 +113,10 @@
 
       <div
         :class="
-          !user.activatedManagrConfigs.includes('Close Date Passed') && isOnboarding && !isAdmin
+          !user.activatedManagrConfigs.includes('Close Date Passed') &&
+          isOnboarding &&
+          !isAdmin &&
+          userLevel !== 'MANAGER'
             ? 'card onboarding'
             : 'card'
         "
@@ -139,7 +152,11 @@
               !user.activatedManagrConfigs.includes('Update Forecast')
             "
             @click="goToUpdateForecast"
-            :class="!isAdmin && isOnboarding ? 'orange_button bouncy' : 'orange_button'"
+            :class="
+              !isAdmin && userLevel !== 'MANAGER' && isOnboarding
+                ? 'orange_button bouncy'
+                : 'orange_button'
+            "
           >
             Activate
           </button>
@@ -157,7 +174,10 @@
 
       <div
         :class="
-          !user.activatedManagrConfigs.includes('Close Date Passed') && isOnboarding && !isAdmin
+          !user.activatedManagrConfigs.includes('Close Date Passed') &&
+          isOnboarding &&
+          !isAdmin &&
+          userLevel !== 'MANAGER'
             ? 'card onboarding'
             : 'card'
         "
@@ -211,7 +231,10 @@
 
       <div
         :class="
-          !user.activatedManagrConfigs.includes('Close Date Passed') && isOnboarding && !isAdmin
+          !user.activatedManagrConfigs.includes('Close Date Passed') &&
+          isOnboarding &&
+          !isAdmin &&
+          userLevel !== 'MANAGER'
             ? 'card onboarding'
             : 'card'
         "
@@ -268,7 +291,10 @@
 
       <div
         :class="
-          !user.activatedManagrConfigs.includes('Close Date Passed') && isOnboarding && !isAdmin
+          !user.activatedManagrConfigs.includes('Close Date Passed') &&
+          isOnboarding &&
+          !isAdmin &&
+          userLevel !== 'MANAGER'
             ? 'card onboarding'
             : 'card'
         "
@@ -314,6 +340,63 @@
           <h4
             class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Upcoming Next Step')"
+          >
+            Active <img src="@/assets/images/configCheck.png" alt="" />
+          </h4>
+        </div>
+      </div>
+
+      <div
+        :class="
+          !user.activatedManagrConfigs.includes('Required Field Empty') &&
+          isOnboarding &&
+          !isAdmin &&
+          userLevel !== 'MANAGER'
+            ? 'card onboarding'
+            : 'card'
+        "
+      >
+        <div class="card__header">
+          <h3>Required Field Empty</h3>
+        </div>
+
+        <div class="card__body">
+          <img
+            style="height: 1.5rem; margin-right: 0.5rem"
+            src="@/assets/images/slackLogo.png"
+            alt=""
+          />
+          <img
+            style="height: 1rem; margin-right: 0.5rem"
+            src="@/assets/images/plusOne.png"
+            class="filter-plus"
+            alt=""
+          />
+          <img
+            style="height: 1.5rem; margin-right: 0.5rem"
+            src="@/assets/images/salesforce.png"
+            alt=""
+          />
+        </div>
+
+        <div class="card__footer">
+          <button
+            v-if="
+              hasSalesforceIntegration &&
+              hasSlackIntegration &&
+              !user.activatedManagrConfigs.includes('Required Field Empty')
+            "
+            @click="goToEmptyField"
+            class="orange_button"
+          >
+            Activate
+          </button>
+          <h4 v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)">
+            Connect Slack & Salesforce to acivate
+          </h4>
+          <h4
+            class="active-workflow"
+            v-else-if="user.activatedManagrConfigs.includes('Required Field Empty')"
           >
             Active <img src="@/assets/images/configCheck.png" alt="" />
           </h4>
@@ -450,6 +533,9 @@ export default {
     },
     goToNextStep() {
       this.$router.push({ name: 'NextStep' })
+    },
+    goToEmptyField() {
+      this.$router.push({ name: 'RequiredFieldEmpty' })
     },
     getWorkflowIds(arr1, arr2) {
       return arr1.some((item) => arr2.includes(item))

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="alert-group-row">
     <!-- <div class="alert-group-row__condition" v-if="form.field.groupOrder.value != 0">
       <label class="alert-group-row__condition-label">AND</label>
       <ToggleCheckBox
@@ -19,21 +19,11 @@
         v-for="(alertOperand, i) in form.field.alertOperands.groups"
         class="alert-group-row__operands__row rows"
       >
-        <div :class="i > 0 ? 'visible' : ''">
-          <NextAlertOperandRow
-            @remove-operand="onRemoveOperand(i)"
-            :resourceType="resourceType"
-            :form.sync="alertOperand"
-          />
-        </div>
-
-        <!-- <div v-else>
-           <NextAlertOperandRow
-            @remove-operand="onRemoveOperand(i)"
-            :resourceType="resourceType"
-            :form.sync="alertOperand"
-          /> -->
-        </div>
+        <EmptyAlertOperandRow
+          @remove-operand="onRemoveOperand(i)"
+          :resourceType="resourceType"
+          :form.sync="alertOperand"
+        />
 
         <!-- <div class="add__remove" v-if="form.field.alertOperands.groups.length > 1">
           <button
@@ -67,7 +57,7 @@
 // Pacakges
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 //Internal
-import NextAlertOperandRow from '@/views/settings/alerts/create/NextAlertOperandRow'
+import EmptyAlertOperandRow from '@/views/settings/alerts/create/EmptyAlertOperandRow'
 
 /**
  * Services
@@ -81,8 +71,8 @@ export default {
    * the object multiple levels deep (this current implementation could be seen as incorrect)
    *
    */
-  name: 'NextAlertGroup',
-  components: { ToggleCheckBox, NextAlertOperandRow },
+  name: 'EmptyAlertGroup',
+  components: { ToggleCheckBox, EmptyAlertOperandRow },
 
   props: {
     form: { type: AlertGroupForm },
@@ -93,6 +83,7 @@ export default {
   data() {
     return {}
   },
+  watch: {},
   async created() {},
   methods: {
     addOperandForm() {
@@ -126,6 +117,9 @@ export default {
       },
     },
   },
+  // beforeMount() {
+  //   this.addOperandForm()
+  // },
 }
 </script>
 
@@ -140,10 +134,6 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
-.visible {
-  visibility: hidden;
-  max-height: 1rem;
-}
 .btn {
   &--danger {
     @include button-danger();
