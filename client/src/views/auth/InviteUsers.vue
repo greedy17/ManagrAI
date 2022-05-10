@@ -14,13 +14,10 @@
     </div>
 
     <Invite class="invite-users__inviter" :inviteOpen="inviteOpen" @cancel="handleCancel" />
-
-    <!-- <button class="continue_button" type="submit" @click="handleContinue">Continue</button> -->
   </div>
 </template>
 
 <script>
-import User from '@/services/users'
 import Invite from '../settings/_pages/_Invite'
 
 export default {
@@ -37,9 +34,6 @@ export default {
     },
     handleCancel() {
       this.inviteOpen = false
-    },
-    handleContinue() {
-      this.$router.push({ name: 'Integrations' })
     },
   },
 }

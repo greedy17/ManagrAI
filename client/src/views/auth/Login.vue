@@ -6,7 +6,6 @@
         <h2>Log in to Managr</h2>
         <p class="enter-email">Please enter your email and password</p>
       </div>
-      <!-- <label for="email">Email</label> -->
       <input
         type="email"
         @input="execCheckEmail"
@@ -138,7 +137,6 @@ export default {
       }
     },
   },
-  computed: {},
 }
 </script>
 
@@ -214,18 +212,6 @@ input:focus {
   }
 }
 
-/* input {
-  @include input-field();
-  height: 2.5rem;
-  width: 15.65rem;
-  display: block;
-  margin: 0.625rem 0;
-
-  &:disabled {
-    border: 2px solid $dark-green;
-  }
-}
- */
 button {
   @include primary-button();
   margin-bottom: 6px;
@@ -277,11 +263,4 @@ img {
   font-size: 13px;
   margin: 2rem;
 }
-/* #email,
-#password {
-  border: 1px solid $soft-gray;
-  border-radius: 3px;
-  margin-top: 5px;
-  background-color: #ffffff;
-} */
 </style>

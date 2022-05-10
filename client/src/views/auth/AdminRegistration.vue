@@ -7,7 +7,6 @@
       </div>
 
       <div class="registration__text">Create and customize your Managr account within minutes.</div>
-      <!-- <form @submit.prevent="onSubmit"> -->
       <div class="registration__form">
         <div class="form-card">
           <FormField
@@ -109,14 +108,6 @@
             </template>
           </FormField>
         </div>
-        <!-- <div class="registration__input__label">
-        Company
-        <input
-          v-model="registrationForm.field.organizationName.value"
-          type="text"
-          class="registration__input"
-        />
-      </div> -->
         <div class="registration__privacy">
           By clicking Sign Up, I agree to the
           <a href="https://managr.ai/terms-of-service" target="_blank">Terms of Service</a> and
@@ -128,7 +119,6 @@
         <div style="margin-top: 1rem">
           <router-link :to="{ name: 'Login' }">Back to Login</router-link>
         </div>
-        <!-- </form> -->
       </div>
     </div>
   </div>

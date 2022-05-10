@@ -147,13 +147,6 @@
               <img @click="onRevoke('NYLAS')" src="@/assets/images/revoke.png" height="16" alt="" />
             </div>
           </div>
-          <!-- <div style="margin-bottom: 0.5rem; width: 15rem">
-          <GoogleButton
-            @click="onGetAuthLink('NYLAS')"
-            :loading="generatingToken && selectedIntegration == 'NYLAS'"
-            v-if="!hasNylasIntegration"
-          />
-        </div> -->
         </div>
 
         <div v-if="hasNylasIntegration" class="card">
@@ -324,15 +317,6 @@
                 v-if="orgHasSlackIntegration || !hasSlackIntegration"
               />
             </div>
-            <!-- <p
-              v-if="
-                (!orgHasSlackIntegration && userCanIntegrateSlack) ||
-                (orgHasSlackIntegration && !hasSlackIntegration)
-              "
-              class="card__required"
-            >
-              REQUIRED
-            </p> -->
           </div>
 
           <p class="card-text">Interact with Managr through Slack</p>
@@ -440,13 +424,6 @@
               </div>
             </div>
           </div>
-          <!-- <div style="margin-bottom: 0.5rem; width: 15rem">
-          <GoogleButton
-            @click="onGetAuthLink('NYLAS')"
-            :loading="generatingToken && selectedIntegration == 'NYLAS'"
-            v-if="!hasNylasIntegration"
-          />
-        </div> -->
         </div>
 
         <div class="card">
@@ -584,29 +561,11 @@
             <p style="color: #beb5cc">Coming Soon</p>
           </div>
         </div>
-
-        <!-- <div class="card">
-          <div class="card__header">
-            <img style="height: 1rem" src="@/assets/images/googleDrive.png" />
-            <h3 class="card__title">Google Drive</h3>
-          </div>
-          <p class="card-text">Enable battlecards and playbooks</p>
-          <div class="card__body">
-            <p style="color: #beb5cc">Coming Soon</p>
-          </div>
-        </div> -->
       </div>
     </div>
 
     <img style="margin-top: 1rem" class="lock" src="@/assets/images/blackLock.png" />
     <p class="privacy">SOC2 certified, and GDPR compliant</p>
-    <!-- <p>
-      <a href="https://managr.ai/terms-of-service" target="_blank">Terms of Service</a>
-      |
-      <a href="https://managr.ai/documentation" target="_blank">Documentation</a>
-      |
-      <a href="https://managr.ai/privacy-policy" target="_blank">Privacy Policy</a>
-    </p> -->
   </div>
 </template>
 
@@ -624,15 +583,9 @@ import GongAccount from '@/services/gong'
 import OutreachAccount from '@/services/outreach'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import GoogleButton from '@/components/GoogleButton'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 
-import AlertTemplate, {
-  AlertGroupForm,
-  AlertTemplateForm,
-  AlertConfigForm,
-  AlertMessageTemplateForm,
-  AlertOperandForm,
-} from '@/services/alerts/'
+import AlertTemplate from '@/services/alerts/'
 
 export default {
   name: 'Integrations',
@@ -646,21 +599,8 @@ export default {
     }
   },
   methods: {
-    alertsCount(num) {
-      if (this.hasZoomChannel) {
-        return num + 1
-      } else {
-        return num
-      }
-    },
-    goToSmartAlerts() {
-      this.$router.push({ name: 'ListTemplates' })
-    },
     goToTemplates() {
       this.$router.push({ name: 'CreateNew' })
-    },
-    changeIntegrated() {
-      this.integrated = !this.integrated
     },
     async onGetAuthLink(integration) {
       integration === 'NYLAS'
@@ -725,23 +665,6 @@ export default {
         }
       }
     },
-    async onRefreshSlack() {
-      const confirmation = confirm('This will refresh the access token for the workspace')
-      if (!confirmation) {
-        return
-      }
-      this.generatingToken = true
-      if (this.orgHasSlackIntegration && this.userCanIntegrateSlack) {
-        try {
-          let res = await SlackOAuth.api.getOAuthLink(SlackOAuth.options.WORKSPACE)
-          if (res.link) {
-            window.location.href = res.link
-          }
-        } finally {
-          this.generatingToken = false
-        }
-      }
-    },
   },
   async created() {
     this.templates.refresh()
@@ -788,9 +711,6 @@ export default {
     }
   },
   computed: {
-    hasZoomChannel() {
-      return this.$store.state.user.slackAccount.zoomChannel
-    },
     hasSalesforceIntegration() {
       return !!this.$store.state.user.salesforceAccount
     },
@@ -821,12 +741,6 @@ export default {
     },
     userCanIntegrateSlack() {
       return this.$store.state.user.isAdmin
-    },
-    slackIsIntegrated() {
-      return (
-        (!this.orgHasSlackIntegration && this.userCanIntegrateSlack) ||
-        (this.orgHasSlackIntegration && !this.hasSlackIntegration)
-      )
     },
     selectedIntegrationSwitcher() {
       switch (this.selectedIntegration) {
@@ -994,11 +908,6 @@ export default {
   width: 22vw;
   height: auto;
   transition: all 0.25s;
-  // @media only screen and (min-width: 768px) {
-  //   flex: 1 0 24%;
-  //   min-width: 21rem;
-  //   max-width: 24rem;
-  // }
 
   &__header {
     display: flex;
@@ -1037,7 +946,6 @@ export default {
     font-weight: bold;
     padding: 0.5rem;
     border-radius: 0.5rem;
-    // text-shadow: 0.85px 0.4px 0.3px ;
   }
 }
 
@@ -1242,6 +1150,3 @@ a {
   filter: brightness(0.85);
 }
 </style>
-
-￼
-

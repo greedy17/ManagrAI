@@ -23,7 +23,6 @@
           <div class="registration__text">
             Create and customize your Managr account with {{ organization }} within minutes.
           </div>
-          <!-- <form @submit.prevent="onSubmit"> -->
 
           <div style="margin-top: -1rem" class="registration__form">
             <div class="form-card">
@@ -111,7 +110,6 @@
             <div style="margin-top: 1rem">
               <router-link :to="{ name: 'Login' }">Back to Login</router-link>
             </div>
-            <!-- </form> -->
           </div>
         </template>
       </template>
@@ -189,7 +187,6 @@ export default {
       }
     },
     async onSubmit() {
-      //
       this.registrationForm.validate()
 
       // Do not continue if the form has errors

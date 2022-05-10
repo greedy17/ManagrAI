@@ -16,7 +16,6 @@
 </template>
 
 <script>
-import User from '@/services/users'
 
 export default {
   name: 'LeadershipCode',
