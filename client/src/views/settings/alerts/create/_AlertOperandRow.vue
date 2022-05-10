@@ -30,12 +30,16 @@
               selectLabel="Enter"
               track-by="apiName"
               label="referenceDisplayLabel"
+              :loading="dropdownLoading"
             >
               <template slot="noResult">
-                <p class="multi-slot">No results.</p>
+                <p class="multi-slot">No results. Try loading more</p>
               </template>
               <template slot="afterList">
-                <p class="multi-slot__more" @click="objectFieldNextPage">Load More</p>
+                <p class="multi-slot__more" @click="objectFieldNextPage">
+                  Load More
+                  <img src="@/assets/images/plusOne.png" alt="" />
+                </p>
               </template>
               <template slot="placeholder">
                 <p class="slot-icon">
@@ -442,6 +446,7 @@ export default {
   },
   data() {
     return {
+      dropdownLoading: false,
       identity: '',
       selectedOperator: '',
       selectedOperand: '',
@@ -646,7 +651,11 @@ export default {
       this.MyOperand === 'Negative' ? (this.MyOperand = 'Positive') : (this.MyOperand = 'Negative')
     },
     async objectFieldNextPage() {
+      this.dropdownLoading = true
       await this.objectFields.addNextPage()
+      setTimeout(() => {
+        this.dropdownLoading = false
+      }, 1000)
     },
     async onSearchFields(v) {
       this.objectFields.pagination = new Pagination()
@@ -770,14 +779,14 @@ export default {
   align-items: center;
   justify-content: center;
   color: $gray;
-  font-weight: bold;
-
+  font-size: 12px;
   width: 100%;
   padding: 0.5rem 0rem;
   margin: 0;
+  cursor: text;
   &__more {
-    background-color: $dark-green;
-    color: white;
+    background-color: white;
+    color: $dark-green;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -787,6 +796,13 @@ export default {
     padding: 0.75rem 0rem;
     margin: 0;
     cursor: pointer;
+
+    img {
+      height: 0.8rem;
+      margin-left: 0.25rem;
+      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+        brightness(93%) contrast(89%);
+    }
   }
 }
 
@@ -814,25 +830,25 @@ export default {
 img {
   filter: invert(90%);
 }
-::v-deep .collection-search .collection-search__form .collection-search__input .search__input {
-  font-family: Lato-Regular, sans-serif;
-  font-weight: normal;
-  font-stretch: normal;
-  font-style: normal;
-  letter-spacing: normal;
-  font-size: 16px;
-  border-radius: 4px;
-  padding: 3%;
-  line-height: 1.29;
-  letter-spacing: 0.5px;
-  color: $panther;
-  height: 2.5rem;
-  background-color: white;
-  border: 1px solid #5d5e5e;
-  width: 10rem;
-  padding: 0 0 0 1rem;
-  margin: 1rem;
-}
+// ::v-deep .collection-search .collection-search__form .collection-search__input .search__input {
+//   font-family: Lato-Regular, sans-serif;
+//   font-weight: normal;
+//   font-stretch: normal;
+//   font-style: normal;
+//   letter-spacing: normal;
+//   font-size: 16px;
+//   border-radius: 4px;
+//   padding: 3%;
+//   line-height: 1.29;
+//   letter-spacing: 0.5px;
+//   color: $panther;
+//   height: 2.5rem;
+//   background-color: white;
+//   border: 1px solid #5d5e5e;
+//   width: 10rem;
+//   padding: 0 0 0 1rem;
+//   margin: 1rem;
+// }
 ::v-deep .collection-search__result-item {
   overflow: auto;
   padding: 0 0.5rem;
@@ -845,6 +861,14 @@ img {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  width: 22vw;
+  margin-top: -0.5rem;
 }
 .btn {
   &--danger {
@@ -916,12 +940,7 @@ img {
 .alert-operand-row__options {
   display: flex;
   align-items: flex-start;
-  flex-wrap: wrap;
   justify-content: space-evenly;
-  margin-top: -1rem;
-  &-label {
-    color: black;
-  }
 }
 .fields__height {
   height: 26vh;

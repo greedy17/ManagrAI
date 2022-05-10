@@ -168,9 +168,10 @@
                   selectLabel="Enter"
                   track-by="id"
                   label="name"
+                  :loading="dropdownLoading"
                 >
                   <template slot="noResult">
-                    <p class="multi-slot">No results.</p>
+                    <p class="multi-slot">No results. Try loading more</p>
                   </template>
                   <template slot="afterList">
                     <p
@@ -178,6 +179,7 @@
                       @click="listUserChannels(userChannelOpts.nextCursor)"
                     >
                       Load More
+                      <img src="@/assets/images/plusOne.png" alt="" />
                     </p>
                   </template>
                   <template slot="placeholder">
@@ -261,6 +263,7 @@ export default {
   },
   data() {
     return {
+      dropdownLoading: false,
       create: true,
       userChannelOpts: new SlackListResponse(),
       channelName: '',
@@ -351,12 +354,16 @@ export default {
       return this.userTargetsOpts.filter((user) => user.id == id)[0].fullName
     },
     async listUserChannels(cursor = null) {
+      this.dropdownLoading = true
       const res = await SlackOAuth.api.listUserChannels(cursor)
       const results = new SlackListResponse({
         channels: [...this.userChannelOpts.channels, ...res.channels],
         responseMetadata: { nextCursor: res.nextCursor },
       })
       this.userChannelOpts = results
+      setTimeout(() => {
+        this.dropdownLoading = false
+      }, 500)
     },
     async createChannel(name) {
       const res = await SlackOAuth.api.createChannel(name)
@@ -527,15 +534,15 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: $dark-green;
-  font-weight: bold;
-  border-top: 1px solid #e8e8e8;
+  color: $gray;
+  font-size: 12px;
   width: 100%;
   padding: 0.5rem 0rem;
   margin: 0;
+  cursor: text;
   &__more {
-    background-color: $dark-green;
-    color: white;
+    background-color: white;
+    color: $dark-green;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -545,6 +552,13 @@ export default {
     padding: 0.75rem 0rem;
     margin: 0;
     cursor: pointer;
+
+    img {
+      height: 0.8rem;
+      margin-left: 0.25rem;
+      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+        brightness(93%) contrast(89%);
+    }
   }
 }
 .search__input {
