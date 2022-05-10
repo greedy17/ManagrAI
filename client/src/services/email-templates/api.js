@@ -26,7 +26,6 @@ export default class EmailTemplateAPI {
   list() {
     const promise = apiClient()
       .get(EMAIL_TEMPLATE_ENDPOINT)
-      // .get(EMAIL_TEMPLATE_ENDPOINT, options)
       .then(response => response.data)
       .then(data => {
         return {

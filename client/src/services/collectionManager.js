@@ -1,5 +1,4 @@
 import Pagination from '@/services/pagination'
-import { apiErrorHandler } from '@/services/api'
 
 /**
  * An abstraction that provides a simple interface for managing

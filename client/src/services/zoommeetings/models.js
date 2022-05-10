@@ -1,5 +1,4 @@
 import Model, { fields } from '@thinknimble/tn-models'
-import { objectToCamelCase, objectToSnakeCase } from '@thinknimble/tn-utils'
 import Contact from '@/services/contacts'
 import ZoomMeetingAPI from './api'
 

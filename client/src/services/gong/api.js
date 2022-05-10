@@ -1,8 +1,5 @@
 import { ModelAPI, ApiFilter } from '@thinknimble/tn-models'
 import { apiClient, apiErrorHandler } from '@/services/api'
-import axios from 'axios'
-import CSRF from '@/services/csrf'
-import API_BASE from '@/services/api/base'
 
 export default class GongAccountAPI extends ModelAPI {
   static ENDPOINT = 'users/gongaccount/'
