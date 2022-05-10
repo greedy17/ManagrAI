@@ -55,7 +55,7 @@ from managr.slack.helpers.block_sets import get_block_set
 from managr.salesloft.models import People
 from managr.salesloft.background import emit_add_cadence_membership
 from managr.zoom.background import emit_process_schedule_zoom_meeting
-
+from managr.slack.tasks import emit_update_slack_message
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,
@@ -92,7 +92,8 @@ def process_stage_next_page(payload, context):
         private_metadata.update({**context})
         if context.get("form_type") == "CREATE":
             callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
-
+        elif context.get("type") == "alert":
+            callback_id = slack_const.PROCESS_SUBMIT_ALERT_RESOURCE_DATA
         else:
             callback_id = slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
         return {
@@ -237,20 +238,22 @@ def process_next_page_slack_commands_form(payload, context):
     current_form_ids = context.get("f").split(",")
     view = payload["view"]
     state = view["state"]["values"]
+    alert_check = context.get("alert_id", None)
     current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
     # save the main form
     main_form = current_forms.filter(template__form_type__in=["UPDATE", "CREATE"]).first()
     main_form.save_form(state)
     stage_forms = current_forms.exclude(template__form_type__in=["UPDATE", "CREATE"])
     slack_access_token = user.organization.slack_integration.access_token
-
     # currently only for update
     blocks = []
     for form in stage_forms:
         blocks.extend(form.generate_form())
-
+    if alert_check is not None:
+        callback_id = slack_const.PROCESS_SUBMIT_ALERT_RESOURCE_DATA
+    else:
+        callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
     if len(blocks):
-
         return {
             "response_action": "push",
             "view": {
@@ -259,7 +262,7 @@ def process_next_page_slack_commands_form(payload, context):
                 "submit": {"type": "plain_text", "text": "Submit"},
                 "blocks": blocks,
                 "private_metadata": view["private_metadata"],
-                "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
+                "callback_id": callback_id,
             },
         }
     return
@@ -2399,6 +2402,7 @@ def process_submit_alert_resource_data(payload, context):
                     ],
                 },
             }
+
             slack_requests.generic_request(
                 slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
                 data,
@@ -2521,49 +2525,7 @@ def process_submit_alert_resource_data(payload, context):
     current_forms.update(is_submitted=True, update_source="alert", submission_date=timezone.now())
     if len(user.slack_integration.realtime_alert_configs):
         _send_instant_alert(current_form_ids)
-    instance = AlertInstance.objects.get(id=context.get("alert_id"))
-    main_form.alert_instance_id = instance
-    main_form.save()
-    alert_instances = AlertInstance.objects.filter(
-        invocation=instance.invocation,
-        channel=context.get("channel_id"),
-        config_id=instance.config_id,
-    ).filter(completed=False)
-    alert_instance = alert_instances.first()
-    text = instance.template.title
-    blocks = [
-        block_builders.header_block(f"{len(alert_instances)} results for workflow {text}"),
-    ]
-    if alert_instance:
-        alert_instances = custom_paginator(alert_instances, page=int(context.get("current_page")))
-        for alert_instance in alert_instances.get("results", []):
-            blocks = [
-                *blocks,
-                *get_block_set(
-                    "alert_instance",
-                    {
-                        "instance_id": str(alert_instance.id),
-                        "current_page": int(context.get("current_page")),
-                    },
-                ),
-            ]
-            alert_instance.rendered_text = alert_instance.render_text()
-            alert_instance.save()
-        if len(blocks):
-            blocks = [
-                *blocks,
-                *custom_paginator_block(
-                    alert_instances,
-                    instance.invocation,
-                    context.get("channel_id"),
-                    instance.config_id,
-                ),
-            ]
-    else:
-        blocks.append(block_builders.simple_section("You're all finished with this workflow!"))
-    slack_requests.update_channel_message(
-        context.get("channel_id"), context.get("message_ts"), slack_access_token, block_set=blocks,
-    )
+    emit_update_slack_message(context, str(main_form.id))
     return {"response_action": "clear"}
 
 

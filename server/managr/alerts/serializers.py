@@ -373,7 +373,12 @@ class AlertConfigWriteSerializer(serializers.ModelSerializer):
                 value = ["SELF"]
 
             data.update({"recipients": value})
-
+        if (
+            data.get("recipient_type") == "SLACK_CHANNEL"
+            and self.context.user.slack_integration.zoom_channel is not None
+        ):
+            print("here")
+            data.update({"recipients": [self.context.user.slack_integration.zoom_channel]})
         internal_data = super().to_internal_value(data)
         return internal_data
 
@@ -421,7 +426,6 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
             )
             try:
                 _new_configs.is_valid(raise_exception=True)
-
                 _new_configs.save()
             except Exception as e:
                 print(f"ERROR {e}")

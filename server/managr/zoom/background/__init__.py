@@ -261,7 +261,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
         if settings.IN_DEV:
             participants.append(
                 {
-                    "name": "maybe mike",
+                    "name": "first",
                     "id": "",
                     "user_email": f"{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}@{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}.com",
                 }
@@ -463,6 +463,7 @@ def _kick_off_slack_interaction(user_id, managr_meeting_id):
                 )
 
             # save slack message ts and channel id to remove if the meeting is deleted before being filled
+            user.activity.increment_untouched_count("meeting")
             workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
             workflow.save()
 
