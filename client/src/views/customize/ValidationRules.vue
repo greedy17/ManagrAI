@@ -40,40 +40,6 @@
       <h3>Validation Rules</h3>
       <p>Apply additional fields to stages</p>
     </div>
-
-    <!-- <modal name="objects-modal" heading="Select a Stage">
-      <div class="objects__">
-        <img class="tooltip image" src="@/assets/images/toolTip.png" @click="toggleObjectsModal" />
-        <div class="required__title">Forms</div>
-        <div>
-          <p class="mar">
-            <strong>Update:</strong>
-            This form appears whenever you see the “Update” button
-          </p>
-
-          <p class="mar">
-            <strong>Create:</strong>
-            This form is triggered when you run the slack command, "managr-create"
-          </p>
-          <p class="mar">
-            <strong>Stage Related Fields:</strong>
-            Additional fields needed to advance Stages
-          </p>
-        </div>
-      </div>
-    </modal> -->
-
-    <!-- <div class="header__container" v-if="!resource">
-      <div class="col" style="margin-top: 4rem">
-        <h3 class="header__title">Select a Salesforce Object</h3>
-        <h3 class="muted">
-          <strong style="font-size: 17px">Pro-tip:</strong> Start with the
-          <strong style="font-size: 16px; color: #cc3873">Opportunity</strong> and
-          <strong style="font-size: 16px; color: #cc3873">Contact</strong>
-          objects, they are the most used.
-        </h3>
-      </div>
-    </div> -->
     <div v-if="selectingStage">
       <div class="modal-container">
         <div class="modal-container__header">
@@ -137,21 +103,6 @@
             </button>
           </div>
         </div>
-
-        <!-- <div class="centered">
-            <span class="user-message" v-if="!stages.length">
-              <small>Can't see your stages?</small>
-            </span>
-            <span v-else class="user-message">
-              <small>Recently updated your stages?</small>
-            </span>
-            <PulseLoadingSpinnerButton
-              @click="() => refreshFormStages()"
-              :loading="false"
-              class="stage__button"
-              text="Refresh"
-            />
-          </div> -->
       </div>
     </div>
 
@@ -188,7 +139,6 @@
         class="stage__dropdown"
       >
         <div>
-          <!-- <div v-if="selectedStage">{{ selectedStage }} Form</div> -->
           <div class="stage__dropdown__header">
             {{ formLength ? 'Saved Validation Rules' : 'No Saved Validation Rules' }}
           </div>
@@ -221,12 +171,6 @@
         </div>
       </div>
     </div>
-    <!-- 
-    <div class="tip-continue" v-if="resource">
-      <button class="primary-button">
-        <router-link :to="{ name: 'ListTemplates' }">Continue to Smart Alerts </router-link>
-      </button>
-    </div> -->
   </div>
 </template>
 
@@ -236,9 +180,9 @@ import Paginator from '@thinknimble/paginator'
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
 import CustomSlackForm from '@/views/settings/CustomSlackForm'
 import { mapState } from 'vuex'
-import SlackOAuth, { salesforceFields } from '@/services/slack'
+import SlackOAuth from '@/services/slack'
 import { SObjectField, SObjectValidation, SObjectPicklist } from '@/services/salesforce'
-import SObjectFormBuilderAPI, { SOBJECTS_LIST } from '@/services/salesforce'
+import { SOBJECTS_LIST } from '@/services/salesforce'
 import * as FORM_CONSTS from '@/services/slack'
 
 export default {
@@ -287,7 +231,6 @@ export default {
       started: false,
     }
   },
-  watch: {},
   async created() {
     try {
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
@@ -308,9 +251,6 @@ export default {
 
   computed: {
     ...mapState(['user']),
-    selectedFormType() {
-      return this.selectedForm ? this.selectedForm.formType : null
-    },
     currentStagesWithForms() {
       return this.formStages.map((sf) => sf.stage)
     },
@@ -353,38 +293,14 @@ export default {
         this.loadingStages = false
       }
     },
-
-    nextPage() {
-      this.formFields.nextPage()
-    },
-    previousPage() {
-      this.formFields.prevPage()
-    },
     nextValidation() {
       this.validations.nextPage()
     },
     previousValidation() {
       this.validations.prevPage()
     },
-    async searchFields() {
-      this.loading = true
-
-      this.formFields.filters = {
-        search: this.search,
-        salesforceObject: this.resource,
-        ...this.fieldParam,
-      }
-      this.formFields.refresh()
-
-      this.loading = false
-    },
-
     toggleRequiredModal() {
       this.$modal.show('required-modal')
-    },
-
-    toggleObjectsModal() {
-      this.$modal.show('objects-modal')
     },
 
     async selectForm(resource, formType, stage = '') {
@@ -404,18 +320,6 @@ export default {
           message: 'There was an error gathering fields',
           type: 'error',
           timeout: 3000,
-        })
-      }
-    },
-    async listValidations(query_params = {}) {
-      try {
-        this.validations.filters = query_params
-        this.validations.refresh()
-      } catch {
-        this.$Alert.alert({
-          type: 'error',
-          timeout: 2000,
-          message: 'There was an error gathering validations',
         })
       }
     },
@@ -457,13 +361,6 @@ export default {
             })
             this.allForms = [...forms]
             this.logForm(form)
-            // this.$Alert.alert({
-            //   type: 'success',
-
-            //   message: 'Form successfully removed',
-
-            //   timeout: 2000,
-            // })
             this.$router.go()
           })
 
@@ -486,13 +383,6 @@ export default {
       }
     },
 
-    openStageDropDown() {
-      this.resource = 'Opportunity'
-      this.formType = 'STAGE_GATING'
-      this.getStageForms()
-      this.stageDropDownOpen = !this.stageDropDownOpen
-    },
-
     async onAddForm() {
       this.selectingStage = !this.selectingStage
       this.loadingStages = true
@@ -505,6 +395,7 @@ export default {
         this.loadingStages = false
       }
     },
+
     addForm(stage) {
       /** Method for Creating a new stage-gating form, this is only available for Opportunities at this time */
 
@@ -681,7 +572,6 @@ export default {
   justify-content: center;
   flex-direction: column;
   align-items: center;
-  // height: 60vh;
 }
 .invert {
   filter: invert(99%);
@@ -940,7 +830,6 @@ button:disabled {
     min-height: 40vh;
     width: 50vw;
     border-radius: 0.3rem;
-    // box-shadow: 2px 3px 3px $soft-gray;
     border: 1px solid #e8e8e8;
     background-color: $white;
     overflow-y: scroll;

@@ -13,7 +13,6 @@
             Active <img src="@/assets/images/configCheck.png" alt="" />
           </p>
         </div>
-        <!-- <img class="back-logo" src="@/assets/images/logo.png" /> -->
         <div class="card__body">
           <img style="margin-right: 1rem" class="card-img" src="@/assets/images/salesforce.png" />
           <img
@@ -36,7 +35,6 @@
             Active <img src="@/assets/images/configCheck.png" alt="" />
           </p>
         </div>
-        <!-- <img class="back-logo" src="@/assets/images/logo.png" /> -->
         <div class="card__body">
           <img style="margin-right: 1rem" class="card-img" src="@/assets/images/salesforce.png" />
           <img
@@ -60,7 +58,6 @@ import SlackOAuth from '@/services/slack'
 
 export default {
   name: 'Required',
-  components: {},
   data() {
     return {
       createContactForm: null,
@@ -74,9 +71,6 @@ export default {
     createContactForm: 'hasContactForm',
   },
   computed: {
-    orgHasSlackIntegration() {
-      return !!this.$store.state.user.organizationRef.slackIntegration
-    },
     user() {
       return this.$store.state.user
     },
@@ -115,7 +109,6 @@ export default {
       }
     },
     test() {
-      // console.log(this.createContactForm)
       console.log(this.updateOpportunityForm[0].fields.length)
     },
     goToUpdateOpp() {
@@ -124,12 +117,6 @@ export default {
     goToCreate() {
       this.$router.push({ name: 'CreateContacts' })
     },
-    goToTemplates() {
-      this.$router.push({ name: 'ListTemplates' })
-    },
-    // handleShowOptional() {
-    //   this.showOptional = !this.showOptional
-    // },
   },
 }
 </script>
@@ -215,7 +202,6 @@ export default {
     filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
       brightness(93%) contrast(89%);
     margin-left: 0.5rem;
-    // margin-top: 0.1rem;
   }
 }
 .card-img {
@@ -301,15 +287,4 @@ ul {
   align-items: center;
   justify-content: center;
 }
-// .optional_button {
-//   height: 2.75rem;
-//   width: 16rem;
-//   border: none;
-//   margin: 0rem 0 0.5rem 0;
-//   font-size: 1.05rem;
-//   font-weight: bold;
-//   color: $panther-silver;
-//   background: transparent;
-//   cursor: pointer;
-// }
 </style>

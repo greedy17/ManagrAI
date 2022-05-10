@@ -30,7 +30,7 @@ import Paginator from '@thinknimble/paginator'
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
 import CustomSlackForm from '@/views/settings/CustomSlackForm'
 import { mapState } from 'vuex'
-import SlackOAuth, { salesforceFields } from '@/services/slack'
+import SlackOAuth from '@/services/slack'
 import { SObjectField, SObjectValidation, SObjectPicklist } from '@/services/salesforce'
 import { SOBJECTS_LIST } from '@/services/salesforce'
 import * as FORM_CONSTS from '@/services/slack'
@@ -71,7 +71,6 @@ export default {
       started: false,
     }
   },
-  watch: {},
   async created() {
     try {
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
@@ -90,79 +89,8 @@ export default {
   },
   computed: {
     ...mapState(['user']),
-    selectedFormType() {
-      return this.selectedForm ? this.selectedForm.formType : null
-    },
-
-    currentStagesWithForms() {
-      return this.formStages.map((sf) => sf.stage)
-    },
   },
   methods: {
-    async refreshFormStages() {
-      try {
-        const res = await SObjectPicklist.api.getStagePicklistValues()
-
-        if (res.status == 200) {
-          this.$Alert.alert({
-            type: 'success',
-            timeout: 2000,
-            message: 'Successfully Retrieved Picklist Values please refresh your page',
-          })
-        }
-      } catch {
-        this.$Alert.alert({
-          type: 'error',
-          timeout: 2000,
-          message: 'There was an error collecting stages',
-        })
-      } finally {
-        this.loadingStages = false
-      }
-    },
-    async listValidations(query_params = {}) {
-      try {
-        this.validations.filters = query_params
-        this.validations.refresh()
-      } catch {
-        this.$Alert.alert({
-          type: 'error',
-          timeout: 2000,
-          message: 'There was an error gathering validations',
-        })
-      }
-    },
-    // async selectForm(resource = OPPORTUNITY, formType = UPDATE, stage = '') {
-    //   this.selectedForm = this.allForms.find(
-    //     (f) => f.resource == resource && f.formType == formType && f.stage == stage,
-    //   )
-    //   this.formType = formType
-    //   this.resource = resource
-    // },
-    nextPage() {
-      this.formFields.nextPage()
-    },
-    previousPage() {
-      this.formFields.prevPage()
-    },
-    nextValidation() {
-      this.validations.nextPage()
-    },
-    previousValidation() {
-      this.validations.prevPage()
-    },
-    async searchFields() {
-      this.loading = true
-
-      this.formFields.filters = {
-        search: this.search,
-        salesforceObject: this.resource,
-        ...this.fieldParam,
-      }
-      this.formFields.refresh()
-
-      this.loading = false
-    },
     async listFields(query_params = {}) {
       try {
         this.formFields.filters = query_params
@@ -172,18 +100,6 @@ export default {
           message: 'There was an error gathering fields',
           type: 'error',
           timeout: 3000,
-        })
-      }
-    },
-    async listValidations(query_params = {}) {
-      try {
-        this.validations.filters = query_params
-        this.validations.refresh()
-      } catch {
-        this.$Alert.alert({
-          type: 'error',
-          timeout: 2000,
-          message: 'There was an error gathering validations',
         })
       }
     },
@@ -218,47 +134,6 @@ export default {
         this.stages = res.length ? res[0]['values'] : []
       } catch (e) {
         console.log(e)
-      }
-    },
-
-    async deleteForm(form) {
-      if (form.id && form.id.length) {
-        const id = form.id
-
-        SlackOAuth.api
-          .delete(id)
-          .then(async (res) => {
-            this.$Alert.alert({
-              type: 'success',
-
-              message: 'Form deleted successfully',
-
-              timeout: 2000,
-            })
-
-            const forms = this.formsByType.filter((f) => {
-              return f.id !== form.id
-            })
-            this.fallForms = [...forms]
-          })
-
-          .catch((e) => {
-            this.$Alert.alert({
-              type: 'error',
-
-              message: 'There was an error, please try again',
-
-              timeout: 2000,
-            })
-          })
-
-          .finally(() => {})
-      } else {
-        const forms = this.allForms.filter((f) => {
-          return f.id !== form.id
-        })
-        this.allForms = [...forms]
-        console.log(this.allForms)
       }
     },
   },

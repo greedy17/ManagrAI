@@ -10,7 +10,6 @@
           justify-content: flex-start;
         "
       >
-        <!-- <img src="@/assets/images/map.png" style="height: 1.5rem" alt="" /> -->
         <h3 class="title">Manage Actions</h3>
         <h5 style="margin-top: -0.5rem">Where Salesforce meets Slack</h5>
       </div>
@@ -42,16 +41,10 @@
 
 <script>
 import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePreview'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 import { UserOnboardingForm } from '@/services/users/forms'
 import User from '@/services/users'
-import AlertTemplate, {
-  AlertGroupForm,
-  AlertTemplateForm,
-  AlertConfigForm,
-  AlertMessageTemplateForm,
-  AlertOperandForm,
-} from '@/services/alerts/'
+import AlertTemplate from '@/services/alerts/'
 
 export default {
   name: 'CustomizeLandingPage',
@@ -81,47 +74,8 @@ export default {
         })
       this.$router.push({ name: 'ListTemplates' })
     },
-    alertsCount(num) {
-      let int = num
-      if (this.hasZoomChannel) {
-        int++
-      }
-      if (this.hasRecapChannel) {
-        int++
-      }
-      return int
-    },
-    onboardComplete() {
-      this.userOnboardingForm.field.onboarding.value = false
-      this.handleUpdate()
-    },
   },
   computed: {
-    listLength() {
-      return this.templates.list.length
-    },
-    hasZoomChannel() {
-      if (this.hasSlack) {
-        return this.$store.state.user.slackAccount.zoomChannel
-      }
-    },
-    hasRecapChannel() {
-      if (this.hasSlack) {
-        return this.$store.state.user.slackAccount.recapChannel
-      }
-    },
-    hasSlack() {
-      return this.$store.state.user.slackAccount
-    },
-    isOnboarding() {
-      return this.$store.state.user.onboarding
-    },
-    isHome() {
-      return this.$route.name == 'alerts'
-    },
-    isAdmin() {
-      return this.$store.state.user.isAdmin
-    },
     user() {
       return this.$store.state.user
     },
