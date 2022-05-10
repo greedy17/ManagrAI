@@ -61,12 +61,15 @@
                 selectLabel="Enter"
                 track-by="apiName"
                 label="referenceDisplayLabel"
+                :loading="dropdownLoading"
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more.</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="onFieldsNextPage">
+                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
                 </template>
 
                 <template slot="placeholder">
@@ -94,10 +97,12 @@
                 label="referenceDisplayLabel"
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="onFieldsNextPage">
+                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -129,10 +134,12 @@
                 label="referenceDisplayLabel"
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="onFieldsNextPage">
+                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -181,10 +188,12 @@
                 label="referenceDisplayLabel"
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="onFieldsNextPage">
+                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -211,10 +220,12 @@
                 label="referenceDisplayLabel"
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="onFieldsNextPage">
+                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -240,10 +251,12 @@
                 label="referenceDisplayLabel"
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="onFieldsNextPage">
+                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -275,10 +288,12 @@
                 label="referenceDisplayLabel"
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="onFieldsNextPage">
+                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -314,12 +329,15 @@
               selectLabel="Enter"
               track-by="apiName"
               label="referenceDisplayLabel"
+              :loading="dropdownLoading"
             >
               <template slot="noResult">
-                <p class="multi-slot">No results.</p>
+                <p class="multi-slot">No results. Try loading more</p>
               </template>
               <template slot="afterList">
-                <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                <p class="multi-slot__more" @click="onFieldsNextPage">
+                  Load More <img src="@/assets/images/plusOne.png" alt="" />
+                </p>
               </template>
               <template slot="placeholder">
                 <p class="slot-icon">
@@ -345,10 +363,12 @@
               label="referenceDisplayLabel"
             >
               <template slot="noResult">
-                <p class="multi-slot">No results.</p>
+                <p class="multi-slot">No results. Try loading more</p>
               </template>
               <template slot="afterList">
-                <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                <p class="multi-slot__more" @click="onFieldsNextPage">
+                  Load More <img src="@/assets/images/plusOne.png" alt="" />
+                </p>
               </template>
               <template slot="placeholder">
                 <p class="slot-icon">
@@ -375,10 +395,12 @@
               label="referenceDisplayLabel"
             >
               <template slot="noResult">
-                <p class="multi-slot">No results.</p>
+                <p class="multi-slot">No results. Try loading more</p>
               </template>
               <template slot="afterList">
-                <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                <p class="multi-slot__more" @click="onFieldsNextPage">
+                  Load More <img src="@/assets/images/plusOne.png" alt="" />
+                </p>
               </template>
               <template slot="placeholder">
                 <p class="slot-icon">
@@ -423,10 +445,12 @@
                 label="referenceDisplayLabel"
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="onFieldsNextPage">
+                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -880,10 +904,12 @@
             label="referenceDisplayLabel"
           >
             <template slot="noResult">
-              <p class="multi-slot">No results.</p>
+              <p class="multi-slot">No results. Try loading more</p>
             </template>
             <template slot="afterList">
-              <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+              <p class="multi-slot__more" @click="onFieldsNextPage">
+                Load More <img src="@/assets/images/plusOne.png" alt="" />
+              </p>
             </template>
             <template slot="placeholder">
               <p class="slot-icon">
@@ -924,10 +950,12 @@
             label="referenceDisplayLabel"
           >
             <template slot="noResult">
-              <p class="multi-slot">No results.</p>
+              <p class="multi-slot">No results. Try loading more</p>
             </template>
             <template slot="afterList">
-              <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+              <p class="multi-slot__more" @click="onFieldsNextPage">
+                Load More <img src="@/assets/images/plusOne.png" alt="" />
+              </p>
             </template>
             <template slot="placeholder">
               <p class="slot-icon">
@@ -1180,6 +1208,7 @@ export default {
   },
   data() {
     return {
+      dropdownLoading: false,
       currentStageForm: null,
       formFields: CollectionManager.create({ ModelClass: SObjectField }),
       formFieldList: [],
@@ -1455,7 +1484,12 @@ export default {
       await this.formFields.refresh()
     },
     async onFieldsNextPage() {
-      await this.formFields.addNextPage()
+      this.dropdownLoading = true
+      await this.formFields.addNextPage().then(() => {
+        setTimeout(() => {
+          this.dropdownLoading = false
+        }, 1000)
+      })
     },
 
     nextPage() {
@@ -1671,14 +1705,14 @@ export default {
   align-items: center;
   justify-content: center;
   color: $gray;
-  font-weight: bold;
-
+  font-size: 12px;
   width: 100%;
   padding: 0.5rem 0rem;
   margin: 0;
+  cursor: text;
   &__more {
-    background-color: $dark-green;
-    color: white;
+    background-color: white;
+    color: $dark-green;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1688,6 +1722,13 @@ export default {
     padding: 0.75rem 0rem;
     margin: 0;
     cursor: pointer;
+
+    img {
+      height: 0.8rem;
+      margin-left: 0.25rem;
+      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+        brightness(93%) contrast(89%);
+    }
   }
 }
 .invert {

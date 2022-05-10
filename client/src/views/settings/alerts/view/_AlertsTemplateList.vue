@@ -522,7 +522,7 @@ button:disabled {
   border: none;
 }
 ::v-deep .ls-container__list--horizontal {
-  background-color: $panther;
+  background-color: white;
   width: 50vw;
 }
 ::v-deep .ls-container {

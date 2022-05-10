@@ -108,13 +108,12 @@
                 </div>
               </div>
             </div>
-
-            <img
-              src="@/assets/images/add.png"
-              style="height: 1.5rem; margin-bottom: 1rem; cursor: pointer"
-              alt=""
-              @click="onShowGroupModal()"
-            />
+          </div>
+          <div
+            v-if="!alert.groupsRef.length"
+            style="display: flex; justify-content: center; width: 100%; margin-bottom: -1rem"
+          >
+            <button class="condition-button" @click="onShowGroupModal()">Add Group</button>
           </div>
         </div>
         <div v-if="selectedTab == 'MESSAGE'" class="alerts-template-list__content-message">
@@ -152,12 +151,16 @@
                 selectLabel="Enter"
                 track-by="apiName"
                 label="referenceDisplayLabel"
+                :loading="dropdownLoading"
               >
                 <template slot="noResult">
                   <p class="multi-slot">No results.</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="fieldNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="fieldNextPage">
+                    Load More
+                    <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -310,6 +313,7 @@ export default {
   },
   data() {
     return {
+      dropdownLoading: false,
       templateTitleField: new FormFieldService({ validators: [new RequiredValidator()] }),
       executeUpdateTemplate: debounce(this.updateTemplate, 900),
       executeUpdateMessageTemplate: debounce(this.updateMessageTemplate, 900),
@@ -434,7 +438,7 @@ export default {
           name: 'alert-groups-modal',
 
           height: 400,
-          width: 600,
+          width: 800,
 
           adaptive: true,
         },
@@ -610,7 +614,11 @@ export default {
       await this.fields.refresh()
     },
     async fieldNextPage() {
+      this.dropdownLoading = true
       await this.fields.addNextPage()
+      setTimeout(() => {
+        this.dropdownLoading = false
+      })
     },
 
     bindText(val) {
@@ -749,7 +757,7 @@ h3 {
   right: 10px;
   border-radius: 0.25rem;
   border: none;
-  background-color: $panther-gray;
+  background-color: white;
   outline: none;
   opacity: 0;
   z-index: -1;
@@ -774,14 +782,14 @@ h3 {
   align-items: center;
   justify-content: center;
   color: $gray;
-  font-weight: bold;
-
+  font-size: 12px;
   width: 100%;
   padding: 0.5rem 0rem;
   margin: 0;
+  cursor: text;
   &__more {
-    background-color: $dark-green;
-    color: white;
+    background-color: white;
+    color: $dark-green;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -791,6 +799,13 @@ h3 {
     padding: 0.75rem 0rem;
     margin: 0;
     cursor: pointer;
+
+    img {
+      height: 0.8rem;
+      margin-left: 0.25rem;
+      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+        brightness(93%) contrast(89%);
+    }
   }
 }
 .dropdown-container:focus {
