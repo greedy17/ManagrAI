@@ -32,7 +32,6 @@
             <span style="margin-left: 2rem; color: white">Example</span>
           </em>
         </div>
-        <!-- <p style="align-self: flex-end; color: #beb5cc">Example</p> -->
       </div>
     </div>
   </div>
@@ -153,7 +152,6 @@ export default {
     }
   }
   .divider {
-    // @include standard-border();
     margin: 1rem 0rem;
   }
 }

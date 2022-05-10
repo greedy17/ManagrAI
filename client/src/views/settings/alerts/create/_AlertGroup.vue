@@ -1,6 +1,5 @@
 <template>
   <div>
-    <!-- <span class="alert-group-row--label">create automation</span> -->
     <div class="centered">
       <div class="toggle__switch" v-if="form.field.groupOrder.value != 0">
         <label>AND</label>
@@ -76,7 +75,6 @@ export default {
   data() {
     return {}
   },
-  watch: {},
   async created() {},
   methods: {
     addOperandForm() {

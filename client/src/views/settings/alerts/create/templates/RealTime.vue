@@ -145,6 +145,9 @@ export default {
     recapChannel() {
       return this.$store.state.user.slackAccount.recapChannel
     },
+    user() {
+      return this.$store.state.user
+    },
     selectedResourceType: {
       get() {
         return this.alertTemplateForm.field.resourceType.value

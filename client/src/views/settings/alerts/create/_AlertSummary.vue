@@ -65,7 +65,6 @@
                 style="display: flex; justify-content: space-evenly"
                 class="box__content-recipient-group__recipient-group__conditions__operands-operand"
               >
-                <!-- <span>{{ form.value.resourceType }} </span> -->
                 <span class="green__item">
                   {{
                     operandRow._operandIdentifier
@@ -84,17 +83,6 @@
                       operandRow._operandIdentifier.dataType == 'DateTime')
                   "
                 >
-                  <!-- <span v-if="operandRow.operandValue === 0">is the current day</span>
-                  <span v-else-if="operandRow.operandValue === 1">is the next</span>
-                  <span v-else-if="operandRow.operandValue === -1">has passed</span> -->
-
-                  <!-- {{
-                    operandDateValToStr(
-                      config.recurrenceFrequency,
-                      config.recurrenceDay,
-                      operandRow.operandValue,
-                    )
-                  }} -->
                   <span>{{ changeNeg(operandRow.operandValue) }} days </span>
                   <span>{{
                     checkVal(operandRow.operandValue) ? ' in the past' : ' in the future'
@@ -137,7 +125,7 @@
 /**
  * Services
  */
-import { AlertOperandForm, AlertGroupForm, AlertTemplateForm } from '@/services/alerts/'
+import { AlertTemplateForm } from '@/services/alerts/'
 import moment from 'moment'
 
 export default {
@@ -148,8 +136,6 @@ export default {
    *
    */
   name: 'AlertSummary',
-  components: {},
-
   props: {
     form: { type: AlertTemplateForm },
   },
@@ -158,7 +144,6 @@ export default {
       moment,
     }
   },
-  watch: {},
   async created() {},
   methods: {
     checkVal(val) {
@@ -204,30 +189,7 @@ export default {
           .join(', ')
       }
     },
-    operandDateValToStr(frequency, day, diffValue) {
-      /**
-       * Helper for converting the selected recurrence frequency to
-       * a real date for use in the SUMMARY COMPONENT
-       *
-       * */
-
-      if (frequency == 'MONTHLY') {
-        // get current date start of month
-        let d = moment().startOf('month')
-        // get the selected day of the month (-1)
-        let selectedD = d.add(day - 1, 'd').add(diffValue, 'd')
-        // return diff based on operand value
-        return selectedD.format('MM/DD')
-      } else {
-        // assume weekly
-        // get todays weekday (as iso 1-7)
-        let m = moment().startOf('isoweek').add(day, 'd')
-        m.add(diffValue, 'd')
-        return m.format('MM/DD')
-      }
-    },
   },
-  computed: {},
 }
 </script>
 
@@ -241,30 +203,6 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
-// .alert-group-row {
-//   // @include standard-border();
-//   margin: 0.5rem;
-//   padding: 0.5rem 1rem;
-//   display: flex;
-//   flex-direction: column;
-//   overflow: visible;
-//   &--label {
-//     @include muted-font();
-//     top: -1.1rem;
-//     position: relative;
-//   }
-// }
-// .alert-group-row__condition {
-//   position: relative;
-//   top: -2.4rem;
-//   display: flex;
-//   align-items: center;
-//   justify-content: center;
-//   &-label {
-//     @include muted-font();
-//     margin: 0 0.5rem;
-//   }
-// }
 .alert__summary {
   display: flex;
   align-items: center;

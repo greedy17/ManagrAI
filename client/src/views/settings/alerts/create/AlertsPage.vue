@@ -405,24 +405,16 @@ import Modal from '@/components/Modal'
  * Services
  */
 
-import AlertTemplate, {
-  AlertGroupForm,
-  AlertTemplateForm,
-  AlertConfigForm,
-  AlertMessageTemplateForm,
-  AlertOperandForm,
-} from '@/services/alerts/'
+import AlertTemplate, { AlertTemplateForm } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 import {
   SObjectField,
-  SObjectValidations,
-  SObjectPicklist,
   NON_FIELD_ALERT_OPTS,
   SOBJECTS_LIST,
 } from '@/services/salesforce'
 import User from '@/services/users'
-import SlackOAuth, { SlackListResponse } from '@/services/slack'
+import { SlackListResponse } from '@/services/slack'
 
 export default {
   name: 'AlertsPage',
@@ -461,9 +453,6 @@ export default {
     this.templates.refresh()
   },
   methods: {
-    showList() {
-      this.listVisible = !this.listVisible
-    },
     handleUpdate() {
       User.api
         .update(this.user.id, this.userOnboardingForm.value)
@@ -478,9 +467,6 @@ export default {
     onboardComplete() {
       this.userOnboardingForm.field.onboarding.value = false
       this.handleUpdate()
-    },
-    showDropDown() {
-      this.dropdownVisible = !this.dropdownVisible
     },
     goToCloseDateApproaching() {
       this.$router.push({ name: 'CloseDateApproaching' })
@@ -497,101 +483,22 @@ export default {
     goToLogZoom() {
       this.$router.push({ name: 'LogZoom' })
     },
-    goToZoomRecap() {
-      this.$router.push({ name: 'ZoomRecap' })
-    },
     goToNextStep() {
       this.$router.push({ name: 'NextStep' })
     },
     goToEmptyField() {
       this.$router.push({ name: 'RequiredFieldEmpty' })
     },
-    getWorkflowIds(arr1, arr2) {
-      return arr1.some((item) => arr2.includes(item))
-    },
   },
   computed: {
-    workFlowIds() {
-      let arr = []
-      for (let i = 0; i < this.templates.list.length; i++) {
-        arr.push(this.templates.list[i].id)
-      }
-      return arr
-    },
     hasSalesforceIntegration() {
       return !!this.$store.state.user.salesforceAccount
-    },
-    hasZoomIntegration() {
-      return !!this.$store.state.user.zoomAccount && this.$store.state.user.hasZoomIntegration
-    },
-    hasGongIntegration() {
-      return !!this.$store.state.user.gongAccount && this.$store.state.user.hasGongIntegration
-    },
-    hasSalesloftIntegration() {
-      return (
-        !!this.$store.state.user.salesloftAccount && this.$store.state.user.hasSalesloftIntegration
-      )
-    },
-    orgHasSlackIntegration() {
-      return !!this.$store.state.user.organizationRef.slackIntegration
     },
     hasSlackIntegration() {
       return !!this.$store.state.user.slackRef
     },
-    hasNylasIntegration() {
-      return !!this.$store.state.user.nylas
-    },
-    userCanIntegrateSlack() {
-      return this.$store.state.user.isAdmin
-    },
     recapChannel() {
       return this.$store.state.user.slackAccount.recapChannel
-    },
-    userTargetsOpts() {
-      if (this.user.userLevel == 'MANAGER') {
-        return [
-          ...this.alertTargetOpts.map((opt) => {
-            return {
-              id: opt.value,
-              fullName: opt.key,
-            }
-          }),
-          ...this.users.list,
-        ]
-      } else {
-        return [{ fullName: 'Myself', id: 'SELF' }]
-      }
-    },
-    recipientOpts() {
-      if (this.user.userLevel == 'MANAGER') {
-        return [
-          ...this.alertRecipientOpts.map((opt) => {
-            return {
-              id: opt.value,
-              fullName: opt.key,
-            }
-          }),
-          ...this.users.list,
-        ]
-      } else {
-        return [{ fullName: 'Myself', id: 'SELF' }]
-      }
-    },
-    formValue() {
-      return this.alertTemplateForm.value
-    },
-    editor() {
-      return this.$refs['message-body'].quill
-    },
-    selection() {
-      return this.editor.selection.lastRange
-    },
-    alertObj() {
-      return {
-        title: this.formValue.title,
-        message: this.formValue.alertMessages[0].body,
-        resourceType: this.selectedResourceType,
-      }
     },
     user() {
       return this.$store.state.user
@@ -601,9 +508,6 @@ export default {
     },
     hasZoomChannel() {
       return this.$store.state.user.slackAccount.zoomChannel
-    },
-    userLevel() {
-      return this.$store.state.user.userLevel
     },
     isOnboarding() {
       return this.$store.state.user.onboarding
@@ -796,10 +700,6 @@ textarea {
     font-weight: bold;
     font-size: 11px;
   }
-}
-.alerts-page__message-options-body__bindings__fields {
-  // margin: 3rem 0rem;
-  // width: 40rem;
 }
 .gray {
   color: $gray;

@@ -57,31 +57,6 @@
             placeholder="Enter a value"
             v-if="!(selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME')"
           />
-          <!-- <div v-if="selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME'" class="column">
-            <span class="row"
-              ><input
-                @click="setOperandDateValue(5)"
-                type="radio"
-                id="Approaching"
-                value="5"
-                v-model="operandDate"
-              />
-              <label for="Approaching"
-                >{{ form.field.operandIdentifier.value }} is approaching.</label
-              >
-            </span>
-
-            <span class="row"
-              ><input
-                @click="setOperandDateValue(-1)"
-                type="radio"
-                id="passed"
-                value="-1"
-                v-model="operandDate"
-              />
-              <label for="passed">{{ form.field.operandIdentifier.value }} has passed.</label>
-            </span>
-          </div> -->
         </div>
       </template>
     </div>
@@ -101,11 +76,10 @@ import FormField from '@/components/forms/FormField'
 /**
  * Services
  */
-import { AlertOperandForm, AlertGroupForm } from '@/services/alerts/'
+import { AlertOperandForm } from '@/services/alerts/'
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
 import {
   SObjectField,
-  SObjectValidations,
   SObjectPicklist,
   NON_FIELD_ALERT_OPTS,
 } from '@/services/salesforce'
@@ -116,7 +90,6 @@ import {
   STRING,
   DATE,
   DECIMAL,
-  BOOLEAN,
   DATETIME,
 } from '@/services/salesforce/models'
 
@@ -226,21 +199,8 @@ export default {
       }
       return 'text'
     },
-    toggleSelectedCondition() {
-      this.selectedCondition == 'AND'
-        ? (this.selectedCondition = 'OR')
-        : (this.selectedCondition = 'AND')
-    },
     async objectFieldNextPage() {
       await this.objectFields.addNextPage()
-    },
-    async onSearchFields(v) {
-      this.objectFields.pagination = new Pagination()
-      this.objectFields.filters = {
-        ...this.objectFields.filters,
-        search: v,
-      }
-      await this.objectFields.refresh()
     },
     async listPicklists(query_params = {}) {
       try {
@@ -251,16 +211,8 @@ export default {
         console.log(e)
       }
     },
-    setOperandDateValue(val) {
-      this.form.field.operandValue.value = val
-      this.form.field.operandOperator.value = '<='
-    },
   },
   computed: {
-    selectedField() {
-      return this.form.field.operandIdentifier.value
-    },
-
     selectedFieldTypeRaw() {
       if (this.form.field._operandIdentifier.value) {
         return this.form.field._operandIdentifier.value.dataType
@@ -279,30 +231,6 @@ export default {
       } else {
         return STRING
       }
-    },
-    operatorOpts() {
-      switch (this.selectedFieldType) {
-        case INTEGER:
-          return this.intOpts
-        case DECIMAL:
-          return this.intOpts
-        case DATE:
-          return this.intOpts
-        case DATETIME:
-          return this.intOpts
-        default:
-          return this.strOpts
-      }
-    },
-    valueOpts() {
-      if (this.selectedFieldType) {
-        if (this.selectedFieldType == DATE || this.selectedFieldType == DATETIME) {
-          return this.dateValueOpts
-        } else {
-          return this.booleanValueOpts
-        }
-      }
-      return this.booleanValueOpts
     },
     selectedCondition: {
       get() {
@@ -392,9 +320,6 @@ export default {
   }
 }
 .alert-operand-row {
-  // @include standard-border();
-  // margin: 1rem;
-  // padding: 0.5rem 1rem;
   display: flex;
   flex-direction: column;
 

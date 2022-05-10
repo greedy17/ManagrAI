@@ -51,9 +51,6 @@
         </div>
 
         <div v-if="pageNumber === 0">
-          <!-- <p style="text-align: center; border-bottom: 2px solid #beb5cc; padding-bottom: 0.25rem">
-        Object Type
-      </p> -->
           <h5 style="text-align: center; margin-top: -0.75rem; color: #4d4e4c" class="title">
             {{ alertTemplateForm.field.resourceType.value }} Selected. Switch to
             <span
@@ -94,41 +91,6 @@
             >
           </h5>
         </div>
-        <!-- <div
-          style="
-            margin: auto;
-            text-align: center;
-            width: 30%;
-            margin-bottom: 1rem;
-            margin-top: -0.5rem;
-          "
-          title="25.00%"
-        >
-          <div
-            style="
-              text-align: left;
-              margin: 2px auto;
-              font-size: 0px;
-              line-height: 0px;
-              border: solid 1px #aaaaaa;
-              background: #0e572e;
-              overflow: hidden;
-              border-radius: 0.25rem;
-            "
-          >
-            <div
-              style="
-                font-size: 0px;
-                line-height: 0px;
-                height: 6px;
-                min-width: 0%;
-                max-width: 25%;
-                width: 25%;
-                background: #41b883;
-              "
-            ></div>
-          </div>
-        </div> -->
         <div :key="index" v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups">
           <div class="sf__collection">
             <AlertGroup
@@ -182,54 +144,12 @@
             </div>
           </div>
         </div>
-        <!-- <div style="margin-top: 0.5rem">
-          <button class="plus_button" @click="onAddAlertGroup">
-            <img src="@/assets/images/add.svg" class="filtered" alt="" />
-            Add Group
-          </button>
-        </div> -->
       </div>
 
       <div v-if="pageNumber === 2" class="alert__column">
         <h3>Construct your Message</h3>
-        <!-- <div
-          style="margin: auto; text-align: center; width: 36%; margin-bottom: 1rem"
-          title="25.00%"
-        >
-          <div
-            style="
-              text-align: left;
-              margin: 2px auto;
-              font-size: 0px;
-              line-height: 0px;
-              border: solid 1px #aaaaaa;
-              background: #0e572e;
-              overflow: hidden;
-              border-radius: 0.25rem;
-            "
-          >
-            <div
-              style="
-                font-size: 0px;
-                line-height: 0px;
-                height: 6px;
-                min-width: 0%;
-                max-width: 75%;
-                width: 75%;
-                background: #41b883;
-              "
-            ></div>
-          </div>
-        </div> -->
         <div class="collection__fields">
           <div class="message_titles">
-            <!-- <p
-              :class="templateBounce ? 'bouncy' : ''"
-              @click="$refs.templateModal.openModal(), switchBounce()"
-              style="cursor: pointer; border-bottom: 3px solid #41b883"
-            >
-              Popular Template
-            </p> -->
             <FormField
               id="message"
               :errors="alertTemplateForm.field.alertMessages.groups[0].field.body.errors"
@@ -329,35 +249,6 @@
 
       <div v-if="pageNumber === 1" class="alert__column">
         <h3>Select Delivery Options</h3>
-        <!-- <div
-          style="margin: auto; text-align: center; width: 30%; margin-bottom: 1rem"
-          title="25.00%"
-        >
-          <div
-            style="
-              text-align: left;
-              margin: 2px auto;
-              font-size: 0px;
-              line-height: 0px;
-              border: solid 1px #aaaaaa;
-              background: #0e572e;
-              overflow: hidden;
-              border-radius: 0.25rem;
-            "
-          >
-            <div
-              style="
-                font-size: 0px;
-                line-height: 0px;
-                height: 6px;
-                min-width: 0%;
-                max-width: 50%;
-                width: 50%;
-                background: #41b883;
-              "
-            ></div>
-          </div>
-        </div> -->
         <div class="sf__collection">
           <template>
             <div
@@ -387,8 +278,6 @@
                 </div>
 
                 <div>
-                  <!-- <p style="color: #beb5cc">What day would you like your Smart Alert delivered:</p> -->
-
                   <div v-if="form.field.recurrenceFrequency.value == 'WEEKLY'">
                     <FormField>
                       <template v-slot:input>
@@ -427,32 +316,6 @@
                     v-model="form.field.recurrenceDay.value"
                     small
                   />
-
-                  <!-- <p
-                    @click="removeDay"
-                    v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
-                    :class="form.field.recurrenceDay.value ? 'selected__item' : 'visible'"
-                  >
-                    <img
-                      src="@/assets/images/remove.png"
-                      style="height: 1rem; margin-right: 0.25rem"
-                      alt=""
-                    />
-                    {{ form.field.recurrenceDay.value }}
-                  </p>
-
-                  <p
-                    @click="removeDay"
-                    v-else-if="form.field.recurrenceFrequency.value == 'WEEKLY'"
-                    :class="form.field.recurrenceDay.value ? 'selected__item' : 'visible'"
-                  >
-                    <img
-                      src="@/assets/images/remove.png"
-                      style="height: 1rem; margin-right: 0.25rem"
-                      alt=""
-                    />
-                    {{ convertToDay(form.field.recurrenceDay.value) }}
-                  </p> -->
                 </div>
               </div>
 
@@ -467,28 +330,6 @@
                 "
               >
                 <span style="font-size: 13px; margin-bottom: 0.3rem">Select pipelines</span>
-                <!-- <input
-                  class="search__input"
-                  type="text"
-                  v-model="searchQuery"
-                  placeholder="Search pipelines..."
-                />
-
-                <div :key="value" v-for="(key, value) in filteredUserTargets">
-                  <span id="utops" class="delivery__row">
-                    <input
-                      v-model="form.field.alertTargets.value"
-                      :value="key.id"
-                      id="value"
-                      type="checkbox"
-                      style="height: 1rem"
-                      @click="setPipelines(key)"
-                    />
-                    <label style="margin-left: -3rem; margin-top: 0.5rem" for="value">{{
-                      key.fullName
-                    }}</label>
-                  </span>
-                </div> -->
                 <FormField :errors="form.field.alertTargets.errors">
                   <template v-slot:input>
                     <Multiselect
@@ -519,21 +360,6 @@
                     </Multiselect>
                   </template>
                 </FormField>
-                <!-- <div style="margin-top: -0.5rem" class="items_height">
-                  <p
-                    :key="i"
-                    v-for="(item, i) in form.field.alertTargets.value"
-                    :class="form.field.alertTargets.value ? 'selected__item' : ''"
-                    @click="removeItemFromTargetArray(item)"
-                  >
-                    <img
-                      src="@/assets/images/remove.png"
-                      style="height: 1rem; margin-right: 0.25rem"
-                      alt=""
-                    />
-                    {{ checkInteger(item) }}
-                  </p>
-                </div> -->
               </div>
 
               <div>
@@ -619,19 +445,6 @@
                       </Multiselect>
                     </template>
                   </FormField>
-                  <!-- 
-                  <p
-                    v-if="form.field.recipients.value.length > 0"
-                    @click="removeTarget"
-                    :class="form.field.recipients.value ? 'selected__item' : 'visible'"
-                  >
-                    <img
-                      src="@/assets/images/remove.png"
-                      style="height: 1rem; margin-right: 0.25rem"
-                      alt=""
-                    />
-                    {{ form.field._recipients.value.name }}
-                  </p> -->
                 </div>
               </div>
             </div>
@@ -641,35 +454,6 @@
 
       <div class="alert__column" v-if="pageNumber === 3">
         <h3>Name and save your workflow</h3>
-        <!-- <div
-          style="margin: auto; text-align: center; width: 65%; margin-bottom: 1rem"
-          title="25.00%"
-        >
-          <div
-            style="
-              text-align: left;
-              margin: 2px auto;
-              font-size: 0px;
-              line-height: 0px;
-              border: solid 1px #aaaaaa;
-              background: #0e572e;
-              overflow: hidden;
-              border-radius: 0.25rem;
-            "
-          >
-            <div
-              style="
-                font-size: 0px;
-                line-height: 0px;
-                height: 6px;
-                min-width: 0%;
-                max-width: 100%;
-                width: 100%;
-                background: #41b883;
-              "
-            ></div>
-          </div>
-        </div> -->
         <template>
           <div
             style="display: flex; justify-content: center; align-items: center"
@@ -685,7 +469,6 @@
               :errors="alertTemplateForm.field.title.errors"
               @blur="alertTemplateForm.field.title.validate()"
             />
-            <!-- <AlertSummary :form="alertTemplateForm" /> -->
           </div>
         </template>
       </div>
@@ -812,16 +595,12 @@ import AlertTemplate, {
   AlertGroupForm,
   AlertTemplateForm,
   AlertConfigForm,
-  AlertMessageTemplateForm,
-  AlertOperandForm,
 } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
 import CollectionSearch from '@thinknimble/collection-search'
 import {
   SObjectField,
-  SObjectValidations,
-  SObjectPicklist,
   NON_FIELD_ALERT_OPTS,
   SOBJECTS_LIST,
 } from '@/services/salesforce'
@@ -935,12 +714,6 @@ export default {
         }
       },
     },
-    // selectedDay: function () {
-    //   this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDay.value =
-    //     this.selectedDay
-    //   this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value =
-    //     this.selectedDay.value
-    // },
   },
   methods: {
     mapIds() {
@@ -969,9 +742,6 @@ export default {
         })
       }
     },
-    switchBounce() {
-      this.templateBounce = !this.templateBounce
-    },
     addCount() {
       this.clickCount += 1
     },
@@ -988,9 +758,6 @@ export default {
         type: 'error',
         timeout: 2000,
       })
-    },
-    checkInteger(str) {
-      return /\d/.test(str) ? this.user.fullName : str
     },
     changeCreate() {
       this.create = !this.create
@@ -1107,64 +874,6 @@ export default {
       new_str = str.replace(/\s+/g, '-').toLowerCase()
       this.channelName = new_str
     },
-    removeDay() {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = ''
-    },
-    removeTarget() {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = []
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = []
-    },
-    removeItemFromTargetArray(item) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value =
-        this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.filter(
-          (i) => i !== item,
-        )
-    },
-    removeItemFromRecipientArray(item) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value.filter(
-          (i) => i !== item,
-        )
-    },
-    // showRecipientValue(val){
-    //   if(this.alertTemplateForm.field.recipients.value.length > 0){
-
-    //   }
-    // },
-    convertToDay(num) {
-      if (num == 0) {
-        return 'Monday'
-      } else if (num == 1) {
-        return 'Tuesday'
-      } else if (num == 2) {
-        return 'Wednesday'
-      } else if (num == 3) {
-        return 'Thursday'
-      } else if (num == 4) {
-        return 'Friday'
-      } else if (num == 5) {
-        return 'Saturday'
-      } else if (num == 6) {
-        return 'Sunday'
-      }
-    },
-    recipientTypeToggle(value) {
-      if (!this.user.slackRef) {
-        this.$Alert.alert({ type: 'error', message: 'Slack Not Integrated', timeout: 2000 })
-        return 'USER_LEVEL'
-      }
-      if (value == 'USER_LEVEL') {
-        return 'SLACK_CHANNEL'
-      } else if (value == 'SLACK_CHANNEL') {
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = []
-        this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = []
-        return 'USER_LEVEL'
-      }
-      return value
-    },
-    onMenuShow() {
-      this.showMenu = !this.showMenu
-    },
     accountResource() {
       this.alertTemplateForm.field.resourceType.value = 'Account'
     },
@@ -1213,10 +922,6 @@ export default {
     onPreviousPage() {
       this.pageNumber >= 1 ? (this.pageNumber -= 1) : (this.pageNumber = this.pageNumber)
     },
-    // setDay(n) {
-    //   this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
-    //   this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value.push(n.value)
-    // },
     setDay(n) {
       this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
       let days = []
@@ -1239,18 +944,6 @@ export default {
       this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
         this.selectedChannel.id
     },
-    changeType(val) {
-      this.recipientType = val
-    },
-    getListOfTargets(targets) {
-      if (targets && targets.length) {
-        return targets
-          .map((opt) => {
-            return opt.id == 'SELF' ? 'Your' : opt.fullName + "'s"
-          })
-          .join(', ')
-      }
-    },
     onAddAlertGroup() {
       // length determines order
       const order = this.alertTemplateForm.field.alertGroups.groups.length
@@ -1262,13 +955,6 @@ export default {
 
       this.alertTemplateForm.addToArray('alertGroups', new AlertGroupForm())
       this.alertTemplateForm.field.alertGroups.groups[order].field.groupOrder.value = order
-    },
-    onAddAlertSetting() {
-      if (this.alertTemplateForm.field.alertConfig.groups.length >= 3) {
-        this.$Alert.alert({ message: 'You can only add 3 configurations', timeout: 2000 })
-        return
-      }
-      this.alertTemplateForm.addToArray('alertConfig', new AlertConfigForm())
     },
     onRemoveAlertGroup(i) {
       // get order and update options
@@ -1287,39 +973,11 @@ export default {
         el.field.groupOrder.value = order + index
       })
     },
-    onRemoveSetting(i) {
-      if (this.alertTemplateForm.field.alertConfig.groups.length - 1 <= 0) {
-        return
-      }
-      this.alertTemplateForm.removeFromArray('alertConfig', i)
-    },
-    async onSearchFields(v) {
-      this.fields.pagination = new Pagination()
-      this.fields.filters = {
-        ...this.fields.filters,
-        search: v,
-      }
-      await this.fields.refresh()
-    },
     async fieldNextPage() {
       await this.fields.addNextPage()
     },
-    async onSearchUsers(v) {
-      this.users.pagination = new Pagination()
-      this.users.filters = {
-        ...this.users.filters,
-        search: v,
-      }
-      await this.users.refresh()
-    },
     async onUsersNextPage() {
       await this.users.addNextPage()
-    },
-    showList() {
-      this.listVisible = !this.listVisible
-    },
-    showDropDown() {
-      this.dropdownVisible = !this.dropdownVisible
     },
   },
   computed: {
@@ -1338,66 +996,11 @@ export default {
         return [{ fullName: 'Myself', id: 'SELF' }]
       }
     },
-    filteredUserTargets() {
-      if (this.searchQuery) {
-        return this.userTargetsOpts.filter((key) => {
-          return key.fullName.toLowerCase().startsWith(this.searchQuery.toLowerCase())
-        })
-      } else {
-        return this.userTargetsOpts
-      }
-    },
-    filteredRecipients() {
-      if (this.searchText) {
-        return this.recipientOpts.filter((key) => {
-          return key.fullName.toLowerCase().startsWith(this.searchText.toLowerCase())
-        })
-      } else {
-        return this.recipientOpts
-      }
-    },
-    filteredChannels() {
-      if (this.searchChannels) {
-        return this.reversedChannels.filter((key) => {
-          return key.name.toLowerCase().startsWith(this.searchChannels.toLowerCase())
-        })
-      } else {
-        return this.reversedChannels
-      }
-    },
-    recipientOpts() {
-      if (this.user.userLevel == 'MANAGER') {
-        return [
-          ...this.alertRecipientOpts.map((opt) => {
-            return {
-              id: opt.value,
-              fullName: opt.key,
-            }
-          }),
-          ...this.users.list,
-        ]
-      } else {
-        return [{ fullName: 'Myself', id: 'SELF' }]
-      }
-    },
-    formValue() {
-      return this.alertTemplateForm.value
-    },
-    reversedChannels() {
-      return this.channelOpts.channels.reverse()
-    },
     editor() {
       return this.$refs['message-body'].quill
     },
     selection() {
       return this.editor.selection.lastRange
-    },
-    alertObj() {
-      return {
-        title: this.formValue.title,
-        message: this.formValue.alertMessages[0].body,
-        resourceType: this.selectedResourceType,
-      }
     },
     user() {
       return this.$store.state.user
@@ -1676,8 +1279,6 @@ button img {
   height: 2.5rem;
   width: 14vw;
   padding: 0 0 0 1rem;
-
-  // box-shadow: 3px 4px 7px $very-light-gray;
 }
 
 .filtered {
@@ -1744,7 +1345,6 @@ button img {
   }
 
   &__form {
-    // flex: 10;
     width: 24vw;
     padding: 2rem;
     box-shadow: 0 5px 10px 0 rgba(132, 132, 132, 0.26);
@@ -1781,7 +1381,6 @@ button img {
   }
 
   &__right {
-    // flex: 2;
     display: flex;
     padding-left: 1rem;
     margin-right: -0.5rem;
@@ -1854,7 +1453,6 @@ button img {
   flex-direction: column;
   background-color: $white;
   border-radius: 0.2rem;
-  // border: 1px solid #e8e8e8;
   border: 1px solid #e8e8e8;
   width: 75vw;
   padding: 2rem;
@@ -1956,7 +1554,6 @@ button img {
   padding: 2.5rem 1rem 0rem 0rem;
 }
 .plus_button {
-  // border: 1px solid #e8e8e8;
   border: none;
   background-color: $dark-green;
   border-radius: 0.3rem;

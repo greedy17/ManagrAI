@@ -1,18 +1,5 @@
 <template>
   <div class="alert-group-row">
-    <!-- <div class="alert-group-row__condition" v-if="form.field.groupOrder.value != 0">
-      <label class="alert-group-row__condition-label">AND</label>
-      <ToggleCheckBox
-        @input="
-          selectedCondition == 'AND' ? (selectedCondition = 'OR') : (selectedCondition = 'AND')
-        "
-        :value="selectedCondition !== 'AND'"
-        offColor="#199e54"
-        onColor="#199e54"
-      />
-      <label class="alert-group-row__condition-label">OR</label>
-    </div> -->
-
     <div class="alert-group-row__operands">
       <div
         :key="i"
@@ -24,27 +11,6 @@
           :resourceType="resourceType"
           :form.sync="alertOperand"
         />
-
-        <!-- <div class="add__remove" v-if="form.field.alertOperands.groups.length > 1">
-          <button
-            class="btn btn--danger btn--icon"
-            @click.stop="onRemoveOperand(i)"
-            :disabled="form.field.alertOperands.groups.length - 1 <= 0"
-          >
-            <svg width="24px" height="24px" viewBox="0 0 24 24">
-              <use xlink:href="@/assets/images/remove.svg#remove" />
-            </svg>
-          </button>
-          <p class="sub">Remove</p>
-        </div>
-        <div class="add__remove">
-          <button class="btn btn--secondary btn--icon" @click="addOperandForm">
-            <svg width="24px" height="24px" viewBox="0 0 24 24">
-              <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
-            </svg>
-          </button>
-          <p class="sub">Row</p>
-        </div> -->
       </div>
     </div>
   </div>
@@ -83,7 +49,6 @@ export default {
   data() {
     return {}
   },
-  watch: {},
   async created() {},
   methods: {
     addOperandForm() {
@@ -178,8 +143,6 @@ export default {
     @include muted-font();
     margin: 0 0.5rem;
   }
-}
-.alert-group-row__operands {
 }
 .add__remove {
   margin-right: 1.5rem;

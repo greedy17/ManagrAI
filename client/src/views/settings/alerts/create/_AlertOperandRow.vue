@@ -77,13 +77,6 @@
             </Multiselect>
           </template>
         </FormField>
-        <!-- <p
-          @click="removeOperator"
-          :class="form.field.operandOperator.value ? 'selected__item' : 'invisible'"
-        >
-          <img src="@/assets/images/remove.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
-          {{ form.field._operandOperator.value ? form.field._operandOperator.value.label : '' }}
-        </p> -->
       </div>
 
       <div class="alert-operand-row__value">
@@ -93,16 +86,6 @@
           v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'"
         >
           <p>Select a value:</p>
-          <!-- <div :key="value" v-for="(key, value) in picklistOpts">
-            <input
-              v-model="form.field.operandValue.value"
-              id="key"
-              :value="key.value"
-              type="radio"
-              @click="setOperand(key)"
-            />
-            <label for="key">{{ key.label }}</label>
-          </div> -->
 
           <FormField :errors="form.field.operandValue.errors">
             <template v-slot:input>
@@ -127,17 +110,6 @@
               </Multiselect>
             </template>
           </FormField>
-          <!-- <p
-            @click="removeValue"
-            :class="form.field.operandValue.value ? 'selected__item' : 'invisible'"
-          >
-            <img
-              src="@/assets/images/remove.png"
-              style="height: 1rem; margin-right: 0.5rem"
-              alt=""
-            />
-            {{ form.field.operandValue.value }}
-          </p> -->
         </div>
 
         <template v-else>
@@ -171,9 +143,6 @@
                 </Multiselect>
               </template>
             </FormField>
-            <!-- <p :class="form.field.operandValue.value ? 'selected__item' : ''">
-              {{ form.field.operandValue.value }}
-            </p> -->
           </div>
 
           <div v-else>
@@ -189,16 +158,6 @@
             >
               <div style="text-align: center">
                 <p>Select an operator:</p>
-                <!-- <div :key="value" v-for="(key, value) in operatorOpts">
-                <input
-                  v-model="form.field.operandOperator.value"
-                  id="key"
-                  :value="key.value"
-                  type="radio"
-                  @click="setOperator(key)"
-                />
-                <label for="key">{{ key.label }}</label>
-                </div> -->
                 <FormField :errors="form.field.operandOperator.errors">
                   <template v-slot:input>
                     <Multiselect
@@ -222,20 +181,6 @@
                     </Multiselect>
                   </template>
                 </FormField>
-                <!-- <p
-                  style="margin-top: 2.25rem"
-                  @click="removeOperator"
-                  :class="form.field.operandOperator.value ? 'selected__item' : 'invisible'"
-                >
-                  <img
-                    src="@/assets/images/remove.png"
-                    style="height: 1rem; margin-right: 0.5rem"
-                    alt=""
-                  />
-                  {{
-                    form.field._operandOperator.value ? form.field._operandOperator.value.label : ''
-                  }}
-                </p> -->
               </div>
 
               <div>
@@ -279,58 +224,7 @@
                     />
                   </template>
                 </FormField>
-                <!-- <p
-                  style="margin-top: -0.5rem; width: 90%"
-                  :class="form.field.operandValue.value ? 'selected__item' : 'invisible'"
-                  @click="removeValue"
-                >
-                  <img
-                    src="@/assets/images/remove.png"
-                    style="height: 1rem; margin-right: 0.5rem"
-                    alt=""
-                  />
-                  {{ form.field.operandValue.value }}
-                </p> -->
               </div>
-
-              <!-- <div style="display: flex; align-items: center">
-                <p>{{ form.field.operandIdentifier.value }} is:</p>
-                <div class="centered">
-                  <label class="alert-operand-row__condition-label">In the past</label>
-                  <ToggleCheckBox
-                    @input="toggleSelectedOperand"
-                    :value="MyOperand !== 'Negative'"
-                    offColor="#41b883"
-                    onColor="#41b883"
-                  />
-                  <label class="alert-operand-row__condition-label">In the Future</label>
-                </div>
-              </div>
-
-              <div v-if="MyOperand === 'Negative'">
-                <label for="quantityNeg">Number of <span>days</span>:</label>
-                <input
-                  id="quantityNeg"
-                  name="quantityNeg"
-                  v-model="form.field.operandValue.value"
-                  type="number"
-                  v-on:keyup="negVal(form.field.operandValue.value)"
-                  class="dayInput"
-                  @click="setIdentifier"
-                />
-              </div>
-
-              <div v-else>
-                <label for="quantity">Number of <span>days</span>:</label>
-                <input
-                  id="quantity"
-                  name="quantity"
-                  v-model="form.field.operandValue.value"
-                  type="number"
-                  class="dayInput"
-                  @click="setIdentifier"
-                />
-              </div> -->
             </div>
 
             <div class="centered" style="flex-direction: column" v-else>
@@ -342,9 +236,6 @@
                 :inputType="getInputType(form.field._operandIdentifier.value)"
                 placeholder=""
               />
-              <!-- <p :class="form.field.operandValue.value ? 'selected__item' : ''">
-                {{ form.field.operandValue.value }}
-              </p> -->
             </div>
           </div>
         </template>
@@ -574,32 +465,11 @@ export default {
     await this.objectFields.refresh()
   },
   methods: {
-    removeIdentifier() {
-      this.form.field.operandIdentifier.value = ''
-    },
-    removeOperator() {
-      this.form.field.operandOperator.value = ''
-    },
-    removeValue() {
-      this.form.field.operandValue.value = ''
-    },
     getInputType(type) {
       if (type && INPUT_TYPE_MAP[type.dataType]) {
         return INPUT_TYPE_MAP[type.dataType]
       }
       return 'text'
-    },
-    setIdentifier() {
-      if (this.selectedFieldType == 'DATE' || this.selectedFieldType == 'DATETIME') {
-        this.form.field.operandOperator.value = '<='
-        this.form.field._operandOperator.value = { label: '<= (Less or Equal)', value: '<=' }
-      }
-    },
-    setOperator(obj) {
-      this.form.field._operandOperator.value = obj
-    },
-    setOperand(obj) {
-      this.form.field._operandValue.value = obj
     },
     toggleSelectedCondition() {
       this.selectedCondition == 'AND'
@@ -612,14 +482,6 @@ export default {
     },
     async objectFieldNextPage() {
       await this.objectFields.addNextPage()
-    },
-    async onSearchFields(v) {
-      this.objectFields.pagination = new Pagination()
-      this.objectFields.filters = {
-        ...this.objectFields.filters,
-        search: v,
-      }
-      await this.objectFields.refresh()
     },
     async listPicklists(query_params = {}) {
       try {
@@ -643,10 +505,6 @@ export default {
     },
   },
   computed: {
-    selectedField() {
-      return this.form.field.operandIdentifier.value
-    },
-
     selectedFieldTypeRaw() {
       if (this.form.field._operandIdentifier.value) {
         return this.form.field._operandIdentifier.value.dataType
@@ -845,9 +703,6 @@ img {
   }
 }
 .alert-operand-row {
-  // @include standard-border();
-  // margin: 1rem;
-  // padding: 0.5rem 1rem;
   display: flex;
   flex-direction: column;
   &--label {
