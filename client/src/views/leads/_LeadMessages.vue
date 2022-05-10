@@ -56,8 +56,6 @@
 
 <script>
 import ComponentLoadingSVG from '@/components/ComponentLoadingSVG'
-import LeadMessage from '@/services/lead-messages'
-import CollectionManager from '@/services/collectionManager'
 import MessageContainer from '@/components/messages/MessageContainer'
 import ActionTabHeader from '@/components/shared/ActionTabHeader'
 import Messaging from '@/services/messages'

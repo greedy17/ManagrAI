@@ -118,38 +118,6 @@ export default {
       let instance = List.fromAPI(list)
       this.myLists.list.unshift(instance)
     },
-    updateFilters(filter) {
-      if (this.myLists.filters[filter.key] == filter.value) {
-        filter.value = null
-      }
-      // only update if there is a change
-      // all collections should have the same filters so only
-      // need one source of truth
-      // if a collection does not have a filter
-      // in its API filter class it will be removed on the request
-      // components wont react to changes in obj[key] value
-      // alt could have created a new list and set it to that
-      //https://vuejs.org/v2/guide/reactivity.html#Change-Detection-Caveats
-
-      this.$set(this.myLists.filters, filter.key, filter.value)
-      this.$set(this.myLeadsAll.filters, filter.key, filter.value)
-      this.$set(this.myLeadsNoList.filters, filter.key, filter.value)
-
-      this.refreshCollections()
-    },
-    deleteFilters() {
-      const user = this.$store.state.user.id
-      const clearedFilter = {
-        byReps: [user],
-        byUser: user,
-      }
-
-      this.myLists.filters = clearedFilter
-      this.myLeadsAll.filters = clearedFilter
-      this.myLeadsNoList.filters = clearedFilter
-
-      this.refreshCollections()
-    },
   },
 }
 </script>

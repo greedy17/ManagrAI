@@ -27,8 +27,6 @@
 </template>
 
 <script>
-import ToolBar from '@/components/forecast/ToolBar'
-
 import ListsContainer from '@/components/forecast/ListsContainer'
 import ToggleCheckBox from '@/components/shared/ToggleCheckBox'
 import Forecast from '@/services/forecasts'
@@ -153,25 +151,6 @@ export default {
         this.loading = false
       })
     },
-    toggleActiveRep(repID) {
-      // depending on state of this.repFilterState --> add or make false at that key
-      // plainObject is used instead of an array because of O(1) lookup for <div class="rep" v-for.. />
-      if (!this.repFilterState[repID]) {
-        this.repFilterState = Object.assign({}, this.repFilterState, { [repID]: true })
-      } else {
-        this.repFilterState = Object.assign({}, this.repFilterState, { [repID]: false })
-      }
-      this.updateForecastCollections()
-    },
-    selectAllReps(repIDs) {
-      let allRepsSelected = repIDs.reduce(allRepsReducer, {})
-      this.repFilterState = allRepsSelected
-      this.updateForecastCollections()
-    },
-    deselectAllReps() {
-      this.repFilterState = {}
-      this.updateForecastCollections()
-    },
     resetPaginationOfCollections() {
       // When updating collection filter parameters,
       // may have an error if the pagination parameter stays at
@@ -189,9 +168,6 @@ export default {
     ...mapGetters(['showToolbarNav']),
     isCurrentRoute() {
       return this.$route.name == 'Forecast'
-    },
-    userID() {
-      return this.$store.state.user.id
     },
     activeReps() {
       return Object.keys(this.repFilterState).filter(repID => this.repFilterState[repID])
