@@ -126,6 +126,7 @@ class AlertTemplateViewSet(
                                 template.url_str(user, config.id), template.resource_type
                             )
                             res_data.extend([item.integration_id for item in res])
+
                     break
                 except TokenExpired:
                     if attempts >= 5:
@@ -323,7 +324,6 @@ class RealTimeAlertViewSet(
         from managr.salesforce.models import SObjectField
 
         data = request.data
-        print(data)
         manager = User.objects.get(id=data.get("user"))
         api_name = data.get("api_name", None)
         if api_name:
