@@ -26,7 +26,7 @@
               v-model="identity"
               :options="objectFields.list"
               openDirection="below"
-              style="width: 13vw"
+              style="width: 16vw"
               selectLabel="Enter"
               track-by="apiName"
               label="referenceDisplayLabel"
@@ -65,7 +65,7 @@
               v-model="selectedOperator"
               :options="operatorOpts"
               openDirection="below"
-              style="width: 13vw"
+              style="width: 16vw"
               selectLabel="Enter"
               label="label"
             >
@@ -115,7 +115,7 @@
                 v-model="selectedOperand"
                 :options="picklistOpts"
                 openDirection="below"
-                style="width: 13vw"
+                style="width: 16vw"
                 selectLabel="Enter"
                 label="label"
               >
@@ -170,7 +170,7 @@
                   v-model="selectedOperand"
                   :options="valueOpts"
                   openDirection="below"
-                  style="width: 13vw"
+                  style="width: 16vw"
                   selectLabel="Enter"
                   label="label"
                 >
@@ -231,7 +231,7 @@
                       v-model="selectedOperator"
                       :options="operatorOpts"
                       openDirection="below"
-                      style="width: 13vw"
+                      style="width: 16vw"
                       selectLabel="Enter"
                       label="label"
                     >
@@ -452,7 +452,8 @@ export default {
       selectedOperand: '',
       objectFields: CollectionManager.create({
         ModelClass: SObjectField,
-        filters: { forAlerts: true, filterable: true, page: 1 },
+        pagination: { size: 200 },
+        // filters: { forAlerts: true, filterable: true, page: 1 },
       }),
       // used by dropdown as a ref field to retrieve obj of selected opt
       selectedOperandFieldRef: null,
@@ -598,8 +599,8 @@ export default {
       async handler(val) {
         this.objectFields.filters = {
           ...this.objectFields.filters,
-          forAlerts: true,
-          filterable: true,
+          // forAlerts: true,
+          // filterable: true,
           salesforceObject: val,
         }
         this.objectFields.refresh()

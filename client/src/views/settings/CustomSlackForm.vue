@@ -1210,7 +1210,10 @@ export default {
     return {
       dropdownLoading: false,
       currentStageForm: null,
-      formFields: CollectionManager.create({ ModelClass: SObjectField }),
+      formFields: CollectionManager.create({
+        ModelClass: SObjectField,
+        pagination: { size: 200 },
+      }),
       formFieldList: [],
       salesforceFields,
       customSlackFormConfig: [],
@@ -1252,40 +1255,12 @@ export default {
       handler(val) {
         if (val && val.fields.length) {
           this.addedFields = [...val.fieldsRef]
-          if (this.formType == 'UPDATE') {
-            let currentFormFields = this.addedFields.map((field) => {
-              return field.id
-            })
-            if (currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false) {
-              let fieldsToAdd = this.managrFields.filter((field) => {
-                return (
-                  field.id == '6407b7a1-a877-44e2-979d-1effafec5035' ||
-                  field.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
-                )
-              })
-              let copyArray = this.addedFields
-              fieldsToAdd = fieldsToAdd.concat(copyArray)
-              this.addedFields = fieldsToAdd.map((field, i) => {
-                let altField = { ...field }
-                altField.order = i
-                if (
-                  altField.id == '6407b7a1-a877-44e2-979d-1effafec5035' ||
-                  altField.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
-                ) {
-                  altField.includeInRecap = true
-                }
-                return altField
-              })
-            }
-          }
-          if (this.formType !== 'UPDATE') {
-            this.addedFields = this.addedFields.filter((field) => {
-              return (
-                field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
-                field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
-              )
-            })
-          }
+          this.addedFields = this.addedFields.filter((field) => {
+            return (
+              field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
+              field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
+            )
+          })
         }
       },
     },
@@ -1345,7 +1320,6 @@ export default {
       },
     },
   },
-
   computed: {
     orderedStageForm() {
       let forms = []
@@ -1399,21 +1373,10 @@ export default {
   created() {
     this.getActionChoices()
   },
-  // async beforeCreate() {
-  //   try {
-  //     this.formFields = CollectionManager.create({
-  //       ModelClass: SObjectField,
-  //       pagination: { size: 500 },
-  //     })
-  //     this.formFields.refresh()
-  //   } catch (e) {
-  //     console.log(e)
-  //   }
-  // },
   methods: {
     test() {
-      console.log(this.formFields.list)
-      console.log(this.addedFieldNames)
+      // console.log(this.formFields.list)
+      console.log(this.addedFields)
     },
 
     async goToProducts() {

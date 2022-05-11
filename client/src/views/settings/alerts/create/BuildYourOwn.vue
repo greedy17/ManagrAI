@@ -39,7 +39,7 @@
     </Modal>
 
     <div class="alert__row">
-      <div v-if="pageNumber === 0" class="alert__column__" style="margin-bottom: 1rem">
+      <div v-show="pageNumber === 0" class="alert__column__" style="margin-bottom: 1rem">
         <div class="workflow-header">
           <h3>Create a Custom Workflow</h3>
           <div class="button-space">
@@ -50,7 +50,7 @@
           </div>
         </div>
 
-        <div v-if="pageNumber === 0">
+        <div v-show="pageNumber === 0">
           <!-- <p style="text-align: center; border-bottom: 2px solid #beb5cc; padding-bottom: 0.25rem">
         Object Type
       </p> -->
@@ -190,7 +190,7 @@
         </div> -->
       </div>
 
-      <div v-if="pageNumber === 2" class="alert__column">
+      <div v-show="pageNumber === 2" class="alert__column">
         <h3>Construct your Message</h3>
         <!-- <div
           style="margin: auto; text-align: center; width: 36%; margin-bottom: 1rem"
@@ -341,7 +341,7 @@
         </div>
       </div>
 
-      <div v-if="pageNumber === 1" class="alert__column">
+      <div v-show="pageNumber === 1" class="alert__column">
         <h3>Select Delivery Options</h3>
         <!-- <div
           style="margin: auto; text-align: center; width: 30%; margin-bottom: 1rem"
@@ -566,21 +566,6 @@
                     /> -->
                   </template>
                 </FormField>
-                <!-- <div style="margin-top: -0.5rem" class="items_height">
-                  <p
-                    :key="i"
-                    v-for="(item, i) in form.field.alertTargets.value"
-                    :class="form.field.alertTargets.value ? 'selected__item' : ''"
-                    @click="removeItemFromTargetArray(item)"
-                  >
-                    <img
-                      src="@/assets/images/remove.png"
-                      style="height: 1rem; margin-right: 0.25rem"
-                      alt=""
-                    />
-                    {{ checkInteger(item) }}
-                  </p>
-                </div> -->
               </div>
 
               <div>
@@ -711,7 +696,7 @@
         </div>
       </div>
 
-      <div class="alert__column" v-if="pageNumber === 3">
+      <div class="alert__column" v-show="pageNumber === 3">
         <h3>Name and save your workflow</h3>
         <!-- <div
           style="margin: auto; text-align: center; width: 65%; margin-bottom: 1rem"
