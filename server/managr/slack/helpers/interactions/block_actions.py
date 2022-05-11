@@ -358,7 +358,6 @@ def process_stage_selected(payload, context):
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
     private_metadata = json.loads(payload["view"]["private_metadata"])
-
     if len(payload["actions"]):
         action = payload["actions"][0]
         blocks = payload["view"]["blocks"]
@@ -1071,7 +1070,6 @@ def process_stage_selected_command_form(payload, context):
     elif not len(added_form_ids) and main_form.template.form_type == "CREATE":
         submit_button_message = "Create"
         callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
-
     data = {
         "trigger_id": trigger_id,
         "view_id": view_id,
