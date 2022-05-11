@@ -870,7 +870,7 @@
         </h6>
       </div>
       <!-- <p @click="tester">test</p> -->
-      <section v-show="!selectedWorkflow && !loadingWorkflows" class="table-section">
+      <section v-if="!selectedWorkflow && !loadingWorkflows" class="table-section">
         <div class="table">
           <PipelineHeader
             :oppFields="oppFields"
@@ -1731,7 +1731,10 @@ export default {
     },
     async resourceSync() {
       if (this.currentDay !== this.syncDay) {
-        this.loading = true
+        setTimeout(() => {
+          this.loading = true
+        }, 300)
+
         try {
           const res = await SObjects.api.resourceSync()
         } catch (e) {
@@ -1753,7 +1756,9 @@ export default {
       }
     },
     async manualSync() {
-      this.loading = true
+      setTimeout(() => {
+        this.loading = true
+      }, 300)
       try {
         const res = await SObjects.api.resourceSync()
       } catch (e) {
@@ -1762,7 +1767,7 @@ export default {
         this.loading = false
         this.$Alert.alert({
           type: 'success',
-          timeout: 3000,
+          timeout: 1500,
           message: 'Sync complete',
           sub: 'All fields reflect your current SFDC data',
         })
@@ -2025,7 +2030,9 @@ export default {
       } catch (e) {
         console.log(e)
       } finally {
-        this.loading = false
+        setTimeout(() => {
+          this.loading = false
+        }, 300)
       }
     },
     async getNotes(id) {
@@ -2340,14 +2347,14 @@ h3 {
   align-items: center;
   justify-content: center;
   color: $gray;
-  font-weight: bold;
-
+  font-size: 12px;
   width: 100%;
   padding: 0.5rem 0rem;
   margin: 0;
+  cursor: text;
   &__more {
-    background-color: $dark-green;
-    color: white;
+    background-color: white;
+    color: $dark-green;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2357,6 +2364,13 @@ h3 {
     padding: 0.75rem 0rem;
     margin: 0;
     cursor: pointer;
+
+    img {
+      height: 0.8rem;
+      margin-left: 0.25rem;
+      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+        brightness(93%) contrast(89%);
+    }
   }
 }
 .empty-table-section {
