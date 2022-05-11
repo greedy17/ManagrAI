@@ -603,7 +603,7 @@ export default {
   mounted() {
     setTimeout(() => {
       this.showLoader = false
-    }, 1000)
+    }, 500)
   },
 }
 </script>

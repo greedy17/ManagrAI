@@ -274,7 +274,7 @@ export default {
       this.deleteTitle = newList[0].title
     },
     handleUpdate() {
-      this.loading = true
+      // this.loading = true
       User.api
         .update(this.user.id, this.userConfigForm.value)
         .then((response) => {

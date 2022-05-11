@@ -870,7 +870,7 @@
         </h6>
       </div>
       <!-- <p @click="tester">test</p> -->
-      <section v-show="!selectedWorkflow && !loadingWorkflows" class="table-section">
+      <section v-if="!selectedWorkflow && !loadingWorkflows" class="table-section">
         <div class="table">
           <PipelineHeader
             :oppFields="oppFields"
@@ -1731,7 +1731,10 @@ export default {
     },
     async resourceSync() {
       if (this.currentDay !== this.syncDay) {
-        this.loading = true
+        setTimeout(() => {
+          this.loading = true
+        }, 300)
+
         try {
           const res = await SObjects.api.resourceSync()
         } catch (e) {
@@ -1753,7 +1756,9 @@ export default {
       }
     },
     async manualSync() {
-      this.loading = true
+      setTimeout(() => {
+        this.loading = true
+      }, 300)
       try {
         const res = await SObjects.api.resourceSync()
       } catch (e) {
@@ -1762,7 +1767,7 @@ export default {
         this.loading = false
         this.$Alert.alert({
           type: 'success',
-          timeout: 3000,
+          timeout: 1500,
           message: 'Sync complete',
           sub: 'All fields reflect your current SFDC data',
         })
@@ -2025,7 +2030,9 @@ export default {
       } catch (e) {
         console.log(e)
       } finally {
-        this.loading = false
+        setTimeout(() => {
+          this.loading = false
+        }, 300)
       }
     },
     async getNotes(id) {
