@@ -176,13 +176,15 @@
                 selectLabel="Enter"
                 track-by="id"
                 label="name"
+                :loading="dropdownLoading"
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more</p>
                 </template>
                 <template slot="afterList">
                   <p class="multi-slot__more" @click="listUserChannels(userChannelOpts.nextCursor)">
                     Load More
+                    <img src="@/assets/images/plusOne.png" alt="" />
                   </p>
                 </template>
                 <template slot="placeholder">
@@ -275,6 +277,7 @@ export default {
   },
   data() {
     return {
+      dropdownLoading: false,
       userChannelOpts: new SlackListResponse(),
       create: true,
       channelName: '',
@@ -320,6 +323,10 @@ export default {
     if (this.user.userLevel == 'MANAGER') {
       await this.users.refresh()
     }
+  },
+  beforeMount() {
+    this.form.field.recurrenceDay.value = 0
+    this.form.field.recurrenceDays.value = [0]
   },
   methods: {
     async onSave() {
@@ -369,12 +376,16 @@ export default {
       this.channelOpts = results
     },
     async listUserChannels(cursor = null) {
+      this.dropdownLoading = true
       const res = await SlackOAuth.api.listUserChannels(cursor)
       const results = new SlackListResponse({
         channels: [...this.userChannelOpts.channels, ...res.channels],
         responseMetadata: { nextCursor: res.nextCursor },
       })
       this.userChannelOpts = results
+      setTimeout(() => {
+        this.dropdownLoading = false
+      }, 500)
     },
     logNewName(str) {
       let new_str = ''
@@ -609,14 +620,14 @@ export default {
   align-items: center;
   justify-content: center;
   color: $gray;
-  font-weight: bold;
-
+  font-size: 12px;
   width: 100%;
   padding: 0.5rem 0rem;
   margin: 0;
+  cursor: text;
   &__more {
-    background-color: $base-gray;
-    color: white;
+    background-color: white;
+    color: $dark-green;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -626,6 +637,13 @@ export default {
     padding: 0.75rem 0rem;
     margin: 0;
     cursor: pointer;
+
+    img {
+      height: 0.8rem;
+      margin-left: 0.25rem;
+      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+        brightness(93%) contrast(89%);
+    }
   }
 }
 .channels_height {

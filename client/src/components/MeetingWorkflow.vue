@@ -3,7 +3,7 @@
     <div class="table-cell">
       <div v-if="!meeting.event_data">
         <div>
-          <p style="letter-spacing: 0.25px; font-size: 15px; margin-bottom: 3px">
+          <p style="letter-spacing: 0.25px; font-size: 12px; margin-bottom: 3px">
             {{ meeting.topic ? meeting.topic : 'Meeting' }}
           </p>
           <span style="color: #9b9b9b; font-size: 11px">
@@ -727,11 +727,12 @@ a {
   justify-content: center;
   color: $gray;
   font-weight: bold;
+
   width: 100%;
   padding: 0.5rem 0rem;
   margin: 0;
   &__more {
-    background-color: $base-gray;
+    background-color: $dark-green;
     color: white;
     display: flex;
     align-items: center;

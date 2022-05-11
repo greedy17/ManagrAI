@@ -61,12 +61,15 @@
                 selectLabel="Enter"
                 track-by="apiName"
                 label="referenceDisplayLabel"
+                :loading="dropdownLoading"
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more.</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="onFieldsNextPage">
+                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
                 </template>
 
                 <template slot="placeholder">
@@ -94,10 +97,12 @@
                 label="referenceDisplayLabel"
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="onFieldsNextPage">
+                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -129,10 +134,12 @@
                 label="referenceDisplayLabel"
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="onFieldsNextPage">
+                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -181,10 +188,12 @@
                 label="referenceDisplayLabel"
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="onFieldsNextPage">
+                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -211,10 +220,12 @@
                 label="referenceDisplayLabel"
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="onFieldsNextPage">
+                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -240,10 +251,12 @@
                 label="referenceDisplayLabel"
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="onFieldsNextPage">
+                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -275,10 +288,12 @@
                 label="referenceDisplayLabel"
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="onFieldsNextPage">
+                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -314,12 +329,15 @@
               selectLabel="Enter"
               track-by="apiName"
               label="referenceDisplayLabel"
+              :loading="dropdownLoading"
             >
               <template slot="noResult">
-                <p class="multi-slot">No results.</p>
+                <p class="multi-slot">No results. Try loading more</p>
               </template>
               <template slot="afterList">
-                <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                <p class="multi-slot__more" @click="onFieldsNextPage">
+                  Load More <img src="@/assets/images/plusOne.png" alt="" />
+                </p>
               </template>
               <template slot="placeholder">
                 <p class="slot-icon">
@@ -345,10 +363,12 @@
               label="referenceDisplayLabel"
             >
               <template slot="noResult">
-                <p class="multi-slot">No results.</p>
+                <p class="multi-slot">No results. Try loading more</p>
               </template>
               <template slot="afterList">
-                <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                <p class="multi-slot__more" @click="onFieldsNextPage">
+                  Load More <img src="@/assets/images/plusOne.png" alt="" />
+                </p>
               </template>
               <template slot="placeholder">
                 <p class="slot-icon">
@@ -375,10 +395,12 @@
               label="referenceDisplayLabel"
             >
               <template slot="noResult">
-                <p class="multi-slot">No results.</p>
+                <p class="multi-slot">No results. Try loading more</p>
               </template>
               <template slot="afterList">
-                <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                <p class="multi-slot__more" @click="onFieldsNextPage">
+                  Load More <img src="@/assets/images/plusOne.png" alt="" />
+                </p>
               </template>
               <template slot="placeholder">
                 <p class="slot-icon">
@@ -423,10 +445,12 @@
                 label="referenceDisplayLabel"
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="onFieldsNextPage">
+                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -880,10 +904,12 @@
             label="referenceDisplayLabel"
           >
             <template slot="noResult">
-              <p class="multi-slot">No results.</p>
+              <p class="multi-slot">No results. Try loading more</p>
             </template>
             <template slot="afterList">
-              <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+              <p class="multi-slot__more" @click="onFieldsNextPage">
+                Load More <img src="@/assets/images/plusOne.png" alt="" />
+              </p>
             </template>
             <template slot="placeholder">
               <p class="slot-icon">
@@ -924,10 +950,12 @@
             label="referenceDisplayLabel"
           >
             <template slot="noResult">
-              <p class="multi-slot">No results.</p>
+              <p class="multi-slot">No results. Try loading more</p>
             </template>
             <template slot="afterList">
-              <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+              <p class="multi-slot__more" @click="onFieldsNextPage">
+                Load More <img src="@/assets/images/plusOne.png" alt="" />
+              </p>
             </template>
             <template slot="placeholder">
               <p class="slot-icon">
@@ -1180,8 +1208,12 @@ export default {
   },
   data() {
     return {
+      dropdownLoading: false,
       currentStageForm: null,
-      formFields: CollectionManager.create({ ModelClass: SObjectField }),
+      formFields: CollectionManager.create({
+        ModelClass: SObjectField,
+        pagination: { size: 200 },
+      }),
       formFieldList: [],
       salesforceFields,
       customSlackFormConfig: [],
@@ -1223,40 +1255,12 @@ export default {
       handler(val) {
         if (val && val.fields.length) {
           this.addedFields = [...val.fieldsRef]
-          if (this.formType == 'UPDATE') {
-            let currentFormFields = this.addedFields.map((field) => {
-              return field.id
-            })
-            if (currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false) {
-              let fieldsToAdd = this.managrFields.filter((field) => {
-                return (
-                  field.id == '6407b7a1-a877-44e2-979d-1effafec5035' ||
-                  field.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
-                )
-              })
-              let copyArray = this.addedFields
-              fieldsToAdd = fieldsToAdd.concat(copyArray)
-              this.addedFields = fieldsToAdd.map((field, i) => {
-                let altField = { ...field }
-                altField.order = i
-                if (
-                  altField.id == '6407b7a1-a877-44e2-979d-1effafec5035' ||
-                  altField.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
-                ) {
-                  altField.includeInRecap = true
-                }
-                return altField
-              })
-            }
-          }
-          if (this.formType !== 'UPDATE') {
-            this.addedFields = this.addedFields.filter((field) => {
-              return (
-                field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
-                field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
-              )
-            })
-          }
+          this.addedFields = this.addedFields.filter((field) => {
+            return (
+              field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
+              field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
+            )
+          })
         }
       },
     },
@@ -1316,7 +1320,6 @@ export default {
       },
     },
   },
-
   computed: {
     orderedStageForm() {
       let forms = []
@@ -1370,21 +1373,10 @@ export default {
   created() {
     this.getActionChoices()
   },
-  // async beforeCreate() {
-  //   try {
-  //     this.formFields = CollectionManager.create({
-  //       ModelClass: SObjectField,
-  //       pagination: { size: 500 },
-  //     })
-  //     this.formFields.refresh()
-  //   } catch (e) {
-  //     console.log(e)
-  //   }
-  // },
   methods: {
     test() {
-      console.log(this.formFields.list)
-      console.log(this.addedFieldNames)
+      // console.log(this.formFields.list)
+      console.log(this.addedFields)
     },
 
     async goToProducts() {
@@ -1455,7 +1447,12 @@ export default {
       await this.formFields.refresh()
     },
     async onFieldsNextPage() {
-      await this.formFields.addNextPage()
+      this.dropdownLoading = true
+      await this.formFields.addNextPage().then(() => {
+        setTimeout(() => {
+          this.dropdownLoading = false
+        }, 1000)
+      })
     },
 
     nextPage() {
@@ -1671,14 +1668,14 @@ export default {
   align-items: center;
   justify-content: center;
   color: $gray;
-  font-weight: bold;
-
+  font-size: 12px;
   width: 100%;
   padding: 0.5rem 0rem;
   margin: 0;
+  cursor: text;
   &__more {
-    background-color: $base-gray;
-    color: white;
+    background-color: white;
+    color: $dark-green;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1688,6 +1685,13 @@ export default {
     padding: 0.75rem 0rem;
     margin: 0;
     cursor: pointer;
+
+    img {
+      height: 0.8rem;
+      margin-left: 0.25rem;
+      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+        brightness(93%) contrast(89%);
+    }
   }
 }
 .invert {

@@ -534,30 +534,14 @@ class SalesforceSObjectViewSet(
                 submission_date=timezone.now(),
                 alert_instance_id=instance,
             )
+            user.activity.increment_untouched_count("workflows")
+            user.activity.add_workflow_activity(str(main_form.id), instance.template.title)
         else:
             current_forms.update(
                 is_submitted=True, update_source="pipeline", submission_date=timezone.now()
             )
         value_update = main_form.resource_object.update_database_values(all_form_data)
         return Response(data={"success": True})
-        # try:
-        #     text = f"Managr updated {main_form.resource_type}"
-        #     message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
-        #     slack_requests.send_ephemeral_message(
-        #         user.slack_integration.channel,
-        #         user.organization.slack_integration.access_token,
-        #         user.slack_integration.slack_id,
-        #         text=text,
-        #         block_set=get_block_set(
-        #             "success_modal", {"message": message, "u": user.id, "form_ids": form_id}
-        #         ),
-        #     )
-
-        # except Exception as e:
-        #     logger.exception(
-        #         f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
-        #     )
-        # return Response(data=data)
 
     @action(
         methods=["get"],
@@ -978,6 +962,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.save()
         workflow.begin_tasks()
         emit_meeting_workflow_tracker(str(workflow.id))
+        workflow.user.activity.add_meeting_activity(str(workflow.id))
         serializer = MeetingWorkflowSerializer(instance=workflow)
         data = {"success": True, "workflow": serializer.data}
         return Response(data=data)

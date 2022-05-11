@@ -39,7 +39,7 @@
     </Modal>
 
     <div class="alert__row">
-      <div v-if="pageNumber === 0" class="alert__column__" style="margin-bottom: 1rem">
+      <div v-show="pageNumber === 0" class="alert__column__" style="margin-bottom: 1rem">
         <div class="workflow-header">
           <h3>Create a Custom Workflow</h3>
           <div class="button-space">
@@ -50,7 +50,7 @@
           </div>
         </div>
 
-        <div v-if="pageNumber === 0">
+        <div v-show="pageNumber === 0">
           <!-- <p style="text-align: center; border-bottom: 2px solid #beb5cc; padding-bottom: 0.25rem">
         Object Type
       </p> -->
@@ -190,7 +190,7 @@
         </div> -->
       </div>
 
-      <div v-if="pageNumber === 2" class="alert__column">
+      <div v-show="pageNumber === 2" class="alert__column">
         <h3>Construct your Message</h3>
         <!-- <div
           style="margin: auto; text-align: center; width: 36%; margin-bottom: 1rem"
@@ -341,7 +341,7 @@
         </div>
       </div>
 
-      <div v-if="pageNumber === 1" class="alert__column">
+      <div v-show="pageNumber === 1" class="alert__column">
         <h3>Select Delivery Options</h3>
         <!-- <div
           style="margin: auto; text-align: center; width: 30%; margin-bottom: 1rem"
@@ -529,12 +529,16 @@
                       label="fullName"
                       :multiple="true"
                       :closeOnSelect="false"
+                      :loading="dropdownLoading"
                     >
                       <template slot="noResult">
-                        <p class="multi-slot">No results.</p>
+                        <p class="multi-slot">No results. Try loading more</p>
                       </template>
                       <template slot="afterList">
-                        <p class="multi-slot__more" @click="onUsersNextPage">Load More</p>
+                        <p class="multi-slot__more" @click="onUsersNextPage">
+                          Load More
+                          <img src="@/assets/images/plusOne.png" alt="" />
+                        </p>
                       </template>
                       <template slot="placeholder">
                         <p class="slot-icon">
@@ -562,21 +566,6 @@
                     /> -->
                   </template>
                 </FormField>
-                <!-- <div style="margin-top: -0.5rem" class="items_height">
-                  <p
-                    :key="i"
-                    v-for="(item, i) in form.field.alertTargets.value"
-                    :class="form.field.alertTargets.value ? 'selected__item' : ''"
-                    @click="removeItemFromTargetArray(item)"
-                  >
-                    <img
-                      src="@/assets/images/remove.png"
-                      style="height: 1rem; margin-right: 0.25rem"
-                      alt=""
-                    />
-                    {{ checkInteger(item) }}
-                  </p>
-                </div> -->
               </div>
 
               <div>
@@ -643,7 +632,7 @@
                         label="name"
                       >
                         <template slot="noResult">
-                          <p class="multi-slot">No results.</p>
+                          <p class="multi-slot">No results. Try loading more</p>
                         </template>
                         <template slot="afterList">
                           <p
@@ -651,6 +640,7 @@
                             @click="listUserChannels(userChannelOpts.nextCursor)"
                           >
                             Load More
+                            <img src="@/assets/images/plusOne.png" alt="" />
                           </p>
                         </template>
                         <template slot="placeholder">
@@ -706,7 +696,7 @@
         </div>
       </div>
 
-      <div class="alert__column" v-if="pageNumber === 3">
+      <div class="alert__column" v-show="pageNumber === 3">
         <h3>Name and save your workflow</h3>
         <!-- <div
           style="margin: auto; text-align: center; width: 65%; margin-bottom: 1rem"
@@ -918,6 +908,7 @@ export default {
   },
   data() {
     return {
+      dropdownLoading: false,
       selectedDay: null,
       selectedChannel: null,
       crmValue: null,
@@ -1080,12 +1071,16 @@ export default {
       this.channelOpts = results
     },
     async listUserChannels(cursor = null) {
+      this.dropdownLoading = true
       const res = await SlackOAuth.api.listUserChannels(cursor)
       const results = new SlackListResponse({
         channels: [...this.userChannelOpts.channels, ...res.channels],
         responseMetadata: { nextCursor: res.nextCursor },
       })
       this.userChannelOpts = results
+      setTimeout(() => {
+        this.dropdownLoading = false
+      }, 500)
     },
     async createChannel(name) {
       this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
@@ -1382,7 +1377,11 @@ export default {
       await this.users.refresh()
     },
     async onUsersNextPage() {
+      this.dropdownLoading = true
       await this.users.addNextPage()
+      setTimeout(() => {
+        this.dropdownLoading = false
+      }, 1000)
     },
     showList() {
       this.listVisible = !this.listVisible
@@ -1546,13 +1545,14 @@ input:focus {
   align-items: center;
   justify-content: center;
   color: $gray;
-  font-weight: bold;
+  font-size: 12px;
   width: 100%;
   padding: 0.5rem 0rem;
   margin: 0;
+  cursor: text;
   &__more {
-    background-color: $base-gray;
-    color: white;
+    background-color: white;
+    color: $dark-green;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1562,6 +1562,13 @@ input:focus {
     padding: 0.75rem 0rem;
     margin: 0;
     cursor: pointer;
+
+    img {
+      height: 0.8rem;
+      margin-left: 0.25rem;
+      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+        brightness(93%) contrast(89%);
+    }
   }
 }
 .message-end {
