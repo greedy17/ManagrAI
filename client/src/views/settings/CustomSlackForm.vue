@@ -17,7 +17,7 @@
         </template>
       </div>
     </div>
-
+    <!-- <p @click="test">test</p> -->
     <div class="opportunity__row">
       <div :class="formType !== 'STAGE_GATING' ? 'collection_fields' : 'stage_fields'">
         <div v-if="formType === 'STAGE_GATING'">
@@ -1167,7 +1167,6 @@ export default {
     ListItem,
     ListContainer,
     Modal,
-
     CustomDropDown,
     draggable,
     ToggleCheckBox,
