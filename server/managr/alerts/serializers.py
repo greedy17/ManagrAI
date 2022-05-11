@@ -373,12 +373,6 @@ class AlertConfigWriteSerializer(serializers.ModelSerializer):
                 value = ["SELF"]
 
             data.update({"recipients": value})
-        if (
-            data.get("recipient_type") == "SLACK_CHANNEL"
-            and self.context.user.slack_integration.zoom_channel is not None
-        ):
-            print("here")
-            data.update({"recipients": [self.context.user.slack_integration.zoom_channel]})
         internal_data = super().to_internal_value(data)
         return internal_data
 
