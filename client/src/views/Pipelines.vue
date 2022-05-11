@@ -104,7 +104,7 @@
               <p>{{ field.referenceDisplayLabel }}:</p>
               <Multiselect
                 v-model="currentVals[field.apiName]"
-                :options="picklistQueryOpts[field.apiName]"
+                :options="createQueryOpts[field.apiName]"
                 @select="
                   setUpdateValues(
                     field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
@@ -164,7 +164,7 @@
               <p>{{ field.referenceDisplayLabel }}:</p>
               <Multiselect
                 v-model="selectedOwner"
-                :options="picklistQueryOpts[field.referenceDisplayLabel]"
+                :options="allUsers"
                 @select="
                   setUpdateValues(field.apiName, $event.salesforce_account_ref.salesforce_id)
                 "
@@ -346,9 +346,9 @@
                     <div v-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
                       <p>{{ field.referenceDisplayLabel }}*</p>
                       <Multiselect
-                        :options="picklistQueryOpts[field.apiName]"
+                        :options="stagePicklistQueryOpts[field.apiName]"
                         @select="
-                          setUpdateValues(
+                          setUpdateValidationValues(
                             field.apiName === 'ForecastCategory'
                               ? 'ForecastCategoryName'
                               : field.apiName,
@@ -387,7 +387,8 @@
                         :placeholder="currentVals[field.apiName]"
                         v-model="currentVals[field.apiName]"
                         @input="
-                          ;(value = $event.target.value), setUpdateValues(field.apiName, value)
+                          ;(value = $event.target.value),
+                            setUpdateValidationValues(field.apiName, value)
                         "
                       />
                     </div>
@@ -407,7 +408,8 @@
                         style="width: 20vw; border-radius: 0.2rem; padding: 7px"
                         v-model="currentVals[field.apiName]"
                         @input="
-                          ;(value = $event.target.value), setUpdateValues(field.apiName, value)
+                          ;(value = $event.target.value),
+                            setUpdateValidationValues(field.apiName, value)
                         "
                       >
                       </textarea>
@@ -422,7 +424,8 @@
                         v-model="currentVals[field.apiName]"
                         id="user-input"
                         @input="
-                          ;(value = $event.target.value), setUpdateValues(field.apiName, value)
+                          ;(value = $event.target.value),
+                            setUpdateValidationValues(field.apiName, value)
                         "
                       />
                     </div>
@@ -433,7 +436,8 @@
                         id="start"
                         v-model="currentVals[field.apiName]"
                         @input="
-                          ;(value = $event.target.value), setUpdateValues(field.apiName, value)
+                          ;(value = $event.target.value),
+                            setUpdateValidationValues(field.apiName, value)
                         "
                       />
                     </div>
@@ -451,7 +455,8 @@
                         v-model="currentVals[field.apiName]"
                         :placeholder="currentVals[field.apiName]"
                         @input="
-                          ;(value = $event.target.value), setUpdateValues(field.apiName, value)
+                          ;(value = $event.target.value),
+                            setUpdateValidationValues(field.apiName, value)
                         "
                       />
                     </div>
@@ -463,7 +468,7 @@
                         v-model="selectedOwner"
                         :options="allUsers"
                         @select="
-                          setUpdateValues(
+                          setUpdateValidationValues(
                             field.apiName,
                             $event.salesforce_account_ref.salesforce_id,
                           )
@@ -493,7 +498,7 @@
                         v-model="selectedAccount"
                         :options="allAccounts"
                         @search-change="getAccounts($event)"
-                        @select="setUpdateValues(field.apiName, $event.id)"
+                        @select="setUpdateValidationValues(field.apiName, $event.id)"
                         openDirection="below"
                         style="width: 18vw"
                         selectLabel="Enter"
@@ -617,11 +622,7 @@
           </div> -->
         </div>
         <div class="flex-end-opp">
-          <div v-if="updatingMeeting" style="display: flex; align-items: center">
-            <button @click="onUpdateMeeting" class="add-button__">Update</button>
-            <p @click="resetEdit" class="cancel">Cancel</p>
-          </div>
-          <div v-else style="display: flex; align-items: center">
+          <div style="display: flex; align-items: center">
             <button @click="updateResource()" class="add-button__">Update</button>
             <p @click="resetEdit" class="cancel">Cancel</p>
           </div>
@@ -649,12 +650,6 @@
           <div v-outside-click="closeListSelect" v-show="showList" class="list-section">
             <div class="list-section__title flex-row-spread">
               <p>{{ currentList }}</p>
-              <!-- <img
-                @click="showList = !showList"
-                class="exit"
-                src="@/assets/images/close.png"
-                alt=""
-              /> -->
             </div>
             <p @click="showPopularList = !showPopularList" class="list-section__sub-title">
               Standard Lists
@@ -783,7 +778,6 @@
         <div v-else>
           <div v-if="!updatingOpps" class="bulk-action">
             <div v-if="!closeDateSelected && !advanceStageSelected && !forecastSelected">
-              <!-- <p class="bulk-action__title">Select Update or<span class="cancel">cancel</span></p> -->
               <div class="flex-row">
                 <button @click="closeDateSelected = !closeDateSelected" class="select-btn">
                   Push Close Date
@@ -1065,6 +1059,7 @@ export default {
       picklistQueryOpts: {},
       createQueryOpts: {},
       picklistQueryOptsContacts: {},
+      stagePicklistQueryOpts: {},
       instanceIds: [],
       allAccounts: null,
       allUsers: null,
@@ -1156,7 +1151,6 @@ export default {
     },
   },
   created() {
-    this.getMeetingList()
     this.getObjects()
     this.templates.refresh()
     this.getAllForms()
@@ -1193,15 +1187,6 @@ export default {
   methods: {
     tester() {
       console.log(this.oppFields)
-    },
-    async getMeetingList() {
-      try {
-        const res = await MeetingWorkflows.api.getMeetingList()
-        this.meetings = res.results
-      } catch (e) {
-        console.log(e)
-      } finally {
-      }
     },
     setOpps() {
       User.api.getUser(this.user.id).then((response) => {
@@ -1365,49 +1350,26 @@ export default {
         this.allOpps = this.allOpps.sort(function (a, b) {
           const nameA = a['secondary_data']['StageName']
           const nameB = b['secondary_data']['StageName']
-          if (nameA < nameB) {
-            return -1
-          }
-          if (nameA > nameB) {
-            return 1
-          }
-          return 0
+          return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
         })
-      } else if (dT === 'TextArea') {
+      } else if (dT === 'TextArea' && !apiName.includes('__c')) {
         this.allOpps = this.allOpps.sort(function (a, b) {
           const nameA = a['secondary_data'][`${newField}`]
           const nameB = b['secondary_data'][`${newField}`]
-          if (nameA.length < nameB.length) {
-            return -1
-          }
-          if (nameA.length > nameB.length) {
-            return 1
-          }
-          return 0
+
+          return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
         })
-      } else if (apiName.includes('__c')) {
+      } else if (apiName.includes('__c') && dT !== 'TextArea') {
         this.allOpps = this.allOpps.sort(function (a, b) {
           const nameA = a['secondary_data'][`${apiName}`]
           const nameB = b['secondary_data'][`${apiName}`]
-          if (nameA < nameB) {
-            return -1
-          }
-          if (nameA > nameB) {
-            return 1
-          }
-          return 0
+          return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
         })
       } else {
         this.allOpps = this.allOpps.sort(function (a, b) {
           const nameA = a['secondary_data'][`${newField}`]
           const nameB = b['secondary_data'][`${newField}`]
-          if (nameA < nameB) {
-            return -1
-          }
-          if (nameA > nameB) {
-            return 1
-          }
-          return 0
+          return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
         })
       }
     },
@@ -1418,49 +1380,25 @@ export default {
         this.allOpps = this.allOpps.sort(function (a, b) {
           const nameA = a['secondary_data']['StageName']
           const nameB = b['secondary_data']['StageName']
-          if (nameA < nameB) {
-            return 1
-          }
-          if (nameA > nameB) {
-            return -1
-          }
-          return 0
+          return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
         })
-      } else if (dT === 'TextArea') {
+      } else if (dT === 'TextArea' && !apiName.includes('__c')) {
         this.allOpps = this.allOpps.sort(function (a, b) {
           const nameA = a['secondary_data'][`${newField}`]
           const nameB = b['secondary_data'][`${newField}`]
-          if (nameA.length < nameB.length) {
-            return 1
-          }
-          if (nameA.length > nameB.length) {
-            return -1
-          }
-          return 0
+          return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
         })
-      } else if (apiName.includes('__c')) {
+      } else if (apiName.includes('__c') && dT !== 'TextArea') {
         this.allOpps = this.allOpps.sort(function (a, b) {
           const nameA = a['secondary_data'][`${apiName}`]
           const nameB = b['secondary_data'][`${apiName}`]
-          if (nameA < nameB) {
-            return 1
-          }
-          if (nameA > nameB) {
-            return -1
-          }
-          return 0
+          return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
         })
       } else {
         this.allOpps = this.allOpps.sort(function (a, b) {
           const nameA = a['secondary_data'][`${newField}`]
           const nameB = b['secondary_data'][`${newField}`]
-          if (nameA < nameB) {
-            return 1
-          }
-          if (nameA > nameB) {
-            return -1
-          }
-          return 0
+          return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
         })
       }
     },
@@ -1471,102 +1409,53 @@ export default {
         this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
           const nameA = a['secondary_data']['StageName']
           const nameB = b['secondary_data']['StageName']
-          if (nameA < nameB) {
-            return -1
-          }
-          if (nameA > nameB) {
-            return 1
-          }
-          return 0
+          return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
         })
-      } else if (dT === 'TextArea') {
+      } else if (dT === 'TextArea' && !apiName.includes('__c')) {
         this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
           const nameA = a['secondary_data'][`${newField}`]
           const nameB = b['secondary_data'][`${newField}`]
-          if (nameA.length < nameB.length) {
-            return -1
-          }
-          if (nameA.length > nameB.length) {
-            return 1
-          }
-          return 0
+          return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
         })
-      } else if (apiName.includes('__c')) {
+      } else if (apiName.includes('__c') && dT !== 'TextArea') {
         this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
           const nameA = a['secondary_data'][`${apiName}`]
           const nameB = b['secondary_data'][`${apiName}`]
-          if (nameA < nameB) {
-            return -1
-          }
-          if (nameA > nameB) {
-            return 1
-          }
-          return 0
+          return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
         })
       } else {
         this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
           const nameA = a['secondary_data'][`${newField}`]
           const nameB = b['secondary_data'][`${newField}`]
-          if (nameA < nameB) {
-            return -1
-          }
-          if (nameA > nameB) {
-            return 1
-          }
-          return 0
+          return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
         })
       }
     },
     sortWorkflowsReverse(dT, field, apiName) {
       let newField = this.capitalizeFirstLetter(this.camelize(field))
-
       if (field === 'Stage') {
         this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
           const nameA = a['secondary_data']['StageName']
           const nameB = b['secondary_data']['StageName']
-          if (nameA < nameB) {
-            return 1
-          }
-          if (nameA > nameB) {
-            return -1
-          }
-          return 0
+          return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
         })
-      } else if (dT === 'TextArea') {
+      } else if (dT === 'TextArea' && !apiName.includes('__c')) {
         this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
           const nameA = a['secondary_data'][`${newField}`]
           const nameB = b['secondary_data'][`${newField}`]
-          if (nameA.length < nameB.length) {
-            return 1
-          }
-          if (nameA.length > nameB.length) {
-            return -1
-          }
-          return 0
+          return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
         })
-      } else if (apiName.includes('__c')) {
+      } else if (apiName.includes('__c') && dT !== 'TextArea') {
         this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
           const nameA = a['secondary_data'][`${apiName}`]
           const nameB = b['secondary_data'][`${apiName}`]
-          if (nameA < nameB) {
-            return 1
-          }
-          if (nameA > nameB) {
-            return -1
-          }
-          return 0
+          return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
         })
       } else {
         this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
           const nameA = a['secondary_data'][`${newField}`]
           const nameB = b['secondary_data'][`${newField}`]
-          if (nameA < nameB) {
-            return 1
-          }
-          if (nameA > nameB) {
-            return -1
-          }
-          return 0
+          return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
         })
       }
     },
@@ -1641,17 +1530,22 @@ export default {
         console.log(e)
       }
     },
-    // async testingPicklist() {
-    //   try {
-    //     const res = await SObjectPicklist.api.listPicklists({
-    //       salesforceObject: 'Opportunity',
-    //       picklistFor: 'ForecastCategoryName',
-    //     })
-    //     console.log(res)
-    //   } catch (e) {
-    //     console.log(e)
-    //   }
-    // },
+    async listStagePicklists(type, query_params) {
+      try {
+        const res = await SObjectPicklist.api.listPicklists(query_params)
+        this.stagePicklistQueryOpts[type] = res.length ? res[0]['values'] : []
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    async listCreatePicklists(type, query_params) {
+      try {
+        const res = await SObjectPicklist.api.listPicklists(query_params)
+        this.createQueryOpts[type] = res.length ? res[0]['values'] : []
+      } catch (e) {
+        console.log(e)
+      }
+    },
     async listStages() {
       try {
         const res = await SObjectPicklist.api.listPicklists({
@@ -1702,31 +1596,6 @@ export default {
         this.contactInstanceId = res.form_id
       } catch (e) {
         console.log(e)
-      }
-    },
-    async onUpdateMeeting() {
-      this.meetingLoading = true
-      this.editOpModalOpen = false
-      try {
-        const res = await MeetingWorkflows.api
-          .updateWorkflow({
-            workflow_id: this.meetingWorkflowId,
-            form_data: this.formData,
-          })
-          .then((res) => {
-            this.getMeetingList()
-          })
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.updatingMeeting = false
-        this.meetingLoading = false
-        this.$Alert.alert({
-          type: 'success',
-          timeout: 2000,
-          message: 'Meeting Logged successfully',
-          sub: 'Opportunity updated',
-        })
       }
     },
     async createFormInstance(id, alertInstanceId = null) {
@@ -1837,6 +1706,13 @@ export default {
 
       if (this.stagesWithForms.includes(val)) {
         this.stageGateField = val
+      } else {
+        this.stageGateField = null
+      }
+    },
+    setUpdateValidationValues(key, val) {
+      if (val) {
+        this.formData[key] = val
       }
     },
     async updateOpps() {
@@ -1861,7 +1737,6 @@ export default {
         } catch (e) {
           console.log(e)
         } finally {
-          // this.getObjects()
           User.api.getUser(this.user.id).then((response) => {
             this.$store.commit('UPDATE_USER', response)
           })
@@ -1884,7 +1759,6 @@ export default {
       } catch (e) {
         console.log(e)
       } finally {
-        // this.getObjects()
         this.loading = false
         this.$Alert.alert({
           type: 'success',
@@ -1908,15 +1782,6 @@ export default {
             this.allOpps = updatedRes.results
             this.originalList = updatedRes.results
           })
-        this.updateList = []
-        this.formData = {}
-        // this.setInitialForm()
-        this.$Alert.alert({
-          type: 'success',
-          timeout: 1000,
-          message: 'Salesforce update successful!',
-        })
-        this.closeFilterSelection()
         if (this.selectedWorkflow) {
           this.updateWorkflowList(this.currentList, this.refreshId)
         } else if (this.currentList === 'Closing this month') {
@@ -1926,6 +1791,15 @@ export default {
         }
       } catch (e) {
         console.log(e)
+      } finally {
+        this.updateList = []
+        this.formData = {}
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 1000,
+          message: 'Salesforce update successful!',
+        })
+        this.closeFilterSelection()
       }
     },
     async createResource() {
@@ -1950,7 +1824,6 @@ export default {
           message: 'Opportunity created successfully!',
         })
       }
-      // this.getAllForms()
     },
     async selectList() {
       if (this.id && this.id !== 'Closing-this-month' && this.id !== 'Closing-next-month') {
@@ -2006,9 +1879,6 @@ export default {
         this.createOppForm = res.filter(
           (obj) => obj.formType === 'CREATE' && obj.resource === 'Opportunity',
         )
-        this.updateContactForm = res.filter(
-          (obj) => obj.formType === 'UPDATE' && obj.resource === 'Contact',
-        )
         let stageGateForms = res.filter(
           (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Opportunity',
         )
@@ -2017,20 +1887,7 @@ export default {
         this.stagesWithForms = stages
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
         this.createOppForm = this.createOppForm[0].fieldsRef
-        this.updateContactForm = this.updateContactForm[0].fieldsRef
 
-        for (let i = 0; i < this.updateContactForm.length; i++) {
-          if (
-            this.updateContactForm[i].dataType === 'Picklist' ||
-            this.updateContactForm[i].dataType === 'MultiPicklist'
-          ) {
-            this.picklistQueryOptsContacts[this.updateContactForm[i].apiName] =
-              this.updateContactForm[i].apiName
-          } else if (this.updateContactForm[i].dataType === 'Reference') {
-            this.picklistQueryOptsContacts[this.updateContactForm[i].referenceDisplayLabel] =
-              this.updateContactForm[i].referenceDisplayLabel
-          }
-        }
         for (let i in this.picklistQueryOptsContacts) {
           this.picklistQueryOptsContacts[i] = this.listPicklists(i, { picklistFor: i })
         }
@@ -2064,7 +1921,7 @@ export default {
         }
 
         for (let i in this.createQueryOpts) {
-          this.createQueryOpts[i] = this.listPicklists(i, { picklistFor: i })
+          this.createQueryOpts[i] = this.listCreatePicklists(i, { picklistFor: i })
         }
 
         this.filterFields = this.updateOppForm[0].fieldsRef.filter(
@@ -2094,16 +1951,30 @@ export default {
             field.apiName !== 'OwnerId',
         )
 
-        // let fieldnames = this.oppFields.map((field) => field.apiName)
         for (const field of stageGateForms) {
           this.stageValidationFields[field.stage] = field.fieldsRef
-          // .filter(
-          //   (svf) => !fieldnames.includes(svf.apiName),
-          // )
         }
-        this.updateContactForm = this.updateContactForm.filter(
-          (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
-        )
+        let stageArrayOfArrays = stageGateForms.map((field) => field.fieldsRef)
+        let allStageFields = [].concat.apply([], stageArrayOfArrays)
+        let dupeStagesRemoved = [
+          ...new Map(allStageFields.map((v) => [v.referenceDisplayLabel, v])).values(),
+        ]
+
+        for (let i = 0; i < dupeStagesRemoved.length; i++) {
+          if (
+            dupeStagesRemoved[i].dataType === 'Picklist' ||
+            dupeStagesRemoved[i].dataType === 'MultiPicklist'
+          ) {
+            this.stagePicklistQueryOpts[dupeStagesRemoved[i].apiName] = dupeStagesRemoved[i].apiName
+          } else if (dupeStagesRemoved[i].dataType === 'Reference') {
+            this.stagePicklistQueryOpts[dupeStagesRemoved[i].referenceDisplayLabel] =
+              dupeStagesRemoved[i].referenceDisplayLabel
+          }
+        }
+
+        for (let i in this.stagePicklistQueryOpts) {
+          this.stagePicklistQueryOpts[i] = this.listStagePicklists(i, { picklistFor: i })
+        }
       } catch (error) {
         console.log(error)
       }
@@ -2145,14 +2016,6 @@ export default {
         this.loadingAccounts = false
       }
     },
-    // async getAccounts() {
-    //   try {
-    //     const res = await SObjects.api.getObjects('Account')
-    //     this.allAccounts = res.results
-    //   } catch (e) {
-    //     console.log(e)
-    //   }
-    // },
     async getObjects() {
       this.loading = true
       try {
@@ -2180,9 +2043,6 @@ export default {
       } catch (e) {
         console.log(e)
       }
-    },
-    addOpp() {
-      this.addOppModalOpen = true
     },
     closeDatesThisMonth() {
       this.allOpps = this.originalList
@@ -2347,7 +2207,6 @@ export default {
     filter: invert(70%);
   }
 }
-
 .results {
   margin: 0;
   width: 100%;
@@ -2357,7 +2216,6 @@ export default {
   margin-top: -0.75rem;
   justify-content: flex-start;
 }
-
 select {
   -webkit-appearance: none !important;
   -moz-appearance: none !important;
@@ -2379,7 +2237,6 @@ select {
   display: flex;
   align-items: center;
   justify-content: center;
-  // box-shadow: 1px 1px 2px $very-light-gray;
   border-radius: 0.25rem;
   background-color: white;
   cursor: pointer;
@@ -2523,32 +2380,6 @@ h3 {
   display: table-row;
   left: 0;
 }
-.table-cell {
-  z-index: 0;
-  display: table-cell;
-  position: sticky;
-  min-width: 12vw;
-  background-color: $off-white;
-  padding: 2vh 3vh;
-  border: none;
-  border-bottom: 1px solid $soft-gray;
-  font-size: 13px;
-}
-.table-cell-wide {
-  display: table-cell;
-  position: sticky;
-  min-width: 26vw;
-  background-color: $off-white;
-  padding: 2vh 3vh;
-  border: none;
-  border-bottom: 1px solid $soft-gray;
-  font-size: 13px;
-  overflow: scroll;
-}
-.table-cell:hover {
-  cursor: text;
-  background-color: white;
-}
 .modal-container {
   background-color: $white;
   overflow: hidden;
@@ -2623,21 +2454,9 @@ h3 {
     font-size: 11px;
   }
 }
-.table-cell-checkbox {
-  display: table-cell;
-  padding: 2vh;
-  width: 3.75vw;
-  border: none;
-  left: 0;
-  position: sticky;
-  z-index: 1;
-  border-bottom: 1px solid $soft-gray;
-  background-color: $off-white;
-}
 .table-cell-header {
   display: table-cell;
   padding: 1.25vh 3vh;
-
   border-bottom: 1px solid $light-orange-gray;
   border-radius: 2px;
   z-index: 2;
@@ -2653,53 +2472,10 @@ h3 {
   -webkit-appearance: none;
   appearance: none;
 }
-.limit-cell-height {
-  max-height: 4rem;
-  width: 110%;
-  overflow: auto;
-  direction: rtl;
-  padding: 0px 0.25rem;
-}
 .centered {
   display: flex;
   justify-content: center;
   align-items: center;
-}
-.cell-name-header {
-  display: table-cell;
-  padding: 1.25vh 3vh;
-  border: none;
-  border-bottom: 3px solid $light-orange-gray;
-  border-radius: 2px;
-  z-index: 3;
-  left: 3.5vw;
-  top: 0;
-  position: sticky;
-  background-color: $off-white;
-  font-weight: bold;
-  font-size: 13px;
-  letter-spacing: 0.5px;
-  color: $base-gray;
-}
-.table-cell-checkbox-header {
-  display: table-cell;
-  padding: 1.25vh;
-  border: none;
-  border-bottom: 3px solid $light-orange-gray;
-  z-index: 3;
-  width: 4vw;
-  top: 0;
-  left: 0;
-  position: sticky;
-  background-color: $off-white;
-}
-.cell-name {
-  background-color: white;
-  color: $base-gray;
-  letter-spacing: 0.25px;
-  position: sticky;
-  left: 3.5vw;
-  z-index: 2;
 }
 input[type='search'] {
   border: none;
@@ -2729,7 +2505,6 @@ section {
   padding: 0px;
 }
 .flex-row {
-  // position: relative;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -2750,7 +2525,6 @@ section {
     margin-left: 0.5rem;
   }
 }
-
 .flex-row-spread {
   display: flex;
   flex-direction: row;
@@ -2826,25 +2600,6 @@ section {
 .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
   opacity: 0;
 }
-.soon-button {
-  display: flex;
-  align-items: center;
-  border: none;
-  height: 4.5vh;
-  margin: 0 0.5rem 0 0;
-  padding: 0.25rem 0.6rem;
-  border-radius: 0.2rem;
-  background-color: $very-light-gray;
-  cursor: text;
-  color: $base-gray;
-  font-weight: bold;
-  font-size: 11px;
-
-  img {
-    filter: invert(80%);
-  }
-}
-
 .add-button:hover {
   box-shadow: 1px 2px 2px $very-light-gray;
 }
@@ -2854,7 +2609,6 @@ section {
 .search-bar {
   height: 4.5vh;
   background-color: $off-white;
-  // box-shadow: 1px 1px 1px $very-light-gray;
   border: 1px solid #e8e8e8;
   display: flex;
   align-items: center;
@@ -2900,9 +2654,6 @@ section {
   align-items: center;
   height: 60vh;
   filter: invert(99%);
-}
-.gray {
-  filter: invert(44%);
 }
 .header {
   font-size: 18px;
