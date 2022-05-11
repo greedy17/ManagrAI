@@ -164,7 +164,7 @@
               <p>{{ field.referenceDisplayLabel }}:</p>
               <Multiselect
                 v-model="selectedOwner"
-                :options="createQueryOpts[field.referenceDisplayLabel]"
+                :options="allUsers"
                 @select="
                   setUpdateValues(field.apiName, $event.salesforce_account_ref.salesforce_id)
                 "
