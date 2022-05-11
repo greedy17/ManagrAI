@@ -1245,6 +1245,194 @@ export default {
       addingFields: false,
       productSelected: false,
       addingProducts: false,
+      noteTitle: {
+        _fields: {
+          length: {
+            defaultVal: null,
+            readOnly: false,
+          },
+          id: {
+            defaultVal: '',
+            readOnly: true,
+          },
+          apiName: {
+            defaultVal: '',
+            readOnly: false,
+          },
+          custom: {
+            defaultVal: false,
+            readOnly: false,
+          },
+          createable: {
+            defaultVal: false,
+            readOnly: false,
+          },
+          dataType: {
+            defaultVal: '',
+            readOnly: false,
+          },
+          label: {
+            defaultVal: '',
+            readOnly: false,
+          },
+          reference: {
+            defaultVal: '',
+            readOnly: false,
+          },
+          referenceToInfos: {
+            defaultVal: null,
+            readOnly: false,
+          },
+          updateable: {
+            defaultVal: false,
+            readOnly: false,
+          },
+          required: {
+            defaultVal: false,
+            readOnly: false,
+          },
+          unique: {
+            defaultVal: false,
+            readOnly: false,
+          },
+          value: {
+            defaultVal: '',
+            readOnly: false,
+          },
+          displayValue: {
+            defaultVal: '',
+            readOnly: false,
+          },
+          referenceDisplayLabel: {
+            defaultVal: '',
+            readOnly: true,
+          },
+          filterable: {
+            defaultVal: '',
+            readOnly: true,
+          },
+          order: {
+            defaultVal: null,
+            readOnly: false,
+          },
+          includeInRecap: {
+            defaultVal: null,
+            readOnly: false,
+          },
+        },
+        length: 30,
+        id: '6407b7a1-a877-44e2-979d-1effafec5035',
+        apiName: 'meeting_type',
+        custom: true,
+        createable: true,
+        dataType: 'String',
+        label: 'Note Subject',
+        reference: 'false',
+        referenceToInfos: [],
+        updateable: true,
+        required: false,
+        unique: false,
+        value: '',
+        displayValue: '',
+        referenceDisplayLabel: 'Note Subject',
+        filterable: 'false',
+        order: null,
+        includeInRecap: null,
+      },
+      noteSubject: {
+        _fields: {
+          length: {
+            defaultVal: null,
+            readOnly: false,
+          },
+          id: {
+            defaultVal: '',
+            readOnly: true,
+          },
+          apiName: {
+            defaultVal: '',
+            readOnly: false,
+          },
+          custom: {
+            defaultVal: false,
+            readOnly: false,
+          },
+          createable: {
+            defaultVal: false,
+            readOnly: false,
+          },
+          dataType: {
+            defaultVal: '',
+            readOnly: false,
+          },
+          label: {
+            defaultVal: '',
+            readOnly: false,
+          },
+          reference: {
+            defaultVal: '',
+            readOnly: false,
+          },
+          referenceToInfos: {
+            defaultVal: null,
+            readOnly: false,
+          },
+          updateable: {
+            defaultVal: false,
+            readOnly: false,
+          },
+          required: {
+            defaultVal: false,
+            readOnly: false,
+          },
+          unique: {
+            defaultVal: false,
+            readOnly: false,
+          },
+          value: {
+            defaultVal: '',
+            readOnly: false,
+          },
+          displayValue: {
+            defaultVal: '',
+            readOnly: false,
+          },
+          referenceDisplayLabel: {
+            defaultVal: '',
+            readOnly: true,
+          },
+          filterable: {
+            defaultVal: '',
+            readOnly: true,
+          },
+          order: {
+            defaultVal: null,
+            readOnly: false,
+          },
+          includeInRecap: {
+            defaultVal: null,
+            readOnly: false,
+          },
+        },
+        length: 255,
+        id: '0bb152b5-aac1-4ee0-9c25-51ae98d55af1',
+        apiName: 'meeting_comments',
+        custom: true,
+        createable: true,
+        dataType: 'String',
+        label: 'Notes',
+        reference: 'false',
+        referenceToInfos: [],
+        updateable: true,
+        required: false,
+        unique: false,
+        value: '',
+        displayValue: '',
+        referenceDisplayLabel: 'Notes',
+        filterable: 'false',
+        order: null,
+        includeInRecap: null,
+      },
     }
   },
   watch: {
@@ -1259,12 +1447,7 @@ export default {
               return field.id
             })
             if (currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false) {
-              let fieldsToAdd = this.managrFields.filter((field) => {
-                return (
-                  field.id == '6407b7a1-a877-44e2-979d-1effafec5035' ||
-                  field.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
-                )
-              })
+              let fieldsToAdd = [this.noteTitle, this.noteSubject]
               let copyArray = this.addedFields
               fieldsToAdd = fieldsToAdd.concat(copyArray)
               this.addedFields = fieldsToAdd.map((field, i) => {
