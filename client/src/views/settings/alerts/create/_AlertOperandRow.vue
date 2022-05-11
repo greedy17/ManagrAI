@@ -453,7 +453,7 @@ export default {
       objectFields: CollectionManager.create({
         ModelClass: SObjectField,
         pagination: { size: 300 },
-        // filters: { forAlerts: true, filterable: true, page: 1 },
+        filters: { forAlerts: true, filterable: true, page: 1 },
       }),
       // used by dropdown as a ref field to retrieve obj of selected opt
       selectedOperandFieldRef: null,
