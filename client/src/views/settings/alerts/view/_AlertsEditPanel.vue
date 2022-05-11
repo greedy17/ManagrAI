@@ -673,18 +673,6 @@ h3 {
   font-size: 2rem;
   padding-left: 4rem;
 }
-.dropdown {
-  right: 10px;
-  border-radius: 0.25rem;
-  border: none;
-  background-color: $panther-gray;
-  outline: none;
-  opacity: 0;
-  z-index: -1;
-  max-height: 0;
-  transition: opacity 0.1s, z-index 0.1s, max-height 5s;
-  padding: 0.1rem 0.25rem;
-}
 .slot-icon {
   display: flex;
   flex-direction: row;
@@ -789,23 +777,6 @@ h3 {
   filter: invert(70%);
   cursor: pointer;
 }
-::v-deep .ql-toolbar .ql-stroke {
-  fill: none;
-  stroke: $panther;
-}
-
-::v-deep .ql-toolbar .ql-fill {
-  fill: $panther;
-  stroke: none;
-}
-
-::v-deep .ql-toolbar .ql-picker {
-  color: $panther;
-}
-
-::v-deep .ql-editor.ql-blank::before {
-  color: $panther;
-}
 ::v-deep .ql-container.ql-snow {
   border: 1px solid #e8e8e8;
 }
@@ -817,13 +788,6 @@ h3 {
 ::v-deep .ql-blank.ql-editor {
   background-color: white;
   border-radius: 0.25rem;
-}
-::v-deep .ql-container {
-  background-color: white;
-  color: $panther;
-  width: 24rem;
-  min-height: 10rem;
-  overflow: scroll;
 }
 .message__box {
   margin-bottom: 2rem;
@@ -856,34 +820,6 @@ h3 {
 
   padding-top: 0.2rem;
   margin-left: -0.1rem;
-}
-.remove__button {
-  border: none;
-  color: $panther-silver;
-  background: transparent;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  font-size: 0.9rem;
-
-  padding-top: 0.2rem;
-  margin-left: -0.1rem;
-}
-.disabled__button {
-  border: none;
-  color: $panther-silver;
-  background: transparent;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  font-size: 0.9rem;
-
-  padding-top: 0.2rem;
-  margin-left: -0.1rem;
-}
-::v-deep .input-content {
-  border: 1px solid #e8e8e8;
-  color: $panther;
 }
 
 ::v-deep .ls-container__list--horizontal {

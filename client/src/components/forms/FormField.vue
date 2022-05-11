@@ -119,7 +119,4 @@ export default {
 ::v-deep .input-content__active {
   outline: none;
 }
-::v-deep .input-form__active {
-  border: $panther-gold;
-}
 </style>

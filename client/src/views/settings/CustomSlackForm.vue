@@ -1666,18 +1666,9 @@ export default {
 .drop {
   border: 2px solid $soft-gray;
   border-radius: 0.25rem;
-  color: $panther-silver;
+  color: $very-light-gray;
   padding: 0.25rem 0.5rem;
   max-height: 2rem;
-}
-.app {
-  background-color: $panther-gray;
-  color: $panther-silver;
-  border-radius: 0.25rem;
-  font-size: 14px;
-  padding: 2px;
-  margin-left: 0.2rem;
-  margin-right: 0.5rem;
 }
 ::v-deep .tn-dropdown__options__option {
   padding-top: 0.375rem;
@@ -1736,29 +1727,6 @@ export default {
   justify-content: space-between;
   flex-direction: row;
 }
-.slack-form-builder
-  ::v-deep
-  .collection-search
-  .collection-search__results
-  .collection-search__result-item {
-  border: none;
-  background-color: $panther;
-}
-.slack-form-builder
-  ::v-deep
-  .collection-search
-  .collection-search__form
-  .collection-search__input
-  .search__input {
-  @include input-field();
-  height: 2.5rem;
-  background-color: $panther-silver;
-  border: 1px solid $panther-gray;
-  width: 10rem;
-  padding: 0 0 0 1rem;
-  margin: 1rem;
-  box-shadow: 1px 4px 7px black;
-}
 
 .slack-form-builder {
   padding: 0rem 3rem;
@@ -1766,46 +1734,6 @@ export default {
   &__sf-fields,
   &__sf-validations {
     margin-right: 2rem;
-  }
-
-  &__container {
-    display: flex;
-    background-color: $panther;
-  }
-
-  &__sf-field {
-    padding: 0.25rem;
-    font-size: 0.85rem;
-    font-display: #{$bold-font-family};
-    background-color: $panther;
-    &:hover {
-      background-color: $panther;
-      cursor: pointer;
-      color: $panther-silver;
-    }
-  }
-
-  &__required {
-    padding: 0.25rem;
-    font-size: 0.85rem;
-    font-display: #{$bold-font-family};
-    background-color: $panther;
-    &:hover {
-      background-color: $panther;
-      cursor: pointer;
-      color: $panther-orange;
-    }
-  }
-
-  &__form {
-    width: 26vw;
-    padding: 2rem;
-    box-shadow: 0 5px 10px 0 rgba(132, 132, 132, 0.26);
-    background-color: $panther;
-    height: 54vh;
-    overflow-y: scroll;
-    overflow-x: hidden;
-    border-radius: 0.5rem;
   }
 }
 .paginator {
@@ -1822,105 +1750,11 @@ export default {
     width: 6rem;
   }
 }
-.form-header {
-  display: flex;
-
-  align-items: center;
-
-  position: -webkit-sticky;
-  position: sticky;
-  background-color: $panther;
-  top: 0;
-  > .save-button {
-    flex: 0.5 0 auto;
-  }
-  > .heading {
-    flex: 1 0 auto;
-  }
-  &__left {
-    flex: 9;
-  }
-
-  &__right {
-    flex: 3;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-  }
-}
 .fields {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-}
-.form-field {
-  background-color: $panther;
-  margin-top: 0.5rem;
-  &__left {
-    flex: 10;
-
-    display: flex;
-    align-items: center;
-  }
-
-  &__middle {
-    flex: 2;
-
-    display: flex;
-    align-items: center;
-  }
-
-  &__body {
-    font-size: 14px;
-  }
-
-  &__right {
-    // flex: 2;
-    display: flex;
-    padding-left: 1rem;
-    margin-right: -0.5rem;
-
-    display: flex;
-    align-items: center;
-  }
-
-  &__btn {
-    padding: 0.35rem;
-    cursor: pointer;
-    color: $dark-gray-blue;
-
-    transition: color 0.3s linear;
-
-    &:hover {
-      color: black;
-    }
-
-    &--flipped {
-      transform: rotateX(180deg);
-    }
-  }
-
-  &__remove-btn {
-    text-align: right;
-    color: $coral;
-    cursor: pointer;
-
-    &:hover {
-      font-weight: 600;
-      color: $coral;
-    }
-
-    &--disabled {
-      color: $dark-gray-blue;
-      cursor: initial;
-
-      &:hover {
-        font-weight: initial;
-        color: initial;
-      }
-    }
-  }
 }
 .save-button {
   display: flex;
@@ -1997,7 +1831,7 @@ img:hover {
 .close {
   padding: 0.5rem 1.5rem;
   background: transparent;
-  color: $panther-gray;
+  color: $very-light-gray;
   border: 2px solid $soft-gray;
   border-radius: 0.25rem;
   opacity: 0.8;
@@ -2090,16 +1924,6 @@ img:hover {
   position: relative;
   border: 1px solid #e8e8e8;
 }
-.fields_title {
-  background-color: $panther;
-  margin: 1rem;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  width: 100%;
-}
-.heading {
-  background-color: $panther;
-}
 .opportunity__column {
   display: flex;
   flex-direction: column;
@@ -2114,17 +1938,8 @@ img:hover {
   align-items: center;
 }
 
-.required__fields {
-  color: $panther-orange;
-}
-
 .popular_fields {
   text-align: center;
-}
-.popularModal {
-  color: $panther-silver;
-  text-decoration: underline;
-  cursor: pointer;
 }
 .continue__button {
   display: flex;
@@ -2143,51 +1958,6 @@ img:hover {
   width: 10rem;
   font-size: 1.02rem;
   margin-right: 0.5rem;
-}
-.cant__continue {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.4rem 1rem;
-  border-radius: 0.3rem;
-  line-height: 1.14;
-  text-indent: none;
-  border-style: none;
-  letter-spacing: 0.03rem;
-  background-color: $panther-silver;
-  color: $panther-gray;
-  cursor: not-allowed;
-  height: 2rem;
-  width: 10rem;
-  font-size: 1.02rem;
-  margin-right: 0.5rem;
-}
-.back__button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.4rem 1rem;
-  border-radius: 0.3rem;
-  line-height: 1.14;
-  text-indent: none;
-  border-style: none;
-  letter-spacing: 0.03rem;
-  color: white;
-  background-color: $panther-orange;
-  cursor: pointer;
-  height: 2rem;
-  width: 10rem;
-  font-size: 1.02rem;
-  margin-right: 0.5rem;
-}
-.warning {
-  margin-top: 1rem;
-  padding: 0.5rem;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: center;
-  color: $panther-gold;
 }
 .row {
   display: flex;

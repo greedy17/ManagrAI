@@ -198,14 +198,6 @@ export default {
   letter-spacing: 1px;
 }
 
-.remove_button {
-  color: $panther-orange;
-  border: none;
-  font-weight: bold;
-  background: transparent;
-  cursor: pointer;
-}
-
 .sub {
   font-size: 13px;
   margin-left: 0.5rem;

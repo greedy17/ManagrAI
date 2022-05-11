@@ -91,7 +91,7 @@ export default {
     width: 24px;
     height: 24px;
     background-color: $off-white;
-    color: $panther-silver;
+    color: $very-light-gray;
 
     border: none;
   }
@@ -100,7 +100,7 @@ export default {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    color: $panther-silver;
+    color: $very-light-gray;
   }
   &__body {
     padding: 10px 20px 10px;

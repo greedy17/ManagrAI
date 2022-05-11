@@ -453,10 +453,6 @@ export default {
   margin: 0 4em;
   padding-top: 2rem;
 }
-::v-deep .vm--modal {
-  background-color: $panther;
-  border-radius: 0.25rem;
-}
 .stage__button {
   display: flex;
   align-items: center;
@@ -497,13 +493,6 @@ export default {
     }
     &__button {
       @include primary-button();
-    }
-    &__footer {
-      display: flex;
-      padding: 1rem;
-
-      justify-content: space-between;
-      border-top: 2px solid $panther-silver;
     }
   }
 }

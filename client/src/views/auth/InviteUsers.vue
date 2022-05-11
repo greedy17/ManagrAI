@@ -115,19 +115,6 @@ h2 {
   border: 1px solid #e8e8e8;
 }
 
-.continue_button {
-  color: white;
-  background-color: $panther-purple;
-  width: 10vw;
-  height: 5vh;
-  border-radius: 0.25rem;
-  padding: 0.5rem;
-  font-weight: bold;
-  font-size: 16px;
-  border: none;
-  margin-top: 2rem;
-}
-
 .invite_button:hover,
 .continue_button:hover {
   cursor: pointer;

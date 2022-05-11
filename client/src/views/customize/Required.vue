@@ -209,12 +209,6 @@ export default {
   height: 1.5rem;
 }
 
-.card-text {
-  font-size: 14px;
-  font-weight: bold;
-  color: $panther-silver;
-  text-align: center;
-}
 .back-logo {
   position: absolute;
   opacity: 0.06;
@@ -222,29 +216,6 @@ export default {
   height: 28%;
   margin-top: -1.5rem;
   margin-left: -2rem;
-}
-.slack-button {
-  padding: 1rem;
-  border-radius: 0.5rem;
-  font-size: 1.25rem;
-  font-weight: bold;
-  color: white;
-  background-color: $dark-green;
-  border: none;
-  cursor: pointer;
-
-  &--disabled {
-    background-color: $panther-silver !important;
-    color: $panther-gray;
-    height: 2.75rem;
-    width: 12rem;
-    border-radius: 0.5rem;
-    border: none;
-    margin: 0rem 0 2rem 0;
-    font-size: 1.25rem;
-    font-weight: bold;
-    cursor: not-allowed;
-  }
 }
 
 .green__button {

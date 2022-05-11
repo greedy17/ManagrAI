@@ -717,16 +717,6 @@ export default {
     cursor: pointer;
   }
 }
-::v-deep .input-content {
-  width: 12vw;
-  background-color: white;
-  color: $panther;
-}
-::v-deep .input-form__large {
-  width: 12vw;
-  background-color: white;
-  color: $panther;
-}
 .search__input {
   font-family: Lato-Regular, sans-serif;
   font-weight: normal;
@@ -755,37 +745,6 @@ export default {
   justify-content: flex-end;
   align-items: center;
   filter: drop-shadow(8px 10px 7px black);
-}
-.collection__fields {
-  background-color: $panther;
-  display: flex;
-  justify-content: space-evenly;
-  align-items: center;
-  flex-direction: row;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  height: 46vh;
-  width: 50vw;
-  overflow-x: scroll;
-}
-.gold__button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.4rem 1rem;
-  border-radius: 0.3rem;
-  font-weight: bold;
-  line-height: 1.14;
-  text-indent: none;
-  border-style: none;
-  letter-spacing: 0.03rem;
-  color: white;
-  background-color: $panther;
-  cursor: pointer;
-  height: 2rem;
-  width: 10rem;
-  font-weight: bold;
-  font-size: 1.02rem;
 }
 .purple__button {
   display: flex;
@@ -822,16 +781,6 @@ export default {
   cursor: not-allowed;
 
   font-size: 14px;
-}
-.collection {
-  background-color: $panther;
-  margin-top: 1rem;
-  padding: 2rem;
-  border-radius: 0.5rem;
-  width: 60vw;
-  box-shadow: 3px 4px 7px black;
-  display: flex;
-  flex-direction: column;
 }
 .bottom {
   margin-bottom: 2rem;
@@ -872,42 +821,6 @@ input {
 }
 .visible {
   visibility: hidden;
-}
-.continue__button {
-  margin: 0.2rem;
-  padding: 0.35rem;
-  width: 10vw;
-  background-color: $panther-purple;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 2rem;
-}
-.back__button {
-  margin: 0.2rem;
-  padding: 0.35rem;
-  width: 10vw;
-  background-color: $panther-gold;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 2rem;
-}
-.disabled__continue {
-  margin: 0.2rem;
-  padding: 0.35rem;
-  width: 10vw;
-  background-color: $panther-silver;
-  color: $panther;
-  border: none;
-  border-radius: 0.5rem;
-  font-weight: bold;
-  cursor: not-allowed;
-  margin-top: 2rem;
 }
 .days__start {
   display: flex;
@@ -976,25 +889,6 @@ img {
   max-height: 30vh;
   width: 80%;
 }
-.collection_fields {
-  background-color: $panther;
-  display: flex;
-  justify-content: center;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  height: 50vh;
-  width: 34vw;
-  box-shadow: 3px 4px 7px black;
-  margin-top: 1rem;
-  overflow-x: scroll;
-}
-.fields_title {
-  background-color: $panther;
-  margin: 1rem;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  width: 100%;
-}
 .quill-editor {
   width: 100%;
 }
@@ -1049,32 +943,6 @@ textarea {
   justify-content: space-evenly;
   align-items: center;
   margin-top: 2rem;
-}
-.card__ {
-  background-color: $panther;
-  border: none;
-  width: 10rem;
-  height: 20vh;
-  margin-right: 1rem;
-  margin-bottom: 2rem;
-  border-radius: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-shadow: 3px 4px 7px black;
-  color: white;
-  @media only screen and (min-width: 768px) {
-    flex: 1 0 24%;
-    min-width: 21rem;
-    max-width: 30rem;
-  }
-
-  &header {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 5rem;
-  }
 }
 .alerts-page__settings {
   display: flex;
@@ -1147,11 +1015,6 @@ textarea {
   font-size: 12px;
   margin-left: 0.5rem;
 }
-.sub__ {
-  font-size: 16px;
-  margin-top: -0.5rem;
-  color: $panther-silver;
-}
 .group {
   display: flex;
   flex-direction: row;
@@ -1217,17 +1080,6 @@ textarea {
 }
 .templates {
   border-bottom: 1px solid $gray;
-}
-.orange_button {
-  width: 7rem;
-  background-color: white;
-  color: $panther-orange;
-  font-weight: bold;
-  font-size: 16px;
-  height: 2rem;
-  border-radius: 0.5rem;
-  border: 2px solid white;
-  cursor: pointer;
 }
 .visible {
   display: none;

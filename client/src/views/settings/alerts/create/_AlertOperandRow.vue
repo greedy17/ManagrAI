@@ -637,25 +637,6 @@ export default {
 img {
   filter: invert(90%);
 }
-::v-deep .collection-search .collection-search__form .collection-search__input .search__input {
-  font-family: Lato-Regular, sans-serif;
-  font-weight: normal;
-  font-stretch: normal;
-  font-style: normal;
-  letter-spacing: normal;
-  font-size: 16px;
-  border-radius: 4px;
-  padding: 3%;
-  line-height: 1.29;
-  letter-spacing: 0.5px;
-  color: $panther;
-  height: 2.5rem;
-  background-color: white;
-  border: 1px solid #5d5e5e;
-  width: 10rem;
-  padding: 0 0 0 1rem;
-  margin: 1rem;
-}
 ::v-deep .collection-search__result-item {
   overflow: auto;
   padding: 0 0.5rem;

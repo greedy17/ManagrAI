@@ -304,9 +304,6 @@ export default {
   letter-spacing: 0.5px;
   height: 2.5rem;
 }
-::v-deep .tn-dropdown__options__option {
-  color: $panther;
-}
 ::v-deep .tn-dropdown__options__container {
   background-color: white;
 }

@@ -932,14 +932,6 @@ export default {
     align-items: flex-start;
     justify-content: flex-start;
   }
-  &__required {
-    color: $panther-orange;
-    font-size: 0.8rem;
-    font-weight: bold;
-    padding: 0.5rem;
-    border-radius: 0.5rem;
-    text-shadow: 0.75px 0.3px 0.2px white;
-  }
   &__connected {
     color: $dark-green;
     font-size: 1rem;
@@ -962,7 +954,7 @@ export default {
 
 .card-text {
   font-size: 14px;
-  color: $panther-gray;
+  color: $base-gray;
   text-align: center;
 }
 
@@ -992,17 +984,6 @@ export default {
   background: transparent;
   border: none;
   cursor: pointer;
-}
-.disabled-button {
-  padding: 0.5rem 1.5rem;
-  border-radius: 0.5rem;
-  margin: 0rem 0 1rem 0;
-  font-size: 1.05rem;
-  font-weight: bold;
-  border: none;
-  background-color: $panther-silver;
-  color: $panther-gray;
-  cursor: not-allowed;
 }
 .btn {
   &--danger {
@@ -1065,13 +1046,6 @@ a {
   cursor: pointer;
 }
 
-.end {
-  width: 6rem;
-  align-self: flex-end;
-  color: $panther-silver;
-  background: transparent;
-  border: none;
-}
 .welcome {
   display: flex;
   flex-direction: row;
@@ -1118,35 +1092,5 @@ a {
   font-size: 1.1rem;
   font-weight: bold;
   text-shadow: 0 0 20px $dark-green;
-}
-
-.revoke {
-  color: $panther-silver;
-  background-color: transparent;
-  width: 7vw;
-  border-radius: 0.25rem;
-  padding: 0.25rem;
-  margin-left: 1rem;
-  font-weight: bold;
-  font-size: 14px;
-  border: 2px solid $panther-silver;
-  cursor: pointer;
-}
-.revoke__ {
-  color: $panther-silver;
-  background-color: transparent;
-  width: 5vw;
-  border-radius: 0.25rem;
-  padding: 0.25rem;
-  margin-left: 0.5rem;
-  margin-right: 0.5rem;
-  font-weight: bold;
-  font-size: 14px;
-  border: 2px solid $panther-silver;
-  cursor: pointer;
-}
-.revoke,
-.revoke__:hover {
-  filter: brightness(0.85);
 }
 </style>

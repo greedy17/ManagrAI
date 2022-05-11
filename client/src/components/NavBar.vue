@@ -415,7 +415,7 @@ nav {
 
     &__bold {
       font-family: #{$bold-font-family};
-      color: $panther;
+      color: $base-gray;
       font-size: 14px;
     }
   }

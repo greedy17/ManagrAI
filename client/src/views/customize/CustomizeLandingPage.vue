@@ -101,22 +101,6 @@ export default {
 .onboarding {
   filter: blur(10px);
 }
-#toolTip {
-  position: relative;
-}
-
-#toolTip p {
-  color: $panther;
-  font-weight: bold;
-  padding: 10px;
-  background-color: #f9f9f9;
-  border: 2px solid $dark-green;
-  -moz-border-radius: 5px;
-  -ie-border-radius: 5px;
-  -webkit-border-radius: 5px;
-  -o-border-radius: 5px;
-  border-radius: 5px;
-}
 
 #tailShadow {
   position: absolute;

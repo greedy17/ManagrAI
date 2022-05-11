@@ -159,8 +159,4 @@ h3 {
   font-size: 1.35rem;
 }
 
-.step {
-  color: $panther-silver;
-  padding: 0.25rem;
-}
 </style>

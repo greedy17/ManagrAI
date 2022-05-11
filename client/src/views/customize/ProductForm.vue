@@ -156,8 +156,4 @@ export default {
   align-items: center;
 }
 
-.step {
-  color: $panther-silver;
-  padding: 0.25rem;
-}
 </style>

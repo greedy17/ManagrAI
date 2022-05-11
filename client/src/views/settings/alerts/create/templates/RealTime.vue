@@ -510,15 +510,4 @@ input {
   padding: 0.25rem 1.5rem;
   cursor: pointer;
 }
-.cs__button {
-  width: 9rem;
-  background-color: transparent;
-  color: $panther-silver;
-  font-weight: bold;
-  font-size: 16px;
-  height: 2rem;
-  border-radius: 0.5rem;
-  border: none;
-  cursor: not-allowed;
-}
 </style>

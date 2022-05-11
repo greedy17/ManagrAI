@@ -1164,16 +1164,6 @@ input:focus {
   margin-top: auto;
   margin-bottom: 0.5rem;
 }
-.object-selection {
-  z-index: 10;
-  position: absolute;
-  right: 0;
-  padding: 0.75rem;
-  width: 18vw;
-  background-color: $panther;
-  border-radius: 0.5rem;
-  box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
-}
 .show_menu {
   margin-right: 0.25rem;
   margin-top: 0.25rem;
@@ -1229,23 +1219,7 @@ button img {
 ::v-deep .multiselect__tags {
   max-width: 18vw;
 }
-::v-deep .ql-toolbar .ql-stroke {
-  fill: none;
-  stroke: $panther;
-}
 
-::v-deep .ql-toolbar .ql-fill {
-  fill: $panther;
-  stroke: none;
-}
-
-::v-deep .ql-toolbar .ql-picker {
-  color: $panther;
-}
-
-::v-deep .ql-editor.ql-blank::before {
-  color: $panther;
-}
 ::v-deep .ql-container.ql-snow {
   border: 1px solid #e8e8e8;
 }
@@ -1256,24 +1230,6 @@ button img {
 }
 ::v-deep .ql-blank.ql-editor {
   background-color: white;
-}
-::v-deep .ql-container {
-  background-color: white;
-  color: $panther;
-}
-::v-deep .collection-search__result-item {
-  border: none;
-  background-color: $panther;
-}
-::v-deep .input-content {
-  width: 14vw;
-  background-color: white;
-  color: $panther;
-}
-::v-deep .input-form__large {
-  width: 14vw;
-  background-color: white;
-  color: $panther;
 }
 ::v-deep .collection-search .collection-search__form .collection-search__input {
   height: 2.5rem;
@@ -1303,117 +1259,12 @@ button img {
   max-height: 30vh;
   width: 80%;
 }
-.slack-form-builder {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-
-  &__sf-fields,
-  &__sf-validations {
-    margin-right: 2rem;
-  }
-
-  &__container {
-    display: flex;
-    background-color: $panther;
-  }
-
-  &__sf-field {
-    padding: 0.25rem;
-    font-size: 0.85rem;
-    font-weight: bold;
-    font-display: #{$bold-font-family};
-    background-color: $panther;
-    &:hover {
-      background-color: $panther;
-      cursor: pointer;
-      color: $panther-silver;
-    }
-  }
-
-  &__required {
-    padding: 0.25rem;
-    font-size: 0.85rem;
-    font-weight: bold;
-    font-display: #{$bold-font-family};
-    background-color: $panther;
-    &:hover {
-      background-color: $panther;
-      cursor: pointer;
-      color: $panther-orange;
-    }
-  }
-
-  &__form {
-    width: 24vw;
-    padding: 2rem;
-    box-shadow: 0 5px 10px 0 rgba(132, 132, 132, 0.26);
-    background-color: $panther;
-    height: 50vh;
-    overflow-y: scroll;
-    overflow-x: hidden;
-    border-radius: 0.5rem;
-  }
-}
-.form-field {
-  background-color: $panther;
-  margin-top: 0.5rem;
-  &__left {
-    flex: 10;
-
-    display: flex;
-    align-items: center;
-  }
-
-  &__middle {
-    flex: 2;
-
-    display: flex;
-    align-items: center;
-  }
-
-  &__body {
-    font-size: 0.75rem;
-  }
-
-  &__label {
-    font-weight: bold;
-  }
-
-  &__right {
-    display: flex;
-    padding-left: 1rem;
-    margin-right: -0.5rem;
-
-    display: flex;
-    align-items: center;
-  }
-
-  &__btn {
-    padding: 0.35rem;
-    cursor: pointer;
-    color: $dark-gray-blue;
-
-    transition: color 0.3s linear;
-
-    &:hover {
-      color: black;
-    }
-
-    &--flipped {
-      transform: rotateX(180deg);
-    }
-  }
-}
 .message {
   width: 20vw;
   display: flex;
   flex-direction: column;
   justify-content: center;
   margin-bottom: 1.5rem;
-}
-.template__border {
-  border-bottom: 2px solid $panther-silver;
 }
 .alert__column {
   display: flex;
@@ -1530,20 +1381,6 @@ button img {
   padding: 2rem;
   border-radius: 0.33rem;
 }
-.alert_title {
-  background-color: $panther;
-  margin: 1rem;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  width: 30%;
-}
-.alert__title {
-  background-color: $panther;
-  margin: 1rem;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  width: 40%;
-}
 .space {
   height: 20vh;
 }
@@ -1569,14 +1406,6 @@ button img {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-.remove_button {
-  color: $panther-orange;
-  border: none;
-  font-weight: bold;
-  background: transparent;
-  cursor: pointer;
-  margin: 0.25rem;
 }
 .quill-editor {
   width: 100%;
@@ -1712,11 +1541,6 @@ textarea {
   font-size: 12px;
   margin-left: 0.5rem;
 }
-.sub__ {
-  font-size: 16px;
-  margin-top: -0.5rem;
-  color: $panther-silver;
-}
 .group {
   display: flex;
   flex-direction: row;
@@ -1726,17 +1550,6 @@ textarea {
   flex-direction: column;
   align-items: center;
   color: white;
-}
-.byo__col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  align-self: center;
-  color: white;
-  background-color: $panther;
-  border-radius: 0.5rem;
-  width: 50vw;
-  margin-top: 2rem;
 }
 .col__ {
   display: flex;
@@ -1831,17 +1644,6 @@ input {
   border-bottom: 1px solid $slate-gray;
   font-weight: bold;
 }
-.orange_button {
-  width: 7rem;
-  background-color: white;
-  color: $panther-orange;
-  font-weight: bold;
-  font-size: 16px;
-  height: 2rem;
-  border-radius: 0.5rem;
-  border: 2px solid white;
-  cursor: pointer;
-}
 .gold__button {
   display: flex;
   align-items: center;
@@ -1916,11 +1718,6 @@ input {
     position: absolute;
     bottom: -5px;
     left: 105%;
-
-    &__bold {
-      font-family: #{$bold-font-family};
-      color: $panther-silver;
-    }
   }
 }
 

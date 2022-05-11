@@ -480,10 +480,6 @@ export default {
   margin-left: -2.2rem;
 }
 
-::v-deep .tn-dropdown__selected-items__item-selection {
-  color: $panther;
-}
-
 .active {
   border-bottom: 2px solid $dark-green;
   padding: 0.2rem;
@@ -624,11 +620,6 @@ button {
   width: 33%;
   font-size: 0.75rem;
   color: $dark-green;
-}
-.unregistered {
-  width: 33%;
-  font-size: 0.75rem;
-  color: $panther-silver;
 }
 .cancel-button {
   margin-top: 1rem;

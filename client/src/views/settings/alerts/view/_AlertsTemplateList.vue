@@ -465,10 +465,6 @@ button:disabled {
   color: white;
   border: none;
 }
-::v-deep .ls-container__list--horizontal {
-  background-color: $panther;
-  width: 50vw;
-}
 ::v-deep .ls-container {
   background: transparent;
   box-shadow: none;
@@ -476,9 +472,6 @@ button:disabled {
 }
 .keep-activating {
   outline: 2px solid $coral;
-}
-.keep-activating__ {
-  outline: 2px solid $panther-gold;
 }
 .done-activating {
   outline: 2px solid $dark-green;
@@ -774,28 +767,6 @@ a {
 }
 .green {
   color: $dark-green;
-}
-.delete_button {
-  color: $panther-orange;
-  border: none;
-  background-color: $panther;
-  width: 8vw;
-  border-radius: 0.25rem;
-  padding: 0.5rem;
-  font-weight: bold;
-  font-size: 16px;
-  cursor: pointer;
-}
-.edit_button {
-  color: $panther-blue;
-  background-color: white;
-  width: 8vw;
-  border-radius: 0.25rem;
-  padding: 0.5rem;
-  font-weight: bold;
-  font-size: 16px;
-  border: 2px solid $white;
-  cursor: pointer;
 }
 .debug {
   border: 2px solid red;

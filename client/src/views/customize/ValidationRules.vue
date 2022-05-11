@@ -641,10 +641,6 @@ export default {
   margin: 0 4em;
   padding-top: 2rem;
 }
-::v-deep .vm--modal {
-  background-color: $panther;
-  border-radius: 0.25rem;
-}
 ::v-deep .tn-dropdown__selection-container {
   box-shadow: 0 5px 10px 0 $very-light-gray;
 }
