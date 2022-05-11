@@ -655,7 +655,7 @@ export default {
   animation: bounce 0.2s infinite alternate;
 }
 ::placeholder {
-  color: $panther-silver;
+  color: $very-light-gray;
   font-size: 0.75rem;
 }
 .back-button {

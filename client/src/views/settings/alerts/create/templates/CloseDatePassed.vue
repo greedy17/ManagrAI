@@ -701,7 +701,7 @@ input[type='text']:focus {
   }
 }
 ::placeholder {
-  color: $panther-silver;
+  color: $very-light-gray;
   font-size: 0.75rem;
 }
 .invisible {

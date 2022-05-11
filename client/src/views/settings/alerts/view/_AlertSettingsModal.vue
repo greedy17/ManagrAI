@@ -497,7 +497,7 @@ export default {
   overflow-y: scroll;
 }
 ::placeholder {
-  color: $panther-silver;
+  color: $very-light-gray;
   font-size: 0.75rem;
 }
 h2 {

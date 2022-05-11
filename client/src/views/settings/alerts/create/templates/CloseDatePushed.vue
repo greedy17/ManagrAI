@@ -462,7 +462,7 @@ export default {
   font-size: 13px;
 }
 ::placeholder {
-  color: $panther-silver;
+  color: $very-light-gray;
   font-size: 0.75rem;
 }
 .slot-icon {
@@ -576,7 +576,7 @@ img {
   border-style: none;
   letter-spacing: 0.03rem;
   background-color: $soft-gray;
-  color: $panther-gray;
+  color: $base-gray;
   cursor: not-allowed;
   font-size: 11px;
 }

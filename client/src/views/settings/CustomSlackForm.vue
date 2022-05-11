@@ -1849,7 +1849,7 @@ img:hover {
   padding: 0.5rem 1rem;
   min-width: 6rem;
   background-color: $soft-gray;
-  color: $panther-gray;
+  color: $base-gray;
   border: none;
   border-radius: 0.25rem;
   margin-left: 0.5rem;

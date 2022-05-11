@@ -1120,7 +1120,7 @@ input:focus {
   cursor: pointer;
 }
 ::placeholder {
-  color: $panther-silver;
+  color: $very-light-gray;
   font-size: 0.75rem;
 }
 .prev-button {
@@ -1693,7 +1693,7 @@ input {
   border-style: none;
   letter-spacing: 0.03rem;
   background-color: $soft-gray;
-  color: $panther-gray;
+  color: $base-gray;
   cursor: not-allowed;
   height: 2rem;
   width: 10rem;

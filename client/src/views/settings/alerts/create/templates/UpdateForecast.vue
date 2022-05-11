@@ -771,7 +771,7 @@ export default {
 }
 
 ::placeholder {
-  color: $panther-silver;
+  color: $very-light-gray;
   font-size: 0.75rem;
 }
 .invisible {
