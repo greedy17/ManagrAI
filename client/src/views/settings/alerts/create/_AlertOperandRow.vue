@@ -452,8 +452,8 @@ export default {
       selectedOperand: '',
       objectFields: CollectionManager.create({
         ModelClass: SObjectField,
-        pagination: { size: 200 },
-        // filters: { forAlerts: true, filterable: true, page: 1 },
+        pagination: { size: 300 },
+        filters: { forAlerts: true, filterable: true, page: 1 },
       }),
       // used by dropdown as a ref field to retrieve obj of selected opt
       selectedOperandFieldRef: null,
@@ -599,8 +599,8 @@ export default {
       async handler(val) {
         this.objectFields.filters = {
           ...this.objectFields.filters,
-          // forAlerts: true,
-          // filterable: true,
+          forAlerts: true,
+          filterable: true,
           salesforceObject: val,
         }
         this.objectFields.refresh()

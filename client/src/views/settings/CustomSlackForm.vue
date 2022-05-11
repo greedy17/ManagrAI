@@ -17,7 +17,7 @@
         </template>
       </div>
     </div>
-
+    <!-- <p @click="test">test</p> -->
     <div class="opportunity__row">
       <div :class="formType !== 'STAGE_GATING' ? 'collection_fields' : 'stage_fields'">
         <div v-if="formType === 'STAGE_GATING'">
@@ -1167,7 +1167,6 @@ export default {
     ListItem,
     ListContainer,
     Modal,
-
     CustomDropDown,
     draggable,
     ToggleCheckBox,
@@ -1255,12 +1254,40 @@ export default {
       handler(val) {
         if (val && val.fields.length) {
           this.addedFields = [...val.fieldsRef]
-          this.addedFields = this.addedFields.filter((field) => {
-            return (
-              field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
-              field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
-            )
-          })
+          if (this.formType == 'UPDATE') {
+            let currentFormFields = this.addedFields.map((field) => {
+              return field.id
+            })
+            if (currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false) {
+              let fieldsToAdd = this.managrFields.filter((field) => {
+                return (
+                  field.id == '6407b7a1-a877-44e2-979d-1effafec5035' ||
+                  field.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
+                )
+              })
+              let copyArray = this.addedFields
+              fieldsToAdd = fieldsToAdd.concat(copyArray)
+              this.addedFields = fieldsToAdd.map((field, i) => {
+                let altField = { ...field }
+                altField.order = i
+                if (
+                  altField.id == '6407b7a1-a877-44e2-979d-1effafec5035' ||
+                  altField.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
+                ) {
+                  altField.includeInRecap = true
+                }
+                return altField
+              })
+            }
+          }
+          if (this.formType !== 'UPDATE') {
+            this.addedFields = this.addedFields.filter((field) => {
+              return (
+                field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
+                field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
+              )
+            })
+          }
         }
       },
     },
