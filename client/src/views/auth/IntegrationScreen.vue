@@ -1,6 +1,6 @@
 <template>
   <div class="integrations">
-    <div v-if="userLevel == 'REP'">
+    <div v-if="userLevel == 'MANAGER'">
       <div>
         <div class="welcome">
           <h3>Hi, {{ user.fullName }}</h3>
@@ -16,7 +16,7 @@
             >
               <p>
                 Connect
-                <span> <img src="@/assets/images/logo.png" height=".5" alt="" /> Managr</span> to
+                <span> <img src="@/assets/images/logo.png" height="9px" alt="" /> Managr</span> to
                 your favorite apps
               </p>
             </div>
