@@ -1,6 +1,6 @@
 <template>
   <div class="integrations">
-    <div v-if="userLevel == 'MANAGER'">
+    <div v-if="userLevel == 'REP'">
       <div>
         <div class="welcome">
           <h3>Hi, {{ user.fullName }}</h3>
