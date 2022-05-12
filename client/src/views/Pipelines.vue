@@ -662,35 +662,58 @@
             <router-link style="width: 100%" v-bind:to="'/pipelines/'">
               <button v-if="showPopularList" @click="allOpportunities" class="list-button">
                 All Opportunities
-                <span class="filter" v-if="currentList === 'All Opportunities'"> active</span>
+                <span
+                  class="filter"
+                  v-if="
+                    currentList === 'All Opportunities' &&
+                    currentWorkflowName === 'Active Workflows'
+                  "
+                >
+                  active</span
+                >
               </button>
             </router-link>
             <button v-if="showPopularList" @click="closeDatesThisMonth" class="list-button">
               Closing this month
-              <span class="filter" v-if="currentList === 'Closing this month'"> active</span>
+              <span
+                class="filter"
+                v-if="
+                  currentList === 'Closing this month' && currentWorkflowName === 'Active Workflows'
+                "
+              >
+                active</span
+              >
             </button>
             <button v-if="showPopularList" @click="closeDatesNextMonth" class="list-button">
               Closing next month
-              <span class="filter" v-if="currentList === 'Closing next month'"> active</span>
+              <span
+                class="filter"
+                v-if="
+                  currentList === 'Closing next month' && currentWorkflowName === 'Active Workflows'
+                "
+              >
+                active</span
+              >
             </button>
-            <p @click="showMeetingList = !showMeetingList" class="list-section__sub-title">
-              Meetings
-              <img v-if="showMeetingList" src="@/assets/images/downArrow.png" alt="" /><img
-                v-else
-                src="@/assets/images/rightArrow.png"
-                alt=""
-              />
-            </p>
-            <div style="width: 100%" v-if="showMeetingList">
-              <router-link :to="{ name: 'Meetings' }">
-                <button class="list-button">Today's meetings</button>
-              </router-link>
-              <!-- <button @click="selectMeeting('Today\'s meetings')" class="list-button">
-                Today's meetings
-                <span class="filter" v-if="currentList === 'Today\'s meetings'"> active</span>
-              </button> -->
-            </div>
-            <p @click="showWorkflowList = !showWorkflowList" class="list-section__sub-title">
+          </div>
+
+          <button @click.stop="workList = !workList" class="select-btn">
+            {{ currentWorkflowName }}
+            <img
+              v-if="!workList"
+              style="height: 1rem; margin-left: 0.5rem"
+              src="@/assets/images/rightArrow.png"
+              alt=""
+            />
+            <img
+              v-else
+              style="height: 1rem; margin-left: 0.5rem"
+              src="@/assets/images/downArrow.png"
+              alt=""
+            />
+          </button>
+          <div v-outside-click="closeWorkSelect" v-show="workList" class="work-section">
+            <p @click="showWorkflowList = !showWorkflowList" class="work-section__sub-title">
               Workflows
               <img v-if="showWorkflowList" src="@/assets/images/downArrow.png" alt="" /><img
                 v-else
@@ -703,19 +726,12 @@
                 <router-link v-bind:to="'/pipelines/' + `${template.id}`">
                   <button class="list-button">
                     {{ template.title }}
-                    <span class="filter" v-if="currentList === template.title"> active</span>
+                    <span class="filter" v-if="currentWorkflowName === template.title">
+                      active</span
+                    >
                   </button>
                 </router-link>
               </div>
-              <!-- <button
-                :key="i"
-                v-for="(template, i) in templates.list"
-                @click="selectList(template.title, template.id)"
-                class="list-button"
-              >
-                {{ template.title }}
-                <span class="filter" v-if="currentList === template.title"> active</span>
-              </button> -->
             </div>
           </div>
 
@@ -865,7 +881,7 @@
       </section>
       <div class="results">
         <h6 style="color: #9b9b9b">
-          {{ currentList }}:
+          {{ currentWorkflowName === 'Active Workflows' ? currentList : currentWorkflowName }}:
           <span>{{ selectedWorkflow ? currentWorkflow.length : allOpps.length }}</span>
         </h6>
       </div>
@@ -939,7 +955,9 @@
           <div class="empty-table">
             <div class="table-row">
               <div class="flex-row table-cell-header">
-                <h5 style="margin-left: 1rem">No results for the {{ currentList }} workflow.</h5>
+                <h5 style="margin-left: 1rem">
+                  No results for the {{ currentWorkflowName }} workflow.
+                </h5>
               </div>
             </div>
           </div>
@@ -957,7 +975,7 @@
   </div>
 </template>
 <script>
-import { SObjects, SObjectPicklist, MeetingWorkflows } from '@/services/salesforce'
+import { SObjects, SObjectPicklist } from '@/services/salesforce'
 import AlertTemplate from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
 import SlackOAuth from '@/services/slack'
@@ -988,6 +1006,7 @@ export default {
   },
   data() {
     return {
+      currentWorkflowName: 'Active Workflows',
       id: this.$route.params.id,
       stageGateField: null,
       stageValidationFields: {},
@@ -998,9 +1017,6 @@ export default {
       selectedOwner: null,
       currentOwner: null,
       currentAccount: null,
-      updatingMeeting: false,
-      meetingWorkflowId: null,
-      meetingLoading: null,
       updatingOpps: false,
       oppInstanceId: null,
       oppId: null,
@@ -1043,6 +1059,7 @@ export default {
       currentList: 'All Opportunities',
       alertInstanceId: null,
       showList: false,
+      workList: false,
       showWorkflowList: true,
       showPopularList: true,
       notes: [],
@@ -1076,9 +1093,6 @@ export default {
       filterValues: [],
       filters: [],
       operatorsLength: 0,
-      showMeetingList: true,
-      meetings: null,
-
       ladFilter: {
         apiName: 'LastActivityDate',
         dataType: 'Date',
@@ -1207,6 +1221,9 @@ export default {
     closeListSelect() {
       this.showList = false
     },
+    closeWorkSelect() {
+      this.workList = false
+    },
     async getFilteredObjects(value) {
       this.loadingWorkflows = true
       if (value) {
@@ -1216,7 +1233,7 @@ export default {
         const res = await SObjects.api.getObjects('Opportunity', true, this.filters)
         if (this.selectedWorkflow) {
           this.allOpps = res.results
-          this.updateWorkflowList(this.currentList, this.refreshId)
+          this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
         } else if (this.currentList === 'Closing this month') {
           this.allOpps = res.results
           this.allOpps = this.allOpps.filter(
@@ -1604,7 +1621,6 @@ export default {
       this.editOpModalOpen = true
       this.currentVals = []
       this.dropdownVal = {}
-      this.updatingMeeting = false
       this.currentOwner = null
       this.currentAccount = null
       this.selectedAccount = null
@@ -1656,7 +1672,7 @@ export default {
         for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
           this.$refs.workflowTableChild[i].onPushCloseDate()
           this.updateOpps()
-          this.updateWorkflowList(this.currentList, this.refreshId)
+          this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
         }
         this.workflowCheckList = []
       } else {
@@ -1672,7 +1688,7 @@ export default {
         for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
           this.$refs.workflowTableChild[i].onAdvanceStage()
           this.updateOpps()
-          this.updateWorkflowList(this.currentList, this.refreshId)
+          this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
         }
         this.workflowCheckList = []
       } else {
@@ -1688,7 +1704,7 @@ export default {
         for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
           this.$refs.workflowTableChild[i].onChangeForecast()
           this.updateOpps()
-          this.updateWorkflowList(this.currentList, this.refreshId)
+          this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
         }
         this.workflowCheckList = []
       } else {
@@ -1788,7 +1804,7 @@ export default {
             this.originalList = updatedRes.results
           })
         if (this.selectedWorkflow) {
-          this.updateWorkflowList(this.currentList, this.refreshId)
+          this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
         } else if (this.currentList === 'Closing this month') {
           this.stillThisMonth()
         } else if (this.currentList === 'Closing next month') {
@@ -1850,16 +1866,16 @@ export default {
           this.selectedWorkflow = true
           this.loadingWorkflows = false
           this.templates.list.length
-            ? (this.currentList = this.templates.list.filter(
+            ? (this.currentWorkflowName = this.templates.list.filter(
                 (temp) => temp.id === this.id,
               )[0].title)
-            : (this.currentList = 'Worklow...')
+            : (currentWorkflowName = 'Worklow...')
         }
       }
     },
     async updateWorkflowList(title, id) {
       this.refreshId = id
-      this.currentList = title
+      this.currentWorkflowName = title
       try {
         let res = await AlertTemplate.api.runAlertTemplateNow(id, {
           fromWorkflow: true,
@@ -1872,6 +1888,7 @@ export default {
       } finally {
         this.selectedWorkflow = true
         this.showList = false
+        this.workList = false
       }
     },
     async getAllForms() {
@@ -1894,7 +1911,10 @@ export default {
         this.createOppForm = this.createOppForm[0].fieldsRef
 
         for (let i in this.picklistQueryOptsContacts) {
-          this.picklistQueryOptsContacts[i] = this.listPicklists(i, { picklistFor: i })
+          this.picklistQueryOptsContacts[i] = this.listPicklists(i, {
+            picklistFor: i,
+            salesforceObject: 'Opportunity',
+          })
         }
 
         for (let i = 0; i < this.oppFormCopy.length; i++) {
@@ -1910,7 +1930,10 @@ export default {
         }
 
         for (let i in this.picklistQueryOpts) {
-          this.picklistQueryOpts[i] = this.listPicklists(i, { picklistFor: i })
+          this.picklistQueryOpts[i] = this.listPicklists(i, {
+            picklistFor: i,
+            salesforceObject: 'Opportunity',
+          })
         }
 
         for (let i = 0; i < this.createOppForm.length; i++) {
@@ -1926,7 +1949,10 @@ export default {
         }
 
         for (let i in this.createQueryOpts) {
-          this.createQueryOpts[i] = this.listCreatePicklists(i, { picklistFor: i })
+          this.createQueryOpts[i] = this.listCreatePicklists(i, {
+            picklistFor: i,
+            salesforceObject: 'Opportunity',
+          })
         }
 
         this.filterFields = this.updateOppForm[0].fieldsRef.filter(
@@ -1978,7 +2004,10 @@ export default {
         }
 
         for (let i in this.stagePicklistQueryOpts) {
-          this.stagePicklistQueryOpts[i] = this.listStagePicklists(i, { picklistFor: i })
+          this.stagePicklistQueryOpts[i] = this.listStagePicklists(i, {
+            picklistFor: i,
+            salesforceObject: 'Opportunity',
+          })
         }
       } catch (error) {
         console.log(error)
@@ -2059,6 +2088,7 @@ export default {
       )
       this.currentList = 'Closing this month'
       this.showList = false
+      this.workList = false
       this.closeFilterSelection()
     },
     stillThisMonth() {
@@ -2115,8 +2145,10 @@ export default {
       this.updateCounter < 10
     ) {
       this.templates.list.length
-        ? (this.currentList = this.templates.list.filter((temp) => temp.id === this.id)[0].title)
-        : (this.currentList = 'Workflow...')
+        ? (this.currentWorkflowName = this.templates.list.filter(
+            (temp) => temp.id === this.id,
+          )[0].title)
+        : (this.currentWorkflowName = 'Workflow...')
       this.updateCounter += 1
     }
   },
@@ -2256,7 +2288,23 @@ select {
     filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
   }
 }
-.select-btn:hover {
+.work-btn {
+  border: 1px solid #e8e8e8;
+  min-height: 4.5vh;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.25rem;
+  background-color: $base-gray;
+  cursor: pointer;
+  color: white;
+  letter-spacing: 0.2px;
+  margin-right: 0.5rem;
+  transition: all 0.25s;
+}
+.select-btn:hover,
+.work-btn:hover {
   transform: scale(1.015);
   box-shadow: 1px 1px 2px $very-light-gray;
 }
@@ -2739,6 +2787,51 @@ main:hover > span {
   cursor: pointer;
   color: white;
   font-weight: bold;
+}
+.work-section {
+  z-index: 4;
+  position: absolute;
+  top: 20vh;
+  left: 12.5vw;
+  border-radius: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background-color: $white;
+  min-width: 20vw;
+  max-height: 70vh;
+  overflow: scroll;
+  margin-right: 0.5rem;
+  box-shadow: 1px 1px 2px 2px $very-light-gray;
+  &__title {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    color: $base-gray;
+    background-color: $off-white;
+    letter-spacing: 0.25px;
+    padding-left: 0.75rem;
+    font-weight: bold;
+    font-size: 16px;
+    width: 100%;
+  }
+  &__sub-title {
+    font-size: 12px;
+    letter-spacing: 0.3px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    margin-left: 0.75rem;
+    margin-top: 1rem;
+    color: $base-gray;
+    cursor: pointer;
+    width: 100%;
+    img {
+      margin: 2px 0px 0px 3px;
+      height: 0.75rem;
+      filter: invert(70%);
+    }
+  }
 }
 .list-section {
   z-index: 4;

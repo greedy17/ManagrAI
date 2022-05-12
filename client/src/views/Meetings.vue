@@ -357,6 +357,12 @@
                 <template slot="noResult">
                   <p>No results.</p>
                 </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    {{ currentOwner }}
+                  </p>
+                </template>
               </Multiselect>
             </div>
 
@@ -378,6 +384,12 @@
                 <template slot="noResult">
                   <p>No results.</p>
                 </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    {{ currentAccount }}
+                  </p>
+                </template>
               </Multiselect>
             </div>
           </section>
@@ -396,273 +408,7 @@
       </div>
     </Modal>
 
-    <Modal
-      v-if="addOppModalOpen"
-      dimmed
-      @close-modal="
-        () => {
-          $emit('cancel'), resetAddOpp()
-        }
-      "
-    >
-      <div class="opp-modal-container">
-        <div class="flex-row-spread header">
-          <div class="flex-row">
-            <img
-              src="@/assets/images/logo.png"
-              style="height: 1.75rem; margin-left: 0.5rem; margin-right: 0.25rem"
-              alt=""
-            />
-            <h2>Create Opportunity</h2>
-          </div>
-
-          <img
-            src="@/assets/images/clear.png"
-            class="invert"
-            style="height: 1.25rem; margin-top: -1rem; margin-right: 0.75rem; cursor: pointer"
-            @click="resetAddOpp"
-            alt=""
-          />
-        </div>
-        <div class="opp-modal">
-          <section :key="field.id" v-for="field in createOppForm">
-            <div
-              v-if="
-                field.dataType === 'TextArea' ||
-                (field.dataType === 'String' && field.apiName === 'NextStep')
-              "
-            >
-              <p>{{ field.referenceDisplayLabel }}:</p>
-              <textarea
-                id="user-input"
-                ccols="30"
-                rows="4"
-                style="width: 26.25vw; border-radius: 0.4rem"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-              >
-              </textarea>
-            </div>
-            <div v-else-if="field.dataType === 'String'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
-              <input
-                id="user-input"
-                type="text"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-              />
-            </div>
-
-            <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
-              <Multiselect
-                v-model="currentVals[field.apiName]"
-                :options="createQueryOpts[field.apiName]"
-                @select="
-                  setUpdateValues(
-                    field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-                    $event.value,
-                  )
-                "
-                openDirection="below"
-                style="width: 18vw"
-                selectLabel="Enter"
-                track-by="value"
-                label="label"
-              >
-                <template slot="noResult">
-                  <p>No results.</p>
-                </template>
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
-                    {{ `${field.referenceDisplayLabel}` }}
-                  </p>
-                </template>
-              </Multiselect>
-            </div>
-            <div v-else-if="field.dataType === 'Date'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
-              <input
-                type="date"
-                id="user-input"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-              />
-            </div>
-            <div v-else-if="field.dataType === 'DateTime'">
-              <p>
-                {{ field.referenceDisplayLabel }}
-              </p>
-              <input
-                type="datetime-local"
-                id="start"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-              />
-            </div>
-            <div
-              v-else-if="
-                field.dataType === 'Phone' ||
-                field.dataType === 'Double' ||
-                field.dataType === 'Currency'
-              "
-            >
-              <p>{{ field.referenceDisplayLabel }}:</p>
-              <input
-                id="user-input"
-                type="number"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-              />
-            </div>
-            <div v-else-if="field.apiName === 'OwnerId'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
-              <Multiselect
-                v-model="selectedOwner"
-                :options="allUsers"
-                @select="
-                  setUpdateValues(field.apiName, $event.salesforce_account_ref.salesforce_id)
-                "
-                openDirection="below"
-                style="width: 18vw"
-                selectLabel="Enter"
-                track-by="salesforce_account_ref.salesforce_id"
-                label="full_name"
-              >
-                <template slot="noResult">
-                  <p>No results.</p>
-                </template>
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
-                    {{ currentOwner }}
-                  </p>
-                </template>
-              </Multiselect>
-            </div>
-
-            <div v-else-if="field.apiName === 'AccountId'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
-
-              <Multiselect
-                v-model="selectedAccount"
-                :options="allAccounts"
-                @search-change="getAccounts($event)"
-                @select="setUpdateValues(field.apiName, $event.id)"
-                openDirection="below"
-                style="width: 18vw"
-                selectLabel="Enter"
-                track-by="id"
-                label="name"
-              >
-                <template slot="noResult">
-                  <p>No results.</p>
-                </template>
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
-                    {{ currentAccount }}
-                  </p>
-                </template>
-              </Multiselect>
-            </div>
-          </section>
-        </div>
-        <div class="flex-end">
-          <button class="add-button" @click="createResource">Create Opportunity</button>
-          <p @click="resetAddOpp" class="cancel">Cancel</p>
-        </div>
-      </div>
-    </Modal>
-
     <div ref="pipelines" v-if="!loading">
-      <section class="flex-row-spread">
-        <div v-if="!workflowCheckList.length && !primaryCheckList.length" class="flex-row">
-          <button @click.stop="showList = !showList" class="select-btn">
-            {{ currentList }}
-            <img
-              v-if="!showList"
-              style="height: 1rem; margin-left: 0.5rem"
-              src="@/assets/images/rightArrow.png"
-              alt=""
-            />
-            <img
-              v-else
-              style="height: 1rem; margin-left: 0.5rem"
-              src="@/assets/images/downArrow.png"
-              alt=""
-            />
-          </button>
-          <div v-outside-click="closeListSelect" v-show="showList" class="list-section">
-            <div class="list-section__title flex-row-spread">
-              <p>{{ currentList }}</p>
-            </div>
-            <p @click="showPopularList = !showPopularList" class="list-section__sub-title">
-              Standard Lists
-              <img v-if="showPopularList" src="@/assets/images/downArrow.png" alt="" /><img
-                v-else
-                src="@/assets/images/rightArrow.png"
-                alt=""
-              />
-            </p>
-            <button v-if="showPopularList" @click="allOpportunities" class="list-button">
-              All Opportunities
-              <span class="filter" v-if="currentList === 'All Opportunities'"> active</span>
-            </button>
-            <router-link style="width: 100%" v-bind:to="'/pipelines/' + 'Closing-this-month'">
-              <button v-if="showPopularList" class="list-button">
-                Closing this month
-                <span class="filter" v-if="currentList === 'Closing this month'"> active</span>
-              </button>
-            </router-link>
-
-            <router-link style="width: 100%" v-bind:to="'/pipelines/' + 'Closing-next-month'">
-              <button v-if="showPopularList" class="list-button">
-                Closing next month
-                <span class="filter" v-if="currentList === 'Closing next month'"> active</span>
-              </button>
-            </router-link>
-
-            <p @click="showMeetingList = !showMeetingList" class="list-section__sub-title">
-              Meetings
-              <img v-if="showMeetingList" src="@/assets/images/downArrow.png" alt="" /><img
-                v-else
-                src="@/assets/images/rightArrow.png"
-                alt=""
-              />
-            </p>
-            <div style="width: 100%" v-if="showMeetingList">
-              <button @click="selectMeeting('Today\'s meetings')" class="list-button">
-                Today's meetings
-                <span class="filter" v-if="currentList === 'Today\'s Meetings'"> active</span>
-              </button>
-            </div>
-            <p @click="showWorkflowList = !showWorkflowList" class="list-section__sub-title">
-              Workflows
-              <img v-if="showWorkflowList" src="@/assets/images/downArrow.png" alt="" /><img
-                v-else
-                src="@/assets/images/rightArrow.png"
-                alt=""
-              />
-            </p>
-            <div style="width: 100%" v-if="showWorkflowList">
-              <div :key="i" v-for="(template, i) in templates.list">
-                <router-link v-bind:to="'/pipelines/' + `${template.id}`">
-                  <button class="list-button">
-                    {{ template.title }}
-                    <span class="filter" v-if="currentList === template.title"> active</span>
-                  </button>
-                </router-link>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="flex-row">
-          <button @click="createOppInstance()" class="add-button">
-            <img src="@/assets/images/plusOne.png" style="height: 1rem" alt="" />
-            Create Opportunity
-          </button>
-          <button @click="manualSync" class="select-btn">
-            <img src="@/assets/images/refresh.png" class="invert" style="height: 1.15rem" alt="" />
-          </button>
-        </div>
-      </section>
       <div class="results">
         <h6 style="color: #9b9b9b">
           Today's Meetings:
@@ -702,7 +448,6 @@
     <div v-if="loading">
       <Loader loaderText="Pulling in your meetings" />
     </div>
-    <!-- <router-view :key="$route.fullPath"></router-view> -->
   </div>
 </template>
 <script>
@@ -755,8 +500,6 @@ export default {
       selection: false,
       allStages: [],
       allForecasts: [],
-      newStage: null,
-      newForecast: null,
       originalList: null,
       daysForward: null,
       allOpps: null,
@@ -808,8 +551,6 @@ export default {
     this.getObjects()
     this.templates.refresh()
     this.getAllForms()
-    this.listStages()
-    this.listForecast()
     this.getUsers()
   },
   watch: {
@@ -903,12 +644,6 @@ export default {
     closeListSelect() {
       this.showList = false
     },
-    setStage(val) {
-      this.newStage = val
-    },
-    setForecast(val) {
-      this.newForecast = val
-    },
     async listPicklists(type, query_params) {
       try {
         const res = await SObjectPicklist.api.listPicklists(query_params)
@@ -929,28 +664,6 @@ export default {
       try {
         const res = await SObjectPicklist.api.listPicklists(query_params)
         this.createQueryOpts[type] = res.length ? res[0]['values'] : []
-      } catch (e) {
-        console.log(e)
-      }
-    },
-    async listStages() {
-      try {
-        const res = await SObjectPicklist.api.listPicklists({
-          salesforceObject: 'Opportunity',
-          picklistFor: 'StageName',
-        })
-        this.allStages = res.length ? res[0]['values'] : []
-      } catch (e) {
-        console.log(e)
-      }
-    },
-    async listForecast() {
-      try {
-        const res = await SObjectPicklist.api.listPicklists({
-          salesforceObject: 'Opportunity',
-          picklistFor: 'ForecastCategoryName',
-        })
-        this.allForecasts = res.length ? res[0]['values'] : []
       } catch (e) {
         console.log(e)
       }
@@ -1069,7 +782,7 @@ export default {
               ? (this.currentAccount = this.allOpps.filter(
                   (opp) => opp.id === this.oppId,
                 )[0].account_ref.name)
-              : (this.currentAccount = 'Select Account')
+              : (this.currentAccount = 'Account')
           })
       } catch (e) {
         console.log(e)
@@ -1497,8 +1210,8 @@ input {
 .table-section {
   margin: 0;
   padding: 0;
-  min-height: 74vh;
-  max-height: 76vh;
+  min-height: 78vh;
+  max-height: 80vh;
   overflow: scroll;
   margin-top: 0.5rem;
   border-radius: 5px;
