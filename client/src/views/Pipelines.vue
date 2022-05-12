@@ -713,6 +713,9 @@
             />
           </button>
           <div v-outside-click="closeWorkSelect" v-show="workList" class="work-section">
+            <div class="work-section__title flex-row-spread">
+              <p>{{ currentWorkflowName }}</p>
+            </div>
             <p @click="showWorkflowList = !showWorkflowList" class="work-section__sub-title">
               Workflows
               <img v-if="showWorkflowList" src="@/assets/images/downArrow.png" alt="" /><img
