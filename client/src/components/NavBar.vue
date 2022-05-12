@@ -29,6 +29,11 @@
               >
             </li>
             <li>
+              <router-link exact-active-class="active" :to="{ name: 'Meetings' }"
+                >Meetings</router-link
+              >
+            </li>
+            <li>
               <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
                 >Team</router-link
               >
@@ -53,7 +58,11 @@
                 >Pipeline</router-link
               >
             </li>
-
+            <li>
+              <router-link exact-active-class="active" :to="{ name: 'Meetings' }"
+                >Meetings</router-link
+              >
+            </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
                 >Team</router-link
@@ -77,6 +86,11 @@
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Pipelines' }"
                 >Pipeline</router-link
+              >
+            </li>
+            <li>
+              <router-link exact-active-class="active" :to="{ name: 'Meetings' }"
+                >Meetings</router-link
               >
             </li>
           </ul>
@@ -103,6 +117,11 @@
             <li v-if="!isOnboarding">
               <router-link exact-active-class="active" :to="{ name: 'Pipelines' }"
                 >Pipeline</router-link
+              >
+            </li>
+            <li v-if="!isOnboarding">
+              <router-link exact-active-class="active" :to="{ name: 'Meetings' }"
+                >Meetings</router-link
               >
             </li>
           </ul>
