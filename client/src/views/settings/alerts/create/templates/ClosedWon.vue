@@ -162,11 +162,9 @@ import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button
 //Internal
 import FormField from '@/components/forms/FormField'
 import CommitAlertGroup from '@/views/settings/alerts/create/CommitAlertGroup'
-import AlertSummary from '@/views/settings/alerts/create/_AlertSummary'
 import ListContainer from '@/components/ListContainer'
 import ListItem from '@/components/ListItem'
 import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotificationTemplate'
-import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePreview'
 import ExpandablePanel from '@/components/ExpandablePanel'
 import Modal from '@/components/Modal'
 import SmartAlertTemplateBuilder from '@/views/settings/alerts/create/SmartAlertTemplateBuilder'
@@ -178,7 +176,7 @@ import { UserConfigForm } from '@/services/users/forms'
 
 import { RealTimeAlertForm, RealTime } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 import {
   SObjectField,
   NON_FIELD_ALERT_OPTS,
@@ -193,13 +191,11 @@ export default {
     ExpandablePanel,
     ListContainer,
     ListItem,
-    SlackMessagePreview,
     CommitAlertGroup,
     SlackNotificationTemplate,
     quillEditor,
     ToggleCheckBox,
     FormField,
-    AlertSummary,
     PulseLoadingSpinnerButton,
     Modal,
     SmartAlertTemplateBuilder,

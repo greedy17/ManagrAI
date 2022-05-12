@@ -157,16 +157,13 @@
 </template>
 
 <script>
-import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePreview'
 import { CollectionManager } from '@thinknimble/tn-models'
 import { UserOnboardingForm } from '@/services/users/forms'
-import User from '@/services/users'
 import AlertTemplate from '@/services/alerts/'
 
 export default {
   name: 'AlertsDashboardMenu',
   components: {
-    SlackMessagePreview,
     CollectionManager,
   },
   data() {

@@ -32,54 +32,6 @@
         />
       </div>
     </modal>
-    <modal name="add-stage-modal" heading="Select a Stage" height="auto" :scrollable="true">
-      <div class="modal-container">
-        <div v-if="!loadingStages" class="modal-container__box">
-          <div class="modal-container__box__header">
-            <h2 class="modal-container__box__title">Select a stage</h2>
-          </div>
-          <div class="modal-container__box__content">
-            <div class="box__content-select">
-              
-            </div>
-          </div>
-
-          <div class="modal-container__box__footer mar">
-            <div class="centered">
-              <span class="user-message" v-if="!stages.length">
-                <small>Can't see your stages?</small>
-              </span>
-              <span v-else class="user-message">
-                <small>Recently updated your stages?</small>
-              </span>
-              <PulseLoadingSpinnerButton
-                @click="() => refreshFormStages()"
-                :loading="false"
-                class="stage__button"
-                text="Refresh"
-              />
-            </div>
-            <div class="centered">
-              <button
-                style="margin-top: 1rem"
-                class="modal-container__box__button"
-                @click="
-                  () => {
-                    $modal.hide('add-stage-modal'),
-                      addForm(this.selectedStage),
-                      selectForm('Opportunity', 'STAGE_GATING', selectedStage)
-                  }
-                "
-                :disabled="!this.selectedStage"
-              >
-                Select
-              </button>
-            </div>
-          </div>
-        </div>
-        <div v-else>LOADING</div>
-      </div>
-    </modal>
     <h1
       v-if="selectedStage"
       style="color: black; padding-bottom: 0.5rem; border-bottom: 3px solid #199e54"
@@ -91,38 +43,6 @@
     </h1>
 
     <div class="centered__stage">
-      <div
-        v-if="stageDropDownOpen && resource == 'Opportunity'"
-        :class="selectedStage ? 'small__stage__dropdown' : 'stage__dropdown'"
-      >
-        <div>
-          <div class="stage__dropdown__header">Your Stage Gate Forms</div>
-          <div
-            v-for="(form, i) in formStages"
-            :key="i"
-            class="stage__dropdown__stages__container"
-            :class="{
-              'stage__dropdown__stages__container--selected':
-                selectedForm &&
-                selectedForm.formType == 'STAGE_GATING' &&
-                selectedForm.resource == 'Opportunity' &&
-                selectedForm.stage == form.stage,
-            }"
-          >
-            <div
-              class="stage__dropdown__stages__title"
-              @click="selectForm('Opportunity', 'STAGE_GATING', form.stage)"
-            >
-              {{ form.stage }}
-            </div>
-            <div class="stage__dropdown__stages__x" @click.prevent="deleteForm(form)">x</div>
-          </div>
-        </div>
-        <div style="display: flex; justify-content: center">
-          <button @click="onAddForm" class="modal-container__box__button">Add Form</button>
-        </div>
-      </div>
-
       <template v-if="selectedForm">
         <div class="box__content--expanded">
           <CustomSlackForm
@@ -470,29 +390,6 @@ export default {
   font-weight: bold;
   font-size: 1.02rem;
 }
-.modal-container {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  margin-top: 1rem;
-  border-radius: 0.25rem;
-  background-color: $panther;
-  &__box {
-    &__title {
-      text-align: center;
-      margin: 2rem 0;
-      width: 100%;
-    }
-    &__content {
-      display: flex;
-      justify-content: center;
-      min-height: 20rem;
-    }
-    &__button {
-      @include primary-button();
-    }
-  }
-}
 
 .box__footer {
   display: flex;
@@ -587,67 +484,9 @@ export default {
   flex-direction: column;
   height: 100%;
 }
-.small__stage__dropdown {
-  margin-bottom: 70vh;
-  margin-left: 80vw;
-  padding: 6px 0 14px;
-  border-radius: 0.5rem;
-  box-shadow: 0 5px 10px 10px rgba(0, 0, 0, 0.5);
-  background-color: $panther;
-  position: absolute;
-  z-index: 100;
-  overflow-y: scroll;
-}
 .stage {
   &__container {
     position: relative;
-  }
-  &__dropdown {
-    margin-top: 16rem;
-    width: 30vw;
-
-    padding: 6px 0 14px;
-    border-radius: 0.5rem;
-    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
-    background-color: $panther;
-    position: absolute;
-
-    z-index: 100;
-    overflow-y: scroll;
-
-    &__header {
-      font-size: 1.25rem;
-      padding: 0.5rem;
-      border-bottom: solid 2px #9e9ea6;
-      cursor: move;
-      z-index: 10;
-    }
-    &__stages {
-      &__container {
-        display: flex;
-
-        height: 2.5rem;
-        padding: 0.75rem;
-        font-size: 0.75rem;
-        cursor: pointer;
-        align-items: center;
-
-        &--selected {
-          color: white;
-          background-color: #{$dark-green};
-        }
-      }
-      &__title {
-        font-size: 12;
-        font-family: #{$bold-font-family};
-        cursor: pointer;
-
-        width: 100%;
-      }
-      &__x {
-        z-index: 1000;
-      }
-    }
   }
 }
 

@@ -458,7 +458,7 @@ h2 {
   font-size: 1.4rem;
 }
 button:disabled {
-  background-color: $panther-silver;
+  background-color: $very-light-gray;
   cursor: not-allowed;
 }
 ::v-deep .item-container__label {

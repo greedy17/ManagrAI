@@ -873,18 +873,6 @@ input {
   max-height: 30vh;
   width: 80%;
 }
-.collection_fields {
-  background-color: $panther;
-  display: flex;
-  justify-content: center;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  height: 50vh;
-  width: 34vw;
-  box-shadow: 3px 4px 7px black;
-  margin-top: 1rem;
-  overflow-x: scroll;
-}
 .quill-editor {
   width: 100%;
 }

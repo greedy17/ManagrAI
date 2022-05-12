@@ -392,12 +392,10 @@ import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button
 //Internal
 import FormField from '@/components/forms/FormField'
 import AlertGroup from '@/views/settings/alerts/create/_AlertGroup'
-import AlertSummary from '@/views/settings/alerts/create/_AlertSummary'
 import ListContainer from '@/components/ListContainer'
 import ListItem from '@/components/ListItem'
 import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotificationTemplate'
 import { UserOnboardingForm } from '@/services/users/forms'
-import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePreview'
 import ExpandablePanel from '@/components/ExpandablePanel'
 import Modal from '@/components/Modal'
 
@@ -422,13 +420,11 @@ export default {
     ExpandablePanel,
     ListContainer,
     ListItem,
-    SlackMessagePreview,
     AlertGroup,
     SlackNotificationTemplate,
     quillEditor,
     ToggleCheckBox,
     FormField,
-    AlertSummary,
     PulseLoadingSpinnerButton,
     Modal,
   },

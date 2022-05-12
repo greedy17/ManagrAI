@@ -211,7 +211,6 @@ import ListContainer from '@/components/ListContainer'
 import ListItem from '@/components/ListItem'
 import FormField from '@/components/forms/FormField'
 import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotificationTemplate'
-import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePreview'
 /**
  * Services
  *
@@ -248,7 +247,6 @@ export default {
   components: {
     FormField,
     SlackNotificationTemplate,
-    SlackMessagePreview,
     quillEditor,
     ListItem,
     ListContainer,

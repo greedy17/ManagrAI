@@ -577,11 +577,9 @@ import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button
 //Internal
 import FormField from '@/components/forms/FormField'
 import AlertGroup from '@/views/settings/alerts/create/_AlertGroup'
-import AlertSummary from '@/views/settings/alerts/create/_AlertSummary'
 import ListContainer from '@/components/ListContainer'
 import ListItem from '@/components/ListItem'
 import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotificationTemplate'
-import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePreview'
 import ExpandablePanel from '@/components/ExpandablePanel'
 import Modal from '@/components/Modal'
 import ProgressBar from '@/components/ProgressBar'
@@ -594,10 +592,9 @@ import CheckBox from '@/components/CheckBoxUpdated'
 import AlertTemplate, {
   AlertGroupForm,
   AlertTemplateForm,
-  AlertConfigForm,
 } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 import CollectionSearch from '@thinknimble/collection-search'
 import {
   SObjectField,
@@ -612,13 +609,11 @@ export default {
     ExpandablePanel,
     ListContainer,
     ListItem,
-    SlackMessagePreview,
     AlertGroup,
     SlackNotificationTemplate,
     quillEditor,
     ToggleCheckBox,
     FormField,
-    AlertSummary,
     PulseLoadingSpinnerButton,
     Modal,
     CollectionSearch,
@@ -1190,7 +1185,7 @@ button img {
 }
 .fixed__center {
   align-self: center;
-  color: $panther-silver;
+  color: $very-light-gray;
 }
 .message_titles {
   display: flex;
@@ -1712,8 +1707,8 @@ input {
     padding: 13px 21px;
     border-radius: 5px;
     box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
-    border: solid 2px $panther-gray;
-    background-color: $panther;
+    border: solid 2px $very-light-gray;
+    background-color: $base-gray;
     color: white;
     position: absolute;
     bottom: -5px;

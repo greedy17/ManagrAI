@@ -107,30 +107,9 @@ export default {
     @include --icon();
   }
 }
-.alert-group-modal {
-  padding: 1rem;
-
-  height: 100%;
-  overflow-y: scroll;
-  background-color: $panther;
-  max-height: 100%;
-  width: 100%;
-  color: white;
-  font-family: $bold-font-family;
-}
 .end {
   display: flex;
   justify-content: center;
   margin-top: 2rem;
-}
-::-webkit-scrollbar {
-  background-color: $panther;
-  -webkit-appearance: none;
-  width: 4px;
-  height: 100%;
-}
-::-webkit-scrollbar-thumb {
-  border-radius: 2px;
-  background-color: $panther-silver;
 }
 </style>

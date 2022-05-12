@@ -745,16 +745,6 @@ img {
   flex-direction: row;
   margin: 0.2rem;
 }
-::-webkit-scrollbar {
-  background-color: $panther;
-  -webkit-appearance: none;
-  width: 4px;
-  height: 100%;
-}
-::-webkit-scrollbar-thumb {
-  border-radius: 2px;
-  background-color: $panther-silver;
-}
 .selected__item {
   padding: 0.5rem;
   border-radius: 0.3rem;
