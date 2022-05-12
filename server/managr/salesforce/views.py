@@ -407,6 +407,7 @@ class SalesforceSObjectViewSet(
                 data = {
                     "form_id": str(slack_form.id),
                     "current_values": current_values,
+                    "success": True,
                 }
                 break
             except TokenExpired:
@@ -417,15 +418,10 @@ class SalesforceSObjectViewSet(
                     user.salesforce_account.regenerate_token()
                     attempts += 1
             except Exception as e:
-                if attempts >= 5:
-
-                    logger.info(f"CREATE FORM INSTANCE ERROR ---- {e}")
-
-                    data = {"error": str(e)}
-                else:
-                    attempts += 1
-
-        if resource_type == "Opportunity" and form_type == "UPDATE":
+                logger.info(f"CREATE FORM INSTANCE ERROR ---- {e}")
+                data = {"error": str(e), "success": False}
+                break
+        if data["success"] is True and (resource_type == "Opportunity" and form_type == "UPDATE"):
             current_products = user.salesforce_account.list_resource_data(
                 "OpportunityLineItem",
                 0,
@@ -534,8 +530,8 @@ class SalesforceSObjectViewSet(
                 submission_date=timezone.now(),
                 alert_instance_id=instance,
             )
-            user.activity.increment_untouched_count("workflows")
-            user.activity.add_workflow_activity(str(main_form.id), instance.template.title)
+            # user.activity.increment_untouched_count("workflows")
+            # user.activity.add_workflow_activity(str(main_form.id), instance.template.title)
         else:
             current_forms.update(
                 is_submitted=True, update_source="pipeline", submission_date=timezone.now()
@@ -962,7 +958,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.save()
         workflow.begin_tasks()
         emit_meeting_workflow_tracker(str(workflow.id))
-        workflow.user.activity.add_meeting_activity(str(workflow.id))
+        # workflow.user.activity.add_meeting_activity(str(workflow.id))
         serializer = MeetingWorkflowSerializer(instance=workflow)
         data = {"success": True, "workflow": serializer.data}
         return Response(data=data)

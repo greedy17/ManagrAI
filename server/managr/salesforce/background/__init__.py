@@ -1189,7 +1189,7 @@ def _process_list_tasks(user_id, data, *args):
 def _process_workflow_tracker(workflow_id):
     """gets workflow and check's if all tasks are completed and manually completes if not already completed"""
     workflow = MeetingWorkflow.objects.filter(id=workflow_id).first()
-    workflow.user.activity.add_meeting_activity(workflow_id)
+    # workflow.user.activity.add_meeting_activity(workflow_id)
     if workflow and workflow.in_progress:
         completed_tasks = set(workflow.completed_operations)
         all_tasks = set(workflow.operations)
