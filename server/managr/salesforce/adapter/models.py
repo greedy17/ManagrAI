@@ -406,7 +406,7 @@ class SalesforceAuthAccountAdapter:
                 }
             )
 
-    def get_individual_picklist_values(self, resource, field_name=None):
+    def get_individual_picklist_values(self, resource, field_name=None, for_dev=False):
         """Sync method to get picklist values for resources not saved in our db"""
 
         record_type_id = self.default_record_ids.get(resource, None)
@@ -447,6 +447,8 @@ class SalesforceAuthAccountAdapter:
             res = client.get(
                 url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
             )
+            if for_dev:
+                logger.info(f"PICKLIST URL <{url}>\nPICKLIST RAW RESPONSE {res.json()}")
             res = self._handle_response(res)
 
             return SObjectPicklistAdapter.create_from_api(
