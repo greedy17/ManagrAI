@@ -2,7 +2,7 @@
   <div class="alerts-page">
     <div v-if="isOnboarding && !isAdmin && userLevel !== 'MANAGER'" class="col">
       <h3>Popular Workflow Automations</h3>
-      <p style="margin-top: -0.5rem" class="sub__">Step 2/2: Activate at least 3 workflows</p>
+      <p style="margin-top: -0.5rem" class="sub__">Step 2/2: Activate at least 2 workflows</p>
       <button
         class="orange_button bouncy"
         v-if="isOnboarding && user.activatedManagrConfigs.includes('Close Date Passed')"
