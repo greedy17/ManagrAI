@@ -377,14 +377,6 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
-.load-more {
-  text-align: center;
-  font-size: 13px;
-}
-.load-more:hover {
-  color: $dark-green;
-  cursor: pointer;
-}
 .col {
   display: flex;
   flex-direction: column;
@@ -470,15 +462,6 @@ export default {
   margin-top: -7rem;
   margin-left: -2rem;
 }
-::v-deep .tn-dropdown__selection-container {
-  box-shadow: 3px 4px 7px $very-light-gray;
-  border: none;
-}
-
-::v-deep .tn-dropdown__options__container {
-  width: 17vw;
-  margin-left: -2.2rem;
-}
 
 .active {
   border-bottom: 2px solid $dark-green;
@@ -498,25 +481,11 @@ export default {
   justify-content: center;
   width: 80%;
 }
-/*
-Override dropdown select input field
-*/
-.dropdown {
-}
-::v-deep .tn-dropdown__selection-container {
-  min-width: 17vw;
-  margin-left: -2.2rem;
-}
-form,
-.success-prompt {
+form {
   width: 100%;
   background-color: $white;
   height: 50vh;
   justify-content: space-evenly;
-}
-.checkbox {
-  width: auto;
-  height: auto;
 }
 .invite-button {
   background-color: $dark-green;
@@ -543,15 +512,6 @@ button {
   flex-direction: column;
   background-color: white;
   color: $base-gray;
-  > .form_field {
-    flex: 0 0 auto;
-  }
-  > .tn-input {
-    width: 12rem;
-  }
-  > .invite-form__dropdown {
-    color: red;
-  }
   &__title {
     font-weight: bold;
     text-align: left;
@@ -566,17 +526,7 @@ button {
     margin-top: -4rem;
   }
 }
-.invite-form__organization {
-  height: 2.5rem;
-  width: 20rem;
-  display: flex;
-  align-items: center;
-  @include input-field();
-}
 .invite-list {
-  &__title {
-    margin-bottom: 2rem;
-  }
   &__container {
     background-color: $white;
     border: 1px solid #e8e8e8;
@@ -600,26 +550,10 @@ button {
       width: 33%;
       overflow-wrap: break-word;
     }
-
-    &__heading {
-      width: 25%;
-    }
-  }
-  &__name {
-    font-size: 0.75rem;
-    font-weight: bold !important;
-    font-family: #{$bold-font-family};
-    text-align: left;
-    color: #f2fff8;
   }
   &__status {
     font-size: 0.75rem;
   }
-}
-.registered {
-  width: 33%;
-  font-size: 0.75rem;
-  color: $dark-green;
 }
 .cancel-button {
   margin-top: 1rem;
@@ -629,8 +563,5 @@ button {
   &:hover {
     cursor: pointer;
   }
-}
-::v-deep .dimmed {
-  background-color: rgba(0, 0, 0, 0.5);
 }
 </style>
