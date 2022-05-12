@@ -189,13 +189,9 @@ import { UserConfigForm } from '@/services/users/forms'
  * Services
  */
 
-import AlertTemplate, {
-  AlertGroupForm,
-  AlertTemplateForm,
-  AlertConfigForm,
-} from '@/services/alerts/'
+import AlertTemplate, { AlertTemplateForm } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 import { SObjectField, NON_FIELD_ALERT_OPTS, SOBJECTS_LIST } from '@/services/salesforce'
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
@@ -539,15 +535,6 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
-.load-more {
-  text-align: center;
-  font-size: 13px;
-}
-.load-more:hover {
-  color: $dark-green;
-  cursor: pointer;
-}
-
 @keyframes bounce {
   0% {
     transform: translateY(0);
@@ -624,21 +611,6 @@ export default {
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
-.invisible {
-  display: none;
-}
-.selected__item {
-  padding: 0.5rem;
-  border: none;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  border-radius: 0.3rem;
-  width: 96%;
-  text-align: center;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-}
 img {
   filter: invert(60%);
 }
@@ -658,16 +630,6 @@ img {
   width: 75%;
   text-align: center;
   margin-top: 1rem;
-}
-.channels_height {
-  height: 22vh;
-  overflow-y: scroll;
-}
-.bottom__middle {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  filter: drop-shadow(8px 10px 7px black);
 }
 .purple__button {
   display: flex;
@@ -705,24 +667,6 @@ img {
 
   font-size: 14px;
 }
-.bottom {
-  margin-bottom: 2rem;
-  height: 24vh;
-  width: 26vw;
-  margin-top: 1rem;
-}
-.message {
-  width: 20vw;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  margin-bottom: 1.5rem;
-}
-.row {
-  display: flex;
-  flex-direction: row;
-  font-weight: bold;
-}
 .row__ {
   display: flex;
   flex-direction: row;
@@ -740,32 +684,9 @@ img {
 input {
   cursor: pointer;
 }
-.column {
-  display: flex;
-  flex-direction: column;
-  margin: 1rem;
-}
-.centered__ {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.visible {
-  visibility: hidden;
-}
-.days__start {
-  display: flex;
-  flex-direction: column;
-}
 .alert__column {
   display: flex;
   flex-direction: row;
-  justify-content: center;
-  align-items: center;
-}
-.alert__row {
-  display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
 }
@@ -794,207 +715,13 @@ input {
   padding: 2rem 2rem 1rem 5rem;
   margin-bottom: 1rem;
 }
-.items_height {
-  overflow-y: scroll;
-  max-height: 30vh;
-  width: 100%;
-}
-.recipients_height {
-  overflow-y: scroll;
-  max-height: 30vh;
-  width: 80%;
-}
-.quill-editor {
-  width: 100%;
-}
-
-textarea {
-  @extend .textarea;
-}
-.box__header {
-  &__status {
-    display: flex;
-    &--error {
-      color: $coral;
-      fill: $coral;
-    }
-    &--success {
-      color: $dark-green;
-      fill: $dark-green;
-    }
-  }
-}
 .alerts-page {
   height: 100vh;
   color: $base-gray;
   margin-top: 4rem;
-  &__previous-step {
-    @include muted-font(12);
-  }
-  &__groups {
-    &__group {
-      display: flex;
-    }
-  }
-  &__message {
-    display: flex;
-    height: 20rem;
-    &-template {
-      margin: 0rem 1rem;
-      &__notification {
-        width: 30rem;
-        margin: 1rem 0rem;
-      }
-      &__message {
-        width: 40rem;
-        margin: 1rem 0rem;
-      }
-    }
-  }
-}
-.alert_cards {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-evenly;
-  align-items: center;
-  margin-top: 2rem;
-}
-.alerts-page__settings {
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
-
-  &__frequency {
-    display: flex;
-    align-items: center;
-    &-label {
-      @include muted-font();
-      margin: 0 0.5rem;
-    }
-  }
-  &-remove {
-    justify-self: end;
-  }
-}
-.btn {
-  &--danger {
-    @include button-danger();
-  }
-  &--primary {
-    @include primary-button();
-  }
-  &--secondary {
-    @include secondary-button();
-  }
-
-  &--icon {
-    @include --icon();
-  }
-}
-.muted--link {
-  @include muted-font();
-  @include pointer-on-hover();
-  &--important {
-    color: red;
-    font-weight: bold;
-    font-size: 11px;
-  }
 }
 .green {
   color: #41b883;
-}
-.red {
-  color: red;
-}
-.pad {
-  padding-bottom: 1rem;
-  margin-top: -1rem;
-}
-.pink {
-  color: $candy;
-  font-weight: bold;
-}
-.purple {
-  color: $grape;
-  font-weight: bold;
-}
-.mar {
-  margin-top: -2rem;
-}
-.center {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-}
-.sub {
-  font-size: 12px;
-  margin-left: 0.5rem;
-}
-.group {
-  display: flex;
-  flex-direction: row;
-  height: auto;
-  margin: 0.5rem;
-  padding: 0.5rem;
-}
-.col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: white;
-}
-.row_ {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 2rem;
-}
-
-.bottom {
-  margin-bottom: 1.25rem;
-  height: 170px;
-}
-.left {
-  margin-bottom: 2rem;
-}
-.space {
-  margin-bottom: 0.5rem;
-}
-.add__group {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-end;
-  margin-top: 3rem;
-  padding-bottom: 1rem;
-  border-bottom: 3px solid $mid-gray;
-}
-.bolder {
-  font-size: 16px;
-  margin-left: 1rem;
-  cursor: pointer;
-  color: $base-gray;
-}
-.bolder:hover {
-  border-bottom: 2px solid $candy;
-  color: $candy;
-}
-.alertsModal {
-  color: $candy;
-  text-decoration: underline;
-  cursor: pointer;
-}
-.modal__container {
-  overflow-y: scroll;
-}
-.blue {
-  color: $slate-gray;
-}
-.top {
-  border-top: 3px solid $grape;
-}
-.templates {
-  border-bottom: 1px solid $gray;
 }
 </style>
 

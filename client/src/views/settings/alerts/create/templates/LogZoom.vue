@@ -129,7 +129,7 @@
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import FormField from '@/components/forms/FormField'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 import User from '@/services/users'
 
 export default {
@@ -169,7 +169,6 @@ export default {
       this.createdZoomChannel = ''
       this.zoomChannel = ''
       this.$router.push({ name: 'CreateNew' })
-      // location.reload()
       this.$Alert.alert({
         type: 'success',
         message: 'Workflow saved successfully',
@@ -297,14 +296,6 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
-.load-more {
-  text-align: center;
-  font-size: 13px;
-}
-.load-more:hover {
-  color: $dark-green;
-  cursor: pointer;
-}
 @keyframes bounce {
   0% {
     transform: translateY(0);
@@ -327,7 +318,6 @@ export default {
   align-items: center;
   justify-content: space-between;
   flex-direction: row;
-
   width: 700px;
 }
 .back-button {
@@ -412,12 +402,6 @@ img {
   align-items: center;
   flex-direction: column;
 }
-.flex-end {
-  margin-top: 2rem;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-}
 .card {
   width: 700px;
   height: 250px;
@@ -433,9 +417,6 @@ input[type='text']:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-.col {
-  flex-direction: column;
 }
 .row {
   display: flex;
@@ -482,19 +463,5 @@ input {
   border: 1px solid white;
   border-radius: 0.25rem;
   margin-top: 0.5rem;
-}
-.selected__item {
-  padding: 0.5rem 1.5rem;
-  border: none;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  border-radius: 0.3rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: -0.25rem;
-}
-.visible {
-  display: none;
 }
 </style>

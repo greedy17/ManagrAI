@@ -167,7 +167,7 @@
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import FormField from '@/components/forms/FormField'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 import User from '@/services/users'
 
 export default {
@@ -350,14 +350,6 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
-.load-more {
-  text-align: center;
-  font-size: 13px;
-}
-.load-more:hover {
-  color: $dark-green;
-  cursor: pointer;
-}
 @keyframes bounce {
   0% {
     transform: translateY(0);
@@ -423,12 +415,6 @@ export default {
 ::placeholder {
   color: $very-light-gray;
   font-size: 0.75rem;
-}
-
-.items_height {
-  overflow-y: scroll;
-  max-height: 10rem;
-  width: 100%;
 }
 input[type='text']:focus {
   outline: none;
@@ -516,31 +502,7 @@ input {
   border-radius: 0.25rem;
   margin-top: 0.5rem;
 }
-.selected__item {
-  padding: 0.5rem 1.5rem;
-  border: none;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  border-radius: 0.3rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.selected__items {
-  padding: 0.5rem 1.5rem;
-  width: 96%;
-  border: none;
-  border-radius: 0.3rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 3px 4px 7px $very-light-gray;
-}
 img {
   filter: invert(60%);
-}
-.visible {
-  display: none;
 }
 </style>
