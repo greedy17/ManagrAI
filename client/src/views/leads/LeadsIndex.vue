@@ -137,13 +137,6 @@ export default {
   margin: 1rem 0;
   width: 10rem;
 
-  .checkbox-container {
-    display: flex;
-    flex-flow: row;
-    width: 20rem;
-    justify-content: flex-start;
-  }
-
   .left,
   .right {
     width: 4rem;
@@ -170,23 +163,6 @@ export default {
 .toggle-icon {
   &:hover {
     cursor: pointer;
-  }
-}
-
-.filter {
-  &__button {
-    @include secondary-button();
-    margin-left: 1rem;
-    width: 9rem;
-  }
-  &__text {
-    font-weight: bold;
-    margin-left: 1rem;
-    font-size: 1rem;
-  }
-  &__image {
-    font-size: 1.8rem;
-    color: $dark-green;
   }
 }
 </style>

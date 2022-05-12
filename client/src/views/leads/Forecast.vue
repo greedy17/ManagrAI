@@ -190,28 +190,6 @@ export default {
 @import '@/styles/layout';
 @import '@/styles/mixins/buttons';
 
-.leads-index {
-  display: flex;
-  flex-flow: row;
-  padding-top: 2%;
-}
-
-.toolbar-pane {
-  width: 17%;
-  padding: 0% 1% 1% 1%;
-  display: flex;
-  flex-flow: column;
-  background-color: $off-white;
-
-  .toolbar {
-    margin-left: auto;
-  }
-}
-.toggle-icon {
-  &:hover {
-    cursor: pointer;
-  }
-}
 .view-toggle-container {
   @include base-font-styles();
   font-size: 0.825rem;
@@ -220,13 +198,6 @@ export default {
   align-items: center;
   margin: 1rem 0;
   width: 10rem;
-
-  .checkbox-container {
-    display: flex;
-    flex-flow: row;
-    width: 20rem;
-    justify-content: flex-start;
-  }
 
   .left,
   .right {
@@ -245,16 +216,6 @@ export default {
   .bold {
     font-weight: bold;
   }
-
-  .centered {
-    margin: 0 auto;
-  }
-}
-
-.lists-container-pane {
-  width: 83%;
-  padding: 0 2% 1% 1%;
-  background-color: $off-white;
 }
 
 .lists-container-message {
@@ -263,22 +224,5 @@ export default {
   color: $gray;
   font-size: 1rem;
   font-weight: 600;
-}
-
-.filter {
-  &__button {
-    @include secondary-button();
-    margin-left: 1rem;
-    width: 9rem;
-  }
-  &__text {
-    font-weight: bold;
-    margin-left: 1rem;
-    font-size: 1rem;
-  }
-  &__image {
-    height: 1.8rem;
-    color: $dark-green;
-  }
 }
 </style>
