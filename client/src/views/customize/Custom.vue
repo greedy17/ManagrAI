@@ -368,23 +368,11 @@ export default {
     justify-content: flex-start;
     border-radius: 0.5rem;
   }
-  &__subtitle {
-    font-size: 14px;
-    margin-bottom: 2rem;
-  }
 }
 .sub__ {
   font-size: 14px;
   margin-top: -0.5rem;
   color: $gray;
-}
-.alert_cards {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  margin-top: 1rem;
-  flex-wrap: wrap;
 }
 .card:hover {
   transform: scale(1.015);

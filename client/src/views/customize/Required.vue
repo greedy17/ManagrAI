@@ -138,10 +138,6 @@ export default {
     justify-content: center;
     border-radius: 0.5rem;
   }
-  &__subtitle {
-    font-size: 14px;
-    margin-bottom: 2rem;
-  }
 }
 .sub__ {
   font-size: 14px;
@@ -209,15 +205,6 @@ export default {
   height: 1.5rem;
 }
 
-.back-logo {
-  position: absolute;
-  opacity: 0.06;
-  filter: alpha(opacity=50);
-  height: 28%;
-  margin-top: -1.5rem;
-  margin-left: -2rem;
-}
-
 .green__button {
   border-radius: 0.33rem;
   padding: 0.5rem 1rem;
@@ -228,16 +215,6 @@ export default {
   cursor: pointer;
 }
 
-.form_images {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.title {
-  font-size: 21px;
-}
 a {
   color: $dark-green;
   text-decoration: none;
@@ -251,11 +228,6 @@ a:hover {
 ul {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-}
-.center {
-  display: flex;
-  align-items: center;
   justify-content: center;
 }
 </style>

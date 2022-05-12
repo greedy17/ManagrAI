@@ -95,65 +95,12 @@ export default {
     transform: translateY(-6px);
   }
 }
-.bouncy {
-  animation: bounce 0.2s infinite alternate;
-}
-.onboarding {
-  filter: blur(10px);
-}
-
-#tailShadow {
-  position: absolute;
-  bottom: -8px;
-  left: 88px;
-  width: 0;
-  height: 0;
-  border: solid 2px $dark-green;
-  box-shadow: 0 0 10px 1px #555;
-}
 
 img {
   filter: invert(90%);
   margin-left: 0.5rem;
 }
 
-#tail1 {
-  position: absolute;
-  bottom: -20px;
-  left: 80px;
-  width: 0;
-  height: 0;
-  border-color: $dark-green transparent transparent transparent;
-  border-width: 10px;
-  border-style: solid;
-}
-
-#tail2 {
-  position: absolute;
-  bottom: -18px;
-  left: 80px;
-  width: 0;
-  height: 0;
-  border-color: #f9f9f9 transparent transparent transparent;
-  border-width: 10px;
-  border-style: solid;
-}
-
-.coming-soon {
-  @include muted-font(13px);
-}
-.center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-}
-.counter {
-  border: 2px solid white;
-  border-radius: 0.3rem;
-  padding: 0.1rem 0.3rem;
-  font-size: 0.75rem;
-}
 .sidenav {
   height: 100%;
   width: 15.5vw;

@@ -21,14 +21,5 @@ export default {
   flex-direction: column;
   align-items: center;
   margin-top: 4rem;
-  &__cards {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  &__subtitle {
-    font-size: 14px;
-    margin-bottom: 2rem;
-  }
 }
 </style>
