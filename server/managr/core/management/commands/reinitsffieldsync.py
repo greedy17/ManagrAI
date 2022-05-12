@@ -33,8 +33,7 @@ class Command(BaseCommand):
             scheduled_time = timezone.now()
             formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
             dev = True if options["dev"] else False
-            print(dev)
-            emit_gen_next_object_field_sync(str(user.id), operations, formatted_time)
+            emit_gen_next_object_field_sync(str(user.id), operations, dev, formatted_time)
             self.stdout.write(
                 self.style.SUCCESS(
                     "Successfully initiated the object field sync for the user {}".format(

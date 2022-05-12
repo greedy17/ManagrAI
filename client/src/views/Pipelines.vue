@@ -2040,6 +2040,7 @@ export default {
         const res = await SObjects.api.getNotes({
           resourceId: id,
         })
+        console.log(res)
         this.modalOpen = true
         if (res.length) {
           for (let i = 0; i < res.length; i++) {
