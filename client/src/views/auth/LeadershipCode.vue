@@ -137,8 +137,4 @@ button {
   border-radius: 3px;
   width: 19rem;
 }
-
-.hidden {
-  display: none;
-}
 </style>

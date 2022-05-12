@@ -114,8 +114,4 @@ button {
   width: 9.375rem;
   box-shadow: none;
 }
-
-.hidden {
-  display: none;
-}
 </style>

@@ -53,9 +53,6 @@ export default {
   align-items: center;
   text-align: center;
   margin-top: 4rem;
-  &__logo {
-    height: 5rem;
-  }
   &__header {
     display: flex;
     align-items: center;
@@ -63,24 +60,9 @@ export default {
     width: 60vw;
     padding: 0.25rem;
   }
-  &__text {
-    font-family: #{$base-font-family};
-    width: 100%;
-    margin-top: -1rem;
-    margin-bottom: 1.5rem;
-  }
-
-  &__input {
-    @include input-field-white();
-  }
 
   &__inviter {
     margin-top: 2rem;
-  }
-
-  &__continue-button {
-    width: 19rem;
-    margin-top: 3rem;
   }
 }
 
@@ -90,18 +72,6 @@ h2 {
   text-align: center;
   font-size: 20px;
   margin-bottom: 2rem;
-}
-
-.input {
-  &__container {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
-
-.hidden {
-  display: none;
 }
 
 .invite_button {
@@ -115,8 +85,7 @@ h2 {
   border: 1px solid #e8e8e8;
 }
 
-.invite_button:hover,
-.continue_button:hover {
+.invite_button:hover {
   cursor: pointer;
   transform: scale(1.025);
   box-shadow: 1px 2px 3px #e8e8e8;

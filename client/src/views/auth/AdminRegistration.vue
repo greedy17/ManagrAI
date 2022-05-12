@@ -243,12 +243,6 @@ export default {
     text-align: center;
     font-size: 14px;
   }
-  &__input {
-    @include input-field-white();
-  }
-  &__input__label {
-    font-size: 14px;
-  }
   &__privacy {
     padding: 0.5rem 1rem;
     font-size: 0.75rem;
@@ -285,31 +279,6 @@ export default {
 .time:hover {
   color: $gray;
 }
-.dropdown {
-  align-items: center;
-  width: 18vw;
-  margin: 0;
-}
-::v-deep .input-content {
-  width: 16rem;
-}
-::v-deep .tn-dropdown__selection-container {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  border-radius: 4px;
-  background-color: $white;
-  border: 1px solid #eaebed;
-  line-height: 1.29;
-  letter-spacing: 0.5px;
-  height: 2.5rem;
-}
-::v-deep .tn-dropdown__options__container {
-  background-color: white;
-}
-::v-deep .tn-dropdown--medium {
-  width: 16rem;
-}
 .form-card {
   display: flex;
   align-items: space-evenly;
@@ -322,20 +291,6 @@ export default {
   padding: 2rem;
   width: 50vw;
   color: $base-gray;
-}
-.divider {
-  height: 1px;
-  background-color: #aaa;
-  width: 100%;
-  margin: 1rem;
-}
-
-.errors {
-  width: 100%;
-  padding: 1rem;
-  background-color: rgb(155, 21, 21);
-  color: white;
-  font-weight: 500;
 }
 
 .registration__form {

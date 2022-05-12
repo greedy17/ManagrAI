@@ -138,8 +138,4 @@ button {
   height: 1.875rem;
   min-width: 12rem;
 }
-
-.hidden {
-  display: none;
-}
 </style>

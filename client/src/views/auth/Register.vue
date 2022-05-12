@@ -250,12 +250,6 @@ export default {
     text-align: center;
     font-size: 14px;
   }
-  &__input {
-    @include input-field-white();
-  }
-  &__input__label {
-    font-size: 14px;
-  }
   &__privacy {
     padding: 0.5rem 1rem;
     font-size: 0.75rem;
@@ -278,12 +272,6 @@ export default {
 input:focus {
   outline: none;
 }
-.divider {
-  height: 1px;
-  background-color: #aaa;
-  width: 100%;
-  margin: 1rem;
-}
 .header {
   display: flex;
   align-items: center;
@@ -303,13 +291,6 @@ input:focus {
 }
 .time:hover {
   color: $gray;
-}
-.errors {
-  width: 100%;
-  padding: 1rem;
-  background-color: rgb(155, 21, 21);
-  color: white;
-  font-weight: 500;
 }
 
 h1 {
@@ -361,11 +342,5 @@ button {
 a {
   color: $dark-green;
   font-weight: bold;
-}
-.time {
-  color: $very-light-gray;
-  cursor: pointer;
-  filter: opacity(60%);
-  font-size: 0.9rem;
 }
 </style>

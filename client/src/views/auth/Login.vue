@@ -185,9 +185,6 @@ input:focus {
     padding: 0rem;
   }
 }
-::v-deep .form-field__input {
-  margin-left: 0.2rem;
-}
 
 .login-page__form {
   background-color: $white;
@@ -229,9 +226,6 @@ a {
 
 label {
   font-size: 15px;
-}
-.hidden {
-  display: none;
 }
 .row {
   display: flex;
