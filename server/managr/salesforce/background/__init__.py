@@ -357,12 +357,13 @@ def _process_sobject_fields_sync(user_id, sync_id, resource, for_dev):
                     )
                 else:
                     picklist_serializer = SObjectPicklistSerializer(data=object_picklist.as_dict)
-                if for_dev:
-                    logger.info(
-                        f"PICKLIST <{object_picklist.as_dict}>\nPICKLIST SERIALIZER <{picklist_serializer}>"
-                    )
+
                 picklist_serializer.is_valid(raise_exception=True)
                 picklist_serializer.save()
+                if for_dev:
+                    logger.info(
+                        f"PICKLIST <{object_picklist.as_dict}>\nPICKLIST SERIALIZER <{picklist_serializer.data}>"
+                    )
     return
 
 
