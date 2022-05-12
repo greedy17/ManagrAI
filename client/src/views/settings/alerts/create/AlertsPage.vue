@@ -152,11 +152,7 @@
               !user.activatedManagrConfigs.includes('Update Forecast')
             "
             @click="goToUpdateForecast"
-            :class="
-              !isAdmin && userLevel !== 'MANAGER' && isOnboarding
-                ? 'orange_button bouncy'
-                : 'orange_button'
-            "
+            class="orange_button"
           >
             Activate
           </button>
@@ -348,7 +344,7 @@
 
       <div
         :class="
-          !user.activatedManagrConfigs.includes('Required Field Empty') &&
+          !user.activatedManagrConfigs.includes('Close Date Passed') &&
           isOnboarding &&
           !isAdmin &&
           userLevel !== 'MANAGER'

@@ -201,6 +201,7 @@ export default {
   data() {
     return {
       objectFields: CollectionManager.create({
+        pagination: { size: 200 },
         ModelClass: SObjectField,
         filters: { forAlerts: true, filterable: true, page: 1 },
       }),
