@@ -592,10 +592,6 @@ a {
   align-items: center;
   justify-content: flex-start;
 }
-.columnn {
-  display: flex;
-  flex-direction: column;
-}
 .contact-img {
   height: 1.25rem;
   margin-right: 0.2rem;

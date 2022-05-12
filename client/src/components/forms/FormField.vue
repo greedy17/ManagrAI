@@ -92,15 +92,6 @@ export default {
     font-size: 14px;
     margin-top: 0.3rem;
   }
-  ::v-deep .primary {
-    --active-opacity: 1;
-  }
-
-  ::v-deep .input-content__active {
-    box-shadow: 0 0 10px rgba($color: $dark-green, $alpha: 0.5);
-    outline: none;
-    background-color: $white;
-  }
 
   &__errors {
     position: relative;
@@ -112,11 +103,5 @@ export default {
     font-family: $base-font-family;
     z-index: 999;
   }
-}
-::v-deep .input-content {
-  @include input-field-white();
-}
-::v-deep .input-content__active {
-  outline: none;
 }
 </style>

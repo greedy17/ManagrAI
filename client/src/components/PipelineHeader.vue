@@ -352,9 +352,6 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
-::v-deep .multiselect {
-  min-width: 7rem;
-}
 .red {
   filter: invert(46%) sepia(37%) saturate(832%) hue-rotate(308deg) brightness(104%) contrast(104%);
   height: 0.75rem;
@@ -459,19 +456,6 @@ export default {
   width: 100%;
   padding: 0.5rem 0rem;
   margin: 0;
-  &__more {
-    background-color: $base-gray;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    border-top: 1px solid #e8e8e8;
-    width: 100%;
-    padding: 0.75rem 0rem;
-    margin: 0;
-    cursor: pointer;
-  }
 }
 .table-cell-header-wide {
   display: table-cell;
@@ -560,16 +544,6 @@ export default {
   align-items: center;
   cursor: pointer;
   color: $dark-green;
-}
-.row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-
-  img {
-    margin-left: 0.5rem;
-  }
 }
 input[type='checkbox']:checked + label::after {
   content: '';

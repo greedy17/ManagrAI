@@ -470,16 +470,6 @@ Display dropdown relative to the component it is triggered by
   background-color: lightgreen;
   color: darkgreen;
 }
-::v-deep .tn-dropdown__selection-container:after {
-  position: absolute;
-  content: '';
-  top: 17px;
-  right: 1em;
-  width: 0;
-  height: 0;
-  border: 5px solid transparent;
-  border-color: rgb(173, 171, 171) transparent transparent transparent;
-}
 .dropdown-input-container {
   position: relative;
   width: 100%;
@@ -514,12 +504,6 @@ Display dropdown relative to the component it is triggered by
   .dropdown-icon {
     position: absolute;
     right: 0.4rem;
-
-    &__expanded {
-      /* animation: rotatetoggleicon forwards;
-      animation-duration: 1s;
-      animation-iteration-count: 1; */
-    }
   }
 
   .selected-items::-webkit-scrollbar {

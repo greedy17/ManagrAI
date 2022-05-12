@@ -186,31 +186,8 @@ export default {
   min-height: 2.5rem;
   width: 20vw;
 }
-.range-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-}
-#operators {
-  border: none;
-  border-radius: 0.25rem;
-  background-color: white;
-  height: 3.5rem;
-  max-width: 9vw;
-  overflow: scroll;
-}
-#operators:focus {
-  outline: none;
-}
 ::placeholder {
   color: $very-light-gray;
-}
-.wide {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-  background-color: white;
 }
 .filter-selection {
   z-index: 5;
@@ -223,16 +200,6 @@ export default {
   padding: 1rem 1rem 0rem 1rem;
   overflow: scroll;
   box-shadow: 1px 1px 7px 2px $very-light-gray;
-
-  &__title {
-    margin: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    position: sticky;
-    top: 0;
-    color: $base-gray;
-  }
 
   &__body {
     display: flex;
@@ -252,27 +219,6 @@ export default {
       font-size: 13px;
       padding-top: 0.5rem;
     }
-  }
-}
-.filter-button {
-  display: flex;
-  align-items: center;
-  min-height: 4.5vh;
-  width: 100%;
-  background-color: transparent;
-  border: none;
-  padding: 0.75 0rem;
-  border-radius: 0.2rem;
-  color: #7a7777;
-  cursor: pointer;
-  font-size: 14px;
-}
-.filter-button:hover {
-  color: $base-gray;
-  background-color: $off-white;
-
-  img {
-    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
   }
 }
 .multi-slot {
@@ -297,14 +243,5 @@ export default {
     margin: 0;
     cursor: pointer;
   }
-}
-.filter-search-bar {
-  height: 4.5vh;
-  background-color: transparent;
-  border-bottom: 1px solid $very-light-gray;
-  display: flex;
-  align-items: center;
-  padding: 2px;
-  margin-right: 0.5rem;
 }
 </style>

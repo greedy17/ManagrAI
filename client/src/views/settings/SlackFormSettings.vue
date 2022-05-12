@@ -481,13 +481,10 @@ export default {
     &__title {
       text-align: center;
       margin: 2rem 0;
-
       width: 100%;
     }
-
     &__content {
       display: flex;
-
       justify-content: center;
       min-height: 20rem;
     }
@@ -598,7 +595,6 @@ export default {
   box-shadow: 0 5px 10px 10px rgba(0, 0, 0, 0.5);
   background-color: $panther;
   position: absolute;
-
   z-index: 100;
   overflow-y: scroll;
 }

@@ -257,18 +257,6 @@ export default {
   border-bottom: 1px solid $soft-gray;
   font-size: 13px;
 }
-.table-cell-checkbox-header {
-  display: table-cell;
-  padding: 2vh 1vh;
-  border: none;
-  border-bottom: 3px solid $light-orange-gray;
-  z-index: 3;
-  width: 4vw;
-  top: 0;
-  left: 0;
-  position: sticky;
-  background-color: $off-white;
-}
 .table-cell-checkbox {
   display: table-cell;
   padding: 2vh;
@@ -279,22 +267,6 @@ export default {
   z-index: 1;
   border-bottom: 1px solid $soft-gray;
   background-color: $off-white;
-}
-.cell-name-header {
-  display: table-cell;
-  padding: 3vh;
-  border: none;
-  border-bottom: 3px solid $light-orange-gray;
-  border-radius: 2px;
-  z-index: 3;
-  left: 3.5vw;
-  top: 0;
-  position: sticky;
-  background-color: $off-white;
-  font-weight: bold;
-  font-size: 13px;
-  letter-spacing: 0.5px;
-  color: $base-gray;
 }
 .flex-row-spread {
   display: flex;
