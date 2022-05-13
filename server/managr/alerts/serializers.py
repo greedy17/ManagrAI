@@ -420,7 +420,7 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
         new_groups = validated_data.pop("new_groups", [])
         message_template = validated_data.pop("message_template")
         new_configs = validated_data.pop("new_configs", [])
-        direct_to_users = validated_data.pop("direct_to_users")
+        direct_to_users = validated_data.get("direct_to_users")
         data = super().create(validated_data, *args, **kwargs)
         message_template = AlertMessageTemplateWriteSerializer(
             data={**message_template, "template": data.id}
@@ -447,7 +447,9 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
             else:
                 new_configs = list(map(lambda x: {**x, "template": data.id}, new_configs))
             _new_configs = AlertConfigWriteSerializer(
-                data=new_configs, many=True, context=self.context,
+                data=new_configs,
+                many=True,
+                context=self.context,
             )
             try:
                 _new_configs.is_valid(raise_exception=True)
