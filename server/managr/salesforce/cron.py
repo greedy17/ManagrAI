@@ -203,6 +203,7 @@ def queue_stale_sf_data_for_delete(cutoff=1440):
     qs = User.objects.filter(is_active=True, salesforce_account__isnull=False).distinct()
     # count them to paginate the response
     user_count = qs.count()
+    logger.info(f"STARTING STALE DATE ClEAR FOR {user_count} users")
     # set limit of 100 or less
     limit = max(100, user_count)
     # divide into pages
@@ -266,7 +267,7 @@ def queue_stale_sf_data_for_delete(cutoff=1440):
                     if resource_count and resource_count <= 500:
                         # emit current batch to delete queue and start new
                         # TODO - Eventually remove the .now to make async
-                        _process_stale_data_for_delete(
+                        _process_stale_data_for_delete.now(
                             [
                                 {
                                     "user_id": str(user.id),
@@ -283,7 +284,7 @@ def queue_stale_sf_data_for_delete(cutoff=1440):
                         for i in range(0, resource_pages):
                             items = qs[i * 500 : i + 1 * 500].values_list("id", flat=True)
                             # TODO - Eventually remove the .now to make async
-                            _process_stale_data_for_delete(
+                            _process_stale_data_for_delete.now(
                                 [
                                     {
                                         "user_id": str(user.id),
