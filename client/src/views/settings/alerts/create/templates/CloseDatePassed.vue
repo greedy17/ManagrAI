@@ -278,7 +278,6 @@ export default {
     ToggleCheckBox,
     FormField,
     PulseLoadingSpinnerButton,
-
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {

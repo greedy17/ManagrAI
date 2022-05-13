@@ -237,7 +237,6 @@ import { UserInviteForm } from '@/services/users/forms'
 import Organization from '@/services/organizations'
 import CollectionManager from '@/services/collectionManager'
 import Modal from '../../../components/InviteModal'
-import CheckBox from '@/components/CheckBoxUpdated'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import FormField from '@/components/forms/FormField'
 import SlackOAuth, { SlackUserList } from '@/services/slack'
@@ -247,7 +246,6 @@ export default {
     Modal,
     PulseLoadingSpinnerButton,
     FormField,
-    CheckBox,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   props: {

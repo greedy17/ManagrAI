@@ -263,13 +263,9 @@ import NewAlertGroup from '@/views/settings/alerts/create/NewAlertGroup'
  * Services
  */
 
-import AlertTemplate, {
-  AlertGroupForm,
-  AlertTemplateForm,
-  AlertConfigForm,
-} from '@/services/alerts/'
+import AlertTemplate, { AlertTemplateForm } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 import { SObjectField, NON_FIELD_ALERT_OPTS, SOBJECTS_LIST } from '@/services/salesforce'
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
@@ -278,12 +274,9 @@ export default {
   name: 'CloseDateApproaching',
   components: {
     NewAlertGroup,
-
     ToggleCheckBox,
     FormField,
-
     PulseLoadingSpinnerButton,
-
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {

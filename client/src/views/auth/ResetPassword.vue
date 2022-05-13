@@ -23,7 +23,6 @@ import User from '@/services/users'
 
 export default {
   name: 'ResetPassword',
-  components: {},
   data() {
     return {
       password: '',

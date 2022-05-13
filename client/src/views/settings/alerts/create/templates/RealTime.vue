@@ -81,15 +81,6 @@
 
 <script>
 /**
- * Components
- * */
-// Pacakges
-
-//Internal
-
-import AlertGroup from '@/views/settings/alerts/create/_AlertGroup'
-
-/**
  * Services
  */
 
@@ -102,9 +93,6 @@ import { SlackListResponse } from '@/services/slack'
 
 export default {
   name: 'RealTime',
-  components: {
-    AlertGroup,
-  },
   data() {
     return {
       channelOpts: new SlackListResponse(),

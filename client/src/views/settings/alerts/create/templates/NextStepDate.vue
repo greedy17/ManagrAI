@@ -199,12 +199,9 @@ export default {
   name: 'NextStep',
   components: {
     NextAlertGroup,
-
     ToggleCheckBox,
     FormField,
-
     PulseLoadingSpinnerButton,
-
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {

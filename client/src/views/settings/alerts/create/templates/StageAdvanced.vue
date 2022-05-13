@@ -181,18 +181,10 @@ import 'quill/dist/quill.core.css'
 import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
 
-import { quillEditor } from 'vue-quill-editor'
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 //Internal
 import FormField from '@/components/forms/FormField'
-import CommitAlertGroup from '@/views/settings/alerts/create/CommitAlertGroup'
-import ListContainer from '@/components/ListContainer'
-import ListItem from '@/components/ListItem'
-import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotificationTemplate'
-import ExpandablePanel from '@/components/ExpandablePanel'
-import Modal from '@/components/Modal'
-import SmartAlertTemplateBuilder from '@/views/settings/alerts/create/SmartAlertTemplateBuilder'
 import { UserConfigForm } from '@/services/users/forms'
 
 /**
@@ -201,7 +193,7 @@ import { UserConfigForm } from '@/services/users/forms'
 
 import { RealTimeAlertForm, RealTime } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 import {
   SObjectField,
   NON_FIELD_ALERT_OPTS,
@@ -214,17 +206,9 @@ export default {
   name: 'StageAdvanced',
   components: {
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
-    ExpandablePanel,
-    ListContainer,
-    ListItem,
-    CommitAlertGroup,
-    SlackNotificationTemplate,
-    quillEditor,
     ToggleCheckBox,
     FormField,
     PulseLoadingSpinnerButton,
-    Modal,
-    SmartAlertTemplateBuilder,
   },
   data() {
     return {

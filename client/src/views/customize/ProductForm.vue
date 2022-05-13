@@ -26,8 +26,6 @@
 </template>
 
 <script>
-import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
-import Paginator from '@thinknimble/paginator'
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
 import CustomSlackForm from '@/views/settings/CustomSlackForm'
 import { mapState } from 'vuex'
@@ -38,7 +36,7 @@ import * as FORM_CONSTS from '@/services/slack'
 
 export default {
   name: 'ProductForm',
-  components: { CustomSlackForm, PulseLoadingSpinnerButton, Paginator },
+  components: { CustomSlackForm },
   data() {
     return {
       ...FORM_CONSTS,

@@ -157,18 +157,10 @@ import 'quill/dist/quill.core.css'
 import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
 
-import { quillEditor } from 'vue-quill-editor'
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 //Internal
 import FormField from '@/components/forms/FormField'
-import CommitAlertGroup from '@/views/settings/alerts/create/CommitAlertGroup'
-import ListContainer from '@/components/ListContainer'
-import ListItem from '@/components/ListItem'
-import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotificationTemplate'
-import ExpandablePanel from '@/components/ExpandablePanel'
-import Modal from '@/components/Modal'
-import SmartAlertTemplateBuilder from '@/views/settings/alerts/create/SmartAlertTemplateBuilder'
 import { UserConfigForm } from '@/services/users/forms'
 
 /**
@@ -184,17 +176,9 @@ import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
   name: 'MovedToCommit',
   components: {
-    ExpandablePanel,
-    ListContainer,
-    ListItem,
-    CommitAlertGroup,
-    SlackNotificationTemplate,
-    quillEditor,
     ToggleCheckBox,
     FormField,
     PulseLoadingSpinnerButton,
-    Modal,
-    SmartAlertTemplateBuilder,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {

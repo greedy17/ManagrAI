@@ -21,7 +21,6 @@ import User from '@/services/users'
 
 export default {
   name: 'ForgotPassword',
-  components: {},
   data() {
     return {
       email: '', // step 1

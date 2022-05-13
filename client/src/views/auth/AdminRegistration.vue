@@ -127,9 +127,6 @@
 <script>
 import User, { UserRegistrationForm } from '@/services/users'
 
-import GoogleButton from '@/components/GoogleButton'
-import TNDropdown from '@/components/TNDropdown'
-import managrDropdown from '@/components/managrDropdown'
 import Button from '@thinknimble/button'
 import FormField from '@/components/forms/FormField'
 import moment from 'moment-timezone'
@@ -138,9 +135,6 @@ export default {
   name: 'Registration',
   components: {
     FormField,
-    GoogleButton,
-    TNDropdown,
-    managrDropdown,
     Button,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },

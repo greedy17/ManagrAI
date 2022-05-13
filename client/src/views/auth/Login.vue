@@ -23,6 +23,7 @@
         @keyup.enter="handleLoginAttempt"
         v-model="loginForm.field.password.value"
         type="password"
+        placeholder="password"
       />
       <PulseLoadingSpinnerButton
         :disabled="loggingIn || !loginForm.isValid"
@@ -67,11 +68,9 @@ import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
 /**
  * internal Components
  */
-import FormField from '@/components/forms/inputs/FormField'
-
 export default {
   name: 'Login',
-  components: { FormField, PulseLoadingSpinnerButton, PulseLoadingSpinner },
+  components: { PulseLoadingSpinnerButton, PulseLoadingSpinner },
   data() {
     return {
       loggingIn: false,
