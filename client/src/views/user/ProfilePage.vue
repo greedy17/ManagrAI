@@ -126,11 +126,6 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
-.dropdown {
-  ::v-deep .selected-items[data-v-515df75a] {
-    max-height: 40px;
-  }
-}
 .profile-page {
   margin-top: 4rem;
   padding: 2rem 2rem;
@@ -138,18 +133,6 @@ export default {
     /* For mobile phones: */
     padding: 0rem;
   }
-}
-::v-deep .input-content {
-  border: 1px solid #e8e8e8;
-}
-::v-deep .tn-dropdown__selection-container {
-  background: transparent;
-  border: none;
-}
-::v-deep .tn-input {
-  width: 100%;
-  display: flex;
-  justify-content: center;
 }
 .profile-page__form {
   @include standard-border();
