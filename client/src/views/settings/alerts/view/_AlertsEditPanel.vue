@@ -215,7 +215,7 @@ import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotif
  * Services
  *
  */
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 import { FormField as FormFieldService } from '@thinknimble/tn-forms'
 import { RequiredValidator } from '@thinknimble/tn-validators'
 
@@ -231,11 +231,7 @@ import AlertTemplate, {
 } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
 import { SObjectField } from '@/services/salesforce'
-import {
-  ALERT_DATA_TYPE_MAP,
-  INPUT_TYPE_MAP,
-  STRING,
-} from '@/services/salesforce/models'
+import { ALERT_DATA_TYPE_MAP, STRING } from '@/services/salesforce/models'
 const TABS = [
   { key: 'TEMPLATE', label: 'Workflow Title' },
   { key: 'GROUPS', label: 'Conditions' },
@@ -627,9 +623,6 @@ export default {
     transform: translateY(-6px);
   }
 }
-.bouncy {
-  animation: bounce 0.2s infinite alternate;
-}
 h3 {
   font-weight: 400;
   letter-spacing: 0.25px;
@@ -643,33 +636,6 @@ h3 {
   cursor: pointer;
   padding: 0.15rem 0.3rem;
   margin-right: 0.5rem;
-}
-.revoke-button {
-  font-size: 0.75rem;
-  font-weight: bold;
-  color: $coral;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-.add-button {
-  font-size: 0.75rem;
-  font-weight: bold;
-  color: white;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-.add-button:hover,
-.revoke-button:hover {
-  color: white;
-}
-.three-dots:after {
-  cursor: pointer;
-  color: white;
-  content: '\2026';
-  font-size: 2rem;
-  padding-left: 4rem;
 }
 .slot-icon {
   display: flex;
@@ -706,16 +672,6 @@ h3 {
     margin: 0;
     cursor: pointer;
   }
-}
-.dropdown-container:focus {
-  outline: none;
-}
-
-.dropdown-container:focus .dropdown {
-  opacity: 1;
-  z-index: 100;
-  max-height: 100vh;
-  transition: opacity 0.2s, z-index 0.2s, max-height 0.2s;
 }
 .card-rows {
   display: flex;
@@ -775,56 +731,12 @@ h3 {
   filter: invert(70%);
   cursor: pointer;
 }
-::v-deep .ql-container.ql-snow {
-  border: 1px solid #e8e8e8;
-}
-::v-deep .ql-toolbar.ql-snow {
-  background-color: white;
-  border: 1px solid #e8e8e8;
-  width: 24rem;
-}
-::v-deep .ql-blank.ql-editor {
-  background-color: white;
-  border-radius: 0.25rem;
-}
 .message__box {
   margin-bottom: 2rem;
   height: 16vh;
   width: 32vw;
   border-radius: 0.25rem;
   background-color: transparent;
-}
-.config__column {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-.filtered {
-  filter: invert(66%) sepia(64%) saturate(3377%) hue-rotate(380deg) brightness(100%) contrast(105%);
-}
-.black-filter {
-  filter: invert(100%) contrast(100%);
-  height: 1.5rem;
-}
-.row__button {
-  border: none;
-  color: $dark-green;
-  background: transparent;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  font-size: 14px;
-
-  padding-top: 0.2rem;
-  margin-left: -0.1rem;
-}
-
-::v-deep .ls-container__list--horizontal {
-  background-color: transparent;
-}
-::v-deep .item-container {
-  margin-right: 2rem;
 }
 .tab__header-items {
   display: flex;
@@ -855,27 +767,6 @@ h3 {
   &__group {
     display: flex;
     padding: 0.75rem;
-    &--large {
-      flex: 1.5 0 auto;
-    }
-    &--medium {
-      flex: 1 0 auto;
-    }
-  }
-}
-.btn {
-  &--danger {
-    @include button-danger();
-  }
-  &--primary {
-    @include primary-button();
-  }
-  &--secondary {
-    @include secondary-button();
-  }
-
-  &--icon {
-    @include --icon();
   }
 }
 .tab__panel {
@@ -894,12 +785,5 @@ h3 {
     align-items: flex-start;
     height: 100%;
   }
-}
-.left {
-  margin-bottom: 5rem;
-}
-.alerts-template-list__add-opts {
-  display: flex;
-  align-items: center;
 }
 </style>

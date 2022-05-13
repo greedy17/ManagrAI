@@ -388,57 +388,9 @@ export default {
     transform: translateY(-6px);
   }
 }
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.5s;
-}
-.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
-  opacity: 0;
-}
 
 .bouncy {
   animation: bounce 0.2s infinite alternate;
-}
-
-.dot-flashing {
-  position: relative;
-  width: 14px;
-  height: 14px;
-  border-radius: 7px;
-  background-color: $dark-green;
-  color: $dark-green;
-  animation: dotFlashing 1s infinite linear alternate;
-  animation-delay: 0.5s;
-}
-
-.dot-flashing::before,
-.dot-flashing::after {
-  content: '';
-  display: inline-block;
-  position: absolute;
-  top: 0;
-}
-
-.dot-flashing::before {
-  left: -15px;
-  width: 14px;
-  height: 14px;
-  border-radius: 7px;
-  background-color: $dark-green;
-  color: $dark-green;
-  animation: dotFlashing 1s infinite alternate;
-  animation-delay: 0s;
-}
-
-.dot-flashing::after {
-  left: 15px;
-  width: 14px;
-  height: 14px;
-  border-radius: 7px;
-  background-color: $dark-green;
-  color: $dark-green;
-  animation: dotFlashing 1s infinite alternate;
-  animation-delay: 1s;
 }
 
 @keyframes dotFlashing {
@@ -451,9 +403,6 @@ export default {
   }
 }
 
-.spacer {
-  height: 0.75rem;
-}
 h2 {
   font-size: 1.4rem;
 }
@@ -461,52 +410,9 @@ button:disabled {
   background-color: $very-light-gray;
   cursor: not-allowed;
 }
-::v-deep .item-container__label {
-  color: white;
-  border: none;
-}
-::v-deep .ls-container {
-  background: transparent;
-  box-shadow: none;
-  margin-bottom: 1rem;
-}
-.keep-activating {
-  outline: 2px solid $coral;
-}
-.done-activating {
-  outline: 2px solid $dark-green;
-}
 .titles {
   color: $base-gray;
   font-weight: bold;
-}
-.alert-links {
-  color: #41b883;
-  border-bottom: 3px solid #19954e;
-}
-.activate-button {
-  background-color: $dark-green;
-  color: white;
-  border: none;
-  font-weight: bold;
-  font-size: 1rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.6rem;
-  cursor: pointer;
-}
-.test-button {
-  background-color: white;
-  color: $dark-green;
-  border: none;
-  font-weight: bold;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.25rem;
-  cursor: pointer;
-}
-.middle {
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 .delete_modal {
   background-color: $white;
@@ -600,28 +506,10 @@ button:disabled {
   cursor: pointer;
   font-size: 16px;
 }
-.no-data {
-  color: $gray;
-  margin-left: 0.5rem;
-  font-size: 15px;
-}
-.alerts-template-list__header--heading {
-  @include header-subtitle();
-}
 .alerts-template-list {
   margin-left: 10vw;
   margin-top: 3.5rem;
   color: $base-gray;
-  &__header {
-    display: flex;
-
-    &-item {
-      min-width: 10rem;
-      &--main {
-        flex: 1 0 auto;
-      }
-    }
-  }
 }
 .alert_cards {
   display: flex;
@@ -670,51 +558,12 @@ button:disabled {
     justify-content: space-evenly;
   }
 }
-.card__ {
-  background-color: white;
-  padding: 0;
-  border: none;
-  width: 22vw;
-  min-height: 25vh;
-  margin: 0rem 0.5rem 0.5rem 0rem;
-  border-radius: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  color: $base-gray;
-
-  &header {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 3rem;
-    font-weight: 900px;
-    margin-bottom: 1rem;
-    font-size: 0.875rem;
-  }
-}
-.icon {
-  display: block;
-  cursor: pointer;
-  width: 20px;
-  height: 30px;
-}
-.pink {
-  color: $candy;
-}
 a {
   text-decoration: none;
   color: white;
   cursor: pointer;
 }
 
-.row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-evenly;
-}
 .row__ {
   display: flex;
   flex-direction: row;
@@ -744,13 +593,6 @@ a {
     filter: invert(70%);
   }
 }
-.row__start {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  margin-top: 0.25rem;
-  width: 100%;
-}
 .green_button:disabled {
   background-color: $soft-gray;
   color: $gray;
@@ -768,37 +610,17 @@ a {
 .green {
   color: $dark-green;
 }
-.debug {
-  border: 2px solid red;
-}
-.center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
 .center__ {
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
   flex-direction: column;
 }
-.centered {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-}
 .center-loader {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 60vh;
-}
-.invert {
-  filter: invert(99%);
-}
-.invisible {
-  display: none;
 }
 .loading-title {
   display: none;

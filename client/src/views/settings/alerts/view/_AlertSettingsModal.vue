@@ -200,7 +200,7 @@ import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 import { AlertConfigForm, AlertConfig } from '@/services/alerts/'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 
 export default {
   /**
@@ -492,10 +492,6 @@ export default {
     cursor: pointer;
   }
 }
-.channels_height {
-  height: 22vh;
-  overflow-y: scroll;
-}
 ::placeholder {
   color: $very-light-gray;
   font-size: 0.75rem;
@@ -521,21 +517,6 @@ h2 {
   margin: 0.5rem 0rem;
   box-shadow: 1px 1px 3px 0px $very-light-gray;
 }
-.btn {
-  &--danger {
-    @include button-danger();
-  }
-  &--primary {
-    @include primary-button();
-  }
-  &--secondary {
-    @include secondary-button();
-  }
-
-  &--icon {
-    @include --icon();
-  }
-}
 .primary-button {
   padding: 0.4rem 1.5rem;
   box-shadow: none;
@@ -560,9 +541,6 @@ h2 {
     margin-bottom: 0.5rem;
   }
 }
-::v-deep .dropdown-search {
-  margin: 1rem 0rem;
-}
 .alerts-page__settings {
   color: $base-gray;
   margin: 0.5rem 1rem;
@@ -573,12 +551,6 @@ h2 {
       margin: 0 0.5rem;
     }
   }
-  &-remove {
-    justify-self: end;
-  }
-}
-.invisible {
-  display: none;
 }
 .save-button {
   display: flex;
@@ -587,15 +559,6 @@ h2 {
   width: 100%;
   padding: 0rem 1rem 0rem 0rem;
   height: 170px;
-}
-.selected__item {
-  padding: 0.5rem 1.2rem;
-  background-color: transparent;
-  border: 3px solid white;
-  color: white;
-  border-radius: 0.3rem;
-  width: 50%;
-  text-align: center;
 }
 .row__ {
   display: flex;

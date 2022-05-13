@@ -228,79 +228,16 @@ export default {
     transform: translateY(-6px);
   }
 }
-.bouncy {
-  animation: bounce 0.2s infinite alternate;
-}
 .onboarding {
   filter: blur(10px);
-}
-#toolTip {
-  position: relative;
-}
-
-#toolTip p {
-  color: $base-gray;
-  font-weight: bold;
-  padding: 11px;
-  background-color: $lighter-green;
-  border: 2px solid $dark-green;
-  -moz-border-radius: 5px;
-  -ie-border-radius: 5px;
-  -webkit-border-radius: 5px;
-  -o-border-radius: 5px;
-  border-radius: 5px;
-}
-
-#tailShadow {
-  position: absolute;
-  bottom: -8px;
-  left: 88px;
-  width: 0;
-  height: 0;
-  border: solid 2px $dark-green;
-
-  box-shadow: 0 0 10px 1px #555;
-}
-h3 {
-  font-size: 1.2rem;
 }
 h5 {
   font-size: 0.8rem;
   font-weight: 700px;
 }
-#tail1 {
-  position: absolute;
-  bottom: -20px;
-  left: 80px;
-  width: 0;
-  height: 0;
-  border-color: $dark-green transparent transparent transparent;
-  border-width: 10px;
-  border-style: solid;
-}
-
-#tail2 {
-  position: absolute;
-  bottom: -18px;
-  left: 80px;
-  width: 0;
-  height: 0;
-  border-color: $lighter-green transparent transparent transparent;
-  border-width: 10px;
-  border-style: solid;
-}
 img {
   filter: invert(90%);
   margin-left: 0.5rem;
-}
-.coming-soon {
-  @include muted-font(13px);
-}
-.center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
 }
 .counter {
   border: 1px solid $base-gray;

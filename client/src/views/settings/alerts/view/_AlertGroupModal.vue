@@ -93,18 +93,8 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 .btn {
-  &--danger {
-    @include button-danger();
-  }
   &--primary {
     @include primary-button();
-  }
-  &--secondary {
-    @include secondary-button();
-  }
-
-  &--icon {
-    @include --icon();
   }
 }
 .end {
