@@ -11,7 +11,7 @@ from . import models as alert_models
 def create_configs_for_target(target, user, config):
     if target in ["MANAGERS", "REPS", "SDR"]:
         users = User.objects.filter(
-            organization=user.organization, user_level=target, is_active=True
+            organization=user.organization, user_level=target, is_active=True,
         )
     elif target == "SELF":
         return config
@@ -19,13 +19,14 @@ def create_configs_for_target(target, user, config):
         users = User.objects.filter(organization=user.organization, is_active=True)
     new_configs = []
     for user in users:
-        config["recipients"] = [
-            user.slack_integration.zoom_channel
-            if user.slack_integration.zoom_channel
-            else user.slack_integration.channel
-        ]
-        config["target"] = [str(user.id)]
-        new_configs.push(config)
+        if user.has_slack_integration:
+            config["recipients"] = [
+                user.slack_integration.zoom_channel
+                if user.slack_integration.zoom_channel
+                else user.slack_integration.channel
+            ]
+            config["target"] = [str(user.id)]
+            new_configs.append(config)
     return new_configs
 
 
@@ -420,7 +421,7 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
         new_groups = validated_data.pop("new_groups", [])
         message_template = validated_data.pop("message_template")
         new_configs = validated_data.pop("new_configs", [])
-        direct_to_users = validated_data.pop("direct_to_users")
+        direct_to_users = validated_data.pop("direct_to_users", False)
         data = super().create(validated_data, *args, **kwargs)
         message_template = AlertMessageTemplateWriteSerializer(
             data={**message_template, "template": data.id}
@@ -436,13 +437,12 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
         if len(new_configs):
             if direct_to_users:
                 all_configs = list()
-                for target in new_configs["alert_targets"]:
-                    all_configs.push(
-                        create_configs_for_target(
-                            target, validated_data.get("user"), new_configs[0]
-                        )
+                for target in new_configs[0]["alert_targets"]:
+                    created_configs = create_configs_for_target(
+                        target, validated_data.get("user"), new_configs[0]
                     )
-
+                    if len(created_configs):
+                        all_configs = [*all_configs, *created_configs]
                 new_configs = list(map(lambda x: {**x, "template": data.id}, all_configs))
             else:
                 new_configs = list(map(lambda x: {**x, "template": data.id}, new_configs))
