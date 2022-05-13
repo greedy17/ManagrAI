@@ -96,7 +96,7 @@ import FormField from '@/components/forms/FormField'
  * Services
  */
 import { AlertOperandForm } from '@/services/alerts/'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 import {
   SObjectField,
   SObjectPicklist,
@@ -105,12 +105,7 @@ import {
 import {
   ALERT_DATA_TYPE_MAP,
   INPUT_TYPE_MAP,
-  INTEGER,
-  STRING,
-  DATE,
-  DECIMAL,
-  BOOLEAN,
-  DATETIME,
+  STRING
 } from '@/services/salesforce/models'
 
 export default {
@@ -325,67 +320,16 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
-.btn {
-  &--danger {
-    @include button-danger();
-  }
-  &--primary {
-    @include primary-button();
-  }
-  &--secondary {
-    @include secondary-button();
-  }
 
-  &--icon {
-    @include --icon();
-  }
-}
 .alert-operand-row {
   display: flex;
   flex-direction: column;
-
-  &--label {
-    top: -1.05rem;
-    position: relative;
-    @include muted-font();
-  }
-}
-.alert-operand-row__condition {
-  position: relative;
-  top: 0rem;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  &-label {
-    @include muted-font();
-    margin: 0 0.5rem;
-  }
-}
-.alert-operand-row__date-range {
-  // displays a message on top of the input field for date/datetime selection
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  width: 15rem;
-  margin-left: 2rem;
-  @include muted-font(14px);
 }
 .alert-operand-row__options {
   display: flex;
   padding: 1rem;
   flex-wrap: wrap;
   justify-content: space-evenly;
-  &-label {
-    color: black;
-  }
-}
-.toggle__row {
-  display: flex;
-  flex-direction: row;
-}
-.mar {
-  margin-top: 1rem;
 }
 .column {
   display: flex;

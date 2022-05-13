@@ -39,7 +39,7 @@
     </Modal>
 
     <div class="alert__row">
-      <div v-if="pageNumber === 0" class="alert__column__" style="margin-bottom: 1rem">
+      <div v-if="pageNumber === 0" class="alert__column" style="margin-bottom: 1rem">
         <div class="workflow-header">
           <h3>Create a Custom Workflow</h3>
           <div class="button-space">
@@ -1093,10 +1093,6 @@ input:focus {
     cursor: pointer;
   }
 }
-.message-end {
-  display: flex;
-  justify-content: flex-start;
-}
 .workflow-header {
   display: flex;
   align-items: center;
@@ -1105,14 +1101,6 @@ input:focus {
 }
 .bouncy {
   animation: bounce 0.2s infinite alternate;
-}
-.load-more {
-  text-align: center;
-  font-size: 13px;
-}
-.load-more:hover {
-  color: $dark-green;
-  cursor: pointer;
 }
 ::placeholder {
   color: $very-light-gray;
@@ -1159,14 +1147,6 @@ input:focus {
   margin-top: auto;
   margin-bottom: 0.5rem;
 }
-.show_menu {
-  margin-right: 0.25rem;
-  margin-top: 0.25rem;
-  cursor: pointer;
-}
-.hide {
-  display: none;
-}
 .remove__group {
   padding: 0.25rem;
   border: 1px solid #e8e8e8;
@@ -1211,55 +1191,9 @@ button img {
   align-items: flex-start;
   flex-direction: column;
 }
-::v-deep .multiselect__tags {
-  max-width: 18vw;
-}
-
-::v-deep .ql-container.ql-snow {
-  border: 1px solid #e8e8e8;
-}
-::v-deep .ql-toolbar.ql-snow {
-  border: 1px solid #e8e8e8;
-  background-color: white;
-  margin-bottom: 0.1rem;
-}
-::v-deep .ql-blank.ql-editor {
-  background-color: white;
-}
-::v-deep .collection-search .collection-search__form .collection-search__input {
-  height: 2.5rem;
-  width: 14vw;
-  padding: 0 0 0 1rem;
-}
-
 .filtered {
   filter: invert(1%);
   height: 1rem;
-}
-.channels_height {
-  height: 22vh;
-  overflow-y: scroll;
-}
-.fields_height {
-  height: 30vh;
-  overflow-y: scroll;
-}
-.items_height {
-  overflow-y: scroll;
-  max-height: 30vh;
-  width: 100%;
-}
-.recipients_height {
-  overflow-y: scroll;
-  max-height: 30vh;
-  width: 80%;
-}
-.message {
-  width: 20vw;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  margin-bottom: 1.5rem;
 }
 .alert__column {
   display: flex;
@@ -1267,18 +1201,6 @@ button img {
   justify-content: flex-start;
   align-items: flex-start;
   border-radius: 0.5rem;
-}
-.alert__column__ {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
-  border-radius: 0.5rem;
-}
-.delivery__column {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
 }
 .alert__row {
   display: flex;
@@ -1304,27 +1226,6 @@ button img {
   padding: 2rem;
   margin-bottom: 1rem;
 }
-
-.option__collection {
-  background-color: $white;
-  justify-content: center;
-  border-radius: 0.5rem;
-  height: 34vh;
-  width: 78vw;
-  padding: 1rem;
-}
-.collection_fields {
-  background-color: $white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  height: 46vh;
-  width: 22vw;
-  overflow-x: scroll;
-}
 .collection__fields {
   background-color: $white;
   display: flex;
@@ -1335,52 +1236,6 @@ button img {
   height: 46vh;
   width: 70vw;
   border: 1px solid #e8e8e8;
-}
-.collection__fields__ {
-  background-color: $white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: row;
-  border-radius: 0.5rem;
-  height: 50vh;
-  width: 30vw;
-  overflow-x: scroll;
-}
-.paginator {
-  @include paginator();
-  &__container {
-    border: none;
-    display: flex;
-    justify-content: flex-start;
-    width: 11rem;
-    font-size: 0.75rem;
-    margin-top: 1rem;
-  }
-  &__text {
-    width: 6rem;
-  }
-}
-.collection {
-  background-color: $white;
-  height: 60vh;
-  width: 30vw;
-  padding: 2rem;
-  border-radius: 0.33rem;
-}
-.collection__small {
-  background-color: $white;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  height: 30vh;
-  width: 30vw;
-  padding: 2rem;
-  border-radius: 0.33rem;
-}
-.space {
-  height: 20vh;
-}
-.space__ {
-  height: 16vh;
 }
 .button-space {
   padding: 2.5rem 1rem 0rem 0rem;
@@ -1396,31 +1251,9 @@ button img {
   cursor: pointer;
   color: white;
 }
-.header {
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.quill-editor {
-  width: 100%;
-}
 
 textarea {
   @extend .textarea;
-}
-.box__header {
-  &__status {
-    display: flex;
-    &--error {
-      color: $coral;
-      fill: $coral;
-    }
-    &--success {
-      color: $dark-green;
-      fill: $dark-green;
-    }
-  }
 }
 .alerts-page {
   height: 88vh;
@@ -1430,153 +1263,9 @@ textarea {
   display: flex;
   flex-direction: column;
   align-items: center;
-  &__previous-step {
-    @include muted-font(12);
-  }
-  &__groups {
-    &__group {
-      display: flex;
-    }
-  }
-  &__message {
-    display: flex;
-    height: 20rem;
-    &-template {
-      margin: 0rem 1rem;
-      &__notification {
-        width: 30rem;
-        margin: 1rem 0rem;
-      }
-      &__message {
-        width: 40rem;
-        margin: 1rem 0rem;
-      }
-    }
-  }
-}
-.alert_cards {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-evenly;
-  align-items: center;
-  margin-top: 2rem;
-}
-
-.alerts-page__settings {
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
-
-  &__frequency {
-    display: flex;
-    align-items: center;
-    &-label {
-      @include muted-font();
-      margin: 0 0.5rem;
-    }
-  }
-  &-remove {
-    justify-self: end;
-  }
-}
-.btn {
-  &--danger {
-    @include button-danger();
-  }
-  &--primary {
-    @include primary-button();
-  }
-  &--secondary {
-    @include secondary-button();
-  }
-
-  &--icon {
-    @include --icon();
-  }
-}
-.muted--link {
-  @include muted-font();
-  @include pointer-on-hover();
-  &--important {
-    color: red;
-    font-weight: bold;
-    font-size: 11px;
-  }
-}
-.gray {
-  color: $gray;
 }
 .green {
   color: $dark-green;
-}
-.slate {
-  color: $slate-gray;
-}
-.pad {
-  padding-bottom: 1rem;
-  margin-top: -1rem;
-}
-.pink {
-  color: $candy;
-  font-weight: bold;
-}
-.purple {
-  color: $grape;
-  font-weight: bold;
-}
-.mar {
-  margin-top: -2rem;
-}
-.center {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-}
-.sub {
-  font-size: 12px;
-  margin-left: 0.5rem;
-}
-.group {
-  display: flex;
-  flex-direction: row;
-}
-.col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: white;
-}
-.col__ {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-evenly;
-  align-items: center;
-}
-.column {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.column__ {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-.row {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-end;
-  margin-top: 1rem;
-  border-bottom: 3px solid $silver;
-}
-.row_ {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 2rem;
-  margin-top: 2rem;
 }
 .row__ {
   display: flex;
@@ -1590,44 +1279,6 @@ textarea {
   width: 32vw;
   border-radius: 0.25rem;
   background-color: transparent;
-}
-.left {
-  margin-bottom: 2rem;
-}
-.add__group {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-end;
-  margin-top: 3rem;
-  padding-bottom: 1rem;
-  border-bottom: 3px solid $mid-gray;
-}
-.bolder {
-  font-size: 16px;
-  margin-left: 1rem;
-  cursor: pointer;
-  color: $base-gray;
-}
-.bolder:hover {
-  border-bottom: 2px solid $candy;
-  color: $candy;
-}
-.alertsModal {
-  color: $candy;
-  text-decoration: underline;
-  cursor: pointer;
-}
-.modal__container {
-  overflow-y: scroll;
-}
-.blue {
-  color: $slate-gray;
-}
-.top {
-  border-top: 3px solid $grape;
-}
-.templates {
-  border-bottom: 1px solid $gray;
 }
 input {
   width: 130px;
@@ -1656,25 +1307,6 @@ input {
   height: 2rem;
   width: 10rem;
   font-size: 12px;
-}
-.purple__button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.4rem 1rem;
-  border-radius: 0.3rem;
-  font-weight: bold;
-  line-height: 1.14;
-  text-indent: none;
-  border-style: none;
-  letter-spacing: 0.03rem;
-  color: $white;
-  background-color: $dark-green;
-  cursor: pointer;
-  height: 2rem;
-  width: 10rem;
-  font-weight: bold;
-  font-size: 1.02rem;
 }
 .disabled__button {
   display: flex;
@@ -1715,25 +1347,7 @@ input {
     left: 105%;
   }
 }
-
 .tooltip:hover .tooltip__popup {
   visibility: visible;
-}
-.selected__item {
-  padding: 0.5rem;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  border-radius: 0.3rem;
-  width: 100%;
-  text-align: center;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-}
-.selected__item img {
-  filter: invert(90%);
-}
-.visible {
-  display: none;
 }
 </style>

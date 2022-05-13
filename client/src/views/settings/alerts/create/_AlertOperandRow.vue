@@ -579,15 +579,6 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
-::v-deep .input-content {
-  width: 13vw;
-  border: 1px solid #e8e8e8 !important;
-  background-color: white;
-  box-shadow: none !important;
-}
-::v-deep .input-form {
-  width: 13vw;
-}
 .multi-slot {
   display: flex;
   align-items: center;
@@ -626,49 +617,13 @@ export default {
   }
 }
 
-.load-more {
-  text-align: center;
-  font-size: 13px;
-}
-.load-more:hover {
-  color: $dark-green;
-  cursor: pointer;
-}
 img {
   filter: invert(90%);
-}
-::v-deep .collection-search__result-item {
-  overflow: auto;
-  padding: 0 0.5rem;
-  border: none;
-}
-::v-deep .collection-search__result-item:hover {
-  background-color: transparent;
 }
 .centered {
   display: flex;
   justify-content: center;
   align-items: center;
-}
-.btn {
-  &--danger {
-    @include button-danger();
-  }
-  &--primary {
-    @include primary-button();
-  }
-  &--secondary {
-    @include secondary-button();
-  }
-
-  &--icon {
-    @include --icon();
-  }
-}
-.dayInput {
-  width: 50px;
-  margin-left: 0.25rem;
-  border-radius: 0.25rem;
 }
 .toggle__switch {
   display: flex;
@@ -686,33 +641,6 @@ img {
 .alert-operand-row {
   display: flex;
   flex-direction: column;
-  &--label {
-    top: -1.05rem;
-    position: relative;
-    @include muted-font();
-  }
-}
-.alert-operand-row__condition {
-  position: relative;
-  top: 0rem;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  &-label {
-    margin: 0 0.5rem;
-    font-size: 15px;
-    font-weight: bold;
-  }
-}
-.alert-operand-row__date-range {
-  // displays a message on top of the input field for date/datetime selection
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  width: 15rem;
-  margin-left: 2rem;
-  @include muted-font(14px);
 }
 .alert-operand-row__options {
   display: flex;
@@ -720,42 +648,5 @@ img {
   flex-wrap: wrap;
   justify-content: space-evenly;
   margin-top: -1rem;
-  &-label {
-    color: black;
-  }
-}
-.fields__height {
-  height: 26vh;
-  overflow-y: scroll;
-}
-.toggle__row {
-  display: flex;
-  flex-direction: row;
-}
-.mar {
-  margin-top: 1rem;
-}
-.column {
-  display: flex;
-  flex-direction: column;
-  margin: 1rem;
-}
-.row {
-  display: flex;
-  flex-direction: row;
-  margin: 0.2rem;
-}
-.selected__item {
-  padding: 0.5rem;
-  border-radius: 0.3rem;
-  width: 100%;
-  text-align: center;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-}
-.invisible {
-  display: none;
 }
 </style>

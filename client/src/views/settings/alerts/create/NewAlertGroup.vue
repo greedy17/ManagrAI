@@ -99,21 +99,6 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
-.btn {
-  &--danger {
-    @include button-danger();
-  }
-  &--primary {
-    @include primary-button();
-  }
-  &--secondary {
-    @include secondary-button();
-  }
-
-  &--icon {
-    @include --icon();
-  }
-}
 .alert-group-row {
   display: flex;
   flex-direction: column;
@@ -121,47 +106,12 @@ export default {
   &__operands {
     &__row {
       display: flex;
-      &-remove {
-        height: 1rem;
-      }
     }
   }
-  &--label {
-    @include muted-font();
-    top: -1.1rem;
-    position: relative;
-  }
-}
-.alert-group-row__condition {
-  position: relative;
-  top: 0rem;
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-  &-label {
-    @include muted-font();
-    margin: 0 0.5rem;
-  }
-}
-.add__remove {
-  margin-right: 1.5rem;
-  display: flex;
-  flex-direction: row;
-  margin-bottom: -1rem;
-  margin-left: -3rem;
-  padding: 1rem;
-}
-.sub {
-  font-size: 13px;
-  margin-left: 0.5rem;
 }
 .rows {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-.left {
-  margin-left: -5rem;
 }
 </style>

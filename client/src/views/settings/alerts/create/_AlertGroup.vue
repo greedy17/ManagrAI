@@ -122,27 +122,6 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
-.btn {
-  &--danger {
-    @include button-danger();
-  }
-  &--primary {
-    @include primary-button();
-  }
-  &--secondary {
-    @include secondary-button();
-  }
-
-  &--icon {
-    @include --icon();
-  }
-}
-
-::v-deep input[type='checkbox'].toggle + div {
-  height: 20px;
-  width: 40px;
-  margin: 0rem 0.5rem;
-}
 .plus_button {
   border: 1px solid #e8e8e8;
   background-color: transparent;
@@ -156,28 +135,6 @@ export default {
 .filtered {
   filter: invert(80%);
   height: 1rem;
-}
-.filtered__red {
-  filter: invert(29%) sepia(33%) saturate(3647%) hue-rotate(348deg) brightness(94%) contrast(86%);
-}
-.alert-group-row {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  overflow: scroll;
-}
-.alert-group-row__condition {
-  position: relative;
-  top: 0rem;
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-  &-label {
-    @include muted-font();
-    margin: 0 0.5rem;
-  }
 }
 .centered {
   display: flex;
@@ -196,27 +153,5 @@ export default {
   margin-bottom: 2rem;
   font-size: 12px;
   letter-spacing: 1px;
-}
-
-.sub {
-  font-size: 13px;
-  margin-left: 0.5rem;
-}
-.row {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-end;
-}
-.rows {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.left {
-  margin-left: -5rem;
-}
-.column {
-  display: flex;
-  align-items: center;
 }
 </style>

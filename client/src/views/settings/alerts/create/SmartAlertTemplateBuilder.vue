@@ -11,13 +11,9 @@
 import FormField from '@/components/forms/FormField'
 import ExpandablePanel from '@/components/ExpandablePanel'
 
-import AlertTemplate, {
-  AlertGroupForm,
-  AlertTemplateForm,
-  AlertConfigForm,
-} from '@/services/alerts/'
+import { AlertTemplateForm } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 import {
   SObjectField,
   NON_FIELD_ALERT_OPTS,
@@ -133,11 +129,4 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables.scss';
-
-.green {
-  color: $dark-green;
-}
-.red {
-  color: red;
-}
 </style>
