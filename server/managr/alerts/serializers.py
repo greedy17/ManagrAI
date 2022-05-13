@@ -437,9 +437,13 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
             if direct_to_users:
                 all_configs = list()
                 for target in new_configs["alert_targets"]:
-                    all_configs = create_configs_for_target(
-                        target, validated_data.get("user"), new_configs[0]
+                    all_configs.push(
+                        create_configs_for_target(
+                            target, validated_data.get("user"), new_configs[0]
+                        )
                     )
+
+                new_configs = list(map(lambda x: {**x, "template": data.id}, all_configs))
             else:
                 new_configs = list(map(lambda x: {**x, "template": data.id}, new_configs))
             _new_configs = AlertConfigWriteSerializer(
