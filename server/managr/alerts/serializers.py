@@ -10,6 +10,10 @@ from . import models as alert_models
 ##  SHORTENED SERIALIZERS FOR REF OBJECTS
 def create_configs_for_target(target, user, config):
     if target in ["MANAGERS", "REPS", "SDR"]:
+        if target == "MANAGERS":
+            target = "MANAGER"
+        elif target == "REPS":
+            target = "REP"
         users = User.objects.filter(
             organization=user.organization, user_level=target, is_active=True,
         )
@@ -25,7 +29,8 @@ def create_configs_for_target(target, user, config):
                 if user.slack_integration.zoom_channel
                 else user.slack_integration.channel
             ]
-            config["target"] = [str(user.id)]
+            config["alert_targets"] = [str(user.id)]
+            config["recipient_type"] = "SLACK_CHANNEL"
             new_configs.append(config)
     return new_configs
 
@@ -398,7 +403,6 @@ class AlertConfigWriteSerializer(serializers.ModelSerializer):
 
 
 class AlertTemplateWriteSerializer(serializers.ModelSerializer):
-
     new_groups = serializers.ListField(required=False)
     message_template = serializers.DictField(required=False)
     new_configs = serializers.ListField(required=False)
@@ -421,7 +425,7 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
         new_groups = validated_data.pop("new_groups", [])
         message_template = validated_data.pop("message_template")
         new_configs = validated_data.pop("new_configs", [])
-        direct_to_users = validated_data.pop("direct_to_users", False)
+        direct_to_users = self.context.data.get("direct_to_users", False)
         data = super().create(validated_data, *args, **kwargs)
         message_template = AlertMessageTemplateWriteSerializer(
             data={**message_template, "template": data.id}
@@ -444,6 +448,8 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
                     if len(created_configs):
                         all_configs = [*all_configs, *created_configs]
                 new_configs = list(map(lambda x: {**x, "template": data.id}, all_configs))
+                if not len(new_configs):
+                    raise Exception("CREATING CONFIG ERROR <USERS DO NOT HAVE A DEFAULT CHANNEL>")
             else:
                 new_configs = list(map(lambda x: {**x, "template": data.id}, new_configs))
             _new_configs = AlertConfigWriteSerializer(
