@@ -1,7 +1,7 @@
 <template>
   <div class="slack-form-builder">
     <div>
-      <div class="slack-from-builder__sf-validations">
+      <div>
         <template v-if="showValidations">
           <template v-if="sfValidations.length">
             <ul :key="val.id" v-for="val in sfValidations">
@@ -1486,25 +1486,12 @@ export default {
   cursor: pointer;
   padding: 0.15rem 0.3rem;
 }
-.center-loader {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
 .label {
   font-size: 0.85rem;
 }
 .green {
   color: $dark-green;
   font-size: 0.85rem;
-}
-.or_button {
-  background: transparent;
-  border: none;
-  color: white;
-  padding-bottom: 0.25rem;
-  margin-left: 0.25rem;
 }
 .default_button {
   padding: 0.5rem 1rem;
@@ -1520,88 +1507,6 @@ export default {
     filter: invert(39%) sepia(96%) saturate(373%) hue-rotate(94deg) brightness(75%) contrast(94%);
   }
 }
-.name_button {
-  font-size: 0px;
-  padding: 0.3rem 0.75rem;
-  margin-top: 0.5rem;
-  border-radius: 0.2rem;
-  border: none;
-  cursor: pointer;
-  color: white;
-  background: transparent;
-  animation: bounce 0.2s infinite alternate;
-}
-.name_button::after {
-  font-size: 14px;
-}
-
-.name_button::after {
-  content: 'Name';
-}
-.name_button:hover::after {
-  content: 'Add Name';
-}
-.name_button:hover {
-  background-color: white;
-  color: $dark-green !important;
-}
-.stage_button {
-  font-size: 0px;
-  padding: 0.3rem 0.75rem;
-  margin-top: 0.5rem;
-  border-radius: 0.2rem;
-  border: none;
-  cursor: pointer;
-  color: white;
-  background: transparent;
-  animation: bounce 0.2s infinite alternate;
-}
-.stage_button::after {
-  font-size: 14px;
-}
-.stage_button::after {
-  content: 'Stage';
-}
-.stage_button:hover::after {
-  content: 'Add Stage';
-}
-.stage_button:hover {
-  background-color: white;
-  color: $dark-green !important;
-}
-.closeDate_button {
-  font-size: 0px;
-  padding: 0.3rem 0.75rem;
-  margin-top: 0.5rem;
-  border-radius: 0.2rem;
-  border: none;
-  cursor: pointer;
-  color: white;
-  background: transparent;
-  animation: bounce 0.2s infinite alternate;
-}
-.closeDate_button::after {
-  font-size: 14px;
-}
-
-.closeDate_button::after {
-  content: 'Close Date';
-}
-.closeDate_button:hover::after {
-  content: 'Add Close Date';
-}
-.closeDate_button:hover {
-  background-color: white;
-  color: $dark-green !important;
-}
-.remove-field {
-  border: 1px solid white;
-  padding: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.1rem;
-}
 .recommend {
   position: absolute;
   bottom: 20vh;
@@ -1613,13 +1518,6 @@ export default {
   box-shadow: 1px 2px 2px $very-light-gray;
   height: 40vh;
   width: 30vw;
-  &__validation {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 0rem 1rem;
-  }
   &__header {
     display: flex;
     flex-direction: row;
@@ -1647,35 +1545,12 @@ export default {
     padding: 0.5rem;
   }
 }
-
-.margin-top {
-  margin-top: 8rem;
-}
-.field_button {
-  padding: 0.3rem 0.75rem;
-  margin-top: 0.5rem;
-  border-radius: 0.2rem;
-  border: none;
-  cursor: pointer;
-  color: $dark-green;
-  background-color: white;
-}
-.bouncy {
-  animation: bounce 0.2s infinite alternate;
-}
 .drop {
   border: 2px solid $soft-gray;
   border-radius: 0.25rem;
   color: $very-light-gray;
   padding: 0.25rem 0.5rem;
   max-height: 2rem;
-}
-::v-deep .tn-dropdown__options__option {
-  padding-top: 0.375rem;
-}
-::v-deep .tn-dropdown__selection-container {
-  height: 2.5rem;
-  box-shadow: none !important;
 }
 .invisible {
   display: none;
@@ -1686,12 +1561,6 @@ export default {
   height: 1.7rem;
   width: 1.7rem;
   margin-right: 0.25rem;
-}
-.tn-dropdown__selected-items__item-selection--muted {
-  font-size: 10px;
-}
-.filtered-green {
-  filter: invert(39%) sepia(96%) saturate(373%) hue-rotate(94deg) brightness(104%) contrast(94%);
 }
 #drag {
   filter: invert(60%);
@@ -1705,14 +1574,6 @@ export default {
   flex-direction: row;
   padding: 0.2rem 0rem;
   border-radius: 0.2rem;
-}
-.option {
-  background: transparent;
-  color: white;
-  padding-bottom: 0.15rem;
-  border: none;
-  border-bottom: 2px solid $dark-green;
-  cursor: pointer;
 }
 .center {
   display: flex;
@@ -1731,36 +1592,6 @@ export default {
 .slack-form-builder {
   padding: 0rem 3rem;
   color: $base-gray;
-  &__sf-fields,
-  &__sf-validations {
-    margin-right: 2rem;
-  }
-}
-.paginator {
-  @include paginator();
-  &__container {
-    border: none;
-    display: flex;
-    justify-content: flex-start;
-    width: 11rem;
-    font-size: 14px;
-    margin-top: 1rem;
-  }
-  &__text {
-    width: 6rem;
-  }
-}
-.fields {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-}
-.save-button {
-  display: flex;
-  justify-content: center;
-  padding-top: 4rem;
-  padding-bottom: 1rem;
 }
 .slot-icon {
   display: flex;
@@ -1781,49 +1612,6 @@ export default {
 }
 .primary-button:disabled {
   background-color: $soft-gray;
-}
-
-.field-title {
-  font-size: 14px;
-  margin-left: 1rem;
-
-  &__bold {
-    font-family: #{$bold-font-family};
-    margin: 2rem 0 0 1rem;
-  }
-}
-
-.meeting-type {
-  @include input-field();
-  padding: 0.5rem;
-  width: 15rem;
-
-  &__list {
-    margin-top: 0.2rem;
-    width: 80%;
-    overflow: hidden;
-  }
-}
-.stages-list {
-  margin-top: -1rem;
-  font-size: 11px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
-}
-
-.space {
-  margin: 1em;
-}
-h2 {
-  margin: -2px;
-  font-size: 1.5rem;
-}
-.recap {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: -2rem;
 }
 img:hover {
   cursor: pointer;
@@ -1864,15 +1652,6 @@ img:hover {
   letter-spacing: 1px;
   cursor: pointer;
 }
-.example-footer {
-  border-top: 1px solid $very-light-gray;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  margin-top: auto;
-  width: 100%;
-  height: 10%;
-}
 .example--footer {
   position: sticky;
   display: flex;
@@ -1894,9 +1673,6 @@ img:hover {
   filter: alpha(opacity=50);
   font-size: 3.5rem;
   transform: rotate(-45deg);
-}
-::v-deep .multiselect__content {
-  max-height: 28vh;
 }
 .collection_fields {
   background-color: $white;
@@ -1924,45 +1700,11 @@ img:hover {
   position: relative;
   border: 1px solid #e8e8e8;
 }
-.opportunity__column {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  margin-right: 2rem;
-}
 .opportunity__row {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-}
-
-.popular_fields {
-  text-align: center;
-}
-.continue__button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.4rem 1rem;
-  border-radius: 0.3rem;
-  line-height: 1.14;
-  text-indent: none;
-  border-style: none;
-  letter-spacing: 0.03rem;
-  color: $dark-green;
-  background-color: white;
-  cursor: pointer;
-  height: 2rem;
-  width: 10rem;
-  font-size: 1.02rem;
-  margin-right: 0.5rem;
-}
-.row {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
 }
 .row__ {
   display: flex;
