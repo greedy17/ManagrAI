@@ -18,9 +18,12 @@ def create_configs_for_target(target, user, config):
             organization=user.organization, user_level=target, is_active=True,
         )
     elif target == "SELF":
-        return config
+        config["recipient_type"] = "SLACK_CHANNEL"
+        return [config]
     elif target == "ALL":
         users = User.objects.filter(organization=user.organization, is_active=True)
+    else:
+        users = User.objects.filter(id=target)
     new_configs = []
     for user in users:
         if user.has_slack_integration:
@@ -447,6 +450,7 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
                     )
                     if len(created_configs):
                         all_configs = [*all_configs, *created_configs]
+                print(all_configs)
                 new_configs = list(map(lambda x: {**x, "template": data.id}, all_configs))
                 if not len(new_configs):
                     raise Exception("CREATING CONFIG ERROR <USERS DO NOT HAVE A DEFAULT CHANNEL>")
