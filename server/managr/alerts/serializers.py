@@ -8,34 +8,35 @@ from . import models as alert_models
 
 # REF SERIALIZERS
 ##  SHORTENED SERIALIZERS FOR REF OBJECTS
-def create_configs_for_target(target, user, config):
+def create_configs_for_target(target, template_user, config):
     if target in ["MANAGERS", "REPS", "SDR"]:
         if target == "MANAGERS":
             target = "MANAGER"
         elif target == "REPS":
             target = "REP"
         users = User.objects.filter(
-            organization=user.organization, user_level=target, is_active=True,
+            organization=template_user.organization, user_level=target, is_active=True,
         )
     elif target == "SELF":
         config["recipient_type"] = "SLACK_CHANNEL"
         return [config]
     elif target == "ALL":
-        users = User.objects.filter(organization=user.organization, is_active=True)
+        users = User.objects.filter(organization=template_user.organization, is_active=True)
     else:
         users = User.objects.filter(id=target)
     new_configs = []
     print(f"CREATE CONFIG USERS LIST FOR {target} <{users}>")
     for user in users:
         if user.has_slack_integration:
-            config["recipients"] = [
+            config_copy = config
+            config_copy["recipients"] = [
                 user.slack_integration.zoom_channel
                 if user.slack_integration.zoom_channel
                 else user.slack_integration.channel
             ]
-            config["alert_targets"] = [str(user.id)]
-            config["recipient_type"] = "SLACK_CHANNEL"
-            new_configs.append(config)
+            config_copy["alert_targets"] = [str(user.id)]
+            config_copy["recipient_type"] = "SLACK_CHANNEL"
+            new_configs.append(config_copy)
     return new_configs
 
 
