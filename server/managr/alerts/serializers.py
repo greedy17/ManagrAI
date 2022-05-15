@@ -38,6 +38,17 @@ def create_configs_for_target(target, user, config):
     return new_configs
 
 
+def remove_duplicate_alert_configs(configs):
+    recipients_in_configs = set()
+    sorted_configs = []
+    for config in configs:
+        if config["alert_targets"][0] not in recipients_in_configs:
+            sorted_configs.append(config)
+            recipients_in_configs.add(config["alert_targets"][0])
+
+    return sorted_configs
+
+
 class AlertTemplateRefSerializer(serializers.ModelSerializer):
     class Meta:
         model = alert_models.AlertTemplate
@@ -450,6 +461,8 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
                     )
                     if len(created_configs):
                         all_configs = [*all_configs, *created_configs]
+                print(all_configs)
+                all_configs = remove_duplicate_alert_configs(all_configs)
                 print(all_configs)
                 new_configs = list(map(lambda x: {**x, "template": data.id}, all_configs))
                 if not len(new_configs):
