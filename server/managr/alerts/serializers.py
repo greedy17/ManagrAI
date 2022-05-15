@@ -2,12 +2,51 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from managr.salesforce.serializers import SObjectFieldSerializer
 from managr.core.serializers import UserSerializer
-
+from managr.core.models import User
 from . import constants as alert_consts
 from . import models as alert_models
 
 # REF SERIALIZERS
 ##  SHORTENED SERIALIZERS FOR REF OBJECTS
+def create_configs_for_target(target, user, config):
+    if target in ["MANAGERS", "REPS", "SDR"]:
+        if target == "MANAGERS":
+            target = "MANAGER"
+        elif target == "REPS":
+            target = "REP"
+        users = User.objects.filter(
+            organization=user.organization, user_level=target, is_active=True,
+        )
+    elif target == "SELF":
+        config["recipient_type"] = "SLACK_CHANNEL"
+        return [config]
+    elif target == "ALL":
+        users = User.objects.filter(organization=user.organization, is_active=True)
+    else:
+        users = User.objects.filter(id=target)
+    new_configs = []
+    for user in users:
+        if user.has_slack_integration:
+            config["recipients"] = [
+                user.slack_integration.zoom_channel
+                if user.slack_integration.zoom_channel
+                else user.slack_integration.channel
+            ]
+            config["alert_targets"] = [str(user.id)]
+            config["recipient_type"] = "SLACK_CHANNEL"
+            new_configs.append(config)
+    return new_configs
+
+
+def remove_duplicate_alert_configs(configs):
+    recipients_in_configs = set()
+    sorted_configs = []
+    for config in configs:
+        if config["alert_targets"][0] not in recipients_in_configs:
+            sorted_configs.append(config)
+            recipients_in_configs.add(config["alert_targets"][0])
+
+    return sorted_configs
 
 
 class AlertTemplateRefSerializer(serializers.ModelSerializer):
@@ -378,7 +417,6 @@ class AlertConfigWriteSerializer(serializers.ModelSerializer):
 
 
 class AlertTemplateWriteSerializer(serializers.ModelSerializer):
-
     new_groups = serializers.ListField(required=False)
     message_template = serializers.DictField(required=False)
     new_configs = serializers.ListField(required=False)
@@ -401,6 +439,7 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
         new_groups = validated_data.pop("new_groups", [])
         message_template = validated_data.pop("message_template")
         new_configs = validated_data.pop("new_configs", [])
+        direct_to_users = self.context.data.get("direct_to_users", False)
         data = super().create(validated_data, *args, **kwargs)
         message_template = AlertMessageTemplateWriteSerializer(
             data={**message_template, "template": data.id}
@@ -414,7 +453,22 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
             _new_groups.is_valid(raise_exception=True)
             _new_groups.save()
         if len(new_configs):
-            new_configs = list(map(lambda x: {**x, "template": data.id}, new_configs))
+            if direct_to_users:
+                all_configs = list()
+                for target in new_configs[0]["alert_targets"]:
+                    created_configs = create_configs_for_target(
+                        target, validated_data.get("user"), new_configs[0]
+                    )
+                    if len(created_configs):
+                        all_configs = [*all_configs, *created_configs]
+                print(all_configs)
+                all_configs = remove_duplicate_alert_configs(all_configs)
+                print(all_configs)
+                new_configs = list(map(lambda x: {**x, "template": data.id}, all_configs))
+                if not len(new_configs):
+                    raise Exception("CREATING CONFIG ERROR <USERS DO NOT HAVE A DEFAULT CHANNEL>")
+            else:
+                new_configs = list(map(lambda x: {**x, "template": data.id}, new_configs))
             _new_configs = AlertConfigWriteSerializer(
                 data=new_configs, many=True, context=self.context,
             )
