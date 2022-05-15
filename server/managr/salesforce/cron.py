@@ -321,7 +321,8 @@ def init_sf_field_sync(user):
 
     scheduled_time = timezone.now()
     formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
-    emit_gen_next_object_field_sync(str(user.id), operations, formatted_time)
+    for_dev = False
+    emit_gen_next_object_field_sync(str(user.id), operations, for_dev, formatted_time)
     return
 
 

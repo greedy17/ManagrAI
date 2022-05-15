@@ -25,6 +25,7 @@ def create_configs_for_target(target, user, config):
     else:
         users = User.objects.filter(id=target)
     new_configs = []
+    print(f"CREATE CONFIG USERS LIST FOR {target} <{users}>")
     for user in users:
         if user.has_slack_integration:
             config["recipients"] = [
