@@ -5,6 +5,7 @@ from managr.core.serializers import UserSerializer
 from managr.core.models import User
 from . import constants as alert_consts
 from . import models as alert_models
+from copy import copy
 
 # REF SERIALIZERS
 ##  SHORTENED SERIALIZERS FOR REF OBJECTS
@@ -28,7 +29,7 @@ def create_configs_for_target(target, template_user, config):
     print(f"CREATE CONFIG USERS LIST FOR {target} <{users}>")
     for user in users:
         if user.has_slack_integration:
-            config_copy = config
+            config_copy = copy(config)
             config_copy["recipients"] = [
                 user.slack_integration.zoom_channel
                 if user.slack_integration.zoom_channel
@@ -37,6 +38,7 @@ def create_configs_for_target(target, template_user, config):
             config_copy["alert_targets"] = [str(user.id)]
             config_copy["recipient_type"] = "SLACK_CHANNEL"
             new_configs.append(config_copy)
+    print(new_configs)
     return new_configs
 
 
