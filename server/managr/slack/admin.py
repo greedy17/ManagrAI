@@ -18,8 +18,11 @@ class CustomFormFieldInline(admin.StackedInline):
         if parent:
             if db_field.name == "field":
                 queryset = sf_models.SObjectField.objects.filter(
-                    Q(salesforce_account__user__organization=parent.organization)
-                    & Q(Q(salesforce_object=parent.resource) | Q(is_public=True))
+                    (
+                        Q(salesforce_account__user__organization=parent.organization)
+                        & Q(salesforce_object=parent.resource)
+                    )
+                    | Q(is_public=True)
                 )
                 return ModelChoiceField(queryset)
         else:
