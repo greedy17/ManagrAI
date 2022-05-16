@@ -129,16 +129,6 @@
       </div>
 
       <div v-if="userLevel == 'REP' && !user.onboarding" class="right">
-        <div class="nameOrg" style="margin-top: 0.75rem">
-          <!-- <p>{{ user.fullName }}</p> -->
-          <p>({{ user.email }})</p>
-        </div>
-
-        <div>
-          <router-link class="profile-wrapper" :to="{ name: 'ProfilePage' }">
-            <img src="@/assets/images/profile.png" style="height: 1rem" alt="" />
-          </router-link>
-        </div>
         <div class="tooltip">
           <img
             style="height: 1.4rem; filter: invert(30%)"
@@ -150,6 +140,13 @@
             <div class="tip">Email Us: support@mymanagr.com</div>
           </div>
         </div>
+        <div>
+          <router-link class="profile-wrapper" :to="{ name: 'ProfilePage' }">
+            <small>{{ user.email }}</small>
+            <img src="@/assets/images/profile.png" alt="" />
+          </router-link>
+        </div>
+
         <div class="center">
           <router-link class="pad" :to="{ name: 'Login' }">
             <button class="logout">
