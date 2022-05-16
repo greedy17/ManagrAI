@@ -632,9 +632,8 @@ export default {
             type: 'success',
           })
         } catch (e) {
-          console.log(e)
           this.$Alert.alert({
-            message: e,
+            message: 'An error occured saving template',
             timeout: 2000,
             type: 'error',
           })
@@ -650,48 +649,6 @@ export default {
         start = this.editor.selection.lastRange.index
       }
       this.editor.insertText(start, `{ ${val} }`)
-    },
-    onAddAlertGroup() {
-      // length determines order
-      const order = this.alertTemplateForm.field.alertGroups.groups.length
-      if (order >= 3) {
-        this.$Alert.alert({ message: 'You can only add 3 groups', timeout: 2000 })
-        return
-      }
-      // set next order
-
-      this.alertTemplateForm.addToArray('alertGroups', new AlertGroupForm())
-      this.alertTemplateForm.field.alertGroups.groups[order].field.groupOrder.value = order
-    },
-    onAddAlertSetting() {
-      if (this.alertTemplateForm.field.alertConfig.groups.length >= 3) {
-        this.$Alert.alert({ message: 'You can only add 3 configurations', timeout: 2000 })
-        return
-      }
-      this.alertTemplateForm.addToArray('alertConfig', new AlertConfigForm())
-    },
-    onRemoveAlertGroup(i) {
-      // get order and update options
-
-      if (this.alertTemplateForm.field.alertGroups.groups.length - 1 <= 0) {
-        return
-      }
-
-      const order = this.alertTemplateForm.field.alertGroups.groups[i].field.groupOrder.value
-
-      this.alertTemplateForm.removeFromArray('alertGroups', i)
-
-      let greaterThan = this.alertTemplateForm.field.alertGroups.groups.slice(i)
-
-      greaterThan.forEach((el, index) => {
-        el.field.groupOrder.value = order + index
-      })
-    },
-    onRemoveSetting(i) {
-      if (this.alertTemplateForm.field.alertConfig.groups.length - 1 <= 0) {
-        return
-      }
-      this.alertTemplateForm.removeFromArray('alertConfig', i)
     },
     async onSearchFields(v) {
       this.fields.pagination = new Pagination()
