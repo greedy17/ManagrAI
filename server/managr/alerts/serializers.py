@@ -5,36 +5,38 @@ from managr.core.serializers import UserSerializer
 from managr.core.models import User
 from . import constants as alert_consts
 from . import models as alert_models
+from copy import copy
 
 # REF SERIALIZERS
 ##  SHORTENED SERIALIZERS FOR REF OBJECTS
-def create_configs_for_target(target, user, config):
+def create_configs_for_target(target, template_user, config):
     if target in ["MANAGERS", "REPS", "SDR"]:
         if target == "MANAGERS":
             target = "MANAGER"
         elif target == "REPS":
             target = "REP"
         users = User.objects.filter(
-            organization=user.organization, user_level=target, is_active=True,
+            organization=template_user.organization, user_level=target, is_active=True,
         )
     elif target == "SELF":
         config["recipient_type"] = "SLACK_CHANNEL"
         return [config]
     elif target == "ALL":
-        users = User.objects.filter(organization=user.organization, is_active=True)
+        users = User.objects.filter(organization=template_user.organization, is_active=True)
     else:
         users = User.objects.filter(id=target)
     new_configs = []
     for user in users:
         if user.has_slack_integration:
-            config["recipients"] = [
+            config_copy = copy(config)
+            config_copy["recipients"] = [
                 user.slack_integration.zoom_channel
                 if user.slack_integration.zoom_channel
                 else user.slack_integration.channel
             ]
-            config["alert_targets"] = [str(user.id)]
-            config["recipient_type"] = "SLACK_CHANNEL"
-            new_configs.append(config)
+            config_copy["alert_targets"] = [str(user.id)]
+            config_copy["recipient_type"] = "SLACK_CHANNEL"
+            new_configs.append(config_copy)
     return new_configs
 
 
@@ -461,9 +463,7 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
                     )
                     if len(created_configs):
                         all_configs = [*all_configs, *created_configs]
-                print(all_configs)
                 all_configs = remove_duplicate_alert_configs(all_configs)
-                print(all_configs)
                 new_configs = list(map(lambda x: {**x, "template": data.id}, all_configs))
                 if not len(new_configs):
                     raise Exception("CREATING CONFIG ERROR <USERS DO NOT HAVE A DEFAULT CHANNEL>")
