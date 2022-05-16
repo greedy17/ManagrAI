@@ -133,7 +133,7 @@
 import PipelineNameSection from '@/components/PipelineNameSection'
 import PipelineField from '@/components/PipelineField'
 import { CollectionManager } from '@thinknimble/tn-models'
-import { SObjects, SObjectField } from '@/services/salesforce'
+import { SObjectField } from '@/services/salesforce'
 
 export default {
   name: 'WorkflowRow',

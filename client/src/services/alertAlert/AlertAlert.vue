@@ -15,13 +15,9 @@
 <script>
 import throttle from 'lodash.throttle'
 import store, { removeAlert } from './store'
-import AlertAlertItem from './AlertAlertItem.vue'
 
 export default {
   name: 'AlertAlert',
-  components: {
-    AlertAlertItem,
-  },
   data() {
     return {
       top: this.oneRem * 0.5,

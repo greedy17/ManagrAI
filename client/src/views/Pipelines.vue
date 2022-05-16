@@ -778,8 +778,6 @@ import { SObjects, SObjectPicklist, MeetingWorkflows } from '@/services/salesfor
 import AlertTemplate from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
 import SlackOAuth from '@/services/slack'
-import PipelineNameSection from '@/components/PipelineNameSection'
-import PipelineField from '@/components/PipelineField'
 import PipelineTableRow from '@/components/PipelineTableRow'
 import PipelineHeader from '@/components/PipelineHeader'
 import User from '@/services/users'
@@ -792,8 +790,6 @@ export default {
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     SkeletonBox: () => import(/* webpackPrefetch: true */ '@/components/SkeletonBox'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
-    PipelineNameSection,
-    PipelineField,
     PipelineTableRow,
     PipelineHeader,
     WorkflowHeader,

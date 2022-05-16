@@ -201,7 +201,6 @@ export default {
       isLoading: this.loading,
     }
   },
-  components: {},
   watch: {
     value: {
       immediate: true,

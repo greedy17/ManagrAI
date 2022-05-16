@@ -15,7 +15,6 @@
 
 <script>
 export default {
-  components: {},
   props: {
     id: {
       type: String,
