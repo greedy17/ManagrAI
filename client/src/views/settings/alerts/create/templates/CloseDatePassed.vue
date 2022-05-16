@@ -136,8 +136,8 @@
               <label :class="!create ? 'green' : ''">Select #channel</label>
               <ToggleCheckBox
                 style="margin-left: 0.25rem; margin-right: 0.25rem"
-                @input="changeCreate"
                 :value="create"
+                @input="changeCreate"
                 offColor="#41b883"
                 onColor="#41b883"
               />
@@ -214,37 +214,16 @@
                     </p>
                   </template>
                 </Multiselect>
-                <!-- 
-                  <!-- 
-                <!-- 
-                  <DropDownSearch
-                    :items.sync="userChannelOpts.channels"
-                    :itemsRef.sync="form.field._recipients.value"
-                    v-model="form.field.recipients.value"
-                    @input="form.field.recipients.validate()"
-                    displayKey="name"
-                    valueKey="id"
-                    nullDisplay="Channels"
-                    :hasNext="!!userChannelOpts.nextCursor"
-                    @load-more="listUserChannels(userChannelOpts.nextCursor)"
-                    searchable
-                    local
-                  >
-                    <template v-slot:tn-dropdown-option="{ option }">
-                      <img
-                        v-if="option.isPrivate == true"
-                        class="card-img"
-                        style="width: 1rem; height: 1rem; margin-right: 0.2rem"
-                        src="@/assets/images/lockAsset.png"
-                      />
-                      {{ option['name'] }}
-                    </template>
-                  </DropDownSearch> -->
               </template>
 
-              <div class="sendAll">
+              <div v-if="userLevel !== 'REP'" class="sendAll">
                 <input type="checkbox" id="allUsers" v-model="directToUsers" />
                 <label for="allUsers">Send directly to users</label>
+              </div>
+
+              <div v-else class="sendAll">
+                <input type="checkbox" id="allUsers" v-model="directToUsers" />
+                <label for="allUsers">Send to primary channel</label>
               </div>
             </div>
           </div>
@@ -280,11 +259,6 @@
 </template>
 
 <script>
-/**
- * Components
- * */
-// Pacakges
-
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 //Internal
@@ -449,13 +423,6 @@ export default {
     },
     changeCreate() {
       this.create = !this.create
-      if (
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value !==
-        'SLACK_CHANNEL'
-      ) {
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value =
-          'SLACK_CHANNEL'
-      }
     },
     async listUserChannels(cursor = null) {
       this.dropdownLoading = true
@@ -470,7 +437,6 @@ export default {
       }, 500)
     },
     async createChannel(name) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
       const res = await SlackOAuth.api.createChannel(name)
       if (res.channel) {
         this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = res.channel
@@ -662,6 +628,7 @@ export default {
             user: this.$store.state.user.id,
             directToUsers: this.directToUsers,
           })
+          console.log(res)
           this.userConfigForm.field.activatedManagrConfigs.value.push(res.title)
           this.handleUpdate()
           this.$router.push({ name: 'CreateNew' })
@@ -672,8 +639,8 @@ export default {
           })
         } catch (e) {
           this.$Alert.alert({
-            message: 'An error occured saving template',
-            timeout: 2000,
+            message: 'Error, one or more of your users do not have slack connected',
+            timeout: 3000,
             type: 'error',
           })
         } finally {
@@ -688,48 +655,6 @@ export default {
         start = this.editor.selection.lastRange.index
       }
       this.editor.insertText(start, `{ ${val} }`)
-    },
-    onAddAlertGroup() {
-      // length determines order
-      const order = this.alertTemplateForm.field.alertGroups.groups.length
-      if (order >= 3) {
-        this.$Alert.alert({ message: 'You can only add 3 groups', timeout: 2000 })
-        return
-      }
-      // set next order
-
-      this.alertTemplateForm.addToArray('alertGroups', new AlertGroupForm())
-      this.alertTemplateForm.field.alertGroups.groups[order].field.groupOrder.value = order
-    },
-    onAddAlertSetting() {
-      if (this.alertTemplateForm.field.alertConfig.groups.length >= 3) {
-        this.$Alert.alert({ message: 'You can only add 3 configurations', timeout: 2000 })
-        return
-      }
-      this.alertTemplateForm.addToArray('alertConfig', new AlertConfigForm())
-    },
-    onRemoveAlertGroup(i) {
-      // get order and update options
-
-      if (this.alertTemplateForm.field.alertGroups.groups.length - 1 <= 0) {
-        return
-      }
-
-      const order = this.alertTemplateForm.field.alertGroups.groups[i].field.groupOrder.value
-
-      this.alertTemplateForm.removeFromArray('alertGroups', i)
-
-      let greaterThan = this.alertTemplateForm.field.alertGroups.groups.slice(i)
-
-      greaterThan.forEach((el, index) => {
-        el.field.groupOrder.value = order + index
-      })
-    },
-    onRemoveSetting(i) {
-      if (this.alertTemplateForm.field.alertConfig.groups.length - 1 <= 0) {
-        return
-      }
-      this.alertTemplateForm.removeFromArray('alertConfig', i)
     },
     async onSearchFields(v) {
       this.fields.pagination = new Pagination()
@@ -872,6 +797,7 @@ export default {
     this.setDefaultChannel()
   },
   beforeMount() {
+    this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
     this.alertTemplateForm.field.title.value = 'Close Date Passed'
     this.alertTemplateForm.field.isActive.value = true
