@@ -441,7 +441,6 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
         new_groups = validated_data.pop("new_groups", [])
         message_template = validated_data.pop("message_template")
         new_configs = validated_data.pop("new_configs", [])
-        direct_to_users = self.context.data.get("direct_to_users", False)
         data = super().create(validated_data, *args, **kwargs)
         message_template = AlertMessageTemplateWriteSerializer(
             data={**message_template, "template": data.id}
@@ -455,20 +454,7 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
             _new_groups.is_valid(raise_exception=True)
             _new_groups.save()
         if len(new_configs):
-            if direct_to_users:
-                all_configs = list()
-                for target in new_configs[0]["alert_targets"]:
-                    created_configs = create_configs_for_target(
-                        target, validated_data.get("user"), new_configs[0]
-                    )
-                    if len(created_configs):
-                        all_configs = [*all_configs, *created_configs]
-                all_configs = remove_duplicate_alert_configs(all_configs)
-                new_configs = list(map(lambda x: {**x, "template": data.id}, all_configs))
-                if not len(new_configs):
-                    raise Exception("CREATING CONFIG ERROR <USERS DO NOT HAVE A DEFAULT CHANNEL>")
-            else:
-                new_configs = list(map(lambda x: {**x, "template": data.id}, new_configs))
+            new_configs = list(map(lambda x: {**x, "template": data.id}, new_configs))
             _new_configs = AlertConfigWriteSerializer(
                 data=new_configs, many=True, context=self.context,
             )
