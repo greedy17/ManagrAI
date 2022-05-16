@@ -2532,12 +2532,32 @@ h3 {
   }
   &__body {
     color: $base-gray;
+    font-family: $base-font-family;
+    word-wrap: break-word;
+    white-space: pre-wrap;
   }
   &__date {
     color: $mid-gray;
     font-size: 11px;
   }
 }
+// .note-section::-webkit-scrollbar {
+//   width: 0px; /* Mostly for vertical scrollbars */
+//   height: 8px; /* Mostly for horizontal scrollbars */
+// }
+// .note-section::-webkit-scrollbar-thumb {
+//   background-color: $dark-green;
+//   box-shadow: inset 4px 4px 8px 0 rgba(rgb(243, 240, 240), 0.5);
+//   border-radius: 0.3rem;
+// }
+// .note-section::-webkit-scrollbar-track {
+//   // background: $soft-gray;
+//   box-shadow: inset 4px 4px 8px 0 $soft-gray;
+//   border-radius: 0.3rem;
+// }
+// .note-section::-webkit-scrollbar-track-piece:end {
+//   margin-left: 1rem;
+// }
 .table-cell-header {
   display: table-cell;
   padding: 1.25vh 3vh;
