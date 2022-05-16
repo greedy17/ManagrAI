@@ -16,7 +16,7 @@
 
         <div class="card__body">
           <img
-            style="height: 1.5rem; margin-right: 0.5rem"
+            style="height: 1.25rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -26,11 +26,7 @@
             alt=""
             id="plus"
           />
-          <img
-            style="height: 1.5rem; margin-right: 0.5rem"
-            src="@/assets/images/slackLogo.png"
-            alt=""
-          />
+          <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
         </div>
         <div class="card__footer">
           <router-link :to="{ name: 'CreateOpportunity' }">
@@ -48,7 +44,7 @@
 
         <div class="card__body">
           <img
-            style="height: 1.5rem; margin-right: 0.5rem"
+            style="height: 1.25rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -58,11 +54,7 @@
             alt=""
             id="plus"
           />
-          <img
-            style="height: 1.5rem; margin-right: 0.5rem"
-            src="@/assets/images/slackLogo.png"
-            alt=""
-          />
+          <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
         </div>
         <div class="card__footer">
           <router-link :to="{ name: 'UpdateContacts' }">
@@ -80,7 +72,7 @@
 
         <div class="card__body">
           <img
-            style="height: 1.5rem; margin-right: 0.5rem"
+            style="height: 1.25rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -90,11 +82,7 @@
             alt=""
             id="plus"
           />
-          <img
-            style="height: 1.5rem; margin-right: 0.5rem"
-            src="@/assets/images/slackLogo.png"
-            alt=""
-          />
+          <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
         </div>
         <div class="card__footer">
           <router-link :to="{ name: 'CreateLeads' }">
@@ -112,7 +100,7 @@
 
         <div class="card__body">
           <img
-            style="height: 1.5rem; margin-right: 0.5rem"
+            style="height: 1.25rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -122,11 +110,7 @@
             id="plus"
             alt=""
           />
-          <img
-            style="height: 1.5rem; margin-right: 0.5rem"
-            src="@/assets/images/slackLogo.png"
-            alt=""
-          />
+          <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
         </div>
         <div class="card__footer">
           <router-link :to="{ name: 'UpdateLeads' }">
@@ -144,7 +128,7 @@
 
         <div class="card__body">
           <img
-            style="height: 1.5rem; margin-right: 0.5rem"
+            style="height: 1.25rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -154,11 +138,7 @@
             alt=""
             id="plus"
           />
-          <img
-            style="height: 1.5rem; margin-right: 0.5rem"
-            src="@/assets/images/slackLogo.png"
-            alt=""
-          />
+          <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
         </div>
         <div class="card__footer">
           <router-link :to="{ name: 'CreateAccounts' }">
@@ -176,7 +156,7 @@
 
         <div class="card__body">
           <img
-            style="height: 1.5rem; margin-right: 0.5rem"
+            style="height: 1.25rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -186,11 +166,7 @@
             alt=""
             id="plus"
           />
-          <img
-            style="height: 1.5rem; margin-right: 0.5rem"
-            src="@/assets/images/slackLogo.png"
-            alt=""
-          />
+          <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
         </div>
         <div class="card__footer">
           <router-link :to="{ name: 'UpdateAccounts' }">
