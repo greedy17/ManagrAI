@@ -200,17 +200,13 @@ import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
 
 import debounce from 'lodash.debounce'
-import { quillEditor } from 'vue-quill-editor'
 import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
 
 //Internal
 import AlertOperandModal from '@/views/settings/alerts/view/_AlertOperandModal'
 import AlertGroupModal from '@/views/settings/alerts/view/_AlertGroupModal'
 import AlertSettingsModal from '@/views/settings/alerts/view/_AlertSettingsModal'
-import ListContainer from '@/components/ListContainer'
-import ListItem from '@/components/ListItem'
 import FormField from '@/components/forms/FormField'
-import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotificationTemplate'
 /**
  * Services
  *
@@ -242,10 +238,6 @@ export default {
   name: 'AlertsEditPanel',
   components: {
     FormField,
-    SlackNotificationTemplate,
-    quillEditor,
-    ListItem,
-    ListContainer,
     PulseLoadingSpinner,
     AlertOperandModal,
     AlertGroupModal,

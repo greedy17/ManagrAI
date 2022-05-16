@@ -191,7 +191,6 @@
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 
 //Internal
-import ListContainer from '@/components/ListContainer'
 import FormField from '@/components/forms/FormField'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 /**
@@ -211,7 +210,6 @@ export default {
    */
   name: 'AlertSettingsModal',
   components: {
-    ListContainer,
     ToggleCheckBox,
     FormField,
     PulseLoadingSpinnerButton,

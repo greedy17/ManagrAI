@@ -20,15 +20,13 @@
 /**
  * Components
  * */
-// Pacakges
-import ToggleCheckBox from '@thinknimble/togglecheckbox'
 //Internal
 import CommitOperandRow from '@/views/settings/alerts/create/CommitOperandRow'
 
 /**
  * Services
  */
-import { AlertOperandForm, AlertGroupForm } from '@/services/alerts/'
+import { AlertGroupForm } from '@/services/alerts/'
 
 export default {
   /**
@@ -38,7 +36,7 @@ export default {
    *
    */
   name: 'CommitAlertGroup',
-  components: { ToggleCheckBox, CommitOperandRow },
+  components: { CommitOperandRow },
 
   props: {
     form: { type: AlertGroupForm },

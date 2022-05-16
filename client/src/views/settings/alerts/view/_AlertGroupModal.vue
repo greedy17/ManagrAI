@@ -20,12 +20,8 @@
  * */
 // Pacakges
 import AlertGroup from '../create/_AlertGroup'
-import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 
-//Internal
-import ListContainer from '@/components/ListContainer'
-import FormField from '@/components/forms/FormField'
 /**
  * Services
  */
@@ -40,9 +36,6 @@ export default {
    */
   name: 'AlertGroupModal',
   components: {
-    ListContainer,
-    ToggleCheckBox,
-    FormField,
     AlertGroup,
     PulseLoadingSpinnerButton,
   },

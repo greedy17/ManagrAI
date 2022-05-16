@@ -23,11 +23,8 @@
  * */
 // Pacakges
 import AlertOperandRow from '../create/_AlertOperandRow.vue'
-import ToggleCheckBox from '@thinknimble/togglecheckbox'
 
 //Internal
-import ListContainer from '@/components/ListContainer'
-import FormField from '@/components/forms/FormField'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 /**
  * Services
@@ -43,9 +40,6 @@ export default {
    */
   name: 'AlertOperandModal',
   components: {
-    ListContainer,
-    ToggleCheckBox,
-    FormField,
     AlertOperandRow,
     AlertGroupOperand,
     PulseLoadingSpinnerButton,

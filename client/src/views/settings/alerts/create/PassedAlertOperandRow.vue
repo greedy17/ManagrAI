@@ -87,11 +87,7 @@
 /**
  * Components
  * */
-// Pacakges
-import ToggleCheckBox from '@thinknimble/togglecheckbox'
-
 //Internal
-import ListContainer from '@/components/ListContainer'
 import FormField from '@/components/forms/FormField'
 /**
  * Services
@@ -117,7 +113,7 @@ export default {
    *
    */
   name: 'PassedAlertOperandRow',
-  components: { ListContainer, ToggleCheckBox, FormField },
+  components: { FormField },
   props: {
     form: { type: AlertOperandForm },
     resourceType: { type: String },

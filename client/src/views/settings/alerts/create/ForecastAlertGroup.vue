@@ -20,8 +20,6 @@
 /**
  * Components
  * */
-// Pacakges
-import ToggleCheckBox from '@thinknimble/togglecheckbox'
 //Internal
 import ForecastOperandRow from '@/views/settings/alerts/create/ForecastOperandRow'
 
@@ -38,7 +36,7 @@ export default {
    *
    */
   name: 'ForecastAlertGroup',
-  components: { ToggleCheckBox, ForecastOperandRow },
+  components: { ForecastOperandRow },
 
   props: {
     form: { type: AlertGroupForm },

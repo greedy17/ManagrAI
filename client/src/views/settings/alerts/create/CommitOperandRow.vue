@@ -87,17 +87,14 @@
 /**
  * Components
  * */
-// Pacakges
-import ToggleCheckBox from '@thinknimble/togglecheckbox'
 
 //Internal
-import ListContainer from '@/components/ListContainer'
 import FormField from '@/components/forms/FormField'
 /**
  * Services
  */
 import { AlertOperandForm } from '@/services/alerts/'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 import {
   SObjectField,
   SObjectPicklist,
@@ -106,12 +103,7 @@ import {
 import {
   ALERT_DATA_TYPE_MAP,
   INPUT_TYPE_MAP,
-  INTEGER,
   STRING,
-  DATE,
-  DECIMAL,
-  BOOLEAN,
-  DATETIME,
 } from '@/services/salesforce/models'
 
 export default {
@@ -122,7 +114,7 @@ export default {
    *
    */
   name: 'CommitOperandRow',
-  components: { ListContainer, ToggleCheckBox, FormField },
+  components: { FormField },
   props: {
     form: { type: AlertOperandForm },
     resourceType: { type: String },

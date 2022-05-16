@@ -9,7 +9,6 @@
 
 <script>
 import FormField from '@/components/forms/FormField'
-import ExpandablePanel from '@/components/ExpandablePanel'
 
 import { AlertTemplateForm } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
@@ -25,7 +24,6 @@ export default {
   name: 'SmartAlertTemplateBuilder',
   components: {
     FormField,
-    ExpandablePanel,
   },
   data() {
     return {

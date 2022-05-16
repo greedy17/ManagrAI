@@ -252,17 +252,14 @@
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 
 //Internal
-import ListContainer from '@/components/ListContainer'
 import FormField from '@/components/forms/FormField'
 /**
  * Services
  */
 import { AlertOperandForm } from '@/services/alerts/'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
-import CollectionSearch from '@thinknimble/collection-search'
+import { CollectionManager } from '@thinknimble/tn-models'
 import {
   SObjectField,
-  SObjectValidations,
   SObjectPicklist,
   NON_FIELD_ALERT_OPTS,
 } from '@/services/salesforce'
@@ -273,7 +270,6 @@ import {
   STRING,
   DATE,
   DECIMAL,
-  BOOLEAN,
   DATETIME,
 } from '@/services/salesforce/models'
 
@@ -286,10 +282,8 @@ export default {
    */
   name: 'AlertOperandRow',
   components: {
-    ListContainer,
     ToggleCheckBox,
     FormField,
-    CollectionSearch,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   props: {

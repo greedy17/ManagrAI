@@ -20,8 +20,6 @@
 /**
  * Components
  * */
-// Pacakges
-import ToggleCheckBox from '@thinknimble/togglecheckbox'
 //Internal
 import DealOperandRow from '@/views/settings/alerts/create/DealOperandRow'
 
@@ -38,7 +36,7 @@ export default {
    *
    */
   name: 'DealAlertGroup',
-  components: { ToggleCheckBox, DealOperandRow },
+  components: { DealOperandRow },
 
   props: {
     form: { type: AlertGroupForm },

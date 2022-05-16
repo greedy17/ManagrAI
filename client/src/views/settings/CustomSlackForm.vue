@@ -1024,17 +1024,9 @@
 
 <script>
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
-import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
-import CheckBox from '../../components/CheckBoxUpdated'
-import ListItem from '@/components/ListItem'
-import ListContainer from '@/components/ListContainer'
-import Modal from '@/components/Modal'
 
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
-import CollectionSearch from '@thinknimble/collection-search'
 
-import CustomDropDown from '@/components/CustomDropDown'
-import Paginator from '@thinknimble/paginator'
 import ActionChoice from '@/services/action-choices'
 import draggable from 'vuedraggable'
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
@@ -1048,15 +1040,6 @@ export default {
   name: 'CustomSlackForm',
   components: {
     PulseLoadingSpinnerButton,
-    CheckBox,
-    PulseLoadingSpinner,
-    Paginator,
-    CollectionSearch,
-    ListItem,
-    ListContainer,
-    Modal,
-
-    CustomDropDown,
     draggable,
     ToggleCheckBox,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),

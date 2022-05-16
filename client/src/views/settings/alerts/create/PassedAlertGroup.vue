@@ -20,8 +20,6 @@
 /**
  * Components
  * */
-// Pacakges
-import ToggleCheckBox from '@thinknimble/togglecheckbox'
 //Internal
 import PassedAlertOperandRow from '@/views/settings/alerts/create/PassedAlertOperandRow'
 
@@ -38,7 +36,7 @@ export default {
    *
    */
   name: 'PassedAlertGroup',
-  components: { ToggleCheckBox, PassedAlertOperandRow },
+  components: { PassedAlertOperandRow },
 
   props: {
     form: { type: AlertGroupForm },

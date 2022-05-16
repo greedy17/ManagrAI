@@ -165,12 +165,9 @@
  * Components
  * */
 // Pacakges
-
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 
 //Internal
-
-import FormField from '@/components/forms/FormField'
 import AlertsEditPanel from '@/views/settings/alerts/view/_AlertsEditPanel'
 /**
  * Services
@@ -187,7 +184,6 @@ export default {
   name: 'AlertsTemplateList',
   components: {
     ToggleCheckBox,
-    FormField,
     AlertsEditPanel,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),

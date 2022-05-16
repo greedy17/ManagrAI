@@ -22,8 +22,6 @@
 /**
  * Components
  * */
-// Pacakges
-import ToggleCheckBox from '@thinknimble/togglecheckbox'
 //Internal
 import NextAlertOperandRow from '@/views/settings/alerts/create/NextAlertOperandRow'
 
@@ -40,7 +38,7 @@ export default {
    *
    */
   name: 'NextAlertGroup',
-  components: { ToggleCheckBox, NextAlertOperandRow },
+  components: { NextAlertOperandRow },
 
   props: {
     form: { type: AlertGroupForm },
