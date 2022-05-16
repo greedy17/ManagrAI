@@ -136,6 +136,7 @@
               <div v-else>
                 <template>
                   <Multiselect
+                    v-if="!directToUsers"
                     placeholder="Select Channel"
                     v-model="selectedChannel"
                     @input="setRecipient"
