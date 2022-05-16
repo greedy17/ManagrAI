@@ -27,7 +27,7 @@
           <p class="note-section__title">
             {{ note.saved_data__meeting_type ? note.saved_data__meeting_type + ':' : 'Untitled:' }}
           </p>
-          <p class="note-section__body">{{ note.saved_data__meeting_comments }}</p>
+          <pre class="note-section__body">{{ note.saved_data__meeting_comments }}</pre>
           <p class="note-section__date">{{ formatDateTime(note.submission_date) }}</p>
         </section>
       </div>
@@ -632,7 +632,7 @@
     <div ref="pipelines" v-if="!loading">
       <section class="flex-row-spread">
         <div v-if="!workflowCheckList.length && !primaryCheckList.length" class="flex-row">
-          <button @click.stop="showList = !showList" class="select-btn">
+          <button @click.stop="showList = !showList" class="select-btn1">
             {{ currentList }}
             <img
               v-if="!showList"
@@ -2272,8 +2272,27 @@ select {
   padding-left: 0.75rem;
   border-radius: 0;
 }
-.select-btn {
+.select-btn1 {
   border: 1px solid #e8e8e8;
+  min-height: 4.5vh;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.25rem;
+  background-color: white;
+  cursor: pointer;
+  color: $dark-green;
+  letter-spacing: 0.2px;
+  margin-right: 0.5rem;
+  transition: all 0.25s;
+
+  img {
+    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+  }
+}
+.select-btn {
+  border: 0.5px solid $dark-green;
   min-height: 4.5vh;
   padding: 0.5rem 1rem;
   display: flex;
@@ -2447,7 +2466,7 @@ h3 {
 }
 .modal-container {
   background-color: $white;
-  overflow: hidden;
+  overflow: auto;
   min-width: 32vw;
   max-width: 40vw;
   min-height: 44vh;

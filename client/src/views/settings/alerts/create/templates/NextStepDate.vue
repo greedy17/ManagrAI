@@ -171,6 +171,11 @@
                   <input type="checkbox" id="allUsers" v-model="directToUsers" />
                   <label for="allUsers">Send directly to users</label>
                 </div>
+
+                <div v-else class="sendAll">
+                  <input type="checkbox" id="allUsers" v-model="directToUsers" />
+                  <label for="allUsers">Send to primary channel</label>
+                </div>
               </div>
             </div>
           </div>
@@ -565,8 +570,8 @@ export default {
           })
         } catch (e) {
           this.$Alert.alert({
-            message: 'An error occured saving template',
-            timeout: 2000,
+            message: 'Error, one or more of your users do not have slack connected',
+            timeout: 3000,
             type: 'error',
           })
         } finally {
