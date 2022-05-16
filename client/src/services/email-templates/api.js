@@ -1,4 +1,4 @@
-import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
+import { apiClient, apiErrorHandler } from '@/services/api'
 
 // API Endpoints
 const EMAIL_TEMPLATE_ENDPOINT = '/email-templates/'
