@@ -136,8 +136,8 @@
               <label :class="!create ? 'green' : ''">Select #channel</label>
               <ToggleCheckBox
                 style="margin-left: 0.25rem; margin-right: 0.25rem"
-                @input="changeCreate"
                 :value="create"
+                @input="changeCreate"
                 offColor="#41b883"
                 onColor="#41b883"
               />
@@ -214,35 +214,9 @@
                     </p>
                   </template>
                 </Multiselect>
-                <!-- 
-                  <!-- 
-                <!-- 
-                  <DropDownSearch
-                    :items.sync="userChannelOpts.channels"
-                    :itemsRef.sync="form.field._recipients.value"
-                    v-model="form.field.recipients.value"
-                    @input="form.field.recipients.validate()"
-                    displayKey="name"
-                    valueKey="id"
-                    nullDisplay="Channels"
-                    :hasNext="!!userChannelOpts.nextCursor"
-                    @load-more="listUserChannels(userChannelOpts.nextCursor)"
-                    searchable
-                    local
-                  >
-                    <template v-slot:tn-dropdown-option="{ option }">
-                      <img
-                        v-if="option.isPrivate == true"
-                        class="card-img"
-                        style="width: 1rem; height: 1rem; margin-right: 0.2rem"
-                        src="@/assets/images/lockAsset.png"
-                      />
-                      {{ option['name'] }}
-                    </template>
-                  </DropDownSearch> -->
               </template>
 
-              <div class="sendAll">
+              <div v-if="userLevel !== 'REP'" class="sendAll">
                 <input type="checkbox" id="allUsers" v-model="directToUsers" />
                 <label for="allUsers">Send directly to users</label>
               </div>
@@ -280,11 +254,6 @@
 </template>
 
 <script>
-/**
- * Components
- * */
-// Pacakges
-
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 //Internal
@@ -449,13 +418,6 @@ export default {
     },
     changeCreate() {
       this.create = !this.create
-      if (
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value !==
-        'SLACK_CHANNEL'
-      ) {
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value =
-          'SLACK_CHANNEL'
-      }
     },
     async listUserChannels(cursor = null) {
       this.dropdownLoading = true
@@ -470,7 +432,6 @@ export default {
       }, 500)
     },
     async createChannel(name) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
       const res = await SlackOAuth.api.createChannel(name)
       if (res.channel) {
         this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = res.channel
@@ -671,8 +632,9 @@ export default {
             type: 'success',
           })
         } catch (e) {
+          console.log(e)
           this.$Alert.alert({
-            message: 'An error occured saving template',
+            message: e,
             timeout: 2000,
             type: 'error',
           })
@@ -872,6 +834,7 @@ export default {
     this.setDefaultChannel()
   },
   beforeMount() {
+    this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
     this.alertTemplateForm.field.title.value = 'Close Date Passed'
     this.alertTemplateForm.field.isActive.value = true
