@@ -1,4 +1,5 @@
 import logging
+from django.conf import settings
 from django.forms import ValidationError
 import pytz
 from datetime import datetime
@@ -49,6 +50,11 @@ def create_configs_for_target(target, template_user, config):
         )
     elif target == "SELF":
         config["recipient_type"] = "SLACK_CHANNEL"
+        config["recipients"] = [
+            template_user.slack_integration.zoom_channel
+            if template_user.slack_integration.zoom_channel
+            else template_user.slack_integration.channel
+        ]
         return [config]
     elif target == "ALL":
         users = User.objects.filter(organization=template_user.organization, is_active=True)
@@ -163,7 +169,11 @@ class AlertTemplateViewSet(
     def run_now(self, request, *args, **kwargs):
         obj = self.get_object()
         data = self.request.data
+
         from_workflow = data.get("from_workflow", False)
+        if settings.IN_DEV or settings.IN_STAGING:
+            print(data)
+            print(from_workflow)
         if from_workflow:
             config = obj.configs.all().first()
             template = config.template
@@ -249,7 +259,6 @@ class RealTimeAlertConfigViewSet(
 
     def create(self, request, *args, **kwargs):
         data = request.data
-        print(data)
         return Response(data)
 
 

@@ -1586,7 +1586,9 @@ export default {
     },
     async updateWorkflow(id) {
       try {
-        await AlertTemplate.api.runAlertTemplateNow(id)
+        await AlertTemplate.api.runAlertTemplateNow(id, {
+          fromWorkflow: true,
+        })
       } catch (e) {
         console.log(e)
       } finally {
