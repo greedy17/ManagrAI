@@ -437,7 +437,10 @@ export default {
       deep: true,
       async handler(val) {
         if (val && val.apiName && val.dataType == 'Picklist') {
-          await this.listPicklists({ picklistFor: val.apiName })
+          await this.listPicklists({
+            picklistFor: val.apiName,
+            salesforceObject: this.resourceType,
+          })
         }
       },
     },
