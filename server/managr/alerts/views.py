@@ -177,6 +177,7 @@ class AlertTemplateViewSet(
         if from_workflow:
             config = obj.configs.all().first()
             template = config.template
+            print(f"CONFIG: {config}\nTEMPLATE:{template}")
             attempts = 1
             while True:
                 sf = self.request.user.salesforce_account
@@ -188,6 +189,7 @@ class AlertTemplateViewSet(
                                 template.resource_type,
                             )
                             res_data = [item.integration_id for item in res]
+                            print(f"RES: {res}\nRES_DATA: {res_data}")
                             break
                     users = config.target_users
                     res_data = []
@@ -197,7 +199,7 @@ class AlertTemplateViewSet(
                                 template.url_str(user, config.id), template.resource_type
                             )
                             res_data.extend([item.integration_id for item in res])
-
+                    print(f"RES_DATA: {res_data}")
                     break
                 except TokenExpired:
                     if attempts >= 5:

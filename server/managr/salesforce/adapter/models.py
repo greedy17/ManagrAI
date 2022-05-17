@@ -569,6 +569,7 @@ class SalesforceAuthAccountAdapter:
             res = client.get(
                 url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
             )
+            print(f"EXECUTE ALERT QUERY: {res} \nURL: {url}")
             res = self._handle_response(res)
             res = self._format_resource_response(res, resource)
             return res
