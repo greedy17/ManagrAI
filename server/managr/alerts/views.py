@@ -49,6 +49,11 @@ def create_configs_for_target(target, template_user, config):
         )
     elif target == "SELF":
         config["recipient_type"] = "SLACK_CHANNEL"
+        config["recipients"] = [
+            template_user.slack_integration.zoom_channel
+            if template_user.slack_integration.zoom_channel
+            else template_user.slack_integration.channel
+        ]
         return [config]
     elif target == "ALL":
         users = User.objects.filter(organization=template_user.organization, is_active=True)
@@ -165,6 +170,7 @@ class AlertTemplateViewSet(
         data = self.request.data
         from_workflow = data.get("from_workflow", False)
         if from_workflow:
+            print(data)
             config = obj.configs.all().first()
             template = config.template
             attempts = 1
@@ -186,6 +192,7 @@ class AlertTemplateViewSet(
                             res = sf.adapter_class.execute_alert_query(
                                 template.url_str(user, config.id), template.resource_type
                             )
+                            print(res)
                             res_data.extend([item.integration_id for item in res])
 
                     break
@@ -203,6 +210,7 @@ class AlertTemplateViewSet(
                     return logger.warning(
                         f"Failed to sync some data for resource {template.resource} for user {str(user.id)} because of SF LIMIT"
                     )
+                print(res_data)
             return Response({"ids": res_data})
         else:
             for config in obj.configs.all():
