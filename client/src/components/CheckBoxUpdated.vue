@@ -1,7 +1,6 @@
 <template>
   <div class="checkbox">
     <div v-if="checked" class="checkbox--filled" />
-    <!-- <img v-else alt="empty" src="@/assets/images/check-box-empty.svg" /> -->
     <div v-else class="checkbox--empty" />
   </div>
 </template>

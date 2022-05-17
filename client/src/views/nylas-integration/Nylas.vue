@@ -48,9 +48,6 @@ export default {
   },
   computed: {
     ...mapState(['user']),
-    isCurrentRoute() {
-      return this.$route.name == 'Nylas'
-    },
   },
 }
 </script>

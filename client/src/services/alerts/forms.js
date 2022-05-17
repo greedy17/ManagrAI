@@ -1,27 +1,12 @@
-import moment from 'moment'
 import Form, { FormArray, FormField } from '@thinknimble/tn-forms'
 import { stringRenderer } from '../utils'
-import { ALERT_DATA_TYPE_MAP, INTEGER, STRING, DATE, DECIMAL } from '../salesforce/models'
-import {
-  MustMatchValidator,
-  EmailValidator,
-  RequiredValidator,
-  MinLengthValidator,
-  Validator,
-  MinDateValidator,
-  MaximumValueValidator,
-  MinimumValueValidator,
-} from '@thinknimble/tn-validators'
-import AlertTemplate from '.'
+import { ALERT_DATA_TYPE_MAP, STRING } from '../salesforce/models'
+import { RequiredValidator } from '@thinknimble/tn-validators'
 
 export class AlertConfigForm extends Form {
   static recurrenceFrequency = new FormField({ value: 'WEEKLY' })
   static recurrenceDays = new FormField({ value: [] })
   static recurrenceDay = new FormField({
-    // validators: [
-    //   new MinimumValueValidator({ min: 0, message: 'Please add values 0 - 31' }),
-    //   new MaximumValueValidator({ max: 31, message: 'Please add values 0 - 31' }),
-    // ],
   })
   static recipients = new FormField({ validators: [new RequiredValidator()], value: [] })
   static alertTargets = new FormField({ validators: [new RequiredValidator()], value: [] })
@@ -110,7 +95,6 @@ export class AlertGroupForm extends Form {
 }
 export class AlertMessageTemplateForm extends Form {
   static bindings = new FormField({})
-  // static notificationText = new FormField({ validators: [new RequiredValidator()] })
   static body = new FormField({ validators: [new RequiredValidator()] })
 }
 

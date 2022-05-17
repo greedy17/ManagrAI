@@ -40,12 +40,6 @@ export default {
     },
   },
   methods: {
-    onExpandDiv() {
-      /**
-       * handler for slot
-       */
-      this.expandDiv()
-    },
     expandDiv() {
       /** This Toggle Method handles the classes note the setTimeout must be set to match the animation time */
 
@@ -108,16 +102,12 @@ export default {
 .box__header {
   cursor: pointer;
   padding: 0.5rem 1rem;
-
   border-bottom: 2px solid $soft-gray;
-  // border: 1px solid $silver;
 }
 .box__content {
   display: none;
 }
 .box__content--expanded {
-  // @include standard-border();
-
   margin-top: 1rem;
   border-radius: 0.5rem;
   display: block;
@@ -126,8 +116,6 @@ export default {
   animation-iteration-count: 1;
 }
 .box__content--closed {
-  // @include standard-border();
-
   display: block;
   animation: closemenu forwards;
   animation-duration: 1s;

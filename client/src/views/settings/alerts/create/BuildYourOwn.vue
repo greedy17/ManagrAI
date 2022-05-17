@@ -39,7 +39,7 @@
     </Modal>
 
     <div class="alert__row">
-      <div v-show="pageNumber === 0" class="alert__column__" style="margin-bottom: 1rem">
+      <div v-show="pageNumber === 0" class="alert__column" style="margin-bottom: 1rem">
         <div class="workflow-header">
           <h3>Create a Custom Workflow</h3>
           <div class="button-space">
@@ -51,9 +51,6 @@
         </div>
 
         <div v-show="pageNumber === 0">
-          <!-- <p style="text-align: center; border-bottom: 2px solid #beb5cc; padding-bottom: 0.25rem">
-        Object Type
-      </p> -->
           <h5 style="text-align: center; margin-top: -0.75rem; color: #4d4e4c" class="title">
             {{ alertTemplateForm.field.resourceType.value }} Selected. Switch to
             <span
@@ -94,41 +91,6 @@
             >
           </h5>
         </div>
-        <!-- <div
-          style="
-            margin: auto;
-            text-align: center;
-            width: 30%;
-            margin-bottom: 1rem;
-            margin-top: -0.5rem;
-          "
-          title="25.00%"
-        >
-          <div
-            style="
-              text-align: left;
-              margin: 2px auto;
-              font-size: 0px;
-              line-height: 0px;
-              border: solid 1px #aaaaaa;
-              background: #0e572e;
-              overflow: hidden;
-              border-radius: 0.25rem;
-            "
-          >
-            <div
-              style="
-                font-size: 0px;
-                line-height: 0px;
-                height: 6px;
-                min-width: 0%;
-                max-width: 25%;
-                width: 25%;
-                background: #41b883;
-              "
-            ></div>
-          </div>
-        </div> -->
         <div :key="index" v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups">
           <div class="sf__collection">
             <AlertGroup
@@ -182,54 +144,12 @@
             </div>
           </div>
         </div>
-        <!-- <div style="margin-top: 0.5rem">
-          <button class="plus_button" @click="onAddAlertGroup">
-            <img src="@/assets/images/add.svg" class="filtered" alt="" />
-            Add Group
-          </button>
-        </div> -->
       </div>
 
       <div v-show="pageNumber === 2" class="alert__column">
         <h3>Construct your Message</h3>
-        <!-- <div
-          style="margin: auto; text-align: center; width: 36%; margin-bottom: 1rem"
-          title="25.00%"
-        >
-          <div
-            style="
-              text-align: left;
-              margin: 2px auto;
-              font-size: 0px;
-              line-height: 0px;
-              border: solid 1px #aaaaaa;
-              background: #0e572e;
-              overflow: hidden;
-              border-radius: 0.25rem;
-            "
-          >
-            <div
-              style="
-                font-size: 0px;
-                line-height: 0px;
-                height: 6px;
-                min-width: 0%;
-                max-width: 75%;
-                width: 75%;
-                background: #41b883;
-              "
-            ></div>
-          </div>
-        </div> -->
         <div class="collection__fields">
           <div class="message_titles">
-            <!-- <p
-              :class="templateBounce ? 'bouncy' : ''"
-              @click="$refs.templateModal.openModal(), switchBounce()"
-              style="cursor: pointer; border-bottom: 3px solid #41b883"
-            >
-              Popular Template
-            </p> -->
             <FormField
               id="message"
               :errors="alertTemplateForm.field.alertMessages.groups[0].field.body.errors"
@@ -322,20 +242,6 @@
                   </p>
                 </template>
               </Multiselect>
-
-              <!-- <DropDownSearch
-                :class="!templateBounce && fieldBounce && clickCount === 0 ? 'bouncy' : ''"
-                :items="fields.list"
-                @input="bindText(`${selectedResourceType}.${$event}`)"
-                displayKey="referenceDisplayLabel"
-                valueKey="apiName"
-                nullDisplay="Search Fields"
-                searchable
-                :hasNext="!!fields.pagination.hasNextPage"
-                @load-more="fieldNextPage"
-                @search-term="onSearchFields"
-                auto
-              /> -->
             </div>
           </div>
         </div>
@@ -343,35 +249,6 @@
 
       <div v-show="pageNumber === 1" class="alert__column">
         <h3>Select Delivery Options</h3>
-        <!-- <div
-          style="margin: auto; text-align: center; width: 30%; margin-bottom: 1rem"
-          title="25.00%"
-        >
-          <div
-            style="
-              text-align: left;
-              margin: 2px auto;
-              font-size: 0px;
-              line-height: 0px;
-              border: solid 1px #aaaaaa;
-              background: #0e572e;
-              overflow: hidden;
-              border-radius: 0.25rem;
-            "
-          >
-            <div
-              style="
-                font-size: 0px;
-                line-height: 0px;
-                height: 6px;
-                min-width: 0%;
-                max-width: 50%;
-                width: 50%;
-                background: #41b883;
-              "
-            ></div>
-          </div>
-        </div> -->
         <div class="sf__collection">
           <template>
             <div
@@ -401,8 +278,6 @@
                 </div>
 
                 <div>
-                  <!-- <p style="color: #beb5cc">What day would you like your Smart Alert delivered:</p> -->
-
                   <div v-if="form.field.recurrenceFrequency.value == 'WEEKLY'">
                     <FormField>
                       <template v-slot:input>
@@ -429,18 +304,6 @@
                             </p>
                           </template>
                         </Multiselect>
-
-                        <!-- <DropDownSearch
-                          :items.sync="weeklyOpts"
-                          :itemsRef.sync="form.field._recurrenceDay.value"
-                          v-model="form.field.recurrenceDay.value"
-                          @input="form.field.recurrenceDay.validate()"
-                          displayKey="key"
-                          valueKey="value"
-                          nullDisplay="Select Day"
-                          searchable
-                          local
-                        /> -->
                       </template>
                     </FormField>
                   </div>
@@ -453,32 +316,6 @@
                     v-model="form.field.recurrenceDay.value"
                     small
                   />
-
-                  <!-- <p
-                    @click="removeDay"
-                    v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
-                    :class="form.field.recurrenceDay.value ? 'selected__item' : 'visible'"
-                  >
-                    <img
-                      src="@/assets/images/remove.png"
-                      style="height: 1rem; margin-right: 0.25rem"
-                      alt=""
-                    />
-                    {{ form.field.recurrenceDay.value }}
-                  </p>
-
-                  <p
-                    @click="removeDay"
-                    v-else-if="form.field.recurrenceFrequency.value == 'WEEKLY'"
-                    :class="form.field.recurrenceDay.value ? 'selected__item' : 'visible'"
-                  >
-                    <img
-                      src="@/assets/images/remove.png"
-                      style="height: 1rem; margin-right: 0.25rem"
-                      alt=""
-                    />
-                    {{ convertToDay(form.field.recurrenceDay.value) }}
-                  </p> -->
                 </div>
               </div>
 
@@ -612,7 +449,7 @@
                       </template>
                     </Multiselect>
                   </template>
-                  <div v-if="userLevel !== 'REP'" class="sendAll">
+                  <div v-if="user.userLevel !== 'REP'" class="sendAll">
                     <input type="checkbox" id="allUsers" v-model="directToUsers" />
                     <label for="allUsers">Send directly to users</label>
                   </div>
@@ -630,35 +467,6 @@
 
       <div class="alert__column" v-show="pageNumber === 3">
         <h3>Name and save your workflow</h3>
-        <!-- <div
-          style="margin: auto; text-align: center; width: 65%; margin-bottom: 1rem"
-          title="25.00%"
-        >
-          <div
-            style="
-              text-align: left;
-              margin: 2px auto;
-              font-size: 0px;
-              line-height: 0px;
-              border: solid 1px #aaaaaa;
-              background: #0e572e;
-              overflow: hidden;
-              border-radius: 0.25rem;
-            "
-          >
-            <div
-              style="
-                font-size: 0px;
-                line-height: 0px;
-                height: 6px;
-                min-width: 0%;
-                max-width: 100%;
-                width: 100%;
-                background: #41b883;
-              "
-            ></div>
-          </div>
-        </div> -->
         <template>
           <div
             style="display: flex; justify-content: center; align-items: center"
@@ -674,7 +482,6 @@
               :errors="alertTemplateForm.field.title.errors"
               @blur="alertTemplateForm.field.title.validate()"
             />
-            <!-- <AlertSummary :form="alertTemplateForm" /> -->
           </div>
         </template>
       </div>
@@ -776,66 +583,33 @@
 import 'quill/dist/quill.core.css'
 import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
-
 import { quillEditor } from 'vue-quill-editor'
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 //Internal
 import FormField from '@/components/forms/FormField'
 import AlertGroup from '@/views/settings/alerts/create/_AlertGroup'
-import AlertSummary from '@/views/settings/alerts/create/_AlertSummary'
-import ListContainer from '@/components/ListContainer'
-import ListItem from '@/components/ListItem'
-import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotificationTemplate'
-import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePreview'
-import DropDownSearch from '@/components/DropDownSearch'
-import ExpandablePanel from '@/components/ExpandablePanel'
 import Modal from '@/components/Modal'
-import ProgressBar from '@/components/ProgressBar'
-import CheckBox from '@/components/CheckBoxUpdated'
 
 /**
  * Services
  */
 
-import AlertTemplate, {
-  AlertGroupForm,
-  AlertTemplateForm,
-  AlertConfigForm,
-  AlertMessageTemplateForm,
-  AlertOperandForm,
-} from '@/services/alerts/'
+import AlertTemplate, { AlertGroupForm, AlertTemplateForm } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
-import CollectionSearch from '@thinknimble/collection-search'
-import {
-  SObjectField,
-  SObjectValidations,
-  SObjectPicklist,
-  NON_FIELD_ALERT_OPTS,
-  SOBJECTS_LIST,
-} from '@/services/salesforce'
+import { CollectionManager } from '@thinknimble/tn-models'
+import { SObjectField, NON_FIELD_ALERT_OPTS, SOBJECTS_LIST } from '@/services/salesforce'
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
   name: 'AlertsPage',
   components: {
-    ExpandablePanel,
-    DropDownSearch,
-    ListContainer,
-    ListItem,
-    SlackMessagePreview,
     AlertGroup,
-    SlackNotificationTemplate,
-    quillEditor,
     ToggleCheckBox,
     FormField,
-    AlertSummary,
     PulseLoadingSpinnerButton,
     Modal,
-    CollectionSearch,
-    ProgressBar,
-    CheckBox,
+    quillEditor,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {
@@ -929,12 +703,6 @@ export default {
       },
       directToUsers: 'setDefaultChannel',
     },
-    // selectedDay: function () {
-    //   this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDay.value =
-    //     this.selectedDay
-    //   this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value =
-    //     this.selectedDay.value
-    // },
   },
   methods: {
     mapIds() {
@@ -968,9 +736,6 @@ export default {
         })
       }
     },
-    switchBounce() {
-      this.templateBounce = !this.templateBounce
-    },
     addCount() {
       this.clickCount += 1
     },
@@ -987,9 +752,6 @@ export default {
         type: 'error',
         timeout: 2000,
       })
-    },
-    checkInteger(str) {
-      return /\d/.test(str) ? this.user.fullName : str
     },
     changeCreate() {
       this.create = !this.create
@@ -1110,64 +872,6 @@ export default {
       new_str = str.replace(/\s+/g, '-').toLowerCase()
       this.channelName = new_str
     },
-    removeDay() {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = ''
-    },
-    removeTarget() {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = []
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = []
-    },
-    removeItemFromTargetArray(item) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value =
-        this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.filter(
-          (i) => i !== item,
-        )
-    },
-    removeItemFromRecipientArray(item) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value.filter(
-          (i) => i !== item,
-        )
-    },
-    // showRecipientValue(val){
-    //   if(this.alertTemplateForm.field.recipients.value.length > 0){
-
-    //   }
-    // },
-    convertToDay(num) {
-      if (num == 0) {
-        return 'Monday'
-      } else if (num == 1) {
-        return 'Tuesday'
-      } else if (num == 2) {
-        return 'Wednesday'
-      } else if (num == 3) {
-        return 'Thursday'
-      } else if (num == 4) {
-        return 'Friday'
-      } else if (num == 5) {
-        return 'Saturday'
-      } else if (num == 6) {
-        return 'Sunday'
-      }
-    },
-    recipientTypeToggle(value) {
-      if (!this.user.slackRef) {
-        this.$Alert.alert({ type: 'error', message: 'Slack Not Integrated', timeout: 2000 })
-        return 'USER_LEVEL'
-      }
-      if (value == 'USER_LEVEL') {
-        return 'SLACK_CHANNEL'
-      } else if (value == 'SLACK_CHANNEL') {
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = []
-        this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = []
-        return 'USER_LEVEL'
-      }
-      return value
-    },
-    onMenuShow() {
-      this.showMenu = !this.showMenu
-    },
     accountResource() {
       this.alertTemplateForm.field.resourceType.value = 'Account'
     },
@@ -1217,10 +921,6 @@ export default {
     onPreviousPage() {
       this.pageNumber >= 1 ? (this.pageNumber -= 1) : (this.pageNumber = this.pageNumber)
     },
-    // setDay(n) {
-    //   this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
-    //   this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value.push(n.value)
-    // },
     setDay(n) {
       this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
       let days = []
@@ -1243,18 +943,6 @@ export default {
       this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
         this.selectedChannel.id
     },
-    changeType(val) {
-      this.recipientType = val
-    },
-    getListOfTargets(targets) {
-      if (targets && targets.length) {
-        return targets
-          .map((opt) => {
-            return opt.id == 'SELF' ? 'Your' : opt.fullName + "'s"
-          })
-          .join(', ')
-      }
-    },
     onAddAlertGroup() {
       // length determines order
       const order = this.alertTemplateForm.field.alertGroups.groups.length
@@ -1266,13 +954,6 @@ export default {
 
       this.alertTemplateForm.addToArray('alertGroups', new AlertGroupForm())
       this.alertTemplateForm.field.alertGroups.groups[order].field.groupOrder.value = order
-    },
-    onAddAlertSetting() {
-      if (this.alertTemplateForm.field.alertConfig.groups.length >= 3) {
-        this.$Alert.alert({ message: 'You can only add 3 configurations', timeout: 2000 })
-        return
-      }
-      this.alertTemplateForm.addToArray('alertConfig', new AlertConfigForm())
     },
     onRemoveAlertGroup(i) {
       // get order and update options
@@ -1291,30 +972,8 @@ export default {
         el.field.groupOrder.value = order + index
       })
     },
-    onRemoveSetting(i) {
-      if (this.alertTemplateForm.field.alertConfig.groups.length - 1 <= 0) {
-        return
-      }
-      this.alertTemplateForm.removeFromArray('alertConfig', i)
-    },
-    async onSearchFields(v) {
-      this.fields.pagination = new Pagination()
-      this.fields.filters = {
-        ...this.fields.filters,
-        search: v,
-      }
-      await this.fields.refresh()
-    },
     async fieldNextPage() {
       await this.fields.addNextPage()
-    },
-    async onSearchUsers(v) {
-      this.users.pagination = new Pagination()
-      this.users.filters = {
-        ...this.users.filters,
-        search: v,
-      }
-      await this.users.refresh()
     },
     async onUsersNextPage() {
       this.dropdownLoading = true
@@ -1322,12 +981,6 @@ export default {
       setTimeout(() => {
         this.dropdownLoading = false
       }, 1000)
-    },
-    showList() {
-      this.listVisible = !this.listVisible
-    },
-    showDropDown() {
-      this.dropdownVisible = !this.dropdownVisible
     },
   },
   computed: {
@@ -1346,66 +999,11 @@ export default {
         return [{ fullName: 'Myself', id: 'SELF' }]
       }
     },
-    filteredUserTargets() {
-      if (this.searchQuery) {
-        return this.userTargetsOpts.filter((key) => {
-          return key.fullName.toLowerCase().startsWith(this.searchQuery.toLowerCase())
-        })
-      } else {
-        return this.userTargetsOpts
-      }
-    },
-    filteredRecipients() {
-      if (this.searchText) {
-        return this.recipientOpts.filter((key) => {
-          return key.fullName.toLowerCase().startsWith(this.searchText.toLowerCase())
-        })
-      } else {
-        return this.recipientOpts
-      }
-    },
-    filteredChannels() {
-      if (this.searchChannels) {
-        return this.reversedChannels.filter((key) => {
-          return key.name.toLowerCase().startsWith(this.searchChannels.toLowerCase())
-        })
-      } else {
-        return this.reversedChannels
-      }
-    },
-    recipientOpts() {
-      if (this.user.userLevel == 'MANAGER') {
-        return [
-          ...this.alertRecipientOpts.map((opt) => {
-            return {
-              id: opt.value,
-              fullName: opt.key,
-            }
-          }),
-          ...this.users.list,
-        ]
-      } else {
-        return [{ fullName: 'Myself', id: 'SELF' }]
-      }
-    },
-    formValue() {
-      return this.alertTemplateForm.value
-    },
-    reversedChannels() {
-      return this.channelOpts.channels.reverse()
-    },
     editor() {
       return this.$refs['message-body'].quill
     },
     selection() {
       return this.editor.selection.lastRange
-    },
-    alertObj() {
-      return {
-        title: this.formValue.title,
-        message: this.formValue.alertMessages[0].body,
-        resourceType: this.selectedResourceType,
-      }
     },
     user() {
       return this.$store.state.user
@@ -1564,10 +1162,6 @@ input:focus {
     }
   }
 }
-.message-end {
-  display: flex;
-  justify-content: flex-start;
-}
 .workflow-header {
   display: flex;
   align-items: center;
@@ -1577,16 +1171,8 @@ input:focus {
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
-.load-more {
-  text-align: center;
-  font-size: 13px;
-}
-.load-more:hover {
-  color: $dark-green;
-  cursor: pointer;
-}
 ::placeholder {
-  color: $panther-silver;
+  color: $very-light-gray;
   font-size: 0.75rem;
 }
 .prev-button {
@@ -1630,24 +1216,6 @@ input:focus {
   margin-top: auto;
   margin-bottom: 0.5rem;
 }
-.object-selection {
-  z-index: 10;
-  position: absolute;
-  right: 0;
-  padding: 0.75rem;
-  width: 18vw;
-  background-color: $panther;
-  border-radius: 0.5rem;
-  box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
-}
-.show_menu {
-  margin-right: 0.25rem;
-  margin-top: 0.25rem;
-  cursor: pointer;
-}
-.hide {
-  display: none;
-}
 .remove__group {
   padding: 0.25rem;
   border: 1px solid #e8e8e8;
@@ -1666,7 +1234,7 @@ button img {
 }
 .fixed__center {
   align-self: center;
-  color: $panther-silver;
+  color: $very-light-gray;
 }
 .message_titles {
   display: flex;
@@ -1692,198 +1260,9 @@ button img {
   align-items: flex-start;
   flex-direction: column;
 }
-::v-deep .multiselect__tags {
-  max-width: 18vw;
-}
-::v-deep .ql-toolbar .ql-stroke {
-  fill: none;
-  stroke: $panther;
-}
-
-::v-deep .ql-toolbar .ql-fill {
-  fill: $panther;
-  stroke: none;
-}
-
-::v-deep .ql-toolbar .ql-picker {
-  color: $panther;
-}
-
-::v-deep .ql-editor.ql-blank::before {
-  color: $panther;
-}
-::v-deep .ql-container.ql-snow {
-  border: 1px solid #e8e8e8;
-}
-::v-deep .ql-toolbar.ql-snow {
-  border: 1px solid #e8e8e8;
-  background-color: white;
-  margin-bottom: 0.1rem;
-}
-::v-deep .ql-blank.ql-editor {
-  background-color: white;
-}
-::v-deep .ql-container {
-  background-color: white;
-  color: $panther;
-}
-::v-deep .collection-search__result-item {
-  border: none;
-  background-color: $panther;
-}
-::v-deep .input-content {
-  width: 14vw;
-  background-color: white;
-  color: $panther;
-}
-::v-deep .input-form__large {
-  width: 14vw;
-  background-color: white;
-  color: $panther;
-}
-::v-deep .collection-search .collection-search__form .collection-search__input {
-  height: 2.5rem;
-  width: 14vw;
-  padding: 0 0 0 1rem;
-
-  // box-shadow: 3px 4px 7px $very-light-gray;
-}
-
 .filtered {
   filter: invert(1%);
   height: 1rem;
-}
-.channels_height {
-  height: 22vh;
-  overflow-y: scroll;
-}
-.fields_height {
-  height: 30vh;
-  overflow-y: scroll;
-}
-.items_height {
-  overflow-y: scroll;
-  max-height: 30vh;
-  width: 100%;
-}
-.recipients_height {
-  overflow-y: scroll;
-  max-height: 30vh;
-  width: 80%;
-}
-.slack-form-builder {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-
-  &__sf-fields,
-  &__sf-validations {
-    margin-right: 2rem;
-  }
-
-  &__container {
-    display: flex;
-    background-color: $panther;
-  }
-
-  &__sf-field {
-    padding: 0.25rem;
-    font-size: 0.85rem;
-    font-weight: bold;
-    font-display: #{$bold-font-family};
-    background-color: $panther;
-    &:hover {
-      background-color: $panther;
-      cursor: pointer;
-      color: $panther-silver;
-    }
-  }
-
-  &__required {
-    padding: 0.25rem;
-    font-size: 0.85rem;
-    font-weight: bold;
-    font-display: #{$bold-font-family};
-    background-color: $panther;
-    &:hover {
-      background-color: $panther;
-      cursor: pointer;
-      color: $panther-orange;
-    }
-  }
-
-  &__form {
-    // flex: 10;
-    width: 24vw;
-    padding: 2rem;
-    box-shadow: 0 5px 10px 0 rgba(132, 132, 132, 0.26);
-    background-color: $panther;
-    height: 50vh;
-    overflow-y: scroll;
-    overflow-x: hidden;
-    border-radius: 0.5rem;
-  }
-}
-.form-field {
-  background-color: $panther;
-  margin-top: 0.5rem;
-  &__left {
-    flex: 10;
-
-    display: flex;
-    align-items: center;
-  }
-
-  &__middle {
-    flex: 2;
-
-    display: flex;
-    align-items: center;
-  }
-
-  &__body {
-    font-size: 0.75rem;
-  }
-
-  &__label {
-    font-weight: bold;
-  }
-
-  &__right {
-    // flex: 2;
-    display: flex;
-    padding-left: 1rem;
-    margin-right: -0.5rem;
-
-    display: flex;
-    align-items: center;
-  }
-
-  &__btn {
-    padding: 0.35rem;
-    cursor: pointer;
-    color: $dark-gray-blue;
-
-    transition: color 0.3s linear;
-
-    &:hover {
-      color: black;
-    }
-
-    &--flipped {
-      transform: rotateX(180deg);
-    }
-  }
-}
-.message {
-  width: 20vw;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  margin-bottom: 1.5rem;
-}
-.template__border {
-  border-bottom: 2px solid $panther-silver;
 }
 .alert__column {
   display: flex;
@@ -1891,18 +1270,6 @@ button img {
   justify-content: flex-start;
   align-items: flex-start;
   border-radius: 0.5rem;
-}
-.alert__column__ {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
-  border-radius: 0.5rem;
-}
-.delivery__column {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
 }
 .alert__row {
   display: flex;
@@ -1923,32 +1290,10 @@ button img {
   flex-direction: column;
   background-color: $white;
   border-radius: 0.2rem;
-  // border: 1px solid #e8e8e8;
   border: 1px solid #e8e8e8;
   width: 75vw;
   padding: 2rem;
   margin-bottom: 1rem;
-}
-
-.option__collection {
-  background-color: $white;
-  justify-content: center;
-  border-radius: 0.5rem;
-  height: 34vh;
-  width: 78vw;
-  padding: 1rem;
-}
-.collection_fields {
-  background-color: $white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  height: 46vh;
-  width: 22vw;
-  overflow-x: scroll;
 }
 .collection__fields {
   background-color: $white;
@@ -1961,71 +1306,10 @@ button img {
   width: 70vw;
   border: 1px solid #e8e8e8;
 }
-.collection__fields__ {
-  background-color: $white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: row;
-  border-radius: 0.5rem;
-  height: 50vh;
-  width: 30vw;
-  overflow-x: scroll;
-}
-.paginator {
-  @include paginator();
-  &__container {
-    border: none;
-    display: flex;
-    justify-content: flex-start;
-    width: 11rem;
-    font-size: 0.75rem;
-    margin-top: 1rem;
-  }
-  &__text {
-    width: 6rem;
-  }
-}
-.collection {
-  background-color: $white;
-  height: 60vh;
-  width: 30vw;
-  padding: 2rem;
-  border-radius: 0.33rem;
-}
-.collection__small {
-  background-color: $white;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  height: 30vh;
-  width: 30vw;
-  padding: 2rem;
-  border-radius: 0.33rem;
-}
-.alert_title {
-  background-color: $panther;
-  margin: 1rem;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  width: 30%;
-}
-.alert__title {
-  background-color: $panther;
-  margin: 1rem;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  width: 40%;
-}
-.space {
-  height: 20vh;
-}
-.space__ {
-  height: 16vh;
-}
 .button-space {
   padding: 2.5rem 1rem 0rem 0rem;
 }
 .plus_button {
-  // border: 1px solid #e8e8e8;
   border: none;
   background-color: $dark-green;
   border-radius: 0.3rem;
@@ -2036,39 +1320,9 @@ button img {
   cursor: pointer;
   color: white;
 }
-.header {
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.remove_button {
-  color: $panther-orange;
-  border: none;
-  font-weight: bold;
-  background: transparent;
-  cursor: pointer;
-  margin: 0.25rem;
-}
-.quill-editor {
-  width: 100%;
-}
 
 textarea {
   @extend .textarea;
-}
-.box__header {
-  &__status {
-    display: flex;
-    &--error {
-      color: $coral;
-      fill: $coral;
-    }
-    &--success {
-      color: $dark-green;
-      fill: $dark-green;
-    }
-  }
 }
 .alerts-page {
   height: 88vh;
@@ -2078,169 +1332,9 @@ textarea {
   display: flex;
   flex-direction: column;
   align-items: center;
-  &__previous-step {
-    @include muted-font(12);
-  }
-  &__groups {
-    &__group {
-      display: flex;
-    }
-  }
-  &__message {
-    display: flex;
-    height: 20rem;
-    &-template {
-      margin: 0rem 1rem;
-      &__notification {
-        width: 30rem;
-        margin: 1rem 0rem;
-      }
-      &__message {
-        width: 40rem;
-        margin: 1rem 0rem;
-      }
-    }
-  }
-}
-.alert_cards {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-evenly;
-  align-items: center;
-  margin-top: 2rem;
-}
-
-.alerts-page__settings {
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
-
-  &__frequency {
-    display: flex;
-    align-items: center;
-    &-label {
-      @include muted-font();
-      margin: 0 0.5rem;
-    }
-  }
-  &-remove {
-    justify-self: end;
-  }
-}
-.btn {
-  &--danger {
-    @include button-danger();
-  }
-  &--primary {
-    @include primary-button();
-  }
-  &--secondary {
-    @include secondary-button();
-  }
-
-  &--icon {
-    @include --icon();
-  }
-}
-.muted--link {
-  @include muted-font();
-  @include pointer-on-hover();
-  &--important {
-    color: red;
-    font-weight: bold;
-    font-size: 11px;
-  }
-}
-.gray {
-  color: $gray;
 }
 .green {
   color: $dark-green;
-}
-.slate {
-  color: $slate-gray;
-}
-.pad {
-  padding-bottom: 1rem;
-  margin-top: -1rem;
-}
-.pink {
-  color: $candy;
-  font-weight: bold;
-}
-.purple {
-  color: $grape;
-  font-weight: bold;
-}
-.mar {
-  margin-top: -2rem;
-}
-.center {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-}
-.sub {
-  font-size: 12px;
-  margin-left: 0.5rem;
-}
-.sub__ {
-  font-size: 16px;
-  margin-top: -0.5rem;
-  color: $panther-silver;
-}
-.group {
-  display: flex;
-  flex-direction: row;
-}
-.col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: white;
-}
-.byo__col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  align-self: center;
-  color: white;
-  background-color: $panther;
-  border-radius: 0.5rem;
-  width: 50vw;
-  margin-top: 2rem;
-}
-.col__ {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-evenly;
-  align-items: center;
-}
-.column {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.column__ {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-.row {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-end;
-  margin-top: 1rem;
-  border-bottom: 3px solid $silver;
-}
-.row_ {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 2rem;
-  margin-top: 2rem;
 }
 .row__ {
   display: flex;
@@ -2255,44 +1349,6 @@ textarea {
   border-radius: 0.25rem;
   background-color: transparent;
 }
-.left {
-  margin-bottom: 2rem;
-}
-.add__group {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-end;
-  margin-top: 3rem;
-  padding-bottom: 1rem;
-  border-bottom: 3px solid $mid-gray;
-}
-.bolder {
-  font-size: 16px;
-  margin-left: 1rem;
-  cursor: pointer;
-  color: $base-gray;
-}
-.bolder:hover {
-  border-bottom: 2px solid $candy;
-  color: $candy;
-}
-.alertsModal {
-  color: $candy;
-  text-decoration: underline;
-  cursor: pointer;
-}
-.modal__container {
-  overflow-y: scroll;
-}
-.blue {
-  color: $slate-gray;
-}
-.top {
-  border-top: 3px solid $grape;
-}
-.templates {
-  border-bottom: 1px solid $gray;
-}
 input {
   width: 130px;
   text-align: center;
@@ -2302,17 +1358,6 @@ input {
   border: none;
   border-bottom: 1px solid $slate-gray;
   font-weight: bold;
-}
-.orange_button {
-  width: 7rem;
-  background-color: white;
-  color: $panther-orange;
-  font-weight: bold;
-  font-size: 16px;
-  height: 2rem;
-  border-radius: 0.5rem;
-  border: 2px solid white;
-  cursor: pointer;
 }
 .gold__button {
   display: flex;
@@ -2332,25 +1377,6 @@ input {
   width: 10rem;
   font-size: 12px;
 }
-.purple__button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.4rem 1rem;
-  border-radius: 0.3rem;
-  font-weight: bold;
-  line-height: 1.14;
-  text-indent: none;
-  border-style: none;
-  letter-spacing: 0.03rem;
-  color: $white;
-  background-color: $dark-green;
-  cursor: pointer;
-  height: 2rem;
-  width: 10rem;
-  font-weight: bold;
-  font-size: 1.02rem;
-}
 .disabled__button {
   display: flex;
   align-items: center;
@@ -2363,7 +1389,7 @@ input {
   border-style: none;
   letter-spacing: 0.03rem;
   background-color: $soft-gray;
-  color: $panther-gray;
+  color: $base-gray;
   cursor: not-allowed;
   height: 2rem;
   width: 10rem;
@@ -2382,38 +1408,15 @@ input {
     padding: 13px 21px;
     border-radius: 5px;
     box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
-    border: solid 2px $panther-gray;
-    background-color: $panther;
+    border: solid 2px $very-light-gray;
+    background-color: $base-gray;
     color: white;
     position: absolute;
     bottom: -5px;
     left: 105%;
-
-    &__bold {
-      font-family: #{$bold-font-family};
-      color: $panther-silver;
-    }
   }
 }
-
 .tooltip:hover .tooltip__popup {
   visibility: visible;
-}
-.selected__item {
-  padding: 0.5rem;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  border-radius: 0.3rem;
-  width: 100%;
-  text-align: center;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-}
-.selected__item img {
-  filter: invert(90%);
-}
-.visible {
-  display: none;
 }
 </style>

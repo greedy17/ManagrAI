@@ -38,12 +38,6 @@
       </div>
       <div class="alerts-template-list__content">
         <div v-if="selectedTab == 'TEMPLATE'" class="alerts-template-list__content-template">
-          <!-- <FormField
-            :id="`resource-type-${alert.id}`"
-            :disabled="true"
-            v-model="alert.resourceType"
-          /> -->
-          <!-- <h3>{{ alert.resourceType }}</h3> -->
           <div v-if="!templateNames.includes(alert.title)">
             <h4>Edit workflow title:</h4>
             <FormField
@@ -91,10 +85,6 @@
                       alt=""
                     />
                   </span>
-
-                  <!-- <span style="margin-bottom: 1rem">
-                    {{ operand.operandOrder != 0 ? operand.operandCondition : '' }}</span
-                  > -->
                   {{ 'Condition ' + (i + 1) + ': ' }}
                   {{ getReadableOperandRow(operand) }}
                 </p>
@@ -138,7 +128,12 @@
               </FormField>
             </div>
             <div
-              style="display: flex; align-items: flex-start; flex-direction: column; width: 100%"
+              style="
+                display: flex;
+                align-items: flex-start;
+                flex-direction: column;
+                margin-left: 3rem;
+              "
             >
               <h3>Add CRM fields:</h3>
               <Multiselect
@@ -169,26 +164,8 @@
                   </p>
                 </template>
               </Multiselect>
-              <!-- <DropDownSearch
-                :items="fields.list"
-                @input="bindText(`${alert.resourceType}.${$event}`)"
-                displayKey="referenceDisplayLabel"
-                valueKey="apiName"
-                nullDisplay="Search fields"
-                searchable
-                :hasNext="!!fields.pagination.hasNextPage"
-                @load-more="fieldNextPage"
-                @search-term="onSearchFields"
-                auto
-              /> -->
             </div>
           </div>
-          <!-- <div
-            class="alerts-template-list__content-message__preview"
-            style="width: 40rem; height: 20rem; overflow-y: scroll"
-          >
-            <SlackMessagePreview :alert="alertObj" />
-          </div> -->
         </div>
         <div v-if="selectedTab == 'CONFIG'" class="alerts-template-list__content-settings">
           <div class="card-rows">
@@ -229,60 +206,36 @@
 import 'quill/dist/quill.core.css'
 import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
-
-import debounce from 'lodash.debounce'
 import { quillEditor } from 'vue-quill-editor'
+import debounce from 'lodash.debounce'
 import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
-import moment from 'moment'
 
 //Internal
 import AlertOperandModal from '@/views/settings/alerts/view/_AlertOperandModal'
 import AlertGroupModal from '@/views/settings/alerts/view/_AlertGroupModal'
 import AlertSettingsModal from '@/views/settings/alerts/view/_AlertSettingsModal'
-import ListContainer from '@/components/ListContainer'
-import ListItem from '@/components/ListItem'
 import FormField from '@/components/forms/FormField'
-import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotificationTemplate'
-import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePreview'
-import DropDownSearch from '@/components/DropDownSearch'
 /**
  * Services
  *
  */
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
-import { toNumberSuffix } from '@/services/filters'
-import Form, { FormArray, FormField as FormFieldService } from '@thinknimble/tn-forms'
-import {
-  MustMatchValidator,
-  EmailValidator,
-  RequiredValidator,
-  MinLengthValidator,
-  Validator,
-} from '@thinknimble/tn-validators'
+import { CollectionManager } from '@thinknimble/tn-models'
+import { FormField as FormFieldService } from '@thinknimble/tn-forms'
+import { RequiredValidator } from '@thinknimble/tn-validators'
 
 import AlertTemplate, {
   AlertMessageTemplate,
   AlertConfig,
   AlertGroup,
   AlertGroupForm,
-  AlertTemplateForm,
   AlertConfigForm,
   AlertMessageTemplateForm,
   AlertGroupOperand,
   AlertOperandForm,
 } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
-import { SObjectField, SObjectValidations, SObjectPicklist } from '@/services/salesforce'
-import {
-  ALERT_DATA_TYPE_MAP,
-  INPUT_TYPE_MAP,
-  INTEGER,
-  STRING,
-  DATE,
-  DECIMAL,
-  BOOLEAN,
-  DATETIME,
-} from '@/services/salesforce/models'
+import { SObjectField } from '@/services/salesforce'
+import { ALERT_DATA_TYPE_MAP, STRING } from '@/services/salesforce/models'
 const TABS = [
   { key: 'TEMPLATE', label: 'Workflow Title' },
   { key: 'GROUPS', label: 'Conditions' },
@@ -293,16 +246,11 @@ export default {
   name: 'AlertsEditPanel',
   components: {
     FormField,
-    SlackNotificationTemplate,
-    SlackMessagePreview,
-    quillEditor,
-    ListItem,
-    ListContainer,
     PulseLoadingSpinner,
-    DropDownSearch,
     AlertOperandModal,
     AlertGroupModal,
     AlertSettingsModal,
+    quillEditor,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   props: {
@@ -378,22 +326,11 @@ export default {
     },
   },
   computed: {
-    alertObj() {
-      return {
-        title: this.templateTitleField.value,
-        message: this.messageTemplateForm.field.body.value,
-        resourceType: this.alert.resourceType,
-      }
-    },
-
     editor() {
       return this.$refs['message-body'].quill
     },
   },
   methods: {
-    logAlert(i) {
-      console.log(i)
-    },
     onShowOperandModal(groupIndex) {
       let newForm = new AlertOperandForm({
         operandOrder: this.alert.groupsRef[groupIndex].operandsRef.length,
@@ -483,12 +420,6 @@ export default {
         return STRING
       }
     },
-    getInputType(type) {
-      if (type && INPUT_TYPE_MAP[type.dataType]) {
-        return INPUT_TYPE_MAP[type.dataType]
-      }
-      return 'text'
-    },
     getReadableOperandRow(rowData) {
       let operandOperator = rowData.operandOperator
       let value = rowData.operandValue
@@ -522,9 +453,6 @@ export default {
       let recurrenceDayString = config.recurrenceDay
 
       if (config.recurrenceFrequency == 'WEEKLY') {
-        // let day = this.weeklyOpts.find((opt) => opt.value == config.recurrenceDay)
-        //   ? this.weeklyOpts.find((opt) => opt.value == config.recurrenceDay).key
-        //   : config.recurrenceDay
         recurrenceDayString = `Run your selected days (Weekly)`
       } else if ((config.recurrenceFrequency = 'MONTHLY')) {
         let day = config.recurrenceDay
@@ -604,14 +532,6 @@ export default {
           console.log(e)
         }
       }
-    },
-    async onSearchFields(v) {
-      this.fields.pagination = new Pagination()
-      this.fields.filters = {
-        ...this.fields.filters,
-        search: v,
-      }
-      await this.fields.refresh()
     },
     async fieldNextPage() {
       this.dropdownLoading = true
@@ -701,6 +621,19 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/buttons';
 
+::v-deep .input-content {
+  width: 13vw;
+  border: 1px solid #e8e8e8 !important;
+  border-radius: 0.3rem;
+  background-color: white;
+  box-shadow: none !important;
+}
+::v-deep .input-form {
+  width: 13vw;
+}
+::v-deep .input-form__active {
+  border: none;
+}
 @keyframes bounce {
   0% {
     transform: translateY(0);
@@ -708,9 +641,6 @@ export default {
   100% {
     transform: translateY(-6px);
   }
-}
-.bouncy {
-  animation: bounce 0.2s infinite alternate;
 }
 h3 {
   font-weight: 400;
@@ -725,45 +655,6 @@ h3 {
   cursor: pointer;
   padding: 0.15rem 0.3rem;
   margin-right: 0.5rem;
-}
-.revoke-button {
-  font-size: 0.75rem;
-  font-weight: bold;
-  color: $coral;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-.add-button {
-  font-size: 0.75rem;
-  font-weight: bold;
-  color: white;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-.add-button:hover,
-.revoke-button:hover {
-  color: white;
-}
-.three-dots:after {
-  cursor: pointer;
-  color: white;
-  content: '\2026';
-  font-size: 2rem;
-  padding-left: 4rem;
-}
-.dropdown {
-  right: 10px;
-  border-radius: 0.25rem;
-  border: none;
-  background-color: white;
-  outline: none;
-  opacity: 0;
-  z-index: -1;
-  max-height: 0;
-  transition: opacity 0.1s, z-index 0.1s, max-height 5s;
-  padding: 0.1rem 0.25rem;
 }
 .slot-icon {
   display: flex;
@@ -807,16 +698,6 @@ h3 {
         brightness(93%) contrast(89%);
     }
   }
-}
-.dropdown-container:focus {
-  outline: none;
-}
-
-.dropdown-container:focus .dropdown {
-  opacity: 1;
-  z-index: 100;
-  max-height: 100vh;
-  transition: opacity 0.2s, z-index 0.2s, max-height 0.2s;
 }
 .card-rows {
   display: flex;
@@ -876,109 +757,12 @@ h3 {
   filter: invert(70%);
   cursor: pointer;
 }
-::v-deep .ql-toolbar .ql-stroke {
-  fill: none;
-  stroke: $panther;
-}
-
-::v-deep .ql-toolbar .ql-fill {
-  fill: $panther;
-  stroke: none;
-}
-
-::v-deep .ql-toolbar .ql-picker {
-  color: $panther;
-}
-
-::v-deep .ql-editor.ql-blank::before {
-  color: $panther;
-}
-::v-deep .ql-container.ql-snow {
-  border: 1px solid #e8e8e8;
-}
-::v-deep .ql-toolbar.ql-snow {
-  background-color: white;
-  border: 1px solid #e8e8e8;
-  width: 24rem;
-}
-::v-deep .ql-blank.ql-editor {
-  background-color: white;
-  border-radius: 0.25rem;
-}
-::v-deep .ql-container {
-  background-color: white;
-  color: $panther;
-  width: 24rem;
-  min-height: 10rem;
-  overflow: scroll;
-}
 .message__box {
   margin-bottom: 2rem;
   height: 16vh;
   width: 32vw;
   border-radius: 0.25rem;
   background-color: transparent;
-}
-.config__column {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-.filtered {
-  filter: invert(66%) sepia(64%) saturate(3377%) hue-rotate(380deg) brightness(100%) contrast(105%);
-}
-.black-filter {
-  filter: invert(100%) contrast(100%);
-  height: 1.5rem;
-}
-.row__button {
-  border: none;
-  color: $dark-green;
-  background: transparent;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  font-size: 14px;
-
-  padding-top: 0.2rem;
-  margin-left: -0.1rem;
-}
-.remove__button {
-  border: none;
-  color: $panther-silver;
-  background: transparent;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  font-size: 0.9rem;
-
-  padding-top: 0.2rem;
-  margin-left: -0.1rem;
-}
-.disabled__button {
-  border: none;
-  color: $panther-silver;
-  background: transparent;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  font-size: 0.9rem;
-
-  padding-top: 0.2rem;
-  margin-left: -0.1rem;
-}
-::v-deep .input-content {
-  border: 1px solid #e8e8e8;
-  // box-shadow: 3px 4px 7px $very-light-gray;
-  color: $panther;
-}
-
-::v-deep .ls-container__list--horizontal {
-  background-color: transparent;
-}
-::v-deep .item-container {
-  margin-right: 2rem;
 }
 .tab__header-items {
   display: flex;
@@ -999,15 +783,6 @@ h3 {
       color: white;
       position: relative;
     }
-    // &--active:after {
-    //   content: '';
-    //   background: $darker-green;
-    //   position: absolute;
-    //   left: 0;
-    //   bottom: 0.3rem;
-    //   height: 70%;
-    //   width: 3px;
-    // }
     &--active:hover {
       color: white !important;
     }
@@ -1018,29 +793,6 @@ h3 {
   &__group {
     display: flex;
     padding: 0.75rem;
-    &__items {
-    }
-    &--large {
-      flex: 1.5 0 auto;
-    }
-    &--medium {
-      flex: 1 0 auto;
-    }
-  }
-}
-.btn {
-  &--danger {
-    @include button-danger();
-  }
-  &--primary {
-    @include primary-button();
-  }
-  &--secondary {
-    @include secondary-button();
-  }
-
-  &--icon {
-    @include --icon();
   }
 }
 .tab__panel {
@@ -1059,24 +811,5 @@ h3 {
     align-items: flex-start;
     height: 100%;
   }
-  &__preview {
-  }
 }
-.left {
-  margin-bottom: 5rem;
-}
-.alerts-template-list__add-opts {
-  display: flex;
-  align-items: center;
-}
-// ::-webkit-scrollbar {
-//   background-color: $panther;
-//   -webkit-appearance: none;
-//   width: 4px;
-//   height: 100%;
-// }
-// ::-webkit-scrollbar-thumb {
-//   border-radius: 2px;
-//   background-color: $panther-silver;
-// }
 </style>

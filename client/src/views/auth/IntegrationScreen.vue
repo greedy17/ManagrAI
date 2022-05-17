@@ -147,13 +147,6 @@
               <img @click="onRevoke('NYLAS')" src="@/assets/images/revoke.png" height="16" alt="" />
             </div>
           </div>
-          <!-- <div style="margin-bottom: 0.5rem; width: 15rem">
-          <GoogleButton
-            @click="onGetAuthLink('NYLAS')"
-            :loading="generatingToken && selectedIntegration == 'NYLAS'"
-            v-if="!hasNylasIntegration"
-          />
-        </div> -->
         </div>
 
         <div v-if="hasNylasIntegration" class="card">
@@ -324,15 +317,6 @@
                 v-if="orgHasSlackIntegration || !hasSlackIntegration"
               />
             </div>
-            <!-- <p
-              v-if="
-                (!orgHasSlackIntegration && userCanIntegrateSlack) ||
-                (orgHasSlackIntegration && !hasSlackIntegration)
-              "
-              class="card__required"
-            >
-              REQUIRED
-            </p> -->
           </div>
 
           <p class="card-text">Interact with Managr through Slack</p>
@@ -440,13 +424,6 @@
               </div>
             </div>
           </div>
-          <!-- <div style="margin-bottom: 0.5rem; width: 15rem">
-          <GoogleButton
-            @click="onGetAuthLink('NYLAS')"
-            :loading="generatingToken && selectedIntegration == 'NYLAS'"
-            v-if="!hasNylasIntegration"
-          />
-        </div> -->
         </div>
 
         <div class="card">
@@ -584,29 +561,11 @@
             <p style="color: #beb5cc">Coming Soon</p>
           </div>
         </div>
-
-        <!-- <div class="card">
-          <div class="card__header">
-            <img style="height: 1rem" src="@/assets/images/googleDrive.png" />
-            <h3 class="card__title">Google Drive</h3>
-          </div>
-          <p class="card-text">Enable battlecards and playbooks</p>
-          <div class="card__body">
-            <p style="color: #beb5cc">Coming Soon</p>
-          </div>
-        </div> -->
       </div>
     </div>
 
     <img style="margin-top: 1rem" class="lock" src="@/assets/images/blackLock.png" />
     <p class="privacy">SOC2 certified, and GDPR compliant</p>
-    <!-- <p>
-      <a href="https://managr.ai/terms-of-service" target="_blank">Terms of Service</a>
-      |
-      <a href="https://managr.ai/documentation" target="_blank">Documentation</a>
-      |
-      <a href="https://managr.ai/privacy-policy" target="_blank">Privacy Policy</a>
-    </p> -->
   </div>
 </template>
 
@@ -623,20 +582,13 @@ import SalesloftAccount from '@/services/salesloft'
 import GongAccount from '@/services/gong'
 import OutreachAccount from '@/services/outreach'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
-import GoogleButton from '@/components/GoogleButton'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 
-import AlertTemplate, {
-  AlertGroupForm,
-  AlertTemplateForm,
-  AlertConfigForm,
-  AlertMessageTemplateForm,
-  AlertOperandForm,
-} from '@/services/alerts/'
+import AlertTemplate from '@/services/alerts/'
 
 export default {
   name: 'Integrations',
-  components: { PulseLoadingSpinnerButton, GoogleButton, CollectionManager },
+  components: { PulseLoadingSpinnerButton, CollectionManager },
   data() {
     return {
       generatingToken: false,
@@ -646,21 +598,8 @@ export default {
     }
   },
   methods: {
-    alertsCount(num) {
-      if (this.hasZoomChannel) {
-        return num + 1
-      } else {
-        return num
-      }
-    },
-    goToSmartAlerts() {
-      this.$router.push({ name: 'ListTemplates' })
-    },
     goToTemplates() {
       this.$router.push({ name: 'CreateNew' })
-    },
-    changeIntegrated() {
-      this.integrated = !this.integrated
     },
     async onGetAuthLink(integration) {
       integration === 'NYLAS'
@@ -725,23 +664,6 @@ export default {
         }
       }
     },
-    async onRefreshSlack() {
-      const confirmation = confirm('This will refresh the access token for the workspace')
-      if (!confirmation) {
-        return
-      }
-      this.generatingToken = true
-      if (this.orgHasSlackIntegration && this.userCanIntegrateSlack) {
-        try {
-          let res = await SlackOAuth.api.getOAuthLink(SlackOAuth.options.WORKSPACE)
-          if (res.link) {
-            window.location.href = res.link
-          }
-        } finally {
-          this.generatingToken = false
-        }
-      }
-    },
   },
   async created() {
     this.templates.refresh()
@@ -788,9 +710,6 @@ export default {
     }
   },
   computed: {
-    hasZoomChannel() {
-      return this.$store.state.user.slackAccount.zoomChannel
-    },
     hasSalesforceIntegration() {
       return !!this.$store.state.user.salesforceAccount
     },
@@ -821,12 +740,6 @@ export default {
     },
     userCanIntegrateSlack() {
       return this.$store.state.user.isAdmin
-    },
-    slackIsIntegrated() {
-      return (
-        (!this.orgHasSlackIntegration && this.userCanIntegrateSlack) ||
-        (this.orgHasSlackIntegration && !this.hasSlackIntegration)
-      )
     },
     selectedIntegrationSwitcher() {
       switch (this.selectedIntegration) {
@@ -901,46 +814,12 @@ export default {
 .filter-loft {
   filter: invert(40%) sepia(96%) brightness(101%) contrast(82%);
 }
-.filtered-green {
-  filter: invert(39%) sepia(96%) saturate(373%) hue-rotate(94deg) brightness(104%) contrast(94%);
-}
 
 .onboarding {
   filter: blur(10px);
 }
 .test {
   animation: bounce 0.2s infinite alternate;
-}
-
-.dropdown {
-  right: 10px;
-  box-shadow: 0px 0px 1px 3px $soft-gray;
-  border-radius: 0.25rem;
-  background-color: $soft-gray;
-  outline: none;
-  opacity: 0;
-  z-index: -1;
-  max-height: 0;
-  transition: opacity 0.1s, z-index 0.1s, max-height 5s;
-  padding: 0.2rem;
-}
-.logo-bg {
-  background-color: transparent;
-  border: none;
-  border-radius: 50%;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  padding-right: 0.2rem;
-  margin-right: 0.75rem;
-}
-.dropdown-container:focus {
-  outline: none;
-}
-
-.dropdown-container:focus .dropdown {
-  opacity: 1;
-  z-index: 100;
-  max-height: 100vh;
-  transition: opacity 0.2s, z-index 0.2s, max-height 0.2s;
 }
 .integrations {
   color: $base-gray;
@@ -957,10 +836,6 @@ export default {
     width: 96vw;
     margin-top: -1rem;
   }
-  &__subtitle {
-    font-size: 14px;
-    margin-bottom: 2rem;
-  }
 }
 .centered {
   display: flex;
@@ -968,16 +843,6 @@ export default {
   justify-content: center;
 }
 
-.rowed {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
 .card:hover {
   transform: scale(1.015);
   box-shadow: 1px 2px 2px $very-light-gray;
@@ -994,11 +859,6 @@ export default {
   width: 22vw;
   height: auto;
   transition: all 0.25s;
-  // @media only screen and (min-width: 768px) {
-  //   flex: 1 0 24%;
-  //   min-width: 21rem;
-  //   max-width: 24rem;
-  // }
 
   &__header {
     display: flex;
@@ -1018,27 +878,6 @@ export default {
     margin-top: auto;
     min-height: 3rem;
   }
-  &__start {
-    display: flex;
-    align-items: flex-start;
-    justify-content: flex-start;
-  }
-  &__required {
-    color: $panther-orange;
-    font-size: 0.8rem;
-    font-weight: bold;
-    padding: 0.5rem;
-    border-radius: 0.5rem;
-    text-shadow: 0.75px 0.3px 0.2px white;
-  }
-  &__connected {
-    color: $dark-green;
-    font-size: 1rem;
-    font-weight: bold;
-    padding: 0.5rem;
-    border-radius: 0.5rem;
-    // text-shadow: 0.85px 0.4px 0.3px ;
-  }
 }
 
 .required__header {
@@ -1048,68 +887,10 @@ export default {
   align-items: center;
 }
 
-.card-img {
-  width: 2rem;
-}
-
 .card-text {
   font-size: 14px;
-  color: $panther-gray;
-  text-align: center;
-}
-
-.slack-button {
-  padding: 0.5rem 1.5rem;
-  border-radius: 0.5rem;
-  margin: 0rem 0 1rem 0;
-  font-size: 1.05rem;
-  font-weight: bold;
-  color: white;
-  background-color: $dark-green;
-  border: none;
-  cursor: pointer;
-}
-.revoke-button {
-  font-size: 1.05rem;
-  font-weight: bold;
-  color: $coral;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-.plain-button {
-  font-size: 1.05rem;
-  font-weight: bold;
   color: $base-gray;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-.disabled-button {
-  padding: 0.5rem 1.5rem;
-  border-radius: 0.5rem;
-  margin: 0rem 0 1rem 0;
-  font-size: 1.05rem;
-  font-weight: bold;
-  border: none;
-  background-color: $panther-silver;
-  color: $panther-gray;
-  cursor: not-allowed;
-}
-.btn {
-  &--danger {
-    @include button-danger();
-  }
-  &--primary {
-    @include primary-button();
-  }
-  &--secondary {
-    @include secondary-button();
-  }
-
-  &--icon {
-    @include --icon();
-  }
+  text-align: center;
 }
 
 .privacy {
@@ -1120,50 +901,12 @@ export default {
 .lock {
   height: 1rem;
 }
-.note {
-  font: lato-bold;
-  font-size: 13px;
-  font-weight: 900;
-  color: $mid-gray;
-  margin-top: -2.5rem;
-}
-.bold {
-  font: lato-bold;
-  font-weight: 2rem;
-  color: $light-gray-blue;
-}
-.title {
-  font-weight: bold;
-  color: $base-gray;
-}
-.col {
-  flex-direction: column;
-}
 a {
   text-decoration: none;
   color: $grape;
   font-weight: bold;
 }
-.alertButton__ {
-  height: 2.5rem;
-  width: 19rem;
-  margin: 0rem 0 2rem 0;
-  color: white;
-  background-color: $dark-green;
-  border: none;
-  font-weight: bold;
-  font-size: 14px;
-  border-radius: 0.25rem;
-  cursor: pointer;
-}
 
-.end {
-  width: 6rem;
-  align-self: flex-end;
-  color: $panther-silver;
-  background: transparent;
-  border: none;
-}
 .welcome {
   display: flex;
   flex-direction: row;
@@ -1180,14 +923,6 @@ a {
     letter-spacing: 0.1px;
   }
 }
-.back-logo {
-  position: absolute;
-  opacity: 0.06;
-  filter: alpha(opacity=50);
-  height: 28%;
-  margin-top: -1.5rem;
-  margin-left: -2rem;
-}
 .orange_button {
   color: white;
   background-color: $dark-green;
@@ -1203,45 +938,4 @@ a {
 .orange_button:hover {
   transform: scale(1.05);
 }
-
-.connected {
-  margin-left: 2rem;
-  color: $dark-green;
-  font-size: 1.1rem;
-  font-weight: bold;
-  text-shadow: 0 0 20px $dark-green;
-}
-
-.revoke {
-  color: $panther-silver;
-  background-color: transparent;
-  width: 7vw;
-  border-radius: 0.25rem;
-  padding: 0.25rem;
-  margin-left: 1rem;
-  font-weight: bold;
-  font-size: 14px;
-  border: 2px solid $panther-silver;
-  cursor: pointer;
-}
-.revoke__ {
-  color: $panther-silver;
-  background-color: transparent;
-  width: 5vw;
-  border-radius: 0.25rem;
-  padding: 0.25rem;
-  margin-left: 0.5rem;
-  margin-right: 0.5rem;
-  font-weight: bold;
-  font-size: 14px;
-  border: 2px solid $panther-silver;
-  cursor: pointer;
-}
-.revoke,
-.revoke__:hover {
-  filter: brightness(0.85);
-}
 </style>
-
-￼
-

@@ -1,4 +1,4 @@
-import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
+import { apiClient, apiErrorHandler } from '@/services/api'
 
 // API Endpoints
 const EMAIL_TEMPLATE_ENDPOINT = '/email-templates/'
@@ -26,7 +26,6 @@ export default class EmailTemplateAPI {
   list() {
     const promise = apiClient()
       .get(EMAIL_TEMPLATE_ENDPOINT)
-      // .get(EMAIL_TEMPLATE_ENDPOINT, options)
       .then(response => response.data)
       .then(data => {
         return {

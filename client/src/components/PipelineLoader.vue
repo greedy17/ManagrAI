@@ -6,9 +6,6 @@
       <div></div>
       <div></div>
     </div>
-    <!-- <div class="invert">
-      <img src="@/assets/images/loading-gif.gif" class="invert" style="height: 7rem" alt="" />
-    </div> -->
     <p>{{ loaderText }}</p>
   </div>
 </template>
