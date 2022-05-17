@@ -677,7 +677,7 @@ class HObjectField(TimeStampModel, IntegrationModel):
                     f"{slack_consts.GET_PICKLIST_OPTIONS}?u={user_id}&field={str(self.id)}"
                 )
                 block = block_builders.external_select(
-                    f"*{self.reference_display_label}*",
+                    f"*{self.label}*",
                     action_query,
                     block_id=self.name,
                     initial_option=initial_option,
@@ -687,7 +687,7 @@ class HObjectField(TimeStampModel, IntegrationModel):
 
         elif self.field_type == "Reference":
             # temporarily using id as display value need to sync display value as part of data
-            display_name = self.reference_display_label
+            display_name = self.label
             initial_option = block_builders.option(value, value) if value else None
             if self.is_public and not self.allow_multiple:
                 user_id = str(kwargs.get("user").id)
@@ -700,19 +700,7 @@ class HObjectField(TimeStampModel, IntegrationModel):
                 resource = self.relationship_name
                 action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}&field_id={self.id}"
                 return block_builders.multi_external_select(
-                    f"_{self.reference_display_label}_",
-                    action_query,
-                    block_id=self.name,
-                    initial_options=None,
-                )
-            elif (
-                self.name == "PricebookEntryId" and self.salesforce_object == "OpportunityLineItem"
-            ):
-                user_id = str(kwargs.get("user").id)
-                resource = self.relationship_name
-                action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}&field_id={self.id}&pricebook={kwargs.get('Pricebook2Id')}"
-                return block_builders.external_select(
-                    "*Products*", action_query, block_id=self.name, initial_option=None,
+                    f"_{self.label}_", action_query, block_id=self.name, initial_options=None,
                 )
             else:
                 user_id = str(self.salesforce_account.user.id)
@@ -724,9 +712,9 @@ class HObjectField(TimeStampModel, IntegrationModel):
                 initial_option=initial_option,
             )
 
-        elif self.field_type == "Date":
+        elif self.field_type == "date":
             return block_builders.datepicker(
-                label=f"*{self.reference_display_label}*", initial_date=value, block_id=self.name,
+                label=f"*{self.label}*", initial_date=value, block_id=self.name,
             )
 
         elif self.field_type == "select":
@@ -747,10 +735,10 @@ class HObjectField(TimeStampModel, IntegrationModel):
                 block_id=self.name,
             )
 
-        elif self.field_type == "Boolean":
+        elif self.field_type == "checkbox":
             return block_builders.checkbox_block(
                 " ",
-                [block_builders.option(self.reference_display_label, "true")],
+                [block_builders.option(self.label, "true")],
                 action_id=self.name,
                 block_id=self.name,
             )
@@ -775,9 +763,9 @@ class HObjectField(TimeStampModel, IntegrationModel):
             if self.field_type == "DateTime":
                 # currently we do not support date time instead make it into text field with format as placeholder
                 return block_builders.input_block(
-                    self.reference_display_label,
+                    self.label,
                     multiline=False,
-                    optional=not self.required,
+                    optional=True,
                     initial_value=value,
                     block_id=self.name,
                     placeholder="MM-DD-YYYY HH:MM AM/PM",
@@ -787,17 +775,14 @@ class HObjectField(TimeStampModel, IntegrationModel):
                 # set these fields to be multiline
 
                 return block_builders.input_block(
-                    self.reference_display_label,
+                    self.label,
                     multiline=True,
-                    optional=not self.required,
+                    optional=True,
                     initial_value=value,
                     block_id=self.name,
                 )
 
             return block_builders.input_block(
-                self.reference_display_label,
-                optional=not self.required,
-                initial_value=value,
-                block_id=self.name,
+                self.label, optional=True, initial_value=value, block_id=self.name,
             )
 

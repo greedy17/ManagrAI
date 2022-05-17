@@ -1096,7 +1096,8 @@ def process_show_update_resource_form(payload, context):
         )
 
         if slack_form:
-            current_stage = slack_form.resource_object.secondary_data.get("StageName")
+            stage_name = "StageName" if user.crm == "Salesforce" else "dealstage"
+            current_stage = slack_form.resource_object.secondary_data.get(stage_name)
             stage_template = (
                 OrgCustomSlackForm.objects.filter(stage=current_stage).first()
                 if current_stage
