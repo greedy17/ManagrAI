@@ -177,41 +177,50 @@
             </div>
 
             <div style="margin-top: 0.5rem" v-else>
-              <FormField>
-                <template v-slot:input>
-                  <Multiselect
-                    placeholder="Select Channel"
-                    v-model="selectedChannel"
-                    @input="setRecipient"
-                    :options="userChannelOpts.channels"
-                    openDirection="below"
-                    style="min-width: 13vw"
-                    selectLabel="Enter"
-                    track-by="id"
-                    label="name"
-                    :loading="dropdownLoading"
-                  >
-                    <template slot="noResult">
-                      <p class="multi-slot">No results. Try loading more</p>
-                    </template>
-                    <template slot="afterList">
-                      <p
-                        class="multi-slot__more"
-                        @click="listUserChannels(userChannelOpts.nextCursor)"
-                      >
-                        Load More
-                        <img src="@/assets/images/plusOne.png" alt="" />
-                      </p>
-                    </template>
-                    <template slot="placeholder">
-                      <p class="slot-icon">
-                        <img src="@/assets/images/search.png" alt="" />
-                        Select Channel
-                      </p>
-                    </template>
-                  </Multiselect>
-                </template>
-              </FormField>
+              <template>
+                <Multiselect
+                  v-if="!directToUsers"
+                  placeholder="Select Channel"
+                  v-model="selectedChannel"
+                  @input="setRecipient"
+                  :options="userChannelOpts.channels"
+                  openDirection="below"
+                  style="min-width: 13vw"
+                  selectLabel="Enter"
+                  track-by="id"
+                  label="name"
+                  :loading="dropdownLoading"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results. Try loading more</p>
+                  </template>
+                  <template slot="afterList">
+                    <p
+                      class="multi-slot__more"
+                      @click="listUserChannels(userChannelOpts.nextCursor)"
+                    >
+                      Load More
+                      <img src="@/assets/images/plusOne.png" alt="" />
+                    </p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.png" alt="" />
+                      Select Channel
+                    </p>
+                  </template>
+                </Multiselect>
+              </template>
+
+              <div v-if="userLevel !== 'REP'" class="sendAll">
+                <input type="checkbox" id="allUsers" v-model="directToUsers" />
+                <label for="allUsers">Send directly to users</label>
+              </div>
+
+              <div v-else class="sendAll">
+                <input type="checkbox" id="allUsers" v-model="directToUsers" />
+                <label for="allUsers">Send to primary channel</label>
+              </div>
             </div>
           </div>
         </div>
@@ -297,7 +306,7 @@ export default {
       listVisible: true,
       dropdownVisible: true,
       channelCreated: false,
-      create: true,
+      create: false,
       NON_FIELD_ALERT_OPTS,
       stringRenderer,
       newChannel: {},
@@ -311,6 +320,7 @@ export default {
       SOBJECTS_LIST,
       pageNumber: 0,
       configName: '',
+      directToUsers: true,
       userConfigForm: new UserConfigForm({}),
       alertTemplateForm: new AlertTemplateForm(),
       selectedBindings: [],
@@ -375,6 +385,7 @@ export default {
         }
       },
     },
+    directToUsers: 'setDefaultChannel',
   },
   methods: {
     getUser(userInfo) {
@@ -400,13 +411,6 @@ export default {
     },
     changeCreate() {
       this.create = !this.create
-      if (
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value !==
-        'SLACK_CHANNEL'
-      ) {
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value =
-          'SLACK_CHANNEL'
-      }
     },
     async listUserChannels(cursor = null) {
       this.dropdownLoading = true
@@ -419,6 +423,11 @@ export default {
       setTimeout(() => {
         this.dropdownLoading = false
       }, 500)
+    },
+    setDefaultChannel() {
+      this.directToUsers
+        ? (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = 'default')
+        : (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = null)
     },
     removeDay() {
       this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = ''
@@ -612,6 +621,7 @@ export default {
           const res = await AlertTemplate.api.createAlertTemplate({
             ...this.alertTemplateForm.toAPI,
             user: this.$store.state.user.id,
+            directToUsers: this.directToUsers,
           })
           this.userConfigForm.field.activatedManagrConfigs.value.push(res.title)
           this.handleUpdate()
@@ -623,8 +633,8 @@ export default {
           })
         } catch (e) {
           this.$Alert.alert({
-            message: 'An error occured saving template',
-            timeout: 2000,
+            message: 'Error, one or more of your users do not have slack connected',
+            timeout: 3000,
             type: 'error',
           })
         } finally {
@@ -828,7 +838,11 @@ export default {
       },
     },
   },
+  mounted() {
+    this.setDefaultChannel()
+  },
   beforeMount() {
+    this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
     this.alertTemplateForm.field.title.value = 'Deal Rotting'
     this.alertTemplateForm.field.isActive.value = true
@@ -852,6 +866,54 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
+input[type='checkbox']:checked + label::after {
+  content: '';
+  position: absolute;
+  width: 1ex;
+  height: 0.3ex;
+  background: rgba(0, 0, 0, 0);
+  top: 0.9ex;
+  left: 0.4ex;
+  border: 2px solid $dark-green;
+  border-top: none;
+  border-right: none;
+  -webkit-transform: rotate(-45deg);
+  -moz-transform: rotate(-45deg);
+  -o-transform: rotate(-45deg);
+  -ms-transform: rotate(-45deg);
+  transform: rotate(-45deg);
+}
+input[type='checkbox'] {
+  line-height: 2.1ex;
+}
+input[type='checkbox'] {
+  position: absolute;
+  left: -999em;
+}
+input[type='checkbox'] + label {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+input[type='checkbox'] + label::before {
+  content: '';
+  display: inline-block;
+  vertical-align: -22%;
+  height: 1.75ex;
+  width: 1.75ex;
+  background-color: white;
+  border: 1px solid rgb(182, 180, 180);
+  border-radius: 4px;
+  margin-right: 0.5em;
+}
+.sendAll {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: $base-gray;
+  margin-top: 1rem;
+}
 .load-more {
   text-align: center;
   font-size: 13px;

@@ -136,8 +136,8 @@
               <label :class="!create ? 'green' : ''">Select #channel</label>
               <ToggleCheckBox
                 style="margin-left: 0.25rem; margin-right: 0.25rem"
-                @input="changeCreate"
                 :value="create"
+                @input="changeCreate"
                 offColor="#41b883"
                 onColor="#41b883"
               />
@@ -181,78 +181,50 @@
             </div>
 
             <div style="margin-top: 0.5rem" v-else>
-              <FormField>
-                <template v-slot:input>
-                  <Multiselect
-                    placeholder="Select Channel"
-                    v-model="selectedChannel"
-                    @input="setRecipient"
-                    :options="userChannelOpts.channels"
-                    openDirection="below"
-                    style="width: 14vw"
-                    selectLabel="Enter"
-                    track-by="id"
-                    label="name"
-                    :loading="dropdownLoading"
-                  >
-                    <template slot="noResult">
-                      <p class="multi-slot">No results. Try loading more</p>
-                    </template>
-                    <template slot="afterList">
-                      <p
-                        class="multi-slot__more"
-                        @click="listUserChannels(userChannelOpts.nextCursor)"
-                      >
-                        Load More
-                        <img src="@/assets/images/plusOne.png" alt="" />
-                      </p>
-                    </template>
-                    <template slot="placeholder">
-                      <p class="slot-icon">
-                        <img src="@/assets/images/search.png" alt="" />
-                        Select Channel
-                      </p>
-                    </template>
-                  </Multiselect>
-                  <!-- 
-                  <DropDownSearch
-                    :items.sync="userChannelOpts.channels"
-                    :itemsRef.sync="form.field._recipients.value"
-                    v-model="form.field.recipients.value"
-                    @input="form.field.recipients.validate()"
-                    displayKey="name"
-                    valueKey="id"
-                    nullDisplay="Channels"
-                    :hasNext="!!userChannelOpts.nextCursor"
-                    @load-more="listUserChannels(userChannelOpts.nextCursor)"
-                    searchable
-                    local
-                  >
-                    <template v-slot:tn-dropdown-option="{ option }">
-                      <img
-                        v-if="option.isPrivate == true"
-                        class="card-img"
-                        style="width: 1rem; height: 1rem; margin-right: 0.2rem"
-                        src="@/assets/images/lockAsset.png"
-                      />
-                      {{ option['name'] }}
-                    </template>
-                  </DropDownSearch> -->
-                </template>
-              </FormField>
+              <template>
+                <Multiselect
+                  v-if="!directToUsers"
+                  placeholder="Select Channel"
+                  v-model="selectedChannel"
+                  @input="setRecipient"
+                  :options="userChannelOpts.channels"
+                  openDirection="below"
+                  style="width: 14vw"
+                  selectLabel="Enter"
+                  track-by="id"
+                  label="name"
+                  :loading="dropdownLoading"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results. Try loading more</p>
+                  </template>
+                  <template slot="afterList">
+                    <p
+                      class="multi-slot__more"
+                      @click="listUserChannels(userChannelOpts.nextCursor)"
+                    >
+                      Load More
+                      <img src="@/assets/images/plusOne.png" alt="" />
+                    </p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.png" alt="" />
+                      Select Channel
+                    </p>
+                  </template>
+                </Multiselect>
+              </template>
 
-              <!-- <p
-                v-if="form.field.recipients.value.length > 0"
-                @click="removeTarget"
-                :class="form.field.recipients.value ? 'selected__item' : 'visible'"
-              >
-                <img
-                  src="@/assets/images/remove.png"
-                  style="height: 1rem; margin-right: 0.25rem"
-                  alt=""
-                />
-                {{ form.field._recipients.value.name }}
-              </p> -->
+              <div v-if="userLevel !== 'REP'" class="sendAll">
+                <input type="checkbox" id="allUsers" v-model="directToUsers" />
+                <label for="allUsers">Send directly to users</label>
+              </div>
+
+              <div v-else class="sendAll">
+                <input type="checkbox" id="allUsers" v-model="directToUsers" />
+                <label for="allUsers">Send to primary channel</label>
+              </div>
             </div>
           </div>
         </div>
@@ -287,19 +259,11 @@
 </template>
 
 <script>
-/**
- * Components
- * */
-// Pacakges
-
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 //Internal
 import FormField from '@/components/forms/FormField'
 import PassedAlertGroup from '@/views/settings/alerts/create/PassedAlertGroup'
-
-import ListItem from '@/components/ListItem'
-
 import { UserConfigForm } from '@/services/users/forms'
 
 /**
@@ -337,7 +301,7 @@ export default {
       channelName: '',
       newChannel: {},
       channelCreated: false,
-      create: true,
+      create: false,
       savingTemplate: false,
       listVisible: true,
       dropdownVisible: true,
@@ -352,6 +316,7 @@ export default {
       SOBJECTS_LIST,
       pageNumber: 0,
       configName: '',
+      directToUsers: true,
       userConfigForm: new UserConfigForm({}),
       alertTemplateForm: new AlertTemplateForm(),
       selectedBindings: [],
@@ -416,6 +381,7 @@ export default {
         }
       },
     },
+    directToUsers: 'setDefaultChannel',
   },
   methods: {
     tester() {
@@ -457,13 +423,6 @@ export default {
     },
     changeCreate() {
       this.create = !this.create
-      if (
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value !==
-        'SLACK_CHANNEL'
-      ) {
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value =
-          'SLACK_CHANNEL'
-      }
     },
     async listUserChannels(cursor = null) {
       this.dropdownLoading = true
@@ -478,7 +437,6 @@ export default {
       }, 500)
     },
     async createChannel(name) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
       const res = await SlackOAuth.api.createChannel(name)
       if (res.channel) {
         this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = res.channel
@@ -641,6 +599,11 @@ export default {
       this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
         this.selectedChannel.id
     },
+    setDefaultChannel() {
+      this.directToUsers
+        ? (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = 'default')
+        : (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = null)
+    },
     // setDay(n) {
     //   this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
     //   this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value.push(n.value)
@@ -663,7 +626,9 @@ export default {
           const res = await AlertTemplate.api.createAlertTemplate({
             ...this.alertTemplateForm.toAPI,
             user: this.$store.state.user.id,
+            directToUsers: this.directToUsers,
           })
+          console.log(res)
           this.userConfigForm.field.activatedManagrConfigs.value.push(res.title)
           this.handleUpdate()
           this.$router.push({ name: 'CreateNew' })
@@ -674,8 +639,8 @@ export default {
           })
         } catch (e) {
           this.$Alert.alert({
-            message: 'An error occured saving template',
-            timeout: 2000,
+            message: 'Error, one or more of your users do not have slack connected',
+            timeout: 3000,
             type: 'error',
           })
         } finally {
@@ -690,48 +655,6 @@ export default {
         start = this.editor.selection.lastRange.index
       }
       this.editor.insertText(start, `{ ${val} }`)
-    },
-    onAddAlertGroup() {
-      // length determines order
-      const order = this.alertTemplateForm.field.alertGroups.groups.length
-      if (order >= 3) {
-        this.$Alert.alert({ message: 'You can only add 3 groups', timeout: 2000 })
-        return
-      }
-      // set next order
-
-      this.alertTemplateForm.addToArray('alertGroups', new AlertGroupForm())
-      this.alertTemplateForm.field.alertGroups.groups[order].field.groupOrder.value = order
-    },
-    onAddAlertSetting() {
-      if (this.alertTemplateForm.field.alertConfig.groups.length >= 3) {
-        this.$Alert.alert({ message: 'You can only add 3 configurations', timeout: 2000 })
-        return
-      }
-      this.alertTemplateForm.addToArray('alertConfig', new AlertConfigForm())
-    },
-    onRemoveAlertGroup(i) {
-      // get order and update options
-
-      if (this.alertTemplateForm.field.alertGroups.groups.length - 1 <= 0) {
-        return
-      }
-
-      const order = this.alertTemplateForm.field.alertGroups.groups[i].field.groupOrder.value
-
-      this.alertTemplateForm.removeFromArray('alertGroups', i)
-
-      let greaterThan = this.alertTemplateForm.field.alertGroups.groups.slice(i)
-
-      greaterThan.forEach((el, index) => {
-        el.field.groupOrder.value = order + index
-      })
-    },
-    onRemoveSetting(i) {
-      if (this.alertTemplateForm.field.alertConfig.groups.length - 1 <= 0) {
-        return
-      }
-      this.alertTemplateForm.removeFromArray('alertConfig', i)
     },
     async onSearchFields(v) {
       this.fields.pagination = new Pagination()
@@ -870,7 +793,11 @@ export default {
       },
     },
   },
+  mounted() {
+    this.setDefaultChannel()
+  },
   beforeMount() {
+    this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
     this.alertTemplateForm.field.title.value = 'Close Date Passed'
     this.alertTemplateForm.field.isActive.value = true
@@ -894,6 +821,54 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
+input[type='checkbox']:checked + label::after {
+  content: '';
+  position: absolute;
+  width: 1ex;
+  height: 0.3ex;
+  background: rgba(0, 0, 0, 0);
+  top: 0.9ex;
+  left: 0.4ex;
+  border: 2px solid $dark-green;
+  border-top: none;
+  border-right: none;
+  -webkit-transform: rotate(-45deg);
+  -moz-transform: rotate(-45deg);
+  -o-transform: rotate(-45deg);
+  -ms-transform: rotate(-45deg);
+  transform: rotate(-45deg);
+}
+input[type='checkbox'] {
+  line-height: 2.1ex;
+}
+input[type='checkbox'] {
+  position: absolute;
+  left: -999em;
+}
+input[type='checkbox'] + label {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+input[type='checkbox'] + label::before {
+  content: '';
+  display: inline-block;
+  vertical-align: -22%;
+  height: 1.75ex;
+  width: 1.75ex;
+  background-color: white;
+  border: 1px solid rgb(182, 180, 180);
+  border-radius: 4px;
+  margin-right: 0.5em;
+}
+.sendAll {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: $base-gray;
+  margin-top: 1rem;
+}
 .load-more {
   text-align: center;
   font-size: 13px;

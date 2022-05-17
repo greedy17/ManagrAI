@@ -140,12 +140,13 @@
             <div class="tip">Email Us: support@mymanagr.com</div>
           </div>
         </div>
-
         <div>
           <router-link class="profile-wrapper" :to="{ name: 'ProfilePage' }">
-            <img src="@/assets/images/profile.png" style="height: 1rem" alt="" />
+            <small>{{ user.email }}</small>
+            <img src="@/assets/images/profile.png" alt="" />
           </router-link>
         </div>
+
         <div class="center">
           <router-link class="pad" :to="{ name: 'Login' }">
             <button class="logout">
@@ -173,12 +174,13 @@
             <div class="tip">Email Us: support@mymanagr.com</div>
           </div>
         </div>
-
         <div>
           <router-link class="profile-wrapper" :to="{ name: 'ProfilePage' }">
-            <img src="@/assets/images/profile.png" style="height: 1rem" alt="" />
+            <small>{{ user.email }}</small>
+            <img src="@/assets/images/profile.png" alt="" />
           </router-link>
         </div>
+
         <div class="center">
           <router-link class="pad" :to="{ name: 'Login' }">
             <button class="logout">
@@ -304,17 +306,42 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/mixins/utils';
 
+.nameOrg {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  p {
+    font-size: 11px;
+  }
+  small {
+    font-size: 10px;
+    margin-left: 0.2rem;
+    color: $dark-green;
+  }
+}
 span {
   font-size: 10px;
   color: $dark-green;
 }
 .profile-wrapper {
+  display: flex !important;
+  align-items: center !important;
   border: none;
-  background-color: $lighter-green;
-  padding: 0.3rem 0.3rem 0.1rem 0.4rem;
-  border-radius: 50%;
+  margin: 1rem 0rem 0.25rem 0rem;
+  background-color: $soft-gray;
+  padding: 0.2rem;
+  border-radius: 0.3rem;
+  small {
+    font-size: 10px;
+    margin-right: 0.5rem;
+    margin-left: 0.25rem;
+    color: $base-gray;
+    letter-spacing: 0.25px;
+  }
   img {
     filter: invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg) brightness(93%) contrast(89%);
+    margin-top: 0.2rem;
+    height: 1.2rem;
   }
 }
 .profile-button {
@@ -348,7 +375,8 @@ span {
   background-color: $soft-gray;
   cursor: pointer;
   color: $base-gray;
-  font-weight: bold;
+  font-size: 11px;
+  // font-weight: bold;
   // transition: all .5s;
 }
 nav {

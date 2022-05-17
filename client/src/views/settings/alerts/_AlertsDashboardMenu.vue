@@ -65,7 +65,7 @@
             alt=""
           />
           <h5>
-            Active
+            Active Workflows
             <span class="counter">{{ alertsCount(templates.list.length) }}</span>
           </h5>
         </div>
@@ -111,7 +111,7 @@
             alt=""
           />
           <h5>
-            Active
+            Active Workflows
             <span class="counter">{{ alertsCount(templates.list.length) }}</span>
           </h5>
         </div>
@@ -193,7 +193,7 @@
             alt=""
           />
           <h5>
-            Active
+            Active Workflows
             <span style="margin-left: 0.5rem" class="counter">{{
               alertsCount(templates.list.length)
             }}</span>
