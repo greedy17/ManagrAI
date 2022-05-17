@@ -168,7 +168,9 @@ class AlertTemplateViewSet(
     def run_now(self, request, *args, **kwargs):
         obj = self.get_object()
         data = self.request.data
+        print(data)
         from_workflow = data.get("from_workflow", False)
+        print(from_workflow)
         if from_workflow:
             print(data)
             config = obj.configs.all().first()
