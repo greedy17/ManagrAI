@@ -126,6 +126,19 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
+::v-deep .input-content {
+  width: 16rem;
+  border: 1px solid #e8e8e8 !important;
+  border-radius: 0.3rem;
+  background-color: white;
+  box-shadow: none !important;
+}
+::v-deep .input-form {
+  width: 16rem;
+}
+::v-deep .input-form__active {
+  border: none;
+}
 .profile-page {
   margin-top: 4rem;
   padding: 2rem 2rem;

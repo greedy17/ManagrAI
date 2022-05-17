@@ -262,11 +262,7 @@ import FormField from '@/components/forms/FormField'
  */
 import { AlertOperandForm } from '@/services/alerts/'
 import { CollectionManager } from '@thinknimble/tn-models'
-import {
-  SObjectField,
-  SObjectPicklist,
-  NON_FIELD_ALERT_OPTS,
-} from '@/services/salesforce'
+import { SObjectField, SObjectPicklist, NON_FIELD_ALERT_OPTS } from '@/services/salesforce'
 import {
   ALERT_DATA_TYPE_MAP,
   INPUT_TYPE_MAP,
@@ -583,6 +579,19 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
+::v-deep .input-content {
+  width: 13vw;
+  border: 1px solid #e8e8e8 !important;
+  border-radius: 0.3rem;
+  background-color: white;
+  box-shadow: none !important;
+}
+::v-deep .input-form {
+  width: 13vw;
+}
+::v-deep .input-form__active {
+  border: none;
+}
 .multi-slot {
   display: flex;
   align-items: center;

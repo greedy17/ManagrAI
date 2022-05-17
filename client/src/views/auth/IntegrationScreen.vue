@@ -582,12 +582,13 @@ import SalesloftAccount from '@/services/salesloft'
 import GongAccount from '@/services/gong'
 import OutreachAccount from '@/services/outreach'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
+import { CollectionManager } from '@thinknimble/tn-models'
 
 import AlertTemplate from '@/services/alerts/'
 
 export default {
   name: 'Integrations',
-  components: { PulseLoadingSpinnerButton },
+  components: { PulseLoadingSpinnerButton, CollectionManager },
   data() {
     return {
       generatingToken: false,

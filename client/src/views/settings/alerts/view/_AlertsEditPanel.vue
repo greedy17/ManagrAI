@@ -128,7 +128,12 @@
               </FormField>
             </div>
             <div
-              style="display: flex; align-items: flex-start; flex-direction: column; width: 100%"
+              style="
+                display: flex;
+                align-items: flex-start;
+                flex-direction: column;
+                margin-left: 3rem;
+              "
             >
               <h3>Add CRM fields:</h3>
               <Multiselect
@@ -201,7 +206,7 @@
 import 'quill/dist/quill.core.css'
 import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
-
+import { quillEditor } from 'vue-quill-editor'
 import debounce from 'lodash.debounce'
 import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
 
@@ -245,6 +250,7 @@ export default {
     AlertOperandModal,
     AlertGroupModal,
     AlertSettingsModal,
+    quillEditor,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   props: {
@@ -615,6 +621,19 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/buttons';
 
+::v-deep .input-content {
+  width: 13vw;
+  border: 1px solid #e8e8e8 !important;
+  border-radius: 0.3rem;
+  background-color: white;
+  box-shadow: none !important;
+}
+::v-deep .input-form {
+  width: 13vw;
+}
+::v-deep .input-form__active {
+  border: none;
+}
 @keyframes bounce {
   0% {
     transform: translateY(0);

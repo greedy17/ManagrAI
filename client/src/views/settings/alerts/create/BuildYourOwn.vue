@@ -39,7 +39,7 @@
     </Modal>
 
     <div class="alert__row">
-      <div v-show="pageNumber === 0" class="alert__column__" style="margin-bottom: 1rem">
+      <div v-show="pageNumber === 0" class="alert__column" style="margin-bottom: 1rem">
         <div class="workflow-header">
           <h3>Create a Custom Workflow</h3>
           <div class="button-space">
@@ -449,7 +449,7 @@
                       </template>
                     </Multiselect>
                   </template>
-                  <div v-if="userLevel !== 'REP'" class="sendAll">
+                  <div v-if="user.userLevel !== 'REP'" class="sendAll">
                     <input type="checkbox" id="allUsers" v-model="directToUsers" />
                     <label for="allUsers">Send directly to users</label>
                   </div>
@@ -583,7 +583,7 @@
 import 'quill/dist/quill.core.css'
 import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
-
+import { quillEditor } from 'vue-quill-editor'
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 //Internal
@@ -595,17 +595,10 @@ import Modal from '@/components/Modal'
  * Services
  */
 
-import AlertTemplate, {
-  AlertGroupForm,
-  AlertTemplateForm,
-} from '@/services/alerts/'
+import AlertTemplate, { AlertGroupForm, AlertTemplateForm } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
 import { CollectionManager } from '@thinknimble/tn-models'
-import {
-  SObjectField,
-  NON_FIELD_ALERT_OPTS,
-  SOBJECTS_LIST,
-} from '@/services/salesforce'
+import { SObjectField, NON_FIELD_ALERT_OPTS, SOBJECTS_LIST } from '@/services/salesforce'
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
@@ -616,6 +609,7 @@ export default {
     FormField,
     PulseLoadingSpinnerButton,
     Modal,
+    quillEditor,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {

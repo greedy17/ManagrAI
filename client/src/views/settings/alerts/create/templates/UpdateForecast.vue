@@ -395,6 +395,11 @@ export default {
         })
       }
     },
+    setDefaultChannel() {
+      this.directToUsers
+        ? (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = 'default')
+        : (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = null)
+    },
     handleUpdate() {
       this.loading = true
 
@@ -645,11 +650,6 @@ export default {
       } else {
         return [{ fullName: 'Myself', id: 'SELF' }]
       }
-    },
-    setDefaultChannel() {
-      this.directToUsers
-        ? (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = 'default')
-        : (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = null)
     },
     user() {
       return this.$store.state.user
