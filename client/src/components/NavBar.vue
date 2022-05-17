@@ -131,7 +131,7 @@
       <div v-if="userLevel == 'REP' && !user.onboarding" class="right">
         <div class="tooltip">
           <img
-            style="height: 1.4rem; filter: invert(30%)"
+            style="height: 1.2rem; filter: invert(30%)"
             src="@/assets/images/blackhelp.png"
             class="tooltip__icon"
           />
@@ -165,7 +165,7 @@
       <div v-if="userLevel !== 'REP'" class="right">
         <div class="tooltip">
           <img
-            style="height: 1.4rem; filter: invert(30%)"
+            style="height: 1.2rem; filter: invert(30%)"
             src="@/assets/images/blackhelp.png"
             class="tooltip__icon"
           />
