@@ -4,6 +4,7 @@ from django.forms.models import ModelChoiceField
 from . import models as slack_models
 from managr.salesforce import models as sf_models
 from django.db.models import Q
+from managr.core.models import User
 
 
 class CustomFormFieldInline(admin.StackedInline):
@@ -17,9 +18,14 @@ class CustomFormFieldInline(admin.StackedInline):
         parent = self.get_parent_object_from_request(request)
         if parent:
             if db_field.name == "field":
+                print()
                 queryset = sf_models.SObjectField.objects.filter(
-                    Q(salesforce_account__user__organization=parent.organization)
-                    & Q(Q(salesforce_object=parent.resource) | Q(is_public=True))
+                    (
+                        Q(salesforce_account__user__organization=parent.organization)
+                        & Q(salesforce_object=parent.resource)
+                        & Q(salesforce_account__user__is_admin=True)
+                    )
+                    | Q(is_public=True)
                 )
                 return ModelChoiceField(queryset)
         else:
