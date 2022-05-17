@@ -329,6 +329,53 @@ export default {
   position: sticky;
   background-color: $off-white;
 }
+.remove-field-section {
+  z-index: 5;
+  position: absolute;
+  right: 0;
+  top: 9vh;
+  border-radius: 0.33rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background-color: $white;
+  min-width: 16rem;
+  box-shadow: 1px 1px 7px 2px $very-light-gray;
+  &__title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: $base-gray;
+    background-color: $off-white;
+    letter-spacing: 0.4px;
+    padding-left: 1rem;
+    font-weight: bold;
+    font-size: 14px;
+    width: 100%;
+    height: 3rem;
+  }
+  &__body {
+    height: 3rem;
+    margin-left: 5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    width: 100%;
+    height: 3rem;
+    border-top: 1px solid $soft-gray;
+    p {
+      cursor: pointer;
+      // color: $dark-green;
+      font-weight: bold;
+    }
+  }
+}
 .table-cell-header-wide {
   display: table-cell;
   padding: 0.25rem;

@@ -21,7 +21,7 @@
             alt=""
             id="plus"
           />
-          <img style="height: 1.5rem" src="@/assets/images/slackLogo.png" />
+          <img style="height: 1.5rem" src="@/assets/images/logo.png" />
         </div>
         <div class="card__footer">
           <button @click="goToUpdateOpp" class="green__button">View + Edit</button>
@@ -43,7 +43,7 @@
             alt=""
             id="plus"
           />
-          <img style="height: 1.5rem" src="@/assets/images/slackLogo.png" />
+          <img style="height: 1.5rem" src="@/assets/images/logo.png" />
         </div>
         <div class="card__footer">
           <button @click="goToCreate" class="green__button">View + Edit</button>
@@ -202,7 +202,7 @@ export default {
 }
 .card-img {
   width: 2rem;
-  height: 1.5rem;
+  height: 1.25rem;
 }
 
 .green__button {

@@ -17,7 +17,7 @@
         </template>
       </div>
     </div>
-
+    <!-- <p @click="test">test</p> -->
     <div class="opportunity__row">
       <div :class="formType !== 'STAGE_GATING' ? 'collection_fields' : 'stage_fields'">
         <div v-if="formType === 'STAGE_GATING'">
@@ -58,12 +58,15 @@
                 selectLabel="Enter"
                 track-by="apiName"
                 label="referenceDisplayLabel"
+                :loading="dropdownLoading"
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more.</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="onFieldsNextPage">
+                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
                 </template>
 
                 <template slot="placeholder">
@@ -91,10 +94,12 @@
                 label="referenceDisplayLabel"
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="onFieldsNextPage">
+                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -126,10 +131,12 @@
                 label="referenceDisplayLabel"
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="onFieldsNextPage">
+                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -160,10 +167,12 @@
                 label="referenceDisplayLabel"
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="onFieldsNextPage">
+                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -189,10 +198,12 @@
                 label="referenceDisplayLabel"
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="onFieldsNextPage">
+                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -218,10 +229,12 @@
                 label="referenceDisplayLabel"
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="onFieldsNextPage">
+                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -253,10 +266,12 @@
                 label="referenceDisplayLabel"
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="onFieldsNextPage">
+                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -282,12 +297,15 @@
               selectLabel="Enter"
               track-by="apiName"
               label="referenceDisplayLabel"
+              :loading="dropdownLoading"
             >
               <template slot="noResult">
-                <p class="multi-slot">No results.</p>
+                <p class="multi-slot">No results. Try loading more</p>
               </template>
               <template slot="afterList">
-                <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                <p class="multi-slot__more" @click="onFieldsNextPage">
+                  Load More <img src="@/assets/images/plusOne.png" alt="" />
+                </p>
               </template>
               <template slot="placeholder">
                 <p class="slot-icon">
@@ -313,10 +331,12 @@
               label="referenceDisplayLabel"
             >
               <template slot="noResult">
-                <p class="multi-slot">No results.</p>
+                <p class="multi-slot">No results. Try loading more</p>
               </template>
               <template slot="afterList">
-                <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                <p class="multi-slot__more" @click="onFieldsNextPage">
+                  Load More <img src="@/assets/images/plusOne.png" alt="" />
+                </p>
               </template>
               <template slot="placeholder">
                 <p class="slot-icon">
@@ -343,10 +363,12 @@
               label="referenceDisplayLabel"
             >
               <template slot="noResult">
-                <p class="multi-slot">No results.</p>
+                <p class="multi-slot">No results. Try loading more</p>
               </template>
               <template slot="afterList">
-                <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                <p class="multi-slot__more" @click="onFieldsNextPage">
+                  Load More <img src="@/assets/images/plusOne.png" alt="" />
+                </p>
               </template>
               <template slot="placeholder">
                 <p class="slot-icon">
@@ -391,10 +413,12 @@
                 label="referenceDisplayLabel"
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+                  <p class="multi-slot__more" @click="onFieldsNextPage">
+                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -816,10 +840,12 @@
             label="referenceDisplayLabel"
           >
             <template slot="noResult">
-              <p class="multi-slot">No results.</p>
+              <p class="multi-slot">No results. Try loading more</p>
             </template>
             <template slot="afterList">
-              <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+              <p class="multi-slot__more" @click="onFieldsNextPage">
+                Load More <img src="@/assets/images/plusOne.png" alt="" />
+              </p>
             </template>
             <template slot="placeholder">
               <p class="slot-icon">
@@ -841,10 +867,12 @@
             label="referenceDisplayLabel"
           >
             <template slot="noResult">
-              <p class="multi-slot">No results.</p>
+              <p class="multi-slot">No results. Try loading more</p>
             </template>
             <template slot="afterList">
-              <p class="multi-slot__more" @click="onFieldsNextPage">Load More</p>
+              <p class="multi-slot__more" @click="onFieldsNextPage">
+                Load More <img src="@/assets/images/plusOne.png" alt="" />
+              </p>
             </template>
             <template slot="placeholder">
               <p class="slot-icon">
@@ -1079,8 +1107,12 @@ export default {
   },
   data() {
     return {
+      dropdownLoading: false,
       currentStageForm: null,
-      formFields: CollectionManager.create({ ModelClass: SObjectField }),
+      formFields: CollectionManager.create({
+        ModelClass: SObjectField,
+        pagination: { size: 200 },
+      }),
       formFieldList: [],
       salesforceFields,
       customSlackFormConfig: [],
@@ -1113,6 +1145,194 @@ export default {
       addingFields: false,
       productSelected: false,
       addingProducts: false,
+      noteTitle: {
+        _fields: {
+          length: {
+            defaultVal: null,
+            readOnly: false,
+          },
+          id: {
+            defaultVal: '',
+            readOnly: true,
+          },
+          apiName: {
+            defaultVal: '',
+            readOnly: false,
+          },
+          custom: {
+            defaultVal: false,
+            readOnly: false,
+          },
+          createable: {
+            defaultVal: false,
+            readOnly: false,
+          },
+          dataType: {
+            defaultVal: '',
+            readOnly: false,
+          },
+          label: {
+            defaultVal: '',
+            readOnly: false,
+          },
+          reference: {
+            defaultVal: '',
+            readOnly: false,
+          },
+          referenceToInfos: {
+            defaultVal: null,
+            readOnly: false,
+          },
+          updateable: {
+            defaultVal: false,
+            readOnly: false,
+          },
+          required: {
+            defaultVal: false,
+            readOnly: false,
+          },
+          unique: {
+            defaultVal: false,
+            readOnly: false,
+          },
+          value: {
+            defaultVal: '',
+            readOnly: false,
+          },
+          displayValue: {
+            defaultVal: '',
+            readOnly: false,
+          },
+          referenceDisplayLabel: {
+            defaultVal: '',
+            readOnly: true,
+          },
+          filterable: {
+            defaultVal: '',
+            readOnly: true,
+          },
+          order: {
+            defaultVal: null,
+            readOnly: false,
+          },
+          includeInRecap: {
+            defaultVal: null,
+            readOnly: false,
+          },
+        },
+        length: 30,
+        id: '6407b7a1-a877-44e2-979d-1effafec5035',
+        apiName: 'meeting_type',
+        custom: true,
+        createable: true,
+        dataType: 'String',
+        label: 'Note Subject',
+        reference: 'false',
+        referenceToInfos: [],
+        updateable: true,
+        required: false,
+        unique: false,
+        value: '',
+        displayValue: '',
+        referenceDisplayLabel: 'Note Subject',
+        filterable: 'false',
+        order: null,
+        includeInRecap: null,
+      },
+      noteSubject: {
+        _fields: {
+          length: {
+            defaultVal: null,
+            readOnly: false,
+          },
+          id: {
+            defaultVal: '',
+            readOnly: true,
+          },
+          apiName: {
+            defaultVal: '',
+            readOnly: false,
+          },
+          custom: {
+            defaultVal: false,
+            readOnly: false,
+          },
+          createable: {
+            defaultVal: false,
+            readOnly: false,
+          },
+          dataType: {
+            defaultVal: '',
+            readOnly: false,
+          },
+          label: {
+            defaultVal: '',
+            readOnly: false,
+          },
+          reference: {
+            defaultVal: '',
+            readOnly: false,
+          },
+          referenceToInfos: {
+            defaultVal: null,
+            readOnly: false,
+          },
+          updateable: {
+            defaultVal: false,
+            readOnly: false,
+          },
+          required: {
+            defaultVal: false,
+            readOnly: false,
+          },
+          unique: {
+            defaultVal: false,
+            readOnly: false,
+          },
+          value: {
+            defaultVal: '',
+            readOnly: false,
+          },
+          displayValue: {
+            defaultVal: '',
+            readOnly: false,
+          },
+          referenceDisplayLabel: {
+            defaultVal: '',
+            readOnly: true,
+          },
+          filterable: {
+            defaultVal: '',
+            readOnly: true,
+          },
+          order: {
+            defaultVal: null,
+            readOnly: false,
+          },
+          includeInRecap: {
+            defaultVal: null,
+            readOnly: false,
+          },
+        },
+        length: 255,
+        id: '0bb152b5-aac1-4ee0-9c25-51ae98d55af1',
+        apiName: 'meeting_comments',
+        custom: true,
+        createable: true,
+        dataType: 'String',
+        label: 'Notes',
+        reference: 'false',
+        referenceToInfos: [],
+        updateable: true,
+        required: false,
+        unique: false,
+        value: '',
+        displayValue: '',
+        referenceDisplayLabel: 'Notes',
+        filterable: 'false',
+        order: null,
+        includeInRecap: null,
+      },
     }
   },
   watch: {
@@ -1127,12 +1347,7 @@ export default {
               return field.id
             })
             if (currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false) {
-              let fieldsToAdd = this.managrFields.filter((field) => {
-                return (
-                  field.id == '6407b7a1-a877-44e2-979d-1effafec5035' ||
-                  field.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
-                )
-              })
+              let fieldsToAdd = [this.noteTitle, this.noteSubject]
               let copyArray = this.addedFields
               fieldsToAdd = fieldsToAdd.concat(copyArray)
               this.addedFields = fieldsToAdd.map((field, i) => {
@@ -1215,7 +1430,6 @@ export default {
       },
     },
   },
-
   computed: {
     currentFields() {
       return this.customForm ? this.customForm.fields : []
@@ -1314,7 +1528,12 @@ export default {
         .finally((this.loadingMeetingTypes = false))
     },
     async onFieldsNextPage() {
-      await this.formFields.addNextPage()
+      this.dropdownLoading = true
+      await this.formFields.addNextPage().then(() => {
+        setTimeout(() => {
+          this.dropdownLoading = false
+        }, 1000)
+      })
     },
     canRemoveField(field) {
       // If form is create required fields cannot be removed
@@ -1437,14 +1656,14 @@ export default {
   align-items: center;
   justify-content: center;
   color: $gray;
-  font-weight: bold;
-
+  font-size: 12px;
   width: 100%;
   padding: 0.5rem 0rem;
   margin: 0;
+  cursor: text;
   &__more {
-    background-color: $dark-green;
-    color: white;
+    background-color: white;
+    color: $dark-green;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1454,6 +1673,13 @@ export default {
     padding: 0.75rem 0rem;
     margin: 0;
     cursor: pointer;
+
+    img {
+      height: 0.8rem;
+      margin-left: 0.25rem;
+      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+        brightness(93%) contrast(89%);
+    }
   }
 }
 .invert {

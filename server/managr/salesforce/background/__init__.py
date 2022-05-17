@@ -87,22 +87,28 @@ def emit_gen_next_sync(user_id, ops_list, schedule_time=timezone.now()):
     return _process_gen_next_sync(user_id, ops_list, schedule=schedule)
 
 
-def emit_gen_next_object_field_sync(user_id, ops_list, schedule_time=timezone.now()):
+def emit_gen_next_object_field_sync(user_id, ops_list, for_dev, schedule_time=timezone.now()):
     schedule = datetime.strptime(schedule_time, "%Y-%m-%dT%H:%M%Z")
-    return _process_gen_next_object_field_sync(user_id, ops_list, schedule=schedule)
+    return _process_gen_next_object_field_sync(user_id, ops_list, for_dev, schedule=schedule)
 
 
-def emit_sync_sobject_fields(user_id, sync_id, resource, scheduled_for=timezone.now()):
-    return _process_sobject_fields_sync(user_id, sync_id, resource, schedule=scheduled_for)
+def emit_sync_sobject_fields(user_id, sync_id, resource, for_dev, scheduled_for=timezone.now()):
+    return _process_sobject_fields_sync(user_id, sync_id, resource, for_dev, schedule=scheduled_for)
 
 
-def emit_sync_sobject_validations(user_id, sync_id, resource, scheduled_for=timezone.now()):
-    return _process_sobject_validations_sync(user_id, sync_id, resource, schedule=scheduled_for)
+def emit_sync_sobject_validations(
+    user_id, sync_id, resource, for_dev, scheduled_for=timezone.now()
+):
+    return _process_sobject_validations_sync(
+        user_id, sync_id, resource, for_dev, schedule=scheduled_for
+    )
 
 
-def emit_sync_sobject_picklist(user_id, sync_id, resource, scheduled_for=timezone.now()):
+def emit_sync_sobject_picklist(user_id, sync_id, resource, for_dev, scheduled_for=timezone.now()):
 
-    return _process_picklist_values_sync(user_id, sync_id, resource, schedule=scheduled_for)
+    return _process_picklist_values_sync(
+        user_id, sync_id, resource, for_dev, schedule=scheduled_for
+    )
 
 
 def emit_add_call_to_sf(workflow_id, *args):
@@ -172,14 +178,14 @@ def _process_pipeline_sync(sync_id):
 
 @background(schedule=0)
 @log_all_exceptions
-def _process_gen_next_object_field_sync(user_id, operations_list):
+def _process_gen_next_object_field_sync(user_id, operations_list, for_dev):
     user = User.objects.filter(id=user_id).first()
     if not user:
         return logger.exception(f"User not found sync operation not created {user_id}")
 
     return SFObjectFieldsOperation.objects.create(
         user=user, operations_list=operations_list, operation_type=sf_consts.SALESFORCE_FIELD_SYNC
-    ).begin_tasks()
+    ).begin_tasks(for_dev)
 
 
 @background()
@@ -201,8 +207,13 @@ def _generate_form_template(user_id):
             is_public=True,
             id__in=slack_consts.DEFAULT_PUBLIC_FORM_FIELDS.get(resource, {}).get(form_type, []),
         )
+        note_subject = public_fields.filter(id="6407b7a1-a877-44e2-979d-1effafec5035").first()
+        note = public_fields.filter(id="0bb152b5-aac1-4ee0-9c25-51ae98d55af1").first()
         for i, field in enumerate(public_fields):
-            f.fields.add(field, through_defaults={"order": i})
+            if i == 0 and note_subject is not None:
+                f.fields.add(note_subject, through_defaults={"order": i})
+            elif i == 1 and note is not None:
+                f.fields.add(note, through_defaults={"order": i})
         f.save()
 
 
@@ -273,7 +284,7 @@ def _process_resource_sync(user_id, sync_id, resource, limit, offset, attempts=1
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_FIELD_SYNC_QUEUE)
 @log_all_exceptions
-def _process_sobject_fields_sync(user_id, sync_id, resource):
+def _process_sobject_fields_sync(user_id, sync_id, resource, for_dev):
     user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
     if not hasattr(user, "salesforce_account"):
         return
@@ -299,7 +310,13 @@ def _process_sobject_fields_sync(user_id, sync_id, resource):
 
     # make fields into model and save them
     # need to update existing ones in case they are already on a form rather than override
+    if for_dev:
+        logger.info(f"FIELDS FROM SYNC FOR {user.email}")
     for field in fields:
+        if for_dev:
+            logger.info(
+                f"--------------------------------------------------------------------------\nFIELD <{field.label} - {field.api_name}>"
+            )
         existing = SObjectField.objects.filter(
             api_name=field.api_name,
             salesforce_account_id=field.salesforce_account,
@@ -318,7 +335,7 @@ def _process_sobject_fields_sync(user_id, sync_id, resource):
                 sf = user.salesforce_account
                 try:
                     object_picklist = sf.get_individual_picklist_values(
-                        resource, field=field.api_name
+                        resource, field=field.api_name, for_dev=for_dev
                     )
                     attempts = 1
 
@@ -345,14 +362,19 @@ def _process_sobject_fields_sync(user_id, sync_id, resource):
                     )
                 else:
                     picklist_serializer = SObjectPicklistSerializer(data=object_picklist.as_dict)
+
                 picklist_serializer.is_valid(raise_exception=True)
                 picklist_serializer.save()
+                if for_dev:
+                    logger.info(
+                        f"PICKLIST <{object_picklist.as_dict}>\nPICKLIST SERIALIZER <{picklist_serializer.data}>"
+                    )
     return
 
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_FIELD_SYNC_QUEUE)
 @log_all_exceptions
-def _process_picklist_values_sync(user_id, sync_id, resource):
+def _process_picklist_values_sync(user_id, sync_id, resource, for_dev):
     user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
     if not hasattr(user, "salesforce_account"):
         return
@@ -397,7 +419,7 @@ def _process_picklist_values_sync(user_id, sync_id, resource):
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_FIELD_SYNC_QUEUE)
 @log_all_exceptions
-def _process_sobject_validations_sync(user_id, sync_id, resource):
+def _process_sobject_validations_sync(user_id, sync_id, resource, for_dev):
     user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
     if not hasattr(user, "salesforce_account"):
         return
@@ -1173,6 +1195,7 @@ def _process_list_tasks(user_id, data, *args):
 def _process_workflow_tracker(workflow_id):
     """gets workflow and check's if all tasks are completed and manually completes if not already completed"""
     workflow = MeetingWorkflow.objects.filter(id=workflow_id).first()
+    # workflow.user.activity.add_meeting_activity(workflow_id)
     if workflow and workflow.in_progress:
         completed_tasks = set(workflow.completed_operations)
         all_tasks = set(workflow.operations)
@@ -1514,7 +1537,7 @@ def remove_field(org_id, form_field):
                 field.forms.first().order = index
                 field.forms.first().save()
             else:
-                field.forms.first().delete()
+                form.fields.remove(field.id)
     return
 
 

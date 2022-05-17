@@ -34,7 +34,7 @@
                 id="user-input"
                 cols="30"
                 rows="2"
-                style="width: 26.25vw; border-radius: 0.2rem"
+                style="width: 36.5vw; border-radius: 0.2rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
               </textarea>
@@ -45,7 +45,7 @@
                 id="user-input"
                 ccols="30"
                 rows="4"
-                style="width: 26.25vw; border-radius: 0.2rem"
+                style="width: 36.5vw; border-radius: 0.2rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
               </textarea>
@@ -101,7 +101,7 @@
                 v-model="dropdownVal[field.apiName]"
                 openDirection="below"
                 :loading="dropdownLoading"
-                style="width: 13vw"
+                style="width: 18vw"
                 selectLabel="Enter"
                 track-by="value"
                 label="label"
@@ -110,6 +110,195 @@
                   <p>No results.</p>
                 </template>
               </Multiselect>
+
+              <div
+                :class="stageGateField ? 'adding-stage-gate' : 'hide'"
+                v-if="field.apiName === 'StageName'"
+              >
+                <div class="adding-stage-gate__header">
+                  <p>This Stage has validation rules</p>
+                </div>
+
+                <div class="adding-stage-gate__body">
+                  <div v-for="(field, i) in stageValidationFields[stageGateField]" :key="i">
+                    <div v-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
+                      <p>{{ field.referenceDisplayLabel }}*</p>
+                      <Multiselect
+                        :options="stagePicklistQueryOpts[field.apiName]"
+                        @select="
+                          setUpdateValidationValues(
+                            field.apiName === 'ForecastCategory'
+                              ? 'ForecastCategoryName'
+                              : field.apiName,
+                            $event.value,
+                          )
+                        "
+                        v-model="dropdownVal[field.apiName]"
+                        openDirection="below"
+                        :loading="dropdownLoading"
+                        style="width: 18vw"
+                        selectLabel="Enter"
+                        track-by="value"
+                        label="label"
+                      >
+                        <template slot="noResult">
+                          <p class="multi-slot">No results.</p>
+                        </template>
+
+                        <template slot="placeholder">
+                          <p class="slot-icon">
+                            <img src="@/assets/images/search.png" alt="" />
+                            {{
+                              `${currentVals[field.apiName]}` !== 'null'
+                                ? `${currentVals[field.apiName]}`
+                                : `${field.referenceDisplayLabel}`
+                            }}
+                          </p>
+                        </template>
+                      </Multiselect>
+                    </div>
+                    <div v-else-if="field.dataType === 'String' && field.apiName !== 'NextStep'">
+                      <p>{{ field.referenceDisplayLabel }}*</p>
+                      <input
+                        id="user-input"
+                        type="text"
+                        :placeholder="currentVals[field.apiName]"
+                        v-model="currentVals[field.apiName]"
+                        @input="
+                          ;(value = $event.target.value),
+                            setUpdateValidationValues(field.apiName, value)
+                        "
+                      />
+                    </div>
+
+                    <div
+                      v-else-if="
+                        field.dataType === 'TextArea' ||
+                        (field.length > 250 && field.dataType === 'String')
+                      "
+                    >
+                      <p>{{ field.referenceDisplayLabel }}*</p>
+                      <textarea
+                        id="user-input"
+                        ccols="30"
+                        rows="2"
+                        :placeholder="currentVals[field.apiName]"
+                        style="width: 20vw; border-radius: 0.2rem; padding: 7px"
+                        v-model="currentVals[field.apiName]"
+                        @input="
+                          ;(value = $event.target.value),
+                            setUpdateValidationValues(field.apiName, value)
+                        "
+                      >
+                      </textarea>
+                    </div>
+                    <div v-else-if="field.dataType === 'Date'">
+                      <p>{{ field.referenceDisplayLabel }}*</p>
+                      <input
+                        type="text"
+                        onfocus="(this.type='date')"
+                        onblur="(this.type='text')"
+                        :placeholder="currentVals[field.apiName]"
+                        v-model="currentVals[field.apiName]"
+                        id="user-input"
+                        @input="
+                          ;(value = $event.target.value),
+                            setUpdateValidationValues(field.apiName, value)
+                        "
+                      />
+                    </div>
+                    <div v-else-if="field.dataType === 'DateTime'">
+                      <p>{{ field.referenceDisplayLabel }}*</p>
+                      <input
+                        type="datetime-local"
+                        id="start"
+                        v-model="currentVals[field.apiName]"
+                        @input="
+                          ;(value = $event.target.value),
+                            setUpdateValidationValues(field.apiName, value)
+                        "
+                      />
+                    </div>
+                    <div
+                      v-else-if="
+                        field.dataType === 'Phone' ||
+                        field.dataType === 'Double' ||
+                        field.dataType === 'Currency'
+                      "
+                    >
+                      <p>{{ field.referenceDisplayLabel }}*</p>
+                      <input
+                        id="user-input"
+                        type="number"
+                        v-model="currentVals[field.apiName]"
+                        :placeholder="currentVals[field.apiName]"
+                        @input="
+                          ;(value = $event.target.value),
+                            setUpdateValidationValues(field.apiName, value)
+                        "
+                      />
+                    </div>
+
+                    <div v-else-if="field.apiName === 'OwnerId'">
+                      <p>{{ field.referenceDisplayLabel }}*</p>
+
+                      <Multiselect
+                        v-model="selectedOwner"
+                        :options="allUsers"
+                        @select="
+                          setUpdateValidationValues(
+                            field.apiName,
+                            $event.salesforce_account_ref.salesforce_id,
+                          )
+                        "
+                        openDirection="below"
+                        style="width: 18vw"
+                        selectLabel="Enter"
+                        track-by="salesforce_account_ref.salesforce_id"
+                        label="full_name"
+                        :loading="dropdownLoading"
+                      >
+                        <template slot="noResult">
+                          <p class="multi-slot">No results.</p>
+                        </template>
+                        <template slot="placeholder">
+                          <p class="slot-icon">
+                            <img src="@/assets/images/search.png" alt="" />
+                            {{ currentOwner }}
+                          </p>
+                        </template>
+                      </Multiselect>
+                    </div>
+
+                    <div v-else-if="field.apiName === 'AccountId'">
+                      <p>{{ field.referenceDisplayLabel }}*</p>
+                      <Multiselect
+                        v-model="selectedAccount"
+                        :options="allAccounts"
+                        @search-change="getAccounts($event)"
+                        @select="setUpdateValidationValues(field.apiName, $event.id)"
+                        openDirection="below"
+                        style="width: 18vw"
+                        selectLabel="Enter"
+                        track-by="integration_id"
+                        label="name"
+                        :loading="dropdownLoading || loadingAccounts"
+                      >
+                        <template slot="noResult">
+                          <p class="multi-slot">No results.</p>
+                        </template>
+
+                        <template slot="placeholder">
+                          <p class="slot-icon">
+                            <img src="@/assets/images/search.png" alt="" />
+                            {{ currentAccount }}
+                          </p>
+                        </template>
+                      </Multiselect>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
             <div v-else-if="field.dataType === 'Date'">
               <p>{{ field.referenceDisplayLabel }}:</p>
@@ -159,237 +348,11 @@
                   setUpdateValues(field.apiName, $event.salesforce_account_ref.salesforce_id)
                 "
                 openDirection="below"
-                style="width: 13vw"
+                style="width: 18vw"
                 selectLabel="Enter"
                 track-by="salesforce_account_ref.salesforce_id"
                 label="full_name"
                 :loading="dropdownLoading"
-              >
-                <template slot="noResult">
-                  <p>No results.</p>
-                </template>
-              </Multiselect>
-            </div>
-
-            <div v-else-if="field.apiName === 'AccountId'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
-
-              <Multiselect
-                :placeholder="currentAccount"
-                v-model="selectedAccount"
-                :options="allAccounts"
-                @select="setUpdateValues(field.apiName, $event.integration_id)"
-                openDirection="below"
-                style="width: 13vw"
-                selectLabel="Enter"
-                track-by="integration_id"
-                label="name"
-                :loading="dropdownLoading"
-              >
-                <template slot="noResult">
-                  <p>No results.</p>
-                </template>
-              </Multiselect>
-            </div>
-          </section>
-        </div>
-        <div class="flex-end-opp">
-          <div v-if="updatingMeeting" style="display: flex; align-items: center">
-            <button @click="onMakeMeetingUpdate" class="add-button__">Update</button>
-            <p @click="resetEdit" class="cancel">Cancel</p>
-          </div>
-          <div v-else style="display: flex; align-items: center">
-            <button @click="updateResource()" class="add-button__">Update</button>
-            <p @click="resetEdit" class="cancel">Cancel</p>
-          </div>
-        </div>
-      </div>
-    </Modal>
-    <Modal
-      v-if="modalOpen"
-      dimmed
-      @close-modal="
-        () => {
-          $emit('cancel'), resetNotes()
-        }
-      "
-    >
-      <div v-if="notes.length" class="modal-container">
-        <div class="flex-row-spread">
-          <div class="flex-row">
-            <img
-              src="@/assets/images/logo.png"
-              style="height: 1.75rem; margin-left: 0.5rem; margin-right: 0.25rem"
-              alt=""
-            />
-            <h2>Notes</h2>
-          </div>
-
-          <img
-            src="@/assets/images/closer.png"
-            style="height: 1.5rem; margin-top: -0.5rem; margin-right: 0.5rem; cursor: pointer"
-            @click="resetNotes"
-            alt=""
-          />
-        </div>
-        <section class="note-section" :key="i" v-for="(note, i) in notes">
-          <p class="note-section__title">
-            {{ note.saved_data__meeting_type ? note.saved_data__meeting_type + ':' : 'Untitled:' }}
-          </p>
-          <p class="note-section__body">{{ note.saved_data__meeting_comments }}</p>
-          <p class="note-section__date">{{ formatDateTime(note.submission_date) }}</p>
-        </section>
-      </div>
-      <div v-else class="modal-container">
-        <div class="flex-row-spread">
-          <div class="flex-row">
-            <img
-              src="@/assets/images/logo.png"
-              style="height: 1.5rem; margin-left: 0.5rem; margin-right: 0.25rem"
-              alt=""
-            />
-            <h2>Notes</h2>
-          </div>
-          <img
-            src="@/assets/images/closer.png"
-            style="height: 1.75rem; margin-top: -0.5rem; margin-right: 0.5rem; cursor: pointer"
-            @click="resetNotes"
-            alt=""
-          />
-        </div>
-        <section class="note-section">
-          <p class="note-section__title">No notes for this opportunity</p>
-        </section>
-      </div>
-    </Modal>
-    <Modal
-      v-if="addOppModalOpen"
-      dimmed
-      @close-modal="
-        () => {
-          $emit('cancel'), resetAddOpp()
-        }
-      "
-    >
-      <div class="opp-modal-container">
-        <div class="flex-row-spread header">
-          <div class="flex-row">
-            <img
-              src="@/assets/images/logo.png"
-              style="height: 1.75rem; margin-left: 0.5rem; margin-right: 0.25rem"
-              alt=""
-            />
-            <h2>Create Opportunity</h2>
-          </div>
-
-          <img
-            src="@/assets/images/clear.png"
-            class="invert"
-            style="height: 1.25rem; margin-top: -1rem; margin-right: 0.75rem; cursor: pointer"
-            @click="resetAddOpp"
-            alt=""
-          />
-        </div>
-        <div class="opp-modal">
-          <section :key="field.id" v-for="field in createOppForm">
-            <div
-              v-if="
-                field.dataType === 'TextArea' ||
-                (field.dataType === 'String' && field.apiName === 'NextStep')
-              "
-            >
-              <p>{{ field.referenceDisplayLabel }}:</p>
-              <textarea
-                id="user-input"
-                ccols="30"
-                rows="4"
-                style="width: 26.25vw; border-radius: 0.4rem"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-              >
-              </textarea>
-            </div>
-            <div v-else-if="field.dataType === 'String'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
-              <input
-                id="user-input"
-                type="text"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-              />
-            </div>
-
-            <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
-              <Multiselect
-                v-model="currentVals[field.apiName]"
-                :options="picklistQueryOpts[field.apiName]"
-                @select="
-                  setUpdateValues(
-                    field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-                    $event.value,
-                  )
-                "
-                openDirection="below"
-                style="width: 13vw"
-                selectLabel="Enter"
-                track-by="value"
-                label="label"
-              >
-                <template slot="noResult">
-                  <p>No results.</p>
-                </template>
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
-                    {{ `${field.referenceDisplayLabel}` }}
-                  </p>
-                </template>
-              </Multiselect>
-            </div>
-            <div v-else-if="field.dataType === 'Date'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
-              <input
-                type="date"
-                id="user-input"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-              />
-            </div>
-            <div v-else-if="field.dataType === 'DateTime'">
-              <p>
-                {{ field.referenceDisplayLabel }}
-              </p>
-              <input
-                type="datetime-local"
-                id="start"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-              />
-            </div>
-            <div
-              v-else-if="
-                field.dataType === 'Phone' ||
-                field.dataType === 'Double' ||
-                field.dataType === 'Currency'
-              "
-            >
-              <p>{{ field.referenceDisplayLabel }}:</p>
-              <input
-                id="user-input"
-                type="number"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-              />
-            </div>
-            <div v-else-if="field.apiName === 'OwnerId'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
-              <Multiselect
-                v-model="selectedOwner"
-                :options="allUsers"
-                @select="
-                  setUpdateValues(field.apiName, $event.salesforce_account_ref.salesforce_id)
-                "
-                openDirection="below"
-                style="width: 13vw"
-                selectLabel="Enter"
-                track-by="salesforce_account_ref.salesforce_id"
-                label="full_name"
               >
                 <template slot="noResult">
                   <p>No results.</p>
@@ -407,15 +370,16 @@
               <p>{{ field.referenceDisplayLabel }}:</p>
 
               <Multiselect
+                :placeholder="currentAccount"
                 v-model="selectedAccount"
                 :options="allAccounts"
-                @search-change="getAccounts($event)"
-                @select="setUpdateValues(field.apiName, $event.id)"
+                @select="setUpdateValues(field.apiName, $event.integration_id)"
                 openDirection="below"
-                style="width: 13vw"
+                style="width: 18vw"
                 selectLabel="Enter"
-                track-by="id"
+                track-by="integration_id"
                 label="name"
+                :loading="dropdownLoading"
               >
                 <template slot="noResult">
                   <p>No results.</p>
@@ -429,114 +393,22 @@
               </Multiselect>
             </div>
           </section>
+          <!-- <button>Add product</button> -->
         </div>
-        <div class="flex-end">
-          <button class="add-button" @click="createResource">Create Opportunity</button>
-          <p @click="resetAddOpp" class="cancel">Cancel</p>
+        <div class="flex-end-opp">
+          <div v-if="updatingMeeting" style="display: flex; align-items: center">
+            <button @click="onMakeMeetingUpdate" class="add-button__">Update</button>
+            <p @click="resetEdit" class="cancel">Cancel</p>
+          </div>
+          <div v-else style="display: flex; align-items: center">
+            <button @click="updateResource()" class="add-button__">Update</button>
+            <p @click="resetEdit" class="cancel">Cancel</p>
+          </div>
         </div>
       </div>
     </Modal>
 
     <div ref="pipelines" v-if="!loading">
-      <section class="flex-row-spread">
-        <div v-if="!workflowCheckList.length && !primaryCheckList.length" class="flex-row">
-          <button @click.stop="showList = !showList" class="select-btn">
-            {{ currentList }}
-            <img
-              v-if="!showList"
-              style="height: 1rem; margin-left: 0.5rem"
-              src="@/assets/images/rightArrow.png"
-              alt=""
-            />
-            <img
-              v-else
-              style="height: 1rem; margin-left: 0.5rem"
-              src="@/assets/images/downArrow.png"
-              alt=""
-            />
-          </button>
-          <div v-outside-click="closeListSelect" v-show="showList" class="list-section">
-            <div class="list-section__title flex-row-spread">
-              <p>{{ currentList }}</p>
-            </div>
-            <p @click="showPopularList = !showPopularList" class="list-section__sub-title">
-              Standard Lists
-              <img v-if="showPopularList" src="@/assets/images/downArrow.png" alt="" /><img
-                v-else
-                src="@/assets/images/rightArrow.png"
-                alt=""
-              />
-            </p>
-            <button v-if="showPopularList" @click="allOpportunities" class="list-button">
-              All Opportunities
-              <span class="filter" v-if="currentList === 'All Opportunities'"> active</span>
-            </button>
-            <router-link style="width: 100%" v-bind:to="'/pipelines/' + 'Closing-this-month'">
-              <button v-if="showPopularList" class="list-button">
-                Closing this month
-                <span class="filter" v-if="currentList === 'Closing this month'"> active</span>
-              </button>
-            </router-link>
-
-            <router-link style="width: 100%" v-bind:to="'/pipelines/' + 'Closing-next-month'">
-              <button v-if="showPopularList" class="list-button">
-                Closing next month
-                <span class="filter" v-if="currentList === 'Closing next month'"> active</span>
-              </button>
-            </router-link>
-
-            <p @click="showMeetingList = !showMeetingList" class="list-section__sub-title">
-              Meetings
-              <img v-if="showMeetingList" src="@/assets/images/downArrow.png" alt="" /><img
-                v-else
-                src="@/assets/images/rightArrow.png"
-                alt=""
-              />
-            </p>
-            <div style="width: 100%" v-if="showMeetingList">
-              <button @click="selectMeeting('Today\'s meetings')" class="list-button">
-                Today's meetings
-                <span class="filter" v-if="currentList === 'Today\'s Meetings'"> active</span>
-              </button>
-            </div>
-            <p @click="showWorkflowList = !showWorkflowList" class="list-section__sub-title">
-              Workflows
-              <img v-if="showWorkflowList" src="@/assets/images/downArrow.png" alt="" /><img
-                v-else
-                src="@/assets/images/rightArrow.png"
-                alt=""
-              />
-            </p>
-            <div style="width: 100%" v-if="showWorkflowList">
-              <div :key="i" v-for="(template, i) in templates.list">
-                <router-link v-bind:to="'/pipelines/' + `${template.id}`">
-                  <button class="list-button">
-                    {{ template.title }}
-                    <span class="filter" v-if="currentList === template.title"> active</span>
-                  </button>
-                </router-link>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="flex-row">
-          <div v-if="!selectedWorkflow" class="search-bar">
-            <input type="search" v-model="filterText" placeholder="search" />
-            <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
-          </div>
-          <div v-else class="search-bar">
-            <input type="search" v-model="workflowFilterText" placeholder="search" />
-            <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
-          </div>
-          <button @click="createOppInstance()" class="add-button">
-            <img src="@/assets/images/plusOne.png" style="height: 1rem" alt="" />
-            Create Opportunity
-          </button>
-          <button @click="manualSync" class="select-btn">
-            <img src="@/assets/images/refresh.png" class="invert" style="height: 1.15rem" alt="" />
-          </button>
-        </div>
-      </section>
       <div class="results">
         <h6 style="color: #9b9b9b">
           Today's Meetings:
@@ -576,7 +448,6 @@
     <div v-if="loading">
       <Loader loaderText="Pulling in your meetings" />
     </div>
-    <!-- <router-view :key="$route.fullPath"></router-view> -->
   </div>
 </template>
 <script>
@@ -584,7 +455,6 @@ import { SObjects, SObjectPicklist, MeetingWorkflows } from '@/services/salesfor
 import AlertTemplate from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
 import SlackOAuth from '@/services/slack'
-
 import MeetingWorkflow from '@/components/MeetingWorkflow'
 import MeetingWorkflowHeader from '@/components/MeetingWorkflowHeader'
 import User from '@/services/users'
@@ -603,8 +473,10 @@ export default {
   data() {
     return {
       id: this.$route.params.id,
+      stageGateField: null,
+      stageValidationFields: {},
+      stagesWithForms: [],
       dropdownVal: {},
-      referenceName: null,
       key: 0,
       meetingKey: 0,
       dropdownLoading: false,
@@ -628,8 +500,6 @@ export default {
       selection: false,
       allStages: [],
       allForecasts: [],
-      newStage: null,
-      newForecast: null,
       originalList: null,
       daysForward: null,
       allOpps: null,
@@ -637,14 +507,13 @@ export default {
       loadingWorkflows: false,
       templates: CollectionManager.create({ ModelClass: AlertTemplate }),
       users: CollectionManager.create({ ModelClass: User }),
+      stagePicklistQueryOpts: {},
       currentWorkflow: null,
       selectedWorkflow: false,
       modalOpen: false,
       editOpModalOpen: false,
       addOppModalOpen: false,
       refreshId: null,
-      filterText: '',
-      workflowFilterText: '',
       currentList: "Today's Meetings",
       alertInstanceId: null,
       showList: false,
@@ -656,113 +525,25 @@ export default {
       selectedAccount: null,
       selectedOwner: null,
       showPopularList: true,
-      notes: [],
       updateOppForm: null,
       oppFormCopy: null,
       createOppForm: null,
       createContactForm: null,
-      oppFields: [],
       instanceId: null,
       contactInstanceId: null,
       formData: {},
-      noteTitle: '',
-      noteInfo: '',
       picklistQueryOpts: {},
       picklistQueryOptsContacts: {},
-      instanceIds: [],
       allAccounts: null,
       allUsers: null,
-      filtering: false,
-      filterSelected: false,
-      activeFilters: [],
-      hoveredIndex: null,
-      currentFilter: null,
-      operatorValue: 'EQUALS',
-      currentOperators: ['equals'],
-      filterType: null,
-      filterFields: [],
-      filterApiName: null,
-      filterValues: [],
-      filters: [],
-      operatorsLength: 0,
       showMeetingList: true,
       selectedMeeting: false,
       meetings: null,
-      multi: null,
-      ladFilter: {
-        apiName: 'LastActivityDate',
-        dataType: 'Date',
-        referenceDisplayLabel: 'Last Activity Date',
-      },
-      lmdFilter: {
-        apiName: 'LastModifiedDate',
-        dataType: 'DateTime',
-        referenceDisplayLabel: 'Last Modified Date',
-      },
     }
   },
-  // mounted() {
-  //   setTimeout(() => {
-  //     this.getInitialAccounts()
-  //   }, 1000)
-  // },
   computed: {
-    currentCheckList() {
-      if (this.primaryCheckList.length > 0) {
-        return this.primaryCheckList
-      } else if (this.workflowCheckList.length > 0) {
-        return this.workflowCheckList
-      } else {
-        return []
-      }
-    },
     user() {
       return this.$store.state.user
-    },
-    allOppsFiltered() {
-      return this.allOpps.filter((opp) =>
-        opp.name.toLowerCase().includes(this.filterText.toLowerCase()),
-      )
-    },
-    filteredWorkflows() {
-      return this.currentWorkflow.filter((opp) =>
-        opp.name.toLowerCase().includes(this.workflowFilterText.toLowerCase()),
-      )
-    },
-    currentMonth() {
-      let date = new Date()
-      return date.getMonth()
-    },
-    currentDay() {
-      let date = new Date()
-      date = date
-        .toLocaleDateString()
-        .substring(date.toLocaleDateString().indexOf('/') + 1)
-        .substring(0, date.toLocaleDateString().indexOf('/') + 1)
-      if (date.includes('/')) {
-        date = date.slice(0, -1)
-        return '0' + date
-      } else {
-        return date
-      }
-    },
-    syncDay() {
-      if (this.$store.state.user.salesforceAccountRef.lastSyncTime) {
-        return this.formatDateTime(this.$store.state.user.salesforceAccountRef.lastSyncTime)
-          .substring(
-            this.formatDateTime(this.$store.state.user.salesforceAccountRef.lastSyncTime).indexOf(
-              '/',
-            ) + 1,
-          )
-          .substring(
-            0,
-            this.formatDateTime(this.$store.state.user.salesforceAccountRef.lastSyncTime).indexOf(
-              '/',
-            ),
-          )
-      } else {
-        return null
-      }
     },
   },
   created() {
@@ -770,15 +551,10 @@ export default {
     this.getObjects()
     this.templates.refresh()
     this.getAllForms()
-    this.listStages()
-    this.listForecast()
-    this.resourceSync()
     this.getUsers()
   },
   watch: {
     accountSobjectId: 'getInitialAccounts',
-    primaryCheckList: 'closeAll',
-    workflowCheckList: 'closeAll',
     updateList: {
       async handler(currList) {
         if (currList.length === 0 && this.recapList.length) {
@@ -795,9 +571,6 @@ export default {
     },
   },
   methods: {
-    tester() {
-      console.log(this.templates.list)
-    },
     async getMeetingList() {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
@@ -862,444 +635,14 @@ export default {
         }, 500)
       }
     },
-
     selectMeeting(name) {
       this.currentList = name
       this.showList = false
       this.selectedMeeting = true
       this.selectedWorkflow = false
-      this.closeFilterSelection()
-    },
-    setOpps() {
-      User.api.getUser(this.user.id).then((response) => {
-        this.$store.commit('UPDATE_USER', response)
-      })
-    },
-    closeFilters() {
-      this.filtering = false
-    },
-    closeFilterSelection() {
-      this.filterSelected = false
-      this.activeFilters = []
-      this.operatorValue = 'EQUALS'
-      this.currentOperator = ['equals']
-      this.filterValues = []
-      this.filters = []
     },
     closeListSelect() {
       this.showList = false
-    },
-    async getFilteredObjects(value) {
-      this.loadingWorkflows = true
-      if (value) {
-        this.filters.push([this.operatorValue, this.filterApiName, value])
-      }
-      try {
-        const res = await SObjects.api.getObjects('Opportunity', true, this.filters)
-        if (this.selectedWorkflow) {
-          this.allOpps = res.results
-          this.updateWorkflowList(this.currentList, this.refreshId)
-        } else if (this.currentList === 'Closing this month') {
-          this.allOpps = res.results
-          this.allOpps = this.allOpps.filter(
-            (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth,
-          )
-        } else if (this.currentList === 'Closing next month') {
-          this.allOpps = res.results
-          this.allOpps = this.allOpps.filter(
-            (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth + 1,
-          )
-        } else {
-          this.allOpps = res.results
-        }
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.operatorValue = 'EQUALS'
-        this.currentOperator = ['equals']
-        this.loadingWorkflows = false
-      }
-    },
-    addOperator(name) {
-      this.operatorValue = name
-      switch (name) {
-        case 'EQUALS':
-          this.currentOperators.length === 1
-            ? (this.currentOperators = ['equals'])
-            : this.currentOperators.push('equals')
-          break
-        case 'NOT_EQUALS':
-          this.currentOperators.length === 1
-            ? (this.currentOperators = ['not equals'])
-            : this.currentOperators.push('not equals')
-          break
-        case 'GREATER_THAN':
-          this.currentOperators.length === 1
-            ? (this.currentOperators = ['greater than'])
-            : this.currentOperators.push('greater than')
-          break
-        case 'GREATER_THAN_EQUALS':
-          this.currentOperators.length === 1
-            ? (this.currentOperators = ['greater or equal'])
-            : this.currentOperators.push('greater or equal')
-          break
-        case 'LESS_THAN':
-          this.currentOperators.length === 1
-            ? (this.currentOperators = ['less than'])
-            : this.currentOperators.push('less than')
-          break
-        case 'LESS_THAN_EQUALS':
-          this.currentOperators.length === 1
-            ? (this.currentOperators = ['less or equal'])
-            : this.currentOperators.push('less or equal')
-          break
-        case 'CONTAINS':
-          this.currentOperators.length === 1
-            ? (this.currentOperators = ['contains'])
-            : this.currentOperators.push('contains')
-          break
-        case 'RANGE':
-          this.currentOperators.length === 1
-            ? (this.currentOperators = ['range'])
-            : this.currentOperators.push('range')
-          break
-        default:
-          console.log('(0_o)')
-      }
-    },
-    addingFilter() {
-      if (this.filtering === true) {
-        this.filtering = false
-      } else {
-        this.filtering = true
-        this.filterSelected = false
-      }
-    },
-    applyFilter(value) {
-      this.updateFilterValue = value
-      this.operatorsLength += 1
-      if (this.currentOperators.length < this.operatorsLength) {
-        this.currentOperators.push('equals')
-      }
-      this.getFilteredObjects(value)
-      this.filterSelected = false
-      this.activeFilters.push(this.currentFilter)
-    },
-    valueSelected(value, name) {
-      let users = this.allUsers.filter((user) => user.salesforce_account_ref)
-      let user = null
-      if (name === 'OwnerId') {
-        this.referenceName = name
-        user = users.filter((user) => user.salesforce_account_ref.salesforce_id === value)
-        this.filterValues.push(user[0].full_name)
-      } else if (name === 'AccountId') {
-        let account = this.allAccounts.filter((account) => account.integration_id === value)
-        this.filterValues.push(account[0].name)
-      } else {
-        this.filterValues.push(value.value)
-      }
-    },
-    selectFilter(name, type, label) {
-      this.filtering = !this.filtering
-      this.filterApiName = name
-      this.filterType = type
-      this.currentFilter = label
-      this.filterSelected = true
-    },
-    removeFilter(name, index) {
-      this.activeFilters.splice(index, 1)
-      this.filters.splice(index, 1)
-      this.filterValues.splice(index, 1)
-      this.currentOperators.splice(index, 1)
-      this.getFilteredObjects()
-      this.filterSelected = false
-      this.currentFilter = null
-      this.operatorValue = 'EQUALS'
-      this.filterApiName = null
-    },
-    capitalizeFirstLetter(string) {
-      return string.charAt(0).toUpperCase() + string.slice(1)
-    },
-    camelize(str) {
-      return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {
-        if (+match === 0) return ''
-        return index === 0 ? match.toLowerCase() : match.toUpperCase()
-      })
-    },
-    sortOpps(dT, field, apiName) {
-      let newField = this.capitalizeFirstLetter(this.camelize(field))
-
-      if (field === 'Stage') {
-        this.allOpps = this.allOpps.sort(function (a, b) {
-          const nameA = a['secondary_data']['StageName']
-          const nameB = b['secondary_data']['StageName']
-          if (nameA < nameB) {
-            return -1
-          }
-          if (nameA > nameB) {
-            return 1
-          }
-          return 0
-        })
-      } else if (dT === 'TextArea') {
-        this.allOpps = this.allOpps.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${newField}`]
-          const nameB = b['secondary_data'][`${newField}`]
-          if (nameA.length < nameB.length) {
-            return -1
-          }
-          if (nameA.length > nameB.length) {
-            return 1
-          }
-          return 0
-        })
-      } else if (apiName.includes('__c')) {
-        this.allOpps = this.allOpps.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${apiName}`]
-          const nameB = b['secondary_data'][`${apiName}`]
-          if (nameA < nameB) {
-            return -1
-          }
-          if (nameA > nameB) {
-            return 1
-          }
-          return 0
-        })
-      } else {
-        this.allOpps = this.allOpps.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${newField}`]
-          const nameB = b['secondary_data'][`${newField}`]
-          if (nameA < nameB) {
-            return -1
-          }
-          if (nameA > nameB) {
-            return 1
-          }
-          return 0
-        })
-      }
-    },
-    sortOppsReverse(dT, field, apiName) {
-      let newField = this.capitalizeFirstLetter(this.camelize(field))
-
-      if (field === 'Stage') {
-        this.allOpps = this.allOpps.sort(function (a, b) {
-          const nameA = a['secondary_data']['StageName']
-          const nameB = b['secondary_data']['StageName']
-          if (nameA < nameB) {
-            return 1
-          }
-          if (nameA > nameB) {
-            return -1
-          }
-          return 0
-        })
-      } else if (dT === 'TextArea') {
-        this.allOpps = this.allOpps.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${newField}`]
-          const nameB = b['secondary_data'][`${newField}`]
-          if (nameA.length < nameB.length) {
-            return 1
-          }
-          if (nameA.length > nameB.length) {
-            return -1
-          }
-          return 0
-        })
-      } else if (apiName.includes('__c')) {
-        this.allOpps = this.allOpps.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${apiName}`]
-          const nameB = b['secondary_data'][`${apiName}`]
-          if (nameA < nameB) {
-            return 1
-          }
-          if (nameA > nameB) {
-            return -1
-          }
-          return 0
-        })
-      } else {
-        this.allOpps = this.allOpps.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${newField}`]
-          const nameB = b['secondary_data'][`${newField}`]
-          if (nameA < nameB) {
-            return 1
-          }
-          if (nameA > nameB) {
-            return -1
-          }
-          return 0
-        })
-      }
-    },
-    sortWorkflows(dT, field, apiName) {
-      let newField = this.capitalizeFirstLetter(this.camelize(field))
-
-      if (field === 'Stage') {
-        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-          const nameA = a['secondary_data']['StageName']
-          const nameB = b['secondary_data']['StageName']
-          if (nameA < nameB) {
-            return -1
-          }
-          if (nameA > nameB) {
-            return 1
-          }
-          return 0
-        })
-      } else if (dT === 'TextArea') {
-        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${newField}`]
-          const nameB = b['secondary_data'][`${newField}`]
-          if (nameA.length < nameB.length) {
-            return -1
-          }
-          if (nameA.length > nameB.length) {
-            return 1
-          }
-          return 0
-        })
-      } else if (apiName.includes('__c')) {
-        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${apiName}`]
-          const nameB = b['secondary_data'][`${apiName}`]
-          if (nameA < nameB) {
-            return -1
-          }
-          if (nameA > nameB) {
-            return 1
-          }
-          return 0
-        })
-      } else {
-        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${newField}`]
-          const nameB = b['secondary_data'][`${newField}`]
-          if (nameA < nameB) {
-            return -1
-          }
-          if (nameA > nameB) {
-            return 1
-          }
-          return 0
-        })
-      }
-    },
-    sortWorkflowsReverse(dT, field, apiName) {
-      let newField = this.capitalizeFirstLetter(this.camelize(field))
-
-      if (field === 'Stage') {
-        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-          const nameA = a['secondary_data']['StageName']
-          const nameB = b['secondary_data']['StageName']
-          if (nameA < nameB) {
-            return 1
-          }
-          if (nameA > nameB) {
-            return -1
-          }
-          return 0
-        })
-      } else if (dT === 'TextArea') {
-        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${newField}`]
-          const nameB = b['secondary_data'][`${newField}`]
-          if (nameA.length < nameB.length) {
-            return 1
-          }
-          if (nameA.length > nameB.length) {
-            return -1
-          }
-          return 0
-        })
-      } else if (apiName.includes('__c')) {
-        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${apiName}`]
-          const nameB = b['secondary_data'][`${apiName}`]
-          if (nameA < nameB) {
-            return 1
-          }
-          if (nameA > nameB) {
-            return -1
-          }
-          return 0
-        })
-      } else {
-        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${newField}`]
-          const nameB = b['secondary_data'][`${newField}`]
-          if (nameA < nameB) {
-            return 1
-          }
-          if (nameA > nameB) {
-            return -1
-          }
-          return 0
-        })
-      }
-    },
-    selectPrimaryCheckbox(id) {
-      if (this.primaryCheckList.includes(id)) {
-        this.primaryCheckList = this.primaryCheckList.filter((opp) => opp !== id)
-      } else {
-        this.primaryCheckList.push(id)
-      }
-    },
-    selectWorkflowCheckbox(id) {
-      if (this.workflowCheckList.includes(id)) {
-        this.workflowCheckList = this.workflowCheckList.filter((opp) => opp !== id)
-      } else {
-        this.workflowCheckList.push(id)
-      }
-    },
-    closeAll() {
-      if (this.primaryCheckList.length === 0 || this.workflowCheckList.length === 0) {
-        this.closeDateSelected = false
-        this.advanceStageSelected = false
-        this.forecastSelected = false
-      }
-    },
-    setStage(val) {
-      this.newStage = val
-    },
-    setForecast(val) {
-      this.newForecast = val
-    },
-    onCheckAll() {
-      if (this.primaryCheckList.length < 1) {
-        for (let i = 0; i < this.allOppsFiltered.length; i++) {
-          this.primaryCheckList.push(this.allOppsFiltered[i].id)
-        }
-      } else if (
-        this.primaryCheckList.length > 0 &&
-        this.primaryCheckList.length < this.allOppsFiltered.length
-      ) {
-        for (let i = 0; i < this.allOppsFiltered.length; i++) {
-          !this.primaryCheckList.includes(this.allOppsFiltered[i].id)
-            ? this.primaryCheckList.push(this.allOppsFiltered[i].id)
-            : (this.primaryCheckList = this.primaryCheckList)
-        }
-      } else {
-        this.primaryCheckList = []
-      }
-    },
-    onCheckAllWorkflows() {
-      if (this.workflowCheckList.length < 1) {
-        for (let i = 0; i < this.filteredWorkflows.length; i++) {
-          this.workflowCheckList.push(this.filteredWorkflows[i].id)
-        }
-      } else if (
-        this.workflowCheckList.length > 0 &&
-        this.workflowCheckList.length < this.filteredWorkflows.length
-      ) {
-        for (let i = 0; i < this.filteredWorkflows.length; i++) {
-          !this.workflowCheckList.includes(this.filteredWorkflows[i].id)
-            ? this.workflowCheckList.push(this.filteredWorkflows[i].id)
-            : (this.workflowCheckList = this.workflowCheckList)
-        }
-      } else {
-        this.workflowCheckList = []
-      }
     },
     async listPicklists(type, query_params) {
       try {
@@ -1309,39 +652,21 @@ export default {
         console.log(e)
       }
     },
-    async listStages() {
+    async listStagePicklists(type, query_params) {
       try {
-        const res = await SObjectPicklist.api.listPicklists({
-          salesforceObject: 'Opportunity',
-          picklistFor: 'StageName',
-        })
-        this.allStages = res.length ? res[0]['values'] : []
+        const res = await SObjectPicklist.api.listPicklists(query_params)
+        this.stagePicklistQueryOpts[type] = res.length ? res[0]['values'] : []
       } catch (e) {
         console.log(e)
       }
     },
-    async listForecast() {
+    async listCreatePicklists(type, query_params) {
       try {
-        const res = await SObjectPicklist.api.listPicklists({
-          salesforceObject: 'Opportunity',
-          picklistFor: 'ForecastCategoryName',
-        })
-        this.allForecasts = res.length ? res[0]['values'] : []
+        const res = await SObjectPicklist.api.listPicklists(query_params)
+        this.createQueryOpts[type] = res.length ? res[0]['values'] : []
       } catch (e) {
         console.log(e)
       }
-    },
-    async updateWorkflow(id) {
-      try {
-        await AlertTemplate.api.runAlertTemplateNow(id)
-      } catch (e) {
-        console.log(e)
-      } finally {
-      }
-    },
-    resetNotes() {
-      this.modalOpen = !this.modalOpen
-      this.notes = []
     },
     resetEdit() {
       this.editOpModalOpen = !this.editOpModalOpen
@@ -1355,7 +680,6 @@ export default {
           resourceType: 'Contact',
           formType: 'UPDATE',
         })
-        // this.addOppModalOpen = true
         this.contactInstanceId = res.form_id
       } catch (e) {
         console.log(e)
@@ -1432,6 +756,7 @@ export default {
       }
     },
     async createFormInstance(id, alertInstanceId = null) {
+      this.stageGateField = null
       this.dropdownLoading = true
       this.editOpModalOpen = true
       this.currentVals = []
@@ -1457,7 +782,7 @@ export default {
               ? (this.currentAccount = this.allOpps.filter(
                   (opp) => opp.id === this.oppId,
                 )[0].account_ref.name)
-              : (this.currentAccount = 'Select Account')
+              : (this.currentAccount = 'Account')
           })
       } catch (e) {
         console.log(e)
@@ -1477,93 +802,19 @@ export default {
         console.log(e)
       }
     },
-    pushCloseDate() {
-      if (this.selectedWorkflow) {
-        for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
-          this.$refs.workflowTableChild[i].onPushCloseDate()
-          this.updateOpps()
-          this.updateWorkflowList(this.currentList, this.refreshId)
-        }
-        this.workflowCheckList = []
-      } else {
-        for (let i = 0; i < this.$refs.pipelineTableChild.length; i++) {
-          this.$refs.pipelineTableChild[i].onPushCloseDate()
-          this.updateOpps()
-        }
-        this.primaryCheckList = []
-      }
-    },
-    advanceStage() {
-      if (this.selectedWorkflow) {
-        for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
-          this.$refs.workflowTableChild[i].onAdvanceStage()
-          this.updateOpps()
-          this.updateWorkflowList(this.currentList, this.refreshId)
-        }
-        this.workflowCheckList = []
-      } else {
-        for (let i = 0; i < this.$refs.pipelineTableChild.length; i++) {
-          this.$refs.pipelineTableChild[i].onAdvanceStage()
-          this.updateOpps()
-        }
-        this.primaryCheckList = []
-      }
-    },
-    changeForecast() {
-      if (this.selectedWorkflow) {
-        for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
-          this.$refs.workflowTableChild[i].onChangeForecast()
-          this.updateOpps()
-          this.updateWorkflowList(this.currentList, this.refreshId)
-        }
-        this.workflowCheckList = []
-      } else {
-        for (let i = 0; i < this.$refs.pipelineTableChild.length; i++) {
-          this.$refs.pipelineTableChild[i].onChangeForecast()
-          this.updateOpps()
-        }
-        this.primaryCheckList = []
-      }
-    },
     setUpdateValues(key, val) {
       if (val) {
         this.formData[key] = val
       }
-    },
-    async updateOpps() {
-      try {
-        let updatedRes = await SObjects.api.getObjects('Opportunity')
-        this.allOpps = updatedRes.results
-        this.originalList = updatedRes.results
-        if (this.currentList === 'Closing this month') {
-          this.stillThisMonth()
-        } else if (this.currentList === 'Closing next month') {
-          this.stillNextMonth()
-        }
-      } catch (e) {
-        console.log(e)
+      if (this.stagesWithForms.includes(val)) {
+        this.stageGateField = val
+      } else {
+        this.stageGateField = null
       }
     },
-    async resourceSync() {
-      if (this.currentDay !== this.syncDay) {
-        this.loading = true
-        try {
-          const res = await SObjects.api.resourceSync()
-        } catch (e) {
-          console.log(e)
-        } finally {
-          this.getObjects()
-          User.api.getUser(this.user.id).then((response) => {
-            this.$store.commit('UPDATE_USER', response)
-          })
-          this.loading = false
-          this.$Alert.alert({
-            type: 'success',
-            timeout: 3000,
-            message: 'Daily Sync complete',
-            sub: 'All fields reflect your current SFDC data',
-          })
-        }
+    setUpdateValidationValues(key, val) {
+      if (val) {
+        this.formData[key] = val
       }
     },
     async manualSync() {
@@ -1604,14 +855,6 @@ export default {
           timeout: 1000,
           message: 'Salesforce update successful!',
         })
-        this.closeFilterSelection()
-        if (this.selectedWorkflow) {
-          this.updateWorkflowList(this.currentList, this.refreshId)
-        } else if (this.currentList === 'Closing this month') {
-          this.stillThisMonth()
-        } else if (this.currentList === 'Closing next month') {
-          this.stillNextMonth()
-        }
       } catch (e) {
         console.log(e)
       }
@@ -1638,54 +881,12 @@ export default {
           message: 'Opportunity created successfully!',
         })
       }
-      // this.getAllForms()
     },
-    async selectList() {
-      // this.currentList = this.templates.list.filter((temp) => temp.id === this.id)[0].title
-      if (this.id) {
-        this.loadingWorkflows = true
-        this.refreshId = this.id
-        setTimeout(() => {
-          this.currentList = this.templates.list.filter((temp) => temp.id === this.id)[0].title
-        }, 1000)
-        try {
-          let res = await AlertTemplate.api.runAlertTemplateNow(this.id, {
-            fromWorkflow: true,
-          })
-          this.currentWorkflow = this.allOpps.filter((opp) =>
-            res.data.ids.includes(opp.integration_id),
-          )
-          if (this.currentWorkflow.length < 1) {
-            this.updateWorkflow(this.id)
-          }
-        } catch (error) {
-          console.log(error)
-        } finally {
-          this.selectedWorkflow = true
-          this.loadingWorkflows = false
-        }
-      }
-    },
-    async updateWorkflowList(title, id) {
-      this.refreshId = id
-      this.currentList = title
-      try {
-        let res = await AlertTemplate.api.runAlertTemplateNow(id, {
-          fromWorkflow: true,
-        })
-        this.currentWorkflow = this.allOpps.filter((opp) =>
-          res.data.ids.includes(opp.integration_id),
-        )
-      } catch (error) {
-        console.log(error)
-      } finally {
-        this.selectedWorkflow = true
-        this.showList = false
-      }
-    },
+
     async getAllForms() {
       try {
         let res = await SlackOAuth.api.getOrgCustomForm()
+
         this.updateOppForm = res.filter(
           (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
         )
@@ -1695,6 +896,12 @@ export default {
         this.createContactForm = res.filter(
           (obj) => obj.formType === 'CREATE' && obj.resource === 'Contact',
         )
+        let stageGateForms = res.filter(
+          (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Opportunity',
+        )
+
+        let stages = stageGateForms.map((field) => field.stage)
+        this.stagesWithForms = stages
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
         this.createOppForm = this.createOppForm[0].fieldsRef
         this.createContactForm = this.createContactForm[0].fieldsRef
@@ -1744,31 +951,44 @@ export default {
         }
 
         for (let i in this.createQueryOpts) {
-          this.createQueryOpts[i] = this.listPicklists(i, { picklistFor: i })
+          this.createQueryOpts[i] = this.listCreatePicklists(i, { picklistFor: i })
         }
 
-        this.filterFields = this.updateOppForm[0].fieldsRef.filter(
-          (field) =>
-            field.apiName !== 'meeting_type' &&
-            field.apiName !== 'meeting_comments' &&
-            !field.apiName.includes('__c'),
-        )
-        this.filterFields = [...this.filterFields, this.ladFilter, this.lmdFilter]
-
-        this.updateOppForm[0].fieldsRef.filter((field) => field.apiName === 'AccountId')
+        this.updateOppForm[0].fieldsRef.filter((field) => field.apiName === 'AccountId').length
           ? (this.accountSobjectId = this.updateOppForm[0].fieldsRef.filter(
+              (field) => field.apiName === 'AccountId',
+            )[0].id)
+          : this.createOppForm.filter((field) => field.apiName === 'AccountId').length
+          ? (this.accountSobjectId = this.createOppForm.filter(
               (field) => field.apiName === 'AccountId',
             )[0].id)
           : (this.accountSobjectId = null)
 
-        this.oppFields = this.updateOppForm[0].fieldsRef.filter(
-          (field) =>
-            field.apiName !== 'meeting_type' &&
-            field.apiName !== 'meeting_comments' &&
-            field.apiName !== 'Name' &&
-            field.apiName !== 'AccountId' &&
-            field.apiName !== 'OwnerId',
-        )
+        for (const field of stageGateForms) {
+          this.stageValidationFields[field.stage] = field.fieldsRef
+        }
+        let stageArrayOfArrays = stageGateForms.map((field) => field.fieldsRef)
+        let allStageFields = [].concat.apply([], stageArrayOfArrays)
+        let dupeStagesRemoved = [
+          ...new Map(allStageFields.map((v) => [v.referenceDisplayLabel, v])).values(),
+        ]
+
+        for (let i = 0; i < dupeStagesRemoved.length; i++) {
+          if (
+            dupeStagesRemoved[i].dataType === 'Picklist' ||
+            dupeStagesRemoved[i].dataType === 'MultiPicklist'
+          ) {
+            this.stagePicklistQueryOpts[dupeStagesRemoved[i].apiName] = dupeStagesRemoved[i].apiName
+          } else if (dupeStagesRemoved[i].dataType === 'Reference') {
+            this.stagePicklistQueryOpts[dupeStagesRemoved[i].referenceDisplayLabel] =
+              dupeStagesRemoved[i].referenceDisplayLabel
+          }
+        }
+
+        for (let i in this.stagePicklistQueryOpts) {
+          this.stagePicklistQueryOpts[i] = this.listStagePicklists(i, { picklistFor: i })
+        }
+
         this.createContactForm = this.createContactForm.filter(
           (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
         )
@@ -1776,7 +996,6 @@ export default {
         console.log(error)
       }
     },
-
     async getUsers() {
       try {
         const res = await SObjects.api.getObjects('User')
@@ -1826,52 +1045,8 @@ export default {
         this.loading = false
       }
     },
-    async getNotes(id) {
-      try {
-        const res = await SObjects.api.getNotes({
-          resourceId: id,
-        })
-        this.modalOpen = true
-        if (res.length) {
-          for (let i = 0; i < res.length; i++) {
-            this.notes.push(res[i])
-            this.notes = this.notes.filter((note) => note.saved_data__meeting_comments !== null)
-          }
-        }
-      } catch (e) {
-        console.log(e)
-      }
-    },
-    addOpp() {
-      this.addOppModalOpen = true
-    },
-    closeDatesThisMonth() {
-      this.$router.replace({ path: '/Pipelines' })
-    },
-    stillThisMonth() {
-      this.allOpps = this.originalList
-      this.allOpps = this.allOpps.filter(
-        (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth,
-      )
-      this.currentList = 'Closing this month'
-    },
-    closeDatesNextMonth() {
-      this.$router.replace({ path: '/Pipelines' })
-    },
-    stillNextMonth() {
-      this.allOpps = this.originalList
-      this.allOpps = this.allOpps.filter(
-        (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth + 1,
-      )
-      this.currentList = 'Closing next month'
-    },
+
     allOpportunities() {
-      this.selectedWorkflow = false
-      this.selectedMeeting = false
-      this.allOpps = this.originalList
-      this.currentList = 'All Opportunities'
-      this.showList = !this.showList
-      this.closeFilterSelection()
       this.$router.replace({ path: '/Pipelines' })
     },
     formatDateTime(input) {
@@ -1889,6 +1064,61 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+.adding-stage-gate {
+  border: 2px solid #e8e8e8;
+  border-radius: 0.3rem;
+  margin: 0.5rem 0rem;
+  width: 36vw;
+  min-height: 30vh;
+  &__header {
+    font-size: 11px;
+    color: $coral;
+    padding: 0.5rem;
+    width: 100%;
+    border-bottom: 1px solid #e8e8e8;
+  }
+  &__body {
+    padding: 0.25rem;
+    font-size: 11px !important;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.2rem;
+    overflow: auto;
+    height: 30vh;
+    input {
+      width: 10vw !important;
+      height: 1.5rem !important;
+    }
+    .multiselect {
+      width: 12vw !important;
+      font-weight: 11px !important;
+    }
+    p {
+      margin-left: 0.25rem;
+    }
+  }
+  &__body::-webkit-scrollbar {
+    width: 2px; /* Mostly for vertical scrollbars */
+    height: 0px; /* Mostly for horizontal scrollbars */
+  }
+  &__body::-webkit-scrollbar-thumb {
+    background-image: linear-gradient(100deg, $darker-green 0%, $lighter-green 99%);
+    box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+    border-radius: 0.3rem;
+  }
+  &__body::-webkit-scrollbar-track {
+    box-shadow: inset 2px 2px 4px 0 $soft-gray;
+    border-radius: 0.3rem;
+  }
+  &__body::-webkit-scrollbar-track-piece {
+    margin-top: 1rem;
+  }
+}
+
+.hide {
+  display: none;
+}
 .slot-icon {
   display: flex;
   flex-direction: row;
@@ -1951,45 +1181,19 @@ select {
   transform: scale(1.02);
   box-shadow: 1px 2px 3px $very-light-gray;
 }
-input[type='checkbox']:checked + label::after {
-  content: '';
-  position: absolute;
-  width: 1ex;
-  height: 0.3ex;
-  background: rgba(0, 0, 0, 0);
-  top: 0.9ex;
-  left: 0.4ex;
-  border: 2px solid $dark-green;
-  border-top: none;
-  border-right: none;
-  -webkit-transform: rotate(-45deg);
-  -moz-transform: rotate(-45deg);
-  -o-transform: rotate(-45deg);
-  -ms-transform: rotate(-45deg);
-  transform: rotate(-45deg);
+[type='search']::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
 }
-input[type='checkbox'] {
-  line-height: 2.1ex;
+
+input[type='search'] {
+  border: none;
+  background-color: $off-white;
+  padding: 4px;
+  margin: 0;
 }
-input[type='checkbox'] {
-  position: absolute;
-  left: -999em;
-}
-input[type='checkbox'] + label {
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-}
-input[type='checkbox'] + label::before {
-  content: '';
-  display: inline-block;
-  vertical-align: -22%;
-  height: 1.75ex;
-  width: 1.75ex;
-  background-color: white;
-  border: 1px solid rgb(182, 180, 180);
-  border-radius: 4px;
-  margin-right: 0.5em;
+input[type='search']:focus {
+  outline: none;
 }
 input[type='date']::-webkit-datetime-edit-text,
 input[type='date']::-webkit-datetime-edit-month-field,
@@ -2002,14 +1206,12 @@ input[type='date']::-webkit-datetime-edit-year-field {
 input {
   padding: 7px;
 }
-h3 {
-  font-size: 22px;
-}
+
 .table-section {
   margin: 0;
   padding: 0;
-  min-height: 74vh;
-  max-height: 76vh;
+  min-height: 78vh;
+  max-height: 80vh;
   overflow: scroll;
   margin-top: 0.5rem;
   border-radius: 5px;
@@ -2022,72 +1224,25 @@ h3 {
   overflow: scroll;
   width: 100vw;
 }
-.empty-table {
-  display: table;
-  width: 98vw;
-}
-.table-row {
-  display: table-row;
-  left: 0;
-}
-.table-cell {
-  display: table-cell;
-  position: sticky;
-  min-width: 12vw;
-  background-color: $off-white;
-  padding: 2vh 3vh;
-  border: none;
-  border-bottom: 1px solid $soft-gray;
-  font-size: 13px;
-}
-.table-cell:hover {
-  cursor: text;
-  background-color: white;
-}
-.modal-container {
-  background-color: $white;
-  overflow: hidden;
-  min-width: 32vw;
-  min-height: 60vh;
-  align-items: center;
-  border-radius: 0.3rem;
-  padding: 0.25rem;
-  box-shadow: 2px 2px 10px 2px $base-gray;
-}
-.close-button {
-  border-radius: 50%;
-  background-color: white;
-  box-shadow: 1px 1px 1px 1px $very-light-gray;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: -1rem;
-  padding: 0.25rem;
-  cursor: pointer;
-  img {
-    filter: invert(80%);
-  }
-}
 .opp-modal-container {
   overflow: hidden;
   background-color: white;
-  // min-height: 80vh;
-  max-width: 34vw;
+  width: 40vw;
   align-items: center;
   border-radius: 0.6rem;
   padding: 1rem;
-  box-shadow: 1px 3px 7px $base-gray;
+  border: 1px solid #e8e8e8;
 }
 .opp-modal {
-  max-width: 30vw;
+  width: 40vw;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
   gap: 0.25rem;
   padding: 0.5rem;
-  overflow-y: scroll;
+  overflow: auto;
   max-height: 56vh;
-  border-radius: 0.25rem;
+  border-radius: 0.3rem;
   border-bottom: 3px solid $white;
   color: $base-gray;
   font-size: 16px;
@@ -2096,117 +1251,10 @@ h3 {
     margin-right: 0.25rem;
   }
 }
-.note-section {
-  padding: 0.5rem 1rem;
-  margin-bottom: 0.25rem;
-  background-color: white;
-  border-bottom: 1px solid $soft-gray;
-  overflow: scroll;
-  &__title {
-    font-size: 16px;
-    font-weight: bold;
-    color: $dark-green;
-    letter-spacing: 1px;
-  }
-  &__body {
-    color: $base-gray;
-  }
-  &__date {
-    color: $mid-gray;
-    font-size: 11px;
-  }
-}
-.table-cell-checkbox {
-  display: table-cell;
-  padding: 2vh;
-  width: 3.75vw;
-  border: none;
-  left: 0;
-  position: sticky;
-
-  border-bottom: 1px solid $soft-gray;
-  background-color: $off-white;
-}
-
-.table-cell-header-wide {
-  display: table-cell;
-  padding: 0.25rem;
-  padding: 1.25vh 2.5vh;
-  min-width: 3rem;
-  border: none;
-  border-bottom: 1px solid $light-orange-gray;
-  border-radius: 2px;
-
-  top: 0;
-  position: sticky;
-  background-color: $off-white;
-  font-weight: bold;
-  font-size: 13px;
-  letter-spacing: 0.5px;
-  color: $base-gray;
-}
-.limit-cell-height {
-  max-height: 4rem;
-  width: 110%;
-  overflow: auto;
-  direction: rtl;
-  padding: 0px 0.25rem;
-}
 .centered {
   display: flex;
   justify-content: center;
   align-items: center;
-}
-.cell-name-header {
-  display: table-cell;
-  padding: 1.25vh 3vh;
-  border: none;
-  border-bottom: 1px solid $light-orange-gray;
-  border-radius: 2px;
-
-  left: 3.5vw;
-  top: 0;
-  position: sticky;
-  background-color: $off-white;
-  font-weight: bold;
-  font-size: 13px;
-  letter-spacing: 0.5px;
-  color: $base-gray;
-}
-.table-cell-checkbox-header {
-  display: table-cell;
-  padding: 1.25vh;
-  border: none;
-  border-bottom: 1px solid $light-orange-gray;
-
-  width: 4vw;
-  top: 0;
-  left: 0;
-  position: sticky;
-  background-color: $off-white;
-}
-.cell-name {
-  background-color: white;
-  color: $base-gray;
-  letter-spacing: 0.25px;
-  position: sticky;
-  left: 3.5vw;
-}
-input[type='search'] {
-  border: none;
-  background-color: $off-white;
-  padding: 4px;
-  margin: 0;
-}
-input[type='search']:focus {
-  outline: none;
-}
-input[type='text']:focus {
-  outline: none;
-  cursor: text;
-}
-input[type='checkbox'] {
-  cursor: pointer;
 }
 select {
   cursor: pointer;
@@ -2220,27 +1268,10 @@ section {
   padding: 0px;
 }
 .flex-row {
-  // position: relative;
   display: flex;
   flex-direction: row;
   align-items: center;
 }
-.flex-row-pad {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  padding: 0rem 0.5rem;
-}
-.bulk-action {
-  margin: 0.75rem 0rem;
-  &__title {
-    font-weight: bold;
-    font-size: 14px;
-    color: $base-gray;
-    margin-left: 0.5rem;
-  }
-}
-
 .flex-row-spread {
   display: flex;
   flex-direction: row;
@@ -2252,7 +1283,7 @@ section {
   color: $base-gray;
 }
 .invert {
-  filter: invert(80%);
+  filter: invert(85%);
 }
 .add-button:disabled {
   display: flex;
@@ -2266,22 +1297,6 @@ section {
 }
 .add-button:disabled:hover {
   transform: none;
-}
-.add-filter-button {
-  display: flex;
-  align-items: center;
-  border: none;
-  height: 4.5vh;
-  margin: 0 0.5rem 0 0;
-  padding: 0.25rem 0.6rem;
-  border-radius: 0.2rem;
-  background-color: transparent;
-  cursor: pointer;
-  color: $dark-green;
-
-  img {
-    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
-  }
 }
 .add-button {
   display: flex;
@@ -2337,7 +1352,6 @@ section {
 .search-bar {
   height: 4.5vh;
   background-color: $off-white;
-  // box-shadow: 1px 1px 1px $very-light-gray;
   border: 1px solid #e8e8e8;
   display: flex;
   align-items: center;
@@ -2345,121 +1359,21 @@ section {
   border-radius: 5px;
   margin-right: 0.5rem;
 }
-#update-input {
-  border: none;
-  border-radius: 0.25rem;
-  box-shadow: 1px 1px 1px 1px $very-light-gray;
-  background-color: white;
-  min-height: 2.5rem;
-  width: 14vw;
-}
 #user-input {
   border: 1px solid #e8e8e8;
   border-radius: 0.3rem;
   background-color: white;
   min-height: 2.5rem;
-  width: 13vw;
+  width: 18vw;
 }
 #user-input:focus {
-  outline: 1px solid $lighter-green;
-}
-.number-input {
-  background-color: $off-white;
-  box-shadow: 1px 1px 1px $gray;
-  border: 2px solid $light-orange-gray;
-  border-radius: 5px;
-  min-height: 4vh;
-  margin-right: 1rem;
-  margin-left: 0.5rem;
-  width: 6vw;
-}
-#update-input:focus,
-.number-input:focus {
-  outline: 1px solid $lighter-green;
-}
-.loader {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 60vh;
-  filter: invert(99%);
-}
-.invert {
-  filter: invert(99%);
-}
-.gray {
-  filter: invert(44%);
+  outline: 1px solid $dark-green;
 }
 .header {
   font-size: 18px;
   padding: 0;
   letter-spacing: 0.5px;
   margin-bottom: 0.2rem;
-}
-.selected-filters {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  max-width: 50vw;
-  margin-top: 1rem;
-  overflow: scroll;
-  padding: 0;
-
-  &__close {
-    background-color: $white-green;
-    backdrop-filter: blur(0.5px);
-    opacity: 4;
-    border: none;
-    margin-left: -1rem;
-    padding: 0rem 0.1rem 0rem 0.1rem;
-    min-height: 3vh;
-
-    img {
-      height: 0.9rem;
-      filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
-    }
-  }
-}
-.main {
-  border: none;
-  height: 5vh;
-  max-width: 10vw;
-  margin: 0 0.5rem 0 0;
-  padding: 0.25rem 0.6rem;
-  border-radius: 0.2rem;
-  background-color: $white-green;
-  cursor: pointer;
-  color: $dark-green;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.main:hover {
-  overflow: visible;
-  white-space: normal;
-  max-width: none;
-}
-
-main > span {
-  display: none;
-}
-main:hover > span {
-  display: block;
-}
-.main__before {
-  display: flex;
-  align-items: center;
-  flex-direction: row;
-  border: none;
-  min-height: 5vh;
-  margin: 0 0.5rem 0 0;
-  padding: 0.25rem 0.6rem;
-  border-radius: 0.2rem;
-  background-color: $dark-green;
-  cursor: pointer;
-  color: white;
-  font-weight: bold;
 }
 .list-section {
   z-index: 4;
@@ -2525,12 +1439,6 @@ main:hover > span {
 .filter {
   color: #199e54;
   margin-left: 0.2rem;
-}
-.exit {
-  padding-right: 0.75rem;
-  margin-top: -0.5rem;
-  height: 1rem;
-  cursor: pointer;
 }
 .cancel {
   color: $dark-green;

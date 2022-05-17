@@ -89,6 +89,20 @@ export default {
   &--primary {
     @include primary-button();
   }
+  box-shadow: none !important;
+}
+.alert-group-modal {
+  padding: 2rem 1rem;
+  border-radius: 0.2rem;
+  height: 100%;
+  overflow-y: scroll;
+  background-color: white;
+  max-height: 100%;
+  width: 100%;
+  color: $base-gray;
+  font-family: $base-font-family;
+  font-size: 13px;
+  box-shadow: none;
 }
 .end {
   display: flex;

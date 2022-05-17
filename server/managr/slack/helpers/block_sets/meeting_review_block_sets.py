@@ -462,7 +462,7 @@ def initial_meeting_interaction_block_set(context):
         {"type": "divider"},
     ]
     resource_button = (
-        f"Change {workflow.resource_type}" if workflow.resource_type else "Map to Opportunity"
+        "Change Opportunity" if workflow.resource_type == "Opportunity" else "Map to Opportunity"
     )
     resource_block = (
         block_builders.section_with_button_block(
@@ -470,7 +470,6 @@ def initial_meeting_interaction_block_set(context):
             str(workflow.id),
             f"*{workflow.resource_type}* {resource.name}",
             action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
-            style="primary",
         )
         if workflow.resource_type
         else block_builders.simple_button_block(
@@ -480,6 +479,8 @@ def initial_meeting_interaction_block_set(context):
             style="primary",
         )
     )
+    if workflow.resource_type and workflow.resource_type != "Opportunity":
+        resource_block["accessory"]["style"] = "primary"
 
     action_blocks = []
     if workflow.resource_type:
@@ -612,7 +613,7 @@ def attach_resource_interaction_block_set(context, *args, **kwargs):
     )
     blocks = [
         block_builders.static_select(
-            ":information_source: Select an opp to attach to the meeting",
+            ":information_source: Select an Opportunity",
             [
                 *map(
                     lambda resource: block_builders.option(resource, resource),

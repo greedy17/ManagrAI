@@ -76,6 +76,12 @@
               </button>
             </div>
             <div class="added-collection__footer">
+              <img
+                style="margin-right: 0.25rem"
+                src="@/assets/images/slackLogo.png"
+                height="15px"
+                alt=""
+              />
               <p style="font-size: 13px">Schedule:</p>
               <div class="row__">
                 <p
@@ -125,6 +131,12 @@
               <button @click="goToLogZoom" class="green_button">Change Channel</button>
             </div>
             <div class="added-collection__footer">
+              <img
+                style="margin-right: 0.25rem"
+                src="@/assets/images/slackLogo.png"
+                height="15px"
+                alt=""
+              />
               <p>
                 Current channel:
                 <span style="font-weight: bold; color: #41b883; font-size: 13px">{{
@@ -143,6 +155,12 @@
               <button @click="goToRecap" class="green_button">Change Channel/Pipelines</button>
             </div>
             <div class="added-collection__footer">
+              <img
+                style="margin-right: 0.2rem"
+                src="@/assets/images/slackLogo.png"
+                height="15px"
+                alt=""
+              />
               <p>
                 Current channel:
                 <span style="font-weight: bold; color: #41b883; font-size: 13px">{{
@@ -239,7 +257,7 @@ export default {
       this.deleteTitle = newList[0].title
     },
     handleUpdate() {
-      this.loading = true
+      // this.loading = true
       User.api
         .update(this.user.id, this.userConfigForm.value)
         .then((response) => {

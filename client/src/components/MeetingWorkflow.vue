@@ -3,7 +3,7 @@
     <div class="table-cell">
       <div v-if="!meeting.event_data">
         <div>
-          <p style="letter-spacing: 0.25px; font-size: 15px; margin-bottom: 3px">
+          <p style="letter-spacing: 0.25px; font-size: 12px; margin-bottom: 3px">
             {{ meeting.topic ? meeting.topic : 'Meeting' }}
           </p>
           <span style="color: #9b9b9b; font-size: 11px">
@@ -687,14 +687,14 @@ a {
   align-items: center;
   justify-content: center;
   color: $gray;
-  font-weight: bold;
-
+  font-size: 12px;
   width: 100%;
   padding: 0.5rem 0rem;
   margin: 0;
+  cursor: text;
   &__more {
-    background-color: $dark-green;
-    color: white;
+    background-color: white;
+    color: $dark-green;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -704,6 +704,13 @@ a {
     padding: 0.75rem 0rem;
     margin: 0;
     cursor: pointer;
+
+    img {
+      height: 0.8rem;
+      margin-left: 0.25rem;
+      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+        brightness(93%) contrast(89%);
+    }
   }
 }
 .noupdate-field-section {

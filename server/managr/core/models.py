@@ -1,5 +1,3 @@
-import datetime
-import time
 from urllib.parse import urlencode
 import uuid
 import json
@@ -7,8 +5,6 @@ import logging
 
 
 from urllib.error import HTTPError
-from dateutil import tz
-import pytz
 import requests
 
 from rest_framework.authtoken.models import Token
@@ -28,12 +24,17 @@ from managr.slack.helpers import block_builders
 from managr.core.nylas.auth import convert_local_time_to_unix
 
 from .nylas.exceptions import NylasAPIError
-
-
 from managr.core.nylas.auth import gen_auth_url, revoke_access_token
 
 client = HttpClient().client
 logger = logging.getLogger("managr")
+
+
+def defaultClickActivity():
+    return {
+        "meeting": {"untouched": 0, "touched": []},
+        "workflows": {"untouched": 0, "touched": []},
+    }
 
 
 class TimeStampModel(models.Model):
@@ -565,3 +566,88 @@ class MeetingPrepInstance(TimeStampModel):
     @property
     def title(self):
         return self.event_data["title"]
+
+
+class UserActivity(models.Model):
+    user = models.OneToOneField(
+        "core.User", on_delete=models.SET_NULL, related_name="activity", null=True
+    )
+    clicks = JSONField(default=defaultClickActivity)
+
+    @classmethod
+    def create_for_existing_users(cls):
+        users = User.objects.all()
+        for user in users:
+            if not hasattr(user, "activity"):
+                UserActivity.objects.create(user=user)
+                logger.info(f"Created activity model for user {user.email}")
+        return
+
+    def increment_untouched_count(self, type, amount=1):
+        if type == "meeting":
+            self.clicks["meeting"]["untouched"] += amount
+        else:
+            self.clicks["workflows"]["untouched"] += amount
+        return self.save()
+
+    def add_meeting_activity(self, meeting_id):
+        from managr.salesforce.models import MeetingWorkflow
+
+        workflow = MeetingWorkflow.objects.get(id=meeting_id)
+        main_form = (
+            workflow.forms.filter(template__form_type__in=["CREATE", "UPDATE"])
+            .exclude(template__resource__in=["Contact", "OpportunityLineItem"])
+            .first()
+        )
+        saved_data = [
+            key
+            for key in main_form.saved_data.keys()
+            if key not in ["meeting_comments", "meeting_type"]
+            and (
+                key not in main_form.previous_data.keys()
+                or main_form.previous_data[key] != main_form.saved_data[key]
+            )
+        ]
+        contact_forms = workflow.forms.filter(
+            template__resource="Contact", template__form_type="CREATE"
+        )
+        no_last_name = [form for form in contact_forms if form.saved_data["LastName"] is None]
+        note_added = False if main_form.saved_data["meeting_comments"] is None else True
+        obj = dict(
+            source=main_form.update_source,
+            new_attendees=dict(
+                saved=len(contact_forms) - len(no_last_name), unsaved=len(no_last_name)
+            ),
+            fields=saved_data,
+            note_added=note_added,
+        )
+        self.clicks["meeting"]["untouched"] -= 1
+        self.clicks["meeting"]["touched"].append(obj)
+        return self.save()
+
+    def add_workflow_activity(self, form_id, alert_name):
+        from managr.slack.models import OrgCustomSlackFormInstance
+
+        workflow = OrgCustomSlackFormInstance.objects.get(id=form_id)
+
+        saved_data = [
+            key
+            for key in workflow.saved_data.keys()
+            if key not in ["meeting_comments", "meeting_type"]
+            and (
+                key not in workflow.previous_data.keys()
+                or workflow.previous_data[key] != workflow.saved_data[key]
+            )
+        ]
+
+        note_added = False if workflow.saved_data["meeting_comments"] is None else True
+        obj = dict(
+            source=workflow.update_source,
+            name=alert_name,
+            fields=saved_data,
+            note_added=note_added,
+        )
+        self.clicks["workflows"]["untouched"] -= 1
+        self.clicks["workflows"]["touched"].append(obj)
+        return self.save()
+

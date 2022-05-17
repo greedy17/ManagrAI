@@ -39,7 +39,7 @@
     </Modal>
 
     <div class="alert__row">
-      <div v-if="pageNumber === 0" class="alert__column" style="margin-bottom: 1rem">
+      <div v-show="pageNumber === 0" class="alert__column__" style="margin-bottom: 1rem">
         <div class="workflow-header">
           <h3>Create a Custom Workflow</h3>
           <div class="button-space">
@@ -50,7 +50,7 @@
           </div>
         </div>
 
-        <div v-if="pageNumber === 0">
+        <div v-show="pageNumber === 0">
           <h5 style="text-align: center; margin-top: -0.75rem; color: #4d4e4c" class="title">
             {{ alertTemplateForm.field.resourceType.value }} Selected. Switch to
             <span
@@ -146,7 +146,7 @@
         </div>
       </div>
 
-      <div v-if="pageNumber === 2" class="alert__column">
+      <div v-show="pageNumber === 2" class="alert__column">
         <h3>Construct your Message</h3>
         <div class="collection__fields">
           <div class="message_titles">
@@ -247,7 +247,7 @@
         </div>
       </div>
 
-      <div v-if="pageNumber === 1" class="alert__column">
+      <div v-show="pageNumber === 1" class="alert__column">
         <h3>Select Delivery Options</h3>
         <div class="sf__collection">
           <template>
@@ -344,12 +344,16 @@
                       label="fullName"
                       :multiple="true"
                       :closeOnSelect="false"
+                      :loading="dropdownLoading"
                     >
                       <template slot="noResult">
-                        <p class="multi-slot">No results.</p>
+                        <p class="multi-slot">No results. Try loading more</p>
                       </template>
                       <template slot="afterList">
-                        <p class="multi-slot__more" @click="onUsersNextPage">Load More</p>
+                        <p class="multi-slot__more" @click="onUsersNextPage">
+                          Load More
+                          <img src="@/assets/images/plusOne.png" alt="" />
+                        </p>
                       </template>
                       <template slot="placeholder">
                         <p class="slot-icon">
@@ -412,39 +416,48 @@
                 </div>
 
                 <div v-else>
-                  <FormField>
-                    <template v-slot:input>
-                      <Multiselect
-                        placeholder="Select Channel"
-                        v-model="selectedChannel"
-                        @input="setRecipient"
-                        :options="userChannelOpts.channels"
-                        openDirection="below"
-                        style="width: 14vw"
-                        selectLabel="Enter"
-                        track-by="id"
-                        label="name"
-                      >
-                        <template slot="noResult">
-                          <p class="multi-slot">No results.</p>
-                        </template>
-                        <template slot="afterList">
-                          <p
-                            class="multi-slot__more"
-                            @click="listUserChannels(userChannelOpts.nextCursor)"
-                          >
-                            Load More
-                          </p>
-                        </template>
-                        <template slot="placeholder">
-                          <p class="slot-icon">
-                            <img src="@/assets/images/search.png" alt="" />
-                            Select Channel
-                          </p>
-                        </template>
-                      </Multiselect>
-                    </template>
-                  </FormField>
+                  <template>
+                    <Multiselect
+                      v-if="!directToUsers"
+                      placeholder="Select Channel"
+                      v-model="selectedChannel"
+                      @input="setRecipient"
+                      :options="userChannelOpts.channels"
+                      openDirection="below"
+                      style="width: 14vw"
+                      selectLabel="Enter"
+                      track-by="id"
+                      label="name"
+                    >
+                      <template slot="noResult">
+                        <p class="multi-slot">No results. Try loading more</p>
+                      </template>
+                      <template slot="afterList">
+                        <p
+                          class="multi-slot__more"
+                          @click="listUserChannels(userChannelOpts.nextCursor)"
+                        >
+                          Load More
+                          <img src="@/assets/images/plusOne.png" alt="" />
+                        </p>
+                      </template>
+                      <template slot="placeholder">
+                        <p class="slot-icon">
+                          <img src="@/assets/images/search.png" alt="" />
+                          Select Channel
+                        </p>
+                      </template>
+                    </Multiselect>
+                  </template>
+                  <div v-if="userLevel !== 'REP'" class="sendAll">
+                    <input type="checkbox" id="allUsers" v-model="directToUsers" />
+                    <label for="allUsers">Send directly to users</label>
+                  </div>
+
+                  <div v-else class="sendAll">
+                    <input type="checkbox" id="allUsers" v-model="directToUsers" />
+                    <label for="allUsers">Send to primary channel</label>
+                  </div>
                 </div>
               </div>
             </div>
@@ -452,7 +465,7 @@
         </div>
       </div>
 
-      <div class="alert__column" v-if="pageNumber === 3">
+      <div class="alert__column" v-show="pageNumber === 3">
         <h3>Name and save your workflow</h3>
         <template>
           <div
@@ -607,6 +620,7 @@ export default {
   },
   data() {
     return {
+      dropdownLoading: false,
       selectedDay: null,
       selectedChannel: null,
       crmValue: null,
@@ -633,7 +647,8 @@ export default {
       searchQuery: '',
       searchText: '',
       searchChannels: '',
-      create: true,
+      create: false,
+      directToUsers: true,
       channelCreated: false,
       fields: CollectionManager.create({ ModelClass: SObjectField }),
       users: CollectionManager.create({ ModelClass: User }),
@@ -692,12 +707,18 @@ export default {
           await this.fields.refresh()
         }
       },
+      directToUsers: 'setDefaultChannel',
     },
   },
   methods: {
     mapIds() {
       let mappedIds = this.selectedUsers.map((user) => user.id)
       this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value = mappedIds
+    },
+    setDefaultChannel() {
+      this.directToUsers
+        ? (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = 'default')
+        : (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = null)
     },
     positiveDay(num) {
       if (num < 0) {
@@ -757,12 +778,16 @@ export default {
       this.channelOpts = results
     },
     async listUserChannels(cursor = null) {
+      this.dropdownLoading = true
       const res = await SlackOAuth.api.listUserChannels(cursor)
       const results = new SlackListResponse({
         channels: [...this.userChannelOpts.channels, ...res.channels],
         responseMetadata: { nextCursor: res.nextCursor },
       })
       this.userChannelOpts = results
+      setTimeout(() => {
+        this.dropdownLoading = false
+      }, 500)
     },
     async createChannel(name) {
       this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
@@ -874,6 +899,7 @@ export default {
           const res = await AlertTemplate.api.createAlertTemplate({
             ...this.alertTemplateForm.toAPI,
             user: this.$store.state.user.id,
+            directToUsers: this.directToUsers,
           })
           this.$router.push({ name: 'ListTemplates' })
         } catch (e) {
@@ -956,7 +982,11 @@ export default {
       await this.fields.addNextPage()
     },
     async onUsersNextPage() {
+      this.dropdownLoading = true
       await this.users.addNextPage()
+      setTimeout(() => {
+        this.dropdownLoading = false
+      }, 1000)
     },
   },
   computed: {
@@ -993,7 +1023,11 @@ export default {
       },
     },
   },
+  mounted() {
+    this.setDefaultChannel()
+  },
   beforeMount() {
+    this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
     this.repsPipeline()
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = [0]
@@ -1017,6 +1051,55 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
+
+input[type='checkbox']:checked + label::after {
+  content: '';
+  position: absolute;
+  width: 1ex;
+  height: 0.3ex;
+  background: rgba(0, 0, 0, 0);
+  top: 0.9ex;
+  left: 0.4ex;
+  border: 2px solid $dark-green;
+  border-top: none;
+  border-right: none;
+  -webkit-transform: rotate(-45deg);
+  -moz-transform: rotate(-45deg);
+  -o-transform: rotate(-45deg);
+  -ms-transform: rotate(-45deg);
+  transform: rotate(-45deg);
+}
+input[type='checkbox'] {
+  line-height: 2.1ex;
+}
+input[type='checkbox'] {
+  position: absolute;
+  left: -999em;
+}
+input[type='checkbox'] + label {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+input[type='checkbox'] + label::before {
+  content: '';
+  display: inline-block;
+  vertical-align: -22%;
+  height: 1.75ex;
+  width: 1.75ex;
+  background-color: white;
+  border: 1px solid rgb(182, 180, 180);
+  border-radius: 4px;
+  margin-right: 0.5em;
+}
+.sendAll {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: $base-gray;
+  margin-top: 1rem;
+}
 
 @keyframes bounce {
   0% {
@@ -1059,13 +1142,14 @@ input:focus {
   align-items: center;
   justify-content: center;
   color: $gray;
-  font-weight: bold;
+  font-size: 12px;
   width: 100%;
   padding: 0.5rem 0rem;
   margin: 0;
+  cursor: text;
   &__more {
-    background-color: $base-gray;
-    color: white;
+    background-color: white;
+    color: $dark-green;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1075,6 +1159,13 @@ input:focus {
     padding: 0.75rem 0rem;
     margin: 0;
     cursor: pointer;
+
+    img {
+      height: 0.8rem;
+      margin-left: 0.25rem;
+      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+        brightness(93%) contrast(89%);
+    }
   }
 }
 .workflow-header {

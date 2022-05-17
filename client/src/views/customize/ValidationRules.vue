@@ -436,7 +436,7 @@ export default {
   mounted() {
     setTimeout(() => {
       this.showLoader = false
-    }, 1000)
+    }, 500)
   },
 }
 </script>
@@ -477,11 +477,11 @@ export default {
   align-items: center;
   justify-content: center;
   color: $gray;
-  font-weight: bold;
-
+  font-size: 12px;
   width: 100%;
   padding: 0.5rem 0rem;
   margin: 0;
+  cursor: text;
 }
 .img-border {
   display: flex;
