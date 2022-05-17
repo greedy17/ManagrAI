@@ -280,9 +280,6 @@ export default {
     },
   },
   methods: {
-    test() {
-      console.log(this.extraFields)
-    },
     async removeField(id) {
       try {
         const res = await SObjects.api.removeExtraField({
@@ -307,9 +304,6 @@ export default {
     cancelRemoveField() {
       this.removingField = false
       this.removingIndex = null
-    },
-    nextPage() {
-      this.objectFields.nextPage()
     },
     addField() {
       this.addingField = true
@@ -358,9 +352,6 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
-::v-deep .multiselect {
-  min-width: 7rem;
-}
 .red {
   filter: invert(46%) sepia(37%) saturate(832%) hue-rotate(308deg) brightness(104%) contrast(104%);
   height: 0.75rem;
@@ -452,7 +443,6 @@ export default {
     border-top: 1px solid $soft-gray;
     p {
       cursor: pointer;
-      // color: $dark-green;
       font-weight: bold;
     }
   }
@@ -467,26 +457,6 @@ export default {
   padding: 0.5rem 0rem;
   margin: 0;
   cursor: text;
-  &__more {
-    background-color: white;
-    color: $dark-green;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    border-top: 1px solid #e8e8e8;
-    width: 100%;
-    padding: 0.75rem 0rem;
-    margin: 0;
-    cursor: pointer;
-
-    img {
-      height: 0.8rem;
-      margin-left: 0.25rem;
-      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
-        brightness(93%) contrast(89%);
-    }
-  }
 }
 .table-cell-header-wide {
   display: table-cell;
@@ -575,16 +545,6 @@ export default {
   align-items: center;
   cursor: pointer;
   color: $dark-green;
-}
-.row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-
-  img {
-    margin-left: 0.5rem;
-  }
 }
 input[type='checkbox']:checked + label::after {
   content: '';

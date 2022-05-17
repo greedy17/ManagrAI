@@ -40,40 +40,6 @@
       <h3>Validation Rules</h3>
       <p>Apply additional fields to stages</p>
     </div>
-
-    <!-- <modal name="objects-modal" heading="Select a Stage">
-      <div class="objects__">
-        <img class="tooltip image" src="@/assets/images/toolTip.png" @click="toggleObjectsModal" />
-        <div class="required__title">Forms</div>
-        <div>
-          <p class="mar">
-            <strong>Update:</strong>
-            This form appears whenever you see the “Update” button
-          </p>
-
-          <p class="mar">
-            <strong>Create:</strong>
-            This form is triggered when you run the slack command, "managr-create"
-          </p>
-          <p class="mar">
-            <strong>Stage Related Fields:</strong>
-            Additional fields needed to advance Stages
-          </p>
-        </div>
-      </div>
-    </modal> -->
-
-    <!-- <div class="header__container" v-if="!resource">
-      <div class="col" style="margin-top: 4rem">
-        <h3 class="header__title">Select a Salesforce Object</h3>
-        <h3 class="muted">
-          <strong style="font-size: 17px">Pro-tip:</strong> Start with the
-          <strong style="font-size: 16px; color: #cc3873">Opportunity</strong> and
-          <strong style="font-size: 16px; color: #cc3873">Contact</strong>
-          objects, they are the most used.
-        </h3>
-      </div>
-    </div> -->
     <div v-if="selectingStage">
       <div class="modal-container">
         <div class="modal-container__header">
@@ -137,81 +103,10 @@
             </button>
           </div>
         </div>
-
-        <!-- <div class="centered">
-            <span class="user-message" v-if="!stages.length">
-              <small>Can't see your stages?</small>
-            </span>
-            <span v-else class="user-message">
-              <small>Recently updated your stages?</small>
-            </span>
-            <PulseLoadingSpinnerButton
-              @click="() => refreshFormStages()"
-              :loading="false"
-              class="stage__button"
-              text="Refresh"
-            />
-          </div> -->
       </div>
     </div>
 
     <div :key="route_name_key" class="centered__stage">
-      <!-- <div @click.prevent="toggleSelectedFormResource(resource)" class="box-updated__header">
-            <span class="box-updated__title">
-              {{ resource }}
-              <img
-                v-if="selectedTab && isVisible"
-                style="height: 1rem; margin-left: 1rem"
-                src="@/assets/images/tooltipgray.png"
-                @click.prevent.stop="toggleRequiredModal"
-              />
-            </span>
-          </div> -->
-
-      <!-- <div :class="resource ? 'search_buttons_row' : ''">
-        <DropDownSearch
-          :items.sync="SOBJECTS_LIST"
-          v-model="resource"
-          displayKey="key"
-          valueKey="value"
-          nullDisplay="Select salesforce object"
-          class="search"
-        />
-
-        <div class="row">
-          <div v-if="resource">
-            <button
-              @click="selectForm(resource, UPDATE)"
-              class="buttons__"
-              :class="this.formType == UPDATE ? 'activeTab' : 'buttons__'"
-            >
-              <img src="@/assets/images/edit.png" alt="update" />
-              {{ ` Update ${resource}` }}
-            </button>
-
-            <button
-              @click="selectForm(resource, CREATE)"
-              :class="this.formType == CREATE ? 'activeTab' : 'buttons__'"
-            >
-              <img src="@/assets/images/create.png" alt="create" />
-              {{ ` Create ${resource}` }}
-            </button>
-            <button
-              @click="openStageDropDown"
-              v-if="resource == OPPORTUNITY"
-              :class="this.formType == STAGE_GATING ? 'activeTab' : 'buttons__'"
-            >
-              <img src="@/assets/images/stageStairs.png" alt="" />
-              Stage Related Fields
-            </button>
-            <img
-              style="cursor: pointer"
-              src="@/assets/images/info.png"
-              @click.prevent.stop="toggleObjectsModal"
-            />
-          </div>
-        </div>
-      </div> -->
       <template v-if="selectedForm">
         <div class="box__content--expanded">
           <CustomSlackForm
@@ -244,7 +139,6 @@
         class="stage__dropdown"
       >
         <div>
-          <!-- <div v-if="selectedStage">{{ selectedStage }} Form</div> -->
           <div class="stage__dropdown__header">
             {{ formLength ? 'Saved Validation Rules' : 'No Saved Validation Rules' }}
           </div>
@@ -277,12 +171,6 @@
         </div>
       </div>
     </div>
-    <!-- 
-    <div class="tip-continue" v-if="resource">
-      <button class="primary-button">
-        <router-link :to="{ name: 'ListTemplates' }">Continue to Smart Alerts </router-link>
-      </button>
-    </div> -->
   </div>
 </template>
 
@@ -292,10 +180,9 @@ import Paginator from '@thinknimble/paginator'
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
 import CustomSlackForm from '@/views/settings/CustomSlackForm'
 import { mapState } from 'vuex'
-import SlackOAuth, { salesforceFields } from '@/services/slack'
+import SlackOAuth from '@/services/slack'
 import { SObjectField, SObjectValidation, SObjectPicklist } from '@/services/salesforce'
-import DropDownSearch from '@/components/DropDownSearch'
-import SObjectFormBuilderAPI, { SOBJECTS_LIST } from '@/services/salesforce'
+import { SOBJECTS_LIST } from '@/services/salesforce'
 import * as FORM_CONSTS from '@/services/slack'
 
 export default {
@@ -303,7 +190,6 @@ export default {
   components: {
     CustomSlackForm,
     PulseLoadingSpinnerButton,
-    DropDownSearch,
     Paginator,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
@@ -345,7 +231,6 @@ export default {
       started: false,
     }
   },
-  watch: {},
   async created() {
     try {
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
@@ -366,9 +251,6 @@ export default {
 
   computed: {
     ...mapState(['user']),
-    selectedFormType() {
-      return this.selectedForm ? this.selectedForm.formType : null
-    },
     currentStagesWithForms() {
       return this.formStages.map((sf) => sf.stage)
     },
@@ -411,38 +293,14 @@ export default {
         this.loadingStages = false
       }
     },
-
-    nextPage() {
-      this.formFields.nextPage()
-    },
-    previousPage() {
-      this.formFields.prevPage()
-    },
     nextValidation() {
       this.validations.nextPage()
     },
     previousValidation() {
       this.validations.prevPage()
     },
-    async searchFields() {
-      this.loading = true
-
-      this.formFields.filters = {
-        search: this.search,
-        salesforceObject: this.resource,
-        ...this.fieldParam,
-      }
-      this.formFields.refresh()
-
-      this.loading = false
-    },
-
     toggleRequiredModal() {
       this.$modal.show('required-modal')
-    },
-
-    toggleObjectsModal() {
-      this.$modal.show('objects-modal')
     },
 
     async selectForm(resource, formType, stage = '') {
@@ -462,18 +320,6 @@ export default {
           message: 'There was an error gathering fields',
           type: 'error',
           timeout: 3000,
-        })
-      }
-    },
-    async listValidations(query_params = {}) {
-      try {
-        this.validations.filters = query_params
-        this.validations.refresh()
-      } catch {
-        this.$Alert.alert({
-          type: 'error',
-          timeout: 2000,
-          message: 'There was an error gathering validations',
         })
       }
     },
@@ -515,13 +361,6 @@ export default {
             })
             this.allForms = [...forms]
             this.logForm(form)
-            // this.$Alert.alert({
-            //   type: 'success',
-
-            //   message: 'Form successfully removed',
-
-            //   timeout: 2000,
-            // })
             this.$router.go()
           })
 
@@ -544,13 +383,6 @@ export default {
       }
     },
 
-    openStageDropDown() {
-      this.resource = 'Opportunity'
-      this.formType = 'STAGE_GATING'
-      this.getStageForms()
-      this.stageDropDownOpen = !this.stageDropDownOpen
-    },
-
     async onAddForm() {
       this.selectingStage = !this.selectingStage
       this.loadingStages = true
@@ -563,6 +395,7 @@ export default {
         this.loadingStages = false
       }
     },
+
     addForm(stage) {
       /** Method for Creating a new stage-gating form, this is only available for Opportunities at this time */
 
@@ -626,19 +459,6 @@ export default {
     transform: translateY(-6px);
   }
 }
-.bouncy {
-  animation: bounce 0.2s infinite alternate;
-}
-.dot-flashing {
-  position: relative;
-  width: 14px;
-  height: 14px;
-  border-radius: 7px;
-  background-color: $dark-green;
-  color: $dark-green;
-  animation: dotFlashing 1s infinite linear alternate;
-  animation-delay: 0.5s;
-}
 .slot-icon {
   display: flex;
   flex-direction: row;
@@ -662,33 +482,6 @@ export default {
   padding: 0.5rem 0rem;
   margin: 0;
   cursor: text;
-  &__more {
-    background-color: white;
-    color: $dark-green;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    border-top: 1px solid #e8e8e8;
-    width: 100%;
-    padding: 0.75rem 0rem;
-    margin: 0;
-    cursor: pointer;
-
-    img {
-      height: 0.8rem;
-      margin-left: 0.25rem;
-      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
-        brightness(93%) contrast(89%);
-    }
-  }
-}
-.dot-flashing::before,
-.dot-flashing::after {
-  content: '';
-  display: inline-block;
-  position: absolute;
-  top: 0;
 }
 .img-border {
   display: flex;
@@ -702,27 +495,6 @@ export default {
     height: 1rem;
     filter: invert(80%);
   }
-}
-.dot-flashing::before {
-  left: -15px;
-  width: 14px;
-  height: 14px;
-  border-radius: 7px;
-  background-color: $dark-green;
-  color: $dark-green;
-  animation: dotFlashing 1s infinite alternate;
-  animation-delay: 0s;
-}
-
-.dot-flashing::after {
-  left: 15px;
-  width: 14px;
-  height: 14px;
-  border-radius: 7px;
-  background-color: $dark-green;
-  color: $dark-green;
-  animation: dotFlashing 1s infinite alternate;
-  animation-delay: 1s;
 }
 .header {
   width: 50vw;
@@ -746,18 +518,6 @@ export default {
   justify-content: center;
   flex-direction: column;
   align-items: center;
-  // height: 60vh;
-}
-.invert {
-  filter: invert(99%);
-}
-.back-logo {
-  position: absolute;
-  opacity: 0.06;
-  filter: alpha(opacity=50);
-  height: 36%;
-  margin-left: -2rem;
-  margin-top: 10rem;
 }
 .container {
   margin-left: 12vw;
@@ -768,44 +528,6 @@ export default {
   flex-direction: column;
   height: 100%;
 }
-
-.box-updated__header {
-  &:hover {
-    cursor: pointer;
-    background-color: #f4f5f6;
-  }
-}
-
-.box-updated__tab {
-  display: flex;
-  padding: 0;
-
-  justify-content: center;
-}
-.box-updated__tab-header {
-  padding: 0 2rem;
-
-  width: 100%;
-  display: flex;
-}
-.box__tab-button {
-  > .button {
-    height: 100%;
-  }
-  position: absolute;
-  right: 3rem;
-  height: 3rem;
-}
-.box-updated__content {
-  display: none;
-
-  &--closed {
-    animation: closemenu forwards;
-    animation-duration: 0.5s;
-    animation-iteration-count: 1;
-    display: block;
-  }
-}
 .box__content--expanded {
   max-height: 90vh;
   display: block;
@@ -815,30 +537,6 @@ export default {
   overflow-y: scroll;
   margin: 0 4em;
   padding-top: 2rem;
-}
-::v-deep .vm--modal {
-  background-color: $panther;
-  border-radius: 0.25rem;
-}
-::v-deep .tn-dropdown__selection-container {
-  box-shadow: 0 5px 10px 0 $very-light-gray;
-}
-.stage__button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.4rem 1rem;
-  border-radius: 0.3rem;
-  font-weight: bold;
-  line-height: 1.14;
-  text-indent: none;
-  border-style: none;
-  letter-spacing: 0.03rem;
-  color: white;
-  background-color: $dark-green;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 1.02rem;
 }
 .modal-container {
   min-height: 50vh;
@@ -863,19 +561,6 @@ export default {
     justify-content: center;
   }
   &__box {
-    &__title {
-      text-align: center;
-
-      width: 100%;
-    }
-
-    &__content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: space-between;
-      min-height: 20rem;
-    }
     &__button {
       font-size: 14px;
       border-radius: 0.3rem;
@@ -895,12 +580,6 @@ button:disabled {
   color: $gray;
   padding: 0.5rem 1.5rem;
   margin: 1rem;
-}
-
-.box__footer {
-  display: flex;
-  justify-content: center;
-  margin-top: 1rem;
 }
 
 @keyframes expandmenu {
@@ -927,59 +606,6 @@ button:disabled {
   }
 }
 
-.header {
-  &__container {
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
-    align-items: center;
-    font-size: 1.25rem;
-    padding-top: 2rem;
-  }
-  &__list {
-    display: flex;
-    flex-direction: column;
-    text-align: left;
-    margin-bottom: 1rem;
-
-    &__item {
-      font-size: 18px;
-    }
-  }
-}
-.field-title {
-  font-size: 0.85rem;
-  margin-left: 1rem;
-
-  &__bold {
-    font-family: #{$bold-font-family};
-    margin: 2rem 0 0 1rem;
-  }
-}
-
-.search-bar {
-  @include input-field();
-  height: 2.5rem !important;
-  width: 13rem;
-  padding: 0 0 0 1rem;
-  margin: 1rem;
-}
-
-.paginator {
-  @include paginator();
-  &__container {
-    border: none;
-    display: flex;
-    justify-content: flex-start;
-    width: 11rem;
-    font-size: 0.75rem;
-    margin-top: 1rem;
-  }
-  &__text {
-    width: 6rem;
-  }
-}
-
 .popup-paginator {
   @include paginator();
 }
@@ -990,22 +616,11 @@ button:disabled {
   flex-direction: row;
   height: 100%;
 }
-.small__stage__dropdown {
-  padding: 6px 0 14px;
-  border-radius: 0.5rem;
-  box-shadow: 0 5px 10px 10px rgba(0, 0, 0, 0.5);
-  background-color: $white;
-  overflow-y: scroll;
-}
 .stage {
-  &__container {
-    position: relative;
-  }
   &__dropdown {
     min-height: 40vh;
     width: 50vw;
     border-radius: 0.3rem;
-    // box-shadow: 2px 3px 3px $soft-gray;
     border: 1px solid #e8e8e8;
     background-color: $white;
     overflow-y: scroll;
@@ -1043,10 +658,6 @@ button:disabled {
       &__title:hover {
         color: $dark-green;
       }
-      &__x {
-        z-index: 1000;
-        font-size: 1rem;
-      }
     }
   }
 }
@@ -1080,133 +691,18 @@ button:disabled {
     }
   }
 }
-.resources {
-  padding-top: 0.5rem;
-  display: flex;
-  justify-content: center;
-}
-.tip-continue {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding-top: 2rem;
-  margin-top: -1rem;
-}
 
 a {
   text-decoration: none;
   color: white;
-}
-
-.main__content {
-  padding-top: 1rem;
-}
-.muted {
-  color: #9f9cb7;
-  font-size: 1rem;
-  margin-top: -5px;
-}
-.hint {
-  color: $base-gray;
-  font-weight: 0.25rem;
-  padding-left: 0.25rem;
-}
-.row {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 0.5em;
 }
 button {
   margin-top: 1em;
   border: none;
   text-align: center;
 }
-.buttons__ {
-  height: 3rem;
-  width: 13rem;
-  text-align: center;
-  border-radius: 0.5rem;
-  border-bottom: 2px solid $theme-gray;
-  color: $gray;
-  background-color: white;
-  font-weight: bolder;
-  font-size: 0.975rem;
-  margin-right: 1.5rem;
-}
-.buttons__:hover {
-  color: #cc3873;
-  border-bottom: 2px solid #cc3873;
-  cursor: pointer;
-}
-.primary-button {
-  padding: 1rem;
-  border-radius: 0.5rem;
-}
-.primary-button:hover {
-  transform: scale(1.025);
-}
-.mar {
-  margin-bottom: 0.5rem;
-}
-.mar__ {
-  margin-top: 1.5rem;
-}
-.activeTab {
-  height: 3rem;
-  width: 12.5rem;
-  text-align: center;
-  border-radius: 0.5rem;
-  background-color: white;
-  border-bottom: 2px solid #cc3873;
-  color: #cc3873;
-  font-weight: bolder;
-  font-size: 0.975rem;
-  margin-right: 1.5rem;
-}
-.search {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 3rem;
-  margin-top: -1rem;
-}
-.search_buttons_row {
-  display: flex;
-  flex-direction: column;
-  margin-top: 1rem;
-}
-.objects__ {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  margin: 1rem;
-}
-.col {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-.mar__top {
-  margin-top: 7rem;
-}
-.purple {
-  color: $grape;
-  font-size: 18px;
-}
 img {
   margin-right: 0.25rem;
   margin-top: 0.5rem;
-}
-.centered {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
 }
 </style>

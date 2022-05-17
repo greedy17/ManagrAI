@@ -72,7 +72,6 @@ body {
   overflow: auto;
   margin: 0;
   min-height: 100vh;
-  // position: relative;
   background-color: $off-white;
 }
 

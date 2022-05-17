@@ -16,11 +16,9 @@
 </template>
 
 <script>
-import User from '@/services/users'
 
 export default {
   name: 'LeadershipCode',
-  components: {},
   data() {
     const LEADERSHIP_CODE = 'M@n@gr!100'
     return {
@@ -137,9 +135,5 @@ button {
   height: 2.25rem;
   border-radius: 3px;
   width: 19rem;
-}
-
-.hidden {
-  display: none;
 }
 </style>

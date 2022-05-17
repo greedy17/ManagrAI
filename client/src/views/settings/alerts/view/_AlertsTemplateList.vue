@@ -31,21 +31,6 @@
       >
         Edit, Run, and Schedule your saved Automations
       </p>
-      <!-- <div v-if="!alertsCount(templates.list.length)">
-        <h3
-          class="bouncy"
-          style="
-            color: #5d5e5e;
-            font-weight: bold;
-            text-align: center;
-            margin-top: 16vh;
-            font-size: 3rem;
-          "
-        >
-          0
-        </h3>
-        <p style="font-weight: bold; color: #5d5e5e; text-align: center">Nothing here.. (o^^)o</p>
-      </div> -->
     </div>
     <div v-if="!alertsCount(templates.list.length)">
       <h3
@@ -89,11 +74,6 @@
               >
                 Run now
               </button>
-              <!-- <div class="centered">
-              <button @click="onTest(alert.id)" class="test-button">Test Alert</button>
-
-              <p style="margin-left: 0.5rem">Results: {{ alert.instances.length }}</p>
-            </div> -->
             </div>
             <div class="added-collection__footer">
               <img
@@ -192,11 +172,6 @@
         </div>
       </transition>
     </template>
-
-    <!-- <div class="center-loader" v-else>
-      <div class="dot-flashing"></div>
-    </div> -->
-
     <div class="center-loader" v-if="templates.refreshing && alertsCount(templates.list.length)">
       <Loader loaderText="Gathering your workflows" />
     </div>
@@ -208,12 +183,9 @@
  * Components
  * */
 // Pacakges
-
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 
 //Internal
-
-import FormField from '@/components/forms/FormField'
 import AlertsEditPanel from '@/views/settings/alerts/view/_AlertsEditPanel'
 /**
  * Services
@@ -230,7 +202,6 @@ export default {
   name: 'AlertsTemplateList',
   components: {
     ToggleCheckBox,
-    FormField,
     AlertsEditPanel,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
@@ -255,9 +226,6 @@ export default {
       pageLoaded: false,
     }
   },
-  // mounted() {
-  //   console.log(this.hasRecapChannel)
-  // },
   async created() {
     this.templates.refresh()
     if (this.zoomChannel) {
@@ -282,9 +250,6 @@ export default {
     async getZoomChannel() {
       const res = await SlackOAuth.api.channelDetails(this.zoomChannel)
       this.currentZoomChannel = res.channel.name
-    },
-    logChannels() {
-      console.log(this.userChannelOpts)
     },
     deletedTitle(id) {
       let newList = []
@@ -318,12 +283,6 @@ export default {
     },
     goToRecap() {
       this.$router.push({ name: 'ZoomRecap' })
-    },
-    hideCard() {
-      this.isHiding = true
-    },
-    goToTemplates() {
-      this.$router.push({ name: 'CreateNew' })
     },
     makeAlertCurrent(val) {
       this.currentAlert = val
@@ -372,22 +331,6 @@ export default {
         })
       }
     },
-    async onTest(id) {
-      try {
-        await AlertTemplate.api.testAlertTemplate(id)
-        this.$Alert.alert({
-          message: `Alert has been initiated to test against your data only`,
-          type: 'success',
-          timeout: 2000,
-        })
-      } catch {
-        this.$Alert.alert({
-          message: 'There was an error testing your alert',
-          type: 'error',
-          timeout: 2000,
-        })
-      }
-    },
     async onToggleAlert(id, value) {
       try {
         await AlertTemplate.api.updateAlertTemplate(id, { is_active: value })
@@ -427,9 +370,6 @@ export default {
     user() {
       return this.$store.state.user
     },
-    hasSlack() {
-      return this.$store.state.user.slackAccount
-    },
     hasRecapChannel() {
       return this.$store.state.user.slackAccount.recapChannel
     },
@@ -462,57 +402,9 @@ export default {
     transform: translateY(-6px);
   }
 }
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.5s;
-}
-.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
-  opacity: 0;
-}
 
 .bouncy {
   animation: bounce 0.2s infinite alternate;
-}
-
-.dot-flashing {
-  position: relative;
-  width: 14px;
-  height: 14px;
-  border-radius: 7px;
-  background-color: $dark-green;
-  color: $dark-green;
-  animation: dotFlashing 1s infinite linear alternate;
-  animation-delay: 0.5s;
-}
-
-.dot-flashing::before,
-.dot-flashing::after {
-  content: '';
-  display: inline-block;
-  position: absolute;
-  top: 0;
-}
-
-.dot-flashing::before {
-  left: -15px;
-  width: 14px;
-  height: 14px;
-  border-radius: 7px;
-  background-color: $dark-green;
-  color: $dark-green;
-  animation: dotFlashing 1s infinite alternate;
-  animation-delay: 0s;
-}
-
-.dot-flashing::after {
-  left: 15px;
-  width: 14px;
-  height: 14px;
-  border-radius: 7px;
-  background-color: $dark-green;
-  color: $dark-green;
-  animation: dotFlashing 1s infinite alternate;
-  animation-delay: 1s;
 }
 
 @keyframes dotFlashing {
@@ -525,69 +417,16 @@ export default {
   }
 }
 
-.spacer {
-  height: 0.75rem;
-}
 h2 {
   font-size: 1.4rem;
 }
 button:disabled {
-  background-color: $panther-silver;
+  background-color: $very-light-gray;
   cursor: not-allowed;
-}
-::v-deep .item-container__label {
-  color: white;
-  border: none;
-}
-::v-deep .ls-container__list--horizontal {
-  background-color: white;
-  width: 50vw;
-}
-::v-deep .ls-container {
-  background: transparent;
-  box-shadow: none;
-  margin-bottom: 1rem;
-}
-.keep-activating {
-  outline: 2px solid $coral;
-}
-.keep-activating__ {
-  outline: 2px solid $panther-gold;
-}
-.done-activating {
-  outline: 2px solid $dark-green;
 }
 .titles {
   color: $base-gray;
   font-weight: bold;
-}
-.alert-links {
-  color: #41b883;
-  border-bottom: 3px solid #19954e;
-}
-.activate-button {
-  background-color: $dark-green;
-  color: white;
-  border: none;
-  font-weight: bold;
-  font-size: 1rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.6rem;
-  cursor: pointer;
-}
-.test-button {
-  background-color: white;
-  color: $dark-green;
-  border: none;
-  font-weight: bold;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.25rem;
-  cursor: pointer;
-}
-.middle {
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 .delete_modal {
   background-color: $white;
@@ -681,33 +520,10 @@ button:disabled {
   cursor: pointer;
   font-size: 16px;
 }
-
-// .yes__button:hover,
-// .no__button:hover {
-//   filter: brightness(80%);
-// }
-.no-data {
-  color: $gray;
-  margin-left: 0.5rem;
-  font-size: 15px;
-}
-.alerts-template-list__header--heading {
-  @include header-subtitle();
-}
 .alerts-template-list {
   margin-left: 10vw;
   margin-top: 3.5rem;
   color: $base-gray;
-  &__header {
-    display: flex;
-
-    &-item {
-      min-width: 10rem;
-      &--main {
-        flex: 1 0 auto;
-      }
-    }
-  }
 }
 .alert_cards {
   display: flex;
@@ -718,14 +534,6 @@ button:disabled {
   flex-wrap: wrap;
   padding: 0;
 }
-// .centered__cards {
-//   display: flex;
-//   flex-direction: row;
-//   justify-content: space-evenly;
-//   align-items: center;
-//   margin-top: 2rem;
-//   flex-wrap: wrap;
-// }
 .added-collection:hover {
   box-shadow: 1px 2px 2px $very-light-gray;
   transform: scale(1.015);
@@ -764,54 +572,12 @@ button:disabled {
     justify-content: space-evenly;
   }
 }
-.card__ {
-  background-color: white;
-  padding: 0;
-  border: none;
-  width: 22vw;
-  min-height: 25vh;
-  margin: 0rem 0.5rem 0.5rem 0rem;
-  border-radius: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  color: $base-gray;
-
-  &header {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 3rem;
-    font-weight: 900px;
-    margin-bottom: 1rem;
-    font-size: 0.875rem;
-  }
-}
-.icon {
-  display: block;
-  cursor: pointer;
-  width: 20px;
-  height: 30px;
-}
-// img {
-//   filter: invert(90%);
-// }
-.pink {
-  color: $candy;
-}
 a {
   text-decoration: none;
   color: white;
   cursor: pointer;
 }
 
-.row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-evenly;
-}
 .row__ {
   display: flex;
   flex-direction: row;
@@ -841,13 +607,6 @@ a {
     filter: invert(70%);
   }
 }
-.row__start {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  margin-top: 0.25rem;
-  width: 100%;
-}
 .green_button:disabled {
   background-color: $soft-gray;
   color: $gray;
@@ -865,47 +624,11 @@ a {
 .green {
   color: $dark-green;
 }
-.delete_button {
-  color: $panther-orange;
-  border: none;
-  background-color: $panther;
-  width: 8vw;
-  border-radius: 0.25rem;
-  padding: 0.5rem;
-  font-weight: bold;
-  font-size: 16px;
-  cursor: pointer;
-}
-.edit_button {
-  color: $panther-blue;
-  background-color: white;
-  width: 8vw;
-  border-radius: 0.25rem;
-  padding: 0.5rem;
-  font-weight: bold;
-  font-size: 16px;
-  border: 2px solid $white;
-  cursor: pointer;
-}
-.debug {
-  border: 2px solid red;
-}
-.center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
 .center__ {
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
   flex-direction: column;
-}
-.centered {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
 }
 .center-loader {
   display: flex;
@@ -913,23 +636,7 @@ a {
   align-items: center;
   height: 60vh;
 }
-.invert {
-  filter: invert(99%);
-}
-.invisible {
-  display: none;
-}
 .loading-title {
   display: none;
 }
-// ::-webkit-scrollbar {
-//   background-color: $panther;
-//   -webkit-appearance: none;
-//   width: 4px;
-//   height: 100%;
-// }
-// ::-webkit-scrollbar-thumb {
-//   border-radius: 2px;
-//   background-color: $panther-silver;
-// }
 </style>

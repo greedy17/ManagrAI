@@ -19,15 +19,15 @@ import 'quill/dist/quill.core.css'
 import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
 
-import { quillEditor } from 'vue-quill-editor'
+// import { quillEditor } from 'vue-quill-editor'
 
 export default {
   components: {
-    quillEditor,
+    // quillEditor,
   },
 }
 // You can also register Quill modules in the component
-import Quill from 'quill'
+// import Quill from 'quill'
 
 export default {
   data() {

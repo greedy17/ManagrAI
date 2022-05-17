@@ -23,7 +23,6 @@
           <div class="registration__text">
             Create and customize your Managr account with {{ organization }} within minutes.
           </div>
-          <!-- <form @submit.prevent="onSubmit"> -->
 
           <div style="margin-top: -1rem" class="registration__form">
             <div class="form-card">
@@ -96,13 +95,6 @@
                       <p>No results.</p>
                     </template>
                   </Multiselect>
-                  <!-- <DropDownSearch
-                    :items.sync="timezones"
-                    v-model="registrationForm.field.timezone.value"
-                    nullDisplay="Select your timezone"
-                    searchable
-                    local
-                  /> -->
                 </template>
               </FormField>
             </div>
@@ -118,7 +110,6 @@
             <div style="margin-top: 1rem">
               <router-link :to="{ name: 'Login' }">Back to Login</router-link>
             </div>
-            <!-- </form> -->
           </div>
         </template>
       </template>
@@ -134,7 +125,6 @@ import User, { RepRegistrationForm } from '@/services/users'
 import Button from '@thinknimble/button'
 import FormField from '@/components/forms/FormField'
 import ComponentLoadingSVG from '@/components/ComponentLoadingSVG'
-import DropDownSearch from '@/components/DropDownSearch'
 import moment from 'moment-timezone'
 
 export default {
@@ -143,7 +133,6 @@ export default {
     Button,
     FormField,
     ComponentLoadingSVG,
-    DropDownSearch,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {
@@ -198,7 +187,6 @@ export default {
       }
     },
     async onSubmit() {
-      //
       this.registrationForm.validate()
 
       // Do not continue if the form has errors
@@ -262,12 +250,6 @@ export default {
     text-align: center;
     font-size: 14px;
   }
-  &__input {
-    @include input-field-white();
-  }
-  &__input__label {
-    font-size: 14px;
-  }
   &__privacy {
     padding: 0.5rem 1rem;
     font-size: 0.75rem;
@@ -290,12 +272,6 @@ export default {
 input:focus {
   outline: none;
 }
-.divider {
-  height: 1px;
-  background-color: #aaa;
-  width: 100%;
-  margin: 1rem;
-}
 .header {
   display: flex;
   align-items: center;
@@ -315,13 +291,6 @@ input:focus {
 }
 .time:hover {
   color: $gray;
-}
-.errors {
-  width: 100%;
-  padding: 1rem;
-  background-color: rgb(155, 21, 21);
-  color: white;
-  font-weight: 500;
 }
 
 h1 {
@@ -373,11 +342,5 @@ button {
 a {
   color: $dark-green;
   font-weight: bold;
-}
-.time {
-  color: $very-light-gray;
-  cursor: pointer;
-  filter: opacity(60%);
-  font-size: 0.9rem;
 }
 </style>

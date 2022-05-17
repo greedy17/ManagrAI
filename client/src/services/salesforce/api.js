@@ -1,4 +1,4 @@
-import { ModelAPI, ApiFilter, Model } from '@thinknimble/tn-models'
+import { ModelAPI, ApiFilter } from '@thinknimble/tn-models'
 import { apiClient, apiErrorHandler } from '@/services/api'
 import { objectToSnakeCase } from '@/services/utils'
 

@@ -1,6 +1,5 @@
 import Model, { fields } from '@thinknimble/tn-models'
-import models from '@thinknimble/tn-models/lib/models'
-import { objectToCamelCase, objectToSnakeCase } from '@thinknimble/tn-utils'
+import { objectToCamelCase } from '@thinknimble/tn-utils'
 
 import SalesforceAPI, { SObjectFormBuilderAPI, SObjectValidationAPI, MeetingWorkflowAPI } from './api'
 

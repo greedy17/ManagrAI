@@ -1,5 +1,3 @@
-import isPlainObject from 'lodash.isplainobject'
-import moment from 'moment'
 require('moment-timezone')
 /**
  * @module       utils

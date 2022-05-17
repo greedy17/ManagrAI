@@ -131,7 +131,7 @@
       <div v-if="userLevel == 'REP' && !user.onboarding" class="right">
         <div class="tooltip">
           <img
-            style="height: 1.4rem; filter: invert(30%)"
+            style="height: 1.2rem; filter: invert(30%)"
             src="@/assets/images/blackhelp.png"
             class="tooltip__icon"
           />
@@ -165,7 +165,7 @@
       <div v-if="userLevel !== 'REP'" class="right">
         <div class="tooltip">
           <img
-            style="height: 1.4rem; filter: invert(30%)"
+            style="height: 1.2rem; filter: invert(30%)"
             src="@/assets/images/blackhelp.png"
             class="tooltip__icon"
           />
@@ -200,24 +200,15 @@
 </template>
 
 <script>
-import DropDownMenu from '@/components/forms/DropDownMenu'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 
-import AlertTemplate, {
-  AlertGroupForm,
-  AlertTemplateForm,
-  AlertConfigForm,
-  AlertMessageTemplateForm,
-  AlertOperandForm,
-} from '@/services/alerts/'
+import AlertTemplate from '@/services/alerts/'
 
 export default {
   name: 'NavBar',
   components: {
-    DropDownMenu,
     CollectionManager,
   },
-  props: {},
   data() {
     return {
       showMenus: {
@@ -250,47 +241,17 @@ export default {
   },
 
   methods: {
-    toggleDropDown() {
-      this.dropdownOpen = !this.dropdownOpen
-    },
-    toggleTooltip() {
-      this.tooltipOpen = !this.tooltipOpen
-    },
-    routeToSelected(selected) {
-      if (selected == 'logout') {
-        this.logOut()
-      } else {
-        this.$router.push({ name: selected })
-      }
-    },
-
-    routeToSettings() {
-      this.$router.push({ name: 'Integrations' })
-    },
     logOut() {
       this.$store.dispatch('logoutUser')
       this.$router.push({ name: 'Login' })
     },
   },
-  watch: {},
   computed: {
     userIsLoggedIn() {
       return this.$store.getters.userIsLoggedIn
     },
     isAdmin() {
       return this.userIsLoggedIn && this.$store.state.user.isAdmin
-    },
-    hasSlack() {
-      return this.$store.state.user.slackRef
-    },
-    hasSalesforce() {
-      return this.$store.state.user.hasSalesforceIntegration
-    },
-    hasZoom() {
-      return this.$store.state.user.hasZoomIntegration
-    },
-    hasNylas() {
-      return this.$store.state.user.nylasRef
     },
     user() {
       return this.$store.state.user
@@ -344,24 +305,11 @@ span {
     height: 1.2rem;
   }
 }
-.profile-button {
-  border: none;
-  padding: 0.25rem;
-  display: flex;
-  justify-self: end;
-  box-shadow: 1px 1px 2px $very-light-gray;
-  border-radius: 0.5rem;
-  background-color: $soft-gray;
-  cursor: pointer;
-  color: $base-gray;
-  font-weight: bold;
-}
 .center {
   display: flex;
   align-items: center;
   justify-content: center;
 }
-
 .logout {
   border: 1px solid #e8e8e8;
   padding: 0.25rem 0.5rem;
@@ -370,14 +318,11 @@ span {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  // box-shadow: 1px 1px 2px $very-light-gray;
   border-radius: 0.3rem;
   background-color: $soft-gray;
   cursor: pointer;
   color: $base-gray;
   font-size: 11px;
-  // font-weight: bold;
-  // transition: all .5s;
 }
 nav {
   height: 3.5rem;
@@ -406,37 +351,6 @@ nav {
   filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
     brightness(93%) contrast(89%);
 }
-.links {
-  display: flex;
-  flex-flow: row;
-  margin-left: 26%;
-  width: 28%;
-}
-.user-menu-dropdown {
-  margin-left: auto;
-  margin-right: 1rem;
-  opacity: 0.6;
-  position: relative;
-}
-.user-menu {
-  position: absolute;
-  right: 4rem;
-  top: auto;
-  @include standard-border;
-  border-top: 0px;
-  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
-  background-color: $white;
-  margin-left: auto;
-  margin-right: 1vw;
-  min-width: 7rem;
-  padding-left: 1rem;
-  z-index: 100;
-
-  h4 {
-    @include pointer-on-hover;
-    @include disable-text-select;
-  }
-}
 .right {
   margin-left: auto;
   display: flex;
@@ -449,17 +363,6 @@ nav {
   > * {
     margin-right: 1rem;
   }
-  &__items {
-    border-radius: 50%;
-
-    &:hover {
-      background-color: $soft-gray;
-      cursor: pointer;
-    }
-    &:active {
-      background-color: darken($soft-gray, 5%);
-    }
-  }
 }
 .left {
   margin-right: auto;
@@ -468,19 +371,6 @@ nav {
   justify-content: space-evenly;
   position: relative;
   margin-right: 0.75rem;
-}
-.icon {
-  width: 20px;
-  height: 15px;
-  fill: #484a6e;
-}
-.icon.green {
-  fill: green;
-}
-.dd-icon {
-  width: 20px;
-  height: 15px;
-  fill: #484a6e;
 }
 .tooltip {
   position: relative;
@@ -503,7 +393,7 @@ nav {
 
     &__bold {
       font-family: #{$bold-font-family};
-      color: $panther;
+      color: $base-gray;
       font-size: 14px;
     }
   }
@@ -546,15 +436,6 @@ li {
   }
 }
 
-.profile {
-  border: 3px solid black;
-  border-radius: 50%;
-  font-size: 12px;
-  font-weight: bold;
-  padding: 0.25rem;
-  margin-top: 1rem;
-  margin-right: 1rem;
-}
 img {
   margin-top: 1rem;
 }

@@ -20,17 +20,12 @@
  * */
 // Pacakges
 import AlertGroup from '../create/_AlertGroup'
-import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 
-//Internal
-import ListContainer from '@/components/ListContainer'
-import FormField from '@/components/forms/FormField'
-import DropDownSearch from '@/components/DropDownSearch'
 /**
  * Services
  */
-import { AlertOperandForm, AlertGroupForm, AlertGroup as AlertGroupModel } from '@/services/alerts/'
+import { AlertGroupForm, AlertGroup as AlertGroupModel } from '@/services/alerts/'
 
 export default {
   /**
@@ -41,10 +36,6 @@ export default {
    */
   name: 'AlertGroupModal',
   components: {
-    ListContainer,
-    ToggleCheckBox,
-    DropDownSearch,
-    FormField,
     AlertGroup,
     PulseLoadingSpinnerButton,
   },
@@ -81,7 +72,6 @@ export default {
       this.isSaving = false
     },
   },
-  computed: {},
 }
 </script>
 
@@ -96,18 +86,8 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 .btn {
-  &--danger {
-    @include button-danger();
-  }
   &--primary {
     @include primary-button();
-  }
-  &--secondary {
-    @include secondary-button();
-  }
-
-  &--icon {
-    @include --icon();
   }
   box-shadow: none !important;
 }
@@ -129,14 +109,4 @@ export default {
   justify-content: center;
   margin-top: 2rem;
 }
-// ::-webkit-scrollbar {
-//   background-color: $panther;
-//   -webkit-appearance: none;
-//   width: 4px;
-//   height: 100%;
-// }
-// ::-webkit-scrollbar-thumb {
-//   border-radius: 2px;
-//   background-color: $panther-silver;
-// }
 </style>

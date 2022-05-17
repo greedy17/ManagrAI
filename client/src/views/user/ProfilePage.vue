@@ -31,15 +31,6 @@
             label="key"
             track-by="value"
           />
-
-          <!-- <DropDownSearch
-            :items.sync="timezones"
-            v-model="profileForm.field.timezone.value"
-            nullDisplay="Select your timezone"
-            searchable
-            local
-            @input="profileForm.field.timezone.validate(), test()"
-          /> -->
         </template>
       </FormField>
 
@@ -59,7 +50,6 @@
 <script>
 import User from '@/services/users'
 import { UserProfileForm } from '@/services/users/forms'
-import DropDownSearch from '@/components/DropDownSearch'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 
 import FormField from '@/components/forms/FormField'
@@ -70,7 +60,6 @@ export default {
   name: 'ProfilePage',
   components: {
     FormField,
-    DropDownSearch,
     PulseLoadingSpinnerButton,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
@@ -137,10 +126,18 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
-.dropdown {
-  ::v-deep .selected-items[data-v-515df75a] {
-    max-height: 40px;
-  }
+::v-deep .input-content {
+  width: 16rem;
+  border: 1px solid #e8e8e8 !important;
+  border-radius: 0.3rem;
+  background-color: white;
+  box-shadow: none !important;
+}
+::v-deep .input-form {
+  width: 16rem;
+}
+::v-deep .input-form__active {
+  border: none;
 }
 .profile-page {
   margin-top: 4rem;
@@ -149,18 +146,6 @@ export default {
     /* For mobile phones: */
     padding: 0rem;
   }
-}
-::v-deep .input-content {
-  border: 1px solid #e8e8e8;
-}
-::v-deep .tn-dropdown__selection-container {
-  background: transparent;
-  border: none;
-}
-::v-deep .tn-input {
-  width: 100%;
-  display: flex;
-  justify-content: center;
 }
 .profile-page__form {
   @include standard-border();

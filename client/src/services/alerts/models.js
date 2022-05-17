@@ -1,5 +1,4 @@
 import Model, { fields } from '@thinknimble/tn-models'
-import User from '../users/models'
 import { objectToCamelCase } from '../utils'
 import AlertTemplateAPI, {
   AlertMessageTemplateAPI,
@@ -10,16 +9,7 @@ import AlertTemplateAPI, {
   AlertInstanceAPI,
   RealTimeAlertConfigAPI,
 } from './api'
-import Contact from '../contacts'
-import Account from '../accounts/'
-import Opportunity from '../opportunity/'
 
-
-const resourceMap = {
-  "Contact": new fields.ModelField({ ModelClass: Contact }),
-  "Account": new fields.ModelField({ ModelClass: Account }),
-  "Opportunity": new fields.ModelField({ ModelClass: Opportunity })
-}
 export class AlertTemplateRef extends Model {
   /**
    * Template Ref class ignores Model Ref classes of child models
