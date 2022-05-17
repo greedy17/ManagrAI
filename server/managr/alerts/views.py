@@ -1,4 +1,5 @@
 import logging
+from django.conf import settings
 from django.forms import ValidationError
 import pytz
 from datetime import datetime
@@ -168,11 +169,12 @@ class AlertTemplateViewSet(
     def run_now(self, request, *args, **kwargs):
         obj = self.get_object()
         data = self.request.data
-        print(data)
+
         from_workflow = data.get("from_workflow", False)
-        print(from_workflow)
-        if from_workflow:
+        if settings.IN_DEV or settings.IN_STAGING:
             print(data)
+            print(from_workflow)
+        if from_workflow:
             config = obj.configs.all().first()
             template = config.template
             attempts = 1
@@ -194,7 +196,6 @@ class AlertTemplateViewSet(
                             res = sf.adapter_class.execute_alert_query(
                                 template.url_str(user, config.id), template.resource_type
                             )
-                            print(res)
                             res_data.extend([item.integration_id for item in res])
 
                     break
@@ -212,7 +213,6 @@ class AlertTemplateViewSet(
                     return logger.warning(
                         f"Failed to sync some data for resource {template.resource} for user {str(user.id)} because of SF LIMIT"
                     )
-                print(res_data)
             return Response({"ids": res_data})
         else:
             for config in obj.configs.all():
@@ -259,7 +259,6 @@ class RealTimeAlertConfigViewSet(
 
     def create(self, request, *args, **kwargs):
         data = request.data
-        print(data)
         return Response(data)
 
 
