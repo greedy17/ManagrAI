@@ -401,6 +401,59 @@
           </h4>
         </div>
       </div>
+
+      <div
+        :class="
+          !user.activatedManagrConfigs.includes('Close Date Passed') &&
+          isOnboarding &&
+          !isAdmin &&
+          userLevel !== 'MANAGER'
+            ? 'card onboarding'
+            : 'card'
+        "
+      >
+        <div class="card__header">
+          <h3>Large Opportunities</h3>
+        </div>
+
+        <div class="card__body">
+          <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
+          <img
+            style="height: 1rem; margin-right: 0.5rem"
+            src="@/assets/images/plusOne.png"
+            class="filter-plus"
+            alt=""
+          />
+          <img
+            style="height: 1.25rem; margin-right: 0.5rem"
+            src="@/assets/images/salesforce.png"
+            alt=""
+          />
+        </div>
+
+        <div class="card__footer">
+          <button
+            v-if="
+              hasSalesforceIntegration &&
+              hasSlackIntegration &&
+              !user.activatedManagrConfigs.includes('Large Opportunities')
+            "
+            @click="goToLargeOpps"
+            class="orange_button"
+          >
+            Activate
+          </button>
+          <h4 v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)">
+            Connect Slack & Salesforce to acivate
+          </h4>
+          <h4
+            class="active-workflow"
+            v-else-if="user.activatedManagrConfigs.includes('Large Opportunities')"
+          >
+            Active <img src="@/assets/images/configCheck.png" alt="" />
+          </h4>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -423,11 +476,7 @@ import { UserOnboardingForm } from '@/services/users/forms'
 import AlertTemplate, { AlertTemplateForm } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
 import { CollectionManager } from '@thinknimble/tn-models'
-import {
-  SObjectField,
-  NON_FIELD_ALERT_OPTS,
-  SOBJECTS_LIST,
-} from '@/services/salesforce'
+import { SObjectField, NON_FIELD_ALERT_OPTS, SOBJECTS_LIST } from '@/services/salesforce'
 import User from '@/services/users'
 import { SlackListResponse } from '@/services/slack'
 
@@ -489,6 +538,9 @@ export default {
     },
     goToEmptyField() {
       this.$router.push({ name: 'RequiredFieldEmpty' })
+    },
+    goToLargeOpps() {
+      this.$router.push({ name: 'LargeOpps' })
     },
   },
   computed: {

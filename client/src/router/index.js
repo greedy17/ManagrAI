@@ -124,6 +124,11 @@ export default new Router({
       component: () => import('@/views/settings/alerts/create/templates/NextStepDate')
     },
     {
+      path: '/large-opps',
+      name: 'LargeOpps',
+      component: () => import('@/views/settings/alerts/create/templates/LargeOpps')
+    },
+    {
       path: '/empty-field',
       name: 'RequiredFieldEmpty',
       component: () => import('@/views/settings/alerts/create/templates/RequiredFieldEmpty')
