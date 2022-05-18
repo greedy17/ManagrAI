@@ -460,6 +460,7 @@ class SalesforceSObjectViewSet(
         if not len(stage_forms):
             main_form.save_form(form_data, False)
         all_form_data = {**stage_form_data_collector, **main_form.saved_data}
+        print(all_form_data)
         formatted_saved_data = process_text_field_format(
             str(user.id), main_form.template.resource, all_form_data
         )
@@ -812,7 +813,8 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type, slack_const.FORM_TYPE_UPDATE,
+            resource_type,
+            slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)
