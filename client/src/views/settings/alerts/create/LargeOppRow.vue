@@ -32,7 +32,8 @@
       </FormField>
     </div>
 
-    <div class="alert-operand-row__value visible">
+    <div class="alert-operand-row__value">
+      <span style="margin-bottom: 0.5rem">"Amount" is greater than:</span>
       <FormField
         v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'"
         :errors="form.field.operandValue.errors"
@@ -84,7 +85,7 @@ export default {
    * the object multiple levels deep (this current implementation could be seen as incorrect)
    *
    */
-  name: 'NextAlertOperandRow',
+  name: 'LargeOppRow',
   components: {
     FormField,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
@@ -234,9 +235,9 @@ export default {
   },
 
   mounted() {
-    this.form.field.operandOperator.value = '='
-    this.form.field._operandOperator.value = { label: '= (Equals)', value: '=' }
-    this.form.field.operandValue.value = '0'
+    this.form.field.operandOperator.value = '>'
+    this.form.field._operandOperator.value = { label: '> (Greater than)', value: '>' }
+    // this.form.field.operandValue.value = '0'
   },
 }
 </script>
@@ -252,6 +253,19 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
+::v-deep .input-content {
+  width: 13vw;
+  border: 1px solid #e8e8e8 !important;
+  border-radius: 0.3rem;
+  background-color: white;
+  box-shadow: none !important;
+}
+::v-deep .input-form {
+  width: 13vw;
+}
+::v-deep .input-form__active {
+  border: none;
+}
 .visible {
   visibility: hidden;
 }

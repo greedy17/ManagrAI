@@ -1092,6 +1092,7 @@ export default {
       filterValues: [],
       filters: [],
       operatorsLength: 0,
+      stageGateId: null,
       ladFilter: {
         apiName: 'LastActivityDate',
         dataType: 'Date',
@@ -1182,6 +1183,7 @@ export default {
     accountSobjectId: 'getAccounts',
     primaryCheckList: 'closeAll',
     workflowCheckList: 'closeAll',
+    stageGateField: 'stageGateInstance',
     updateList: {
       async handler(currList) {
         if (currList.length === 0 && this.recapList.length) {
@@ -1668,6 +1670,20 @@ export default {
         console.log(e)
       }
     },
+    async stageGateInstance() {
+      this.stageGateId = null
+      try {
+        const res = await SObjects.api.createFormInstance({
+          resourceType: 'Opportunity',
+          formType: 'STAGE_GATING',
+        })
+        this.stageGateId = res.form_id
+      } catch (e) {
+        console.log(e)
+      } finally {
+        console.log(this.stageGateId)
+      }
+    },
     pushCloseDate() {
       if (this.selectedWorkflow) {
         for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
@@ -1721,10 +1737,10 @@ export default {
         this.formData[key] = val
       }
 
-      if (this.stagesWithForms.includes(val)) {
-        this.stageGateField = val
-      } else {
-        this.stageGateField = null
+      if (key === 'StageName') {
+        this.stagesWithForms.includes(val)
+          ? (this.stageGateField = val)
+          : (this.stageGateField = null)
       }
     },
     setUpdateValidationValues(key, val) {
@@ -1796,7 +1812,7 @@ export default {
       try {
         const res = await SObjects.api
           .updateResource({
-            form_id: this.instanceId,
+            form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
             form_data: this.formData,
           })
           .then(async () => {

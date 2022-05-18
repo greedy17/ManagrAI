@@ -2,9 +2,9 @@
   <div class="alerts-page">
     <div class="alerts-header">
       <div>
-        <h3>Required Field Empty</h3>
+        <h3>Large Opportunites</h3>
         <p style="margin-top: -0.5rem; font-size: 14px">
-          View and update all Opportunities with required fields that have not been filled out
+          View and update all your Opportunities that exceed a certain amount
         </p>
       </div>
 
@@ -22,8 +22,8 @@
             :key="index"
             v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
           >
-            <span style="margin-bottom: 0.5rem">Select your Field</span>
-            <EmptyAlertGroup
+            <span style="margin-bottom: 0.5rem">Select your "Amount" Field</span>
+            <LargeOppGroup
               :form="alertGroup"
               :resourceType="alertTemplateForm.field.resourceType.value"
             />
@@ -150,7 +150,6 @@
                     </template>
                   </Multiselect>
                 </template>
-
                 <div v-if="userLevel !== 'REP'" class="sendAll">
                   <input type="checkbox" id="allUsers" v-model="directToUsers" />
                   <label for="allUsers">Send directly to users</label>
@@ -177,6 +176,7 @@
         "
         text="Activate alert"
         @click.stop="onSave"
+        :disabled="!alertTemplateForm.isValid"
       />
     </div>
   </div>
@@ -192,7 +192,7 @@ import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 //Internal
 import FormField from '@/components/forms/FormField'
-import EmptyAlertGroup from '@/views/settings/alerts/create/EmptyAlertGroup'
+import LargeOppGroup from '@/views/settings/alerts/create/LargeOppGroup'
 import { UserConfigForm } from '@/services/users/forms'
 
 /**
@@ -206,9 +206,9 @@ import { SObjectField, NON_FIELD_ALERT_OPTS, SOBJECTS_LIST } from '@/services/sa
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
-  name: 'RequiredFieldEmpty',
+  name: 'LargeOpps',
   components: {
-    EmptyAlertGroup,
+    LargeOppGroup,
     ToggleCheckBox,
     FormField,
     PulseLoadingSpinnerButton,
@@ -307,6 +307,11 @@ export default {
     directToUsers: 'setDefaultChannel',
   },
   methods: {
+    setDefaultChannel() {
+      this.directToUsers
+        ? (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = 'default')
+        : (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = null)
+    },
     handleUpdate() {
       this.loading = true
 
@@ -322,11 +327,6 @@ export default {
     changeCreate() {
       this.create = !this.create
     },
-    setDefaultChannel() {
-      this.directToUsers
-        ? (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = 'default')
-        : (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = null)
-    },
     async listUserChannels(cursor = null) {
       this.dropdownLoading = true
       const res = await SlackOAuth.api.listUserChannels(cursor)
@@ -340,7 +340,6 @@ export default {
       }, 500)
     },
     async createChannel(name) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
       const res = await SlackOAuth.api.createChannel(name)
       if (res.channel) {
         this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = res.channel
@@ -459,6 +458,7 @@ export default {
           const res = await AlertTemplate.api.createAlertTemplate({
             ...this.alertTemplateForm.toAPI,
             user: this.$store.state.user.id,
+            directToUsers: this.directToUsers,
           })
           this.userConfigForm.field.activatedManagrConfigs.value.push(res.title)
           this.handleUpdate()
@@ -526,11 +526,10 @@ export default {
   beforeMount() {
     this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
-    this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
-    this.alertTemplateForm.field.title.value = 'Required Field Empty'
+    this.alertTemplateForm.field.title.value = 'Large Opportunities'
     this.alertTemplateForm.field.isActive.value = true
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
-      'Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has a required field that has not been filled out. Please update it.'
+      'Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> is a large opportunity.'
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceFrequency.value = 'WEEKLY'
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = [
@@ -632,6 +631,7 @@ input[type='checkbox'] + label::before {
   flex-direction: row;
   padding: 0vw 12vw;
 }
+
 .multi-slot {
   display: flex;
   align-items: center;
@@ -736,6 +736,7 @@ img {
   background-color: $soft-gray;
   color: $gray;
   cursor: not-allowed;
+
   font-size: 14px;
 }
 .row__ {
@@ -795,4 +796,3 @@ input {
   color: #41b883;
 }
 </style>
-
