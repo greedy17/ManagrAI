@@ -1680,6 +1680,8 @@ export default {
         this.stageGateId = res.form_id
       } catch (e) {
         console.log(e)
+      } finally {
+        console.log(this.stageGateId)
       }
     },
     pushCloseDate() {
@@ -1735,10 +1737,10 @@ export default {
         this.formData[key] = val
       }
 
-      if (this.stagesWithForms.includes(val)) {
-        this.stageGateField = val
-      } else {
-        this.stageGateField = null
+      if (key === 'StageName') {
+        this.stagesWithForms.includes(val)
+          ? (this.stageGateField = val)
+          : (this.stageGateField = null)
       }
     },
     setUpdateValidationValues(key, val) {
@@ -1810,7 +1812,7 @@ export default {
       try {
         const res = await SObjects.api
           .updateResource({
-            form_id: stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
+            form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
             form_data: this.formData,
           })
           .then(async () => {
