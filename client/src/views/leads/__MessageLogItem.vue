@@ -74,11 +74,6 @@ export default {
 .date-text {
   color: $mid-gray;
 }
-.icon-viewed {
-  width: 25px;
-  height: 25px;
-  fill: rgba(47, 48, 53, 0.4);
-}
 .icon-type {
   display: flex;
   justify-content: flex-start;
@@ -87,12 +82,5 @@ export default {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-}
-
-.read-receipt {
-  display: flex;
-}
-.muted {
-  margin-right: 1rem;
 }
 </style>

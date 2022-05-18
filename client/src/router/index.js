@@ -99,11 +99,6 @@ export default new Router({
       component: () => import('@/views/customize/ProductForm')
     },
     {
-      path: '/configure',
-      name: 'Configure',
-      component: () => import('@/views/auth/Configure')
-    },
-    {
       path: '/create-contacts',
       name: 'CreateContacts',
       component: () => import('@/views/customize/CreateContacts')
@@ -127,6 +122,16 @@ export default new Router({
       path: '/next-step',
       name: 'NextStep',
       component: () => import('@/views/settings/alerts/create/templates/NextStepDate')
+    },
+    {
+      path: '/large-opps',
+      name: 'LargeOpps',
+      component: () => import('@/views/settings/alerts/create/templates/LargeOpps')
+    },
+    {
+      path: '/empty-field',
+      name: 'RequiredFieldEmpty',
+      component: () => import('@/views/settings/alerts/create/templates/RequiredFieldEmpty')
     },
     {
       path: '/close-date-approaching',
@@ -154,15 +159,15 @@ export default new Router({
       component: () => import('@/views/settings/alerts/create/templates/ZoomRecap')
     },
     {
-      path: '/pipelines',
+      path: '/pipelines/:id?/',
+      props: true,
       name: 'Pipelines',
       component: () => import('@/views/Pipelines')
     },
     {
-      path: '/forecasting',
-      name: 'Forecasting',
-      component: () =>
-        import('@/views/Forecasting')
+      path: '/meetings',
+      name: 'Meetings',
+      component: () => import('@/views/Meetings')
     },
     {
       path: '/staff',

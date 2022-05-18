@@ -8,20 +8,21 @@
           dataType !== 'DateTime' &&
           apiName !== 'StageName'
         "
+        :class="fieldData ? '' : 'blank'"
       >
-        {{ fieldData ? fieldData : '---' }}
+        {{ fieldData ? fieldData : '' }}
       </p>
 
-      <p v-else-if="dataType === 'Date'">
-        {{ fieldData ? formatDate(fieldData) : '---' }}
+      <p :class="fieldData ? '' : 'blank'" v-else-if="dataType === 'Date'">
+        {{ fieldData ? formatDate(fieldData) : '' }}
       </p>
 
-      <p v-else-if="dataType === 'DateTime'">
-        {{ fieldData ? formatDateTime(fieldData) : '---' }}
+      <p :class="fieldData ? '' : 'blank'" v-else-if="dataType === 'DateTime'">
+        {{ fieldData ? formatDateTime(fieldData) : '' }}
       </p>
 
-      <p class="flex-columned" v-else-if="apiName === 'StageName'">
-        {{ fieldData ? fieldData : '---' }}
+      <p :class="fieldData ? 'flex-columned' : 'blank'" v-else-if="apiName === 'StageName'">
+        {{ fieldData ? fieldData : '' }}
         <span class="daysinstage">{{
           fieldData
             ? 'Days in Stage: ' +
@@ -30,8 +31,8 @@
         }}</span>
       </p>
 
-      <p style="color: #199e54" v-else>
-        {{ fieldData ? formatCash(fieldData) : '$ --- ---' }}
+      <p :class="fieldData ? 'cash' : 'blank'" v-else>
+        {{ fieldData ? formatCash(fieldData) : '' }}
       </p>
     </div>
     <div v-else>
@@ -110,5 +111,8 @@ export default {
   font-weight: bold;
   margin-top: 0.5rem;
   color: $gray;
+}
+.cash {
+  color: $dark-green;
 }
 </style>

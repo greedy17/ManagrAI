@@ -22,7 +22,7 @@
       <div class="flex-row-spread">
         <div>
           <div
-            class="flex-col"
+            class="flex-column"
             v-if="
               updateWorkflowList.includes(workflow.id) || updatedWorkflowList.includes(workflow.id)
             "
@@ -48,13 +48,11 @@
           <SkeletonBox width="15px" height="14px" />
         </div>
 
-        <div v-else class="flex-column">
+        <div v-else class="flex-row">
           <button @click="emitCreateForm" class="name-cell-edit-note-button-2">
-            Update
-            <img class="invert" src="@/assets/images/edit-note.png" />
+            <img style="filter: invert(90%); height: 0.6rem" src="@/assets/images/edit.png" />
           </button>
           <button @click="emitGetNotes" class="name-cell-note-button-2">
-            Notes
             <img class="gray" src="@/assets/images/white-note.png" />
           </button>
         </div>
@@ -65,9 +63,16 @@
       :key="i"
       v-for="(field, i) in oppFields"
       :class="
-        field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
+        field.dataType === 'TextArea' ||
+        (field.length > 250 &&
+          field.dataType === 'String' &&
+          (workflow['secondary_data'][field.apiName] ||
+            workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]))
           ? 'table-cell-wide'
-          : 'table-cell'
+          : workflow['secondary_data'][field.apiName] ||
+            workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+          ? 'table-cell'
+          : 'empty'
       "
     >
       <SkeletonBox
@@ -91,12 +96,43 @@
         />
       </div>
     </div>
+    <div
+      :key="field.id"
+      v-for="field in extraPipelineFields"
+      :class="
+        workflow['secondary_data'][field.apiName] ||
+        workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+          ? 'table-cell'
+          : 'empty'
+      "
+    >
+      <SkeletonBox
+        v-if="updateWorkflowList.includes(workflow.id) || updatedWorkflowList.includes(workflow.id)"
+        width="100px"
+        height="14px"
+      />
+
+      <div class="limit-cell-height" v-else-if="!updateWorkflowList.includes(workflow.id)">
+        <PipelineField
+          style="direction: ltr"
+          :apiName="field.apiName"
+          :dataType="field.dataType"
+          :fieldData="
+            field.apiName.includes('__c')
+              ? workflow['secondary_data'][field.apiName]
+              : workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+          "
+          :lastStageUpdate="workflow['last_stage_update']"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import PipelineNameSection from '@/components/PipelineNameSection'
 import PipelineField from '@/components/PipelineField'
+import { CollectionManager } from '@thinknimble/tn-models'
 import { SObjects, SObjectField } from '@/services/salesforce'
 
 export default {
@@ -110,6 +146,13 @@ export default {
     return {
       updatedWorkflowList: [],
       newCloseDate: null,
+      objectFields: CollectionManager.create({
+        ModelClass: SObjectField,
+        pagination: { size: 300 },
+        filters: {
+          salesforceObject: 'Opportunity',
+        },
+      }),
     }
   },
   props: {
@@ -124,6 +167,19 @@ export default {
   },
   watch: {
     closeDateData: 'futureDate',
+  },
+  async created() {
+    await this.objectFields.refresh()
+  },
+  computed: {
+    extraPipelineFields() {
+      let extras = []
+      extras = this.objectFields.list.filter((field) => this.hasExtraFields.includes(field.id))
+      return extras
+    },
+    hasExtraFields() {
+      return this.$store.state.user.salesforceAccountRef.extraPipelineFields
+    },
   },
   methods: {
     emitCreateForm() {
@@ -249,6 +305,14 @@ export default {
 .table-row {
   display: table-row;
 }
+.empty {
+  display: table-cell;
+  background: white;
+  min-width: 12vw;
+  border-left: 1px solid $soft-gray;
+  border-right: 1px solid $soft-gray;
+  border-bottom: 1px solid $soft-gray;
+}
 .table-cell {
   display: table-cell;
   position: sticky;
@@ -289,6 +353,17 @@ export default {
   position: sticky;
   background-color: $off-white;
 }
+.table-cell-checkbox {
+  display: table-cell;
+  padding: 2vh;
+  width: 3.75vw;
+  border: none;
+  left: 0;
+  position: sticky;
+  z-index: 1;
+  border-bottom: 1px solid $soft-gray;
+  background-color: $off-white;
+}
 .cell-name-header {
   display: table-cell;
   padding: 3vh;
@@ -305,36 +380,23 @@ export default {
   letter-spacing: 0.5px;
   color: $base-gray;
 }
-.table-cell-header {
-  display: table-cell;
-  padding: 3vh;
-  border: none;
-  border-bottom: 3px solid $light-orange-gray;
-  border-radius: 2px;
-  z-index: 2;
-  top: 0;
-  position: sticky;
-  background-color: $off-white;
-  font-weight: bold;
-  font-size: 13px;
-  letter-spacing: 0.5px;
-  color: $base-gray;
-}
 .flex-row-spread {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
 }
-.flex-col {
+.flex-column {
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-end;
 }
 .flex-row {
-  position: relative;
   display: flex;
   flex-direction: row;
-  align-items: center;
+  justify-content: flex-end;
+  align-items: flex-end;
 }
 input[type='checkbox']:checked + label::after {
   content: '';
@@ -385,53 +447,42 @@ input[type='checkbox'] + label::before {
   width: 110%;
   overflow: auto;
   direction: rtl;
-  padding: 0px 0.25rem;
 }
 .name-cell-note-button-2 {
-  cursor: pointer;
-  border: none;
-  border-radius: 0.2rem;
-  padding: 0.25rem 0.3rem;
+  height: 1.5rem;
+  width: 1.5rem;
+  margin-right: 0.2rem;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
   background-color: white;
-  box-shadow: 1px 1px 3px $very-light-gray;
-  max-width: 4rem;
-  transition: all 0.3s;
   display: flex;
   align-items: center;
-  justify-content: space-around;
-  font-size: 11px;
-  font-weight: 700px;
-  letter-spacing: 0.25px;
+  justify-content: center;
+  border: 1px solid #e8e8e8;
   img {
     height: 0.8rem;
+    padding: 1px;
   }
 }
 .name-cell-note-button-2:hover,
 .name-cell-edit-note-button-2:hover {
   transform: scale(1.03);
-  box-shadow: 1px 1px 1px 1px $very-light-gray;
+  box-shadow: 1px 1px 1px $soft-gray;
+  cursor: pointer;
 }
 .name-cell-edit-note-button-2 {
-  cursor: pointer;
-  border: none;
-  border-radius: 0.2rem;
-  padding: 0.25rem 0.3rem;
-  background-color: $dark-green;
-  color: white;
-  transition: all 0.3s;
+  height: 1.5rem;
+  width: 1.5rem;
+  margin-right: 0.2rem;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  background-color: white;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-  box-shadow: 1px 1px 2px $very-light-gray;
-  font-weight: 700px;
-  letter-spacing: 0.25px;
-  margin-top: 0.4rem;
-  margin-bottom: 0.3rem;
-
+  justify-content: center;
+  border: 1px solid #e8e8e8;
   img {
-    height: 0.8rem;
-    margin-left: 0.25rem;
+    height: 1.2rem;
   }
 }
 </style>

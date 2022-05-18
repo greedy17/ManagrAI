@@ -1,4 +1,4 @@
-import { ModelAPI, ApiFilter, Model } from '@thinknimble/tn-models'
+import { ModelAPI, ApiFilter } from '@thinknimble/tn-models'
 import { apiClient, apiErrorHandler } from '@/services/api'
 import { objectToSnakeCase } from '@/services/utils'
 
@@ -39,21 +39,52 @@ export default class SalesforceAPI extends ModelAPI {
 }
 
 export class MeetingWorkflowAPI extends ModelAPI {
-  static ENDPOINT = 'salesforce/'
+  static ENDPOINT = 'salesforce/meeting-workflows/'
   get client() {
     return apiClient()
   }
 
   async getMeetingList() {
     try {
-      const res = await this.client.get(MeetingWorkflowAPI.ENDPOINT + 'meeting-workflows')
+      const res = await this.client.get(MeetingWorkflowAPI.ENDPOINT)
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error getting meetings' })(e)
     }
   }
 
-
+  async mapMeeting(workflow_id, resource_id, resource_type) {
+    try {
+      const res = await this.client.post(MeetingWorkflowAPI.ENDPOINT + 'map-workflow/', { workflow_id: workflow_id, resource_id: resource_id, resource_type: resource_type })
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error getting meetings' })(e)
+    }
+  }
+  async removeParticipant(workflow_id, tracking_id) {
+    try {
+      const res = await this.client.post(MeetingWorkflowAPI.ENDPOINT + 'remove-participant/', { workflow_id: workflow_id, tracking_id: tracking_id })
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error removing participant' })(e)
+    }
+  }
+  async updateWorkflow(formData) {
+    try {
+      const res = await this.client.post(MeetingWorkflowAPI.ENDPOINT + 'update-workflow/', formData)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error updating workflow' })(e)
+    }
+  }
+  async updateParticipant(formData) {
+    try {
+      const res = await this.client.post(MeetingWorkflowAPI.ENDPOINT + 'update-participant/', formData)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error updating workflow' })(e)
+    }
+  }
 }
 
 export class SObjectFormBuilderAPI extends ModelAPI {
@@ -142,6 +173,14 @@ export class SObjectFormBuilderAPI extends ModelAPI {
   async removeExtraField(fieldIds) {
     try {
       const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'fields/remove-pipeline-fields/', fieldIds)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error syncing resources' })(e)
+    }
+  }
+  async getSobjectPicklistValues(sobject_id, value) {
+    try {
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'fields/sobject-picklist-values/', { params: sobject_id, value })
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error syncing resources' })(e)

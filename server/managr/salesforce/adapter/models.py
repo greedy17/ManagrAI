@@ -406,7 +406,7 @@ class SalesforceAuthAccountAdapter:
                 }
             )
 
-    def get_individual_picklist_values(self, resource, field_name=None):
+    def get_individual_picklist_values(self, resource, field_name=None, for_dev=False):
         """Sync method to get picklist values for resources not saved in our db"""
 
         record_type_id = self.default_record_ids.get(resource, None)
@@ -447,6 +447,8 @@ class SalesforceAuthAccountAdapter:
             res = client.get(
                 url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
             )
+            if for_dev:
+                logger.info(f"PICKLIST URL <{url}>\nPICKLIST RAW RESPONSE {res.json()}")
             res = self._handle_response(res)
 
             return SObjectPicklistAdapter.create_from_api(
@@ -519,17 +521,19 @@ class SalesforceAuthAccountAdapter:
 
     def list_relationship_data(self, relationship, fields, value, *args, **kwargs):
         # build the filter query from the name fields and value
+        sobject_type = args[0] if len(args) else None
         filter_query = ""
         for index, f in enumerate(fields):
-            string_val = f"{f} LIKE '%{value}%'"
-            if index != 0:
-                string_val = f" OR {string_val}"
-            filter_query = filter_query + string_val
+            if value:
+                string_val = f"{f} LIKE '%{value}%'"
+                if index != 0:
+                    string_val = f" OR {string_val}"
+                filter_query = filter_query + string_val
 
-        filter_query_string = f"AND ({filter_query})"
+        filter_query_string = [f"AND ({filter_query})"] if len(filter_query) else []
         # always retreive id
         fields.insert(0, "Id")
-        url = f"{self.instance_url}{sf_consts.SALESFORCE_RESOURCE_QUERY_URI(self.salesforce_id, relationship, fields, additional_filters=[filter_query_string], limit=20 )}"
+        url = f"{self.instance_url}{sf_consts.SALESFORCE_RESOURCE_QUERY_URI(self.salesforce_id, relationship, fields, additional_filters=filter_query_string, limit=20, SobjectType=sobject_type )}"
         with Client as client:
             res = client.get(
                 url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
@@ -565,6 +569,7 @@ class SalesforceAuthAccountAdapter:
             res = client.get(
                 url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
             )
+            print(f"EXECUTE ALERT QUERY: {res} \nURL: {url}")
             res = self._handle_response(res)
             res = self._format_resource_response(res, resource)
             return res

@@ -18,7 +18,6 @@ export default {
   data() {
     return {}
   },
-  methods: {},
   props: {
     name: {
       type: String,

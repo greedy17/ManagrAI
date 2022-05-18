@@ -17,10 +17,15 @@ from managr.core import constants as core_consts
 from managr.salesforce.routes import routes as model_routes
 from managr.salesforce.adapter.routes import routes as adapter_routes
 from managr.salesforce import constants as sf_consts
+from managr.salesforce.adapter.exceptions import TokenExpired
 
 # Create your models here.
 
 logger = logging.getLogger("managr")
+
+
+def default_days():
+    return [0]
 
 
 class AlertTemplateQuerySet(models.QuerySet):
@@ -66,8 +71,12 @@ class AlertTemplate(TimeStampModel):
             user_sf.salesforce_id,
             self.resource_type,
             ["Id"],
-            additional_filters=[*self.adapter_class.additional_filters(), operand_groups,],
+            additional_filters=[
+                *self.adapter_class.additional_filters(),
+                operand_groups,
+            ],
         )
+        print(f"{user_sf.instance_url}{q}")
         return f"{user_sf.instance_url}{q}"
 
     @property
@@ -126,7 +135,10 @@ class AlertGroupQuerySet(models.QuerySet):
 
 class AlertGroup(TimeStampModel):
     group_condition = models.CharField(
-        choices=(("AND", "AND"), ("OR", "OR"),),
+        choices=(
+            ("AND", "AND"),
+            ("OR", "OR"),
+        ),
         max_length=255,
         help_text="Applied to itself for multiple groups AND/OR group1 AND/OR group 2",
     )
@@ -180,7 +192,10 @@ class AlertOperand(TimeStampModel):
         "alerts.AlertGroup", on_delete=models.CASCADE, related_name="operands"
     )
     operand_condition = models.CharField(
-        choices=(("AND", "AND"), ("OR", "OR"),),
+        choices=(
+            ("AND", "AND"),
+            ("OR", "OR"),
+        ),
         max_length=255,
         help_text="Applied to itself for multiple groups AND/OR group1 AND/OR group 2",
     )
@@ -224,7 +239,8 @@ class AlertOperand(TimeStampModel):
                 self.group.template.config_run_against_date(config_id)
                 + timezone.timedelta(days=int(self.operand_value))
             ).strftime("%Y-%m-%dT00:00:00Z")
-        elif self.data_type == "STRING":
+        elif self.data_type == "STRING" and self.operand_value != "null":
+
             # sf requires single quotes for strings only (aka not decimal or date)
 
             # zero conditional does not get added
@@ -328,7 +344,8 @@ class AlertConfig(TimeStampModel):
     recurrence_frequency = models.CharField(
         max_length=255, default="WEEKLY", help_text="Weekly/Monthly will run on these days"
     )
-    recurrence_day = models.SmallIntegerField(help_text="day of week/ month")
+    recurrence_day = models.SmallIntegerField(help_text="day of week/ month", null=True, blank=True)
+    recurrence_days = ArrayField(models.SmallIntegerField(), default=default_days)
     recipients = ArrayField(
         models.CharField(max_length=255),
         default=list,
@@ -357,10 +374,10 @@ class AlertConfig(TimeStampModel):
         """
         if self.recurrence_frequency == "WEEKLY":
             today_weekday = timezone.now().weekday()
-            if today_weekday != int(self.recurrence_day):
+            if today_weekday in self.recurrence_days:
                 # calculate the specific date wanted based on day of week
-                day_diff = int(self.recurrence_day) - today_weekday
-                return timezone.now() + timezone.timedelta(days=day_diff)
+                # day_diff = int(self.recurrence_day) - today_weekday
+                return timezone.now()
             return timezone.now()
         elif self.recurrence_frequency == "MONTHLY":
             d = timezone.now()
@@ -374,6 +391,11 @@ class AlertConfig(TimeStampModel):
                 return datetime.datetime(year=d.year, month=d.month, day=self.recurrence_day)
 
         return timezone.now()
+
+    def add_to_recurrence_days(self):
+        if self.recurrence_frequency == "WEEKLY":
+            self.recurrence_days = [self.recurrence_day]
+        return self.save()
 
     @property
     def target_users(self):
@@ -418,7 +440,9 @@ class AlertInstanceQuerySet(models.QuerySet):
 
 class AlertInstance(TimeStampModel):
     template = models.ForeignKey(
-        "alerts.AlertTemplate", on_delete=models.CASCADE, related_name="instances",
+        "alerts.AlertTemplate",
+        on_delete=models.CASCADE,
+        related_name="instances",
     )
     user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="alerts")
     rendered_text = models.TextField(
@@ -489,32 +513,54 @@ class AlertInstance(TimeStampModel):
     def var_binding_map(self):
         """takes set of variable bindings and replaces them with the value"""
         binding_map = dict()
-        current_values = self.resource.get_current_values()
-        for binding in self.template.message_template.bindings:
-            ## collect all valid bindings
+        attempts = 1
+        while True:
             try:
-                k, v = binding.split(".")
-                if k != self.template.resource_type and k != "__Recipient":
-                    continue
-                if k == self.template.resource_type and hasattr(self.user, "salesforce_account"):
-                    # if field does not exist set to strike through field with N/A
-                    # binding_map[binding] = self.resource.secondary_data.get(v, "~None~")
-                    binding_map[binding] = current_values.secondary_data.get(v, "~None~")
-                    # if field value is None or blank set to empty or no value
-                    if binding_map[binding] in ["", None]:
-                        binding_map[binding] = "~None~"
-                    # HACK pb for datetime fields Mike wants just the date
-                    user = self.user
-                    if self.resource.secondary_data.get(v):
-                        field = user.salesforce_account.object_fields.filter(api_name=v).first()
-                        if field and field.data_type == "DateTime":
-                            binding_map[binding] = binding_map[binding][0:10]
+                current_values = self.resource.get_current_values()
+                for binding in self.template.message_template.bindings:
+                    ## collect all valid bindings
+                    try:
+                        k, v = binding.split(".")
+                        if k != self.template.resource_type and k != "__Recipient":
+                            continue
+                        if k == self.template.resource_type and hasattr(
+                            self.user, "salesforce_account"
+                        ):
+                            # if field does not exist set to strike through field with N/A
+                            # binding_map[binding] = self.resource.secondary_data.get(v, "~None~")
+                            binding_map[binding] = current_values.secondary_data.get(v, "~None~")
+                            # if field value is None or blank set to empty or no value
+                            if binding_map[binding] in ["", None]:
+                                binding_map[binding] = "~None~"
+                            # HACK pb for datetime fields Mike wants just the date
+                            user = self.user
+                            if self.resource.secondary_data.get(v):
+                                field = user.salesforce_account.object_fields.filter(
+                                    api_name=v
+                                ).first()
+                                if field and field.data_type == "DateTime":
+                                    binding_map[binding] = binding_map[binding][0:10]
 
-                elif k == "__Recipient":
-                    binding_map[binding] = getattr(self.user, v)
-                    if binding_map[binding] in ["", None]:
-                        binding_map[binding] = f" ~{k} {v} N/A~ "
+                        elif k == "__Recipient":
+                            binding_map[binding] = getattr(self.user, v)
+                            if binding_map[binding] in ["", None]:
+                                binding_map[binding] = f" ~{k} {v} N/A~ "
 
-            except ValueError:
-                continue
+                    except ValueError:
+                        continue
+                break
+
+            except TokenExpired:
+                if attempts >= 5:
+                    logger.exception(
+                        f"Failed to retrieve alerts current data for user {str(user.id)} after {attempts} tries"
+                    )
+                    break
+                else:
+                    self.user.salesforce_account.regenerate_token()
+                    attempts += 1
+            except Exception as e:
+                return logger.warning(
+                    f"Exception occured when pulling current data for render text in alert {self.id} because of {e}"
+                )
         return binding_map

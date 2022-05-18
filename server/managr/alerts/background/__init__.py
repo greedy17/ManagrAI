@@ -113,9 +113,9 @@ def _process_check_alert(config_id, user_id, invocation, run_time):
             return logger.warning(
                 f"Failed to sync some data for resource {resource} for user {user_id} because of SF LIMIT"
             )
-
     instances = []
     for item in res:
+        # user.activity.increment_untouched_count("workflow")
         existing = model_class.objects.filter(integration_id=item.integration_id).first()
         if existing:
             # create alert instance to keep on hand and track errors
@@ -273,9 +273,10 @@ def _process_send_alert(invocation, channel, config_id):
             "initial_alert_blockset",
             {
                 "channel": channel,
+                "template": str(alert_instances[0].template.id),
                 "config_id": config_id,
                 "invocation": invocation,
-                "title": f"*New Task:* Update {len(alert_instances)} {template.title}",
+                "title": f"*New Task:* {len(alert_instances)} {template.title}",
             },
         ),
         block_builders.context_block(f"Owned by {instance_user.full_name}"),

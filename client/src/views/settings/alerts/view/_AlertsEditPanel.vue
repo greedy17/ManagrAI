@@ -1,39 +1,36 @@
 <template>
   <div class="tab">
-    <div class="tab__header">
-      <div class="tab__header-items">
-        <div class="tab__header-items__group tab__header-items__group">
-          <div
-            :class="{ 'tab__header-items__item--active': selectedTab == 'TEMPLATE' }"
-            @click="selectedTab = 'TEMPLATE'"
-            class="tab__header-items__item"
-          >
-            Workflow Title
-          </div>
-          <div
-            :class="{ 'tab__header-items__item--active': selectedTab == 'GROUPS' }"
-            @click="selectedTab = 'GROUPS'"
-            class="tab__header-items__item"
-          >
-            Conditions
-          </div>
-          <div
-            :class="{ 'tab__header-items__item--active': selectedTab == 'CONFIG' }"
-            @click="selectedTab = 'CONFIG'"
-            class="tab__header-items__item"
-          >
-            Delivery
-          </div>
-          <div
-            :class="{ 'tab__header-items__item--active': selectedTab == 'MESSAGE' }"
-            @click="selectedTab = 'MESSAGE'"
-            class="tab__header-items__item"
-          >
-            Message
-          </div>
-        </div>
+    <div class="tab__header-items__group">
+      <div
+        :class="{ 'tab__header-items__item--active': selectedTab == 'TEMPLATE' }"
+        @click="selectedTab = 'TEMPLATE'"
+        class="tab__header-items__item"
+      >
+        Workflow Title
+      </div>
+      <div
+        :class="{ 'tab__header-items__item--active': selectedTab == 'GROUPS' }"
+        @click="selectedTab = 'GROUPS'"
+        class="tab__header-items__item"
+      >
+        Conditions
+      </div>
+      <div
+        :class="{ 'tab__header-items__item--active': selectedTab == 'CONFIG' }"
+        @click="selectedTab = 'CONFIG'"
+        class="tab__header-items__item"
+      >
+        Delivery
+      </div>
+      <div
+        :class="{ 'tab__header-items__item--active': selectedTab == 'MESSAGE' }"
+        @click="selectedTab = 'MESSAGE'"
+        class="tab__header-items__item"
+      >
+        Message
       </div>
     </div>
+
     <div class="tab__panel">
       <div style="display: flex; justify-content: center">
         <PulseLoadingSpinner v-if="savingInTab" />
@@ -41,14 +38,8 @@
       </div>
       <div class="alerts-template-list__content">
         <div v-if="selectedTab == 'TEMPLATE'" class="alerts-template-list__content-template">
-          <!-- <FormField
-            :id="`resource-type-${alert.id}`"
-            :disabled="true"
-            v-model="alert.resourceType"
-          /> -->
-          <!-- <h3>{{ alert.resourceType }}</h3> -->
-          <div v-if="!templateNames.includes(alert.title)" style="margin: 2rem">
-            <h3>Edit workflow title:</h3>
+          <div v-if="!templateNames.includes(alert.title)">
+            <h4>Edit workflow title:</h4>
             <FormField
               :id="`resource-title-${alert.id}`"
               :errors="templateTitleField.errors"
@@ -56,11 +47,11 @@
               v-model="templateTitleField.value"
             />
           </div>
-          <div v-else style="margin: 2rem">
-            <h2>{{ alert.title }}</h2>
+          <div v-else>
+            <h3>{{ alert.title }}</h3>
             <p class="even">
               Cant edit templated alert titles &nbsp;
-              <img src="@/assets/images/exclamation.png" style="height: 1.2rem" alt="" />
+              <img src="@/assets/images/exclamation.png" alt="" />
             </p>
           </div>
         </div>
@@ -68,12 +59,14 @@
           <div class="card-rows" v-for="(group, index) in alert.groupsRef" :key="index">
             <div class="group-card">
               <div style="display: flex; justify-content: flex-end; width: 100%">
-                <img
-                  @click.stop="onRemoveAlertGroup(group.id, index)"
-                  style="height: 1.25rem; cursor: pointer; filter: invert(90%)"
-                  src="@/assets/images/remove.png"
-                  alt=""
-                />
+                <div class="img-border">
+                  <img
+                    @click.stop="onRemoveAlertGroup(group.id, index)"
+                    style="height: 1rem; cursor: pointer; filter: invert(90%)"
+                    src="@/assets/images/trash.png"
+                    alt=""
+                  />
+                </div>
               </div>
 
               <div class="group-card__title">Workflow conditions group {{ index + 1 }}</div>
@@ -84,15 +77,14 @@
                   :key="i"
                   v-for="(operand, i) in group.operandsRef"
                 >
-                  <img
-                    class="remove-color"
-                    src="@/assets/images/remove.png"
-                    style="height: 1rem"
-                    alt=""
-                  />
-                  <!-- <span style="margin-bottom: 1rem">
-                    {{ operand.operandOrder != 0 ? operand.operandCondition : '' }}</span
-                  > -->
+                  <span class="img-border">
+                    <img
+                      class="remove-color"
+                      src="@/assets/images/remove.png"
+                      style="height: 1rem"
+                      alt=""
+                    />
+                  </span>
                   {{ 'Condition ' + (i + 1) + ': ' }}
                   {{ getReadableOperandRow(operand) }}
                 </p>
@@ -106,20 +98,19 @@
                 </div>
               </div>
             </div>
-
-            <img
-              src="@/assets/images/add.png"
-              style="height: 1.5rem; margin-bottom: 1rem; cursor: pointer"
-              alt=""
-              @click="onShowGroupModal()"
-            />
+          </div>
+          <div
+            v-if="!alert.groupsRef.length"
+            style="display: flex; justify-content: center; width: 100%; margin-bottom: -1rem"
+          >
+            <button class="condition-button" @click="onShowGroupModal()">Add Group</button>
           </div>
         </div>
         <div v-if="selectedTab == 'MESSAGE'" class="alerts-template-list__content-message">
           <div class="alerts-template-list__content-message__form">
             <div class="alerts-template-list__content-message__form-body">
               <div>
-                <h3>Edit your worflow message:</h3>
+                <h3>Edit your workflow message:</h3>
               </div>
               <FormField :errors="messageTemplateForm.field.body.errors">
                 <template v-slot:input>
@@ -137,42 +128,60 @@
               </FormField>
             </div>
             <div
-              style="display: flex; align-items: flex-start; flex-direction: column; width: 100%"
+              style="
+                display: flex;
+                align-items: flex-start;
+                flex-direction: column;
+                margin-left: 3rem;
+              "
             >
               <h3>Add CRM fields:</h3>
-              <DropDownSearch
-                :items="fields.list"
-                @input="bindText(`${alert.resourceType}.${$event}`)"
-                displayKey="referenceDisplayLabel"
-                valueKey="apiName"
-                nullDisplay="Search fields"
-                searchable
-                :hasNext="!!fields.pagination.hasNextPage"
-                @load-more="fieldNextPage"
-                @search-term="onSearchFields"
-                auto
-              />
+              <Multiselect
+                placeholder="Select field"
+                v-model="crmValue"
+                @input="bindText(`${alert.resourceType}.${$event.apiName}`)"
+                :options="fields.list"
+                openDirection="below"
+                style="width: 14vw"
+                selectLabel="Enter"
+                track-by="apiName"
+                label="referenceDisplayLabel"
+                :loading="dropdownLoading"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+                <template slot="afterList">
+                  <p class="multi-slot__more" @click="fieldNextPage">
+                    Load More
+                    <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    Select field
+                  </p>
+                </template>
+              </Multiselect>
             </div>
           </div>
-          <!-- <div
-            class="alerts-template-list__content-message__preview"
-            style="width: 40rem; height: 20rem; overflow-y: scroll"
-          >
-            <SlackMessagePreview :alert="alertObj" />
-          </div> -->
         </div>
         <div v-if="selectedTab == 'CONFIG'" class="alerts-template-list__content-settings">
           <div class="card-rows">
             <div class="group-card">
               <div class="group-card__title">Delivery Options</div>
               <p class="row" :key="index" v-for="(config, index) in alert.configsRef">
-                <img
-                  class="remove-color"
-                  @click="onDeleteConfig(config.id, index)"
-                  src="@/assets/images/remove.png"
-                  style="height: 1rem"
-                  alt=""
-                />
+                <span class="img-border">
+                  <img
+                    class="remove-color"
+                    @click="onDeleteConfig(config.id, index)"
+                    src="@/assets/images/remove.png"
+                    style="height: 1rem"
+                    alt=""
+                  />
+                </span>
+
                 {{ 'Option ' + (index + 1) + ': ' }}
                 {{ getReadableConfig(config) }}
               </p>
@@ -197,60 +206,36 @@
 import 'quill/dist/quill.core.css'
 import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
-
-import debounce from 'lodash.debounce'
 import { quillEditor } from 'vue-quill-editor'
+import debounce from 'lodash.debounce'
 import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
-import moment from 'moment'
 
 //Internal
 import AlertOperandModal from '@/views/settings/alerts/view/_AlertOperandModal'
 import AlertGroupModal from '@/views/settings/alerts/view/_AlertGroupModal'
 import AlertSettingsModal from '@/views/settings/alerts/view/_AlertSettingsModal'
-import ListContainer from '@/components/ListContainer'
-import ListItem from '@/components/ListItem'
 import FormField from '@/components/forms/FormField'
-import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotificationTemplate'
-import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePreview'
-import DropDownSearch from '@/components/DropDownSearch'
 /**
  * Services
  *
  */
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
-import { toNumberSuffix } from '@/services/filters'
-import Form, { FormArray, FormField as FormFieldService } from '@thinknimble/tn-forms'
-import {
-  MustMatchValidator,
-  EmailValidator,
-  RequiredValidator,
-  MinLengthValidator,
-  Validator,
-} from '@thinknimble/tn-validators'
+import { CollectionManager } from '@thinknimble/tn-models'
+import { FormField as FormFieldService } from '@thinknimble/tn-forms'
+import { RequiredValidator } from '@thinknimble/tn-validators'
 
 import AlertTemplate, {
   AlertMessageTemplate,
   AlertConfig,
   AlertGroup,
   AlertGroupForm,
-  AlertTemplateForm,
   AlertConfigForm,
   AlertMessageTemplateForm,
   AlertGroupOperand,
   AlertOperandForm,
 } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
-import { SObjectField, SObjectValidations, SObjectPicklist } from '@/services/salesforce'
-import {
-  ALERT_DATA_TYPE_MAP,
-  INPUT_TYPE_MAP,
-  INTEGER,
-  STRING,
-  DATE,
-  DECIMAL,
-  BOOLEAN,
-  DATETIME,
-} from '@/services/salesforce/models'
+import { SObjectField } from '@/services/salesforce'
+import { ALERT_DATA_TYPE_MAP, STRING } from '@/services/salesforce/models'
 const TABS = [
   { key: 'TEMPLATE', label: 'Workflow Title' },
   { key: 'GROUPS', label: 'Conditions' },
@@ -261,16 +246,12 @@ export default {
   name: 'AlertsEditPanel',
   components: {
     FormField,
-    SlackNotificationTemplate,
-    SlackMessagePreview,
-    quillEditor,
-    ListItem,
-    ListContainer,
     PulseLoadingSpinner,
-    DropDownSearch,
     AlertOperandModal,
     AlertGroupModal,
     AlertSettingsModal,
+    quillEditor,
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   props: {
     alert: {
@@ -280,6 +261,7 @@ export default {
   },
   data() {
     return {
+      dropdownLoading: false,
       templateTitleField: new FormFieldService({ validators: [new RequiredValidator()] }),
       executeUpdateTemplate: debounce(this.updateTemplate, 900),
       executeUpdateMessageTemplate: debounce(this.updateMessageTemplate, 900),
@@ -288,6 +270,7 @@ export default {
       selectedTab: TABS[0].key,
       savedChanges: false,
       savingInTab: false,
+      crmValue: null,
       templateNames: [
         'Close Date Passed',
         'Close Date Approaching',
@@ -343,22 +326,11 @@ export default {
     },
   },
   computed: {
-    alertObj() {
-      return {
-        title: this.templateTitleField.value,
-        message: this.messageTemplateForm.field.body.value,
-        resourceType: this.alert.resourceType,
-      }
-    },
-
     editor() {
       return this.$refs['message-body'].quill
     },
   },
   methods: {
-    logAlert(i) {
-      console.log(i)
-    },
     onShowOperandModal(groupIndex) {
       let newForm = new AlertOperandForm({
         operandOrder: this.alert.groupsRef[groupIndex].operandsRef.length,
@@ -371,10 +343,8 @@ export default {
 
         {
           name: 'alert-operands-modal',
-          minHeight: 600,
-          minWidth: 600,
-          height: 600,
-          width: 600,
+          height: 500,
+          width: 820,
         },
         {
           'before-close': (e) => {
@@ -404,10 +374,8 @@ export default {
         {
           name: 'alert-groups-modal',
 
-          minHeight: 600,
-          minWidth: 600,
-          height: 600,
-          width: 600,
+          height: 400,
+          width: 800,
 
           adaptive: true,
         },
@@ -432,10 +400,8 @@ export default {
 
         {
           name: 'alert-settings-modal',
-          minHeight: 600,
-          minWidth: 600,
-          height: 600,
-          width: 600,
+          height: 650,
+          width: 580,
         },
         {
           'before-close': (e) => {
@@ -453,12 +419,6 @@ export default {
       } else {
         return STRING
       }
-    },
-    getInputType(type) {
-      if (type && INPUT_TYPE_MAP[type.dataType]) {
-        return INPUT_TYPE_MAP[type.dataType]
-      }
-      return 'text'
     },
     getReadableOperandRow(rowData) {
       let operandOperator = rowData.operandOperator
@@ -493,10 +453,7 @@ export default {
       let recurrenceDayString = config.recurrenceDay
 
       if (config.recurrenceFrequency == 'WEEKLY') {
-        let day = this.weeklyOpts.find((opt) => opt.value == config.recurrenceDay)
-          ? this.weeklyOpts.find((opt) => opt.value == config.recurrenceDay).key
-          : config.recurrenceDay
-        recurrenceDayString = `Run every ${day} (Weekly)`
+        recurrenceDayString = `Run your selected days (Weekly)`
       } else if ((config.recurrenceFrequency = 'MONTHLY')) {
         let day = config.recurrenceDay
         recurrenceDayString = `Run every ${this.addSuffix(day)} Monthly`
@@ -576,16 +533,12 @@ export default {
         }
       }
     },
-    async onSearchFields(v) {
-      this.fields.pagination = new Pagination()
-      this.fields.filters = {
-        ...this.fields.filters,
-        search: v,
-      }
-      await this.fields.refresh()
-    },
     async fieldNextPage() {
+      this.dropdownLoading = true
       await this.fields.addNextPage()
+      setTimeout(() => {
+        this.dropdownLoading = false
+      })
     },
 
     bindText(val) {
@@ -668,6 +621,19 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/buttons';
 
+::v-deep .input-content {
+  width: 13vw;
+  border: 1px solid #e8e8e8 !important;
+  border-radius: 0.3rem;
+  background-color: white;
+  box-shadow: none !important;
+}
+::v-deep .input-form {
+  width: 13vw;
+}
+::v-deep .input-form__active {
+  border: none;
+}
 @keyframes bounce {
   0% {
     transform: translateY(0);
@@ -676,58 +642,62 @@ export default {
     transform: translateY(-6px);
   }
 }
-.bouncy {
-  animation: bounce 0.2s infinite alternate;
+h3 {
+  font-weight: 400;
+  letter-spacing: 0.25px;
 }
-.revoke-button {
-  font-size: 0.75rem;
-  font-weight: bold;
-  color: $coral;
-  background: transparent;
-  border: none;
+.img-border {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e8e8e8;
+  border-radius: 0.2rem;
   cursor: pointer;
+  padding: 0.15rem 0.3rem;
+  margin-right: 0.5rem;
 }
-.add-button {
-  font-size: 0.75rem;
-  font-weight: bold;
-  color: white;
-  background: transparent;
-  border: none;
-  cursor: pointer;
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 1rem;
+    margin-right: 0.25rem;
+    filter: invert(70%);
+  }
 }
-.add-button:hover,
-.revoke-button:hover {
-  color: white;
-}
-.three-dots:after {
-  cursor: pointer;
-  color: white;
-  content: '\2026';
-  font-size: 2rem;
-  padding-left: 4rem;
-}
-.dropdown {
-  right: 10px;
-  border-radius: 0.25rem;
-  border: none;
-  background-color: $panther-gray;
-  outline: none;
-  opacity: 0;
-  z-index: -1;
-  max-height: 0;
-  transition: opacity 0.1s, z-index 0.1s, max-height 5s;
-  padding: 0.1rem 0.25rem;
-}
+.multi-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $gray;
+  font-size: 12px;
+  width: 100%;
+  padding: 0.5rem 0rem;
+  margin: 0;
+  cursor: text;
+  &__more {
+    background-color: white;
+    color: $dark-green;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-top: 1px solid #e8e8e8;
+    width: 100%;
+    padding: 0.75rem 0rem;
+    margin: 0;
+    cursor: pointer;
 
-.dropdown-container:focus {
-  outline: none;
-}
-
-.dropdown-container:focus .dropdown {
-  opacity: 1;
-  z-index: 100;
-  max-height: 100vh;
-  transition: opacity 0.2s, z-index 0.2s, max-height 0.2s;
+    img {
+      height: 0.8rem;
+      margin-left: 0.25rem;
+      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+        brightness(93%) contrast(89%);
+    }
+  }
 }
 .card-rows {
   display: flex;
@@ -738,97 +708,54 @@ export default {
   margin-top: 2rem;
 }
 .group-card {
-  border-radius: 0.75rem;
+  border-radius: 0.3rem;
   background-color: $white;
   padding: 1.2rem;
   width: 58%;
   margin-bottom: 2rem;
   color: $base-gray;
-  font-size: 0.85rem;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  transition: all 0.2s;
+  font-size: 14px;
+  border: 1px solid #e8e8e8;
 
   &__title {
     width: 100%;
     height: 2rem;
     text-align: center;
     font-size: 1.05rem;
-    font-weight: bold;
   }
 }
 
-.group-card:hover {
-  transform: scale(1.015);
-}
 .condition-button {
   background-color: $dark-green;
   color: white;
   border-radius: 0.25rem;
-  font-weight: bold;
   border: none;
   cursor: pointer;
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 1rem;
   margin: 0.5rem;
 }
 .row {
   display: flex;
   flex-direction: row;
   align-items: center;
-  font-weight: bold;
+
   cursor: pointer;
 }
 .even {
-  color: #beb5cc;
+  color: $gray;
   display: flex;
   flex-direction: row;
   align-items: center;
-  font-weight: bold;
-  cursor: not-allowed;
+  cursor: text;
+  font-size: 14px;
+  img {
+    height: 1rem;
+    filter: invert(70%);
+  }
 }
 .remove-color {
-  filter: invert(47%) sepia(73%) saturate(969%) hue-rotate(319deg) brightness(103%) contrast(96%);
-  margin-right: 0.25rem;
+  filter: invert(70%);
   cursor: pointer;
-}
-::v-deep .ql-toolbar .ql-stroke {
-  fill: none;
-  stroke: $panther;
-}
-
-::v-deep .ql-toolbar .ql-fill {
-  fill: $panther;
-  stroke: none;
-}
-
-::v-deep .ql-toolbar .ql-picker {
-  color: $panther;
-}
-
-::v-deep .ql-editor.ql-blank::before {
-  color: $panther;
-}
-::v-deep .ql-container.ql-snow {
-  border-radius: 0.2rem;
-  border: none;
-  box-shadow: 3px 4px 7px $very-light-gray;
-}
-::v-deep .ql-toolbar.ql-snow {
-  border-radius: 0.1rem;
-  background-color: white;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  border: none;
-  width: 24rem;
-}
-::v-deep .ql-blank.ql-editor {
-  background-color: white;
-  border-radius: 0.25rem;
-}
-::v-deep .ql-container {
-  background-color: white;
-  color: $panther;
-  width: 24rem;
-  min-height: 10rem;
-  overflow: scroll;
 }
 .message__box {
   margin-bottom: 2rem;
@@ -837,140 +764,46 @@ export default {
   border-radius: 0.25rem;
   background-color: transparent;
 }
-.config__column {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-.filtered {
-  filter: invert(66%) sepia(64%) saturate(3377%) hue-rotate(380deg) brightness(100%) contrast(105%);
-}
-.black-filter {
-  filter: invert(100%) contrast(100%);
-  height: 1.5rem;
-}
-.row__button {
-  border: none;
-  color: $dark-green;
-  background: transparent;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: bold;
-  padding-top: 0.2rem;
-  margin-left: -0.1rem;
-}
-.remove__button {
-  border: none;
-  color: $panther-silver;
-  background: transparent;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: bold;
-  padding-top: 0.2rem;
-  margin-left: -0.1rem;
-}
-.disabled__button {
-  border: none;
-  color: $panther-silver;
-  background: transparent;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: bold;
-  padding-top: 0.2rem;
-  margin-left: -0.1rem;
-}
-::v-deep .input-content {
-  border: none;
-  font-weight: bold;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  color: $panther;
-}
-::v-deep .input-content:focus {
-  box-shadow: 3px 4px 7px $very-light-gray;
-  border: none;
-  font-weight: bold;
-  color: $base-gray;
-}
-::v-deep .ls-container__list--horizontal {
-  background-color: transparent;
-}
-::v-deep .item-container {
-  margin-right: 2rem;
-}
 .tab__header-items {
   display: flex;
-  padding: 0.5rem 1rem;
   overflow: scroll;
   &__item {
-    padding: 1rem 3rem;
-    margin: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    padding: 0.5rem;
     border-bottom: none;
-    color: #bcbcc1;
-    font-weight: normal;
+    color: $base-gray;
+    letter-spacing: 0.5px;
     cursor: pointer;
+    width: 17vw;
     &--active {
-      padding: 1rem 3rem;
-      color: $darker-green;
-      background-color: $lighter-green;
-      border-radius: 0.4rem;
-      font-weight: 900;
+      background-color: $dark-green;
+      border-radius: 0.2rem;
+      color: white;
       position: relative;
     }
-    &--active:after {
-      content: '';
-      background: $darker-green;
-      position: absolute;
-      bottom: 0.75rem;
-      left: 0;
-      height: 50%;
-      width: 3px;
+    &--active:hover {
+      color: white !important;
     }
   }
   &__item:hover {
-    background-color: $lighter-green;
-    color: $darker-green;
-    border-radius: 0.4rem;
+    color: $dark-green;
   }
   &__group {
     display: flex;
-    &__items {
-    }
-    &--large {
-      flex: 1.5 0 auto;
-    }
-    &--medium {
-      flex: 1 0 auto;
-    }
-  }
-}
-.btn {
-  &--danger {
-    @include button-danger();
-  }
-  &--primary {
-    @include primary-button();
-  }
-  &--secondary {
-    @include secondary-button();
-  }
-
-  &--icon {
-    @include --icon();
+    padding: 0.75rem;
   }
 }
 .tab__panel {
-  padding: 0.25rem 0 0;
+  padding: 0.5rem 3rem;
 }
 .alerts-template-list__content-message {
-  margin-left: 2rem;
-  padding-left: 0.5rem;
+  font-size: 14px;
+  letter-spacing: 0.2px;
+  display: flex;
+  justify-content: flex-start;
+  padding: 0.5rem 2rem;
   height: 100%;
   &__form {
     display: flex;
@@ -978,24 +811,5 @@ export default {
     align-items: flex-start;
     height: 100%;
   }
-  &__preview {
-  }
 }
-.left {
-  margin-bottom: 5rem;
-}
-.alerts-template-list__add-opts {
-  display: flex;
-  align-items: center;
-}
-// ::-webkit-scrollbar {
-//   background-color: $panther;
-//   -webkit-appearance: none;
-//   width: 4px;
-//   height: 100%;
-// }
-// ::-webkit-scrollbar-thumb {
-//   border-radius: 2px;
-//   background-color: $panther-silver;
-// }
 </style>

@@ -33,6 +33,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
             "is_trial",
             "slack_integration",
             "has_products",
+            "number_of_allowed_users",
         )
 
 

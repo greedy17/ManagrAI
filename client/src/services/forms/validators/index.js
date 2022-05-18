@@ -12,7 +12,6 @@ export default {
 export function required({ check = true, message = '' } = {}) {
   return function (field) {
     let error = { name: 'required', message: 'This is a Required Field' }
-    let name = field.name
     let value = field.value
     let errors = field.errors
     if ((!value && check == true) || (value.length <= 0 && check == true)) {
@@ -31,7 +30,6 @@ export function minLength({ length = 0, message = '' } = {}) {
       name: 'minlength',
       message: 'Please Enter a Minimum of ' + length + ' Characters',
     }
-    let name = field.name
     let value = field.value
     let errors = field.errors
     if (value.length < length) {
@@ -52,7 +50,6 @@ export function mustMatch({ targetString, matcherString, message = '' } = {}) {
     let matcher = formFields[matcherString]
     //matcher is the matcher value
     let error = { name: 'mustmatch', message: 'This field must match its matcher' }
-    let name = field.name
     let value = field.value
     let errors = field.errors
     let matcherValue = matcher.Value

@@ -5,7 +5,6 @@ import { mapState } from 'vuex'
 export default {
   extends: FormSettings,
   name: 'FormSettings',
-  components: {},
   data() {
     return {
       isLoading: false,
@@ -18,7 +17,6 @@ export default {
   computed: {
     ...mapState(['user']),
   },
-  methods: {},
 }
 </script>
 

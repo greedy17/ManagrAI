@@ -70,6 +70,26 @@ def loading_block_set(context):
 
 
 @block_set()
+def direct_to_block_set(context):
+    slack_context = context.get("slack")
+    managr_url = context.get("managr")
+    blocks = [
+        block_builders.simple_section(f"{context.get('title')}", "mrkdwn"),
+        block_builders.actions_block(
+            [
+                block_builders.simple_button_block(
+                    "Complete in Slack", "complete_in_slack", action_id=slack_context,
+                ),
+                block_builders.simple_button_block(
+                    "Complete in Managr", "complete_in_managr", url=managr_url, style="primary"
+                ),
+            ]
+        ),
+    ]
+    return blocks
+
+
+@block_set()
 def success_modal_block_set(context):
     message = context.get("message", ":white_check_mark: Success!")
     user = context.get("u")
@@ -495,11 +515,10 @@ def meeting_reminder_block_set(context):
         user.organization.slack_integration.access_token, user.slack_integration.zoom_channel
     )
     name = channel_info.get("channel").get("name")
-    text = "meeting" if len(not_completed) < 2 else "meetings"
+    text = "meeting" if not_completed < 2 else "meetings"
     blocks = [
         block_builders.simple_section(
-            f"FYI you have {len(not_completed)} {text} from today that still need to be logged",
-            "mrkdwn",
+            f"{not_completed} {text} left to complete: #{name}", "mrkdwn",
         )
     ]
     return blocks
@@ -516,13 +535,8 @@ def message_meeting_block_set():
 def manager_meeting_reminder_block_set(context):
     not_completed = context.get("not_completed")
     name = context.get("name")
-    text = "meeting" if len(not_completed) < 2 else "meetings"
-    blocks = [
-        block_builders.simple_section(
-            f"Hey {name} your team still has *{len(not_completed)} {text}* from today that needs to be logged",
-            "mrkdwn",
-        )
-    ]
+    text = "meeting" if not_completed < 2 else "meetings"
+    blocks = [block_builders.simple_section(f"{not_completed} {text} left to complete", "mrkdwn",)]
     return blocks
 
 
@@ -567,6 +581,7 @@ def initial_alert_message(context):
     title = context.get("title")
     invocation = context.get("invocation")
     channel = context.get("channel")
+    template = context.get("template")
     config_id = context.get("config_id")
     if settings.IN_DEV:
         url = "http://localhost:8080/pipelines"
@@ -589,13 +604,14 @@ def initial_alert_message(context):
                             f"config_id={config_id}",
                         ],
                     ),
-                    style="danger",
                 ),
                 block_builders.simple_button_block(
-                    "Complete in Managr", "open_in_pipeline", url=url, style="primary"
+                    "Complete in Managr",
+                    "open_in_pipeline",
+                    url=f"{url}/{template}",
+                    style="primary",
                 ),
             ]
         ),
     ]
     return blocks
-

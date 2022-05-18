@@ -38,7 +38,6 @@ import User from '@/services/users'
 
 export default {
   name: 'Activation',
-  components: {},
   data() {
     return {
       password: '',

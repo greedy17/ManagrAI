@@ -2,12 +2,53 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from managr.salesforce.serializers import SObjectFieldSerializer
 from managr.core.serializers import UserSerializer
-
+from managr.core.models import User
 from . import constants as alert_consts
 from . import models as alert_models
+from copy import copy
 
 # REF SERIALIZERS
 ##  SHORTENED SERIALIZERS FOR REF OBJECTS
+def create_configs_for_target(target, template_user, config):
+    if target in ["MANAGERS", "REPS", "SDR"]:
+        if target == "MANAGERS":
+            target = "MANAGER"
+        elif target == "REPS":
+            target = "REP"
+        users = User.objects.filter(
+            organization=template_user.organization, user_level=target, is_active=True,
+        )
+    elif target == "SELF":
+        config["recipient_type"] = "SLACK_CHANNEL"
+        return [config]
+    elif target == "ALL":
+        users = User.objects.filter(organization=template_user.organization, is_active=True)
+    else:
+        users = User.objects.filter(id=target)
+    new_configs = []
+    for user in users:
+        if user.has_slack_integration:
+            config_copy = copy(config)
+            config_copy["recipients"] = [
+                user.slack_integration.zoom_channel
+                if user.slack_integration.zoom_channel
+                else user.slack_integration.channel
+            ]
+            config_copy["alert_targets"] = [str(user.id)]
+            config_copy["recipient_type"] = "SLACK_CHANNEL"
+            new_configs.append(config_copy)
+    return new_configs
+
+
+def remove_duplicate_alert_configs(configs):
+    recipients_in_configs = set()
+    sorted_configs = []
+    for config in configs:
+        if config["alert_targets"][0] not in recipients_in_configs:
+            sorted_configs.append(config)
+            recipients_in_configs.add(config["alert_targets"][0])
+
+    return sorted_configs
 
 
 class AlertTemplateRefSerializer(serializers.ModelSerializer):
@@ -90,6 +131,7 @@ class AlertConfigRefSerializer(serializers.ModelSerializer):
             "id",
             "recurrence_frequency",
             "recurrence_day",
+            "recurrence_days",
             "recipients",
             "recipient_type",
             "recipients_ref",
@@ -339,6 +381,7 @@ class AlertConfigWriteSerializer(serializers.ModelSerializer):
             "id",
             "recurrence_frequency",
             "recurrence_day",
+            "recurrence_days",
             "recipients",
             "recipient_type",
             "template",
@@ -371,13 +414,11 @@ class AlertConfigWriteSerializer(serializers.ModelSerializer):
                 value = ["SELF"]
 
             data.update({"recipients": value})
-
         internal_data = super().to_internal_value(data)
         return internal_data
 
 
 class AlertTemplateWriteSerializer(serializers.ModelSerializer):
-
     new_groups = serializers.ListField(required=False)
     message_template = serializers.DictField(required=False)
     new_configs = serializers.ListField(required=False)
@@ -400,7 +441,6 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
         new_groups = validated_data.pop("new_groups", [])
         message_template = validated_data.pop("message_template")
         new_configs = validated_data.pop("new_configs", [])
-
         data = super().create(validated_data, *args, **kwargs)
         message_template = AlertMessageTemplateWriteSerializer(
             data={**message_template, "template": data.id}
@@ -415,10 +455,12 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
             _new_groups.save()
         if len(new_configs):
             new_configs = list(map(lambda x: {**x, "template": data.id}, new_configs))
-
             _new_configs = AlertConfigWriteSerializer(
                 data=new_configs, many=True, context=self.context,
             )
-            _new_configs.is_valid(raise_exception=True)
-            _new_configs.save()
+            try:
+                _new_configs.is_valid(raise_exception=True)
+                _new_configs.save()
+            except Exception as e:
+                print(f"ERROR {e}")
         return data

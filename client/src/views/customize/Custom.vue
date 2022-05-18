@@ -1,21 +1,22 @@
 <template>
   <div class="customizations">
-    <div style="display: flex; align-items: flex-start; margin-left: 10vw; flex-direction: column">
-      <h2 style="color: #4d4e4c">Optional Actions</h2>
-      <p style="color: #5d5e5e; margin-top: -0.5rem" class="sub__">
-        Map Slack fields to the corresponding SFDC fields.
-      </p>
+    <div>
+      <h3>Optional Actions</h3>
+      <p class="sub__">Map Slack fields to the corresponding SFDC fields.</p>
     </div>
 
-    <div class="alert_cards">
-      <div class="card__">
+    <div class="customizations__cards">
+      <div class="card">
         <div class="card__header">
-          <h3>Create <span style="color: #199e54">Opportunity</span></h3>
+          <h3>Create Opportunity</h3>
+          <p class="active-workflow" v-if="hasCreateOppForm">
+            Active <img src="@/assets/images/configCheck.png" alt="" />
+          </p>
         </div>
 
-        <div class="row">
+        <div class="card__body">
           <img
-            style="height: 1.5rem; margin-right: 0.5rem"
+            style="height: 1.25rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -25,31 +26,25 @@
             alt=""
             id="plus"
           />
-          <img
-            style="height: 1.5rem; margin-right: 0.5rem"
-            src="@/assets/images/slackLogo.png"
-            alt=""
-          />
+          <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
         </div>
-        <div style="margin-top: 1.5rem">
+        <div class="card__footer">
           <router-link :to="{ name: 'CreateOpportunity' }">
             <button class="activate-button">View + Edit</button>
           </router-link>
-
-          <!-- <h4 style="margin-top: -0.5rem" v-else-if="!hasZoomIntegration">
-            Connect Zoom in order to activate
-          </h4>
-          <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="hasZoomChannel">Activated</p> -->
         </div>
       </div>
-      <div class="card__">
+      <div class="card">
         <div class="card__header">
-          <h3>Update <span style="color: #5f8cff">Contacts</span></h3>
+          <h3>Update Contacts</h3>
+          <p class="active-workflow" v-if="hasUpdateContactForm">
+            Active <img src="@/assets/images/configCheck.png" alt="" />
+          </p>
         </div>
 
-        <div class="row">
+        <div class="card__body">
           <img
-            style="height: 1.5rem; margin-right: 0.5rem"
+            style="height: 1.25rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -59,30 +54,25 @@
             alt=""
             id="plus"
           />
-          <img
-            style="height: 1.5rem; margin-right: 0.5rem"
-            src="@/assets/images/slackLogo.png"
-            alt=""
-          />
+          <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
         </div>
-        <div style="margin-top: 1.5rem">
+        <div class="card__footer">
           <router-link :to="{ name: 'UpdateContacts' }">
             <button class="activate-button">View + Edit</button>
           </router-link>
-          <!-- <h4 style="margin-top: -0.5rem" v-else-if="!hasZoomIntegration">
-            Connect Zoom in order to activate
-          </h4>
-          <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="hasZoomChannel">Activated</p> -->
         </div>
       </div>
-      <div class="card__">
+      <div class="card">
         <div class="card__header">
-          <h3>Create <span style="color: #ddad3c">Lead</span></h3>
+          <h3>Create Lead</h3>
+          <p class="active-workflow" v-if="hasCreateLeadForm">
+            Active <img src="@/assets/images/configCheck.png" alt="" />
+          </p>
         </div>
 
-        <div class="row">
+        <div class="card__body">
           <img
-            style="height: 1.5rem; margin-right: 0.5rem"
+            style="height: 1.25rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -92,30 +82,25 @@
             alt=""
             id="plus"
           />
-          <img
-            style="height: 1.5rem; margin-right: 0.5rem"
-            src="@/assets/images/slackLogo.png"
-            alt=""
-          />
+          <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
         </div>
-        <div style="margin-top: 1.5rem">
+        <div class="card__footer">
           <router-link :to="{ name: 'CreateLeads' }">
             <button class="activate-button">View + Edit</button>
           </router-link>
-          <!-- <h4 style="margin-top: -0.5rem" v-else-if="!hasZoomIntegration">
-            Connect Zoom in order to activate
-          </h4>
-          <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="hasZoomChannel">Activated</p> -->
         </div>
       </div>
-      <div class="card__">
+      <div class="card">
         <div class="card__header">
-          <h3>Update <span style="color: #ddad3c">Lead</span></h3>
+          <h3>Update Lead</h3>
+          <p class="active-workflow" v-if="hasUpdateLeadForm">
+            Active <img src="@/assets/images/configCheck.png" alt="" />
+          </p>
         </div>
 
-        <div class="row">
+        <div class="card__body">
           <img
-            style="height: 1.5rem; margin-right: 0.5rem"
+            style="height: 1.25rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -125,30 +110,25 @@
             id="plus"
             alt=""
           />
-          <img
-            style="height: 1.5rem; margin-right: 0.5rem"
-            src="@/assets/images/slackLogo.png"
-            alt=""
-          />
+          <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
         </div>
-        <div style="margin-top: 1.5rem">
+        <div class="card__footer">
           <router-link :to="{ name: 'UpdateLeads' }">
             <button class="activate-button">View + Edit</button>
           </router-link>
-          <!-- <h4 style="margin-top: -0.5rem" v-else-if="!hasZoomIntegration">
-            Connect Zoom in order to activate
-          </h4>
-          <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="hasZoomChannel">Activated</p> -->
         </div>
       </div>
-      <div class="card__">
+      <div class="card">
         <div class="card__header">
-          <h3>Create <span style="color: #fa646a">Account</span></h3>
+          <h3>Create Account</h3>
+          <p class="active-workflow" v-if="hasCreateAccountForm">
+            Active <img src="@/assets/images/configCheck.png" alt="" />
+          </p>
         </div>
 
-        <div class="row">
+        <div class="card__body">
           <img
-            style="height: 1.5rem; margin-right: 0.5rem"
+            style="height: 1.25rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -158,30 +138,25 @@
             alt=""
             id="plus"
           />
-          <img
-            style="height: 1.5rem; margin-right: 0.5rem"
-            src="@/assets/images/slackLogo.png"
-            alt=""
-          />
+          <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
         </div>
-        <div style="margin-top: 1.5rem">
+        <div class="card__footer">
           <router-link :to="{ name: 'CreateAccounts' }">
             <button class="activate-button">View + Edit</button>
           </router-link>
-          <!-- <h4 style="margin-top: -0.5rem" v-else-if="!hasZoomIntegration">
-            Connect Zoom in order to activate
-          </h4>
-          <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="hasZoomChannel">Activated</p> -->
         </div>
       </div>
-      <div class="card__">
+      <div class="card">
         <div class="card__header">
-          <h3>Update <span style="color: #fa646a">Account</span></h3>
+          <h3>Update Account</h3>
+          <p class="active-workflow" v-if="hasUpdateAccountForm">
+            Active <img src="@/assets/images/configCheck.png" alt="" />
+          </p>
         </div>
 
-        <div class="row">
+        <div class="card__body">
           <img
-            style="height: 1.5rem; margin-right: 0.5rem"
+            style="height: 1.25rem; margin-right: 0.5rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -191,20 +166,12 @@
             alt=""
             id="plus"
           />
-          <img
-            style="height: 1.5rem; margin-right: 0.5rem"
-            src="@/assets/images/slackLogo.png"
-            alt=""
-          />
+          <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
         </div>
-        <div style="margin-top: 1.5rem">
+        <div class="card__footer">
           <router-link :to="{ name: 'UpdateAccounts' }">
             <button class="activate-button">View + Edit</button>
           </router-link>
-          <!-- <h4 style="margin-top: -0.5rem" v-else-if="!hasZoomIntegration">
-            Connect Zoom in order to activate
-          </h4>
-          <p style="margin-top: -0.5rem; font-weight: 900" v-else-if="hasZoomChannel">Activated</p> -->
         </div>
       </div>
     </div>
@@ -212,37 +179,118 @@
 </template>
 
 <script>
-import Modal from '@/components/Modal'
+import SlackOAuth from '@/services/slack'
 
 export default {
   name: 'Custom',
-  components: {
-    Modal,
+  watch: {
+    createOppForm: 'checkCreateOpp',
+    updateContactForm: 'checkUpdateContact',
+    createLeadForm: 'checkCreateLead',
+    createAccountForm: 'checkCreateAccount',
+    updateLeadForm: 'checkUpdateLead',
+    updateAccountForm: 'checkUpdateAccount',
   },
   data() {
-    return {}
+    return {
+      hasCreateOppForm: null,
+      hasUpdateContactForm: null,
+      hasCreateLeadForm: null,
+      hasCreateAccountForm: null,
+      hasUpdateLeadForm: null,
+      hasUpdateAccountForm: null,
+
+      createOppForm: null,
+      updateContactForm: null,
+      createLeadForm: null,
+      createAccountForm: null,
+      updateLeadForm: null,
+      updateAccountForm: null,
+    }
   },
+  created() {
+    this.getForms()
+  },
+
   computed: {
-    orgHasSlackIntegration() {
-      return !!this.$store.state.user.organizationRef.slackIntegration
-    },
     user() {
       return this.$store.state.user
     },
   },
   methods: {
-    goToUpdateOpp() {
-      this.$router.push({ name: 'UpdateOpportunity' })
+    async getForms() {
+      try {
+        let res = await SlackOAuth.api.getOrgCustomForm()
+        this.createOppForm = res.filter(
+          (form) => form.formType === 'CREATE' && form.resource === 'Opportunity',
+        )
+        this.updateContactForm = res.filter(
+          (form) => form.formType === 'UPDATE' && form.resource === 'Contact',
+        )
+        this.createLeadForm = res.filter(
+          (form) => form.formType === 'CREATE' && form.resource === 'Lead',
+        )
+        this.createAccountForm = res.filter(
+          (form) => form.formType === 'CREATE' && form.resource === 'Account',
+        )
+        this.updateLeadForm = res.filter(
+          (form) => form.formType === 'UPDATE' && form.resource === 'Lead',
+        )
+        this.updateAccountForm = res.filter(
+          (form) => form.formType === 'UPDATE' && form.resource === 'Account',
+        )
+      } catch (error) {
+        console.log(error)
+      }
     },
-    goToCreate() {
-      this.$router.push({ name: 'CreateContacts' })
+    checkCreateOpp() {
+      let fields = this.createOppForm[0].fieldsRef.filter(
+        (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+      )
+      if (fields.length > 0) {
+        this.hasCreateOppForm = true
+      }
     },
-    goToTemplates() {
-      this.$router.push({ name: 'ListTemplates' })
+    checkUpdateContact() {
+      let fields = this.updateContactForm[0].fieldsRef.filter(
+        (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+      )
+      if (fields.length > 0) {
+        this.hasUpdateContactForm = true
+      }
     },
-    // handleShowOptional() {
-    //   this.showOptional = !this.showOptional
-    // },
+    checkCreateLead() {
+      let fields = this.createLeadForm[0].fieldsRef.filter(
+        (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+      )
+      if (fields.length > 0) {
+        this.hasCreateLeadForm = true
+      }
+    },
+    checkCreateAccount() {
+      let fields = this.createAccountForm[0].fieldsRef.filter(
+        (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+      )
+      if (fields.length > 0) {
+        this.hasCreateAccountForm = true
+      }
+    },
+    checkUpdateLead() {
+      let fields = this.updateLeadForm[0].fieldsRef.filter(
+        (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+      )
+      if (fields.length > 0) {
+        this.hasUpdateLeadForm = true
+      }
+    },
+    checkUpdateAccount() {
+      let fields = this.updateAccountForm[0].fieldsRef.filter(
+        (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+      )
+      if (fields.length > 0) {
+        this.hasUpdateAccountForm = true
+      }
+    },
   },
 }
 </script>
@@ -257,73 +305,84 @@ export default {
 .activate-button {
   background-color: $dark-green;
   color: white;
-  font-weight: bold;
   font-size: 14px;
   border: none;
-  border-radius: 0.33rem;
+  border-radius: 0.3rem;
   padding: 0.5rem 1rem;
   cursor: pointer;
 }
-.customizations {
-  margin-left: 14vw;
-  margin-top: 3.5rem;
-}
-
-.alert_cards {
+.active-workflow {
   display: flex;
   flex-direction: row;
-  justify-content: center;
   align-items: center;
-  margin-top: 1rem;
-  flex-wrap: wrap;
+  justify-content: center;
+  padding: 0.3rem;
+  margin-left: 0.5rem;
+  border: 1px solid $soft-gray;
+  background-color: white;
+  border-radius: 0.3rem;
+  color: $dark-green;
+  font-size: 12px;
+  cursor: text;
+  img {
+    height: 1rem;
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
+    margin-left: 0.5rem;
+  }
 }
-
-// .back-logo {
-//   position: absolute;
-//   opacity: 0.06;
-//   filter: alpha(opacity=50);
-//   height: 20%;
-//   margin-top: 2rem;
-//   margin-right: -10rem;
-// }
-.card__ {
-  background-color: $white;
-  border: none;
-  width: 20vw;
-  padding: 1.25rem;
-  margin-right: 1.25rem;
-  margin-bottom: 2rem;
-  border-radius: 0.5rem;
+.customizations {
+  color: $base-gray;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  color: $base-gray;
-  // @media only screen and (min-width: 768px) {
-  //   flex: 1 0 24%;
-  //   min-width: 21rem;
-  //   max-width: 30rem;
-  // }
-  h3 {
-    font-size: 1.2rem;
-  }
-  &header {
+  align-items: flex-start;
+  margin-top: 3.5rem;
+  margin-left: 20vw;
+  &__cards {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 3rem;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    border-radius: 0.5rem;
   }
-  .col {
+}
+.sub__ {
+  font-size: 14px;
+  margin-top: -0.5rem;
+  color: $gray;
+}
+.card:hover {
+  transform: scale(1.015);
+  box-shadow: 1px 2px 2px $very-light-gray;
+}
+.card {
+  background-color: white;
+  border-radius: 0.5rem;
+  width: 24vw;
+  margin-right: 1rem;
+  margin-bottom: 1rem;
+  transition: all 0.25s;
+  &__header {
+    height: 2rem;
+    padding: 1.25rem 1rem;
+    font-size: 13px;
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid $soft-gray;
+  }
+  &__body {
+    display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    height: 5rem;
+    font-size: 13px;
   }
-  .sub__ {
-    font-size: 16px;
-    margin-top: -0.5rem;
-    color: $panther-silver;
+  &__footer {
+    display: flex;
+    align-items: center;
+    height: 2rem;
+    font-size: 14px;
+    justify-content: space-evenly;
   }
 }
 </style>

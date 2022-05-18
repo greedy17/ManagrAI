@@ -41,10 +41,6 @@ export default {
       this.show = false
       document.querySelector('body').classList.remove('overflow-hidden')
     },
-    openModal() {
-      this.show = true
-      document.querySelector('body').classList.add('overflow-hidden')
-    },
   },
 }
 </script>
@@ -95,7 +91,7 @@ export default {
     width: 24px;
     height: 24px;
     background-color: $off-white;
-    color: $panther-silver;
+    color: $very-light-gray;
 
     border: none;
   }
@@ -104,7 +100,7 @@ export default {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    color: $panther-silver;
+    color: $very-light-gray;
   }
   &__body {
     padding: 10px 20px 10px;
@@ -117,13 +113,5 @@ export default {
   &__footer {
     padding: 10px 10px;
   }
-}
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s;
-}
-.fade-enter,
-.fade-leave-to {
-  opacity: 0;
 }
 </style>

@@ -2,11 +2,10 @@
   <div class="login-page">
     <div class="login-page__form">
       <div class="column">
-        <img src="@/assets/images/logo.png" alt="logo" />
+        <img src="@/assets/images/logo.png" class="logo" alt="logo" />
         <h2>Log in to Managr</h2>
         <p class="enter-email">Please enter your email and password</p>
       </div>
-      <!-- <label for="email">Email</label> -->
       <input
         type="email"
         @input="execCheckEmail"
@@ -24,6 +23,7 @@
         @keyup.enter="handleLoginAttempt"
         v-model="loginForm.field.password.value"
         type="password"
+        placeholder="password"
       />
       <PulseLoadingSpinnerButton
         :disabled="loggingIn || !loginForm.isValid"
@@ -68,11 +68,9 @@ import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
 /**
  * internal Components
  */
-import FormField from '@/components/forms/inputs/FormField'
-
 export default {
   name: 'Login',
-  components: { FormField, PulseLoadingSpinnerButton, PulseLoadingSpinner },
+  components: { PulseLoadingSpinnerButton, PulseLoadingSpinner },
   data() {
     return {
       loggingIn: false,
@@ -138,7 +136,6 @@ export default {
       }
     },
   },
-  computed: {},
 }
 </script>
 
@@ -167,7 +164,14 @@ input:focus {
   color: $mid-gray;
   padding: 0.5rem;
 }
-
+.logo {
+  height: 4rem;
+  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+    brightness(93%) contrast(89%);
+}
+input:focus {
+  outline: none;
+}
 .login-page {
   padding: 2rem 2rem;
   display: flex;
@@ -180,21 +184,18 @@ input:focus {
     padding: 0rem;
   }
 }
-::v-deep .form-field__input {
-  margin-left: 0.2rem;
-}
 
 .login-page__form {
   background-color: $white;
-  border-radius: 0.5rem;
+  border-radius: 0.3rem;
   width: 30vw;
-  margin-top: 1rem;
-  box-shadow: 4px 5px 9px $very-light-gray;
+  margin-top: 4rem;
   display: flex;
   flex-flow: column;
   align-items: center;
   justify-content: center;
   color: $base-gray;
+  border: 1px solid #e8e8e8;
 
   @media only screen and (max-width: 768px) {
     /* For mobile phones: */
@@ -207,25 +208,14 @@ input:focus {
   }
 }
 
-/* input {
-  @include input-field();
-  height: 2.5rem;
-  width: 15.65rem;
-  display: block;
-  margin: 0.625rem 0;
-
-  &:disabled {
-    border: 2px solid $dark-green;
-  }
-}
- */
 button {
   @include primary-button();
   margin-bottom: 6px;
   width: 22vw;
   height: 6vh;
-  background-color: #199e54 !important;
+  background-color: #41b883 !important;
   color: white !important;
+  box-shadow: none;
 }
 
 a {
@@ -235,9 +225,6 @@ a {
 
 label {
   font-size: 15px;
-}
-.hidden {
-  display: none;
 }
 .row {
   display: flex;
@@ -269,11 +256,4 @@ img {
   font-size: 13px;
   margin: 2rem;
 }
-/* #email,
-#password {
-  border: 1px solid $soft-gray;
-  border-radius: 3px;
-  margin-top: 5px;
-  background-color: #ffffff;
-} */
 </style>

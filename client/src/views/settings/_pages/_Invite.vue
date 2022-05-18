@@ -10,70 +10,77 @@
       "
     >
       <form class="invite-form" @submit.prevent="handleInvite">
-        <h2 class="invite-form__title">Invite Users via Slack</h2>
-        <h2 class="invite-form__subtitle" style="color: #199e54; margin-top: -4rem">
-          {{ $store.state.user.organizationRef.name }}
-        </h2>
+        <div class="header">
+          <h3 class="invite-form__title">Invite Users via Slack</h3>
+          <h4 class="invite-form__subtitle">
+            {{ $store.state.user.organizationRef.name }}
+          </h4>
+        </div>
+
         <div
           style="display: flex; justify-content: center; flex-direction: column; margin-top: -3rem"
         >
           <div style="display: flex; align-items: flex-start; flex-direction: column">
-            <p style="margin-left: -2.2rem">Slack Users:</p>
             <FormField>
               <template v-slot:input>
-                <DropDownSearch
-                  :items.sync="slackMembers.members"
-                  v-model="userInviteForm.field.slackId.value"
-                  displayKey="realName"
-                  valueKey="id"
-                  nullDisplay="Search Users"
-                  :hasNext="!!slackMembers.nextCursor"
-                  @load-more="listUsers(slackMembers.nextCursor)"
-                  searchable
-                  local
+                <Multiselect
+                  placeholder="Select Slack User"
+                  @input="mapMember"
+                  v-model="selectedMember"
+                  :options="slackMembers.members"
+                  openDirection="below"
+                  style="min-width: 15vw"
+                  selectLabel="Enter"
+                  track-by="id"
+                  label="realName"
                 >
-                </DropDownSearch>
+                  <template slot="noResult">
+                    <p class="multi-slot">No results. Try loading more</p>
+                  </template>
+                  <template slot="afterList">
+                    <p class="multi-slot__more" @click="listUsers(slackMembers.nextCursor)">
+                      Load More
+                      <img src="@/assets/images/plusOne.png" alt="" />
+                    </p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.png" alt="" />
+                      Select Slack User
+                    </p>
+                  </template>
+                </Multiselect>
               </template>
             </FormField>
           </div>
           <div style="display: flex; align-items: flex-start; flex-direction: column">
-            <p style="margin-left: -2.2rem">User Level:</p>
             <FormField>
               <template v-slot:input>
-                <DropDownSearch
-                  :items.sync="userTypes"
-                  v-model="userInviteForm.field.userLevel.value"
-                  nullDisplay="Select user level"
-                  local
-                  searchable
-                  valueKey="value"
-                  @input="userInviteForm.field.userLevel.validate()"
-                />
+                <Multiselect
+                  placeholder="Select User Level"
+                  @input="mapUserLevel"
+                  v-model="selectedLevel"
+                  :options="userTypes"
+                  openDirection="below"
+                  style="min-width: 15vw"
+                  selectLabel="Enter"
+                  label="key"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results.</p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.png" alt="" />
+                      Select User Level
+                    </p>
+                  </template>
+                </Multiselect>
               </template>
             </FormField>
           </div>
         </div>
-        <!-- <div class="dropdown">
-          <FormField :errors="userInviteForm.field.role.errors" label="Role">
-            <template v-slot:input>
-              <DropDownSelect
-                :items="userRoles"
-                valueKey="key"
-                displayKey="name"
-                v-model="userInviteForm.field.role.value"
-                :itemsRef="userRoles"
-                class="invite-form__dropdown"
-                nullDisplay="Select user role"
-                @input="userInviteForm.field.role.validate()"
-              />
-            </template>
-          </FormField>
-        </div> -->
         <div class="invite-form__actions">
-          <!-- <div @click="onConfirmSlackInvite" style="display: flex; align-items: center">
-            <CheckBox :checked="userInviteForm.field.slackInvite.value" />
-            <span style="margin-top: 0.25rem; margin-left: 0.25rem">Send Slack Invite</span>
-          </div> -->
           <template>
             <PulseLoadingSpinnerButton
               @click="handleInvite"
@@ -164,9 +171,6 @@
             <img src="@/assets/images/gmailCal.png" alt="" style="height: 0.8rem" />
           </span>
         </div>
-        <!-- <div style="color: white" class="invite-list__section__item invite-list__status">
-          Active workflows: {{user.}}
-        </div> -->
       </div>
       <div v-for="member in team.list" :key="member.id" class="invite-list__section__container">
         <template v-if="member.id !== user.id">
@@ -223,9 +227,6 @@
               <img src="@/assets/images/gmailCal.png" alt="" style="height: 0.8rem" />
             </span>
           </div>
-          <!-- <div class="invite-list__section__item invite-list__status">
-            <p>3</p>
-          </div> -->
         </template>
       </div>
     </div>
@@ -234,25 +235,19 @@
 <script>
 import User from '@/services/users'
 import { UserInviteForm } from '@/services/users/forms'
-import DropDownSelect from '@thinknimble/dropdownselect'
 import Organization from '@/services/organizations'
 import CollectionManager from '@/services/collectionManager'
 import Modal from '../../../components/InviteModal'
-import Button from '@thinknimble/button'
-import CheckBox from '@/components/CheckBoxUpdated'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import FormField from '@/components/forms/FormField'
 import SlackOAuth, { SlackUserList } from '@/services/slack'
-import DropDownSearch from '@/components/DropDownSearch'
 export default {
   name: 'Invite',
   components: {
-    DropDownSelect,
-    DropDownSearch,
     Modal,
     PulseLoadingSpinnerButton,
     FormField,
-    CheckBox,
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   props: {
     inviteOpen: {
@@ -262,6 +257,8 @@ export default {
   },
   data() {
     return {
+      selectedMember: null,
+      selectedLevel: null,
       sendSlackInvite: false,
       organization: null,
       organizations: CollectionManager.create({ ModelClass: Organization }),
@@ -286,14 +283,16 @@ export default {
       }),
     }
   },
-  watch: {},
   async created() {
     this.refresh()
     await this.listUsers()
   },
   methods: {
-    console(wrd) {
-      console.log(wrd)
+    mapMember() {
+      this.userInviteForm.field.slackId.value = this.selectedMember.id
+    },
+    mapUserLevel() {
+      this.userInviteForm.field.userLevel.value = this.selectedLevel.value
     },
     async listUsers(cursor = null) {
       const res = await SlackOAuth.api.listUsers(cursor)
@@ -302,21 +301,6 @@ export default {
         responseMetadata: { nextCursor: res.nextCursor },
       })
       this.slackMembers = results
-      // console.log(res)
-      // console.log(results)
-      // console.log(this.slackMembers)
-    },
-    onConfirmSlackInvite() {
-      if (!this.userInviteForm.field.slackInvite.value) {
-        let confirmSlack = confirm(
-          'This will post a message to the channel you selected tagging the user to sign up',
-        )
-        if (confirmSlack) {
-          this.userInviteForm.field.slackInvite.value = true
-        }
-      } else {
-        this.userInviteForm.field.slackInvite.value = false
-      }
     },
     async refresh() {
       this.user = this.$store.state.user
@@ -384,9 +368,6 @@ export default {
       return this.$store.state.user.isStaff
     },
   },
-  // beforeMount() {
-  //   console.log(this.user)
-  // },
 }
 </script>
 <style lang="scss" scoped>
@@ -398,6 +379,49 @@ export default {
 .col {
   display: flex;
   flex-direction: column;
+}
+.multi-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $gray;
+  font-size: 12px;
+  width: 100%;
+  padding: 0.5rem 0rem;
+  margin: 0;
+  cursor: text;
+  &__more {
+    background-color: white;
+    color: $dark-green;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-top: 1px solid #e8e8e8;
+    width: 100%;
+    padding: 0.75rem 0rem;
+    margin: 0;
+    cursor: pointer;
+
+    img {
+      height: 0.8rem;
+      margin-left: 0.25rem;
+      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+        brightness(93%) contrast(89%);
+    }
+  }
+}
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 1rem;
+    margin-right: 0.25rem;
+    filter: invert(70%);
+  }
 }
 .section-header {
   font-size: 15px;
@@ -422,7 +446,9 @@ export default {
   flex-direction: row;
   justify-self: flex-start;
 }
-
+.header {
+  margin-top: -1rem;
+}
 .complete {
   border-bottom: 2.9px solid $dark-green;
   border-radius: 10%;
@@ -442,19 +468,6 @@ export default {
   margin-top: -7rem;
   margin-left: -2rem;
 }
-::v-deep .tn-dropdown__selection-container {
-  box-shadow: 3px 4px 7px $very-light-gray;
-  border: none;
-}
-
-::v-deep .tn-dropdown__options__container {
-  width: 17vw;
-  margin-left: -2.2rem;
-}
-
-::v-deep .tn-dropdown__selected-items__item-selection {
-  color: $panther;
-}
 
 .active {
   border-bottom: 2px solid $dark-green;
@@ -472,42 +485,21 @@ export default {
   display: flex;
   flex-flow: row;
   justify-content: center;
-  // height: 80vh;
   width: 80%;
 }
-/*
-Override dropdown select input field
-*/
-.dropdown {
-}
-::v-deep .tn-dropdown__selection-container {
-  min-width: 17vw;
-  margin-left: -2.2rem;
-}
-// ::v-deep .tn-dropdown__options__option {
-//   color: $base-gray;
-//   font-weight: bold;
-// }
-form,
-.success-prompt {
-  //   margin-top: 3.125rem;
+form {
   width: 100%;
   background-color: $white;
   height: 50vh;
   justify-content: space-evenly;
 }
-.checkbox {
-  width: auto;
-  height: auto;
-}
 .invite-button {
   background-color: $dark-green;
   color: white;
   margin-top: 2.5rem;
-  height: 2.5rem;
-  width: 18vw;
+  width: 15vw;
   font-size: 16px;
-  font-weight: bold;
+  box-shadow: none;
 }
 button {
   @include primary-button();
@@ -519,26 +511,19 @@ button {
 .invite-form {
   border: none;
   border-radius: 0.75rem;
-  width: 28rem;
-  height: 90vh;
+  min-width: 27vw;
+  min-height: 64vh;
   display: flex;
   align-items: center;
-  // justify-content: center;
   flex-direction: column;
   background-color: white;
   color: $base-gray;
-  > .form_field {
-    flex: 0 0 auto;
-  }
-  > .tn-input {
-    width: 12rem;
-  }
-  > .invite-form__dropdown {
-    color: red;
-  }
   &__title {
     font-weight: bold;
     text-align: left;
+  }
+  &__subtitle {
+    color: $dark-green;
   }
   &__actions {
     display: flex;
@@ -547,26 +532,16 @@ button {
     margin-top: -4rem;
   }
 }
-.invite-form__organization {
-  height: 2.5rem;
-  width: 20rem;
-  display: flex;
-  align-items: center;
-  @include input-field();
-}
 .invite-list {
-  &__title {
-    font-weight: bold;
-    margin-bottom: 2rem;
-  }
   &__container {
     background-color: $white;
-    border: none;
+    border: 1px solid #e8e8e8;
     color: $base-gray;
-    min-width: 60vw;
+    width: 60vw;
+    height: 60vh;
+    overflow: scroll;
     padding: 1.5rem 0rem 1.5rem 1rem;
     border-radius: 5px;
-    box-shadow: 3px 4px 7px $very-light-gray;
     display: flex;
     align-items: flex-start;
     flex-direction: column;
@@ -581,41 +556,18 @@ button {
       width: 33%;
       overflow-wrap: break-word;
     }
-
-    &__heading {
-      width: 25%;
-    }
-  }
-  &__name {
-    font-size: 0.75rem;
-    font-weight: bold !important;
-    font-family: #{$bold-font-family};
-    text-align: left;
-    color: #f2fff8;
   }
   &__status {
     font-size: 0.75rem;
   }
 }
-.registered {
-  width: 33%;
-  font-size: 0.75rem;
-  color: $dark-green;
-}
-.unregistered {
-  width: 33%;
-  font-size: 0.75rem;
-  color: $panther-silver;
-}
 .cancel-button {
   margin-top: 1rem;
   position: relative;
   right: 1px;
+  color: $gray;
   &:hover {
     cursor: pointer;
   }
-}
-::v-deep .dimmed {
-  background-color: rgba(0, 0, 0, 0.5);
 }
 </style>

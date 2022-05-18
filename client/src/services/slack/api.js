@@ -15,6 +15,7 @@ const SLACK_LIST_USERS = '/slack/list-users/'
 const SLACK_CREATE_CHANNEL = '/slack/create-channel/'
 const SLACK_ZOOM_CHANNEL_UPDATE = '/slack/update-zoom-channel/'
 const ZOOM_RECAP_CHANNEL_UPDATE = '/slack/update-recap-channel/'
+const SLACK_CHANNEL_DETAILS = '/slack/channel-details/'
 
 export default class SlackAPI {
   constructor(cls) {
@@ -134,6 +135,13 @@ export default class SlackAPI {
       .post(SLACK_CREATE_CHANNEL, { name: data })
       .then(response => response.data)
       .catch(apiErrorHandler({ apiName: 'SlackAPI.createChannel' }))
+  }
+
+  async channelDetails(channel_id) {
+    return this.client
+      .get(SLACK_CHANNEL_DETAILS, { params: { channel_id } })
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'SlackApi.channelDetails' }))
   }
 
   async updateZoomChannel(slack_id, zoom_channel) {

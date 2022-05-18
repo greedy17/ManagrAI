@@ -29,13 +29,13 @@
               >
             </li>
             <li>
-              <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
-                >Team</router-link
+              <router-link exact-active-class="active" :to="{ name: 'Meetings' }"
+                >Meetings</router-link
               >
             </li>
             <li>
-              <router-link exact-active-class="active" :to="{ name: 'Forecasting' }"
-                >Forecast (coming soon)</router-link
+              <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
+                >Team</router-link
               >
             </li>
             <li v-if="user.isStaff">
@@ -61,15 +61,14 @@
                 >Pipeline</router-link
               >
             </li>
-
             <li>
-              <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
-                >Team</router-link
+              <router-link exact-active-class="active" :to="{ name: 'Meetings' }"
+                >Meetings</router-link
               >
             </li>
             <li>
-              <router-link exact-active-class="active" :to="{ name: 'Forecasting' }"
-                >Forecast (coming soon)</router-link
+              <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
+                >Team</router-link
               >
             </li>
           </ul>
@@ -93,8 +92,8 @@
               >
             </li>
             <li>
-              <router-link exact-active-class="active" :to="{ name: 'Forecasting' }"
-                >Forecast (coming soon)</router-link
+              <router-link exact-active-class="active" :to="{ name: 'Meetings' }"
+                >Meetings</router-link
               >
             </li>
           </ul>
@@ -124,8 +123,8 @@
               >
             </li>
             <li v-if="!isOnboarding">
-              <router-link exact-active-class="active" :to="{ name: 'Forecasting' }"
-                >Forecast (coming soon)</router-link
+              <router-link exact-active-class="active" :to="{ name: 'Meetings' }"
+                >Meetings</router-link
               >
             </li>
           </ul>
@@ -135,7 +134,7 @@
       <div v-if="userLevel == 'REP' && !user.onboarding" class="right">
         <div class="tooltip">
           <img
-            style="height: 1.4rem; filter: invert(30%)"
+            style="height: 1.2rem; filter: invert(30%)"
             src="@/assets/images/blackhelp.png"
             class="tooltip__icon"
           />
@@ -144,12 +143,13 @@
             <div class="tip">Email Us: support@mymanagr.com</div>
           </div>
         </div>
-
         <div>
           <router-link class="profile-wrapper" :to="{ name: 'ProfilePage' }">
-            <img src="@/assets/images/profile.png" style="height: 1rem" alt="" />
+            <small>{{ user.email }}</small>
+            <img src="@/assets/images/profile.png" alt="" />
           </router-link>
         </div>
+
         <div class="center">
           <router-link class="pad" :to="{ name: 'Login' }">
             <button class="logout">
@@ -168,7 +168,7 @@
       <div v-if="userLevel !== 'REP'" class="right">
         <div class="tooltip">
           <img
-            style="height: 1.4rem; filter: invert(30%)"
+            style="height: 1.2rem; filter: invert(30%)"
             src="@/assets/images/blackhelp.png"
             class="tooltip__icon"
           />
@@ -177,12 +177,13 @@
             <div class="tip">Email Us: support@mymanagr.com</div>
           </div>
         </div>
-
         <div>
           <router-link class="profile-wrapper" :to="{ name: 'ProfilePage' }">
-            <img src="@/assets/images/profile.png" style="height: 1rem" alt="" />
+            <small>{{ user.email }}</small>
+            <img src="@/assets/images/profile.png" alt="" />
           </router-link>
         </div>
+
         <div class="center">
           <router-link class="pad" :to="{ name: 'Login' }">
             <button class="logout">
@@ -202,24 +203,15 @@
 </template>
 
 <script>
-import DropDownMenu from '@/components/forms/DropDownMenu'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 
-import AlertTemplate, {
-  AlertGroupForm,
-  AlertTemplateForm,
-  AlertConfigForm,
-  AlertMessageTemplateForm,
-  AlertOperandForm,
-} from '@/services/alerts/'
+import AlertTemplate from '@/services/alerts/'
 
 export default {
   name: 'NavBar',
   components: {
-    DropDownMenu,
     CollectionManager,
   },
-  props: {},
   data() {
     return {
       showMenus: {
@@ -252,47 +244,17 @@ export default {
   },
 
   methods: {
-    toggleDropDown() {
-      this.dropdownOpen = !this.dropdownOpen
-    },
-    toggleTooltip() {
-      this.tooltipOpen = !this.tooltipOpen
-    },
-    routeToSelected(selected) {
-      if (selected == 'logout') {
-        this.logOut()
-      } else {
-        this.$router.push({ name: selected })
-      }
-    },
-
-    routeToSettings() {
-      this.$router.push({ name: 'Integrations' })
-    },
     logOut() {
       this.$store.dispatch('logoutUser')
       this.$router.push({ name: 'Login' })
     },
   },
-  watch: {},
   computed: {
     userIsLoggedIn() {
       return this.$store.getters.userIsLoggedIn
     },
     isAdmin() {
       return this.userIsLoggedIn && this.$store.state.user.isAdmin
-    },
-    hasSlack() {
-      return this.$store.state.user.slackRef
-    },
-    hasSalesforce() {
-      return this.$store.state.user.hasSalesforceIntegration
-    },
-    hasZoom() {
-      return this.$store.state.user.hasZoomIntegration
-    },
-    hasNylas() {
-      return this.$store.state.user.nylasRef
     },
     user() {
       return this.$store.state.user
@@ -308,30 +270,43 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/mixins/utils';
 
+.nameOrg {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  p {
+    font-size: 11px;
+  }
+  small {
+    font-size: 10px;
+    margin-left: 0.2rem;
+    color: $dark-green;
+  }
+}
 span {
   font-size: 10px;
   color: $dark-green;
 }
 .profile-wrapper {
+  display: flex !important;
+  align-items: center !important;
   border: none;
-  background-color: $lighter-green;
-  padding: 0.3rem 0.3rem 0.1rem 0.4rem;
-  border-radius: 50%;
-  img {
-    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
-  }
-}
-.profile-button {
-  border: none;
-  padding: 0.25rem;
-  display: flex;
-  justify-self: end;
-  box-shadow: 1px 1px 2px $very-light-gray;
-  border-radius: 0.5rem;
+  margin: 1rem 0rem 0.25rem 0rem;
   background-color: $soft-gray;
-  cursor: pointer;
-  color: $base-gray;
-  font-weight: bold;
+  padding: 0.2rem;
+  border-radius: 0.3rem;
+  small {
+    font-size: 10px;
+    margin-right: 0.5rem;
+    margin-left: 0.25rem;
+    color: $base-gray;
+    letter-spacing: 0.25px;
+  }
+  img {
+    filter: invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg) brightness(93%) contrast(89%);
+    margin-top: 0.2rem;
+    height: 1.2rem;
+  }
 }
 .center {
   display: flex;
@@ -339,22 +314,21 @@ span {
   justify-content: center;
 }
 .logout {
-  border: none;
+  border: 1px solid #e8e8e8;
   padding: 0.25rem 0.5rem;
   margin-top: 0.75rem;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  box-shadow: 1px 1px 2px $very-light-gray;
-  border-radius: 0.5rem;
+  border-radius: 0.3rem;
   background-color: $soft-gray;
   cursor: pointer;
   color: $base-gray;
-  font-weight: bold;
+  font-size: 11px;
 }
 nav {
-  height: 4rem;
+  height: 3.5rem;
   display: flex;
   flex-flow: row;
   align-items: center;
@@ -363,59 +337,23 @@ nav {
   left: 0;
   z-index: 200;
   width: 100vw;
-  color: $base-gray;
   padding: 0.25rem 0 1rem 0;
-  border-bottom: 3px solid $soft-gray;
+  border-bottom: 2px solid $soft-gray;
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
 .logo {
-  margin-left: 1.5rem;
-  margin-right: 2.25rem;
+  margin-left: 0.5rem;
+  margin-right: 1rem;
   display: flex;
   flex-direction: row;
   align-items: flex-end;
   justify-content: center;
   cursor: pointer;
-  font-weight: 400;
-  font-size: 1.5rem;
-  padding: 0.75rem;
+  padding: 0.5rem;
+  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+    brightness(93%) contrast(89%);
 }
-
-.links {
-  display: flex;
-  flex-flow: row;
-  margin-left: 26%;
-  width: 28%;
-}
-
-.user-menu-dropdown {
-  margin-left: auto;
-  margin-right: 1rem;
-  opacity: 0.6;
-  position: relative;
-}
-
-.user-menu {
-  position: absolute;
-  right: 4rem;
-  top: auto;
-  @include standard-border;
-  border-top: 0px;
-  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
-  background-color: $white;
-  margin-left: auto;
-  margin-right: 1vw;
-  min-width: 7rem;
-  padding-left: 1rem;
-  z-index: 100;
-
-  h4 {
-    @include pointer-on-hover;
-    @include disable-text-select;
-  }
-}
-
 .right {
   margin-left: auto;
   display: flex;
@@ -428,17 +366,6 @@ nav {
   > * {
     margin-right: 1rem;
   }
-  &__items {
-    border-radius: 50%;
-
-    &:hover {
-      background-color: $soft-gray;
-      cursor: pointer;
-    }
-    &:active {
-      background-color: darken($soft-gray, 5%);
-    }
-  }
 }
 .left {
   margin-right: auto;
@@ -446,22 +373,8 @@ nav {
   flex-direction: row;
   justify-content: space-evenly;
   position: relative;
-  margin-right: 1rem;
+  margin-right: 0.75rem;
 }
-.icon {
-  width: 20px;
-  height: 15px;
-  fill: #484a6e;
-}
-.icon.green {
-  fill: green;
-}
-.dd-icon {
-  width: 20px;
-  height: 15px;
-  fill: #484a6e;
-}
-
 .tooltip {
   position: relative;
   &__icon {
@@ -483,7 +396,7 @@ nav {
 
     &__bold {
       font-family: #{$bold-font-family};
-      color: $panther;
+      color: $base-gray;
       font-size: 14px;
     }
   }
@@ -491,22 +404,23 @@ nav {
 .tip {
   font-size: 11px;
 }
-
 .tooltip:hover .tooltip__popup {
   visibility: visible;
 }
-
 ul {
   list-style-type: none;
   margin: 0;
   padding: 0;
+}
+ul:hover {
+  color: white;
 }
 
 li {
   display: inline;
   letter-spacing: 0.4px;
   text-align: center;
-  margin-right: 1rem;
+  margin-right: 0.75rem;
   font-size: 13px;
   padding: 0.5rem;
   @media only screen and (max-width: 800px) {
@@ -525,15 +439,6 @@ li {
   }
 }
 
-.profile {
-  border: 3px solid black;
-  border-radius: 50%;
-  font-size: 12px;
-  font-weight: bold;
-  padding: 0.25rem;
-  margin-top: 1rem;
-  margin-right: 1rem;
-}
 img {
   margin-top: 1rem;
 }
@@ -542,10 +447,14 @@ a {
   color: $base-gray;
   font-family: #{$base-font-family};
   font-weight: bold;
+  padding: 0.5rem 0.2rem;
+}
+a:hover {
+  color: white;
 }
 
 li:hover {
-  background-color: $lighter-green;
+  background-color: $dark-green;
   border-radius: 0.2rem;
   color: white;
 }
@@ -553,8 +462,8 @@ li:hover {
   margin-top: 1rem;
 }
 .active {
-  border-bottom: 3px solid $dark-green;
+  border-bottom: 2.25px solid $dark-green;
   color: $dark-green;
-  padding-bottom: 1rem;
+  padding-bottom: 0.9rem;
 }
 </style>

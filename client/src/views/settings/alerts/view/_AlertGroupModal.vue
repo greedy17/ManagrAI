@@ -20,17 +20,12 @@
  * */
 // Pacakges
 import AlertGroup from '../create/_AlertGroup'
-import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 
-//Internal
-import ListContainer from '@/components/ListContainer'
-import FormField from '@/components/forms/FormField'
-import DropDownSearch from '@/components/DropDownSearch'
 /**
  * Services
  */
-import { AlertOperandForm, AlertGroupForm, AlertGroup as AlertGroupModel } from '@/services/alerts/'
+import { AlertGroupForm, AlertGroup as AlertGroupModel } from '@/services/alerts/'
 
 export default {
   /**
@@ -41,10 +36,6 @@ export default {
    */
   name: 'AlertGroupModal',
   components: {
-    ListContainer,
-    ToggleCheckBox,
-    DropDownSearch,
-    FormField,
     AlertGroup,
     PulseLoadingSpinnerButton,
   },
@@ -81,7 +72,6 @@ export default {
       this.isSaving = false
     },
   },
-  computed: {},
 }
 </script>
 
@@ -96,44 +86,27 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 .btn {
-  &--danger {
-    @include button-danger();
-  }
   &--primary {
     @include primary-button();
   }
-  &--secondary {
-    @include secondary-button();
-  }
-
-  &--icon {
-    @include --icon();
-  }
+  box-shadow: none !important;
 }
 .alert-group-modal {
-  padding: 1rem;
-
+  padding: 2rem 1rem;
+  border-radius: 0.2rem;
   height: 100%;
   overflow-y: scroll;
-  background-color: $panther;
+  background-color: white;
   max-height: 100%;
   width: 100%;
-  color: white;
-  font-family: $bold-font-family;
+  color: $base-gray;
+  font-family: $base-font-family;
+  font-size: 13px;
+  box-shadow: none;
 }
 .end {
   display: flex;
   justify-content: center;
   margin-top: 2rem;
-}
-::-webkit-scrollbar {
-  background-color: $panther;
-  -webkit-appearance: none;
-  width: 4px;
-  height: 100%;
-}
-::-webkit-scrollbar-thumb {
-  border-radius: 2px;
-  background-color: $panther-silver;
 }
 </style>

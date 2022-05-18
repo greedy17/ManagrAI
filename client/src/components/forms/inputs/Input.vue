@@ -1,4 +1,6 @@
 <template>
+  <!-- This file should not be used anywhere in the future. 
+  When that happens, delete this file. -->
   <input
     class="form-field__input"
     :id="id"
@@ -13,7 +15,6 @@
 
 <script>
 export default {
-  components: {},
   props: {
     id: {
       type: String,

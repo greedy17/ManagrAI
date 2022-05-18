@@ -220,10 +220,7 @@
             :multiple="true"
           >
             <template slot="noResult">
-              <div class="row">
-                <p>No results</p>
-                <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
-              </div>
+              <p class="multi-slot">No results.</p>
             </template>
           </Multiselect>
         </div>
@@ -283,9 +280,6 @@ export default {
     },
   },
   methods: {
-    test() {
-      console.log(this.extraFields)
-    },
     async removeField(id) {
       try {
         const res = await SObjects.api.removeExtraField({
@@ -310,9 +304,6 @@ export default {
     cancelRemoveField() {
       this.removingField = false
       this.removingIndex = null
-    },
-    nextPage() {
-      this.objectFields.nextPage()
     },
     addField() {
       this.addingField = true
@@ -361,9 +352,6 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
-::v-deep .multiselect {
-  min-width: 7rem;
-}
 .red {
   filter: invert(46%) sepia(37%) saturate(832%) hue-rotate(308deg) brightness(104%) contrast(104%);
   height: 0.75rem;
@@ -455,12 +443,38 @@ export default {
     border-top: 1px solid $soft-gray;
     p {
       cursor: pointer;
-      // color: $dark-green;
       font-weight: bold;
     }
   }
 }
-
+.multi-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $gray;
+  font-size: 12px;
+  width: 100%;
+  padding: 0.5rem 0rem;
+  margin: 0;
+  cursor: text;
+}
+.table-cell-header-wide {
+  display: table-cell;
+  padding: 0.25rem;
+  padding: 1.25vh 2.5vh;
+  min-width: 3rem;
+  border: none;
+  border-bottom: 1px solid $light-orange-gray;
+  border-radius: 2px;
+  z-index: 2;
+  top: 0;
+  position: sticky;
+  background-color: $off-white;
+  font-weight: bold;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  color: $base-gray;
+}
 .sort-img-visible {
   display: flex;
   flex-direction: row;
@@ -480,7 +494,7 @@ export default {
   display: table-cell;
   padding: 2vh 1vh;
   border: none;
-  border-bottom: 3px solid $light-orange-gray;
+  border-bottom: 1px solid $light-orange-gray;
   z-index: 3;
   width: 4vw;
   top: 0;
@@ -492,10 +506,25 @@ export default {
   display: table-cell;
   padding: 3vh;
   border: none;
-  border-bottom: 3px solid $light-orange-gray;
+  border-bottom: 1px solid $light-orange-gray;
   border-radius: 2px;
   z-index: 3;
   left: 3.5vw;
+  top: 0;
+  position: sticky;
+  background-color: $off-white;
+  font-weight: bold;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  color: $base-gray;
+}
+.table-cell-header {
+  display: table-cell;
+  padding: 1.25vh 3vh;
+  border: none;
+  border-bottom: 1px solid $light-orange-gray;
+  border-radius: 2px;
+  z-index: 2;
   top: 0;
   position: sticky;
   background-color: $off-white;
@@ -517,14 +546,44 @@ export default {
   cursor: pointer;
   color: $dark-green;
 }
-.row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-
-  img {
-    margin-left: 0.5rem;
-  }
+input[type='checkbox']:checked + label::after {
+  content: '';
+  position: absolute;
+  width: 1ex;
+  height: 0.3ex;
+  background: rgba(0, 0, 0, 0);
+  top: 0.9ex;
+  left: 0.4ex;
+  border: 2px solid $dark-green;
+  border-top: none;
+  border-right: none;
+  -webkit-transform: rotate(-45deg);
+  -moz-transform: rotate(-45deg);
+  -o-transform: rotate(-45deg);
+  -ms-transform: rotate(-45deg);
+  transform: rotate(-45deg);
+}
+input[type='checkbox'] {
+  line-height: 2.1ex;
+}
+input[type='checkbox'] {
+  position: absolute;
+  left: -999em;
+}
+input[type='checkbox'] + label {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+input[type='checkbox'] + label::before {
+  content: '';
+  display: inline-block;
+  vertical-align: -22%;
+  height: 1.75ex;
+  width: 1.75ex;
+  background-color: white;
+  border: 1px solid rgb(182, 180, 180);
+  border-radius: 4px;
+  margin-right: 0.5em;
 }
 </style>

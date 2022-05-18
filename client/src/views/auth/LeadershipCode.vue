@@ -16,11 +16,9 @@
 </template>
 
 <script>
-import User from '@/services/users'
 
 export default {
   name: 'LeadershipCode',
-  components: {},
   data() {
     const LEADERSHIP_CODE = 'M@n@gr!100'
     return {
@@ -52,10 +50,11 @@ export default {
 
 .leadership-card {
   margin-top: 2rem;
-  background-color: $panther;
+  background-color: white;
+  border: 1px solid #e8e8e8;
   border-radius: 0.5rem;
   padding: 3rem;
-  color: white;
+  color: $base-gray;
 }
 
 .leadership-code {
@@ -67,11 +66,13 @@ export default {
   text-align: center;
   background-color: transparent;
   &__logo {
-    height: 5rem;
+    height: 4rem;
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
   }
 
   &__text {
-    color: white;
+    color: $base-gray;
     font-family: #{$base-font-family};
     width: 100%;
     max-width: 20rem;
@@ -80,7 +81,12 @@ export default {
 
   &__input {
     @include input-field-white();
+    outline: none;
   }
+}
+
+input:focus {
+  outline: none;
 }
 
 h2 {
@@ -129,9 +135,5 @@ button {
   height: 2.25rem;
   border-radius: 3px;
   width: 19rem;
-}
-
-.hidden {
-  display: none;
 }
 </style>

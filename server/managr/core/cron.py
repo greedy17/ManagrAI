@@ -594,7 +594,6 @@ def generate_afternoon_digest(user_id):
             ]
     else:
         meetings = check_for_uncompleted_meetings(user.id)
-        logger.info(f"UNCOMPLETED MEETINGS FOR {user.email}: {meetings}")
         if meetings["status"]:
             meeting = block_sets.get_block_set(
                 "meeting_reminder", {"u": str(user.id), "not_completed": meetings["not_completed"]}

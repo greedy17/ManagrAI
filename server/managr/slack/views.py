@@ -46,7 +46,7 @@ from managr.core.serializers import UserSerializer
 from managr.core.models import User
 from managr.api.decorators import slack_api_exceptions
 from managr.organization.models import Organization
-from managr.core.cron import generate_afternoon_digest, generate_morning_digest
+from managr.core.background import generate_reminder_message, generate_morning_digest
 from .models import (
     OrganizationSlackIntegration,
     UserSlackIntegration,
@@ -298,7 +298,6 @@ class SlackViewSet(viewsets.GenericViewSet,):
     )
     def slack_user_channels(self, request, *args, **kwargs):
         cursor = request.data.get("cursor")
-        print(f"SLACK USER CHANNELS CURSOR: {cursor}")
         organization_slack = request.user.organization.slack_integration
         if organization_slack:
             channels = slack_requests.list_user_channels(
@@ -311,6 +310,24 @@ class SlackViewSet(viewsets.GenericViewSet,):
         else:
             channels = {"channels": [], "response_metadata": {}}
         return Response(status=status.HTTP_200_OK, data=channels)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="channel-details",
+    )
+    def slack_channel_details(self, request, *args, **kwargs):
+        organization_slack = request.user.organization.slack_integration
+        channel_id = request.GET.get("channel_id", None)
+        if organization_slack:
+            channel = slack_requests.get_channel_info(organization_slack.access_token, channel_id)
+        else:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={"success": False, "message": "Couldn't find your Slack account"},
+            )
+        return Response(status=status.HTTP_200_OK, data=channel)
 
     @action(
         methods=["post"],
@@ -372,11 +389,12 @@ class SlackViewSet(viewsets.GenericViewSet,):
                     status=status.HTTP_400_BAD_REQUEST,
                     data={"success": False, "message": "Couldn't find your Slack account"},
                 )
-        slack.change_recap_channel(request.data.get("recap_channel"))
+        if not slack.recap_channel:
+            slack.change_recap_channel(request.data.get("recap_channel"))
         logger.info(f"NEW RECAP CHANNEL FOR {slack.user.id}: {slack.recap_channel}")
         for user in request.data.get("users"):
             user_acc = User.objects.filter(id=user).first()
-            if user_acc and hasattr(user_acc, "slack_acount"):
+            if user_acc and hasattr(user_acc, "slack_integration"):
                 if slack_id not in user_acc.slack_integration.recap_receivers:
                     user_acc.slack_integration.recap_receivers.append(slack_id)
                     user_acc.slack_integration.save()
@@ -1190,6 +1208,6 @@ def launch_digest(request):
     if time == "morning":
         generate_morning_digest(user.id)
     else:
-        generate_afternoon_digest(user.id)
+        generate_reminder_message(user.id)
 
     return Response()

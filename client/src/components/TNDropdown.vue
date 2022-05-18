@@ -57,9 +57,6 @@ export default {
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Lato&display=swap');
 
-.dropdown {
-}
-
 .dropdown__content {
   border: none;
   -moz-appearance: none;

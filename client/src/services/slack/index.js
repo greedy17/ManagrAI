@@ -1,5 +1,5 @@
 import Model, { fields } from '@thinknimble/tn-models'
-import { objectToCamelCase, objectToSnakeCase } from '@/services/utils'
+import { objectToCamelCase } from '@/services/utils'
 import SlackAPI from './api'
 import { SObjectField } from '../salesforce'
 

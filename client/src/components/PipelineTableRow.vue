@@ -38,13 +38,11 @@
           <SkeletonBox width="15px" height="14px" />
           <SkeletonBox width="15px" height="14px" />
         </div>
-        <div v-else class="flex-column">
+        <div v-else class="flex-row">
           <button @click="emitCreateForm" class="name-cell-edit-note-button-1">
-            Update
-            <img class="invert" src="@/assets/images/edit-note.png" />
+            <img style="filter: invert(90%); height: 0.6rem" src="@/assets/images/edit.png" />
           </button>
           <button @click="emitGetNotes" class="name-cell-note-button-1">
-            Notes
             <img class="gray" src="@/assets/images/white-note.png" />
           </button>
         </div>
@@ -55,9 +53,16 @@
       :key="i"
       v-for="(field, i) in oppFields"
       :class="
-        field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
+        field.dataType === 'TextArea' ||
+        (field.length > 250 &&
+          field.dataType === 'String' &&
+          (opp['secondary_data'][field.apiName] ||
+            opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]))
           ? 'table-cell-wide'
-          : 'table-cell'
+          : opp['secondary_data'][field.apiName] ||
+            opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+          ? 'table-cell'
+          : 'empty'
       "
     >
       <SkeletonBox
@@ -80,7 +85,16 @@
         />
       </div>
     </div>
-    <div :key="field.id" v-for="field in extraPipelineFields" class="table-cell">
+    <div
+      :key="field.id"
+      v-for="field in extraPipelineFields"
+      :class="
+        opp['secondary_data'][field.apiName] ||
+        opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+          ? 'table-cell'
+          : 'empty'
+      "
+    >
       <SkeletonBox
         v-if="updateList.includes(opp.id) || updatedList.includes(opp.id)"
         width="100px"
@@ -101,7 +115,7 @@
         />
       </div>
     </div>
-    <div style="background-color: white" class="table-cell-checkbox"></div>
+    <div class="table-cell-checkbox"></div>
   </div>
 </template>
 
@@ -281,6 +295,14 @@ export default {
 .table-row {
   display: table-row;
 }
+.empty {
+  display: table-cell;
+  background: white;
+  min-width: 12vw;
+  border-left: 1px solid $soft-gray;
+  border-right: 1px solid $soft-gray;
+  border-bottom: 1px solid $soft-gray;
+}
 .table-cell {
   display: table-cell;
   position: sticky;
@@ -321,6 +343,17 @@ export default {
   position: sticky;
   background-color: $off-white;
 }
+.table-cell-checkbox {
+  display: table-cell;
+  padding: 2vh;
+  width: 3.75vw;
+  border: none;
+  left: 0;
+  position: sticky;
+  z-index: 1;
+  border-bottom: 1px solid $soft-gray;
+  background-color: $off-white;
+}
 .cell-name-header {
   display: table-cell;
   padding: 3vh;
@@ -350,10 +383,10 @@ export default {
   align-items: flex-end;
 }
 .flex-row {
-  position: relative;
   display: flex;
   flex-direction: row;
-  align-items: center;
+  justify-content: flex-end;
+  align-items: flex-end;
 }
 input[type='checkbox']:checked + label::after {
   content: '';
@@ -406,50 +439,40 @@ input[type='checkbox'] + label::before {
   direction: rtl;
 }
 .name-cell-note-button-1 {
-  cursor: pointer;
-  border: none;
-  border-radius: 0.2rem;
-  padding: 0.25rem 0.3rem;
+  height: 1.5rem;
+  width: 1.5rem;
+  margin-right: 0.2rem;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
   background-color: white;
-  box-shadow: 1px 1px 3px $very-light-gray;
-  max-width: 4rem;
-  transition: all 0.3s;
   display: flex;
   align-items: center;
-  justify-content: space-around;
-  font-size: 11px;
-  font-weight: 700px;
-  letter-spacing: 0.25px;
+  justify-content: center;
+  border: 1px solid #e8e8e8;
   img {
     height: 0.8rem;
+    padding: 1px;
   }
 }
 .name-cell-note-button-1:hover,
 .name-cell-edit-note-button-1:hover {
   transform: scale(1.03);
-  box-shadow: 1px 1px 1px 1px $very-light-gray;
+  box-shadow: 1px 1px 1px $soft-gray;
+  cursor: pointer;
 }
 .name-cell-edit-note-button-1 {
-  cursor: pointer;
-  border: none;
-  border-radius: 0.2rem;
-  padding: 0.25rem 0.3rem;
-  background-color: $dark-green;
-  color: white;
-  transition: all 0.3s;
+  height: 1.5rem;
+  width: 1.5rem;
+  margin-right: 0.2rem;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  background-color: white;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-  box-shadow: 1px 1px 2px $very-light-gray;
-  font-weight: 700px;
-  letter-spacing: 0.25px;
-  margin-top: 0.4rem;
-  margin-bottom: 0.3rem;
-
+  justify-content: center;
+  border: 1px solid #e8e8e8;
   img {
-    height: 0.8rem;
-    margin-left: 0.25rem;
+    height: 1.2rem;
   }
 }
 // ::-webkit-scrollbar {
