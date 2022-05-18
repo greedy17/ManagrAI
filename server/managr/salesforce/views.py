@@ -1,11 +1,9 @@
-from audioop import tostereo
 import logging
 import random
 import pytz
 import json
 from urllib.parse import unquote
 from datetime import datetime
-
 from .routes import routes
 import time
 from background_task.models import CompletedTask
@@ -448,22 +446,19 @@ class SalesforceSObjectViewSet(
         logger.info(f"UPDATE START ---- {data}")
 
         user = User.objects.get(id=self.request.user.id)
-        form_id = data.get("form_id")
+        form_ids = data.get("form_id")
         form_data = data.get("form_data")
         alert_instance_id = data.get("alert_instance", None)
-        main_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
-        stage_forms = []
+        forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
+        main_form = forms.filter(template__form_type="UPDATE").first()
         stage_form_data_collector = {}
-        for form in stage_forms:
+        for form in forms:
             form.save_form(form_data, False)
             stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
-        if not len(stage_forms):
-            main_form.save_form(form_data, False)
         all_form_data = {**stage_form_data_collector, **main_form.saved_data}
         formatted_saved_data = process_text_field_format(
             str(user.id), main_form.template.resource, all_form_data
         )
-        current_forms = user.custom_slack_form_instances.filter(id__in=[form_id])
         data = None
         attempts = 1
         while True:
@@ -519,12 +514,12 @@ class SalesforceSObjectViewSet(
         if all_form_data.get("meeting_comments") is not None:
             emit_add_update_to_sf(str(main_form.id))
         if len(user.slack_integration.realtime_alert_configs):
-            _send_instant_alert([form_id])
+            _send_instant_alert(form_ids)
         if alert_instance_id:
             from managr.alerts.models import AlertInstance
 
             instance = AlertInstance.objects.get(id=alert_instance_id)
-            current_forms.update(
+            forms.update(
                 is_submitted=True,
                 update_source="pipeline",
                 submission_date=timezone.now(),
@@ -533,7 +528,7 @@ class SalesforceSObjectViewSet(
             # user.activity.increment_untouched_count("workflows")
             # user.activity.add_workflow_activity(str(main_form.id), instance.template.title)
         else:
-            current_forms.update(
+            forms.update(
                 is_submitted=True, update_source="pipeline", submission_date=timezone.now()
             )
         value_update = main_form.resource_object.update_database_values(all_form_data)
