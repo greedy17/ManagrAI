@@ -10,7 +10,7 @@
       <template v-if="selected_org">
         <div v-if="loading">Loading</div>
         <template v-else>
-          <div class="form__list">
+          <!-- <div class="form__list">
             <div :key="i" class="form__list_item" v-for="(form, i) in orgForms">
               <h3>{{ form.formType }} {{ form.resource }}</h3>
               <p>Form Fields:</p>
@@ -43,7 +43,7 @@
                 </li>
               </ul>
             </div>
-          </div>
+          </div> -->
         </template>
       </template>
     </div>
@@ -55,6 +55,7 @@ import SlackOAuth from '@/services/slack'
 import { SObjects, SObjectPicklist, MeetingWorkflows } from '@/services/salesforce'
 import CollectionManager from '@/services/collectionManager'
 import Organization from '@/services/organizations'
+import COMMANDS from './staff-constants'
 
 export default {
   name: 'Staff',

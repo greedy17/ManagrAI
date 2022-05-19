@@ -173,7 +173,7 @@ export default new Router({
       path: '/staff',
       name: "Staff",
       component: () =>
-        import("@/views/Staff")
+        import("@/views/staff/Staff")
     },
     {
       path: '/deal-movement',

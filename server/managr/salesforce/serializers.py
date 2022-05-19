@@ -129,7 +129,15 @@ class MeetingWorkflowSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MeetingWorkflow
-        fields = ("meeting", "meeting_ref", "resource_id", "resource_type", "user", "org_ref")
+        fields = (
+            "meeting",
+            "meeting_ref",
+            "resource_id",
+            "resource_type",
+            "user",
+            "org_ref",
+            "is_completed",
+        )
 
     def get_org_ref(self, instance):
         from managr.core.serializers import OrganizationSerializer

@@ -234,4 +234,15 @@ export default class UserAPI {
       .then(response => this.cls.fromAPI(response.data))
       .catch(apiErrorHandler({ apiName: 'API error' }))
   }
+
+  callCommand(keyword) {
+    const url = `${USERS_ENDPOINT}staff/commands`
+    const data = {
+      command: keyword
+    }
+    return this.client
+      .post(url, data)
+      .then(response => this.cls.fromAPI(response.data))
+      .catch(apiErrorHandler({ apiName: 'API ERROR' }))
+  }
 }
