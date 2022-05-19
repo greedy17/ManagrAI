@@ -8,6 +8,14 @@
       alertMessage='Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has a passed close date of <strong>{ Opportunity.CloseDate }</strong>. Please update it!'
       recurrenceDay=0
       recurrenceDays=[0]
+      operandOperator='>='
+      operandIdentifier='CloseDate'
+      opperandValue=-1
+      :referenceOperandValue="referenceOperandValue1"
+      operandOperator2='CloseDate'
+      operandIdentifier2='>='
+      opperandValue2=-200
+      :referenceOperandValue2="referenceOperandValue2"
   />
 </template>
 
@@ -37,6 +45,8 @@ export default {
       dropdownLoading: false,
       channelOpts: new SlackListResponse(),
       userChannelOpts: new SlackListResponse(),
+      referenceOperandValue1: { label: '>= (Greater or Equal)', value: '>=' },
+      referenceOperandValue2: { label: '<= (Less or Equal)', value: '<=' },
       NON_FIELD_ALERT_OPTS,
       stringRenderer,
       SOBJECTS_LIST,

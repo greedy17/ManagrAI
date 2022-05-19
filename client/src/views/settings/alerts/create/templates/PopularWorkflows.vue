@@ -23,7 +23,22 @@
           :key="i"
           v-for="(form, i) in alertTemplateForm.field.alertConfig.groups"
         >
+          <!-- Put v-if v-else here for RequiredFieldEmpty -->
+          <div v-if="selectField">
+            <div
+              class="delivery__row"
+              :key="index"
+              v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
+            >
+              <span style="margin-bottom: 0.5rem">Select your Field</span>
+              <EmptyAlertGroup
+                :form="alertGroup"
+                :resourceType="resourceType"
+              />
+            </div>
+          </div>
           <div
+            v-else
             style="margin-top: 1rem"
             class="delivery__row"
             :errors="form.field.recurrenceDay.errors"
@@ -86,6 +101,7 @@
               small
             />
           </div>
+          <!-- End put v-if v-else here for RequiredFieldEmpty -->
 
           <div
             style="margin-top: 1rem; margin-left: 0.5rem"
@@ -270,6 +286,7 @@ import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 //Internal
 import FormField from '@/components/forms/FormField'
+import EmptyAlertGroup from '@/views/settings/alerts/create/EmptyAlertGroup'
 // Different (will probably want to import all four?): 
 import ForecastAlertGroup from '@/views/settings/alerts/create/ForecastAlertGroup'
 // import DealAlertGroup from '@/views/settings/alerts/create/DealAlertGroup'
@@ -303,7 +320,13 @@ export default {
     'operandOperator',
     'operandIdentifier',
     'opperandValue',
-    'referenceOperandValue'
+    'referenceOperandValue',
+    'operandOperator2',
+    'operandIdentifier2',
+    'opperandValue2',
+    'referenceOperandValue2',
+    'recurrenceFrequency',
+    'selectField',
   ],
   components: {
     // Different: 
@@ -314,6 +337,7 @@ export default {
     ToggleCheckBox,
     FormField,
     PulseLoadingSpinnerButton,
+    EmptyAlertGroup,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {
@@ -415,7 +439,7 @@ export default {
   },
   methods: {
     test() {
-      console.log('heeeyyy hey', this.$route.params)
+      console.log('heeeyyy hey', this.resourceType)
     },
     repsPipeline() {
       if (this.userLevel !== 'MANAGER') {
@@ -656,16 +680,16 @@ export default {
     this.setDefaultChannel()
   },
   beforeMount() {
-    if (this.operandOrder === 1) {
+    if (this.operandOrder === 0) {
       this.form.field.operandIdentifier.value = this.operandIdentifier;
-      this.form.field.operandOperator.value = this.operandValue
+      this.form.field.operandOperator.value = this.operandOperator
       this.form.field._operandOperator.value = this.referenceOperandValue
       this.form.field.operandValue.value = this.operandValue
-    } else if (this.operandOrder === 0) {
-      this.form.field.operandIdentifier.value = this.operandIdentifier;
-      this.form.field.operandOperator.value = this.operandValue
-      this.form.field._operandOperator.value = this.referenceOperandValue
-      this.form.field.operandValue.value = this.operandValue
+    } else if (this.operandOrder === 1) {
+      this.form.field.operandIdentifier.value = this.operandIdentifier2;
+      this.form.field.operandOperator.value = this.operandOperator2
+      this.form.field._operandOperator.value = this.referenceOperandValue2
+      this.form.field.operandValue.value = this.operandValue2
     } 
     this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = this.recipientType
     this.alertTemplateForm.field.resourceType.value = this.resourceType
@@ -675,7 +699,9 @@ export default {
     this.repsPipeline()
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = this.recurrenceDay
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = this.recurrenceDays
-    
+    if (this.recurrenceFrequency) {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceFrequency.value = this.recurrenceFrequency
+    }
   },
 }
 </script>
