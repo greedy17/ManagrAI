@@ -303,6 +303,7 @@ export default {
     'operandOperator',
     'operandIdentifier',
     'opperandValue',
+    'referenceOperandValue'
   ],
   components: {
     // Different: 
@@ -658,23 +659,23 @@ export default {
     if (this.operandOrder === 1) {
       this.form.field.operandIdentifier.value = this.operandIdentifier;
       this.form.field.operandOperator.value = this.operandValue
-      this.form.field._operandOperator.value = { label: '<= (Less or Equal)', value: '<=' }
+      this.form.field._operandOperator.value = this.referenceOperandValue
       this.form.field.operandValue.value = this.operandValue
     } else if (this.operandOrder === 0) {
       this.form.field.operandIdentifier.value = this.operandIdentifier;
       this.form.field.operandOperator.value = this.operandValue
-      this.form.field._operandOperator.value = { label: '>= (Greater or Equal)', value: '>=' }
+      this.form.field._operandOperator.value = this.referenceOperandValue
       this.form.field.operandValue.value = this.operandValue
-    } else {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = this.recipientType
-      this.alertTemplateForm.field.resourceType.value = this.resourceType
-      this.alertTemplateForm.field.title.value = this.title
-      this.alertTemplateForm.field.isActive.value = this.isActive
-      this.alertTemplateForm.field.alertMessages.groups[0].field.body.value = this.alertMessage
-      this.repsPipeline()
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = this.recurrenceDay
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = this.recurrenceDays
-    }
+    } 
+    this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = this.recipientType
+    this.alertTemplateForm.field.resourceType.value = this.resourceType
+    this.alertTemplateForm.field.title.value = this.title
+    this.alertTemplateForm.field.isActive.value = this.isActive
+    this.alertTemplateForm.field.alertMessages.groups[0].field.body.value = this.alertMessage
+    this.repsPipeline()
+    this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = this.recurrenceDay
+    this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = this.recurrenceDays
+    
   },
 }
 </script>
