@@ -50,11 +50,12 @@ def create_configs_for_target(target, template_user, config):
         )
     elif target == "SELF":
         config["recipient_type"] = "SLACK_CHANNEL"
-        config["recipients"] = [
-            template_user.slack_integration.zoom_channel
-            if template_user.slack_integration.zoom_channel
-            else template_user.slack_integration.channel
-        ]
+        if template_user.has_slack_integration:
+            config["recipients"] = [
+                template_user.slack_integration.zoom_channel
+                if template_user.slack_integration.zoom_channel
+                else template_user.slack_integration.channel
+            ]
         return [config]
     elif target == "ALL":
         users = User.objects.filter(organization=template_user.organization, is_active=True)
@@ -96,7 +97,8 @@ def alert_config_creator(data, user):
                 created_configs = create_configs_for_target(target, user, new_configs[0])
                 if len(created_configs):
                     all_configs = [*all_configs, *created_configs]
-            all_configs = remove_duplicate_alert_configs(all_configs)
+            if len(all_configs) > 1:
+                all_configs = remove_duplicate_alert_configs(all_configs)
             new_configs = all_configs if len(all_configs) else None
     else:
         return None
