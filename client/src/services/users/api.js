@@ -235,14 +235,17 @@ export default class UserAPI {
       .catch(apiErrorHandler({ apiName: 'API error' }))
   }
 
-  callCommand(keyword) {
-    const url = `${USERS_ENDPOINT}staff/commands`
+  async callCommand(keyword) {
+    const url = `${USERS_ENDPOINT}staff/commands/`
     const data = {
       command: keyword
     }
-    return this.client
-      .post(url, data)
-      .then(response => this.cls.fromAPI(response.data))
-      .catch(apiErrorHandler({ apiName: 'API ERROR' }))
+    try {
+      let res = await this.client.post(url, data)
+      console.log(res)
+      return res.data
+    } catch (e) {
+      console.log(e)
+    }
   }
 }

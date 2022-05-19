@@ -1,7 +1,8 @@
 import logging
+from urllib import response
 import requests
 import textwrap
-
+from django.utils import timezone
 from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
 from django.template.exceptions import TemplateDoesNotExist
@@ -44,7 +45,7 @@ from .serializers import (
     UserInvitationSerializer,
     UserRegistrationSerializer,
 )
-from .permissions import IsOrganizationManager, IsSuperUser
+from .permissions import IsOrganizationManager, IsSuperUser, IsStaff
 
 from .nylas.emails import (
     send_new_email_legacy,
@@ -54,6 +55,19 @@ from .nylas.emails import (
 from .nylas.models import NylasAccountStatusList
 
 logger = logging.getLogger("managr")
+
+
+def GET_COMMAND_OBJECTS():
+    from managr.salesforce.background import (
+        emit_gen_next_sync,
+        emit_gen_next_object_field_sync,
+    )
+
+    commands = {
+        "SALESFORCE_FIELDS": emit_gen_next_object_field_sync,
+        "SALESFORCE_RESOURCES": emit_gen_next_sync,
+    }
+    return commands
 
 
 def index(request):
@@ -291,6 +305,41 @@ class UserViewSet(
         response = return_file_id_from_nylas(user=user, file_object=file_object)
 
         return Response(response, status=status.HTTP_200_OK)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated, IsStaff],
+        detail=False,
+        url_path="staff/commands",
+    )
+    def launch_command(self, request, *args, **kwargs):
+        COMMANDS = GET_COMMAND_OBJECTS()
+        user = request.user
+        data = request.data
+        command = data.get("command")
+        print(command)
+        print(COMMANDS)
+        command_function = COMMANDS[command]
+        scheduled_time = timezone.now()
+        formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
+        if command == "SALESFORCE_FIELDS":
+            operations = [
+                *user.salesforce_account.field_sync_opts,
+                *user.salesforce_account.validation_sync_opts,
+            ]
+            command_function(str(user.id), operations, False, formatted_time)
+            response_data = {
+                "success": True,
+                "message": "Successfully started field sync for users",
+            }
+        else:
+            operations = user.salesforce_account.resource_sync_opts
+            command_function(str(user.id), operations, formatted_time)
+            response_data = {
+                "success": True,
+                "message": "Successfully started resource sync for users",
+            }
+        return Response(data=response_data)
 
 
 class ActivationLinkView(APIView):

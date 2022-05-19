@@ -10,6 +10,38 @@
       <template v-if="selected_org">
         <div v-if="loading">Loading</div>
         <template v-else>
+          <div class="command_dropdown">
+            <Multiselect
+              placeholder="Select Command"
+              style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
+              v-model="selectedCommand"
+              :options="commandOptions"
+              openDirection="below"
+              selectLabel="Enter"
+              track-by="value"
+              label="label"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+            </Multiselect>
+            <Multiselect
+              placeholder="Select Users"
+              style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
+              v-model="selectedUsers"
+              :options="orgUsers"
+              openDirection="below"
+              selectLabel="Enter"
+              track-by="id"
+              label="fullName"
+              :multiple="true"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+            </Multiselect>
+            <button class="green_button" @click="runCommand">Enter</button>
+          </div>
           <!-- <div class="form__list">
             <div :key="i" class="form__list_item" v-for="(form, i) in orgForms">
               <h3>{{ form.formType }} {{ form.resource }}</h3>
@@ -56,11 +88,25 @@ import { SObjects, SObjectPicklist, MeetingWorkflows } from '@/services/salesfor
 import CollectionManager from '@/services/collectionManager'
 import Organization from '@/services/organizations'
 import COMMANDS from './staff-constants'
+import User from '@/services/users'
 
 export default {
   name: 'Staff',
+  components: {
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+  },
   data() {
     return {
+      commandOptions: [
+        { label: 'Salesforce Resources', value: 'SALESFORCE_RESOURCES' },
+        { label: 'Salesforce Fields', value: 'SALESFORCE_FIELDS' },
+      ],
+      allUsers: CollectionManager.create({
+        ModelClass: User,
+      }),
+      selectedUsers: null,
+      orgUsers: null,
+      selectedCommand: '',
       loading: true,
       allForms: null,
       allMeetingWorkflows: null,
@@ -74,6 +120,9 @@ export default {
     user() {
       return this.$store.state.user
     },
+  },
+  mounted() {
+    console.log(this.allUsers)
   },
   methods: {
     async getAllForms() {
@@ -92,6 +141,19 @@ export default {
         console.log(e)
       }
     },
+    async runCommand() {
+      try {
+        const res = await User.api.callCommand(this.selectedCommand.value).then((res) => {
+          this.$Alert.alert({
+            type: 'success',
+            timeout: 1000,
+            message: res['message'],
+          })
+        })
+      } catch (e) {
+        console.log(e)
+      }
+    },
     filterOrgForms(org_id) {
       return this.allForms.filter((form) => form.organization == org_id)
     },
@@ -102,19 +164,25 @@ export default {
       this.orgForms = this.filterOrgForms(org_id)
       this.orgMeetingWorkflows = this.filterMeetingWorkflow(org_id)
     },
+    filterUsers(org_id) {
+      return this.allUsers.list.filter((user) => user.organization == org_id)
+    },
   },
   created() {
     this.getAllForms()
     this.getAllMeetingWorkflows()
     this.organizations.refresh()
+    this.allUsers.refresh()
   },
   watch: {
     organizations() {
       this.selected_org = this.organizations[0].id
+      this.orgUsers = this.filterUsers(this.selected_org)
     },
     selected_org() {
       this.showOrgData(this.selected_org)
       this.loading = false
+      this.orgUsers = this.filterUsers(this.selected_org)
     },
   },
 }
@@ -169,5 +237,20 @@ ul {
 .field__list_item {
   display: flex;
   flex-direction: column;
+}
+
+.command_dropdown {
+  margin: 2rem;
+}
+
+.green_button {
+  color: white;
+  background-color: $dark-green;
+  border-radius: 0.25rem;
+  padding: 0.5rem 1rem;
+  font-weight: bold;
+  font-size: 12px;
+  border: none;
+  cursor: pointer;
 }
 </style>
