@@ -1,267 +1,21 @@
 <template>
-  <div class="alerts-page">
-    <div class="alerts-header">
-      <div>
-        <h3>Close Date Passed</h3>
-        <p style="margin-top: -0.5rem; font-size: 14px">
-          View and update all Opportunities with a passed close date
-        </p>
-      </div>
-
-      <button @click="$router.push({ name: 'CreateNew' })" class="back-button">
-        <img src="@/assets/images/back.png" alt="" />
-        Back to workflows
-      </button>
-    </div>
-
-    <div style="margin-top: 1rem" v-if="pageNumber === 0" class="alert__column">
-      <template>
-        <div
-          class="forecast__collection"
-          :key="i"
-          v-for="(form, i) in alertTemplateForm.field.alertConfig.groups"
-        >
-          <div
-            style="margin-top: 1rem"
-            class="delivery__row"
-            :errors="form.field.recurrenceDay.errors"
-          >
-            <div class="row__">
-              <label :class="form.field.recurrenceFrequency.value == 'WEEKLY' ? 'green' : ''"
-                >Weekly</label
-              >
-              <ToggleCheckBox
-                @input="
-                  form.field.recurrenceFrequency.value == 'WEEKLY'
-                    ? (form.field.recurrenceFrequency.value = 'MONTHLY')
-                    : (form.field.recurrenceFrequency.value = 'WEEKLY')
-                "
-                :value="form.field.recurrenceFrequency.value !== 'WEEKLY'"
-                offColor="#41b883"
-                onColor="#41b883"
-                style="margin-left: 0.25rem; margin-right: 0.25rem"
-              />
-              <label :class="form.field.recurrenceFrequency.value == 'MONTHLY' ? 'green' : ''"
-                >Monthly</label
-              >
-            </div>
-
-            <div style="margin-top: 0.5rem" v-if="form.field.recurrenceFrequency.value == 'WEEKLY'">
-              <FormField>
-                <template v-slot:input>
-                  <Multiselect
-                    placeholder="Select Days"
-                    @input="setDay($event)"
-                    v-model="selectedDay"
-                    :options="weeklyOpts"
-                    openDirection="below"
-                    style="width: 14vw"
-                    selectLabel="Enter"
-                    track-by="value"
-                    label="key"
-                    :multiple="true"
-                    :closeOnSelect="false"
-                  >
-                    <template slot="noResult">
-                      <p class="multi-slot">No results.</p>
-                    </template>
-                    <template slot="placeholder">
-                      <p class="slot-icon">
-                        <img src="@/assets/images/search.png" alt="" />
-                        Select Days
-                      </p>
-                    </template>
-                  </Multiselect>
-                </template>
-              </FormField>
-            </div>
-            <FormField
-              style="margin-top: 0.5rem"
-              id="delivery"
-              v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
-              placeholder="Day of month"
-              @blur="form.field.recurrenceDay.validate()"
-              v-model="form.field.recurrenceDay.value"
-              small
-            />
-          </div>
-
-          <div
-            style="margin-top: 1rem; margin-left: 0.5rem"
-            v-if="userLevel == 'MANAGER'"
-            class="delivery__row"
-          >
-            <span style="margin-bottom: 0.5rem">Select Users</span>
-
-            <FormField :errors="form.field.alertTargets.errors">
-              <template v-slot:input>
-                <Multiselect
-                  placeholder="Select Users"
-                  @input="mapIds"
-                  v-model="selectedUsers"
-                  :options="userTargetsOpts"
-                  openDirection="below"
-                  style="width: 14vw"
-                  selectLabel="Enter"
-                  track-by="id"
-                  label="fullName"
-                  :multiple="true"
-                  :closeOnSelect="false"
-                >
-                  <template slot="noResult">
-                    <p class="multi-slot">No results.</p>
-                  </template>
-                  <template slot="placeholder">
-                    <p class="slot-icon">
-                      <img src="@/assets/images/search.png" alt="" />
-                      Select Users
-                    </p>
-                  </template>
-                </Multiselect>
-              </template>
-            </FormField>
-          </div>
-
-          <div
-            style="
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: flex-start;
-              padding: 0.5rem;
-              margin-top: 0.5rem;
-            "
-          >
-            <div v-if="!channelName" class="row__">
-              <label :class="!create ? 'green' : ''">Select #channel</label>
-              <ToggleCheckBox
-                style="margin-left: 0.25rem; margin-right: 0.25rem"
-                :value="create"
-                @input="changeCreate"
-                offColor="#41b883"
-                onColor="#41b883"
-              />
-              <label :class="create ? 'green' : ''">Create #channel</label>
-            </div>
-
-            <label v-else for="channel" style="font-weight: bold"
-              >Alert will send to
-              <span style="color: #41b883; font-size: 14px">{{ channelName }}</span>
-              channel</label
-            >
-            <div
-              style="
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: flex-start;
-              "
-              v-if="create"
-            >
-              <input
-                v-model="channelName"
-                class="search__input"
-                type="text"
-                name="channel"
-                id="channel"
-                placeholder="Name your channel"
-                @input="logNewName(channelName)"
-              />
-
-              <div v-if="!channelCreated" style="margin-top: 1.25rem">
-                <button
-                  v-if="channelName"
-                  @click="createChannel(channelName)"
-                  class="purple__button bouncy"
-                >
-                  Create Channel
-                </button>
-                <button v-else class="disabled__button">Create Channel</button>
-              </div>
-            </div>
-
-            <div style="margin-top: 0.5rem" v-else>
-              <template>
-                <Multiselect
-                  v-if="!directToUsers"
-                  placeholder="Select Channel"
-                  v-model="selectedChannel"
-                  @input="setRecipient"
-                  :options="userChannelOpts.channels"
-                  openDirection="below"
-                  style="width: 14vw"
-                  selectLabel="Enter"
-                  track-by="id"
-                  label="name"
-                  :loading="dropdownLoading"
-                >
-                  <template slot="noResult">
-                    <p class="multi-slot">No results. Try loading more</p>
-                  </template>
-                  <template slot="afterList">
-                    <p
-                      class="multi-slot__more"
-                      @click="listUserChannels(userChannelOpts.nextCursor)"
-                    >
-                      Load More
-                      <img src="@/assets/images/plusOne.png" alt="" />
-                    </p>
-                  </template>
-                  <template slot="placeholder">
-                    <p class="slot-icon">
-                      <img src="@/assets/images/search.png" alt="" />
-                      Select Channel
-                    </p>
-                  </template>
-                </Multiselect>
-              </template>
-
-              <div v-if="userLevel !== 'REP'" class="sendAll">
-                <input type="checkbox" id="allUsers" v-model="directToUsers" />
-                <label for="allUsers">Send directly to users</label>
-              </div>
-
-              <div v-else class="sendAll">
-                <input type="checkbox" id="allUsers" v-model="directToUsers" />
-                <label for="allUsers">Send to primary channel</label>
-              </div>
-            </div>
-          </div>
-        </div>
-      </template>
-    </div>
-
-    <div
-      :key="index"
-      v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
-      class="visible"
-    >
-      <PassedAlertGroup
-        :form="alertGroup"
-        :resourceType="alertTemplateForm.field.resourceType.value"
-      />
-    </div>
-
-    <div class="bottom_locked">
-      <PulseLoadingSpinnerButton
-        :loading="savingTemplate"
-        :class="
-          !alertTemplateForm.isValid || savingTemplate
-            ? 'disabled__button'
-            : 'purple__button bouncy'
-        "
-        text="Activate alert"
-        @click.stop="onSave"
-        :disabled="!alertTemplateForm.isValid"
-      />
-    </div>
-  </div>
+  <PopularWorkflows 
+      title='Close Date Passed'
+      subtitle='View and update all Opportunities with a passed close date'
+      recipientType='SLACK_CHANNEL'
+      resourceType='Opportunity'
+      isActive=true
+      alertMessage='Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has a passed close date of <strong>{ Opportunity.CloseDate }</strong>. Please update it!'
+      recurrenceDay=0
+      recurrenceDays=[0]
+  />
 </template>
 
 <script>
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 //Internal
+import PopularWorkflows from '@/views/settings/alerts/create/templates/PopularWorkflows'
 import FormField from '@/components/forms/FormField'
 import PassedAlertGroup from '@/views/settings/alerts/create/PassedAlertGroup'
 import { UserConfigForm } from '@/services/users/forms'
@@ -279,6 +33,7 @@ import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
   name: 'CloseDatePassed',
   components: {
+    PopularWorkflows,
     PassedAlertGroup,
     ToggleCheckBox,
     FormField,
@@ -838,10 +593,6 @@ input {
   width: 75vw;
   padding: 2rem;
   margin-bottom: 1rem;
-}
-
-textarea {
-  @extend .textarea;
 }
 .alerts-page {
   height: 100vh;
