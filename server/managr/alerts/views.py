@@ -40,17 +40,20 @@ logger = logging.getLogger("managr")
 def create_configs_for_target(target, template_user, config):
     from managr.core.models import User
 
+    print(target)
     if target in ["MANAGERS", "REPS", "SDR"]:
         if target == "MANAGERS":
             target = "MANAGER"
         elif target == "REPS":
             target = "REP"
         users = User.objects.filter(
-            organization=template_user.organization, user_level=target, is_active=True,
+            organization=template_user.organization,
+            user_level=target,
+            is_active=True,
         )
     elif target == "SELF":
         config["recipient_type"] = "SLACK_CHANNEL"
-        if template_user.has_slack_integration:
+        if "default" in config["recipients"]:
             config["recipients"] = [
                 template_user.slack_integration.zoom_channel
                 if template_user.slack_integration.zoom_channel
@@ -70,8 +73,9 @@ def create_configs_for_target(target, template_user, config):
                 if user.slack_integration.zoom_channel
                 else user.slack_integration.channel
             ]
-            config_copy["alert_targets"] = [str(user.id)]
             config_copy["recipient_type"] = "SLACK_CHANNEL"
+            if user != template_user:
+                config_copy["alert_targets"] = [str(user.id)]
             new_configs.append(config_copy)
     return new_configs
 
@@ -173,13 +177,9 @@ class AlertTemplateViewSet(
         data = self.request.data
 
         from_workflow = data.get("from_workflow", False)
-        if settings.IN_DEV or settings.IN_STAGING:
-            print(data)
-            print(from_workflow)
         if from_workflow:
             config = obj.configs.all().first()
             template = config.template
-            print(f"CONFIG: {config}\nTEMPLATE:{template}")
             attempts = 1
             while True:
                 sf = self.request.user.salesforce_account
@@ -191,9 +191,11 @@ class AlertTemplateViewSet(
                                 template.resource_type,
                             )
                             res_data = [item.integration_id for item in res]
-                            print(f"RES: {res}\nRES_DATA: {res_data}")
                             break
-                    users = config.target_users
+                    users = []
+                    for config in obj.configs.all():
+                        users = [*users, *config.target_users]
+                    print(users)
                     res_data = []
                     for user in users:
                         if hasattr(user, "salesforce_account"):
@@ -201,7 +203,6 @@ class AlertTemplateViewSet(
                                 template.url_str(user, config.id), template.resource_type
                             )
                             res_data.extend([item.integration_id for item in res])
-                    print(f"RES_DATA: {res_data}")
                     break
                 except TokenExpired:
                     if attempts >= 5:
@@ -311,7 +312,9 @@ class AlertConfigViewSet(
                 id=last_instance.template.id
             ).values()[0]
             instances = alert_models.AlertInstance.objects.filter(
-                user=user, config__id=config_id, invocation=last_instance.invocation,
+                user=user,
+                config__id=config_id,
+                invocation=last_instance.invocation,
             )
             return Response(data={"instances": instances.values(), "template": template})
 
@@ -369,7 +372,8 @@ class AlertOperandViewSet(
 
 
 class AlertInstanceViewSet(
-    mixins.ListModelMixin, viewsets.GenericViewSet,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
 ):
     filter_backends = (
         DjangoFilterBackend,
