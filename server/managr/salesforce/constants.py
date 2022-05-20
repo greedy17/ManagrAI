@@ -84,7 +84,6 @@ def SALESFORCE_RESOURCE_QUERY_URI(
 def SALESFORCE_RESOURCE_QUERY_BY_ID_URI(resource, fields, ids):
     fields = set(fields)
     ids_string = ""
-    print(len(ids))
     for i, id in enumerate(ids):
         ids_string += f"'{id}'"
         if i != len(ids) - 1:

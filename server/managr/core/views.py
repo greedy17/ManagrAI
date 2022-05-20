@@ -292,6 +292,37 @@ class UserViewSet(
 
         return Response(response, status=status.HTTP_200_OK)
 
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="modify-forecast",
+    )
+    def modify_forecast(self, request, *args, **kwargs):
+        from managr.opportunity.models import Opportunity
+
+        user = request.user
+        action = request.data.get("action")
+        ids = request.data.get("ids")
+        if action == "add":
+            for id in ids:
+                user.current_forecast.add_to_state(id)
+        else:
+            user.current_forecast.remove_from_state(id)
+        return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="get-forecast-values",
+    )
+    def get_forecast_values(self, request, *args, **kwargs):
+        user = request.user
+        res = user.current_forecast.get_current_values()
+        data = {"opps": res["records"]}
+        return Response(data=data, status=status.HTTP_200_OK)
+
 
 class ActivationLinkView(APIView):
     permission_classes = (permissions.AllowAny,)

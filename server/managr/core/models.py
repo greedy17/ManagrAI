@@ -663,7 +663,7 @@ class UserForecast(models.Model):
     user = models.OneToOneField(
         "core.User", on_delete=models.CASCADE, related_name="current_forecast"
     )
-    state = JSONField(default=dict)
+    state = JSONField(default=dict, null=True,)
 
     def __str__(self):
         return f"Forecast for {self.user.email}"
@@ -680,7 +680,7 @@ class UserForecast(models.Model):
     def add_to_state(self, id):
         from managr.opportunity.models import Opportunity
 
-        opp = Opportunity.objects.get(id=id)
+        opp = Opportunity.objects.get(integration_id=id)
         if opp.integration_id not in self.state.keys():
             self.state[opp.integration_id] = opp.secondary_data
             self.save()
