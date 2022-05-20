@@ -574,6 +574,9 @@ class UserActivity(models.Model):
     )
     clicks = JSONField(default=defaultClickActivity)
 
+    def __str__(self):
+        return f"Activity for {self.user.email}"
+
     @classmethod
     def create_for_existing_users(cls):
         users = User.objects.all()
@@ -611,7 +614,11 @@ class UserActivity(models.Model):
         contact_forms = workflow.forms.filter(
             template__resource="Contact", template__form_type="CREATE"
         )
-        no_last_name = [form for form in contact_forms if form.saved_data["LastName"] is None]
+        no_last_name = [
+            form
+            for form in contact_forms
+            if (len(form.saved_data) and form.saved_data["LastName"] is None)
+        ]
         note_added = False if main_form.saved_data["meeting_comments"] is None else True
         obj = dict(
             source=main_form.update_source,
@@ -650,4 +657,48 @@ class UserActivity(models.Model):
         self.clicks["workflows"]["untouched"] -= 1
         self.clicks["workflows"]["touched"].append(obj)
         return self.save()
+
+
+class UserForecast(models.Model):
+    user = models.OneToOneField(
+        "core.User", on_delete=models.CASCADE, related_name="current_forecast"
+    )
+    state = JSONField(default=dict)
+
+    def __str__(self):
+        return f"Forecast for {self.user.email}"
+
+    @classmethod
+    def create_for_existing_users(cls):
+        users = User.objects.all()
+        for user in users:
+            if not hasattr(user, "current_forecast"):
+                UserForecast.objects.create(user=user)
+                logger.info(f"Created forecast model for user {user.email}")
+        return
+
+    def add_to_state(self, id):
+        from managr.opportunity.models import Opportunity
+
+        opp = Opportunity.objects.get(id=id)
+        if opp.integration_id not in self.state.keys():
+            self.state[opp.integration_id] = opp.secondary_data
+            self.save()
+            return "Opportunity saved to current forecast state"
+        return "Opportunity already in current forecast state"
+
+    def remove_from_state(self, id):
+        from managr.opportunity.models import Opportunity
+
+        opp = Opportunity.objects.get(id=id)
+        if opp.integration_id in self.state.keys():
+            del self.state[opp.integration_id]
+            return "Opportunity removed from current forecast state"
+        return "Opportunity not in current forecast state"
+
+    def get_current_values(self):
+        res = self.user.salesforce_account.adapter_class.get_resource_in_list(
+            "Opportunity", list(self.state.keys())
+        )
+        return res
 

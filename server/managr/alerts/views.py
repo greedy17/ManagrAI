@@ -40,7 +40,6 @@ logger = logging.getLogger("managr")
 def create_configs_for_target(target, template_user, config):
     from managr.core.models import User
 
-    print(target)
     if target in ["MANAGERS", "REPS", "SDR"]:
         if target == "MANAGERS":
             target = "MANAGER"
@@ -192,7 +191,6 @@ class AlertTemplateViewSet(
                     users = []
                     for config in obj.configs.all():
                         users = [*users, *config.target_users]
-                    print(users)
                     res_data = []
                     for user in users:
                         if hasattr(user, "salesforce_account"):

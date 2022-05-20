@@ -48,7 +48,6 @@ def get_access_token(code):
         data=data,
         headers=headers,
     )
-    print(f"ACCESS TOKEN RESPONSE: {res.json()}")
     if res.status_code == 200:
         return res.json()["access_token"]
     elif res.status_code == 400:
