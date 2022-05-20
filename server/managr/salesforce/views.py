@@ -98,7 +98,7 @@ def authenticate(request):
 
         scheduled_time = timezone.now()
         formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
-        emit_gen_next_object_field_sync(str(request.user.id), operations, formatted_time)
+        emit_gen_next_object_field_sync(str(request.user.id), operations, False, formatted_time)
         # generate forms
         if serializer.instance.user.is_admin:
             emit_generate_form_template(data.user)
