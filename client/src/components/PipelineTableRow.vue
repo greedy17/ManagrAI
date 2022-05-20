@@ -212,7 +212,7 @@ export default {
             })
             .then(async (res) => {
               const response = await SObjects.api.updateResource({
-                form_id: res.form_id,
+                form_id: [res.form_id],
                 form_data: { StageName: this.stageData },
               })
             })
@@ -240,7 +240,7 @@ export default {
             })
             .then(async (res) => {
               const response = await SObjects.api.updateResource({
-                form_id: res.form_id,
+                form_id: [res.form_id],
                 form_data: { CloseDate: this.newCloseDate },
               })
             })
@@ -268,7 +268,7 @@ export default {
             })
             .then(async (res) => {
               const response = await SObjects.api.updateResource({
-                form_id: res.form_id,
+                form_id: [res.form_id],
                 form_data: { ForecastCategoryName: this.ForecastCategoryNameData },
               })
             })

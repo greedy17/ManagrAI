@@ -277,8 +277,14 @@ export default {
         'Update Forecast',
         'Deal Rotting',
         'Upcoming Next Step',
+        'Required Field Empty',
+        'Large Opportunities',
       ],
-      fields: CollectionManager.create({ ModelClass: SObjectField }),
+      fields: CollectionManager.create({
+        ModelClass: SObjectField,
+        pagination: { size: 200 },
+        filters: { forAlerts: true, filterable: true },
+      }),
       recipientBindings: [
         { referenceDisplayLabel: 'Recipient Full Name', apiName: 'full_name' },
         { referenceDisplayLabel: 'Recipient First Name', apiName: 'first_name' },

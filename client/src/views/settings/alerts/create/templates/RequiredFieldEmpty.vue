@@ -459,6 +459,7 @@ export default {
           const res = await AlertTemplate.api.createAlertTemplate({
             ...this.alertTemplateForm.toAPI,
             user: this.$store.state.user.id,
+            directToUsers: this.directToUsers,
           })
           this.userConfigForm.field.activatedManagrConfigs.value.push(res.title)
           this.handleUpdate()
@@ -526,7 +527,6 @@ export default {
   beforeMount() {
     this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
-    this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
     this.alertTemplateForm.field.title.value = 'Required Field Empty'
     this.alertTemplateForm.field.isActive.value = true
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
