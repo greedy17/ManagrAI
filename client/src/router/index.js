@@ -214,13 +214,13 @@ export default new Router({
           path: 'templates',
           name: 'CreateNew',
           component: () =>
-            import(/* webpackChunkName: "settings" */ '../views/settings/alerts/create/AlertsPage'),
+            import('../views/settings/alerts/create/AlertsPage'),
         },
         {
           path: 'build-your-own',
           name: 'BuildYourOwn',
           component: () =>
-            import(/* webpackChunkName: "settings" */ '../views/settings/alerts/create/BuildYourOwn'),
+            import('../views/settings/alerts/create/BuildYourOwn'),
         },
         {
           path: 'list-templates',
@@ -235,7 +235,7 @@ export default new Router({
           name: 'RealTime',
           component: () =>
             import(
-            /* webpackChunkName: "settings" */ '../views/settings/alerts/create/templates/RealTime'
+              '../views/settings/alerts/create/templates/RealTime'
             ),
         },
       ],

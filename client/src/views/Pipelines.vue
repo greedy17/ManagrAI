@@ -338,13 +338,14 @@
                 v-if="field.apiName === 'StageName'"
               >
                 <div class="adding-stage-gate__header">
+                  <img src="@/assets/images/warning.svg" alt="" />
                   <p>This Stage has validation rules</p>
                 </div>
 
                 <div class="adding-stage-gate__body">
                   <div v-for="(field, i) in stageValidationFields[stageGateField]" :key="i">
                     <div v-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
-                      <p>{{ field.referenceDisplayLabel }}*</p>
+                      <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
                       <Multiselect
                         :options="stagePicklistQueryOpts[field.apiName]"
                         @select="
@@ -380,7 +381,7 @@
                       </Multiselect>
                     </div>
                     <div v-else-if="field.dataType === 'String' && field.apiName !== 'NextStep'">
-                      <p>{{ field.referenceDisplayLabel }}*</p>
+                      <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
                       <input
                         id="user-input"
                         type="text"
@@ -399,7 +400,7 @@
                         (field.length > 250 && field.dataType === 'String')
                       "
                     >
-                      <p>{{ field.referenceDisplayLabel }}*</p>
+                      <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
                       <textarea
                         id="user-input"
                         ccols="30"
@@ -415,7 +416,7 @@
                       </textarea>
                     </div>
                     <div v-else-if="field.dataType === 'Date'">
-                      <p>{{ field.referenceDisplayLabel }}*</p>
+                      <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
                       <input
                         type="text"
                         onfocus="(this.type='date')"
@@ -430,7 +431,7 @@
                       />
                     </div>
                     <div v-else-if="field.dataType === 'DateTime'">
-                      <p>{{ field.referenceDisplayLabel }}*</p>
+                      <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
                       <input
                         type="datetime-local"
                         id="start"
@@ -448,7 +449,7 @@
                         field.dataType === 'Currency'
                       "
                     >
-                      <p>{{ field.referenceDisplayLabel }}*</p>
+                      <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
                       <input
                         id="user-input"
                         type="number"
@@ -462,7 +463,7 @@
                     </div>
 
                     <div v-else-if="field.apiName === 'OwnerId'">
-                      <p>{{ field.referenceDisplayLabel }}*</p>
+                      <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
 
                       <Multiselect
                         v-model="selectedOwner"
@@ -493,7 +494,7 @@
                     </div>
 
                     <div v-else-if="field.apiName === 'AccountId'">
-                      <p>{{ field.referenceDisplayLabel }}*</p>
+                      <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
                       <Multiselect
                         v-model="selectedAccount"
                         :options="allAccounts"
@@ -800,27 +801,15 @@
               <div class="flex-row">
                 <button @click="closeDateSelected = !closeDateSelected" class="select-btn">
                   Push Close Date
-                  <img
-                    src="@/assets/images/date.png"
-                    style="height: 1.25rem; margin-left: 0.25rem"
-                    alt=""
-                  />
+                  <img src="@/assets/images/date.png" style="margin-left: 0.25rem" alt="" />
                 </button>
                 <button @click="advanceStageSelected = !advanceStageSelected" class="select-btn">
                   Advance Stage
-                  <img
-                    src="@/assets/images/stairs.png"
-                    style="height: 1.25rem; margin-left: 0.25rem"
-                    alt=""
-                  />
+                  <img src="@/assets/images/stairs.png" style="margin-left: 0.25rem" alt="" />
                 </button>
                 <button @click="forecastSelected = !forecastSelected" class="select-btn">
                   Change Forecast
-                  <img
-                    src="@/assets/images/monetary.png"
-                    style="height: 1.1rem; width: 1.35rem; margin-left: 0.25rem"
-                    alt=""
-                  />
+                  <img src="@/assets/images/monetary.png" style="margin-left: 0.25rem" alt="" />
                 </button>
               </div>
             </div>
@@ -833,29 +822,69 @@
             </div>
             <div class="flex-row-pad" v-if="advanceStageSelected">
               <p style="font-size: 14px">Select Stage:</p>
-              <select
-                style="margin-left: 0.5rem; margin-right: 0.5rem"
-                @input=";(value = $event.target.value), setStage(value)"
-                id="update-input"
+              <Multiselect
+                v-if="picklistQueryOpts['StageName']"
+                :options="picklistQueryOpts['StageName']"
+                @select="setStage($event.value)"
+                v-model="dropdownVal['StageName']"
+                openDirection="below"
+                :loading="dropdownLoading"
+                style="width: 14vw"
+                selectLabel="Enter"
+                track-by="value"
+                label="label"
               >
-                <option v-for="(stage, i) in allStages" :key="i" :value="stage.value">
-                  <p>{{ stage.label }}</p>
-                </option>
-              </select>
-              <button @click="advanceStage()" class="add-button">Advance Stage</button>
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    Select Stage
+                  </p>
+                </template>
+              </Multiselect>
+              <p v-else>Add Stage to your update form</p>
+              <button
+                v-if="picklistQueryOpts['StageName']"
+                @click="advanceStage()"
+                class="add-button"
+              >
+                Advance Stage
+              </button>
             </div>
             <div class="flex-row-pad" v-if="forecastSelected">
               <p style="font-size: 14px">Select Forecast:</p>
-              <select
-                style="margin-left: 0.5rem; margin-right: 0.5rem"
-                @input=";(value = $event.target.value), setForecast(value)"
-                id="update-input"
+              <Multiselect
+                v-if="picklistQueryOpts['ForecastCategoryName']"
+                :options="picklistQueryOpts['ForecastCategoryName']"
+                @select="setForecast($event.value)"
+                v-model="dropdownVal['ForecastCategoryName']"
+                openDirection="below"
+                :loading="dropdownLoading"
+                style="width: 14vw"
+                selectLabel="Enter"
+                track-by="value"
+                label="label"
               >
-                <option v-for="(forecast, i) in allForecasts" :key="i" :value="forecast.value">
-                  <p>{{ forecast.label }}</p>
-                </option>
-              </select>
-              <button @click="changeForecast(currentCheckList)" class="add-button">
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    Forecast Category
+                  </p>
+                </template>
+              </Multiselect>
+              <p v-else>Add Forecast Category to your update form</p>
+              <button
+                v-if="picklistQueryOpts['ForecastCategoryName']"
+                @click="changeForecast(currentCheckList)"
+                class="add-button"
+              >
                 Change Forecast
               </button>
             </div>
@@ -985,8 +1014,6 @@ import SlackOAuth from '@/services/slack'
 import PipelineTableRow from '@/components/PipelineTableRow'
 import PipelineHeader from '@/components/PipelineHeader'
 import User from '@/services/users'
-import WorkflowRow from '@/components/WorkflowRow'
-import WorkflowHeader from '@/components/WorkflowHeader'
 
 export default {
   name: 'Pipelines',
@@ -996,8 +1023,8 @@ export default {
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     PipelineTableRow,
     PipelineHeader,
-    WorkflowHeader,
-    WorkflowRow,
+    WorkflowHeader: () => import(/* webpackPrefetch: true */ '@/components/WorkflowHeader'),
+    WorkflowRow: () => import(/* webpackPrefetch: true */ '@/components/WorkflowRow'),
     PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
     Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
     Filters: () => import(/* webpackPrefetch: true */ '@/components/Filters'),
@@ -1164,13 +1191,13 @@ export default {
       }
     },
   },
-  created() {
-    this.getObjects()
+  async created() {
     this.templates.refresh()
+    this.getObjects()
     this.getAllForms()
-    this.listStages()
-    this.listForecast()
     this.resourceSync()
+  },
+  beforeMount() {
     this.getUsers()
   },
   mounted() {
@@ -1184,25 +1211,26 @@ export default {
     primaryCheckList: 'closeAll',
     workflowCheckList: 'closeAll',
     stageGateField: 'stageGateInstance',
-    updateList: {
-      async handler(currList) {
-        if (currList.length === 0 && this.recapList.length) {
-          let bulk = true ? this.recapList.length > 1 : false
-          try {
-            const res = await SObjects.api.sendRecap(bulk, this.recapList)
-          } catch (e) {
-            console.log(e)
-          } finally {
-            this.recapList = []
-          }
-        }
-      },
-    },
+    updateOppForm: 'setForms',
+    // updateList: {
+    //   async handler(currList) {
+    //     if (currList.length === 0 && this.recapList.length) {
+    //       let bulk = true ? this.recapList.length > 1 : false
+    //       try {
+    //         const res = await SObjects.api.sendRecap(bulk, this.recapList)
+    //       } catch (e) {
+    //         console.log(e)
+    //       } finally {
+    //         this.recapList = []
+    //       }
+    //     }
+    //   },
+    // },
   },
   methods: {
-    tester() {
-      console.log(this.oppFields)
-    },
+    // tester() {
+    //   console.log(this.oppFields)
+    // },
     setOpps() {
       User.api.getUser(this.user.id).then((response) => {
         this.$store.commit('UPDATE_USER', response)
@@ -1564,28 +1592,6 @@ export default {
         console.log(e)
       }
     },
-    async listStages() {
-      try {
-        const res = await SObjectPicklist.api.listPicklists({
-          salesforceObject: 'Opportunity',
-          picklistFor: 'StageName',
-        })
-        this.allStages = res.length ? res[0]['values'] : []
-      } catch (e) {
-        console.log(e)
-      }
-    },
-    async listForecast() {
-      try {
-        const res = await SObjectPicklist.api.listPicklists({
-          salesforceObject: 'Opportunity',
-          picklistFor: 'ForecastCategoryName',
-        })
-        this.allForecasts = res.length ? res[0]['values'] : []
-      } catch (e) {
-        console.log(e)
-      }
-    },
     async updateWorkflow(id) {
       try {
         await AlertTemplate.api.runAlertTemplateNow(id, {
@@ -1593,7 +1599,6 @@ export default {
         })
       } catch (e) {
         console.log(e)
-      } finally {
       }
     },
     resetNotes() {
@@ -1680,8 +1685,6 @@ export default {
         this.stageGateId = res.form_id
       } catch (e) {
         console.log(e)
-      } finally {
-        console.log(this.stageGateId)
       }
     },
     pushCloseDate() {
@@ -1767,18 +1770,18 @@ export default {
         setTimeout(() => {
           this.loading = true
         }, 300)
-
         try {
-          const res = await SObjects.api.resourceSync()
+          await SObjects.api.resourceSync()
         } catch (e) {
           console.log(e)
         } finally {
-          User.api.getUser(this.user.id).then((response) => {
-            this.$store.commit('UPDATE_USER', response)
-          })
+          this.$store.dispatch('refreshCurrentUser')
+          // User.api.getUser(this.user.id).then((response) => {
+          //   this.$store.commit('UPDATE_USER', response)
+          // })
           setTimeout(() => {
             this.loading = false
-          }, 1000)
+          }, 100)
           this.$Alert.alert({
             type: 'success',
             timeout: 3000,
@@ -1789,15 +1792,15 @@ export default {
       }
     },
     async manualSync() {
-      setTimeout(() => {
-        this.loading = true
-      }, 300)
       try {
-        const res = await SObjects.api.resourceSync()
+        await SObjects.api.resourceSync()
       } catch (e) {
         console.log(e)
       } finally {
-        this.loading = false
+        this.$store.dispatch('refreshCurrentUser')
+        setTimeout(() => {
+          this.loading = false
+        }, 100)
         this.$Alert.alert({
           type: 'success',
           timeout: 1500,
@@ -1843,7 +1846,7 @@ export default {
     async createResource() {
       this.addOppModalOpen = false
       try {
-        const res = await SObjects.api
+        await SObjects.api
           .createResource({
             form_id: this.oppInstanceId,
             form_data: this.formData,
@@ -1886,7 +1889,7 @@ export default {
             ? (this.currentWorkflowName = this.templates.list.filter(
                 (temp) => temp.id === this.id,
               )[0].title)
-            : (currentWorkflowName = 'Worklow...')
+            : (this.currentWorkflowName = 'Worklow...')
         }
       }
     },
@@ -1908,6 +1911,86 @@ export default {
         this.workList = false
       }
     },
+    setForms() {
+      for (let i in this.picklistQueryOptsContacts) {
+        this.picklistQueryOptsContacts[i] = this.listPicklists(i, {
+          picklistFor: i,
+          salesforceObject: 'Opportunity',
+        })
+      }
+
+      for (let i = 0; i < this.oppFormCopy.length; i++) {
+        if (
+          this.oppFormCopy[i].dataType === 'Picklist' ||
+          this.oppFormCopy[i].dataType === 'MultiPicklist'
+        ) {
+          this.picklistQueryOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].apiName
+        } else if (this.oppFormCopy[i].dataType === 'Reference') {
+          this.picklistQueryOpts[this.oppFormCopy[i].referenceDisplayLabel] =
+            this.oppFormCopy[i].referenceDisplayLabel
+        }
+      }
+
+      for (let i in this.picklistQueryOpts) {
+        this.picklistQueryOpts[i] = this.listPicklists(i, {
+          picklistFor: i,
+          salesforceObject: 'Opportunity',
+        })
+      }
+
+      for (let i = 0; i < this.createOppForm.length; i++) {
+        if (
+          this.createOppForm[i].dataType === 'Picklist' ||
+          this.createOppForm[i].dataType === 'MultiPicklist'
+        ) {
+          this.createQueryOpts[this.createOppForm[i].apiName] = this.createOppForm[i].apiName
+        } else if (this.createOppForm[i].dataType === 'Reference') {
+          this.createQueryOpts[this.createOppForm[i].referenceDisplayLabel] =
+            this.createOppForm[i].referenceDisplayLabel
+        }
+      }
+
+      for (let i in this.createQueryOpts) {
+        this.createQueryOpts[i] = this.listCreatePicklists(i, {
+          picklistFor: i,
+          salesforceObject: 'Opportunity',
+        })
+      }
+
+      this.filterFields = this.updateOppForm[0].fieldsRef.filter(
+        (field) =>
+          field.apiName !== 'meeting_type' &&
+          field.apiName !== 'meeting_comments' &&
+          !field.apiName.includes('__c'),
+      )
+      this.filterFields = [...this.filterFields, this.ladFilter, this.lmdFilter]
+
+      this.updateOppForm[0].fieldsRef.filter((field) => field.apiName === 'AccountId').length
+        ? (this.accountSobjectId = this.updateOppForm[0].fieldsRef.filter(
+            (field) => field.apiName === 'AccountId',
+          )[0].id)
+        : this.createOppForm.filter((field) => field.apiName === 'AccountId').length
+        ? (this.accountSobjectId = this.createOppForm.filter(
+            (field) => field.apiName === 'AccountId',
+          )[0].id)
+        : (this.accountSobjectId = null)
+
+      this.oppFields = this.updateOppForm[0].fieldsRef.filter(
+        (field) =>
+          field.apiName !== 'meeting_type' &&
+          field.apiName !== 'meeting_comments' &&
+          field.apiName !== 'Name' &&
+          field.apiName !== 'AccountId' &&
+          field.apiName !== 'OwnerId',
+      )
+
+      for (let i in this.stagePicklistQueryOpts) {
+        this.stagePicklistQueryOpts[i] = this.listStagePicklists(i, {
+          picklistFor: i,
+          salesforceObject: 'Opportunity',
+        })
+      }
+    },
     async getAllForms() {
       try {
         let res = await SlackOAuth.api.getOrgCustomForm()
@@ -1926,78 +2009,6 @@ export default {
         this.stagesWithForms = stages
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
         this.createOppForm = this.createOppForm[0].fieldsRef
-
-        for (let i in this.picklistQueryOptsContacts) {
-          this.picklistQueryOptsContacts[i] = this.listPicklists(i, {
-            picklistFor: i,
-            salesforceObject: 'Opportunity',
-          })
-        }
-
-        for (let i = 0; i < this.oppFormCopy.length; i++) {
-          if (
-            this.oppFormCopy[i].dataType === 'Picklist' ||
-            this.oppFormCopy[i].dataType === 'MultiPicklist'
-          ) {
-            this.picklistQueryOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].apiName
-          } else if (this.oppFormCopy[i].dataType === 'Reference') {
-            this.picklistQueryOpts[this.oppFormCopy[i].referenceDisplayLabel] =
-              this.oppFormCopy[i].referenceDisplayLabel
-          }
-        }
-
-        for (let i in this.picklistQueryOpts) {
-          this.picklistQueryOpts[i] = this.listPicklists(i, {
-            picklistFor: i,
-            salesforceObject: 'Opportunity',
-          })
-        }
-
-        for (let i = 0; i < this.createOppForm.length; i++) {
-          if (
-            this.createOppForm[i].dataType === 'Picklist' ||
-            this.createOppForm[i].dataType === 'MultiPicklist'
-          ) {
-            this.createQueryOpts[this.createOppForm[i].apiName] = this.createOppForm[i].apiName
-          } else if (this.createOppForm[i].dataType === 'Reference') {
-            this.createQueryOpts[this.createOppForm[i].referenceDisplayLabel] =
-              this.createOppForm[i].referenceDisplayLabel
-          }
-        }
-
-        for (let i in this.createQueryOpts) {
-          this.createQueryOpts[i] = this.listCreatePicklists(i, {
-            picklistFor: i,
-            salesforceObject: 'Opportunity',
-          })
-        }
-
-        this.filterFields = this.updateOppForm[0].fieldsRef.filter(
-          (field) =>
-            field.apiName !== 'meeting_type' &&
-            field.apiName !== 'meeting_comments' &&
-            !field.apiName.includes('__c'),
-        )
-        this.filterFields = [...this.filterFields, this.ladFilter, this.lmdFilter]
-
-        this.updateOppForm[0].fieldsRef.filter((field) => field.apiName === 'AccountId').length
-          ? (this.accountSobjectId = this.updateOppForm[0].fieldsRef.filter(
-              (field) => field.apiName === 'AccountId',
-            )[0].id)
-          : this.createOppForm.filter((field) => field.apiName === 'AccountId').length
-          ? (this.accountSobjectId = this.createOppForm.filter(
-              (field) => field.apiName === 'AccountId',
-            )[0].id)
-          : (this.accountSobjectId = null)
-
-        this.oppFields = this.updateOppForm[0].fieldsRef.filter(
-          (field) =>
-            field.apiName !== 'meeting_type' &&
-            field.apiName !== 'meeting_comments' &&
-            field.apiName !== 'Name' &&
-            field.apiName !== 'AccountId' &&
-            field.apiName !== 'OwnerId',
-        )
 
         for (const field of stageGateForms) {
           this.stageValidationFields[field.stage] = field.fieldsRef
@@ -2018,13 +2029,6 @@ export default {
             this.stagePicklistQueryOpts[dupeStagesRemoved[i].referenceDisplayLabel] =
               dupeStagesRemoved[i].referenceDisplayLabel
           }
-        }
-
-        for (let i in this.stagePicklistQueryOpts) {
-          this.stagePicklistQueryOpts[i] = this.listStagePicklists(i, {
-            picklistFor: i,
-            salesforceObject: 'Opportunity',
-          })
         }
       } catch (error) {
         console.log(error)
@@ -2078,7 +2082,7 @@ export default {
       } finally {
         setTimeout(() => {
           this.loading = false
-        }, 300)
+        }, 100)
       }
     },
     async getNotes(id) {
@@ -2198,17 +2202,24 @@ export default {
   }
 }
 .adding-stage-gate {
-  border: 2px solid #e8e8e8;
+  border: 1px solid #e8e8e8;
   border-radius: 0.3rem;
   margin: 0.5rem 0rem;
   width: 36vw;
   min-height: 30vh;
   &__header {
-    font-size: 11px;
-    color: $coral;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    font-size: 14px;
     padding: 0.5rem;
+    color: $base-gray;
     width: 100%;
     border-bottom: 1px solid #e8e8e8;
+    img {
+      height: 1rem;
+      margin-right: 0.5rem;
+    }
   }
   &__body {
     padding: 0.25rem;
@@ -2230,13 +2241,16 @@ export default {
     p {
       margin-left: 0.25rem;
     }
+    span {
+      color: $coral;
+    }
   }
   &__body::-webkit-scrollbar {
     width: 2px; /* Mostly for vertical scrollbars */
     height: 0px; /* Mostly for horizontal scrollbars */
   }
   &__body::-webkit-scrollbar-thumb {
-    background-image: linear-gradient(100deg, $darker-green 0%, $lighter-green 99%);
+    background-color: $dark-green;
     box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
     border-radius: 0.3rem;
   }
@@ -2245,7 +2259,7 @@ export default {
     border-radius: 0.3rem;
   }
   &__body::-webkit-scrollbar-track-piece {
-    margin-top: 1rem;
+    margin-top: 0.25rem;
   }
 }
 .hide {
@@ -2288,7 +2302,6 @@ select {
 }
 .select-btn1 {
   border: 1px solid #e8e8e8;
-  min-height: 4.5vh;
   padding: 0.5rem 1rem;
   display: flex;
   align-items: center;
@@ -2307,8 +2320,7 @@ select {
 }
 .select-btn {
   border: 0.5px solid $dark-green;
-  min-height: 4.5vh;
-  padding: 0.5rem 1rem;
+  padding: 0.475rem 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2322,6 +2334,7 @@ select {
 
   img {
     filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+    height: 1rem;
   }
 }
 .work-btn {
@@ -2629,10 +2642,20 @@ section {
   letter-spacing: 1px;
 }
 .flex-row-pad {
+  margin-top: -1rem;
   display: flex;
   flex-direction: row;
   align-items: center;
   padding: 0rem 0.5rem;
+  justify-content: flex-start;
+  position: relative;
+  z-index: 15;
+  p {
+    margin-right: 0.5rem;
+  }
+  button {
+    margin-left: 0.5rem;
+  }
 }
 .bulk-action {
   margin: 0.75rem 0rem;
@@ -2689,9 +2712,8 @@ section {
   display: flex;
   align-items: center;
   border: none;
-  height: 4.5vh;
   margin: 0 0.5rem 0 0;
-  padding: 0.25rem 0.6rem;
+  padding: 0.5rem 1.25rem;
   border-radius: 0.2rem;
   background-color: $dark-green;
   cursor: pointer;
@@ -2702,8 +2724,7 @@ section {
   display: flex;
   align-items: center;
   border: none;
-  min-height: 4.5vh;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 1rem;
   font-size: 16px;
   border-radius: 0.2rem;
   background-color: $dark-green;
@@ -2983,9 +3004,9 @@ main:hover > span {
   align-items: flex-end;
   justify-content: flex-end;
 }
-textarea {
-  resize: none;
-}
+// textarea {
+//   resize: none;
+// }
 a {
   text-decoration: none;
 }
