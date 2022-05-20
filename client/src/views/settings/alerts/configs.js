@@ -1,4 +1,3 @@
-
 const CLOSE_DATE_PASSED = {
     title: "Close Date Passed",
     user: null,
@@ -224,15 +223,109 @@ const CLOSE_DATE_APPROACHING = {
     alertLevel: "ORGANIZATION",
 }
 
-// TODO: Add two more objects (UPCOMING_NEXT_STEP and REQUIRED_FIELD_EMPTY)
+const UPCOMING_NEXT_STEP = {
+    title: "Upcoming Next Step", // Change
+    user: null,
+    isActive: true,
+    resourceType: "Opportunity",
+    newGroups: [
+        {
+            groupCondition: "AND",
+            newOperands: [
+                {
+                    operandCondition: "AND",
+                    operandIdentifier: "CloseDate", // Change (No idea if this is right)
+                    operandOperator: "=", // Change
+                    operandValue: '0', // Change
+                    operandType: "FIELD",
+                    operandOrder: 0,
+                    dataType: "DATE",
+                    group: "",
+                },
+            ],
+            groupOrder: 0,
+            template: "",
+        }
+    ],
+    messageTemplate: {
+        // Change V
+        bindings: [
+            " __Recipient.full_name ",
+            " Opportunity.Name ",
+        ],
+        // Change V
+        body: "Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has an upcoming Next Step Date due this week.",
+    },
+    newConfigs: [
+        {
+            recurrenceFrequency: "WEEKLY",
+            recurrenceDays: [0],
+            recurrenceDay: 0,
+            recipients: ["default"],
+            alertTargets: ["SELF"],
+            recipientType: "SLACK_CHANNEL",
+            alertTemplateId: "",
+            template: "",
+        }
+    ],
+    alertLevel: "ORGANIZATION",
+}
+
+const REQUIRED_FIELD_EMPTY = {
+    title: "Required Field Empty", // Change
+    user: null,
+    isActive: true,
+    resourceType: "Opportunity",
+    newGroups: [
+        {
+            groupCondition: "AND",
+            newOperands: [
+                {
+                    operandCondition: "AND",
+                    operandIdentifier: "CloseDate", // Change
+                    operandOperator: "=", // Change
+                    operandValue: 'null', // Change
+                    operandType: "FIELD",
+                    operandOrder: 0,
+                    dataType: "DATE",
+                    group: "",
+                },
+            ],
+            groupOrder: 0,
+            template: "",
+        }
+    ],
+    messageTemplate: {
+        // Change V
+        bindings: [
+            " __Recipient.full_name ",
+            " Opportunity.Name ",
+        ],
+        // Change V
+        body: "Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has a required field that has not been filled out.",
+    },
+    newConfigs: [
+        {
+            recurrenceFrequency: "WEEKLY",
+            recurrenceDays: [0],
+            recurrenceDay: 0,
+            recipients: ["default"],
+            alertTargets: ["SELF"],
+            recipientType: "SLACK_CHANNEL",
+            alertTemplateId: "",
+            template: "",
+        }
+    ],
+    alertLevel: "ORGANIZATION",
+}
 
 const ALL_CONFIGS = {
     CLOSE_DATE_PASSED,
     UPDATE_FORECAST,
     DEAL_ROTTING,
     CLOSE_DATE_APPROACHING,
-    // UPCOMING_NEXT_STEP,
-    // REQUIRED_FIELD_EMPTY,
+    UPCOMING_NEXT_STEP,
+    REQUIRED_FIELD_EMPTY,
 }
 
 export default ALL_CONFIGS;
