@@ -33,7 +33,7 @@
 
     <div class="tab__panel">
       <div style="display: flex; justify-content: center">
-        <PulseLoadingSpinner v-if="savingInTab" />
+        <!-- <PulseLoadingSpinner v-if="savingInTab" /> -->
         <div v-show="savedChanges">Saved Changes</div>
       </div>
       <div class="alerts-template-list__content">
@@ -208,7 +208,6 @@ import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
 import { quillEditor } from 'vue-quill-editor'
 import debounce from 'lodash.debounce'
-import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
 
 //Internal
 import AlertOperandModal from '@/views/settings/alerts/view/_AlertOperandModal'
@@ -246,7 +245,6 @@ export default {
   name: 'AlertsEditPanel',
   components: {
     FormField,
-    PulseLoadingSpinner,
     AlertOperandModal,
     AlertGroupModal,
     AlertSettingsModal,

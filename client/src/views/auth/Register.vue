@@ -114,7 +114,7 @@
         </template>
       </template>
       <template v-else>
-        <ComponentLoadingSVG />
+        <p>...</p>
       </template>
     </div>
   </div>
@@ -124,7 +124,6 @@
 import User, { RepRegistrationForm } from '@/services/users'
 import Button from '@thinknimble/button'
 import FormField from '@/components/forms/FormField'
-import ComponentLoadingSVG from '@/components/ComponentLoadingSVG'
 import moment from 'moment-timezone'
 
 export default {
@@ -132,7 +131,6 @@ export default {
   components: {
     Button,
     FormField,
-    ComponentLoadingSVG,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {
