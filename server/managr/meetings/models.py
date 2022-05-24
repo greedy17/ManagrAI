@@ -1,9 +1,10 @@
+import json
 from django.db import models
 from managr.core.models import TimeStampModel
 from django.contrib.postgres.fields import JSONField, ArrayField
 from managr.zoom.models import ZoomAuthAccount, ZoomMeeting
+from managr.salesforce.models import MeetingWorkflow
 from managr.zoom.zoom_helper.models import ZoomMtg
-from managr.core.models import NylasAuthAccount
 
 
 class Meeting(TimeStampModel):
@@ -47,15 +48,23 @@ class Meeting(TimeStampModel):
         return self
 
     @classmethod
-    def recreate_from_zoom_meeting_model(cls, zoom_meeting_id):
-        zoom_meeting = ZoomMeeting.objects.get(id=zoom_meeting_id)
-        meeting_data = vars(zoom_meeting)
-        zoom_account_id = meeting_data.get("zoom_account_id")
+    def recreate_from_zoom_meeting_model(cls, zoom_meeting_id, workflow_id):
+        from managr.meetings.serializers import MeetingZoomSerializer
+
+        zoom_meeting = ZoomMeeting.objects.filter(id=zoom_meeting_id).values()[0]
+        zoom_account_id = zoom_meeting.pop("zoom_account_id")
         zoom_account = ZoomAuthAccount.objects.get(id=zoom_account_id)
-        participants = meeting_data.get("participants")
-        workflow_ref = str(ZoomMeeting.workflow.id)
-        print(zoom_account)
-        print(participants)
-        print(workflow_ref)
+        participants = zoom_meeting.pop("participants")
+        zoom_meeting["workflow_ref"] = str(workflow_id)
+        zoom_meeting["user"] = str(zoom_account.user.id)
+        zoom_meeting["source"] = "Zoom"
+        zoom_meeting.pop("id")
+        zoom_meeting = json.loads(json.dumps(zoom_meeting, default=str))
+        serializer = MeetingZoomSerializer(data=zoom_meeting)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        meeting = Meeting.objects.get(id=serializer.data.get("id"))
+        meeting.participants = participants
+        meeting.save()
         return
 

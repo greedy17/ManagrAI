@@ -630,9 +630,8 @@ class SFObjectFieldsOperation(SFSyncOperation):
 
 
 class MeetingWorkflow(SFSyncOperation):
-
     meeting = models.OneToOneField(
-        "zoom.ZoomMeeting", models.CASCADE, related_name="workflow", null=True, blank=True
+        "zoom.ZoomMeeting", models.SET_NULL, related_name="workflow", null=True, blank=True
     )
     non_zoom_meeting = models.OneToOneField(
         "core.MeetingPrepInstance", models.CASCADE, related_name="workflow", null=True, blank=True
