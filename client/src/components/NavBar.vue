@@ -392,7 +392,6 @@ nav {
     right: 105%;
 
     &__bold {
-      font-family: #{$bold-font-family};
       color: $base-gray;
       font-size: 14px;
     }

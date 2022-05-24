@@ -326,7 +326,7 @@ export default {
   position: sticky;
   min-width: 26vw;
   background-color: $off-white;
-  padding: 2vh 3vh;
+  padding: 2vh 3.5vh;
   border: none;
   border-bottom: 1px solid $soft-gray;
   font-size: 13px;
