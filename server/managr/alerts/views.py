@@ -2,6 +2,7 @@ import logging
 from django.conf import settings
 from django.forms import ValidationError
 import pytz
+from django.db.models import Q
 from datetime import datetime
 from django_filters.rest_framework import DjangoFilterBackend
 from copy import copy
@@ -40,16 +41,14 @@ logger = logging.getLogger("managr")
 def create_configs_for_target(target, template_user, config):
     from managr.core.models import User
 
-    print(target)
     if target in ["MANAGERS", "REPS", "SDR"]:
         if target == "MANAGERS":
             target = "MANAGER"
         elif target == "REPS":
             target = "REP"
         users = User.objects.filter(
-            organization=template_user.organization,
-            user_level=target,
-            is_active=True,
+            Q(organization=template_user.organization, user_level=target, is_active=True,)
+            | Q(id=template_user.id)
         )
     elif target == "SELF":
         config["recipient_type"] = "SLACK_CHANNEL"
@@ -312,9 +311,7 @@ class AlertConfigViewSet(
                 id=last_instance.template.id
             ).values()[0]
             instances = alert_models.AlertInstance.objects.filter(
-                user=user,
-                config__id=config_id,
-                invocation=last_instance.invocation,
+                user=user, config__id=config_id, invocation=last_instance.invocation,
             )
             return Response(data={"instances": instances.values(), "template": template})
 
@@ -372,8 +369,7 @@ class AlertOperandViewSet(
 
 
 class AlertInstanceViewSet(
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet,
+    mixins.ListModelMixin, viewsets.GenericViewSet,
 ):
     filter_backends = (
         DjangoFilterBackend,
