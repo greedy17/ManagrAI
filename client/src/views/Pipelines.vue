@@ -935,6 +935,8 @@
             @create-form="createFormInstance(opp.id)"
             @get-notes="getNotes(opp.id)"
             @checked-box="selectPrimaryCheckbox(opp.id)"
+            @inline-edit="testing"
+            :picklistOpts="picklistQueryOpts"
             :opp="opp"
             :index="i"
             :oppFields="oppFields"
@@ -1231,6 +1233,9 @@ export default {
     // tester() {
     //   console.log(this.oppFields)
     // },
+    testing(apiName) {
+      console.log(apiName)
+    },
     setOpps() {
       User.api.getUser(this.user.id).then((response) => {
         this.$store.commit('UPDATE_USER', response)

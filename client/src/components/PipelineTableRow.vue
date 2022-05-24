@@ -71,8 +71,78 @@
         height="14px"
       />
 
-      <div class="limit-cell-height" v-else-if="!updateList.includes(opp.id)">
+      <div
+        @click="editInline(field.apiName, i)"
+        class="limit-cell-height"
+        v-else-if="!updateList.includes(opp.id)"
+      >
+        <div class="inline-edit" v-if="editing && editIndex === i">
+          <div
+            v-if="
+              field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
+            "
+          >
+            <textarea id="user-input" cols="20" rows="2"> </textarea>
+          </div>
+          <div
+            v-else-if="
+              (field.dataType === 'String' && field.apiName !== 'meeting_type') ||
+              (field.dataType === 'String' && field.apiName !== 'meeting_comments') ||
+              (field.dataType === 'String' && field.apiName !== 'NextStep')
+            "
+          >
+            <input id="user-input" type="text" />
+          </div>
+
+          <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
+            <Multiselect
+              :options="picklistOpts[field.apiName]"
+              openDirection="below"
+              selectLabel="Enter"
+              style="width: 14vw"
+              track-by="value"
+              label="label"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.png" alt="" />
+                  {{ `${field.referenceDisplayLabel}` }}
+                </p>
+              </template>
+            </Multiselect>
+          </div>
+
+          <div v-else-if="field.dataType === 'Date'">
+            <input
+              type="text"
+              onfocus="(this.type='date')"
+              onblur="(this.type='text')"
+              id="user-input"
+            />
+          </div>
+          <div v-else-if="field.dataType === 'DateTime'">
+            <input
+              type="datetime-local"
+              id="start"
+              @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+            />
+          </div>
+          <div
+            v-else-if="
+              field.dataType === 'Phone' ||
+              field.dataType === 'Double' ||
+              field.dataType === 'Currency'
+            "
+          >
+            <input id="user-input" type="number" />
+          </div>
+        </div>
         <PipelineField
+          v-else
           style="direction: ltr"
           :apiName="field.apiName"
           :dataType="field.dataType"
@@ -131,12 +201,15 @@ export default {
     PipelineNameSection,
     PipelineField,
     SkeletonBox: () => import(/* webpackPrefetch: true */ '@/components/SkeletonBox'),
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   async created() {
     await this.objectFields.refresh()
   },
   data() {
     return {
+      editing: false,
+      editIndex: null,
       objectFields: CollectionManager.create({
         ModelClass: SObjectField,
         pagination: { size: 300 },
@@ -160,6 +233,7 @@ export default {
     closeDateData: {},
     ForecastCategoryNameData: {},
     updateList: {},
+    picklistOpts: {},
   },
   computed: {
     extraPipelineFields() {
@@ -172,6 +246,12 @@ export default {
     },
   },
   methods: {
+    editInline(apiName, index) {
+      this.editIndex = index
+      console.log(this.picklistOpts)
+      this.editing = true
+      this.$emit('inline-edit', apiName)
+    },
     emitCreateForm() {
       this.$emit('create-form')
     },
@@ -291,6 +371,50 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+.multi-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $gray;
+  font-size: 12px;
+  width: 100%;
+  padding: 0.5rem 0rem;
+  margin: 0;
+  cursor: text;
+  &__more {
+    background-color: white;
+    color: $dark-green;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-top: 1px solid #e8e8e8;
+    width: 100%;
+    padding: 0.75rem 0rem;
+    margin: 0;
+    cursor: pointer;
+
+    img {
+      height: 0.8rem;
+      margin-left: 0.25rem;
+      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+        brightness(93%) contrast(89%);
+    }
+  }
+}
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 0.8rem;
+    margin-right: 0.25rem;
+    filter: invert(70%);
+  }
+}
 
 .table-row {
   display: table-row;
@@ -436,7 +560,6 @@ input[type='checkbox'] + label::before {
   max-height: 4rem;
   width: 110%;
   overflow: auto;
-  direction: rtl;
 }
 .name-cell-note-button-1 {
   height: 1.5rem;
