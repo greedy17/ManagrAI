@@ -156,15 +156,13 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
             zoom_account = user.zoom_account
             try:
                 meeting = zoom_account.helper_class.get_past_meeting(meeting_uuid)
-
-                meeting.original_duration = original_duration
-                logger.info(f"{meeting.original_duration}")
-                if meeting.original_duration < 0:
+                meeting.meta_data["original_duration"] = original_duration
+                logger.info(f"{meeting.meta_data['original_duration']}")
+                if meeting.meta_data["original_duration"] < 0:
                     # zoom weired bug where instance meetings get a random -1324234234 negative big int
-                    meeting.original_duration = 0
+                    meeting.meta_data["original_duration"] = 0
                 # this will fail if a user has a free account
                 meeting = meeting.get_past_meeting_participants(zoom_account.access_token)
-
                 break
             except TokenExpired:
                 if attempts >= 5:
@@ -374,20 +372,10 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                     contact_forms.append(form)
                     contact["_form"] = str(form.id)
             meeting.participants = meeting_contacts
-            serializer = ZoomMeetingSerializer(data=meeting.as_dict)
-            try:
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
-            except ValidationError as e:
-                logger.exception(
-                    f"Unable to save and initiate slack for meeting with uuid "
-                    f"{meeting_uuid} because of error {json.dumps(e.detail)}"
-                )
-                return e
-            # emit the event to start slack interaction
+            meeting.save()
             workflow = MeetingWorkflow.objects.create(
                 user=user,
-                meeting=serializer.instance,
+                meeting=meeting,
                 operation_type=zoom_consts.MEETING_REVIEW_OPERATION,
                 **meeting_resource_data,
             )

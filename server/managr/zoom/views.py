@@ -213,6 +213,8 @@ def zoom_meetings_webhook(request):
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 def init_fake_meeting(request):
+    from managr.meetings.models import Meeting
+
     # list of accepted commands for this fake endpoint
     allowed_commands = ["opp", "acc", "lead"]
     slack_id = request.data.get("user_id", None)
@@ -232,7 +234,6 @@ def init_fake_meeting(request):
         return Response(
             data={"response_type": "ephemeral", "text": "Sorry I cant find your zoom account",}
         )
-    host_id = user.zoom_account.zoom_id
     text = request.data.get("text", "")
     if len(text):
         command_params = text.split(" ")
@@ -261,8 +262,7 @@ def init_fake_meeting(request):
         return Response(
             data={"response_type": "ephemeral", "text": "Sorry I cant find your zoom meeting",}
         )
-    host_id = host_id
-    meeting = ZoomMeeting.objects.filter(meeting_uuid=meeting_uuid).first()
+    meeting = Meeting.objects.filter(meeting_id=meeting_uuid).first()
     if meeting:
         meeting.delete()
     original_duration = None
@@ -281,7 +281,7 @@ def init_fake_meeting(request):
             return Response(data={"response_type": "ephemeral", "text": "An error occured",})
         # get meeting
         workflow.begin_communication(now=True)
-        workflow = MeetingWorkflow.objects.filter(meeting__meeting_uuid=meeting_uuid).first()
+        workflow = MeetingWorkflow.objects.filter(meeting__meeting_id=meeting_uuid).first()
         if meeting_resource and meeting_resource.lower() == "acc":
             acc = user.accounts.first()
             workflow.resource_id = str(acc.id)
