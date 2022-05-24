@@ -1,13 +1,6 @@
 <template>
-  <PopularWorkflows 
-    title='Update Forecast'
-    subtitle='Update your forecast here'
-    recipientType='SLACK_CHANNEL'
-    resourceType='Opportunity'
-    isActive=true
-    alertMessage='Please update the forecast for <strong>{ Opportunity.Name }</strong> ! it’s expected to close on <strong>{ Opportunity.CloseDate }</strong> and forecasted as <strong>{ Opportunity.ForecastCategoryName }</strong> - please either move to Commit or update the Close Date.<br><br> <strong>Next Step</strong>: { Opportunity.NextStep }'
-    recurrenceDay=0
-    recurrenceDays=[0]
+  <PopularWorkflows
+    :config="allConfigs.UPDATE_FORECAST"
   />
 </template>
 
@@ -18,6 +11,7 @@
 //Internal
 import PopularWorkflows from '@/views/settings/alerts/create/templates/PopularWorkflows'
 import { UserConfigForm } from '@/services/users/forms'
+import allConfigs from '../../configs'
 
 /**
  * Services
@@ -43,6 +37,7 @@ export default {
       NON_FIELD_ALERT_OPTS,
       stringRenderer,
       OPPORTUNITY: 'Opportunity',
+      allConfigs,
       SOBJECTS_LIST,
       directToUsers: true,
       userConfigForm: new UserConfigForm({}),

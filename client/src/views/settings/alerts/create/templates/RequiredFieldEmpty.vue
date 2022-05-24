@@ -1,15 +1,7 @@
 <template>
-  <PopularWorkflows 
-    title='Required Field Empty'
-    subtitle='View and update all Opportunities with required fields that have not been filled out'
-    recipientType='SLACK_CHANNEL'
-    resourceType='Opportunity'
-    isActive=true
-    alertMessage='Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has a required field that has not been filled out.'
-    recurrenceDay=0
-    recurrenceFrequency='WEEKLY'
-    :recurrenceDays="recurrenceDays"
+  <PopularWorkflows
     :selectField="true"
+    :config="allConfigs.REQUIRED_FIELD_EMPTY"
   />
 </template>
 
@@ -26,6 +18,7 @@ import PopularWorkflows from '@/views/settings/alerts/create/templates/PopularWo
 import FormField from '@/components/forms/FormField'
 import EmptyAlertGroup from '@/views/settings/alerts/create/EmptyAlertGroup'
 import { UserConfigForm } from '@/services/users/forms'
+import allConfigs from '../../configs'
 
 /**
  * Services
@@ -52,6 +45,7 @@ export default {
       dropdownLoading: false,
       selectedUsers: [],
       recurrenceDays: [0, 1, 2, 3, 4, 5],
+      allConfigs: allConfigs,
       selectedChannel: null,
       channelOpts: new SlackListResponse(),
       userChannelOpts: new SlackListResponse(),

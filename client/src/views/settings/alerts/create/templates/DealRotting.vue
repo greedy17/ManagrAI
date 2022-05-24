@@ -1,13 +1,6 @@
 <template>
-  <PopularWorkflows 
-    title='Deal Rotting'
-    subtitle='View and update all Opportunities that havent been worked in 30 days'
-    recipientType='SLACK_CHANNEL'
-    resourceType='Opportunity'
-    isActive=true
-    alertMessage='Hey  <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong>, hasnt been touched since <strong>{ Opportunity.LastActivityDate }</strong>'
-    recurrenceDay=0
-    recurrenceDays=[0]
+  <PopularWorkflows
+    :config="allConfigs.DEAL_ROTTING"
   />
 </template>
 
@@ -18,6 +11,7 @@
 //Internal
 import PopularWorkflows from '@/views/settings/alerts/create/templates/PopularWorkflows'
 import { UserConfigForm } from '@/services/users/forms'
+import allConfigs from '../../configs'
 
 /**
  * Services
@@ -43,6 +37,7 @@ export default {
       NON_FIELD_ALERT_OPTS,
       stringRenderer,
       SOBJECTS_LIST,
+      allConfigs,
       directToUsers: true,
       userConfigForm: new UserConfigForm({}),
       alertTemplateForm: new AlertTemplateForm(),

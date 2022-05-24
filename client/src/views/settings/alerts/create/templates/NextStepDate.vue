@@ -1,15 +1,7 @@
 <template>
-  <PopularWorkflows 
-    title='Upcoming Next Step'
-    subtitle='View and update all Opportunities with Next Steps due this Week'
-    recipientType='SLACK_CHANNEL'
-    resourceType='Opportunity'
-    isActive=true
-    alertMessage='Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has an upcoming Next Step Date due this week.'
-    recurrenceFrequency='WEEKLY'
-    recurrenceDay=0
-    recurrenceDays=[0, 1, 2, 3, 4, 5]
-    selectField=true
+  <PopularWorkflows
+    :selectField="true"
+    :config="allConfigs.UPCOMING_NEXT_STEP"
   />
 </template>
 
@@ -26,6 +18,7 @@ import PopularWorkflows from '@/views/settings/alerts/create/templates/PopularWo
 import FormField from '@/components/forms/FormField'
 import NextAlertGroup from '@/views/settings/alerts/create/NextAlertGroup'
 import { UserConfigForm } from '@/services/users/forms'
+import allConfigs from '../../configs'
 
 /**
  * Services
@@ -59,6 +52,7 @@ export default {
       dropdownVisible: true,
       channelCreated: false,
       create: false,
+      allConfigs,
       NON_FIELD_ALERT_OPTS,
       stringRenderer,
       newChannel: {},

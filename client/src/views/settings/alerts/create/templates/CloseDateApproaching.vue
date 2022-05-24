@@ -1,13 +1,6 @@
 <template>
-  <PopularWorkflows 
-      title='Close Date Approaching'
-      subtitle='View and update all Opportunities with an upcoming close date'
-      recipientType='SLACK_CHANNEL'
-      resourceType='Opportunity'
-      isActive=true
-      alertMessage='Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has an upcoming close date of <strong>{ Opportunity.CloseDate }</strong>. Please update it!'
-      recurrenceDay=0
-      recurrenceDays=[0]
+  <PopularWorkflows
+      :config="allConfigs.CLOSE_DATE_APPROACHING"
   />
 </template>
 
@@ -17,6 +10,7 @@
  * */
 //Internal
 import PopularWorkflows from '@/views/settings/alerts/create/templates/PopularWorkflows'
+import allConfigs from '../../configs'
 
 /**
  * Services
@@ -40,6 +34,7 @@ export default {
       dropdownLoading: false,
       channelOpts: new SlackListResponse(),
       userChannelOpts: new SlackListResponse(),
+      allConfigs: allConfigs,
       NON_FIELD_ALERT_OPTS,
       stringRenderer,
       SOBJECTS_LIST,

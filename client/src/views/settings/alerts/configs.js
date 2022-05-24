@@ -1,5 +1,6 @@
 const CLOSE_DATE_PASSED = {
     title: "Close Date Passed",
+    subtitle: "View and update all Opportunities with a passed close date",
     user: null,
     isActive: true,
     resourceType: "Opportunity",
@@ -56,7 +57,8 @@ const CLOSE_DATE_PASSED = {
 }
 
 const UPDATE_FORECAST = {
-    title: "Update Forecast", // Change
+    title: "Update Forecast", 
+    subtitle: 'Update your forecast here',
     user: null,
     isActive: true,
     resourceType: "Opportunity",
@@ -66,9 +68,9 @@ const UPDATE_FORECAST = {
             newOperands: [
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "ForecastCategoryName", // Change
-                    operandOperator: "!=", // Change
-                    operandValue: 'Commit', // Change
+                    operandIdentifier: "ForecastCategoryName", 
+                    operandOperator: "!=", 
+                    operandValue: 'Commit', 
                     operandType: "FIELD",
                     operandOrder: 0,
                     dataType: "DATE",
@@ -76,9 +78,9 @@ const UPDATE_FORECAST = {
                 },
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "CloseDate", // Change
-                    operandOperator: "<=", // Change
-                    operandValue: 14, // Change
+                    operandIdentifier: "CloseDate", 
+                    operandOperator: "<=", 
+                    operandValue: 14, 
                     operandType: "FIELD",
                     operandOrder: 1,
                     dataType: "DATE",
@@ -90,14 +92,12 @@ const UPDATE_FORECAST = {
         }
     ],
     messageTemplate: {
-        // Change V
         bindings: [
             " Opportunity.Name ",
             " Opportunity.CloseDate ",
             " Opportunity.ForecastCategoryName ",
             " Opportunity.NextStep ",
         ],
-        // Change V
         body: "Please update the forecast for <strong>{ Opportunity.Name }</strong> ! it’s expected to close on <strong>{ Opportunity.CloseDate }</strong> and forecasted as <strong>{ Opportunity.ForecastCategoryName }</strong> - please either move to Commit or update the Close Date.<br><br> <strong>Next Step</strong>: { Opportunity.NextStep }",
     },
     newConfigs: [
@@ -116,7 +116,8 @@ const UPDATE_FORECAST = {
 }
 
 const DEAL_ROTTING = {
-    title: "Deal Rotting", // Change
+    title: "Deal Rotting", 
+    subtitle: 'View and update all Opportunities that havent been worked in 30 days',
     user: null,
     isActive: true,
     resourceType: "Opportunity",
@@ -126,9 +127,9 @@ const DEAL_ROTTING = {
             newOperands: [
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "LastActivityDate", // Change
-                    operandOperator: "<", // Change
-                    operandValue: -30, // Change
+                    operandIdentifier: "LastActivityDate", 
+                    operandOperator: "<", 
+                    operandValue: -30, 
                     operandType: "FIELD",
                     operandOrder: 0,
                     dataType: "DATE",
@@ -140,13 +141,11 @@ const DEAL_ROTTING = {
         }
     ],
     messageTemplate: {
-        // Change V
         bindings: [
             " __Recipient.full_name ",
             " Opportunity.Name ",
             " Opportunity.LastActivityDate ",
         ],
-        // Change V
         body: "Hey  <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong>, hasnt been touched since <strong>{ Opportunity.LastActivityDate }</strong>",
     },
     newConfigs: [
@@ -165,7 +164,8 @@ const DEAL_ROTTING = {
 }
 
 const CLOSE_DATE_APPROACHING = {
-    title: "Close Date Approaching", // Change
+    title: "Close Date Approaching", 
+    subtitle: 'View and update all Opportunities with an upcoming close date',
     user: null,
     isActive: true,
     resourceType: "Opportunity",
@@ -175,9 +175,9 @@ const CLOSE_DATE_APPROACHING = {
             newOperands: [
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "CloseDate", // Change
-                    operandOperator: "<=", // Change
-                    operandValue: 7, // Change
+                    operandIdentifier: "CloseDate", 
+                    operandOperator: "<=", 
+                    operandValue: 7, 
                     operandType: "FIELD",
                     operandOrder: 0,
                     dataType: "DATE",
@@ -185,9 +185,9 @@ const CLOSE_DATE_APPROACHING = {
                 },
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "CloseDate", // Change
-                    operandOperator: ">", // Change
-                    operandValue: -1, // Change
+                    operandIdentifier: "CloseDate", 
+                    operandOperator: ">", 
+                    operandValue: -1, 
                     operandType: "FIELD",
                     operandOrder: 1,
                     dataType: "DATE",
@@ -199,13 +199,11 @@ const CLOSE_DATE_APPROACHING = {
         }
     ],
     messageTemplate: {
-        // Change V
         bindings: [
             " __Recipient.full_name ",
             " Opportunity.Name ",
             " Opportunity.CloseDate ",
         ],
-        // Change V
         body: "Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has an upcoming close date of <strong>{ Opportunity.CloseDate }</strong>. Please update it!",
     },
     newConfigs: [
@@ -224,7 +222,8 @@ const CLOSE_DATE_APPROACHING = {
 }
 
 const UPCOMING_NEXT_STEP = {
-    title: "Upcoming Next Step", // Change
+    title: "Upcoming Next Step", 
+    subtitle: "View and update all Opportunities with Next Steps due this Week",
     user: null,
     isActive: true,
     resourceType: "Opportunity",
@@ -234,9 +233,9 @@ const UPCOMING_NEXT_STEP = {
             newOperands: [
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "CloseDate", // Change (No idea if this is right)
-                    operandOperator: "=", // Change
-                    operandValue: '0', // Change
+                    operandIdentifier: "CloseDate",
+                    operandOperator: "=", 
+                    operandValue: '0', 
                     operandType: "FIELD",
                     operandOrder: 0,
                     dataType: "DATE",
@@ -248,18 +247,16 @@ const UPCOMING_NEXT_STEP = {
         }
     ],
     messageTemplate: {
-        // Change V
         bindings: [
             " __Recipient.full_name ",
             " Opportunity.Name ",
         ],
-        // Change V
         body: "Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has an upcoming Next Step Date due this week.",
     },
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0],
+            recurrenceDays: [0, 1, 2, 3, 4, 5],
             recurrenceDay: 0,
             recipients: ["default"],
             alertTargets: ["SELF"],
@@ -272,7 +269,8 @@ const UPCOMING_NEXT_STEP = {
 }
 
 const REQUIRED_FIELD_EMPTY = {
-    title: "Required Field Empty", // Change
+    title: "Required Field Empty", 
+    subtitle: "View and update all Opportunities with required fields that have not been filled out",
     user: null,
     isActive: true,
     resourceType: "Opportunity",
@@ -282,9 +280,9 @@ const REQUIRED_FIELD_EMPTY = {
             newOperands: [
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "CloseDate", // Change
-                    operandOperator: "=", // Change
-                    operandValue: 'null', // Change
+                    operandIdentifier: "CloseDate", 
+                    operandOperator: "=", 
+                    operandValue: 'null', 
                     operandType: "FIELD",
                     operandOrder: 0,
                     dataType: "DATE",
@@ -296,18 +294,16 @@ const REQUIRED_FIELD_EMPTY = {
         }
     ],
     messageTemplate: {
-        // Change V
         bindings: [
             " __Recipient.full_name ",
             " Opportunity.Name ",
         ],
-        // Change V
         body: "Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has a required field that has not been filled out.",
     },
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0],
+            recurrenceDays: [0, 1, 2, 3, 4, 5],
             recurrenceDay: 0,
             recipients: ["default"],
             alertTargets: ["SELF"],

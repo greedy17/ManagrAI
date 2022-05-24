@@ -3,10 +3,10 @@
     <div class="alerts-header">
       <div>
         <!-- Variable 1 (title) -->
-        <h3 @click="test">{{title}}</h3>
+        <h3 @click="test">{{config.title}}</h3>
         <!-- Variable 2 (subtitle) -->
         <p style="margin-top: -0.5rem; font-size: 14px; color: #9b9b9b">
-          {{subtitle}}
+          {{config.subtitle}}
         </p>
       </div>
 
@@ -33,7 +33,7 @@
               <span style="margin-bottom: 0.5rem">Select your Field</span>
               <EmptyAlertGroup
                 :form="alertGroup"
-                :resourceType="resourceType"
+                :resourceType="config.resourceType"
               />
             </div>
           </div>
@@ -327,6 +327,7 @@ export default {
     'referenceOperandValue2',
     'recurrenceFrequency',
     'selectField',
+    'config',
   ],
   components: {
     // Different: 
@@ -680,27 +681,27 @@ export default {
     this.setDefaultChannel()
   },
   beforeMount() {
-    if (this.operandOrder === 0) {
-      this.form.field.operandIdentifier.value = this.operandIdentifier;
-      this.form.field.operandOperator.value = this.operandOperator
-      this.form.field._operandOperator.value = this.referenceOperandValue
-      this.form.field.operandValue.value = this.operandValue
-    } else if (this.operandOrder === 1) {
-      this.form.field.operandIdentifier.value = this.operandIdentifier2;
-      this.form.field.operandOperator.value = this.operandOperator2
-      this.form.field._operandOperator.value = this.referenceOperandValue2
-      this.form.field.operandValue.value = this.operandValue2
+    if (this.config.newGroups.newOperands && this.config.newGroups.newOperands[0]) {
+      this.form.field.operandIdentifier.value = this.config.newGroups.newOperands[0].operandIdentifier;
+      this.form.field.operandOperator.value = this.config.newGroups.newOperands[0].operandOperator
+      // this.form.field._operandOperator.value = this.referenceOperandValue
+      this.form.field.operandValue.value = this.config.newGroups.newOperands[0].operandValue
+    } else if (this.config.newGroups.newOperands && this.config.newGroups.newOperands[1]) {
+      this.form.field.operandIdentifier.value = this.config.newGroups.newOperands[1].operandIdentifier2;
+      this.form.field.operandOperator.value = this.config.newGroups.newOperands[1].operandOperator2
+      // this.form.field._operandOperator.value = this.referenceOperandValue2
+      this.form.field.operandValue.value = this.config.newGroups.newOperands[1].operandValue2
     } 
-    this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = this.recipientType
-    this.alertTemplateForm.field.resourceType.value = this.resourceType
-    this.alertTemplateForm.field.title.value = this.title
-    this.alertTemplateForm.field.isActive.value = this.isActive
-    this.alertTemplateForm.field.alertMessages.groups[0].field.body.value = this.alertMessage
+    this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = this.config.newConfigs[0].recipientType
+    this.alertTemplateForm.field.resourceType.value = this.config.resourceType
+    this.alertTemplateForm.field.title.value = this.config.title
+    this.alertTemplateForm.field.isActive.value = this.config.isActive
+    this.alertTemplateForm.field.alertMessages.groups[0].field.body.value = this.config.messageTemplate.body
     this.repsPipeline()
-    this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = this.recurrenceDay
-    this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = this.recurrenceDays
-    if (this.recurrenceFrequency) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceFrequency.value = this.recurrenceFrequency
+    this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = this.config.newConfigs[0].recurrenceDay
+    this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = this.config.newConfigs[0].recurrenceDays
+    if (this.config.newConfigs[0].recurrenceFrequency) {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceFrequency.value = this.config.newConfigs[0].recurrenceFrequency
     }
   },
 }

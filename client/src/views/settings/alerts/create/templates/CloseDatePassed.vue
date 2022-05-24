@@ -1,21 +1,6 @@
 <template>
   <PopularWorkflows 
-      title='Close Date Passed'
-      subtitle='View and update all Opportunities with a passed close date'
-      recipientType='SLACK_CHANNEL'
-      resourceType='Opportunity'
-      isActive=true
-      alertMessage='Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has a passed close date of <strong>{ Opportunity.CloseDate }</strong>. Please update it!'
-      recurrenceDay=0
-      recurrenceDays=[0]
-      operandOperator='>='
-      operandIdentifier='CloseDate'
-      opperandValue=-1
-      :referenceOperandValue="referenceOperandValue1"
-      operandOperator2='CloseDate'
-      operandIdentifier2='>='
-      opperandValue2=-200
-      :referenceOperandValue2="referenceOperandValue2"
+      :config="allConfigs.CLOSE_DATE_PASSED"
   />
 </template>
 
@@ -23,6 +8,7 @@
 //Internal
 import PopularWorkflows from '@/views/settings/alerts/create/templates/PopularWorkflows'
 import { UserConfigForm } from '@/services/users/forms'
+import allConfigs from '../../configs'
 
 /**
  * Services
@@ -45,6 +31,7 @@ export default {
       dropdownLoading: false,
       channelOpts: new SlackListResponse(),
       userChannelOpts: new SlackListResponse(),
+      allConfigs,
       referenceOperandValue1: { label: '>= (Greater or Equal)', value: '>=' },
       referenceOperandValue2: { label: '<= (Less or Equal)', value: '<=' },
       NON_FIELD_ALERT_OPTS,
