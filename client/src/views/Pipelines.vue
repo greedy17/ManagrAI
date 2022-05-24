@@ -1036,6 +1036,7 @@ export default {
     return {
       currentWorkflowName: 'Active Workflows',
       id: this.$route.params.id,
+      tableKey: 1200,
       stageGateField: null,
       stageValidationFields: {},
       stagesWithForms: [],
@@ -1403,6 +1404,12 @@ export default {
           const nameB = b['secondary_data']['StageName']
           return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
         })
+      } else if (field === 'Last Activity') {
+        this.allOpps = this.allOpps.sort(function (a, b) {
+          const nameA = a['secondary_data'][`${newField}` + 'Date']
+          const nameB = b['secondary_data'][`${newField}` + 'Date']
+          return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+        })
       } else if (dT === 'TextArea' && !apiName.includes('__c')) {
         this.allOpps = this.allOpps.sort(function (a, b) {
           const nameA = a['secondary_data'][`${newField}`]
@@ -1411,6 +1418,12 @@ export default {
           return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
         })
       } else if (apiName.includes('__c') && dT !== 'TextArea') {
+        this.allOpps = this.allOpps.sort(function (a, b) {
+          const nameA = a['secondary_data'][`${apiName}`]
+          const nameB = b['secondary_data'][`${apiName}`]
+          return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+        })
+      } else if (apiName.includes('__c') && dT === 'TextArea') {
         this.allOpps = this.allOpps.sort(function (a, b) {
           const nameA = a['secondary_data'][`${apiName}`]
           const nameB = b['secondary_data'][`${apiName}`]
@@ -1433,6 +1446,12 @@ export default {
           const nameB = b['secondary_data']['StageName']
           return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
         })
+      } else if (field === 'Last Activity') {
+        this.allOpps = this.allOpps.sort(function (a, b) {
+          const nameA = a['secondary_data'][`${newField}` + 'Date']
+          const nameB = b['secondary_data'][`${newField}` + 'Date']
+          return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+        })
       } else if (dT === 'TextArea' && !apiName.includes('__c')) {
         this.allOpps = this.allOpps.sort(function (a, b) {
           const nameA = a['secondary_data'][`${newField}`]
@@ -1440,6 +1459,12 @@ export default {
           return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
         })
       } else if (apiName.includes('__c') && dT !== 'TextArea') {
+        this.allOpps = this.allOpps.sort(function (a, b) {
+          const nameA = a['secondary_data'][`${apiName}`]
+          const nameB = b['secondary_data'][`${apiName}`]
+          return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+        })
+      } else if (apiName.includes('__c') && dT === 'TextArea') {
         this.allOpps = this.allOpps.sort(function (a, b) {
           const nameA = a['secondary_data'][`${apiName}`]
           const nameB = b['secondary_data'][`${apiName}`]
@@ -1462,6 +1487,12 @@ export default {
           const nameB = b['secondary_data']['StageName']
           return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
         })
+      } else if (field === 'Last Activity') {
+        this.allOpps = this.allOpps.sort(function (a, b) {
+          const nameA = a['secondary_data'][`${newField}` + 'Date']
+          const nameB = b['secondary_data'][`${newField}` + 'Date']
+          return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+        })
       } else if (dT === 'TextArea' && !apiName.includes('__c')) {
         this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
           const nameA = a['secondary_data'][`${newField}`]
@@ -1470,6 +1501,12 @@ export default {
         })
       } else if (apiName.includes('__c') && dT !== 'TextArea') {
         this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+          const nameA = a['secondary_data'][`${apiName}`]
+          const nameB = b['secondary_data'][`${apiName}`]
+          return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+        })
+      } else if (apiName.includes('__c') && dT === 'TextArea') {
+        this.allOpps = this.allOpps.sort(function (a, b) {
           const nameA = a['secondary_data'][`${apiName}`]
           const nameB = b['secondary_data'][`${apiName}`]
           return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
@@ -1490,6 +1527,12 @@ export default {
           const nameB = b['secondary_data']['StageName']
           return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
         })
+      } else if (field === 'Last Activity') {
+        this.allOpps = this.allOpps.sort(function (a, b) {
+          const nameA = a['secondary_data'][`${newField}` + 'Date']
+          const nameB = b['secondary_data'][`${newField}` + 'Date']
+          return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+        })
       } else if (dT === 'TextArea' && !apiName.includes('__c')) {
         this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
           const nameA = a['secondary_data'][`${newField}`]
@@ -1498,6 +1541,12 @@ export default {
         })
       } else if (apiName.includes('__c') && dT !== 'TextArea') {
         this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+          const nameA = a['secondary_data'][`${apiName}`]
+          const nameB = b['secondary_data'][`${apiName}`]
+          return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+        })
+      } else if (apiName.includes('__c') && dT === 'TextArea') {
+        this.allOpps = this.allOpps.sort(function (a, b) {
           const nameA = a['secondary_data'][`${apiName}`]
           const nameB = b['secondary_data'][`${apiName}`]
           return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
@@ -3009,9 +3058,9 @@ main:hover > span {
   align-items: flex-end;
   justify-content: flex-end;
 }
-// textarea {
-//   resize: none;
-// }
+textarea {
+  resize: vertical;
+}
 a {
   text-decoration: none;
 }

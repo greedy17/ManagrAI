@@ -41,25 +41,21 @@
 
       <div class="card">
         <div class="card__header">
-          <h3>Deal Movement</h3>
-          <p class="active-workflow-small" v-if="hasRealTimeConfigs">
+          <h3>Stage Advanced</h3>
+          <p class="active-workflow-small" v-if="advancedConfigActive">
             Active <img src="@/assets/images/configCheck.png" alt="" />
           </p>
         </div>
 
         <div class="card__body">
-          <img
-            style="height: 1.5rem; margin-right: 1rem"
-            src="@/assets/images/slackLogo.png"
-            alt=""
-          />
+          <img style="height: 1.5rem; margin-right: 1rem" src="@/assets/images/logo.png" alt="" />
           <img
             style="height: 1rem; margin-right: 1rem; filter: invert(60%)"
             src="@/assets/images/plusOne.png"
             alt=""
           />
           <img
-            style="height: 1.5rem; margin-right: 1rem"
+            style="height: 1.25rem; margin-right: 1rem"
             src="@/assets/images/salesforce.png"
             alt=""
           />
@@ -69,6 +65,105 @@
           <button
             v-if="hasSalesforceIntegration && hasSlackIntegration"
             @click="goToStageAdvanced"
+            class="orange_button"
+          >
+            View + Edit
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card__header">
+          <h3>Moved to Commit</h3>
+          <p class="active-workflow-small" v-if="commitConfigActive">
+            Active <img src="@/assets/images/configCheck.png" alt="" />
+          </p>
+        </div>
+
+        <div class="card__body">
+          <img style="height: 1.5rem; margin-right: 1rem" src="@/assets/images/logo.png" alt="" />
+          <img
+            style="height: 1rem; margin-right: 1rem; filter: invert(60%)"
+            src="@/assets/images/plusOne.png"
+            alt=""
+          />
+          <img
+            style="height: 1.25rem; margin-right: 1rem"
+            src="@/assets/images/salesforce.png"
+            alt=""
+          />
+        </div>
+
+        <div class="card__footer">
+          <button
+            v-if="hasSalesforceIntegration && hasSlackIntegration"
+            @click="goToCommit"
+            class="orange_button"
+          >
+            View + Edit
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card__header">
+          <h3>Close Date Pushed</h3>
+          <p class="active-workflow-small" v-if="pushedConfigActive">
+            Active <img src="@/assets/images/configCheck.png" alt="" />
+          </p>
+        </div>
+
+        <div class="card__body">
+          <img style="height: 1.5rem; margin-right: 1rem" src="@/assets/images/logo.png" alt="" />
+          <img
+            style="height: 1rem; margin-right: 1rem; filter: invert(60%)"
+            src="@/assets/images/plusOne.png"
+            alt=""
+          />
+          <img
+            style="height: 1.25rem; margin-right: 1rem"
+            src="@/assets/images/salesforce.png"
+            alt=""
+          />
+        </div>
+
+        <div class="card__footer">
+          <button
+            v-if="hasSalesforceIntegration && hasSlackIntegration"
+            @click="goToCloseDatePushed"
+            class="orange_button"
+          >
+            View + Edit
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card__header">
+          <h3>Closed Won</h3>
+          <p class="active-workflow-small" v-if="wonConfigActive">
+            Active <img src="@/assets/images/configCheck.png" alt="" />
+          </p>
+        </div>
+
+        <div class="card__body">
+          <img style="height: 1.5rem; margin-right: 1rem" src="@/assets/images/logo.png" alt="" />
+          <img
+            style="height: 1rem; margin-right: 1rem; filter: invert(60%)"
+            src="@/assets/images/plusOne.png"
+            alt=""
+          />
+          <img
+            style="height: 1.25rem; margin-right: 1rem"
+            src="@/assets/images/salesforce.png"
+            alt=""
+          />
+        </div>
+
+        <div class="card__footer">
+          <button
+            v-if="hasSalesforceIntegration && hasSlackIntegration"
+            @click="goToClosedWon"
             class="orange_button"
           >
             View + Edit
@@ -112,17 +207,57 @@ export default {
   async created() {
     this.templates.refresh()
   },
+  mounted() {
+    console.log(this.user)
+  },
   methods: {
     goToStageAdvanced() {
-      this.$router.push({ name: 'DealMovement' })
+      this.$router.push({ name: 'StageAdvanced' })
+    },
+    goToCommit() {
+      this.$router.push({ name: 'MovedToCommit' })
+    },
+    goToCloseDatePushed() {
+      this.$router.push({ name: 'CloseDatePushed' })
+    },
+    goToClosedWon() {
+      this.$router.push({ name: 'ClosedWon' })
     },
     goToZoomRecap() {
       this.$router.push({ name: 'ZoomRecap' })
     },
   },
   computed: {
-    hasRealTimeConfigs() {
-      return !!this.user.slackAccount.realtimeAlertConfigs
+    realtimeConfigs() {
+      return Object.values(this.$store.state.user.slackAccount.realtimeAlertConfigs)
+    },
+    commitConfigActive() {
+      for (let i = 0; i < this.realtimeConfigs.length; i++) {
+        if (this.realtimeConfigs[i]['Moved to Commit']) {
+          return true
+        }
+      }
+    },
+    advancedConfigActive() {
+      for (let i = 0; i < this.realtimeConfigs.length; i++) {
+        if (this.realtimeConfigs[i]['Stage Advanced']) {
+          return true
+        }
+      }
+    },
+    pushedConfigActive() {
+      for (let i = 0; i < this.realtimeConfigs.length; i++) {
+        if (this.realtimeConfigs[i]['Close date pushed']) {
+          return true
+        }
+      }
+    },
+    wonConfigActive() {
+      for (let i = 0; i < this.realtimeConfigs.length; i++) {
+        if (this.realtimeConfigs[i]['Closed Won']) {
+          return true
+        }
+      }
     },
     hasSalesforceIntegration() {
       return !!this.$store.state.user.salesforceAccount
@@ -216,6 +351,7 @@ export default {
 .alerts-page {
   margin-left: 10vw;
   margin-top: 3.5rem;
+  font-family: $base-font-family;
 }
 .alert_cards {
   display: flex;
@@ -232,18 +368,21 @@ export default {
   background-color: white;
   border: 1px solid #e8e8e8;
   border-radius: 0.5rem;
-  width: 24vw;
+  width: 22vw;
   margin-right: 1rem;
   margin-bottom: 1rem;
   transition: all 0.25s;
   &__header {
     height: 2rem;
     padding: 1.25rem 1rem;
-    font-size: 13px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     border-bottom: 2px solid $soft-gray;
+    h3 {
+      font-size: 14px;
+      font-weight: 400 !important;
+    }
   }
   &__body {
     display: flex;

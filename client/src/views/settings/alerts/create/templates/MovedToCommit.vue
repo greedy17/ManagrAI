@@ -1,5 +1,17 @@
 <template>
   <div class="alerts-page">
+    <div class="description">
+      <div>
+        <h4 class="title">Moved to commit</h4>
+        <p>Recieve alerts when deals move to commit.</p>
+      </div>
+
+      <button @click="$router.push({ name: 'RealTime' })" class="back-button">
+        <img src="@/assets/images/back.png" alt="" />
+        Back to Instant Updates
+      </button>
+    </div>
+
     <div v-if="pageNumber === 0" class="alert__column">
       <template>
         <div class="forecast__collection">
@@ -12,7 +24,7 @@
                   v-model="selectedUsers"
                   :options="userList"
                   openDirection="below"
-                  style="width: 14vw"
+                  style="width: 18vw"
                   selectLabel="Enter"
                   track-by="id"
                   label="fullName"
@@ -45,7 +57,7 @@
           >
             <p>Slack Channel:</p>
             <div v-if="!channelName" class="row__">
-              <label :class="!create ? 'green' : ''">Select</label>
+              <label :class="!create ? 'green' : ''">Select Channel</label>
               <ToggleCheckBox
                 style="margin-left: 0.5rem; margin-right: 0.5rem"
                 @input="changeCreate"
@@ -53,7 +65,7 @@
                 offColor="#199e54"
                 onColor="#199e54"
               />
-              <label :class="create ? 'green' : ''">Create</label>
+              <label :class="create ? 'green' : ''">Create Channel</label>
             </div>
 
             <label v-else for="channel" style="font-weight: bold"
@@ -101,7 +113,7 @@
                     @input="setRecipient"
                     :options="userChannelOpts.channels"
                     openDirection="below"
-                    style="width: 14vw"
+                    style="width: 18vw"
                     selectLabel="Enter"
                     track-by="id"
                     label="name"
@@ -139,11 +151,6 @@
           </div>
         </div>
       </template>
-
-      <div class="description">
-        <h4 class="title">Moved to commit</h4>
-        <p>Recieve alerts when deals move to commit.</p>
-      </div>
     </div>
   </div>
 </template>
@@ -251,7 +258,7 @@ export default {
     }
     if (this.user.userLevel == 'MANAGER') {
       await this.users.refresh()
-      this.userList = this.users.list
+      this.userList = this.users.list.filter((user) => user.salesforceAccountRef)
     }
     this.userConfigForm = new UserConfigForm({
       activatedManagrConfigs: this.user.activatedManagrConfigs,
@@ -387,7 +394,6 @@ export default {
             dataType: 'string',
           },
         })
-        this.$router.go()
       } catch (e) {
         this.$Alert.alert({
           message: 'An error occured saving template',
@@ -396,6 +402,13 @@ export default {
         })
       } finally {
         this.savingTemplate = false
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 2000,
+          message: 'Alert activation successful!',
+          // sub: 'All fields reflect your current SFDC data',
+        })
+        this.$router.push({ name: 'RealTime' })
       }
     },
   },
@@ -460,7 +473,7 @@ img {
   height: 2.5rem;
   background-color: white;
   border: none;
-  width: 14vw;
+  width: 18vw;
   text-align: center;
   margin-top: 0.5rem;
   box-shadow: 1px 1px 3px 0px $very-light-gray;
@@ -505,7 +518,7 @@ img {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 3rem;
   border-radius: 0.3rem;
   border-style: none;
   letter-spacing: 0.03rem;
@@ -519,7 +532,7 @@ img {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 3rem;
   font-weight: bold;
   border-radius: 0.3rem;
   text-indent: none;
@@ -527,8 +540,8 @@ img {
   letter-spacing: 0.03rem;
   background-color: $soft-gray;
   color: $base-gray;
-  cursor: not-allowed;
-  font-size: 11px;
+  cursor: text;
+  font-size: 12px;
 }
 .row__ {
   display: flex;
@@ -559,19 +572,47 @@ input {
   align-items: center;
 }
 .description {
-  margin: -3.5rem 0rem 0rem 1rem;
-  width: 10vw;
-  border-bottom: 2px solid $soft-gray;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-left: 1rem;
+  width: 48vw;
+  h4 {
+    font-size: 18px;
+  }
+  p {
+    font-size: 14px;
+    margin-top: -0.5rem;
+  }
+}
+.back-button {
+  font-size: 14px;
+  color: $dark-green;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  border: none;
+  cursor: pointer;
+  margin: 1rem 0rem 0rem 0rem;
+
+  img {
+    height: 1rem;
+    margin-right: 0.5rem;
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
+  }
 }
 .forecast__collection {
   background-color: white;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  border-radius: 0.75rem;
+  border: 1px solid #e8e8e8;
+  border-radius: 0.5rem;
+  width: 48vw;
   padding: 3rem 2rem;
-  margin-top: -3rem;
 }
 .alerts-page {
-  font-size: 11px;
+  margin-top: 5rem;
+  margin-left: 24vw;
+  font-size: 12px;
   height: 100vh;
   color: $base-gray;
 }
