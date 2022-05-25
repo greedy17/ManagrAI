@@ -497,7 +497,10 @@ class SalesforceSObjectViewSet(
                     data = {"success": False, "error": "Could not refresh token"}
                     break
                 else:
-                    sf.regenerate_token()
+                    if main_form.resource_object.owner == user:
+                        sf.regenerate_token()
+                    else:
+                        main_form.resource_object.owner.salesforce_account.regenerate_token()
                     attempts += 1
 
             except ConnectionResetError:
