@@ -630,7 +630,6 @@ class SFObjectFieldsOperation(SFSyncOperation):
 
 
 class MeetingWorkflow(SFSyncOperation):
-
     meeting = models.OneToOneField(
         "zoom.ZoomMeeting", models.CASCADE, related_name="workflow", null=True, blank=True
     )

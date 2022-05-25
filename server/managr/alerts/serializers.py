@@ -400,6 +400,7 @@ class AlertConfigWriteSerializer(serializers.ModelSerializer):
         return value
 
     def to_internal_value(self, data):
+        print(self.context.user)
         if (
             not self.context.user.user_level == "MANAGER"
             and not data.get("recipient_type") == "SLACK_CHANNEL"
