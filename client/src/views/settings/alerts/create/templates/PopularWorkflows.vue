@@ -254,9 +254,14 @@
       class="visible"
     >
       <!-- Variable 3 -->
-      <ForecastAlertGroup
+      <!-- <ForecastAlertGroup
         :form="alertGroup"
         :resourceType="alertTemplateForm.field.resourceType.value"
+      /> -->
+      <AlertGroups
+        :form="alertGroup"
+        :resourceType="alertTemplateForm.field.resourceType.value"
+        :operand="config.newGroups[0].newOperands"
       />
     </div>
 
@@ -292,6 +297,7 @@ import ForecastAlertGroup from '@/views/settings/alerts/create/ForecastAlertGrou
 // import DealAlertGroup from '@/views/settings/alerts/create/DealAlertGroup'
 // import PassedAlertGroup from '@/views/settings/alerts/create/PassedAlertGroup'
 // import NewAlertGroup from '@/views/settings/alerts/create/NewAlertGroup'
+import AlertGroups from '../AlertGroups.vue'
 import { UserConfigForm } from '@/services/users/forms'
 
 /**
@@ -335,6 +341,7 @@ export default {
     // DealAlertGroup,
     // PassedAlertGroup,
     // NewAlertGroup,
+    AlertGroups,
     ToggleCheckBox,
     FormField,
     PulseLoadingSpinnerButton,
