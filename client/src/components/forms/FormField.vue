@@ -104,4 +104,12 @@ export default {
     z-index: 999;
   }
 }
+
+input {
+  border: 1px solid #e8e8e8;
+  border-radius: 0.3rem;
+  background-color: white;
+  min-height: 2.5rem;
+  width: 14vw;
+}
 </style>
