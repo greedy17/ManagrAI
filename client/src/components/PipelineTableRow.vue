@@ -48,22 +48,25 @@
         </div>
       </div>
     </div>
-
     <div
       :key="i"
       v-for="(field, i) in oppFields"
-      :class="
-        field.dataType === 'TextArea' ||
-        (field.length > 250 &&
-          field.dataType === 'String' &&
-          (opp['secondary_data'][field.apiName] ||
-            opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]))
-          ? 'table-cell-wide'
-          : opp['secondary_data'][field.apiName] ||
-            opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-          ? 'table-cell'
-          : 'empty'
-      "
+      :class="{
+        'active-edit': editing && editIndex === i && currentRow === index,
+        'table-cell-wide':
+          field.dataType === 'TextArea' ||
+          (field.length > 250 &&
+            field.dataType === 'String' &&
+            (opp['secondary_data'][field.apiName] ||
+              opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))])),
+        'table-cell':
+          opp['secondary_data'][field.apiName] ||
+          opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))],
+        empty: !(
+          opp['secondary_data'][field.apiName] ||
+          opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+        ),
+      }"
     >
       <SkeletonBox
         v-if="updateList.includes(opp.id) || updatedList.includes(opp.id)"
@@ -71,8 +74,146 @@
         height="14px"
       />
 
-      <div class="limit-cell-height" v-else-if="!updateList.includes(opp.id)">
+      <div
+        @click="editInline(i)"
+        class="limit-cell-height"
+        v-else-if="!updateList.includes(opp.id)"
+      >
+        <div class="inline-edit" v-if="editing && editIndex === i && currentRow === index">
+          <div
+            v-if="
+              field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
+            "
+            class="inline-row"
+          >
+            <textarea
+              @input="executeUpdateValues(field.apiName, $event.target.value)"
+              id="user-input-wide"
+              :value="
+                field.apiName.includes('__c')
+                  ? opp['secondary_data'][field.apiName]
+                  : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+              "
+            >
+            </textarea>
+
+            <div v-if="inlineLoader">
+              <PipelineLoader />
+            </div>
+          </div>
+          <div
+            v-else-if="
+              (field.dataType === 'String' && field.apiName !== 'meeting_type') ||
+              (field.dataType === 'String' && field.apiName !== 'meeting_comments') ||
+              (field.dataType === 'String' && field.apiName !== 'NextStep') ||
+              (field.dataType === 'Email' && field.apiName !== 'NextStep')
+            "
+            class="inline-row"
+          >
+            <input
+              @input="executeUpdateValues(field.apiName, $event.target.value)"
+              id="user-input"
+              type="text"
+              :value="
+                field.apiName.includes('__c')
+                  ? opp['secondary_data'][field.apiName]
+                  : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+              "
+            />
+            <div v-if="inlineLoader">
+              <PipelineLoader />
+            </div>
+          </div>
+
+          <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
+            <div v-if="inlineLoader">
+              <PipelineLoader />
+            </div>
+            <Multiselect
+              v-else
+              :options="picklistOpts[field.apiName]"
+              openDirection="below"
+              selectLabel="Enter"
+              style="width: 14vw; padding-bottom: 8rem"
+              track-by="value"
+              label="label"
+              @select="
+                setUpdateValues(
+                  field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+                  $event.value,
+                  field.dataType,
+                )
+              "
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.png" alt="" />
+                  {{ `${field.referenceDisplayLabel}` }}
+                </p>
+              </template>
+            </Multiselect>
+          </div>
+          <div v-else-if="field.dataType === 'Date'">
+            <div v-if="inlineLoader">
+              <PipelineLoader />
+            </div>
+            <input
+              v-else
+              @input="executeUpdateValues(field.apiName, $event.target.value)"
+              type="date"
+              id="user-input"
+              :value="
+                field.apiName.includes('__c')
+                  ? opp['secondary_data'][field.apiName]
+                  : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+              "
+            />
+          </div>
+          <div v-else-if="field.dataType === 'DateTime'">
+            <div v-if="inlineLoader">
+              <PipelineLoader />
+            </div>
+            <input
+              v-else
+              type="datetime-local"
+              id="user-input"
+              @input="executeUpdateValues(field.apiName, $event.target.value)"
+              :value="
+                field.apiName.includes('__c')
+                  ? opp['secondary_data'][field.apiName]
+                  : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+              "
+            />
+          </div>
+          <div
+            v-else-if="
+              field.dataType === 'Phone' ||
+              field.dataType === 'Double' ||
+              field.dataType === 'Currency'
+            "
+            class="inline-row"
+          >
+            <input
+              @input="executeUpdateValues(field.apiName, $event.target.value)"
+              id="user-input"
+              type="number"
+              :value="
+                field.apiName.includes('__c')
+                  ? opp['secondary_data'][field.apiName]
+                  : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+              "
+            />
+            <div v-if="inlineLoader">
+              <PipelineLoader />
+            </div>
+          </div>
+        </div>
         <PipelineField
+          v-else
           style="direction: ltr"
           :apiName="field.apiName"
           :dataType="field.dataType"
@@ -124,6 +265,7 @@ import PipelineNameSection from '@/components/PipelineNameSection'
 import PipelineField from '@/components/PipelineField'
 import { CollectionManager } from '@thinknimble/tn-models'
 import { SObjects, SObjectField } from '@/services/salesforce'
+import debounce from 'lodash.debounce'
 
 export default {
   name: 'PipelineTableRow',
@@ -131,12 +273,20 @@ export default {
     PipelineNameSection,
     PipelineField,
     SkeletonBox: () => import(/* webpackPrefetch: true */ '@/components/SkeletonBox'),
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+    PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
   },
   async created() {
     await this.objectFields.refresh()
   },
   data() {
     return {
+      currentRow: null,
+      formData: {},
+      executeUpdateValues: debounce(this.setUpdateValues, 900),
+      editing: false,
+      editIndex: null,
+      currentOpp: null,
       objectFields: CollectionManager.create({
         ModelClass: SObjectField,
         pagination: { size: 300 },
@@ -150,6 +300,7 @@ export default {
   },
   watch: {
     closeDateData: 'futureDate',
+    closeEdit: 'closeInline',
   },
   props: {
     index: {},
@@ -160,6 +311,9 @@ export default {
     closeDateData: {},
     ForecastCategoryNameData: {},
     updateList: {},
+    picklistOpts: {},
+    inlineLoader: {},
+    closeEdit: {},
   },
   computed: {
     extraPipelineFields() {
@@ -172,6 +326,22 @@ export default {
     },
   },
   methods: {
+    closeInline() {
+      this.editing = false
+    },
+    editInline(index) {
+      this.currentRow = this.index
+      this.editIndex = index
+      this.editing = true
+    },
+    setUpdateValues(key, val, dataType) {
+      if (val) {
+        this.formData[key] = val
+      }
+      setTimeout(() => {
+        this.$emit('inline-edit', this.formData, this.opp.id, dataType)
+      }, 200)
+    },
     emitCreateForm() {
       this.$emit('create-form')
     },
@@ -291,6 +461,116 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+#user-input {
+  border: 1px solid #e8e8e8;
+  border-radius: 0.3rem;
+  background-color: white;
+  min-height: 2rem;
+  width: 12vw;
+}
+#user-input-wide {
+  border: 1px solid #e8e8e8;
+  border-radius: 0.3rem;
+  background-color: white;
+  min-height: 2rem;
+  width: 20vw;
+  font-family: $base-font-family;
+  margin: 1.5rem 1rem;
+  padding: 7px;
+}
+#user-input:focus,
+#user-input-wide:focus {
+  outline: none;
+}
+input[type='text']:focus {
+  outline: none;
+  cursor: text;
+}
+textarea {
+  resize: none;
+  position: absolute;
+  margin-top: -1rem;
+}
+input[type='date'] {
+  background-color: $soft-gray !important;
+  color: $base-gray !important;
+}
+input[type='date']::-webkit-calendar-picker-indicator {
+  background-color: white;
+  border-radius: 3px;
+  padding: 5px;
+}
+input[type='date']::-webkit-datetime-edit-text,
+input[type='date']::-webkit-datetime-edit-month-field,
+input[type='date']::-webkit-datetime-edit-day-field,
+input[type='date']::-webkit-datetime-edit-year-field {
+  // color: #888;
+  cursor: pointer;
+  padding: 0.25rem;
+}
+input {
+  padding: 7px;
+}
+.inline-edit {
+  cursor: text;
+}
+.inline-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+.active-edit {
+  border-bottom: 2px solid $dark-green !important;
+  border-left: 1px solid $soft-gray !important;
+  border-right: 1px solid $soft-gray !important;
+  border-top: 1px solid $soft-gray !important;
+  background-color: white !important;
+}
+.multi-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $gray;
+  font-size: 12px;
+  width: 100%;
+  padding: 0.5rem 0rem;
+  margin: 0;
+  cursor: text;
+  &__more {
+    background-color: white;
+    color: $dark-green;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-top: 1px solid #e8e8e8;
+    width: 100%;
+    padding: 0.75rem 0rem;
+    margin: 0;
+    cursor: pointer;
+
+    img {
+      height: 0.8rem;
+      margin-left: 0.25rem;
+      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+        brightness(93%) contrast(89%);
+    }
+  }
+}
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 0.8rem;
+    margin-right: 0.25rem;
+    filter: invert(70%);
+  }
+}
 
 .table-row {
   display: table-row;
@@ -433,10 +713,10 @@ input[type='checkbox'] + label::before {
   margin-right: 0.5em;
 }
 .limit-cell-height {
-  max-height: 4rem;
+  max-height: 8rem;
   width: 110%;
   overflow: auto;
-  direction: rtl;
+  cursor: url('../assets/images/edit-cursor.svg'), auto;
 }
 .name-cell-note-button-1 {
   height: 1.5rem;
@@ -475,17 +755,4 @@ input[type='checkbox'] + label::before {
     height: 1.2rem;
   }
 }
-// ::-webkit-scrollbar {
-//   background-color: $off-white;
-//   -webkit-appearance: none;
-//   height: 100%;
-//   width: 3px;
-// }
-// ::-webkit-scrollbar-thumb {
-//   border-radius: 3px;
-//   background-color: $very-light-gray;
-// }
-// ::-webkit-scrollbar-track {
-//   margin-top: 1rem;
-// }
 </style>

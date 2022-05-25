@@ -562,6 +562,41 @@
               />
             </div>
 
+            <div
+              v-else-if="
+                field.dataType === 'Reference' &&
+                field.apiName !== 'OwnerId' &&
+                field.apiName !== 'AccountId'
+              "
+            >
+              <p>{{ field.referenceDisplayLabel }}:</p>
+              <Multiselect
+                :options="referenceOpts[field.apiName]"
+                @select="setUpdateValues(field.apiName, $event.id)"
+                v-model="dropdownVal[field.apiName]"
+                openDirection="below"
+                :loading="dropdownLoading"
+                style="width: 18vw"
+                selectLabel="Enter"
+                track-by="id"
+                label="name"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    {{
+                      `${currentVals[field.apiName]}` !== 'null'
+                        ? `${currentVals[field.apiName]}`
+                        : `${field.referenceDisplayLabel}`
+                    }}
+                  </p>
+                </template>
+              </Multiselect>
+            </div>
             <div v-else-if="field.apiName === 'OwnerId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
 
@@ -630,6 +665,7 @@
         </div>
       </div>
     </Modal>
+
     <div ref="pipelines" v-if="!loading">
       <section class="flex-row-spread">
         <div v-if="!workflowCheckList.length && !primaryCheckList.length" class="flex-row">
@@ -917,9 +953,8 @@
           <span>{{ selectedWorkflow ? currentWorkflow.length : allOpps.length }}</span>
         </h6>
       </div>
-      <!-- <p @click="tester">test</p> -->
       <section v-if="!selectedWorkflow && !loadingWorkflows" class="table-section">
-        <div class="table">
+        <div v-outside-click="emitCloseEdit" class="table">
           <PipelineHeader
             :oppFields="oppFields"
             @check-all="onCheckAll"
@@ -935,6 +970,10 @@
             @create-form="createFormInstance(opp.id)"
             @get-notes="getNotes(opp.id)"
             @checked-box="selectPrimaryCheckbox(opp.id)"
+            @inline-edit="inlineUpdate"
+            :closeEdit="closeInline"
+            :inlineLoader="inlineLoader"
+            :picklistOpts="picklistQueryOpts"
             :opp="opp"
             :index="i"
             :oppFields="oppFields"
@@ -1032,6 +1071,8 @@ export default {
   },
   data() {
     return {
+      closeInline: 0,
+      inlineLoader: false,
       currentWorkflowName: 'Active Workflows',
       id: this.$route.params.id,
       tableKey: 1200,
@@ -1100,6 +1141,7 @@ export default {
       formData: {},
       noteTitle: '',
       noteInfo: '',
+      referenceOpts: {},
       picklistQueryOpts: {},
       createQueryOpts: {},
       picklistQueryOptsContacts: {},
@@ -1229,9 +1271,56 @@ export default {
     // },
   },
   methods: {
-    // tester() {
-    //   console.log(this.oppFields)
-    // },
+    test() {
+      console.log(this.referenceOpts)
+    },
+    async getReferenceFieldList(key, val) {
+      try {
+        const res = await SObjects.api.getSobjectPicklistValues({
+          sobject_id: val,
+        })
+        this.referenceOpts[key] = res
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    emitCloseEdit() {
+      this.closeInline += 1
+    },
+    async inlineUpdate(formData, id, dataType) {
+      this.inlineLoader = true
+      try {
+        const res = await SObjects.api
+          .createFormInstance({
+            resourceType: 'Opportunity',
+            formType: 'UPDATE',
+            resourceId: id,
+          })
+          .then(async (res) => {
+            SObjects.api
+              .updateResource({
+                form_id: [res.form_id],
+                form_data: formData,
+              })
+              .then(async () => {
+                let updatedRes = await SObjects.api.getObjects('Opportunity')
+                this.allOpps = updatedRes.results
+                this.originalList = updatedRes.results
+              })
+          })
+        console.log('test')
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.inlineLoader = false
+        this.closeInline += 1
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 750,
+          message: 'Salesforce update successful!',
+        })
+      }
+    },
     setOpps() {
       User.api.getUser(this.user.id).then((response) => {
         this.$store.commit('UPDATE_USER', response)
@@ -1788,7 +1877,6 @@ export default {
       if (val) {
         this.formData[key] = val
       }
-
       if (key === 'StageName') {
         this.stagesWithForms.includes(val)
           ? (this.stageGateField = val)
@@ -1975,8 +2063,7 @@ export default {
         ) {
           this.picklistQueryOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].apiName
         } else if (this.oppFormCopy[i].dataType === 'Reference') {
-          this.picklistQueryOpts[this.oppFormCopy[i].referenceDisplayLabel] =
-            this.oppFormCopy[i].referenceDisplayLabel
+          this.referenceOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].id
         }
       }
 
@@ -1985,6 +2072,10 @@ export default {
           picklistFor: i,
           salesforceObject: 'Opportunity',
         })
+      }
+
+      for (let i in this.referenceOpts) {
+        this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i])
       }
 
       for (let i = 0; i < this.createOppForm.length; i++) {
@@ -2617,23 +2708,6 @@ h3 {
     font-size: 11px;
   }
 }
-// .note-section::-webkit-scrollbar {
-//   width: 0px; /* Mostly for vertical scrollbars */
-//   height: 8px; /* Mostly for horizontal scrollbars */
-// }
-// .note-section::-webkit-scrollbar-thumb {
-//   background-color: $dark-green;
-//   box-shadow: inset 4px 4px 8px 0 rgba(rgb(243, 240, 240), 0.5);
-//   border-radius: 0.3rem;
-// }
-// .note-section::-webkit-scrollbar-track {
-//   // background: $soft-gray;
-//   box-shadow: inset 4px 4px 8px 0 $soft-gray;
-//   border-radius: 0.3rem;
-// }
-// .note-section::-webkit-scrollbar-track-piece:end {
-//   margin-left: 1rem;
-// }
 .table-cell-header {
   display: table-cell;
   padding: 1.25vh 3vh;
@@ -2818,9 +2892,10 @@ section {
   background-color: white;
   min-height: 2.5rem;
   width: 18vw;
+  font-family: $base-font-family;
 }
 #user-input:focus {
-  outline: 1px solid $dark-green;
+  outline: none;
 }
 .number-input {
   background-color: $off-white;
