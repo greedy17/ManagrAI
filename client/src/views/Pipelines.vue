@@ -630,6 +630,7 @@
         </div>
       </div>
     </Modal>
+    <!-- <p @click="test">testingggg</p> -->
     <div ref="pipelines" v-if="!loading">
       <section class="flex-row-spread">
         <div v-if="!workflowCheckList.length && !primaryCheckList.length" class="flex-row">
@@ -917,7 +918,7 @@
           <span>{{ selectedWorkflow ? currentWorkflow.length : allOpps.length }}</span>
         </h6>
       </div>
-      <!-- <p @click="tester">test</p> -->
+
       <section v-if="!selectedWorkflow && !loadingWorkflows" class="table-section">
         <div class="table">
           <PipelineHeader
@@ -935,7 +936,9 @@
             @create-form="createFormInstance(opp.id)"
             @get-notes="getNotes(opp.id)"
             @checked-box="selectPrimaryCheckbox(opp.id)"
-            @inline-edit="testing"
+            @inline-edit="inlineUpdate"
+            :closeEdit="closeInline"
+            :inlineLoader="inlineLoader"
             :picklistOpts="picklistQueryOpts"
             :opp="opp"
             :index="i"
@@ -1034,6 +1037,8 @@ export default {
   },
   data() {
     return {
+      closeInline: 0,
+      inlineLoader: false,
       currentWorkflowName: 'Active Workflows',
       id: this.$route.params.id,
       tableKey: 1200,
@@ -1231,11 +1236,42 @@ export default {
     // },
   },
   methods: {
-    // tester() {
-    //   console.log(this.oppFields)
-    // },
-    testing(apiName) {
-      console.log(apiName)
+    test() {
+      console.log(this.allOpps)
+    },
+    async inlineUpdate(formData, id, dataType) {
+      this.inlineLoader = true
+      try {
+        const res = await SObjects.api
+          .createFormInstance({
+            resourceType: 'Opportunity',
+            formType: 'UPDATE',
+            resourceId: id,
+          })
+          .then(async (res) => {
+            SObjects.api
+              .updateResource({
+                form_id: [res.form_id],
+                form_data: formData,
+              })
+              .then(async () => {
+                let updatedRes = await SObjects.api.getObjects('Opportunity')
+                this.allOpps = updatedRes.results
+                this.originalList = updatedRes.results
+              })
+          })
+        console.log('test')
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.inlineLoader = false
+        this.closeInline += 1
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 750,
+          message: 'Salesforce update successful!',
+        })
+      }
     },
     setOpps() {
       User.api.getUser(this.user.id).then((response) => {
@@ -2622,23 +2658,6 @@ h3 {
     font-size: 11px;
   }
 }
-// .note-section::-webkit-scrollbar {
-//   width: 0px; /* Mostly for vertical scrollbars */
-//   height: 8px; /* Mostly for horizontal scrollbars */
-// }
-// .note-section::-webkit-scrollbar-thumb {
-//   background-color: $dark-green;
-//   box-shadow: inset 4px 4px 8px 0 rgba(rgb(243, 240, 240), 0.5);
-//   border-radius: 0.3rem;
-// }
-// .note-section::-webkit-scrollbar-track {
-//   // background: $soft-gray;
-//   box-shadow: inset 4px 4px 8px 0 $soft-gray;
-//   border-radius: 0.3rem;
-// }
-// .note-section::-webkit-scrollbar-track-piece:end {
-//   margin-left: 1rem;
-// }
 .table-cell-header {
   display: table-cell;
   padding: 1.25vh 3vh;
@@ -2825,7 +2844,7 @@ section {
   width: 18vw;
 }
 #user-input:focus {
-  outline: 1px solid $dark-green;
+  outline: none;
 }
 .number-input {
   background-color: $off-white;

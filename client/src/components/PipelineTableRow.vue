@@ -48,22 +48,25 @@
         </div>
       </div>
     </div>
-
     <div
       :key="i"
       v-for="(field, i) in oppFields"
-      :class="
-        field.dataType === 'TextArea' ||
-        (field.length > 250 &&
-          field.dataType === 'String' &&
-          (opp['secondary_data'][field.apiName] ||
-            opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]))
-          ? 'table-cell-wide'
-          : opp['secondary_data'][field.apiName] ||
-            opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-          ? 'table-cell'
-          : 'empty'
-      "
+      :class="{
+        'active-edit': editing && editIndex === i && currentRow === index,
+        'table-cell-wide':
+          field.dataType === 'TextArea' ||
+          (field.length > 250 &&
+            field.dataType === 'String' &&
+            (opp['secondary_data'][field.apiName] ||
+              opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))])),
+        'table-cell':
+          opp['secondary_data'][field.apiName] ||
+          opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))],
+        empty: !(
+          opp['secondary_data'][field.apiName] ||
+          opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+        ),
+      }"
     >
       <SkeletonBox
         v-if="updateList.includes(opp.id) || updatedList.includes(opp.id)"
@@ -72,36 +75,65 @@
       />
 
       <div
-        @click="editInline(field.apiName, i)"
+        @click="editInline(i)"
         class="limit-cell-height"
         v-else-if="!updateList.includes(opp.id)"
       >
-        <div class="inline-edit" v-if="editing && editIndex === i">
+        <div class="inline-edit" v-if="editing && editIndex === i && currentRow === index">
           <div
             v-if="
               field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
             "
+            class="inline-row"
           >
-            <textarea id="user-input" cols="20" rows="2"> </textarea>
+            <textarea
+              @input="executeUpdateValues(field.apiName, $event.target.value)"
+              id="user-input-wide"
+            >
+            </textarea>
+
+            <div v-if="inlineLoader">
+              <PipelineLoader />
+            </div>
           </div>
           <div
             v-else-if="
               (field.dataType === 'String' && field.apiName !== 'meeting_type') ||
               (field.dataType === 'String' && field.apiName !== 'meeting_comments') ||
-              (field.dataType === 'String' && field.apiName !== 'NextStep')
+              (field.dataType === 'String' && field.apiName !== 'NextStep') ||
+              (field.dataType === 'Email' && field.apiName !== 'NextStep')
             "
+            class="inline-row"
           >
-            <input id="user-input" type="text" />
+            <input
+              @input="executeUpdateValues(field.apiName, $event.target.value)"
+              id="user-input"
+              type="text"
+            />
+            <div v-if="inlineLoader">
+              <PipelineLoader />
+            </div>
           </div>
 
           <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
+            <div v-if="inlineLoader">
+              <PipelineLoader />
+            </div>
             <Multiselect
+              v-else
               :options="picklistOpts[field.apiName]"
               openDirection="below"
               selectLabel="Enter"
-              style="width: 14vw"
+              style="width: 14vw; padding-bottom: 8rem"
               track-by="value"
               label="label"
+              @select="
+                setUpdateValues(
+                  field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+                  $event.value,
+                  field.dataType,
+                )
+              "
             >
               <template slot="noResult">
                 <p class="multi-slot">No results.</p>
@@ -115,20 +147,26 @@
               </template>
             </Multiselect>
           </div>
-
           <div v-else-if="field.dataType === 'Date'">
+            <div v-if="inlineLoader">
+              <PipelineLoader />
+            </div>
             <input
-              type="text"
-              onfocus="(this.type='date')"
-              onblur="(this.type='text')"
+              v-else
+              @input="executeUpdateValues(field.apiName, $event.target.value)"
+              type="date"
               id="user-input"
             />
           </div>
           <div v-else-if="field.dataType === 'DateTime'">
+            <div v-if="inlineLoader">
+              <PipelineLoader />
+            </div>
             <input
+              v-else
               type="datetime-local"
-              id="start"
-              @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+              id="user-input"
+              @input="executeUpdateValues(field.apiName, $event.target.value)"
             />
           </div>
           <div
@@ -137,8 +175,16 @@
               field.dataType === 'Double' ||
               field.dataType === 'Currency'
             "
+            class="inline-row"
           >
-            <input id="user-input" type="number" />
+            <input
+              @input="executeUpdateValues(field.apiName, $event.target.value)"
+              id="user-input"
+              type="number"
+            />
+            <div v-if="inlineLoader">
+              <PipelineLoader />
+            </div>
           </div>
         </div>
         <PipelineField
@@ -194,6 +240,7 @@ import PipelineNameSection from '@/components/PipelineNameSection'
 import PipelineField from '@/components/PipelineField'
 import { CollectionManager } from '@thinknimble/tn-models'
 import { SObjects, SObjectField } from '@/services/salesforce'
+import debounce from 'lodash.debounce'
 
 export default {
   name: 'PipelineTableRow',
@@ -202,14 +249,19 @@ export default {
     PipelineField,
     SkeletonBox: () => import(/* webpackPrefetch: true */ '@/components/SkeletonBox'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+    PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
   },
   async created() {
     await this.objectFields.refresh()
   },
   data() {
     return {
+      currentRow: null,
+      formData: {},
+      executeUpdateValues: debounce(this.setUpdateValues, 900),
       editing: false,
       editIndex: null,
+      currentOpp: null,
       objectFields: CollectionManager.create({
         ModelClass: SObjectField,
         pagination: { size: 300 },
@@ -223,6 +275,7 @@ export default {
   },
   watch: {
     closeDateData: 'futureDate',
+    closeEdit: 'closeInline',
   },
   props: {
     index: {},
@@ -234,6 +287,8 @@ export default {
     ForecastCategoryNameData: {},
     updateList: {},
     picklistOpts: {},
+    inlineLoader: {},
+    closeEdit: {},
   },
   computed: {
     extraPipelineFields() {
@@ -246,11 +301,23 @@ export default {
     },
   },
   methods: {
-    editInline(apiName, index) {
+    closeInline() {
+      this.editing = false
+    },
+    editInline(index) {
+      this.currentRow = this.index
       this.editIndex = index
-      console.log(this.picklistOpts)
       this.editing = true
-      this.$emit('inline-edit', apiName)
+      console.log(this.currentRow)
+      console.log(this.editIndex)
+    },
+    setUpdateValues(key, val, dataType) {
+      if (val) {
+        this.formData[key] = val
+      }
+      setTimeout(() => {
+        this.$emit('inline-edit', this.formData, this.opp.id, dataType)
+      }, 200)
     },
     emitCreateForm() {
       this.$emit('create-form')
@@ -372,6 +439,67 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+#user-input {
+  border: 1px solid #e8e8e8;
+  border-radius: 0.3rem;
+  background-color: white;
+  min-height: 2rem;
+  width: 12vw;
+}
+#user-input-wide {
+  border: 1px solid #e8e8e8;
+  border-radius: 0.3rem;
+  background-color: white;
+  min-height: 2rem;
+  width: 20vw;
+}
+#user-input:focus,
+#user-input-wide:focus {
+  outline: none;
+}
+input[type='text']:focus {
+  outline: none;
+  cursor: text;
+}
+textarea {
+  resize: none;
+  position: absolute;
+  margin-top: -1rem;
+}
+input[type='date'] {
+  background-color: $soft-gray !important;
+  color: $base-gray !important;
+}
+input[type='date']::-webkit-calendar-picker-indicator {
+  background-color: white;
+  border-radius: 3px;
+  padding: 5px;
+}
+input[type='date']::-webkit-datetime-edit-text,
+input[type='date']::-webkit-datetime-edit-month-field,
+input[type='date']::-webkit-datetime-edit-day-field,
+input[type='date']::-webkit-datetime-edit-year-field {
+  // color: #888;
+  cursor: pointer;
+  padding: 0.25rem;
+}
+input {
+  padding: 7px;
+}
+.inline-edit {
+  cursor: text;
+}
+.inline-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+.active-edit {
+  border: 2px solid $dark-green !important;
+  border-radius: 5px;
+  background-color: white !important;
+}
 .multi-slot {
   display: flex;
   align-items: center;
@@ -557,9 +685,10 @@ input[type='checkbox'] + label::before {
   margin-right: 0.5em;
 }
 .limit-cell-height {
-  max-height: 4rem;
+  max-height: 8rem;
   width: 110%;
   overflow: auto;
+  cursor: url('../assets/images/edit-cursor.svg'), auto;
 }
 .name-cell-note-button-1 {
   height: 1.5rem;
@@ -598,17 +727,4 @@ input[type='checkbox'] + label::before {
     height: 1.2rem;
   }
 }
-// ::-webkit-scrollbar {
-//   background-color: $off-white;
-//   -webkit-appearance: none;
-//   height: 100%;
-//   width: 3px;
-// }
-// ::-webkit-scrollbar-thumb {
-//   border-radius: 3px;
-//   background-color: $very-light-gray;
-// }
-// ::-webkit-scrollbar-track {
-//   margin-top: 1rem;
-// }
 </style>
