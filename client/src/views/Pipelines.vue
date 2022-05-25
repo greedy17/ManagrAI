@@ -562,6 +562,41 @@
               />
             </div>
 
+            <div
+              v-else-if="
+                field.dataType === 'Reference' &&
+                field.apiName !== 'OwnerId' &&
+                field.apiName !== 'AccountId'
+              "
+            >
+              <p>{{ field.referenceDisplayLabel }}:</p>
+              <Multiselect
+                :options="referenceOpts[field.apiName]"
+                @select="setUpdateValues(field.apiName, $event.id)"
+                v-model="dropdownVal[field.apiName]"
+                openDirection="below"
+                :loading="dropdownLoading"
+                style="width: 18vw"
+                selectLabel="Enter"
+                track-by="id"
+                label="name"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    {{
+                      `${currentVals[field.apiName]}` !== 'null'
+                        ? `${currentVals[field.apiName]}`
+                        : `${field.referenceDisplayLabel}`
+                    }}
+                  </p>
+                </template>
+              </Multiselect>
+            </div>
             <div v-else-if="field.apiName === 'OwnerId'">
               <p>{{ field.referenceDisplayLabel }}:</p>
 
@@ -630,7 +665,7 @@
         </div>
       </div>
     </Modal>
-    <!-- <p @click="test">testingggg</p> -->
+
     <div ref="pipelines" v-if="!loading">
       <section class="flex-row-spread">
         <div v-if="!workflowCheckList.length && !primaryCheckList.length" class="flex-row">
@@ -918,9 +953,8 @@
           <span>{{ selectedWorkflow ? currentWorkflow.length : allOpps.length }}</span>
         </h6>
       </div>
-
       <section v-if="!selectedWorkflow && !loadingWorkflows" class="table-section">
-        <div class="table">
+        <div v-outside-click="emitCloseEdit" class="table">
           <PipelineHeader
             :oppFields="oppFields"
             @check-all="onCheckAll"
@@ -1107,6 +1141,7 @@ export default {
       formData: {},
       noteTitle: '',
       noteInfo: '',
+      referenceOpts: {},
       picklistQueryOpts: {},
       createQueryOpts: {},
       picklistQueryOptsContacts: {},
@@ -1237,7 +1272,20 @@ export default {
   },
   methods: {
     test() {
-      console.log(this.allOpps)
+      console.log(this.referenceOpts)
+    },
+    async getReferenceFieldList(key, val) {
+      try {
+        const res = await SObjects.api.getSobjectPicklistValues({
+          sobject_id: val,
+        })
+        this.referenceOpts[key] = res
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    emitCloseEdit() {
+      this.closeInline += 1
     },
     async inlineUpdate(formData, id, dataType) {
       this.inlineLoader = true
@@ -1829,7 +1877,6 @@ export default {
       if (val) {
         this.formData[key] = val
       }
-
       if (key === 'StageName') {
         this.stagesWithForms.includes(val)
           ? (this.stageGateField = val)
@@ -2016,8 +2063,7 @@ export default {
         ) {
           this.picklistQueryOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].apiName
         } else if (this.oppFormCopy[i].dataType === 'Reference') {
-          this.picklistQueryOpts[this.oppFormCopy[i].referenceDisplayLabel] =
-            this.oppFormCopy[i].referenceDisplayLabel
+          this.referenceOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].id
         }
       }
 
@@ -2026,6 +2072,10 @@ export default {
           picklistFor: i,
           salesforceObject: 'Opportunity',
         })
+      }
+
+      for (let i in this.referenceOpts) {
+        this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i])
       }
 
       for (let i = 0; i < this.createOppForm.length; i++) {
@@ -2842,6 +2892,7 @@ section {
   background-color: white;
   min-height: 2.5rem;
   width: 18vw;
+  font-family: $base-font-family;
 }
 #user-input:focus {
   outline: none;

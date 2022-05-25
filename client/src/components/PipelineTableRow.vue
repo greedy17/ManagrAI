@@ -89,6 +89,11 @@
             <textarea
               @input="executeUpdateValues(field.apiName, $event.target.value)"
               id="user-input-wide"
+              :value="
+                field.apiName.includes('__c')
+                  ? opp['secondary_data'][field.apiName]
+                  : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+              "
             >
             </textarea>
 
@@ -109,6 +114,11 @@
               @input="executeUpdateValues(field.apiName, $event.target.value)"
               id="user-input"
               type="text"
+              :value="
+                field.apiName.includes('__c')
+                  ? opp['secondary_data'][field.apiName]
+                  : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+              "
             />
             <div v-if="inlineLoader">
               <PipelineLoader />
@@ -156,6 +166,11 @@
               @input="executeUpdateValues(field.apiName, $event.target.value)"
               type="date"
               id="user-input"
+              :value="
+                field.apiName.includes('__c')
+                  ? opp['secondary_data'][field.apiName]
+                  : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+              "
             />
           </div>
           <div v-else-if="field.dataType === 'DateTime'">
@@ -167,6 +182,11 @@
               type="datetime-local"
               id="user-input"
               @input="executeUpdateValues(field.apiName, $event.target.value)"
+              :value="
+                field.apiName.includes('__c')
+                  ? opp['secondary_data'][field.apiName]
+                  : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+              "
             />
           </div>
           <div
@@ -181,6 +201,11 @@
               @input="executeUpdateValues(field.apiName, $event.target.value)"
               id="user-input"
               type="number"
+              :value="
+                field.apiName.includes('__c')
+                  ? opp['secondary_data'][field.apiName]
+                  : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+              "
             />
             <div v-if="inlineLoader">
               <PipelineLoader />
@@ -308,8 +333,6 @@ export default {
       this.currentRow = this.index
       this.editIndex = index
       this.editing = true
-      console.log(this.currentRow)
-      console.log(this.editIndex)
     },
     setUpdateValues(key, val, dataType) {
       if (val) {
@@ -452,6 +475,9 @@ export default {
   background-color: white;
   min-height: 2rem;
   width: 20vw;
+  font-family: $base-font-family;
+  margin: 1.5rem 1rem;
+  padding: 7px;
 }
 #user-input:focus,
 #user-input-wide:focus {
@@ -496,8 +522,10 @@ input {
   justify-content: space-between;
 }
 .active-edit {
-  border: 2px solid $dark-green !important;
-  border-radius: 5px;
+  border-bottom: 2px solid $dark-green !important;
+  border-left: 1px solid $soft-gray !important;
+  border-right: 1px solid $soft-gray !important;
+  border-top: 1px solid $soft-gray !important;
   background-color: white !important;
 }
 .multi-slot {
