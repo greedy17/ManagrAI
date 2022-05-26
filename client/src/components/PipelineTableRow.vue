@@ -50,6 +50,7 @@
     </div>
     <div
       :key="i"
+      @click="editInline(i)"
       v-for="(field, i) in oppFields"
       :class="{
         'active-edit': editing && editIndex === i && currentRow === index,
@@ -74,11 +75,7 @@
         height="14px"
       />
 
-      <div
-        @click="editInline(i)"
-        class="limit-cell-height"
-        v-else-if="!updateList.includes(opp.id)"
-      >
+      <div class="limit-cell-height" v-else-if="!updateList.includes(opp.id)">
         <div class="inline-edit" v-if="editing && editIndex === i && currentRow === index">
           <div
             v-if="
@@ -130,13 +127,14 @@
               <PipelineLoader />
             </div>
             <Multiselect
-              v-else
+              v-else-if="field.apiName !== 'StageName'"
               :options="picklistOpts[field.apiName]"
               openDirection="below"
               selectLabel="Enter"
               style="width: 14vw; padding-bottom: 8rem"
               track-by="value"
               label="label"
+              v-model="dropdownValue"
               @select="
                 setUpdateValues(
                   field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
@@ -156,6 +154,27 @@
                 </p>
               </template>
             </Multiselect>
+            <Multiselect
+              v-else-if="field.apiName === 'StageName'"
+              :options="picklistOpts[field.apiName]"
+              openDirection="below"
+              selectLabel="Enter"
+              style="width: 14vw; padding-bottom: 8rem"
+              track-by="value"
+              label="label"
+              v-model="dropdownValue"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.png" alt="" />
+                  {{ `${field.referenceDisplayLabel}` }}
+                </p>
+              </template>
+            </Multiselect>
           </div>
           <div v-else-if="field.dataType === 'Date'">
             <div v-if="inlineLoader">
@@ -163,7 +182,7 @@
             </div>
             <input
               v-else
-              @input="executeUpdateValues(field.apiName, $event.target.value)"
+              @input="setUpdateValues(field.apiName, $event.target.value)"
               type="date"
               id="user-input"
               :value="
@@ -181,7 +200,7 @@
               v-else
               type="datetime-local"
               id="user-input"
-              @input="executeUpdateValues(field.apiName, $event.target.value)"
+              @input="setUpdateValues(field.apiName, $event.target.value)"
               :value="
                 field.apiName.includes('__c')
                   ? opp['secondary_data'][field.apiName]
@@ -283,7 +302,8 @@ export default {
     return {
       currentRow: null,
       formData: {},
-      executeUpdateValues: debounce(this.setUpdateValues, 900),
+      dropdownValue: null,
+      executeUpdateValues: debounce(this.setUpdateValues, 800),
       editing: false,
       editIndex: null,
       currentOpp: null,
@@ -301,6 +321,17 @@ export default {
   watch: {
     closeDateData: 'futureDate',
     closeEdit: 'closeInline',
+    dropdownValue: {
+      // immediate: true,
+      // deep: true,
+      handler(val) {
+        if (this.stages.includes(val.value)) {
+          this.$emit('open-stage-form', val.value, this.opp.id)
+        } else {
+          this.setUpdateValues('StageName', val.value)
+        }
+      },
+    },
   },
   props: {
     index: {},
@@ -314,6 +345,7 @@ export default {
     picklistOpts: {},
     inlineLoader: {},
     closeEdit: {},
+    stages: {},
   },
   computed: {
     extraPipelineFields() {
@@ -601,6 +633,12 @@ input {
   left: 3.5vw;
   z-index: 2;
 }
+.table-cell:hover {
+  border: 1px solid $dark-green;
+}
+.cell-name:hover {
+  border: none;
+}
 .table-cell-wide {
   display: table-cell;
   position: sticky;
@@ -716,7 +754,11 @@ input[type='checkbox'] + label::before {
   max-height: 8rem;
   width: 110%;
   overflow: auto;
-  cursor: url('../assets/images/edit-cursor.svg'), auto;
+  img {
+    height: 0.25rem;
+  }
+  // cursor: url('../assets/images/edit-cursor.svg'), auto;
+  cursor: pointer;
 }
 .name-cell-note-button-1 {
   height: 1.5rem;
