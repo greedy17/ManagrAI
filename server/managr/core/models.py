@@ -645,13 +645,21 @@ class UserActivity(models.Model):
             )
         ]
 
-        note_added = False if workflow.saved_data["meeting_comments"] is None else True
+        note_added = (
+            False
+            if (
+                "meeting_comments" not in workflow.saved_data.keys()
+                or workflow.saved_data["meeting_comments"] is None
+            )
+            else True
+        )
         obj = dict(
             source=workflow.update_source,
             name=alert_name,
             fields=saved_data,
             note_added=note_added,
         )
+        print(obj)
         self.clicks["workflows"]["untouched"] -= 1
         self.clicks["workflows"]["touched"].append(obj)
         return self.save()

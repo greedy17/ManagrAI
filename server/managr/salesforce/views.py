@@ -444,11 +444,11 @@ class SalesforceSObjectViewSet(
 
         data = self.request.data
         logger.info(f"UPDATE START ---- {data}")
-
         user = User.objects.get(id=self.request.user.id)
         form_ids = data.get("form_id")
         form_data = data.get("form_data")
-        alert_instance_id = data.get("alert_instance", None)
+        from_workflow = data.get("from_workflow")
+        title = data.get("workflow_title", None)
         forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
         main_form = forms.filter(template__form_type="UPDATE").first()
         stage_form_data_collector = {}
@@ -515,22 +515,11 @@ class SalesforceSObjectViewSet(
             emit_add_update_to_sf(str(main_form.id))
         if len(user.slack_integration.realtime_alert_configs):
             _send_instant_alert(form_ids)
-        if alert_instance_id:
-            from managr.alerts.models import AlertInstance
-
-            instance = AlertInstance.objects.get(id=alert_instance_id)
-            forms.update(
-                is_submitted=True,
-                update_source="pipeline",
-                submission_date=timezone.now(),
-                alert_instance_id=instance,
-            )
+        forms.update(is_submitted=True, update_source="pipeline", submission_date=timezone.now())
+        if from_workflow:
             user.activity.increment_untouched_count("workflows")
-            user.activity.add_workflow_activity(str(main_form.id), instance.template.title)
-        else:
-            forms.update(
-                is_submitted=True, update_source="pipeline", submission_date=timezone.now()
-            )
+            user.activity.add_workflow_activity(str(main_form.id), title)
+
         value_update = main_form.resource_object.update_database_values(all_form_data)
         return Response(data={"success": True})
 

@@ -524,6 +524,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
         serializer = OrgCustomSlackFormSerializer(
             data=request.data, instance=instance, context={"request": request}
         )
+        print(request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
@@ -571,6 +572,7 @@ class SlackFormsViewSet(
         serializer.is_valid(raise_exception=True)
         serializer.save()
         instance = serializer.instance
+        print(data)
         instance.fields.clear()
         for i, field in enumerate(fields_ref):
             instance.fields.add(
