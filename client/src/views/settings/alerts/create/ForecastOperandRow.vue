@@ -1,16 +1,5 @@
 <template>
   <div v-if="form.field.operandOrder.value === 0" class="alert-operand-row">
-    <!-- <span class="alert-operand-row--label">Alert Operands</span> -->
-    <!-- <div class="alert-operand-row__condition" v-if="form.field.operandOrder.value != 0">
-      <label class="alert-operand-row__condition-label">AND</label>
-      <ToggleCheckBox
-        @input="toggleSelectedCondition"
-        :value="selectedCondition !== 'AND'"
-        offColor="#199e54"
-        onColor="#199e54"
-      />
-      <label class="alert-operand-row__condition-label">OR</label>
-    </div> -->
     <div class="alert-operand-row__options">
       <div
         v-if="selectedFieldType != 'DATE'"
@@ -19,20 +8,6 @@
       >
         <FormField :errors="form.field.operandIdentifier.errors">
           <template v-slot:input>
-            <DropDownSearch
-              v-if="selectedOperandType == 'FIELD'"
-              :items="objectFields.list"
-              :itemsRef.sync="form.field._operandIdentifier.value"
-              v-model="form.field.operandIdentifier.value"
-              displayKey="referenceDisplayLabel"
-              valueKey="apiName"
-              nullDisplay="Search SFDC fields"
-              searchable
-              :hasNext="!!objectFields.pagination.hasNextPage"
-              @load-more="objectFieldNextPage"
-              @search-term="onSearchFields"
-              @input="form.field.operandIdentifier.validate()"
-            />
           </template>
         </FormField>
       </div>
@@ -43,17 +18,6 @@
       >
         <FormField :errors="form.field.operandOperator.errors">
           <template v-slot:input>
-            <DropDownSearch
-              :items.sync="operatorOpts"
-              :itemsRef.sync="form.field._operandOperator.value"
-              v-model="form.field.operandOperator.value"
-              @input="form.field.operandOperator.validate()"
-              displayKey="label"
-              valueKey="value"
-              nullDisplay="Select an Operator"
-              searchable
-              local
-            />
           </template>
         </FormField>
       </div>
@@ -63,17 +27,6 @@
           :errors="form.field.operandValue.errors"
         >
           <template v-slot:input>
-            <DropDownSearch
-              :items.sync="picklistOpts"
-              :itemsRef.sync="form.field._operandValue.value"
-              v-model="form.field.operandValue.value"
-              displayKey="label"
-              valueKey="value"
-              nullDisplay="Select a value"
-              searchable
-              local
-              v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'"
-            />
           </template>
         </FormField>
         <template v-else>
@@ -82,17 +35,6 @@
             :errors="form.field.operandValue.errors"
           >
             <template v-slot:input>
-              <DropDownSearch
-                :items.sync="valueOpts"
-                :itemsRef.sync="form.field._operandValue.value"
-                v-model="form.field.operandValue.value"
-                displayKey="label"
-                valueKey="value"
-                nullDisplay="Select a value"
-                searchable
-                local
-                v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'"
-              />
             </template>
           </FormField>
           <div v-else>
@@ -110,17 +52,6 @@
               v-if="selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME'"
               class="column"
             >
-              <!-- <span class="row"
-                ><input
-                  @click="setOperandDateValue(0)"
-                  type="radio"
-                  id="today"
-                  value="0"
-                  v-model="operandDate"
-                />
-                <label for="today">{{ form.field.operandIdentifier.value }} is today.</label>
-              </span> -->
-
               <span class="row"
                 ><input
                   @click="setOperandDateValue(5)"
@@ -133,7 +64,6 @@
                   >{{ form.field.operandIdentifier.value }} is approaching.</label
                 >
               </span>
-
               <span class="row"
                 ><input
                   @click="setOperandDateValue(-1)"
@@ -156,33 +86,22 @@
 /**
  * Components
  * */
-// Pacakges
-import ToggleCheckBox from '@thinknimble/togglecheckbox'
-
 //Internal
-import ListContainer from '@/components/ListContainer'
 import FormField from '@/components/forms/FormField'
-import DropDownSearch from '@/components/DropDownSearch'
 /**
  * Services
  */
 import { AlertOperandForm } from '@/services/alerts/'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 import {
   SObjectField,
-  SObjectValidations,
   SObjectPicklist,
   NON_FIELD_ALERT_OPTS,
 } from '@/services/salesforce'
 import {
   ALERT_DATA_TYPE_MAP,
   INPUT_TYPE_MAP,
-  INTEGER,
-  STRING,
-  DATE,
-  DECIMAL,
-  BOOLEAN,
-  DATETIME,
+  STRING
 } from '@/services/salesforce/models'
 
 export default {
@@ -193,7 +112,7 @@ export default {
    *
    */
   name: 'ForecastOperandRow',
-  components: { ListContainer, ToggleCheckBox, DropDownSearch, FormField },
+  components: { FormField },
   props: {
     form: { type: AlertOperandForm },
     resourceType: { type: String },
@@ -281,22 +200,6 @@ export default {
       }
       return 'text'
     },
-    toggleSelectedCondition() {
-      this.selectedCondition == 'AND'
-        ? (this.selectedCondition = 'OR')
-        : (this.selectedCondition = 'AND')
-    },
-    async objectFieldNextPage() {
-      await this.objectFields.addNextPage()
-    },
-    async onSearchFields(v) {
-      this.objectFields.pagination = new Pagination()
-      this.objectFields.filters = {
-        ...this.objectFields.filters,
-        search: v,
-      }
-      await this.objectFields.refresh()
-    },
     async listPicklists(query_params = {}) {
       try {
         const res = await SObjectPicklist.api.listPicklists(query_params)
@@ -312,10 +215,6 @@ export default {
     },
   },
   computed: {
-    selectedField() {
-      return this.form.field.operandIdentifier.value
-    },
-
     selectedFieldTypeRaw() {
       if (this.form.field._operandIdentifier.value) {
         return this.form.field._operandIdentifier.value.dataType
@@ -334,30 +233,6 @@ export default {
       } else {
         return STRING
       }
-    },
-    operatorOpts() {
-      switch (this.selectedFieldType) {
-        case INTEGER:
-          return this.intOpts
-        case DECIMAL:
-          return this.intOpts
-        case DATE:
-          return this.intOpts
-        case DATETIME:
-          return this.intOpts
-        default:
-          return this.strOpts
-      }
-    },
-    valueOpts() {
-      if (this.selectedFieldType) {
-        if (this.selectedFieldType == DATE || this.selectedFieldType == DATETIME) {
-          return this.dateValueOpts
-        } else {
-          return this.booleanValueOpts
-        }
-      }
-      return this.booleanValueOpts
     },
     selectedCondition: {
       get() {
@@ -442,70 +317,16 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
-.btn {
-  &--danger {
-    @include button-danger();
-  }
-  &--primary {
-    @include primary-button();
-  }
-  &--secondary {
-    @include secondary-button();
-  }
 
-  &--icon {
-    @include --icon();
-  }
-}
 .alert-operand-row {
-  // @include standard-border();
-  // margin: 1rem;
-  // padding: 0.5rem 1rem;
   display: flex;
   flex-direction: column;
-
-  &--label {
-    top: -1.05rem;
-    position: relative;
-    @include muted-font();
-  }
-}
-.alert-operand-row__condition {
-  position: relative;
-  top: 0rem;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  &-label {
-    @include muted-font();
-    margin: 0 0.5rem;
-  }
-}
-.alert-operand-row__date-range {
-  // displays a message on top of the input field for date/datetime selection
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  width: 15rem;
-  margin-left: 2rem;
-  @include muted-font(14px);
 }
 .alert-operand-row__options {
   display: flex;
   padding: 1rem;
   flex-wrap: wrap;
   justify-content: space-evenly;
-  &-label {
-    color: black;
-  }
-}
-.toggle__row {
-  display: flex;
-  flex-direction: row;
-}
-.mar {
-  margin-top: 1rem;
 }
 .column {
   display: flex;

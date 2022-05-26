@@ -1,6 +1,8 @@
 import logging
+from django.conf import settings
 from django.forms import ValidationError
 import pytz
+from django.db.models import Q
 from datetime import datetime
 from django_filters.rest_framework import DjangoFilterBackend
 from copy import copy
@@ -45,10 +47,17 @@ def create_configs_for_target(target, template_user, config):
         elif target == "REPS":
             target = "REP"
         users = User.objects.filter(
-            organization=template_user.organization, user_level=target, is_active=True,
+            Q(organization=template_user.organization, user_level=target, is_active=True,)
+            | Q(id=template_user.id)
         )
     elif target == "SELF":
         config["recipient_type"] = "SLACK_CHANNEL"
+        if "default" in config["recipients"]:
+            config["recipients"] = [
+                template_user.slack_integration.zoom_channel
+                if template_user.slack_integration.zoom_channel
+                else template_user.slack_integration.channel
+            ]
         return [config]
     elif target == "ALL":
         users = User.objects.filter(organization=template_user.organization, is_active=True)
@@ -63,8 +72,9 @@ def create_configs_for_target(target, template_user, config):
                 if user.slack_integration.zoom_channel
                 else user.slack_integration.channel
             ]
-            config_copy["alert_targets"] = [str(user.id)]
             config_copy["recipient_type"] = "SLACK_CHANNEL"
+            if user != template_user:
+                config_copy["alert_targets"] = [str(user.id)]
             new_configs.append(config_copy)
     return new_configs
 
@@ -90,7 +100,8 @@ def alert_config_creator(data, user):
                 created_configs = create_configs_for_target(target, user, new_configs[0])
                 if len(created_configs):
                     all_configs = [*all_configs, *created_configs]
-            all_configs = remove_duplicate_alert_configs(all_configs)
+            if len(all_configs) > 1:
+                all_configs = remove_duplicate_alert_configs(all_configs)
             new_configs = all_configs if len(all_configs) else None
     else:
         return None
@@ -163,6 +174,7 @@ class AlertTemplateViewSet(
     def run_now(self, request, *args, **kwargs):
         obj = self.get_object()
         data = self.request.data
+
         from_workflow = data.get("from_workflow", False)
         if from_workflow:
             config = obj.configs.all().first()
@@ -179,7 +191,10 @@ class AlertTemplateViewSet(
                             )
                             res_data = [item.integration_id for item in res]
                             break
-                    users = config.target_users
+                    users = []
+                    for config in obj.configs.all():
+                        users = [*users, *config.target_users]
+                    print(users)
                     res_data = []
                     for user in users:
                         if hasattr(user, "salesforce_account"):
@@ -187,7 +202,6 @@ class AlertTemplateViewSet(
                                 template.url_str(user, config.id), template.resource_type
                             )
                             res_data.extend([item.integration_id for item in res])
-
                     break
                 except TokenExpired:
                     if attempts >= 5:
@@ -249,7 +263,6 @@ class RealTimeAlertConfigViewSet(
 
     def create(self, request, *args, **kwargs):
         data = request.data
-        print(data)
         return Response(data)
 
 

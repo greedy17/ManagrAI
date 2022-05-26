@@ -77,7 +77,6 @@ export default {
 .content {
   flex-grow: 1;
   font-size: 14px;
-  // color: $dark-green;
 }
 .subs {
   font-size: 11px;

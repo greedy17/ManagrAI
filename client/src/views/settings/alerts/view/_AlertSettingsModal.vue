@@ -48,17 +48,6 @@
                   </p>
                 </template>
               </Multiselect>
-              <!-- <DropDownSearch
-                :items.sync="weeklyOpts"
-                :itemsRef.sync="form.field._recurrenceDay.value"
-                v-model="form.field.recurrenceDay.value"
-                @input="form.field.recurrenceDay.validate()"
-                displayKey="key"
-                valueKey="value"
-                nullDisplay="Days"
-                searchable
-                local
-              /> -->
             </template>
           </FormField>
         </div>
@@ -97,22 +86,6 @@
                 </p>
               </template>
             </Multiselect>
-            <!-- <DropDownSearch
-              :items.sync="userTargetsOpts"
-              :itemsRef.sync="form.field._alertTargets.value"
-              v-model="form.field.alertTargets.value"
-              @input="form.field.alertTargets.validate()"
-              displayKey="fullName"
-              valueKey="id"
-              nullDisplay="Users"
-              searchable
-              multi
-              medium
-              :loading="users.loadingNextPage"
-              :hasNext="!!users.pagination.hasNextPage"
-              @load-more="onUsersNextPage"
-              @search-term="onSearchUsers"
-            /> -->
           </template>
         </FormField>
       </div>
@@ -194,29 +167,6 @@
                   </p>
                 </template>
               </Multiselect>
-              <!-- <DropDownSearch
-                :items.sync="userChannelOpts.channels"
-                :itemsRef.sync="form.field._recipients.value"
-                v-model="form.field.recipients.value"
-                @input="form.field.recipients.validate()"
-                displayKey="name"
-                valueKey="id"
-                nullDisplay="Channels"
-                :hasNext="!!userChannelOpts.nextCursor"
-                @load-more="listUserChannels(userChannelOpts.nextCursor)"
-                searchable
-                local
-              >
-                <template v-slot:tn-dropdown-option="{ option }">
-                  <img
-                    v-if="option.isPrivate == true"
-                    class="card-img"
-                    style="width: 1rem; height: 1rem; margin-right: 0.2rem"
-                    src="@/assets/images/lockAsset.png"
-                  />
-                  {{ option['name'] }}
-                </template>
-              </DropDownSearch> -->
             </template></FormField
           >
         </div>
@@ -243,9 +193,7 @@
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 
 //Internal
-import ListContainer from '@/components/ListContainer'
 import FormField from '@/components/forms/FormField'
-import DropDownSearch from '@/components/DropDownSearch'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 /**
  * Services
@@ -253,7 +201,7 @@ import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 import { AlertConfigForm, AlertConfig } from '@/services/alerts/'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 
 export default {
   /**
@@ -264,9 +212,7 @@ export default {
    */
   name: 'AlertSettingsModal',
   components: {
-    ListContainer,
     ToggleCheckBox,
-    DropDownSearch,
     FormField,
     PulseLoadingSpinnerButton,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
@@ -349,10 +295,6 @@ export default {
       }
       this.isSaving = false
     },
-    // setDay(n) {
-    //   this.form.field.recurrenceDay.value = 0
-    //   this.form.field.recurrenceDays.value.push(n.value)
-    // },
     setDay(n) {
       this.form.field.recurrenceDay.value = 0
       let days = []
@@ -366,14 +308,6 @@ export default {
     },
     setRecipient(n) {
       this.form.field.recipients.value = n.id
-    },
-    async listChannels(cursor = null) {
-      const res = await SlackOAuth.api.listChannels(cursor)
-      const results = new SlackListResponse({
-        channels: [...this.channelOpts.channels, ...res.channels],
-        responseMetadata: { nextCursor: res.nextCursor },
-      })
-      this.channelOpts = results
     },
     async listUserChannels(cursor = null) {
       this.dropdownLoading = true
@@ -482,37 +416,6 @@ export default {
         }
       }
     },
-    removeTarget() {
-      this.form.field.recipients.value = []
-      this.form.field._recipients.value = []
-    },
-    recipientTypeToggle(value) {
-      if (!this.user.slackRef) {
-        this.$Alert.alert({ type: 'error', message: 'Slack Not Integrated', timeout: 2000 })
-        return 'USER_LEVEL'
-      }
-      if (value == 'USER_LEVEL') {
-        return 'SLACK_CHANNEL'
-      } else if (value == 'SLACK_CHANNEL') {
-        this.form.field.recipients.value = []
-        this.form.field._recipients.value = []
-        return 'USER_LEVEL'
-      }
-      return value
-    },
-
-    async onSearchUsers(v) {
-      this.users.pagination = new Pagination()
-      this.users.filters = {
-        ...this.users.filters,
-        search: v,
-      }
-
-      await this.users.refresh()
-    },
-    async onUsersNextPage() {
-      await this.users.addNextPage()
-    },
   },
   computed: {
     userTargetsOpts() {
@@ -529,51 +432,6 @@ export default {
       } else {
         return [{ fullName: 'Myself', id: 'SELF' }]
       }
-    },
-    recipientOpts() {
-      if (this.user.userLevel == 'MANAGER') {
-        return [
-          ...this.alertRecipientOpts.map((opt) => {
-            return {
-              id: opt.value,
-              fullName: opt.key,
-            }
-          }),
-          ...this.users.list,
-        ]
-      } else {
-        return [{ fullName: 'Myself', id: 'SELF' }]
-      }
-    },
-    filteredUserTargets() {
-      if (this.searchQuery) {
-        return this.userTargetsOpts.filter((key) => {
-          return key.fullName.toLowerCase().startsWith(this.searchQuery.toLowerCase())
-        })
-      } else {
-        return this.userTargetsOpts
-      }
-    },
-    filteredRecipients() {
-      if (this.searchText) {
-        return this.recipientOpts.filter((key) => {
-          return key.fullName.toLowerCase().startsWith(this.searchText.toLowerCase())
-        })
-      } else {
-        return this.recipientOpts
-      }
-    },
-    filteredChannels() {
-      if (this.searchChannels) {
-        return this.reversedChannels.filter((key) => {
-          return key.name.toLowerCase().startsWith(this.searchChannels.toLowerCase())
-        })
-      } else {
-        return this.reversedChannels
-      }
-    },
-    reversedChannels() {
-      return this.channelOpts.channels.reverse()
     },
     user() {
       return this.$store.state.user
@@ -646,12 +504,8 @@ export default {
     }
   }
 }
-.channels_height {
-  height: 22vh;
-  overflow-y: scroll;
-}
 ::placeholder {
-  color: $panther-silver;
+  color: $very-light-gray;
   font-size: 0.75rem;
 }
 h2 {
@@ -674,21 +528,6 @@ h2 {
   width: 16vw;
   margin: 0.5rem 0rem;
   box-shadow: 1px 1px 3px 0px $very-light-gray;
-}
-.btn {
-  &--danger {
-    @include button-danger();
-  }
-  &--primary {
-    @include primary-button();
-  }
-  &--secondary {
-    @include secondary-button();
-  }
-
-  &--icon {
-    @include --icon();
-  }
 }
 .primary-button {
   padding: 0.4rem 1.5rem;
@@ -714,9 +553,6 @@ h2 {
     margin-bottom: 0.5rem;
   }
 }
-::v-deep .dropdown-search {
-  margin: 1rem 0rem;
-}
 .alerts-page__settings {
   color: $base-gray;
   margin: 0.5rem 1rem;
@@ -727,12 +563,6 @@ h2 {
       margin: 0 0.5rem;
     }
   }
-  &-remove {
-    justify-self: end;
-  }
-}
-.invisible {
-  display: none;
 }
 .save-button {
   display: flex;
@@ -741,15 +571,6 @@ h2 {
   width: 100%;
   padding: 0rem 1rem 0rem 0rem;
   height: 170px;
-}
-.selected__item {
-  padding: 0.5rem 1.2rem;
-  background-color: transparent;
-  border: 3px solid white;
-  color: white;
-  border-radius: 0.3rem;
-  width: 50%;
-  text-align: center;
 }
 .row__ {
   display: flex;

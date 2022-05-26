@@ -79,7 +79,5 @@ export default {
     text-overflow: ellipsis;
     border-bottom: 1px solid #cc3873;
   }
-  &__icon {
-  }
 }
 </style>

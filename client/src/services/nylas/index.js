@@ -1,4 +1,4 @@
-import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
+import { apiClient, apiErrorHandler } from '@/services/api'
 import { objectToCamelCase } from '@thinknimble/tn-utils'
 
 const REVOKE_TOKEN_ENDPOINT = '/users/nylas/revoke/'

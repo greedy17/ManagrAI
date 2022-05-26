@@ -183,7 +183,6 @@ import SlackOAuth from '@/services/slack'
 
 export default {
   name: 'Custom',
-  components: {},
   watch: {
     createOppForm: 'checkCreateOpp',
     updateContactForm: 'checkUpdateContact',
@@ -214,9 +213,6 @@ export default {
   },
 
   computed: {
-    orgHasSlackIntegration() {
-      return !!this.$store.state.user.organizationRef.slackIntegration
-    },
     user() {
       return this.$store.state.user
     },
@@ -295,19 +291,6 @@ export default {
         this.hasUpdateAccountForm = true
       }
     },
-
-    goToUpdateOpp() {
-      this.$router.push({ name: 'UpdateOpportunity' })
-    },
-    goToCreate() {
-      this.$router.push({ name: 'CreateContacts' })
-    },
-    goToTemplates() {
-      this.$router.push({ name: 'ListTemplates' })
-    },
-    // handleShowOptional() {
-    //   this.showOptional = !this.showOptional
-    // },
   },
 }
 </script>
@@ -346,7 +329,6 @@ export default {
     filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
       brightness(93%) contrast(89%);
     margin-left: 0.5rem;
-    // margin-top: 0.1rem;
   }
 }
 .customizations {
@@ -362,23 +344,11 @@ export default {
     justify-content: flex-start;
     border-radius: 0.5rem;
   }
-  &__subtitle {
-    font-size: 14px;
-    margin-bottom: 2rem;
-  }
 }
 .sub__ {
   font-size: 14px;
   margin-top: -0.5rem;
   color: $gray;
-}
-.alert_cards {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  margin-top: 1rem;
-  flex-wrap: wrap;
 }
 .card:hover {
   transform: scale(1.015);

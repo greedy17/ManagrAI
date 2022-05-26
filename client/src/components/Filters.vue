@@ -38,22 +38,10 @@ export default {
       )
     },
   },
-  methods: {
-    selectFilterOption(option) {
-      if (option === 'less than' || option === 'greater than' || option === 'equals') {
-        this.amountInput(option)
-      }
-    },
-    closeFilters() {
-      this.showList ? (this.showList = !this.showList) : (this.showList = this.showList)
-      this.filtering = !this.filtering
-    },
-  },
 }
 </script>
 <style lang="scss" scoped>
 @import '@/styles/variables';
-// @import '@/styles/buttons';
 
 input[type='search'] {
   border: none;
@@ -127,7 +115,6 @@ input[type='search']:focus {
 .filter-button:hover {
   color: $base-gray;
   background-color: $off-white;
-
   img {
     filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
   }
@@ -139,9 +126,7 @@ input[type='search']:focus {
   border-bottom: 1px solid $very-light-gray;
   display: flex;
   align-items: center;
-  // padding: 2px;
   margin: auto;
   padding: auto;
-  // margin-right: 0.5rem;
 }
 </style>

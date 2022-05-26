@@ -29,22 +29,7 @@ export default {
 @import '@/styles/sidebars';
 @import '@/styles/mixins/utils';
 
-.toolbar__row {
-  @include pointer-on-hover;
-}
-
-.org-statement {
-  color: $mid-gray;
-  margin-top: 1rem;
-  margin-bottom: 0;
-}
 a {
   text-decoration: none;
-}
-::v-deep .router-link-exact-active.router-link-active {
-  .toolbar__row {
-    background-color: #e5f2ea;
-    border-bottom: 4px #199e54 solid;
-  }
 }
 </style>

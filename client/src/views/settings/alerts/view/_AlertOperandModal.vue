@@ -23,12 +23,8 @@
  * */
 // Pacakges
 import AlertOperandRow from '../create/_AlertOperandRow.vue'
-import ToggleCheckBox from '@thinknimble/togglecheckbox'
 
 //Internal
-import ListContainer from '@/components/ListContainer'
-import FormField from '@/components/forms/FormField'
-import DropDownSearch from '@/components/DropDownSearch'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 /**
  * Services
@@ -44,10 +40,6 @@ export default {
    */
   name: 'AlertOperandModal',
   components: {
-    ListContainer,
-    ToggleCheckBox,
-    DropDownSearch,
-    FormField,
     AlertOperandRow,
     AlertGroupOperand,
     PulseLoadingSpinnerButton,
@@ -85,7 +77,6 @@ export default {
       this.isSaving = false
     },
   },
-  computed: {},
 }
 </script>
 
@@ -99,22 +90,6 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
-
-.btn {
-  &--danger {
-    @include button-danger();
-  }
-  &--primary {
-    @include primary-button();
-  }
-  &--secondary {
-    @include secondary-button();
-  }
-
-  &--icon {
-    @include --icon();
-  }
-}
 
 .primary-button {
   padding: 0.4rem 1.5rem;

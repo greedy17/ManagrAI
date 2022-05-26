@@ -221,8 +221,8 @@ export default {
               resourceId: this.workflow.id,
             })
             .then(async (res) => {
-              const response = await SObjects.api.updateResource({
-                form_id: res.form_id,
+              await SObjects.api.updateResource({
+                form_id: [res.form_id],
                 form_data: { StageName: this.stageData },
               })
             })
@@ -249,8 +249,8 @@ export default {
               resourceId: this.workflow.id,
             })
             .then(async (res) => {
-              const response = await SObjects.api.updateResource({
-                form_id: res.form_id,
+              await SObjects.api.updateResource({
+                form_id: [res.form_id],
                 form_data: { CloseDate: this.newCloseDate },
               })
             })
@@ -277,8 +277,8 @@ export default {
               resourceId: this.workflow.id,
             })
             .then(async (res) => {
-              const response = await SObjects.api.updateResource({
-                form_id: res.form_id,
+              await SObjects.api.updateResource({
+                form_id: [res.form_id],
                 form_data: { ForecastCategoryName: this.ForecastCategoryNameData },
               })
             })

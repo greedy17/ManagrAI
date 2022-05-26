@@ -106,42 +106,8 @@
                     </p>
                   </template>
                 </Multiselect>
-                <!-- <DropDownSearch
-                  :items.sync="userChannelOpts.channels"
-                  v-model="zoomChannel"
-                  displayKey="name"
-                  valueKey="id"
-                  nullDisplay="Channels"
-                  :hasNext="!!userChannelOpts.nextCursor"
-                  @load-more="listUserChannels(userChannelOpts.nextCursor)"
-                  searchable
-                  local
-                >
-                  <template v-slot:tn-dropdown-option="{ option }">
-                    <img
-                      v-if="option.isPrivate == true"
-                      class="card-img"
-                      style="width: 1.2rem; height: 1rem; margin-right: 0.2rem"
-                      src="@/assets/images/lock.png"
-                    />
-                    {{ option['name'] }}
-                  </template>
-                </DropDownSearch> -->
               </template>
             </FormField>
-
-            <!-- <p
-              v-if="zoomChannel"
-              @click="removeZoomChannel"
-              :class="zoomChannel ? 'selected__item' : 'visible'"
-            >
-              <img
-                src="@/assets/images/remove.png"
-                style="height: 1rem; margin-right: 0.25rem; margin-top: 0.25rem"
-                alt=""
-              />
-              {{ getChannelName(zoomChannel) }}
-            </p> -->
           </div>
           <div style="margin-top: 1.5rem" v-if="channelCreated || zoomChannel">
             <div v-if="!create">
@@ -157,18 +123,6 @@
           </div>
         </div>
       </div>
-      <!-- <div v-if="channelCreated || zoomChannel" class="flex-end">
-        <div v-if="!create">
-          <button class="green__button bouncy" @click="handleZoomUpdate(zoomChannel)">
-            Activate Channel
-          </button>
-        </div>
-        <div v-else>
-          <button class="green__button bouncy" @click="handleZoomUpdate(createdZoomChannel)">
-            Activate Channel
-          </button>
-        </div>
-      </div> -->
     </div>
   </div>
 </template>
@@ -176,15 +130,13 @@
 <script>
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import FormField from '@/components/forms/FormField'
-import DropDownSearch from '@/components/DropDownSearch'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 import User from '@/services/users'
 
 export default {
   name: 'LogZoom',
   components: {
-    DropDownSearch,
     ToggleCheckBox,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     FormField,
@@ -212,10 +164,6 @@ export default {
     }
   },
   methods: {
-    test() {
-      console.log(this.userChannelOpts.channels)
-      console.log(this.zoomChannel)
-    },
     async handleZoomUpdate(zoom_channel) {
       if (typeof zoom_channel === 'object') {
         zoom_channel = zoom_channel.id
@@ -235,9 +183,6 @@ export default {
         })
       }
     },
-    removeZoomChannel() {
-      this.zoomChannel = ''
-    },
     logNewName(str) {
       let new_str = ''
       new_str = str.replace(/\s+/g, '-').toLowerCase()
@@ -245,9 +190,6 @@ export default {
     },
     changeCreate() {
       this.create = !this.create
-    },
-    getChannelName(id) {
-      return this.userChannelOpts.channels.filter((channel) => channel.id == id)[0].name
     },
     async listUserChannels(cursor = null) {
       this.dropdownLoading = true
@@ -366,14 +308,6 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
-.load-more {
-  text-align: center;
-  font-size: 13px;
-}
-.load-more:hover {
-  color: $dark-green;
-  cursor: pointer;
-}
 @keyframes bounce {
   0% {
     transform: translateY(0);
@@ -396,7 +330,6 @@ export default {
   align-items: center;
   justify-content: space-between;
   flex-direction: row;
-
   width: 700px;
 }
 .back-button {
@@ -478,7 +411,7 @@ img {
   font-weight: 400;
 }
 ::placeholder {
-  color: $panther-silver;
+  color: $very-light-gray;
   font-size: 0.75rem;
 }
 .logZoomPage {
@@ -488,12 +421,6 @@ img {
   display: flex;
   align-items: center;
   flex-direction: column;
-}
-.flex-end {
-  margin-top: 2rem;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
 }
 .card {
   width: 700px;
@@ -510,9 +437,6 @@ input[type='text']:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-.col {
-  flex-direction: column;
 }
 .row {
   display: flex;
@@ -559,19 +483,5 @@ input {
   border: 1px solid white;
   border-radius: 0.25rem;
   margin-top: 0.5rem;
-}
-.selected__item {
-  padding: 0.5rem 1.5rem;
-  border: none;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  border-radius: 0.3rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: -0.25rem;
-}
-.visible {
-  display: none;
 }
 </style>

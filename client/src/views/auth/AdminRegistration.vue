@@ -7,7 +7,6 @@
       </div>
 
       <div class="registration__text">Create and customize your Managr account within minutes.</div>
-      <!-- <form @submit.prevent="onSubmit"> -->
       <div class="registration__form">
         <div class="form-card">
           <FormField
@@ -79,17 +78,6 @@
                   <p>No results.</p>
                 </template>
               </Multiselect>
-
-              <!-- <DropDownSearch
-                :items="userRoles"
-                valueKey="key"
-                displayKey="name"
-                v-model="registrationForm.field.role.value"
-                :itemsRef="userRoles"
-                class="invite-form__dropdown"
-                nullDisplay="Select user role"
-                @input="registrationForm.field.role.validate()"
-              /> -->
             </template>
           </FormField>
 
@@ -117,25 +105,9 @@
                   <p>No results.</p>
                 </template>
               </Multiselect>
-
-              <!-- <DropDownSearch
-                :items.sync="timezones"
-                v-model="registrationForm.field.timezone.value"
-                nullDisplay="Select your timezone"
-                searchable
-                local
-              /> -->
             </template>
           </FormField>
         </div>
-        <!-- <div class="registration__input__label">
-        Company
-        <input
-          v-model="registrationForm.field.organizationName.value"
-          type="text"
-          class="registration__input"
-        />
-      </div> -->
         <div class="registration__privacy">
           By clicking Sign Up, I agree to the
           <a href="https://managr.ai/terms-of-service" target="_blank">Terms of Service</a> and
@@ -147,7 +119,6 @@
         <div style="margin-top: 1rem">
           <router-link :to="{ name: 'Login' }">Back to Login</router-link>
         </div>
-        <!-- </form> -->
       </div>
     </div>
   </div>
@@ -156,25 +127,15 @@
 <script>
 import User, { UserRegistrationForm } from '@/services/users'
 
-import GoogleButton from '@/components/GoogleButton'
-import TNDropdown from '@/components/TNDropdown'
-import managrDropdown from '@/components/managrDropdown'
 import Button from '@thinknimble/button'
 import FormField from '@/components/forms/FormField'
-import DropDownSelect from '@thinknimble/dropdownselect'
-import DropDownSearch from '@/components/DropDownSearch'
 import moment from 'moment-timezone'
 
 export default {
   name: 'Registration',
   components: {
     FormField,
-    DropDownSelect,
-    GoogleButton,
-    TNDropdown,
-    managrDropdown,
     Button,
-    DropDownSearch,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {
@@ -276,12 +237,6 @@ export default {
     text-align: center;
     font-size: 14px;
   }
-  &__input {
-    @include input-field-white();
-  }
-  &__input__label {
-    font-size: 14px;
-  }
   &__privacy {
     padding: 0.5rem 1rem;
     font-size: 0.75rem;
@@ -318,34 +273,6 @@ export default {
 .time:hover {
   color: $gray;
 }
-.dropdown {
-  align-items: center;
-  width: 18vw;
-  margin: 0;
-}
-::v-deep .input-content {
-  width: 16rem;
-}
-::v-deep .tn-dropdown__selection-container {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  border-radius: 4px;
-  background-color: $white;
-  border: 1px solid #eaebed;
-  line-height: 1.29;
-  letter-spacing: 0.5px;
-  height: 2.5rem;
-}
-::v-deep .tn-dropdown__options__option {
-  color: $panther;
-}
-::v-deep .tn-dropdown__options__container {
-  background-color: white;
-}
-::v-deep .tn-dropdown--medium {
-  width: 16rem;
-}
 .form-card {
   display: flex;
   align-items: space-evenly;
@@ -358,20 +285,6 @@ export default {
   padding: 2rem;
   width: 50vw;
   color: $base-gray;
-}
-.divider {
-  height: 1px;
-  background-color: #aaa;
-  width: 100%;
-  margin: 1rem;
-}
-
-.errors {
-  width: 100%;
-  padding: 1rem;
-  background-color: rgb(155, 21, 21);
-  color: white;
-  font-weight: 500;
 }
 
 .registration__form {

@@ -115,6 +115,4 @@ export default {
 .cash {
   color: $dark-green;
 }
-.blank {
-}
 </style>
