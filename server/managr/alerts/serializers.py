@@ -436,6 +436,7 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
             "message_template",
             "new_configs",
             "alert_level",
+            "target_reference",
         )
 
     def create(self, validated_data, *args, **kwargs):
