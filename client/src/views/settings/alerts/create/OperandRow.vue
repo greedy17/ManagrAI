@@ -1,17 +1,83 @@
 <template>
-  <div class="alert-group-row">
-    <div class="alert-group-row__operands">
+  <div v-if="form.field.operandOrder.value === 0" class="alert-operand-row">
+    <div class="alert-operand-row__options">
       <div
-        :key="i"
-        v-for="(alertOperand, i) in form.field.alertOperands.groups"
-        class="alert-group-row__operands__row rows"
+        v-if="selectedFieldType != 'DATE'"
+        class="alert-operand-row__field"
+        style="margin: 0 0.3rem"
       >
-        <OperandRow
-          @remove-operand="onRemoveOperand(i)"
-          :resourceType="resourceType"
-          :form.sync="alertOperand"
-          :operand="operand"
-        />
+        <FormField :errors="form.field.operandIdentifier.errors">
+          <template v-slot:input>
+          </template>
+        </FormField>
+      </div>
+      <div
+        v-if="!(selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME')"
+        class="alert-operand-row__operator"
+        style="margin: 0 0.3rem"
+      >
+        <FormField :errors="form.field.operandOperator.errors">
+          <template v-slot:input>
+          </template>
+        </FormField>
+      </div>
+      <div class="alert-operand-row__value">
+        <FormField
+          v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'"
+          :errors="form.field.operandValue.errors"
+        >
+          <template v-slot:input>
+          </template>
+        </FormField>
+        <template v-else>
+          <FormField
+            v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'"
+            :errors="form.field.operandValue.errors"
+          >
+            <template v-slot:input>
+            </template>
+          </FormField>
+          <div v-else>
+            <FormField
+              @blur="form.field.operandValue.validate()"
+              :errors="form.field.operandValue.errors"
+              v-model="form.field.operandValue.value"
+              :inputType="getInputType(form.field._operandIdentifier.value)"
+              large
+              bordered
+              placeholder="Enter a value"
+              v-if="!(selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME')"
+            />
+            <div
+              v-if="selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME'"
+              class="column"
+            >
+              <span class="row"
+                ><input
+                  @click="setOperandDateValue(5)"
+                  type="radio"
+                  id="Approaching"
+                  value="5"
+                  v-model="operandDate"
+                />
+                <label for="Approaching"
+                  >{{ form.field.operandIdentifier.value }} is approaching.</label
+                >
+              </span>
+
+              <span class="row"
+                ><input
+                  @click="setOperandDateValue(-1)"
+                  type="radio"
+                  id="passed"
+                  value="-1"
+                  v-model="operandDate"
+                />
+                <label for="passed">{{ form.field.operandIdentifier.value }} has passed.</label>
+              </span>
+            </div>
+          </div>
+        </template>
       </div>
     </div>
   </div>
@@ -22,14 +88,11 @@
  * Components
  * */
 //Internal
-// import DealOperandRow from '@/views/settings/alerts/create/DealOperandRow'
 import FormField from '@/components/forms/FormField'
-import OperandRow from './OperandRow.vue'
-
 /**
  * Services
  */
-import { AlertGroupForm, AlertOperandForm } from '@/services/alerts/'
+import { AlertOperandForm } from '@/services/alerts/'
 import { CollectionManager } from '@thinknimble/tn-models'
 import {
   SObjectField,
@@ -49,15 +112,12 @@ export default {
    * the object multiple levels deep (this current implementation could be seen as incorrect)
    *
    */
-  name: 'AlertGroups',
-  components: { FormField, OperandRow },
-
+  name: 'OperandRow',
+  components: { FormField },
   props: {
-    form: { type: AlertGroupForm },
-    canRemove: { type: Boolean },
-    index: { type: Number },
+    form: { type: AlertOperandForm },
     resourceType: { type: String },
-    operand: { type: Array }
+    operand: { type: Array}
   },
   data() {
     return {
@@ -136,26 +196,6 @@ export default {
     await this.objectFields.refresh()
   },
   methods: {
-    addOperandForm() {
-      const order = this.form.field.alertOperands.groups.length
-      if (order >= 3) {
-        this.$Alert.alert({ message: 'You can only add 3 items per group', timeout: 2000 })
-        return
-      }
-      this.form.addToArray('alertOperands', new AlertOperandForm())
-      this.form.field.alertOperands.groups[order].field.operandOrder.value = order
-    },
-    onRemoveOperand(i) {
-      if (this.form.field.alertOperands.groups.length - 1 <= 0) {
-        return
-      }
-      const order = this.form.field.alertOperands.groups[i].field.operandOrder.value
-      this.form.removeFromArray('alertOperands', i)
-      let greaterThan = this.form.field.alertOperands.groups.slice(i)
-      greaterThan.forEach((el, index) => {
-        el.field.operandOrder.value = order + index
-      })
-    },
     getInputType(type) {
       if (type && INPUT_TYPE_MAP[type.dataType]) {
         return INPUT_TYPE_MAP[type.dataType]
@@ -198,11 +238,10 @@ export default {
     },
     selectedCondition: {
       get() {
-        // return this.form.field.groupCondition.value
         return this.form.field.operandCondition.value
       },
       set(val) {
-        this.form.field.groupCondition.value = val
+        this.form.field.operandCondition.value = val
       },
     },
     selectedOperandType: {
@@ -215,26 +254,54 @@ export default {
     },
   },
   beforeMount() {
-    this.addOperandForm()
-
-    // console.log('not value', this.form.field)
-
-    // if (this.operand[0]) {
-    //   this.form.field.operandIdentifier.value = this.operand[0].operandIdentifier
-    //   this.form.field.operandOperator.value = this.operand[0].operandOperator
-    //   // this.form.field._operandOperator.value = { label: '!= (Does Not Equal)', value: '!=' }
-    //   this.form.field.operandValue.value = this.operand[0].operandValue
-    // } else if (this.operand[1]) {
-    //   this.form.field.operandIdentifier.value = this.operand[1].operandIdentifier
-    //   this.form.field.operandOperator.value = this.operand[1].operandOperator
-    //   // this.form.field._operandOperator.value = { label: '!= (Does Not Equal)', value: '!=' }
-    //   this.form.field.operandValue.value = this.operand[1].operandValue
+    // this.form.field.operandIdentifier.value = 'LastActivityDate'
+    // this.form.field._operandIdentifier.value = {
+    //   apiName: 'LastActivityDate',
+    //   createable: false,
+    //   custom: false,
+    //   dataType: 'Date',
+    //   displayValue: '',
+    //   filterable: 'true',
+    //   id: 'f5b6fc70-7ada-4d5a-91a8-30d2b6af985c',
+    //   includeInRecap: null,
+    //   label: 'Last Activity',
+    //   length: 0,
+    //   order: null,
+    //   reference: 'false',
+    //   referenceDisplayLabel: 'Last Activity',
+    //   referenceToInfos: Array[0],
+    //   required: false,
+    //   unique: false,
+    //   updateable: false,
+    //   value: '',
     // }
+    console.log("Huuuhbhghh", this.form.field.operandIdentifier, typeof this.form.field.operandIdentifier.value)
+    // if (this.operand[0]) {
+      if (this.form.field.operandOrder.value === 0) {
+        console.log('hit 1')
+        this.form.field.operandIdentifier.value = this.operand[0].operandIdentifier
+        console.log('hit 2')
+        this.form.field.operandOperator.value = this.operand[0].operandOperator
+        console.log('hit 3')
+        // this.form.field._operandOperator.value = { label: '!= (Does Not Equal)', value: '!=' }
+        this.form.field.operandValue.value = this.operand[0].operandValue
+    // } else if (this.operand[1]) {
+    } else if (this.form.field.operandOrder.value === 1) {
+      // if (this.operand[1]) {
+        console.log('hit 4', this.form.field)
+          this.form.field.operandIdentifier.value = this.operand[1].operandIdentifier
+          console.log('hit 5')
+          this.form.field.operandOperator.value = this.operand[1].operandOperator
+          // this.form.field._operandOperator.value = { label: '!= (Does Not Equal)', value: '!=' }
+          console.log('hit 6')
+          this.form.field.operandValue.value = this.operand[1].operandValue
+      // }
+    }
   },
   mounted() {
     // this.form.field.operandIdentifier.value = 'LastActivityDate'
     // this.form.field.operandOperator.value = '<'
-    // // this.form.field._operandOperator.value = { label: '< (Less Than)', value: '<' }
+    // this.form.field._operandOperator.value = { label: '< (Less Than)', value: '<' }
     // this.form.field.operandValue.value = -30
   },
 }
@@ -251,19 +318,24 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
-.alert-group-row {
+.alert-operand-row {
   display: flex;
   flex-direction: column;
-  overflow: visible;
-  &__operands {
-    &__row {
-      display: flex;
-    }
-  }
 }
-.rows {
+.alert-operand-row__options {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 1rem;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+}
+.column {
+  display: flex;
+  flex-direction: column;
+  margin: 1rem;
+}
+.row {
+  display: flex;
+  flex-direction: row;
+  margin: 0.2rem;
 }
 </style>

@@ -105,11 +105,7 @@ export default {
   }
 }
 
-input {
-  border: 1px solid #e8e8e8;
-  border-radius: 0.3rem;
+::v-deep .input-content {
   background-color: white;
-  min-height: 2.5rem;
-  width: 14vw;
 }
 </style>

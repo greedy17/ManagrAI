@@ -23,7 +23,6 @@
           :key="i"
           v-for="(form, i) in alertTemplateForm.field.alertConfig.groups"
         >
-          <!-- Put v-if v-else here for RequiredFieldEmpty -->
           <div v-if="selectField">
             <div
               class="delivery__row"
@@ -37,6 +36,7 @@
               />
             </div>
           </div>
+          <!-- Need -->
           <div
             v-else
             style="margin-top: 1rem"
@@ -49,21 +49,21 @@
               >
               <ToggleCheckBox
                 @input="
-                  form.field.recurrenceFrequency.value == 'WEEKLY'
-                    ? (form.field.recurrenceFrequency.value = 'MONTHLY')
-                    : (form.field.recurrenceFrequency.value = 'WEEKLY')
+                  config.newConfigs[0].recurrenceFrequency == 'WEEKLY'
+                    ? (config.newConfigs[0].recurrenceFrequency = 'MONTHLY')
+                    : (config.newConfigs[0].recurrenceFrequency = 'WEEKLY')
                 "
-                :value="form.field.recurrenceFrequency.value !== 'WEEKLY'"
+                :value="config.newConfigs[0].recurrenceFrequency !== 'WEEKLY'"
                 offColor="#41b883"
                 onColor="#41b883"
                 style="margin-left: 0.25rem; margin-right: 0.25rem"
               />
-              <label :class="form.field.recurrenceFrequency.value == 'MONTHLY' ? 'green' : ''"
+              <label :class="config.newConfigs[0].recurrenceFrequency == 'MONTHLY' ? 'green' : ''"
                 >Monthly</label
               >
             </div>
 
-            <div v-if="form.field.recurrenceFrequency.value == 'WEEKLY'">
+            <div v-if="config.newConfigs[0].recurrenceFrequency == 'WEEKLY'">
               <FormField>
                 <template v-slot:input>
                   <Multiselect
@@ -94,15 +94,14 @@
             </div>
             <FormField
               id="delivery"
-              v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
+              v-if="config.newConfigs[0].recurrenceFrequency == 'MONTHLY'"
               placeholder="Day of month"
-              @blur="form.field.recurrenceDay.validate()"
-              v-model="form.field.recurrenceDay.value"
+              v-model="config.newConfigs[0].recurrenceDay"
               small
             />
           </div>
-          <!-- End put v-if v-else here for RequiredFieldEmpty -->
 
+          <!-- Need -->
           <div
             style="margin-top: 1rem; margin-left: 0.5rem"
             v-if="userLevel == 'MANAGER'"
@@ -139,6 +138,7 @@
             </FormField>
           </div>
 
+          <!-- Need -->
           <div
             style="
               display: flex;
@@ -258,24 +258,24 @@
         :form="alertGroup"
         :resourceType="alertTemplateForm.field.resourceType.value"
       /> -->
-      <AlertGroups
+      <!-- <AlertGroups
         :form="alertGroup"
         :resourceType="alertTemplateForm.field.resourceType.value"
         :operand="config.newGroups[0].newOperands"
-      />
+      /> -->
     </div>
 
     <div class="bottom_locked">
       <PulseLoadingSpinnerButton
         :loading="savingTemplate"
         :class="
-          !alertTemplateForm.isValid || savingTemplate
+          !(config.newConfigs[0].recurrenceDays.length && config.newConfigs[0].alertTargets.length && selectUsersBool && setDaysBool) || savingTemplate
             ? 'disabled__button'
             : 'purple__button bouncy'
         "
         text="Activate alert"
         @click.stop="onSave"
-        :disabled="!alertTemplateForm.isValid || savingTemplate"
+        :disabled="!(config.newConfigs[0].recurrenceDays.length && config.newConfigs[0].alertTargets.length && selectUsersBool && setDaysBool) || savingTemplate"
       />
     </div>
   </div>
@@ -374,6 +374,8 @@ export default {
       SOBJECTS_LIST,
       pageNumber: 0,
       configName: '',
+      setDaysBool: false,
+      selectUsersBool: false,
       directToUsers: true,
       userConfigForm: new UserConfigForm({}),
       alertTemplateForm: new AlertTemplateForm(),
@@ -447,11 +449,11 @@ export default {
   },
   methods: {
     test() {
-      console.log('heeeyyy hey', this.resourceType)
+      console.log('heeeyyy hey', this.config.newConfigs[0].recurrenceFrequency)
     },
     repsPipeline() {
       if (this.userLevel !== 'MANAGER') {
-        this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
+        this.config.newConfigs[0].alertTargets.push('SELF')
         this.setPipelines({
           fullName: 'MYSELF',
           id: 'SELF',
@@ -460,8 +462,8 @@ export default {
     },
     setDefaultChannel() {
       this.directToUsers
-        ? (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = 'default')
-        : (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = null)
+        ? (this.config.newConfigs[0].recipients = 'default')
+        : (this.config.newConfigs[0].recipients = null)
     },
     handleUpdate() {
       this.loading = true
@@ -490,20 +492,13 @@ export default {
         this.dropdownLoading = false
       }, 500)
     },
-    // does not have:
-    // async listChannels(cursor = null) {
-    //   const res = await SlackOAuth.api.listChannels(cursor)
-    //   const results = new SlackListResponse({
-    //     channels: [...this.channelOpts.channels, ...res.channels],
-    //     responseMetadata: { nextCursor: res.nextCursor },
-    //   })
-    //   this.channelOpts = results
-    // },
     async createChannel(name) {
       const res = await SlackOAuth.api.createChannel(name)
       if (res.channel) {
         this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = res.channel
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = res.channel.id
+        this.config.newConfigs[0].recipients = res.channel.id
+        // this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = res.channel
+        // this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = res.channel.id
         this.channelCreated = !this.channelCreated
       } else {
         console.log(res.error)
@@ -595,7 +590,7 @@ export default {
       if (value == 'USER_LEVEL') {
         return 'SLACK_CHANNEL'
       } else if (value == 'SLACK_CHANNEL') {
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = []
+        this.config.newConfigs[0].recipients = []
         this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = []
         return 'USER_LEVEL'
       }
@@ -604,32 +599,32 @@ export default {
     setRecipient() {
       this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value =
         this.selectedChannel
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
+      this.config.newConfigs[0].recipients =
         this.selectedChannel.id
     },
     setDay(n) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
+      this.config.newConfigs[0].recurrenceDay = 0
       let days = []
       n.forEach((day) => days.push(day.value))
       let newDays = [...new Set(days)]
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = newDays
-      console.log(this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value)
+      this.config.newConfigs[0].recurrenceDays = newDays
+      this.setDaysBool = true;
     },
     mapIds() {
       let mappedIds = this.selectedUsers.map((user) => user.id)
-
-      this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value = mappedIds
+      this.config.newConfigs[0].alertTargets = mappedIds
+      this.selectUsersBool = true
     },
     setPipelines(obj) {
       this.alertTemplateForm.field.alertConfig.groups[0].field._alertTargets.value.push(obj)
     },
     async onSave() {
       this.savingTemplate = true
-      this.alertTemplateForm.validate()
-      if (this.alertTemplateForm.isValid) {
+        const newConfigs = this.config.newConfigs[0];
+        if (newConfigs.recurrenceDays.length && newConfigs.alertTargets.length && this.selectUsersBool && this.setDaysBool) {
         try {
           const res = await AlertTemplate.api.createAlertTemplate({
-            ...this.alertTemplateForm.toAPI,
+            ...this.config,
             user: this.$store.state.user.id,
             directToUsers: this.directToUsers,
           })
@@ -677,10 +672,10 @@ export default {
     },
     selectedResourceType: {
       get() {
-        return this.alertTemplateForm.field.resourceType.value
+        return this.config.resourceType
       },
       set(val) {
-        this.alertTemplateForm.field.resourceType.value = val
+        this.config.resourceType = val
       },
     },
   },
@@ -688,28 +683,6 @@ export default {
     this.setDefaultChannel()
   },
   beforeMount() {
-    if (this.config.newGroups.newOperands && this.config.newGroups.newOperands[0]) {
-      this.form.field.operandIdentifier.value = this.config.newGroups.newOperands[0].operandIdentifier;
-      this.form.field.operandOperator.value = this.config.newGroups.newOperands[0].operandOperator
-      // this.form.field._operandOperator.value = this.referenceOperandValue
-      this.form.field.operandValue.value = this.config.newGroups.newOperands[0].operandValue
-    } else if (this.config.newGroups.newOperands && this.config.newGroups.newOperands[1]) {
-      this.form.field.operandIdentifier.value = this.config.newGroups.newOperands[1].operandIdentifier2;
-      this.form.field.operandOperator.value = this.config.newGroups.newOperands[1].operandOperator2
-      // this.form.field._operandOperator.value = this.referenceOperandValue2
-      this.form.field.operandValue.value = this.config.newGroups.newOperands[1].operandValue2
-    } 
-    this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = this.config.newConfigs[0].recipientType
-    this.alertTemplateForm.field.resourceType.value = this.config.resourceType
-    this.alertTemplateForm.field.title.value = this.config.title
-    this.alertTemplateForm.field.isActive.value = this.config.isActive
-    this.alertTemplateForm.field.alertMessages.groups[0].field.body.value = this.config.messageTemplate.body
-    this.repsPipeline()
-    this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = this.config.newConfigs[0].recurrenceDay
-    this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = this.config.newConfigs[0].recurrenceDays
-    if (this.config.newConfigs[0].recurrenceFrequency) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceFrequency.value = this.config.newConfigs[0].recurrenceFrequency
-    }
   },
 }
 </script>
@@ -972,4 +945,5 @@ img {
 .green {
   color: $dark-green;
 }
+
 </style>
