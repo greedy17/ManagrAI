@@ -611,16 +611,21 @@ class UserActivity(models.Model):
         contact_forms = workflow.forms.filter(
             template__resource="Contact", template__form_type="CREATE"
         )
-        no_last_name = [form for form in contact_forms if form.saved_data["LastName"] is None]
+        no_last_name = [
+            form
+            for form in contact_forms
+            if (not len(form.saved_data) or form.saved_data["LastName"] is None)
+        ]
         note_added = False if main_form.saved_data["meeting_comments"] is None else True
         obj = dict(
-            source=main_form.update_source,
+            source=main_form.update_source if main_form.update_source else "meeting",
             new_attendees=dict(
                 saved=len(contact_forms) - len(no_last_name), unsaved=len(no_last_name)
             ),
             fields=saved_data,
             note_added=note_added,
         )
+        print(obj)
         self.clicks["meeting"]["untouched"] -= 1
         self.clicks["meeting"]["touched"].append(obj)
         return self.save()

@@ -525,8 +525,8 @@ class SalesforceSObjectViewSet(
                 submission_date=timezone.now(),
                 alert_instance_id=instance,
             )
-            # user.activity.increment_untouched_count("workflows")
-            # user.activity.add_workflow_activity(str(main_form.id), instance.template.title)
+            user.activity.increment_untouched_count("workflows")
+            user.activity.add_workflow_activity(str(main_form.id), instance.template.title)
         else:
             forms.update(
                 is_submitted=True, update_source="pipeline", submission_date=timezone.now()
@@ -953,7 +953,6 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.save()
         workflow.begin_tasks()
         emit_meeting_workflow_tracker(str(workflow.id))
-        # workflow.user.activity.add_meeting_activity(str(workflow.id))
         serializer = MeetingWorkflowSerializer(instance=workflow)
         data = {"success": True, "workflow": serializer.data}
         return Response(data=data)
