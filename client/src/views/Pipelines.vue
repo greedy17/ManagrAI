@@ -1471,7 +1471,7 @@ export default {
       this.setUpdateValues('StageName', field)
       this.stageGateField = field
       this.stageFormOpen = true
-      this.stageGateInstance()
+      this.stageGateInstance(field)
       this.oppInstance(id)
     },
     closeStageForm() {
@@ -2031,12 +2031,13 @@ export default {
         console.log(e)
       }
     },
-    async stageGateInstance() {
+    async stageGateInstance(field) {
       this.stageGateId = null
       try {
         const res = await SObjects.api.createFormInstance({
           resourceType: 'Opportunity',
           formType: 'STAGE_GATING',
+          stageName: field ? field : this.stageGateField,
         })
         this.stageGateId = res.form_id
       } catch (e) {

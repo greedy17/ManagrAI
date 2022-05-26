@@ -49,8 +49,8 @@
       </div>
     </div>
     <div
-      :key="i"
       @click="editInline(i)"
+      :key="i"
       v-for="(field, i) in oppFields"
       :class="{
         'active-edit': editing && editIndex === i && currentRow === index,
@@ -76,7 +76,7 @@
       />
 
       <div class="limit-cell-height" v-else-if="!updateList.includes(opp.id)">
-        <div class="inline-edit" v-if="editing && editIndex === i && currentRow === index">
+        <div class="inline-edit" v-show="editing && editIndex === i && currentRow === index">
           <div
             v-if="
               field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
@@ -232,8 +232,8 @@
           </div>
         </div>
         <PipelineField
-          v-else
-          style="direction: ltr"
+          :index="i"
+          style="direction: ltr; border: "
           :apiName="field.apiName"
           :dataType="field.dataType"
           :fieldData="
@@ -609,7 +609,7 @@ input {
 }
 .empty {
   display: table-cell;
-  background: white;
+  background: white !important;
   min-width: 12vw;
   border-left: 1px solid $soft-gray;
   border-right: 1px solid $soft-gray;
@@ -633,7 +633,8 @@ input {
   left: 3.5vw;
   z-index: 2;
 }
-.table-cell:hover {
+.table-cell:hover,
+.empty:hover {
   border: 1px solid $dark-green;
 }
 .cell-name:hover {
@@ -752,7 +753,8 @@ input[type='checkbox'] + label::before {
 }
 .limit-cell-height {
   max-height: 8rem;
-  width: 110%;
+  // width: 110%;
+  padding: 0;
   overflow: auto;
   img {
     height: 0.25rem;
