@@ -30,10 +30,35 @@
               v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
             >
               <span style="margin-bottom: 0.5rem">Select your Field</span>
-              <EmptyAlertGroup
+              <!-- <EmptyAlertGroup
                 :form="alertGroup"
                 :resourceType="config.resourceType"
-              />
+              /> -->
+              <!-- <Multiselect
+                placeholder="Select Field"
+                v-model="identity"
+                :options="objectFields.list"
+                openDirection="below"
+                style="min-width: 13vw"
+                selectLabel="Enter"
+                track-by="apiName"
+                label="referenceDisplayLabel"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results. Try loading more</p>
+                </template>
+                <template slot="afterList">
+                  <p class="multi-slot__more" @click="objectFieldNextPage">
+                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    Select Field
+                  </p>
+                </template>
+              </Multiselect> -->
             </div>
           </div>
           <!-- Need -->
@@ -44,7 +69,7 @@
             :errors="form.field.recurrenceDay.errors"
           >
             <div style="margin-bottom: 0.5rem" class="row__">
-              <label :class="form.field.recurrenceFrequency.value == 'WEEKLY' ? 'green' : ''"
+              <label :class="config.newConfigs[0].recurrenceFrequency == 'WEEKLY' ? 'green' : ''"
                 >Weekly</label
               >
               <ToggleCheckBox
@@ -336,11 +361,7 @@ export default {
     'config',
   ],
   components: {
-    // Different: 
     ForecastAlertGroup,
-    // DealAlertGroup,
-    // PassedAlertGroup,
-    // NewAlertGroup,
     AlertGroups,
     ToggleCheckBox,
     FormField,
