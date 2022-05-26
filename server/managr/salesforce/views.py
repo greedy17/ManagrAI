@@ -388,10 +388,12 @@ class SalesforceSObjectViewSet(
         form_type = self.request.GET.get("form_type")
         resource_type = self.request.GET.get("resource_type")
         resource_id = self.request.GET.get("resource_id", None)
+        stage_name = self.request.GET.get("stage_name", None)
+        template_list = OrgCustomSlackForm.objects.for_user(user).filter(
+            Q(resource=resource_type, form_type=form_type)
+        )
         template = (
-            OrgCustomSlackForm.objects.for_user(user)
-            .filter(Q(resource=resource_type, form_type=form_type))
-            .first()
+            template_list.filter(stage=stage_name).first() if stage_name else template_list.first()
         )
         slack_form = (
             OrgCustomSlackFormInstance.objects.create(
