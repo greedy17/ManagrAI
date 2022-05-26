@@ -7,7 +7,7 @@
     <div :class="{ 'page-content': !hideNavBar }">
       <router-view :key="$route.fullPath"></router-view>
     </div>
-    <img src="@/assets/images/backgroundLogo.png" class="background-logo grayscale" />
+    <img src="@/assets/images/backgroundLogo.png" class="background-logo" />
   </div>
 </template>
 
@@ -69,11 +69,9 @@ export default {
 }
 
 body {
-  overflow-y: scroll;
-  overflow-x: auto;
+  overflow: auto;
   margin: 0;
   min-height: 100vh;
-  position: relative;
   background-color: $off-white;
 }
 

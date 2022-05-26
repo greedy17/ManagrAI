@@ -42,7 +42,6 @@ export default {
       padding: 0.5rem 1rem;
       width: 100%;
       display: flex;
-      //flex-direction: row;
       overflow-x: scroll;
     }
     &--vertical {

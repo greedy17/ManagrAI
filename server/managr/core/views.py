@@ -1,5 +1,6 @@
 import logging
 import requests
+import textwrap
 
 from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
@@ -468,13 +469,26 @@ def email_auth_token(request):
             email_check = [cal for cal in calendar_data if cal["name"] == account["email_address"]]
             calendar = [cal for cal in calendar_data if cal["read_only"] is False]
             if len(email_check):
-
                 calendar_id = email_check[0]["id"]
             else:
                 if len(calendar):
                     calendar_id = calendar[0]["id"]
                 else:
                     calendar_id = None
+            logger.info(
+                textwrap.dedent(
+                    f"""
+                ---------------------------
+                NYLAS CALENAR ACCOUNT CREATION INFO: \n
+                ----------------------\n
+                ACCOUNT INFO: {account}\n
+                CALENDAR INFO:{calendar_data}\n
+                EMAIL CHECK: {email_check} \n 
+                CALENDAR CHECK: {calendar} \n
+                FOUND CALENDAR ID: {calendar_id}\n
+                -----------------------"""
+                )
+            )
             NylasAuthAccount.objects.create(
                 access_token=access_token,
                 account_id=account["account_id"],
@@ -567,6 +581,7 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
             slack_id, u.organization.slack_integration.access_token
         ).json()
         channel = channel_res.get("channel", {}).get("id")
+        logger.info(f"User {user.id} activation link: {user.activation_link}")
         blocks = [
             block_builders.section_with_button_block(
                 "Register", "register", text, url=user.activation_link

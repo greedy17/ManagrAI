@@ -1,79 +1,55 @@
 <template>
   <div class="alert-operand-row">
-    <!-- <span class="alert-operand-row--label">Alert Operands</span> -->
-
-    <div style="margin-bottom: 2rem" class="centered" v-if="form.field.operandOrder.value != 0">
-      <label class="alert-operand-row__condition-label">AND</label>
+    <div
+      style="margin: 2rem 0.25rem"
+      class="toggle__switch"
+      v-if="form.field.operandOrder.value != 0"
+    >
+      <label>AND</label>
       <ToggleCheckBox
         @input="toggleSelectedCondition"
         :value="selectedCondition !== 'AND'"
-        offColor="#199e54"
-        onColor="#199e54"
+        offColor="#41b883"
+        onColor="#41b883"
       />
-      <label class="alert-operand-row__condition-label">OR</label>
+      <label>OR</label>
     </div>
 
     <div class="alert-operand-row__options">
       <div class="centered" style="flex-direction: column">
-        <p style="font-weight: bold">Select CRM Field:</p>
-
-        <!-- <CollectionSearch
-          class="fields__height"
-          :collection="objectFields"
-          itemDisplayKey="referenceDisplayLabel"
-          :showSubmitBtn="false"
-          @onSearch="
-            () => {
-              formFields.pagination = new Pagination()
-            }
-          "
-        >
-          <template v-slot:item="{ result }">
-            <div>
-              <input
-                id="key"
-                :value="result.apiName"
-                v-model="form.field.operandIdentifier.value"
-                type="radio"
-                @click="setIdentifier(result)"
-              />
-              <label for="result">{{ result['referenceDisplayLabel'] }}</label>
-            </div>
-
-            <div class="slack-form-builder__container">
-                <CheckBox :checked="addedFieldIds.includes(result.id)" />
-                <div class="slack-form-builder__sf-field">
-                  {{ result['referenceDisplayLabel'] }}
-                </div>
-              </div>
-          </template>
-        </CollectionSearch> -->
+        <p>Select CRM Field:</p>
 
         <FormField :errors="form.field.operandIdentifier.errors">
           <template v-slot:input>
-            <DropDownSearch
-              v-if="selectedOperandType == 'FIELD'"
-              :items.sync="objectFields.list"
-              :itemsRef.sync="form.field._operandIdentifier.value"
-              v-model="form.field.operandIdentifier.value"
-              displayKey="referenceDisplayLabel"
-              valueKey="apiName"
-              nullDisplay="Select Fields"
-              searchable
-              :hasNext="!!objectFields.pagination.hasNextPage"
-              @load-more="objectFieldNextPage"
-              @search-term="onSearchFields"
-              @input="form.field.operandIdentifier.validate()"
-            />
+            <Multiselect
+              placeholder="Select Field"
+              v-model="identity"
+              :options="objectFields.list"
+              openDirection="below"
+              style="width: 16vw"
+              selectLabel="Enter"
+              track-by="apiName"
+              label="referenceDisplayLabel"
+              :loading="dropdownLoading"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results. Try loading more</p>
+              </template>
+              <template slot="afterList">
+                <p class="multi-slot__more" @click="objectFieldNextPage">
+                  Load More
+                  <img src="@/assets/images/plusOne.png" alt="" />
+                </p>
+              </template>
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.png" alt="" />
+                  Select Field
+                </p>
+              </template>
+            </Multiselect>
           </template>
         </FormField>
-        <p
-          @click="removeIdentifier"
-          :class="form.field.operandIdentifier.value ? 'selected__item' : 'invisible'"
-        >
-          <img src="@/assets/images/remove.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
-          {{ form.field.operandIdentifier.value }}
-        </p>
       </div>
 
       <div
@@ -81,39 +57,30 @@
         class="centered"
         style="flex-direction: column"
       >
-        <p style="font-weight: bold">Select an operator:</p>
-        <!-- <div :key="value" v-for="(key, value) in operatorOpts">
-          <input
-            v-model="form.field.operandOperator.value"
-            id="key"
-            :value="key.value"
-            type="radio"
-            @click="setOperator(key)"
-          />
-          <label for="key">{{ key.label }}</label>
-        </div> -->
+        <p>Select an operator:</p>
         <FormField :errors="form.field.operandOperator.errors">
           <template v-slot:input>
-            <DropDownSearch
-              :items.sync="operatorOpts"
-              :itemsRef.sync="form.field._operandOperator.value"
-              v-model="form.field.operandOperator.value"
-              @input="form.field.operandOperator.validate()"
-              displayKey="label"
-              valueKey="value"
-              nullDisplay="Select Operators"
-              searchable
-              local
-            />
+            <Multiselect
+              placeholder="Select Operator"
+              v-model="selectedOperator"
+              :options="operatorOpts"
+              openDirection="below"
+              style="width: 16vw"
+              selectLabel="Enter"
+              label="label"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.png" alt="" />
+                  Select Operator
+                </p>
+              </template>
+            </Multiselect>
           </template>
         </FormField>
-        <p
-          @click="removeOperator"
-          :class="form.field.operandOperator.value ? 'selected__item' : 'invisible'"
-        >
-          <img src="@/assets/images/remove.png" style="height: 1rem; margin-right: 0.5rem" alt="" />
-          {{ form.field._operandOperator.value ? form.field._operandOperator.value.label : '' }}
-        </p>
       </div>
 
       <div class="alert-operand-row__value">
@@ -122,43 +89,31 @@
           style="flex-direction: column"
           v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'"
         >
-          <p style="font-weight: bold">Select a value:</p>
-          <!-- <div :key="value" v-for="(key, value) in picklistOpts">
-            <input
-              v-model="form.field.operandValue.value"
-              id="key"
-              :value="key.value"
-              type="radio"
-              @click="setOperand(key)"
-            />
-            <label for="key">{{ key.label }}</label>
-          </div> -->
+          <p>Select a value:</p>
 
           <FormField :errors="form.field.operandValue.errors">
             <template v-slot:input>
-              <DropDownSearch
-                :items.sync="picklistOpts"
-                :itemsRef.sync="form.field._operandValue.value"
-                v-model="form.field.operandValue.value"
-                displayKey="label"
-                valueKey="value"
-                nullDisplay="Select a value"
-                searchable
-                local
-              />
+              <Multiselect
+                placeholder="Select Value"
+                v-model="selectedOperand"
+                :options="picklistOpts"
+                openDirection="below"
+                style="width: 16vw"
+                selectLabel="Enter"
+                label="label"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    Select Value
+                  </p>
+                </template>
+              </Multiselect>
             </template>
           </FormField>
-          <p
-            @click="removeValue"
-            :class="form.field.operandValue.value ? 'selected__item' : 'invisible'"
-          >
-            <img
-              src="@/assets/images/remove.png"
-              style="height: 1rem; margin-right: 0.5rem"
-              alt=""
-            />
-            {{ form.field.operandValue.value }}
-          </p>
         </div>
 
         <template v-else>
@@ -167,25 +122,31 @@
             style="flex-direction: column"
             v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'"
           >
-            <p style="font-weight: bold">Select a value:</p>
+            <p>Select a value:</p>
 
             <FormField :errors="form.field.operandValue.errors">
               <template v-slot:input>
-                <DropDownSearch
-                  :items.sync="valueOpts"
-                  :itemsRef.sync="form.field._operandValue.value"
-                  v-model="form.field.operandValue.value"
-                  displayKey="label"
-                  valueKey="value"
-                  nullDisplay="Select a value"
-                  searchable
-                  local
-                />
+                <Multiselect
+                  placeholder="Select value"
+                  v-model="selectedOperand"
+                  :options="valueOpts"
+                  openDirection="below"
+                  style="width: 16vw"
+                  selectLabel="Enter"
+                  label="label"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results.</p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.png" alt="" />
+                      Select Value
+                    </p>
+                  </template>
+                </Multiselect>
               </template>
             </FormField>
-            <p :class="form.field.operandValue.value ? 'selected__item' : ''">
-              {{ form.field.operandValue.value }}
-            </p>
           </div>
 
           <div v-else>
@@ -200,61 +161,45 @@
               v-if="selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME'"
             >
               <div style="text-align: center">
-                <p style="font-weight: bold">Select an operator:</p>
-                <!-- <div :key="value" v-for="(key, value) in operatorOpts">
-                <input
-                  v-model="form.field.operandOperator.value"
-                  id="key"
-                  :value="key.value"
-                  type="radio"
-                  @click="setOperator(key)"
-                />
-                <label for="key">{{ key.label }}</label>
-                </div> -->
+                <p>Select an operator:</p>
                 <FormField :errors="form.field.operandOperator.errors">
                   <template v-slot:input>
-                    <DropDownSearch
-                      :items.sync="operatorOpts"
-                      :itemsRef.sync="form.field._operandOperator.value"
-                      v-model="form.field.operandOperator.value"
-                      @input="form.field.operandOperator.validate()"
-                      displayKey="label"
-                      valueKey="value"
-                      nullDisplay="Select Operators"
-                      searchable
-                      local
-                    />
+                    <Multiselect
+                      placeholder="Select Operator"
+                      v-model="selectedOperator"
+                      :options="operatorOpts"
+                      openDirection="below"
+                      style="width: 16vw"
+                      selectLabel="Enter"
+                      label="label"
+                    >
+                      <template slot="noResult">
+                        <p class="multi-slot">No results.</p>
+                      </template>
+                      <template slot="placeholder">
+                        <p class="slot-icon">
+                          <img src="@/assets/images/search.png" alt="" />
+                          Select Operator
+                        </p>
+                      </template>
+                    </Multiselect>
                   </template>
                 </FormField>
-                <p
-                  style="margin-top: 2.25rem"
-                  @click="removeOperator"
-                  :class="form.field.operandOperator.value ? 'selected__item' : 'invisible'"
-                >
-                  <img
-                    src="@/assets/images/remove.png"
-                    style="height: 1rem; margin-right: 0.5rem"
-                    alt=""
-                  />
-                  {{
-                    form.field._operandOperator.value ? form.field._operandOperator.value.label : ''
-                  }}
-                </p>
               </div>
 
               <div>
                 <div
                   class="centered"
-                  style="margin-bottom: 0.8rem; margin-top: 0.75rem; margin-left: -1.5rem"
+                  style="margin-bottom: 0.8rem; margin-top: 0.75rem; margin-left: -1rem"
                 >
-                  <label class="alert-operand-row__condition-label">In the past</label>
+                  <label>In the past</label>
                   <ToggleCheckBox
                     @input="toggleSelectedOperand"
                     :value="MyOperand !== 'Negative'"
-                    offColor="#199e54"
-                    onColor="#199e54"
+                    offColor="#41b883"
+                    onColor="#41b883"
                   />
-                  <label class="alert-operand-row__condition-label">In the future</label>
+                  <label>In the future</label>
                 </div>
 
                 <FormField v-if="MyOperand === 'Negative'" :errors="form.field.operandValue.errors">
@@ -283,62 +228,11 @@
                     />
                   </template>
                 </FormField>
-                <p
-                  style="margin-top: -0.5rem; width: 90%"
-                  :class="form.field.operandValue.value ? 'selected__item' : 'invisible'"
-                  @click="removeValue"
-                >
-                  <img
-                    src="@/assets/images/remove.png"
-                    style="height: 1rem; margin-right: 0.5rem"
-                    alt=""
-                  />
-                  {{ form.field.operandValue.value }}
-                </p>
               </div>
-
-              <!-- <div style="display: flex; align-items: center">
-                <p>{{ form.field.operandIdentifier.value }} is:</p>
-                <div class="centered">
-                  <label class="alert-operand-row__condition-label">In the past</label>
-                  <ToggleCheckBox
-                    @input="toggleSelectedOperand"
-                    :value="MyOperand !== 'Negative'"
-                    offColor="#199e54"
-                    onColor="#199e54"
-                  />
-                  <label class="alert-operand-row__condition-label">In the Future</label>
-                </div>
-              </div>
-
-              <div v-if="MyOperand === 'Negative'">
-                <label for="quantityNeg">Number of <span>days</span>:</label>
-                <input
-                  id="quantityNeg"
-                  name="quantityNeg"
-                  v-model="form.field.operandValue.value"
-                  type="number"
-                  v-on:keyup="negVal(form.field.operandValue.value)"
-                  class="dayInput"
-                  @click="setIdentifier"
-                />
-              </div>
-
-              <div v-else>
-                <label for="quantity">Number of <span>days</span>:</label>
-                <input
-                  id="quantity"
-                  name="quantity"
-                  v-model="form.field.operandValue.value"
-                  type="number"
-                  class="dayInput"
-                  @click="setIdentifier"
-                />
-              </div> -->
             </div>
 
             <div class="centered" style="flex-direction: column" v-else>
-              <p style="font-weight: bold">Enter value:</p>
+              <p>Enter value:</p>
               <FormField
                 @blur="form.field.operandValue.validate()"
                 :errors="form.field.operandValue.errors"
@@ -346,9 +240,6 @@
                 :inputType="getInputType(form.field._operandIdentifier.value)"
                 placeholder=""
               />
-              <p :class="form.field.operandValue.value ? 'selected__item' : ''">
-                {{ form.field.operandValue.value }}
-              </p>
             </div>
           </div>
         </template>
@@ -365,21 +256,13 @@
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 
 //Internal
-import ListContainer from '@/components/ListContainer'
 import FormField from '@/components/forms/FormField'
-import DropDownSearch from '@/components/DropDownSearch'
 /**
  * Services
  */
 import { AlertOperandForm } from '@/services/alerts/'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
-import CollectionSearch from '@thinknimble/collection-search'
-import {
-  SObjectField,
-  SObjectValidations,
-  SObjectPicklist,
-  NON_FIELD_ALERT_OPTS,
-} from '@/services/salesforce'
+import { CollectionManager } from '@thinknimble/tn-models'
+import { SObjectField, SObjectPicklist, NON_FIELD_ALERT_OPTS } from '@/services/salesforce'
 import {
   ALERT_DATA_TYPE_MAP,
   INPUT_TYPE_MAP,
@@ -387,7 +270,6 @@ import {
   STRING,
   DATE,
   DECIMAL,
-  BOOLEAN,
   DATETIME,
 } from '@/services/salesforce/models'
 
@@ -399,15 +281,24 @@ export default {
    *
    */
   name: 'AlertOperandRow',
-  components: { ListContainer, ToggleCheckBox, DropDownSearch, FormField, CollectionSearch },
+  components: {
+    ToggleCheckBox,
+    FormField,
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+  },
   props: {
     form: { type: AlertOperandForm },
     resourceType: { type: String },
   },
   data() {
     return {
+      dropdownLoading: false,
+      identity: '',
+      selectedOperator: '',
+      selectedOperand: '',
       objectFields: CollectionManager.create({
         ModelClass: SObjectField,
+        pagination: { size: 300 },
         filters: { forAlerts: true, filterable: true, page: 1 },
       }),
       // used by dropdown as a ref field to retrieve obj of selected opt
@@ -527,12 +418,29 @@ export default {
     }
   },
   watch: {
+    identity: function () {
+      this.form.field.operandIdentifier.value = this.identity.apiName
+      this.form.field._operandIdentifier.value = this.objectFields.list.filter(
+        (item) => item.apiName === this.identity.apiName,
+      )[0]
+    },
+    selectedOperator: function () {
+      this.form.field.operandOperator.value = this.selectedOperator.value
+      this.form.field._operandOperator.value = this.selectedOperator
+    },
+    selectedOperand: function () {
+      this.form.field._operandValue.value = this.selectedOperand
+      this.form.field.operandValue.value = this.selectedOperand.value
+    },
     selectedFieldRef: {
       immediate: true,
       deep: true,
       async handler(val) {
         if (val && val.apiName && val.dataType == 'Picklist') {
-          await this.listPicklists({ picklistFor: val.apiName })
+          await this.listPicklists({
+            picklistFor: val.apiName,
+            salesforceObject: this.resourceType,
+          })
         }
       },
     },
@@ -556,32 +464,11 @@ export default {
     await this.objectFields.refresh()
   },
   methods: {
-    removeIdentifier() {
-      this.form.field.operandIdentifier.value = ''
-    },
-    removeOperator() {
-      this.form.field.operandOperator.value = ''
-    },
-    removeValue() {
-      this.form.field.operandValue.value = ''
-    },
     getInputType(type) {
       if (type && INPUT_TYPE_MAP[type.dataType]) {
         return INPUT_TYPE_MAP[type.dataType]
       }
       return 'text'
-    },
-    setIdentifier() {
-      if (this.selectedFieldType == 'DATE' || this.selectedFieldType == 'DATETIME') {
-        this.form.field.operandOperator.value = '<='
-        this.form.field._operandOperator.value = { label: '<= (Less or Equal)', value: '<=' }
-      }
-    },
-    setOperator(obj) {
-      this.form.field._operandOperator.value = obj
-    },
-    setOperand(obj) {
-      this.form.field._operandValue.value = obj
     },
     toggleSelectedCondition() {
       this.selectedCondition == 'AND'
@@ -593,15 +480,11 @@ export default {
       this.MyOperand === 'Negative' ? (this.MyOperand = 'Positive') : (this.MyOperand = 'Negative')
     },
     async objectFieldNextPage() {
+      this.dropdownLoading = true
       await this.objectFields.addNextPage()
-    },
-    async onSearchFields(v) {
-      this.objectFields.pagination = new Pagination()
-      this.objectFields.filters = {
-        ...this.objectFields.filters,
-        search: v,
-      }
-      await this.objectFields.refresh()
+      setTimeout(() => {
+        this.dropdownLoading = false
+      }, 1000)
     },
     async listPicklists(query_params = {}) {
       try {
@@ -625,10 +508,6 @@ export default {
     },
   },
   computed: {
-    selectedField() {
-      return this.form.field.operandIdentifier.value
-    },
-
     selectedFieldTypeRaw() {
       if (this.form.field._operandIdentifier.value) {
         return this.form.field._operandIdentifier.value.dataType
@@ -704,158 +583,92 @@ export default {
 @import '@/styles/buttons';
 
 ::v-deep .input-content {
-  width: 6rem;
+  width: 13vw;
+  border: 1px solid #e8e8e8 !important;
+  border-radius: 0.3rem;
   background-color: white;
+  box-shadow: none !important;
 }
 ::v-deep .input-form {
-  width: 6rem;
-  box-shadow: 3px 4px 7px $very-light-gray;
+  width: 13vw;
 }
-img {
-  filter: invert(90%);
-}
-::v-deep .collection-search .collection-search__form .collection-search__input .search__input {
-  font-family: Lato-Regular, sans-serif;
-  font-weight: normal;
-  font-stretch: normal;
-  font-style: normal;
-  letter-spacing: normal;
-  font-size: 16px;
-  border-radius: 4px;
-  padding: 3%;
-  line-height: 1.29;
-  letter-spacing: 0.5px;
-  color: $panther;
-  height: 2.5rem;
-  background-color: white;
-  border: 1px solid #5d5e5e;
-  width: 10rem;
-  padding: 0 0 0 1rem;
-  margin: 1rem;
-  -webkit-box-shadow: 1px 4px 7px black;
-  box-shadow: 1px 4px 7px black;
-}
-::v-deep .collection-search__result-item {
-  overflow: auto;
-  padding: 0 0.5rem;
+::v-deep .input-form__active {
   border: none;
 }
-::v-deep .collection-search__result-item:hover {
-  background-color: transparent;
+.multi-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $gray;
+  font-size: 12px;
+  width: 100%;
+  padding: 0.5rem 0rem;
+  margin: 0;
+  cursor: text;
+  &__more {
+    background-color: white;
+    color: $dark-green;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-top: 1px solid #e8e8e8;
+    width: 100%;
+    padding: 0.75rem 0rem;
+    margin: 0;
+    cursor: pointer;
+
+    img {
+      height: 0.8rem;
+      margin-left: 0.25rem;
+      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+        brightness(93%) contrast(89%);
+    }
+  }
+}
+
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 1rem;
+    margin-right: 0.25rem;
+    filter: invert(70%);
+  }
+}
+
+img {
+  filter: invert(90%);
 }
 .centered {
   display: flex;
   justify-content: center;
   align-items: center;
 }
-.btn {
-  &--danger {
-    @include button-danger();
-  }
-  &--primary {
-    @include primary-button();
-  }
-  &--secondary {
-    @include secondary-button();
-  }
-
-  &--icon {
-    @include --icon();
-  }
-}
-.dayInput {
-  width: 50px;
-  margin-left: 0.25rem;
-  border-radius: 0.25rem;
-}
-.alert-operand-row {
-  // @include standard-border();
-  // margin: 1rem;
-  // padding: 0.5rem 1rem;
-  display: flex;
-  flex-direction: column;
-  &--label {
-    top: -1.05rem;
-    position: relative;
-    @include muted-font();
-  }
-}
-.alert-operand-row__condition {
-  position: relative;
-  top: 0rem;
+.toggle__switch {
   display: flex;
   flex-direction: row;
-  align-items: center;
   justify-content: center;
-  &-label {
-    margin: 0 0.5rem;
-    font-size: 15px;
-    font-weight: bold;
+  align-items: center;
+  margin-bottom: 2rem;
+  font-size: 12px;
+  letter-spacing: 1px;
+
+  label {
+    padding: 0rem 0.2rem;
   }
 }
-.alert-operand-row__date-range {
-  // displays a message on top of the input field for date/datetime selection
-  position: absolute;
+.alert-operand-row {
   display: flex;
   flex-direction: column;
-  width: 15rem;
-  margin-left: 2rem;
-  @include muted-font(14px);
 }
 .alert-operand-row__options {
   display: flex;
   align-items: flex-start;
-  flex-wrap: wrap;
   justify-content: space-evenly;
   margin-top: -1rem;
-  &-label {
-    color: black;
-  }
-}
-.fields__height {
-  height: 26vh;
-  overflow-y: scroll;
-}
-.toggle__row {
-  display: flex;
-  flex-direction: row;
-}
-.mar {
-  margin-top: 1rem;
-}
-.column {
-  display: flex;
-  flex-direction: column;
-  margin: 1rem;
-}
-.row {
-  display: flex;
-  flex-direction: row;
-  margin: 0.2rem;
-}
-::-webkit-scrollbar {
-  background-color: $panther;
-  -webkit-appearance: none;
-  width: 4px;
-  height: 100%;
-}
-::-webkit-scrollbar-thumb {
-  border-radius: 2px;
-  background-color: $panther-silver;
-}
-.selected__item {
-  padding: 0.5rem;
-
-  box-shadow: 3px 4px 7px $very-light-gray;
-  border-radius: 0.3rem;
-  width: 100%;
-  text-align: center;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-}
-.invisible {
-  display: none;
 }
 </style>

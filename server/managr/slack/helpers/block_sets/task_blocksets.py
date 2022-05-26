@@ -41,6 +41,7 @@ def create_task_modal_block_set(context):
     blocks = [
         block_builders.input_block("Subject", optional=False, block_id="managr_task_subject",),
         # HACK:- According to slack values are cached based on block_id since this is a sub block adding action_id seems to preserve the value
+        block_builders.input_block("Comments", block_id="managr_task_description", multiline=True),
         block_builders.datepicker(
             block_id="managr_task_datetime", label="Due Date", action_id="DO_NOTHING"
         ),

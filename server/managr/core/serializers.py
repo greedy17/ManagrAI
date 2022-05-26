@@ -47,6 +47,7 @@ class UserSerializer(serializers.ModelSerializer):
     slack_account = UserFrontEndSlackIntegrationSerializer(
         source="slack_integration", read_only=True
     )
+    activated_managr_templates = serializers.SerializerMethodField("get_alert_template_refs")
 
     class Meta:
         model = User
@@ -89,6 +90,7 @@ class UserSerializer(serializers.ModelSerializer):
             "has_salesforce_integration",
             "timezone",
             "activated_managr_configs",
+            "activated_managr_templates",
             "onboarding",
             "crm",
         )
@@ -105,6 +107,12 @@ class UserSerializer(serializers.ModelSerializer):
         "is_admin",
         "is_superuser",
     )
+
+    def get_alert_template_refs(self, instance):
+        from managr.alerts.models import AlertTemplate
+
+        templates = AlertTemplate.objects.for_user(instance).values_list("title", flat=True)
+        return templates
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):

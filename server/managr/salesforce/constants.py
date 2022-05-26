@@ -38,6 +38,7 @@ REMOVE_OWNER_ID = {
     "OpportunityLineItem",
 }
 
+ADD_RESOURCE_TYPE_FIELDS = ["RecordType"]
 
 # SF CUSTOM URI QUERIES
 def SALESFORCE_RESOURCE_QUERY_URI(
@@ -47,9 +48,15 @@ def SALESFORCE_RESOURCE_QUERY_URI(
     childRelationshipFields=[],
     additional_filters=[],
     limit=SALESFORCE_QUERY_LIMIT,
+    SobjectType=None,
 ):
     # make a set to remove duplicates
     fields = set(fields)
+    if resource in ADD_RESOURCE_TYPE_FIELDS:
+        if len(additional_filters):
+            additional_filters.append(f"AND SobjectType = '{SobjectType}'")
+        else:
+            additional_filters.append(f"SobjectType = '{SobjectType}'")
     url = f"{CUSTOM_BASE_URI}/query/?q=SELECT {','.join(fields)}"
     if len(childRelationshipFields):
         for rel, v in childRelationshipFields.items():
@@ -214,6 +221,16 @@ RESOURCE_SYNC_PRICEBOOK2 = "Pricebook2"
 RESOURCE_SYNC_PRICEBOOKENTRY = "PricebookEntry"
 RESOURCE_SYNC_OPPORTUNITYLINEITEM = "OpportunityLineItem"
 
+RESOURCE_SYNC_ORDER = [
+    RESOURCE_SYNC_LEAD,
+    RESOURCE_SYNC_ACCOUNT,
+    RESOURCE_SYNC_OPPORTUNITY,
+    RESOURCE_SYNC_CONTACT,
+    RESOURCE_SYNC_PRICEBOOK2,
+    RESOURCE_SYNC_PRODUCT2,
+    RESOURCE_SYNC_PRICEBOOKENTRY,
+    RESOURCE_SYNC_OPPORTUNITYLINEITEM,
+]
 
 SALESFORCE_RESOURCE_TASK = "Task"
 SALESFORCE_RESOURCE_EVENT = "Event"

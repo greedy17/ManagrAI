@@ -2,71 +2,71 @@
   <div class="alerts-template-list">
     <Modal v-if="deleteOpen" dimmed>
       <div class="delete_modal">
-        <h2>Delete Workflow</h2>
-        <div>
+        <div class="delete_modal__header">
+          <h2>Delete Workflow</h2>
+          <img @click="deleteOpen = !deleteOpen" src="@/assets/images/close.png" alt="" />
+        </div>
+
+        <div class="delete_modal__body">
           <p>This action cannot be undone, are you sure ?</p>
-          <div class="center">
-            <button style="margin-right: 0.5rem" class="no__button" @click="deleteClose">No</button>
-            <button class="yes__button" @click.stop="onDeleteTemplate(deleteId)">Yes</button>
-          </div>
+        </div>
+
+        <div class="delete_modal__footer">
+          <button class="no__button" @click="deleteClose">No</button>
+          <button class="yes__button" @click.stop="onDeleteTemplate(deleteId)">Yes</button>
         </div>
       </div>
     </Modal>
-    <div class="spacer"></div>
 
     <div class="center__">
-      <h2 v-if="!editing" :class="templates.refreshing ? 'loading-title titles' : 'titles'">
+      <h3 v-if="!editing" :class="templates.refreshing ? 'loading-title titles' : 'titles'">
         Edit your Workflow Automation
-      </h2>
-      <h2 @click="test" v-else :class="templates.refreshing ? 'loading-title titles' : 'titles'">
+      </h3>
+      <h3 v-else :class="templates.refreshing ? 'loading-title titles' : 'titles'">
         Saved Workflow Automations
-      </h2>
+      </h3>
       <p
         :class="templates.refreshing ? 'loading-title titles' : ''"
-        style="font-weight: bold; color: #5d5e5e; margin-top: -0.5rem; font-size: 0.95rem"
+        style="font-weight: bold; color: #aaaaaa; margin-top: -0.5rem; font-size: 13px"
       >
         Edit, Run, and Schedule your saved Automations
       </p>
-      <div v-if="!alertsCount(templates.list.length)">
-        <h3
-          class="bouncy"
-          style="
-            color: #5d5e5e;
-            font-weight: bold;
-            text-align: center;
-            margin-top: 16vh;
-            font-size: 3rem;
-          "
-        >
-          0
-        </h3>
-        <p style="font-weight: bold; color: #5d5e5e; text-align: center">Nothing here.. (o^^)o</p>
-      </div>
+    </div>
+    <div v-if="!alertsCount(templates.list.length)">
+      <h3
+        class="bouncy"
+        style="
+          color: #5d5e5e;
+          font-weight: bold;
+          text-align: center;
+          margin-top: 16vh;
+          font-size: 3rem;
+        "
+      >
+        0
+      </h3>
+      <p style="font-weight: bold; color: #5d5e5e; text-align: center">Nothing here.. (o^^)o</p>
     </div>
     <template
       style="margin-top: -1rem"
       v-if="!templates.refreshing && alertsCount(templates.list.length)"
     >
       <transition name="fade">
-        <div class="middle" v-if="!editing">
-          <div class="edit__modal">
-            <div>
-              <AlertsEditPanel :alert="currentAlert" />
-            </div>
-            <button style="margin-bottom: 1.5rem" class="yes__button" @click="closeEdit">
-              Done
-            </button>
+        <div v-if="!editing" class="edit__modal">
+          <AlertsEditPanel :alert="currentAlert" />
+          <div class="edit__modal__button">
+            <button @click="closeEdit">Done</button>
           </div>
         </div>
       </transition>
 
       <transition name="fade">
         <div class="alert_cards" v-if="editing">
-          <div :key="i" v-for="(alert, i) in templates.list" class="card__">
-            <div :data-key="alert.id">
-              <h3 class="card__header">{{ alert.title.toUpperCase() }}</h3>
+          <div :key="i" v-for="(alert, i) in templates.list" class="added-collection">
+            <div class="added-collection__header" :data-key="alert.id">
+              <h3>{{ alert.title }}</h3>
             </div>
-            <div class="row">
+            <div class="added-collection__body">
               <button
                 :disabled="clicked.includes(alert.id)"
                 @click.stop="onRunAlertTemplateNow(alert.id)"
@@ -74,18 +74,19 @@
               >
                 Run now
               </button>
-              <!-- <div class="centered">
-              <button @click="onTest(alert.id)" class="test-button">Test Alert</button>
-
-              <p style="margin-left: 0.5rem">Results: {{ alert.instances.length }}</p>
-            </div> -->
             </div>
-            <div class="row__start">
-              <p style="margin: 0.5rem 0.5rem">Schedule:</p>
+            <div class="added-collection__footer">
+              <img
+                style="margin-right: 0.25rem"
+                src="@/assets/images/slackLogo.png"
+                height="15px"
+                alt=""
+              />
+              <p style="font-size: 13px">Schedule:</p>
               <div class="row__">
                 <p
                   :class="!alert.isActive ? 'green' : ''"
-                  style="margin-right: 0.25rem; font-size: 0.8rem"
+                  style="margin-right: 0.5rem; font-size: 12px; letter-spacing: 1px"
                 >
                   OFF
                 </p>
@@ -93,43 +94,24 @@
                   @input="onToggleAlert(alert.id, alert.isActive)"
                   v-model="alert.isActive"
                   offColor="#aaaaaa"
-                  onColor="#199e54"
+                  onColor="#41b883"
                 />
                 <p
                   :class="alert.isActive ? 'green' : ''"
-                  style="margin-left: 0.25rem; font-size: 0.8rem"
+                  style="margin-left: 0.5rem; font-size: 12px; letter-spacing: 1px"
                 >
                   ON
                 </p>
               </div>
 
               <div class="row__two">
-                <img
-                  @click="makeAlertCurrent(alert)"
-                  src="@/assets/images/edit.png"
-                  style="
-                    height: 1.5rem;
-                    cursor: pointer;
-                    margin-right: 0.5rem;
-                    box-shadow: 1.5px 1px 2px #fafafa;
-                    border: none;
-                    border-radius: 50%;
-                    padding: 0.2rem;
-                  "
-                />
+                <span class="img-border">
+                  <img @click="makeAlertCurrent(alert)" src="@/assets/images/edit.png" />
+                </span>
 
-                <img
-                  src="@/assets/images/whitetrash.png"
-                  style="
-                    height: 1.5rem;
-                    cursor: pointer;
-                    box-shadow: 1.5px 1px 2px #fafafa;
-                    border: none;
-                    border-radius: 50%;
-                    padding: 0.2rem;
-                  "
-                  @click="deleteClosed(alert.id)"
-                />
+                <span class="img-border">
+                  <img src="@/assets/images/whitetrash.png" @click="deleteClosed(alert.id)" />
+                </span>
               </div>
             </div>
 
@@ -139,30 +121,50 @@
               </div>
             </template>
           </div>
-          <div v-if="zoomChannel" class="card__">
-            <h3 class="card__header">LOG MEETINGS</h3>
-            <div class="row">
+          <div v-if="zoomChannel" class="added-collection">
+            <div class="added-collection__header">
+              <h3>Log Meetings</h3>
+              <p></p>
+            </div>
+
+            <div class="added-collection__body">
               <button @click="goToLogZoom" class="green_button">Change Channel</button>
             </div>
-            <div>
+            <div class="added-collection__footer">
+              <img
+                style="margin-right: 0.25rem"
+                src="@/assets/images/slackLogo.png"
+                height="15px"
+                alt=""
+              />
               <p>
                 Current channel:
-                <span style="font-weight: bold; color: #199e54">{{
-                  currentZoomChannel.toUpperCase()
+                <span style="font-weight: bold; color: #41b883; font-size: 13px">{{
+                  currentZoomChannel
                 }}</span>
               </p>
             </div>
           </div>
-          <div v-if="hasRecapChannel && userLevel !== 'REP'" class="card__">
-            <h3 class="card__header">MEETING RECAPS</h3>
-            <div class="row">
+
+          <div v-if="hasRecapChannel && userLevel !== 'REP'" class="added-collection">
+            <div class="added-collection__header">
+              <h3>Meeting Recaps</h3>
+            </div>
+
+            <div class="added-collection__body">
               <button @click="goToRecap" class="green_button">Change Channel/Pipelines</button>
             </div>
-            <div>
+            <div class="added-collection__footer">
+              <img
+                style="margin-right: 0.2rem"
+                src="@/assets/images/slackLogo.png"
+                height="15px"
+                alt=""
+              />
               <p>
                 Current channel:
-                <span style="font-weight: bold; color: #199e54">{{
-                  currentRecapChannel.toUpperCase()
+                <span style="font-weight: bold; color: #41b883; font-size: 13px">{{
+                  currentRecapChannel
                 }}</span>
               </p>
             </div>
@@ -170,16 +172,8 @@
         </div>
       </transition>
     </template>
-
-    <!-- <div class="center-loader" v-else>
-      <div class="dot-flashing"></div>
-    </div> -->
-
-    <div
-      class="invert center-loader"
-      v-if="templates.refreshing && alertsCount(templates.list.length)"
-    >
-      <img src="@/assets/images/loading-gif.gif" class="invert" style="height: 8rem" alt="" />
+    <div class="center-loader" v-if="templates.refreshing && alertsCount(templates.list.length)">
+      <Loader loaderText="Gathering your workflows" />
     </div>
   </div>
 </template>
@@ -189,42 +183,28 @@
  * Components
  * */
 // Pacakges
-
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
-import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
 
 //Internal
-
-import ExpandablePanel from '@/components/ExpandablePanel'
-import FormField from '@/components/forms/FormField'
 import AlertsEditPanel from '@/views/settings/alerts/view/_AlertsEditPanel'
-import Modal from '@/components/InviteModal'
 /**
  * Services
  *
  */
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 import { UserConfigForm } from '@/services/users/forms'
 import User from '@/services/users'
 
-import AlertTemplate, {
-  AlertGroupForm,
-  AlertTemplateForm,
-  AlertConfigForm,
-  AlertMessageTemplateForm,
-  AlertOperandForm,
-} from '@/services/alerts/'
+import AlertTemplate from '@/services/alerts/'
 
 export default {
   name: 'AlertsTemplateList',
   components: {
-    ExpandablePanel,
-    PulseLoadingSpinner,
     ToggleCheckBox,
-    FormField,
     AlertsEditPanel,
-    Modal,
+    Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
+    Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
   },
   data() {
     return {
@@ -246,34 +226,30 @@ export default {
       pageLoaded: false,
     }
   },
-  // mounted() {
-  //   setTimeout(() => {
-  //     this.showLoader = false
-  //   }, 2000)
-  // },
   async created() {
     this.templates.refresh()
+    if (this.zoomChannel) {
+      this.getZoomChannel()
+    }
+    if (this.hasRecapChannel) {
+      this.getRecapChannel()
+    }
+    await this.listUserChannels()
     this.userConfigForm = new UserConfigForm({
       activatedManagrConfigs: this.user.activatedManagrConfigs,
     })
-    await this.listUserChannels()
-    if (this.hasRecapChannel) {
-      this.currentRecapChannel = this.userChannelOpts.channels.filter(
-        (channel) => channel.id === this.hasRecapChannel,
-      )[0].name
-    }
-    if (this.zoomChannel) {
-      this.currentZoomChannel = this.userChannelOpts.channels.filter(
-        (channel) => channel.id === this.zoomChannel,
-      )[0].name
-    }
   },
   methods: {
-    test() {
-      console.log(this.templates)
+    // test() {
+    //   console.log(this.templates)
+    // },
+    async getRecapChannel() {
+      const res = await SlackOAuth.api.channelDetails(this.hasRecapChannel)
+      this.currentRecapChannel = res.channel.name
     },
-    logChannels() {
-      console.log(this.userChannelOpts)
+    async getZoomChannel() {
+      const res = await SlackOAuth.api.channelDetails(this.zoomChannel)
+      this.currentZoomChannel = res.channel.name
     },
     deletedTitle(id) {
       let newList = []
@@ -281,7 +257,7 @@ export default {
       this.deleteTitle = newList[0].title
     },
     handleUpdate() {
-      this.loading = true
+      // this.loading = true
       User.api
         .update(this.user.id, this.userConfigForm.value)
         .then((response) => {
@@ -307,12 +283,6 @@ export default {
     },
     goToRecap() {
       this.$router.push({ name: 'ZoomRecap' })
-    },
-    hideCard() {
-      this.isHiding = true
-    },
-    goToTemplates() {
-      this.$router.push({ name: 'CreateNew' })
     },
     makeAlertCurrent(val) {
       this.currentAlert = val
@@ -361,22 +331,6 @@ export default {
         })
       }
     },
-    async onTest(id) {
-      try {
-        await AlertTemplate.api.testAlertTemplate(id)
-        this.$Alert.alert({
-          message: `Alert has been initiated to test against your data only`,
-          type: 'success',
-          timeout: 2000,
-        })
-      } catch {
-        this.$Alert.alert({
-          message: 'There was an error testing your alert',
-          type: 'error',
-          timeout: 2000,
-        })
-      }
-    },
     async onToggleAlert(id, value) {
       try {
         await AlertTemplate.api.updateAlertTemplate(id, { is_active: value })
@@ -395,7 +349,6 @@ export default {
       }
     },
     async onRunAlertTemplateNow(id) {
-      console.log(id)
       try {
         await AlertTemplate.api.runAlertTemplateNow(id)
         this.$Alert.alert({
@@ -416,9 +369,6 @@ export default {
   computed: {
     user() {
       return this.$store.state.user
-    },
-    hasSlack() {
-      return this.$store.state.user.slackAccount
     },
     hasRecapChannel() {
       return this.$store.state.user.slackAccount.recapChannel
@@ -452,57 +402,9 @@ export default {
     transform: translateY(-6px);
   }
 }
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.5s;
-}
-.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
-  opacity: 0;
-}
 
 .bouncy {
   animation: bounce 0.2s infinite alternate;
-}
-
-.dot-flashing {
-  position: relative;
-  width: 14px;
-  height: 14px;
-  border-radius: 7px;
-  background-color: $dark-green;
-  color: $dark-green;
-  animation: dotFlashing 1s infinite linear alternate;
-  animation-delay: 0.5s;
-}
-
-.dot-flashing::before,
-.dot-flashing::after {
-  content: '';
-  display: inline-block;
-  position: absolute;
-  top: 0;
-}
-
-.dot-flashing::before {
-  left: -15px;
-  width: 14px;
-  height: 14px;
-  border-radius: 7px;
-  background-color: $dark-green;
-  color: $dark-green;
-  animation: dotFlashing 1s infinite alternate;
-  animation-delay: 0s;
-}
-
-.dot-flashing::after {
-  left: 15px;
-  width: 14px;
-  height: 14px;
-  border-radius: 7px;
-  background-color: $dark-green;
-  color: $dark-green;
-  animation: dotFlashing 1s infinite alternate;
-  animation-delay: 1s;
 }
 
 @keyframes dotFlashing {
@@ -515,193 +417,160 @@ export default {
   }
 }
 
-.spacer {
-  height: 0.75rem;
-}
 h2 {
   font-size: 1.4rem;
 }
 button:disabled {
-  background-color: $panther-silver;
+  background-color: $very-light-gray;
   cursor: not-allowed;
-}
-::v-deep .item-container__label {
-  color: white;
-  border: none;
-}
-::v-deep .ls-container__list--horizontal {
-  background-color: $panther;
-  width: 50vw;
-}
-::v-deep .ls-container {
-  background: transparent;
-  box-shadow: none;
-  margin-bottom: 1rem;
-}
-.keep-activating {
-  outline: 2px solid $coral;
-}
-.keep-activating__ {
-  outline: 2px solid $panther-gold;
-}
-.done-activating {
-  outline: 2px solid $dark-green;
 }
 .titles {
   color: $base-gray;
   font-weight: bold;
 }
-.alert-links {
-  color: #199e54;
-  border-bottom: 3px solid #19954e;
-}
-.activate-button {
-  background-color: $dark-green;
-  color: white;
-  border: none;
-  font-weight: bold;
-  font-size: 1rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.6rem;
-  cursor: pointer;
-}
-.test-button {
-  background-color: white;
-  color: $dark-green;
-  border: none;
-  font-weight: bold;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.25rem;
-  cursor: pointer;
-}
-.middle {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
 .delete_modal {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   background-color: $white;
   color: $base-gray;
-  border-radius: 0.5rem;
-  height: 28vh;
+  border-radius: 0.3rem;
+  width: 40vw;
+  padding: 1rem;
+  &__header {
+    height: 3rem;
+    padding: 1rem 0rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 400;
+    border-bottom: 1px solid $soft-gray;
+    img {
+      height: 1rem;
+      margin-top: -1rem;
+      cursor: pointer;
+    }
+  }
+  &__body {
+    height: 4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  &__footer {
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 .edit__modal {
   background-color: white;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  border-radius: 1rem;
+  border: 1px solid #e8e8e8;
+  border-radius: 0.3rem;
   color: $base-gray;
-  height: 70vh;
+  width: 100%;
+  height: 74vh;
   overflow: scroll;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-direction: column;
-}
+  padding: none;
 
-.yes__button {
-  width: 8vw;
-  background-color: $dark-green;
-  border: none;
-  border-radius: 0.25rem;
-  color: white;
-  cursor: pointer;
-  margin-right: 0.5rem;
-  padding: 0.5rem;
-  font-weight: bold;
-}
-.no__button {
-  width: 8vw;
-  background-color: $very-light-gray;
-  border: none;
-  border-radius: 0.25rem;
-  color: white;
-  cursor: pointer;
-  padding: 0.5rem;
-  font-weight: bold;
-}
-.yes__button:hover,
-.no__button:hover {
-  filter: brightness(80%);
-}
-.no-data {
-  color: $gray;
-  margin-left: 0.5rem;
-  font-size: 15px;
-}
-.alerts-template-list__header--heading {
-  @include header-subtitle();
-}
-.alerts-template-list {
-  margin-left: 18vw;
-  margin-top: 3.5rem;
-  color: $base-gray;
-  &__header {
+  &__button {
     display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding: 0rem 2rem 1rem 0rem;
+    width: 100%;
 
-    &-item {
-      min-width: 10rem;
-      &--main {
-        flex: 1 0 auto;
-      }
+    button {
+      background-color: $dark-green;
+      border: none;
+      border-radius: 0.25rem;
+      color: white;
+      cursor: pointer;
+      padding: 0.5rem 2rem;
     }
   }
+}
+
+.no__button {
+  background-color: $soft-gray;
+  outline: 1px solid $soft-gray;
+  border: none;
+  font-size: 16px;
+  border-radius: 0.3rem;
+  cursor: pointer;
+  padding: 0.4rem 2rem;
+  margin-right: 0.5rem;
+  color: $base-gray;
+}
+.yes__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 2rem;
+  border-radius: 0.3rem;
+  line-height: 1.14;
+  text-indent: none;
+  border-style: none;
+  letter-spacing: 0.03rem;
+  color: white;
+  background-color: $dark-green;
+  outline: 1px solid $dark-green;
+  cursor: pointer;
+  font-size: 16px;
+}
+.alerts-template-list {
+  margin-left: 10vw;
+  margin-top: 3.5rem;
+  color: $base-gray;
 }
 .alert_cards {
   display: flex;
   flex-direction: row;
-  justify-content: space-evenly;
-  align-items: center;
-  margin-top: 2rem;
+  justify-content: flex-start;
+  align-items: flex-start;
+  margin-top: 1rem;
   flex-wrap: wrap;
+  padding: 0;
 }
-// .centered__cards {
-//   display: flex;
-//   flex-direction: row;
-//   justify-content: space-evenly;
-//   align-items: center;
-//   margin-top: 2rem;
-//   flex-wrap: wrap;
-// }
-.card__ {
-  background-color: white;
-  border: none;
-  min-width: 22vw;
-  max-width: 44vw;
-  min-height: 25vh;
-  margin-right: 1rem;
-  margin-bottom: 2rem;
-  border-radius: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  color: $base-gray;
+.added-collection:hover {
+  box-shadow: 1px 2px 2px $very-light-gray;
+  transform: scale(1.015);
+}
 
-  &header {
+.added-collection {
+  background-color: white;
+  border-radius: 0.3rem;
+  border: 1px solid #e8e8e8;
+  width: 22vw;
+  margin-right: 1rem;
+  margin-bottom: 1rem;
+  transition: all 0.25s;
+  &__header {
+    max-height: 3rem;
+    padding: 1.75rem 1rem;
+    font-size: 13px;
     display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    border-bottom: 2px solid $soft-gray;
+  }
+  &__body {
+    display: flex;
+    align-items: center;
     justify-content: center;
+    height: 5rem;
+    font-size: 13px;
+  }
+  &__footer {
+    display: flex;
     align-items: center;
     height: 3rem;
-    font-weight: 900px;
-    margin-bottom: 1rem;
-    font-size: 0.875rem;
+    padding: 1rem;
+    font-size: 14px;
+    justify-content: space-evenly;
   }
-}
-.icon {
-  display: block;
-  cursor: pointer;
-  width: 20px;
-  height: 30px;
-}
-img {
-  filter: invert(90%);
-}
-.pink {
-  color: $candy;
 }
 a {
   text-decoration: none;
@@ -709,12 +578,6 @@ a {
   cursor: pointer;
 }
 
-.row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-evenly;
-}
 .row__ {
   display: flex;
   flex-direction: row;
@@ -722,21 +585,31 @@ a {
   justify-content: center;
   margin: 0 0.5rem 0 0.5rem;
   color: $base-gray;
-  font-weight: 900;
+  font-weight: bold;
+}
+.img-border {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e8e8e8;
+  border-radius: 0.2rem;
+  cursor: pointer;
+  padding: 0.15rem 0.3rem;
 }
 .row__two {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  margin: 1rem;
   width: 100%;
+  img {
+    height: 0.8rem;
+    cursor: pointer;
+    filter: invert(70%);
+  }
 }
-.row__start {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  margin-top: 0.25rem;
-  width: 100%;
+.green_button:disabled {
+  background-color: $soft-gray;
+  color: $gray;
 }
 .green_button {
   color: white;
@@ -744,54 +617,18 @@ a {
   border-radius: 0.25rem;
   padding: 0.5rem 1rem;
   font-weight: bold;
-  font-size: 16px;
+  font-size: 12px;
   border: none;
   cursor: pointer;
 }
 .green {
   color: $dark-green;
 }
-.delete_button {
-  color: $panther-orange;
-  border: none;
-  background-color: $panther;
-  width: 8vw;
-  border-radius: 0.25rem;
-  padding: 0.5rem;
-  font-weight: bold;
-  font-size: 16px;
-  cursor: pointer;
-}
-.edit_button {
-  color: $panther-blue;
-  background-color: white;
-  width: 8vw;
-  border-radius: 0.25rem;
-  padding: 0.5rem;
-  font-weight: bold;
-  font-size: 16px;
-  border: 2px solid $white;
-  cursor: pointer;
-}
-.debug {
-  border: 2px solid red;
-}
-.center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
 .center__ {
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: flex-start;
+  align-items: flex-start;
   flex-direction: column;
-}
-.centered {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
 }
 .center-loader {
   display: flex;
@@ -799,23 +636,7 @@ a {
   align-items: center;
   height: 60vh;
 }
-.invert {
-  filter: invert(99%);
-}
-.invisible {
-  display: none;
-}
 .loading-title {
   display: none;
 }
-// ::-webkit-scrollbar {
-//   background-color: $panther;
-//   -webkit-appearance: none;
-//   width: 4px;
-//   height: 100%;
-// }
-// ::-webkit-scrollbar-thumb {
-//   border-radius: 2px;
-//   background-color: $panther-silver;
-// }
 </style>

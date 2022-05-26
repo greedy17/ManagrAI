@@ -1,5 +1,4 @@
 import Model, { fields } from '@thinknimble/tn-models'
-import User from '../users/models'
 import { objectToCamelCase } from '../utils'
 import AlertTemplateAPI, {
   AlertMessageTemplateAPI,
@@ -10,16 +9,7 @@ import AlertTemplateAPI, {
   AlertInstanceAPI,
   RealTimeAlertConfigAPI,
 } from './api'
-import Contact from '../contacts'
-import Account from '../accounts/'
-import Opportunity from '../opportunity/'
 
-
-const resourceMap = {
-  "Contact": new fields.ModelField({ ModelClass: Contact }),
-  "Account": new fields.ModelField({ ModelClass: Account }),
-  "Opportunity": new fields.ModelField({ ModelClass: Opportunity })
-}
 export class AlertTemplateRef extends Model {
   /**
    * Template Ref class ignores Model Ref classes of child models
@@ -79,6 +69,7 @@ export class AlertConfig extends Model {
   static templateRef = new fields.ModelField({ ModelClass: AlertTemplateRef })
   static recurrenceFrequency = new fields.CharField({})
   static recurrenceDay = new fields.IntegerField({})
+  static recurrenceDays = new fields.ArrayField({ type: new fields.IntegerField() })
   static recipients = new fields.ArrayField({ type: new fields.CharField() })
   static recipientType = new fields.CharField({})
   static alertTargetsRef = new fields.Field({})
@@ -96,6 +87,7 @@ export class AlertInstance extends Model {
   static resourceId = new fields.CharField({})
   static sentAt = new fields.CharField({})
   static config = new fields.ModelField({ ModelClass: AlertConfig })
+  static formInstanceRef = new fields.BooleanField({})
 
   static fromAPI(json) {
     return new AlertInstance(objectToCamelCase(json))

@@ -5,7 +5,7 @@ from django.contrib.auth.admin import UserAdmin
 from django import forms
 from django.forms import ModelForm, Textarea
 from django.contrib.auth.forms import ReadOnlyPasswordHashField, UserCreationForm, UserChangeForm
-
+from rest_framework.authtoken.models import Token
 
 from managr.slack.models import UserSlackIntegration
 from managr.zoom.models import ZoomAuthAccount
@@ -15,6 +15,7 @@ from .models import (
     User,
     NylasAuthAccount,
     MeetingPrepInstance,
+    UserActivity,
     #    NotificationOption,
     #    NotificationSelection,
 )
@@ -163,6 +164,7 @@ class CustomUserAdmin(UserAdmin):
                     "timezone",
                     "reminders",
                     "crm",
+                    "activated_managr_configs",
                 )
             },
         ),
@@ -201,9 +203,16 @@ class CustomMeetingPrepInstance(admin.ModelAdmin):
     ordering = ("-datetime_created",)
 
 
+class CustomUserActivity(admin.ModelAdmin):
+    model = UserActivity
+    list_display = ("user",)
+
+
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(NylasAuthAccount, CustomNylasAuthAccount)
 admin.site.register(MeetingPrepInstance, CustomMeetingPrepInstance)
+admin.site.register(UserActivity, CustomUserActivity)
+
 
 # admin.site.register(NotificationOption, CustomNotificationOption)
 # admin.site.register(NotificationSelection, CustomNotificationSelection)

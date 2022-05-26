@@ -38,7 +38,6 @@ export default class EmailTemplate {
       data = emailTemplate
     }
 
-    //
     excludeFields = [...EmailTemplate.readOnlyFields, ...excludeFields]
     excludeFields.forEach(item => {
       delete data[item]

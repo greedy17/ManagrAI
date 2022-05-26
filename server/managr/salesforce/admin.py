@@ -55,12 +55,8 @@ class CustomMeetingWorkflow(admin.ModelAdmin):
     model = models.MeetingWorkflow
     inlines = (CustomFormInstanceInline,)
     list_filter = ("user__email",)
-    list_display = (
-        "datetime_created",
-        "meeting",
-        "progress",
-    )
-    readonly_fields = ["user", "meeting", "non_zoom_meeting"]
+    list_display = ("datetime_created", "user")
+    readonly_fields = ["user"]
     ordering = ("-datetime_created",)
 
 

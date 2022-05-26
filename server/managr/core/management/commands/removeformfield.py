@@ -8,7 +8,7 @@ from managr.organization.models import Organization
 
 
 class Command(BaseCommand):
-    help = "Helper for restarting the sf sync"
+    help = "Helper for removing a field from forms"
 
     def add_arguments(self, parser):
         parser.add_argument("org_id", nargs="+", type=str)

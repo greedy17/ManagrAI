@@ -28,7 +28,7 @@ from managr.organization.models import (
     PricebookEntry,
     OpportunityLineItem,
 )
-from managr.organization.serializers import AccountSerializer, StageSerializer
+from managr.organization.serializers import AccountSerializer, StageSerializer, ContactSerializer
 from managr.opportunity.models import Opportunity, Lead
 from managr.opportunity.serializers import OpportunitySerializer
 from managr.slack import constants as slack_consts
@@ -38,7 +38,6 @@ from managr.slack.helpers import block_builders
 from managr.slack.helpers.utils import action_with_params
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers.exceptions import CannotSendToChannel
-from managr.slack.helpers.utils import action_with_params
 from managr.slack.models import UserSlackIntegration
 
 from ..routes import routes
@@ -88,22 +87,28 @@ def emit_gen_next_sync(user_id, ops_list, schedule_time=timezone.now()):
     return _process_gen_next_sync(user_id, ops_list, schedule=schedule)
 
 
-def emit_gen_next_object_field_sync(user_id, ops_list, schedule_time=timezone.now()):
+def emit_gen_next_object_field_sync(user_id, ops_list, for_dev, schedule_time=timezone.now()):
     schedule = datetime.strptime(schedule_time, "%Y-%m-%dT%H:%M%Z")
-    return _process_gen_next_object_field_sync(user_id, ops_list, schedule=schedule)
+    return _process_gen_next_object_field_sync(user_id, ops_list, for_dev, schedule=schedule)
 
 
-def emit_sync_sobject_fields(user_id, sync_id, resource, scheduled_for=timezone.now()):
-    return _process_sobject_fields_sync(user_id, sync_id, resource, schedule=scheduled_for)
+def emit_sync_sobject_fields(user_id, sync_id, resource, for_dev, scheduled_for=timezone.now()):
+    return _process_sobject_fields_sync(user_id, sync_id, resource, for_dev, schedule=scheduled_for)
 
 
-def emit_sync_sobject_validations(user_id, sync_id, resource, scheduled_for=timezone.now()):
-    return _process_sobject_validations_sync(user_id, sync_id, resource, schedule=scheduled_for)
+def emit_sync_sobject_validations(
+    user_id, sync_id, resource, for_dev, scheduled_for=timezone.now()
+):
+    return _process_sobject_validations_sync(
+        user_id, sync_id, resource, for_dev, schedule=scheduled_for
+    )
 
 
-def emit_sync_sobject_picklist(user_id, sync_id, resource, scheduled_for=timezone.now()):
+def emit_sync_sobject_picklist(user_id, sync_id, resource, for_dev, scheduled_for=timezone.now()):
 
-    return _process_picklist_values_sync(user_id, sync_id, resource, schedule=scheduled_for)
+    return _process_picklist_values_sync(
+        user_id, sync_id, resource, for_dev, schedule=scheduled_for
+    )
 
 
 def emit_add_call_to_sf(workflow_id, *args):
@@ -155,23 +160,32 @@ def _process_gen_next_sync(user_id, operations_list):
     user = User.objects.filter(id=user_id).first()
     if not user:
         return logger.exception(f"User not found sync operation not created {user_id}")
-    return SFResourceSync.objects.create(
+    SFResourceSync.objects.create(
         user=user,
         operations_list=operations_list,
         operation_type=sf_consts.SALESFORCE_RESOURCE_SYNC,
     ).begin_tasks()
+    return
 
 
 @background(schedule=0)
 @log_all_exceptions
-def _process_gen_next_object_field_sync(user_id, operations_list):
+def _process_pipeline_sync(sync_id):
+    sync = SFResourceSync.objects.get(id=sync_id)
+    sync.begin_tasks()
+    return sync.id
+
+
+@background(schedule=0)
+@log_all_exceptions
+def _process_gen_next_object_field_sync(user_id, operations_list, for_dev):
     user = User.objects.filter(id=user_id).first()
     if not user:
         return logger.exception(f"User not found sync operation not created {user_id}")
 
     return SFObjectFieldsOperation.objects.create(
         user=user, operations_list=operations_list, operation_type=sf_consts.SALESFORCE_FIELD_SYNC
-    ).begin_tasks()
+    ).begin_tasks(for_dev)
 
 
 @background()
@@ -193,8 +207,13 @@ def _generate_form_template(user_id):
             is_public=True,
             id__in=slack_consts.DEFAULT_PUBLIC_FORM_FIELDS.get(resource, {}).get(form_type, []),
         )
+        note_subject = public_fields.filter(id="6407b7a1-a877-44e2-979d-1effafec5035").first()
+        note = public_fields.filter(id="0bb152b5-aac1-4ee0-9c25-51ae98d55af1").first()
         for i, field in enumerate(public_fields):
-            f.fields.add(field, through_defaults={"order": i})
+            if i == 0 and note_subject is not None:
+                f.fields.add(note_subject, through_defaults={"order": i})
+            elif i == 1 and note is not None:
+                f.fields.add(note, through_defaults={"order": i})
         f.save()
 
 
@@ -265,7 +284,7 @@ def _process_resource_sync(user_id, sync_id, resource, limit, offset, attempts=1
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_FIELD_SYNC_QUEUE)
 @log_all_exceptions
-def _process_sobject_fields_sync(user_id, sync_id, resource):
+def _process_sobject_fields_sync(user_id, sync_id, resource, for_dev):
     user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
     if not hasattr(user, "salesforce_account"):
         return
@@ -291,7 +310,13 @@ def _process_sobject_fields_sync(user_id, sync_id, resource):
 
     # make fields into model and save them
     # need to update existing ones in case they are already on a form rather than override
+    if for_dev:
+        logger.info(f"FIELDS FROM SYNC FOR {user.email}")
     for field in fields:
+        if for_dev:
+            logger.info(
+                f"--------------------------------------------------------------------------\nFIELD <{field.label} - {field.api_name}>"
+            )
         existing = SObjectField.objects.filter(
             api_name=field.api_name,
             salesforce_account_id=field.salesforce_account,
@@ -310,7 +335,7 @@ def _process_sobject_fields_sync(user_id, sync_id, resource):
                 sf = user.salesforce_account
                 try:
                     object_picklist = sf.get_individual_picklist_values(
-                        resource, field=field.api_name
+                        resource, field=field.api_name, for_dev=for_dev
                     )
                     attempts = 1
 
@@ -337,14 +362,19 @@ def _process_sobject_fields_sync(user_id, sync_id, resource):
                     )
                 else:
                     picklist_serializer = SObjectPicklistSerializer(data=object_picklist.as_dict)
+
                 picklist_serializer.is_valid(raise_exception=True)
                 picklist_serializer.save()
+                if for_dev:
+                    logger.info(
+                        f"PICKLIST <{object_picklist.as_dict}>\nPICKLIST SERIALIZER <{picklist_serializer.data}>"
+                    )
     return
 
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_FIELD_SYNC_QUEUE)
 @log_all_exceptions
-def _process_picklist_values_sync(user_id, sync_id, resource):
+def _process_picklist_values_sync(user_id, sync_id, resource, for_dev):
     user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
     if not hasattr(user, "salesforce_account"):
         return
@@ -389,7 +419,7 @@ def _process_picklist_values_sync(user_id, sync_id, resource):
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_FIELD_SYNC_QUEUE)
 @log_all_exceptions
-def _process_sobject_validations_sync(user_id, sync_id, resource):
+def _process_sobject_validations_sync(user_id, sync_id, resource, for_dev):
     user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
     if not hasattr(user, "salesforce_account"):
         return
@@ -576,12 +606,16 @@ def _process_add_call_to_sf(workflow_id, *args):
     if not hasattr(user, "salesforce_account"):
         return logger.exception("User does not have a salesforce account cannot push to sf")
     review_form = workflow.forms.filter(template__form_type=slack_consts.FORM_TYPE_UPDATE).first()
+    subject = review_form.saved_data.get("meeting_type")
+    description = review_form.saved_data.get("meeting_comments")
     if workflow.meeting:
+        title = workflow.meeting.topic if subject is None else subject
         user_timezone = user.zoom_account.timezone
         start_time = workflow.meeting.start_time
         end_time = workflow.meeting.end_time
 
     else:
+        title = workflow.non_zoom_meeting.event_data["title"] if subject is None else subject
         user_timezone = user.timezone
         start_time = datetime.utcfromtimestamp(
             int(workflow.non_zoom_meeting.event_data["times"]["start_time"])
@@ -602,8 +636,8 @@ def _process_add_call_to_sf(workflow_id, *args):
         else end_time
     )
     data = dict(
-        Subject=f"Zoom Meeting - {review_form.saved_data.get('meeting_type')}",
-        Description=f"{review_form.saved_data.get('meeting_comments')}, this meeting started on {formatted_start} and ended on {formatted_end} ",
+        Subject=f"Zoom Meeting - {title}",
+        Description=f"{'No comments' if description is None else description}, this meeting started on {formatted_start} and ended on {formatted_end} ",
         WhatId=workflow.resource.integration_id,
         ActivityDate=start_time.strftime("%Y-%m-%d"),
         Status="Completed",
@@ -658,8 +692,13 @@ def _process_add_update_to_sf(form_id, *args):
     if not hasattr(user, "salesforce_account"):
         return logger.exception("User does not have a salesforce account cannot push to sf")
     start_time = form.submission_date
+    subject = (
+        "No subject"
+        if form.saved_data.get("meeting_type") is None
+        else form.saved_data.get("meeting_type")
+    )
     data = dict(
-        Subject=f"{form.saved_data.get('meeting_type')}",
+        Subject=f"{subject}",
         Description=f"{form.saved_data.get('meeting_comments')}",
         ActivityDate=start_time.strftime("%Y-%m-%d"),
         Status="Completed",
@@ -882,6 +921,13 @@ def _process_create_new_contacts(workflow_id, *args):
                         sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                         time.sleep(sleep)
                         attempts += 1
+        try:
+            serializer = ContactSerializer(data=res.as_dict)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+        except Exception as e:
+            logger.exception(f"Failed to create contact in DB because of {e}")
+            return
     return
 
 
@@ -1156,6 +1202,7 @@ def _process_list_tasks(user_id, data, *args):
 def _process_workflow_tracker(workflow_id):
     """gets workflow and check's if all tasks are completed and manually completes if not already completed"""
     workflow = MeetingWorkflow.objects.filter(id=workflow_id).first()
+    # workflow.user.activity.add_meeting_activity(workflow_id)
     if workflow and workflow.in_progress:
         completed_tasks = set(workflow.completed_operations)
         all_tasks = set(workflow.operations)
@@ -1218,7 +1265,7 @@ def check_for_display_value(field, value):
 
 @background(schedule=0)
 @slack_api_exceptions(rethrow=True)
-def _send_recap(form_ids, send_to_data=None, manager_recap=False):
+def _send_recap(form_ids, send_to_data=None, manager_recap=False, bulk=False):
     submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
         template__resource="OpportunityLineItem"
     )
@@ -1230,17 +1277,28 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
     resource_name = main_form.resource_object.name if main_form.resource_object.name else ""
     slack_access_token = user.organization.slack_integration.access_token
     title = (
-        "*Meeting Recap* :zap:" if manager_recap else f"*{main_form.template.resource} Recap* :zap:"
+        ":zap: *Instant Update:* Meeting Logged"
+        if manager_recap
+        else f":zap: *{main_form.template.resource} Recap*"
     )
+    if bulk:
+        title = ":zap: *Bulk Update* "
+        text = ""
+        for index, form in enumerate(submitted_forms):
+            text += f"{form.resource_object.name}"
+            if index != len(submitted_forms):
+                text += ", "
+    else:
+        text = f"_{main_form.template.resource}_ *{resource_name}*"
     blocks = [
         block_builders.simple_section(title, "mrkdwn"),
         block_builders.section_with_button_block(
             "View Recap",
             "recap",
-            f"_{main_form.template.resource}_ *{resource_name}*",
+            text,
             action_id=action_with_params(
                 slack_consts.VIEW_RECAP,
-                params=[f"u={str(user.id)}", f"form_ids={'.'.join(form_ids)}"],
+                params=[f"u={str(user.id)}", f"form_ids={','.join(form_ids)}"],
             ),
         ),
         block_builders.context_block(f"{main_form.template.resource} owned by {user.full_name}"),
@@ -1352,21 +1410,22 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False):
 
 def create_alert_string(operator, data_type, config_value, saved_value, old_value, title):
     alert_string = f"{title}"
+    if data_type == "date":
+        saved_value = datetime.strptime(saved_value, "%Y-%m-%d")
+        old_value = datetime.strptime(old_value, "%Y-%m-%d")
     if operator == "==":
         if data_type == "string" and saved_value == config_value and saved_value != old_value:
             return alert_string
     elif operator == "<=":
-        return
+        if saved_value <= config_value:
+            return alert_string
     elif operator == ">=":
-        return
+        if saved_value >= config_value:
+            return alert_string
     elif operator == "!=":
         if data_type == "string" and saved_value != config_value:
             return alert_string
-        elif (
-            data_type == "date"
-            and datetime.strptime(saved_value, "%Y-%m-%d").month
-            != datetime.strptime(old_value, "%Y-%m-%d").month
-        ):
+        elif data_type == "date" and old_value is not None and saved_value.month != old_value.month:
             return alert_string
     return None
 
@@ -1399,12 +1458,13 @@ def _send_instant_alert(form_ids):
         if api_name in new_data.keys():
             for object in configs[str(field["id"])].values():
                 if api_name in list(object.values()):
+                    old_value = old_data[api_name] if len(old_data) else None
                     value_check = create_alert_string(
                         object["operator"],
                         object["data_type"],
                         object["value"],
                         new_data[api_name],
-                        old_data[api_name],
+                        old_value,
                         object["title"],
                     )
                     if value_check:
@@ -1428,7 +1488,7 @@ def _send_instant_alert(form_ids):
                 f"_{main_form.template.resource}_ *{resource_name}*",
                 action_id=action_with_params(
                     slack_consts.VIEW_RECAP,
-                    params=[f"u={str(user.id)}", f"form_ids={'.'.join(form_ids)}"],
+                    params=[f"u={str(user.id)}", f"form_ids={','.join(form_ids)}"],
                 ),
             ),
             block_builders.context_block(
@@ -1484,7 +1544,7 @@ def remove_field(org_id, form_field):
                 field.forms.first().order = index
                 field.forms.first().save()
             else:
-                field.forms.first().delete()
+                form.fields.remove(field.id)
     return
 
 

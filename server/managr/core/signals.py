@@ -1,5 +1,5 @@
 from rest_framework.authtoken.models import Token
-
+from django.contrib.auth import get_user_model
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 
@@ -7,10 +7,11 @@ from .models import User
 from background_task.models import CompletedTask
 from managr.hubspot import constants as hs_consts
 from managr.salesforce import constants as sf_consts
+from .models import User, UserActivity
 
 
 @receiver(post_save, sender=User)
-def create_auth_token(sender, instance=None, created=False, **kwargs):
+def create_auth_token(sender, instance, created, **kwargs):
     """When a new user is created, automatically generate an auth token for them."""
     if created:
         Token.objects.create(user=instance)
@@ -38,3 +39,9 @@ def update_succesful_task_operations(sender, instance=None, created=False, **kwa
             update_succesful_hubspot_operations(sender, instance, created, **kwargs)
         else:
             return
+
+
+@receiver(post_save, sender=get_user_model())
+def create_activity(sender, instance, created, **kwargs):
+    if created:
+        UserActivity.objects.create(user=instance)

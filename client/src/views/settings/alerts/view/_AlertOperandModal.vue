@@ -1,13 +1,15 @@
 <template>
   <div class="alert-operand-modal">
+    <div class="alert-operand-modal__header">
+      <h3>Add Condition</h3>
+    </div>
     <AlertOperandRow v-if="form" :resourceType="resourceType" :form.sync="form" />
 
-    <div class="middle">
+    <div class="alert-operand-modal__save">
       <PulseLoadingSpinnerButton
-        style="margin-top: 2rem"
         text="save"
         @click="onSave"
-        class="btn btn--primary"
+        class="primary-button"
         :loading="isSaving"
         :disabled="!form.isValid"
       />
@@ -21,12 +23,8 @@
  * */
 // Pacakges
 import AlertOperandRow from '../create/_AlertOperandRow.vue'
-import ToggleCheckBox from '@thinknimble/togglecheckbox'
 
 //Internal
-import ListContainer from '@/components/ListContainer'
-import FormField from '@/components/forms/FormField'
-import DropDownSearch from '@/components/DropDownSearch'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 /**
  * Services
@@ -42,10 +40,6 @@ export default {
    */
   name: 'AlertOperandModal',
   components: {
-    ListContainer,
-    ToggleCheckBox,
-    DropDownSearch,
-    FormField,
     AlertOperandRow,
     AlertGroupOperand,
     PulseLoadingSpinnerButton,
@@ -83,7 +77,6 @@ export default {
       this.isSaving = false
     },
   },
-  computed: {},
 }
 </script>
 
@@ -97,37 +90,40 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
-.btn {
-  &--danger {
-    @include button-danger();
-  }
-  &--primary {
-    @include primary-button();
-  }
-  &--secondary {
-    @include secondary-button();
-  }
 
-  &--icon {
-    @include --icon();
-  }
+.primary-button {
+  padding: 0.4rem 1.5rem;
+  box-shadow: none;
+  font-weight: 400;
+}
+.primary-button:disabled {
+  background-color: $soft-gray;
 }
 
 .alert-operand-modal {
-  padding: 2rem;
-  height: 100%;
   overflow-y: scroll;
   background-color: $white;
-  border-radius: 0.5rem;
+  border-radius: 0.3rem;
   color: $base-gray;
-  font-weight: bold;
-  max-height: 100%;
   width: 100%;
   font-family: $base-font-family;
-}
-.middle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+
+  &__header {
+    padding: 0.25rem 1.5rem;
+    letter-spacing: 1px;
+    outline: 1px solid #e8e8e8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__save {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding-right: 1rem;
+    height: 200px;
+    width: 100%;
+  }
 }
 </style>

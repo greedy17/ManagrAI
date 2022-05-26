@@ -203,6 +203,7 @@ def queue_stale_sf_data_for_delete(cutoff=1440):
     qs = User.objects.filter(is_active=True, salesforce_account__isnull=False).distinct()
     # count them to paginate the response
     user_count = qs.count()
+    logger.info(f"STARTING STALE DATE ClEAR FOR {user_count} users")
     # set limit of 100 or less
     limit = max(100, user_count)
     # divide into pages
@@ -270,7 +271,9 @@ def queue_stale_sf_data_for_delete(cutoff=1440):
                             [
                                 {
                                     "user_id": str(user.id),
-                                    "resource": {r: qs.values_list("id", flat=True)},
+                                    "resource": {
+                                        r: list(str(id) for id in qs.values_list("id", flat=True))
+                                    },
                                 }
                             ],
                         )
@@ -285,7 +288,11 @@ def queue_stale_sf_data_for_delete(cutoff=1440):
                                 [
                                     {
                                         "user_id": str(user.id),
-                                        "resource": {r: items.values_list("id", flat=True)},
+                                        "resource": {
+                                            r: list(
+                                                str(id) for id in items.values_list("id", flat=True)
+                                            )
+                                        },
                                     }
                                 ],
                             )
@@ -315,7 +322,8 @@ def init_sf_field_sync(user):
 
     scheduled_time = timezone.now()
     formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
-    emit_gen_next_object_field_sync(str(user.id), operations, formatted_time)
+    for_dev = False
+    emit_gen_next_object_field_sync(str(user.id), operations, for_dev, formatted_time)
     return
 
 

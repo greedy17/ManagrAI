@@ -4,7 +4,7 @@ import pytz
 import uuid
 import logging
 import json
-
+from django.conf import settings
 from datetime import datetime
 
 from django.db.models import Q
@@ -70,6 +70,26 @@ def loading_block_set(context):
 
 
 @block_set()
+def direct_to_block_set(context):
+    slack_context = context.get("slack")
+    managr_url = context.get("managr")
+    blocks = [
+        block_builders.simple_section(f"{context.get('title')}", "mrkdwn"),
+        block_builders.actions_block(
+            [
+                block_builders.simple_button_block(
+                    "Complete in Slack", "complete_in_slack", action_id=slack_context,
+                ),
+                block_builders.simple_button_block(
+                    "Complete in Managr", "complete_in_managr", url=managr_url, style="primary"
+                ),
+            ]
+        ),
+    ]
+    return blocks
+
+
+@block_set()
 def success_modal_block_set(context):
     message = context.get("message", ":white_check_mark: Success!")
     user = context.get("u")
@@ -82,6 +102,29 @@ def success_modal_block_set(context):
             action_id=action_with_params(
                 slack_const.PROCESS_SEND_RECAP_MODAL,
                 params=[f"u={user}", f"form_ids={form_ids}", "type=command"],
+            ),
+        )
+    ]
+    return blocks
+
+
+@block_set()
+def bulk_recap_block_set(context):
+    message = context.get("message", ":white_check_mark: Success!")
+    user = context.get("u")
+    form_ids = context.get("form_ids")
+    blocks = [
+        block_builders.section_with_button_block(
+            "Send Recap",
+            "SEND_RECAP",
+            message,
+            action_id=action_with_params(
+                slack_const.PROCESS_SEND_RECAP_MODAL,
+                params=[
+                    f"u={user}",
+                    f"form_ids={form_ids}",
+                    f"bulk_status={context.get('bulk_status')}",
+                ],
             ),
         )
     ]
@@ -472,11 +515,10 @@ def meeting_reminder_block_set(context):
         user.organization.slack_integration.access_token, user.slack_integration.zoom_channel
     )
     name = channel_info.get("channel").get("name")
-    text = "meeting" if len(not_completed) < 2 else "meetings"
+    text = "meeting" if not_completed < 2 else "meetings"
     blocks = [
         block_builders.simple_section(
-            f"FYI you have {len(not_completed)} {text} from today that still need to be logged",
-            "mrkdwn",
+            f"{not_completed} {text} left to complete: #{name}", "mrkdwn",
         )
     ]
     return blocks
@@ -493,13 +535,8 @@ def message_meeting_block_set():
 def manager_meeting_reminder_block_set(context):
     not_completed = context.get("not_completed")
     name = context.get("name")
-    text = "meeting" if len(not_completed) < 2 else "meetings"
-    blocks = [
-        block_builders.simple_section(
-            f"Hey {name} your team still has *{len(not_completed)} {text}* from today that needs to be logged",
-            "mrkdwn",
-        )
-    ]
+    text = "meeting" if not_completed < 2 else "meetings"
+    blocks = [block_builders.simple_section(f"{not_completed} {text} left to complete", "mrkdwn",)]
     return blocks
 
 
@@ -537,3 +574,44 @@ def edit_product_block_set(context):
     )
     form_blocks = slack_form.generate_form()
     return [*form_blocks]
+
+
+@block_set()
+def initial_alert_message(context):
+    title = context.get("title")
+    invocation = context.get("invocation")
+    channel = context.get("channel")
+    template = context.get("template")
+    config_id = context.get("config_id")
+    if settings.IN_DEV:
+        url = "http://localhost:8080/pipelines"
+    elif settings.IN_STAGING:
+        url = "https://staging.managr.ai/pipelines"
+    else:
+        url = "https://app.managr.ai/pipelines"
+    blocks = [
+        block_builders.simple_section(title, "mrkdwn"),
+        block_builders.actions_block(
+            [
+                block_builders.simple_button_block(
+                    "Complete in Slack",
+                    "update_in_slack",
+                    action_id=action_with_params(
+                        slack_const.PAGINATE_ALERTS,
+                        params=[
+                            f"invocation={invocation}",
+                            f"channel={channel}",
+                            f"config_id={config_id}",
+                        ],
+                    ),
+                ),
+                block_builders.simple_button_block(
+                    "Complete in Managr",
+                    "open_in_pipeline",
+                    url=f"{url}/{template}",
+                    style="primary",
+                ),
+            ]
+        ),
+    ]
+    return blocks

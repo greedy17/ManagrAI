@@ -1,18 +1,5 @@
 <template>
   <div>
-    <!-- <div class="alert-group-row__condition" v-if="form.field.groupOrder.value != 0">
-      <label class="alert-group-row__condition-label">AND</label>
-      <ToggleCheckBox
-        @input="
-          selectedCondition == 'AND' ? (selectedCondition = 'OR') : (selectedCondition = 'AND')
-        "
-        :value="selectedCondition !== 'AND'"
-        offColor="#199e54"
-        onColor="#199e54"
-      />
-      <label class="alert-group-row__condition-label">OR</label>
-    </div> -->
-
     <div class="alert-group-row__operands">
       <div
         :key="i"
@@ -26,35 +13,6 @@
             :form.sync="alertOperand"
           />
         </div>
-
-        <!-- <div v-else>
-           <NextAlertOperandRow
-            @remove-operand="onRemoveOperand(i)"
-            :resourceType="resourceType"
-            :form.sync="alertOperand"
-          /> -->
-        </div>
-
-        <!-- <div class="add__remove" v-if="form.field.alertOperands.groups.length > 1">
-          <button
-            class="btn btn--danger btn--icon"
-            @click.stop="onRemoveOperand(i)"
-            :disabled="form.field.alertOperands.groups.length - 1 <= 0"
-          >
-            <svg width="24px" height="24px" viewBox="0 0 24 24">
-              <use xlink:href="@/assets/images/remove.svg#remove" />
-            </svg>
-          </button>
-          <p class="sub">Remove</p>
-        </div>
-        <div class="add__remove">
-          <button class="btn btn--secondary btn--icon" @click="addOperandForm">
-            <svg width="24px" height="24px" viewBox="0 0 24 24">
-              <use fill="#199e54" xlink:href="@/assets/images/add.svg#add" />
-            </svg>
-          </button>
-          <p class="sub">Row</p>
-        </div> -->
       </div>
     </div>
   </div>
@@ -64,15 +22,13 @@
 /**
  * Components
  * */
-// Pacakges
-import ToggleCheckBox from '@thinknimble/togglecheckbox'
 //Internal
 import NextAlertOperandRow from '@/views/settings/alerts/create/NextAlertOperandRow'
 
 /**
  * Services
  */
-import { AlertOperandForm, AlertGroupForm } from '@/services/alerts/'
+import { AlertGroupForm } from '@/services/alerts/'
 
 export default {
   /**
@@ -82,7 +38,7 @@ export default {
    *
    */
   name: 'NextAlertGroup',
-  components: { ToggleCheckBox, NextAlertOperandRow },
+  components: { NextAlertOperandRow },
 
   props: {
     form: { type: AlertGroupForm },
@@ -95,15 +51,6 @@ export default {
   },
   async created() {},
   methods: {
-    addOperandForm() {
-      const order = this.form.field.alertOperands.groups.length
-      if (order >= 3) {
-        this.$Alert.alert({ message: 'You can only add 3 items per group', timeout: 2000 })
-        return
-      }
-      this.form.addToArray('alertOperands', new AlertOperandForm())
-      this.form.field.alertOperands.groups[order].field.operandOrder.value = order
-    },
     onRemoveOperand(i) {
       if (this.form.field.alertOperands.groups.length - 1 <= 0) {
         return
@@ -126,9 +73,6 @@ export default {
       },
     },
   },
-  beforeMount() {
-    this.addOperandForm()
-  },
 }
 </script>
 
@@ -147,21 +91,6 @@ export default {
   visibility: hidden;
   max-height: 1rem;
 }
-.btn {
-  &--danger {
-    @include button-danger();
-  }
-  &--primary {
-    @include primary-button();
-  }
-  &--secondary {
-    @include secondary-button();
-  }
-
-  &--icon {
-    @include --icon();
-  }
-}
 .alert-group-row {
   display: flex;
   flex-direction: column;
@@ -169,49 +98,12 @@ export default {
   &__operands {
     &__row {
       display: flex;
-      &-remove {
-        height: 1rem;
-      }
     }
   }
-  &--label {
-    @include muted-font();
-    top: -1.1rem;
-    position: relative;
-  }
-}
-.alert-group-row__condition {
-  position: relative;
-  top: 0rem;
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-  &-label {
-    @include muted-font();
-    margin: 0 0.5rem;
-  }
-}
-.alert-group-row__operands {
-}
-.add__remove {
-  margin-right: 1.5rem;
-  display: flex;
-  flex-direction: row;
-  margin-bottom: -1rem;
-  margin-left: -3rem;
-  padding: 1rem;
-}
-.sub {
-  font-size: 13px;
-  margin-left: 0.5rem;
 }
 .rows {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-.left {
-  margin-left: -5rem;
 }
 </style>

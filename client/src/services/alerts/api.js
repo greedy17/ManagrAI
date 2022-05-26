@@ -1,4 +1,4 @@
-import { ModelAPI, ApiFilter, Model } from '@thinknimble/tn-models'
+import { ModelAPI, ApiFilter } from '@thinknimble/tn-models'
 import { apiClient, apiErrorHandler } from '@/services/api'
 import { objectToSnakeCase } from '@/services/utils'
 
@@ -7,6 +7,7 @@ export default class AlertTemplateAPI extends ModelAPI {
   static FILTERS_MAP = {
     page: ApiFilter.create({ key: 'page' }),
     pageSize: ApiFilter.create({ key: 'page_size' }),
+    forPipeline: ApiFilter.create({ key: 'for_pipeline' }),
   }
   get client() {
     return apiClient()
@@ -35,9 +36,11 @@ export default class AlertTemplateAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'AlertTemplateAPI.deleteAlertTemplate' })(e)
     }
   }
-  async runAlertTemplateNow(id) {
+  async runAlertTemplateNow(id, from_workflow) {
+    const fw = objectToSnakeCase(from_workflow)
     try {
-      await this.client.post(`${AlertTemplateAPI.ENDPOINT}${id}/run-now/`)
+      const res = await this.client.post(`${AlertTemplateAPI.ENDPOINT}${id}/run-now/`, fw)
+      return res
     } catch (e) {
       apiErrorHandler({ apiName: 'AlertTemplateAPI.deleteAlertTemplate' })(e)
     }

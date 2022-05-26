@@ -350,7 +350,7 @@ def get_random_no_update_message(topic):
         f"Gotcha, {topic} has no updates",
         f"10-4 {topic} needs no updating",
         f"Cool, no updated needed for {topic}",
-        f"Ok dokie, {topic} needs no updates",
+        f"Okie dokie, {topic} needs no updates",
     ]
     idx = random.randint(0, len(RANDOM_NO_CHANGE_RESPONSES) - 1)
     return RANDOM_NO_CHANGE_RESPONSES[idx]
@@ -436,9 +436,9 @@ def send_loading_screen(access_token, message, view_type, user_id, trigger_id=No
             loading_view_data["trigger_id"] = trigger_id
     else:
         view = slack_consts.VIEWS_PUSH
-        loading_view_data["view_id"] = view_id
-        if trigger_id is not None:
-            loading_view_data["trigger_id"] = trigger_id
+        loading_view_data["trigger_id"] = trigger_id
+        if view_id is not None:
+            loading_view_data["view_id"] = view_id
     try:
         loading_res = requests.generic_request(
             slack_consts.SLACK_API_ROOT + view, loading_view_data, access_token=access_token,

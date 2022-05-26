@@ -20,8 +20,12 @@ from managr.slack.helpers.exceptions import (
     InvalidBlocksFormatException,
     InvalidBlocksException,
     InvalidAccessToken,
+    CannotSendToChannel,
 )
 from managr.slack.helpers.block_sets import get_block_set
+from managr.slack.helpers.utils import action_with_params
+from managr.slack.helpers import block_builders
+
 from managr.organization.models import Contact, Account
 from managr.opportunity.models import Opportunity, Lead
 from managr.salesforce.adapter.models import ContactAdapter
@@ -239,8 +243,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                 else:
                     memo[p.get("user_email")] = len(participants)
                     participants.append(p)
-
-        if settings.IN_DEV or settings.IN_STAGING:
+        if settings.IN_STAGING:
             participants.append(
                 {
                     "name": "maybe mike",
@@ -254,6 +257,17 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                     "id": "",
                     "user_email": f"{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}@{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}.com",
                 }
+            )
+        if settings.IN_DEV:
+            participants.append(
+                {
+                    "name": "first",
+                    "id": "",
+                    "user_email": f"{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}@{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}.com",
+                }
+            )
+            participants.append(
+                {"name": "Zachary Bradley", "id": "", "user_email": "zachbradleydev@gmail.com",}
             )
         contact_forms = []
         if len(participants):
@@ -361,7 +375,6 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                     contact["_form"] = str(form.id)
             meeting.participants = meeting_contacts
             serializer = ZoomMeetingSerializer(data=meeting.as_dict)
-
             try:
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
@@ -371,7 +384,6 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                     f"{meeting_uuid} because of error {json.dumps(e.detail)}"
                 )
                 return e
-
             # emit the event to start slack interaction
             workflow = MeetingWorkflow.objects.create(
                 user=user,
@@ -402,7 +414,20 @@ def _kick_off_slack_interaction(user_id, managr_meeting_id):
                 else user.slack_integration.channel
             )
             slack_org_access_token = user.organization.slack_integration.access_token
-            block_set = get_block_set("initial_meeting_interaction", {"w": managr_meeting_id,},)
+            block_set = [
+                *get_block_set(
+                    "direct_to_block_set",
+                    context={
+                        "slack": action_with_params(
+                            slack_consts.SHOW_INITIAL_MEETING_INTERACTION,
+                            params=[f"w={str(workflow.id)}"],
+                        ),
+                        "managr": f"{slack_consts.MANAGR_URL}/meetings",
+                        "title": f"*New Task:* Log your meeting",
+                    },
+                ),
+                block_builders.context_block(f"Owned by {user.full_name}"),
+            ]
             try:
                 res = slack_requests.send_channel_message(
                     user_slack_channel,
@@ -426,8 +451,17 @@ def _kick_off_slack_interaction(user_id, managr_meeting_id):
                 return logger.exception(
                     f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
                 )
+            except CannotSendToChannel as e:
+                return logger.exception(
+                    f"Failed to send to channel in kick off slack interaction for workflow {str(workflow.id)} {e}"
+                )
+            except Exception as e:
+                return logger.exception(
+                    f"Kick off slack interaction error {e} for workflow {str(workflow.id)}"
+                )
 
             # save slack message ts and channel id to remove if the meeting is deleted before being filled
+            # user.activity.increment_untouched_count("meeting")
             workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
             workflow.save()
 

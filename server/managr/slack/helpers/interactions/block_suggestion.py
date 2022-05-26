@@ -275,12 +275,13 @@ def process_get_external_relationship_options(payload, context):
     relationship = context.get("relationship")
     fields = context.get("fields").split(",") if len(context.get("fields")) else []
     value = payload["value"]
+    resource = context.get("resource")
     attempts = 1
     while True:
         sf_account = user.salesforce_account
         sf_adapter = sf_account.adapter_class
         try:
-            res = sf_adapter.list_relationship_data(relationship, fields, value)
+            res = sf_adapter.list_relationship_data(relationship, fields, value, resource)
             break
         except TokenExpired:
             if attempts >= 5:

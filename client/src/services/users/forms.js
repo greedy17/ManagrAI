@@ -1,11 +1,9 @@
 import Form, { FormField } from '@thinknimble/tn-forms'
-import Model, { fields } from '@thinknimble/tn-models'
 import {
   MustMatchValidator,
   EmailValidator,
   RequiredValidator,
   MinLengthValidator,
-  Validator,
 } from '@thinknimble/tn-validators'
 import moment from 'moment'
 

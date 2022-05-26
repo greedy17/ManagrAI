@@ -61,7 +61,7 @@ class ArrayLength(models.Func):
 class SObjectFieldQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            return self.filter(salesforce_account__user__id=user.id, is_public=False)
+            return self.filter(Q(salesforce_account__user__id=user.id, is_public=False))
         else:
             return self.none()
 
@@ -261,7 +261,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
                 )
             else:
                 user_id = str(self.salesforce_account.user.id)
-                action_query = f"{slack_consts.GET_EXTERNAL_RELATIONSHIP_OPTIONS}?u={user_id}&relationship={self.display_value_keys['api_name']}&fields={','.join(self.display_value_keys['name_fields'])}"
+                action_query = f"{slack_consts.GET_EXTERNAL_RELATIONSHIP_OPTIONS}?u={user_id}&relationship={self.display_value_keys['api_name']}&fields={','.join(self.display_value_keys['name_fields'])}&resource={self.salesforce_object}"
             return block_builders.external_select(
                 f"*{display_name}*",
                 action_query,
@@ -608,7 +608,7 @@ class SFObjectFieldsOperation(SFSyncOperation):
             sf_consts.SALESFORCE_PICKLIST_VALUES: emit_sync_sobject_picklist,
         }
 
-    def begin_tasks(self, attempts=1):
+    def begin_tasks(self, for_dev, attempts=1):
 
         for op in self.operations_list:
             # split the operation to get opp and params
@@ -619,7 +619,7 @@ class SFObjectFieldsOperation(SFSyncOperation):
             scheduled_for = datetime.now(pytz.utc)
             if operation_name == sf_consts.SALESFORCE_PICKLIST_VALUES:
                 scheduled_for = scheduled_for + timezone.timedelta(minutes=2)
-            t = operation(str(self.user.id), str(self.id), param, scheduled_for)
+            t = operation(str(self.user.id), str(self.id), param, for_dev, scheduled_for)
 
             self.operations.append(str(t.task_hash))
 
@@ -630,7 +630,6 @@ class SFObjectFieldsOperation(SFSyncOperation):
 
 
 class MeetingWorkflow(SFSyncOperation):
-
     meeting = models.OneToOneField(
         "zoom.ZoomMeeting", models.CASCADE, related_name="workflow", null=True, blank=True
     )
@@ -837,6 +836,8 @@ class SalesforceAuthAccount(TimeStampModel):
         blank=True,
     )
     is_busy = models.BooleanField(default=False)
+    last_sync_time = models.DateTimeField(blank=True, null=True)
+    extra_pipeline_fields = ArrayField(models.CharField(max_length=255), default=list, blank=True)
 
     class Meta:
         ordering = ["-datetime_created"]
@@ -881,7 +882,8 @@ class SalesforceAuthAccount(TimeStampModel):
 
     @property
     def resource_sync_opts(self):
-        return list(
+        operations_order = sf_consts.RESOURCE_SYNC_ORDER
+        operations = list(
             filter(
                 lambda resource: f"{resource}"
                 if self.sobjects.get(resource, None) not in ["", None, False]
@@ -889,6 +891,9 @@ class SalesforceAuthAccount(TimeStampModel):
                 self.sobjects,
             )
         )
+        operations_diff = list(set(operations) - set(operations_order))
+        operations_order.extend(operations_diff)
+        return operations_order
 
     @property
     def field_sync_opts(self):
@@ -1019,12 +1024,12 @@ class SalesforceAuthAccount(TimeStampModel):
         values = self.adapter_class.get_stage_picklist_values(resource)
         return values
 
-    def get_individual_picklist_values(self, resource, field=None):
+    def get_individual_picklist_values(self, resource, field=None, for_dev=False):
         attempts = 1
         while True:
             try:
                 values = self.adapter_class.get_individual_picklist_values(
-                    resource, field_name=field
+                    resource, field_name=field, for_dev=for_dev
                 )
                 break
             except TokenExpired:

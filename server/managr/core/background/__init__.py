@@ -1,16 +1,22 @@
 import logging
 import time
 import random
+import textwrap
 import jwt
 import pytz
 import uuid
+import requests
 from datetime import datetime, timezone
+from copy import copy
 import re
 from background_task import background
+from django.conf import settings
+from rest_framework.request import Request
+
 from django.db.models import Q
 from django.utils import timezone
 from managr.salesforce.adapter.exceptions import TokenExpired
-from managr.alerts.models import AlertConfig
+from managr.alerts.models import AlertConfig, AlertInstance, AlertTemplate
 from managr.core.models import User, MeetingPrepInstance
 from managr.core.serializers import MeetingPrepInstanceSerializer
 from managr.core import constants as core_consts
@@ -31,8 +37,6 @@ from managr.zoom.background import _split_first_name, _split_last_name
 from managr.utils.misc import custom_paginator
 from managr.zoom.background import emit_kick_off_slack_interaction
 
-# from managr.slack.helpers.block_sets.meeting_review_block_sets import _initial_interaction_message
-
 logger = logging.getLogger("managr")
 
 
@@ -43,6 +47,10 @@ logger = logging.getLogger("managr")
 
 def emit_process_send_workflow_reminder(user_id, workflow_count):
     return _process_send_workflow_reminder(user_id, workflow_count)
+
+
+def emit_process_add_calendar_id(user_id, verbose_name):
+    return _process_add_calendar_id(user_id, verbose_name=verbose_name)
 
 
 def emit_create_calendar_event(user, title, start_time, participants, meeting_link, description):
@@ -63,17 +71,29 @@ def emit_generate_morning_digest(user_id, verbose_name):
     return generate_morning_digest(user_id, verbose_name=verbose_name)
 
 
-def emit_generate_afternoon_digest(user_id, verbose_name):
-    return generate_afternoon_digest(user_id, verbose_name=verbose_name)
+def emit_generate_reminder_message(user_id, verbose_name):
+    return generate_reminder_message(user_id, verbose_name=verbose_name)
 
 
 def emit_check_reminders(user_id, verbose_name):
     return check_reminders(user_id, verbose_name=verbose_name)
 
 
+def emit_process_non_zoom_meetings(user_id, verbose_name):
+    return _process_non_zoom_meetings(user_id, verbose_name=verbose_name)
+
+
 # Functions for Scheduling Meeting
 def emit_non_zoom_meetings(workflow_id, user_id, user_tz, non_zoom_end_times):
     return non_zoom_meeting_message(workflow_id, user_id, user_tz, non_zoom_end_times)
+
+
+def emit_timezone_tasks(user_id, verbose_name):
+    return timezone_tasks(user_id, verbose_name=verbose_name)
+
+
+def emit_process_workflow_config_check(user_id, verbose_name):
+    return _process_workflow_config_check(user_id, verbose_name=verbose_name)
 
 
 @background()
@@ -87,11 +107,18 @@ def non_zoom_meeting_message(workflow_id, user_id, user_tz, non_zoom_end_times):
     # user_7am_naive = timezone.now()
     # user_7am = timezone.make_aware(user_7am_naive, timezone=pytz.timezone(user_tz))
     current_time = datetime.now()
-    utc_time_from_user_7_am = current_time.astimezone(pytz.timezone("UTC"))
-    time_difference = local_end - utc_time_from_user_7_am
-    # seconds = a_timedelta.total_seconds()
-    seconds = time_difference.total_seconds()
-    seconds = int(seconds)
+    local_current = current_time.astimezone(pytz.timezone("UTC"))
+    if local_end < local_current:
+        seconds = local_current
+        time_difference = "Meeting passed current time"
+    else:
+        time_difference = local_end - local_current
+        # seconds = a_timedelta.total_seconds()
+        seconds = time_difference.total_seconds()
+        seconds = int(seconds)
+    logger.info(
+        f"NON ZOOM MEETING SCHEDULER: \n END TIME: {non_zoom_end_times}\n LOCAL END: {local_end}\n CURRENT TIME: {current_time} \n TIME DIFFERENCE: {time_difference}"
+    )
     # Use time difference in UTC to schedule realtime meeting alert
     return emit_kick_off_slack_interaction(user_id, workflow_id, schedule=seconds)
 
@@ -121,7 +148,7 @@ def _process_create_calendar_event(
         logger.info(f"Nylas warning {e}")
 
 
-def afternoon_digest_scheduler(self):
+def reminder_message_scheduler(self):
     if self.access_token:
         decoded = jwt.decode(
             self.access_token, algorithms="HS512", options={"verify_signature": False}
@@ -129,7 +156,7 @@ def afternoon_digest_scheduler(self):
     exp = decoded["exp"]
     expiration = datetime.fromtimestamp(exp) - timezone.timedelta(minutes=10)
 
-    t = emit_generate_afternoon_digest(str(self.id), expiration.strftime("%Y-%m-%dT%H:%M"))
+    t = emit_generate_reminder_message(str(self.id), expiration.strftime("%Y-%m-%dT%H:%M"))
     self.refresh_token_task = str(t.id)
 
 
@@ -175,7 +202,8 @@ def check_for_uncompleted_meetings(user_id, org_level=False):
                 ]
 
                 if len(user_not_completed):
-                    not_completed = [*not_completed, *user_not_completed]
+
+                    not_completed.extend(user_not_completed)
         else:
             # This will be for the reps
             total_meetings = MeetingWorkflow.objects.filter(user=user.id).filter(
@@ -183,7 +211,7 @@ def check_for_uncompleted_meetings(user_id, org_level=False):
             )
             not_completed = [meeting for meeting in total_meetings if meeting.progress == 0]
         if len(not_completed):
-            return {"status": True, "not_completed": not_completed}
+            return {"status": True, "uncompleted": len(not_completed)}
     return {"status": False}
 
 
@@ -217,7 +245,10 @@ def _process_calendar_details(user_id):
             data["description"] = description
             conferencing = event.get("conferencing", None)
             if conferencing:
-                data["provider"] = conferencing["provider"]
+                if "Zoom" in description:
+                    data["provider"] = "Zoom Meeting"
+                else:
+                    data["provider"] = conferencing["provider"]
             data["times"] = event.get("when", None)
             processed_data.append(data)
         return processed_data
@@ -225,7 +256,7 @@ def _process_calendar_details(user_id):
         return None
 
 
-def meeting_prep(processed_data, user_id, invocation=1):
+def meeting_prep(processed_data, user_id, invocation=1, from_task=False):
     def get_domain(email):
         """Parse domain out of an email"""
         return email[email.index("@") + 1 :]
@@ -384,8 +415,6 @@ def meeting_prep(processed_data, user_id, invocation=1):
         "invocation": invocation,
     }
     resource_check = meeting_resource_data.get("resource_id", None)
-    provider = processed_data.get("provider")
-
     if resource_check:
         data["resource_id"] = meeting_resource_data["resource_id"]
         data["resource_type"] = meeting_resource_data["resource_type"]
@@ -398,22 +427,28 @@ def meeting_prep(processed_data, user_id, invocation=1):
     meeting_prep_instance = (
         MeetingPrepInstance.objects.filter(user=user).order_by("-datetime_created").first()
     )
-    # Conditional Check for Zoom meeting or Non-Zoom Meeting
-    if (provider == "Zoom Meeting" and user.email not in processed_data["owner"]) or (
-        provider not in [None, "Zoom Meeting",]
-        and "Zoom meeting" not in processed_data["description"]
-    ):
-        # Google Meet (Non-Zoom)
-        meeting_workflow = MeetingWorkflow.objects.create(
-            non_zoom_meeting=meeting_prep_instance, user=user,
-        )
-
-        # Sending end_times, workflow_id, and user values to emit function
-        non_zoom_end_times = processed_data.get("times").get("end_time")
-        workflow_id = str(meeting_workflow.id)
-        user_id = str(user.id)
-        user_tz = str(user.timezone)
-        return emit_non_zoom_meetings(workflow_id, user_id, user_tz, non_zoom_end_times)
+    if from_task:
+        provider = processed_data.get("provider")
+        # Conditional Check for Zoom meeting or Non-Zoom Meeting
+        if (provider == "Zoom Meeting" and user.email not in processed_data["owner"]) or (
+            provider not in [None, "Zoom Meeting",]
+            and "Zoom meeting" not in processed_data["description"]
+        ):
+            # Google Meet (Non-Zoom)
+            meeting_workflow = MeetingWorkflow.objects.create(
+                non_zoom_meeting=meeting_prep_instance, user=user,
+            )
+            meeting_workflow.forms.set(contact_forms)
+            # Sending end_times, workflow_id, and user values to emit function
+            non_zoom_end_times = processed_data.get("times").get("end_time")
+            workflow_id = str(meeting_workflow.id)
+            user_id = str(user.id)
+            user_tz = str(user.timezone)
+            emit_non_zoom_meetings(workflow_id, user_id, user_tz, non_zoom_end_times)
+            logger.info(
+                f"-------------------------\nMEETING PREP INFO FOR {user.email}\nMEETING PREP INSTANCE: {meeting_prep_instance.id}\nMEETING WORKFLOW: {meeting_workflow.id}\n-------------------------"
+            )
+            return
 
 
 def _send_calendar_details(
@@ -572,46 +607,62 @@ def process_get_task_list(user_id, page=1):
             task_blocks.extend(
                 custom_task_paginator_block(paged_tasks, user.slack_integration.channel)
             )
-        else:
-            task_blocks = [
-                block_builders.simple_section("You have no upcoming tasks :clap:", "mrkdwn"),
-            ]
-    else:
-        task_blocks.extend(
-            block_builders.simple_section("Seems you don't have Salesforce connected...")
-        )
     return task_blocks
 
 
 def process_current_alert_list(user_id):
     user = User.objects.get(id=user_id)
     configs = AlertConfig.objects.filter(Q(template__user=user.id, template__is_active=True))
-    alert_blocks = [
-        block_builders.simple_section(":eyes: *Pipeline Monitor*", "mrkdwn"),
-    ]
+    alert_blocks = []
     if configs:
         for config in configs:
-            text = f"{config.template.title}"
-            if config.recipients[0] not in ["SELF", "OWNER"]:
-                channel_info = slack_requests.get_channel_info(
-                    user.organization.slack_integration.access_token, config.recipients[0]
+            instance_check = AlertInstance.objects.filter(
+                Q(
+                    config=config.id,
+                    datetime_created__date=datetime.today(),
+                    form_instance__isnull=True,
                 )
-                name = channel_info.get("channel").get("name")
-                text += f": #{name}"
-            alert_blocks = [
-                *alert_blocks,
-                block_builders.simple_section(text, "mrkdwn"),
-            ]
-    else:
-        alert_blocks.append(
-            block_builders.simple_section("Your pipeline look good today :thumbsup: ", "mrkdwn")
-        )
+            )
+            if len(instance_check):
+                text = f"{len(instance_check)} {config.template.title} left to complete"
+                if config.recipients[0] not in ["SELF", "OWNER"]:
+                    channel_info = slack_requests.get_channel_info(
+                        user.organization.slack_integration.access_token, config.recipients[0]
+                    )
+                    name = channel_info.get("channel").get("name")
+                    text += f": #{name}"
+                alert_blocks = [
+                    *alert_blocks,
+                    block_builders.simple_section(text, "mrkdwn"),
+                ]
     return alert_blocks
 
 
 #########################################################
 # BACKGROUND TASKS
 #########################################################
+
+
+@background()
+def _process_non_zoom_meetings(user_id):
+    user = User.objects.get(id=user_id)
+    if (
+        hasattr(user, "nylas")
+        and hasattr(user, "slack_integration")
+        and user.slack_integration.zoom_channel is not None
+    ):
+        try:
+            processed_data = _process_calendar_details(user_id)
+        except Exception as e:
+            logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
+        if processed_data is not None:
+            last_instance = (
+                MeetingPrepInstance.objects.filter(user=user).order_by("-datetime_created").first()
+            )
+            current_invocation = last_instance.invocation + 1 if last_instance else 1
+            for event in processed_data:
+                meeting_prep(event, user_id, current_invocation, from_task=True)
+    return
 
 
 @background()
@@ -700,6 +751,7 @@ def generate_morning_digest(user_id, invocation=None, page=1):
                 user.organization.slack_integration.access_token,
                 block_set=blocks,
             )
+            return {"response_action": "clear"}
         except Exception as e:
             logger.exception(f"Failed to send morning digest message to {user.email} due to {e}")
     else:
@@ -707,51 +759,46 @@ def generate_morning_digest(user_id, invocation=None, page=1):
 
 
 @background(schedule=0)
-def generate_afternoon_digest(user_id):
+def generate_reminder_message(user_id):
     user = User.objects.get(id=user_id)
     #   check user_level for manager
+    meeting = []
+    alert_blocks = process_current_alert_list(user_id)
     if user.user_level == "MANAGER":
         meetings = check_for_uncompleted_meetings(user.id, True)
         if meetings["status"]:
             name = user.first_name if hasattr(user, "first_name") else user.full_name
             meeting = block_sets.get_block_set(
                 "manager_meeting_reminder",
-                {"u": str(user.id), "not_completed": meetings["not_completed"], "name": name,},
+                {"u": str(user.id), "not_completed": meetings["uncompleted"], "name": name,},
             )
-        else:
-            meeting = [
-                block_builders.simple_section(
-                    "Your team has logged all of their meetings today! :clap:", "mrkdwn"
-                )
-            ]
     else:
         meetings = check_for_uncompleted_meetings(user.id)
-        logger.info(f"UNCOMPLETED MEETINGS FOR {user.email}: {meetings}")
         if meetings["status"]:
             meeting = block_sets.get_block_set(
-                "meeting_reminder", {"u": str(user.id), "not_completed": meetings["not_completed"]}
+                "meeting_reminder", {"u": str(user.id), "not_completed": meetings["uncompleted"]}
             )
-        else:
-            meeting = [
-                block_builders.simple_section(
-                    "You've completed all your meetings today! :clap:", "mrkdwn"
-                )
-            ]
-    actions = block_sets.get_block_set("actions_block_set", {"u": str(user.id)})
-    try:
-        slack_requests.send_channel_message(
-            user.slack_integration.channel,
-            user.organization.slack_integration.access_token,
-            block_set=[
-                block_builders.simple_section("*Afternoon Digest* :beer:", "mrkdwn"),
-                {"type": "divider"},
-                *meeting,
-                {"type": "divider"},
-                *actions,
-            ],
-        )
-    except Exception as e:
-        logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
+    title = (
+        "*Reminder:* Your team has uncompleted tasks from today"
+        if user.user_level == "MANAGER"
+        else "*Reminder:* Uncompleted tasks from today"
+    )
+    if len(meeting) or len(alert_blocks):
+        try:
+            slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                block_set=[
+                    block_builders.simple_section(title, "mrkdwn"),
+                    {"type": "divider"},
+                    *meeting,
+                    *alert_blocks,
+                ],
+            )
+        except Exception as e:
+            logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
+    else:
+        return
 
 
 @background()
@@ -765,23 +812,149 @@ def check_reminders(user_id):
                 core_consts.REMINDER_CONFIG[key]["MINUTE"],
             )
             if check:
-                if key == core_consts.MORNING_DIGEST:
-                    emit_generate_morning_digest(
-                        user_id, f"morning-digest-{user.email}-{str(uuid.uuid4())}"
-                    )
-                elif key == core_consts.WORKFLOW_REMINDER:
+                if key == core_consts.WORKFLOW_REMINDER:
                     if datetime.today().weekday() == 4:
                         workflows = check_workflows_count(user.id)
                         if workflows["status"] and workflows["workflow_count"] <= 2:
                             emit_process_send_workflow_reminder(
                                 str(user.id), workflows["workflow_count"]
                             )
-                elif key == core_consts.AFTERNOON_DIGEST_REP and user.user_level != "MANAGER":
-                    emit_generate_afternoon_digest(
-                        user_id, f"afternoon-digest-{user.email}-{str(uuid.uuid4())}"
+                elif key == core_consts.REMINDER_MESSAGE_REP and user.user_level != "MANAGER":
+                    emit_generate_reminder_message(
+                        user_id, f"reminder-message-{user.email}-{str(uuid.uuid4())}"
                     )
-                elif key == core_consts.AFTERNOON_DIGEST_MANAGER and user.user_level == "MANAGER":
-                    emit_generate_afternoon_digest(
-                        user_id, f"afternoon-digest-{user.email}-{str(uuid.uuid4())}"
+                elif key == core_consts.REMINDER_MESSAGE_MANAGER and user.user_level == "MANAGER":
+                    emit_generate_reminder_message(
+                        user_id, f"reminder-message-{user.email}-{str(uuid.uuid4())}"
                     )
     return
+
+
+@background()
+def _process_workflow_config_check(user_id):
+    from managr.alerts.serializers import AlertConfigWriteSerializer
+
+    user = User.objects.get(id=user_id)
+    if user.user_level == "MANAGER":
+        templates = AlertTemplate.objects.filter(user=user)
+        for template in templates:
+            configs = template.configs.all()
+            filtered_configs = configs.filter(alert_targets__contains=["REPS"])
+            if len(filtered_configs):
+                config_targets = []
+                [config_targets.extend(config.alert_targets) for config in configs]
+                print(config_targets)
+                config_reference = filtered_configs[0]
+                new_config_base = {
+                    "recurrence_frequency": config_reference.recurrence_frequency,
+                    "recurrence_day": config_reference.recurrence_day,
+                    "recurrence_days": config_reference.recurrence_days,
+                    "recipient_type": config_reference.recipient_type,
+                    "template": config_reference.template.id,
+                }
+                all_reps = User.objects.filter(
+                    organization=user.organization,
+                    user_level="REP",
+                    slack_integration__isnull=False,
+                )
+                print(f"ALL REPS {all_reps}")
+                for rep in all_reps:
+                    if str(rep.id) not in config_targets:
+                        config_copy = copy(new_config_base)
+                        config_copy["alert_targets"] = [str(rep.id)]
+                        config_copy["recipients"] = [
+                            rep.slack_integration.zoom_channel
+                            if rep.slack_integration.zoom_channel
+                            else rep.slack_integration.channel
+                        ]
+                        print(f"CONFIG {config_copy}")
+                        try:
+                            serializer = AlertConfigWriteSerializer(
+                                data=config_copy, context=template
+                            )
+                            print(f"SERIALZIER: {serializer}")
+                            serializer.is_valid(raise_exception=True)
+                            serializer.save()
+                        except Exception as e:
+                            logger.exception(f"CONFIG CHECK CREATING CONFIG ERROR: {e}")
+                            continue
+        return
+    else:
+        return
+
+
+TIMEZONE_TASK_FUNCTION = {
+    core_consts.NON_ZOOM_MEETINGS: emit_process_non_zoom_meetings,
+    core_consts.CALENDAR_CHECK: emit_process_add_calendar_id,
+    core_consts.WORKFLOW_CONFIG_CHECK: emit_process_workflow_config_check,
+}
+
+
+def TESTING_TIMEZONE_TIMES(user_id):
+    user = User.objects.get(id=user_id)
+    keys = TIMEZONE_TASK_FUNCTION.keys()
+    user_timezone = pytz.timezone(user.timezone)
+    currenttime = datetime.today().time()
+    current = pytz.utc.localize(datetime.combine(datetime.today(), currenttime)).astimezone(
+        user_timezone
+    )
+    minute = 30 if current.minute <= 30 else 00
+    hour = current.hour if minute == 30 else current.hour + 1
+    time_obj = {"HOUR": hour, "MINUTE": minute}
+    obj = {}
+    for name in keys:
+        obj[name] = time_obj
+    return obj
+
+
+@background()
+def timezone_tasks(user_id):
+    if settings.IN_DEV:
+        tasks = TESTING_TIMEZONE_TIMES(user_id)
+    else:
+        tasks = core_consts.TIMEZONE_TASK_TIMES
+    user = User.objects.get(id=user_id)
+    for key in tasks.keys():
+        check = check_for_time(user.timezone, tasks[key]["HOUR"], tasks[key]["MINUTE"])
+        if check:
+            verbose_name = f"{key}-{user.email}-{str(uuid.uuid4())}"
+            TIMEZONE_TASK_FUNCTION[key](user_id, verbose_name)
+    return
+
+
+@background()
+def _process_add_calendar_id(user_id):
+    user = User.objects.get(id=user_id)
+    if hasattr(user, "nylas") and user.nylas.event_calendar_id is None:
+        headers = dict(Authorization=f"Bearer {user.nylas.access_token}")
+        calendars = requests.get(
+            f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.CALENDAR_URI}", headers=headers,
+        ).json()
+
+        email_check = [cal for cal in calendars if cal["name"] == user.email]
+        calendar = [cal for cal in calendars if cal["read_only"] is False]
+        if len(email_check):
+            calendar_id = email_check[0]["id"]
+        else:
+            if len(calendar):
+                calendar_id = calendar[0]["id"]
+            else:
+                calendar_id = None
+        logger.info(
+            textwrap.dedent(
+                f"""
+            ------------------------------------
+            NYLAS CALENAR ACCOUNT CREATION INFO: \n
+            CALENDAR INFO:{calendar}\n
+            EMAIL CHECK: {email_check} \n 
+            CALENDAR CHECK: {calendar} \n
+            FOUND CALENDAR ID: {calendar_id}\n
+            ------------------------------------"""
+            )
+        )
+        if calendar_id:
+            user.nylas.event_calendar_id = calendar_id
+            user.nylas.save()
+        else:
+            logger.info(f"COULD NOT FIND A CALENDAR ID FOR {user.email}")
+        return

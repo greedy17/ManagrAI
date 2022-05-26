@@ -20,13 +20,16 @@
       ></FormField>
       <FormField :errors="profileForm.field.timezone.errors" label="Timezone">
         <template v-slot:input>
-          <DropDownSearch
-            :items.sync="timezones"
-            v-model="profileForm.field.timezone.value"
-            nullDisplay="Select your timezone"
-            searchable
-            local
-            @input="profileForm.field.timezone.validate()"
+          <Multiselect
+            placeholder="Select Timezone"
+            style="width: 16rem"
+            v-model="selectedTimezone"
+            @input="test"
+            :options="timezones"
+            openDirection="below"
+            selectLabel="Enter"
+            label="key"
+            track-by="value"
           />
         </template>
       </FormField>
@@ -47,7 +50,6 @@
 <script>
 import User from '@/services/users'
 import { UserProfileForm } from '@/services/users/forms'
-import DropDownSearch from '@/components/DropDownSearch'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 
 import FormField from '@/components/forms/FormField'
@@ -56,9 +58,14 @@ import moment from 'moment-timezone'
 
 export default {
   name: 'ProfilePage',
-  components: { FormField, DropDownSearch, PulseLoadingSpinnerButton },
+  components: {
+    FormField,
+    PulseLoadingSpinnerButton,
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+  },
   data() {
     return {
+      selectedTimezone: null,
       user: this.getUser,
       timezones: moment.tz.names(),
       profileForm: new UserProfileForm({}),
@@ -76,6 +83,9 @@ export default {
     })
   },
   methods: {
+    test() {
+      this.profileForm.field.timezone.value = this.selectedTimezone.value
+    },
     handleUpdate() {
       this.loading = true
       User.api
@@ -116,10 +126,18 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
-.dropdown {
-  ::v-deep .selected-items[data-v-515df75a] {
-    max-height: 40px;
-  }
+::v-deep .input-content {
+  width: 16rem;
+  border: 1px solid #e8e8e8 !important;
+  border-radius: 0.3rem;
+  background-color: white;
+  box-shadow: none !important;
+}
+::v-deep .input-form {
+  width: 16rem;
+}
+::v-deep .input-form__active {
+  border: none;
 }
 .profile-page {
   margin-top: 4rem;
@@ -128,19 +146,6 @@ export default {
     /* For mobile phones: */
     padding: 0rem;
   }
-}
-::v-deep .input-content {
-  box-shadow: 0px 2px 3px $very-light-gray;
-  border: none;
-}
-::v-deep .tn-dropdown__selection-container {
-  background: transparent;
-  border: none;
-}
-::v-deep .tn-input {
-  width: 100%;
-  display: flex;
-  justify-content: center;
 }
 .profile-page__form {
   @include standard-border();
@@ -152,8 +157,7 @@ export default {
   min-height: 15rem;
   height: auto;
   background-color: $white;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  border: none;
+  border: 1px solid #e8e8e8;
   border-radius: 0.5rem;
   color: $base-gray;
   display: flex;
@@ -172,6 +176,7 @@ export default {
 
 .update-button {
   background-color: $dark-green;
+  box-shadow: none;
   color: white;
   margin-top: 1.25rem;
   height: 2.5rem;

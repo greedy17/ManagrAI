@@ -1,13 +1,19 @@
 <template>
   <div class="logZoomPage">
-    <div style="display: flex; align-item: flex-start; flex-direction: column; margin-left: 19vw">
-      <h2>
-        <span>
-          Meeting
-          <span style="color: #5f8cff"> Recaps</span>
-        </span>
-      </h2>
-      <p style="margin-top: -0.5rem">Recieve meeting recaps from essential team members</p>
+    <div
+      style="display: flex; align-item: center; justify-content: space-between; margin: 0vw 19vw"
+    >
+      <div>
+        <h3>Meeting Recaps</h3>
+        <p style="margin-top: -0.5rem; font-size: 14px; color: #9b9b9b">
+          Recieve meeting recaps from essential team members
+        </p>
+      </div>
+
+      <button @click="$router.push({ name: 'CreateNew' })" class="back-button">
+        <img src="@/assets/images/back.png" alt="" />
+        Back to workflows
+      </button>
     </div>
 
     <div style="flex-direction: column" class="centered">
@@ -23,49 +29,28 @@
         >
           <p style="text-align: center; font-weight: bold">Select Users</p>
           <div>
-            <DropDownSearch
-              @input="checkIds"
-              :items.sync="userList"
+            <Multiselect
+              placeholder="Select Users"
               v-model="userIds"
-              displayKey="fullName"
-              valueKey="id"
-              nullDisplay="Users"
-              searchable
-              local
-              multi
+              :options="userList"
+              openDirection="below"
+              style="width: 14vw"
+              selectLabel="Enter"
+              track-by="id"
+              label="fullName"
+              :multiple="true"
+              :closeOnSelect="false"
             >
-            </DropDownSearch>
-          </div>
-          <!-- <div class="items_height">
-              <p
-                :key="i"
-                v-for="(item, i) in form.field.alertTargets.value"
-                :class="form.field.alertTargets.value ? 'selected__item' : ''"
-                @click="removeItemFromTargetArray(item)"
-              >
-                <img
-                  src="@/assets/images/remove.png"
-                  style="height: 1rem; margin-right: 0.25rem"
-                  alt=""
-                />
-                {{ item.length ? checkInteger(item) : '' }}
-              </p>
-            </div> -->
-          <div v-if="userIds.length > 0" class="items_height">
-            <p
-              :key="item"
-              v-for="item in userIds"
-              @click="removeUser(item)"
-              :class="userIds.length > 0 ? 'selected__items' : 'visible'"
-              style="margin-top: 1.5rem"
-            >
-              <img
-                src="@/assets/images/remove.png"
-                style="height: 1rem; margin-right: 0.25rem"
-                alt=""
-              />
-              {{ getUserName(item) }}
-            </p>
+              <template slot="noResult">
+                <p>No results.</p>
+              </template>
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.png" alt="" />
+                  Select Users
+                </p>
+              </template>
+            </Multiselect>
           </div>
         </div>
 
@@ -76,15 +61,15 @@
               style="margin: 0.25rem"
               @input="changeCreate"
               :value="create"
-              offColor="#5f8cff"
-              onColor="#5f8cff"
+              offColor="#41b883"
+              onColor="#41b883"
             />
             <label :class="create ? 'green' : ''">Create #channel</label>
           </div>
 
           <label v-else for="channel" style="font-weight: bold"
             >Alerts will send to
-            <span style="color: #5f8cff; font-size: 1.2rem">{{ channelName }}</span>
+            <span style="color: #41b883; font-size: 1.2rem">{{ channelName }}</span>
             channel</label
           >
           <div
@@ -129,43 +114,38 @@
           >
             <FormField>
               <template v-slot:input>
-                <DropDownSearch
-                  :items.sync="userChannelOpts.channels"
+                <Multiselect
+                  placeholder="Select Channel"
                   v-model="recapChannel"
-                  displayKey="name"
-                  valueKey="id"
-                  nullDisplay="Channels"
-                  :hasNext="!!userChannelOpts.nextCursor"
-                  @load-more="listChannels(userChannelOpts.nextCursor)"
-                  searchable
-                  local
+                  :options="userChannelOpts.channels"
+                  openDirection="below"
+                  style="min-width: 13vw"
+                  selectLabel="Enter"
+                  track-by="id"
+                  label="name"
+                  :loading="dropdownLoading"
                 >
-                  <template v-slot:tn-dropdown-option="{ option }">
-                    <img
-                      v-if="option.isPrivate == true"
-                      class="card-img"
-                      style="width: 1.2rem; height: 1rem; margin-right: 0.2rem"
-                      src="@/assets/images/lock.png"
-                    />
-                    {{ option['name'] }}
+                  <template slot="noResult">
+                    <p class="multi-slot">No results. Try loading more</p>
                   </template>
-                </DropDownSearch>
+                  <template slot="afterList">
+                    <p
+                      class="multi-slot__more"
+                      @click="listUserChannels(userChannelOpts.nextCursor)"
+                    >
+                      Load More
+                      <img src="@/assets/images/plusOne.png" alt="" />
+                    </p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.png" alt="" />
+                      Select Channel
+                    </p>
+                  </template>
+                </Multiselect>
               </template>
             </FormField>
-
-            <p
-              v-if="recapChannel"
-              @click="removeRecapChannel"
-              :class="recapChannel ? 'selected__item' : 'visible'"
-              style="margin-top: -0.25rem"
-            >
-              <img
-                src="@/assets/images/remove.png"
-                style="height: 1rem; margin-right: 0.25rem; margin-top: 0.25rem"
-                alt=""
-              />
-              {{ getChannelName(recapChannel) }}
-            </p>
           </div>
         </div>
       </div>
@@ -188,22 +168,20 @@
 <script>
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import FormField from '@/components/forms/FormField'
-import DropDownSearch from '@/components/DropDownSearch'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
-import Multiselect from 'vue-multiselect'
+import { CollectionManager } from '@thinknimble/tn-models'
 import User from '@/services/users'
 
 export default {
   name: 'ZoomRecap',
   components: {
-    DropDownSearch,
     ToggleCheckBox,
     FormField,
-    Multiselect,
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {
     return {
+      dropdownLoading: false,
       create: true,
       userChannelOpts: new SlackListResponse(),
       channelName: '',
@@ -213,7 +191,6 @@ export default {
       recapChannel: '',
       recapChannelId: '',
       createdZoomChannel: '',
-      test: '',
       userIds: [],
       pipelines: [],
       users: CollectionManager.create({ ModelClass: User }),
@@ -238,43 +215,13 @@ export default {
     }
   },
   methods: {
-    // getPipes(arr) {
-    //   let ids = []
-    //   for (let i = 0; i < this.userList.length; i++) {
-    //     ids.push(this.userList[i].id)
-    //   }
-    //   for (let i in arr) {
-    //     if (ids.includes(arr[i])) {
-    //       this.pipelines.push(this.userList.filter((user) => user.id === arr[1]))
-    //     }
-    //   }
-    //   this.pipelines.reduce(function (a, b) {
-    //     if (a.indexOf(b) < 0) a.push(b)
-    //     return a
-    //   }, [])
-    //   console.log(this.pipelines)
-    // },
-    removeItemFromTargetArray(item) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value =
-        this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.filter(
-          (i) => i !== item,
-        )
-    },
-    checkInteger(str) {
-      return /\d/.test(str) ? this.user.fullName : str
-    },
-    removeUser(id) {
-      this.userIds = this.userIds.filter((i) => i !== id)
-    },
-    checkIds() {
-      console.log(this.userIds)
-    },
-    setChannel(obj) {
-      this.recapChannelId = obj.id
-    },
     async handleRecapUpdate(recap_channel) {
+      if (typeof recap_channel === 'object') {
+        recap_channel = recap_channel.id
+      }
+      this.userIds = this.userIds.map((user) => user.id)
       const res = await SlackOAuth.api.updateRecapChannel(this.slackId, recap_channel, this.userIds)
-      console.log(res)
+
       this.createdZoomChannel = ''
       this.recapChannel = ''
       this.$router.push({ name: 'CreateNew' })
@@ -285,9 +232,6 @@ export default {
         timeout: 2000,
       })
     },
-    removeRecapChannel() {
-      this.recapChannel = ''
-    },
     logNewName(str) {
       let new_str = ''
       new_str = str.replace(/\s+/g, '-').toLowerCase()
@@ -296,19 +240,17 @@ export default {
     changeCreate() {
       this.create = !this.create
     },
-    getChannelName(id) {
-      return this.userChannelOpts.channels.filter((channel) => channel.id == id)[0].name
-    },
-    getUserName(id) {
-      return this.userTargetsOpts.filter((user) => user.id == id)[0].fullName
-    },
     async listUserChannels(cursor = null) {
+      this.dropdownLoading = true
       const res = await SlackOAuth.api.listUserChannels(cursor)
       const results = new SlackListResponse({
         channels: [...this.userChannelOpts.channels, ...res.channels],
         responseMetadata: { nextCursor: res.nextCursor },
       })
       this.userChannelOpts = results
+      setTimeout(() => {
+        this.dropdownLoading = false
+      }, 500)
     },
     async createChannel(name) {
       const res = await SlackOAuth.api.createChannel(name)
@@ -400,32 +342,6 @@ export default {
     slackId() {
       return this.$store.state.user.slackRef.slackId
     },
-    userTargetsOpts() {
-      if (this.user.userLevel == 'MANAGER') {
-        return [
-          ...this.alertTargetOpts.map((opt) => {
-            return {
-              id: opt.value,
-              fullName: opt.key,
-            }
-          }),
-          ...this.users.list,
-        ]
-      } else {
-        return [{ fullName: 'Myself', id: 'SELF' }]
-      }
-    },
-    async onSearchUsers(v) {
-      this.users.pagination = new Pagination()
-      this.users.filters = {
-        ...this.users.filters,
-        search: v,
-      }
-      await this.users.refresh()
-    },
-    async onUsersNextPage() {
-      await this.users.addNextPage()
-    },
   },
 }
 </script>
@@ -449,25 +365,74 @@ export default {
     transform: translateY(-6px);
   }
 }
+.back-button {
+  font-size: 14px;
+  color: $dark-green;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  border: none;
+  cursor: pointer;
+  margin: 1rem 0rem 0rem 0rem;
+
+  img {
+    height: 1rem;
+    margin-right: 0.5rem;
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
+  }
+}
+
+.multi-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $gray;
+  font-size: 12px;
+  width: 100%;
+  padding: 0.5rem 0rem;
+  margin: 0;
+  cursor: text;
+  &__more {
+    background-color: white;
+    color: $dark-green;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-top: 1px solid #e8e8e8;
+    width: 100%;
+    padding: 0.75rem 0rem;
+    margin: 0;
+    cursor: pointer;
+
+    img {
+      height: 0.8rem;
+      margin-left: 0.25rem;
+      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+        brightness(93%) contrast(89%);
+    }
+  }
+}
+.search__input {
+  min-height: 40px;
+  display: block;
+  padding: 8px 40px 8px 8px;
+  border-radius: 5px;
+  border: 1px solid #e8e8e8;
+  background: #fff;
+  font-size: 14px;
+}
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
 ::placeholder {
-  color: $panther-silver;
+  color: $very-light-gray;
   font-size: 0.75rem;
 }
-::v-deep .multiselect__tags {
-  min-width: 16vw;
-  max-width: 20vw;
-  box-shadow: 3px 4px 7px $very-light-gray;
+input[type='text']:focus {
+  outline: none;
 }
-
-.items_height {
-  overflow-y: scroll;
-  max-height: 10rem;
-  width: 100%;
-}
-
 .logZoomPage {
   height: 100vh;
   color: $base-gray;
@@ -480,8 +445,8 @@ export default {
   width: 60vw;
   padding: 3rem;
   background-color: $white;
-  border-radius: 0.5rem;
-  box-shadow: 3px 4px 7px $very-light-gray;
+  border-radius: 0.3rem;
+  border: 1px solid #e8e8e8;
   color: $base-gray;
 }
 .centered {
@@ -495,6 +460,18 @@ export default {
   flex-direction: row;
   align-items: center;
   font-weight: bold;
+}
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 1rem;
+    margin-right: 0.25rem;
+    filter: invert(70%);
+  }
 }
 .green__button {
   display: flex;
@@ -516,13 +493,13 @@ export default {
   font-size: 1.02rem;
 }
 .green {
-  color: #5f8cff;
+  color: #41b883;
 }
 .disabled__button {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.4rem 1rem;
+  padding: 0.5rem 1.5rem;
   border-radius: 0.3rem;
   font-weight: bold;
   line-height: 1.14;
@@ -530,67 +507,16 @@ export default {
   border-style: none;
   letter-spacing: 0.03rem;
   background-color: $soft-gray;
-  color: $panther-gray;
+  color: $gray;
   cursor: not-allowed;
-  height: 2rem;
-  width: 10rem;
-  font-weight: bold;
-  font-size: 1.02rem;
+  font-size: 14px;
 }
 input {
-  box-shadow: 3px 4px 7px $very-light-gray;
-  border: 1px solid white;
+  border: 1px solid #e8e8e8;
   border-radius: 0.25rem;
   margin-top: 0.5rem;
 }
-.selected__item {
-  padding: 0.5rem 1.5rem;
-  border: none;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  border-radius: 0.3rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.selected__items {
-  padding: 0.5rem 1.5rem;
-  width: 96%;
-  border: none;
-  border-radius: 0.3rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 3px 4px 7px $very-light-gray;
-}
 img {
   filter: invert(60%);
-}
-.visible {
-  display: none;
-}
-.dropdown {
-  font-family: Lato-Regular, sans-serif;
-  font-weight: normal;
-  font-stretch: normal;
-  font-style: normal;
-  letter-spacing: normal;
-  font-size: 16px;
-  border-radius: 4px;
-  line-height: 1;
-  letter-spacing: 0.5px;
-  color: #4d4e4c;
-  height: 2.5rem;
-  background-color: white;
-  border: 1px solid #5d5e5e;
-  width: 12vw;
-  // padding: 0 0 0 1rem;
-  margin: 1rem;
-  -webkit-box-shadow: 1px 4px 7px black;
-  box-shadow: 1px 4px 7px black;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  margin-top: -0.5rem;
 }
 </style>

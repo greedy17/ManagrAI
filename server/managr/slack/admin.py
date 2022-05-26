@@ -6,6 +6,7 @@ from . import constants as slack_consts
 from managr.salesforce import models as sf_models
 from managr.hubspot.models import HObjectField
 from django.db.models import Q
+from managr.core.models import User
 
 
 class CustomFormFieldInline(admin.StackedInline):
@@ -22,8 +23,12 @@ class CustomFormFieldInline(admin.StackedInline):
             if db_field.name == "field":
                 queryset = (
                     sf_models.SObjectField.objects.filter(
-                        Q(salesforce_account__user__organization=parent.organization)
-                        & Q(Q(salesforce_object=parent.resource) | Q(is_public=True))
+                        (
+                            Q(salesforce_account__user__organization=parent.organization)
+                            & Q(salesforce_object=parent.resource)
+                            & Q(salesforce_account__user__is_admin=True)
+                        )
+                        | Q(is_public=True)
                     )
                     if parent.resource not in slack_consts.SALESFORCE_FORM_RESOURCES
                     else HObjectField.objects.filter(
@@ -31,6 +36,7 @@ class CustomFormFieldInline(admin.StackedInline):
                         & Q(Q(hubspot_object=parent.resource) | Q(is_public=True))
                     )
                 )
+
                 return ModelChoiceField(queryset)
         else:
             queryset = sf_models.SObjectField.objects.all()
@@ -59,8 +65,8 @@ class CustomOrgSlackFormsInstance(admin.ModelAdmin):
     list_filter = ("user", "user__organization", "template__form_type", "update_source")
     list_display = ("template", "user", "submission_date", "update_source")
     ordering = ("-datetime_created",)
-    exclude = ["alert_instance_id"]
-    readonly_fields = ["user", "template", "saved_data", "previous_data"]
+    exclude = []
+    readonly_fields = ["user", "template", "saved_data", "previous_data", "alert_instance_id"]
 
 
 admin.site.register(slack_models.OrgCustomSlackForm, CustomOrgSlackForms)

@@ -60,6 +60,7 @@ class ZoomAuthAccount(TimeStampModel):
         blank=True,
         help_text="Automatically Send a Refresh task to be executed 15 mins before expiry to reduce errors",
     )
+    fake_meeting_id = models.CharField(max_length=50, null=True, blank=True)
 
     objects = ZoomAuthAccountQuerySet.as_manager()
 

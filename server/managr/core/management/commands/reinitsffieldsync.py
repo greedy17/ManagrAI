@@ -16,6 +16,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("users", nargs="+", type=str)
+        parser.add_argument("-d", "--dev", action="store_true")
 
     def handle(self, *args, **options):
         for t in options["users"]:
@@ -31,7 +32,8 @@ class Command(BaseCommand):
             ]
             scheduled_time = timezone.now()
             formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
-            emit_gen_next_object_field_sync(str(user.id), operations, formatted_time)
+            dev = True if options["dev"] else False
+            emit_gen_next_object_field_sync(str(user.id), operations, dev, formatted_time)
             self.stdout.write(
                 self.style.SUCCESS(
                     "Successfully initiated the object field sync for the user {}".format(

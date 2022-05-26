@@ -165,13 +165,13 @@ variable "scheduled_tasks" {
     {
       name       = "processsyncqueues"
       command    = "process_tasks --queue SALESFORCE_RESOURCE_SYNC --duration 3600"
-      cron       = "cron(*/10 * * * ? *)"
+      cron       = "cron(0 */11 * * ? *)"
       task_count = 1
     },
     {
       name       = "syncresourcedata"
       command    = "initresourcesync"
-      cron       = "cron(*/10 * * * ? *)"
+      cron       = "cron(0 */11 * * ? *)"
       task_count = 1
     },
     {
@@ -211,8 +211,8 @@ variable "scheduled_tasks" {
       task_count = 1
     },
     {
-      name       = "runreminders"
-      command    = "triggerreminders"
+      name       = "runtimezonetasks"
+      command    = "timezonetasks"
       cron       = "cron(*/30 * * * ? *)"
       task_count = 1
     },

@@ -47,6 +47,7 @@ class Organization(TimeStampModel):
         blank=True,
     )
     has_products = models.BooleanField(default=False)
+    number_of_allowed_users = models.IntegerField(default=1)
     objects = OrganizationQuerySet.as_manager()
 
     @property

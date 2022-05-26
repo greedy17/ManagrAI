@@ -1,4 +1,4 @@
-import { ModelAPI, ApiFilter, Model } from '@thinknimble/tn-models'
+import { ModelAPI, ApiFilter } from '@thinknimble/tn-models'
 import { apiClient, apiErrorHandler } from '@/services/api'
 import { objectToSnakeCase } from '@/services/utils'
 
@@ -34,6 +34,55 @@ export default class SalesforceAPI extends ModelAPI {
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Zoom Auth Link' })(e)
+    }
+  }
+}
+
+export class MeetingWorkflowAPI extends ModelAPI {
+  static ENDPOINT = 'salesforce/meeting-workflows/'
+  get client() {
+    return apiClient()
+  }
+
+  async getMeetingList() {
+    try {
+      const res = await this.client.get(MeetingWorkflowAPI.ENDPOINT)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error getting meetings' })(e)
+    }
+  }
+
+  async mapMeeting(workflow_id, resource_id, resource_type) {
+    try {
+      const res = await this.client.post(MeetingWorkflowAPI.ENDPOINT + 'map-workflow/', { workflow_id: workflow_id, resource_id: resource_id, resource_type: resource_type })
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error getting meetings' })(e)
+    }
+  }
+  async removeParticipant(workflow_id, tracking_id) {
+    try {
+      const res = await this.client.post(MeetingWorkflowAPI.ENDPOINT + 'remove-participant/', { workflow_id: workflow_id, tracking_id: tracking_id })
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error removing participant' })(e)
+    }
+  }
+  async updateWorkflow(formData) {
+    try {
+      const res = await this.client.post(MeetingWorkflowAPI.ENDPOINT + 'update-workflow/', formData)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error updating workflow' })(e)
+    }
+  }
+  async updateParticipant(formData) {
+    try {
+      const res = await this.client.post(MeetingWorkflowAPI.ENDPOINT + 'update-participant/', formData)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error updating workflow' })(e)
     }
   }
 }
@@ -79,9 +128,10 @@ export class SObjectFormBuilderAPI extends ModelAPI {
     }
   }
 
-  async getObjects(sobject) {
+  async getObjects(sobject, for_filter = false, filters = false, resource_id = false) {
+
     try {
-      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/', { params: { sobject: sobject, page_size: 100 } })
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/', { params: { sobject: sobject, resource_id: resource_id, for_filter: for_filter, filters: JSON.stringify(filters), page_size: 750 } })
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
@@ -104,10 +154,58 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
     }
   }
-  async confirmUpdate(data) {
+  async createResource(formData) {
     try {
-      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'confirm-update/', data)
+      const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'sobject/create/', formData)
       return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+    }
+  }
+  async addExtraFields(fieldIds) {
+    try {
+      const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'fields/update-pipeline-fields/', fieldIds)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error syncing resources' })(e)
+    }
+  }
+  async removeExtraField(fieldIds) {
+    try {
+      const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'fields/remove-pipeline-fields/', fieldIds)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error syncing resources' })(e)
+    }
+  }
+  async getSobjectPicklistValues(sobject_id, value) {
+    try {
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'fields/sobject-picklist-values/', { params: sobject_id, value })
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error syncing resources' })(e)
+    }
+  }
+  async resourceSync() {
+    try {
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/resource-sync/')
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error syncing resources' })(e)
+    }
+  }
+  async sendRecap(bulk, form_ids) {
+    try {
+      const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'sobject/send-recap/', { bulk, form_ids })
+      return res
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Confirmation error' })(e)
+    }
+  }
+  async confirmUpdate(verbose_name, task_hash) {
+    try {
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/confirm-update/', { params: verbose_name, task_hash })
+      return res
     } catch (e) {
       apiErrorHandler({ apiName: 'Confirmation error' })(e)
     }

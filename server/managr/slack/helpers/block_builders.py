@@ -446,6 +446,13 @@ def checkbox_input(options, action_id):
     return block
 
 
+def static_select_input(options, action_id, placeholder=None):
+    block = {"type": "static_select", "options": options, "action_id": action_id}
+    if placeholder:
+        block["placeholder"] = {"type": "plain_text", "text": placeholder}
+    return block
+
+
 def checkbox_option(text, value, text_type="mrkdwn", description=None):
     """
     Function for building the options for a checkbox input

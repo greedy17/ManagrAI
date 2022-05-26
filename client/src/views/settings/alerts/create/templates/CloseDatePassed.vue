@@ -1,13 +1,17 @@
 <template>
   <div class="alerts-page">
-    <div style="display: flex; align-item: flex-start; flex-direction: column; margin-left: 12vw">
-      <h2>
-        <span>
-          Close Date
-          <span style="color: #fa646a">Passed</span>
-        </span>
-      </h2>
-      <p style="margin-top: -0.5rem">View and update all Opportunities with a passed close date</p>
+    <div class="alerts-header">
+      <div>
+        <h3>Close Date Passed</h3>
+        <p style="margin-top: -0.5rem; font-size: 14px">
+          View and update all Opportunities with a passed close date
+        </p>
+      </div>
+
+      <button @click="$router.push({ name: 'CreateNew' })" class="back-button">
+        <img src="@/assets/images/back.png" alt="" />
+        Back to workflows
+      </button>
     </div>
 
     <div style="margin-top: 1rem" v-if="pageNumber === 0" class="alert__column">
@@ -33,8 +37,8 @@
                     : (form.field.recurrenceFrequency.value = 'WEEKLY')
                 "
                 :value="form.field.recurrenceFrequency.value !== 'WEEKLY'"
-                offColor="#fa646a"
-                onColor="#fa646a"
+                offColor="#41b883"
+                onColor="#41b883"
                 style="margin-left: 0.25rem; margin-right: 0.25rem"
               />
               <label :class="form.field.recurrenceFrequency.value == 'MONTHLY' ? 'green' : ''"
@@ -45,17 +49,29 @@
             <div style="margin-top: 0.5rem" v-if="form.field.recurrenceFrequency.value == 'WEEKLY'">
               <FormField>
                 <template v-slot:input>
-                  <DropDownSearch
-                    :items.sync="weeklyOpts"
-                    :itemsRef.sync="form.field._recurrenceDay.value"
-                    v-model="form.field.recurrenceDay.value"
-                    @input="form.field.recurrenceDay.validate()"
-                    displayKey="key"
-                    valueKey="value"
-                    nullDisplay="Select Day"
-                    searchable
-                    local
-                  />
+                  <Multiselect
+                    placeholder="Select Days"
+                    @input="setDay($event)"
+                    v-model="selectedDay"
+                    :options="weeklyOpts"
+                    openDirection="below"
+                    style="width: 14vw"
+                    selectLabel="Enter"
+                    track-by="value"
+                    label="key"
+                    :multiple="true"
+                    :closeOnSelect="false"
+                  >
+                    <template slot="noResult">
+                      <p class="multi-slot">No results.</p>
+                    </template>
+                    <template slot="placeholder">
+                      <p class="slot-icon">
+                        <img src="@/assets/images/search.png" alt="" />
+                        Select Days
+                      </p>
+                    </template>
+                  </Multiselect>
                 </template>
               </FormField>
             </div>
@@ -68,31 +84,6 @@
               v-model="form.field.recurrenceDay.value"
               small
             />
-            <p
-              @click="removeDay"
-              v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
-              :class="form.field.recurrenceDay.value ? 'selected__item' : 'visible'"
-            >
-              <img
-                src="@/assets/images/remove.png"
-                style="height: 1rem; margin-right: 0.25rem"
-                alt=""
-              />
-              {{ form.field.recurrenceDay.value }}
-            </p>
-
-            <p
-              @click="removeDay"
-              v-else-if="form.field.recurrenceFrequency.value == 'WEEKLY'"
-              :class="form.field.recurrenceDay.value ? 'selected__item' : 'visible'"
-            >
-              <img
-                src="@/assets/images/remove.png"
-                style="height: 1rem; margin-right: 0.25rem"
-                alt=""
-              />
-              {{ onConvert(form.field.recurrenceDay.value) }}
-            </p>
           </div>
 
           <div
@@ -104,39 +95,31 @@
 
             <FormField :errors="form.field.alertTargets.errors">
               <template v-slot:input>
-                <DropDownSearch
-                  :items.sync="userTargetsOpts"
-                  :itemsRef.sync="form.field._alertTargets.value"
-                  v-model="form.field.alertTargets.value"
-                  @input="form.field.alertTargets.validate()"
-                  displayKey="fullName"
-                  valueKey="id"
-                  nullDisplay="Mulit-select"
-                  searchable
-                  multi
-                  medium
-                  :loading="users.loadingNextPage"
-                  :hasNext="!!users.pagination.hasNextPage"
-                  @load-more="onUsersNextPage"
-                  @search-term="onSearchUsers"
-                />
+                <Multiselect
+                  placeholder="Select Users"
+                  @input="mapIds"
+                  v-model="selectedUsers"
+                  :options="userTargetsOpts"
+                  openDirection="below"
+                  style="width: 14vw"
+                  selectLabel="Enter"
+                  track-by="id"
+                  label="fullName"
+                  :multiple="true"
+                  :closeOnSelect="false"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results.</p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.png" alt="" />
+                      Select Users
+                    </p>
+                  </template>
+                </Multiselect>
               </template>
             </FormField>
-            <div class="items_height">
-              <p
-                :key="i"
-                v-for="(item, i) in form.field.alertTargets.value"
-                :class="form.field.alertTargets.value ? 'selected__item' : ''"
-                @click="removeItemFromTargetArray(item)"
-              >
-                <img
-                  src="@/assets/images/remove.png"
-                  style="height: 1rem; margin-right: 0.25rem"
-                  alt=""
-                />
-                {{ item.length ? checkInteger(item) : '' }}
-              </p>
-            </div>
           </div>
 
           <div
@@ -153,17 +136,17 @@
               <label :class="!create ? 'green' : ''">Select #channel</label>
               <ToggleCheckBox
                 style="margin-left: 0.25rem; margin-right: 0.25rem"
-                @input="changeCreate"
                 :value="create"
-                offColor="#fa646a"
-                onColor="#fa646a"
+                @input="changeCreate"
+                offColor="#41b883"
+                onColor="#41b883"
               />
               <label :class="create ? 'green' : ''">Create #channel</label>
             </div>
 
             <label v-else for="channel" style="font-weight: bold"
               >Alert will send to
-              <span style="color: #fa646a; font-size: 1.2rem">{{ channelName }}</span>
+              <span style="color: #41b883; font-size: 14px">{{ channelName }}</span>
               channel</label
             >
             <div
@@ -198,46 +181,50 @@
             </div>
 
             <div style="margin-top: 0.5rem" v-else>
-              <FormField>
-                <template v-slot:input>
-                  <DropDownSearch
-                    :items.sync="userChannelOpts.channels"
-                    :itemsRef.sync="form.field._recipients.value"
-                    v-model="form.field.recipients.value"
-                    @input="form.field.recipients.validate()"
-                    displayKey="name"
-                    valueKey="id"
-                    nullDisplay="Channels"
-                    :hasNext="!!userChannelOpts.nextCursor"
-                    @load-more="listChannels(userChannelOpts.nextCursor)"
-                    searchable
-                    local
-                  >
-                    <template v-slot:tn-dropdown-option="{ option }">
-                      <img
-                        v-if="option.isPrivate == true"
-                        class="card-img"
-                        style="width: 1rem; height: 1rem; margin-right: 0.2rem"
-                        src="@/assets/images/lockAsset.png"
-                      />
-                      {{ option['name'] }}
-                    </template>
-                  </DropDownSearch>
-                </template>
-              </FormField>
+              <template>
+                <Multiselect
+                  v-if="!directToUsers"
+                  placeholder="Select Channel"
+                  v-model="selectedChannel"
+                  @input="setRecipient"
+                  :options="userChannelOpts.channels"
+                  openDirection="below"
+                  style="width: 14vw"
+                  selectLabel="Enter"
+                  track-by="id"
+                  label="name"
+                  :loading="dropdownLoading"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results. Try loading more</p>
+                  </template>
+                  <template slot="afterList">
+                    <p
+                      class="multi-slot__more"
+                      @click="listUserChannels(userChannelOpts.nextCursor)"
+                    >
+                      Load More
+                      <img src="@/assets/images/plusOne.png" alt="" />
+                    </p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.png" alt="" />
+                      Select Channel
+                    </p>
+                  </template>
+                </Multiselect>
+              </template>
 
-              <p
-                v-if="form.field.recipients.value.length > 0"
-                @click="removeTarget"
-                :class="form.field.recipients.value ? 'selected__item' : 'visible'"
-              >
-                <img
-                  src="@/assets/images/remove.png"
-                  style="height: 1rem; margin-right: 0.25rem"
-                  alt=""
-                />
-                {{ form.field._recipients.value.name }}
-              </p>
+              <div v-if="userLevel !== 'REP'" class="sendAll">
+                <input type="checkbox" id="allUsers" v-model="directToUsers" />
+                <label for="allUsers">Send directly to users</label>
+              </div>
+
+              <div v-else class="sendAll">
+                <input type="checkbox" id="allUsers" v-model="directToUsers" />
+                <label for="allUsers">Send to primary channel</label>
+              </div>
             </div>
           </div>
         </div>
@@ -272,79 +259,44 @@
 </template>
 
 <script>
-/**
- * Components
- * */
-// Pacakges
-import 'quill/dist/quill.core.css'
-import 'quill/dist/quill.snow.css'
-import 'quill/dist/quill.bubble.css'
-
-import { quillEditor } from 'vue-quill-editor'
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 //Internal
 import FormField from '@/components/forms/FormField'
 import PassedAlertGroup from '@/views/settings/alerts/create/PassedAlertGroup'
-import AlertSummary from '@/views/settings/alerts/create/_AlertSummary'
-import ListContainer from '@/components/ListContainer'
-import ListItem from '@/components/ListItem'
-import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotificationTemplate'
-import SlackMessagePreview from '@/views/settings/alerts/create/SlackMessagePreview'
-import DropDownSearch from '@/components/DropDownSearch'
-import ExpandablePanel from '@/components/ExpandablePanel'
-import Modal from '@/components/Modal'
-import SmartAlertTemplateBuilder from '@/views/settings/alerts/create/SmartAlertTemplateBuilder'
 import { UserConfigForm } from '@/services/users/forms'
 
 /**
  * Services
  */
 
-import AlertTemplate, {
-  AlertGroupForm,
-  AlertTemplateForm,
-  AlertConfigForm,
-  AlertMessageTemplateForm,
-  AlertOperandForm,
-} from '@/services/alerts/'
+import AlertTemplate, { AlertTemplateForm } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
-import {
-  SObjectField,
-  SObjectValidations,
-  SObjectPicklist,
-  NON_FIELD_ALERT_OPTS,
-  SOBJECTS_LIST,
-} from '@/services/salesforce'
+import { CollectionManager } from '@thinknimble/tn-models'
+import { SObjectField, NON_FIELD_ALERT_OPTS, SOBJECTS_LIST } from '@/services/salesforce'
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
   name: 'CloseDatePassed',
   components: {
-    ExpandablePanel,
-    DropDownSearch,
-    ListContainer,
-    ListItem,
-    SlackMessagePreview,
     PassedAlertGroup,
-    SlackNotificationTemplate,
-    quillEditor,
     ToggleCheckBox,
     FormField,
-    AlertSummary,
     PulseLoadingSpinnerButton,
-    Modal,
-    SmartAlertTemplateBuilder,
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {
     return {
+      dropdownLoading: false,
+      selectedUsers: [],
+      selectedDay: null,
+      selectedChannel: null,
       channelOpts: new SlackListResponse(),
       userChannelOpts: new SlackListResponse(),
       channelName: '',
       newChannel: {},
       channelCreated: false,
-      create: true,
+      create: false,
       savingTemplate: false,
       listVisible: true,
       dropdownVisible: true,
@@ -359,6 +311,7 @@ export default {
       SOBJECTS_LIST,
       pageNumber: 0,
       configName: '',
+      directToUsers: true,
       userConfigForm: new UserConfigForm({}),
       alertTemplateForm: new AlertTemplateForm(),
       selectedBindings: [],
@@ -423,10 +376,12 @@ export default {
         }
       },
     },
+    directToUsers: 'setDefaultChannel',
   },
   methods: {
-    checkInteger(str) {
-      return /\d/.test(str) ? this.user.fullName : str
+    mapIds() {
+      let mappedIds = this.selectedUsers.map((user) => user.id)
+      this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value = mappedIds
     },
     repsPipeline() {
       if (this.userLevel !== 'MANAGER') {
@@ -439,7 +394,7 @@ export default {
     },
     handleUpdate() {
       this.loading = true
-      console.log(this.userConfigForm.value)
+
       User.api
         .update(this.user.id, this.userConfigForm.value)
         .then((response) => {
@@ -451,24 +406,20 @@ export default {
     },
     changeCreate() {
       this.create = !this.create
-      if (
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value !==
-        'SLACK_CHANNEL'
-      ) {
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value =
-          'SLACK_CHANNEL'
-      }
     },
     async listUserChannels(cursor = null) {
+      this.dropdownLoading = true
       const res = await SlackOAuth.api.listUserChannels(cursor)
       const results = new SlackListResponse({
         channels: [...this.userChannelOpts.channels, ...res.channels],
         responseMetadata: { nextCursor: res.nextCursor },
       })
       this.userChannelOpts = results
+      setTimeout(() => {
+        this.dropdownLoading = false
+      }, 500)
     },
     async createChannel(name) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
       const res = await SlackOAuth.api.createChannel(name)
       if (res.channel) {
         this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = res.channel
@@ -556,53 +507,6 @@ export default {
       new_str = str.replace(/\s+/g, '-').toLowerCase()
       this.channelName = new_str
     },
-    removeDay() {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = ''
-    },
-    removeTarget() {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = []
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = []
-    },
-    removeItemFromTargetArray(item) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value =
-        this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.filter(
-          (i) => i !== item,
-        )
-    },
-    removeItemFromRecipientArray(item) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value.filter(
-          (i) => i !== item,
-        )
-    },
-    onConvert(val) {
-      let newVal = ''
-      if (val == 0) {
-        newVal = 'Monday'
-      } else if (val == 1) {
-        newVal = 'Tuesday'
-      } else if (val == 2) {
-        newVal = 'Wednesday'
-      } else if (val == 3) {
-        newVal = 'Thursday'
-      } else if (val == 4) {
-        newVal = 'Friday'
-      } else if (val == 5) {
-        newVal = 'Saturday'
-      } else if (val == 6) {
-        newVal = 'Sunday'
-      }
-      return newVal
-    },
-    onNextPage() {
-      this.pageNumber <= 0 ? (this.pageNumber += 1) : (this.pageNumber = this.pageNumber)
-    },
-    onPreviousPage() {
-      this.pageNumber >= 1 ? (this.pageNumber -= 1) : (this.pageNumber = this.pageNumber)
-    },
-    goToTemplates() {
-      this.$router.push({ name: 'CreateNew' })
-    },
     async listChannels(cursor = null) {
       const res = await SlackOAuth.api.listChannels(cursor)
       const results = new SlackListResponse({
@@ -611,28 +515,23 @@ export default {
       })
       this.channelOpts = results
     },
-    recipientTypeToggle(value) {
-      if (!this.user.slackRef) {
-        this.$Alert.alert({ type: 'error', message: 'Slack Not Integrated', timeout: 2000 })
-        return 'USER_LEVEL'
-      }
-      if (value == 'USER_LEVEL') {
-        return 'SLACK_CHANNEL'
-      } else if (value == 'SLACK_CHANNEL') {
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = []
-        this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = []
-        return 'USER_LEVEL'
-      }
-      return value
+    setRecipient() {
+      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value =
+        this.selectedChannel
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
+        this.selectedChannel.id
     },
-    setRecipients(obj) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value.push(obj)
+    setDefaultChannel() {
+      this.directToUsers
+        ? (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = 'default')
+        : (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = null)
     },
-    setRecipient(obj) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = obj
-    },
-    setDay(obj) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._recurrenceDay.value = obj
+    setDay(n) {
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
+      let days = []
+      n.forEach((day) => days.push(day.value))
+      let newDays = [...new Set(days)]
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = newDays
     },
     setPipelines(obj) {
       this.alertTemplateForm.field.alertConfig.groups[0].field._alertTargets.value.push(obj)
@@ -645,7 +544,9 @@ export default {
           const res = await AlertTemplate.api.createAlertTemplate({
             ...this.alertTemplateForm.toAPI,
             user: this.$store.state.user.id,
+            directToUsers: this.directToUsers,
           })
+          console.log(res)
           this.userConfigForm.field.activatedManagrConfigs.value.push(res.title)
           this.handleUpdate()
           this.$router.push({ name: 'CreateNew' })
@@ -656,102 +557,13 @@ export default {
           })
         } catch (e) {
           this.$Alert.alert({
-            message: 'An error occured saving template',
-            timeout: 2000,
+            message: 'Error, one or more of your users do not have slack connected',
+            timeout: 3000,
             type: 'error',
           })
         } finally {
           this.savingTemplate = false
         }
-      }
-    },
-    bindText(val) {
-      this.$refs['message-body'].quill.focus()
-      let start = 0
-      if (this.editor.selection.lastRange) {
-        start = this.editor.selection.lastRange.index
-      }
-      this.editor.insertText(start, `{ ${val} }`)
-    },
-    onAddAlertGroup() {
-      // length determines order
-      const order = this.alertTemplateForm.field.alertGroups.groups.length
-      if (order >= 3) {
-        this.$Alert.alert({ message: 'You can only add 3 groups', timeout: 2000 })
-        return
-      }
-      // set next order
-
-      this.alertTemplateForm.addToArray('alertGroups', new AlertGroupForm())
-      this.alertTemplateForm.field.alertGroups.groups[order].field.groupOrder.value = order
-    },
-    onAddAlertSetting() {
-      if (this.alertTemplateForm.field.alertConfig.groups.length >= 3) {
-        this.$Alert.alert({ message: 'You can only add 3 configurations', timeout: 2000 })
-        return
-      }
-      this.alertTemplateForm.addToArray('alertConfig', new AlertConfigForm())
-    },
-    onRemoveAlertGroup(i) {
-      // get order and update options
-
-      if (this.alertTemplateForm.field.alertGroups.groups.length - 1 <= 0) {
-        return
-      }
-
-      const order = this.alertTemplateForm.field.alertGroups.groups[i].field.groupOrder.value
-
-      this.alertTemplateForm.removeFromArray('alertGroups', i)
-
-      let greaterThan = this.alertTemplateForm.field.alertGroups.groups.slice(i)
-
-      greaterThan.forEach((el, index) => {
-        el.field.groupOrder.value = order + index
-      })
-    },
-    onRemoveSetting(i) {
-      if (this.alertTemplateForm.field.alertConfig.groups.length - 1 <= 0) {
-        return
-      }
-      this.alertTemplateForm.removeFromArray('alertConfig', i)
-    },
-    async onSearchFields(v) {
-      this.fields.pagination = new Pagination()
-      this.fields.filters = {
-        ...this.fields.filters,
-        search: v,
-      }
-      await this.fields.refresh()
-    },
-    async fieldNextPage() {
-      await this.fields.addNextPage()
-    },
-    async onSearchUsers(v) {
-      this.users.pagination = new Pagination()
-      this.users.filters = {
-        ...this.users.filters,
-        search: v,
-      }
-      await this.users.refresh()
-    },
-    async onUsersNextPage() {
-      await this.users.addNextPage()
-    },
-    showList() {
-      this.listVisible = !this.listVisible
-    },
-    showDropDown() {
-      this.dropdownVisible = !this.dropdownVisible
-    },
-    setAlertValues(date, name) {
-      this.alertTemplateForm.field.title = name
-      this.alertTemplateForm.alertGroups.groups[0].fields.alertOperands.groups[0].fields.operandValue.value =
-        date
-      this.alertTemplateForm.alertGroups.groups[0].fields.alertOperands.groups[0].fields.operandOperator.value =
-        '<='
-      if (date >= 0) {
-        this.alertGroups.groups[0].fields.alertOperands.groups[0].fields.field.operandOperator.value =
-          '='
       }
     },
   },
@@ -774,67 +586,6 @@ export default {
         return [{ fullName: 'Myself', id: 'SELF' }]
       }
     },
-    recipientOpts() {
-      if (this.user.userLevel == 'MANAGER') {
-        return [
-          ...this.alertRecipientOpts.map((opt) => {
-            return {
-              id: opt.value,
-              fullName: opt.key,
-            }
-          }),
-          ...this.users.list,
-        ]
-      } else {
-        return [{ fullName: 'Myself', id: 'SELF' }]
-      }
-    },
-    filteredUserTargets() {
-      if (this.searchQuery) {
-        return this.userTargetsOpts.filter((key) => {
-          return key.fullName.toLowerCase().startsWith(this.searchQuery.toLowerCase())
-        })
-      } else {
-        return this.userTargetsOpts
-      }
-    },
-    filteredRecipients() {
-      if (this.searchText) {
-        return this.recipientOpts.filter((key) => {
-          return key.fullName.toLowerCase().startsWith(this.searchText.toLowerCase())
-        })
-      } else {
-        return this.recipientOpts
-      }
-    },
-    filteredChannels() {
-      if (this.searchChannels) {
-        return this.reversedChannels.filter((key) => {
-          return key.name.toLowerCase().startsWith(this.searchChannels.toLowerCase())
-        })
-      } else {
-        return this.reversedChannels
-      }
-    },
-    reversedChannels() {
-      return this.channelOpts.channels.reverse()
-    },
-    formValue() {
-      return this.alertTemplateForm.value
-    },
-    editor() {
-      return this.$refs['message-body'].quill
-    },
-    selection() {
-      return this.editor.selection.lastRange
-    },
-    alertObj() {
-      return {
-        title: this.formValue.title,
-        message: this.formValue.alertMessages[0].body,
-        resourceType: this.selectedResourceType,
-      }
-    },
     user() {
       return this.$store.state.user
     },
@@ -847,13 +598,19 @@ export default {
       },
     },
   },
+  mounted() {
+    this.setDefaultChannel()
+  },
   beforeMount() {
+    this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
     this.alertTemplateForm.field.title.value = 'Close Date Passed'
     this.alertTemplateForm.field.isActive.value = true
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
       'Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has a passed close date of <strong>{ Opportunity.CloseDate }</strong>. Please update it!'
     this.repsPipeline()
+    this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
+    this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = [0]
   },
 }
 </script>
@@ -869,6 +626,54 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
+input[type='checkbox']:checked + label::after {
+  content: '';
+  position: absolute;
+  width: 1ex;
+  height: 0.3ex;
+  background: rgba(0, 0, 0, 0);
+  top: 0.9ex;
+  left: 0.4ex;
+  border: 2px solid $dark-green;
+  border-top: none;
+  border-right: none;
+  -webkit-transform: rotate(-45deg);
+  -moz-transform: rotate(-45deg);
+  -o-transform: rotate(-45deg);
+  -ms-transform: rotate(-45deg);
+  transform: rotate(-45deg);
+}
+input[type='checkbox'] {
+  line-height: 2.1ex;
+}
+input[type='checkbox'] {
+  position: absolute;
+  left: -999em;
+}
+input[type='checkbox'] + label {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+input[type='checkbox'] + label::before {
+  content: '';
+  display: inline-block;
+  vertical-align: -22%;
+  height: 1.75ex;
+  width: 1.75ex;
+  background-color: white;
+  border: 1px solid rgb(182, 180, 180);
+  border-radius: 4px;
+  margin-right: 0.5em;
+}
+.sendAll {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: $base-gray;
+  margin-top: 1rem;
+}
 @keyframes bounce {
   0% {
     transform: translateY(0);
@@ -880,34 +685,67 @@ export default {
 .bouncy {
   animation: bounce 0.2s infinite alternate;
 }
-::placeholder {
-  color: $panther-silver;
-  font-size: 0.75rem;
-}
-::v-deep .input-content {
-  width: 12vw;
-  background-color: white;
-  color: $panther;
-}
-::v-deep .input-form__large {
-  width: 12vw;
-  background-color: white;
-  color: $panther;
-}
-.invisible {
-  display: none;
-}
-.selected__item {
-  padding: 0.5rem;
-  background-color: $dark-green;
-  border: none;
-  border-radius: 0.3rem;
-  width: 100%;
-  text-align: center;
-  cursor: pointer;
+.back-button {
+  font-size: 14px;
+  color: $dark-green;
+  background-color: transparent;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  border: none;
+  cursor: pointer;
+  margin: 1rem 0rem 0rem 0rem;
+
+  img {
+    height: 1rem;
+    margin-right: 0.5rem;
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
+  }
+}
+.alerts-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: row;
+  padding: 0vw 12vw;
+}
+input[type='text']:focus {
+  outline: none;
+}
+.multi-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $gray;
+  font-size: 12px;
+  width: 100%;
+  padding: 0.5rem 0rem;
+  margin: 0;
+  cursor: text;
+  &__more {
+    background-color: white;
+    color: $dark-green;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-top: 1px solid #e8e8e8;
+    width: 100%;
+    padding: 0.75rem 0rem;
+    margin: 0;
+    cursor: pointer;
+
+    img {
+      height: 0.8rem;
+      margin-left: 0.25rem;
+      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+        brightness(93%) contrast(89%);
+    }
+  }
+}
+::placeholder {
+  color: $very-light-gray;
+  font-size: 0.75rem;
 }
 .search__input {
   font-family: Lato-Regular, sans-serif;
@@ -922,60 +760,16 @@ export default {
   color: #4d4e4c;
   height: 2.5rem;
   background-color: white;
-  border: none;
-  width: 70%;
-  // padding: 0 0 0 1rem;
+  border: 1px solid #e8e8e8;
+  width: 14vw;
   margin: 1rem;
-  box-shadow: 3px 4px 7px $very-light-gray;
-}
-.channels_height {
-  height: 22vh;
-  overflow-y: scroll;
-}
-.bottom__middle {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  filter: drop-shadow(8px 10px 7px black);
-}
-.collection__fields {
-  background-color: $panther;
-  display: flex;
-  justify-content: space-evenly;
-  align-items: center;
-  flex-direction: row;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  height: 46vh;
-  width: 50vw;
-  overflow-x: scroll;
-}
-.gold__button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.4rem 1rem;
-  border-radius: 0.3rem;
-  font-weight: bold;
-  line-height: 1.14;
-  text-indent: none;
-  border-style: none;
-  letter-spacing: 0.03rem;
-  color: white;
-  background-color: $panther;
-  cursor: pointer;
-  height: 2rem;
-  width: 10rem;
-  font-weight: bold;
-  font-size: 1.02rem;
 }
 .purple__button {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.25rem 1rem;
+  padding: 0.5rem 1.25rem;
   border-radius: 0.3rem;
-  font-weight: bold;
   line-height: 1.14;
   text-indent: none;
   border-style: none;
@@ -983,16 +777,13 @@ export default {
   color: white;
   background-color: $dark-green;
   cursor: pointer;
-  height: 2rem;
-  width: 10rem;
-  font-weight: bold;
-  font-size: 1.02rem;
+  font-size: 16px;
 }
 .disabled__button {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.25rem 1rem;
+  padding: 0.5rem 1.5rem;
   border-radius: 0.3rem;
   font-weight: bold;
   line-height: 1.14;
@@ -1000,40 +791,10 @@ export default {
   border-style: none;
   letter-spacing: 0.03rem;
   background-color: $soft-gray;
-  color: $panther-gray;
+  color: $gray;
   cursor: not-allowed;
-  height: 2rem;
-  width: 10rem;
-  font-weight: bold;
-  font-size: 1.02rem;
-}
-.collection {
-  background-color: $panther;
-  margin-top: 1rem;
-  padding: 2rem;
-  border-radius: 0.5rem;
 
-  box-shadow: 3px 4px 7px black;
-  display: flex;
-  flex-direction: column;
-}
-.bottom {
-  margin-bottom: 2rem;
-  height: 24vh;
-  width: 26vw;
-  margin-top: 1rem;
-}
-.message {
-  width: 20vw;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  margin-bottom: 1.5rem;
-}
-.row {
-  display: flex;
-  flex-direction: row;
-  font-weight: bold;
+  font-size: 14px;
 }
 .row__ {
   display: flex;
@@ -1044,68 +805,12 @@ export default {
 input {
   cursor: pointer;
 }
-.column {
-  display: flex;
-  flex-direction: column;
-  margin: 1rem;
-}
-.centered__ {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
 .visible {
   visibility: hidden;
-}
-.continue__button {
-  margin: 0.2rem;
-  padding: 0.35rem;
-  width: 10vw;
-  background-color: $panther-purple;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 2rem;
-}
-.back__button {
-  margin: 0.2rem;
-  padding: 0.35rem;
-  width: 10vw;
-  background-color: $panther-gold;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 2rem;
-}
-.disabled__continue {
-  margin: 0.2rem;
-  padding: 0.35rem;
-  width: 10vw;
-  background-color: $panther-silver;
-  color: $panther;
-  border: none;
-  border-radius: 0.5rem;
-  font-weight: bold;
-  cursor: not-allowed;
-  margin-top: 2rem;
-}
-.days__start {
-  display: flex;
-  flex-direction: column;
 }
 .alert__column {
   display: flex;
   flex-direction: row;
-  justify-content: center;
-  align-items: center;
-}
-.alert__row {
-  display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
 }
@@ -1127,276 +832,39 @@ input {
   justify-content: space-evenly;
   flex-direction: row;
   background-color: $white;
-  box-shadow: 3px 4px 7px $very-light-gray;
   color: $base-gray;
-  border-radius: 0.75rem;
+  border: 1px solid #e8e8e8;
+  border-radius: 0.3rem;
   width: 75vw;
   padding: 2rem;
   margin-bottom: 1rem;
-}
-.collection_fields {
-  background-color: $panther;
-  display: flex;
-  justify-content: center;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  height: 50vh;
-  width: 34vw;
-  box-shadow: 3px 4px 7px black;
-  margin-top: 1rem;
-  overflow-x: scroll;
-}
-.fields_title {
-  background-color: $panther;
-  margin: 1rem;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  width: 100%;
-}
-.quill-editor {
-  width: 100%;
 }
 
 textarea {
   @extend .textarea;
 }
-.box__header {
-  &__status {
-    display: flex;
-    &--error {
-      color: $coral;
-      fill: $coral;
-    }
-    &--success {
-      color: $dark-green;
-      fill: $dark-green;
-    }
-  }
-}
 .alerts-page {
   height: 100vh;
   color: $base-gray;
   margin-top: 4rem;
-  &__previous-step {
-    @include muted-font(12);
-  }
-  &__groups {
-    &__group {
-      display: flex;
-    }
-  }
-  &__message {
-    display: flex;
-    height: 20rem;
-    &-template {
-      margin: 0rem 1rem;
-      &__notification {
-        width: 30rem;
-        margin: 1rem 0rem;
-      }
-      &__message {
-        width: 40rem;
-        margin: 1rem 0rem;
-      }
-    }
-  }
 }
-.alert_cards {
+
+.slot-icon {
   display: flex;
   flex-direction: row;
-  justify-content: space-evenly;
   align-items: center;
-  margin-top: 2rem;
-}
-
-.alerts-page__settings {
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
-  color: $base-gray;
-
-  &__frequency {
-    display: flex;
-    align-items: center;
-    &-label {
-      @include muted-font();
-      margin: 0 0.5rem;
-    }
+  padding: 0;
+  margin: 0;
+  img {
+    height: 1rem;
+    margin-right: 0.25rem;
+    filter: invert(70%);
   }
-  &-remove {
-    justify-self: end;
-  }
-}
-.btn {
-  &--danger {
-    @include button-danger();
-  }
-  &--primary {
-    @include primary-button();
-  }
-  &--secondary {
-    @include secondary-button();
-  }
-
-  &--icon {
-    @include --icon();
-  }
-}
-.muted--link {
-  @include muted-font();
-  @include pointer-on-hover();
-  &--important {
-    color: red;
-    font-weight: bold;
-    font-size: 11px;
-  }
-}
-.alerts-page__message-options-body__bindings__fields {
-  // margin: 3rem 0rem;
-  // width: 40rem;
 }
 .green {
-  color: #fa646a;
-}
-.red {
-  color: red;
-}
-.pad {
-  padding-bottom: 1rem;
-  margin-top: -1rem;
-}
-.pink {
-  color: $candy;
-  font-weight: bold;
-}
-.purple {
-  color: $grape;
-  font-weight: bold;
-}
-.mar {
-  margin-top: -2rem;
-}
-.center {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-}
-.sub {
-  font-size: 12px;
-  margin-left: 0.5rem;
-}
-.sub__ {
-  font-size: 16px;
-  margin-top: -0.5rem;
-  color: $panther-silver;
-}
-.group {
-  display: flex;
-  flex-direction: row;
-  height: auto;
-  margin: 0.5rem;
-  padding: 0.5rem;
-}
-.col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: white;
-}
-.row_ {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 2rem;
-}
-
-.bottom {
-  margin-bottom: 1.25rem;
-  height: 170px;
-}
-.left {
-  margin-bottom: 2rem;
-}
-.space {
-  margin-bottom: 0.5rem;
-}
-.add__group {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-end;
-  margin-top: 3rem;
-  padding-bottom: 1rem;
-  border-bottom: 3px solid $mid-gray;
-}
-.bolder {
-  font-size: 16px;
-  margin-left: 1rem;
-  cursor: pointer;
-  color: $base-gray;
-}
-.bolder:hover {
-  border-bottom: 2px solid $candy;
-  color: $candy;
-}
-.alertsModal {
-  color: $candy;
-  text-decoration: underline;
-  cursor: pointer;
-}
-.modal__container {
-  overflow-y: scroll;
-}
-.blue {
-  color: $slate-gray;
-}
-.top {
-  border-top: 3px solid $grape;
-}
-.templates {
-  border-bottom: 1px solid $gray;
-}
-.orange_button {
-  width: 7rem;
-  background-color: white;
-  color: $panther-orange;
-  font-weight: bold;
-  font-size: 16px;
-  height: 2rem;
-  border-radius: 0.5rem;
-  border: 2px solid white;
-  cursor: pointer;
-}
-.selected__item {
-  padding: 0.5rem 1.2rem;
-  background-color: transparent;
-  border: none;
-  box-shadow: 3px 4px 7px $very-light-gray;
-  border-radius: 0.3rem;
-  width: 96%;
-  text-align: center;
+  color: #41b883;
 }
 img {
   filter: invert(60%);
 }
-.items_height {
-  overflow-y: scroll;
-  max-height: 30vh;
-  width: 100%;
-}
-.recipients_height {
-  overflow-y: scroll;
-  max-height: 30vh;
-  width: 80%;
-}
-// ::-webkit-scrollbar {
-//   background-color: $panther;
-//   -webkit-appearance: none;
-//   width: 4px;
-//   height: 100%;
-// }
-// ::-webkit-scrollbar-thumb {
-//   border-radius: 2px;
-//   background-color: $panther-silver;
-// }
 </style>

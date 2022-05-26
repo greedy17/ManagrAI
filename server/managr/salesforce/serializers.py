@@ -1,7 +1,16 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
-from .models import SalesforceAuthAccount, SObjectPicklist, SObjectField, SObjectValidation
+from managr.zoom.serializers import ZoomMeetingSerializer
+from managr.slack.models import OrgCustomSlackFormInstance
+
+from .models import (
+    MeetingWorkflow,
+    SalesforceAuthAccount,
+    SObjectPicklist,
+    SObjectField,
+    SObjectValidation,
+)
 
 
 class SalesforceAuthSerializer(serializers.ModelSerializer):
@@ -23,6 +32,8 @@ class SalesforceAuthSerializer(serializers.ModelSerializer):
             "sobjects",
             "exclude_fields",
             "is_busy",
+            "last_sync_time",
+            "extra_pipeline_fields",
         )
 
 
@@ -107,3 +118,28 @@ class SObjectPicklistSerializer(serializers.ModelSerializer):
                 .first()
             )
         return super().to_internal_value(data)
+
+
+class MeetingWorkflowSerializer(serializers.ModelSerializer):
+    meeting_ref = serializers.SerializerMethodField("get_meeting_ref")
+    is_completed = serializers.SerializerMethodField("get_completed_status")
+
+    class Meta:
+        model = MeetingWorkflow
+        fields = ("id", "meeting", "meeting_ref", "resource_id", "resource_type", "is_completed")
+
+    def get_meeting_ref(self, instance):
+        from managr.core.serializers import MeetingPrepInstanceSerializer
+
+        if instance.non_zoom_meeting is None:
+            meeting = ZoomMeetingSerializer(instance=instance.meeting)
+        else:
+            meeting = MeetingPrepInstanceSerializer(instance=instance.non_zoom_meeting)
+        return meeting.data
+
+    def get_completed_status(self, instance):
+        form = instance.forms.filter(template__form_type="UPDATE").first()
+        if form:
+            if form.saved_data:
+                return True
+        return False

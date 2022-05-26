@@ -1,5 +1,8 @@
 <template>
   <div class="alert-settings-modal">
+    <div class="alert-settings-modal__header">
+      <h2>Add Delivery Option</h2>
+    </div>
     <div class="row__save">
       <div class="alerts-page__settings__frequency">
         <label class="alerts-page__settings__frequency-label">Weekly</label>
@@ -10,36 +13,41 @@
               : (form.field.recurrenceFrequency.value = 'WEEKLY')
           "
           :value="form.field.recurrenceFrequency.value !== 'WEEKLY'"
-          offColor="#199e54"
-          onColor="#199e54"
+          offColor="#41b883"
+          onColor="#41b883"
         />
         <label class="alerts-page__settings__frequency-label">Monthly</label>
       </div>
-      <PulseLoadingSpinnerButton
-        text="save"
-        @click="onSave"
-        class="btn btn--primary"
-        :loading="isSaving"
-        :disabled="!form.isValid"
-      />
     </div>
     <div class="alerts-page__settings">
-      <div style="margin-right: 1rem" class="alerts-page__settings__day">
+      <div class="alerts-page__settings__day">
         <p>Select day:</p>
-        <div style="margin-top: -1rem" v-if="weeklyOrMonthly == 'WEEKLY'">
+        <div style="margin-top: -1.75rem" v-if="weeklyOrMonthly == 'WEEKLY'">
           <FormField>
             <template v-slot:input>
-              <DropDownSearch
-                :items.sync="weeklyOpts"
-                :itemsRef.sync="form.field._recurrenceDay.value"
-                v-model="form.field.recurrenceDay.value"
-                @input="form.field.recurrenceDay.validate()"
-                displayKey="key"
-                valueKey="value"
-                nullDisplay="Days"
-                searchable
-                local
-              />
+              <Multiselect
+                placeholder="Select Days"
+                @input="setDay($event)"
+                v-model="selectedDay"
+                :options="weeklyOpts"
+                openDirection="below"
+                style="width: 16vw; margin-top: 1rem"
+                selectLabel="Enter"
+                track-by="value"
+                label="key"
+                :multiple="true"
+                :closeOnSelect="false"
+              >
+                <template slot="noResult">
+                  <p>No results.</p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    Select Days
+                  </p>
+                </template>
+              </Multiselect>
             </template>
           </FormField>
         </div>
@@ -52,45 +60,51 @@
           />
         </div>
       </div>
-      <div style="margin-right: 1rem" class="alerts-page__settings__target-users">
+      <div class="alerts-page__settings__target-users">
         <p>Select Users:</p>
-        <FormField style="margin-top: -1rem" :errors="form.field.alertTargets.errors">
+        <FormField style="margin-top: -1.75rem" :errors="form.field.alertTargets.errors">
           <template v-slot:input>
-            <DropDownSearch
-              :items.sync="userTargetsOpts"
-              :itemsRef.sync="form.field._alertTargets.value"
-              v-model="form.field.alertTargets.value"
-              @input="form.field.alertTargets.validate()"
-              displayKey="fullName"
-              valueKey="id"
-              nullDisplay="Users"
-              searchable
-              multi
-              medium
-              :loading="users.loadingNextPage"
-              :hasNext="!!users.pagination.hasNextPage"
-              @load-more="onUsersNextPage"
-              @search-term="onSearchUsers"
-            />
+            <Multiselect
+              placeholder="Select Users"
+              @input="mapIds"
+              v-model="selectedUsers"
+              :options="userTargetsOpts"
+              openDirection="below"
+              style="width: 16vw; margin-top: 1rem"
+              selectLabel="Enter"
+              track-by="id"
+              label="fullName"
+              :multiple="true"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.png" alt="" />
+                  Select Users
+                </p>
+              </template>
+            </Multiselect>
           </template>
         </FormField>
       </div>
       <div style="margin-top: 1rem" class="alerts-page__settings__recipients">
         <div class="alerts-page__settings__recipient-type">
           <div v-if="!channelName" class="row__">
-            <label>Select #channel</label>
+            <label>Select channel</label>
             <ToggleCheckBox
               style="margin: 0.25rem"
               @input="changeCreate"
               :value="create"
-              offColor="#199e54"
-              onColor="#199e54"
+              offColor="#41b883"
+              onColor="#41b883"
             />
-            <label>Create #channel</label>
+            <label>Create channel</label>
           </div>
           <label v-else for="channel" style="font-weight: bold"
             >Alert will send to
-            <span style="color: #199e54; font-size: 1.2rem">{{ channelName }}</span>
+            <span style="color: #41b883; font-size: 14px">{{ channelName }}</span>
             channel</label
           >
         </div>
@@ -114,7 +128,7 @@
             @input="logNewName(channelName)"
           />
 
-          <div v-if="!channelCreated" v style="margin-top: 1.25rem">
+          <div v-if="!channelCreated">
             <button v-if="channelName" @click="createChannel(channelName)" class="purple__button">
               Create Channel
             </button>
@@ -125,45 +139,46 @@
         <div v-else>
           <FormField>
             <template v-slot:input>
-              <DropDownSearch
-                :items.sync="userChannelOpts.channels"
-                :itemsRef.sync="form.field._recipients.value"
-                v-model="form.field.recipients.value"
-                @input="form.field.recipients.validate()"
-                displayKey="name"
-                valueKey="id"
-                nullDisplay="Channels"
-                :hasNext="!!userChannelOpts.nextCursor"
-                @load-more="listChannels(userChannelOpts.nextCursor)"
-                searchable
-                local
+              <Multiselect
+                placeholder="Select Channel"
+                v-model="selectedChannel"
+                @input="setRecipient($event)"
+                :options="userChannelOpts.channels"
+                openDirection="below"
+                style="width: 16vw; margin-top: 0.5rem"
+                selectLabel="Enter"
+                track-by="id"
+                label="name"
+                :loading="dropdownLoading"
               >
-                <template v-slot:tn-dropdown-option="{ option }">
-                  <img
-                    v-if="option.isPrivate == true"
-                    class="card-img"
-                    style="width: 1rem; height: 1rem; margin-right: 0.2rem"
-                    src="@/assets/images/lockAsset.png"
-                  />
-                  {{ option['name'] }}
+                <template slot="noResult">
+                  <p class="multi-slot">No results. Try loading more</p>
                 </template>
-              </DropDownSearch>
-            </template>
-          </FormField>
-
-          <p
-            v-if="form.field.recipients.value.length > 0"
-            @click="removeTarget"
-            :class="form.field.recipients.value ? 'selected__item' : 'visible'"
+                <template slot="afterList">
+                  <p class="multi-slot__more" @click="listUserChannels(userChannelOpts.nextCursor)">
+                    Load More
+                    <img src="@/assets/images/plusOne.png" alt="" />
+                  </p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    Select Channel
+                  </p>
+                </template>
+              </Multiselect>
+            </template></FormField
           >
-            <img
-              src="@/assets/images/remove.png"
-              style="height: 1rem; margin-right: 0.25rem"
-              alt=""
-            />
-            {{ form.field._recipients.value.name }}
-          </p>
         </div>
+      </div>
+      <div class="save-button">
+        <PulseLoadingSpinnerButton
+          text="save"
+          @click="onSave"
+          class="primary-button"
+          :loading="isSaving"
+          :disabled="!form.isValid"
+        />
       </div>
     </div>
   </div>
@@ -178,9 +193,7 @@
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 
 //Internal
-import ListContainer from '@/components/ListContainer'
 import FormField from '@/components/forms/FormField'
-import DropDownSearch from '@/components/DropDownSearch'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 /**
  * Services
@@ -188,7 +201,7 @@ import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 import { AlertConfigForm, AlertConfig } from '@/services/alerts/'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 
 export default {
   /**
@@ -199,11 +212,10 @@ export default {
    */
   name: 'AlertSettingsModal',
   components: {
-    ListContainer,
     ToggleCheckBox,
-    DropDownSearch,
     FormField,
     PulseLoadingSpinnerButton,
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   props: {
     form: { type: AlertConfigForm },
@@ -211,6 +223,7 @@ export default {
   },
   data() {
     return {
+      dropdownLoading: false,
       userChannelOpts: new SlackListResponse(),
       create: true,
       channelName: '',
@@ -218,6 +231,9 @@ export default {
       searchQuery: '',
       searchText: '',
       searchChannels: '',
+      selectedDay: null,
+      selectedUsers: null,
+      selectedChannel: null,
       users: CollectionManager.create({ ModelClass: User }),
       alertRecipientOpts: [
         { key: 'Myself', value: 'SELF' },
@@ -254,6 +270,10 @@ export default {
       await this.users.refresh()
     }
   },
+  beforeMount() {
+    this.form.field.recurrenceDay.value = 0
+    this.form.field.recurrenceDays.value = [0]
+  },
   methods: {
     async onSave() {
       this.isSaving = true
@@ -275,21 +295,31 @@ export default {
       }
       this.isSaving = false
     },
-    async listChannels(cursor = null) {
-      const res = await SlackOAuth.api.listChannels(cursor)
-      const results = new SlackListResponse({
-        channels: [...this.channelOpts.channels, ...res.channels],
-        responseMetadata: { nextCursor: res.nextCursor },
-      })
-      this.channelOpts = results
+    setDay(n) {
+      this.form.field.recurrenceDay.value = 0
+      let days = []
+      n.forEach((day) => days.push(day.value))
+      let newDays = [...new Set(days)]
+      this.form.field.recurrenceDays.value = newDays
+    },
+    mapIds() {
+      let mappedIds = this.selectedUsers.map((user) => user.id)
+      this.form.field.alertTargets.value = mappedIds
+    },
+    setRecipient(n) {
+      this.form.field.recipients.value = n.id
     },
     async listUserChannels(cursor = null) {
+      this.dropdownLoading = true
       const res = await SlackOAuth.api.listUserChannels(cursor)
       const results = new SlackListResponse({
         channels: [...this.userChannelOpts.channels, ...res.channels],
         responseMetadata: { nextCursor: res.nextCursor },
       })
       this.userChannelOpts = results
+      setTimeout(() => {
+        this.dropdownLoading = false
+      }, 500)
     },
     logNewName(str) {
       let new_str = ''
@@ -386,42 +416,6 @@ export default {
         }
       }
     },
-    removeTarget() {
-      this.form.field.recipients.value = []
-      this.form.field._recipients.value = []
-    },
-    recipientTypeToggle(value) {
-      if (!this.user.slackRef) {
-        this.$Alert.alert({ type: 'error', message: 'Slack Not Integrated', timeout: 2000 })
-        return 'USER_LEVEL'
-      }
-      if (value == 'USER_LEVEL') {
-        return 'SLACK_CHANNEL'
-      } else if (value == 'SLACK_CHANNEL') {
-        this.form.field.recipients.value = []
-        this.form.field._recipients.value = []
-        return 'USER_LEVEL'
-      }
-      return value
-    },
-    setRecipient(obj) {
-      this.form.field._recipients.value = obj
-    },
-    setRecipients(obj) {
-      this.form.field._recipients.value.push(obj)
-    },
-    async onSearchUsers(v) {
-      this.users.pagination = new Pagination()
-      this.users.filters = {
-        ...this.users.filters,
-        search: v,
-      }
-      console.log(this.users.filters)
-      await this.users.refresh()
-    },
-    async onUsersNextPage() {
-      await this.users.addNextPage()
-    },
   },
   computed: {
     userTargetsOpts() {
@@ -438,51 +432,6 @@ export default {
       } else {
         return [{ fullName: 'Myself', id: 'SELF' }]
       }
-    },
-    recipientOpts() {
-      if (this.user.userLevel == 'MANAGER') {
-        return [
-          ...this.alertRecipientOpts.map((opt) => {
-            return {
-              id: opt.value,
-              fullName: opt.key,
-            }
-          }),
-          ...this.users.list,
-        ]
-      } else {
-        return [{ fullName: 'Myself', id: 'SELF' }]
-      }
-    },
-    filteredUserTargets() {
-      if (this.searchQuery) {
-        return this.userTargetsOpts.filter((key) => {
-          return key.fullName.toLowerCase().startsWith(this.searchQuery.toLowerCase())
-        })
-      } else {
-        return this.userTargetsOpts
-      }
-    },
-    filteredRecipients() {
-      if (this.searchText) {
-        return this.recipientOpts.filter((key) => {
-          return key.fullName.toLowerCase().startsWith(this.searchText.toLowerCase())
-        })
-      } else {
-        return this.recipientOpts
-      }
-    },
-    filteredChannels() {
-      if (this.searchChannels) {
-        return this.reversedChannels.filter((key) => {
-          return key.name.toLowerCase().startsWith(this.searchChannels.toLowerCase())
-        })
-      } else {
-        return this.reversedChannels
-      }
-    },
-    reversedChannels() {
-      return this.channelOpts.channels.reverse()
     },
     user() {
       return this.$store.state.user
@@ -508,15 +457,59 @@ export default {
 .row__save {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  align-items: center;
+  justify-content: center;
+  height: 4rem;
 }
-.channels_height {
-  height: 22vh;
-  overflow-y: scroll;
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 1rem;
+    margin-right: 0.25rem;
+    filter: invert(70%);
+  }
+}
+.multi-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $gray;
+  font-size: 12px;
+  width: 100%;
+  padding: 0.5rem 0rem;
+  margin: 0;
+  cursor: text;
+  &__more {
+    background-color: white;
+    color: $dark-green;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-top: 1px solid #e8e8e8;
+    width: 100%;
+    padding: 0.75rem 0rem;
+    margin: 0;
+    cursor: pointer;
+
+    img {
+      height: 0.8rem;
+      margin-left: 0.25rem;
+      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+        brightness(93%) contrast(89%);
+    }
+  }
 }
 ::placeholder {
-  color: $panther-silver;
+  color: $very-light-gray;
   font-size: 0.75rem;
+}
+h2 {
+  font-weight: 400;
 }
 .search__input {
   font-family: Lato-Regular, sans-serif;
@@ -524,76 +517,69 @@ export default {
   font-stretch: normal;
   font-style: normal;
   letter-spacing: normal;
-  font-size: 16px;
+  font-size: 14px;
   border-radius: 4px;
   line-height: 1.29;
   letter-spacing: 0.5px;
+  color: #4d4e4c;
   height: 2.5rem;
   background-color: white;
   border: none;
-  // padding: 0 0 0 1rem;
-  margin-top: 1rem;
-  box-shadow: 3px 4px 7px $very-light-gray;
+  width: 16vw;
+  margin: 0.5rem 0rem;
+  box-shadow: 1px 1px 3px 0px $very-light-gray;
 }
-.btn {
-  &--danger {
-    @include button-danger();
-  }
-  &--primary {
-    @include primary-button();
-  }
-  &--secondary {
-    @include secondary-button();
-  }
-
-  &--icon {
-    @include --icon();
-  }
+.primary-button {
+  padding: 0.4rem 1.5rem;
+  box-shadow: none;
+  font-weight: 400;
+}
+.primary-button:disabled {
+  background-color: $soft-gray;
+  color: $gray;
 }
 .alert-settings-modal {
-  padding: 1rem;
   overflow-y: scroll;
   height: 100%;
   max-height: 100%;
   background-color: $white;
   color: $base-gray;
-  font-family: $bold-font-family;
-}
-::v-deep .dropdown-search {
-  margin: 1rem 0rem;
+  font-size: 14px;
+  font-family: Lato-Regular, sans-serif;
+  &__header {
+    outline: 1px solid #e8e8e8;
+    font-weight: 400;
+    padding: 0.5rem 1rem;
+    margin-bottom: 0.5rem;
+  }
 }
 .alerts-page__settings {
   color: $base-gray;
-  margin: 2rem;
+  margin: 0.5rem 1rem;
   &__frequency {
     display: flex;
     align-items: center;
     &-label {
-      font-size: 0.75rem;
       margin: 0 0.5rem;
     }
   }
-  &-remove {
-    justify-self: end;
-  }
 }
-.invisible {
-  display: none;
-}
-.selected__item {
-  padding: 0.5rem 1.2rem;
-  background-color: transparent;
-  border: 3px solid white;
-  color: white;
-  border-radius: 0.3rem;
-  width: 50%;
-  text-align: center;
+.save-button {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  width: 100%;
+  padding: 0rem 1rem 0rem 0rem;
+  height: 170px;
 }
 .row__ {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
+  label {
+    font-weight: 400;
+  }
 }
 .purple__button {
   display: flex;
@@ -601,7 +587,6 @@ export default {
   justify-content: center;
   padding: 1.25rem 1rem;
   border-radius: 0.3rem;
-  font-weight: bold;
   line-height: 1.14;
   text-indent: none;
   border-style: none;
@@ -611,26 +596,21 @@ export default {
   cursor: pointer;
   height: 2rem;
   width: 10rem;
-  font-weight: bold;
   font-size: 1.02rem;
 }
 .disabled__button {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.25rem 1rem;
+  padding: 0.5rem 1.5rem;
   border-radius: 0.3rem;
-  font-weight: bold;
   line-height: 1.14;
   text-indent: none;
   border-style: none;
   letter-spacing: 0.03rem;
-  background-color: $very-light-gray;
-  color: $panther-gray;
+  background-color: $soft-gray;
+  color: $gray;
   cursor: not-allowed;
-  height: 2rem;
-  width: 10rem;
-  font-weight: bold;
-  font-size: 1.02rem;
+  font-size: 14px;
 }
 </style>
