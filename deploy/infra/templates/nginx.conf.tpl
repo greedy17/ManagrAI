@@ -53,10 +53,11 @@ http {
 
         # gzip settings
         gzip on;
+        gzip_static on;
         gzip_comp_level 6;
         gzip_disable "msie6";
         gzip_vary on;
-        gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml;
+        gzip_types text/plain text/css text/xml text/javascript application/javascript application/json application/x-javascript application/xml;
         gzip_min_length 1000;
         gzip_proxied no-cache no-store private expired auth;
         #
