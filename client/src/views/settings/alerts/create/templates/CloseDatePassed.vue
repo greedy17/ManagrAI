@@ -607,7 +607,7 @@ export default {
     this.alertTemplateForm.field.title.value = 'Close Date Passed'
     this.alertTemplateForm.field.isActive.value = true
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
-      'Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has a passed close date of <strong>{ Opportunity.CloseDate }</strong>. Please update it!'
+      '<strong>.{ Opportunity.Name }</strong> has a passed close date of <strong>.{ Opportunity.CloseDate }</strong>. Please update it!'
     this.repsPipeline()
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = [0]

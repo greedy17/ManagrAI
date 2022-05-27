@@ -530,7 +530,7 @@ export default {
     this.alertTemplateForm.field.title.value = 'Required Field Empty'
     this.alertTemplateForm.field.isActive.value = true
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
-      'Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has a required field that has not been filled out. Please update it.'
+      '<strong>{ Opportunity.Name }</strong> does not have a required field. Please update it!'
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceFrequency.value = 'WEEKLY'
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = [
