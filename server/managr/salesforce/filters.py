@@ -55,6 +55,7 @@ class SObjectFieldFilterSet(FilterSet):
 class SalesforceSObjectFilterSet(FilterSet):
 
     for_filter = django_filters.CharFilter(method="for_filter")
+    contains = django_filters.CharFilter(method="name_contains")
 
     def for_filter(qs, filters):
         for filter in filters:
@@ -65,4 +66,7 @@ class SalesforceSObjectFilterSet(FilterSet):
             else:
                 qs = qs.filter(**{new_query: filter[2]})
         return qs
+
+    def name_contains(qs, value):
+        return qs.filter(name__icontains=value)
 

@@ -1184,7 +1184,7 @@
         v-if="selectedWorkflow && currentWorkflow.length > 0 && !loadingWorkflows"
         class="table-section"
       >
-        <div class="table">
+        <div v-outside-click="emitCloseEdit" class="table">
           <WorkflowHeader
             :oppFields="oppFields"
             @check-all="onCheckAllWorkflows"
@@ -1199,6 +1199,12 @@
             @create-form="createFormInstance(workflow.id)"
             @get-notes="getNotes(workflow.id)"
             @checked-box="selectWorkflowCheckbox(workflow.id)"
+            @inline-edit="inlineUpdate"
+            @open-stage-form="openStageForm"
+            :closeEdit="closeInline"
+            :stages="stagesWithForms"
+            :inlineLoader="inlineLoader"
+            :picklistOpts="picklistQueryOpts"
             :workflow="workflow"
             :index="i + 1 * 1000"
             :oppFields="oppFields"
@@ -1471,7 +1477,7 @@ export default {
       this.setUpdateValues('StageName', field)
       this.stageGateField = field
       this.stageFormOpen = true
-      this.stageGateInstance()
+      this.stageGateInstance(field)
       this.oppInstance(id)
     },
     closeStageForm() {
@@ -1510,6 +1516,9 @@ export default {
                 let updatedRes = await SObjects.api.getObjects('Opportunity')
                 this.allOpps = updatedRes.results
                 this.originalList = updatedRes.results
+                if (this.selectedWorkflow) {
+                  this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+                }
               })
           })
       } catch (e) {
@@ -2031,12 +2040,13 @@ export default {
         console.log(e)
       }
     },
-    async stageGateInstance() {
+    async stageGateInstance(field) {
       this.stageGateId = null
       try {
         const res = await SObjects.api.createFormInstance({
           resourceType: 'Opportunity',
           formType: 'STAGE_GATING',
+          stageName: field ? field : this.stageGateField,
         })
         this.stageGateId = res.form_id
       } catch (e) {
@@ -2208,10 +2218,11 @@ export default {
             let updatedRes = await SObjects.api.getObjects('Opportunity')
             this.allOpps = updatedRes.results
             this.originalList = updatedRes.results
+            if (this.selectedWorkflow) {
+              this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+            }
           })
-        if (this.selectedWorkflow) {
-          this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
-        } else if (this.currentList === 'Closing this month') {
+        if (this.currentList === 'Closing this month') {
           this.stillThisMonth()
         } else if (this.currentList === 'Closing next month') {
           this.stillNextMonth()
