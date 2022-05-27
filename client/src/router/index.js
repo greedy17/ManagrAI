@@ -170,16 +170,28 @@ export default new Router({
       component: () => import('@/views/Meetings')
     },
     {
-      path: '/deal-movement',
-      name: 'DealMovement',
-      component: () =>
-        import('../views/settings/alerts/create/templates/DealMovement'),
-    },
-    {
       path: '/closed-won',
       name: 'ClosedWon',
       component: () =>
         import('../views/settings/alerts/create/templates/ClosedWon'),
+    },
+    {
+      path: '/stage-advanced',
+      name: 'StageAdvanced',
+      component: () =>
+        import('../views/settings/alerts/create/templates/StageAdvanced'),
+    },
+    {
+      path: '/moved-to-commit',
+      name: 'MovedToCommit',
+      component: () =>
+        import('../views/settings/alerts/create/templates/MovedToCommit'),
+    },
+    {
+      path: '/close-date-pushed',
+      name: 'CloseDatePushed',
+      component: () =>
+        import('../views/settings/alerts/create/templates/CloseDatePushed'),
     },
     {
       path: '/map',

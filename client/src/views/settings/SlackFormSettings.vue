@@ -382,7 +382,6 @@ export default {
   }
 
   &__title {
-    font-family: #{$bold-font-family};
     border-bottom: 2px solid #cc3873;
   }
   &__instructions {

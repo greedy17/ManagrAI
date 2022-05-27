@@ -71,10 +71,7 @@ class AlertTemplate(TimeStampModel):
             user_sf.salesforce_id,
             self.resource_type,
             ["Id"],
-            additional_filters=[
-                *self.adapter_class.additional_filters(),
-                operand_groups,
-            ],
+            additional_filters=[*self.adapter_class.additional_filters(), operand_groups,],
         )
         print(f"{user_sf.instance_url}{q}")
         return f"{user_sf.instance_url}{q}"
@@ -135,10 +132,7 @@ class AlertGroupQuerySet(models.QuerySet):
 
 class AlertGroup(TimeStampModel):
     group_condition = models.CharField(
-        choices=(
-            ("AND", "AND"),
-            ("OR", "OR"),
-        ),
+        choices=(("AND", "AND"), ("OR", "OR"),),
         max_length=255,
         help_text="Applied to itself for multiple groups AND/OR group1 AND/OR group 2",
     )
@@ -192,10 +186,7 @@ class AlertOperand(TimeStampModel):
         "alerts.AlertGroup", on_delete=models.CASCADE, related_name="operands"
     )
     operand_condition = models.CharField(
-        choices=(
-            ("AND", "AND"),
-            ("OR", "OR"),
-        ),
+        choices=(("AND", "AND"), ("OR", "OR"),),
         max_length=255,
         help_text="Applied to itself for multiple groups AND/OR group1 AND/OR group 2",
     )
@@ -365,6 +356,9 @@ class AlertConfig(TimeStampModel):
     class Meta:
         ordering = ["-datetime_created"]
 
+    def as_dict(self):
+        return vars(self)
+
     @property
     def run_against_date(self):
         """
@@ -440,9 +434,7 @@ class AlertInstanceQuerySet(models.QuerySet):
 
 class AlertInstance(TimeStampModel):
     template = models.ForeignKey(
-        "alerts.AlertTemplate",
-        on_delete=models.CASCADE,
-        related_name="instances",
+        "alerts.AlertTemplate", on_delete=models.CASCADE, related_name="instances",
     )
     user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="alerts")
     rendered_text = models.TextField(

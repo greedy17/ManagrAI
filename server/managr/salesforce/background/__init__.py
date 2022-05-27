@@ -28,7 +28,7 @@ from managr.organization.models import (
     PricebookEntry,
     OpportunityLineItem,
 )
-from managr.organization.serializers import AccountSerializer, StageSerializer
+from managr.organization.serializers import AccountSerializer, StageSerializer, ContactSerializer
 from managr.opportunity.models import Opportunity, Lead
 from managr.opportunity.serializers import OpportunitySerializer
 from managr.slack import constants as slack_consts
@@ -921,6 +921,13 @@ def _process_create_new_contacts(workflow_id, *args):
                         sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                         time.sleep(sleep)
                         attempts += 1
+        try:
+            serializer = ContactSerializer(data=res.as_dict)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+        except Exception as e:
+            logger.exception(f"Failed to create contact in DB because of {e}")
+            return
     return
 
 
