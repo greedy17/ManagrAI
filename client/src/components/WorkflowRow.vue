@@ -377,6 +377,7 @@ export default {
       this.editing = true
     },
     setUpdateValues(key, val, dataType) {
+      this.formData = {}
       if (val) {
         this.formData[key] = val
       }
