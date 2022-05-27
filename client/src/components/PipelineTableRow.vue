@@ -400,7 +400,6 @@ export default {
       let currentYear = currentDate.getFullYear()
       let dateString = currentYear + '-' + (currentMonth + 1) + '-' + currentDayOfMonth
       this.newCloseDate = dateString
-      console.log(this.newCloseDate)
     },
     async onAdvanceStage() {
       if (this.primaryCheckList.includes(this.opp.id)) {
