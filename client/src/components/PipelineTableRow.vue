@@ -366,6 +366,7 @@ export default {
       this.editing = true
     },
     setUpdateValues(key, val, dataType) {
+      this.formData = {}
       if (val) {
         this.formData[key] = val
       }
@@ -399,7 +400,6 @@ export default {
       let currentYear = currentDate.getFullYear()
       let dateString = currentYear + '-' + (currentMonth + 1) + '-' + currentDayOfMonth
       this.newCloseDate = dateString
-      console.log(this.newCloseDate)
     },
     async onAdvanceStage() {
       if (this.primaryCheckList.includes(this.opp.id)) {
