@@ -610,7 +610,7 @@ export default {
     this.alertTemplateForm.field.title.value = 'Deal Rotting'
     this.alertTemplateForm.field.isActive.value = true
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
-      'Hey  <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong>, hasnt been touched since <strong>{ Opportunity.LastActivityDate }</strong>'
+      '<strong>{ Opportunity.Name }</strong> hasnt been touched since <strong>{ Opportunity.LastActivityDate }</strong> <br><br> Please reach out, or drop into a Sequence'
     this.repsPipeline()
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = [0]

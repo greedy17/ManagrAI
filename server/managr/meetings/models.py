@@ -1,4 +1,6 @@
 import json
+import pytz
+from datetime import datetime
 from django.db import models
 from managr.core.models import TimeStampModel
 from django.contrib.postgres.fields import JSONField, ArrayField
@@ -68,3 +70,33 @@ class Meeting(TimeStampModel):
         meeting.save()
         return
 
+    @classmethod
+    def recreate_from_non_zoom(cls, meeting_id, workflow_id):
+        from managr.core.models import MeetingPrepInstance
+        from managr.meetings.serializers import MeetingSerializer
+
+        meeting = MeetingPrepInstance.objects.get(id=meeting_id)
+        event_data = meeting.event_data
+        event_data["workflow_ref"] = workflow_id
+        meeting_data = {}
+        start_time = datetime.utcfromtimestamp(int(event_data["times"]["start_time"]))
+        end_time = datetime.utcfromtimestamp(int(event_data["times"]["end_time"]))
+        formatted_start = start_time.astimezone(pytz.timezone(meeting.user.timezone))
+        formatted_end = end_time.astimezone(pytz.timezone(meeting.user.timezone))
+        meeting_data["start_time"] = formatted_start
+        meeting_data["end_time"] = formatted_end
+        meeting_data["title"] = event_data["title"]
+        meeting_data["provider"] = (
+            "Zoom" if event_data["provider"] == "Zoom Meeting" else "Google Meet"
+        )
+        meeting_data["user"] = meeting.user.id
+        meeting_data["meeting_uuid"] = "None"
+        meeting_data["meta_data"] = event_data
+        serializer = MeetingSerializer(data=meeting_data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        new_meeting = Meeting.objects.get(id=serializer.data.get("id"))
+        new_meeting.participants = meeting.participants
+        new_meeting.is_owner = True if meeting.user.email in event_data["owner"] else False
+        new_meeting.save()
+        return

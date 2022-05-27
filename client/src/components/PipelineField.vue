@@ -94,6 +94,7 @@ export default {
     },
     fieldData: {},
     lastStageUpdate: {},
+    index: {},
   },
 }
 </script>
