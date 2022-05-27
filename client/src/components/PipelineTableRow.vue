@@ -233,6 +233,7 @@
         </div>
         <PipelineField
           :index="i"
+          v-show="!editing || editIndex !== i"
           style="direction: ltr; border: "
           :apiName="field.apiName"
           :dataType="field.dataType"
@@ -322,8 +323,6 @@ export default {
     closeDateData: 'futureDate',
     closeEdit: 'closeInline',
     dropdownValue: {
-      // immediate: true,
-      // deep: true,
       handler(val) {
         if (this.stages.includes(val.value)) {
           this.$emit('open-stage-form', val.value, this.opp.id)
@@ -598,7 +597,7 @@ input {
   padding: 0;
   margin: 0;
   img {
-    height: 0.8rem;
+    height: 1rem !important;
     margin-right: 0.25rem;
     filter: invert(70%);
   }
