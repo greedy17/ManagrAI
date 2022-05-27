@@ -48,7 +48,6 @@ def create_configs_for_target(target, template_user, config):
             target = "REP"
         users = User.objects.filter(
             Q(organization=template_user.organization, user_level=target, is_active=True,)
-            | Q(id=template_user.id)
         )
     elif target == "SELF":
         config["recipient_type"] = "SLACK_CHANNEL"
@@ -73,8 +72,7 @@ def create_configs_for_target(target, template_user, config):
                 else user.slack_integration.channel
             ]
             config_copy["recipient_type"] = "SLACK_CHANNEL"
-            if user != template_user:
-                config_copy["alert_targets"] = [str(user.id)]
+            config_copy["alert_targets"] = [str(user.id)]
             new_configs.append(config_copy)
     return new_configs
 
@@ -141,12 +139,14 @@ class AlertTemplateViewSet(
 
     def create(self, request, *args, **kwargs):
         data = request.data
+        alert_target_ref = data["new_configs"][0]["alert_targets"]
         configs = alert_config_creator(data, request.user)
         if configs is None:
             serializer = alert_serializers.AlertTemplateWriteSerializer(data=None, context=request)
             serializer.is_valid(raise_exception=True)
         else:
             data["new_configs"] = configs
+            data["target_reference"] = alert_target_ref
             serializer = alert_serializers.AlertTemplateWriteSerializer(data=data, context=request)
             serializer.is_valid(raise_exception=True)
             serializer.save()

@@ -839,12 +839,11 @@ def _process_workflow_config_check(user_id):
         templates = AlertTemplate.objects.filter(user=user)
         for template in templates:
             configs = template.configs.all()
-            filtered_configs = configs.filter(alert_targets__contains=["REPS"])
-            if len(filtered_configs):
+            if "REPS" in template.target_reference:
                 config_targets = []
                 [config_targets.extend(config.alert_targets) for config in configs]
                 print(config_targets)
-                config_reference = filtered_configs[0]
+                config_reference = configs[0]
                 new_config_base = {
                     "recurrence_frequency": config_reference.recurrence_frequency,
                     "recurrence_day": config_reference.recurrence_day,
