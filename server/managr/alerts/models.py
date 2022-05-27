@@ -50,6 +50,7 @@ class AlertTemplate(TimeStampModel):
         help_text="Keeps track of the number of times this alert has been triggered, this is used to inform the workspace and paginate slack views",
     )
     last_invocation_datetime = models.DateTimeField(null=True)
+    target_reference = ArrayField(models.CharField(max_length=255), default=list)
 
     def __str__(self):
         return f"{self.title} created by {self.user.email}"
