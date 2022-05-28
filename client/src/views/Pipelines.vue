@@ -277,7 +277,7 @@
                 v-model="dropdownVal[field.apiName]"
                 :options="
                   field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
-                    ? createQueryOpts[field.apiName]
+                    ? picklistQueryOpts[field.apiName]
                     : referenceOpts[field.apiName]
                 "
                 @select="
@@ -1267,13 +1267,13 @@ export default {
     this.templates.refresh()
     this.getObjects()
     this.getAllForms()
-    this.resourceSync()
   },
   beforeMount() {
     this.getUsers()
   },
   mounted() {
     this.selectList()
+    this.resourceSync()
   },
   watch: {
     primaryCheckList: 'closeAll',
@@ -1948,9 +1948,6 @@ export default {
           console.log(e)
         } finally {
           this.$store.dispatch('refreshCurrentUser')
-          // User.api.getUser(this.user.id).then((response) => {
-          //   this.$store.commit('UPDATE_USER', response)
-          // })
           setTimeout(() => {
             this.loading = false
           }, 100)
