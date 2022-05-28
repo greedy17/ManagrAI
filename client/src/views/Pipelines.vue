@@ -64,7 +64,6 @@
             <img src="@/assets/images/logo.png" class="logo" alt="" />
             <h3>Create Opportunity</h3>
           </div>
-
           <img
             src="@/assets/images/clear.png"
             class="invert"
@@ -99,23 +98,42 @@
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
-
-            <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
+            <div
+              v-else-if="
+                field.dataType === 'Picklist' ||
+                field.dataType === 'MultiPicklist' ||
+                field.dataType === 'Reference'
+              "
+            >
               <p>{{ field.referenceDisplayLabel }}:</p>
               <Multiselect
                 v-model="currentVals[field.apiName]"
-                :options="createQueryOpts[field.apiName]"
+                :options="
+                  field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                    ? createQueryOpts[field.apiName]
+                    : referenceOpts[field.apiName]
+                "
                 @select="
                   setUpdateValues(
                     field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-                    $event.value,
+                    field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                      ? $event.value
+                      : $event.id,
                   )
                 "
                 openDirection="below"
                 style="width: 18vw"
                 selectLabel="Enter"
-                track-by="value"
-                label="label"
+                :track-by="
+                  field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                    ? 'value'
+                    : 'id'
+                "
+                :label="
+                  field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                    ? 'label'
+                    : 'name'
+                "
               >
                 <template slot="noResult">
                   <p class="multi-slot">No results.</p>
@@ -159,57 +177,6 @@
                 type="number"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
-            </div>
-            <div v-else-if="field.apiName === 'OwnerId'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
-              <Multiselect
-                v-model="selectedOwner"
-                :options="allUsers"
-                @select="
-                  setUpdateValues(field.apiName, $event.salesforce_account_ref.salesforce_id)
-                "
-                openDirection="below"
-                style="width: 18vw"
-                selectLabel="Enter"
-                track-by="salesforce_account_ref.salesforce_id"
-                label="full_name"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
-                </template>
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
-                    Select Owner
-                  </p>
-                </template>
-              </Multiselect>
-            </div>
-
-            <div v-else-if="field.apiName === 'AccountId'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
-
-              <Multiselect
-                v-model="selectedAccount"
-                :options="allAccounts"
-                @search-change="getAccounts($event)"
-                @select="setUpdateValues(field.apiName, $event.id)"
-                openDirection="below"
-                style="width: 18vw"
-                selectLabel="Enter"
-                track-by="id"
-                label="name"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
-                </template>
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
-                    Select Account
-                  </p>
-                </template>
-              </Multiselect>
             </div>
           </section>
         </div>
@@ -298,40 +265,61 @@
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
-            <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
+            <div
+              v-else-if="
+                field.dataType === 'Picklist' ||
+                field.dataType === 'MultiPicklist' ||
+                field.dataType === 'Reference'
+              "
+            >
               <p>{{ field.referenceDisplayLabel }}:</p>
               <Multiselect
-                :options="picklistQueryOpts[field.apiName]"
+                v-model="dropdownVal[field.apiName]"
+                :options="
+                  field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                    ? picklistQueryOpts[field.apiName]
+                    : referenceOpts[field.apiName]
+                "
                 @select="
                   setUpdateValues(
                     field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-                    $event.value,
+                    field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                      ? $event.value
+                      : $event.id,
                   )
                 "
-                v-model="dropdownVal[field.apiName]"
                 openDirection="below"
-                :loading="dropdownLoading"
                 style="width: 18vw"
                 selectLabel="Enter"
-                track-by="value"
-                label="label"
+                :track-by="
+                  field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                    ? 'value'
+                    : 'id'
+                "
+                :label="
+                  field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                    ? 'label'
+                    : 'name'
+                "
               >
                 <template slot="noResult">
                   <p class="multi-slot">No results.</p>
                 </template>
-
                 <template slot="placeholder">
                   <p class="slot-icon">
                     <img src="@/assets/images/search.png" alt="" />
                     {{
-                      `${currentVals[field.apiName]}` !== 'null'
+                      field.apiName === 'AccountId'
+                        ? currentAccount
+                        : field.apiName === 'OwnerId'
+                        ? currentOwner
+                        : `${currentVals[field.apiName]}` !== 'null'
                         ? `${currentVals[field.apiName]}`
                         : `${field.referenceDisplayLabel}`
                     }}
                   </p>
                 </template>
               </Multiselect>
-
               <div
                 :class="stageGateField ? 'adding-stage-gate' : 'hide'"
                 v-if="field.apiName === 'StageName'"
@@ -340,33 +328,50 @@
                   <img src="@/assets/images/warning.svg" alt="" />
                   <p>This Stage has validation rules</p>
                 </div>
-
                 <div class="adding-stage-gate__body">
                   <div v-for="(field, i) in stageValidationFields[stageGateField]" :key="i">
-                    <div v-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
-                      <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                    <div
+                      v-if="
+                        field.dataType === 'Picklist' ||
+                        field.dataType === 'MultiPicklist' ||
+                        field.dataType === 'Reference'
+                      "
+                    >
+                      <p>{{ field.referenceDisplayLabel }}:</p>
                       <Multiselect
-                        :options="stagePicklistQueryOpts[field.apiName]"
+                        :options="
+                          field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                            ? stagePicklistQueryOpts[field.apiName]
+                            : referenceOpts[field.apiName]
+                        "
                         @select="
                           setUpdateValidationValues(
                             field.apiName === 'ForecastCategory'
                               ? 'ForecastCategoryName'
                               : field.apiName,
-                            $event.value,
+                            field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                              ? $event.value
+                              : $event.id,
                           )
                         "
-                        v-model="dropdownVal[field.apiName]"
                         openDirection="below"
-                        :loading="dropdownLoading"
+                        v-model="dropdownVal[field.apiName]"
                         style="width: 18vw"
                         selectLabel="Enter"
-                        track-by="value"
-                        label="label"
+                        :track-by="
+                          field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                            ? 'value'
+                            : 'id'
+                        "
+                        :label="
+                          field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                            ? 'label'
+                            : 'name'
+                        "
                       >
                         <template slot="noResult">
                           <p class="multi-slot">No results.</p>
                         </template>
-
                         <template slot="placeholder">
                           <p class="slot-icon">
                             <img src="@/assets/images/search.png" alt="" />
@@ -460,69 +465,10 @@
                         "
                       />
                     </div>
-
-                    <div v-else-if="field.apiName === 'OwnerId'">
-                      <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
-
-                      <Multiselect
-                        v-model="selectedOwner"
-                        :options="allUsers"
-                        @select="
-                          setUpdateValidationValues(
-                            field.apiName,
-                            $event.salesforce_account_ref.salesforce_id,
-                          )
-                        "
-                        openDirection="below"
-                        style="width: 18vw"
-                        selectLabel="Enter"
-                        track-by="salesforce_account_ref.salesforce_id"
-                        label="full_name"
-                        :loading="dropdownLoading"
-                      >
-                        <template slot="noResult">
-                          <p class="multi-slot">No results.</p>
-                        </template>
-                        <template slot="placeholder">
-                          <p class="slot-icon">
-                            <img src="@/assets/images/search.png" alt="" />
-                            {{ currentOwner }}
-                          </p>
-                        </template>
-                      </Multiselect>
-                    </div>
-
-                    <div v-else-if="field.apiName === 'AccountId'">
-                      <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
-                      <Multiselect
-                        v-model="selectedAccount"
-                        :options="allAccounts"
-                        @search-change="getAccounts($event)"
-                        @select="setUpdateValidationValues(field.apiName, $event.id)"
-                        openDirection="below"
-                        style="width: 18vw"
-                        selectLabel="Enter"
-                        track-by="integration_id"
-                        label="name"
-                        :loading="dropdownLoading || loadingAccounts"
-                      >
-                        <template slot="noResult">
-                          <p class="multi-slot">No results.</p>
-                        </template>
-
-                        <template slot="placeholder">
-                          <p class="slot-icon">
-                            <img src="@/assets/images/search.png" alt="" />
-                            {{ currentAccount }}
-                          </p>
-                        </template>
-                      </Multiselect>
-                    </div>
                   </div>
                 </div>
               </div>
             </div>
-
             <div v-else-if="field.dataType === 'Date'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <input
@@ -560,98 +506,7 @@
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
-
-            <div
-              v-else-if="
-                field.dataType === 'Reference' &&
-                field.apiName !== 'OwnerId' &&
-                field.apiName !== 'AccountId'
-              "
-            >
-              <p>{{ field.referenceDisplayLabel }}:</p>
-              <Multiselect
-                :options="referenceOpts[field.apiName]"
-                @select="setUpdateValues(field.apiName, $event.id)"
-                v-model="dropdownVal[field.apiName]"
-                openDirection="below"
-                :loading="dropdownLoading"
-                style="width: 18vw"
-                selectLabel="Enter"
-                track-by="id"
-                label="name"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
-                </template>
-
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
-                    {{
-                      `${currentVals[field.apiName]}` !== 'null'
-                        ? `${currentVals[field.apiName]}`
-                        : `${field.referenceDisplayLabel}`
-                    }}
-                  </p>
-                </template>
-              </Multiselect>
-            </div>
-            <div v-else-if="field.apiName === 'OwnerId'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
-
-              <Multiselect
-                v-model="selectedOwner"
-                :options="allUsers"
-                @select="
-                  setUpdateValues(field.apiName, $event.salesforce_account_ref.salesforce_id)
-                "
-                openDirection="below"
-                style="width: 18vw"
-                selectLabel="Enter"
-                track-by="salesforce_account_ref.salesforce_id"
-                label="full_name"
-                :loading="dropdownLoading"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
-                </template>
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
-                    {{ currentOwner }}
-                  </p>
-                </template>
-              </Multiselect>
-            </div>
-
-            <div v-else-if="field.apiName === 'AccountId'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
-              <Multiselect
-                v-model="selectedAccount"
-                :options="allAccounts"
-                @search-change="getAccounts($event)"
-                @select="setUpdateValues(field.apiName, $event.id)"
-                openDirection="below"
-                style="width: 18vw"
-                selectLabel="Enter"
-                track-by="integration_id"
-                label="name"
-                :loading="dropdownLoading || loadingAccounts"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
-                </template>
-
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
-                    {{ currentAccount }}
-                  </p>
-                </template>
-              </Multiselect>
-            </div>
           </section>
-
           <!-- <div class="adding-product">
             <button>Add product <img src="@/assets/images/plusOne.png" alt="" /></button>
           </div> -->
@@ -734,7 +589,7 @@
           </div>
 
           <button @click.stop="workList = !workList" class="select-btn">
-            {{ currentWorkflowName }}
+            {{ currentWorkflowName ? currentWorkflowName : 'Active Workflows' }}
             <img
               v-if="!workList"
               style="height: 1rem; margin-left: 0.5rem"
@@ -750,7 +605,7 @@
           </button>
           <div v-outside-click="closeWorkSelect" v-show="workList" class="work-section">
             <div class="work-section__title flex-row-spread">
-              <p>{{ currentWorkflowName }}</p>
+              <p>{{ currentWorkflowName ? currentWorkflowName : 'Active Workflows' }}</p>
             </div>
             <p @click="showWorkflowList = !showWorkflowList" class="work-section__sub-title">
               Workflows
@@ -762,18 +617,22 @@
             </p>
             <div style="width: 100%" v-if="showWorkflowList">
               <div :key="i" v-for="(template, i) in templates.list">
-                <router-link v-bind:to="'/pipelines/' + `${template.id}`">
-                  <button class="list-button">
-                    {{ template.title }}
-                    <span class="filter" v-if="currentWorkflowName === template.title">
-                      active</span
-                    >
-                  </button>
-                </router-link>
+                <button
+                  class="list-button"
+                  @click="
+                    $router.replace({
+                      name: 'Pipelines',
+                      params: { id: template.id, title: template.title },
+                    }),
+                      selectList(template.id)
+                  "
+                >
+                  {{ template.title }}
+                  <span class="filter" v-if="currentWorkflowName === template.title"> active</span>
+                </button>
               </div>
             </div>
           </div>
-
           <div
             v-for="(filter, i) in activeFilters"
             :key="i"
@@ -948,7 +807,7 @@
       </section>
       <div class="results">
         <h6 style="color: #9b9b9b">
-          {{ currentWorkflowName === 'Active Workflows' ? currentList : currentWorkflowName }}:
+          {{ !currentWorkflowName ? currentList : currentWorkflowName }}:
           <span>{{ selectedWorkflow ? currentWorkflow.length : allOpps.length }}</span>
         </h6>
       </div>
@@ -970,32 +829,54 @@
 
         <div class="adding-stage-gate2__body">
           <div v-for="(field, i) in stageValidationFields[stageGateField]" :key="i">
-            <div v-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
+            <div
+              v-if="
+                field.dataType === 'Picklist' ||
+                field.dataType === 'MultiPicklist' ||
+                field.dataType === 'Reference'
+              "
+            >
               <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
               <Multiselect
-                :options="stagePicklistQueryOpts[field.apiName]"
+                :options="
+                  field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                    ? stagePicklistQueryOpts[field.apiName]
+                    : referenceOpts[field.apiName]
+                "
                 @select="
                   setUpdateValidationValues(
                     field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-                    $event.value,
+                    field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                      ? $event.value
+                      : $event.id,
                   )
                 "
-                v-model="dropdownVal[field.apiName]"
                 openDirection="below"
-                :loading="dropdownLoading"
+                v-model="dropdownVal[field.apiName]"
                 style="width: 18vw"
                 selectLabel="Enter"
-                track-by="value"
-                label="label"
+                :track-by="
+                  field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                    ? 'value'
+                    : 'id'
+                "
+                :label="
+                  field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                    ? 'label'
+                    : 'name'
+                "
               >
                 <template slot="noResult">
                   <p class="multi-slot">No results.</p>
                 </template>
-
                 <template slot="placeholder">
                   <p class="slot-icon">
                     <img src="@/assets/images/search.png" alt="" />
-                    select
+                    {{
+                      `${currentVals[field.apiName]}` !== 'null'
+                        ? `${currentVals[field.apiName]}`
+                        : `${field.referenceDisplayLabel}`
+                    }}
                   </p>
                 </template>
               </Multiselect>
@@ -1074,64 +955,6 @@
                   ;(value = $event.target.value), setUpdateValidationValues(field.apiName, value)
                 "
               />
-            </div>
-
-            <div v-else-if="field.apiName === 'OwnerId'">
-              <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
-
-              <Multiselect
-                v-model="selectedOwner"
-                :options="allUsers"
-                @select="
-                  setUpdateValidationValues(
-                    field.apiName,
-                    $event.salesforce_account_ref.salesforce_id,
-                  )
-                "
-                openDirection="below"
-                style="width: 18vw"
-                selectLabel="Enter"
-                track-by="salesforce_account_ref.salesforce_id"
-                label="full_name"
-                :loading="dropdownLoading"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
-                </template>
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
-                    {{ currentOwner }}
-                  </p>
-                </template>
-              </Multiselect>
-            </div>
-
-            <div v-else-if="field.apiName === 'AccountId'">
-              <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
-              <Multiselect
-                v-model="selectedAccount"
-                :options="allAccounts"
-                @search-change="getAccounts($event)"
-                @select="setUpdateValidationValues(field.apiName, $event.id)"
-                openDirection="below"
-                style="width: 18vw"
-                selectLabel="Enter"
-                track-by="integration_id"
-                label="name"
-                :loading="dropdownLoading || loadingAccounts"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
-                </template>
-
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
-                    {{ currentAccount }}
-                  </p>
-                </template>
-              </Multiselect>
             </div>
           </div>
         </div>
@@ -1275,14 +1098,13 @@ export default {
       stageFormOpen: false,
       closeInline: 0,
       inlineLoader: false,
-      currentWorkflowName: 'Active Workflows',
+      currentWorkflowName: this.$route.params.title,
       id: this.$route.params.id,
       tableKey: 1200,
       stageGateField: null,
       stageValidationFields: {},
       stagesWithForms: [],
       dropdownVal: {},
-      updateCounter: 0,
       selectedAccount: null,
       selectedOwner: null,
       currentOwner: null,
@@ -1395,10 +1217,15 @@ export default {
         opp.name.toLowerCase().includes(this.filterText.toLowerCase()),
       )
     },
-    filteredWorkflows() {
-      return this.currentWorkflow.filter((opp) =>
-        opp.name.toLowerCase().includes(this.workflowFilterText.toLowerCase()),
-      )
+    filteredWorkflows: {
+      get: function () {
+        return this.currentWorkflow.filter((opp) =>
+          opp.name.toLowerCase().includes(this.workflowFilterText.toLowerCase()),
+        )
+      },
+      set: function (newvalue) {
+        this.currentWorkflow = newvalue
+      },
     },
     currentMonth() {
       let date = new Date()
@@ -1440,37 +1267,19 @@ export default {
     this.templates.refresh()
     this.getObjects()
     this.getAllForms()
-    this.resourceSync()
   },
   beforeMount() {
     this.getUsers()
   },
   mounted() {
     this.selectList()
-    setTimeout(() => {
-      this.getInitialAccounts()
-    }, 1000)
+    this.resourceSync()
   },
   watch: {
-    accountSobjectId: 'getAccounts',
     primaryCheckList: 'closeAll',
     workflowCheckList: 'closeAll',
     stageGateField: 'stageGateInstance',
     updateOppForm: 'setForms',
-    // updateList: {
-    //   async handler(currList) {
-    //     if (currList.length === 0 && this.recapList.length) {
-    //       let bulk = true ? this.recapList.length > 1 : false
-    //       try {
-    //         const res = await SObjects.api.sendRecap(bulk, this.recapList)
-    //       } catch (e) {
-    //         console.log(e)
-    //       } finally {
-    //         this.recapList = []
-    //       }
-    //     }
-    //   },
-    // },
   },
   methods: {
     openStageForm(field, id) {
@@ -2058,7 +1867,6 @@ export default {
         for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
           this.$refs.workflowTableChild[i].onPushCloseDate()
           this.updateOpps()
-          this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
         }
         this.workflowCheckList = []
       } else {
@@ -2074,7 +1882,6 @@ export default {
         for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
           this.$refs.workflowTableChild[i].onAdvanceStage()
           this.updateOpps()
-          this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
         }
         this.workflowCheckList = []
       } else {
@@ -2090,7 +1897,7 @@ export default {
         for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
           this.$refs.workflowTableChild[i].onChangeForecast()
           this.updateOpps()
-          this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+          // this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
         }
         this.workflowCheckList = []
       } else {
@@ -2141,9 +1948,6 @@ export default {
           console.log(e)
         } finally {
           this.$store.dispatch('refreshCurrentUser')
-          // User.api.getUser(this.user.id).then((response) => {
-          //   this.$store.commit('UPDATE_USER', response)
-          // })
           setTimeout(() => {
             this.loading = false
           }, 100)
@@ -2263,30 +2067,25 @@ export default {
         })
       }
     },
-    async selectList() {
-      if (this.id && this.id !== 'Closing-this-month' && this.id !== 'Closing-next-month') {
+    async selectList(id) {
+      if (this.id) {
         this.loadingWorkflows = true
-        this.refreshId = this.id
+        this.refreshId = id ? id : this.id
         try {
-          let res = await AlertTemplate.api.runAlertTemplateNow(this.id, {
+          let res = await AlertTemplate.api.runAlertTemplateNow(id ? id : this.id, {
             fromWorkflow: true,
           })
           this.currentWorkflow = this.allOpps.filter((opp) =>
             res.data.ids.includes(opp.integration_id),
           )
           if (this.currentWorkflow.length < 1) {
-            this.updateWorkflow(this.id)
+            this.updateWorkflow(id ? id : this.id)
           }
         } catch (error) {
           console.log(error)
         } finally {
           this.selectedWorkflow = true
           this.loadingWorkflows = false
-          this.templates.list.length
-            ? (this.currentWorkflowName = this.templates.list.filter(
-                (temp) => temp.id === this.id,
-              )[0].title)
-            : (this.currentWorkflowName = 'Worklow...')
         }
       }
     },
@@ -2300,6 +2099,7 @@ export default {
         this.currentWorkflow = this.allOpps.filter((opp) =>
           res.data.ids.includes(opp.integration_id),
         )
+        this.filteredWorkflows = this.currentWorkflow
       } catch (error) {
         console.log(error)
       } finally {
@@ -2442,21 +2242,21 @@ export default {
         console.log(e)
       }
     },
-    async getInitialAccounts() {
-      this.loadingAccounts = true
-      if (this.accountSobjectId) {
-        try {
-          const res = await SObjects.api.getSobjectPicklistValues({
-            sobject_id: this.accountSobjectId,
-          })
-          this.allAccounts = res
-        } catch (e) {
-          console.log(e)
-        } finally {
-          this.loadingAccounts = false
-        }
-      }
-    },
+    // async getInitialAccounts() {
+    //   this.loadingAccounts = true
+    //   if (this.accountSobjectId) {
+    //     try {
+    //       const res = await SObjects.api.getSobjectPicklistValues({
+    //         sobject_id: this.accountSobjectId,
+    //       })
+    //       this.allAccounts = res
+    //     } catch (e) {
+    //       console.log(e)
+    //     } finally {
+    //       this.loadingAccounts = false
+    //     }
+    //   }
+    // },
     async getAccounts(val) {
       this.loadingAccounts = true
       try {
@@ -2553,24 +2353,12 @@ export default {
     },
   },
   beforeUpdate() {
-    if (this.id === 'Closing-this-month' && this.updateCounter < 2) {
-      this.closeDatesThisMonth()
-      this.updateCounter += 1
-    } else if (this.id === 'Closing-next-month' && this.updateCounter < 2) {
-      this.closeDatesNextMonth()
-      this.updateCounter += 1
-    } else if (
-      this.id &&
-      this.id !== 'Closing-next-month' &&
-      this.id !== 'Closing-next-month' &&
-      this.updateCounter < 10
-    ) {
+    if (this.id) {
       this.templates.list.length
         ? (this.currentWorkflowName = this.templates.list.filter(
             (temp) => temp.id === this.id,
           )[0].title)
         : (this.currentWorkflowName = 'Workflow...')
-      this.updateCounter += 1
     }
   },
 }

@@ -88,7 +88,7 @@
       />
 
       <div class="limit-cell-height" v-else>
-        <div class="inline-edit" v-show="editing && editIndex === i && currentRow === index">
+        <div class="inline-edit" v-if="editing && editIndex === i && currentRow === index">
           <div
             v-if="
               field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
@@ -146,7 +146,7 @@
               style="width: 14vw; padding-bottom: 8rem"
               track-by="value"
               label="label"
-              v-model="dropdownValue"
+              v-model="dropdownVal[field.apiName]"
               @select="
                 setUpdateValues(
                   field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
@@ -162,7 +162,11 @@
               <template slot="placeholder">
                 <p class="slot-icon">
                   <img src="@/assets/images/search.png" alt="" />
-                  {{ `${field.referenceDisplayLabel}` }}
+                  {{
+                    field.apiName.includes('__c')
+                      ? workflow['secondary_data'][field.apiName]
+                      : workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+                  }}
                 </p>
               </template>
             </Multiselect>
@@ -174,7 +178,7 @@
               style="width: 14vw; padding-bottom: 8rem"
               track-by="value"
               label="label"
-              v-model="dropdownValue"
+              @select="setDropdownValue($event)"
             >
               <template slot="noResult">
                 <p class="multi-slot">No results.</p>
@@ -183,7 +187,7 @@
               <template slot="placeholder">
                 <p class="slot-icon">
                   <img src="@/assets/images/search.png" alt="" />
-                  {{ `${field.referenceDisplayLabel}` }}
+                  {{ workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))] }}
                 </p>
               </template>
             </Multiselect>
@@ -311,6 +315,7 @@ export default {
       currentRow: null,
       formData: {},
       dropdownValue: null,
+      dropdownVal: {},
       executeUpdateValues: debounce(this.setUpdateValues, 800),
       editing: false,
       editIndex: null,
@@ -335,7 +340,6 @@ export default {
     stageData: {},
     closeDateData: {},
     ForecastCategoryNameData: {},
-
     picklistOpts: {},
     inlineLoader: {},
     closeEdit: {},
@@ -346,10 +350,10 @@ export default {
     closeEdit: 'closeInline',
     dropdownValue: {
       handler(val) {
-        if (this.stages.includes(val.value)) {
-          this.$emit('open-stage-form', val.value, this.workflow.id)
+        if (this.stages.includes(val)) {
+          this.$emit('open-stage-form', val, this.opp.id)
         } else {
-          this.setUpdateValues('StageName', val.value)
+          this.setUpdateValues('StageName', val)
         }
       },
     },
@@ -368,6 +372,9 @@ export default {
     },
   },
   methods: {
+    setDropdownValue(val) {
+      this.dropdownValue = val.value
+    },
     closeInline() {
       this.editing = false
     },
@@ -377,6 +384,7 @@ export default {
       this.editing = true
     },
     setUpdateValues(key, val, dataType) {
+      this.formData = {}
       if (val) {
         this.formData[key] = val
       }
@@ -410,7 +418,6 @@ export default {
       let currentYear = currentDate.getFullYear()
       let dateString = currentYear + '-' + (currentMonth + 1) + '-' + currentDayOfMonth
       this.newCloseDate = dateString
-      console.log(this.newCloseDate)
     },
     async onAdvanceStage() {
       if (this.workflowCheckList.includes(this.workflow.id)) {
