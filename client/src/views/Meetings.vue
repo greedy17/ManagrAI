@@ -538,6 +538,7 @@ export default {
       showMeetingList: true,
       selectedMeeting: false,
       meetings: null,
+      referenceOpts: {},
     }
   },
   computed: {
@@ -550,26 +551,39 @@ export default {
     this.getObjects()
     this.templates.refresh()
     this.getAllForms()
+  },
+  beforeMount() {
     this.getUsers()
   },
   watch: {
     accountSobjectId: 'getInitialAccounts',
-    updateList: {
-      async handler(currList) {
-        if (currList.length === 0 && this.recapList.length) {
-          let bulk = true ? this.recapList.length > 1 : false
-          try {
-            const res = await SObjects.api.sendRecap(bulk, this.recapList)
-          } catch (e) {
-            console.log(e)
-          } finally {
-            this.recapList = []
-          }
-        }
-      },
-    },
+    updateOppForm: 'setForms',
+    // updateList: {
+    //   async handler(currList) {
+    //     if (currList.length === 0 && this.recapList.length) {
+    //       let bulk = true ? this.recapList.length > 1 : false
+    //       try {
+    //         const res = await SObjects.api.sendRecap(bulk, this.recapList)
+    //       } catch (e) {
+    //         console.log(e)
+    //       } finally {
+    //         this.recapList = []
+    //       }
+    //     }
+    //   },
+    // },
   },
   methods: {
+    async getReferenceFieldList(key, val) {
+      try {
+        const res = await SObjects.api.getSobjectPicklistValues({
+          sobject_id: val,
+        })
+        this.referenceOpts[key] = res
+      } catch (e) {
+        console.log(e)
+      }
+    },
     async getMeetingList() {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
@@ -816,23 +830,7 @@ export default {
         this.formData[key] = val
       }
     },
-    async manualSync() {
-      this.loading = true
-      try {
-        const res = await SObjects.api.resourceSync()
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.getObjects()
-        this.loading = false
-        this.$Alert.alert({
-          type: 'success',
-          timeout: 3000,
-          message: 'Sync complete',
-          sub: 'All fields reflect your current SFDC data',
-        })
-      }
-    },
+
     async updateResource() {
       this.updateList.push(this.oppId)
       this.editOpModalOpen = false
@@ -881,7 +879,101 @@ export default {
         })
       }
     },
+    setForms() {
+      for (let i = 0; i < this.createContactForm.length; i++) {
+        if (
+          this.createContactForm[i].dataType === 'Picklist' ||
+          this.createContactForm[i].dataType === 'MultiPicklist'
+        ) {
+          this.picklistQueryOptsContacts[this.createContactForm[i].apiName] =
+            this.createContactForm[i].apiName
+        } else if (this.createContactForm[i].dataType === 'Reference') {
+          this.picklistQueryOptsContacts[this.createContactForm[i].referenceDisplayLabel] =
+            this.createContactForm[i].referenceDisplayLabel
+        }
+      }
+      for (let i in this.picklistQueryOptsContacts) {
+        this.picklistQueryOptsContacts[i] = this.listPicklists(i, {
+          picklistFor: i,
+          salesforceObject: 'Opportunity',
+        })
+      }
 
+      for (let i = 0; i < this.oppFormCopy.length; i++) {
+        if (
+          this.oppFormCopy[i].dataType === 'Picklist' ||
+          this.oppFormCopy[i].dataType === 'MultiPicklist'
+        ) {
+          this.picklistQueryOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].apiName
+        } else if (this.oppFormCopy[i].dataType === 'Reference') {
+          this.referenceOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].id
+        }
+      }
+
+      for (let i in this.picklistQueryOpts) {
+        this.picklistQueryOpts[i] = this.listPicklists(i, {
+          picklistFor: i,
+          salesforceObject: 'Opportunity',
+        })
+      }
+
+      for (let i in this.referenceOpts) {
+        this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i])
+      }
+
+      for (let i = 0; i < this.createOppForm.length; i++) {
+        if (
+          this.createOppForm[i].dataType === 'Picklist' ||
+          this.createOppForm[i].dataType === 'MultiPicklist'
+        ) {
+          this.createQueryOpts[this.createOppForm[i].apiName] = this.createOppForm[i].apiName
+        } else if (this.createOppForm[i].dataType === 'Reference') {
+          this.createQueryOpts[this.createOppForm[i].referenceDisplayLabel] =
+            this.createOppForm[i].referenceDisplayLabel
+        }
+      }
+
+      for (let i in this.createQueryOpts) {
+        this.createQueryOpts[i] = this.listCreatePicklists(i, {
+          picklistFor: i,
+          salesforceObject: 'Opportunity',
+        })
+      }
+
+      this.filterFields = this.updateOppForm[0].fieldsRef.filter(
+        (field) =>
+          field.apiName !== 'meeting_type' &&
+          field.apiName !== 'meeting_comments' &&
+          !field.apiName.includes('__c'),
+      )
+      this.filterFields = [...this.filterFields, this.ladFilter, this.lmdFilter]
+
+      this.updateOppForm[0].fieldsRef.filter((field) => field.apiName === 'AccountId').length
+        ? (this.accountSobjectId = this.updateOppForm[0].fieldsRef.filter(
+            (field) => field.apiName === 'AccountId',
+          )[0].id)
+        : this.createOppForm.filter((field) => field.apiName === 'AccountId').length
+        ? (this.accountSobjectId = this.createOppForm.filter(
+            (field) => field.apiName === 'AccountId',
+          )[0].id)
+        : (this.accountSobjectId = null)
+
+      this.oppFields = this.updateOppForm[0].fieldsRef.filter(
+        (field) =>
+          field.apiName !== 'meeting_type' &&
+          field.apiName !== 'meeting_comments' &&
+          field.apiName !== 'Name' &&
+          field.apiName !== 'AccountId' &&
+          field.apiName !== 'OwnerId',
+      )
+
+      for (let i in this.stagePicklistQueryOpts) {
+        this.stagePicklistQueryOpts[i] = this.listStagePicklists(i, {
+          picklistFor: i,
+          salesforceObject: 'Opportunity',
+        })
+      }
+    },
     async getAllForms() {
       try {
         let res = await SlackOAuth.api.getOrgCustomForm()
@@ -892,11 +984,11 @@ export default {
         this.createOppForm = res.filter(
           (obj) => obj.formType === 'CREATE' && obj.resource === 'Opportunity',
         )
-        this.createContactForm = res.filter(
-          (obj) => obj.formType === 'CREATE' && obj.resource === 'Contact',
-        )
         let stageGateForms = res.filter(
           (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Opportunity',
+        )
+        this.createContactForm = res.filter(
+          (obj) => obj.formType === 'CREATE' && obj.resource === 'Contact',
         )
 
         let stages = stageGateForms.map((field) => field.stage)
@@ -904,64 +996,6 @@ export default {
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
         this.createOppForm = this.createOppForm[0].fieldsRef
         this.createContactForm = this.createContactForm[0].fieldsRef
-
-        for (let i = 0; i < this.createContactForm.length; i++) {
-          if (
-            this.createContactForm[i].dataType === 'Picklist' ||
-            this.createContactForm[i].dataType === 'MultiPicklist'
-          ) {
-            this.picklistQueryOptsContacts[this.createContactForm[i].apiName] =
-              this.createContactForm[i].apiName
-          } else if (this.createContactForm[i].dataType === 'Reference') {
-            this.picklistQueryOptsContacts[this.createContactForm[i].referenceDisplayLabel] =
-              this.createContactForm[i].referenceDisplayLabel
-          }
-        }
-        for (let i in this.picklistQueryOptsContacts) {
-          this.picklistQueryOptsContacts[i] = this.listPicklists(i, { picklistFor: i })
-        }
-
-        for (let i = 0; i < this.oppFormCopy.length; i++) {
-          if (
-            this.oppFormCopy[i].dataType === 'Picklist' ||
-            this.oppFormCopy[i].dataType === 'MultiPicklist'
-          ) {
-            this.picklistQueryOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].apiName
-          } else if (this.oppFormCopy[i].dataType === 'Reference') {
-            this.picklistQueryOpts[this.oppFormCopy[i].referenceDisplayLabel] =
-              this.oppFormCopy[i].referenceDisplayLabel
-          }
-        }
-
-        for (let i in this.picklistQueryOpts) {
-          this.picklistQueryOpts[i] = this.listPicklists(i, { picklistFor: i })
-        }
-
-        for (let i = 0; i < this.createOppForm.length; i++) {
-          if (
-            this.createOppForm[i].dataType === 'Picklist' ||
-            this.createOppForm[i].dataType === 'MultiPicklist'
-          ) {
-            this.createQueryOpts[this.createOppForm[i].apiName] = this.createOppForm[i].apiName
-          } else if (this.createOppForm[i].dataType === 'Reference') {
-            this.createQueryOpts[this.createOppForm[i].referenceDisplayLabel] =
-              this.createOppForm[i].referenceDisplayLabel
-          }
-        }
-
-        for (let i in this.createQueryOpts) {
-          this.createQueryOpts[i] = this.listCreatePicklists(i, { picklistFor: i })
-        }
-
-        this.updateOppForm[0].fieldsRef.filter((field) => field.apiName === 'AccountId').length
-          ? (this.accountSobjectId = this.updateOppForm[0].fieldsRef.filter(
-              (field) => field.apiName === 'AccountId',
-            )[0].id)
-          : this.createOppForm.filter((field) => field.apiName === 'AccountId').length
-          ? (this.accountSobjectId = this.createOppForm.filter(
-              (field) => field.apiName === 'AccountId',
-            )[0].id)
-          : (this.accountSobjectId = null)
 
         for (const field of stageGateForms) {
           this.stageValidationFields[field.stage] = field.fieldsRef
@@ -983,18 +1017,11 @@ export default {
               dupeStagesRemoved[i].referenceDisplayLabel
           }
         }
-
-        for (let i in this.stagePicklistQueryOpts) {
-          this.stagePicklistQueryOpts[i] = this.listStagePicklists(i, { picklistFor: i })
-        }
-
-        this.createContactForm = this.createContactForm.filter(
-          (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
-        )
       } catch (error) {
         console.log(error)
       }
     },
+
     async getUsers() {
       try {
         const res = await SObjects.api.getObjects('User')

@@ -76,7 +76,7 @@
       />
 
       <div class="limit-cell-height" v-else-if="!updateList.includes(opp.id)">
-        <div class="inline-edit" v-show="editing && editIndex === i && currentRow === index">
+        <div class="inline-edit" v-if="editing && editIndex === i && currentRow === index">
           <div
             v-if="
               field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
@@ -134,7 +134,7 @@
               style="width: 14vw; padding-bottom: 8rem"
               track-by="value"
               label="label"
-              v-model="dropdownVal"
+              v-model="dropdownVal[field.apiName]"
               @select="
                 setUpdateValues(
                   field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
@@ -150,7 +150,11 @@
               <template slot="placeholder">
                 <p class="slot-icon">
                   <img src="@/assets/images/search.png" alt="" />
-                  {{ `${field.referenceDisplayLabel}` }}
+                  {{
+                    field.apiName.includes('__c')
+                      ? opp['secondary_data'][field.apiName]
+                      : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+                  }}
                 </p>
               </template>
             </Multiselect>
@@ -162,7 +166,7 @@
               style="width: 14vw; padding-bottom: 8rem"
               track-by="value"
               label="label"
-              v-model="dropdownValue"
+              @select="setDropdownValue($event)"
             >
               <template slot="noResult">
                 <p class="multi-slot">No results.</p>
@@ -171,7 +175,7 @@
               <template slot="placeholder">
                 <p class="slot-icon">
                   <img src="@/assets/images/search.png" alt="" />
-                  {{ `${field.referenceDisplayLabel}` }}
+                  {{ opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))] }}
                 </p>
               </template>
             </Multiselect>
@@ -325,10 +329,10 @@ export default {
     closeEdit: 'closeInline',
     dropdownValue: {
       handler(val) {
-        if (this.stages.includes(val.value)) {
-          this.$emit('open-stage-form', val.value, this.opp.id)
+        if (this.stages.includes(val)) {
+          this.$emit('open-stage-form', val, this.opp.id)
         } else {
-          this.setUpdateValues('StageName', val.value)
+          this.setUpdateValues('StageName', val)
         }
       },
     },
@@ -360,6 +364,9 @@ export default {
   methods: {
     closeInline() {
       this.editing = false
+    },
+    setDropdownValue(val) {
+      this.dropdownValue = val.value
     },
     editInline(index) {
       this.currentRow = this.index
