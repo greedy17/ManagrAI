@@ -146,7 +146,7 @@
               style="width: 14vw; padding-bottom: 8rem"
               track-by="value"
               label="label"
-              v-model="dropdownValue"
+              v-model="dropdownVal"
               @select="
                 setUpdateValues(
                   field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
@@ -311,6 +311,7 @@ export default {
       currentRow: null,
       formData: {},
       dropdownValue: null,
+      dropdownVal: {},
       executeUpdateValues: debounce(this.setUpdateValues, 800),
       editing: false,
       editIndex: null,
@@ -335,7 +336,6 @@ export default {
     stageData: {},
     closeDateData: {},
     ForecastCategoryNameData: {},
-
     picklistOpts: {},
     inlineLoader: {},
     closeEdit: {},
