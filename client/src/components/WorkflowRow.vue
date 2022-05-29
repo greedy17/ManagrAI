@@ -621,6 +621,7 @@ input {
 .table-cell:hover,
 .empty:hover {
   border: 1px solid $dark-green;
+  border-radius: 3px;
 }
 .cell-name:hover {
   border: none;

@@ -1070,6 +1070,7 @@
 </template>
 <script>
 import { SObjects, SObjectPicklist } from '@/services/salesforce'
+import { mapActions } from 'vuex'
 import AlertTemplate from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
 import SlackOAuth from '@/services/slack'
@@ -1282,6 +1283,7 @@ export default {
     updateOppForm: 'setForms',
   },
   methods: {
+    ...mapActions(['refreshCurrentUser']),
     openStageForm(field, id) {
       this.setUpdateValues('StageName', field)
       this.stageGateField = field
@@ -1947,7 +1949,7 @@ export default {
         } catch (e) {
           console.log(e)
         } finally {
-          this.$store.dispatch('refreshCurrentUser')
+          this.refreshCurrentUser()
           setTimeout(() => {
             this.loading = false
           }, 100)
@@ -2109,13 +2111,6 @@ export default {
       }
     },
     setForms() {
-      for (let i in this.picklistQueryOptsContacts) {
-        this.picklistQueryOptsContacts[i] = this.listPicklists(i, {
-          picklistFor: i,
-          salesforceObject: 'Opportunity',
-        })
-      }
-
       for (let i = 0; i < this.oppFormCopy.length; i++) {
         if (
           this.oppFormCopy[i].dataType === 'Picklist' ||
@@ -2133,7 +2128,14 @@ export default {
           salesforceObject: 'Opportunity',
         })
       }
-
+      this.oppFields = this.updateOppForm[0].fieldsRef.filter(
+        (field) =>
+          field.apiName !== 'meeting_type' &&
+          field.apiName !== 'meeting_comments' &&
+          field.apiName !== 'Name' &&
+          field.apiName !== 'AccountId' &&
+          field.apiName !== 'OwnerId',
+      )
       for (let i in this.referenceOpts) {
         this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i])
       }
@@ -2175,15 +2177,6 @@ export default {
           )[0].id)
         : (this.accountSobjectId = null)
 
-      this.oppFields = this.updateOppForm[0].fieldsRef.filter(
-        (field) =>
-          field.apiName !== 'meeting_type' &&
-          field.apiName !== 'meeting_comments' &&
-          field.apiName !== 'Name' &&
-          field.apiName !== 'AccountId' &&
-          field.apiName !== 'OwnerId',
-      )
-
       for (let i in this.stagePicklistQueryOpts) {
         this.stagePicklistQueryOpts[i] = this.listStagePicklists(i, {
           picklistFor: i,
@@ -2193,17 +2186,11 @@ export default {
     },
     async getAllForms() {
       try {
-        let res = await SlackOAuth.api.getOrgCustomForm()
+        let res = await SlackOAuth.api.getOrgCustomForm('Opportunity')
 
-        this.updateOppForm = res.filter(
-          (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
-        )
-        this.createOppForm = res.filter(
-          (obj) => obj.formType === 'CREATE' && obj.resource === 'Opportunity',
-        )
-        let stageGateForms = res.filter(
-          (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Opportunity',
-        )
+        this.updateOppForm = res.filter((obj) => obj.formType === 'UPDATE')
+        this.createOppForm = res.filter((obj) => obj.formType === 'CREATE')
+        let stageGateForms = res.filter((obj) => obj.formType === 'STAGE_GATING')
 
         let stages = stageGateForms.map((field) => field.stage)
         this.stagesWithForms = stages
@@ -2680,7 +2667,7 @@ h3 {
   overflow: scroll;
   margin-top: 0.5rem;
   border-radius: 5px;
-  box-shadow: 1px 2px 20px 2px $soft-gray;
+  border: 1px solid $soft-gray;
   background-color: $off-white;
 }
 .table-section::-webkit-scrollbar {

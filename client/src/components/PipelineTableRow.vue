@@ -53,7 +53,7 @@
       :key="i"
       v-for="(field, i) in oppFields"
       :class="{
-        'active-edit': editing && editIndex === i && currentRow === index,
+        'active-edit': editing && editIndex === i,
         'table-cell-wide':
           field.dataType === 'TextArea' ||
           (field.length > 250 &&
@@ -76,7 +76,7 @@
       />
 
       <div class="limit-cell-height" v-else-if="!updateList.includes(opp.id)">
-        <div class="inline-edit" v-if="editing && editIndex === i && currentRow === index">
+        <div class="inline-edit" v-if="editing && editIndex === i">
           <div
             v-if="
               field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
@@ -305,7 +305,6 @@ export default {
   },
   data() {
     return {
-      currentRow: null,
       formData: {},
       dropdownValue: {},
       dropdownVal: {},
@@ -369,7 +368,6 @@ export default {
       this.dropdownValue = val.value
     },
     editInline(index) {
-      this.currentRow = this.index
       this.editIndex = index
       this.editing = true
     },
@@ -642,6 +640,7 @@ input {
 .table-cell:hover,
 .empty:hover {
   border: 1px solid $dark-green;
+  border-radius: 3px;
 }
 .cell-name:hover {
   border: none;

@@ -407,13 +407,44 @@
         </div>
       </div>
     </Modal>
+    <Modal
+      v-if="meetingOpen"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), resetMeeting()
+        }
+      "
+    >
+      <div class="modal-container">
+        <div class="flex-row-spread">
+          <div class="flex-row">
+            <img src="@/assets/images/logo.png" height="1rem" width="1rem" alt="" />
+            <h3>Create Meeting</h3>
+          </div>
 
+          <img
+            src="@/assets/images/closer.png"
+            style="height: 1.5rem; margin-top: -0.5rem; margin-right: 0.5rem; cursor: pointer"
+            @click="resetMeeting()"
+            alt=""
+          />
+        </div>
+        <section class="">
+          <p class=""></p>
+          <pre class=""></pre>
+          <p class=""></p>
+        </section>
+      </div>
+    </Modal>
     <div ref="pipelines" v-if="!loading">
       <div class="results">
         <h6 style="color: #9b9b9b">
           Today's Meetings:
           <span>{{ meetings.length }}</span>
         </h6>
+
+        <button @click="resetMeeting()" class="add-button">Create Meeting</button>
       </div>
 
       <section class="table-section">
@@ -472,6 +503,7 @@ export default {
   },
   data() {
     return {
+      meetingOpen: false,
       stageGateField: null,
       stageValidationFields: {},
       stagesWithForms: [],
@@ -574,6 +606,9 @@ export default {
     // },
   },
   methods: {
+    resetMeeting() {
+      this.meetingOpen = !this.meetingOpen
+    },
     async getReferenceFieldList(key, val) {
       try {
         const res = await SObjects.api.getSobjectPicklistValues({
@@ -1090,6 +1125,19 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+.modal-container {
+  background-color: $white;
+  overflow: auto;
+  min-width: 32vw;
+  max-width: 40vw;
+  min-height: 44vh;
+  max-height: 80vh;
+  align-items: center;
+  border-radius: 0.3rem;
+  padding: 0.25rem;
+  border: 1px solid #e8e8e8;
+}
+
 .adding-stage-gate {
   border: 2px solid #e8e8e8;
   border-radius: 0.3rem;
@@ -1163,9 +1211,10 @@ export default {
   width: 100%;
   display: flex;
   padding-left: 1rem;
-  margin-bottom: -1.25rem;
+  margin-bottom: -0.25rem;
   margin-top: -0.75rem;
-  justify-content: flex-start;
+  align-items: center;
+  justify-content: space-between;
 }
 
 select {
@@ -1241,7 +1290,7 @@ input {
   overflow: scroll;
   margin-top: 0.5rem;
   border-radius: 5px;
-  box-shadow: 2px 2px 20px 2px $soft-gray;
+  border: 1px solid #e8e8e8;
   background-color: $off-white;
 }
 
