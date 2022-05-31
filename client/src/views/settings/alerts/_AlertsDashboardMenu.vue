@@ -3,7 +3,7 @@
     <div v-if="userLevel == 'REP'" class="sidenav">
       <div style="margin-bottom: 2rem; margin-left: 0.5rem">
         <h4 class="title">Workflow Automations</h4>
-        <h5 style="margin-top: -0.65rem; color: #9b9b9b">Where Salesforce meets Slack</h5>
+        <h5 style="margin-top: -0.65rem; color: #9b9b9b">Let us do the work for you</h5>
       </div>
 
       <router-link exact-active-class="active" :to="{ name: 'CreateNew' }">
