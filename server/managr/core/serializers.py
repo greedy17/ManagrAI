@@ -19,6 +19,12 @@ from managr.slack.serializers import (
 from .models import User, NylasAuthAccount, MeetingPrepInstance, UserForecast
 
 
+class UserForecastSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserForecast
+        fields = ("user", "state")
+
+
 class NylasAuthAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = NylasAuthAccount
@@ -48,7 +54,7 @@ class UserSerializer(serializers.ModelSerializer):
         source="slack_integration", read_only=True
     )
     activated_managr_templates = serializers.SerializerMethodField("get_alert_template_refs")
-    forecast = serializers.SerializerMethodField("get_user_forecast")
+    forecast = UserForecastSerializer(many=False, source="current_forecast", read_only=True)
 
     class Meta:
         model = User
@@ -112,10 +118,6 @@ class UserSerializer(serializers.ModelSerializer):
 
         templates = AlertTemplate.objects.for_user(instance).values_list("title", flat=True)
         return templates
-
-    def get_user_forecast(self, instance):
-        forecast = UserForecast.objects.get(user=instance)
-        return forecast
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -221,33 +223,3 @@ class MeetingPrepInstanceSerializer(serializers.ModelSerializer):
             "resource_type",
         )
 
-
-"""
-class NotificationSelectionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = NotificationSelection
-        fields = ("id", "option", "user", "value")
-
-
-class NotificationOptionSerializer(serializers.ModelSerializer):
-    value = serializers.SerializerMethodField("get_value")
-
-    class Meta:
-        model = NotificationOption
-        fields = (
-            "id",
-            "title",
-            "description",
-            "default_value",
-            "notification_type",
-            "resource",
-            "key",
-            "value",
-        )
-
-    def get_value(self, instance):
-        selection = instance.get_value(self.context["request"].user)
-        serializer = NotificationSelectionSerializer(selection)
-
-        return serializer.data
- """
