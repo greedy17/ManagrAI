@@ -625,7 +625,6 @@ class UserActivity(models.Model):
             fields=saved_data,
             note_added=note_added,
         )
-        print(obj)
         self.clicks["meeting"]["untouched"] -= 1
         self.clicks["meeting"]["touched"].append(obj)
         return self.save()
@@ -659,7 +658,6 @@ class UserActivity(models.Model):
             fields=saved_data,
             note_added=note_added,
         )
-        print(obj)
         self.clicks["workflows"]["untouched"] -= 1
         self.clicks["workflows"]["touched"].append(obj)
         return self.save()
