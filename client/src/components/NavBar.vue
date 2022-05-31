@@ -1,18 +1,15 @@
 <template>
   <div>
     <nav id="nav" v-if="userIsLoggedIn">
-      <div class="logo">
-        <img style="height: 2rem" src="@/assets/images/logo.png" />
-      </div>
+      <router-link :to="{ name: 'Integrations' }">
+        <div class="logo">
+          <img style="height: 2rem" src="@/assets/images/logo.png" />
+        </div>
+      </router-link>
 
       <div class="left" ref="user-menu-icon">
         <div class="mar" v-if="isAdmin">
           <ul>
-            <li>
-              <router-link exact-active-class="active" :to="{ name: 'Integrations' }"
-                >Connect
-              </router-link>
-            </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Required' }"
                 >Actions</router-link
@@ -34,8 +31,8 @@
               >
             </li>
             <li>
-              <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
-                >Team</router-link
+              <router-link exact-active-class="active" :to="{ name: 'Forecast' }"
+                >Forecast</router-link
               >
             </li>
           </ul>
@@ -43,11 +40,6 @@
 
         <div class="mar" v-else-if="userLevel === 'MANAGER' && !isAdmin">
           <ul>
-            <li>
-              <router-link exact-active-class="active" :to="{ name: 'Integrations' }"
-                >Connect
-              </router-link>
-            </li>
             <li>
               <router-link active-class="active" :to="{ name: 'ListTemplates' }"
                 >Workflows
@@ -64,8 +56,8 @@
               >
             </li>
             <li>
-              <router-link exact-active-class="active" :to="{ name: 'InviteUsers' }"
-                >Team</router-link
+              <router-link exact-active-class="active" :to="{ name: 'Forecast' }"
+                >Forecast</router-link
               >
             </li>
           </ul>
@@ -73,11 +65,6 @@
 
         <div class="mar" v-else-if="userLevel === 'SDR'">
           <ul>
-            <li>
-              <router-link exact-active-class="active" :to="{ name: 'Integrations' }"
-                >Connect
-              </router-link>
-            </li>
             <li>
               <router-link active-class="active" :to="{ name: 'ListTemplates' }"
                 >Workflows
@@ -98,7 +85,7 @@
 
         <div v-else-if="userLevel === 'REP'">
           <ul>
-            <li>
+            <!-- <li>
               <router-link
                 v-if="isOnboarding"
                 exact-active-class="active"
@@ -108,7 +95,7 @@
               <router-link v-else exact-active-class="active" :to="{ name: 'Integrations' }"
                 >Connect
               </router-link>
-            </li>
+            </li> -->
             <li v-if="!isOnboarding">
               <router-link active-class="active" :to="{ name: 'ListTemplates' }"
                 >Workflows
@@ -129,19 +116,12 @@
       </div>
 
       <div v-if="userLevel == 'REP' && !user.onboarding" class="right">
-        <div class="tooltip">
-          <img
-            style="height: 1.2rem; filter: invert(30%)"
-            src="@/assets/images/blackhelp.png"
-            class="tooltip__icon"
-          />
-          <div class="tooltip__popup">
-            <div class="tooltip__popup__bold">Having issues?</div>
-            <div class="tip">Email Us: support@mymanagr.com</div>
-          </div>
-        </div>
+        <router-link exact-active-class="active-img" :to="{ name: 'Integrations' }"
+          ><img src="@/assets/images/connect.svg" alt="" />
+        </router-link>
+
         <div>
-          <router-link class="profile-wrapper" :to="{ name: 'ProfilePage' }">
+          <router-link class="profile-wrapper" :to="{ name: 'InviteUsers' }">
             <small>{{ user.email }}</small>
             <img src="@/assets/images/profile.png" alt="" />
           </router-link>
@@ -163,19 +143,12 @@
       </div>
 
       <div v-if="userLevel !== 'REP'" class="right">
-        <div class="tooltip">
-          <img
-            style="height: 1.2rem; filter: invert(30%)"
-            src="@/assets/images/blackhelp.png"
-            class="tooltip__icon"
-          />
-          <div class="tooltip__popup">
-            <div class="tooltip__popup__bold">Having issues?</div>
-            <div class="tip">Email Us: support@mymanagr.com</div>
-          </div>
-        </div>
+        <router-link exact-active-class="active-img" :to="{ name: 'Integrations' }"
+          ><img src="@/assets/images/connect.svg" class="nav-img" alt="" />
+        </router-link>
+
         <div>
-          <router-link class="profile-wrapper" :to="{ name: 'ProfilePage' }">
+          <router-link class="profile-wrapper" :to="{ name: 'InviteUsers' }">
             <small>{{ user.email }}</small>
             <img src="@/assets/images/profile.png" alt="" />
           </router-link>
@@ -267,6 +240,9 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/mixins/utils';
 
+.nav-img {
+  height: 16px;
+}
 .nameOrg {
   display: flex;
   flex-direction: row;
@@ -372,37 +348,6 @@ nav {
   position: relative;
   margin-right: 0.75rem;
 }
-.tooltip {
-  position: relative;
-  &__icon {
-    height: 2rem;
-  }
-
-  &__popup {
-    padding: 0.5rem;
-    min-width: 14vw;
-    visibility: hidden;
-    border-radius: 5px;
-    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
-    border: solid 2px $off-white;
-    background-color: $off-white;
-    color: $base-gray;
-    position: absolute;
-    top: -5px;
-    right: 105%;
-
-    &__bold {
-      color: $base-gray;
-      font-size: 14px;
-    }
-  }
-}
-.tip {
-  font-size: 11px;
-}
-.tooltip:hover .tooltip__popup {
-  visibility: visible;
-}
 ul {
   list-style-type: none;
   margin: 0;
@@ -456,6 +401,10 @@ li:hover {
 }
 .mar {
   margin-top: 1rem;
+}
+.active-img {
+  border-bottom: 2.25px solid $dark-green;
+  color: $dark-green;
 }
 .active {
   border-bottom: 2.25px solid $dark-green;
