@@ -2,9 +2,7 @@
   <div class="alerts-page">
     <div class="alerts-header">
       <div>
-        <!-- Variable 1 (title) -->
-        <h3 @click="test">{{config.title}}</h3>
-        <!-- Variable 2 (subtitle) -->
+        <h3>{{config.title}}</h3>
         <p style="margin-top: -0.5rem; font-size: 14px; color: #9b9b9b">
           {{config.subtitle}}
         </p>
@@ -30,11 +28,7 @@
               v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
             >
               <span style="margin-bottom: 0.5rem">Select your Field</span>
-              <!-- <EmptyAlertGroup
-                :form="alertGroup"
-                :resourceType="config.resourceType"
-              /> -->
-              <!-- <Multiselect
+              <Multiselect
                 placeholder="Select Field"
                 v-model="identity"
                 :options="objectFields.list"
@@ -58,10 +52,9 @@
                     Select Field
                   </p>
                 </template>
-              </Multiselect> -->
+              </Multiselect>
             </div>
           </div>
-          <!-- Need -->
           <div
             v-else
             style="margin-top: 1rem"
@@ -126,7 +119,6 @@
             />
           </div>
 
-          <!-- Need -->
           <div
             style="margin-top: 1rem; margin-left: 0.5rem"
             v-if="userLevel == 'MANAGER'"
@@ -163,7 +155,6 @@
             </FormField>
           </div>
 
-          <!-- Need -->
           <div
             style="
               display: flex;
@@ -278,29 +269,20 @@
       v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
       class="visible"
     >
-      <!-- Variable 3 -->
-      <!-- <ForecastAlertGroup
-        :form="alertGroup"
-        :resourceType="alertTemplateForm.field.resourceType.value"
-      /> -->
-      <!-- <AlertGroups
-        :form="alertGroup"
-        :resourceType="alertTemplateForm.field.resourceType.value"
-        :operand="config.newGroups[0].newOperands"
-      /> -->
     </div>
 
     <div class="bottom_locked">
       <PulseLoadingSpinnerButton
         :loading="savingTemplate"
         :class="
-          !(config.newConfigs[0].recurrenceDays.length && config.newConfigs[0].alertTargets.length && selectUsersBool && setDaysBool) || savingTemplate
+          !((config.newConfigs[0].recurrenceDays.length || config.newGroups[0].newOperands[0].operandIdentifier) && config.newConfigs[0].alertTargets.length && selectUsersBool && (setDaysBool || selectFieldBool)) || savingTemplate
             ? 'disabled__button'
             : 'purple__button bouncy'
         "
         text="Activate alert"
         @click.stop="onSave"
-        :disabled="!(config.newConfigs[0].recurrenceDays.length && config.newConfigs[0].alertTargets.length && selectUsersBool && setDaysBool) || savingTemplate"
+      selectFieldBool
+        :disabled="!((config.newConfigs[0].recurrenceDays.length || config.newGroups[0].newOperands[0].operandIdentifier) && config.newConfigs[0].alertTargets.length && selectUsersBool && (setDaysBool || selectFieldBool)) || savingTemplate"
       />
     </div>
   </div>
@@ -316,13 +298,6 @@ import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 //Internal
 import FormField from '@/components/forms/FormField'
-import EmptyAlertGroup from '@/views/settings/alerts/create/EmptyAlertGroup'
-// Different (will probably want to import all four?): 
-import ForecastAlertGroup from '@/views/settings/alerts/create/ForecastAlertGroup'
-// import DealAlertGroup from '@/views/settings/alerts/create/DealAlertGroup'
-// import PassedAlertGroup from '@/views/settings/alerts/create/PassedAlertGroup'
-// import NewAlertGroup from '@/views/settings/alerts/create/NewAlertGroup'
-import AlertGroups from '../AlertGroups.vue'
 import { UserConfigForm } from '@/services/users/forms'
 
 /**
@@ -330,93 +305,49 @@ import { UserConfigForm } from '@/services/users/forms'
  */
 
 import AlertTemplate, { AlertTemplateForm } from '@/services/alerts/'
-import { stringRenderer } from '@/services/utils'
 import { CollectionManager } from '@thinknimble/tn-models'
-import { SObjectField, NON_FIELD_ALERT_OPTS, SOBJECTS_LIST } from '@/services/salesforce'
+import { SObjectField } from '@/services/salesforce'
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
   // Different name (title): 
   name: 'PopularWorkflows',
   props: [
-    'title',
-    'subtitle',
-    'recipientType',
-    'recurrenceDay',
-    'recurrenceDays',
-    'resourceType',
-    'isActive',
-    'alertMessage',
-    'operandOrder',
-    'operandOperator',
-    'operandIdentifier',
-    'opperandValue',
-    'referenceOperandValue',
-    'operandOperator2',
-    'operandIdentifier2',
-    'opperandValue2',
-    'referenceOperandValue2',
-    'recurrenceFrequency',
     'selectField',
     'config',
   ],
   components: {
-    ForecastAlertGroup,
-    AlertGroups,
     ToggleCheckBox,
     FormField,
     PulseLoadingSpinnerButton,
-    EmptyAlertGroup,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {
     return {
+      objectFields: CollectionManager.create({
+        ModelClass: SObjectField,
+        pagination: { size: 200 },
+        filters: { forAlerts: true, filterable: true, page: 1 },
+      }),
       dropdownLoading: null,
       selectedUsers: [],
       selectedDays: null,
       selectedChannel: null,
-      // Does not have channelOpts: new SlackListResponse(),
       userChannelOpts: new SlackListResponse(),
       create: false,
       channelCreated: false,
       savingTemplate: false,
-      listVisible: true,
-      dropdownVisible: true,
-      NON_FIELD_ALERT_OPTS,
-      stringRenderer,
-      OPPORTUNITY: 'Opportunity',
       channelName: '',
-      newChannel: {},
-      operandDate: '',
-      // recurrenceDay: '',
-      searchQuery: '',
-      searchText: '',
-      searchChannels: '',
-      SOBJECTS_LIST,
+      identity: '',
       pageNumber: 0,
-      configName: '',
       setDaysBool: false,
+      selectFieldBool: false,
       selectUsersBool: false,
       directToUsers: true,
       userConfigForm: new UserConfigForm({}),
       alertTemplateForm: new AlertTemplateForm(),
-      selectedBindings: [],
       fields: CollectionManager.create({ ModelClass: SObjectField }),
       users: CollectionManager.create({ ModelClass: User }),
-      recipientBindings: [
-        { referenceDisplayLabel: 'Recipient Full Name', apiName: 'full_name' },
-        { referenceDisplayLabel: 'Recipient First Name', apiName: 'first_name' },
-        { referenceDisplayLabel: 'Recipient Last Name', apiName: 'last_name' },
-        { referenceDisplayLabel: 'Recipient Email', apiName: 'email' },
-      ],
-      alertRecipientOpts: [
-        { key: 'Myself', value: 'SELF' },
-        { key: 'Owner', value: 'OWNER' },
-        { key: 'All Managers', value: 'MANAGERS' },
-        { key: 'All Reps', value: 'REPS' },
-        { key: 'Everyone', value: 'ALL' },
-        { key: 'SDR', value: 'SDR' },
-      ],
       alertTargetOpts: [
         { key: 'Myself', value: 'SELF' },
         { key: 'All Managers', value: 'MANAGERS' },
@@ -433,15 +364,10 @@ export default {
         { key: 'Saturday', value: '5' },
         { key: 'Sunday', value: '6' },
       ],
-      nameOptions: [
-        { key: 'Close Date Passed', value: 'Close Date Passed' },
-        { key: 'Close Date Approaching', value: 'Close Date Approaching' },
-      ],
     }
   },
   async created() {
     if (this.user.slackRef) {
-      // does not have await this.listChannels()
       await this.listUserChannels()
     }
     if (this.user.userLevel == 'MANAGER') {
@@ -450,6 +376,11 @@ export default {
     this.userConfigForm = new UserConfigForm({
       activatedManagrConfigs: this.user.activatedManagrConfigs,
     })
+    this.objectFields.filters = {
+      ...this.objectFields.filters,
+      salesforceObject: this.resourceType,
+    }
+    await this.objectFields.refresh()
   },
   watch: {
     selectedResourceType: {
@@ -466,21 +397,29 @@ export default {
         }
       },
     },
+    resourceType: {
+      async handler(val) {
+        this.objectFields.filters = {
+          ...this.objectFields.filters,
+          forAlerts: true,
+          filterable: true,
+          salesforceObject: val,
+        }
+        this.objectFields.refresh()
+      },
+    },
+    identity: function () {
+      if (this.identity) {
+        this.config.newGroups[0].newOperands[0].operandIdentifier = this.identity.apiName
+        this.selectFieldBool = true
+      } else {
+        this.config.newGroups[0].newOperands[0].operandIdentifier = ''
+        this.selectFieldBool = false
+      }
+    },
     directToUsers: 'setDefaultChannel',
   },
   methods: {
-    test() {
-      console.log('heeeyyy hey', this.config.newConfigs[0].recurrenceFrequency)
-    },
-    repsPipeline() {
-      if (this.userLevel !== 'MANAGER') {
-        this.config.newConfigs[0].alertTargets.push('SELF')
-        this.setPipelines({
-          fullName: 'MYSELF',
-          id: 'SELF',
-        })
-      }
-    },
     setDefaultChannel() {
       this.directToUsers
         ? (this.config.newConfigs[0].recipients = 'default')
@@ -501,6 +440,9 @@ export default {
     changeCreate() {
       this.create = !this.create
     },
+    async objectFieldNextPage() {
+      await this.objectFields.addNextPage()
+    },
     async listUserChannels(cursor = null) {
       this.dropdownLoading = true
       const res = await SlackOAuth.api.listUserChannels(cursor)
@@ -518,8 +460,6 @@ export default {
       if (res.channel) {
         this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = res.channel
         this.config.newConfigs[0].recipients = res.channel.id
-        // this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = res.channel
-        // this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = res.channel.id
         this.channelCreated = !this.channelCreated
       } else {
         console.log(res.error)
@@ -603,20 +543,6 @@ export default {
       new_str = str.replace(/\s+/g, '-').toLowerCase()
       this.channelName = new_str
     },
-    recipientTypeToggle(value) {
-      if (!this.user.slackRef) {
-        this.$Alert.alert({ type: 'error', message: 'Slack Not Integrated', timeout: 2000 })
-        return 'USER_LEVEL'
-      }
-      if (value == 'USER_LEVEL') {
-        return 'SLACK_CHANNEL'
-      } else if (value == 'SLACK_CHANNEL') {
-        this.config.newConfigs[0].recipients = []
-        this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = []
-        return 'USER_LEVEL'
-      }
-      return value
-    },
     setRecipient() {
       this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value =
         this.selectedChannel
@@ -636,13 +562,15 @@ export default {
       this.config.newConfigs[0].alertTargets = mappedIds
       this.selectUsersBool = true
     },
-    setPipelines(obj) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field._alertTargets.value.push(obj)
-    },
     async onSave() {
       this.savingTemplate = true
         const newConfigs = this.config.newConfigs[0];
-        if (newConfigs.recurrenceDays.length && newConfigs.alertTargets.length && this.selectUsersBool && this.setDaysBool) {
+        const operandIden = this.config.newGroups[0].newOperands[0].operandIdentifier
+        if (
+          (newConfigs.recurrenceDays.length || operandIden) && 
+          newConfigs.alertTargets.length && 
+          this.selectUsersBool && 
+          (this.setDaysBool || this.selectFieldBool)) {
         try {
           const res = await AlertTemplate.api.createAlertTemplate({
             ...this.config,

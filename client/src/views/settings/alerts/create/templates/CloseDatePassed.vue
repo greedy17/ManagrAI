@@ -5,21 +5,13 @@
 </template>
 
 <script>
+/**
+ * Components
+ * */
 //Internal
 import PopularWorkflows from '@/views/settings/alerts/create/templates/PopularWorkflows'
-import { UserConfigForm } from '@/services/users/forms'
 import allConfigs from '../../configs'
 
-/**
- * Services
- */
-
-import { AlertTemplateForm } from '@/services/alerts/'
-import { stringRenderer } from '@/services/utils'
-import { CollectionManager } from '@thinknimble/tn-models'
-import { SObjectField, NON_FIELD_ALERT_OPTS, SOBJECTS_LIST } from '@/services/salesforce'
-import User from '@/services/users'
-import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
   name: 'CloseDatePassed',
   components: {
@@ -28,93 +20,8 @@ export default {
   },
   data() {
     return {
-      dropdownLoading: false,
-      channelOpts: new SlackListResponse(),
-      userChannelOpts: new SlackListResponse(),
       allConfigs,
-      referenceOperandValue1: { label: '>= (Greater or Equal)', value: '>=' },
-      referenceOperandValue2: { label: '<= (Less or Equal)', value: '<=' },
-      NON_FIELD_ALERT_OPTS,
-      stringRenderer,
-      SOBJECTS_LIST,
-      directToUsers: true,
-      userConfigForm: new UserConfigForm({}),
-      alertTemplateForm: new AlertTemplateForm(),
-      fields: CollectionManager.create({ ModelClass: SObjectField }),
-      users: CollectionManager.create({ ModelClass: User }),
     }
-  },
-  async created() {
-    if (this.user.slackRef) {
-      await this.listChannels()
-      await this.listUserChannels()
-    }
-    if (this.user.userLevel == 'MANAGER') {
-      await this.users.refresh()
-    }
-    this.userConfigForm = new UserConfigForm({
-      activatedManagrConfigs: this.user.activatedManagrConfigs,
-    })
-  },
-  watch: {
-    selectedResourceType: {
-      immediate: true,
-      async handler(val, prev) {
-        if (prev && val !== prev) {
-          this.alertTemplateForm = this.alertTemplateForm.reset()
-          this.selectedResourceType = val
-        }
-        if (this.selectedResourceType) {
-          this.fields.filters.salesforceObject = this.selectedResourceType
-          this.fields.filters.page = 1
-          await this.fields.refresh()
-        }
-      },
-    },
-    directToUsers: 'setDefaultChannel',
-  },
-  methods: {
-    async listUserChannels(cursor = null) {
-      this.dropdownLoading = true
-      const res = await SlackOAuth.api.listUserChannels(cursor)
-      const results = new SlackListResponse({
-        channels: [...this.userChannelOpts.channels, ...res.channels],
-        responseMetadata: { nextCursor: res.nextCursor },
-      })
-      this.userChannelOpts = results
-      setTimeout(() => {
-        this.dropdownLoading = false
-      }, 500)
-    },
-    async listChannels(cursor = null) {
-      const res = await SlackOAuth.api.listChannels(cursor)
-      const results = new SlackListResponse({
-        channels: [...this.channelOpts.channels, ...res.channels],
-        responseMetadata: { nextCursor: res.nextCursor },
-      })
-      this.channelOpts = results
-    },
-    setDefaultChannel() {
-      this.directToUsers
-        ? (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = 'default')
-        : (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = null)
-    },
-  },
-  computed: {
-    user() {
-      return this.$store.state.user
-    },
-    selectedResourceType: {
-      get() {
-        return this.alertTemplateForm.field.resourceType.value
-      },
-      set(val) {
-        this.alertTemplateForm.field.resourceType.value = val
-      },
-    },
-  },
-  mounted() {
-    this.setDefaultChannel()
   },
 }
 </script>
