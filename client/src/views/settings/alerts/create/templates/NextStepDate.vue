@@ -529,7 +529,7 @@ export default {
     this.alertTemplateForm.field.title.value = 'Upcoming Next Step'
     this.alertTemplateForm.field.isActive.value = true
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
-      'Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has an upcoming Next Step Date due this week.'
+      '<strong>{ Opportunity.Name }</strong> has an upcoming Next Step Date. <br><br> Next Step: { Opportunity.NextStep }'
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceFrequency.value = 'WEEKLY'
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = [

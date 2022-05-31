@@ -1059,7 +1059,7 @@ import ActionChoice from '@/services/action-choices'
 import draggable from 'vuedraggable'
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 
-import SlackOAuth, { salesforceFields } from '@/services/slack'
+import SlackOAuth from '@/services/slack'
 import { SObjectField } from '@/services/salesforce'
 
 import * as FORM_CONSTS from '@/services/slack'
@@ -1114,7 +1114,6 @@ export default {
         pagination: { size: 200 },
       }),
       formFieldList: [],
-      salesforceFields,
       customSlackFormConfig: [],
       formHasChanges: false,
       savingForm: false,

@@ -7,14 +7,16 @@ import pytz
 import uuid
 import requests
 from datetime import datetime, timezone
+from copy import copy
 import re
 from background_task import background
 from django.conf import settings
+from rest_framework.request import Request
 
 from django.db.models import Q
 from django.utils import timezone
 from managr.salesforce.adapter.exceptions import TokenExpired
-from managr.alerts.models import AlertConfig, AlertInstance
+from managr.alerts.models import AlertConfig, AlertInstance, AlertTemplate
 from managr.core.models import User, MeetingPrepInstance
 from managr.core.serializers import MeetingPrepInstanceSerializer
 from managr.core import constants as core_consts
@@ -34,9 +36,6 @@ from managr.opportunity.models import Lead, Opportunity
 from managr.zoom.background import _split_first_name, _split_last_name
 from managr.utils.misc import custom_paginator
 from managr.zoom.background import emit_kick_off_slack_interaction
-from managr.alerts.constants import ALERT_PIPELINE_URL
-
-# from managr.slack.helpers.block_sets.meeting_review_block_sets import _initial_interaction_message
 
 logger = logging.getLogger("managr")
 
@@ -91,6 +90,10 @@ def emit_non_zoom_meetings(workflow_id, user_id, user_tz, non_zoom_end_times):
 
 def emit_timezone_tasks(user_id, verbose_name):
     return timezone_tasks(user_id, verbose_name=verbose_name)
+
+
+def emit_process_workflow_config_check(user_id, verbose_name):
+    return _process_workflow_config_check(user_id, verbose_name=verbose_name)
 
 
 @background()
@@ -827,9 +830,62 @@ def check_reminders(user_id):
     return
 
 
+@background()
+def _process_workflow_config_check(user_id):
+    from managr.alerts.serializers import AlertConfigWriteSerializer
+
+    user = User.objects.get(id=user_id)
+    if user.user_level == "MANAGER":
+        templates = AlertTemplate.objects.filter(user=user)
+        for template in templates:
+            configs = template.configs.all()
+            if "REPS" in template.target_reference:
+                config_targets = []
+                [config_targets.extend(config.alert_targets) for config in configs]
+                print(config_targets)
+                config_reference = configs[0]
+                new_config_base = {
+                    "recurrence_frequency": config_reference.recurrence_frequency,
+                    "recurrence_day": config_reference.recurrence_day,
+                    "recurrence_days": config_reference.recurrence_days,
+                    "recipient_type": config_reference.recipient_type,
+                    "template": config_reference.template.id,
+                }
+                all_reps = User.objects.filter(
+                    organization=user.organization,
+                    user_level="REP",
+                    slack_integration__isnull=False,
+                )
+                print(f"ALL REPS {all_reps}")
+                for rep in all_reps:
+                    if str(rep.id) not in config_targets:
+                        config_copy = copy(new_config_base)
+                        config_copy["alert_targets"] = [str(rep.id)]
+                        config_copy["recipients"] = [
+                            rep.slack_integration.zoom_channel
+                            if rep.slack_integration.zoom_channel
+                            else rep.slack_integration.channel
+                        ]
+                        print(f"CONFIG {config_copy}")
+                        try:
+                            serializer = AlertConfigWriteSerializer(
+                                data=config_copy, context=template
+                            )
+                            print(f"SERIALZIER: {serializer}")
+                            serializer.is_valid(raise_exception=True)
+                            serializer.save()
+                        except Exception as e:
+                            logger.exception(f"CONFIG CHECK CREATING CONFIG ERROR: {e}")
+                            continue
+        return
+    else:
+        return
+
+
 TIMEZONE_TASK_FUNCTION = {
     core_consts.NON_ZOOM_MEETINGS: emit_process_non_zoom_meetings,
     core_consts.CALENDAR_CHECK: emit_process_add_calendar_id,
+    core_consts.WORKFLOW_CONFIG_CHECK: emit_process_workflow_config_check,
 }
 
 
