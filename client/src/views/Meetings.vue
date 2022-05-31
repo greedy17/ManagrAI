@@ -417,10 +417,10 @@
       "
     >
       <div class="modal-container">
-        <div class="flex-row-spread">
+        <header class="modal-container__header">
           <div class="flex-row">
-            <img src="@/assets/images/logo.png" height="1rem" width="1rem" alt="" />
-            <h3>Create Meeting</h3>
+            <img src="@/assets/images/logo.png" height="24px" alt="" />
+            <h3>Create Zoom Meeting</h3>
           </div>
 
           <img
@@ -429,11 +429,42 @@
             @click="resetMeeting()"
             alt=""
           />
-        </div>
-        <section class="">
-          <p class=""></p>
-          <pre class=""></pre>
-          <p class=""></p>
+        </header>
+        <section class="modal-container__body">
+          <span>
+            <label>Meeting Title: </label>
+            <input id="zoom-input" type="text" />
+          </span>
+
+          <span>
+            <label class="">Description: </label>
+            <input id="zoom-input" type="text" />
+          </span>
+
+          <span>
+            <label class="">Start Time</label>
+            <input id="zoom-input" type="time" />
+            <!-- <label class="">Minute</label>
+            <input type="text" />
+            <label class="">AM/PM</label>
+            <input type="text" /> -->
+          </span>
+
+          <span>
+            <label class="">Duration</label>
+            <input type="text" />
+          </span>
+
+          <p>Select participants</p>
+          <span>
+            <label class="">Internal Users</label>
+            <input type="text" />
+          </span>
+
+          <span>
+            <label class="">External Users</label>
+            <input type="text" />
+          </span>
         </section>
       </div>
     </Modal>
@@ -444,7 +475,9 @@
           <span>{{ meetings.length }}</span>
         </h6>
 
-        <button @click="resetMeeting()" class="add-button">Create Meeting</button>
+        <button @click="resetMeeting()" class="add-button">
+          Create Meeting <img src="@/assets/images/zoom.png" alt="" style="height: 1rem" />
+        </button>
       </div>
 
       <section class="table-section">
@@ -1128,14 +1161,34 @@ export default {
 .modal-container {
   background-color: $white;
   overflow: auto;
-  min-width: 32vw;
-  max-width: 40vw;
-  min-height: 44vh;
-  max-height: 80vh;
+  width: 36vw;
+  height: 80vh;
   align-items: center;
   border-radius: 0.3rem;
   padding: 0.25rem;
   border: 1px solid #e8e8e8;
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.25rem 0.5rem;
+    color: $base-gray;
+    letter-spacing: 0.5px;
+    font-size: 18px;
+    border-bottom: 1px solid #e8e8e8;
+    height: 4rem;
+    img {
+      margin-right: 0.25rem;
+    }
+  }
+  &__body {
+    padding: 2rem 1.5rem;
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.5rem;
+    letter-spacing: 0.5px;
+  }
 }
 
 .adding-stage-gate {
@@ -1385,6 +1438,9 @@ section {
   cursor: pointer;
   color: white;
   transition: all 0.3s;
+  img {
+    margin-left: 0.5rem;
+  }
 }
 .add-button__ {
   display: flex;
@@ -1439,6 +1495,13 @@ section {
   border-radius: 0.3rem;
   background-color: white;
   min-height: 2.5rem;
+  width: 18vw;
+}
+#zoom-input {
+  border: 1px solid $soft-gray;
+  border-radius: 0.3rem;
+  padding: 0.25rem;
+  height: 2rem;
   width: 18vw;
 }
 #user-input:focus {
