@@ -16,7 +16,7 @@ from managr.slack.serializers import (
 )
 
 
-from .models import User, NylasAuthAccount, MeetingPrepInstance
+from .models import User, NylasAuthAccount, MeetingPrepInstance, UserForecast
 
 
 class NylasAuthAccountSerializer(serializers.ModelSerializer):
@@ -48,6 +48,7 @@ class UserSerializer(serializers.ModelSerializer):
         source="slack_integration", read_only=True
     )
     activated_managr_templates = serializers.SerializerMethodField("get_alert_template_refs")
+    forecast = serializers.SerializerMethodField("get_user_forecast")
 
     class Meta:
         model = User
@@ -90,6 +91,7 @@ class UserSerializer(serializers.ModelSerializer):
             "activated_managr_configs",
             "activated_managr_templates",
             "onboarding",
+            "forecast",
         )
 
     read_only_fields = (
@@ -110,6 +112,10 @@ class UserSerializer(serializers.ModelSerializer):
 
         templates = AlertTemplate.objects.for_user(instance).values_list("title", flat=True)
         return templates
+
+    def get_user_forecast(self, instance):
+        forecast = UserForecast.objects.get(user=instance)
+        return forecast
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
