@@ -375,7 +375,6 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                     contact["_form"] = str(form.id)
             meeting.participants = meeting_contacts
             serializer = ZoomMeetingSerializer(data=meeting.as_dict)
-
             try:
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
@@ -385,7 +384,6 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                     f"{meeting_uuid} because of error {json.dumps(e.detail)}"
                 )
                 return e
-
             # emit the event to start slack interaction
             workflow = MeetingWorkflow.objects.create(
                 user=user,

@@ -22,7 +22,7 @@
       <h3 v-if="!editing" :class="templates.refreshing ? 'loading-title titles' : 'titles'">
         Edit your Workflow Automation
       </h3>
-      <h3 @click="test" v-else :class="templates.refreshing ? 'loading-title titles' : 'titles'">
+      <h3 v-else :class="templates.refreshing ? 'loading-title titles' : 'titles'">
         Saved Workflow Automations
       </h3>
       <p
@@ -240,9 +240,9 @@ export default {
     })
   },
   methods: {
-    test() {
-      console.log(this.templates)
-    },
+    // test() {
+    //   console.log(this.templates)
+    // },
     async getRecapChannel() {
       const res = await SlackOAuth.api.channelDetails(this.hasRecapChannel)
       this.currentRecapChannel = res.channel.name
