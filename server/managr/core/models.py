@@ -2,7 +2,7 @@ from urllib.parse import urlencode
 import uuid
 import json
 import logging
-
+from datetime import datetime
 
 from urllib.error import HTTPError
 import requests
@@ -682,7 +682,11 @@ class UserForecast(models.Model):
 
         opp = Opportunity.objects.get(integration_id=id)
         if opp.integration_id not in self.state.keys():
-            self.state[opp.integration_id] = opp.secondary_data
+            current_date = str(datetime.now())
+            self.state[opp.integration_id] = {
+                "date_added": current_date,
+                "data": opp.secondary_data,
+            }
             self.save()
             return "Opportunity saved to current forecast state"
         return "Opportunity already in current forecast state"
