@@ -1785,6 +1785,7 @@ export default {
       }
     },
     async createFormInstance(id, alertInstanceId = null) {
+      this.formData = {}
       this.stageGateField = null
       this.dropdownLoading = true
       this.editOpModalOpen = true
