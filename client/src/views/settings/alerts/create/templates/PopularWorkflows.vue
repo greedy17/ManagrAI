@@ -27,32 +27,127 @@
               :key="index"
               v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
             >
-              <span style="margin-bottom: 0.5rem">Select your Field</span>
-              <Multiselect
-                placeholder="Select Field"
-                v-model="identity"
-                :options="objectFields.list"
-                openDirection="below"
-                style="min-width: 13vw"
-                selectLabel="Enter"
-                track-by="apiName"
-                label="referenceDisplayLabel"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results. Try loading more</p>
-                </template>
-                <template slot="afterList">
-                  <p class="multi-slot__more" @click="objectFieldNextPage">
-                    Load More <img src="@/assets/images/plusOne.png" alt="" />
-                  </p>
-                </template>
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
-                    Select Field
-                  </p>
-                </template>
-              </Multiselect>
+              <!-- If Large Opps -->
+              <div v-if="largeOpps">
+                <span style="margin-bottom: 0.5rem">Select your "Amount" Field</span>
+                <!-- <LargeOppGroup
+                  :form="alertGroup"
+                  :resourceType="alertTemplateForm.field.resourceType.value"
+                /> -->
+                  <div>
+                    <div class="alert-group-row__operands">
+                      <div
+                        :key="i"
+                        v-for="(alertOperand, i) in alertGroup.field.alertOperands.groups"
+                        class="alert-group-row__operands__row rows"
+                      >
+                        <div :class="i > 0 ? 'visible' : ''">
+                          <!-- <LargeOppRow
+                            @remove-operand="onRemoveOperand(i)"
+                            :resourceType="resourceType"
+                            :form.sync="alertOperand"
+                          /> -->
+                          <div>
+                            <div>
+                              <FormField>
+                                <template v-slot:input>
+                                  <Multiselect
+                                    placeholder="Select Field"
+                                    v-model="identity"
+                                    :options="objectFields.list"
+                                    openDirection="below"
+                                    style="min-width: 13vw"
+                                    selectLabel="Enter"
+                                    track-by="apiName"
+                                    label="referenceDisplayLabel"
+                                  >
+                                    <template slot="noResult">
+                                      <p class="multi-slot">No results. Try loading more</p>
+                                    </template>
+                                    <template slot="afterList">
+                                      <p class="multi-slot__more" @click="objectFieldNextPage">
+                                        Load More <img src="@/assets/images/plusOne.png" alt="" />
+                                      </p>
+                                    </template>
+                                    <template slot="placeholder">
+                                      <p class="slot-icon">
+                                        <img src="@/assets/images/search.png" alt="" />
+                                        Select Field
+                                      </p>
+                                    </template>
+                                  </Multiselect>
+                                </template>
+                              </FormField>
+                            </div>
+
+                            <div class="alert-operand-row__value">
+                              <span style="margin-bottom: 0.5rem">"Amount" is greater than:</span>
+                              <FormField
+                                v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'"
+                                :errors="form.field.operandValue.errors"
+                              >
+                                <template v-slot:input> </template>
+                              </FormField>
+                              <template v-else>
+                                <FormField
+                                  v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'"
+                                  :errors="form.field.operandValue.errors"
+                                >
+                                  <template v-slot:input> </template>
+                                </FormField>
+                                <div v-else>
+                                  <!-- Check here -->
+                                  <!-- operandValue -->
+                                  <FormField
+                                    @blur="alertGroup.field.operandValue.validate()"
+                                    :errors="alertGroup.field.operandValue.errors"
+                                    v-model="largeOppValue"
+                                    :inputType="getInputType(form.field._operandIdentifier.value)"
+                                    large
+                                    bordered
+                                    placeholder="Enter a value"
+                                    v-if="!(selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME')"
+                                  />
+                                </div>
+                              </template>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+              </div>
+              <!-- End If Large Opps -->
+              <!-- Else -->
+              <div v-else>
+                <span style="margin-bottom: 0.5rem">Select your Field</span>
+                <Multiselect
+                  placeholder="Select Field"
+                  v-model="identity"
+                  :options="objectFields.list"
+                  openDirection="below"
+                  style="min-width: 13vw"
+                  selectLabel="Enter"
+                  track-by="apiName"
+                  label="referenceDisplayLabel"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results. Try loading more</p>
+                  </template>
+                  <template slot="afterList">
+                    <p class="multi-slot__more" @click="objectFieldNextPage">
+                      Load More <img src="@/assets/images/plusOne.png" alt="" />
+                    </p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.png" alt="" />
+                      Select Field
+                    </p>
+                  </template>
+                </Multiselect>
+              </div>
+              <!-- End Else -->
             </div>
           </div>
           <div
@@ -314,6 +409,7 @@ export default {
   name: 'PopularWorkflows',
   props: [
     'selectField',
+    'largeOpps',
     'config',
   ],
   components: {
@@ -339,6 +435,7 @@ export default {
       savingTemplate: false,
       channelName: '',
       identity: '',
+      largeOppValue: '',
       pageNumber: 0,
       setDaysBool: false,
       selectFieldBool: false,
@@ -417,6 +514,15 @@ export default {
         this.selectFieldBool = false
       }
     },
+    largeOppValue: function () {
+      if (this.largeOppValue) {
+        this.config.newGroups[0].newOperands[0].operandValue = this.largeOppValue.apiName
+        this.selectFieldBool = true
+      } else {
+        this.config.newGroups[0].newOperands[0].operandValue = ''
+        this.selectFieldBool = false
+      }
+    },
     directToUsers: 'setDefaultChannel',
   },
   methods: {
@@ -424,6 +530,12 @@ export default {
       this.directToUsers
         ? (this.config.newConfigs[0].recipients = 'default')
         : (this.config.newConfigs[0].recipients = null)
+    },
+    getInputType(type) {
+      if (type && INPUT_TYPE_MAP[type.dataType]) {
+        return INPUT_TYPE_MAP[type.dataType]
+      }
+      return 'text'
     },
     handleUpdate() {
       this.loading = true

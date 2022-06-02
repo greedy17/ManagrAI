@@ -127,9 +127,9 @@ const DEAL_ROTTING = {
             newOperands: [
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "LastActivityDate", 
+                    operandIdentifier: "LastActivityDate", // Select your Amount
                     operandOperator: "<", 
-                    operandValue: "-30", 
+                    operandValue: "-30", // Amount is greater than
                     operandType: "FIELD",
                     operandOrder: 0,
                     dataType: "DATE",
@@ -315,6 +315,53 @@ const REQUIRED_FIELD_EMPTY = {
     alertLevel: "ORGANIZATION",
 }
 
+const LARGE_OPPORTUNITIES = {
+    title: "Large Opportunities", 
+    subtitle: "View and update all your Opportunities that exceed a certain amount",
+    user: null,
+    isActive: true,
+    resourceType: "Opportunity",
+    newGroups: [
+        {
+            groupCondition: "AND",
+            newOperands: [
+                {
+                    operandCondition: "AND",
+                    operandIdentifier: "CloseDate", 
+                    operandOperator: "=", 
+                    operandValue: 'null', 
+                    operandType: "FIELD",
+                    operandOrder: 0,
+                    dataType: "DATE",
+                    group: "",
+                },
+            ],
+            groupOrder: 0,
+            template: "",
+        }
+    ],
+    messageTemplate: {
+        bindings: [
+            " __Recipient.full_name ",
+            " Opportunity.Name ",
+        ],
+        body: "Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> is a large opportunity.",
+    },
+    newConfigs: [
+        {
+            recurrenceFrequency: "WEEKLY",
+            recurrenceDays: [0, 1, 2, 3, 4, 5],
+            recurrenceDay: "0",
+            recipients: ["default"],
+            alertTargets: ["SELF"],
+            recipientType: "SLACK_CHANNEL",
+            alertTemplateId: "",
+            template: "",
+        }
+    ],
+    alertLevel: "ORGANIZATION",
+}
+
 const ALL_CONFIGS = {
     CLOSE_DATE_PASSED,
     UPDATE_FORECAST,
@@ -322,6 +369,7 @@ const ALL_CONFIGS = {
     CLOSE_DATE_APPROACHING,
     UPCOMING_NEXT_STEP,
     REQUIRED_FIELD_EMPTY,
+    LARGE_OPPORTUNITIES,
 }
 
 export default ALL_CONFIGS;
