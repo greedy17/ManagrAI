@@ -96,6 +96,7 @@ INSTALLED_APPS = [
     "managr.outreach",
     "managr.hubspot",
     "managr.meetings",
+    "managr.crm",
     # "managr.demo",
     # Django
     "django.contrib.admin",
