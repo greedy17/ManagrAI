@@ -328,7 +328,7 @@ const LARGE_OPPORTUNITIES = {
                 {
                     operandCondition: "AND",
                     operandIdentifier: "CloseDate", 
-                    operandOperator: "=", 
+                    operandOperator: ">", 
                     operandValue: 'null', 
                     operandType: "FIELD",
                     operandOrder: 0,

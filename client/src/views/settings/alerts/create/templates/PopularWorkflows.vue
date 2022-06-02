@@ -27,13 +27,8 @@
               :key="index"
               v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
             >
-              <!-- If Large Opps -->
               <div v-if="largeOpps">
                 <span style="margin-bottom: 0.5rem">Select your "Amount" Field</span>
-                <!-- <LargeOppGroup
-                  :form="alertGroup"
-                  :resourceType="alertTemplateForm.field.resourceType.value"
-                /> -->
                   <div>
                     <div class="alert-group-row__operands">
                       <div
@@ -42,11 +37,6 @@
                         class="alert-group-row__operands__row rows"
                       >
                         <div :class="i > 0 ? 'visible' : ''">
-                          <!-- <LargeOppRow
-                            @remove-operand="onRemoveOperand(i)"
-                            :resourceType="resourceType"
-                            :form.sync="alertOperand"
-                          /> -->
                           <div>
                             <div>
                               <FormField>
@@ -82,31 +72,15 @@
 
                             <div class="alert-operand-row__value">
                               <span style="margin-bottom: 0.5rem">"Amount" is greater than:</span>
-                              <FormField
-                                v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'"
-                                :errors="form.field.operandValue.errors"
-                              >
-                                <template v-slot:input> </template>
-                              </FormField>
-                              <template v-else>
-                                <FormField
-                                  v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'"
-                                  :errors="form.field.operandValue.errors"
-                                >
-                                  <template v-slot:input> </template>
-                                </FormField>
-                                <div v-else>
-                                  <!-- Check here -->
-                                  <!-- operandValue -->
+                              <template>
+                                <div>
                                   <FormField
-                                    @blur="alertGroup.field.operandValue.validate()"
-                                    :errors="alertGroup.field.operandValue.errors"
+                                    :errors="alertOperand.field.operandValue.errors"
                                     v-model="largeOppValue"
-                                    :inputType="getInputType(form.field._operandIdentifier.value)"
+                                    :inputType="getInputType(alertOperand.field._operandIdentifier.value)"
                                     large
                                     bordered
                                     placeholder="Enter a value"
-                                    v-if="!(selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME')"
                                   />
                                 </div>
                               </template>
@@ -117,8 +91,6 @@
                     </div>
                   </div>
               </div>
-              <!-- End If Large Opps -->
-              <!-- Else -->
               <div v-else>
                 <span style="margin-bottom: 0.5rem">Select your Field</span>
                 <Multiselect
@@ -147,7 +119,6 @@
                   </template>
                 </Multiselect>
               </div>
-              <!-- End Else -->
             </div>
           </div>
           <div
@@ -370,14 +341,13 @@
       <PulseLoadingSpinnerButton
         :loading="savingTemplate"
         :class="
-          !((config.newConfigs[0].recurrenceDays.length || config.newGroups[0].newOperands[0].operandIdentifier) && config.newConfigs[0].alertTargets.length && selectUsersBool && (setDaysBool || selectFieldBool)) || savingTemplate
+          !(verifySubmit()) || savingTemplate
             ? 'disabled__button'
             : 'purple__button bouncy'
         "
         text="Activate alert"
         @click.stop="onSave"
-      selectFieldBool
-        :disabled="!((config.newConfigs[0].recurrenceDays.length || config.newGroups[0].newOperands[0].operandIdentifier) && config.newConfigs[0].alertTargets.length && selectUsersBool && (setDaysBool || selectFieldBool)) || savingTemplate"
+        :disabled="!(verifySubmit()) || savingTemplate"
       />
     </div>
   </div>
@@ -402,10 +372,10 @@ import { UserConfigForm } from '@/services/users/forms'
 import AlertTemplate, { AlertTemplateForm } from '@/services/alerts/'
 import { CollectionManager } from '@thinknimble/tn-models'
 import { SObjectField } from '@/services/salesforce'
+import { INPUT_TYPE_MAP } from '@/services/salesforce/models'
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
-  // Different name (title): 
   name: 'PopularWorkflows',
   props: [
     'selectField',
@@ -438,6 +408,7 @@ export default {
       largeOppValue: '',
       pageNumber: 0,
       setDaysBool: false,
+      largeOppsBool: false,
       selectFieldBool: false,
       selectUsersBool: false,
       directToUsers: true,
@@ -516,11 +487,11 @@ export default {
     },
     largeOppValue: function () {
       if (this.largeOppValue) {
-        this.config.newGroups[0].newOperands[0].operandValue = this.largeOppValue.apiName
-        this.selectFieldBool = true
+        this.config.newGroups[0].newOperands[0].operandValue = this.largeOppValue
+        this.largeOppsBool = true
       } else {
         this.config.newGroups[0].newOperands[0].operandValue = ''
-        this.selectFieldBool = false
+        this.largeOppsBool = false
       }
     },
     directToUsers: 'setDefaultChannel',
@@ -530,6 +501,25 @@ export default {
       this.directToUsers
         ? (this.config.newConfigs[0].recipients = 'default')
         : (this.config.newConfigs[0].recipients = null)
+    },
+    verifySubmit() {
+      if (this.largeOpps) {
+        return (
+          this.config.newGroups[0].newOperands[0].operandIdentifier
+          && this.config.newGroups[0].newOperands[0].operandValue
+          && this.config.newConfigs[0].alertTargets.length 
+          && this.selectUsersBool 
+          && this.selectFieldBool
+          && this.largeOppsBool
+          )
+      } else {
+        return (
+          (this.config.newConfigs[0].recurrenceDays.length || this.config.newGroups[0].newOperands[0].operandIdentifier)
+          && this.config.newConfigs[0].alertTargets.length 
+          && this.selectUsersBool 
+          && (this.setDaysBool || this.selectFieldBool)
+          )
+      }
     },
     getInputType(type) {
       if (type && INPUT_TYPE_MAP[type.dataType]) {
@@ -678,10 +668,18 @@ export default {
       this.savingTemplate = true
         const newConfigs = this.config.newConfigs[0];
         const operandIden = this.config.newGroups[0].newOperands[0].operandIdentifier
+        let largeOpsCheck = true;
+        if (this.largeOpps) {
+          largeOpsCheck = false;
+          if (this.largeOppsBool) {
+            largeOpsCheck = true
+          }
+        }
         if (
           (newConfigs.recurrenceDays.length || operandIden) && 
           newConfigs.alertTargets.length && 
           this.selectUsersBool && 
+          largeOpsCheck &&
           (this.setDaysBool || this.selectFieldBool)) {
         try {
           const res = await AlertTemplate.api.createAlertTemplate({
@@ -758,6 +756,20 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
+
+::v-deep .input-content {
+  width: 13vw;
+  border: 1px solid #e8e8e8 !important;
+  border-radius: 0.3rem;
+  background-color: white;
+  box-shadow: none !important;
+}
+::v-deep .input-form {
+  width: 13vw;
+}
+::v-deep .input-form__active {
+  border: none;
+}
 
 input[type='checkbox']:checked + label::after {
   content: '';
