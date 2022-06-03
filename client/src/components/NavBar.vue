@@ -11,11 +11,6 @@
         <div class="mar" v-if="isAdmin">
           <ul>
             <li>
-              <router-link exact-active-class="active" :to="{ name: 'Required' }"
-                >Actions</router-link
-              >
-            </li>
-            <li>
               <router-link active-class="active" :to="{ name: 'ListTemplates' }"
                 >Workflows
               </router-link>
@@ -32,8 +27,8 @@
             </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Forecast' }"
-                >Forecast</router-link
-              >
+                >Forecast
+              </router-link>
             </li>
           </ul>
         </div>
@@ -145,6 +140,10 @@
       <div v-if="userLevel !== 'REP'" class="right">
         <router-link exact-active-class="active-img" :to="{ name: 'Integrations' }"
           ><img src="@/assets/images/connect.svg" class="nav-img" alt="" />
+        </router-link>
+
+        <router-link v-if="isAdmin" exact-active-class="active-img" :to="{ name: 'Required' }"
+          ><img src="@/assets/images/list.svg" alt="" />
         </router-link>
 
         <div>
@@ -410,5 +409,10 @@ li:hover {
   border-bottom: 2.25px solid $dark-green;
   color: $dark-green;
   padding-bottom: 0.9rem;
+
+  img {
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
+  }
 }
 </style>

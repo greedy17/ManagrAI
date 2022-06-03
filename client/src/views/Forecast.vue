@@ -85,10 +85,12 @@
           <p class="gray-text smaller-font margin-left-s" v-if="forecastOpps && !loading">
             Total Opps in Forecast: {{ forecastLength }}
           </p>
+          <p v-else></p>
         </div>
 
         <section style="position: relative">
-          <button @click.stop="addingFilter" class="add-filter-button margin-left-s">
+          <!-- @click.stop="addingFilter" -->
+          <button class="add-filter-button margin-left-s">
             <img
               src="@/assets/images/plusOne.png"
               style="height: 0.8rem; margin-right: 0.25rem"
@@ -101,8 +103,8 @@
         </section>
       </section>
       <div class="row">
-        <button class="forecast-header__button">
-          <p>%</p>
+        <button class="forecast-header__green-button">
+          <p class="green-text">%</p>
         </button>
         <button class="margin-left-s forecast-header__button" @click="resetSettings">
           <img class="invert" src="@/assets/images/settings.png" alt="" />
@@ -119,10 +121,10 @@
         </div>
         <div v-if="!forecastOpps" class="margin-left margin-top small-font gray-text">
           <p>
-            No opps in forecast. Add them in
+            No opps in forecast. Add them via
             <span @click="resetSettings" class="settings"
-              >settings <img src="@/assets/images/settings.png" alt=""
-            /></span>
+              >settings <img src="@/assets/images/settings.png" alt="" />
+            </span>
           </p>
         </div>
         <div v-else-if="forecastOpps" v-for="(opp, i) in forecastOpps" :key="i" class="table-row">
@@ -138,6 +140,26 @@
             </p>
             <p class="gray-text">
               Owned by: {{ currentValues[opp.data.Name].owner_ref.full_name }}
+            </p>
+          </div>
+          <div class="table-cell">
+            <p class="green-text align-center letter-spacing">
+              {{ opp.data.Amount ? formatCash(currentValues[opp.data.Name].amount) : '' }}
+              <span v-if="currentValues[opp.data.Name].amount < opp.data.Amount"
+                ><img
+                  class="filter-red margin-left-s"
+                  src="@/assets/images/trendingDown.svg"
+                  alt=""
+              /></span>
+              <span v-else-if="currentValues[opp.data.Name].amount > opp.data.Amount"
+                ><img
+                  class="filter-green margin-left-s"
+                  src="@/assets/images/trendingUp.svg"
+                  alt=""
+              /></span>
+            </p>
+            <p class="gray-text letter-spacing">
+              {{ opp.data.Amount ? formatCash(opp.data.Amount) : '' }}
             </p>
           </div>
           <div class="table-cell">
@@ -222,26 +244,6 @@
             </p>
           </div>
           <div class="table-cell">
-            <p class="green-text align-center letter-spacing">
-              {{ opp.data.Amount ? formatCash(currentValues[opp.data.Name].amount) : '' }}
-              <span v-if="currentValues[opp.data.Name].amount < opp.data.Amount"
-                ><img
-                  class="filter-red margin-left-s"
-                  src="@/assets/images/trendingDown.svg"
-                  alt=""
-              /></span>
-              <span v-else-if="currentValues[opp.data.Name].amount > opp.data.Amount"
-                ><img
-                  class="filter-green margin-left-s"
-                  src="@/assets/images/trendingUp.svg"
-                  alt=""
-              /></span>
-            </p>
-            <p class="gray-text letter-spacing">
-              {{ opp.data.Amount ? formatCash(opp.data.Amount) : '' }}
-            </p>
-          </div>
-          <div class="table-cell">
             <p>
               {{
                 opp.data.LastActivityDate
@@ -252,13 +254,10 @@
           </div>
         </div>
         <div class="table-row-sticky" v-if="forecastOpps">
-          <div class="table-cell-s"></div>
-          <div class="table-cell-s"></div>
-          <div class="table-cell-s"><p class="letter-spacing">Average deal:</p></div>
           <div class="table-cell-s">
-            <p class="green-text letter-spacing">{{ formatCash(averageDeal) }}</p>
+            <p class="letter-spacing">Total:</p>
+            <p class="letter-spacing margin-top-2">Ave deal size:</p>
           </div>
-          <div class="table-cell-s"><p class="letter-spacing">Totals:</p></div>
           <div class="table-cell-s">
             <p class="green-text align-center letter-spacing">
               {{ formatCash(totalAmount) }}
@@ -275,8 +274,13 @@
                   alt=""
               /></span>
             </p>
-            <s class="gray-text letter-spacing">{{ formatCash(originalAmount) }}</s>
+            <p class="gray-text letter-spacing">{{ formatCash(originalAmount) }}</p>
+            <p class="green-text letter-spacing">{{ formatCash(averageDeal) }}</p>
           </div>
+          <div class="table-cell-s"></div>
+          <div class="table-cell-s"></div>
+          <div class="table-cell-s"></div>
+          <div class="table-cell-s"></div>
           <div class="table-cell-s"></div>
         </div>
       </div>
@@ -296,7 +300,7 @@ export default {
   data() {
     return {
       filterFields: [],
-      forecastHeaders: ['Date Added', 'Stage', 'Forecast', 'Close Date', 'Amount', 'Last Activity'],
+      forecastHeaders: ['Amount', 'Date Added', 'Stage', 'Forecast', 'Close Date', 'Last Activity'],
       forecastOptions: ['My forecast', 'Team Forecast'],
       currentForecast: 'My Forecast',
       allOpps: null,
@@ -350,7 +354,7 @@ export default {
           message: 'Error adding Opportunities',
         })
       } finally {
-        await this.$store.dispatch('refreshCurrentUser')
+        this.$store.dispatch('refreshCurrentUser')
         this.resetSettings()
       }
     },
@@ -414,6 +418,9 @@ export default {
       } finally {
         this.loading = false
       }
+    },
+    gotToPipeline() {
+      this.$router.push({ name: 'Pipelines' })
     },
     closeListSelect() {
       this.showList = false
@@ -485,6 +492,9 @@ export default {
 .margin-top {
   margin-top: 1rem;
 }
+.margin-top-2 {
+  margin-top: 2rem;
+}
 .small-font {
   font-size: 12px;
   font-weight: 300 !important;
@@ -504,10 +514,14 @@ export default {
   align-items: center;
 }
 .forecast {
-  margin-top: 4rem;
+  margin-top: 3.5rem;
 }
 .letter-spacing {
   letter-spacing: 1px;
+}
+.filter-green {
+  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+    brightness(93%) contrast(89%);
 }
 .row {
   display: flex;
@@ -521,11 +535,12 @@ export default {
   margin: 0;
   padding: 0;
   min-height: 50vh;
-  height: 76vh;
+  height: 78vh;
   overflow: scroll;
-  margin-top: 0.5rem;
+  margin-top: -0.5rem;
   border-radius: 5px;
   border: 1.25px solid $soft-gray;
+  border-bottom: 3px solid $soft-gray;
   background-color: white;
 }
 .table {
@@ -566,9 +581,8 @@ export default {
   font-size: 12px;
   background-color: white;
 
-  s,
   p {
-    height: 0.5rem !important;
+    height: 0.4rem !important;
   }
 }
 .table-cell-header {
@@ -625,8 +639,19 @@ export default {
 
   &__button {
     background-color: white;
-    border: 1px solid $soft-gray;
-    height: 2.25rem;
+    border: 1.25px solid $soft-gray;
+    height: 2rem;
+    width: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  &__green-button {
+    background-color: white;
+    border: 0.5px solid $dark-green;
+    height: 2rem;
     width: 3rem;
     display: flex;
     align-items: center;
