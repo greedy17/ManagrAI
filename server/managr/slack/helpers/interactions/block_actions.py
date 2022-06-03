@@ -1820,12 +1820,11 @@ def process_get_notes(payload, context):
     ]
     if note_data:
         for note in note_data:
-            if note[1] is None:
-                continue
+            note_title = "N/A" if note[1] is None else note[1]
             date = note[0].date() if note[0] is not None else " "
             current_stage = note[3]
             previous_stage = note[4]
-            block_message = f"*{date} - {note[1]}*\n"
+            block_message = f"*{date} - {note_title}*\n"
             if current_stage and previous_stage:
                 if current_stage != previous_stage:
                     block_message += f"Stage: ~{previous_stage}~ :arrow_right: {current_stage} \n"

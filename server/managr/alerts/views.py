@@ -194,7 +194,6 @@ class AlertTemplateViewSet(
                     users = []
                     for config in obj.configs.all():
                         users = [*users, *config.target_users]
-                    print(users)
                     res_data = []
                     for user in users:
                         if hasattr(user, "salesforce_account"):

@@ -79,6 +79,10 @@ export default {
       execCheckEmail: debounce(this.checkAccountStatus, 900),
     }
   },
+  mounted() {
+    let el = document.getElementById('fullstory')
+    el.remove()
+  },
   methods: {
     async checkAccountStatus() {
       this.loginForm.field.email.validate()
