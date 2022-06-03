@@ -51,7 +51,9 @@ class IntegrationModel(models.Model):
         max_length=255, blank=True, help_text="The UUID from the integration source"
     )
     integration_source = models.CharField(
-        max_length=255, choices=org_consts.INTEGRATION_SOURCES, blank=True,
+        max_length=255,
+        choices=org_consts.INTEGRATION_SOURCES,
+        blank=True,
     )
     imported_by = models.ForeignKey(
         "core.User", on_delete=models.CASCADE, null=True, related_name="imported_%(class)s"
@@ -147,13 +149,34 @@ class User(AbstractUser, TimeStampModel):
     ENABLEMENT = "ENABLEMENT"
     SDR = "SDR"
     ROLE_CHOICES = [
-        (LEADERSHIP, "Leadership",),
-        (FRONTLINE_MANAGER, "Frontline Manager",),
-        (ACCOUNT_EXEC, "Account Executive",),
-        (ACCOUNT_MANAGER, "Account Manager",),
-        (OPERATIONS, "OPERATIONS",),
-        (ENABLEMENT, "Enablement",),
-        (SDR, "SDR",),
+        (
+            LEADERSHIP,
+            "Leadership",
+        ),
+        (
+            FRONTLINE_MANAGER,
+            "Frontline Manager",
+        ),
+        (
+            ACCOUNT_EXEC,
+            "Account Executive",
+        ),
+        (
+            ACCOUNT_MANAGER,
+            "Account Manager",
+        ),
+        (
+            OPERATIONS,
+            "OPERATIONS",
+        ),
+        (
+            ENABLEMENT,
+            "Enablement",
+        ),
+        (
+            SDR,
+            "SDR",
+        ),
     ]
     role = models.CharField(max_length=32, choices=ROLE_CHOICES, blank=True)
 
@@ -168,9 +191,14 @@ class User(AbstractUser, TimeStampModel):
         null=True,
     )
     user_level = models.CharField(
-        choices=core_consts.USER_LEVELS, max_length=255, default=core_consts.USER_LEVEL_REP,
+        choices=core_consts.USER_LEVELS,
+        max_length=255,
+        default=core_consts.USER_LEVEL_REP,
     )
-    first_name = models.CharField(max_length=255, blank=True,)
+    first_name = models.CharField(
+        max_length=255,
+        blank=True,
+    )
     last_name = models.CharField(max_length=255, blank=True, null=False)
     phone_number = models.CharField(max_length=255, blank=True, default="")
     is_invited = models.BooleanField(max_length=255, default=True)
@@ -449,7 +477,12 @@ class NylasAuthAccount(TimeStampModel):
         starts_after = convert_local_time_to_unix(user_timezone, 7, 00)
         ends_before = convert_local_time_to_unix(user_timezone, 20, 00)
 
-        query = dict({"starts_after": starts_after, "ends_before": ends_before,})
+        query = dict(
+            {
+                "starts_after": starts_after,
+                "ends_before": ends_before,
+            }
+        )
         if self.event_calendar_id:
             query["calendar_id"] = self.event_calendar_id
         params = urlencode(query)
@@ -549,7 +582,8 @@ class MeetingPrepInstance(TimeStampModel):
         max_length=255, null=True, blank=True, help_text="The class name of the resource"
     )
     invocation = models.PositiveIntegerField(
-        default=0, help_text="Keeps track of the number of times the meeting instance was called",
+        default=0,
+        help_text="Keeps track of the number of times the meeting instance was called",
     )
     form = models.OneToOneField(
         "slack.OrgCustomSlackFormInstance",
@@ -617,11 +651,11 @@ class UserActivity(models.Model):
         no_last_name = [
             form
             for form in contact_forms
-            if (len(form.saved_data) and form.saved_data["LastName"] is None)
+            if (not len(form.saved_data) or form.saved_data["LastName"] is None)
         ]
         note_added = False if main_form.saved_data["meeting_comments"] is None else True
         obj = dict(
-            source=main_form.update_source,
+            source=main_form.update_source if main_form.update_source else "meeting",
             new_attendees=dict(
                 saved=len(contact_forms) - len(no_last_name), unsaved=len(no_last_name)
             ),
@@ -647,7 +681,14 @@ class UserActivity(models.Model):
             )
         ]
 
-        note_added = False if workflow.saved_data["meeting_comments"] is None else True
+        note_added = (
+            False
+            if (
+                "meeting_comments" not in workflow.saved_data.keys()
+                or workflow.saved_data["meeting_comments"] is None
+            )
+            else True
+        )
         obj = dict(
             source=workflow.update_source,
             name=alert_name,
@@ -663,7 +704,10 @@ class UserForecast(models.Model):
     user = models.OneToOneField(
         "core.User", on_delete=models.CASCADE, related_name="current_forecast"
     )
-    state = JSONField(default=dict, null=True,)
+    state = JSONField(
+        default=dict,
+        null=True,
+    )
 
     def __str__(self):
         return f"Forecast for {self.user.email}"
@@ -705,4 +749,3 @@ class UserForecast(models.Model):
             "Opportunity", list(self.state.keys())
         )
         return res
-
