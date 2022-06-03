@@ -111,7 +111,7 @@
                 :options="
                   field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                     ? createQueryOpts[field.apiName]
-                    : referenceOpts[field.apiName]
+                    : createReferenceOpts[field.apiName]
                 "
                 @select="
                   setUpdateValues(
@@ -1166,6 +1166,7 @@ export default {
       noteTitle: '',
       noteInfo: '',
       referenceOpts: {},
+      createReferenceOpts: {},
       picklistQueryOpts: {},
       createQueryOpts: {},
       picklistQueryOptsContacts: {},
@@ -1293,12 +1294,16 @@ export default {
       this.stageGateField = null
       this.stageFormOpen = false
     },
-    async getReferenceFieldList(key, val) {
+    async getReferenceFieldList(key, val, type) {
       try {
         const res = await SObjects.api.getSobjectPicklistValues({
           sobject_id: val,
         })
-        this.referenceOpts[key] = res
+        if (type === 'update') {
+          this.referenceOpts[key] = res
+        } else {
+          this.createReferenceOpts[key] = res
+        }
       } catch (e) {
         console.log(e)
       }
@@ -2127,6 +2132,7 @@ export default {
           this.picklistQueryOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].apiName
         } else if (this.oppFormCopy[i].dataType === 'Reference') {
           this.referenceOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].id
+          console.log(this.referenceOpts)
         }
       }
 
@@ -2138,7 +2144,7 @@ export default {
       }
 
       for (let i in this.referenceOpts) {
-        this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i])
+        this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i], 'update')
       }
 
       for (let i = 0; i < this.createOppForm.length; i++) {
@@ -2148,8 +2154,8 @@ export default {
         ) {
           this.createQueryOpts[this.createOppForm[i].apiName] = this.createOppForm[i].apiName
         } else if (this.createOppForm[i].dataType === 'Reference') {
-          this.createQueryOpts[this.createOppForm[i].referenceDisplayLabel] =
-            this.createOppForm[i].referenceDisplayLabel
+          this.createReferenceOpts[this.createOppForm[i].apiName] = this.createOppForm[i].id
+          console.log(this.createReferenceOpts)
         }
       }
 
@@ -2158,6 +2164,14 @@ export default {
           picklistFor: i,
           salesforceObject: 'Opportunity',
         })
+      }
+
+      for (let i in this.createReferenceOpts) {
+        this.createReferenceOpts[i] = this.getReferenceFieldList(
+          i,
+          this.createReferenceOpts[i],
+          'create',
+        )
       }
 
       this.filterFields = this.updateOppForm[0].fieldsRef.filter(
