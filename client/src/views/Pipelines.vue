@@ -2132,7 +2132,6 @@ export default {
           this.picklistQueryOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].apiName
         } else if (this.oppFormCopy[i].dataType === 'Reference') {
           this.referenceOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].id
-          console.log(this.referenceOpts)
         }
       }
 
@@ -2155,7 +2154,6 @@ export default {
           this.createQueryOpts[this.createOppForm[i].apiName] = this.createOppForm[i].apiName
         } else if (this.createOppForm[i].dataType === 'Reference') {
           this.createReferenceOpts[this.createOppForm[i].apiName] = this.createOppForm[i].id
-          console.log(this.createReferenceOpts)
         }
       }
 

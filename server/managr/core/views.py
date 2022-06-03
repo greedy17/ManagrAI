@@ -292,6 +292,38 @@ class UserViewSet(
 
         return Response(response, status=status.HTTP_200_OK)
 
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="modify-forecast",
+    )
+    def modify_forecast(self, request, *args, **kwargs):
+        from managr.opportunity.models import Opportunity
+
+        user = request.user
+        action = request.data.get("action")
+        ids = request.data.get("ids")
+        if action == "add":
+            for id in ids:
+                user.current_forecast.add_to_state(id)
+        else:
+            for id in ids:
+                user.current_forecast.remove_from_state(id)
+        return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="get-forecast-values",
+    )
+    def get_forecast_values(self, request, *args, **kwargs):
+        user = request.user
+        res = user.current_forecast.get_current_values()
+        data = {"opps": res["records"]}
+        return Response(data=data, status=status.HTTP_200_OK)
+
 
 class ActivationLinkView(APIView):
     permission_classes = (permissions.AllowAny,)
@@ -307,7 +339,8 @@ class ActivationLinkView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         if user and user.is_active:
             return Response(
-                data={"activation_link": user.activation_link}, status=status.HTTP_204_NO_CONTENT,
+                data={"activation_link": user.activation_link},
+                status=status.HTTP_204_NO_CONTENT,
             )
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -315,7 +348,9 @@ class ActivationLinkView(APIView):
 
 @api_view(["GET"])
 @permission_classes(
-    [permissions.IsAuthenticated,]
+    [
+        permissions.IsAuthenticated,
+    ]
 )
 def get_email_authorization_link(request):
     u = request.user
@@ -430,7 +465,9 @@ class NylasAccountWebhook(APIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [permissions.IsAuthenticated,]
+    [
+        permissions.IsAuthenticated,
+    ]
 )
 def email_auth_token(request):
     u = request.user
@@ -665,7 +702,9 @@ class UserPasswordManagmentView(generics.GenericAPIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [permissions.AllowAny,]
+    [
+        permissions.AllowAny,
+    ]
 )
 def request_reset_link(request):
     """endpoint to request a password reset email (forgot password)"""
