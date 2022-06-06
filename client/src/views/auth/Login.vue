@@ -80,8 +80,10 @@ export default {
     }
   },
   mounted() {
-    let el = document.getElementById('fullstory')
-    el.remove()
+    // let logScript = document.getElementById('logrocket-script')
+    // logScript.remove()
+    let pkg = document.getElementById('logrocket-package')
+    pkg.remove()
   },
   methods: {
     async checkAccountStatus() {
