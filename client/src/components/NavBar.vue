@@ -25,11 +25,11 @@
                 >Meetings</router-link
               >
             </li>
-            <!-- <li>
+            <li>
               <router-link exact-active-class="active" :to="{ name: 'Forecast' }"
                 >Forecast
               </router-link>
-            </li> -->
+            </li>
           </ul>
         </div>
 
