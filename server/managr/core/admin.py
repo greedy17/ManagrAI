@@ -16,6 +16,7 @@ from .models import (
     NylasAuthAccount,
     MeetingPrepInstance,
     UserActivity,
+    UserForecast,
     #    NotificationOption,
     #    NotificationSelection,
 )
@@ -207,10 +208,16 @@ class CustomUserActivity(admin.ModelAdmin):
     list_display = ("user",)
 
 
+class CustomUserForecast(admin.ModelAdmin):
+    model = UserForecast
+    list_display = ("user",)
+
+
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(NylasAuthAccount, CustomNylasAuthAccount)
 admin.site.register(MeetingPrepInstance, CustomMeetingPrepInstance)
 admin.site.register(UserActivity, CustomUserActivity)
+admin.site.register(UserForecast, CustomUserActivity)
 
 
 # admin.site.register(NotificationOption, CustomNotificationOption)

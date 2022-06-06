@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 
-from .models import User, UserActivity
+from .models import User, UserActivity, UserForecast
 
 
 @receiver(post_save, sender=User)
@@ -14,6 +14,8 @@ def create_auth_token(sender, instance, created, **kwargs):
 
 
 @receiver(post_save, sender=get_user_model())
-def create_activity(sender, instance, created, **kwargs):
+def create_user_related_models(sender, instance, created, **kwargs):
     if created:
         UserActivity.objects.create(user=instance)
+        UserForecast.objects.create(user=instance)
+

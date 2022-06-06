@@ -533,9 +533,6 @@ def process_submit_resource_data(payload, context):
             )
 
     else:
-        current_forms.update(
-            is_submitted=True, update_source="command", submission_date=timezone.now()
-        )
         form_id = current_form_ids[0]
         # update the channel message to clear it
         if main_form.template.form_type == "CREATE":
