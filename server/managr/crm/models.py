@@ -63,9 +63,6 @@ class BaseOpportunityQuerySet(models.QuerySet):
 
 
 class BaseOpportunity(TimeStampModel, IntegrationModel):
-    crm = models.CharField(
-        choices=crm_consts.CRM_CHOICES, max_length=255, default=crm_consts.CRM_CHOICE_SALESFORCE,
-    )
     name = models.CharField(max_length=255, blank=True, null=False)
     amount = models.DecimalField(max_digits=30, decimal_places=15, default=0.00, null=True,)
     forecast_category = models.CharField(max_length=255, null=True)
@@ -110,7 +107,7 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
         data = self.__dict__
         data["id"] = str(data["id"])
         data["owner"] = str(self.owner.id)
-        return adapters[self.crm]["Opportunity"](**data)
+        return adapters[self.integration_source]["Opportunity"](**data)
 
 
 class BaseContactQuerySet(models.QuerySet):
