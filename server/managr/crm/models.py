@@ -3,10 +3,9 @@ from managr.core.models import TimeStampModel, IntegrationModel
 from django.contrib.postgres.fields import JSONField, ArrayField
 
 from managr.crm import constants as crm_consts
+from managr.crm import routes as adapters
 
 # Create your models here.
-
-
 class BaseAccountQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
@@ -44,6 +43,13 @@ class BaseAccount(TimeStampModel, IntegrationModel):
     class Meta:
         ordering = ["-datetime_created"]
 
+    @property
+    def adapter_class(self):
+        data = self.__dict__
+        data["id"] = str(data["id"])
+        data["owner"] = str(self.owner.id)
+        return adapters[self.crm]["Account"](**data)
+
 
 class BaseOpportunityQuerySet(models.QuerySet):
     def for_user(self, user):
@@ -64,7 +70,13 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
     amount = models.DecimalField(max_digits=30, decimal_places=15, default=0.00, null=True,)
     forecast_category = models.CharField(max_length=255, null=True)
     close_date = models.DateField(null=True)
-    account = models.CharField(max_length=255, blank=True, help_text="Retrieved from Integration")
+    account = models.ForeignKey(
+        "BaseAccount",
+        related_name="opportunities",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
     contacts = models.ManyToManyField("BaseContact", related_name="contacts", blank=True)
     external_account = models.CharField(
         max_length=255, blank=True, help_text="value from the integration"
@@ -92,6 +104,13 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
 
     class Meta:
         ordering = ["-datetime_created"]
+
+    @property
+    def adapter_class(self):
+        data = self.__dict__
+        data["id"] = str(data["id"])
+        data["owner"] = str(self.owner.id)
+        return adapters[self.crm]["Opportunity"](**data)
 
 
 class BaseContactQuerySet(models.QuerySet):
@@ -128,3 +147,10 @@ class BaseContact(TimeStampModel, IntegrationModel):
 
     class Meta:
         ordering = ["-datetime_created"]
+
+    @property
+    def adapter_class(self):
+        data = self.__dict__
+        data["id"] = str(data["id"])
+        data["owner"] = str(self.owner.id)
+        return adapters[self.crm]["Contact"](**data)

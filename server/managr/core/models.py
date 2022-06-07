@@ -199,7 +199,7 @@ class User(AbstractUser, TimeStampModel):
         blank=True,
         help_text="Object for reminder setting",
     )
-    crm = models.CharField(choices=core_consts.CRM_CHOICES, max_length=25, null=True, blank=True)
+    crm = models.CharField(choices=core_consts.CRM_CHOICES, max_length=25, null=True, blank=True,)
     objects = UserManager()
 
     @property

@@ -7,22 +7,31 @@ from managr.salesforce import constants as sf_consts
 from managr.salesforce.adapter import models as salesforce_adapters
 
 USER_RESOURCE = "User"
+OPPORTUNITY = "Opportunity"
+ACCOUNT = "Account"
+CONTACT = "Contact"
+LEAD = "Lead"
+PRODUCT = "Product"
+PRICEBOOK = "Pricebook"
+PRICEBOOKENTRY = "PriceBookEntry"
+OPPORTUNITYLINEITEM = "OpportunityLineItem"
+
 
 routes = {
     crm_consts.CRM_CHOICE_HUBSPOT: {
-        hs_consts.RESOURCE_SYNC_COMPANY: hubspot_adapters.CompanyAdapter,
-        hs_consts.RESOURCE_SYNC_DEAL: hubspot_adapters.DealAdapter,
-        hs_consts.RESOURCE_SYNC_HUBSPOTCONTACT: hubspot_adapters.HubspotContactAdapter,
+        OPPORTUNITY: hubspot_adapters.CompanyAdapter,
+        ACCOUNT: hubspot_adapters.DealAdapter,
+        CONTACT: hubspot_adapters.HubspotContactAdapter,
     },
     crm_consts.CRM_CHOICE_SALESFORCE: {
-        sf_consts.RESOURCE_SYNC_ACCOUNT: salesforce_adapters.AccountAdapter,
-        sf_consts.RESOURCE_SYNC_OPPORTUNITY: salesforce_adapters.OpportunityAdapter,
-        sf_consts.RESOURCE_SYNC_CONTACT: salesforce_adapters.ContactAdapter,
-        sf_consts.RESOURCE_SYNC_LEAD: salesforce_adapters.LeadAdapter,
-        sf_consts.RESOURCE_SYNC_PRODUCT2: salesforce_adapters.Product2Adapter,
-        sf_consts.RESOURCE_SYNC_PRICEBOOK2: salesforce_adapters.Pricebook2Adapter,
-        sf_consts.RESOURCE_SYNC_PRICEBOOKENTRY: salesforce_adapters.PricebookEntryAdapter,
-        sf_consts.RESOURCE_SYNC_OPPORTUNITYLINEITEM: salesforce_adapters.OpportunityLineItemAdapter,
+        ACCOUNT: salesforce_adapters.AccountAdapter,
+        OPPORTUNITY: salesforce_adapters.OpportunityAdapter,
+        CONTACT: salesforce_adapters.ContactAdapter,
+        LEAD: salesforce_adapters.LeadAdapter,
+        PRODUCT: salesforce_adapters.Product2Adapter,
+        PRICEBOOK: salesforce_adapters.Pricebook2Adapter,
+        PRICEBOOKENTRY: salesforce_adapters.PricebookEntryAdapter,
+        OPPORTUNITYLINEITEM: salesforce_adapters.OpportunityLineItemAdapter,
         sf_consts.SALESFORCE_RESOURCE_TASK: salesforce_adapters.TaskAdapter,
     },
     USER_RESOURCE: {"model": core_models.User, "serializer": core_ser.UserSerializer,},

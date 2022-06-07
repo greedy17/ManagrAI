@@ -7,13 +7,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('salesforce', '0025_salesforceauthaccount_last_sync_time'),
+        ("salesforce", "0025_auto_20220323_1731"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='salesforceauthaccount',
-            name='extra_pipeline_fields',
-            field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=255), blank=True, default=list, size=None),
+            model_name="salesforceauthaccount",
+            name="extra_pipeline_fields",
+            field=django.contrib.postgres.fields.ArrayField(
+                base_field=models.CharField(max_length=255), blank=True, default=list, size=None
+            ),
         ),
     ]
