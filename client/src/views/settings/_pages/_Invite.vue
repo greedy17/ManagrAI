@@ -451,14 +451,13 @@ export default {
 }
 .complete {
   border-bottom: 2.9px solid $dark-green;
-  border-radius: 10%;
+
   margin-right: 0.5rem;
   color: $base-gray;
 }
 .incomplete {
   border-bottom: 2px solid $coral;
   color: $base-gray;
-  border-radius: 10%;
 }
 .back-logo {
   position: absolute;
@@ -472,13 +471,13 @@ export default {
 .active {
   border-bottom: 2px solid $dark-green;
   padding: 0.2rem;
-  border-radius: 10%;
+
   margin-right: 0.25rem;
 }
 .inactive {
   border-bottom: 2px solid $coral;
   padding: 0.2rem;
-  border-radius: 10%;
+
   margin-right: 0.25rem;
 }
 .invite-container {

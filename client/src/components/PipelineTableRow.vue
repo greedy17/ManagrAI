@@ -308,7 +308,7 @@ export default {
       formData: {},
       dropdownValue: {},
       dropdownVal: {},
-      executeUpdateValues: debounce(this.setUpdateValues, 800),
+      executeUpdateValues: debounce(this.setUpdateValues, 2000),
       editing: false,
       editIndex: null,
       currentOpp: null,

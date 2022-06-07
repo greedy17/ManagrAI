@@ -111,7 +111,7 @@
                 :options="
                   field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                     ? createQueryOpts[field.apiName]
-                    : referenceOpts[field.apiName]
+                    : createReferenceOpts[field.apiName]
                 "
                 @select="
                   setUpdateValues(
@@ -705,6 +705,10 @@
                   Change Forecast
                   <img src="@/assets/images/monetary.png" style="margin-left: 0.25rem" alt="" />
                 </button>
+                <button @click="modifyForecast('add')" class="select-btn">
+                  Add to Forecast
+                  <img src="@/assets/images/monetary.png" style="margin-left: 0.25rem" alt="" />
+                </button>
               </div>
             </div>
             <div class="flex-row-pad" v-if="closeDateSelected">
@@ -1167,6 +1171,7 @@ export default {
       noteTitle: '',
       noteInfo: '',
       referenceOpts: {},
+      createReferenceOpts: {},
       picklistQueryOpts: {},
       createQueryOpts: {},
       picklistQueryOptsContacts: {},
@@ -1188,6 +1193,7 @@ export default {
       filters: [],
       operatorsLength: 0,
       stageGateId: null,
+      forecastList: [],
       ladFilter: {
         apiName: 'LastActivityDate',
         dataType: 'Date',
@@ -1281,9 +1287,36 @@ export default {
     workflowCheckList: 'closeAll',
     stageGateField: 'stageGateInstance',
     updateOppForm: 'setForms',
+    currentCheckList: 'addToForecastList',
   },
   methods: {
     ...mapActions(['refreshCurrentUser']),
+    addToForecastList() {
+      let list = []
+      for (let i = 0; i < this.currentCheckList.length; i++) {
+        list.push(this.allOpps.filter((opp) => opp.id === this.currentCheckList[i])[0])
+      }
+      this.forecastList = list.map((opp) => opp.integration_id)
+    },
+    async modifyForecast(action) {
+      try {
+        await User.api.modifyForecast(action, this.forecastList)
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 1500,
+          message: 'Opportunities added to forecast.',
+        })
+      } catch (e) {
+        this.$Alert.alert({
+          type: 'error',
+          timeout: 1500,
+          message: 'Error adding Opportunities',
+        })
+      } finally {
+        this.$store.dispatch('refreshCurrentUser')
+        this.primaryCheckList = []
+      }
+    },
     openStageForm(field, id) {
       this.setUpdateValues('StageName', field)
       this.stageGateField = field
@@ -1295,12 +1328,16 @@ export default {
       this.stageGateField = null
       this.stageFormOpen = false
     },
-    async getReferenceFieldList(key, val) {
+    async getReferenceFieldList(key, val, type) {
       try {
         const res = await SObjects.api.getSobjectPicklistValues({
           sobject_id: val,
         })
-        this.referenceOpts[key] = res
+        if (type === 'update') {
+          this.referenceOpts[key] = res
+        } else {
+          this.createReferenceOpts[key] = res
+        }
       } catch (e) {
         console.log(e)
       }
@@ -1787,6 +1824,7 @@ export default {
       }
     },
     async createFormInstance(id, alertInstanceId = null) {
+      this.formData = {}
       this.stageGateField = null
       this.dropdownLoading = true
       this.editOpModalOpen = true
@@ -2019,6 +2057,8 @@ export default {
           .updateResource({
             form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
             form_data: this.formData,
+            from_workflow: this.selectedWorkflow ? true : false,
+            workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
           })
           .then(async () => {
             let updatedRes = await SObjects.api.getObjects('Opportunity')
@@ -2137,7 +2177,7 @@ export default {
           field.apiName !== 'OwnerId',
       )
       for (let i in this.referenceOpts) {
-        this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i])
+        this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i], 'update')
       }
 
       for (let i = 0; i < this.createOppForm.length; i++) {
@@ -2147,8 +2187,7 @@ export default {
         ) {
           this.createQueryOpts[this.createOppForm[i].apiName] = this.createOppForm[i].apiName
         } else if (this.createOppForm[i].dataType === 'Reference') {
-          this.createQueryOpts[this.createOppForm[i].referenceDisplayLabel] =
-            this.createOppForm[i].referenceDisplayLabel
+          this.createReferenceOpts[this.createOppForm[i].apiName] = this.createOppForm[i].id
         }
       }
 
@@ -2157,6 +2196,14 @@ export default {
           picklistFor: i,
           salesforceObject: 'Opportunity',
         })
+      }
+
+      for (let i in this.createReferenceOpts) {
+        this.createReferenceOpts[i] = this.getReferenceFieldList(
+          i,
+          this.createReferenceOpts[i],
+          'create',
+        )
       }
 
       this.filterFields = this.updateOppForm[0].fieldsRef.filter(
