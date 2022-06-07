@@ -44,6 +44,79 @@
         </footer>
       </div>
     </Modal>
+    <Modal
+      v-if="deleteOpen"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), resetDelete()
+        }
+      "
+    >
+      <div class="modal-container-small">
+        <header class="modal-container__header">
+          <h3>Remove from Forecast</h3>
+          <img @click="resetDelete" src="@/assets/images/clear.png" alt="" />
+        </header>
+        <div class="modal-container__body center">
+          <p>Are you sure ?</p>
+
+          <div class="row">
+            <button @click="resetDelete" class="no__button">No</button>
+            <button @click="removeForecast('remove')" class="yes__button">Yes</button>
+          </div>
+        </div>
+      </div>
+    </Modal>
+    <Modal
+      v-if="notesOpen"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), resetNotes()
+        }
+      "
+    >
+      <div v-if="notes.length" class="modal-container">
+        <div class="row-spread">
+          <div class="align-center">
+            <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <h3>Notes</h3>
+          </div>
+
+          <img
+            src="@/assets/images/closer.png"
+            style="height: 1.5rem; margin-top: -0.5rem; margin-right: 0.5rem; cursor: pointer"
+            @click="resetNotes"
+            alt=""
+          />
+        </div>
+        <section class="note-section" :key="i" v-for="(note, i) in notes">
+          <p class="note-section__title">
+            {{ note.saved_data__meeting_type ? note.saved_data__meeting_type + ':' : 'Untitled:' }}
+          </p>
+          <pre class="note-section__body">{{ note.saved_data__meeting_comments }}</pre>
+          <p class="note-section__date">{{ formatDateTime(note.submission_date) }}</p>
+        </section>
+      </div>
+      <div v-else class="modal-container">
+        <div class="row-spread">
+          <div class="align-center">
+            <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <h3>Notes</h3>
+          </div>
+          <img
+            src="@/assets/images/closer.png"
+            style="height: 1.5rem; margin-top: -0.5rem; margin-right: 0.5rem; cursor: pointer"
+            @click="resetNotes"
+            alt=""
+          />
+        </div>
+        <section class="note-section">
+          <p class="note-section__title">No notes for this opportunity</p>
+        </section>
+      </div>
+    </Modal>
     <!-- <Modal
       v-if="calculatorOpen"
       dimmed
@@ -74,7 +147,7 @@
             />
           </button>
           <div v-outside-click="closeListSelect" v-show="showList" class="list-section">
-            <div class="list-section__title flex-row-spread">
+            <div class="list-section__title row-spread">
               <p>Current Forecast</p>
             </div>
             <button class="list-button">
@@ -88,7 +161,7 @@
           <p v-else></p>
         </div>
 
-        <section class="relative">
+        <!-- <section class="relative">
           <button @click.stop="addingFilter" class="add-filter-button margin-left-s">
             <img
               src="@/assets/images/plusOne.png"
@@ -147,12 +220,12 @@
               :apiName="filterApiName"
             />
           </div>
-        </section>
+        </section> -->
       </section>
       <div class="row">
-        <button class="forecast-header__green-button">
+        <!-- <button class="forecast-header__green-button">
           <p class="green-text">%</p>
-        </button>
+        </button> -->
         <button class="margin-left-s forecast-header__button" @click="resetSettings">
           <img class="invert" src="@/assets/images/settings.png" alt="" />
         </button>
@@ -176,18 +249,46 @@
         </div>
         <div v-else-if="forecastOpps" v-for="(opp, i) in forecastOpps" :key="i" class="table-row">
           <p class="no-display">{{ setOriginalAmount(opp.data.Amount) }}</p>
-          <div class="table-cell cell-name">
-            <p>{{ opp.data.Name }}</p>
-            <p class="green-text">
-              {{
-                currentValues[opp.data.Name].account_ref
-                  ? currentValues[opp.data.Name].account_ref.name
-                  : ''
-              }}
-            </p>
-            <p class="gray-text">
-              Owned by: {{ currentValues[opp.data.Name].owner_ref.full_name }}
-            </p>
+          <div class="table-cell cell-name row">
+            <div class="row-spread">
+              <div>
+                <p>{{ opp.data.Name }}</p>
+                <p class="green-text">
+                  {{
+                    currentValues[opp.data.Name].account_ref
+                      ? currentValues[opp.data.Name].account_ref.name
+                      : ''
+                  }}
+                </p>
+                <p class="gray-text">
+                  Owned by: {{ currentValues[opp.data.Name].owner_ref.full_name }}
+                </p>
+              </div>
+
+              <div class="row">
+                <button
+                  @click="getNotes(currentValues[opp.data.Name].id)"
+                  class="name-cell-edit-note-button"
+                >
+                  <img
+                    class="invert-less"
+                    src="@/assets/images/white-note.png"
+                    height="12px"
+                    alt=""
+                  />
+                </button>
+
+                <button
+                  @click="
+                    deleteOpen = true
+                    setDeleteId(opp.data.Id)
+                  "
+                  class="name-cell-edit-note-button"
+                >
+                  <img class="invert" src="@/assets/images/trash.png" height="14px" alt="" />
+                </button>
+              </div>
+            </div>
           </div>
           <div class="table-cell">
             <p class="green-text align-center letter-spacing">
@@ -368,8 +469,10 @@ export default {
       calculatorOpen: false,
       filterSelected: false,
       addingOperator: false,
+      deleteOpen: false,
       filtering: false,
       modalOpen: false,
+      notesOpen: false,
       showList: false,
       loading: true,
       forecastVmodel: null,
@@ -393,6 +496,8 @@ export default {
       activeOperators: [],
       addedFilters: [],
       filterValues: [],
+      deleteIds: [],
+      notes: [],
       activeFilters: [],
       filterNames: [],
     }
@@ -412,7 +517,55 @@ export default {
   beforeMount() {
     this.setPicklist()
   },
+  mounted() {
+    console.log(this.forecastOpps)
+  },
   methods: {
+    resetNotes() {
+      this.notesOpen = !this.notesOpen
+      this.notes = []
+    },
+    async getNotes(id) {
+      try {
+        const res = await SObjects.api.getNotes({
+          resourceId: id,
+        })
+        this.notesOpen = true
+        if (res.length) {
+          for (let i = 0; i < res.length; i++) {
+            this.notes.push(res[i])
+            this.notes = this.notes.filter((note) => note.saved_data__meeting_comments !== null)
+          }
+        }
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    setDeleteId(id) {
+      this.deleteIds = []
+      this.deleteIds.push(id)
+      console.log(this.deleteIds)
+    },
+    async removeForecast() {
+      try {
+        await User.api.modifyForecast('remove', this.deleteIds)
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 1500,
+          message: 'Opportunity removed. Refresh to see changes.',
+        })
+      } catch (e) {
+        this.$Alert.alert({
+          type: 'error',
+          timeout: 1500,
+          message: 'Error Removing Opportunity',
+        })
+      } finally {
+        this.$store.dispatch('refreshCurrentUser')
+        this.deleteOpen = false
+        this.deleteIds = []
+      }
+    },
     async modifyForecast(action) {
       try {
         await User.api.modifyForecast(action, this.addedOpportunities)
@@ -585,6 +738,9 @@ export default {
     resetSettings() {
       this.modalOpen = !this.modalOpen
     },
+    resetDelete() {
+      this.deleteOpen = !this.deleteOpen
+    },
     resetAddOpp() {
       this.addOppOpen = !this.addOppOpen
     },
@@ -688,8 +844,22 @@ export default {
   flex-direction: row;
   align-items: flex-start;
 }
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.row-spread {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
 .invert {
   filter: invert(70%);
+}
+.invert-less {
+  filter: invert(40%);
 }
 .table-section {
   margin: 0;
@@ -876,6 +1046,15 @@ export default {
     margin-right: 0.25rem;
     filter: invert(70%);
   }
+}
+.modal-container-small {
+  background-color: $white;
+  overflow: auto;
+  width: 26vw;
+  height: 28vh;
+  align-items: center;
+  border-radius: 0.3rem;
+  border: 1px solid #e8e8e8;
 }
 .modal-container {
   background-color: $white;
@@ -1106,5 +1285,75 @@ export default {
   cursor: pointer;
   color: white;
   font-weight: bold;
+}
+
+.name-cell-edit-note-button {
+  height: 1.5rem;
+  width: 1.5rem;
+  margin-right: 0.2rem;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e8e8e8;
+  cursor: pointer;
+}
+.no__button {
+  background-color: $soft-gray;
+  outline: 1px solid $soft-gray;
+  border: none;
+  font-size: 14px;
+  border-radius: 0.3rem;
+  cursor: pointer;
+  padding: 0.4rem 2rem;
+  margin-right: 0.5rem;
+  color: $base-gray;
+}
+.yes__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 2rem;
+  border-radius: 0.3rem;
+  text-indent: none;
+  border-style: none;
+  letter-spacing: 0.25px;
+  color: white;
+  background-color: $dark-green;
+  outline: 1px solid $dark-green;
+  cursor: pointer;
+  font-size: 14px;
+}
+.logo {
+  height: 1.75rem;
+  margin-left: 0.5rem;
+  margin-right: 0.25rem;
+  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+    brightness(93%) contrast(89%);
+}
+.note-section {
+  padding: 0.5rem 1rem;
+  margin-bottom: 0.25rem;
+  background-color: white;
+  border-bottom: 1px solid $soft-gray;
+  overflow: scroll;
+  &__title {
+    font-size: 16px;
+    font-weight: bolder;
+    color: $dark-green;
+    letter-spacing: 1.2px;
+  }
+  &__body {
+    color: $base-gray;
+    font-family: $base-font-family;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+  }
+  &__date {
+    color: $mid-gray;
+    font-size: 11px;
+  }
 }
 </style>

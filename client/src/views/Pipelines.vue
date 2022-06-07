@@ -705,6 +705,10 @@
                   Change Forecast
                   <img src="@/assets/images/monetary.png" style="margin-left: 0.25rem" alt="" />
                 </button>
+                <button @click="modifyForecast('add')" class="select-btn">
+                  Add to Forecast
+                  <img src="@/assets/images/monetary.png" style="margin-left: 0.25rem" alt="" />
+                </button>
               </div>
             </div>
             <div class="flex-row-pad" v-if="closeDateSelected">
@@ -1188,6 +1192,7 @@ export default {
       filters: [],
       operatorsLength: 0,
       stageGateId: null,
+      forecastList: [],
       ladFilter: {
         apiName: 'LastActivityDate',
         dataType: 'Date',
@@ -1281,8 +1286,35 @@ export default {
     workflowCheckList: 'closeAll',
     stageGateField: 'stageGateInstance',
     updateOppForm: 'setForms',
+    currentCheckList: 'addToForecastList',
   },
   methods: {
+    addToForecastList() {
+      let list = []
+      for (let i = 0; i < this.currentCheckList.length; i++) {
+        list.push(this.allOpps.filter((opp) => opp.id === this.currentCheckList[i])[0])
+      }
+      this.forecastList = list.map((opp) => opp.integration_id)
+    },
+    async modifyForecast(action) {
+      try {
+        await User.api.modifyForecast(action, this.forecastList)
+        this.$Alert.alert({
+          type: 'success',
+          timeout: 1500,
+          message: 'Opportunities added to forecast.',
+        })
+      } catch (e) {
+        this.$Alert.alert({
+          type: 'error',
+          timeout: 1500,
+          message: 'Error adding Opportunities',
+        })
+      } finally {
+        this.$store.dispatch('refreshCurrentUser')
+        this.primaryCheckList = []
+      }
+    },
     openStageForm(field, id) {
       this.setUpdateValues('StageName', field)
       this.stageGateField = field
