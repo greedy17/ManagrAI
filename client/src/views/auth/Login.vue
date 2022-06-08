@@ -80,8 +80,14 @@ export default {
     }
   },
   mounted() {
-    let el = document.getElementById('fullstory')
-    el.remove()
+    // let logScript = document.getElementById('logrocket-script')
+    // logScript.remove()
+    // let pkg = document.getElementById('logrocket-package')
+    // let installedPkg = document.querySelector(
+    //   'script[src="https://cdn.lr-in-prod.com/logger-1.min.js"]',
+    // )
+    // installedPkg.remove()
+    // pkg.remove()
   },
   methods: {
     async checkAccountStatus() {

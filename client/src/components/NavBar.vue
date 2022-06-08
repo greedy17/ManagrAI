@@ -25,11 +25,11 @@
                 >Meetings</router-link
               >
             </li>
-            <!-- <li>
+            <li>
               <router-link exact-active-class="active" :to="{ name: 'Forecast' }"
-                >Forecast
+                >Forecast <span>Beta</span>
               </router-link>
-            </li> -->
+            </li>
           </ul>
         </div>
 
@@ -52,7 +52,7 @@
             </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Forecast' }"
-                >Forecast</router-link
+                >Forecast<span>Beta</span></router-link
               >
             </li>
           </ul>
@@ -256,8 +256,12 @@ export default {
   }
 }
 span {
-  font-size: 10px;
+  font-size: 11px;
   color: $dark-green;
+  background-color: $soft-gray;
+  margin-left: 0.25rem;
+  padding: 0.2rem;
+  border-radius: 0.2rem;
 }
 .profile-wrapper {
   display: flex !important;
