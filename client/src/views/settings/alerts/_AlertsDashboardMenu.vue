@@ -33,7 +33,8 @@
       <router-link v-if="!isOnboarding" exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
         <div :class="isOnboarding ? 'onboarding row' : 'row'">
           <img
-            src="@/assets/images/build.png"
+            class="invert"
+            src="@/assets/images/build.svg"
             style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
             alt=""
           />
@@ -79,7 +80,8 @@
       <router-link exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
         <div class="row">
           <img
-            src="@/assets/images/build.png"
+            class="invert"
+            src="@/assets/images/build.svg"
             style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
             alt=""
           />
@@ -99,7 +101,8 @@
           <router-link exact-active-class="active" :to="{ name: 'RealTime' }">
             <div style="height: 2.25rem" class="row">
               <img
-                src="@/assets/images/bolt.png"
+                class="invert"
+                src="@/assets/images/bolt.svg"
                 style="height: 0.9rem; margin-right: 1rem; margin-left: 1rem"
                 alt=""
               />
@@ -113,7 +116,8 @@
           >
             <div style="height: 2.25rem" class="row">
               <img
-                src="@/assets/images/org.png"
+                src="@/assets/images/org.svg"
+                class="invert"
                 style="height: 0.8rem; margin-right: 1rem; margin-left: 1rem"
                 alt=""
               />
@@ -143,7 +147,8 @@
       <router-link exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
         <div class="row">
           <img
-            src="@/assets/images/build.png"
+            class="invert"
+            src="@/assets/images/build.svg"
             style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
             alt=""
           />
@@ -305,6 +310,9 @@ a:hover div {
     filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
       brightness(93%) contrast(89%);
   }
+}
+.invert {
+  filter: invert(80%);
 }
 a:hover span {
   border-color: $dark-green;

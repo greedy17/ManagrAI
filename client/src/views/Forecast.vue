@@ -12,7 +12,7 @@
       <div class="modal-container">
         <header class="modal-container__header">
           <h3>Forecast Settings</h3>
-          <img @click="resetSettings" src="@/assets/images/clear.png" alt="" />
+          <img class="invert" @click="resetSettings" src="@/assets/images/clear.svg" alt="" />
         </header>
         <div class="modal-container__body">
           <p>Add Opportunites to Forecast:</p>
@@ -33,7 +33,7 @@
             </template>
             <template slot="placeholder">
               <p class="slot-icon">
-                <img src="@/assets/images/search.png" alt="" />
+                <img src="@/assets/images/search.svg" alt="" />
                 Select Opportunities
               </p>
             </template>
@@ -56,7 +56,7 @@
       <div class="modal-container-small">
         <header class="modal-container__header">
           <h3>Remove from Forecast</h3>
-          <img @click="resetDelete" src="@/assets/images/clear.png" alt="" />
+          <img class="invert" @click="resetDelete" src="@/assets/images/clear.svg" alt="" />
         </header>
         <div class="modal-container__body center">
           <p>Are you sure ?</p>
@@ -85,7 +85,7 @@
           </div>
 
           <img
-            src="@/assets/images/closer.png"
+            src="@/assets/images/close.svg"
             style="height: 1.5rem; margin-top: -0.5rem; margin-right: 0.5rem; cursor: pointer"
             @click="resetNotes"
             alt=""
@@ -106,7 +106,7 @@
             <h3>Notes</h3>
           </div>
           <img
-            src="@/assets/images/closer.png"
+            src="@/assets/images/close.svg"
             style="height: 1.5rem; margin-top: -0.5rem; margin-right: 0.5rem; cursor: pointer"
             @click="resetNotes"
             alt=""
@@ -136,13 +136,15 @@
             <img
               v-if="!showList"
               style="height: 1rem; margin-left: 0.5rem"
-              src="@/assets/images/rightArrow.png"
+              src="@/assets/images/rightArrow.svg"
+              class="invert"
               alt=""
             />
             <img
               v-else
+              class="invert"
               style="height: 1rem; margin-left: 0.5rem"
-              src="@/assets/images/downArrow.png"
+              src="@/assets/images/downArrow.svg"
               alt=""
             />
           </button>
@@ -272,7 +274,7 @@
                 >
                   <img
                     class="invert-less"
-                    src="@/assets/images/white-note.png"
+                    src="@/assets/images/white-note.svg"
                     height="12px"
                     alt=""
                   />

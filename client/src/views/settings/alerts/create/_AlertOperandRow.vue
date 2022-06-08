@@ -38,12 +38,12 @@
               <template slot="afterList">
                 <p class="multi-slot__more" @click="objectFieldNextPage">
                   Load More
-                  <img src="@/assets/images/plusOne.png" alt="" />
+                  <img src="@/assets/images/plusOne.svg" class="uninvert" alt="" />
                 </p>
               </template>
               <template slot="placeholder">
                 <p class="slot-icon">
-                  <img src="@/assets/images/search.png" alt="" />
+                  <img src="@/assets/images/search.svg" alt="" />
                   Select Field
                 </p>
               </template>
@@ -74,7 +74,7 @@
               </template>
               <template slot="placeholder">
                 <p class="slot-icon">
-                  <img src="@/assets/images/search.png" alt="" />
+                  <img src="@/assets/images/search.svg" alt="" />
                   Select Operator
                 </p>
               </template>
@@ -107,7 +107,7 @@
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
+                    <img src="@/assets/images/search.svg" alt="" />
                     Select Value
                   </p>
                 </template>
@@ -140,7 +140,7 @@
                   </template>
                   <template slot="placeholder">
                     <p class="slot-icon">
-                      <img src="@/assets/images/search.png" alt="" />
+                      <img src="@/assets/images/search.svg" alt="" />
                       Select Value
                     </p>
                   </template>
@@ -178,7 +178,7 @@
                       </template>
                       <template slot="placeholder">
                         <p class="slot-icon">
-                          <img src="@/assets/images/search.png" alt="" />
+                          <img src="@/assets/images/search.svg" alt="" />
                           Select Operator
                         </p>
                       </template>
@@ -642,6 +642,9 @@ export default {
 
 img {
   filter: invert(90%);
+}
+.uninvert {
+  filter: invert(10%);
 }
 .centered {
   display: flex;

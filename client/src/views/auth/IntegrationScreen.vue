@@ -33,7 +33,7 @@
               <h3 class="card__title">Salesforce</h3>
               <img
                 class="filter-dot"
-                src="@/assets/images/dot.png"
+                src="@/assets/images/dot.svg"
                 v-if="hasSalesforceIntegration"
               />
             </div>
@@ -57,7 +57,7 @@
               <div class="img-border">
                 <img
                   @click="onRevoke('SALESFORCE')"
-                  src="@/assets/images/revoke.png"
+                  src="@/assets/images/revoke.svg"
                   height="16"
                   alt=""
                 />
@@ -73,7 +73,7 @@
               <h3 class="card__title">Slack</h3>
               <img
                 class="filter-dot"
-                src="@/assets/images/dot.png"
+                src="@/assets/images/dot.svg"
                 v-if="orgHasSlackIntegration || !hasSlackIntegration"
               />
             </div>
@@ -96,14 +96,13 @@
 
           <div v-else class="card__body">
             <div class="img-border">
-              <img @click="onRevoke('SLACK')" src="@/assets/images/revoke.png" height="16" alt="" />
+              <img @click="onRevoke('SLACK')" src="@/assets/images/revoke.svg" height="16" alt="" />
             </div>
             <div class="img-border">
               <img
                 @click="onGetAuthLink('SLACK')"
-                src="@/assets/images/refresh.png"
+                src="@/assets/images/refresh.svg"
                 height="16"
-                class="invert"
                 alt=""
               />
             </div>
@@ -122,7 +121,7 @@
             <img src="@/assets/images/gmailCal.png" style="margin-right: 1rem; height: 1rem" />
             <img src="@/assets/images/outlookMail.png" style="height: 1rem" />
             <h3 class="card__title">Calendar</h3>
-            <img class="filter-dot" src="@/assets/images/dot.png" v-if="hasNylasIntegration" />
+            <img class="filter-dot" src="@/assets/images/dot.svg" v-if="hasNylasIntegration" />
           </div>
 
           <p class="card-text">Accesses your upcoming meetings + attendees</p>
@@ -144,7 +143,7 @@
           </div>
           <div v-else class="card__body">
             <div class="img-border">
-              <img @click="onRevoke('NYLAS')" src="@/assets/images/revoke.png" height="16" alt="" />
+              <img @click="onRevoke('NYLAS')" src="@/assets/images/revoke.svg" height="16" alt="" />
             </div>
           </div>
         </div>
@@ -153,7 +152,7 @@
           <div class="card__header">
             <img style="height: 1rem" src="@/assets/images/zoom.png" />
             <h3 class="card__title">Zoom</h3>
-            <img class="filter-dot" src="@/assets/images/dot.png" v-if="hasZoomIntegration" />
+            <img class="filter-dot" src="@/assets/images/dot.svg" v-if="hasZoomIntegration" />
           </div>
           <p class="card-text">Activates the zoom meeting workflow automation.</p>
           <div v-if="!hasZoomIntegration" class="card__body">
@@ -171,14 +170,13 @@
 
           <div v-else class="card__body">
             <div class="img-border">
-              <img @click="onRevoke('ZOOM')" src="@/assets/images/revoke.png" height="16" alt="" />
+              <img @click="onRevoke('ZOOM')" src="@/assets/images/revoke.svg" height="16" alt="" />
             </div>
             <div class="img-border">
               <img
                 @click="onGetAuthLink('ZOOM')"
-                src="@/assets/images/refresh.png"
+                src="@/assets/images/refresh.svg"
                 height="16"
-                class="invert"
                 alt=""
               />
             </div>
@@ -230,7 +228,7 @@
               <div class="img-border">
                 <img
                   @click="onRevoke('OUTREACH')"
-                  src="@/assets/images/revoke.png"
+                  src="@/assets/images/revoke.svg"
                   height="16"
                   alt=""
                 />
@@ -238,9 +236,8 @@
               <div class="img-border">
                 <img
                   @click="onGetAuthLink('OUTREACH')"
-                  src="@/assets/images/refresh.png"
+                  src="@/assets/images/refresh.svg"
                   height="16"
-                  class="invert"
                   alt=""
                 />
               </div>
@@ -273,7 +270,7 @@
               <h3 class="card__title">Salesforce</h3>
               <img
                 class="filter-dot"
-                src="@/assets/images/dot.png"
+                src="@/assets/images/dot.svg"
                 v-if="hasSalesforceIntegration"
               />
             </div>
@@ -297,7 +294,7 @@
               <div class="img-border">
                 <img
                   @click="onRevoke('SALESFORCE')"
-                  src="@/assets/images/revoke.png"
+                  src="@/assets/images/revoke.svg"
                   height="16"
                   alt=""
                 />
@@ -313,7 +310,7 @@
               <h3 class="card__title">Slack</h3>
               <img
                 class="filter-dot"
-                src="@/assets/images/dot.png"
+                src="@/assets/images/dot.svg"
                 v-if="orgHasSlackIntegration || !hasSlackIntegration"
               />
             </div>
@@ -337,7 +334,7 @@
               <div class="img-border">
                 <img
                   @click="onRevoke('SLACK')"
-                  src="@/assets/images/revoke.png"
+                  src="@/assets/images/revoke.svg"
                   height="16"
                   alt=""
                 />
@@ -345,9 +342,8 @@
               <div class="img-border">
                 <img
                   @click="onGetAuthLink('SLACK')"
-                  src="@/assets/images/refresh.png"
+                  src="@/assets/images/refresh.svg"
                   height="16"
-                  class="invert"
                   alt=""
                 />
               </div>
@@ -359,7 +355,7 @@
           <div class="card__header">
             <img style="height: 1rem" src="@/assets/images/zoom.png" />
             <h3 class="card__title">Zoom</h3>
-            <img class="filter-dot" src="@/assets/images/dot.png" v-if="hasZoomIntegration" />
+            <img class="filter-dot" src="@/assets/images/dot.svg" v-if="hasZoomIntegration" />
           </div>
 
           <p class="card-text">Activates the meeting workflow automation.</p>
@@ -377,7 +373,7 @@
               <div class="img-border">
                 <img
                   @click="onRevoke('ZOOM')"
-                  src="@/assets/images/revoke.png"
+                  src="@/assets/images/revoke.svg"
                   height="16"
                   alt=""
                 />
@@ -385,9 +381,8 @@
               <div class="img-border">
                 <img
                   @click="onGetAuthLink('ZOOM')"
-                  src="@/assets/images/refresh.png"
+                  src="@/assets/images/refresh.svg"
                   height="16"
-                  class="invert"
                   alt=""
                 />
               </div>
@@ -400,7 +395,7 @@
             <img src="@/assets/images/gmailCal.png" style="margin-right: 1rem; height: 1rem" />
             <img src="@/assets/images/outlookMail.png" style="height: 1rem" />
             <h3 class="card__title">Calendar</h3>
-            <img class="filter-dot" src="@/assets/images/dot.png" v-if="hasNylasIntegration" />
+            <img class="filter-dot" src="@/assets/images/dot.svg" v-if="hasNylasIntegration" />
           </div>
 
           <p class="card-text">Accesses your upcoming meetings + attendees</p>
@@ -417,7 +412,7 @@
               <div class="img-border">
                 <img
                   @click="onRevoke('NYLAS')"
-                  src="@/assets/images/revoke.png"
+                  src="@/assets/images/revoke.svg"
                   height="16"
                   alt=""
                 />
@@ -429,7 +424,7 @@
         <div class="card">
           <div class="card__header">
             <img class="filter-loft" style="height: 1rem" src="@/assets/images/salesloft.svg" />
-            <img class="filter-dot" src="@/assets/images/dot.png" v-if="hasSalesloftIntegration" />
+            <img class="filter-dot" src="@/assets/images/dot.svg" v-if="hasSalesloftIntegration" />
           </div>
           <p class="card-text">Add Contacts to Cadences</p>
           <div class="card__body">
@@ -446,7 +441,7 @@
               <div class="img-border">
                 <img
                   @click="onRevoke('SALESLOFT')"
-                  src="@/assets/images/revoke.png"
+                  src="@/assets/images/revoke.svg"
                   height="16"
                   alt=""
                 />
@@ -458,7 +453,7 @@
         <div class="card">
           <div class="card__header">
             <img style="height: 1rem" src="@/assets/images/outreach.webp" />
-            <img class="filter-dot" src="@/assets/images/dot.png" v-if="hasOutreachIntegration" />
+            <img class="filter-dot" src="@/assets/images/dot.svg" v-if="hasOutreachIntegration" />
           </div>
           <p class="card-text">Add Contacts to Sequences</p>
           <div class="card__body">
@@ -475,7 +470,7 @@
               <div class="img-border">
                 <img
                   @click="onRevoke('OUTREACH')"
-                  src="@/assets/images/revoke.png"
+                  src="@/assets/images/revoke.svg"
                   height="16"
                   alt=""
                 />
@@ -483,9 +478,8 @@
               <div class="img-border">
                 <img
                   @click="onGetAuthLink('OUTREACH')"
-                  src="@/assets/images/refresh.png"
+                  src="@/assets/images/refresh.svg"
                   height="16"
-                  class="invert"
                   alt=""
                 />
               </div>
@@ -513,7 +507,7 @@
                 ></path>
               </g>
             </svg>
-            <img class="filter-dot" src="@/assets/images/dot.png" v-if="hasGongIntegration" />
+            <img class="filter-dot" src="@/assets/images/dot.svg" v-if="hasGongIntegration" />
           </div>
           <p class="card-text">Access call recordings and insights</p>
           <div class="card__body">
@@ -531,7 +525,7 @@
               <div class="img-border">
                 <img
                   @click="onRevoke('GONG')"
-                  src="@/assets/images/revoke.png"
+                  src="@/assets/images/revoke.svg"
                   height="16"
                   alt=""
                 />
@@ -564,7 +558,7 @@
       </div>
     </div>
 
-    <img style="margin-top: 1rem" class="lock" src="@/assets/images/blackLock.png" />
+    <img style="margin-top: 1rem" class="lock" src="@/assets/images/blackLock.svg" />
     <p class="privacy">SOC2 certified, and GDPR compliant</p>
   </div>
 </template>

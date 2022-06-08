@@ -62,7 +62,7 @@
 
             <template slot="placeholder">
               <p class="slot-icon">
-                <img src="@/assets/images/search.png" alt="" />
+                <img src="@/assets/images/search.svg" alt="" />
                 {{ selectedStage ? selectedStage : 'Select Stage' }}
               </p>
             </template>

@@ -154,12 +154,12 @@
                 <template slot="afterList">
                   <p class="multi-slot__more" @click="fieldNextPage">
                     Load More
-                    <img src="@/assets/images/plusOne.png" alt="" />
+                    <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
                   </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
+                    <img src="@/assets/images/search.svg" alt="" />
                     Select field
                   </p>
                 </template>
@@ -760,6 +760,9 @@ h3 {
 .remove-color {
   filter: invert(70%);
   cursor: pointer;
+}
+.invert {
+  filter: invert(80%);
 }
 .message__box {
   margin-bottom: 2rem;

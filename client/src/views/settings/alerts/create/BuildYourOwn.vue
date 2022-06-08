@@ -44,7 +44,7 @@
           <h3>Create a Custom Workflow</h3>
           <div class="button-space">
             <button class="plus_button" @click="onAddAlertGroup">
-              <img src="@/assets/images/plusOne.png" class="filtered" alt="" />
+              <img src="@/assets/images/plusOne.svg" class="filtered" alt="" />
               Add Group
             </button>
           </div>
@@ -183,7 +183,7 @@
                 <img
                   @click="viewingTemplate = !viewingTemplate"
                   style="height: 1rem"
-                  src="@/assets/images/close.png"
+                  src="@/assets/images/close.svg"
                   alt=""
                 />
               </div>
@@ -237,7 +237,7 @@
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
+                    <img src="@/assets/images/search.svg" alt="" />
                     Select Field
                   </p>
                 </template>
@@ -299,7 +299,7 @@
                           </template>
                           <template slot="placeholder">
                             <p class="slot-icon">
-                              <img src="@/assets/images/search.png" alt="" />
+                              <img src="@/assets/images/search.svg" alt="" />
                               Select a Day
                             </p>
                           </template>
@@ -352,12 +352,12 @@
                       <template slot="afterList">
                         <p class="multi-slot__more" @click="onUsersNextPage">
                           Load More
-                          <img src="@/assets/images/plusOne.png" alt="" />
+                          <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
                         </p>
                       </template>
                       <template slot="placeholder">
                         <p class="slot-icon">
-                          <img src="@/assets/images/search.png" alt="" />
+                          <img src="@/assets/images/search.svg" alt="" />
                           Select Users
                         </p>
                       </template>
@@ -438,12 +438,12 @@
                           @click="listUserChannels(userChannelOpts.nextCursor)"
                         >
                           Load More
-                          <img src="@/assets/images/plusOne.png" alt="" />
+                          <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
                         </p>
                       </template>
                       <template slot="placeholder">
                         <p class="slot-icon">
-                          <img src="@/assets/images/search.png" alt="" />
+                          <img src="@/assets/images/search.svg" alt="" />
                           Select Channel
                         </p>
                       </template>
@@ -1261,8 +1261,11 @@ button img {
   flex-direction: column;
 }
 .filtered {
-  filter: invert(1%);
+  filter: invert(99%);
   height: 1rem;
+}
+.invert {
+  filter: invert(99%);
 }
 .alert__column {
   display: flex;

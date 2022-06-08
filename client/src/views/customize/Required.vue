@@ -10,14 +10,14 @@
         <div class="card__header">
           <h3>Update Opportunity</h3>
           <p class="active-workflow" v-if="activeUpdateOpportunityForm">
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </p>
         </div>
         <div class="card__body">
           <img style="margin-right: 1rem" class="card-img" src="@/assets/images/salesforce.png" />
           <img
-            style="height: 1rem; margin-right: 1rem; filter: invert(60%)"
-            src="@/assets/images/plusOne.png"
+            style="height: 1rem; margin-right: 1rem; filter: invert(40%)"
+            src="@/assets/images/plusOne.svg"
             alt=""
             id="plus"
           />
@@ -32,14 +32,14 @@
         <div class="card__header">
           <h3>Create Contacts</h3>
           <p v-if="activeCreateContactForm" class="active-workflow">
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </p>
         </div>
         <div class="card__body">
           <img style="margin-right: 1rem" class="card-img" src="@/assets/images/salesforce.png" />
           <img
-            style="height: 1rem; margin-right: 1rem; filter: invert(60%)"
-            src="@/assets/images/plusOne.png"
+            style="height: 1rem; margin-right: 1rem; filter: invert(40%)"
+            src="@/assets/images/plusOne.svg"
             alt=""
             id="plus"
           />

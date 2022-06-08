@@ -128,7 +128,7 @@
               Log out
               <img
                 @click="logOut"
-                src="@/assets/images/blacklogout.png"
+                src="@/assets/images/blacklogout.svg"
                 alt=""
                 style="height: 0.75rem; margin: 0.25rem"
               />
@@ -159,7 +159,7 @@
               Log out
               <img
                 @click="logOut"
-                src="@/assets/images/blacklogout.png"
+                src="@/assets/images/blacklogout.svg"
                 alt=""
                 style="height: 0.75rem; margin: 0.25rem"
               />
