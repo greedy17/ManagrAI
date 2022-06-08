@@ -199,7 +199,6 @@ export default {
       hasCreateAccountForm: null,
       hasUpdateLeadForm: null,
       hasUpdateAccountForm: null,
-
       createOppForm: null,
       updateContactForm: null,
       createLeadForm: null,
