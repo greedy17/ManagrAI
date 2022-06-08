@@ -265,7 +265,7 @@
           </div>
         </div>
       </div>
-
+      <p class="grey-text margin-left">Required</p>
       <div class="integrations__cards">
         <div class="card">
           <div class="required__header">
@@ -307,6 +307,40 @@
           </div>
         </div>
 
+        <div class="card">
+          <div class="card__header">
+            <img src="@/assets/images/gmailCal.png" style="margin-right: 1rem; height: 1rem" />
+            <img src="@/assets/images/outlookMail.png" style="height: 1rem" />
+            <h3 class="card__title">Calendar</h3>
+            <img class="filter-dot" src="@/assets/images/dot.png" v-if="hasNylasIntegration" />
+          </div>
+
+          <p class="card-text">Accesses your upcoming meetings + attendees</p>
+          <div class="card__body">
+            <PulseLoadingSpinnerButton
+              v-if="!hasNylasIntegration"
+              @click="onGetAuthLink('NYLAS')"
+              style="margin-left: 1rem"
+              class="orange_button"
+              text="Connect"
+              :loading="generatingToken && selectedIntegration == 'NYLAS'"
+            ></PulseLoadingSpinnerButton>
+            <div v-else class="card__body">
+              <div class="img-border">
+                <img
+                  @click="onRevoke('NYLAS')"
+                  src="@/assets/images/revoke.png"
+                  height="16"
+                  alt=""
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="grey-text margin-left">Optional</p>
+      <div class="integrations__cards">
         <div class="card">
           <div class="required__header">
             <div class="card__header">
@@ -389,37 +423,6 @@
                   src="@/assets/images/refresh.png"
                   height="16"
                   class="invert"
-                  alt=""
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card__header">
-            <img src="@/assets/images/gmailCal.png" style="margin-right: 1rem; height: 1rem" />
-            <img src="@/assets/images/outlookMail.png" style="height: 1rem" />
-            <h3 class="card__title">Calendar</h3>
-            <img class="filter-dot" src="@/assets/images/dot.png" v-if="hasNylasIntegration" />
-          </div>
-
-          <p class="card-text">Accesses your upcoming meetings + attendees</p>
-          <div class="card__body">
-            <PulseLoadingSpinnerButton
-              v-if="!hasNylasIntegration"
-              @click="onGetAuthLink('NYLAS')"
-              style="margin-left: 1rem"
-              class="orange_button"
-              text="Connect"
-              :loading="generatingToken && selectedIntegration == 'NYLAS'"
-            ></PulseLoadingSpinnerButton>
-            <div v-else class="card__body">
-              <div class="img-border">
-                <img
-                  @click="onRevoke('NYLAS')"
-                  src="@/assets/images/revoke.png"
-                  height="16"
                   alt=""
                 />
               </div>
@@ -950,5 +953,8 @@ a {
 }
 .green-outline {
   outline: 1px solid $dark-green;
+}
+.font-12 {
+  font-size: 12px;
 }
 </style>

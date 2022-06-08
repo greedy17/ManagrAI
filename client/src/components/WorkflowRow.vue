@@ -134,6 +134,27 @@
             </div>
           </div>
 
+          <div v-else-if="field.dataType === 'Boolean'">
+            <Multiselect
+              v-model="dropdownVal[field.apiName]"
+              :options="booleans"
+              @select="setUpdateValues(field.apiName, $event)"
+              openDirection="below"
+              style="width: 14vw; padding-bottom: 8rem"
+              selectLabel="Enter"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.png" alt="" />
+                  {{ workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))] }}
+                </p>
+              </template>
+            </Multiselect>
+          </div>
+
           <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
             <div v-if="inlineLoader">
               <PipelineLoader />
@@ -322,6 +343,7 @@ export default {
       currentOpp: null,
       updatedWorkflowList: [],
       newCloseDate: null,
+      booleans: ['true', 'false'],
       objectFields: CollectionManager.create({
         ModelClass: SObjectField,
         pagination: { size: 300 },
