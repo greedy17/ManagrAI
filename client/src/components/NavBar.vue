@@ -27,7 +27,7 @@
             </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Forecast' }"
-                >Forecast <span>Beta</span>
+                >Tracker <span>Beta</span>
               </router-link>
             </li>
           </ul>
@@ -52,7 +52,7 @@
             </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Forecast' }"
-                >Forecast<span>Beta</span></router-link
+                >Tracker<span>Beta</span></router-link
               >
             </li>
           </ul>
@@ -73,6 +73,11 @@
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Meetings' }"
                 >Meetings</router-link
+              >
+            </li>
+            <li>
+              <router-link exact-active-class="active" :to="{ name: 'Forecast' }"
+                >Tracker<span>Beta</span></router-link
               >
             </li>
           </ul>
@@ -106,6 +111,11 @@
                 >Meetings</router-link
               >
             </li>
+            <li>
+              <router-link exact-active-class="active" :to="{ name: 'Forecast' }"
+                >Tracker<span>Beta</span></router-link
+              >
+            </li>
           </ul>
         </div>
       </div>
@@ -115,10 +125,14 @@
           ><img src="@/assets/images/connect.svg" alt="" />
         </router-link>
 
+        <router-link v-if="isAdmin" exact-active-class="active-img" :to="{ name: 'Required' }"
+          ><img src="@/assets/images/list.svg" alt="" />
+        </router-link>
+
         <div>
           <router-link class="profile-wrapper" :to="{ name: 'InviteUsers' }">
             <small>{{ user.email }}</small>
-            <img src="@/assets/images/profile.png" alt="" />
+            <img src="@/assets/images/profile.svg" alt="" />
           </router-link>
         </div>
 
@@ -128,7 +142,7 @@
               Log out
               <img
                 @click="logOut"
-                src="@/assets/images/blacklogout.png"
+                src="@/assets/images/blacklogout.svg"
                 alt=""
                 style="height: 0.75rem; margin: 0.25rem"
               />
@@ -149,7 +163,7 @@
         <div>
           <router-link class="profile-wrapper" :to="{ name: 'InviteUsers' }">
             <small>{{ user.email }}</small>
-            <img src="@/assets/images/profile.png" alt="" />
+            <img src="@/assets/images/profile.svg" alt="" />
           </router-link>
         </div>
 
@@ -159,7 +173,7 @@
               Log out
               <img
                 @click="logOut"
-                src="@/assets/images/blacklogout.png"
+                src="@/assets/images/blacklogout.svg"
                 alt=""
                 style="height: 0.75rem; margin: 0.25rem"
               />

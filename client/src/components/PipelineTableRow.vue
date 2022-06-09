@@ -40,10 +40,10 @@
         </div>
         <div v-else class="flex-row">
           <button @click="emitCreateForm" class="name-cell-edit-note-button-1">
-            <img style="filter: invert(90%); height: 0.6rem" src="@/assets/images/edit.png" />
+            <img style="filter: invert(10%); height: 0.6rem" src="@/assets/images/edit.svg" />
           </button>
           <button @click="emitGetNotes" class="name-cell-note-button-1">
-            <img class="gray" src="@/assets/images/white-note.png" />
+            <img class="gray" src="@/assets/images/white-note.svg" />
           </button>
         </div>
       </div>
@@ -149,7 +149,7 @@
 
               <template slot="placeholder">
                 <p class="slot-icon">
-                  <img src="@/assets/images/search.png" alt="" />
+                  <img src="@/assets/images/search.svg" alt="" />
                   {{
                     field.apiName.includes('__c')
                       ? opp['secondary_data'][field.apiName]
@@ -174,7 +174,7 @@
 
               <template slot="placeholder">
                 <p class="slot-icon">
-                  <img src="@/assets/images/search.png" alt="" />
+                  <img src="@/assets/images/search.svg" alt="" />
                   {{ opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))] }}
                 </p>
               </template>
@@ -233,6 +233,26 @@
             <div v-if="inlineLoader">
               <PipelineLoader />
             </div>
+          </div>
+          <div v-else-if="field.dataType === 'Boolean'">
+            <Multiselect
+              v-model="dropdownVal[field.apiName]"
+              :options="booleans"
+              @select="setUpdateValues(field.apiName, $event)"
+              openDirection="below"
+              style="width: 14vw; padding-bottom: 8rem"
+              selectLabel="Enter"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.svg" alt="" />
+                  {{ opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))] }}
+                </p>
+              </template>
+            </Multiselect>
           </div>
         </div>
         <PipelineField
@@ -305,6 +325,7 @@ export default {
   },
   data() {
     return {
+      booleans: ['true', 'false'],
       currentRow: null,
       formData: {},
       dropdownValue: {},

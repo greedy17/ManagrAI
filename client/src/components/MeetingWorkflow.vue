@@ -48,7 +48,7 @@
             <img
               @click="addContact(participantIndex)"
               class="contact-img"
-              src="@/assets/images/add-contact.png"
+              src="@/assets/images/add-contact.svg"
               alt=""
             />
           </span>
@@ -68,7 +68,7 @@
             />
           </span>
           <span v-if="meeting.participants[participantIndex].__has_changes">
-            <img class="filter" src="@/assets/images/profile.png" alt="" />
+            <img class="filter" src="@/assets/images/profile.svg" alt="" />
           </span>
         </div>
 
@@ -92,7 +92,7 @@
               Add <span>"{{ meeting.participants[participantIndex].email }}"</span> to your Contacts
             </p>
             <img
-              src="@/assets/images/closer.png"
+              src="@/assets/images/close.svg"
               style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
               @click="addingContact = !addingContact"
             />
@@ -278,7 +278,7 @@
               Remove <span>"{{ meeting.participants[participantIndex].email }}"</span>
             </p>
             <img
-              src="@/assets/images/closer.png"
+              src="@/assets/images/close.svg"
               style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
               @click="removingParticipant = !removingParticipant"
             />
@@ -315,9 +315,8 @@
       >
         {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
         <img
-          class="invert"
           style="height: 0.6rem; margin-left: 0.2rem"
-          src="@/assets/images/edit.png"
+          src="@/assets/images/edit.svg"
           alt=""
         />
       </p>
@@ -335,7 +334,7 @@
         <div class="add-field-section__title">
           <p>Map to Opportunity</p>
           <img
-            src="@/assets/images/closer.png"
+            src="@/assets/images/close.svg"
             style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
             @click="addingOpp = !addingOpp"
           />
@@ -387,7 +386,7 @@
           <div class="noupdate-field-section__title">
             <p>No Update Needed</p>
             <img
-              src="@/assets/images/closer.png"
+              src="@/assets/images/close.svg"
               style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
               @click="noUpdate = !noUpdate"
             />
@@ -408,7 +407,7 @@
       </div>
     </div>
     <div v-else class="table-cell">
-      <p class="success">Meeting Logged <img src="@/assets/images/complete.png" alt="" /></p>
+      <p class="success">Meeting Logged <img src="@/assets/images/complete.svg" alt="" /></p>
     </div>
   </div>
 </template>

@@ -50,10 +50,10 @@
 
         <div v-else class="flex-row">
           <button @click="emitCreateForm" class="name-cell-edit-note-button-2">
-            <img style="filter: invert(90%); height: 0.6rem" src="@/assets/images/edit.png" />
+            <img style="filter: invert(10%); height: 0.6rem" src="@/assets/images/edit.svg" />
           </button>
           <button @click="emitGetNotes" class="name-cell-note-button-2">
-            <img class="gray" src="@/assets/images/white-note.png" />
+            <img class="gray" src="@/assets/images/white-note.svg" />
           </button>
         </div>
       </div>
@@ -134,6 +134,27 @@
             </div>
           </div>
 
+          <div v-else-if="field.dataType === 'Boolean'">
+            <Multiselect
+              v-model="dropdownVal[field.apiName]"
+              :options="booleans"
+              @select="setUpdateValues(field.apiName, $event)"
+              openDirection="below"
+              style="width: 14vw; padding-bottom: 8rem"
+              selectLabel="Enter"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.svg" alt="" />
+                  {{ workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))] }}
+                </p>
+              </template>
+            </Multiselect>
+          </div>
+
           <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
             <div v-if="inlineLoader">
               <PipelineLoader />
@@ -161,7 +182,7 @@
 
               <template slot="placeholder">
                 <p class="slot-icon">
-                  <img src="@/assets/images/search.png" alt="" />
+                  <img src="@/assets/images/search.svg" alt="" />
                   {{
                     field.apiName.includes('__c')
                       ? workflow['secondary_data'][field.apiName]
@@ -186,7 +207,7 @@
 
               <template slot="placeholder">
                 <p class="slot-icon">
-                  <img src="@/assets/images/search.png" alt="" />
+                  <img src="@/assets/images/search.svg" alt="" />
                   {{ workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))] }}
                 </p>
               </template>
@@ -322,6 +343,7 @@ export default {
       currentOpp: null,
       updatedWorkflowList: [],
       newCloseDate: null,
+      booleans: ['true', 'false'],
       objectFields: CollectionManager.create({
         ModelClass: SObjectField,
         pagination: { size: 300 },

@@ -3,7 +3,7 @@
     <div class="filter-section__title">
       <div class="filter-search-bar wide">
         <input class="wide" type="search" v-model="searchFilterText" placeholder="Search filters" />
-        <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
+        <img src="@/assets/images/search.svg" style="height: 1rem" alt="" />
       </div>
     </div>
 

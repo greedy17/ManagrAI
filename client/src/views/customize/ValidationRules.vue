@@ -62,7 +62,7 @@
 
             <template slot="placeholder">
               <p class="slot-icon">
-                <img src="@/assets/images/search.png" alt="" />
+                <img src="@/assets/images/search.svg" alt="" />
                 {{ selectedStage ? selectedStage : 'Select Stage' }}
               </p>
             </template>
@@ -162,7 +162,7 @@
             </div>
 
             <div class="img-border" @click.prevent="deleteForm(form)">
-              <img src="@/assets/images/trash.png" alt="" />
+              <img src="@/assets/images/trash.svg" class="invertTrash" alt="" />
             </div>
           </div>
         </div>
@@ -472,6 +472,9 @@ export default {
     filter: invert(70%);
   }
 }
+.invertTrash {
+  filter: invert(20%);
+}
 .multi-slot {
   display: flex;
   align-items: center;
@@ -493,7 +496,7 @@ export default {
 
   img {
     height: 1rem;
-    filter: invert(80%);
+    filter: invert(20%);
   }
 }
 .header {

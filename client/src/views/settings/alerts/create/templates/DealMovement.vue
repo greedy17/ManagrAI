@@ -7,7 +7,7 @@
       </div>
 
       <button @click="$router.push({ name: 'RealTime' })" class="back-button">
-        <img src="@/assets/images/back.png" alt="" />
+        <img class="invert" src="@/assets/images/back.svg" alt="" />
         Back to workflows
       </button>
     </div>
@@ -26,7 +26,7 @@
       <div v-else class="added-item">
         <p>Stage Advanced</p>
         <button style="cursor: auto" class="plus_button">
-          <img src="@/assets/images/configCheck.png" class="filtered" alt="" />
+          <img src="@/assets/images/configCheck.svg" class="filtered" alt="" />
         </button>
       </div>
 
@@ -39,7 +39,7 @@
       <div v-else class="added-item">
         <p>Moved to Commit</p>
         <button style="cursor: auto" class="plus_button">
-          <img src="@/assets/images/configCheck.png" class="filtered" alt="" />
+          <img src="@/assets/images/configCheck.svg" class="filtered" alt="" />
         </button>
       </div>
 
@@ -52,7 +52,7 @@
       <div v-else class="added-item">
         <p>Close Date Pushed</p>
         <button style="cursor: auto" class="plus_button">
-          <img src="@/assets/images/configCheck.png" class="filtered" alt="" />
+          <img src="@/assets/images/configCheck.svg" class="filtered" alt="" />
         </button>
       </div>
 
@@ -65,7 +65,7 @@
       <div v-else class="added-item">
         <p>Closed Won</p>
         <button style="cursor: auto" class="plus_button">
-          <img src="@/assets/images/configCheck.png" class="filtered" alt="" />
+          <img src="@/assets/images/configCheck.svg" class="filtered" alt="" />
         </button>
       </div>
     </div>
@@ -99,7 +99,7 @@
         </section>
         <section class="added-collection__footer">
           <div class="edit" @click="onAdvancing">
-            <img src="@/assets/images/edit.png" alt="" />
+            <img src="@/assets/images/edit.svg" class="invert" alt="" />
           </div>
         </section>
       </div>
@@ -114,7 +114,7 @@
         </section>
         <section class="added-collection__footer">
           <div class="edit" @click="onCommit">
-            <img src="@/assets/images/edit.png" alt="" />
+            <img src="@/assets/images/edit.svg" class="invert" alt="" />
           </div>
         </section>
       </div>
@@ -129,7 +129,7 @@
         </section>
         <section class="added-collection__footer">
           <div class="edit" @click="onPushing">
-            <img src="@/assets/images/edit.png" alt="" />
+            <img src="@/assets/images/edit.svg" class="invert" alt="" />
           </div>
         </section>
       </div>
@@ -144,7 +144,7 @@
         </section>
         <section class="added-collection__footer">
           <div class="edit" @click="onWinning">
-            <img src="@/assets/images/edit.png" alt="" />
+            <img src="@/assets/images/edit.svg" class="invert" alt="" />
           </div>
         </section>
       </div>
@@ -393,6 +393,9 @@ export default {
 .filtered {
   filter: invert(33%) sepia(52%) saturate(2452%) hue-rotate(130deg) brightness(68%) contrast(80%);
   height: 1.2rem;
+}
+.invert {
+  filter: invert(80%);
 }
 .alerts-page {
   margin-top: 4.5rem;

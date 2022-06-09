@@ -20,7 +20,7 @@
             <h2>Update Opportunity</h2>
           </div>
           <img
-            src="@/assets/images/closer.png"
+            src="@/assets/images/close.svg"
             style="height: 1.5rem; margin-top: -1rem; margin-right: 0.75rem; cursor: pointer"
             @click="resetEdit"
             alt=""
@@ -147,7 +147,7 @@
 
                         <template slot="placeholder">
                           <p class="slot-icon">
-                            <img src="@/assets/images/search.png" alt="" />
+                            <img src="@/assets/images/search.svg" alt="" />
                             {{
                               `${currentVals[field.apiName]}` !== 'null'
                                 ? `${currentVals[field.apiName]}`
@@ -263,7 +263,7 @@
                         </template>
                         <template slot="placeholder">
                           <p class="slot-icon">
-                            <img src="@/assets/images/search.png" alt="" />
+                            <img src="@/assets/images/search.svg" alt="" />
                             {{ currentOwner }}
                           </p>
                         </template>
@@ -290,7 +290,7 @@
 
                         <template slot="placeholder">
                           <p class="slot-icon">
-                            <img src="@/assets/images/search.png" alt="" />
+                            <img src="@/assets/images/search.svg" alt="" />
                             {{ currentAccount }}
                           </p>
                         </template>
@@ -359,7 +359,7 @@
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
+                    <img src="@/assets/images/search.svg" alt="" />
                     {{ currentOwner }}
                   </p>
                 </template>
@@ -386,8 +386,30 @@
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
+                    <img src="@/assets/images/search.svg" alt="" />
                     {{ currentAccount }}
+                  </p>
+                </template>
+              </Multiselect>
+            </div>
+            <div v-else-if="field.dataType === 'Boolean'">
+              <p>{{ field.referenceDisplayLabel }}:</p>
+
+              <Multiselect
+                v-model="dropdownVal[field.apiName]"
+                :options="booleans"
+                @select="setUpdateValues(field.apiName, $event)"
+                openDirection="below"
+                style="width: 18vw"
+                selectLabel="Enter"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.svg" alt="" />
+                    {{ currentVals[field.apiName] }}
                   </p>
                 </template>
               </Multiselect>
@@ -539,6 +561,8 @@ export default {
       selectedMeeting: false,
       meetings: null,
       referenceOpts: {},
+      stageGateId: null,
+      booleans: ['true', 'false'],
     }
   },
   computed: {
@@ -558,6 +582,7 @@ export default {
   watch: {
     accountSobjectId: 'getInitialAccounts',
     updateOppForm: 'setForms',
+    stageGateField: 'stageGateInstance',
     // updateList: {
     //   async handler(currList) {
     //     if (currList.length === 0 && this.recapList.length) {
@@ -574,6 +599,19 @@ export default {
     // },
   },
   methods: {
+    async stageGateInstance(field) {
+      this.stageGateId = null
+      try {
+        const res = await SObjects.api.createFormInstance({
+          resourceType: 'Opportunity',
+          formType: 'STAGE_GATING',
+          stageName: field ? field : this.stageGateField,
+        })
+        this.stageGateId = res.form_id
+      } catch (e) {
+        console.log(e)
+      }
+    },
     async getReferenceFieldList(key, val) {
       try {
         const res = await SObjects.api.getSobjectPicklistValues({
@@ -750,6 +788,7 @@ export default {
         const res = await MeetingWorkflows.api
           .updateWorkflow({
             workflow_id: this.meetingWorkflowId,
+            stage_form_id: this.stageGateId ? [this.stageGateId] : [],
             form_data: this.formData,
           })
           .then((res) => {
@@ -819,10 +858,10 @@ export default {
       if (val) {
         this.formData[key] = val
       }
-      if (this.stagesWithForms.includes(val)) {
-        this.stageGateField = val
-      } else {
-        this.stageGateField = null
+      if (key === 'StageName') {
+        this.stagesWithForms.includes(val)
+          ? (this.stageGateField = val)
+          : (this.stageGateField = null)
       }
     },
     setUpdateValidationValues(key, val) {
@@ -837,8 +876,10 @@ export default {
       try {
         const res = await SObjects.api
           .updateResource({
-            form_id: this.instanceId,
+            form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
             form_data: this.formData,
+            from_workflow: false,
+            workflow_title: 'None',
           })
           .then(async () => {
             let updatedRes = await SObjects.api.getObjects('Opportunity')
@@ -1174,7 +1215,7 @@ select {
   background-color: #fafafa;
   height: 40px;
   width: 100%;
-  background-image: url('../assets/images/dropdown.png');
+  background-image: url('../assets/images/dropdown.svg');
   background-size: 1rem;
   background-position: 100%;
   background-repeat: no-repeat;

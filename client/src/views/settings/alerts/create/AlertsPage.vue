@@ -25,7 +25,7 @@
           <img style="height: 1.75rem; margin-right: 1rem" src="@/assets/images/zoom.png" alt="" />
           <img
             style="height: 1rem; margin-right: 1rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             class="filter-plus"
             alt=""
           />
@@ -36,7 +36,7 @@
           />
           <img
             style="height: 1rem; margin-right: 1rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             class="filter-plus"
             alt=""
           />
@@ -72,7 +72,7 @@
             Activate
           </button>
           <p class="active-workflow" v-else>
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </p>
         </div>
       </div>
@@ -92,7 +92,7 @@
           <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
           <img
             style="height: 1rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             class="filter-plus"
             alt=""
           />
@@ -126,7 +126,7 @@
             class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Close Date Passed')"
           >
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </h4>
         </div>
       </div>
@@ -149,7 +149,7 @@
           <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
           <img
             style="height: 1rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             class="filter-plus"
             alt=""
           />
@@ -179,7 +179,7 @@
             class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Update Forecast')"
           >
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </h4>
         </div>
       </div>
@@ -202,14 +202,14 @@
           <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
           <img
             style="height: 1rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             class="filter-plus"
             alt=""
           />
           <img class="filter-loft" style="height: 1rem" src="@/assets/images/salesloft.svg" />
           <img
             style="height: 1rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             class="filter-plus"
             alt=""
           />
@@ -235,7 +235,7 @@
             class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Deal Rotting')"
           >
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </h4>
         </div>
       </div>
@@ -258,7 +258,7 @@
           <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
           <img
             style="height: 1rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             class="filter-plus"
             alt=""
           />
@@ -291,7 +291,7 @@
             class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Close Date Approaching')"
           >
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </h4>
         </div>
       </div>
@@ -314,7 +314,7 @@
           <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
           <img
             style="height: 1rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             class="filter-plus"
             alt=""
           />
@@ -344,7 +344,7 @@
             class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Upcoming Next Step')"
           >
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </h4>
         </div>
       </div>
@@ -367,7 +367,7 @@
           <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
           <img
             style="height: 1rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             class="filter-plus"
             alt=""
           />
@@ -397,7 +397,7 @@
             class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Required Field Empty')"
           >
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </h4>
         </div>
       </div>
@@ -420,7 +420,7 @@
           <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
           <img
             style="height: 1rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             class="filter-plus"
             alt=""
           />
@@ -450,7 +450,7 @@
             class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Large Opportunities')"
           >
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </h4>
         </div>
       </div>
@@ -660,7 +660,7 @@ export default {
 }
 
 .filter-plus {
-  filter: invert(90%);
+  filter: invert(10%);
 }
 .sub__ {
   font-size: 14px;
