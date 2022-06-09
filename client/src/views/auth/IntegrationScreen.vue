@@ -3,9 +3,8 @@
     <div v-if="userLevel == 'REP'">
       <div>
         <div class="welcome">
-          <h3>Hi, {{ user.fullName }}</h3>
-
           <div>
+            <h3>Hi, {{ user.fullName }}</h3>
             <div
               v-if="
                 (!(!orgHasSlackIntegration && userCanIntegrateSlack) ||
@@ -90,6 +89,44 @@
             <div class="img-border">
               <img @click="onRevoke('NYLAS')" src="@/assets/images/revoke.png" height="16" alt="" />
             </div>
+          </div>
+        </div>
+
+        <div
+          v-if="hasNylasIntegration && hasSalesforceIntegration && user.onboarding && !user.isAdmin"
+          class="card"
+        >
+          <div class="card__header centered">
+            <h3>Last Step...</h3>
+          </div>
+
+          <div class="card__text centered">
+            <button
+              @click="goToTemplates"
+              style="display: flex; align-items: center"
+              class="orange_button test"
+            >
+              Activate Workflows
+            </button>
+          </div>
+        </div>
+
+        <div
+          v-if="hasNylasIntegration && hasSalesforceIntegration && user.onboarding && user.isAdmin"
+          class="card"
+        >
+          <div class="card__header centered">
+            <h4>Map CRM fields to Managr</h4>
+          </div>
+
+          <div class="card__text centered">
+            <button
+              @click="goToForms"
+              style="display: flex; align-items: center"
+              class="orange_button test"
+            >
+              Continue to Field Mapping
+            </button>
           </div>
         </div>
       </div>
@@ -209,43 +246,6 @@
                 />
               </div>
             </div>
-          </div>
-        </div>
-        <div
-          v-if="hasNylasIntegration && hasSalesforceIntegration && user.onboarding && !user.isAdmin"
-          class="card green-outline"
-        >
-          <div class="card__header centered">
-            <h3>Last Step...</h3>
-          </div>
-
-          <div class="card__text centered">
-            <button
-              @click="goToTemplates"
-              style="display: flex; align-items: center"
-              class="orange_button test"
-            >
-              Activate Workflows
-            </button>
-          </div>
-        </div>
-
-        <div
-          v-if="hasNylasIntegration && hasSalesforceIntegration && user.onboarding && user.isAdmin"
-          class="card green-outline"
-        >
-          <div class="card__header centered">
-            <h4>Map CRM fields to Managr</h4>
-          </div>
-
-          <div class="card__text centered">
-            <button
-              @click="goToForms"
-              style="display: flex; align-items: center"
-              class="orange_button test"
-            >
-              Continue to Field Mapping
-            </button>
           </div>
         </div>
       </div>
