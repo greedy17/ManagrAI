@@ -15,7 +15,7 @@
       </div>
       <router-link exact-active-class="active" :to="{ name: 'Required' }">
         <div class="row">
-          <img src="@/assets/images/optional.png" style="height: 1rem; margin-right: 1rem" alt="" />
+          <img src="@/assets/images/optional.svg" class="invert" style="height: 1rem; margin-right: 1rem" alt="" />
           <h5>Field Mapping</h5>
         </div>
       </router-link>

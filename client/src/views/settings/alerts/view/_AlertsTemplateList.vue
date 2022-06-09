@@ -123,7 +123,7 @@
                 </span>
 
                 <span class="img-border">
-                  <img src="@/assets/images/whitetrash.png" @click="deleteClosed(alert.id)" />
+                  <img src="@/assets/images/trash.svg" class="invert" @click="deleteClosed(alert.id)" />
                 </span>
               </div>
             </div>

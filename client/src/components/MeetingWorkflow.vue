@@ -68,7 +68,7 @@
             />
           </span>
           <span v-if="meeting.participants[participantIndex].__has_changes">
-            <img class="filter" src="@/assets/images/profile.png" alt="" />
+            <img class="filter" src="@/assets/images/profile.svg" alt="" />
           </span>
         </div>
 

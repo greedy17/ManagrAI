@@ -229,7 +229,7 @@
           <p class="green-text">%</p>
         </button> -->
         <button class="margin-left-s forecast-header__button" @click="resetSettings">
-          <img class="invert" src="@/assets/images/settings.png" alt="" />
+          <img src="@/assets/images/settings.svg" alt="" />
         </button>
       </div>
     </header>
@@ -245,7 +245,7 @@
           <p>
             No opps in forecast. Add them via
             <span @click="resetSettings" class="settings"
-              >settings <img src="@/assets/images/settings.png" alt="" />
+              >settings <img src="@/assets/images/settings.svg" class="invert" alt="" />
             </span>
           </p>
         </div>
@@ -287,7 +287,7 @@
                   "
                   class="name-cell-edit-note-button"
                 >
-                  <img class="invert" src="@/assets/images/trash.png" height="14px" alt="" />
+                  <img class="invertTrash" src="@/assets/images/trash.svg" height="14px" alt="" />
                 </button>
               </div>
             </div>
@@ -859,6 +859,9 @@ export default {
 }
 .invert {
   filter: invert(70%);
+}
+.invertTrash {
+  filter: invert(30%);
 }
 .invert-less {
   filter: invert(40%);

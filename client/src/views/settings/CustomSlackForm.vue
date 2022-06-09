@@ -462,7 +462,7 @@
 
               <div class="img-border">
                 <img
-                  src="@/assets/images/trash.png"
+                  src="@/assets/images/trash.svg"
                   alt=""
                   id="remove"
                   :class="unshownIds.includes(field.id) ? 'invisible' : 'invert'"
@@ -1774,7 +1774,7 @@ export default {
   filter: invert(60%);
 }
 #remove {
-  filter: invert(60%);
+  filter: invert(40%);
 }
 .drag-item {
   display: flex;

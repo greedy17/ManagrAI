@@ -31,7 +31,7 @@
               v-clipboard:success="onCopy"
               v-clipboard:error="onError"
             >
-              <img src="@/assets/images/copy.png" style="height: 1.25rem" alt="" />
+              <img src="@/assets/images/copy.svg" class="invert" style="height: 1.25rem" alt="" />
             </button>
           </div>
         </div>
@@ -139,7 +139,7 @@
 
             <div class="fixed__right" v-if="alertTemplateForm.field.alertGroups.groups.length > 1">
               <button class="remove__group" @click="onRemoveAlertGroup(index)">
-                <img src="@/assets/images/trash.png" style="height: 0.85rem" alt="" />
+                <img src="@/assets/images/trash.svg" class="invert" style="height: 0.85rem" alt="" />
               </button>
             </div>
           </div>
@@ -209,7 +209,7 @@
                   v-clipboard:success="onCopy"
                   v-clipboard:error="onError"
                 >
-                  <img src="@/assets/images/copy.png" style="height: 1.25rem" alt="" />
+                  <img src="@/assets/images/copy.svg" class="invert" style="height: 1.25rem" alt="" />
                 </button>
               </div>
             </div>

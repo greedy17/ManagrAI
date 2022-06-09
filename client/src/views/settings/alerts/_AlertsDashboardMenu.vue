@@ -9,8 +9,9 @@
       <router-link exact-active-class="active" :to="{ name: 'CreateNew' }">
         <div :class="isOnboarding ? 'onboarding row' : 'row'">
           <img
-            src="@/assets/images/trophy.png"
-            style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
+            src="@/assets/images/org.svg"
+            class="invert"
+            style="height: 0.8rem; margin-right: 1rem; margin-left: 1rem"
             alt=""
           />
           <h5>Popular</h5>
@@ -19,7 +20,8 @@
       <router-link v-if="!isOnboarding" exact-active-class="active" :to="{ name: 'ListTemplates' }">
         <div :class="isOnboarding ? 'onboarding row' : 'row'">
           <img
-            src="@/assets/images/star.png"
+            src="@/assets/images/star.svg"
+            class="invert"
             style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
             alt=""
           />
@@ -55,8 +57,9 @@
       <router-link exact-active-class="active" :to="{ name: 'CreateNew' }">
         <div class="row">
           <img
-            src="@/assets/images/trophy.png"
-            style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
+            src="@/assets/images/org.svg"
+            class="invert"
+            style="height: 0.8rem; margin-right: 1rem; margin-left: 1rem"
             alt=""
           />
           <h5>Popular</h5>
@@ -66,7 +69,8 @@
       <router-link exact-active-class="active" :to="{ name: 'ListTemplates' }">
         <div class="row">
           <img
-            src="@/assets/images/star.png"
+            src="@/assets/images/star.svg"
+            class="invert"
             style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
             alt=""
           />
@@ -131,7 +135,8 @@
       <router-link exact-active-class="active" :to="{ name: 'ListTemplates' }">
         <div class="row">
           <img
-            src="@/assets/images/star.png"
+            src="@/assets/images/star.svg"
+            class="invert"
             style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
             alt=""
           />

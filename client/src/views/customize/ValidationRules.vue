@@ -162,7 +162,7 @@
             </div>
 
             <div class="img-border" @click.prevent="deleteForm(form)">
-              <img src="@/assets/images/trash.png" alt="" />
+              <img src="@/assets/images/trash.svg" class="invertTrash" alt="" />
             </div>
           </div>
         </div>
@@ -471,6 +471,9 @@ export default {
     padding-bottom: 0.5rem;
     filter: invert(70%);
   }
+}
+.invertTrash {
+  filter: invert(80%);
 }
 .multi-slot {
   display: flex;

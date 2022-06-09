@@ -62,8 +62,8 @@
                 <div class="img-border">
                   <img
                     @click.stop="onRemoveAlertGroup(group.id, index)"
-                    style="height: 1rem; cursor: pointer; filter: invert(90%)"
-                    src="@/assets/images/trash.png"
+                    style="height: 1rem; cursor: pointer; filter: invert(10%)"
+                    src="@/assets/images/trash.svg"
                     alt=""
                   />
                 </div>
@@ -80,7 +80,7 @@
                   <span class="img-border">
                     <img
                       class="remove-color"
-                      src="@/assets/images/remove.png"
+                      src="@/assets/images/remove.svg"
                       style="height: 1rem"
                       alt=""
                     />
@@ -176,7 +176,7 @@
                   <img
                     class="remove-color"
                     @click="onDeleteConfig(config.id, index)"
-                    src="@/assets/images/remove.png"
+                    src="@/assets/images/remove.svg"
                     style="height: 1rem"
                     alt=""
                   />
@@ -758,7 +758,7 @@ h3 {
   }
 }
 .remove-color {
-  filter: invert(70%);
+  filter: invert(30%);
   cursor: pointer;
 }
 .invert {

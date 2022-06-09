@@ -30,8 +30,7 @@
             v-if="form.field.alertOperands.groups.length > 1"
             :disabled="form.field.alertOperands.groups.length - 1 <= 0"
           >
-          <!-- Filtered class has been changed, Bryan. Just change the trash to svg, don't worry about style. -->
-            <img src="@/assets/images/trash.png" class="filtered" alt="" />
+            <img src="@/assets/images/trash.svg" class="filtered" alt="" />
           </button>
 
           <button class="plus_button" @click="addOperandForm">

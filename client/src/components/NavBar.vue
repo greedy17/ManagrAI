@@ -122,7 +122,7 @@
         <div>
           <router-link class="profile-wrapper" :to="{ name: 'InviteUsers' }">
             <small>{{ user.email }}</small>
-            <img src="@/assets/images/profile.png" alt="" />
+            <img src="@/assets/images/profile.svg" alt="" />
           </router-link>
         </div>
 
@@ -153,7 +153,7 @@
         <div>
           <router-link class="profile-wrapper" :to="{ name: 'InviteUsers' }">
             <small>{{ user.email }}</small>
-            <img src="@/assets/images/profile.png" alt="" />
+            <img src="@/assets/images/profile.svg" alt="" />
           </router-link>
         </div>
 
