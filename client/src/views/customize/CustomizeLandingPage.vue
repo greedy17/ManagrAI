@@ -11,21 +11,21 @@
         "
       >
         <h3 class="title">Manage Actions</h3>
-        <h5 style="margin-top: -0.5rem">Where Salesforce meets Slack</h5>
+        <h5 style="margin-top: -0.5rem">Access & Update CRM Fields</h5>
       </div>
       <router-link exact-active-class="active" :to="{ name: 'Required' }">
         <div class="row">
-          <img src="@/assets/images/warning.svg" class="invert" style="height: 1rem; margin-right: 1rem" alt="" />
-          <h5>Required</h5>
+          <img src="@/assets/images/optional.png" style="height: 1rem; margin-right: 1rem" alt="" />
+          <h5>Field Mapping</h5>
         </div>
       </router-link>
 
-      <router-link exact-active-class="active" :to="{ name: 'Custom' }">
+      <!-- <router-link exact-active-class="active" :to="{ name: 'Custom' }">
         <div class="row">
           <img src="@/assets/images/optional.png" style="height: 1rem; margin-right: 1rem" alt="" />
           <h5>Optional</h5>
         </div>
-      </router-link>
+      </router-link> -->
 
       <router-link exact-active-class="active" :to="{ name: 'ValidationRules' }">
         <div class="row">
@@ -40,7 +40,6 @@
 </template>
 
 <script>
-
 import { CollectionManager } from '@thinknimble/tn-models'
 import { UserOnboardingForm } from '@/services/users/forms'
 import User from '@/services/users'

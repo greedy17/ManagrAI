@@ -14,7 +14,7 @@
     </div>
 
     <Invite
-      v-if="getUser.userLevel === 'MANAGER'"
+      v-if="getUser.userLevel === 'MANAGER' || user.isAdmin"
       class="invite-users__inviter"
       :inviteOpen="inviteOpen"
       @cancel="handleCancel"

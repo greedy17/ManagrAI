@@ -115,6 +115,10 @@
           ><img src="@/assets/images/connect.svg" alt="" />
         </router-link>
 
+        <router-link v-if="isAdmin" exact-active-class="active-img" :to="{ name: 'Required' }"
+          ><img src="@/assets/images/list.svg" alt="" />
+        </router-link>
+
         <div>
           <router-link class="profile-wrapper" :to="{ name: 'InviteUsers' }">
             <small>{{ user.email }}</small>
