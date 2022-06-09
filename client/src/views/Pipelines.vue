@@ -1414,7 +1414,7 @@ export default {
         this.$Alert.alert({
           type: 'success',
           timeout: 1500,
-          message: 'Opportunities added to forecast.',
+          message: 'Opportunities added to Tracker.',
         })
       } catch (e) {
         this.$Alert.alert({

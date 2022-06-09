@@ -11,11 +11,11 @@
     >
       <div class="modal-container">
         <header class="modal-container__header">
-          <h3>Forecast Settings</h3>
+          <h3>Tracker Settings</h3>
           <img @click="resetSettings" src="@/assets/images/clear.png" alt="" />
         </header>
         <div class="modal-container__body">
-          <p>Add Opportunites to Forecast:</p>
+          <p>Add Opportunites to Tracker:</p>
           <Multiselect
             v-model="forecastVmodel"
             style="width: 60%"
@@ -56,7 +56,7 @@
     >
       <div class="modal-container-small">
         <header class="modal-container__header">
-          <h3>Remove from Forecast</h3>
+          <h3>Remove from Tracker</h3>
           <img @click="resetDelete" src="@/assets/images/clear.png" alt="" />
         </header>
         <div class="modal-container__body center">
@@ -573,7 +573,7 @@ export default {
         this.$Alert.alert({
           type: 'success',
           timeout: 1500,
-          message: 'Opportunity added to forecast.',
+          message: 'Opportunity added to Tracker.',
         })
       } catch (e) {
         this.$Alert.alert({
