@@ -18,9 +18,6 @@ class BaseAccountQuerySet(models.QuerySet):
 
 
 class BaseAccount(TimeStampModel, IntegrationModel):
-    crm = models.CharField(
-        choices=crm_consts.CRM_CHOICES, max_length=255, default=crm_consts.CRM_CHOICE_SALESFORCE,
-    )
     name = models.CharField(max_length=255)
     organization = models.ForeignKey(
         "organization.Organization", related_name="base_accounts", on_delete=models.CASCADE,
@@ -122,9 +119,6 @@ class BaseContactQuerySet(models.QuerySet):
 
 
 class BaseContact(TimeStampModel, IntegrationModel):
-    crm = models.CharField(
-        choices=crm_consts.CRM_CHOICES, max_length=255, default=crm_consts.CRM_CHOICE_SALESFORCE,
-    )
     email = models.CharField(max_length=255, blank=True)
     owner = models.ForeignKey(
         "core.User", on_delete=models.CASCADE, related_name="base_contacts", blank=True, null=True
