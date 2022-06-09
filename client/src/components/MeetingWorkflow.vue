@@ -407,7 +407,7 @@
       </div>
     </div>
     <div v-else class="table-cell">
-      <p class="success">Meeting Logged <img src="@/assets/images/complete.png" alt="" /></p>
+      <p class="success">Meeting Logged <img src="@/assets/images/complete.svg" class="invert" alt="" /></p>
     </div>
   </div>
 </template>

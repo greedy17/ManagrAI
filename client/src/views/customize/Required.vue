@@ -46,7 +46,7 @@
         <div class="card__header">
           <h3>Create Opportunity</h3>
           <p class="active-workflow" v-if="hasCreateOppForm">
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </p>
         </div>
 
@@ -58,9 +58,8 @@
           />
           <img
             style="height: 1.5rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             alt=""
-            class="invert"
           />
           <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
         </div>
@@ -100,7 +99,7 @@
         <div class="card__header">
           <h3>Update Contacts</h3>
           <p class="active-workflow" v-if="hasUpdateContactForm">
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </p>
         </div>
 
@@ -112,9 +111,8 @@
           />
           <img
             style="height: 1.5rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             alt=""
-            class="invert"
           />
           <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
         </div>
@@ -128,7 +126,7 @@
         <div class="card__header">
           <h3>Create Lead</h3>
           <p class="active-workflow" v-if="hasCreateLeadForm">
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </p>
         </div>
 
@@ -140,9 +138,8 @@
           />
           <img
             style="height: 1.5rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             alt=""
-            class="invert"
           />
           <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
         </div>
@@ -156,7 +153,7 @@
         <div class="card__header">
           <h3>Update Lead</h3>
           <p class="active-workflow" v-if="hasUpdateLeadForm">
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </p>
         </div>
 
@@ -168,8 +165,7 @@
           />
           <img
             style="height: 1.5rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
-            class="invert"
+            src="@/assets/images/plusOne.svg"
             alt=""
           />
           <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
@@ -184,7 +180,7 @@
         <div class="card__header">
           <h3>Create Account</h3>
           <p class="active-workflow" v-if="hasCreateAccountForm">
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </p>
         </div>
 
@@ -196,9 +192,8 @@
           />
           <img
             style="height: 1.5rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             alt=""
-            class="invert"
           />
           <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
         </div>
@@ -212,7 +207,7 @@
         <div class="card__header">
           <h3>Update Account</h3>
           <p class="active-workflow" v-if="hasUpdateAccountForm">
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </p>
         </div>
 
@@ -224,9 +219,8 @@
           />
           <img
             style="height: 1.5rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             alt=""
-            class="invert"
           />
           <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
         </div>

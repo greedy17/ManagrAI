@@ -72,7 +72,7 @@
             <img src="@/assets/images/gmailCal.png" style="margin-right: 1rem; height: 1rem" />
             <img src="@/assets/images/outlookMail.png" style="height: 1rem" />
             <h3 class="card__title">Calendar</h3>
-            <img class="filter-dot" src="@/assets/images/dot.png" v-if="hasNylasIntegration" />
+            <img class="filter-dot" src="@/assets/images/dot.svg" v-if="hasNylasIntegration" />
           </div>
 
           <p class="card-text">Accesses your upcoming meetings + attendees</p>
@@ -87,7 +87,7 @@
           </div>
           <div v-else class="card__body">
             <div class="img-border">
-              <img @click="onRevoke('NYLAS')" src="@/assets/images/revoke.png" height="16" alt="" />
+              <img @click="onRevoke('NYLAS')" src="@/assets/images/revoke.svg" height="16" alt="" />
             </div>
           </div>
         </div>
@@ -309,7 +309,7 @@
             <img src="@/assets/images/gmailCal.png" style="margin-right: 1rem; height: 1rem" />
             <img src="@/assets/images/outlookMail.png" style="height: 1rem" />
             <h3 class="card__title">Calendar</h3>
-            <img class="filter-dot" src="@/assets/images/dot.png" v-if="hasNylasIntegration" />
+            <img class="filter-dot" src="@/assets/images/dot.svg" v-if="hasNylasIntegration" />
           </div>
 
           <p class="card-text">Accesses your upcoming meetings + attendees</p>
@@ -326,7 +326,7 @@
               <div class="img-border">
                 <img
                   @click="onRevoke('NYLAS')"
-                  src="@/assets/images/revoke.png"
+                  src="@/assets/images/revoke.svg"
                   height="16"
                   alt=""
                 />
