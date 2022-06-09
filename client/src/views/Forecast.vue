@@ -149,11 +149,11 @@
           </button>
           <div v-outside-click="closeListSelect" v-show="showList" class="list-section">
             <div class="list-section__title row-spread">
-              <p>Current Forecast</p>
+              <p>Active Trackers</p>
             </div>
             <button class="list-button">
-              My forecast
-              <span class="green-text" v-if="(currentForecast = 'My Forecast')"> active</span>
+              My Tracker
+              <span class="green-text" v-if="currentForecast === 'My Tracker'"> active</span>
             </button>
           </div>
           <p class="gray-text smaller-font margin-left-s" v-if="forecastOpps && !loading">
@@ -464,7 +464,7 @@ export default {
       ],
       forecastHeaders: ['Amount', 'Date Added', 'Stage', 'Forecast', 'Close Date', 'Last Activity'],
       forecastOptions: ['My forecast', 'Team Forecast'],
-      currentForecast: 'My Forecast',
+      currentForecast: 'My Tracker',
       forecastOppsCopy: this.$store.state.user.forecast.state,
       forecastOpps: this.$store.state.user.forecast.state,
       calculatorOpen: false,
