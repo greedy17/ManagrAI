@@ -572,9 +572,6 @@
               />
             </div>
           </section>
-          <!-- <div class="adding-product">
-            <button>Add product <img src="@/assets/images/plusOne.png" alt="" /></button>
-          </div> -->
         </div>
         <div class="flex-end-opp">
           <div style="display: flex; align-items: center">
