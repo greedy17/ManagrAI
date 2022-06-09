@@ -132,7 +132,7 @@
         <div>
           <router-link class="profile-wrapper" :to="{ name: 'InviteUsers' }">
             <small>{{ user.email }}</small>
-            <img src="@/assets/images/profile.png" alt="" />
+            <img src="@/assets/images/profile.svg" alt="" />
           </router-link>
         </div>
 
@@ -142,7 +142,7 @@
               Log out
               <img
                 @click="logOut"
-                src="@/assets/images/blacklogout.png"
+                src="@/assets/images/blacklogout.svg"
                 alt=""
                 style="height: 0.75rem; margin: 0.25rem"
               />
@@ -163,7 +163,7 @@
         <div>
           <router-link class="profile-wrapper" :to="{ name: 'InviteUsers' }">
             <small>{{ user.email }}</small>
-            <img src="@/assets/images/profile.png" alt="" />
+            <img src="@/assets/images/profile.svg" alt="" />
           </router-link>
         </div>
 
@@ -173,7 +173,7 @@
               Log out
               <img
                 @click="logOut"
-                src="@/assets/images/blacklogout.png"
+                src="@/assets/images/blacklogout.svg"
                 alt=""
                 style="height: 0.75rem; margin: 0.25rem"
               />

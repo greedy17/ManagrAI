@@ -15,7 +15,7 @@
       </div>
       <router-link exact-active-class="active" :to="{ name: 'Required' }">
         <div class="row">
-          <img src="@/assets/images/optional.png" style="height: 1rem; margin-right: 1rem" alt="" />
+          <img src="@/assets/images/optional.svg" class="invert" style="height: 1rem; margin-right: 1rem" alt="" />
           <h5>Field Mapping</h5>
         </div>
       </router-link>
@@ -29,7 +29,7 @@
 
       <router-link exact-active-class="active" :to="{ name: 'ValidationRules' }">
         <div class="row">
-          <img src="@/assets/images/gavel.png" style="height: 1rem; margin-right: 1rem" alt="" />
+          <img src="@/assets/images/gavel.svg" class="invert" style="height: 1rem; margin-right: 1rem" alt="" />
           <h5>Validation Rules</h5>
         </div>
       </router-link>
@@ -124,7 +124,7 @@ a:hover {
 }
 .active div:hover {
   img {
-    filter: none;
+    filter: invert(99%);
   }
   color: white;
 }
@@ -136,7 +136,7 @@ a:hover {
   position: relative;
   color: white;
   img {
-    filter: none;
+    filter: invert(99%);
   }
 }
 .active div:after {
@@ -168,6 +168,10 @@ a:hover {
       brightness(93%) contrast(89%);
   }
   color: $dark-green;
+}
+
+.invert {
+  filter: invert(20%);
 }
 </style>
 

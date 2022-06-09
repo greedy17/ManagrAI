@@ -12,7 +12,7 @@
       <div class="modal-container">
         <header class="modal-container__header">
           <h3>Forecast Settings</h3>
-          <img @click="resetSettings" src="@/assets/images/clear.png" alt="" />
+          <img class="invert" @click="resetSettings" src="@/assets/images/close.svg" alt="" />
         </header>
         <div class="modal-container__body">
           <p>Add Opportunites to Forecast:</p>
@@ -34,7 +34,7 @@
             </template>
             <template slot="placeholder">
               <p class="slot-icon">
-                <img src="@/assets/images/search.png" alt="" />
+                <img src="@/assets/images/search.svg" alt="" />
                 Select Opportunities
               </p>
             </template>
@@ -57,7 +57,7 @@
       <div class="modal-container-small">
         <header class="modal-container__header">
           <h3>Remove from Forecast</h3>
-          <img @click="resetDelete" src="@/assets/images/clear.png" alt="" />
+          <img class="invert" @click="resetDelete" src="@/assets/images/close.svg" alt="" />
         </header>
         <div class="modal-container__body center">
           <p>Are you sure ?</p>
@@ -86,7 +86,7 @@
           </div>
 
           <img
-            src="@/assets/images/closer.png"
+            src="@/assets/images/close.svg"
             style="height: 1.5rem; margin-top: -0.5rem; margin-right: 0.5rem; cursor: pointer"
             @click="resetNotes"
             alt=""
@@ -107,7 +107,7 @@
             <h3>Notes</h3>
           </div>
           <img
-            src="@/assets/images/closer.png"
+            src="@/assets/images/close.svg"
             style="height: 1.5rem; margin-top: -0.5rem; margin-right: 0.5rem; cursor: pointer"
             @click="resetNotes"
             alt=""
@@ -137,13 +137,15 @@
             <img
               v-if="!showList"
               style="height: 1rem; margin-left: 0.5rem"
-              src="@/assets/images/rightArrow.png"
+              src="@/assets/images/rightArrow.svg"
+              class="invert"
               alt=""
             />
             <img
               v-else
+              class="invert"
               style="height: 1rem; margin-left: 0.5rem"
-              src="@/assets/images/downArrow.png"
+              src="@/assets/images/downArrow.svg"
               alt=""
             />
           </button>
@@ -228,7 +230,7 @@
           <p class="green-text">%</p>
         </button> -->
         <button class="margin-left-s forecast-header__button" @click="resetSettings">
-          <img class="invert" src="@/assets/images/settings.png" alt="" />
+          <img src="@/assets/images/settings.svg" alt="" />
         </button>
       </div>
     </header>
@@ -244,7 +246,7 @@
           <p>
             No opps in forecast. Add them via
             <span @click="resetSettings" class="settings"
-              >settings <img src="@/assets/images/settings.png" alt="" />
+              >settings <img src="@/assets/images/settings.svg" class="invert" alt="" />
             </span>
           </p>
         </div>
@@ -273,7 +275,7 @@
                 >
                   <img
                     class="invert-less"
-                    src="@/assets/images/white-note.png"
+                    src="@/assets/images/white-note.svg"
                     height="12px"
                     alt=""
                   />
@@ -286,7 +288,7 @@
                   "
                   class="name-cell-edit-note-button"
                 >
-                  <img class="invert" src="@/assets/images/trash.png" height="14px" alt="" />
+                  <img class="invertTrash" src="@/assets/images/trash.svg" height="14px" alt="" />
                 </button>
               </div>
             </div>
@@ -858,6 +860,9 @@ export default {
 }
 .invert {
   filter: invert(70%);
+}
+.invertTrash {
+  filter: invert(30%);
 }
 .invert-less {
   filter: invert(40%);
