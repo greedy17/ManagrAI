@@ -22,7 +22,8 @@
           <img
             src="@/assets/images/star.svg"
             class="invert"
-            style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
+            height="20px"
+            style="margin-right: 1rem; padding-left: 0.25rem"
             alt=""
           />
           <h5>
@@ -71,7 +72,8 @@
           <img
             src="@/assets/images/star.svg"
             class="invert"
-            style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
+            height="20px"
+            style="margin-right: 1rem; padding-left: 0.25rem"
             alt=""
           />
           <h5>
@@ -137,7 +139,8 @@
           <img
             src="@/assets/images/star.svg"
             class="invert"
-            style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
+            height="20px"
+            style="margin-right: 1rem; padding-left: 0.25rem"
             alt=""
           />
           <h5>
@@ -282,7 +285,7 @@ a:hover {
 .active div:hover {
   color: white;
   img {
-    filter: none;
+    filter: invert(99%);
   }
 }
 .active div {
@@ -292,7 +295,7 @@ a:hover {
   font-weight: bold;
   position: relative;
   img {
-    filter: none;
+    filter: invert(99%);
   }
   span {
     color: white !important;
@@ -317,7 +320,7 @@ a:hover div {
   }
 }
 .invert {
-  filter: invert(80%);
+  filter: invert(20%);
 }
 a:hover span {
   border-color: $dark-green;

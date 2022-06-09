@@ -171,7 +171,7 @@ a:hover {
 }
 
 .invert {
-  filter: invert(80%);
+  filter: invert(20%);
 }
 </style>
 

@@ -623,11 +623,11 @@ a {
   img {
     height: 0.8rem;
     cursor: pointer;
-    filter: invert(70%);
+    filter: invert(20%);
   }
 }
 .invert {
-  filter: invert(80%);
+  filter: invert(20%);
 }
 .green_button:disabled {
   background-color: $soft-gray;
