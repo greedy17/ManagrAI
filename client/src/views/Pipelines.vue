@@ -765,21 +765,21 @@
           <div v-if="!updatingOpps" class="bulk-action">
             <div v-if="!closeDateSelected && !advanceStageSelected && !forecastSelected">
               <div class="flex-row">
-                <button @click="closeDateSelected = !closeDateSelected" class="select-btn">
+                <button @click="closeDateSelected = !closeDateSelected" class="select-btn1">
                   Push Close Date
-                  <img src="@/assets/images/date.svg" style="margin-left: 0.25rem" alt="" />
+                  <img src="@/assets/images/date.svg" height="14px" style="margin-left: 0.25rem" alt="" />
                 </button>
-                <button @click="advanceStageSelected = !advanceStageSelected" class="select-btn">
+                <button @click="advanceStageSelected = !advanceStageSelected" class="select-btn1">
                   Advance Stage
-                  <img src="@/assets/images/stairs.svg" style="margin-left: 0.25rem" alt="" />
+                  <img src="@/assets/images/stairs.svg" height="14px" style="margin-left: 0.25rem" alt="" />
                 </button>
-                <button @click="forecastSelected = !forecastSelected" class="select-btn">
+                <button @click="forecastSelected = !forecastSelected" class="select-btn1">
                   Change Forecast
-                  <img src="@/assets/images/monetary.svg" style="margin-left: 0.25rem" alt="" />
+                  <img src="@/assets/images/monetary.svg" height="14px" style="margin-left: 0.25rem" alt="" />
                 </button>
                 <button @click="modifyForecast('add')" class="select-btn">
-                  Add to Forecast
-                  <img src="@/assets/images/monetary.svg" style="margin-left: 0.25rem" alt="" />
+                  Start Tracking
+                 
                 </button>
               </div>
             </div>
@@ -873,7 +873,7 @@
             <img src="@/assets/images/search.svg" style="height: 1rem" alt="" />
           </div>
           <button @click="createOppInstance()" class="add-button">
-            <img src="@/assets/images/plusOne.svg" class="invert" style="height: 1rem" alt="" />
+            <img src="@/assets/images/plusOne.svg" class="fullInvert" style="height: 1rem" alt="" />
             Create Opportunity
           </button>
           <button @click="manualSync" class="select-btn">
@@ -3067,6 +3067,9 @@ section {
 }
 .invert {
   filter: invert(80%);
+}
+.fullInvert {
+  filter: invert(99%);
 }
 .add-button:disabled {
   display: flex;
