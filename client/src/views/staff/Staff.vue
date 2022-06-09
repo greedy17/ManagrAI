@@ -42,7 +42,7 @@
             </Multiselect>
             <button class="green_button" @click="runCommand">Enter</button>
           </div>
-          <!-- <div class="form__list">
+          <div class="form__list">
             <div :key="i" class="form__list_item" v-for="(form, i) in orgForms">
               <h3>{{ form.formType }} {{ form.resource }}</h3>
               <p>Form Fields:</p>
@@ -75,7 +75,7 @@
                 </li>
               </ul>
             </div>
-          </div> -->
+          </div>
         </template>
       </template>
     </div>
