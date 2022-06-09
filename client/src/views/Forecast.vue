@@ -23,6 +23,7 @@
             selectLabel="Enter"
             track-by="id"
             label="name"
+            :maxHeight="150"
             :options="allOpps"
             :multiple="true"
             :closeOnSelect="false"

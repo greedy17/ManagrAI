@@ -27,7 +27,7 @@
             </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Forecast' }"
-                >Forecast <span>Beta</span>
+                >Tracker <span>Beta</span>
               </router-link>
             </li>
           </ul>
@@ -52,7 +52,7 @@
             </li>
             <li>
               <router-link exact-active-class="active" :to="{ name: 'Forecast' }"
-                >Forecast<span>Beta</span></router-link
+                >Tracker<span>Beta</span></router-link
               >
             </li>
           </ul>

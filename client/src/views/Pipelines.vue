@@ -759,21 +759,41 @@
           <div v-if="!updatingOpps" class="bulk-action">
             <div v-if="!closeDateSelected && !advanceStageSelected && !forecastSelected">
               <div class="flex-row">
-                <button @click="closeDateSelected = !closeDateSelected" class="select-btn">
+                <button @click="closeDateSelected = !closeDateSelected" class="select-btn1">
                   Push Close Date
-                  <img src="@/assets/images/date.png" style="margin-left: 0.25rem" alt="" />
+                  <img
+                    src="@/assets/images/date.png"
+                    height="16px"
+                    style="margin-left: 0.25rem"
+                    alt=""
+                  />
                 </button>
-                <button @click="advanceStageSelected = !advanceStageSelected" class="select-btn">
+                <button @click="advanceStageSelected = !advanceStageSelected" class="select-btn1">
                   Advance Stage
-                  <img src="@/assets/images/stairs.png" style="margin-left: 0.25rem" alt="" />
+                  <img
+                    src="@/assets/images/stairs.png"
+                    height="16px"
+                    style="margin-left: 0.25rem"
+                    alt=""
+                  />
                 </button>
-                <button @click="forecastSelected = !forecastSelected" class="select-btn">
+                <button @click="forecastSelected = !forecastSelected" class="select-btn1">
                   Change Forecast
-                  <img src="@/assets/images/monetary.png" style="margin-left: 0.25rem" alt="" />
+                  <img
+                    src="@/assets/images/monetary.png"
+                    height="16px"
+                    style="margin-left: 0.25rem"
+                    alt=""
+                  />
                 </button>
                 <button @click="modifyForecast('add')" class="select-btn">
-                  Add to Forecast
-                  <img src="@/assets/images/monetary.png" style="margin-left: 0.25rem" alt="" />
+                  Add to Tracker
+                  <!-- <img
+                    src="@/assets/images/monetary.png"
+                    height="14px"
+                    style="margin-left: 0.25rem"
+                    alt=""
+                  /> -->
                 </button>
               </div>
             </div>
