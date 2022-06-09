@@ -1,8 +1,8 @@
 <template>
-  <PopularWorkflows  
-      :config="allConfigs.LARGE_OPPORTUNITIES"
-      :largeOpps="true"
-      :selectField="true"
+  <PopularWorkflows
+    :config="allConfigs.LARGE_OPPORTUNITIES"
+    :largeOpps="true"
+    :selectField="true"
   />
 </template>
 

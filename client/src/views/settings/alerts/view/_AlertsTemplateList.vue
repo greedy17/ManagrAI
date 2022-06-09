@@ -4,7 +4,7 @@
       <div class="delete_modal">
         <div class="delete_modal__header">
           <h2>Delete Workflow</h2>
-          <img @click="deleteOpen = !deleteOpen" src="@/assets/images/close.png" alt="" />
+          <img @click="deleteOpen = !deleteOpen" src="@/assets/images/close.svg" alt="" />
         </div>
 
         <div class="delete_modal__body">
@@ -22,8 +22,8 @@
       <h3 v-if="!editing" :class="templates.refreshing ? 'loading-title titles' : 'titles'">
         Edit your Workflow Automation
       </h3>
-      <h3 @click="test" v-else :class="templates.refreshing ? 'loading-title titles' : 'titles'">
-        Saved Workflow Automations
+      <h3 v-else :class="templates.refreshing ? 'loading-title titles' : 'titles'">
+        Active Workflow Automations
       </h3>
       <p
         :class="templates.refreshing ? 'loading-title titles' : ''"
@@ -77,13 +77,14 @@
             </div>
             <div class="added-collection__footer">
               <img
+                v-if="hasSlackIntegration"
                 style="margin-right: 0.25rem"
                 src="@/assets/images/slackLogo.png"
                 height="15px"
                 alt=""
               />
-              <p style="font-size: 13px">Schedule:</p>
-              <div class="row__">
+              <p v-if="hasSlackIntegration" style="font-size: 13px">Schedule:</p>
+              <div v-if="hasSlackIntegration" class="row__">
                 <p
                   :class="!alert.isActive ? 'green' : ''"
                   style="margin-right: 0.5rem; font-size: 12px; letter-spacing: 1px"
@@ -103,14 +104,26 @@
                   ON
                 </p>
               </div>
+              <div style="width: 30vw" v-else>
+                <img
+                  style="margin-right: 0.2rem"
+                  src="@/assets/images/slackLogo.png"
+                  height="8px"
+                  alt=""
+                />
+                <small
+                  >Connect <span class="link" @click="goToConnect">Slack</span> for
+                  notifications</small
+                >
+              </div>
 
               <div class="row__two">
                 <span class="img-border">
-                  <img @click="makeAlertCurrent(alert)" src="@/assets/images/edit.png" />
+                  <img @click="makeAlertCurrent(alert)" src="@/assets/images/edit.svg" class="invert" />
                 </span>
 
                 <span class="img-border">
-                  <img src="@/assets/images/whitetrash.png" @click="deleteClosed(alert.id)" />
+                  <img src="@/assets/images/trash.svg" class="invert" @click="deleteClosed(alert.id)" />
                 </span>
               </div>
             </div>
@@ -240,9 +253,9 @@ export default {
     })
   },
   methods: {
-    test() {
-      console.log(this.templates)
-    },
+    // test() {
+    //   console.log(this.templates)
+    // },
     async getRecapChannel() {
       const res = await SlackOAuth.api.channelDetails(this.hasRecapChannel)
       this.currentRecapChannel = res.channel.name
@@ -283,6 +296,9 @@ export default {
     },
     goToRecap() {
       this.$router.push({ name: 'ZoomRecap' })
+    },
+    goToConnect() {
+      this.$router.push({ name: 'Integrations' })
     },
     makeAlertCurrent(val) {
       this.currentAlert = val
@@ -369,6 +385,9 @@ export default {
   computed: {
     user() {
       return this.$store.state.user
+    },
+    hasSlackIntegration() {
+      return !!this.$store.state.user.slackRef
     },
     hasRecapChannel() {
       return this.$store.state.user.slackAccount.recapChannel
@@ -604,8 +623,11 @@ a {
   img {
     height: 0.8rem;
     cursor: pointer;
-    filter: invert(70%);
+    filter: invert(20%);
   }
+}
+.invert {
+  filter: invert(20%);
 }
 .green_button:disabled {
   background-color: $soft-gray;
@@ -638,5 +660,10 @@ a {
 }
 .loading-title {
   display: none;
+}
+.link {
+  color: $dark-green;
+  border-bottom: 1px solid $dark-green;
+  cursor: pointer;
 }
 </style>

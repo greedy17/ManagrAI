@@ -1,8 +1,5 @@
 <template>
-  <PopularWorkflows
-    :selectField="true"
-    :config="allConfigs.REQUIRED_FIELD_EMPTY"
-  />
+  <PopularWorkflows :selectField="true" :config="allConfigs.REQUIRED_FIELD_EMPTY" />
 </template>
 
 <script>

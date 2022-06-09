@@ -1,7 +1,5 @@
 <template>
-  <PopularWorkflows
-      :config="allConfigs.CLOSE_DATE_APPROACHING"
-  />
+  <PopularWorkflows :config="allConfigs.CLOSE_DATE_APPROACHING" />
 </template>
 
 <script>

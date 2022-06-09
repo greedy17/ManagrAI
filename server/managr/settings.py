@@ -94,6 +94,7 @@ INSTALLED_APPS = [
     "managr.salesloft",
     "managr.gong",
     "managr.outreach",
+    "managr.meetings",
     # "managr.demo",
     # Django
     "django.contrib.admin",

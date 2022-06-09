@@ -1,7 +1,7 @@
 <template>
   <div class="aa-notification" :class="alert.type" @click="$emit('remove', alert)">
     <div class="row">
-      <img v-if="alert.type === 'success'" class="check" src="@/assets/images/check.png" alt="" />
+      <img v-if="alert.type === 'success'" class="check" src="@/assets/images/check.svg" alt="" />
       <div class="col">
         <div class="content" v-html="alert.message" />
         <div class="subs" v-html="alert.sub" />
@@ -106,6 +106,6 @@ export default {
 .check {
   height: 1.25rem;
   margin-right: 0.75rem;
-  filter: invert(46%) sepia(20%) saturate(1576%) hue-rotate(94deg) brightness(102%) contrast(92%);
+  filter: invert(54%) sepia(20%) saturate(1576%) hue-rotate(94deg) brightness(102%) contrast(92%);
 }
 </style>

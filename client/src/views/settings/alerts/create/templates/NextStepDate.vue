@@ -1,8 +1,5 @@
 <template>
-  <PopularWorkflows
-    :selectField="true"
-    :config="allConfigs.UPCOMING_NEXT_STEP"
-  />
+  <PopularWorkflows :selectField="true" :config="allConfigs.UPCOMING_NEXT_STEP" />
 </template>
 
 <script>

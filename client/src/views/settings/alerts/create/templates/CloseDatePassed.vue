@@ -1,7 +1,5 @@
 <template>
-  <PopularWorkflows 
-      :config="allConfigs.CLOSE_DATE_PASSED"
-  />
+  <PopularWorkflows :config="allConfigs.CLOSE_DATE_PASSED" />
 </template>
 
 <script>

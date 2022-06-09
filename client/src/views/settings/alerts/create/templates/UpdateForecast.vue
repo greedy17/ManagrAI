@@ -1,7 +1,5 @@
 <template>
-  <PopularWorkflows
-    :config="allConfigs.UPDATE_FORECAST"
-  />
+  <PopularWorkflows :config="allConfigs.UPDATE_FORECAST" />
 </template>
 
 <script>
