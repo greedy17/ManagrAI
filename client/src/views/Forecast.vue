@@ -12,7 +12,7 @@
       <div class="modal-container">
         <header class="modal-container__header">
           <h3>Forecast Settings</h3>
-          <img class="invert" @click="resetSettings" src="@/assets/images/clear.svg" alt="" />
+          <img class="invert" @click="resetSettings" src="@/assets/images/close.svg" alt="" />
         </header>
         <div class="modal-container__body">
           <p>Add Opportunites to Forecast:</p>
@@ -56,7 +56,7 @@
       <div class="modal-container-small">
         <header class="modal-container__header">
           <h3>Remove from Forecast</h3>
-          <img class="invert" @click="resetDelete" src="@/assets/images/clear.svg" alt="" />
+          <img class="invert" @click="resetDelete" src="@/assets/images/close.svg" alt="" />
         </header>
         <div class="modal-container__body center">
           <p>Are you sure ?</p>

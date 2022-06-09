@@ -51,7 +51,7 @@
             <h3>{{ alert.title }}</h3>
             <p class="even">
               Cant edit templated alert titles &nbsp;
-              <img src="@/assets/images/exclamation.png" alt="" />
+              <img src="@/assets/images/exclamation.svg" class="invert" alt="" />
             </p>
           </div>
         </div>

@@ -65,7 +65,7 @@
             <h3>Create Opportunity</h3>
           </div>
           <img
-            src="@/assets/images/clear.svg"
+            src="@/assets/images/close.svg"
             style="height: 1.25rem; margin-top: -1rem; margin-right: 0.75rem; cursor: pointer"
             @click="resetAddOpp"
             alt=""

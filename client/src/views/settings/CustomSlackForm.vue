@@ -917,7 +917,7 @@
             "
           >
             <img src="@/assets/images/share.svg" class="invert2" style="height: 1rem" alt="" />
-            <img class="invert2" src="@/assets/images/clear.svg" style="height: 1rem; margin-left: 0.5rem" alt="" />
+            <img src="@/assets/images/close.svg" class="invert2" style="height: 1rem; margin-left: 0.5rem" alt="" />
           </div>
         </div>
 
