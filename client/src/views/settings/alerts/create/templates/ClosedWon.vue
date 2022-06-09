@@ -7,7 +7,7 @@
       </div>
 
       <button @click="$router.push({ name: 'RealTime' })" class="back-button">
-        <img src="@/assets/images/back.png" alt="" />
+        <img class="invert" src="@/assets/images/back.svg" alt="" />
         Back to Instant Updates
       </button>
     </div>
@@ -39,7 +39,7 @@
 
                   <template slot="placeholder">
                     <p class="slot-icon">
-                      <img src="@/assets/images/search.png" alt="" />
+                      <img src="@/assets/images/search.svg" alt="" />
                       Select Users
                     </p>
                   </template>
@@ -131,7 +131,7 @@
                     </template>
                     <template slot="placeholder">
                       <p class="slot-icon">
-                        <img src="@/assets/images/search.png" alt="" />
+                        <img src="@/assets/images/search.svg" alt="" />
                         Select Users
                       </p>
                     </template>
@@ -643,6 +643,9 @@ input {
     filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
       brightness(93%) contrast(89%);
   }
+}
+.invert {
+  filter: invert(80%);
 }
 .forecast__collection {
   background-color: white;

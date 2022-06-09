@@ -17,7 +17,7 @@
           </div>
 
           <img
-            src="@/assets/images/closer.png"
+            src="@/assets/images/close.svg"
             style="height: 1.5rem; margin-top: -0.5rem; margin-right: 0.5rem; cursor: pointer"
             @click="resetNotes"
             alt=""
@@ -38,7 +38,7 @@
             <h3>Notes</h3>
           </div>
           <img
-            src="@/assets/images/closer.png"
+            src="@/assets/images/close.svg"
             style="height: 1.5rem; margin-top: -0.5rem; margin-right: 0.5rem; cursor: pointer"
             @click="resetNotes"
             alt=""
@@ -65,8 +65,7 @@
             <h3>Create Opportunity</h3>
           </div>
           <img
-            src="@/assets/images/clear.png"
-            class="invert"
+            src="@/assets/images/close.svg"
             style="height: 1.25rem; margin-top: -1rem; margin-right: 0.75rem; cursor: pointer"
             @click="resetAddOpp"
             alt=""
@@ -140,7 +139,7 @@
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
+                    <img src="@/assets/images/search.svg" alt="" />
                     {{ `${field.referenceDisplayLabel}` }}
                   </p>
                 </template>
@@ -194,7 +193,7 @@
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
+                    <img src="@/assets/images/search.svg" alt="" />
                     {{ currentVals[field.apiName] }}
                   </p>
                 </template>
@@ -224,7 +223,7 @@
             <h3>Update Opportunity</h3>
           </div>
           <img
-            src="@/assets/images/closer.png"
+            src="@/assets/images/close.svg"
             style="height: 1.5rem; margin-top: -1rem; margin-right: 0.75rem; cursor: pointer"
             @click="resetEdit"
             alt=""
@@ -303,7 +302,7 @@
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
+                    <img src="@/assets/images/search.svg" alt="" />
                     {{ currentVals[field.apiName] }}
                   </p>
                 </template>
@@ -351,7 +350,7 @@
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
+                    <img src="@/assets/images/search.svg" alt="" />
                     {{
                       field.apiName === 'AccountId'
                         ? currentAccount
@@ -418,7 +417,7 @@
                         </template>
                         <template slot="placeholder">
                           <p class="slot-icon">
-                            <img src="@/assets/images/search.png" alt="" />
+                            <img src="@/assets/images/search.svg" alt="" />
                             {{
                               `${currentVals[field.apiName]}` !== 'null'
                                 ? `${currentVals[field.apiName]}`
@@ -525,7 +524,7 @@
                         </template>
                         <template slot="placeholder">
                           <p class="slot-icon">
-                            <img src="@/assets/images/search.png" alt="" />
+                            <img src="@/assets/images/search.svg" alt="" />
                             {{ currentVals[field.apiName] }}
                           </p>
                         </template>
@@ -573,9 +572,6 @@
               />
             </div>
           </section>
-          <!-- <div class="adding-product">
-            <button>Add product <img src="@/assets/images/plusOne.png" alt="" /></button>
-          </div> -->
         </div>
         <div class="flex-end-opp">
           <div style="display: flex; align-items: center">
@@ -594,13 +590,15 @@
             <img
               v-if="!showList"
               style="height: 1rem; margin-left: 0.5rem"
-              src="@/assets/images/rightArrow.png"
+              src="@/assets/images/rightArrow.svg"
+              class="invert"
               alt=""
             />
             <img
               v-else
+              class="invert"
               style="height: 1rem; margin-left: 0.5rem"
-              src="@/assets/images/downArrow.png"
+              src="@/assets/images/downArrow.svg"
               alt=""
             />
           </button>
@@ -610,9 +608,10 @@
             </div>
             <p @click="showPopularList = !showPopularList" class="list-section__sub-title">
               Standard Lists
-              <img v-if="showPopularList" src="@/assets/images/downArrow.png" alt="" /><img
+              <img v-if="showPopularList" class="invert" src="@/assets/images/downArrow.svg" alt="" /><img
                 v-else
-                src="@/assets/images/rightArrow.png"
+                src="@/assets/images/rightArrow.svg"
+                class="invert"
                 alt=""
               />
             </p>
@@ -659,13 +658,15 @@
             <img
               v-if="!workList"
               style="height: 1rem; margin-left: 0.5rem"
-              src="@/assets/images/rightArrow.png"
+              src="@/assets/images/rightArrow.svg"
+              class="invert"
               alt=""
             />
             <img
               v-else
               style="height: 1rem; margin-left: 0.5rem"
-              src="@/assets/images/downArrow.png"
+              class="invert"
+              src="@/assets/images/downArrow.svg"
               alt=""
             />
           </button>
@@ -675,9 +676,10 @@
             </div>
             <p @click="showWorkflowList = !showWorkflowList" class="work-section__sub-title">
               Workflows
-              <img v-if="showWorkflowList" src="@/assets/images/downArrow.png" alt="" /><img
+              <img v-if="showWorkflowList" class="invert" src="@/assets/images/downArrow.svg" alt="" /><img
                 v-else
-                src="@/assets/images/rightArrow.png"
+                src="@/assets/images/rightArrow.svg"
+                class="invert"
                 alt=""
               />
             </p>
@@ -710,7 +712,7 @@
             <small style="font-weight: 400px; margin-left: 0.2rem">{{ currentOperators[i] }}</small>
             <small style="margin-left: 0.2rem">{{ filterValues[i] }}</small>
             <span v-if="hoveredIndex === i" class="selected-filters__close"
-              ><img src="@/assets/images/close.png" @click="removeFilter(filter, i)" alt=""
+              ><img src="@/assets/images/close.svg" @click="removeFilter(filter, i)" alt=""
             /></span>
           </div>
 
@@ -745,7 +747,8 @@
               class="add-filter-button"
             >
               <img
-                src="@/assets/images/plusOne.png"
+                src="@/assets/images/plusOne.svg"
+                class="invert"
                 style="height: 0.8rem; margin-right: 0.25rem"
                 alt=""
               />Add filter
@@ -761,39 +764,19 @@
               <div class="flex-row">
                 <button @click="closeDateSelected = !closeDateSelected" class="select-btn1">
                   Push Close Date
-                  <img
-                    src="@/assets/images/date.png"
-                    height="16px"
-                    style="margin-left: 0.25rem"
-                    alt=""
-                  />
+                  <img src="@/assets/images/date.svg" height="14px" style="margin-left: 0.25rem" alt="" />
                 </button>
                 <button @click="advanceStageSelected = !advanceStageSelected" class="select-btn1">
                   Advance Stage
-                  <img
-                    src="@/assets/images/stairs.png"
-                    height="16px"
-                    style="margin-left: 0.25rem"
-                    alt=""
-                  />
+                  <img src="@/assets/images/stairs.svg" height="14px" style="margin-left: 0.25rem" alt="" />
                 </button>
                 <button @click="forecastSelected = !forecastSelected" class="select-btn1">
                   Change Forecast
-                  <img
-                    src="@/assets/images/monetary.png"
-                    height="16px"
-                    style="margin-left: 0.25rem"
-                    alt=""
-                  />
+                  <img src="@/assets/images/monetary.svg" height="14px" style="margin-left: 0.25rem" alt="" />
                 </button>
                 <button @click="modifyForecast('add')" class="select-btn">
-                  Add to Tracker
-                  <!-- <img
-                    src="@/assets/images/monetary.png"
-                    height="14px"
-                    style="margin-left: 0.25rem"
-                    alt=""
-                  /> -->
+                  Start Tracking
+                 
                 </button>
               </div>
             </div>
@@ -824,7 +807,7 @@
 
                 <template slot="placeholder">
                   <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
+                    <img src="@/assets/images/search.svg" alt="" />
                     Select Stage
                   </p>
                 </template>
@@ -858,7 +841,7 @@
 
                 <template slot="placeholder">
                   <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
+                    <img src="@/assets/images/search.svg" alt="" />
                     Forecast Category
                   </p>
                 </template>
@@ -880,18 +863,18 @@
         <div class="flex-row">
           <div v-if="!selectedWorkflow" class="search-bar">
             <input type="search" v-model="filterText" placeholder="search" />
-            <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
+            <img src="@/assets/images/search.svg" style="height: 1rem" alt="" />
           </div>
           <div v-else class="search-bar">
             <input type="search" v-model="workflowFilterText" placeholder="search" />
-            <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
+            <img src="@/assets/images/search.svg" style="height: 1rem" alt="" />
           </div>
           <button @click="createOppInstance()" class="add-button">
-            <img src="@/assets/images/plusOne.png" style="height: 1rem" alt="" />
+            <img src="@/assets/images/plusOne.svg" class="fullInvert" style="height: 1rem" alt="" />
             Create Opportunity
           </button>
           <button @click="manualSync" class="select-btn">
-            <img src="@/assets/images/refresh.png" class="invert" style="height: 1.15rem" alt="" />
+            <img src="@/assets/images/refresh.svg" style="height: 1.15rem" alt="" />
           </button>
         </div>
       </section>
@@ -910,7 +893,7 @@
           </div>
 
           <img
-            src="@/assets/images/closer.png"
+            src="@/assets/images/close.svg"
             style="height: 1rem; margin-top: -0.25rem; margin-right: 0.75rem; cursor: pointer"
             @click="closeStageForm"
             alt=""
@@ -961,7 +944,7 @@
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
+                    <img src="@/assets/images/search.svg" alt="" />
                     {{
                       `${currentVals[field.apiName]}` !== 'null'
                         ? `${currentVals[field.apiName]}`
@@ -1062,7 +1045,7 @@
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
+                    <img src="@/assets/images/search.svg" alt="" />
                     {{ currentVals[field.apiName] }}
                   </p>
                 </template>
@@ -2712,7 +2695,7 @@ select {
   background-color: #fafafa;
   height: 40px;
   width: 100%;
-  background-image: url('../assets/images/dropdown.png');
+  background-image: url('../assets/images/dropdown.svg');
   background-size: 1rem;
   background-position: 100%;
   background-repeat: no-repeat;
@@ -3081,6 +3064,9 @@ section {
 }
 .invert {
   filter: invert(80%);
+}
+.fullInvert {
+  filter: invert(99%);
 }
 .add-button:disabled {
   display: flex;

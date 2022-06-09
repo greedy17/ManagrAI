@@ -4,7 +4,7 @@
       <div class="delete_modal">
         <div class="delete_modal__header">
           <h2>Delete Workflow</h2>
-          <img @click="deleteOpen = !deleteOpen" src="@/assets/images/close.png" alt="" />
+          <img @click="deleteOpen = !deleteOpen" src="@/assets/images/close.svg" alt="" />
         </div>
 
         <div class="delete_modal__body">
@@ -119,11 +119,11 @@
 
               <div class="row__two">
                 <span class="img-border">
-                  <img @click="makeAlertCurrent(alert)" src="@/assets/images/edit.png" />
+                  <img @click="makeAlertCurrent(alert)" src="@/assets/images/edit.svg" class="invert" />
                 </span>
 
                 <span class="img-border">
-                  <img src="@/assets/images/whitetrash.png" @click="deleteClosed(alert.id)" />
+                  <img src="@/assets/images/trash.svg" class="invert" @click="deleteClosed(alert.id)" />
                 </span>
               </div>
             </div>
@@ -623,8 +623,11 @@ a {
   img {
     height: 0.8rem;
     cursor: pointer;
-    filter: invert(70%);
+    filter: invert(20%);
   }
+}
+.invert {
+  filter: invert(20%);
 }
 .green_button:disabled {
   background-color: $soft-gray;

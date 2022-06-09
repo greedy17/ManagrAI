@@ -16,7 +16,9 @@ def create_configs_for_target(target, template_user, config):
         elif target == "REPS":
             target = "REP"
         users = User.objects.filter(
-            organization=template_user.organization, user_level=target, is_active=True,
+            organization=template_user.organization,
+            user_level=target,
+            is_active=True,
         )
     elif target == "SELF":
         config["recipient_type"] = "SLACK_CHANNEL"
@@ -440,6 +442,7 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data, *args, **kwargs):
+        print(validated_data)
         new_groups = validated_data.pop("new_groups", [])
         message_template = validated_data.pop("message_template")
         new_configs = validated_data.pop("new_configs", [])
@@ -458,7 +461,9 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
         if len(new_configs):
             new_configs = list(map(lambda x: {**x, "template": data.id}, new_configs))
             _new_configs = AlertConfigWriteSerializer(
-                data=new_configs, many=True, context=self.context,
+                data=new_configs,
+                many=True,
+                context=self.context,
             )
             try:
                 _new_configs.is_valid(raise_exception=True)

@@ -47,7 +47,11 @@ def create_configs_for_target(target, template_user, config):
         elif target == "REPS":
             target = "REP"
         users = User.objects.filter(
-            Q(organization=template_user.organization, user_level=target, is_active=True,)
+            Q(
+                organization=template_user.organization,
+                user_level=target,
+                is_active=True,
+            )
         )
     elif target == "SELF":
         config["recipient_type"] = "SLACK_CHANNEL"
@@ -63,6 +67,7 @@ def create_configs_for_target(target, template_user, config):
     else:
         users = User.objects.filter(id=target)
     new_configs = []
+    print(users)
     for user in users:
         if user.has_slack_integration:
             config_copy = copy(config)
@@ -310,7 +315,9 @@ class AlertConfigViewSet(
                 id=last_instance.template.id
             ).values()[0]
             instances = alert_models.AlertInstance.objects.filter(
-                user=user, config__id=config_id, invocation=last_instance.invocation,
+                user=user,
+                config__id=config_id,
+                invocation=last_instance.invocation,
             )
             return Response(data={"instances": instances.values(), "template": template})
 
@@ -368,7 +375,8 @@ class AlertOperandViewSet(
 
 
 class AlertInstanceViewSet(
-    mixins.ListModelMixin, viewsets.GenericViewSet,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
 ):
     filter_backends = (
         DjangoFilterBackend,
