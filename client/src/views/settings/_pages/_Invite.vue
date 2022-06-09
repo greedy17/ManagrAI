@@ -40,12 +40,12 @@
                   <template slot="afterList">
                     <p class="multi-slot__more" @click="listUsers(slackMembers.nextCursor)">
                       Load More
-                      <img src="@/assets/images/plusOne.png" alt="" />
+                      <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
                     </p>
                   </template>
                   <template slot="placeholder">
                     <p class="slot-icon">
-                      <img src="@/assets/images/search.png" alt="" />
+                      <img src="@/assets/images/search.svg" alt="" />
                       Select Slack User
                     </p>
                   </template>
@@ -71,7 +71,7 @@
                   </template>
                   <template slot="placeholder">
                     <p class="slot-icon">
-                      <img src="@/assets/images/search.png" alt="" />
+                      <img src="@/assets/images/search.svg" alt="" />
                       Select User Level
                     </p>
                   </template>
@@ -423,6 +423,9 @@ export default {
     filter: invert(70%);
   }
 }
+.invert {
+  filter: invert(80%);
+}
 .section-header {
   font-size: 15px;
   font-weight: bold;
@@ -451,14 +454,13 @@ export default {
 }
 .complete {
   border-bottom: 2.9px solid $dark-green;
-  border-radius: 10%;
+
   margin-right: 0.5rem;
   color: $base-gray;
 }
 .incomplete {
   border-bottom: 2px solid $coral;
   color: $base-gray;
-  border-radius: 10%;
 }
 .back-logo {
   position: absolute;
@@ -472,13 +474,13 @@ export default {
 .active {
   border-bottom: 2px solid $dark-green;
   padding: 0.2rem;
-  border-radius: 10%;
+
   margin-right: 0.25rem;
 }
 .inactive {
   border-bottom: 2px solid $coral;
   padding: 0.2rem;
-  border-radius: 10%;
+
   margin-right: 0.25rem;
 }
 .invite-container {

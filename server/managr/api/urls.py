@@ -125,6 +125,7 @@ urlpatterns = [
         "zoom/webhooks/recordings", zoom_views.zoom_recordings_webhook, name="get_zoom_recording",
     ),
     path("zoom/fake-recording", zoom_views.fake_recording, name="fake-recording"),
+    path("zoom/schedule-meeting", zoom_views.schedule_zoom_meeting, name="schedule-zoom-meeting"),
     path(
         "users/salesforce/authorization",
         sf_views.salesforce_auth_link,

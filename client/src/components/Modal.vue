@@ -70,7 +70,6 @@ export default {
     z-index: 1;
   }
   &__dialog {
-    $bold-font-family: Lato-Bold;
     color: white;
     background-color: $white;
     box-shadow: 3px 4px 7px $very-light-gray;

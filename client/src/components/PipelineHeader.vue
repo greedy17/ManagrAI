@@ -20,9 +20,9 @@
     >
       <div class="sort-img-visible">
         Name
-        <img v-if="nameSort === 0" style="height: 0.75rem" src="@/assets/images/sort.png" alt="" />
+        <img v-if="nameSort === 0" style="height: 0.75rem" src="@/assets/images/sort.svg" alt="" />
         <span v-if="nameSort === 2">
-          <img class="light-green" src="@/assets/images/ascend.png" style="height: 0.6rem" alt="" />
+          <img class="light-green" src="@/assets/images/ascend.svg" style="height: 0.6rem" alt="" />
         </span>
       </div>
     </div>
@@ -40,11 +40,11 @@
     >
       <div class="sort-img-visible">
         Name
-        <img v-if="nameSort === 0" style="height: 0.75rem" src="@/assets/images/sort.png" alt="" />
+        <img v-if="nameSort === 0" style="height: 0.75rem" src="@/assets/images/sort.svg" alt="" />
         <span v-if="nameSort === 1">
           <img
             class="light-green"
-            src="@/assets/images/descend.png"
+            src="@/assets/images/descend.svg"
             style="height: 0.6rem"
             alt=""
           />
@@ -72,11 +72,11 @@
         <img
           v-if="reverseIndex !== i"
           style="height: 0.75rem"
-          src="@/assets/images/sort.png"
+          src="@/assets/images/sort.svg"
           alt=""
         />
         <span v-if="reverseIndex === i">
-          <img class="light-green" src="@/assets/images/ascend.png" style="height: 0.6rem" alt="" />
+          <img class="light-green" src="@/assets/images/ascend.svg" style="height: 0.6rem" alt="" />
         </span>
       </p>
 
@@ -99,13 +99,13 @@
         <img
           v-if="sortingIndex !== i"
           style="height: 0.75rem"
-          src="@/assets/images/sort.png"
+          src="@/assets/images/sort.svg"
           alt=""
         />
         <span v-if="sortingIndex === i">
           <img
             class="light-green"
-            src="@/assets/images/descend.png"
+            src="@/assets/images/descend.svg"
             style="height: 0.6rem"
             alt=""
           />
@@ -133,17 +133,17 @@
         <img
           v-if="reverseIndex !== oppFields.length + i"
           style="height: 0.75rem"
-          src="@/assets/images/sort.png"
+          src="@/assets/images/sort.svg"
           alt=""
         />
         <span v-if="reverseIndex === oppFields.length + i">
-          <img class="light-green" src="@/assets/images/ascend.png" style="height: 0.6rem" alt="" />
+          <img class="light-green" src="@/assets/images/ascend.svg" style="height: 0.6rem" alt="" />
         </span>
         <img
           style="margin-left: 0.1rem"
           class="red"
           @click="removeExtraField(i)"
-          src="@/assets/images/closer.png"
+          src="@/assets/images/close.svg"
           alt=""
         />
       </p>
@@ -167,18 +167,18 @@
         <img
           v-if="sortingIndex !== oppFields.length + i"
           style="height: 0.75rem"
-          src="@/assets/images/sort.png"
+          src="@/assets/images/sort.svg"
           alt=""
         />
         <span v-if="sortingIndex === oppFields.length + i">
           <img
             class="light-green"
-            src="@/assets/images/descend.png"
+            src="@/assets/images/descend.svg"
             style="height: 0.6rem"
             alt=""
           />
         </span>
-        <img class="red" @click="removeExtraField(i)" src="@/assets/images/closer.png" alt="" />
+        <img class="red" @click="removeExtraField(i)" src="@/assets/images/close.svg" alt="" />
       </p>
 
       <div v-if="removingField && removingIndex === i" class="remove-field-section">
@@ -194,14 +194,14 @@
     <div class="table-cell-header">
       <div class="direction-row" @click="addField">
         <p style="color: white">.</p>
-        <img src="@/assets/images/plusOne.png" class="add-row" alt="" />
+        <img src="@/assets/images/plusOne.svg" class="add-row invert" alt="" />
       </div>
 
       <div v-if="addingField" class="add-field-section">
         <div class="add-field-section__title">
           <p>Add View Only Field</p>
           <img
-            src="@/assets/images/closer.png"
+            src="@/assets/images/close.svg"
             style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
             @click="closeAddField"
           />
@@ -538,6 +538,9 @@ export default {
   margin-left: 0.25rem;
   padding-right: 0.25rem;
   filter: invert(36%) sepia(81%) saturate(5047%) hue-rotate(139deg) brightness(77%) contrast(80%);
+}
+.invert {
+  filter: invert(80%);
 }
 .direction-row {
   display: flex;

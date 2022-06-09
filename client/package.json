@@ -27,7 +27,6 @@
     "@thinknimble/tn-validators": "^1.1.1",
     "@thinknimble/togglecheckbox": "^0.1.4",
     "axios": "^0.18.0",
-    "email-validator": "^2.0.4",
     "js-cookie": "^2.2.0",
     "jwt-decode": "^3.1.2",
     "lodash.debounce": "^4.0.8",
@@ -36,8 +35,6 @@
     "luxon": "^1.24.1",
     "moment": "^2.26.0",
     "moment-timezone": "^0.5.31",
-    "pluralize": "^8.0.0",
-    "randomcolor": "^0.5.3",
     "v-mask": "^2.2.1",
     "vue": "^2.5.22",
     "vue-clipboard2": "^0.3.3",
@@ -53,8 +50,7 @@
     "vue2-google-maps": "^0.10.7",
     "vuedraggable": "^2.24.3",
     "vuex": "^3.1.0",
-    "vuex-persistedstate": "^2.5.4",
-    "weekstart": "^1.0.1"
+    "vuex-persistedstate": "^2.5.4"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.4.0",

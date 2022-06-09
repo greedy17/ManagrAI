@@ -11,7 +11,7 @@
       </div>
 
       <button @click="$router.push({ name: 'CreateNew' })" class="back-button">
-        <img src="@/assets/images/back.png" alt="" />
+        <img class="invert" src="@/assets/images/back.svg" alt="" />
         Back to workflows
       </button>
     </div>
@@ -46,7 +46,7 @@
               </template>
               <template slot="placeholder">
                 <p class="slot-icon">
-                  <img src="@/assets/images/search.png" alt="" />
+                  <img src="@/assets/images/search.svg" alt="" />
                   Select Users
                 </p>
               </template>
@@ -134,12 +134,12 @@
                       @click="listUserChannels(userChannelOpts.nextCursor)"
                     >
                       Load More
-                      <img src="@/assets/images/plusOne.png" alt="" />
+                      <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
                     </p>
                   </template>
                   <template slot="placeholder">
                     <p class="slot-icon">
-                      <img src="@/assets/images/search.png" alt="" />
+                      <img src="@/assets/images/search.svg" alt="" />
                       Select Channel
                     </p>
                   </template>
@@ -518,5 +518,8 @@ input {
 }
 img {
   filter: invert(60%);
+}
+.invert {
+  filter: invert(80%);
 }
 </style>

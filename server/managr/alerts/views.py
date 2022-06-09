@@ -2,6 +2,7 @@ import logging
 from django.conf import settings
 from django.forms import ValidationError
 import pytz
+from django.db.models import Q
 from datetime import datetime
 from django_filters.rest_framework import DjangoFilterBackend
 from copy import copy
@@ -40,14 +41,13 @@ logger = logging.getLogger("managr")
 def create_configs_for_target(target, template_user, config):
     from managr.core.models import User
 
-    print(target)
     if target in ["MANAGERS", "REPS", "SDR"]:
         if target == "MANAGERS":
             target = "MANAGER"
         elif target == "REPS":
             target = "REP"
         users = User.objects.filter(
-            organization=template_user.organization, user_level=target, is_active=True,
+            Q(organization=template_user.organization, user_level=target, is_active=True,)
         )
     elif target == "SELF":
         config["recipient_type"] = "SLACK_CHANNEL"
@@ -72,8 +72,7 @@ def create_configs_for_target(target, template_user, config):
                 else user.slack_integration.channel
             ]
             config_copy["recipient_type"] = "SLACK_CHANNEL"
-            if user != template_user:
-                config_copy["alert_targets"] = [str(user.id)]
+            config_copy["alert_targets"] = [str(user.id)]
             new_configs.append(config_copy)
     return new_configs
 
@@ -99,7 +98,8 @@ def alert_config_creator(data, user):
                 created_configs = create_configs_for_target(target, user, new_configs[0])
                 if len(created_configs):
                     all_configs = [*all_configs, *created_configs]
-            all_configs = remove_duplicate_alert_configs(all_configs)
+            if len(all_configs) > 1:
+                all_configs = remove_duplicate_alert_configs(all_configs)
             new_configs = all_configs if len(all_configs) else None
     else:
         return None
@@ -139,12 +139,14 @@ class AlertTemplateViewSet(
 
     def create(self, request, *args, **kwargs):
         data = request.data
+        alert_target_ref = data["new_configs"][0]["alert_targets"]
         configs = alert_config_creator(data, request.user)
         if configs is None:
             serializer = alert_serializers.AlertTemplateWriteSerializer(data=None, context=request)
             serializer.is_valid(raise_exception=True)
         else:
             data["new_configs"] = configs
+            data["target_reference"] = alert_target_ref
             serializer = alert_serializers.AlertTemplateWriteSerializer(data=data, context=request)
             serializer.is_valid(raise_exception=True)
             serializer.save()
@@ -192,7 +194,6 @@ class AlertTemplateViewSet(
                     users = []
                     for config in obj.configs.all():
                         users = [*users, *config.target_users]
-                    print(users)
                     res_data = []
                     for user in users:
                         if hasattr(user, "salesforce_account"):

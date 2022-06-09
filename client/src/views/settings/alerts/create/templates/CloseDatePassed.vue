@@ -9,7 +9,7 @@
       </div>
 
       <button @click="$router.push({ name: 'CreateNew' })" class="back-button">
-        <img src="@/assets/images/back.png" alt="" />
+        <img class="invert" src="@/assets/images/back.svg" alt="" />
         Back to workflows
       </button>
     </div>
@@ -67,7 +67,7 @@
                     </template>
                     <template slot="placeholder">
                       <p class="slot-icon">
-                        <img src="@/assets/images/search.png" alt="" />
+                        <img src="@/assets/images/search.svg" alt="" />
                         Select Days
                       </p>
                     </template>
@@ -113,7 +113,7 @@
                   </template>
                   <template slot="placeholder">
                     <p class="slot-icon">
-                      <img src="@/assets/images/search.png" alt="" />
+                      <img src="@/assets/images/search.svg" alt="" />
                       Select Users
                     </p>
                   </template>
@@ -204,12 +204,12 @@
                       @click="listUserChannels(userChannelOpts.nextCursor)"
                     >
                       Load More
-                      <img src="@/assets/images/plusOne.png" alt="" />
+                      <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
                     </p>
                   </template>
                   <template slot="placeholder">
                     <p class="slot-icon">
-                      <img src="@/assets/images/search.png" alt="" />
+                      <img src="@/assets/images/search.svg" alt="" />
                       Select Channel
                     </p>
                   </template>
@@ -607,7 +607,7 @@ export default {
     this.alertTemplateForm.field.title.value = 'Close Date Passed'
     this.alertTemplateForm.field.isActive.value = true
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
-      'Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has a passed close date of <strong>{ Opportunity.CloseDate }</strong>. Please update it!'
+      '<strong>.{ Opportunity.Name }</strong> has a passed close date of <strong>.{ Opportunity.CloseDate }</strong>. Please update it!'
     this.repsPipeline()
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = [0]
@@ -866,5 +866,8 @@ textarea {
 }
 img {
   filter: invert(60%);
+}
+.invert {
+  filter: invert(80%);
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
   <div class="invite-users">
-    <div class="invite-users__header">
+    <div v-if="getUser.userLevel === 'MANAGER'" class="invite-users__header">
       <h3 style="color: #4d4e4c">Manage Your Team</h3>
 
       <button class="invite_button" type="submit" @click="handleInvite">
@@ -13,27 +13,121 @@
       </button>
     </div>
 
-    <Invite class="invite-users__inviter" :inviteOpen="inviteOpen" @cancel="handleCancel" />
+    <Invite
+      v-if="getUser.userLevel === 'MANAGER' || user.isAdmin"
+      class="invite-users__inviter"
+      :inviteOpen="inviteOpen"
+      @cancel="handleCancel"
+    />
+
+    <section>
+      <header class="invite-users__header">
+        <h3 style="color: #4d4e4c">Update your Info</h3>
+
+        <button class="invite_button" type="submit" @click="handleUpdate">
+          Update
+          <img style="height: 0.8rem; margin-left: 0.25rem" src="@/assets/images/logo.png" alt="" />
+        </button>
+      </header>
+
+      <form class="update-container">
+        <input
+          v-model="profileForm.field.firstName.value"
+          placeholder="First Name"
+          :errors="profileForm.field.firstName.errors"
+          id="user-input"
+        />
+        <input
+          v-model="profileForm.field.lastName.value"
+          placeholder="Last Name"
+          :errors="profileForm.field.lastName.errors"
+          id="user-input"
+        />
+
+        <Multiselect
+          placeholder="Select Timezone"
+          style="width: 16rem"
+          v-model="selectedTimezone"
+          @input="setTime"
+          :options="timezones"
+          openDirection="below"
+          selectLabel="Enter"
+          label="key"
+          track-by="value"
+        />
+      </form>
+    </section>
   </div>
 </template>
 
 <script>
 import Invite from '../settings/_pages/_Invite'
+import User from '@/services/users'
+import { UserProfileForm } from '@/services/users/forms'
+import moment from 'moment-timezone'
 
 export default {
   name: 'InviteUsers',
-  components: { Invite },
+  components: { Invite, Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect') },
   data() {
     return {
       inviteOpen: false,
+      selectedTimezone: null,
+      user: this.getUser,
+      timezones: moment.tz.names(),
+      profileForm: new UserProfileForm({}),
+      loading: false,
     }
   },
   methods: {
+    setTime() {
+      this.profileForm.field.timezone.value = this.selectedTimezone.value
+    },
     handleInvite() {
       this.inviteOpen = !this.inviteOpen
     },
     handleCancel() {
       this.inviteOpen = false
+    },
+    handleUpdate() {
+      this.loading = true
+      User.api
+        .update(this.getUser.id, this.profileForm.value)
+        .then((response) => {
+          this.$Alert.alert({
+            message: 'Successfully Updated Profile info',
+            type: 'success',
+            timeout: 2000,
+          })
+          this.$store.dispatch('updateUser', User.fromAPI(response.data))
+
+          this.resetProfileForm()
+        })
+        .catch((e) => {
+          console.log(e)
+          this.resetProfileForm()
+        })
+    },
+    resetProfileForm() {
+      this.profileForm.firstName = this.getUser.firstName
+      this.profileForm.lastName = this.getUser.lastName
+      this.profileForm.timezone = this.getUser.timezone
+      this.loading = false
+    },
+  },
+  async created() {
+    this.profileForm = new UserProfileForm({
+      firstName: this.getUser.firstName,
+      lastName: this.getUser.lastName,
+      timezone: this.getUser.timezone,
+    })
+    this.timezones = this.timezones.map((tz) => {
+      return { key: tz, value: tz }
+    })
+  },
+  computed: {
+    getUser() {
+      return this.$store.state.user
     },
   },
 }
@@ -45,6 +139,31 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
+.update-container {
+  background-color: $white;
+  border: 1px solid #e8e8e8;
+  color: $base-gray;
+  width: 60vw;
+  height: 40vh;
+  overflow: scroll;
+  padding: 1.5rem 0rem 1.5rem 1rem;
+  border-radius: 5px;
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+}
+#user-input {
+  border: 1px solid #e8e8e8;
+  border-radius: 0.3rem;
+  background-color: white;
+  min-height: 2.5rem;
+  width: 16rem;
+  margin-bottom: 1rem;
+  font-family: $base-font-family;
+}
+#user-input:focus {
+  outline: none;
+}
 .invite-users {
   color: white;
   display: flex;

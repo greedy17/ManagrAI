@@ -9,7 +9,7 @@
       </div>
 
       <button @click="$router.push({ name: 'CreateNew' })" class="back-button">
-        <img src="@/assets/images/back.png" alt="" />
+        <img class="invert" src="@/assets/images/back.svg" alt="" />
         Back to workflows
       </button>
     </div>
@@ -67,7 +67,7 @@
                     </template>
                     <template slot="placeholder">
                       <p class="slot-icon">
-                        <img src="@/assets/images/search.png" alt="" />
+                        <img src="@/assets/images/search.svg" alt="" />
                         Select Days
                       </p>
                     </template>
@@ -112,7 +112,7 @@
                   </template>
                   <template slot="placeholder">
                     <p class="slot-icon">
-                      <img src="@/assets/images/search.png" alt="" />
+                      <img src="@/assets/images/search.svg" alt="" />
                       Select Users
                     </p>
                   </template>
@@ -203,12 +203,12 @@
                       @click="listUserChannels(userChannelOpts.nextCursor)"
                     >
                       Load More
-                      <img src="@/assets/images/plusOne.png" alt="" />
+                      <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
                     </p>
                   </template>
                   <template slot="placeholder">
                     <p class="slot-icon">
-                      <img src="@/assets/images/search.png" alt="" />
+                      <img src="@/assets/images/search.svg" alt="" />
                       Select Channels
                     </p>
                   </template>
@@ -672,7 +672,7 @@ export default {
     this.alertTemplateForm.field.title.value = 'Update Forecast'
     this.alertTemplateForm.field.isActive.value = true
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
-      'Please update the forecast for <strong>{ Opportunity.Name }</strong> ! it’s expected to close on <strong>{ Opportunity.CloseDate }</strong> and forecasted as <strong>{ Opportunity.ForecastCategoryName }</strong> - please either move to Commit or update the Close Date.<br><br> <strong>Next Step</strong>: { Opportunity.NextStep }'
+      '<strong>{ Opportunity.Name }</strong> is expected to close on <strong>{ Opportunity.CloseDate }</strong> and forecasted as <strong>{ Opportunity.ForecastCategoryName }</strong> <br><br> please either move to Commit or push the Close Date.'
     this.repsPipeline()
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = [0]
@@ -924,6 +924,9 @@ input {
 }
 img {
   filter: invert(60%);
+}
+.invert {
+  filter: invert(80%);
 }
 .alerts-page {
   height: 100vh;
