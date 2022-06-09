@@ -473,7 +473,7 @@ export default {
   }
 }
 .invertTrash {
-  filter: invert(80%);
+  filter: invert(20%);
 }
 .multi-slot {
   display: flex;
@@ -496,7 +496,7 @@ export default {
 
   img {
     height: 1rem;
-    filter: invert(80%);
+    filter: invert(20%);
   }
 }
 .header {

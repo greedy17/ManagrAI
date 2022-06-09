@@ -124,7 +124,7 @@ a:hover {
 }
 .active div:hover {
   img {
-    filter: none;
+    filter: invert(99%);
   }
   color: white;
 }
@@ -136,7 +136,7 @@ a:hover {
   position: relative;
   color: white;
   img {
-    filter: none;
+    filter: invert(99%);
   }
 }
 .active div:after {
