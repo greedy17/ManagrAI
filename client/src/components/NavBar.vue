@@ -75,6 +75,11 @@
                 >Meetings</router-link
               >
             </li>
+            <li>
+              <router-link exact-active-class="active" :to="{ name: 'Forecast' }"
+                >Tracker<span>Beta</span></router-link
+              >
+            </li>
           </ul>
         </div>
 
@@ -104,6 +109,11 @@
             <li v-if="!isOnboarding">
               <router-link exact-active-class="active" :to="{ name: 'Meetings' }"
                 >Meetings</router-link
+              >
+            </li>
+            <li>
+              <router-link exact-active-class="active" :to="{ name: 'Forecast' }"
+                >Tracker<span>Beta</span></router-link
               >
             </li>
           </ul>
