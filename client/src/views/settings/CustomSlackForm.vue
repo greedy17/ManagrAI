@@ -681,7 +681,7 @@
               )
             "
             style="margin-right: 0.5rem"
-            @click="goToOptional"
+            @click="goBack"
             class="disabled__"
           >
             Back
@@ -1558,9 +1558,6 @@ export default {
     },
     goBack() {
       this.$router.push({ name: 'Required' })
-    },
-    goToOptional() {
-      this.$router.push({ name: 'Custom' })
     },
     goToUpdateOpp() {
       this.$router.push({ name: 'UpdateOpportunity' })

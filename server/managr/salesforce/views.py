@@ -801,8 +801,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type,
-            slack_const.FORM_TYPE_UPDATE,
+            resource_type, slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)
@@ -899,18 +898,18 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         request_data = self.request.data
         user = request.user
         workflow = MeetingWorkflow.objects.get(id=request_data.get("workflow_id"))
-
-        forms = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING)
+        forms = OrgCustomSlackFormInstance.objects.filter(id__in=request_data.get("stage_form_id"))
         current_form_ids = []
+        main_form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
+        current_form_ids.append(str(main_form.id))
+        main_form.save_form(request_data.get("form_data"), False)
         if len(forms):
             for form in forms:
                 current_form_ids.append(str(form.id))
-                form.save_form(request_data.get("form_data"))
+                form.workflow = workflow
+                form.save_form(request_data.get("form_data"), False)
+
         # otherwise we save the meeting review form
-        else:
-            form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
-            current_form_ids.append(str(form.id))
-            form.save_form(request_data.get("form_data"), False)
         if workflow.meeting:
             contact_forms = workflow.forms.filter(
                 template__resource=slack_const.FORM_RESOURCE_CONTACT

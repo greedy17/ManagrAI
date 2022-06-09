@@ -178,6 +178,28 @@
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
+            <div v-else-if="field.dataType === 'Boolean'">
+              <p>{{ field.referenceDisplayLabel }}:</p>
+
+              <Multiselect
+                v-model="dropdownVal[field.apiName]"
+                :options="booleans"
+                @select="setUpdateValues(field.apiName, $event)"
+                openDirection="below"
+                style="width: 18vw"
+                selectLabel="Enter"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    {{ currentVals[field.apiName] }}
+                  </p>
+                </template>
+              </Multiselect>
+            </div>
           </section>
         </div>
         <div class="flex-end">
@@ -264,6 +286,28 @@
                 v-model="currentVals[field.apiName]"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
+            </div>
+            <div v-else-if="field.dataType === 'Boolean'">
+              <p>{{ field.referenceDisplayLabel }}:</p>
+
+              <Multiselect
+                v-model="dropdownVal[field.apiName]"
+                :options="booleans"
+                @select="setUpdateValues(field.apiName, $event)"
+                openDirection="below"
+                style="width: 18vw"
+                selectLabel="Enter"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    {{ currentVals[field.apiName] }}
+                  </p>
+                </template>
+              </Multiselect>
             </div>
             <div
               v-else-if="
@@ -464,6 +508,28 @@
                             setUpdateValidationValues(field.apiName, value)
                         "
                       />
+                    </div>
+                    <div v-else-if="field.dataType === 'Boolean'">
+                      <p>{{ field.referenceDisplayLabel }}:</p>
+
+                      <Multiselect
+                        v-model="dropdownVal[field.apiName]"
+                        :options="booleans"
+                        @select="setUpdateValidationValues(field.apiName, $event)"
+                        openDirection="below"
+                        style="width: 18vw"
+                        selectLabel="Enter"
+                      >
+                        <template slot="noResult">
+                          <p class="multi-slot">No results.</p>
+                        </template>
+                        <template slot="placeholder">
+                          <p class="slot-icon">
+                            <img src="@/assets/images/search.png" alt="" />
+                            {{ currentVals[field.apiName] }}
+                          </p>
+                        </template>
+                      </Multiselect>
                     </div>
                   </div>
                 </div>
@@ -960,6 +1026,28 @@
                 "
               />
             </div>
+            <div v-else-if="field.dataType === 'Boolean'">
+              <p>{{ field.referenceDisplayLabel }}:</p>
+
+              <Multiselect
+                v-model="dropdownVal[field.apiName]"
+                :options="booleans"
+                @select="setUpdateValidationValues(field.apiName, $event)"
+                openDirection="below"
+                style="width: 18vw"
+                selectLabel="Enter"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.png" alt="" />
+                    {{ currentVals[field.apiName] }}
+                  </p>
+                </template>
+              </Multiselect>
+            </div>
           </div>
         </div>
         <div class="flex-end-opp">
@@ -1193,6 +1281,7 @@ export default {
       operatorsLength: 0,
       stageGateId: null,
       forecastList: [],
+      booleans: ['true', 'false'],
       ladFilter: {
         apiName: 'LastActivityDate',
         dataType: 'Date',
@@ -1289,6 +1378,9 @@ export default {
     currentCheckList: 'addToForecastList',
   },
   methods: {
+    testBool(i) {
+      console.log(i)
+    },
     addToForecastList() {
       let list = []
       for (let i = 0; i < this.currentCheckList.length; i++) {

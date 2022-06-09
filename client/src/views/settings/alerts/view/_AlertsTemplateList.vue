@@ -23,7 +23,7 @@
         Edit your Workflow Automation
       </h3>
       <h3 v-else :class="templates.refreshing ? 'loading-title titles' : 'titles'">
-        Saved Workflow Automations
+        Active Workflow Automations
       </h3>
       <p
         :class="templates.refreshing ? 'loading-title titles' : ''"
@@ -77,13 +77,14 @@
             </div>
             <div class="added-collection__footer">
               <img
+                v-if="hasSlackIntegration"
                 style="margin-right: 0.25rem"
                 src="@/assets/images/slackLogo.png"
                 height="15px"
                 alt=""
               />
-              <p style="font-size: 13px">Schedule:</p>
-              <div class="row__">
+              <p v-if="hasSlackIntegration" style="font-size: 13px">Schedule:</p>
+              <div v-if="hasSlackIntegration" class="row__">
                 <p
                   :class="!alert.isActive ? 'green' : ''"
                   style="margin-right: 0.5rem; font-size: 12px; letter-spacing: 1px"
@@ -102,6 +103,18 @@
                 >
                   ON
                 </p>
+              </div>
+              <div style="width: 30vw" v-else>
+                <img
+                  style="margin-right: 0.2rem"
+                  src="@/assets/images/slackLogo.png"
+                  height="8px"
+                  alt=""
+                />
+                <small
+                  >Connect <span class="link" @click="goToConnect">Slack</span> for
+                  notifications</small
+                >
               </div>
 
               <div class="row__two">
@@ -284,6 +297,9 @@ export default {
     goToRecap() {
       this.$router.push({ name: 'ZoomRecap' })
     },
+    goToConnect() {
+      this.$router.push({ name: 'Integrations' })
+    },
     makeAlertCurrent(val) {
       this.currentAlert = val
       this.editing = !this.editing
@@ -369,6 +385,9 @@ export default {
   computed: {
     user() {
       return this.$store.state.user
+    },
+    hasSlackIntegration() {
+      return !!this.$store.state.user.slackRef
     },
     hasRecapChannel() {
       return this.$store.state.user.slackAccount.recapChannel
@@ -638,5 +657,10 @@ a {
 }
 .loading-title {
   display: none;
+}
+.link {
+  color: $dark-green;
+  border-bottom: 1px solid $dark-green;
+  cursor: pointer;
 }
 </style>

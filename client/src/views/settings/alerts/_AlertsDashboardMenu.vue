@@ -118,7 +118,7 @@
                 alt=""
               />
 
-              <h5>Scheduled Updates</h5>
+              <h5>Popular Workflows</h5>
             </div>
           </router-link>
         </div>
