@@ -787,9 +787,8 @@ export default {
       try {
         const res = await MeetingWorkflows.api
           .updateWorkflow({
-            workflow_id: this.stageGateId
-              ? [this.meetingWorkflowId, this.stageGateId]
-              : [this.meetingWorkflowId],
+            workflow_id: this.meetingWorkflowId,
+            stage_form_id: this.stageGateId ? [this.stageGateId] : [],
             form_data: this.formData,
           })
           .then((res) => {
