@@ -2,9 +2,9 @@
   <div class="alerts-page">
     <div class="alerts-header">
       <div>
-        <h3>{{config.title}}</h3>
+        <h3>{{ config.title }}</h3>
         <p style="margin-top: -0.5rem; font-size: 14px; color: #9b9b9b">
-          {{config.subtitle}}
+          {{ config.subtitle }}
         </p>
       </div>
 
@@ -29,76 +29,83 @@
             >
               <div v-if="largeOpps">
                 <span style="margin-bottom: 0.5rem">Select your "Amount" Field</span>
-                  <div>
-                    <div class="alert-group-row__operands">
-                      <div
-                        :key="i"
-                        v-for="(alertOperand, i) in alertGroup.field.alertOperands.groups"
-                        class="alert-group-row__operands__row rows"
-                      >
-                        <div :class="i > 0 ? 'visible' : ''">
+                <div>
+                  <div class="alert-group-row__operands">
+                    <div
+                      :key="i"
+                      v-for="(alertOperand, i) in alertGroup.field.alertOperands.groups"
+                      class="alert-group-row__operands__row rows"
+                    >
+                      <div :class="i > 0 ? 'visible' : ''">
+                        <div>
                           <div>
-                            <div>
-                              <FormField>
-                                <template v-slot:input>
-                                  <Multiselect
-                                    placeholder="Select Field"
-                                    v-model="identity"
-                                    :options="objectFields.list"
-                                    openDirection="below"
-                                    style="min-width: 13vw"
-                                    selectLabel="Enter"
-                                    track-by="apiName"
-                                    label="referenceDisplayLabel"
-                                  >
-                                    <template slot="noResult">
-                                      <p class="multi-slot">No results. Try loading more</p>
-                                    </template>
-                                    <template slot="afterList">
-                                      <p class="multi-slot__more" @click="objectFieldNextPage">
-                                        Load More <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
-                                      </p>
-                                    </template>
-                                    <template slot="placeholder">
-                                      <p class="slot-icon">
-                                        <img src="@/assets/images/search.svg" alt="" />
-                                        Select Field
-                                      </p>
-                                    </template>
-                                  </Multiselect>
-                                </template>
-                              </FormField>
-                            </div>
-
-                            <div class="alert-operand-row__value">
-                              <span style="margin-bottom: 0.5rem">"Amount" is greater than:</span>
-                              <template>
-                                <div>
-                                  <FormField
-                                    :errors="alertOperand.field.operandValue.errors"
-                                    v-model="largeOppValue"
-                                    :inputType="getInputType(alertOperand.field._operandIdentifier.value)"
-                                    large
-                                    bordered
-                                    placeholder="Enter a value"
-                                  />
-                                </div>
+                            <FormField>
+                              <template v-slot:input>
+                                <Multiselect
+                                  placeholder="Select Field"
+                                  v-model="identity"
+                                  :options="objectFields.list"
+                                  openDirection="below"
+                                  style="min-width: 13vw"
+                                  selectLabel="Enter"
+                                  track-by="apiName"
+                                  label="referenceDisplayLabel"
+                                >
+                                  <template slot="noResult">
+                                    <p class="multi-slot">No results. Try loading more</p>
+                                  </template>
+                                  <template slot="afterList">
+                                    <p class="multi-slot__more" @click="objectFieldNextPage">
+                                      Load More
+                                      <img
+                                        src="@/assets/images/plusOne.svg"
+                                        class="invert"
+                                        alt=""
+                                      />
+                                    </p>
+                                  </template>
+                                  <template slot="placeholder">
+                                    <p class="slot-icon">
+                                      <img src="@/assets/images/search.svg" alt="" />
+                                      Select Field
+                                    </p>
+                                  </template>
+                                </Multiselect>
                               </template>
-                            </div>
+                            </FormField>
+                          </div>
+
+                          <div class="alert-operand-row__value">
+                            <span style="margin-bottom: 0.5rem">"Amount" is greater than:</span>
+                            <template>
+                              <div>
+                                <FormField
+                                  :errors="alertOperand.field.operandValue.errors"
+                                  v-model="largeOppValue"
+                                  :inputType="
+                                    getInputType(alertOperand.field._operandIdentifier.value)
+                                  "
+                                  large
+                                  bordered
+                                  placeholder="Enter a value"
+                                />
+                              </div>
+                            </template>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
+                </div>
               </div>
               <div v-else>
-                <span style="margin-bottom: 0.5rem">Select your Field</span>
+                <span>Select your Field</span>
                 <Multiselect
                   placeholder="Select Field"
                   v-model="identity"
                   :options="objectFields.list"
                   openDirection="below"
-                  style="min-width: 13vw"
+                  style="min-width: 13vw; margin-top: 0.75rem"
                   selectLabel="Enter"
                   track-by="apiName"
                   label="referenceDisplayLabel"
@@ -121,12 +128,7 @@
               </div>
             </div>
           </div>
-          <div
-            v-else
-            style="margin-top: 1rem"
-            class="delivery__row"
-            :errors="form.field.recurrenceDay.errors"
-          >
+          <div v-else class="delivery__row" :errors="form.field.recurrenceDay.errors">
             <div style="margin-bottom: 0.5rem" class="row__">
               <label :class="config.newConfigs[0].recurrenceFrequency == 'WEEKLY' ? 'green' : ''"
                 >Weekly</label
@@ -185,11 +187,7 @@
             />
           </div>
 
-          <div
-            style="margin-top: 1rem; margin-left: 0.5rem"
-            v-if="userLevel == 'MANAGER'"
-            class="delivery__row"
-          >
+          <div v-if="userLevel == 'MANAGER'" class="delivery__row">
             <span style="margin-bottom: 0.5rem">Select Users</span>
 
             <FormField :errors="form.field.alertTargets.errors">
@@ -227,8 +225,6 @@
               flex-direction: column;
               align-items: center;
               justify-content: flex-start;
-              padding: 0.5rem;
-              margin-top: 0.5rem;
             "
           >
             <div v-if="!channelName" class="row__">
@@ -334,20 +330,15 @@
       :key="index"
       v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
       class="visible"
-    >
-    </div>
+    ></div>
 
     <div class="bottom_locked">
       <PulseLoadingSpinnerButton
         :loading="savingTemplate"
-        :class="
-          !(verifySubmit()) || savingTemplate
-            ? 'disabled__button'
-            : 'purple__button bouncy'
-        "
+        :class="!verifySubmit() || savingTemplate ? 'disabled__button' : 'purple__button bouncy'"
         text="Activate alert"
         @click.stop="onSave"
-        :disabled="!(verifySubmit()) || savingTemplate"
+        :disabled="!verifySubmit() || savingTemplate"
       />
     </div>
   </div>
@@ -377,11 +368,7 @@ import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
   name: 'PopularWorkflows',
-  props: [
-    'selectField',
-    'largeOpps',
-    'config',
-  ],
+  props: ['selectField', 'largeOpps', 'config'],
   components: {
     ToggleCheckBox,
     FormField,
@@ -505,20 +492,21 @@ export default {
     verifySubmit() {
       if (this.largeOpps) {
         return (
-          this.config.newGroups[0].newOperands[0].operandIdentifier
-          && this.config.newGroups[0].newOperands[0].operandValue
-          && this.config.newConfigs[0].alertTargets.length 
-          && this.selectUsersBool 
-          && this.selectFieldBool
-          && this.largeOppsBool
-          )
+          this.config.newGroups[0].newOperands[0].operandIdentifier &&
+          this.config.newGroups[0].newOperands[0].operandValue &&
+          this.config.newConfigs[0].alertTargets.length &&
+          this.selectUsersBool &&
+          this.selectFieldBool &&
+          this.largeOppsBool
+        )
       } else {
         return (
-          (this.config.newConfigs[0].recurrenceDays.length || this.config.newGroups[0].newOperands[0].operandIdentifier)
-          && this.config.newConfigs[0].alertTargets.length 
-          && this.selectUsersBool 
-          && (this.setDaysBool || this.selectFieldBool)
-          )
+          (this.config.newConfigs[0].recurrenceDays.length ||
+            this.config.newGroups[0].newOperands[0].operandIdentifier) &&
+          this.config.newConfigs[0].alertTargets.length &&
+          this.selectUsersBool &&
+          (this.setDaysBool || this.selectFieldBool)
+        )
       }
     },
     getInputType(type) {
@@ -648,8 +636,7 @@ export default {
     setRecipient() {
       this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value =
         this.selectedChannel
-      this.config.newConfigs[0].recipients =
-        this.selectedChannel.id
+      this.config.newConfigs[0].recipients = this.selectedChannel.id
     },
     setDay(n) {
       this.config.newConfigs[0].recurrenceDay = 0
@@ -657,7 +644,7 @@ export default {
       n.forEach((day) => days.push(day.value))
       let newDays = [...new Set(days)]
       this.config.newConfigs[0].recurrenceDays = newDays
-      this.setDaysBool = true;
+      this.setDaysBool = true
     },
     mapIds() {
       let mappedIds = this.selectedUsers.map((user) => user.id)
@@ -666,21 +653,22 @@ export default {
     },
     async onSave() {
       this.savingTemplate = true
-        const newConfigs = this.config.newConfigs[0];
-        const operandIden = this.config.newGroups[0].newOperands[0].operandIdentifier
-        let largeOpsCheck = true;
-        if (this.largeOpps) {
-          largeOpsCheck = false;
-          if (this.largeOppsBool) {
-            largeOpsCheck = true
-          }
+      const newConfigs = this.config.newConfigs[0]
+      const operandIden = this.config.newGroups[0].newOperands[0].operandIdentifier
+      let largeOpsCheck = true
+      if (this.largeOpps) {
+        largeOpsCheck = false
+        if (this.largeOppsBool) {
+          largeOpsCheck = true
         }
-        if (
-          (newConfigs.recurrenceDays.length || operandIden) && 
-          newConfigs.alertTargets.length && 
-          this.selectUsersBool && 
-          largeOpsCheck &&
-          (this.setDaysBool || this.selectFieldBool)) {
+      }
+      if (
+        (newConfigs.recurrenceDays.length || operandIden) &&
+        newConfigs.alertTargets.length &&
+        this.selectUsersBool &&
+        largeOpsCheck &&
+        (this.setDaysBool || this.selectFieldBool)
+      ) {
         try {
           const res = await AlertTemplate.api.createAlertTemplate({
             ...this.config,
@@ -741,8 +729,7 @@ export default {
   mounted() {
     this.setDefaultChannel()
   },
-  beforeMount() {
-  },
+  beforeMount() {},
 }
 </script>
 
@@ -1021,5 +1008,4 @@ img {
 .green {
   color: $dark-green;
 }
-
 </style>

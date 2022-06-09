@@ -167,7 +167,7 @@
         <!-- <section class="relative">
           <button @click.stop="addingFilter" class="add-filter-button margin-left-s">
             <img
-              src="@/assets/images/plusOne.png"
+              src="@/assets/images/plusOne.svg"
               style="height: 0.8rem; margin-right: 0.25rem"
               alt=""
             />Add filter
