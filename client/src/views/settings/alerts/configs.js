@@ -57,7 +57,7 @@ const CLOSE_DATE_PASSED = {
 }
 
 const UPDATE_FORECAST = {
-    title: "Update Forecast", 
+    title: "Update Forecast",
     subtitle: 'Update your forecast here',
     user: null,
     isActive: true,
@@ -68,19 +68,19 @@ const UPDATE_FORECAST = {
             newOperands: [
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "ForecastCategoryName", 
-                    operandOperator: "!=", 
-                    operandValue: 'Commit', 
+                    operandIdentifier: "ForecastCategoryName",
+                    operandOperator: "!=",
+                    operandValue: 'Commit',
                     operandType: "FIELD",
                     operandOrder: 0,
-                    dataType: "DATE",
+                    dataType: "STRING",
                     group: "",
                 },
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "CloseDate", 
-                    operandOperator: "<=", 
-                    operandValue: "14", 
+                    operandIdentifier: "CloseDate",
+                    operandOperator: "<=",
+                    operandValue: "14",
                     operandType: "FIELD",
                     operandOrder: 1,
                     dataType: "DATE",
@@ -116,7 +116,7 @@ const UPDATE_FORECAST = {
 }
 
 const DEAL_ROTTING = {
-    title: "Deal Rotting", 
+    title: "Deal Rotting",
     subtitle: 'View and update all Opportunities that havent been worked in 30 days',
     user: null,
     isActive: true,
@@ -128,7 +128,7 @@ const DEAL_ROTTING = {
                 {
                     operandCondition: "AND",
                     operandIdentifier: "LastActivityDate", // Select your Amount
-                    operandOperator: "<", 
+                    operandOperator: "<",
                     operandValue: "-30", // Amount is greater than
                     operandType: "FIELD",
                     operandOrder: 0,
@@ -164,7 +164,7 @@ const DEAL_ROTTING = {
 }
 
 const CLOSE_DATE_APPROACHING = {
-    title: "Close Date Approaching", 
+    title: "Close Date Approaching",
     subtitle: 'View and update all Opportunities with an upcoming close date',
     user: null,
     isActive: true,
@@ -175,9 +175,9 @@ const CLOSE_DATE_APPROACHING = {
             newOperands: [
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "CloseDate", 
-                    operandOperator: "<=", 
-                    operandValue: "7", 
+                    operandIdentifier: "CloseDate",
+                    operandOperator: "<=",
+                    operandValue: "7",
                     operandType: "FIELD",
                     operandOrder: 0,
                     dataType: "DATE",
@@ -185,9 +185,9 @@ const CLOSE_DATE_APPROACHING = {
                 },
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "CloseDate", 
-                    operandOperator: ">", 
-                    operandValue: "-1", 
+                    operandIdentifier: "CloseDate",
+                    operandOperator: ">",
+                    operandValue: "-1",
                     operandType: "FIELD",
                     operandOrder: 1,
                     dataType: "DATE",
@@ -222,7 +222,7 @@ const CLOSE_DATE_APPROACHING = {
 }
 
 const UPCOMING_NEXT_STEP = {
-    title: "Upcoming Next Step", 
+    title: "Upcoming Next Step",
     subtitle: "View and update all Opportunities with Next Steps due this Week",
     user: null,
     isActive: true,
@@ -234,8 +234,8 @@ const UPCOMING_NEXT_STEP = {
                 {
                     operandCondition: "AND",
                     operandIdentifier: "CloseDate",
-                    operandOperator: "=", 
-                    operandValue: '0', 
+                    operandOperator: "=",
+                    operandValue: '0',
                     operandType: "FIELD",
                     operandOrder: 0,
                     dataType: "DATE",
@@ -269,7 +269,7 @@ const UPCOMING_NEXT_STEP = {
 }
 
 const REQUIRED_FIELD_EMPTY = {
-    title: "Required Field Empty", 
+    title: "Required Field Empty",
     subtitle: "View and update all Opportunities with required fields that have not been filled out",
     user: null,
     isActive: true,
@@ -280,12 +280,12 @@ const REQUIRED_FIELD_EMPTY = {
             newOperands: [
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "CloseDate", 
-                    operandOperator: "=", 
-                    operandValue: 'null', 
+                    operandIdentifier: "",
+                    operandOperator: "=",
+                    operandValue: 'null',
                     operandType: "FIELD",
                     operandOrder: 0,
-                    dataType: "DATE",
+                    dataType: "STRING",
                     group: "",
                 },
             ],
@@ -316,7 +316,7 @@ const REQUIRED_FIELD_EMPTY = {
 }
 
 const LARGE_OPPORTUNITIES = {
-    title: "Large Opportunities", 
+    title: "Large Opportunities",
     subtitle: "View and update all your Opportunities that exceed a certain amount",
     user: null,
     isActive: true,
@@ -327,12 +327,12 @@ const LARGE_OPPORTUNITIES = {
             newOperands: [
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "CloseDate", 
-                    operandOperator: ">", 
-                    operandValue: 'null', 
+                    operandIdentifier: "",
+                    operandOperator: ">",
+                    operandValue: 'null',
                     operandType: "FIELD",
                     operandOrder: 0,
-                    dataType: "DATE",
+                    dataType: "",
                     group: "",
                 },
             ],

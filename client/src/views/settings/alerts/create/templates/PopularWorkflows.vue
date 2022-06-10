@@ -1,7 +1,7 @@
 <template>
   <div class="alerts-page">
     <div class="alerts-header">
-      <div>
+      <div @click="test">
         <h3>{{ config.title }}</h3>
         <p style="margin-top: -0.5rem; font-size: 14px; color: #9b9b9b">
           {{ config.subtitle }}
@@ -43,7 +43,7 @@
                               <template v-slot:input>
                                 <Multiselect
                                   placeholder="Select Field"
-                                  v-model="identity"
+                                  v-model="largeOpp"
                                   :options="objectFields.list"
                                   openDirection="below"
                                   style="min-width: 13vw"
@@ -392,6 +392,7 @@ export default {
       savingTemplate: false,
       channelName: '',
       identity: '',
+      largeOpp: null,
       largeOppValue: '',
       pageNumber: 0,
       setDaysBool: false,
@@ -463,6 +464,16 @@ export default {
         this.objectFields.refresh()
       },
     },
+    largeOpp: function () {
+      if (this.largeOpp) {
+        this.config.newGroups[0].newOperands[0].operandIdentifier = this.largeOpp.apiName
+        this.config.newGroups[0].newOperands[0].dataType = this.largeOpp.dataType
+        this.selectFieldBool = true
+      } else {
+        this.config.newGroups[0].newOperands[0].operandIdentifier = ''
+        this.selectFieldBool = false
+      }
+    },
     identity: function () {
       if (this.identity) {
         this.config.newGroups[0].newOperands[0].operandIdentifier = this.identity.apiName
@@ -484,6 +495,9 @@ export default {
     directToUsers: 'setDefaultChannel',
   },
   methods: {
+    test() {
+      console.log(this.config)
+    },
     setDefaultChannel() {
       this.directToUsers
         ? (this.config.newConfigs[0].recipients = 'default')
