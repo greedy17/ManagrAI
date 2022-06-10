@@ -1531,7 +1531,7 @@ section {
   justify-content: flex-end;
 }
 textarea {
-  resize: none;
+  resize: vertical;
 }
 a {
   text-decoration: none;
