@@ -768,6 +768,8 @@ export default {
       this.editOpModalOpen = true
       this.updatingMeeting = true
       this.meetingWorkflowId = meetingWorkflow
+      this.dropdownVal = {}
+      this.formData = {}
       try {
         const res = await SObjects.api.createFormInstance({
           resourceType: 'Opportunity',

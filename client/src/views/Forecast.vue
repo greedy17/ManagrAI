@@ -165,7 +165,7 @@
             </button>
           </div>
           <p class="gray-text smaller-font margin-left-s" v-if="forecastOpps && !loading">
-            Total Opps in Forecast: {{ forecastLength }}
+            Opportunites Tracked: {{ forecastLength }}
           </p>
           <p v-else></p>
         </div>

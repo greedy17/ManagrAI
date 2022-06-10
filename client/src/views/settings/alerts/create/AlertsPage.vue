@@ -17,7 +17,7 @@
     </div>
 
     <div class="alert_cards">
-      <div class="card">
+      <div v-if="hasSlackIntegration" class="card">
         <div class="card__header">
           <h3>Log Meetings</h3>
         </div>
@@ -297,6 +297,7 @@
       </div>
 
       <div
+        v-if="hasSlackIntegration"
         :class="
           !user.activatedManagrConfigs.includes('Close Date Passed') &&
           isOnboarding &&
@@ -350,6 +351,7 @@
       </div>
 
       <div
+        v-if="hasSlackIntegration"
         :class="
           !user.activatedManagrConfigs.includes('Close Date Passed') &&
           isOnboarding &&
@@ -403,6 +405,7 @@
       </div>
 
       <div
+        v-if="hasSlackIntegration"
         :class="
           !user.activatedManagrConfigs.includes('Close Date Passed') &&
           isOnboarding &&
