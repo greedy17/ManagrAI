@@ -104,4 +104,8 @@ export default {
     z-index: 999;
   }
 }
+
+::v-deep .input-content {
+  background-color: white;
+}
 </style>

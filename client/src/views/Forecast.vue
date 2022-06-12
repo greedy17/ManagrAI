@@ -11,11 +11,17 @@
     >
       <div class="modal-container">
         <header class="modal-container__header">
-          <h3>Forecast Settings</h3>
-          <img class="invert" @click="resetSettings" src="@/assets/images/close.svg" alt="" />
+          <h3>Tracker Settings</h3>
+          <img
+            @click="resetSettings"
+            src="@/assets/images/close.svg"
+            class="invert-less"
+            style="filter: invert(30%)"
+            alt=""
+          />
         </header>
         <div class="modal-container__body">
-          <p>Add Opportunites to Forecast:</p>
+          <p>Add Opportunites to Tracker:</p>
           <Multiselect
             v-model="forecastVmodel"
             style="width: 60%"
@@ -159,7 +165,7 @@
             </button>
           </div>
           <p class="gray-text smaller-font margin-left-s" v-if="forecastOpps && !loading">
-            Total Opps in Forecast: {{ forecastLength }}
+            Opportunites Tracked: {{ forecastLength }}
           </p>
           <p v-else></p>
         </div>
@@ -167,7 +173,7 @@
         <!-- <section class="relative">
           <button @click.stop="addingFilter" class="add-filter-button margin-left-s">
             <img
-              src="@/assets/images/plusOne.png"
+              src="@/assets/images/plusOne.svg"
               style="height: 0.8rem; margin-right: 0.25rem"
               alt=""
             />Add filter
@@ -575,7 +581,7 @@ export default {
         this.$Alert.alert({
           type: 'success',
           timeout: 1500,
-          message: 'Opportunity added to forecast.',
+          message: 'Opportunity added to Tracker.',
         })
       } catch (e) {
         this.$Alert.alert({

@@ -341,4 +341,7 @@ a {
   color: $dark-green;
   font-weight: bold;
 }
+::v-deep .input-content {
+  border: 1px solid #e8e8e8;
+}
 </style>
