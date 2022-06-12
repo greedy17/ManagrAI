@@ -80,7 +80,7 @@
       <div
         :class="
           !(hasZoomChannel || recapChannel) && isOnboarding && !isAdmin && userLevel !== 'MANAGER'
-            ? 'onboarding card'
+            ? 'card'
             : 'card'
         "
       >
@@ -106,9 +106,7 @@
         <div class="card__footer">
           <button
             v-if="
-              hasSalesforceIntegration &&
-              hasSlackIntegration &&
-              !user.activatedManagrConfigs.includes('Close Date Passed')
+              hasSalesforceIntegration && !user.activatedManagrConfigs.includes('Close Date Passed')
             "
             @click="goToCloseDatePassed"
             :class="
@@ -119,9 +117,7 @@
           >
             Activate
           </button>
-          <h4 v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)">
-            Connect Slack & Salesforce to acivate
-          </h4>
+          <h4 v-else-if="!hasSalesforceIntegration">Connect Salesforce to acivate</h4>
           <h4
             class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Close Date Passed')"
