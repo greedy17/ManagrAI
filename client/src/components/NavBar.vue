@@ -8,7 +8,7 @@
       </router-link>
 
       <div class="left" ref="user-menu-icon">
-        <div class="mar" v-if="isAdmin">
+        <div class="mar" v-if="isAdmin && userLevel !== 'REP'">
           <ul>
             <li>
               <router-link active-class="active" :to="{ name: 'ListTemplates' }"
