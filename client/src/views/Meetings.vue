@@ -768,6 +768,8 @@ export default {
       this.editOpModalOpen = true
       this.updatingMeeting = true
       this.meetingWorkflowId = meetingWorkflow
+      this.dropdownVal = {}
+      this.formData = {}
       try {
         const res = await SObjects.api.createFormInstance({
           resourceType: 'Opportunity',
@@ -1529,7 +1531,7 @@ section {
   justify-content: flex-end;
 }
 textarea {
-  resize: none;
+  resize: vertical;
 }
 a {
   text-decoration: none;

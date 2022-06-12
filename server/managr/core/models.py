@@ -119,7 +119,7 @@ class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
         extra_fields["is_superuser"] = False
         extra_fields["is_active"] = True
         extra_fields["is_admin"] = True
-        extra_fields["user_level"] = core_consts.USER_LEVEL_MANAGER
+        extra_fields["user_level"] = core_consts.USER_LEVEL_REP
         return self._create_user(email, password, **extra_fields)
 
     def create_superuser(self, email, password, **extra_fields):
