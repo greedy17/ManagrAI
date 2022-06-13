@@ -68,7 +68,7 @@
             </div>
             <div class="added-collection__body">
               <button
-                :disabled="clicked.includes(alert.id)"
+                :disabled="clicked.includes(alert.id) || !hasSlackIntegration"
                 @click.stop="onRunAlertTemplateNow(alert.id)"
                 class="green_button"
               >
@@ -119,11 +119,19 @@
 
               <div class="row__two">
                 <span class="img-border">
-                  <img @click="makeAlertCurrent(alert)" src="@/assets/images/edit.svg" class="invert" />
+                  <img
+                    @click="makeAlertCurrent(alert)"
+                    src="@/assets/images/edit.svg"
+                    class="invert"
+                  />
                 </span>
 
                 <span class="img-border">
-                  <img src="@/assets/images/trash.svg" class="invert" @click="deleteClosed(alert.id)" />
+                  <img
+                    src="@/assets/images/trash.svg"
+                    class="invert"
+                    @click="deleteClosed(alert.id)"
+                  />
                 </span>
               </div>
             </div>
