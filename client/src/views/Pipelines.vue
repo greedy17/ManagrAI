@@ -608,12 +608,12 @@
             </div>
             <p @click="showPopularList = !showPopularList" class="list-section__sub-title">
               Standard Lists
-              <img v-if="showPopularList" class="invert" src="@/assets/images/downArrow.svg" alt="" /><img
-                v-else
-                src="@/assets/images/rightArrow.svg"
+              <img
+                v-if="showPopularList"
                 class="invert"
+                src="@/assets/images/downArrow.svg"
                 alt=""
-              />
+              /><img v-else src="@/assets/images/rightArrow.svg" class="invert" alt="" />
             </p>
             <router-link style="width: 100%" v-bind:to="'/pipelines/'">
               <button v-if="showPopularList" @click="allOpportunities" class="list-button">
@@ -676,12 +676,12 @@
             </div>
             <p @click="showWorkflowList = !showWorkflowList" class="work-section__sub-title">
               Workflows
-              <img v-if="showWorkflowList" class="invert" src="@/assets/images/downArrow.svg" alt="" /><img
-                v-else
-                src="@/assets/images/rightArrow.svg"
+              <img
+                v-if="showWorkflowList"
                 class="invert"
+                src="@/assets/images/downArrow.svg"
                 alt=""
-              />
+              /><img v-else src="@/assets/images/rightArrow.svg" class="invert" alt="" />
             </p>
             <div style="width: 100%" v-if="showWorkflowList">
               <div :key="i" v-for="(template, i) in templates.list">
@@ -764,20 +764,32 @@
               <div class="flex-row">
                 <button @click="closeDateSelected = !closeDateSelected" class="select-btn1">
                   Push Close Date
-                  <img src="@/assets/images/date.svg" height="14px" style="margin-left: 0.25rem" alt="" />
+                  <img
+                    src="@/assets/images/date.svg"
+                    height="14px"
+                    style="margin-left: 0.25rem"
+                    alt=""
+                  />
                 </button>
                 <button @click="advanceStageSelected = !advanceStageSelected" class="select-btn1">
                   Advance Stage
-                  <img src="@/assets/images/stairs.svg" height="14px" style="margin-left: 0.25rem" alt="" />
+                  <img
+                    src="@/assets/images/stairs.svg"
+                    height="14px"
+                    style="margin-left: 0.25rem"
+                    alt=""
+                  />
                 </button>
                 <button @click="forecastSelected = !forecastSelected" class="select-btn1">
                   Change Forecast
-                  <img src="@/assets/images/monetary.svg" height="14px" style="margin-left: 0.25rem" alt="" />
+                  <img
+                    src="@/assets/images/monetary.svg"
+                    height="14px"
+                    style="margin-left: 0.25rem"
+                    alt=""
+                  />
                 </button>
-                <button @click="modifyForecast('add')" class="select-btn">
-                  Start Tracking
-                 
-                </button>
+                <button @click="modifyForecast('add')" class="select-btn">Start Tracking</button>
               </div>
             </div>
             <div class="flex-row-pad" v-if="closeDateSelected">
@@ -2822,7 +2834,7 @@ h3 {
   overflow: scroll;
   margin-top: 0.5rem;
   border-radius: 5px;
-  box-shadow: 1px 2px 20px 2px $soft-gray;
+  border: 1px solid #e8e8e8;
   background-color: $off-white;
 }
 .table-section::-webkit-scrollbar {
