@@ -9,7 +9,7 @@
         }
       "
     >
-      <form class="invite-form" @submit.prevent="handleInvite">
+      <form v-if="!hasSlack" class="invite-form" @submit.prevent="handleInvite">
         <div class="header">
           <h3 class="invite-form__title">Invite Users via Slack</h3>
           <h4 class="invite-form__subtitle">
@@ -93,6 +93,61 @@
           </template>
         </div>
       </form>
+      <div v-else class="invite-form" style="padding: 2rem">
+        <div class="header">
+          <h3 class="invite-form__title">Invite Users to Managr</h3>
+          <h4 class="invite-form__subtitle">
+            {{ $store.state.user.organizationRef.name }}
+          </h4>
+        </div>
+
+        <div style="margin-top: 1rem">
+          <FormField>
+            <template v-slot:input>
+              <Multiselect
+                placeholder="Select User Level"
+                @input="mapUserLevel"
+                v-model="selectedLevel"
+                :options="userTypesNoSlack"
+                openDirection="below"
+                style="min-width: 16vw"
+                selectLabel="Enter"
+                label="key"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.svg" alt="" />
+                    Select User Level
+                  </p>
+                </template>
+              </Multiselect>
+            </template>
+          </FormField>
+          <div class="form_field">
+            <input
+              v-model="userInviteForm.field.email.value"
+              placeholder="Enter User email"
+              type="email"
+            />
+          </div>
+        </div>
+
+        <div class="invite-form__actions-noslack">
+          <template>
+            <PulseLoadingSpinnerButton
+              @click="handleInviteNonSlack"
+              class="invite-button"
+              text="Invite"
+              :loading="loading"
+              >Invite</PulseLoadingSpinnerButton
+            >
+            <div class="cancel-button" @click="handleCancel">Cancel</div>
+          </template>
+        </div>
+      </div>
     </Modal>
     <div class="invite-list__container">
       <div class="key">
@@ -271,6 +326,10 @@ export default {
         { key: 'Representative', value: User.types.REP },
         { key: 'SDR', value: User.types.SDR },
       ],
+      userTypesNoSlack: [
+        { key: 'Representative', value: User.types.REP },
+        { key: 'SDR', value: User.types.SDR },
+      ],
       showInvited: true,
       team: CollectionManager.create({ ModelClass: User }),
       user: null,
@@ -359,6 +418,41 @@ export default {
         this.inviteOpen = !this.inviteOpen
       }
     },
+    async handleInviteNonSlack() {
+      // reset component data when submission begins, in case of prior request
+      this.loading = true
+      this.userInviteForm.validate()
+      if (!this.userInviteForm.isValid) {
+        this.loading = false
+        this.$Alert.alert({
+          type: 'error',
+          message: 'Please check form errors',
+          timeout: 2000,
+        })
+        return
+      }
+      // check form data for this request
+      try {
+        const res = await User.api.invite(this.userInviteForm.value)
+        console.log(res)
+        this.$Alert.alert({
+          message: 'Invitation created successfully! Copy and send to user',
+          type: 'success',
+          timeout: 2000,
+        })
+        await this.refresh()
+        this.resetData()
+      } catch (e) {
+        this.$Alert.alert({
+          type: 'error',
+          message: 'Error sending invite. Please try again',
+          timeout: 2000,
+        })
+      } finally {
+        this.loading = false
+        this.inviteOpen = !this.inviteOpen
+      }
+    },
     resetData() {
       this.userInviteForm.field.organization.value = this.$store.state.user.organization
     },
@@ -366,6 +460,9 @@ export default {
   computed: {
     isStaff() {
       return this.$store.state.user.isStaff
+    },
+    hasSlack() {
+      return !!this.$store.state.user.slackRef
     },
   },
 }
@@ -376,6 +473,20 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
+::placeholder {
+  // color: #35495e;
+  color: $very-light-gray;
+  padding-left: 1rem;
+}
+input {
+  width: 16vw;
+  height: 2.5rem;
+  border-radius: 5px;
+  border: 1px solid #e8e8e8;
+}
+input:focus {
+  outline: none;
+}
 .col {
   display: flex;
   flex-direction: column;
@@ -532,6 +643,12 @@ button {
     flex-direction: column;
     align-items: center;
     margin-top: -4rem;
+  }
+  &__actions-noslack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 1rem;
   }
 }
 .invite-list {
