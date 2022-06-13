@@ -192,6 +192,7 @@ class UserInvitationSerializer(serializers.ModelSerializer):
     """
 
     organization_ref = OrganizationSerializer(many=False, source="organization", read_only=True)
+    activation_link_ref = serializers.SerializerMethodField("get_activation_link")
 
     class Meta:
         model = User
@@ -201,6 +202,7 @@ class UserInvitationSerializer(serializers.ModelSerializer):
             "email",
             "organization",
             "organization_ref",
+            "activation_link_ref",
             "user_level",
             "role",
         )
@@ -209,6 +211,9 @@ class UserInvitationSerializer(serializers.ModelSerializer):
             "organization": {"required": True},
         }
         read_only_fields = ("organization_ref",)
+
+    def get_activation_link(self, instance):
+        return instance.activation_link
 
 
 class MeetingPrepInstanceSerializer(serializers.ModelSerializer):
