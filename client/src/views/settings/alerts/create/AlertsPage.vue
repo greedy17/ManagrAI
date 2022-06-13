@@ -525,7 +525,9 @@ export default {
       return !!this.$store.state.user.slackRef
     },
     recapChannel() {
-      return this.$store.state.user.slackAccount.recapChannel
+      return this.$store.state.user.slackAccount
+        ? this.$store.state.user.slackAccount.recapChannel
+        : false
     },
     user() {
       return this.$store.state.user
