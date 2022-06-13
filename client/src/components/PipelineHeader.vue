@@ -194,7 +194,7 @@
     <div class="table-cell-header">
       <div class="direction-row" @click="addField">
         <p style="color: white">.</p>
-        <img src="@/assets/images/plusOne.svg" class="add-row invert" alt="" />
+        <img src="@/assets/images/plusOne.svg" class="add-row" alt="" />
       </div>
 
       <div v-if="addingField" class="add-field-section">
@@ -464,7 +464,7 @@ export default {
   padding: 1.25vh 2.5vh;
   min-width: 3rem;
   border: none;
-  border-bottom: 1px solid $light-orange-gray;
+  border-bottom: 1px solid #e8e8e8;
   border-radius: 2px;
   z-index: 2;
   top: 0;
@@ -494,7 +494,7 @@ export default {
   display: table-cell;
   padding: 2vh 1vh;
   border: none;
-  border-bottom: 1px solid $light-orange-gray;
+  border-bottom: 1px solid #e8e8e8;
   z-index: 3;
   width: 4vw;
   top: 0;
@@ -506,7 +506,7 @@ export default {
   display: table-cell;
   padding: 3vh;
   border: none;
-  border-bottom: 1px solid $light-orange-gray;
+  border-bottom: 1px solid #e8e8e8;
   border-radius: 2px;
   z-index: 3;
   left: 3.5vw;
@@ -522,7 +522,7 @@ export default {
   display: table-cell;
   padding: 1.25vh 3vh;
   border: none;
-  border-bottom: 1px solid $light-orange-gray;
+  border-bottom: 1px solid #e8e8e8;
   border-radius: 2px;
   z-index: 2;
   top: 0;
