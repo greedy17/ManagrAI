@@ -111,7 +111,7 @@
                 >Meetings</router-link
               >
             </li>
-            <li>
+            <li v-if="!isOnboarding">
               <router-link exact-active-class="active" :to="{ name: 'Forecast' }"
                 >Tracker<span>Beta</span></router-link
               >
