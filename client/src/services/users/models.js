@@ -47,6 +47,7 @@ export default class User extends Model {
   static activatedManagrConfigs = new fields.Field()
   static onboarding = new fields.BooleanField()
   static forecast = new fields.Field()
+  static activationLinkRef = new fields.Field()
 
 
   static fromAPI(json = {}) {

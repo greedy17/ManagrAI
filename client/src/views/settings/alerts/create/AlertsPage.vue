@@ -1,6 +1,6 @@
 <template>
   <div class="alerts-page">
-    <div v-if="isOnboarding && !isAdmin && userLevel !== 'MANAGER'" class="col">
+    <div v-if="isOnboarding && userLevel !== 'MANAGER'" class="col">
       <h3>Popular Workflow Automations</h3>
       <p style="margin-top: -0.5rem" class="sub__">Step 2/2: Activate at least 2 workflows</p>
       <button
