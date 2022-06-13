@@ -2,12 +2,27 @@
   <div class="staff">
     <div class="staff__drawer">
       <h1>Organizations</h1>
-      <div :key="i" v-for="(org, i) in organizations.list">
+      <!-- <div :key="i" v-for="(org, i) in organizations.list">
+        <div>{{org}}</div>
         <h2 @click="selected_org = org.id">{{ org.name }}</h2>
-      </div>
+      </div> -->
+      <Multiselect
+        placeholder="Select Organization"
+        style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
+        v-model="selected_org"
+        :options="organizations.list"
+        openDirection="below"
+        selectLabel="Enter"
+        track-by="value"
+        label="name"
+      >
+        <template slot="noResult">
+          <p class="multi-slot">No results.</p>
+        </template>
+      </Multiselect>
     </div>
     <div class="staff__main_page">
-      <template v-if="selected_org">
+      <template v-if="selected_org && selected_org.id">
         <div v-if="loading">Loading</div>
         <template v-else>
           <div class="command_dropdown">
@@ -42,7 +57,8 @@
             </Multiselect>
             <button class="green_button" @click="runCommand">Enter</button>
           </div>
-          <div class="form__list">
+
+          <!-- <div class="form__list">
             <div :key="i" class="form__list_item" v-for="(form, i) in orgForms">
               <h3>{{ form.formType }} {{ form.resource }}</h3>
               <p>Form Fields:</p>
@@ -53,6 +69,54 @@
                 </li>
               </ul>
               <p v-else>Form is not created</p>
+            </div>
+          </div> -->
+
+          <!-- <div>{{allForms}}</div> -->
+          <div class="form__list">
+            <div class="form__list_item">
+              <h3>Users</h3>
+              <Multiselect
+                placeholder="Select Users"
+                style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
+                v-model="selectedUsers"
+                :options="orgUsers"
+                openDirection="below"
+                selectLabel="Enter"
+                track-by="id"
+                label="fullName"
+                :multiple="true"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+              </Multiselect>
+              <button class="green_button" @click="goToUser(selectedUsers)">Go</button>
+            </div>
+            <div class="form__list_item">
+              <h3>Slack Form</h3>
+              <Multiselect
+                placeholder="Select Slack Form"
+                style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
+                v-model="selectedSlackForms"
+                :options="orgSlackForms"
+                openDirection="below"
+                selectLabel="Enter"
+                track-by="id"
+                :custom-label="slackFormLabel"
+                :multiple="true"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+              </Multiselect>
+              <button class="green_button" @click="goToSlackForm()">Go</button>
+            </div>
+            <div class="form__list_item">
+              <h3>Slack Form Instances</h3>
+            </div>
+            <div class="form__list_item">
+              <h3>Meeting Workflows</h3>
             </div>
           </div>
           <hr />
@@ -77,6 +141,21 @@
             </div>
           </div>
         </template>
+      </template>
+      <template v-else-if="page === 'Users'">
+        <div v-for="(user) in selectedUsers" :key="user.id">
+          <h3>Full Name: {{user.fullName}}</h3>
+          <h3>Email: {{user.email}}</h3>
+          <h3>Role: {{user.role}}</h3>
+        </div>
+      </template>
+      <template v-else-if="page === 'SlackForm'">
+        <div v-for="(slackForm) in selectedSlackForms" :key="slackForm.id">
+          <h3>{{slackForm.stage}}</h3>
+          <!-- <h3>Full Name: {{slackForm.fullName}}</h3> -->
+          <!-- <h3>Email: {{slackForm.email}}</h3> -->
+          <!-- <h3>Role: {{slackForm.role}}</h3> -->
+        </div>
       </template>
     </div>
   </div>
@@ -105,12 +184,16 @@ export default {
         ModelClass: User,
       }),
       selectedUsers: null,
+      selectedSlackForms: null,
       orgUsers: null,
+      orgSlackForms: null,
       selectedCommand: '',
       loading: true,
       allForms: null,
       allMeetingWorkflows: null,
       selected_org: null,
+      old_selected_org: null,
+      page: null,
       orgForms: null,
       orgMeetingWorkflows: null,
       organizations: CollectionManager.create({ ModelClass: Organization }),
@@ -122,13 +205,14 @@ export default {
     },
   },
   mounted() {
-    console.log(this.allUsers)
+    console.log('mounted', this.allForms)
   },
   methods: {
     async getAllForms() {
       try {
         let res = await SlackOAuth.api.getOrgCustomForm()
         this.allForms = res
+        console.log('getAllForms', this.allForms[0])
       } catch (e) {
         console.log(e)
       }
@@ -154,6 +238,30 @@ export default {
         console.log(e)
       }
     },
+    goToUser(user) {
+      if (!this.selectedUsers) {
+        return;
+      }
+      console.log('user', user[0])
+      this.old_selected_org = this.selected_org;
+      this.selected_org = null;
+      this.page = 'Users';
+    },
+    goToSlackForm() {
+      if (!this.selectedSlackForms) {
+        return;
+      }
+      this.old_selected_org = this.selected_org;
+      this.selected_org = null;
+      this.page = 'SlackForm';
+    },
+    slackFormLabel({formType, resource}) {
+      let formattedFormType = formType[0];
+      for (let i = 1; i < formType.length; i++) {
+        formattedFormType += formType[i].toLowerCase();
+      }
+      return `${formattedFormType} ${resource}`;
+    },
     filterOrgForms(org_id) {
       return this.allForms.filter((form) => form.organization == org_id)
     },
@@ -167,6 +275,9 @@ export default {
     filterUsers(org_id) {
       return this.allUsers.list.filter((user) => user.organization == org_id)
     },
+    filterSlackForms(org_id) {
+      return this.allForms.filter((form) => form.organization == org_id)
+    },
   },
   created() {
     this.getAllForms()
@@ -176,13 +287,21 @@ export default {
   },
   watch: {
     organizations() {
-      this.selected_org = this.organizations[0].id
-      this.orgUsers = this.filterUsers(this.selected_org)
+      if (this.selected_org) {
+        this.selected_org.id = this.organizations[0].id
+        this.orgUsers = this.filterUsers(this.selected_org.id)
+        this.orgSlackForms = this.filterSlackForms(this.selected_org.id)
+        // console.log('this.orgSlackForms', this.orgSlackForms)
+      }
     },
     selected_org() {
-      this.showOrgData(this.selected_org)
-      this.loading = false
-      this.orgUsers = this.filterUsers(this.selected_org)
+      if (this.selected_org) {
+        this.showOrgData(this.selected_org.id)
+        this.loading = false
+        this.orgUsers = this.filterUsers(this.selected_org.id)
+        this.orgSlackForms = this.filterSlackForms(this.selected_org.id)
+        console.log('this.orgSlackForms', this.orgSlackForms)
+      }
     },
   },
 }
