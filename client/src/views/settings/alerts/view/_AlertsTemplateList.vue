@@ -398,10 +398,14 @@ export default {
       return !!this.$store.state.user.slackRef
     },
     hasRecapChannel() {
-      return this.$store.state.user.slackAccount.recapChannel
+      return this.$store.state.user.slackAccount
+        ? this.$store.state.user.slackAccount.recapChannel
+        : null
     },
     zoomChannel() {
-      return this.$store.state.user.slackAccount.zoomChannel
+      return this.$store.state.user.slackAccount
+        ? this.$store.state.user.slackAccount.zoomChannel
+        : null
     },
     userLevel() {
       return this.$store.state.user.userLevel
