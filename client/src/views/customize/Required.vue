@@ -548,5 +548,6 @@ ul {
   color: white;
   border: none;
   border-radius: 3px;
+  cursor: pointer;
 }
 </style>

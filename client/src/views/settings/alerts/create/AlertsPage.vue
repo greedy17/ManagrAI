@@ -110,9 +110,7 @@
             "
             @click="goToCloseDatePassed"
             :class="
-              !isAdmin && userLevel !== 'MANAGER' && isOnboarding
-                ? 'orange_button bouncy'
-                : 'orange_button'
+              userLevel !== 'MANAGER' && isOnboarding ? 'orange_button bouncy' : 'orange_button'
             "
           >
             Activate
@@ -133,7 +131,7 @@
           isOnboarding &&
           !isAdmin &&
           userLevel !== 'MANAGER'
-            ? 'card onboarding'
+            ? 'card'
             : 'card'
         "
       >
@@ -159,18 +157,14 @@
         <div class="card__footer">
           <button
             v-if="
-              hasSalesforceIntegration &&
-              hasSlackIntegration &&
-              !user.activatedManagrConfigs.includes('Update Forecast')
+              hasSalesforceIntegration && !user.activatedManagrConfigs.includes('Update Forecast')
             "
             @click="goToUpdateForecast"
             class="orange_button"
           >
             Activate
           </button>
-          <h4 v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)">
-            Connect Slack & Salesforce to acivate
-          </h4>
+          <h4 v-else-if="!hasSalesforceIntegration">Connect Salesforce to acivate</h4>
           <h4
             class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Update Forecast')"
@@ -186,7 +180,7 @@
           isOnboarding &&
           !isAdmin &&
           userLevel !== 'MANAGER'
-            ? 'card onboarding'
+            ? 'card'
             : 'card'
         "
       >
@@ -214,19 +208,13 @@
 
         <div class="card__footer">
           <button
-            v-if="
-              hasSalesforceIntegration &&
-              hasSlackIntegration &&
-              !user.activatedManagrConfigs.includes('Deal Rotting')
-            "
+            v-if="hasSalesforceIntegration && !user.activatedManagrConfigs.includes('Deal Rotting')"
             @click="goToDealRotting"
             class="orange_button"
           >
             Activate
           </button>
-          <h4 v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)">
-            Connect Slack & Salesforce to acivate
-          </h4>
+          <h4 v-else-if="!hasSalesforceIntegration">Connect Salesforce to acivate</h4>
           <h4
             class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Deal Rotting')"
@@ -242,7 +230,7 @@
           isOnboarding &&
           !isAdmin &&
           userLevel !== 'MANAGER'
-            ? 'card onboarding'
+            ? 'card'
             : 'card'
         "
       >
@@ -269,7 +257,6 @@
           <button
             v-if="
               hasSalesforceIntegration &&
-              hasSlackIntegration &&
               !user.activatedManagrConfigs.includes('Close Date Approaching')
             "
             @click="goToCloseDateApproaching"
@@ -277,11 +264,8 @@
           >
             Activate
           </button>
-          <h4
-            style="margin-top: -0.5rem"
-            v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)"
-          >
-            Connect Slack & Salesforce to acivate
+          <h4 style="margin-top: -0.5rem" v-else-if="!hasSalesforceIntegration">
+            Connect Salesforce to acivate
           </h4>
           <h4
             class="active-workflow"
@@ -299,7 +283,7 @@
           isOnboarding &&
           !isAdmin &&
           userLevel !== 'MANAGER'
-            ? 'card onboarding'
+            ? 'card'
             : 'card'
         "
       >
@@ -326,7 +310,6 @@
           <button
             v-if="
               hasSalesforceIntegration &&
-              hasSlackIntegration &&
               !user.activatedManagrConfigs.includes('Upcoming Next Step')
             "
             @click="goToNextStep"
@@ -334,9 +317,7 @@
           >
             Activate
           </button>
-          <h4 v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)">
-            Connect Slack & Salesforce to acivate
-          </h4>
+          <h4 v-else-if="!hasSalesforceIntegration">Connect Salesforce to acivate</h4>
           <h4
             class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Upcoming Next Step')"
@@ -353,7 +334,7 @@
           isOnboarding &&
           !isAdmin &&
           userLevel !== 'MANAGER'
-            ? 'card onboarding'
+            ? 'card'
             : 'card'
         "
       >
@@ -380,7 +361,6 @@
           <button
             v-if="
               hasSalesforceIntegration &&
-              hasSlackIntegration &&
               !user.activatedManagrConfigs.includes('Required Field Empty')
             "
             @click="goToEmptyField"
@@ -388,9 +368,7 @@
           >
             Activate
           </button>
-          <h4 v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)">
-            Connect Slack & Salesforce to acivate
-          </h4>
+          <h4 v-else-if="!hasSalesforceIntegration">Connect Salesforce to acivate</h4>
           <h4
             class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Required Field Empty')"
@@ -407,7 +385,7 @@
           isOnboarding &&
           !isAdmin &&
           userLevel !== 'MANAGER'
-            ? 'card onboarding'
+            ? 'card'
             : 'card'
         "
       >
@@ -434,7 +412,6 @@
           <button
             v-if="
               hasSalesforceIntegration &&
-              hasSlackIntegration &&
               !user.activatedManagrConfigs.includes('Large Opportunities')
             "
             @click="goToLargeOpps"
@@ -442,9 +419,7 @@
           >
             Activate
           </button>
-          <h4 v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)">
-            Connect Slack & Salesforce to acivate
-          </h4>
+          <h4 v-else-if="!hasSalesforceIntegration">Connect Salesforce to acivate</h4>
           <h4
             class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Large Opportunities')"
@@ -555,11 +530,14 @@ export default {
     user() {
       return this.$store.state.user
     },
+    userLevel() {
+      return this.$store.state.user.userLevel
+    },
     isAdmin() {
       return this.$store.state.user.isAdmin
     },
     hasZoomChannel() {
-      return this.$store.state.user.slackAccount.zoomChannel
+      return this.$store.state.user.hasZoomIntegration
     },
     isOnboarding() {
       return this.$store.state.user.onboarding
