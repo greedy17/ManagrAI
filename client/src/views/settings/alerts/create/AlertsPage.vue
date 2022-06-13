@@ -530,6 +530,9 @@ export default {
     user() {
       return this.$store.state.user
     },
+    userLevel() {
+      return this.$store.state.user.userLevel
+    },
     isAdmin() {
       return this.$store.state.user.isAdmin
     },
