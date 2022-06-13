@@ -55,6 +55,7 @@ class UserSerializer(serializers.ModelSerializer):
     )
     activated_managr_templates = serializers.SerializerMethodField("get_alert_template_refs")
     forecast = UserForecastSerializer(many=False, source="current_forecast", read_only=True)
+    activation_link_ref = serializers.SerializerMethodField("get_activation_link")
 
     class Meta:
         model = User
@@ -77,6 +78,7 @@ class UserSerializer(serializers.ModelSerializer):
             "user_level",
             "profile_photo",
             "role",
+            "activation_link_ref",
             # integrations
             "nylas",
             "nylas_ref",
@@ -118,6 +120,9 @@ class UserSerializer(serializers.ModelSerializer):
 
         templates = AlertTemplate.objects.for_user(instance).values_list("title", flat=True)
         return templates
+
+    def get_activation_link(self, instance):
+        return instance.activation_link
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -192,7 +197,6 @@ class UserInvitationSerializer(serializers.ModelSerializer):
     """
 
     organization_ref = OrganizationSerializer(many=False, source="organization", read_only=True)
-    activation_link_ref = serializers.SerializerMethodField("get_activation_link")
 
     class Meta:
         model = User
@@ -202,7 +206,6 @@ class UserInvitationSerializer(serializers.ModelSerializer):
             "email",
             "organization",
             "organization_ref",
-            "activation_link_ref",
             "user_level",
             "role",
         )
@@ -211,9 +214,6 @@ class UserInvitationSerializer(serializers.ModelSerializer):
             "organization": {"required": True},
         }
         read_only_fields = ("organization_ref",)
-
-    def get_activation_link(self, instance):
-        return instance.activation_link
 
 
 class MeetingPrepInstanceSerializer(serializers.ModelSerializer):
@@ -227,4 +227,3 @@ class MeetingPrepInstanceSerializer(serializers.ModelSerializer):
             "resource_id",
             "resource_type",
         )
-

@@ -9,7 +9,7 @@
         }
       "
     >
-      <form v-if="!hasSlack" class="invite-form" @submit.prevent="handleInvite">
+      <form v-if="hasSlack" class="invite-form" @submit.prevent="handleInvite">
         <div class="header">
           <h3 class="invite-form__title">Invite Users via Slack</h3>
           <h4 class="invite-form__subtitle">
@@ -138,14 +138,32 @@
         <div class="invite-form__actions-noslack">
           <template>
             <PulseLoadingSpinnerButton
+              v-if="!activationLink"
               @click="handleInviteNonSlack"
               class="invite-button"
               text="Invite"
               :loading="loading"
               >Invite</PulseLoadingSpinnerButton
             >
-            <div class="cancel-button" @click="handleCancel">Cancel</div>
+            <span style="margin-top: 1rem; cursor: pointer" v-else
+              ><small
+                v-clipboard:copy="activationLink"
+                v-clipboard:success="onCopy"
+                v-clipboard:error="onError"
+                >{{ activationLink }}
+                <img
+                  src="@/assets/images/copy.svg"
+                  height="18px"
+                  style="margin-left: 0.5rem"
+                  alt="" /></small
+            ></span>
+            <div v-if="!activationLink" class="cancel-button" @click="handleCancel">Cancel</div>
+            <small v-else class="copyText">Copy above link and send to user</small>
           </template>
+        </div>
+
+        <div v-if="activationLink">
+          <button @click="handleCancel" class="invite-button">Reset form</button>
         </div>
       </div>
     </Modal>
@@ -312,6 +330,7 @@ export default {
   },
   data() {
     return {
+      activationLink: null,
       selectedMember: null,
       selectedLevel: null,
       sendSlackInvite: false,
@@ -347,6 +366,21 @@ export default {
     await this.listUsers()
   },
   methods: {
+    onCopy: function () {
+      this.$Alert.alert({
+        message: 'Message Copied to clipboard successfully',
+        type: 'success',
+        timeout: 2000,
+      })
+      this.handleCancel()
+    },
+    onError: function () {
+      this.$Alert.alert({
+        message: 'error copying template',
+        type: 'error',
+        timeout: 2000,
+      })
+    },
     mapMember() {
       this.userInviteForm.field.slackId.value = this.selectedMember.id
     },
@@ -376,6 +410,7 @@ export default {
       await this.refresh()
       this.resetData()
       this.$emit('cancel')
+      this.activationLink = null
     },
     async handleInvite() {
       // reset component data when submission begins, in case of prior request
@@ -434,11 +469,11 @@ export default {
       // check form data for this request
       try {
         const res = await User.api.invite(this.userInviteForm.value)
-        console.log(res)
+        this.activationLink = res.data.activation_link_ref
         this.$Alert.alert({
           message: 'Invitation created successfully! Copy and send to user',
           type: 'success',
-          timeout: 2000,
+          timeout: 3000,
         })
         await this.refresh()
         this.resetData()
@@ -450,7 +485,8 @@ export default {
         })
       } finally {
         this.loading = false
-        this.inviteOpen = !this.inviteOpen
+
+        // this.inviteOpen = !this.inviteOpen
       }
     },
     resetData() {
@@ -490,6 +526,10 @@ input:focus {
 .col {
   display: flex;
   flex-direction: column;
+}
+.copyText {
+  color: $dark-green;
+  margin-top: 1rem;
 }
 .multi-slot {
   display: flex;
