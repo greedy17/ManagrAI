@@ -47,7 +47,11 @@ def create_configs_for_target(target, template_user, config):
         elif target == "REPS":
             target = "REP"
         users = User.objects.filter(
-            Q(organization=template_user.organization, user_level=target, is_active=True,)
+            Q(
+                organization=template_user.organization,
+                user_level=target,
+                is_active=True,
+            )
         )
     elif target == "SELF":
         config["recipient_type"] = "SLACK_CHANNEL"
@@ -176,11 +180,13 @@ class AlertTemplateViewSet(
     )
     def run_now(self, request, *args, **kwargs):
         obj = self.get_object()
+        print(obj.configs)
         data = self.request.data
 
         from_workflow = data.get("from_workflow", False)
         if from_workflow:
             config = obj.configs.all().first()
+            print(config)
             template = config.template
             attempts = 1
             while True:
@@ -313,7 +319,9 @@ class AlertConfigViewSet(
                 id=last_instance.template.id
             ).values()[0]
             instances = alert_models.AlertInstance.objects.filter(
-                user=user, config__id=config_id, invocation=last_instance.invocation,
+                user=user,
+                config__id=config_id,
+                invocation=last_instance.invocation,
             )
             return Response(data={"instances": instances.values(), "template": template})
 
@@ -371,7 +379,8 @@ class AlertOperandViewSet(
 
 
 class AlertInstanceViewSet(
-    mixins.ListModelMixin, viewsets.GenericViewSet,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
 ):
     filter_backends = (
         DjangoFilterBackend,
