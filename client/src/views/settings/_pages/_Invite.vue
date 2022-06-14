@@ -9,7 +9,7 @@
         }
       "
     >
-      <form v-if="!hasSlack" class="invite-form" @submit.prevent="handleInvite">
+      <form v-if="hasSlack" class="invite-form" @submit.prevent="handleInvite">
         <div class="header">
           <h3 class="invite-form__title">Invite Users via Slack</h3>
           <h4 class="invite-form__subtitle">
