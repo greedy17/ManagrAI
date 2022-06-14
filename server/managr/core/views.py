@@ -591,7 +591,7 @@ def get_account_status(request):
 
 class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
     serializer_class = UserInvitationSerializer
-    permission_classes = (IsSuperUser | IsOrganizationManager,)
+    # permission_classes = (IsSuperUser | IsOrganizationManager,)
 
     def create(self, request, *args, **kwargs):
         u = request.user
