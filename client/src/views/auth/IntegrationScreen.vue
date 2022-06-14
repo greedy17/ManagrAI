@@ -5,14 +5,7 @@
         <div class="welcome">
           <div>
             <h3>Hi, {{ user.fullName }}</h3>
-            <div
-              v-if="
-                (!(!orgHasSlackIntegration && userCanIntegrateSlack) ||
-                  (orgHasSlackIntegration && !hasSlackIntegration)) &&
-                hasNylasIntegration &&
-                hasSalesforceIntegration
-              "
-            >
+            <div v-if="hasNylasIntegration && hasSalesforceIntegration">
               <p>
                 Connect
                 <span> <img src="@/assets/images/logo.png" height="9px" alt="" /> Managr</span> to

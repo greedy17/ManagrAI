@@ -1,6 +1,55 @@
 <template>
   <div class="pipelines">
     <Modal
+      v-if="modalOpen"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), resetNotes()
+        }
+      "
+    >
+      <div v-if="notes.length" class="modal-container">
+        <div class="flex-row-spread">
+          <div class="flex-row">
+            <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <h3>Notes</h3>
+          </div>
+
+          <img
+            src="@/assets/images/close.svg"
+            style="height: 1.5rem; margin-top: -0.5rem; margin-right: 0.5rem; cursor: pointer"
+            @click="resetNotes"
+            alt=""
+          />
+        </div>
+        <section class="note-section" :key="i" v-for="(note, i) in notes">
+          <p class="note-section__title">
+            {{ note.saved_data__meeting_type ? note.saved_data__meeting_type + ':' : 'Untitled:' }}
+          </p>
+          <pre class="note-section__body">{{ note.saved_data__meeting_comments }}</pre>
+          <p class="note-section__date">{{ formatDateTime(note.submission_date) }}</p>
+        </section>
+      </div>
+      <div v-else class="modal-container">
+        <div class="flex-row-spread">
+          <div class="flex-row">
+            <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <h3>Notes</h3>
+          </div>
+          <img
+            src="@/assets/images/close.svg"
+            style="height: 1.5rem; margin-top: -0.5rem; margin-right: 0.5rem; cursor: pointer"
+            @click="resetNotes"
+            alt=""
+          />
+        </div>
+        <section class="note-section">
+          <p class="note-section__title">No notes for this opportunity</p>
+        </section>
+      </div>
+    </Modal>
+    <Modal
       v-if="editOpModalOpen"
       dimmed
       @close-modal="
@@ -449,6 +498,7 @@
             @no-update="NoMeetingUpdate"
             @remove-participant="removeParticipant"
             @add-participant="addParticipant"
+            @get-notes="getNotes"
             @filter-accounts="getAccounts"
             :dropdowns="picklistQueryOptsContacts"
             :contactFields="createContactForm"
@@ -563,6 +613,7 @@ export default {
       referenceOpts: {},
       stageGateId: null,
       booleans: ['true', 'false'],
+      notes: [],
     }
   },
   computed: {
@@ -599,6 +650,27 @@ export default {
     // },
   },
   methods: {
+    resetNotes() {
+      this.modalOpen = !this.modalOpen
+      this.notes = []
+    },
+    async getNotes(id) {
+      console.log(id)
+      try {
+        const res = await SObjects.api.getNotes({
+          resourceId: id,
+        })
+        this.modalOpen = true
+        if (res.length) {
+          for (let i = 0; i < res.length; i++) {
+            this.notes.push(res[i])
+            this.notes = this.notes.filter((note) => note.saved_data__meeting_comments !== null)
+          }
+        }
+      } catch (e) {
+        console.log(e)
+      }
+    },
     async stageGateInstance(field) {
       this.stageGateId = null
       try {
@@ -1284,7 +1356,7 @@ input {
   overflow: scroll;
   margin-top: 0.5rem;
   border-radius: 5px;
-  box-shadow: 2px 2px 20px 2px $soft-gray;
+  border: 1px solid #e8e8e8;
   background-color: $off-white;
 }
 
@@ -1535,5 +1607,47 @@ textarea {
 }
 a {
   text-decoration: none;
+}
+.modal-container {
+  background-color: $white;
+  overflow: auto;
+  min-width: 32vw;
+  max-width: 40vw;
+  min-height: 44vh;
+  max-height: 80vh;
+  align-items: center;
+  border-radius: 0.3rem;
+  padding: 0.25rem;
+  border: 1px solid #e8e8e8;
+}
+.logo {
+  height: 1.75rem;
+  margin-left: 0.5rem;
+  margin-right: 0.25rem;
+  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+    brightness(93%) contrast(89%);
+}
+.note-section {
+  padding: 0.5rem 1rem;
+  margin-bottom: 0.25rem;
+  background-color: white;
+  border-bottom: 1px solid $soft-gray;
+  overflow: scroll;
+  &__title {
+    font-size: 16px;
+    font-weight: bolder;
+    color: $dark-green;
+    letter-spacing: 1.2px;
+  }
+  &__body {
+    color: $base-gray;
+    font-family: $base-font-family;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+  }
+  &__date {
+    color: $mid-gray;
+    font-size: 11px;
+  }
 }
 </style>

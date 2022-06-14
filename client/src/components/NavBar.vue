@@ -8,7 +8,7 @@
       </router-link>
 
       <div class="left" ref="user-menu-icon">
-        <div class="mar" v-if="isAdmin">
+        <div class="mar" v-if="isAdmin && userLevel !== 'REP'">
           <ul>
             <li>
               <router-link active-class="active" :to="{ name: 'ListTemplates' }"
@@ -83,7 +83,7 @@
           </ul>
         </div>
 
-        <div v-else-if="userLevel === 'REP'">
+        <div class="mar" v-else-if="userLevel === 'REP'">
           <ul>
             <!-- <li>
               <router-link
@@ -111,7 +111,7 @@
                 >Meetings</router-link
               >
             </li>
-            <li>
+            <li v-if="!isOnboarding">
               <router-link exact-active-class="active" :to="{ name: 'Forecast' }"
                 >Tracker<span>Beta</span></router-link
               >
@@ -122,7 +122,7 @@
 
       <div v-if="userLevel == 'REP' && !user.onboarding" class="right">
         <router-link exact-active-class="active-img" :to="{ name: 'Integrations' }"
-          ><img src="@/assets/images/connect.svg" alt="" />
+          ><img src="@/assets/images/connect.svg" class="nav-img" alt="" />
         </router-link>
 
         <router-link v-if="isAdmin" exact-active-class="active-img" :to="{ name: 'Required' }"

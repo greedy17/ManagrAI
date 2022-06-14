@@ -308,15 +308,20 @@
     </div>
 
     <div class="table-cell">
-      <p
-        class="roww"
-        @click="addingOpp = !addingOpp"
-        v-if="resourceId && resourceType === 'Opportunity' && !meetingUpdated"
-      >
+      <p class="roww" v-if="resourceId && resourceType === 'Opportunity' && !meetingUpdated">
         {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
         <img
-          style="height: 0.6rem; margin-left: 0.2rem"
+          @click="addingOpp = !addingOpp"
+          style="margin-left: 0.5rem; margin-right: 0.5rem; cursor: pointer"
+          height="12px"
           src="@/assets/images/edit.svg"
+          alt=""
+        />
+        <img
+          @click="emitGetNotes(resourceId)"
+          src="@/assets/images/white-note.svg"
+          class="invert"
+          height="14px"
           alt=""
         />
       </p>
@@ -467,6 +472,9 @@ export default {
     }
   },
   methods: {
+    emitGetNotes(id) {
+      this.$emit('get-notes', id)
+    },
     async getCurrentVals() {
       try {
         const res = await SObjects.api.createFormInstance({
@@ -561,8 +569,10 @@ a {
   font-weight: bold;
 }
 .invert {
-  filter: invert(80%);
+  filter: invert(50%);
   cursor: pointer;
+}
+.inverted {
 }
 .add-button {
   border: none;

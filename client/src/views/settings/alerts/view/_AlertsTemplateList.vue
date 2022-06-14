@@ -32,7 +32,7 @@
         Edit, Run, and Schedule your saved Automations
       </p>
     </div>
-    <div v-if="!alertsCount(templates.list.length)">
+    <div v-if="!alertsCount(templates.list.length) && !templates.refreshing">
       <h3
         class="bouncy"
         style="
@@ -68,7 +68,7 @@
             </div>
             <div class="added-collection__body">
               <button
-                :disabled="clicked.includes(alert.id)"
+                :disabled="clicked.includes(alert.id) || !hasSlackIntegration"
                 @click.stop="onRunAlertTemplateNow(alert.id)"
                 class="green_button"
               >
@@ -119,11 +119,19 @@
 
               <div class="row__two">
                 <span class="img-border">
-                  <img @click="makeAlertCurrent(alert)" src="@/assets/images/edit.svg" class="invert" />
+                  <img
+                    @click="makeAlertCurrent(alert)"
+                    src="@/assets/images/edit.svg"
+                    class="invert"
+                  />
                 </span>
 
                 <span class="img-border">
-                  <img src="@/assets/images/trash.svg" class="invert" @click="deleteClosed(alert.id)" />
+                  <img
+                    src="@/assets/images/trash.svg"
+                    class="invert"
+                    @click="deleteClosed(alert.id)"
+                  />
                 </span>
               </div>
             </div>
@@ -185,7 +193,7 @@
         </div>
       </transition>
     </template>
-    <div class="center-loader" v-if="templates.refreshing && alertsCount(templates.list.length)">
+    <div class="center-loader" v-if="templates.refreshing">
       <Loader loaderText="Gathering your workflows" />
     </div>
   </div>
@@ -390,10 +398,14 @@ export default {
       return !!this.$store.state.user.slackRef
     },
     hasRecapChannel() {
-      return this.$store.state.user.slackAccount.recapChannel
+      return this.$store.state.user.slackAccount
+        ? this.$store.state.user.slackAccount.recapChannel
+        : null
     },
     zoomChannel() {
-      return this.$store.state.user.slackAccount.zoomChannel
+      return this.$store.state.user.slackAccount
+        ? this.$store.state.user.slackAccount.zoomChannel
+        : null
     },
     userLevel() {
       return this.$store.state.user.userLevel

@@ -647,11 +647,13 @@ export default {
     async noSlackSave() {
       this.savingTemplate = true
       try {
+        console.log(this.config)
         const res = await AlertTemplate.api.createAlertTemplate({
           ...this.config,
           user: this.$store.state.user.id,
-          directToUsers: this.directToUsers,
+          directToUsers: true,
         })
+        console.log(res)
         this.userConfigForm.field.activatedManagrConfigs.value.push(res.title)
         this.handleUpdate()
         this.$router.push({ name: 'CreateNew' })
@@ -694,6 +696,7 @@ export default {
             user: this.$store.state.user.id,
             directToUsers: this.directToUsers,
           })
+          console.log(res)
           this.userConfigForm.field.activatedManagrConfigs.value.push(res.title)
           this.handleUpdate()
           this.$router.push({ name: 'CreateNew' })

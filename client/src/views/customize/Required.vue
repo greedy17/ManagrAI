@@ -6,6 +6,7 @@
         <p class="margin-top-negative sub__">Map CRM fields to Managr</p>
       </div>
       <button
+        @click="goToWorkflows"
         v-if="
           activeUpdateOpportunityForm &&
           activeCreateContactForm &&
@@ -382,6 +383,9 @@ export default {
     goToCreate() {
       this.$router.push({ name: 'CreateContacts' })
     },
+    goToWorkflows() {
+      this.$router.push({ name: 'CreateNew' })
+    },
   },
 }
 </script>
@@ -544,5 +548,6 @@ ul {
   color: white;
   border: none;
   border-radius: 3px;
+  cursor: pointer;
 }
 </style>

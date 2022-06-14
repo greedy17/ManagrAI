@@ -1,6 +1,6 @@
 <template>
   <div class="invite-users">
-    <div v-if="getUser.userLevel === 'MANAGER'" class="invite-users__header">
+    <div class="invite-users__header">
       <h3 style="color: #4d4e4c">Manage Your Team</h3>
 
       <button class="invite_button" type="submit" @click="handleInvite">
@@ -13,12 +13,7 @@
       </button>
     </div>
 
-    <Invite
-      v-if="getUser.userLevel === 'MANAGER' || user.isAdmin"
-      class="invite-users__inviter"
-      :inviteOpen="inviteOpen"
-      @cancel="handleCancel"
-    />
+    <Invite class="invite-users__inviter" :inviteOpen="inviteOpen" @cancel="handleCancel" />
 
     <section>
       <header class="invite-users__header">
@@ -128,6 +123,9 @@ export default {
   computed: {
     getUser() {
       return this.$store.state.user
+    },
+    isAdmin() {
+      return this.$store.state.user.isAdmin
     },
   },
 }

@@ -16,9 +16,7 @@ def create_configs_for_target(target, template_user, config):
         elif target == "REPS":
             target = "REP"
         users = User.objects.filter(
-            organization=template_user.organization,
-            user_level=target,
-            is_active=True,
+            organization=template_user.organization, user_level=target, is_active=True,
         )
     elif target == "SELF":
         config["recipient_type"] = "SLACK_CHANNEL"
@@ -174,6 +172,8 @@ class AlertConfigRefSerializer(serializers.ModelSerializer):
         ]
 
     def get_recipients_ref(self, instance):
+        if instance.recipient_type == "SELF" and "default" in instance.recipients:
+            return ["default"]
         if instance.recipient_type == "USER_LEVEL":
             target_groups = list(
                 filter(
@@ -461,9 +461,7 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
         if len(new_configs):
             new_configs = list(map(lambda x: {**x, "template": data.id}, new_configs))
             _new_configs = AlertConfigWriteSerializer(
-                data=new_configs,
-                many=True,
-                context=self.context,
+                data=new_configs, many=True, context=self.context,
             )
             try:
                 _new_configs.is_valid(raise_exception=True)
