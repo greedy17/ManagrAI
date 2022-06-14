@@ -14,7 +14,7 @@
     </div>
 
     <Invite
-      v-if="getUser.userLevel === 'MANAGER' || user.isAdmin"
+      v-if="getUser.userLevel === 'MANAGER' || isAdmin"
       class="invite-users__inviter"
       :inviteOpen="inviteOpen"
       @cancel="handleCancel"
@@ -128,6 +128,9 @@ export default {
   computed: {
     getUser() {
       return this.$store.state.user
+    },
+    isAdmin() {
+      return this.$store.state.user.isAdmin
     },
   },
 }

@@ -83,7 +83,7 @@
           </ul>
         </div>
 
-        <div v-else-if="userLevel === 'REP'">
+        <div class="mar" v-else-if="userLevel === 'REP'">
           <ul>
             <!-- <li>
               <router-link
