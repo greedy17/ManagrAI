@@ -9,7 +9,7 @@
         }
       "
     >
-      <form v-if="hasSlack" class="invite-form" @submit.prevent="handleInvite">
+      <form v-if="!hasSlack" class="invite-form" @submit.prevent="handleInvite">
         <div class="header">
           <h3 class="invite-form__title">Invite Users via Slack</h3>
           <h4 class="invite-form__subtitle">
@@ -368,9 +368,9 @@ export default {
   methods: {
     onCopy: function () {
       this.$Alert.alert({
-        message: 'Message Copied to clipboard successfully',
+        message: 'Link copied!',
         type: 'success',
-        timeout: 2000,
+        timeout: 1000,
       })
       this.handleCancel()
     },
@@ -471,9 +471,9 @@ export default {
         const res = await User.api.invite(this.userInviteForm.value)
         this.activationLink = res.data.activation_link_ref
         this.$Alert.alert({
-          message: 'Invitation created successfully! Copy and send to user',
+          message: 'Invite link created successfully!',
           type: 'success',
-          timeout: 3000,
+          timeout: 1000,
         })
         await this.refresh()
         this.resetData()
