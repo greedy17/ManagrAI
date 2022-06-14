@@ -518,7 +518,7 @@ class SalesforceSObjectViewSet(
                 break
         if all_form_data.get("meeting_comments") is not None:
             emit_add_update_to_sf(str(main_form.id))
-        if user.slack_integration and len(user.slack_integration.realtime_alert_configs):
+        if user.has_slack_integration and len(user.slack_integration.realtime_alert_configs):
             _send_instant_alert(form_ids)
         forms.update(is_submitted=True, update_source="pipeline", submission_date=timezone.now())
         if from_workflow:
@@ -801,8 +801,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type,
-            slack_const.FORM_TYPE_UPDATE,
+            resource_type, slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)
