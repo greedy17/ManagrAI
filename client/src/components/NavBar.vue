@@ -122,7 +122,7 @@
 
       <div v-if="userLevel == 'REP' && !user.onboarding" class="right">
         <router-link exact-active-class="active-img" :to="{ name: 'Integrations' }"
-          ><img src="@/assets/images/connect.svg" alt="" />
+          ><img src="@/assets/images/connect.svg" class="nav-img" alt="" />
         </router-link>
 
         <router-link v-if="isAdmin" exact-active-class="active-img" :to="{ name: 'Required' }"

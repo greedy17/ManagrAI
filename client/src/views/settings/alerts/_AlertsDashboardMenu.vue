@@ -28,7 +28,9 @@
           />
           <h5>
             Active Workflows
-            <span class="counter">{{ alertsCount(templates.list.length) }}</span>
+            <span style="margin-left: 0.5rem" class="counter">{{
+              alertsCount(templates.list.length)
+            }}</span>
           </h5>
         </div>
       </router-link>
@@ -78,7 +80,9 @@
           />
           <h5>
             Active Workflows
-            <span class="counter">{{ alertsCount(templates.list.length) }}</span>
+            <span style="margin-left: 0.5rem" class="counter">{{
+              alertsCount(templates.list.length)
+            }}</span>
           </h5>
         </div>
       </router-link>

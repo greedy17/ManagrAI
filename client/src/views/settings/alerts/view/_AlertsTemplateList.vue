@@ -32,7 +32,7 @@
         Edit, Run, and Schedule your saved Automations
       </p>
     </div>
-    <div v-if="!alertsCount(templates.list.length)">
+    <div v-if="!alertsCount(templates.list.length) && !templates.refreshing">
       <h3
         class="bouncy"
         style="
@@ -193,7 +193,7 @@
         </div>
       </transition>
     </template>
-    <div class="center-loader" v-if="templates.refreshing && alertsCount(templates.list.length)">
+    <div class="center-loader" v-if="templates.refreshing">
       <Loader loaderText="Gathering your workflows" />
     </div>
   </div>

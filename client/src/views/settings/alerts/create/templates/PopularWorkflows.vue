@@ -307,7 +307,7 @@
           </div>
         </div>
       </div>
-      <div v-if="!hasSlack" class="overlay">
+      <div v-if="hasSlack" class="overlay">
         <p class="text">
           <!-- <img src="@/assets/images/slackLogo.png" height="10px" class="margin-right-s" alt="" /> -->
           <span class="link" @click="goToConnect"> Connect Slack</span>
@@ -316,7 +316,7 @@
       </div>
     </div>
 
-    <div v-if="hasSlack" class="bottom_locked margin-top">
+    <div v-if="!hasSlack" class="bottom_locked margin-top">
       <PulseLoadingSpinnerButton
         :loading="savingTemplate"
         :class="!verifySubmit() || savingTemplate ? 'disabled__button' : 'purple__button bouncy'"
@@ -647,11 +647,13 @@ export default {
     async noSlackSave() {
       this.savingTemplate = true
       try {
+        console.log(this.config)
         const res = await AlertTemplate.api.createAlertTemplate({
           ...this.config,
           user: this.$store.state.user.id,
-          directToUsers: false,
+          directToUsers: true,
         })
+        console.log(res)
         this.userConfigForm.field.activatedManagrConfigs.value.push(res.title)
         this.handleUpdate()
         this.$router.push({ name: 'CreateNew' })
@@ -694,6 +696,7 @@ export default {
             user: this.$store.state.user.id,
             directToUsers: this.directToUsers,
           })
+          console.log(res)
           this.userConfigForm.field.activatedManagrConfigs.value.push(res.title)
           this.handleUpdate()
           this.$router.push({ name: 'CreateNew' })
