@@ -169,10 +169,209 @@
         </template>
       </template>
       <template v-else-if="page === 'Users'">
-        <div v-for="(user) in selectedUsers" :key="user.id">
-          <h3>Full Name: {{user.fullName}}</h3>
-          <h3>Email: {{user.email}}</h3>
-          <h3>Role: {{user.role}}</h3>
+        <div v-for="(user, i) in selectedUsers" :key="user.id">
+          <div>
+            <button class="green_button back" @click="goBack">Back</button>
+            <h2 class="user_title">User {{i + 1}}</h2>
+          </div>
+          <div class="user_item_container">
+            <h3>First Name:</h3>
+            <h4>{{user.firstName}}</h4>
+          </div>
+          <div class="user_item_container">
+            <h3>Last Name:</h3>
+            <h4>{{user.lastName}}</h4>
+          </div>
+          <div class="user_item_container">
+            <h3>Email:</h3>
+            <h4>{{user.email}}</h4>
+          </div>
+          <div class="user_item_container">
+            <h3>Is Active:</h3>
+            <h4>{{user.isActive}}</h4>
+          </div>
+          <div class="user_item_container">
+            <h3>Is Invited:</h3>
+            <h4>{{user.isInvited}}</h4>
+          </div>
+          <div class="user_item_container">
+            <h3>Is Admin:</h3>
+            <h4>{{user.isAdmin}}</h4>
+          </div>
+          <div class="user_item_container">
+            <h3>Is Staff:</h3>
+            <h4>{{user.isStaff}}</h4>
+          </div>
+          <div class="user_item_container">
+            <h3>User Level:</h3>
+            <h4>{{user.userLevel}}</h4>
+          </div>
+          <div class="user_item_container">
+            <h3>Role:</h3>
+            <h4>{{user.role}}</h4>
+          </div>
+          <div class="user_item_container">
+            <h3>Timezone:</h3>
+            <h4>{{user.timezone}}</h4>
+          </div>
+          <div class="user_item_container">
+            <h3>Reminders:</h3>
+            <!-- <h4>{{user.isInvited}}</h4> -->
+            <h4>???</h4>
+          </div>
+          <div class="user_item_container">
+            <h3>Activated Managr Configs:</h3>
+            <h4>{{user.activatedManagrConfigs}}</h4>
+          </div>
+          <div class="user_item_container">
+            <h3>Slack ID:</h3>
+            <h4>{{user.slackRef.slackId}}</h4>
+          </div>
+          <div class="user_item_container">
+            <h3>Channel:</h3>
+            <h4>{{user.slackAccount.channel}}</h4>
+          </div>
+          <div class="user_item_container">
+            <h3>Organization Slack:</h3>
+            <!-- VV This is clearly wrong. Figure out where list of these are VV -->
+            <h4>{{user.organizationRef.slackIntegration}}</h4>
+          </div>
+          <div class="user_item_container">
+            <h3>Is Revoked:</h3>
+            <h4>???</h4>
+          </div>
+          <div class="user_item_container">
+            <h3>Is Onboarded:</h3>
+            <h4>{{user.onboarding}}</h4>
+          </div>
+          <div class="user_item_container">
+            <h3>Zoom Channel:</h3>
+            <div v-if="user.slackAccount.zoomChannel">
+              <h4>{{user.slackAccount.zoomChannel}}</h4>
+            </div>
+            <div v-else>
+              <h4>null</h4>
+            </div>
+          </div>
+          <div class="user_item_container">
+            <h3>Recap Channel:</h3>
+            <div v-if="user.slackAccount.recapChannel">
+              <h4>{{user.slackAccount.recapChannel}}</h4>
+            </div>
+            <div v-else>
+              <h4>null</h4>
+            </div>
+          </div>
+          <div class="user_item_container">
+            <h3>Recap Recievers:</h3>
+            <div v-if="user.slackAccount.recapReceivers.length">
+              <div v-for="(receiver) in user.slackAccount.recapReceivers" :key="receiver">
+                <h4>{{user.receiver}}</h4>
+              </div>
+            </div>
+            <div v-else>null</div>
+          </div>
+          <div class="user_item_container">
+            <h3>Recap Channel:</h3>
+            <div v-if="user.slackAccount.realtimeAlertConfigs.length">
+              <h4>{{user.slackAccountrealtimeAlertConfigs}}</h4>
+            </div>
+            <div v-else>
+              <h4>null</h4>
+            </div>
+          </div>
+          <div>
+            <div class="user_item_container">
+              <h3>Zoom ID:</h3>
+              <h4>???</h4>
+            </div>
+            <div class="user_item_container">
+              <h3>Email:</h3>
+              <h4>???</h4>
+            </div>
+            <div class="user_item_container">
+              <h3>Type:</h3>
+              <h4>???</h4>
+            </div>
+            <div class="user_item_container">
+              <h3>Role Name:</h3>
+              <h4>???</h4>
+            </div>
+            <div class="user_item_container">
+              <h3>Timezone:</h3>
+              <h4>???</h4>
+            </div>
+            <div class="user_item_container">
+              <h3>Host Key:</h3>
+              <h4>???</h4>
+            </div>
+            <div class="user_item_container">
+              <h3>Account ID:</h3>
+              <h4>???</h4>
+            </div>
+            <div class="user_item_container">
+              <h3>Language:</h3>
+              <h4>???</h4>
+            </div>
+            <div class="user_item_container">
+              <h3>Status:</h3>
+              <h4>???</h4>
+            </div>
+            <div class="user_item_container">
+              <h3>Access Token:</h3>
+              <h4>???</h4>
+            </div>
+            <div class="user_item_container">
+              <h3>Refresh Token:</h3>
+              <h4>???</h4>
+            </div>
+            <div class="user_item_container">
+              <h3>Token Generated Date:</h3>
+              <h4>???</h4>
+            </div>
+            <div class="user_item_container">
+              <h3>Token Scope:</h3>
+              <h4>???</h4>
+            </div>
+            <div class="user_item_container">
+              <h3>Is Revoked:</h3>
+              <h4>???</h4>
+            </div>
+            <div class="user_item_container">
+              <h3>Refresh Token Task:</h3>
+              <h4>???</h4>
+            </div>
+            <div class="user_item_container">
+              <h3>Fake Meeting ID:</h3>
+              <h4>???</h4>
+            </div>
+          </div>
+          <div>
+            <div class="user_item_container">
+              <h3>Auth Account:</h3>
+              <h4>???</h4>
+            </div>
+            <div class="user_item_container">
+              <h3>Salesloft ID:</h3>
+              <h4>???</h4>
+            </div>
+            <div class="user_item_container">
+              <h3>Guid:</h3>
+              <h4>???</h4>
+            </div>
+            <div class="user_item_container">
+              <h3>Is Active:</h3>
+              <h4>???</h4>
+            </div>
+            <div class="user_item_container">
+              <h3>Email:</h3>
+              <h4>???</h4>
+            </div>
+            <div class="user_item_container">
+              <h3>Team ID:</h3>
+              <h4>???</h4>
+            </div>
+          </div>
         </div>
       </template>
       <template v-else-if="page === 'SlackForm'">
@@ -312,11 +511,15 @@ export default {
       }
       return false;
     },
-    goToUser(user) {
+    goBack() {
+      this.selected_org = this.old_selected_org;
+      this.old_selected_org = null;
+      this.page = null;
+    },
+    goToUser() {
       if (!this.selectedUsers) {
         return;
       }
-      console.log('user', user[0])
       this.old_selected_org = this.selected_org;
       this.selected_org = null;
       this.page = 'Users';
@@ -483,5 +686,26 @@ input[type='search']:focus {
   justify-content: center;
   width: 100%;
   background-color: white;
+}
+.user_title {
+  margin-left: 1rem;
+}
+.user_item_container {
+  border: 1px solid black;
+  margin: 1rem;
+  padding: .25rem 1rem;
+
+  h3 {
+    margin: 0;
+  }
+
+  h4 {
+    margin: .25rem .5rem;
+  }
+}
+.back {
+  margin: 1rem;
+  text-decoration: underline;
+  cursor: pointer;
 }
 </style>
