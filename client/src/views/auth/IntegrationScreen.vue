@@ -138,13 +138,7 @@
             </div>
           </div>
           <p class="card-text">Interact with Managr through Slack</p>
-          <div
-            v-if="
-              (!orgHasSlackIntegration && userCanIntegrateSlack) ||
-              (orgHasSlackIntegration && !hasSlackIntegration)
-            "
-            class="card__body"
-          >
+          <div v-if="!hasSlackIntegration" class="card__body">
             <PulseLoadingSpinnerButton
               @click="onIntegrateSlack"
               class="orange_button"
@@ -347,10 +341,7 @@
           <p class="card-text">Interact with Managr through Slack</p>
           <div class="card__body">
             <PulseLoadingSpinnerButton
-              v-if="
-                (!orgHasSlackIntegration && userCanIntegrateSlack) ||
-                (orgHasSlackIntegration && !hasSlackIntegration)
-              "
+              v-if="!hasSlackIntegration"
               :disabled="(!orgHasSlackIntegration && !userCanIntegrateSlack) || hasSlackIntegration"
               @click="onIntegrateSlack"
               class="orange_button"
