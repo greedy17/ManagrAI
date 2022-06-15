@@ -375,8 +375,11 @@
         </div>
       </template>
       <template v-else-if="page === 'SlackForm'">
-        <div v-for="(slackForm) in selectedSlackForms" :key="slackForm.id">
-          <h3>Slack Form</h3>
+        <div v-for="(slackForm, i) in selectedSlackForms" :key="slackForm.id">
+          <div>
+            <button class="green_button back" @click="goBack">Back</button>
+            <h2 class="user_title">Slack Form {{i + 1}}</h2>
+          </div>
           <h4>{{slackForm}}</h4>
           <div v-for="(fieldRef) in slackForm.fieldsRef" :key="fieldRef.id">
             <h3>Label: {{fieldRef.label}}</h3>
@@ -386,6 +389,7 @@
       </template>
       <template v-else-if="page === 'MeetingWorkflow'">
         <!-- <div>{{orgMeetingWorkflows[0]}}</div> -->
+        <button class="green_button back" @click="goBack">Back</button>
         <div v-for="(meetingWorkflow) in orgMeetingWorkflows" :key="meetingWorkflow.id">
           <h3 @click="openModal(meetingWorkflow)">{{meetingWorkflow.meeting_ref.topic}}</h3>
           <!-- <h3>Full Name: {{slackForm.fullName}}</h3> -->
@@ -517,7 +521,7 @@ export default {
       this.page = null;
     },
     goToUser() {
-      if (!this.selectedUsers) {
+      if (!this.selectedUsers || !this.selectedUsers.length) {
         return;
       }
       this.old_selected_org = this.selected_org;
@@ -525,7 +529,7 @@ export default {
       this.page = 'Users';
     },
     goToSlackForm() {
-      if (!this.selectedSlackForms) {
+      if (!this.selectedSlackForms || !this.selectedSlackForms.length) {
         return;
       }
       this.old_selected_org = this.selected_org;
