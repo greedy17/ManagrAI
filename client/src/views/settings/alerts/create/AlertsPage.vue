@@ -277,7 +277,6 @@
       </div>
 
       <div
-        v-if="hasSlackIntegration"
         :class="
           !user.activatedManagrConfigs.includes('Close Date Passed') &&
           isOnboarding &&
@@ -328,7 +327,6 @@
       </div>
 
       <div
-        v-if="hasSlackIntegration"
         :class="
           !user.activatedManagrConfigs.includes('Close Date Passed') &&
           isOnboarding &&
@@ -379,7 +377,6 @@
       </div>
 
       <div
-        v-if="hasSlackIntegration"
         :class="
           !user.activatedManagrConfigs.includes('Close Date Passed') &&
           isOnboarding &&
@@ -539,7 +536,9 @@ export default {
       return this.$store.state.user.isAdmin
     },
     hasZoomChannel() {
-      return this.$store.state.user.hasZoomIntegration
+      return this.$store.state.user.slackAccount
+        ? this.$store.state.user.slackAccount.zoomChannel
+        : null
     },
     isOnboarding() {
       return this.$store.state.user.onboarding
