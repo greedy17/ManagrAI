@@ -1,7 +1,7 @@
 <template>
   <div class="alerts-page">
     <div class="alerts-header">
-      <div>
+      <div @click="test">
         <h3>{{ config.title }}</h3>
         <p style="margin-top: -0.5rem; font-size: 14px; color: #9b9b9b">
           {{ config.subtitle }}
@@ -471,6 +471,12 @@ export default {
     directToUsers: 'setDefaultChannel',
   },
   methods: {
+    repsPipeline() {
+      if (this.userLevel !== 'MANAGER') {
+        this.config.newConfigs[0].alertTargets = ['SELF']
+        this.selectUsersBool = true
+      }
+    },
     goToConnect() {
       this.$router.push({ name: 'Integrations' })
     },
@@ -754,6 +760,7 @@ export default {
   },
   mounted() {
     this.setDefaultChannel()
+    this.repsPipeline()
   },
   beforeMount() {},
 }
