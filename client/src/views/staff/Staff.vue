@@ -1,11 +1,43 @@
 <template>
   <div class="staff">
+    <Modal
+      v-if="editOpModalOpen"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), resetEdit()
+        }
+      "
+    >
+      <div v-if="modalInfo">
+        <div>{{modalInfo}}</div>
+      </div>
+      <div v-else>No Modal Info</div>
+    </Modal>
     <div class="staff__drawer">
-      <h1>Organizations</h1>
+      <h3>Quick Commands</h3>
+      <div class="command_dropdown">
+        <Multiselect
+          placeholder="Select Command"
+          style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
+          v-model="selectedCommand"
+          :options="commandOptions"
+          openDirection="below"
+          selectLabel="Enter"
+          track-by="value"
+          label="label"
+        >
+          <template slot="noResult">
+            <p class="multi-slot">No results.</p>
+          </template>
+        </Multiselect>
+        <button class="green_button sized" @click="runCommand">></button>
+      </div>
       <!-- <div :key="i" v-for="(org, i) in organizations.list">
         <div>{{org}}</div>
         <h2 @click="selected_org = org.id">{{ org.name }}</h2>
       </div> -->
+      <h3>Organizations</h3>
       <Multiselect
         placeholder="Select Organization"
         style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
@@ -25,52 +57,45 @@
       <template v-if="selected_org && selected_org.id">
         <div v-if="loading">Loading</div>
         <template v-else>
-          <div class="command_dropdown">
-            <Multiselect
-              placeholder="Select Command"
-              style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
-              v-model="selectedCommand"
-              :options="commandOptions"
-              openDirection="below"
-              selectLabel="Enter"
-              track-by="value"
-              label="label"
-            >
-              <template slot="noResult">
-                <p class="multi-slot">No results.</p>
-              </template>
-            </Multiselect>
-            <Multiselect
-              placeholder="Select Users"
-              style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
-              v-model="selectedUsers"
-              :options="orgUsers"
-              openDirection="below"
-              selectLabel="Enter"
-              track-by="id"
-              label="fullName"
-              :multiple="true"
-            >
-              <template slot="noResult">
-                <p class="multi-slot">No results.</p>
-              </template>
-            </Multiselect>
-            <button class="green_button" @click="runCommand">Enter</button>
-          </div>
-
-          <!-- <div class="form__list">
-            <div :key="i" class="form__list_item" v-for="(form, i) in orgForms">
-              <h3>{{ form.formType }} {{ form.resource }}</h3>
-              <p>Form Fields:</p>
-              <ul v-if="form.fieldsRef.length > 1">
-                <li class="field__list_item" :key="i" v-for="(field, i) in form.fieldsRef">
-                  <span>{{ field.order }}-{{ field.label }}</span
-                  ><span class="sub_text">{{ field.dataType }}</span>
-                </li>
-              </ul>
-              <p v-else>Form is not created</p>
+          <div style="border-bottom: 1px solid black; margin-left: 1rem">
+            <!-- top bar here  -->
+            <!-- {{selected_org}} -->
+            <div>
+              <div>State</div>
+              <Multiselect
+                placeholder="State"
+                style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
+                v-model="stateActive"
+                :options="states"
+                openDirection="below"
+                selectLabel="Enter"
+                track-by="id"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+              </Multiselect>
             </div>
-          </div> -->
+            <div>
+              <div>Ignore Emails</div>
+              <input 
+                class="wide" 
+                type="search" 
+                v-model="ignoreEmailText" 
+                placeholder="Ignore Emails" 
+                @keyup.enter="ignoreEmail"
+              />
+            </div>
+            <div>
+              <div @click="test">Has Products</div>
+              <input 
+                type="checkbox" 
+                v-model="hasProducts" 
+              />
+            </div>
+            <button class="green_button" @click="goToUser(selectedUsers)">Go</button>
+          </div>
+          
 
           <!-- <div>{{allForms}}</div> -->
           <div class="form__list">
@@ -117,6 +142,7 @@
             </div>
             <div class="form__list_item">
               <h3>Meeting Workflows</h3>
+              <button class="green_button" @click="goToMeetingWorkflow()">Go</button>
             </div>
           </div>
           <hr />
@@ -151,7 +177,18 @@
       </template>
       <template v-else-if="page === 'SlackForm'">
         <div v-for="(slackForm) in selectedSlackForms" :key="slackForm.id">
-          <h3>{{slackForm.stage}}</h3>
+          <h3>Slack Form</h3>
+          <h4>{{slackForm}}</h4>
+          <div v-for="(fieldRef) in slackForm.fieldsRef" :key="fieldRef.id">
+            <h3>Label: {{fieldRef.label}}</h3>
+            <h3>Order: {{fieldRef.order}}</h3>
+          </div>
+        </div>
+      </template>
+      <template v-else-if="page === 'MeetingWorkflow'">
+        <!-- <div>{{orgMeetingWorkflows[0]}}</div> -->
+        <div v-for="(meetingWorkflow) in orgMeetingWorkflows" :key="meetingWorkflow.id">
+          <h3 @click="openModal(meetingWorkflow)">{{meetingWorkflow.meeting_ref.topic}}</h3>
           <!-- <h3>Full Name: {{slackForm.fullName}}</h3> -->
           <!-- <h3>Email: {{slackForm.email}}</h3> -->
           <!-- <h3>Role: {{slackForm.role}}</h3> -->
@@ -172,6 +209,7 @@ import User from '@/services/users'
 export default {
   name: 'Staff',
   components: {
+    Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {
@@ -189,6 +227,13 @@ export default {
       orgSlackForms: null,
       selectedCommand: '',
       loading: true,
+      editOpModalOpen: false,
+      modalInfo: null,
+      states: ['Active', 'Inactive'],
+      stateActive: null, // change to whatever info is coming in
+      ignoreEmailText: '',
+      ignoreEmails: [], // change to whatever info is coming in
+      hasProducts: false, // change to whatever info is coming in
       allForms: null,
       allMeetingWorkflows: null,
       selected_org: null,
@@ -205,9 +250,12 @@ export default {
     },
   },
   mounted() {
-    console.log('mounted', this.allForms)
+    console.log('mounted', this.hasProducts)
   },
   methods: {
+    test() {
+      console.log('test', this.hasProducts)
+    },
     async getAllForms() {
       try {
         let res = await SlackOAuth.api.getOrgCustomForm()
@@ -238,6 +286,32 @@ export default {
         console.log(e)
       }
     },
+    ignoreEmail() {
+      if (!this.checkEmail()) {
+        return console.log('Please enter a valid email')
+      }
+      this.ignoreEmails.push(this.ignoreEmailText);
+      this.ignoreEmailText = '';
+      console.log('ignoreEmails', this.ignoreEmails);
+    },
+    checkEmail() {
+      let symbol = false;
+      let dot = false;
+      for (let i = 0; i < this.ignoreEmailText.length; i++) {
+        if (!symbol) {
+          if (this.ignoreEmailText[i] === '@') {
+            symbol = true;
+          }
+        } else if (!dot) {
+          if (this.ignoreEmailText[i] === '.') {
+            dot = true;
+          }
+        } else {
+          return true;
+        }
+      }
+      return false;
+    },
     goToUser(user) {
       if (!this.selectedUsers) {
         return;
@@ -254,6 +328,18 @@ export default {
       this.old_selected_org = this.selected_org;
       this.selected_org = null;
       this.page = 'SlackForm';
+    },
+    goToMeetingWorkflow() {
+      this.old_selected_org = this.selected_org;
+      this.selected_org = null;
+      this.page = 'MeetingWorkflow';
+    },
+    openModal(meetingWorkflow) {
+      this.modalInfo = meetingWorkflow;
+      this.editOpModalOpen = true;
+    },
+    resetEdit() {
+      this.editOpModalOpen = !this.editOpModalOpen
     },
     slackFormLabel({formType, resource}) {
       let formattedFormType = formType[0];
@@ -291,6 +377,7 @@ export default {
         this.selected_org.id = this.organizations[0].id
         this.orgUsers = this.filterUsers(this.selected_org.id)
         this.orgSlackForms = this.filterSlackForms(this.selected_org.id)
+        this.orgMeetingWorkflows = this.filterMeetingWorkflow(this.selected_org.id)
         // console.log('this.orgSlackForms', this.orgSlackForms)
       }
     },
@@ -359,7 +446,8 @@ ul {
 }
 
 .command_dropdown {
-  margin: 2rem;
+  // margin: 2rem;
+  display: flex;
 }
 
 .green_button {
@@ -371,5 +459,29 @@ ul {
   font-size: 12px;
   border: none;
   cursor: pointer;
+}
+
+.sized{
+  height: 3em;
+  align-self: center;
+}
+
+input[type='search'] {
+  border: none;
+  background-color: white;
+  padding: 4px;
+  margin: 0;
+}
+input[type='search']:focus {
+  outline: none;
+}
+::placeholder {
+  color: $very-light-gray;
+}
+.wide {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  background-color: white;
 }
 </style>
