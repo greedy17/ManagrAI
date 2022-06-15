@@ -535,6 +535,7 @@ export default {
       this.old_selected_org = this.selected_org;
       this.selected_org = null;
       this.page = 'SlackForm';
+      console.log('selectedSlackForms', this.selectedSlackForms)
     },
     goToMeetingWorkflow() {
       this.old_selected_org = this.selected_org;
@@ -639,7 +640,7 @@ ul {
 .form__list_item {
   padding: 0 2rem 2rem 2rem;
   border: 1px solid black;
-  width: 20vw;
+  width: 30vw;
   margin: 1rem;
 }
 .sub_text {
