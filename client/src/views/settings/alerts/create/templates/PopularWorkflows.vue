@@ -128,6 +128,7 @@
               >Weekly</label
             >
             <ToggleCheckBox
+              v-if="hasSlack"
               @input="
                 config.newConfigs[0].recurrenceFrequency == 'WEEKLY'
                   ? (config.newConfigs[0].recurrenceFrequency = 'MONTHLY')
@@ -146,6 +147,7 @@
             <FormField>
               <template v-slot:input>
                 <Multiselect
+                  :disabled="!hasSlack"
                   placeholder="Select Day"
                   @input="setDay($event)"
                   v-model="selectedDays"
@@ -164,7 +166,7 @@
                   <template slot="placeholder">
                     <p class="slot-icon">
                       <img src="@/assets/images/search.svg" alt="" />
-                      Select Days
+                      {{ hasSlack ? 'Select Days' : 'Connect slack' }}
                     </p>
                   </template>
                 </Multiselect>
@@ -184,6 +186,7 @@
           <FormField :errors="form.field.alertTargets.errors">
             <template v-slot:input>
               <Multiselect
+                :disabled="!hasSlack"
                 placeholder="Select Users"
                 @input="mapIds"
                 v-model="selectedUsers"
@@ -202,7 +205,7 @@
                 <template slot="placeholder">
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
-                    Select Users
+                    {{ hasSlack ? 'Select Users' : 'Connect slack' }}
                   </p>
                 </template>
               </Multiselect>
@@ -210,6 +213,7 @@
           </FormField>
         </div>
         <div
+          v-if="hasSlack"
           style="
             display: flex;
             flex-direction: column;
@@ -307,7 +311,7 @@
           </div>
         </div>
       </div>
-      <div v-if="!hasSlack" class="overlay">
+      <div v-if="!hasSlack && !selectField" class="overlay">
         <p class="text">
           <!-- <img src="@/assets/images/slackLogo.png" height="10px" class="margin-right-s" alt="" /> -->
           <span class="link" @click="goToConnect"> Connect Slack</span>
@@ -327,7 +331,22 @@
     </div>
 
     <div class="bottom_locked margin-top" v-else>
-      <button @click="noSlackSave" class="purple__button bouncy">Activate without Slack</button>
+      <button
+        v-if="largeOpps"
+        :disabled="!selectFieldBool || !largeOppsBool"
+        @click="noSlackSave"
+        :class="!selectFieldBool || !largeOppsBool ? 'disabled__button' : 'purple__button bouncy'"
+      >
+        Activate without Slack
+      </button>
+      <button
+        v-else
+        @click="noSlackSave"
+        :disabled="selectField ? !selectFieldBool : null"
+        :class="selectField && !selectFieldBool ? 'disabled__button' : 'purple__button bouncy'"
+      >
+        Activate without Slack
+      </button>
     </div>
   </div>
 </template>
