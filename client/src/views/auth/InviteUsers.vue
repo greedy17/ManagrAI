@@ -6,8 +6,15 @@
       <button class="invite_button" type="submit" @click="handleInvite">
         Invite Member
         <img
+          v-if="hasSlack"
           style="height: 0.8rem; margin-left: 0.25rem"
           src="@/assets/images/slackLogo.png"
+          alt=""
+        />
+        <img
+          v-else
+          style="height: 0.8rem; margin-left: 0.25rem"
+          src="@/assets/images/logo.png"
           alt=""
         />
       </button>
@@ -126,6 +133,9 @@ export default {
     },
     isAdmin() {
       return this.$store.state.user.isAdmin
+    },
+    hasSlack() {
+      return !!this.$store.state.user.slackRef
     },
   },
 }

@@ -3,7 +3,7 @@
     <div class="opportunity_title">
       <h3>Update Opportunity</h3>
       <p style="color: #9b9b9b; margin-top: -0.5rem; font-size: 14px">
-        Select the Opportunity fields you’d like to display and update via Slack:
+        Select the Opportunity fields you’d like to display and update via Managr or Slack:
       </p>
     </div>
     <div class="box__content--expanded">
