@@ -16,6 +16,7 @@ class Command(BaseCommand):
         parser.add_argument("-m", "--meetings", action="store_true")
 
     def handle(self, *args, **options):
+        print(options)
         if options["users"]:
             for t in options["users"]:
                 user = User.objects.filter(email=t).first()

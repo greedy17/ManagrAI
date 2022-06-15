@@ -430,24 +430,31 @@ def meeting_prep(processed_data, user_id, invocation=1, from_task=False):
     if from_task:
         provider = processed_data.get("provider")
         # Conditional Check for Zoom meeting or Non-Zoom Meeting
-        if (provider == "Zoom Meeting" and user.email not in processed_data["owner"]) or (
-            provider not in [None, "Zoom Meeting",]
-            and "Zoom meeting" not in processed_data["description"]
-        ):
-            # Google Meet (Non-Zoom)
+        if user.has_zoom_integration:
+            if (provider == "Zoom Meeting" and user.email not in processed_data["owner"]) or (
+                provider not in [None, "Zoom Meeting",]
+                and "Zoom meeting" not in processed_data["description"]
+            ):
+                # Google Meet (Non-Zoom)
+                meeting_workflow = MeetingWorkflow.objects.create(
+                    non_zoom_meeting=meeting_prep_instance, user=user,
+                )
+                meeting_workflow.forms.set(contact_forms)
+                # Sending end_times, workflow_id, and user values to emit function
+                non_zoom_end_times = processed_data.get("times").get("end_time")
+                workflow_id = str(meeting_workflow.id)
+                user_id = str(user.id)
+                user_tz = str(user.timezone)
+                emit_non_zoom_meetings(workflow_id, user_id, user_tz, non_zoom_end_times)
+                logger.info(
+                    f"-------------------------\nMEETING PREP INFO FOR {user.email}\nMEETING PREP INSTANCE: {meeting_prep_instance.id}\nMEETING WORKFLOW: {meeting_workflow.id}\n-------------------------"
+                )
+                return
+        else:
             meeting_workflow = MeetingWorkflow.objects.create(
                 non_zoom_meeting=meeting_prep_instance, user=user,
             )
             meeting_workflow.forms.set(contact_forms)
-            # Sending end_times, workflow_id, and user values to emit function
-            non_zoom_end_times = processed_data.get("times").get("end_time")
-            workflow_id = str(meeting_workflow.id)
-            user_id = str(user.id)
-            user_tz = str(user.timezone)
-            emit_non_zoom_meetings(workflow_id, user_id, user_tz, non_zoom_end_times)
-            logger.info(
-                f"-------------------------\nMEETING PREP INFO FOR {user.email}\nMEETING PREP INSTANCE: {meeting_prep_instance.id}\nMEETING WORKFLOW: {meeting_workflow.id}\n-------------------------"
-            )
             return
 
 
@@ -646,11 +653,7 @@ def process_current_alert_list(user_id):
 @background()
 def _process_non_zoom_meetings(user_id):
     user = User.objects.get(id=user_id)
-    if (
-        hasattr(user, "nylas")
-        and hasattr(user, "slack_integration")
-        and user.slack_integration.zoom_channel is not None
-    ):
+    if hasattr(user, "nylas"):
         try:
             processed_data = _process_calendar_details(user_id)
         except Exception as e:
