@@ -48,7 +48,6 @@ import {
   timeOnlyShort,
   toCapitalCase,
 } from '@/services/filters'
-import pluralize from 'pluralize'
 
 import { Datetime } from 'vue-datetime'
 import 'vue-datetime/dist/vue-datetime.css'

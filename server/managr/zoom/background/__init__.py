@@ -148,21 +148,19 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
     ignore_emails = user.organization.ignore_emails
     meeting = {}
     if zoom_account and not zoom_account.is_revoked:
-
-        # emit the process
-
         while True:
             attempts = 1
             zoom_account = user.zoom_account
             try:
                 meeting = zoom_account.helper_class.get_past_meeting(meeting_uuid)
-                meeting.meta_data["original_duration"] = original_duration
-                logger.info(f"{meeting.meta_data['original_duration']}")
-                if meeting.meta_data["original_duration"] < 0:
+                meeting.original_duration = original_duration
+                logger.info(f"{meeting.original_duration}")
+                if meeting.original_duration < 0:
                     # zoom weired bug where instance meetings get a random -1324234234 negative big int
-                    meeting.meta_data["original_duration"] = 0
+                    meeting.original_duration = 0
                 # this will fail if a user has a free account
                 meeting = meeting.get_past_meeting_participants(zoom_account.access_token)
+
                 break
             except TokenExpired:
                 if attempts >= 5:
@@ -372,10 +370,20 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                     contact_forms.append(form)
                     contact["_form"] = str(form.id)
             meeting.participants = meeting_contacts
-            meeting.save()
+            serializer = ZoomMeetingSerializer(data=meeting.as_dict)
+            try:
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+            except ValidationError as e:
+                logger.exception(
+                    f"Unable to save and initiate slack for meeting with uuid "
+                    f"{meeting_uuid} because of error {json.dumps(e.detail)}"
+                )
+                return e
+            # emit the event to start slack interaction
             workflow = MeetingWorkflow.objects.create(
                 user=user,
-                meeting=meeting,
+                meeting=serializer.instance,
                 operation_type=zoom_consts.MEETING_REVIEW_OPERATION,
                 **meeting_resource_data,
             )
@@ -385,6 +393,242 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                 # sends false only for Mike testing
                 workflow.begin_communication()
             return workflow
+        # MEETING CODE
+        # emit the process
+        # while True:
+        #     attempts = 1
+        #     zoom_account = user.zoom_account
+        #     try:
+        #         meeting = zoom_account.helper_class.get_past_meeting(meeting_uuid)
+        #         meeting.meta_data["original_duration"] = original_duration
+        #         logger.info(f"{meeting.meta_data['original_duration']}")
+        #         if meeting.meta_data["original_duration"] < 0:
+        #             # zoom weired bug where instance meetings get a random -1324234234 negative big int
+        #             meeting.meta_data["original_duration"] = 0
+        #         # this will fail if a user has a free account
+        #         meeting = meeting.get_past_meeting_participants(zoom_account.access_token)
+        #         break
+        #     except TokenExpired:
+        #         if attempts >= 5:
+        #             return logger.exception(
+        #                 f"Failed to retrieve meeeting data user zoom token is expired and we were unable to regenerate a new one {str(user.id)} email {user.email}"
+        #             )
+        #         else:
+        #             zoom_account.regenerate_token()
+        #             attempts += 1
+        #     except AccountSubscriptionLevel:
+        #         logger.info(
+        #             f"failed to list participants from zoom because {zoom_account.user.email} has a free zoom account"
+        #         )
+        #         _send_zoom_error_message(user, meeting_uuid)
+        #         return
+
+        # #
+        # logger.info(
+        #     f"    Got Meeting: {meeting} with ID: {meeting_uuid} for user {user.email} with user_id {str(user.id)}"
+        # )
+        # logger.info(f"    Meeting Start: {meeting.start_time}")
+        # logger.info(f"    Meeting End: {meeting.end_time}")
+
+        # # Gather Meeting Participants from Zoom and Calendar
+        # logger.info("Gathering meeting participants...")
+        # zoom_participants = meeting.as_dict.get("participants", [])
+
+        # logger.info(f"    Zoom Participants: {zoom_participants}")
+
+        # # Gather unique emails from the Zoom Meeting participants
+        # participants = []
+        # user = zoom_account.user
+
+        # org_email_domain = get_domain(user.email)
+        # remove_users_with_these_domains_regex = r"(@[\w.]+calendar.google.com)|({})".format(
+        #     org_email_domain
+        # )
+        # for email in ignore_emails:
+        #     remove_users_with_these_domains_regex = (
+        #         remove_users_with_these_domains_regex + r"|({})".format(email)
+        #     )
+        # # re.search(remove_users_with_these_domains_regex, p.get("user_email", ""))
+        # #### first check if we care about this meeting before going forward
+        # should_register_this_meeting = [
+        #     p
+        #     for p in zoom_participants
+        #     if not re.search(remove_users_with_these_domains_regex, p.get("user_email", ""))
+        # ]
+
+        # if not len(should_register_this_meeting):
+        #     return
+
+        # memo = {}
+        # for p in zoom_participants:
+        #     if p.get("user_email", "") not in ["", None, *memo.keys()] and not re.search(
+        #         remove_users_with_these_domains_regex, p.get("user_email", "")
+        #     ):
+        #         memo[p.get("user_email")] = len(participants)
+        #         participants.append(p)
+
+        # # If the user has their calendar connected through Nylas, find a
+        # # matching meeting and gather unique participant emails.
+        # calendar_participants = calendar_participants_from_zoom_meeting(meeting, user)
+
+        # # Combine the sets of participants. Filter out empty emails, meeting owner, and any
+        # # emails with domains that match the owner, which are teammates of the owner.
+        # logger.info(f"    Got list of participants: {participants}")
+
+        # for p in calendar_participants:
+        #     if not re.search(
+        #         remove_users_with_these_domains_regex, p.get("user_email", "")
+        #     ) and p.get("user_email", "") not in ["", None]:
+        #         if p.get("user_email", "") in memo.keys():
+        #             index = memo[p.get("user_email")]
+        #             participants[index]["name"] = p.get("name", "")
+        #         else:
+        #             memo[p.get("user_email")] = len(participants)
+        #             participants.append(p)
+        # if settings.IN_STAGING:
+        #     participants.append(
+        #         {
+        #             "name": "maybe mike",
+        #             "id": "",
+        #             "user_email": f"{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}@{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}.com",
+        #         }
+        #     )
+        #     participants.append(
+        #         {
+        #             "name": "not",
+        #             "id": "",
+        #             "user_email": f"{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}@{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}.com",
+        #         }
+        #     )
+        # if settings.IN_DEV:
+        #     participants.append(
+        #         {
+        #             "name": "first",
+        #             "id": "",
+        #             "user_email": f"{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}@{''.join([chr(random.randint(97, 122)) for x in range(random.randint(3,9))])}.com",
+        #         }
+        #     )
+        #     participants.append(
+        #         {"name": "Zachary Bradley", "id": "", "user_email": "zachbradleydev@gmail.com",}
+        #     )
+        # contact_forms = []
+        # if len(participants):
+        #     # Reduce to set of unique participant emails
+        #     participant_emails = set([p.get("user_email") for p in participants])
+
+        #     meeting_contacts = []
+
+        #     # find existing contacts
+
+        #     existing_contacts = Contact.objects.filter(
+        #         email__in=participant_emails, owner__organization__id=user.organization.id
+        #     ).exclude(email=user.email)
+        #     # convert all contacts to model representation and remove from array
+        #     for contact in existing_contacts:
+        #         formatted_contact = contact.adapter_class.as_dict
+
+        #         # create a form for each contact to save to workflow
+
+        #         meeting_contacts.append(formatted_contact)
+        #         for index, participant in enumerate(participants):
+        #             if (
+        #                 participant["user_email"] == contact.email
+        #                 or participant["user_email"] == user.email
+        #             ):
+        #                 del participants[index]
+        #     new_contacts = list(
+        #         filter(
+        #             lambda x: len(x.get("secondary_data", dict())) or x.get("email"),
+        #             list(
+        #                 map(
+        #                     lambda participant: {
+        #                         **ContactAdapter(
+        #                             **dict(
+        #                                 email=participant["user_email"],
+        #                                 # these will only get stored if lastname and firstname are accessible from sf
+        #                                 external_owner=user.salesforce_account.salesforce_id,
+        #                                 secondary_data={
+        #                                     "FirstName": _split_first_name(participant["name"]),
+        #                                     "LastName": _split_last_name(participant["name"]),
+        #                                     "Email": participant["user_email"],
+        #                                 },
+        #                             )
+        #                         ).as_dict,
+        #                     },
+        #                     participants,
+        #                 ),
+        #             ),
+        #         )
+        #     )
+
+        #     meeting_contacts = [
+        #         *new_contacts,
+        #         *meeting_contacts,
+        #     ]
+        #     meeting_resource_data = dict(resource_id="", resource_type="")
+        #     opportunity = Opportunity.objects.filter(
+        #         contacts__email__in=participant_emails, owner__id=user.id
+        #     ).first()
+        #     if opportunity:
+        #         meeting_resource_data["resource_id"] = str(opportunity.id)
+        #         meeting_resource_data["resource_type"] = "Opportunity"
+
+        #     else:
+        #         account = Account.objects.filter(
+        #             contacts__email__in=participant_emails, owner__id=user.id,
+        #         ).first()
+        #         if account:
+        #             meeting_resource_data["resource_id"] = str(account.id)
+        #             meeting_resource_data["resource_type"] = "Account"
+        #         else:
+        #             lead = Lead.objects.filter(
+        #                 email__in=participant_emails, owner__id=user.id
+        #             ).first()
+        #             if lead:
+        #                 meeting_resource_data["resource_id"] = str(lead.id)
+        #                 meeting_resource_data["resource_type"] = "Lead"
+
+        #     for contact in meeting_contacts:
+        #         contact["_tracking_id"] = str(uuid.uuid4())
+        #         form_type = (
+        #             slack_consts.FORM_TYPE_UPDATE
+        #             if contact["id"] not in ["", None]
+        #             else slack_consts.FORM_TYPE_CREATE
+        #         )
+        #         template = OrgCustomSlackForm.objects.filter(
+        #             form_type=form_type,
+        #             resource=slack_consts.FORM_RESOURCE_CONTACT,
+        #             organization=user.organization,
+        #         ).first()
+        #         if not template:
+        #             logger.exception(
+        #                 f"Unable to find Contact Form template for user {str(user_id)}, email {user.email} cannot create initial form for meeting review"
+        #             )
+        #             contact["_form"] = None
+        #         else:
+        #             # create instance
+        #             logger.info(f"contact_id: {contact['id']}")
+        #             form = OrgCustomSlackFormInstance.objects.create(
+        #                 user=user,
+        #                 template=template,
+        #                 resource_id="" if contact.get("id") in ["", None] else contact.get("id"),
+        #             )
+        #             contact_forms.append(form)
+        #             contact["_form"] = str(form.id)
+        #     meeting.participants = meeting_contacts
+        #     meeting.save()
+        #     workflow = MeetingWorkflow.objects.create(
+        #         user=user,
+        #         meeting=meeting,
+        #         operation_type=zoom_consts.MEETING_REVIEW_OPERATION,
+        #         **meeting_resource_data,
+        #     )
+
+        #     workflow.forms.set(contact_forms)
+        #     if send_slack:
+        #         # sends false only for Mike testing
+        #         workflow.begin_communication()
+        #     return workflow
 
 
 @background(schedule=0)
