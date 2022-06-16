@@ -631,7 +631,10 @@ class SFObjectFieldsOperation(SFSyncOperation):
 
 class MeetingWorkflow(SFSyncOperation):
     meeting = models.OneToOneField(
-        "meetings.Meeting", models.CASCADE, related_name="workflow", null=True, blank=True
+        "zoom.ZoomMeeting", models.CASCADE, related_name="workflow", null=True, blank=True
+    )
+    non_zoom_meeting = models.OneToOneField(
+        "core.MeetingPrepInstance", models.CASCADE, related_name="workflow", null=True, blank=True
     )
     resource_id = models.CharField(
         max_length=255,
