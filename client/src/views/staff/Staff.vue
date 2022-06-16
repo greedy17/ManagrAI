@@ -9,8 +9,57 @@
         }
       "
     >
-      <div v-if="modalInfo">
-        <div>{{modalInfo}}</div>
+      <div class="modal-container" v-if="modalInfo">
+        <div v-if="modalName === 'slackFormInstance'">
+          <div class="modal-container__body">
+            <!-- {{modalInfo}} -->
+            <div>
+              <h3>Resource ID:</h3>
+              <h4>{{modalInfo.resource_id ? modalInfo.resource_id : 'null'}}</h4>
+            </div>
+            <div>
+              <h3>Workflow:</h3>
+              <h4>{{modalInfo.workflow_id ? modalInfo.workflow_id : 'null'}}</h4>
+            </div>
+            <div>
+              <h3>Is Submitted:</h3>
+              <h4>{{modalInfo.submission_date ? "true" : "false"}}</h4>
+            </div>
+            <div>
+              <h3>Submission Date:</h3>
+              <h4>{{modalInfo.submission_date ? modalInfo.submission_date : "null"}}</h4>
+            </div>
+            <div>
+              <h3>Update Source:</h3>
+              <h4>{{modalInfo.update_source ? modalInfo.update_source : 'null'}}</h4>
+            </div>
+            <div>
+              <h3>User ID:</h3>
+              <h4>{{modalInfo.user_id}}</h4>
+            </div>
+            <div>
+              <h3>Template ID:</h3>
+              <h4>{{modalInfo.template_id}}</h4>
+            </div>
+            <div>
+              <h3>Saved Data:</h3>
+              <h4>{{modalInfo.saved_data}}</h4>
+            </div>
+            <div>
+              <h3>Previous Data:</h3>
+              <h4>{{modalInfo.previous_data}}</h4>
+            </div>
+            <div>
+              <h3>Alert Instance ID:</h3>
+              <h4>{{modalInfo.alert_instance_id_id ? modalInfo.alert_instance_id_id : 'null'}}</h4>
+            </div>
+          </div>
+        </div>
+        <div v-else-if="modalName === 'MeetingWorkflow'">
+          <div class="modal-container__body">
+            {{modalInfo}}
+          </div>
+        </div>
       </div>
       <div v-else>No Modal Info</div>
     </Modal>
@@ -37,7 +86,7 @@
         <div>{{org}}</div>
         <h2 @click="selected_org = org.id">{{ org.name }}</h2>
       </div> -->
-      <h3>Organizations</h3>
+      <h3 @click="test">Organizations</h3>
       <Multiselect
         placeholder="Select Organization"
         style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
@@ -85,6 +134,11 @@
                 placeholder="Ignore Emails" 
                 @keyup.enter="ignoreEmail"
               />
+              <p>{{ignoreEmailText}}</p>
+              <div v-for="email in ignoreEmails" :key="email">
+                
+                <div>{{email}}</div>
+              </div>
             </div>
             <div>
               <div @click="test">Has Products</div>
@@ -93,7 +147,7 @@
                 v-model="hasProducts" 
               />
             </div>
-            <button class="green_button" @click="goToUser(selectedUsers)">Go</button>
+            <button class="green_button" @click="postOrgUpdates({ignore_emails: ignoreEmails, has_products: hasProducts, state_active: stateActive, org_id: selected_org ? selected_org.id : old_selected_org.id})">Go</button>
           </div>
           
 
@@ -139,6 +193,7 @@
             </div>
             <div class="form__list_item">
               <h3>Slack Form Instances</h3>
+              <button class="green_button" @click="goToSlackFormInstace()">Go</button>
             </div>
             <div class="form__list_item">
               <h3>Meeting Workflows</h3>
@@ -380,18 +435,61 @@
             <button class="green_button back" @click="goBack">Back</button>
             <h2 class="user_title">Slack Form {{i + 1}}</h2>
           </div>
-          <h4>{{slackForm}}</h4>
-          <div v-for="(fieldRef) in slackForm.fieldsRef" :key="fieldRef.id">
-            <h3>Label: {{fieldRef.label}}</h3>
-            <h3>Order: {{fieldRef.order}}</h3>
+          <!-- <h4>{{slackForm}}</h4> -->
+          <div>
+            <div class="user_item_container">
+              <h3>Organization</h3>
+              <!-- <h4>{{old_selected_org.name}}</h4> -->
+            </div>
+            <div class="user_item_container">
+              <h3>Form Type</h3>
+              <h4>{{slackForm.formType}}</h4>
+            </div>
+            <div class="user_item_container">
+              <h3>Resource</h3>
+              <h4>{{slackForm.resource}}</h4>
+            </div>
+            <div class="user_item_container">
+              <h3>Config</h3>
+              <h4>>{{slackForm.config}}</h4>
+            </div>
+            <div class="user_item_container">
+              <h3>Stage</h3>
+              <h4>{{slackForm.stage ? slackForm.stage : 'Null'}}</h4>
+            </div>
           </div>
+          <div>
+            <h3>Form Fields</h3>
+            <div v-for="(fieldRef) in slackForm.fieldsRef" :key="fieldRef.id">
+              <!-- <h3>Label: {{fieldRef.label}}</h3>
+              <h3>Order: {{fieldRef.order}}</h3> -->
+              <div class="user_item_container">
+                <h3>Field</h3>
+                <h4>{{fieldRef.referenceDisplayLabel}}</h4>
+              </div>
+              <div class="user_item_container">
+                <h3>Order</h3>
+                <h4>{{fieldRef.order}}</h4>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+      <template v-else-if="page === 'SlackFormInstance'">
+        <button class="green_button back" @click="goBack">Back</button>
+        <div v-for="(slackFormInstance, i) in slackFormInstances" :key="slackFormInstance.id">
+          <h3 @click="openModal('slackFormInstance', slackFormInstance)">{{slackFormInstance.id}}</h3>
+          <!-- <div>
+            <h3>Resource ID:</h3>
+            <h4>{{slackFormInstance.resource_id}}</h4>
+          </div> -->
         </div>
       </template>
       <template v-else-if="page === 'MeetingWorkflow'">
         <!-- <div>{{orgMeetingWorkflows[0]}}</div> -->
         <button class="green_button back" @click="goBack">Back</button>
         <div v-for="(meetingWorkflow) in orgMeetingWorkflows" :key="meetingWorkflow.id">
-          <h3 @click="openModal(meetingWorkflow)">{{meetingWorkflow.meeting_ref.topic}}</h3>
+          <h3 @click="openModal('meetingWorkflow', meetingWorkflow)">{{meetingWorkflow.meeting_ref.topic}}</h3>
           <!-- <h3>Full Name: {{slackForm.fullName}}</h3> -->
           <!-- <h3>Email: {{slackForm.email}}</h3> -->
           <!-- <h3>Role: {{slackForm.role}}</h3> -->
@@ -432,7 +530,7 @@ export default {
       loading: true,
       editOpModalOpen: false,
       modalInfo: null,
-      states: ['Active', 'Inactive'],
+      states: ['ACTIVE', 'INACTIVE'],
       stateActive: null, // change to whatever info is coming in
       ignoreEmailText: '',
       ignoreEmails: [], // change to whatever info is coming in
@@ -441,6 +539,8 @@ export default {
       allMeetingWorkflows: null,
       selected_org: null,
       old_selected_org: null,
+      slackFormInstances: null,
+      modalName: '',
       page: null,
       orgForms: null,
       orgMeetingWorkflows: null,
@@ -453,11 +553,14 @@ export default {
     },
   },
   mounted() {
-    console.log('mounted', this.hasProducts)
+    this.stateActive = this.user.organizationRef.state;
+    this.hasProducts = this.user.organizationRef.hasProducts;
+    this.ignoreEmails = this.user.organizationRef.ignoreEmailRef;
+    console.log('this.stateActive', this.user)
   },
   methods: {
     test() {
-      console.log('test', this.hasProducts)
+      console.log('test', this.selectedSlackForms)
     },
     async getAllForms() {
       try {
@@ -471,6 +574,7 @@ export default {
     async getAllMeetingWorkflows() {
       try {
         let res = await MeetingWorkflows.api.getMeetingList()
+        console.log('res.results', res.results)
         this.allMeetingWorkflows = res.results
       } catch (e) {
         console.log(e)
@@ -481,7 +585,7 @@ export default {
         const res = await User.api.callCommand(this.selectedCommand.value).then((res) => {
           this.$Alert.alert({
             type: 'success',
-            timeout: 1000,
+            timeout: 4000,
             message: res['message'],
           })
         })
@@ -489,20 +593,45 @@ export default {
         console.log(e)
       }
     },
+    async getSlackFormInstance() {
+      try {
+        const res = await SlackOAuth.api.slackInstances(this.selected_org.id)
+        console.log('slackFormInstanceRes', res)
+        // User.api.getUser(this.user.id).then((response) => {
+          //   this.$store.commit('UPDATE_USER', response)
+          // })
+        this.slackFormInstances = res;
+      } catch(e) {
+        console.log('Error in getSlackFormInstance', e)
+      }
+    },
+    async postOrgUpdates(data) {
+      console.log(data)
+      const res = await Organization.api.orgUpdate(data).then(() => {
+        this.organizations.refresh();
+      });
+      // console.log('res!!!', res)
+    },
     ignoreEmail() {
       if (!this.checkEmail()) {
         return console.log('Please enter a valid email')
       }
       this.ignoreEmails.push(this.ignoreEmailText);
       this.ignoreEmailText = '';
-      console.log('ignoreEmails', this.ignoreEmails);
+      console.log('ignoreEmails', this.ignoreEmails, Array.isArray(this.ignoreEmails));
     },
     checkEmail() {
       let symbol = false;
       let dot = false;
+      if (this.ignoreEmailText[0] === '.' || this.ignoreEmailText[0] === '@') {
+        return false;
+      }
       for (let i = 0; i < this.ignoreEmailText.length; i++) {
         if (!symbol) {
           if (this.ignoreEmailText[i] === '@') {
+            if (this.ignoreEmailText[i+1] === '.' || this.ignoreEmailText[i-1] === '.') {
+              return false;
+            }
             symbol = true;
           }
         } else if (!dot) {
@@ -524,6 +653,7 @@ export default {
       if (!this.selectedUsers || !this.selectedUsers.length) {
         return;
       }
+      console.log('selectedUsers', this.selectedUsers)
       this.old_selected_org = this.selected_org;
       this.selected_org = null;
       this.page = 'Users';
@@ -537,17 +667,27 @@ export default {
       this.page = 'SlackForm';
       console.log('selectedSlackForms', this.selectedSlackForms)
     },
+    goToSlackFormInstace() {
+      this.getSlackFormInstance()
+      this.old_selected_org = this.selected_org;
+      this.selected_org = null;
+      this.page = 'SlackFormInstance';
+    },
     goToMeetingWorkflow() {
       this.old_selected_org = this.selected_org;
       this.selected_org = null;
       this.page = 'MeetingWorkflow';
     },
-    openModal(meetingWorkflow) {
-      this.modalInfo = meetingWorkflow;
+    openModal(name, data) {
+      this.modalName = name;
+      this.modalInfo = data;
+      console.log('modal data', data)
       this.editOpModalOpen = true;
     },
     resetEdit() {
-      this.editOpModalOpen = !this.editOpModalOpen
+      this.editOpModalOpen = !this.editOpModalOpen;
+      this.modalName = '';
+      this.modalInfo = null;
     },
     slackFormLabel({formType, resource}) {
       let formattedFormType = formType[0];
@@ -712,5 +852,44 @@ input[type='search']:focus {
   margin: 1rem;
   text-decoration: underline;
   cursor: pointer;
+}
+.modal-container {
+  background-color: $white;
+  overflow: auto;
+  width: 44vw;
+  min-height: 48vh;
+  align-items: center;
+  border-radius: 0.3rem;
+  border: 1px solid #e8e8e8;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    padding-left: 0.75rem;
+    border-bottom: 1px solid #e8e8e8;
+    img {
+      filter: invert(80%);
+      height: 1.25rem;
+      margin-top: 0.75rem;
+      margin-right: 0.5rem;
+      cursor: pointer;
+    }
+  }
+  &__body {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    margin-top: 1vh;
+    padding: 0 1rem;
+    min-height: 28vh;
+  }
+  &__footer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    position: sticky;
+    height: 8vh;
+    padding: 0.5rem;
+  }
 }
 </style>

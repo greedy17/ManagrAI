@@ -13,6 +13,7 @@ const SLACK_LIST_PUBLIC_CHANNELS_ENDPOINT = '/slack/list-channels/'
 const SLACK_LIST_CHANNELS_ENDPOINT = '/slack/list-user-channels/'
 const SLACK_LIST_USERS = '/slack/list-users/'
 const SLACK_CREATE_CHANNEL = '/slack/create-channel/'
+const SLACK_LIST_INSTANCES = '/slack/slackforminstances'
 const SLACK_ZOOM_CHANNEL_UPDATE = '/slack/update-zoom-channel/'
 const ZOOM_RECAP_CHANNEL_UPDATE = '/slack/update-recap-channel/'
 const SLACK_CHANNEL_DETAILS = '/slack/channel-details/'
@@ -142,6 +143,14 @@ export default class SlackAPI {
       .get(SLACK_CHANNEL_DETAILS, { params: { channel_id } })
       .then(response => response.data)
       .catch(apiErrorHandler({ apiName: 'SlackApi.channelDetails' }))
+  }
+
+  async slackInstances(org_id) {
+    console.log('orgid here', org_id)
+    return this.client
+      .get(SLACK_LIST_INSTANCES, { params: { org_id } })
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'SlackApi.slackInstances' }))
   }
 
   async updateZoomChannel(slack_id, zoom_channel) {

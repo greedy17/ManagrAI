@@ -91,7 +91,38 @@ class OrganizationViewSet(
         serializer = OrganizationRefSerializer(qs, many=True)
 
         return Response(serializer.data)
-
+    
+    @action(
+        methods=["POST"],
+        # permission_classes=(IsSalesPerson,),
+        detail=False,
+        url_path="update-org-info",
+    )
+    def update_org_info(self, request, *args, **kwargs):
+        """endpoint to update the State, Ignore Emails, and Has Products sections"""
+        d = request.data
+        print(d)
+        state = d.get("state_active")
+        print(1)
+        ignore_emails = d.get("ignore_emails")
+        print(2)
+        has_products = d.get("has_products")
+        print(3)
+        org_id = d.get("org_id")
+        print(4)
+        organization = Organization.objects.get(id = org_id)
+        print(5)
+        if organization.state != state:
+            organization.state = state
+            print(6)
+        if organization.has_products != has_products:
+            organization.has_products = has_products
+            print(7)
+        print('organization.state', organization.state, ' - ', state)
+        organization.ignore_emails = list(set(ignore_emails))
+        print(8)
+        organization.save()
+        return Response(data=status.HTTP_200_OK)
 
 class AccountViewSet(
     viewsets.GenericViewSet,

@@ -1211,3 +1211,12 @@ def launch_digest(request):
         generate_reminder_message(user.id)
 
     return Response()
+
+@api_view(["GET"])
+@permission_classes(
+    [permissions.IsAuthenticated,]
+)
+def get_orgs_custom_slack_form_instances(request):
+    org_id = request.query_params.get("org_id")
+    org=OrgCustomSlackFormInstance.objects.filter(user__organization=org_id).values()[:50]
+    return Response(data=org)

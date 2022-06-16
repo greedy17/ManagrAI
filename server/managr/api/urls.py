@@ -148,6 +148,7 @@ urlpatterns = [
     path("slack/webhooks/events", slack_views.slack_events, name="slack-events",),
     path("slack/commands/update-resource", slack_views.update_resource, name="update-resource",),
     path("slack/commands/list-tasks", slack_views.list_tasks, name="list-tasks",),
+    path("slack/slackforminstances", slack_views.get_orgs_custom_slack_form_instances, name="get-orgs-custom-slack-form-instances"),
     path("auto/clear-stale-data", auto_views.init_clear_stale_data, name="clear-stale-data",),
     path("auto/sync-resources", auto_views.init_resource_sync, name="resource-sync",),
     path("auto/sync-fields", auto_views.init_object_field_sync, name="object-field-sync",),

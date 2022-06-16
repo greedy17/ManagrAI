@@ -1,6 +1,7 @@
 import { apiClient, apiErrorHandler, ApiFilter, ModelAPI } from '@/services/api'
 
 const ORGANIZATIONS_ENDPOINT = '/organizations/'
+const ORGANIZATIONS_UPDATE = '/organizations/update-org-info/'
 
 export default class OrganizationAPI {
   constructor(cls) {
@@ -32,5 +33,12 @@ export default class OrganizationAPI {
     } catch {
       apiErrorHandler({ apiName: 'Organization.list' })
     }
+  }
+  async orgUpdate(data) {
+    console.log('data here', data)
+    return this.client
+      .post(ORGANIZATIONS_UPDATE, data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'Organization.orgUpdate' }))
   }
 }
