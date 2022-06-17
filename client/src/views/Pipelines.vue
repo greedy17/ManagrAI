@@ -2154,6 +2154,9 @@ export default {
             let updatedRes = await SObjects.api.getObjects('Opportunity')
             this.allOpps = updatedRes.results
             this.originalList = updatedRes.results
+            if (this.selectedWorkflow) {
+              this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+            }
           })
         if (this.currentList === 'Closing this month') {
           this.stillThisMonth()
