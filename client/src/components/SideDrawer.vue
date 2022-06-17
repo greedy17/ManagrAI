@@ -33,19 +33,24 @@
         </div>
       </div>
 
-      <div class="noti-section">
+      <div class="noti-section-lg">
         <p class="sticky">
           Pipeline <small class="green-bg">{{ templates.list ? templates.list.length : 0 }}</small>
-          <!-- <button class="green-button" @click="runWorkflows">Run all</button> -->
+          <button :disabled="!templates.list.length" class="green-button" @click="runWorkflows">
+            Refresh
+          </button>
         </p>
+        <span v-if="!templates.list.length"
+          ><a class="green-border no-cursor">No active workflow.</a></span
+        >
         <span @click="goToWorkflow(alert.id)" :key="i" v-for="(alert, i) in templates.list"
           ><a class="green-border">
-            {{ alert.title }}
-            <p class="small-font no-margin">owner: {{ users ? owner(alert.user) : '' }}</p>
+            {{ alert.title }} <small class="green">{{ workflows[i] ? workflows[i] : '--' }}</small>
+            <p class="small-font no-margin grey">owner: {{ users ? owner(alert.user) : '' }}</p>
           </a>
         </span>
-        <!-- <span><a class="green-border" href="">Pipeline 2</a></span>
-        <span><a class="green-border" href="">Pipeline 3</a></span> -->
+
+        <!-- <span><a class="green-border" href="">Pipeline 3</a></span>  -->
       </div>
 
       <div class="noti-section">
@@ -71,6 +76,7 @@ export default {
       meetings: null,
       today: null,
       day: null,
+      workflows: [],
       days: {
         0: 'Sunday',
         1: 'Monday',
@@ -100,15 +106,17 @@ export default {
   },
   methods: {
     async runWorkflows() {
+      let ids = this.templates.list.map((wf) => wf.id)
+      console.log(ids)
       try {
-        let res = await AlertTemplate.api.runAlertTemplateNow(this.templates.list[0].id, {
-          fromWorkflow: true,
-        })
-        console.log(res)
+        for (let i = 0; i < ids.length; i++) {
+          let res = await AlertTemplate.api.runAlertTemplateNow(ids[i], {
+            fromWorkflow: true,
+          })
+          this.workflows.push(res.data.ids.length)
+        }
       } catch (error) {
         console.log(error)
-      } finally {
-        return
       }
     },
     owner(usr) {
@@ -182,6 +190,12 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+
+button:disabled {
+  color: $very-light-gray;
+  border: 1px solid $very-light-gray;
+  cursor: text;
+}
 .no-margin {
   margin: 0 0 0 -3px;
 }
@@ -232,10 +246,10 @@ export default {
 }
 .green-button {
   border: 1px solid $dark-green;
-  border-radius: 3px;
+  border-radius: 4px;
   background-color: white;
   color: $dark-green;
-  margin-left: 65px;
+  margin-left: 55px;
   cursor: pointer;
 }
 .green {
@@ -256,6 +270,14 @@ export default {
 }
 .neg-mar-bottom {
   margin-bottom: -5px;
+}
+.noti-section-lg {
+  height: 250px;
+  overflow-y: scroll;
+  padding: 0px 16px;
+  border-bottom: 1px solid $soft-gray;
+  margin: 0px 0px 5px 0px;
+  width: 100%;
 }
 .noti-section {
   height: 200px;
@@ -284,7 +306,7 @@ export default {
 .red-border {
   border: 1px solid $very-light-gray;
   border-radius: 4px;
-  height: 56px;
+  height: 46px;
   margin-bottom: 3px;
   color: $very-light-gray !important;
   cursor: text;
@@ -389,4 +411,21 @@ h3 {
     font-size: 18px;
   }
 }
+
+//  ::-webkit-scrollbar {
+//     width: 2px; /* Mostly for vertical scrollbars */
+//     height: 0px; /* Mostly for horizontal scrollbars */
+//   }
+//   ::-webkit-scrollbar-thumb {
+//     background-image: linear-gradient(100deg, $darker-green 0%, $lighter-green 99%);
+//     box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+//     border-radius: 0.3rem;
+//   }
+//   ::-webkit-scrollbar-track {
+//     box-shadow: inset 2px 2px 4px 0 $soft-gray;
+//     border-radius: 0.3rem;
+//   }
+//   ::-webkit-scrollbar-track-piece {
+//     margin-top: 1rem;
+//   }
 </style>
