@@ -319,10 +319,13 @@ class UserViewSet(
         url_path="get-forecast-values",
     )
     def get_forecast_values(self, request, *args, **kwargs):
+        from managr.opportunity.serializers import OpportunitySerializer
+
         user = request.user
         res = user.current_forecast.get_current_values()
-        data = {"opps": res["records"]}
-        return Response(data=data, status=status.HTTP_200_OK)
+        opps = OpportunitySerializer(data=res["records"], many=True)
+        opps.is_valid()
+        return Response(data=opps.data, status=status.HTTP_200_OK)
 
 
 class ActivationLinkView(APIView):
