@@ -526,7 +526,7 @@ export default {
       let noAmPm = newTime.replace(amPm, '')
       let noAmPmSeconds = noAmPm.replace(':', ' ')
 
-      if (parseInt(hour) < 9) {
+      if (parseInt(hour) < 10) {
         newTime = '0' + newTime
         noAmPm = '0' + noAmPm
         noSeconds = '0' + noSeconds
@@ -534,7 +534,7 @@ export default {
       }
       noSeconds = noSeconds.replace(' ', ':')
       noSeconds = noSeconds.split(':')
-      noSeconds = noSeconds[0] + noSeconds[1]
+      noSeconds = noSeconds[0] + ':' + noSeconds[1] + amPm
       return noSeconds
     },
   },

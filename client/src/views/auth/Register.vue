@@ -175,10 +175,12 @@ export default {
         this.organization = res.data.organization
       } catch (e) {
         this.errorValidatingEmail = true
-        this.$Alert.alert({
+        this.$toast('Unable to retrieve email', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'error',
-          timeout: 3000,
-          message: 'Unable to retrieve email',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } finally {
         this.isLoading = false
@@ -189,10 +191,12 @@ export default {
 
       // Do not continue if the form has errors
       if (!this.registrationForm.isValid) {
-        this.$Alert.alert({
+        this.$toast('Please complete all fields', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'error',
-          message: 'Please complete all the fields.',
-          timeout: 3000,
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
         return
       }
@@ -205,9 +209,12 @@ export default {
         user = await User.api.activate(this.userId, this.token, this.registrationForm)
         console.log(this.registrationForm)
       } catch (error) {
-        this.$Alert.alert({
+        this.$toast('There was a problem creating your account.', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'error',
-          message: 'There was a problem creating your user account.',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
         throw error
       } finally {

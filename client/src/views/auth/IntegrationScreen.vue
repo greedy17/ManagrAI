@@ -676,11 +676,16 @@ export default {
         if (response && response.status >= 400 && response.status < 500 && response.status != 401) {
           let { data } = response
           if (data.timezone) {
-            this.$Alert.alert({
-              type: 'error',
-              message:
-                '<h3>We could not retrieve your timezone from zoom, to fix this please login to the zoom.us portal through a browser and return to managr to reintegrate</h3>',
-            })
+            this.$toast(
+              'We could not retrieve your timezone from zoom, to fix this please login to the zoom.us portal through a browser and return to managr to reintegrate',
+              {
+                timeout: 2000,
+                position: 'top-left',
+                type: 'success',
+                toastClassName: 'custom',
+                bodyClassName: ['custom'],
+              },
+            )
           }
         }
       } finally {

@@ -449,10 +449,12 @@ export default {
           console.log(e)
         } finally {
           this.updatedList = []
-          this.$Alert.alert({
+          this.$toast('Salesforce Update Successful', {
+            timeout: 2000,
+            position: 'top-left',
             type: 'success',
-            timeout: 750,
-            message: 'Salesforce update successful!',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         }
       }
@@ -477,10 +479,12 @@ export default {
           console.log(e)
         } finally {
           this.updatedList = []
-          this.$Alert.alert({
+          this.$toast('Salesforce Update Successful', {
+            timeout: 2000,
+            position: 'top-left',
             type: 'success',
-            timeout: 750,
-            message: 'Salesforce update successful!',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         }
       }
@@ -505,10 +509,12 @@ export default {
           console.log(e)
         } finally {
           this.updatedList = []
-          this.$Alert.alert({
+          this.$toast('Salesforce Update Successful', {
+            timeout: 2000,
+            position: 'top-left',
             type: 'success',
-            timeout: 750,
-            message: 'Salesforce update successful!',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         }
       }

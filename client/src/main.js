@@ -18,7 +18,7 @@ import 'babel-polyfill'
 
 import Vue from 'vue'
 import Vuex from 'vuex'
-import AlertAlert from '@/services/alertAlert'
+// import AlertAlert from '@/services/alertAlert'
 import * as VueGoogleMaps from 'vue2-google-maps'
 import App from './App'
 import router from './router'
@@ -32,13 +32,18 @@ import vmodal from 'vue-js-modal'
 import VueClipboard from 'vue-clipboard2'
 import { Drag, Drop } from 'vue-drag-drop';
 import outsideClickDirective from "@/services/directives/outside-click";
+import Toast from "vue-toastification";
+import "vue-toastification/dist/index.css";
+
+
 
 Vue.directive("outside-click", outsideClickDirective);
 Vue.config.productionTip = false
 
+Vue.use(Toast);
 Vue.use(VueClipboard)
 Vue.use(Vuex)
-Vue.use(AlertAlert)
+// Vue.use(AlertAlert)
 Vue.use(VueGoogleMaps, {
   load: {
     // NOTE (Bruno): Documentation for error-messages for this Google API:
