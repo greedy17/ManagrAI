@@ -254,10 +254,12 @@ export default {
         const res = await SObjects.api.removeExtraField({
           field_ids: [id],
         })
-        this.$Alert.alert({
+        this.$toast('Field removed successfully', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 1000,
-          message: 'Field removed successfully',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } catch (e) {
         console.log(e)

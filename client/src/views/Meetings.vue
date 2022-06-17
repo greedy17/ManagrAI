@@ -750,10 +750,12 @@ export default {
       } finally {
         setTimeout(() => {
           this.meetingLoading = false
-          this.$Alert.alert({
-            type: 'success',
+          this.$toast('Contact Added Successfully', {
             timeout: 2000,
-            message: 'Contact Added Successfully',
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         }, 500)
       }
@@ -826,11 +828,12 @@ export default {
         console.log(e)
       } finally {
         this.meetingLoading = false
-        this.$Alert.alert({
-          type: 'success',
+        this.$toast('Meeting logged Successfully', {
           timeout: 2000,
-          message: 'Meeting Logged successfully',
-          sub: 'No update necessary',
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
@@ -873,11 +876,12 @@ export default {
       } finally {
         this.updatingMeeting = false
         this.meetingLoading = false
-        this.$Alert.alert({
-          type: 'success',
+        this.$toast('Meeting logged Successfully', {
           timeout: 2000,
-          message: 'Meeting Logged successfully',
-          sub: 'Opportunity updated',
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
@@ -962,10 +966,12 @@ export default {
           })
         this.updateList = []
         this.formData = {}
-        this.$Alert.alert({
+        this.$toast('Salesforce Update Successful', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 1000,
-          message: 'Salesforce update successful!',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } catch (e) {
         console.log(e)
@@ -987,10 +993,12 @@ export default {
       } catch (e) {
         console.log(e)
       } finally {
-        this.$Alert.alert({
+        this.$toast('Opportunity created Successfully', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 1000,
-          message: 'Opportunity created successfully!',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },

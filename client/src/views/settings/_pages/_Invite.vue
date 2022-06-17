@@ -367,18 +367,22 @@ export default {
   },
   methods: {
     onCopy: function () {
-      this.$Alert.alert({
-        message: 'Link copied!',
+      this.$toast('Link copied.', {
+        timeout: 2000,
+        position: 'top-left',
         type: 'success',
-        timeout: 1000,
+        toastClassName: 'custom',
+        bodyClassName: ['custom'],
       })
       this.handleCancel()
     },
     onError: function () {
-      this.$Alert.alert({
-        message: 'error copying template',
-        type: 'error',
+      this.$toast('Error copying template', {
         timeout: 2000,
+        position: 'top-left',
+        type: 'error',
+        toastClassName: 'custom',
+        bodyClassName: ['custom'],
       })
     },
     mapMember() {
@@ -418,10 +422,12 @@ export default {
       this.userInviteForm.validate()
       if (!this.userInviteForm.isValid) {
         this.loading = false
-        this.$Alert.alert({
-          type: 'error',
-          message: 'Please check form errors',
+        this.$toast('Please check form for errors', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
         return
       }
@@ -432,20 +438,24 @@ export default {
         )[0].profile.email
         const res = await User.api.invite(this.userInviteForm.value)
         console.log(res)
-        this.$Alert.alert({
-          message: 'Your invitation was sent',
+        this.$toast('Invitation Sent', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 3000,
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
         await this.refresh()
         this.resetData()
       } catch (e) {
         let err = e.response.data
         if (err.email) {
-          this.$Alert.alert({
-            type: 'error',
-            message: `Looks like a ${err.email}`,
+          this.$toast('Emanil error', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         }
       } finally {
@@ -459,10 +469,12 @@ export default {
       this.userInviteForm.validate()
       if (!this.userInviteForm.isValid) {
         this.loading = false
-        this.$Alert.alert({
-          type: 'error',
-          message: 'Please check form errors',
+        this.$toast('Please check form for errors', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
         return
       }
@@ -470,18 +482,22 @@ export default {
       try {
         const res = await User.api.invite(this.userInviteForm.value)
         this.activationLink = res.data.activation_link_ref
-        this.$Alert.alert({
-          message: 'Invite link created successfully!',
+        this.$toast('Invite link created successfully', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 1000,
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
         await this.refresh()
         this.resetData()
       } catch (e) {
-        this.$Alert.alert({
-          type: 'error',
-          message: 'Error sending invite. Please try again',
+        this.$toast('Error sending invite', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } finally {
         this.loading = false

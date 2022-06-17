@@ -917,7 +917,12 @@
             "
           >
             <img src="@/assets/images/share.svg" class="invert2" style="height: 1rem" alt="" />
-            <img src="@/assets/images/close.svg" class="invert2" style="height: 1rem; margin-left: 0.5rem" alt="" />
+            <img
+              src="@/assets/images/close.svg"
+              class="invert2"
+              style="height: 1rem; margin-left: 0.5rem"
+              alt=""
+            />
           </div>
         </div>
 
@@ -1473,10 +1478,12 @@ export default {
         this.customForm.formType == FORM_CONSTS.MEETING_REVIEW
       ) {
         if (!this.meetingType.length && !this.actionChoices.length) {
-          this.$Alert.alert({
+          this.$toast('Please enter a meeting type', {
+            timeout: 2000,
+            position: 'top-left',
             type: 'error',
-            message: 'Please enter a Meeting Type',
-            timeout: 1000,
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
           return
         }
@@ -1496,10 +1503,12 @@ export default {
         })
         .then((res) => {
           this.$emit('update:selectedForm', res)
-          this.$Alert.alert({
+          this.$toast('Form added successfully', {
+            timeout: 2000,
+            position: 'top-left',
             type: 'success',
-            message: 'Form Added Succesfully!',
-            timeout: 1000,
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         })
         .finally(() => {
@@ -1582,10 +1591,12 @@ export default {
         this.customForm.formType == FORM_CONSTS.MEETING_REVIEW
       ) {
         if (!this.meetingType.length && !this.actionChoices.length) {
-          this.$Alert.alert({
+          this.$toast('Please enter a meeting type', {
+            timeout: 2000,
+            position: 'top-left',
             type: 'error',
-            message: 'Please enter a Meeting Type',
-            timeout: 1000,
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
           return
         }
@@ -1605,10 +1616,12 @@ export default {
         })
         .then((res) => {
           this.$emit('update:selectedForm', res)
-          this.$Alert.alert({
+          this.$toast('Form added successfully', {
+            timeout: 2000,
+            position: 'top-left',
             type: 'success',
-            message: 'Form Added Succesfully!',
-            timeout: 1000,
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         })
         .finally(() => {

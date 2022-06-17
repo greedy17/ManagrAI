@@ -528,6 +528,7 @@ export default {
   },
   mounted() {
     console.log(this.forecastOpps)
+    console.log(this.currentValues)
   },
   methods: {
     resetNotes() {
@@ -558,16 +559,20 @@ export default {
     async removeForecast() {
       try {
         await User.api.modifyForecast('remove', this.deleteIds)
-        this.$Alert.alert({
+        this.$toast('Opportunity Removed. Refresh to see changes', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 1500,
-          message: 'Opportunity removed. Refresh to see changes.',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } catch (e) {
-        this.$Alert.alert({
+        this.$toast('Error removing opportunity!', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'error',
-          timeout: 1500,
-          message: 'Error Removing Opportunity',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } finally {
         this.$store.dispatch('refreshCurrentUser')
@@ -578,16 +583,20 @@ export default {
     async modifyForecast(action) {
       try {
         await User.api.modifyForecast(action, this.addedOpportunities)
-        this.$Alert.alert({
+        this.$toast('Opportunity Added to Tracker', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 1500,
-          message: 'Opportunity added to Tracker.',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } catch (e) {
-        this.$Alert.alert({
+        this.$toast('Error adding opportunities', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'error',
-          timeout: 1500,
-          message: 'Error adding Opportunities',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } finally {
         this.$store.dispatch('refreshCurrentUser')
@@ -600,10 +609,12 @@ export default {
         this.allOpps = res.results
         // console.log(this.allOpps)
       } catch (e) {
-        this.$Alert.alert({
+        this.$toast('Error gathering opportunities', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'error',
-          timeout: 1500,
-          message: 'Error gathering your Opportunities',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
@@ -646,10 +657,12 @@ export default {
         this.forecasts = res2.length ? res2[0]['values'] : []
         this.forecasts ? (this.forecasts = this.forecasts.map((forecast) => forecast.value)) : []
       } catch (e) {
-        this.$Alert.alert({
+        this.$toast('Error gathering your stages', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'error',
-          timeout: 1500,
-          message: 'Error gathering your stages',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } finally {
         this.loading = false

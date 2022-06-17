@@ -105,6 +105,7 @@
               "
             >
               <p>{{ field.referenceDisplayLabel }}:</p>
+
               <Multiselect
                 v-model="currentVals[field.apiName]"
                 :options="
@@ -119,6 +120,11 @@
                       ? $event.value
                       : $event.id,
                   )
+                "
+                @search-change="
+                  field.dataType === 'Reference'
+                    ? getReferenceFieldList(field.apiName, field.id, 'create', $event)
+                    : null
                 "
                 openDirection="below"
                 style="width: 18vw"
@@ -1393,6 +1399,9 @@ export default {
     currentCheckList: 'addToForecastList',
   },
   methods: {
+    test(n) {
+      console.log(n)
+    },
     testBool(i) {
       console.log(i)
     },
@@ -1406,16 +1415,21 @@ export default {
     async modifyForecast(action) {
       try {
         await User.api.modifyForecast(action, this.forecastList)
-        this.$Alert.alert({
+
+        this.$toast('Opportunities added to Tracker.', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 1500,
-          message: 'Opportunities added to Tracker.',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } catch (e) {
-        this.$Alert.alert({
-          type: 'error',
-          timeout: 1500,
-          message: 'Error adding Opportunities',
+        this.$toast('Error adding opportunities.', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } finally {
         this.$store.dispatch('refreshCurrentUser')
@@ -1433,10 +1447,11 @@ export default {
       this.stageGateField = null
       this.stageFormOpen = false
     },
-    async getReferenceFieldList(key, val, type) {
+    async getReferenceFieldList(key, val, type, eventVal) {
       try {
         const res = await SObjects.api.getSobjectPicklistValues({
           sobject_id: val,
+          value: eventVal ? eventVal : '',
         })
         if (type === 'update') {
           this.referenceOpts[key] = res
@@ -1481,10 +1496,12 @@ export default {
           this.inlineLoader = false
           this.closeInline += 1
         }, 1500)
-        this.$Alert.alert({
+        this.$toast('Salesforce Update Successful', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 750,
-          message: 'Salesforce update successful!',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
@@ -2096,11 +2113,12 @@ export default {
           setTimeout(() => {
             this.loading = false
           }, 100)
-          this.$Alert.alert({
+          this.$toast('Daily sync complete', {
+            timeout: 2000,
+            position: 'top-left',
             type: 'success',
-            timeout: 3000,
-            message: 'Daily Sync complete',
-            sub: 'All fields reflect your current SFDC data',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         }
       }
@@ -2115,11 +2133,12 @@ export default {
         setTimeout(() => {
           this.loading = false
         }, 100)
-        this.$Alert.alert({
+        this.$toast('Sync complete', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 1500,
-          message: 'Sync complete',
-          sub: 'All fields reflect your current SFDC data',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
@@ -2146,10 +2165,12 @@ export default {
       } finally {
         this.closeStageForm()
         this.formData = {}
-        this.$Alert.alert({
+        this.$toast('Salesforce Update Successful', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 1000,
-          message: 'Salesforce update successful!',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
         this.dropdownLoading = false
       }
@@ -2183,10 +2204,12 @@ export default {
       } finally {
         this.updateList = []
         this.formData = {}
-        this.$Alert.alert({
+        this.$toast('Salesforce Update Successful', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 1000,
-          message: 'Salesforce update successful!',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
         this.closeFilterSelection()
       }
@@ -2207,10 +2230,12 @@ export default {
       } catch (e) {
         console.log(e)
       } finally {
-        this.$Alert.alert({
+        this.$toast('Opportunity created successfully.', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 1000,
-          message: 'Opportunity created successfully!',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
@@ -2521,8 +2546,10 @@ export default {
 </script>
 <style lang="scss" scoped>
 @import '@/styles/variables';
-@import '@/styles/buttons';
 
+// .Vue-Toastification__toast--success.custom {
+//   background-color: $dark-green;
+// }
 .adding-product {
   height: 3rem;
   margin: 1rem 0rem;

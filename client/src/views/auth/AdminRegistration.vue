@@ -179,7 +179,13 @@ export default {
 
       // Do not continue if the form has errors
       if (!this.registrationForm.isValid) {
-        this.$Alert.alert({ type: 'error', message: 'Please complete all the fields.' })
+        this.$toast('Please complete all fields.', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
         return
       }
       // Continue with user registration...
@@ -189,10 +195,12 @@ export default {
       try {
         user = await User.api.register(this.registrationForm)
       } catch (error) {
-        this.$Alert.alert({
-          type: 'error',
-          message: 'There was a problem creating your user account.',
+        this.$toast('There was a problem creating your account.', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
         throw error
       } finally {
