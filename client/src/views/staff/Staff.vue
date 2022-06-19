@@ -278,64 +278,232 @@
             <h3>Activated Managr Configs:</h3>
             <h4>{{user.activatedManagrConfigs}}</h4>
           </div>
-          <div class="user_item_container">
-            <h3>Slack ID:</h3>
-            <h4>{{user.slackRef.slackId}}</h4>
-          </div>
-          <div class="user_item_container">
-            <h3>Channel:</h3>
-            <h4>{{user.slackAccount.channel}}</h4>
-          </div>
-          <div class="user_item_container">
-            <h3>Organization Slack:</h3>
-            <!-- VV This is clearly wrong. Figure out where list of these are VV -->
-            <h4>{{user.organizationRef.slackIntegration}}</h4>
-          </div>
-          <div class="user_item_container">
-            <h3>Is Revoked:</h3>
-            <h4>???</h4>
-          </div>
-          <div class="user_item_container">
-            <h3>Is Onboarded:</h3>
-            <h4>{{user.onboarding}}</h4>
-          </div>
-          <div class="user_item_container">
-            <h3>Zoom Channel:</h3>
-            <div v-if="user.slackAccount.zoomChannel">
-              <h4>{{user.slackAccount.zoomChannel}}</h4>
+          <div>
+            <h2>User Slack Integrations</h2>
+            <div class="user_item_container">
+              <h3>Slack ID:</h3>
+              <h4>{{user.slackRef.slackId}}</h4>
             </div>
-            <div v-else>
-              <h4>null</h4>
+            <div class="user_item_container">
+              <h3>Channel:</h3>
+              <h4>{{user.slackAccount.channel}}</h4>
             </div>
-          </div>
-          <div class="user_item_container">
-            <h3>Recap Channel:</h3>
-            <div v-if="user.slackAccount.recapChannel">
-              <h4>{{user.slackAccount.recapChannel}}</h4>
+            <div class="user_item_container">
+              <h3>Organization Slack:</h3>
+              <!-- VV This is clearly wrong. Figure out where list of these are VV -->
+              <h4>{{user.organizationRef.slackIntegration}}</h4>
             </div>
-            <div v-else>
-              <h4>null</h4>
+            <!-- <div class="user_item_container">
+              <h3>Is Revoked:</h3>
+              <h4>???</h4>
+            </div> -->
+            <div class="user_item_container">
+              <h3>Is Onboarded:</h3>
+              <h4>{{user.onboarding}}</h4>
             </div>
-          </div>
-          <div class="user_item_container">
-            <h3>Recap Recievers:</h3>
-            <div v-if="user.slackAccount.recapReceivers.length">
-              <div v-for="(receiver) in user.slackAccount.recapReceivers" :key="receiver">
-                <h4>{{user.receiver}}</h4>
+            <div class="user_item_container">
+              <h3>Zoom Channel:</h3>
+              <div v-if="user.slackAccount.zoomChannel">
+                <h4>{{user.slackAccount.zoomChannel}}</h4>
+              </div>
+              <div v-else>
+                <h4>null</h4>
               </div>
             </div>
-            <div v-else>null</div>
-          </div>
-          <div class="user_item_container">
-            <h3>Recap Channel:</h3>
-            <div v-if="user.slackAccount.realtimeAlertConfigs.length">
-              <h4>{{user.slackAccountrealtimeAlertConfigs}}</h4>
+            <div class="user_item_container">
+              <h3>Recap Channel:</h3>
+              <div v-if="user.slackAccount.recapChannel">
+                <h4>{{user.slackAccount.recapChannel}}</h4>
+              </div>
+              <div v-else>
+                <h4>null</h4>
+              </div>
             </div>
-            <div v-else>
-              <h4>null</h4>
+            <div class="user_item_container">
+              <h3>Recap Recievers:</h3>
+              <div v-if="user.slackAccount.recapReceivers.length">
+                <div v-for="(receiver) in user.slackAccount.recapReceivers" :key="receiver">
+                  <h4>{{user.receiver}}</h4>
+                </div>
+              </div>
+              <div v-else>null</div>
+            </div>
+            <!-- <div class="user_item_container">
+              <h3>Recap Channel:</h3>
+              <div v-if="user.slackAccount.realtimeAlertConfigs.length">
+                <h4>{{user.slackAccountrealtimeAlertConfigs}}</h4>
+              </div>
+              <div v-else>
+                <h4>null</h4>
+              </div>
+            </div> -->
+          </div>
+          <div>
+            <h2>Salesforce ({{user.salesforceAccountRef.id}})</h2>
+            <div class="user_item_container">
+              <h3>SFDC ID:</h3>
+              <div v-if="user.salesforceAccountRef.salesforceId">
+                <h4>{{user.salesforceAccountRef.salesforceId}}</h4>
+              </div>
+              <div v-else>
+                <h4>null</h4>
+              </div>
+            </div>
+            <div class="user_item_container">
+              <h3>sobjects:</h3>
+              <div v-if="user.salesforceAccountRef.sobjects">
+                <h4>{{user.salesforceAccountRef.sobjects}}</h4>
+              </div>
+              <div v-else>
+                <h4>null</h4>
+              </div>
+            </div>
+            <div class="user_item_container">
+              <h3>Instance URL:</h3>
+              <div v-if="user.salesforceAccountRef.instanceUrl">
+                <h4>{{user.salesforceAccountRef.instanceUrl}}</h4>
+              </div>
+              <div v-else>
+                <h4>null</h4>
+              </div>
+            </div>
+            <div class="user_item_container">
+              <h3>Access Token:</h3>
+              <div v-if="user.salesforceAccountRef.accessToken">
+                <h4>{{user.salesforceAccountRef.accessToken}}</h4>
+              </div>
+              <div v-else>
+                <h4>null</h4>
+              </div>
             </div>
           </div>
           <div>
+            <h2>Nylas ({{user.nylasRef.id}})</h2>
+            <div class="user_item_container">
+              <h3>Access Token:</h3>
+              <div v-if="user.nylasRef.accessToken">
+                <h4>{{user.nylasRef.accessToken}}</h4>
+              </div>
+              <div v-else>
+                <h4>null</h4>
+              </div>
+            </div>
+            <div class="user_item_container">
+              <h3>Email:</h3>
+              <div v-if="user.nylasRef.emailAddress">
+                <h4>{{user.nylasRef.emailAddress}}</h4>
+              </div>
+              <div v-else>
+                <h4>null</h4>
+              </div>
+            </div>
+            <div class="user_item_container">
+              <h3>Event Calendar ID:</h3>
+              <div v-if="user.nylasRef.eventCalendarId">
+                <h4>{{user.nylasRef.eventCalendarId}}</h4>
+              </div>
+              <div v-else>
+                <h4>null</h4>
+              </div>
+            </div>
+            <div class="user_item_container">
+              <h3>Provider:</h3>
+              <div v-if="user.nylasRef.provider">
+                <h4>{{user.nylasRef.provider}}</h4>
+              </div>
+              <div v-else>
+                <h4>null</h4>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h2>Zoom (unfinished) ({{user.salesforceAccountRef.id}})</h2>
+            <div class="user_item_container">
+              <h3>SFDC ID:</h3>
+              <div v-if="user.salesforceAccountRef.salesforceId">
+                <h4>{{user.salesforceAccountRef.salesforceId}}</h4>
+              </div>
+              <div v-else>
+                <h4>null</h4>
+              </div>
+            </div>
+            <div class="user_item_container">
+              <h3>sobjects:</h3>
+              <div v-if="user.salesforceAccountRef.sobjects">
+                <h4>{{user.salesforceAccountRef.sobjects}}</h4>
+              </div>
+              <div v-else>
+                <h4>null</h4>
+              </div>
+            </div>
+            <div class="user_item_container">
+              <h3>Instance URL:</h3>
+              <div v-if="user.salesforceAccountRef.instanceUrl">
+                <h4>{{user.salesforceAccountRef.instanceUrl}}</h4>
+              </div>
+              <div v-else>
+                <h4>null</h4>
+              </div>
+            </div>
+            <div class="user_item_container">
+              <h3>Access Token:</h3>
+              <div v-if="user.salesforceAccountRef.accessToken">
+                <h4>{{user.salesforceAccountRef.accessToken}}</h4>
+              </div>
+              <div v-else>
+                <h4>null</h4>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h2>Slack Account ({{user.slackAccount.slackId}})</h2>
+            <div class="user_item_container">
+              <h3>Slack ID:</h3>
+              <div v-if="user.slackAccount.slackId">
+                <h4>{{user.slackAccount.slackId}}</h4>
+              </div>
+              <div v-else>
+                <h4>null</h4>
+              </div>
+            </div>
+            <div class="user_item_container">
+              <h3>Channel:</h3>
+              <div v-if="user.slackAccount.channel">
+                <h4>{{user.slackAccount.channel}}</h4>
+              </div>
+              <div v-else>
+                <h4>null</h4>
+              </div>
+            </div>
+            <div class="user_item_container">
+              <h3>Zoom Channel:</h3>
+              <div v-if="user.slackAccount.zoomChannel">
+                <h4>{{user.slackAccount.zoomChannel}}</h4>
+              </div>
+              <div v-else>
+                <h4>null</h4>
+              </div>
+            </div>
+            <div class="user_item_container">
+              <h3>Recap Receivers:</h3>
+              <div v-if="user.slackAccount.recapReceivers">
+                <h4>{{user.slackAccount.recapReceivers}}</h4>
+              </div>
+              <div v-else>
+                <h4>null</h4>
+              </div>
+            </div>
+            <div class="user_item_container">
+              <h3>Real Time Alert Configs:</h3>
+              <div v-if="user.slackAccount.realtimeAlertConfigs">
+                <h4>{{user.slackAccount.realtimeAlertConfigs}}</h4>
+              </div>
+              <div v-else>
+                <h4>null</h4>
+              </div>
+            </div>
+          </div>
+          <!-- <div>
             <div class="user_item_container">
               <h3>Zoom ID:</h3>
               <h4>???</h4>
@@ -426,7 +594,7 @@
               <h3>Team ID:</h3>
               <h4>???</h4>
             </div>
-          </div>
+          </div> -->
         </div>
       </template>
       <template v-else-if="page === 'SlackForm'">
@@ -455,7 +623,7 @@
             </div>
             <div class="user_item_container">
               <h3>Stage</h3>
-              <h4>{{slackForm.stage ? slackForm.stage : 'Null'}}</h4>
+              <h4>{{slackForm.stage ? slackForm.stage : 'null'}}</h4>
             </div>
           </div>
           <div>
@@ -846,6 +1014,7 @@ input[type='search']:focus {
 
   h4 {
     margin: .25rem .5rem;
+    overflow-wrap: break-word;
   }
 }
 .back {
