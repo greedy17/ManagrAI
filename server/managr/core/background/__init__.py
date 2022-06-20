@@ -406,6 +406,7 @@ def meeting_prep(processed_data, user_id):
         provider = processed_data.get("provider")
         # Conditional Check for Zoom meeting or Non-Zoom Meeting
         meeting_workflow = MeetingWorkflow.objects.create(
+            operation_type="MEETING_REVIEW",
             meeting=meeting,
             user=user,
             resource_id=meeting_resource_data["resource_id"],

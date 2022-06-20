@@ -885,8 +885,13 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     def update_workflow(self, request, *args, **kwargs):
         request_data = self.request.data
         user = request.user
+        stage_form_ids = request_data.get("stage_form_id", None)
         workflow = MeetingWorkflow.objects.get(id=request_data.get("workflow_id"))
-        forms = OrgCustomSlackFormInstance.objects.filter(id__in=request_data.get("stage_form_id"))
+        forms = (
+            OrgCustomSlackFormInstance.objects.filter(id__in=request_data.get("stage_form_id"))
+            if stage_form_ids
+            else []
+        )
         current_form_ids = []
         main_form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
         current_form_ids.append(str(main_form.id))
