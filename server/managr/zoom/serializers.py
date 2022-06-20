@@ -31,6 +31,7 @@ class ZoomAuthSerializer(serializers.ModelSerializer):
             "refresh_token",
             "token_generated_date",
             "token_scope",
+            "fake_meeting_id",
         )
 
 

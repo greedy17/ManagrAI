@@ -422,29 +422,29 @@
             </div>
           </div>
           <div>
-            <h2>Zoom (unfinished) ({{user.salesforceAccountRef.id}})</h2>
+            <h2>Zoom ({{user.zoomRef.id}})</h2>
             <div class="user_item_container">
-              <h3>SFDC ID:</h3>
-              <div v-if="user.salesforceAccountRef.salesforceId">
-                <h4>{{user.salesforceAccountRef.salesforceId}}</h4>
+              <h3>Zoom ID:</h3>
+              <div v-if="user.zoomRef.zoomId">
+                <h4>{{user.zoomRef.zoomId}}</h4>
               </div>
               <div v-else>
                 <h4>null</h4>
               </div>
             </div>
             <div class="user_item_container">
-              <h3>sobjects:</h3>
-              <div v-if="user.salesforceAccountRef.sobjects">
-                <h4>{{user.salesforceAccountRef.sobjects}}</h4>
+              <h3>Timezone:</h3>
+              <div v-if="user.zoomRef.timezone">
+                <h4>{{user.zoomRef.timezone}}</h4>
               </div>
               <div v-else>
                 <h4>null</h4>
               </div>
             </div>
             <div class="user_item_container">
-              <h3>Instance URL:</h3>
-              <div v-if="user.salesforceAccountRef.instanceUrl">
-                <h4>{{user.salesforceAccountRef.instanceUrl}}</h4>
+              <h3>Account ID:</h3>
+              <div v-if="user.zoomRef.accountId">
+                <h4>{{user.zoomRef.accountId}}</h4>
               </div>
               <div v-else>
                 <h4>null</h4>
@@ -452,8 +452,17 @@
             </div>
             <div class="user_item_container">
               <h3>Access Token:</h3>
-              <div v-if="user.salesforceAccountRef.accessToken">
-                <h4>{{user.salesforceAccountRef.accessToken}}</h4>
+              <div v-if="user.zoomRef.accessToken">
+                <h4>{{user.zoomRef.accessToken}}</h4>
+              </div>
+              <div v-else>
+                <h4>null</h4>
+              </div>
+            </div>
+            <div class="user_item_container">
+              <h3>Fake Meeting ID:</h3>
+              <div v-if="user.zoomRef.fakeMeetingId">
+                <h4>{{user.zoomRef.fakeMeetingId}}</h4>
               </div>
               <div v-else>
                 <h4>null</h4>
