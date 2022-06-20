@@ -789,6 +789,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         meetings = MeetingWorkflow.objects.filter(
             Q(user=user, datetime_created__range=(start, end))
         ).order_by("-datetime_created")
+        print(meetings)
         logger.info(f"Pulled workflow for user {user.full_name}: {len(meetings)}")
         return meetings
 
@@ -823,7 +824,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
 
         request_data = self.request.data
         workflow = MeetingWorkflow.objects.get(id=request_data.get("workflow_id"))
-        meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
+        meeting = workflow.meeting
         contact = dict(
             *filter(
                 lambda contact: contact["_tracking_id"] == request_data.get("tracking_id"),
@@ -883,7 +884,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     def remove_participant(self, request, *args, **kwargs):
         request_data = self.request.data
         workflow = MeetingWorkflow.objects.get(id=request_data.get("workflow_id"))
-        meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
+        meeting = workflow.meeting
         for i, part in enumerate(meeting.participants):
             if part["_tracking_id"] == request_data.get("tracking_id"):
                 # remove its form if it exists

@@ -517,8 +517,7 @@ def process_no_changes_made(payload, context):
 @processor(required_context=["w", "tracking_id"])
 def process_remove_contact_from_meeting(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
-    type = "zoom" if workflow.meeting else "non-zoom"
+    meeting = workflow.meeting
     org = workflow.user.organization
     access_token = org.slack_integration.access_token
     for i, part in enumerate(meeting.participants):
@@ -529,7 +528,7 @@ def process_remove_contact_from_meeting(payload, context):
             del meeting.participants[i]
             break
     meeting.save()
-    if check_contact_last_name(workflow.id, type):
+    if check_contact_last_name(workflow.id):
         update_res = slack_requests.update_channel_message(
             context.get("original_message_channel"),
             context.get("original_message_timestamp"),

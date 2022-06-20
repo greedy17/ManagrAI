@@ -829,7 +829,7 @@ def process_update_meeting_contact(payload, context):
         form = OrgCustomSlackFormInstance.objects.get(id=contact["_form"])
     else:
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-        meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
+        meeting = workflow.meeting
         contact = dict(
             *filter(
                 lambda contact: contact["_tracking_id"] == context.get("tracking_id"),
@@ -894,8 +894,7 @@ def process_update_meeting_contact(payload, context):
             "original_message_channel": context.get("original_message_channel"),
             "original_message_timestamp": context.get("original_message_timestamp"),
         }
-        meeting_type = "zoom" if workflow.meeting else "non-zoom"
-        if check_contact_last_name(workflow.id, meeting_type):
+        if check_contact_last_name(workflow.id):
             update_res = slack_requests.update_channel_message(
                 context.get("original_message_channel"),
                 context.get("original_message_timestamp"),
