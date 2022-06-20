@@ -134,10 +134,15 @@
                 placeholder="Ignore Emails" 
                 @keyup.enter="ignoreEmail"
               />
-              <p>{{ignoreEmailText}}</p>
+              <!-- <p>{{ignoreEmailText}}</p> -->
               <div v-for="email in ignoreEmails" :key="email">
-                
-                <div>{{email}}</div>
+                <div v-if="!newIgnoreEmails.includes(email)" class="email_text_container">
+                  <div class="removed_email">{{email}}</div>
+                </div>
+                <div v-else class="email_text_container">
+                  <div>{{email}}</div>
+                  <div @click="removeEmail(email)" style="cursor: pointer;">X</div>
+                </div>
               </div>
             </div>
             <div>
@@ -147,7 +152,7 @@
                 v-model="hasProducts" 
               />
             </div>
-            <button class="green_button" @click="postOrgUpdates({ignore_emails: ignoreEmails, has_products: hasProducts, state_active: stateActive, org_id: selected_org ? selected_org.id : old_selected_org.id})">Go</button>
+            <button class="green_button" @click="postOrgUpdates({ignore_emails: newIgnoreEmails, has_products: hasProducts, state_active: stateActive, org_id: selected_org ? selected_org.id : old_selected_org.id})">Save Changes</button>
           </div>
           
 
@@ -417,29 +422,29 @@
             </div>
           </div>
           <div>
-            <h2>Zoom (unfinished) ({{user.salesforceAccountRef.id}})</h2>
+            <h2>Zoom ({{user.zoomRef.id}})</h2>
             <div class="user_item_container">
-              <h3>SFDC ID:</h3>
-              <div v-if="user.salesforceAccountRef.salesforceId">
-                <h4>{{user.salesforceAccountRef.salesforceId}}</h4>
+              <h3>Zoom ID:</h3>
+              <div v-if="user.zoomRef.zoomId">
+                <h4>{{user.zoomRef.zoomId}}</h4>
               </div>
               <div v-else>
                 <h4>null</h4>
               </div>
             </div>
             <div class="user_item_container">
-              <h3>sobjects:</h3>
-              <div v-if="user.salesforceAccountRef.sobjects">
-                <h4>{{user.salesforceAccountRef.sobjects}}</h4>
+              <h3>Timezone:</h3>
+              <div v-if="user.zoomRef.timezone">
+                <h4>{{user.zoomRef.timezone}}</h4>
               </div>
               <div v-else>
                 <h4>null</h4>
               </div>
             </div>
             <div class="user_item_container">
-              <h3>Instance URL:</h3>
-              <div v-if="user.salesforceAccountRef.instanceUrl">
-                <h4>{{user.salesforceAccountRef.instanceUrl}}</h4>
+              <h3>Account ID:</h3>
+              <div v-if="user.zoomRef.accountId">
+                <h4>{{user.zoomRef.accountId}}</h4>
               </div>
               <div v-else>
                 <h4>null</h4>
@@ -447,8 +452,17 @@
             </div>
             <div class="user_item_container">
               <h3>Access Token:</h3>
-              <div v-if="user.salesforceAccountRef.accessToken">
-                <h4>{{user.salesforceAccountRef.accessToken}}</h4>
+              <div v-if="user.zoomRef.accessToken">
+                <h4>{{user.zoomRef.accessToken}}</h4>
+              </div>
+              <div v-else>
+                <h4>null</h4>
+              </div>
+            </div>
+            <div class="user_item_container">
+              <h3>Fake Meeting ID:</h3>
+              <div v-if="user.zoomRef.fakeMeetingId">
+                <h4>{{user.zoomRef.fakeMeetingId}}</h4>
               </div>
               <div v-else>
                 <h4>null</h4>
@@ -702,6 +716,7 @@ export default {
       stateActive: null, // change to whatever info is coming in
       ignoreEmailText: '',
       ignoreEmails: [], // change to whatever info is coming in
+      newIgnoreEmails: [],
       hasProducts: false, // change to whatever info is coming in
       allForms: null,
       allMeetingWorkflows: null,
@@ -724,6 +739,7 @@ export default {
     this.stateActive = this.user.organizationRef.state;
     this.hasProducts = this.user.organizationRef.hasProducts;
     this.ignoreEmails = this.user.organizationRef.ignoreEmailRef;
+    this.newIgnoreEmails = this.ignoreEmails;
     console.log('this.stateActive', this.user)
   },
   methods: {
@@ -785,8 +801,9 @@ export default {
         return console.log('Please enter a valid email')
       }
       this.ignoreEmails.push(this.ignoreEmailText);
+      this.newIgnoreEmails.push(this.ignoreEmailText);
       this.ignoreEmailText = '';
-      console.log('ignoreEmails', this.ignoreEmails, Array.isArray(this.ignoreEmails));
+      console.log('ignoreEmails', this.newIgnoreEmails, Array.isArray(this.ignoreEmails));
     },
     checkEmail() {
       let symbol = false;
@@ -811,6 +828,9 @@ export default {
         }
       }
       return false;
+    },
+    removeEmail(email) {
+      this.newIgnoreEmails = this.newIgnoreEmails.filter(em => em !== email)
     },
     goBack() {
       this.selected_org = this.old_selected_org;
@@ -1060,5 +1080,16 @@ input[type='search']:focus {
     height: 8vh;
     padding: 0.5rem;
   }
+}
+
+.email_text_container{
+  display: flex;
+  div {
+    margin: .5rem .5rem .5rem 0;
+  }
+}
+.removed_email {
+  text-decoration: line-through;
+  color: $very-light-gray;
 }
 </style>
