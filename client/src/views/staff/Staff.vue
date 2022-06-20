@@ -134,10 +134,15 @@
                 placeholder="Ignore Emails" 
                 @keyup.enter="ignoreEmail"
               />
-              <p>{{ignoreEmailText}}</p>
+              <!-- <p>{{ignoreEmailText}}</p> -->
               <div v-for="email in ignoreEmails" :key="email">
-                
-                <div>{{email}}</div>
+                <div v-if="!newIgnoreEmails.includes(email)" class="email_text_container">
+                  <div class="removed_email">{{email}}</div>
+                </div>
+                <div v-else class="email_text_container">
+                  <div>{{email}}</div>
+                  <div @click="removeEmail(email)" style="cursor: pointer;">X</div>
+                </div>
               </div>
             </div>
             <div>
@@ -147,7 +152,7 @@
                 v-model="hasProducts" 
               />
             </div>
-            <button class="green_button" @click="postOrgUpdates({ignore_emails: ignoreEmails, has_products: hasProducts, state_active: stateActive, org_id: selected_org ? selected_org.id : old_selected_org.id})">Go</button>
+            <button class="green_button" @click="postOrgUpdates({ignore_emails: newIgnoreEmails, has_products: hasProducts, state_active: stateActive, org_id: selected_org ? selected_org.id : old_selected_org.id})">Save Changes</button>
           </div>
           
 
@@ -702,6 +707,7 @@ export default {
       stateActive: null, // change to whatever info is coming in
       ignoreEmailText: '',
       ignoreEmails: [], // change to whatever info is coming in
+      newIgnoreEmails: [],
       hasProducts: false, // change to whatever info is coming in
       allForms: null,
       allMeetingWorkflows: null,
@@ -724,6 +730,7 @@ export default {
     this.stateActive = this.user.organizationRef.state;
     this.hasProducts = this.user.organizationRef.hasProducts;
     this.ignoreEmails = this.user.organizationRef.ignoreEmailRef;
+    this.newIgnoreEmails = this.ignoreEmails;
     console.log('this.stateActive', this.user)
   },
   methods: {
@@ -785,8 +792,9 @@ export default {
         return console.log('Please enter a valid email')
       }
       this.ignoreEmails.push(this.ignoreEmailText);
+      this.newIgnoreEmails.push(this.ignoreEmailText);
       this.ignoreEmailText = '';
-      console.log('ignoreEmails', this.ignoreEmails, Array.isArray(this.ignoreEmails));
+      console.log('ignoreEmails', this.newIgnoreEmails, Array.isArray(this.ignoreEmails));
     },
     checkEmail() {
       let symbol = false;
@@ -811,6 +819,9 @@ export default {
         }
       }
       return false;
+    },
+    removeEmail(email) {
+      this.newIgnoreEmails = this.newIgnoreEmails.filter(em => em !== email)
     },
     goBack() {
       this.selected_org = this.old_selected_org;
@@ -1060,5 +1071,16 @@ input[type='search']:focus {
     height: 8vh;
     padding: 0.5rem;
   }
+}
+
+.email_text_container{
+  display: flex;
+  div {
+    margin: .5rem .5rem .5rem 0;
+  }
+}
+.removed_email {
+  text-decoration: line-through;
+  color: $very-light-gray;
 }
 </style>
