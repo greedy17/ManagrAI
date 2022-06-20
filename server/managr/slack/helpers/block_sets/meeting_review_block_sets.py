@@ -698,7 +698,7 @@ def create_modal_block_set(context, *args, **kwargs):
 def disregard_meeting_review_block_set(context, *args, **kwargs):
     """Shows a modal to create/select a resource"""
     w = MeetingWorkflow.objects.get(id=context.get("w"))
-    topic = w.meeting.topic if w.meeting else w.non_zoom_meeting.event_data["title"]
+    topic = w.meeting.topic
     blocks = [
         block_builders.section_with_button_block(
             "Review",

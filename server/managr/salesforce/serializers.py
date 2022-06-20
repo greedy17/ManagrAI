@@ -3,7 +3,7 @@ from rest_framework.exceptions import ValidationError, PermissionDenied
 
 from managr.zoom.serializers import ZoomMeetingSerializer
 from managr.slack.models import OrgCustomSlackFormInstance
-from managr.meetings.serializers import MeetingSerializer
+from managr.meetings.serializers import MeetingFrontendSerializer
 from .models import (
     MeetingWorkflow,
     SalesforceAuthAccount,
@@ -121,7 +121,7 @@ class SObjectPicklistSerializer(serializers.ModelSerializer):
 
 
 class MeetingWorkflowSerializer(serializers.ModelSerializer):
-    meeting_ref = MeetingSerializer(many=False, source="meeting", read_only=True)
+    meeting_ref = MeetingFrontendSerializer(many=False, source="meeting", read_only=True)
     is_completed = serializers.SerializerMethodField("get_completed_status")
 
     class Meta:

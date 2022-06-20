@@ -160,13 +160,8 @@ def process_zoom_meeting_data(payload, context):
         form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
         current_form_ids.append(str(form.id))
         form.save_form(state)
-    if workflow.meeting:
-        contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
-    else:
-        contact_ids = [
-            participant["_form"] for participant in workflow.non_zoom_meeting.participants
-        ]
-        contact_forms = OrgCustomSlackFormInstance.objects.filter(id__in=contact_ids)
+    contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
+
     ops = [
         # update
         f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}",

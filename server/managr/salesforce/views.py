@@ -841,30 +841,18 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             "id": contact.get("id", None),
             "__has_changes": True,
         }
-        if workflow.non_zoom_meeting is not None:
-            part_index = None
-            for index, participant in enumerate(workflow.participants):
-                if participant["_tracking_id"] == new_contact["_tracking_id"]:
-                    part_index = index
-                    break
-            workflow.participants = [
-                *workflow.participants[:part_index],
-                new_contact,
-                *workflow.participants[part_index + 1 :],
-            ]
-            workflow.save()
-        else:
-            part_index = None
-            for index, participant in enumerate(meeting.participants):
-                if participant["_tracking_id"] == new_contact["_tracking_id"]:
-                    part_index = index
-                    break
-            meeting.participants = [
-                *meeting.participants[:part_index],
-                new_contact,
-                *meeting.participants[part_index + 1 :],
-            ]
-            meeting.save()
+
+        part_index = None
+        for index, participant in enumerate(meeting.participants):
+            if participant["_tracking_id"] == new_contact["_tracking_id"]:
+                part_index = index
+                break
+        meeting.participants = [
+            *meeting.participants[:part_index],
+            new_contact,
+            *meeting.participants[part_index + 1 :],
+        ]
+        meeting.save()
         data = meeting.participants
         return Response(data=data)
 
@@ -910,15 +898,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
                 form.save_form(request_data.get("form_data"), False)
 
         # otherwise we save the meeting review form
-        if workflow.meeting:
-            contact_forms = workflow.forms.filter(
-                template__resource=slack_const.FORM_RESOURCE_CONTACT
-            )
-        else:
-            contact_ids = [
-                participant["_form"] for participant in workflow.non_zoom_meeting.participants
-            ]
-            contact_forms = OrgCustomSlackFormInstance.objects.filter(id__in=contact_ids)
+        contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
         ops = [
             f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}",
             f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}",
