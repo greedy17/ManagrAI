@@ -16,7 +16,6 @@
 </template>
 
 <script>
-
 export default {
   name: 'LeadershipCode',
   data() {
@@ -31,10 +30,12 @@ export default {
       if (this.code === this.leadershipCode) {
         this.$router.push({ name: 'AdminRegistration', params: { validCode: true } })
       } else {
-        this.$Alert.alert({
-          type: 'error',
-          message: 'Invalid Leadership Code, please try again.',
+        this.$toast('Invalid Leadership code. please try again', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },

@@ -533,9 +533,6 @@ def process_submit_resource_data(payload, context):
             )
 
     else:
-        current_forms.update(
-            is_submitted=True, update_source="command", submission_date=timezone.now()
-        )
         form_id = current_form_ids[0]
         # update the channel message to clear it
         if main_form.template.form_type == "CREATE":
@@ -2355,6 +2352,8 @@ def process_submit_alert_resource_data(payload, context):
     user = User.objects.get(id=context.get("u"))
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
+    alert_id = context.get("alert_id", None)
+    alert = AlertInstance.objects.filter(id=alert_id).first()
     external_id = payload.get("view", {}).get("external_id", None)
     try:
         view_type, __unique_id = external_id.split(".")
@@ -2524,6 +2523,7 @@ def process_submit_alert_resource_data(payload, context):
     current_forms.update(is_submitted=True, update_source="alert", submission_date=timezone.now())
     if len(user.slack_integration.realtime_alert_configs):
         _send_instant_alert(current_form_ids)
+    user.activity.add_workflow_activity(str(main_form.id), alert.template.title)
     emit_update_slack_message(context, str(main_form.id))
     return {"response_action": "clear"}
 

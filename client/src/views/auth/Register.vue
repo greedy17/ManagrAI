@@ -114,7 +114,7 @@
         </template>
       </template>
       <template v-else>
-        <ComponentLoadingSVG />
+        <p>...</p>
       </template>
     </div>
   </div>
@@ -124,7 +124,6 @@
 import User, { RepRegistrationForm } from '@/services/users'
 import Button from '@thinknimble/button'
 import FormField from '@/components/forms/FormField'
-import ComponentLoadingSVG from '@/components/ComponentLoadingSVG'
 import moment from 'moment-timezone'
 
 export default {
@@ -132,7 +131,6 @@ export default {
   components: {
     Button,
     FormField,
-    ComponentLoadingSVG,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {
@@ -177,10 +175,12 @@ export default {
         this.organization = res.data.organization
       } catch (e) {
         this.errorValidatingEmail = true
-        this.$Alert.alert({
+        this.$toast('Unable to retrieve email', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'error',
-          timeout: 3000,
-          message: 'Unable to retrieve email',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } finally {
         this.isLoading = false
@@ -191,10 +191,12 @@ export default {
 
       // Do not continue if the form has errors
       if (!this.registrationForm.isValid) {
-        this.$Alert.alert({
+        this.$toast('Please complete all fields', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'error',
-          message: 'Please complete all the fields.',
-          timeout: 3000,
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
         return
       }
@@ -207,9 +209,12 @@ export default {
         user = await User.api.activate(this.userId, this.token, this.registrationForm)
         console.log(this.registrationForm)
       } catch (error) {
-        this.$Alert.alert({
+        this.$toast('There was a problem creating your account.', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'error',
-          message: 'There was a problem creating your user account.',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
         throw error
       } finally {
@@ -342,5 +347,8 @@ button {
 a {
   color: $dark-green;
   font-weight: bold;
+}
+::v-deep .input-content {
+  border: 1px solid #e8e8e8;
 }
 </style>

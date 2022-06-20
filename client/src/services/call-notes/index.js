@@ -1,4 +1,4 @@
-import moment from 'moment'
+import moment from 'moment/src/moment'
 import CallNoteAPI from '@/services/call-notes/api'
 import { objectToCamelCase, objectToSnakeCase } from '@thinknimble/tn-utils'
 

@@ -18,52 +18,32 @@ import 'babel-polyfill'
 
 import Vue from 'vue'
 import Vuex from 'vuex'
-import AlertAlert from '@/services/alertAlert'
-import VueMask from 'v-mask'
+// import AlertAlert from '@/services/alertAlert'
 import * as VueGoogleMaps from 'vue2-google-maps'
-import VueSanitize from 'vue-sanitize'
-
 import App from './App'
 import router from './router'
 import store from './store'
 
 // global components
-import PageLoadingSVG from '@/components/PageLoadingSVG'
-import ComponentLoadingSVG from '@/components/ComponentLoadingSVG'
 import Modal from '@/components/Modal'
-// filters
-// import { currencyFilter, currencyFilterNoCents } from '@/services/currency'
-import { formatDateShort, constantToCapitalized } from '@/services/utils'
-import {
-  formatDateShortWithTime,
-  momentDateTime,
-  momentDateShort,
-  momentDateTimeShort,
-  timeAgo,
-  toNumberSuffix,
-  timeToNow,
-  prependUrlProtocol,
-  roundToOneDecimalPlace,
-  snakeCaseToTextFilter,
-  timeOnlyShort,
-  toCapitalCase,
-} from '@/services/filters'
-
 import { Datetime } from 'vue-datetime'
 import 'vue-datetime/dist/vue-datetime.css'
 import vmodal from 'vue-js-modal'
 import VueClipboard from 'vue-clipboard2'
 import { Drag, Drop } from 'vue-drag-drop';
 import outsideClickDirective from "@/services/directives/outside-click";
+import Toast from "vue-toastification";
+import "vue-toastification/dist/index.css";
+
+
 
 Vue.directive("outside-click", outsideClickDirective);
 Vue.config.productionTip = false
 
+Vue.use(Toast);
 Vue.use(VueClipboard)
 Vue.use(Vuex)
-Vue.use(AlertAlert)
-Vue.use(VueSanitize)
-Vue.use(VueMask)
+// Vue.use(AlertAlert)
 Vue.use(VueGoogleMaps, {
   load: {
     // NOTE (Bruno): Documentation for error-messages for this Google API:
@@ -73,35 +53,11 @@ Vue.use(VueGoogleMaps, {
   },
 })
 
-Vue.filter('momentDateTime', momentDateTime)
-Vue.filter('momentDateTimeShort', momentDateTimeShort)
-Vue.filter('momentDateShort', momentDateShort)
-// Vue.filter('currency', currencyFilter)
-// Vue.filter('currencyNoCents', currencyFilterNoCents)
-Vue.filter('dateShort', formatDateShort)
-Vue.filter('timeAgo', timeAgo)
-Vue.filter('timeToNow', timeToNow)
-Vue.filter('prependUrlProtocol', prependUrlProtocol)
-Vue.filter('dateShortWithTime', formatDateShortWithTime)
-Vue.filter('constantToCapitalized', constantToCapitalized)
-Vue.filter('roundToOneDecimalPlace', roundToOneDecimalPlace)
-Vue.filter('snakeCaseToTextFilter', snakeCaseToTextFilter)
-Vue.filter('timeOnlyShort', timeOnlyShort)
-Vue.filter('capitalCase', toCapitalCase)
-Vue.filter('numberSuffix', toNumberSuffix)
-
-Vue.filter('pluralize', function (value, number) {
-  return pluralize(value, number)
-})
-
 Vue.component('drag', Drag);
 Vue.component('drop', Drop);
-Vue.component('PageLoadingSVG', PageLoadingSVG)
-Vue.component('ComponentLoadingSVG', ComponentLoadingSVG)
 Vue.component('Modal', Modal)
-
 Vue.component('datetime', Datetime)
-Vue.component('vue-multiselect', window.VueMultiselect.default)
+Vue.component('vue-multiselect')
 Vue.use(vmodal)
 
 

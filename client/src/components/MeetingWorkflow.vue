@@ -1,18 +1,18 @@
 <template>
   <div class="table-row">
     <div class="table-cell">
-      <div v-if="!meeting.event_data">
-        <div>
-          <p style="letter-spacing: 0.25px; font-size: 12px; margin-bottom: 3px">
-            {{ meeting.topic ? meeting.topic : 'Meeting' }}
-          </p>
-          <span style="color: #9b9b9b; font-size: 11px">
-            Time: {{ meeting.start_time ? formatDateTimeToTime(meeting.start_time) : '' }}
-          </span>
-        </div>
+      <!-- <div v-if="!meeting.event_data"> -->
+      <div>
+        <p style="letter-spacing: 0.25px; font-size: 12px; margin-bottom: 3px">
+          {{ meeting.topic ? meeting.topic : 'Meeting' }}
+        </p>
+        <span style="color: #9b9b9b; font-size: 11px">
+          Time: {{ meeting.start_time ? formatDateTimeToTime(meeting.start_time) : '' }}
+        </span>
       </div>
+    </div>
 
-      <div v-else>
+    <!-- <div v-else>
         <div>
           <p style="letter-spacing: 0.25px; font-size: 15px; margin-bottom: 3px">
             {{ meeting.event_data.title }}
@@ -22,7 +22,7 @@
           </span>
         </div>
       </div>
-    </div>
+    </div> -->
     <div class="table-cell">
       {{ meeting.participants.length }}
     </div>
@@ -48,7 +48,7 @@
             <img
               @click="addContact(participantIndex)"
               class="contact-img"
-              src="@/assets/images/add-contact.png"
+              src="@/assets/images/add-contact.svg"
               alt=""
             />
           </span>
@@ -68,7 +68,7 @@
             />
           </span>
           <span v-if="meeting.participants[participantIndex].__has_changes">
-            <img class="filter" src="@/assets/images/profile.png" alt="" />
+            <img class="filter" src="@/assets/images/profile.svg" alt="" />
           </span>
         </div>
 
@@ -92,7 +92,7 @@
               Add <span>"{{ meeting.participants[participantIndex].email }}"</span> to your Contacts
             </p>
             <img
-              src="@/assets/images/closer.png"
+              src="@/assets/images/close.svg"
               style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
               @click="addingContact = !addingContact"
             />
@@ -278,7 +278,7 @@
               Remove <span>"{{ meeting.participants[participantIndex].email }}"</span>
             </p>
             <img
-              src="@/assets/images/closer.png"
+              src="@/assets/images/close.svg"
               style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
               @click="removingParticipant = !removingParticipant"
             />
@@ -308,16 +308,20 @@
     </div>
 
     <div class="table-cell">
-      <p
-        class="roww"
-        @click="addingOpp = !addingOpp"
-        v-if="resourceId && resourceType === 'Opportunity' && !meetingUpdated"
-      >
+      <p class="roww" v-if="resourceId && resourceType === 'Opportunity' && !meetingUpdated">
         {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
         <img
+          @click="addingOpp = !addingOpp"
+          style="margin-left: 0.5rem; margin-right: 0.5rem; cursor: pointer"
+          height="12px"
+          src="@/assets/images/edit.svg"
+          alt=""
+        />
+        <img
+          @click="emitGetNotes(resourceId)"
+          src="@/assets/images/white-note.svg"
           class="invert"
-          style="height: 0.6rem; margin-left: 0.2rem"
-          src="@/assets/images/edit.png"
+          height="14px"
           alt=""
         />
       </p>
@@ -335,7 +339,7 @@
         <div class="add-field-section__title">
           <p>Map to Opportunity</p>
           <img
-            src="@/assets/images/closer.png"
+            src="@/assets/images/close.svg"
             style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
             @click="addingOpp = !addingOpp"
           />
@@ -387,7 +391,7 @@
           <div class="noupdate-field-section__title">
             <p>No Update Needed</p>
             <img
-              src="@/assets/images/closer.png"
+              src="@/assets/images/close.svg"
               style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
               @click="noUpdate = !noUpdate"
             />
@@ -408,7 +412,7 @@
       </div>
     </div>
     <div v-else class="table-cell">
-      <p class="success">Meeting Logged <img src="@/assets/images/complete.png" alt="" /></p>
+      <p class="success">Meeting Logged <img src="@/assets/images/complete.svg" alt="" /></p>
     </div>
   </div>
 </template>
@@ -468,6 +472,9 @@ export default {
     }
   },
   methods: {
+    emitGetNotes(id) {
+      this.$emit('get-notes', id)
+    },
     async getCurrentVals() {
       try {
         const res = await SObjects.api.createFormInstance({
@@ -519,7 +526,7 @@ export default {
       let noAmPm = newTime.replace(amPm, '')
       let noAmPmSeconds = noAmPm.replace(':', ' ')
 
-      if (parseInt(hour) < 9) {
+      if (parseInt(hour) < 10) {
         newTime = '0' + newTime
         noAmPm = '0' + noAmPm
         noSeconds = '0' + noSeconds
@@ -527,7 +534,7 @@ export default {
       }
       noSeconds = noSeconds.replace(' ', ':')
       noSeconds = noSeconds.split(':')
-      noSeconds = noSeconds[0] + noSeconds[1]
+      noSeconds = noSeconds[0] + ':' + noSeconds[1] + amPm
       return noSeconds
     },
   },
@@ -562,8 +569,10 @@ a {
   font-weight: bold;
 }
 .invert {
-  filter: invert(80%);
+  filter: invert(50%);
   cursor: pointer;
+}
+.inverted {
 }
 .add-button {
   border: none;

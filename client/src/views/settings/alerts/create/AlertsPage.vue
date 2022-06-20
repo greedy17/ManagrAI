@@ -1,6 +1,6 @@
 <template>
   <div class="alerts-page">
-    <div v-if="isOnboarding && !isAdmin && userLevel !== 'MANAGER'" class="col">
+    <div v-if="isOnboarding && userLevel !== 'MANAGER'" class="col">
       <h3>Popular Workflow Automations</h3>
       <p style="margin-top: -0.5rem" class="sub__">Step 2/2: Activate at least 2 workflows</p>
       <button
@@ -25,7 +25,7 @@
           <img style="height: 1.75rem; margin-right: 1rem" src="@/assets/images/zoom.png" alt="" />
           <img
             style="height: 1rem; margin-right: 1rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             class="filter-plus"
             alt=""
           />
@@ -36,7 +36,7 @@
           />
           <img
             style="height: 1rem; margin-right: 1rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             class="filter-plus"
             alt=""
           />
@@ -61,7 +61,7 @@
         </div>
         <div class="card__footer">
           <button
-            v-if="!hasZoomChannel"
+            v-if="!hasZoomChannel && hasSlackIntegration"
             @click="goToLogZoom"
             :class="
               !isAdmin && userlevel !== 'MANAGER' && isOnboarding
@@ -72,7 +72,7 @@
             Activate
           </button>
           <p class="active-workflow" v-else>
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </p>
         </div>
       </div>
@@ -80,7 +80,7 @@
       <div
         :class="
           !(hasZoomChannel || recapChannel) && isOnboarding && !isAdmin && userLevel !== 'MANAGER'
-            ? 'onboarding card'
+            ? 'card'
             : 'card'
         "
       >
@@ -92,7 +92,7 @@
           <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
           <img
             style="height: 1rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             class="filter-plus"
             alt=""
           />
@@ -106,27 +106,21 @@
         <div class="card__footer">
           <button
             v-if="
-              hasSalesforceIntegration &&
-              hasSlackIntegration &&
-              !user.activatedManagrConfigs.includes('Close Date Passed')
+              hasSalesforceIntegration && !user.activatedManagrConfigs.includes('Close Date Passed')
             "
             @click="goToCloseDatePassed"
             :class="
-              !isAdmin && userLevel !== 'MANAGER' && isOnboarding
-                ? 'orange_button bouncy'
-                : 'orange_button'
+              userLevel !== 'MANAGER' && isOnboarding ? 'orange_button bouncy' : 'orange_button'
             "
           >
             Activate
           </button>
-          <h4 v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)">
-            Connect Slack & Salesforce to acivate
-          </h4>
+          <h4 v-else-if="!hasSalesforceIntegration">Connect Salesforce to acivate</h4>
           <h4
             class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Close Date Passed')"
           >
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </h4>
         </div>
       </div>
@@ -137,7 +131,7 @@
           isOnboarding &&
           !isAdmin &&
           userLevel !== 'MANAGER'
-            ? 'card onboarding'
+            ? 'card'
             : 'card'
         "
       >
@@ -149,7 +143,7 @@
           <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
           <img
             style="height: 1rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             class="filter-plus"
             alt=""
           />
@@ -163,23 +157,19 @@
         <div class="card__footer">
           <button
             v-if="
-              hasSalesforceIntegration &&
-              hasSlackIntegration &&
-              !user.activatedManagrConfigs.includes('Update Forecast')
+              hasSalesforceIntegration && !user.activatedManagrConfigs.includes('Update Forecast')
             "
             @click="goToUpdateForecast"
             class="orange_button"
           >
             Activate
           </button>
-          <h4 v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)">
-            Connect Slack & Salesforce to acivate
-          </h4>
+          <h4 v-else-if="!hasSalesforceIntegration">Connect Salesforce to acivate</h4>
           <h4
             class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Update Forecast')"
           >
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </h4>
         </div>
       </div>
@@ -190,7 +180,7 @@
           isOnboarding &&
           !isAdmin &&
           userLevel !== 'MANAGER'
-            ? 'card onboarding'
+            ? 'card'
             : 'card'
         "
       >
@@ -202,14 +192,14 @@
           <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
           <img
             style="height: 1rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             class="filter-plus"
             alt=""
           />
           <img class="filter-loft" style="height: 1rem" src="@/assets/images/salesloft.svg" />
           <img
             style="height: 1rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             class="filter-plus"
             alt=""
           />
@@ -218,24 +208,18 @@
 
         <div class="card__footer">
           <button
-            v-if="
-              hasSalesforceIntegration &&
-              hasSlackIntegration &&
-              !user.activatedManagrConfigs.includes('Deal Rotting')
-            "
+            v-if="hasSalesforceIntegration && !user.activatedManagrConfigs.includes('Deal Rotting')"
             @click="goToDealRotting"
             class="orange_button"
           >
             Activate
           </button>
-          <h4 v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)">
-            Connect Slack & Salesforce to acivate
-          </h4>
+          <h4 v-else-if="!hasSalesforceIntegration">Connect Salesforce to acivate</h4>
           <h4
             class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Deal Rotting')"
           >
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </h4>
         </div>
       </div>
@@ -246,7 +230,7 @@
           isOnboarding &&
           !isAdmin &&
           userLevel !== 'MANAGER'
-            ? 'card onboarding'
+            ? 'card'
             : 'card'
         "
       >
@@ -258,7 +242,7 @@
           <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
           <img
             style="height: 1rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             class="filter-plus"
             alt=""
           />
@@ -273,7 +257,6 @@
           <button
             v-if="
               hasSalesforceIntegration &&
-              hasSlackIntegration &&
               !user.activatedManagrConfigs.includes('Close Date Approaching')
             "
             @click="goToCloseDateApproaching"
@@ -281,17 +264,14 @@
           >
             Activate
           </button>
-          <h4
-            style="margin-top: -0.5rem"
-            v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)"
-          >
-            Connect Slack & Salesforce to acivate
+          <h4 style="margin-top: -0.5rem" v-else-if="!hasSalesforceIntegration">
+            Connect Salesforce to acivate
           </h4>
           <h4
             class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Close Date Approaching')"
           >
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </h4>
         </div>
       </div>
@@ -302,7 +282,7 @@
           isOnboarding &&
           !isAdmin &&
           userLevel !== 'MANAGER'
-            ? 'card onboarding'
+            ? 'card'
             : 'card'
         "
       >
@@ -314,7 +294,7 @@
           <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
           <img
             style="height: 1rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             class="filter-plus"
             alt=""
           />
@@ -329,7 +309,6 @@
           <button
             v-if="
               hasSalesforceIntegration &&
-              hasSlackIntegration &&
               !user.activatedManagrConfigs.includes('Upcoming Next Step')
             "
             @click="goToNextStep"
@@ -337,14 +316,12 @@
           >
             Activate
           </button>
-          <h4 v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)">
-            Connect Slack & Salesforce to acivate
-          </h4>
+          <h4 v-else-if="!hasSalesforceIntegration">Connect Salesforce to acivate</h4>
           <h4
             class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Upcoming Next Step')"
           >
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </h4>
         </div>
       </div>
@@ -355,7 +332,7 @@
           isOnboarding &&
           !isAdmin &&
           userLevel !== 'MANAGER'
-            ? 'card onboarding'
+            ? 'card'
             : 'card'
         "
       >
@@ -367,7 +344,7 @@
           <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
           <img
             style="height: 1rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             class="filter-plus"
             alt=""
           />
@@ -382,7 +359,6 @@
           <button
             v-if="
               hasSalesforceIntegration &&
-              hasSlackIntegration &&
               !user.activatedManagrConfigs.includes('Required Field Empty')
             "
             @click="goToEmptyField"
@@ -390,14 +366,12 @@
           >
             Activate
           </button>
-          <h4 v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)">
-            Connect Slack & Salesforce to acivate
-          </h4>
+          <h4 v-else-if="!hasSalesforceIntegration">Connect Salesforce to acivate</h4>
           <h4
             class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Required Field Empty')"
           >
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </h4>
         </div>
       </div>
@@ -408,7 +382,7 @@
           isOnboarding &&
           !isAdmin &&
           userLevel !== 'MANAGER'
-            ? 'card onboarding'
+            ? 'card'
             : 'card'
         "
       >
@@ -420,7 +394,7 @@
           <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
           <img
             style="height: 1rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             class="filter-plus"
             alt=""
           />
@@ -435,7 +409,6 @@
           <button
             v-if="
               hasSalesforceIntegration &&
-              hasSlackIntegration &&
               !user.activatedManagrConfigs.includes('Large Opportunities')
             "
             @click="goToLargeOpps"
@@ -443,14 +416,12 @@
           >
             Activate
           </button>
-          <h4 v-else-if="!(hasSalesforceIntegration && hasSlackIntegration)">
-            Connect Slack & Salesforce to acivate
-          </h4>
+          <h4 v-else-if="!hasSalesforceIntegration">Connect Salesforce to acivate</h4>
           <h4
             class="active-workflow"
             v-else-if="user.activatedManagrConfigs.includes('Large Opportunities')"
           >
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </h4>
         </div>
       </div>
@@ -551,16 +522,23 @@ export default {
       return !!this.$store.state.user.slackRef
     },
     recapChannel() {
-      return this.$store.state.user.slackAccount.recapChannel
+      return this.$store.state.user.slackAccount
+        ? this.$store.state.user.slackAccount.recapChannel
+        : false
     },
     user() {
       return this.$store.state.user
+    },
+    userLevel() {
+      return this.$store.state.user.userLevel
     },
     isAdmin() {
       return this.$store.state.user.isAdmin
     },
     hasZoomChannel() {
-      return this.$store.state.user.slackAccount.zoomChannel
+      return this.$store.state.user.slackAccount
+        ? this.$store.state.user.slackAccount.zoomChannel
+        : null
     },
     isOnboarding() {
       return this.$store.state.user.onboarding
@@ -660,7 +638,7 @@ export default {
 }
 
 .filter-plus {
-  filter: invert(90%);
+  filter: invert(10%);
 }
 .sub__ {
   font-size: 14px;

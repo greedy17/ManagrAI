@@ -2,6 +2,7 @@ import logging
 from django.conf import settings
 from django.forms import ValidationError
 import pytz
+from django.db.models import Q
 from datetime import datetime
 from django_filters.rest_framework import DjangoFilterBackend
 from copy import copy
@@ -40,31 +41,35 @@ logger = logging.getLogger("managr")
 def create_configs_for_target(target, template_user, config):
     from managr.core.models import User
 
-    print(target)
     if target in ["MANAGERS", "REPS", "SDR"]:
         if target == "MANAGERS":
             target = "MANAGER"
         elif target == "REPS":
             target = "REP"
         users = User.objects.filter(
-            organization=template_user.organization,
-            user_level=target,
-            is_active=True,
+            Q(
+                organization=template_user.organization,
+                user_level=target,
+                is_active=True,
+            )
         )
     elif target == "SELF":
         config["recipient_type"] = "SLACK_CHANNEL"
-        if "default" in config["recipients"]:
+        if "default" in config["recipients"] and template_user.has_slack_integration:
             config["recipients"] = [
                 template_user.slack_integration.zoom_channel
                 if template_user.slack_integration.zoom_channel
                 else template_user.slack_integration.channel
             ]
+        else:
+            config["recipients"] = ["default"]
         return [config]
     elif target == "ALL":
         users = User.objects.filter(organization=template_user.organization, is_active=True)
     else:
         users = User.objects.filter(id=target)
     new_configs = []
+    print(users)
     for user in users:
         if user.has_slack_integration:
             config_copy = copy(config)
@@ -74,8 +79,7 @@ def create_configs_for_target(target, template_user, config):
                 else user.slack_integration.channel
             ]
             config_copy["recipient_type"] = "SLACK_CHANNEL"
-            if user != template_user:
-                config_copy["alert_targets"] = [str(user.id)]
+            config_copy["alert_targets"] = [str(user.id)]
             new_configs.append(config_copy)
     return new_configs
 
@@ -142,12 +146,14 @@ class AlertTemplateViewSet(
 
     def create(self, request, *args, **kwargs):
         data = request.data
+        alert_target_ref = data["new_configs"][0]["alert_targets"]
         configs = alert_config_creator(data, request.user)
         if configs is None:
             serializer = alert_serializers.AlertTemplateWriteSerializer(data=None, context=request)
             serializer.is_valid(raise_exception=True)
         else:
             data["new_configs"] = configs
+            data["target_reference"] = alert_target_ref
             serializer = alert_serializers.AlertTemplateWriteSerializer(data=data, context=request)
             serializer.is_valid(raise_exception=True)
             serializer.save()
@@ -174,11 +180,13 @@ class AlertTemplateViewSet(
     )
     def run_now(self, request, *args, **kwargs):
         obj = self.get_object()
+        print(obj.configs)
         data = self.request.data
 
         from_workflow = data.get("from_workflow", False)
         if from_workflow:
             config = obj.configs.all().first()
+            print(config)
             template = config.template
             attempts = 1
             while True:
@@ -195,7 +203,6 @@ class AlertTemplateViewSet(
                     users = []
                     for config in obj.configs.all():
                         users = [*users, *config.target_users]
-                    print(users)
                     res_data = []
                     for user in users:
                         if hasattr(user, "salesforce_account"):

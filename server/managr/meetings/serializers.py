@@ -1,5 +1,5 @@
 from rest_framework import serializers
-
+import json
 from managr.meetings.models import Meeting
 
 
@@ -14,6 +14,7 @@ class MeetingZoomSerializer(serializers.ModelSerializer):
             "start_time",
             "end_time",
             "provider",
+            "participants",
             "meta_data",
         )
 
@@ -42,6 +43,7 @@ class MeetingSerializer(serializers.ModelSerializer):
             "start_time",
             "end_time",
             "provider",
+            "participants",
             "meta_data",
         )
 

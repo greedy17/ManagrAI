@@ -62,10 +62,12 @@ export default {
       if (this.form.isValid) {
         try {
           const res = await AlertGroupOperand.api.createOperand(this.form.toAPI)
-          this.$Alert.alert({
-            message: 'Successfully Added added and operand',
-            type: 'success',
+          this.$toast('Successfully added operand', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
           this.createdObj = res
           this.$modal.hide('alert-operands-modal', { createdObj: this.createdObj })

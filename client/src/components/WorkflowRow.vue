@@ -50,30 +50,35 @@
 
         <div v-else class="flex-row">
           <button @click="emitCreateForm" class="name-cell-edit-note-button-2">
-            <img style="filter: invert(90%); height: 0.6rem" src="@/assets/images/edit.png" />
+            <img style="filter: invert(10%); height: 0.6rem" src="@/assets/images/edit.svg" />
           </button>
           <button @click="emitGetNotes" class="name-cell-note-button-2">
-            <img class="gray" src="@/assets/images/white-note.png" />
+            <img class="gray" src="@/assets/images/white-note.svg" />
           </button>
         </div>
       </div>
     </div>
 
     <div
+      @click="editInline(i)"
       :key="i"
       v-for="(field, i) in oppFields"
-      :class="
-        field.dataType === 'TextArea' ||
-        (field.length > 250 &&
-          field.dataType === 'String' &&
-          (workflow['secondary_data'][field.apiName] ||
-            workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]))
-          ? 'table-cell-wide'
-          : workflow['secondary_data'][field.apiName] ||
-            workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-          ? 'table-cell'
-          : 'empty'
-      "
+      :class="{
+        'active-edit': editing && editIndex === i && currentRow === index,
+        'table-cell-wide':
+          field.dataType === 'TextArea' ||
+          (field.length > 250 &&
+            field.dataType === 'String' &&
+            (workflow['secondary_data'][field.apiName] ||
+              workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))])),
+        'table-cell':
+          workflow['secondary_data'][field.apiName] ||
+          workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))],
+        empty: !(
+          workflow['secondary_data'][field.apiName] ||
+          workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+        ),
+      }"
     >
       <SkeletonBox
         v-if="updateWorkflowList.includes(workflow.id) || updatedWorkflowList.includes(workflow.id)"
@@ -83,8 +88,189 @@
       />
 
       <div class="limit-cell-height" v-else>
+        <div class="inline-edit" v-if="editing && editIndex === i && currentRow === index">
+          <div
+            v-if="
+              field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
+            "
+            class="inline-row"
+          >
+            <textarea
+              @input="executeUpdateValues(field.apiName, $event.target.value)"
+              id="user-input-wide"
+              :value="
+                field.apiName.includes('__c')
+                  ? workflow['secondary_data'][field.apiName]
+                  : workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+              "
+            >
+            </textarea>
+
+            <div v-if="inlineLoader">
+              <PipelineLoader />
+            </div>
+          </div>
+          <div
+            v-else-if="
+              (field.dataType === 'String' && field.apiName !== 'meeting_type') ||
+              (field.dataType === 'String' && field.apiName !== 'meeting_comments') ||
+              (field.dataType === 'String' && field.apiName !== 'NextStep') ||
+              (field.dataType === 'Email' && field.apiName !== 'NextStep')
+            "
+            class="inline-row"
+          >
+            <input
+              @input="executeUpdateValues(field.apiName, $event.target.value)"
+              id="user-input"
+              type="text"
+              :value="
+                field.apiName.includes('__c')
+                  ? workflow['secondary_data'][field.apiName]
+                  : workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+              "
+            />
+            <div v-if="inlineLoader">
+              <PipelineLoader />
+            </div>
+          </div>
+
+          <div v-else-if="field.dataType === 'Boolean'">
+            <Multiselect
+              v-model="dropdownVal[field.apiName]"
+              :options="booleans"
+              @select="setUpdateValues(field.apiName, $event)"
+              openDirection="below"
+              style="width: 14vw; padding-bottom: 8rem"
+              selectLabel="Enter"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.svg" alt="" />
+                  {{ workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))] }}
+                </p>
+              </template>
+            </Multiselect>
+          </div>
+
+          <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
+            <div v-if="inlineLoader">
+              <PipelineLoader />
+            </div>
+            <Multiselect
+              v-else-if="field.apiName !== 'StageName'"
+              :options="picklistOpts[field.apiName]"
+              openDirection="below"
+              selectLabel="Enter"
+              style="width: 14vw; padding-bottom: 8rem"
+              track-by="value"
+              label="label"
+              v-model="dropdownVal[field.apiName]"
+              @select="
+                setUpdateValues(
+                  field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+                  $event.value,
+                  field.dataType,
+                )
+              "
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.svg" alt="" />
+                  {{
+                    field.apiName.includes('__c')
+                      ? workflow['secondary_data'][field.apiName]
+                      : workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+                  }}
+                </p>
+              </template>
+            </Multiselect>
+            <Multiselect
+              v-else-if="field.apiName === 'StageName'"
+              :options="picklistOpts[field.apiName]"
+              openDirection="below"
+              selectLabel="Enter"
+              style="width: 14vw; padding-bottom: 8rem"
+              track-by="value"
+              label="label"
+              @select="setDropdownValue($event)"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.svg" alt="" />
+                  {{ workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))] }}
+                </p>
+              </template>
+            </Multiselect>
+          </div>
+          <div v-else-if="field.dataType === 'Date'">
+            <div v-if="inlineLoader">
+              <PipelineLoader />
+            </div>
+            <input
+              v-else
+              @input="setUpdateValues(field.apiName, $event.target.value)"
+              type="date"
+              id="user-input"
+              :value="
+                field.apiName.includes('__c')
+                  ? workflow['secondary_data'][field.apiName]
+                  : workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+              "
+            />
+          </div>
+          <div v-else-if="field.dataType === 'DateTime'">
+            <div v-if="inlineLoader">
+              <PipelineLoader />
+            </div>
+            <input
+              v-else
+              type="datetime-local"
+              id="user-input"
+              @input="setUpdateValues(field.apiName, $event.target.value)"
+              :value="
+                field.apiName.includes('__c')
+                  ? workflow['secondary_data'][field.apiName]
+                  : workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+              "
+            />
+          </div>
+          <div
+            v-else-if="
+              field.dataType === 'Phone' ||
+              field.dataType === 'Double' ||
+              field.dataType === 'Currency'
+            "
+            class="inline-row"
+          >
+            <input
+              @input="executeUpdateValues(field.apiName, $event.target.value)"
+              id="user-input"
+              type="number"
+              :value="
+                field.apiName.includes('__c')
+                  ? workflow['secondary_data'][field.apiName]
+                  : workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+              "
+            />
+            <div v-if="inlineLoader">
+              <PipelineLoader />
+            </div>
+          </div>
+        </div>
         <PipelineField
           style="direction: ltr"
+          v-show="!editing || editIndex !== i"
           :apiName="field.apiName"
           :dataType="field.dataType"
           :fieldData="
@@ -134,6 +320,7 @@ import PipelineNameSection from '@/components/PipelineNameSection'
 import PipelineField from '@/components/PipelineField'
 import { CollectionManager } from '@thinknimble/tn-models'
 import { SObjects, SObjectField } from '@/services/salesforce'
+import debounce from 'lodash.debounce'
 
 export default {
   name: 'WorkflowRow',
@@ -141,11 +328,22 @@ export default {
     PipelineNameSection,
     PipelineField,
     SkeletonBox: () => import(/* webpackPrefetch: true */ '@/components/SkeletonBox'),
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+    PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
   },
   data() {
     return {
+      currentRow: null,
+      formData: {},
+      dropdownValue: null,
+      dropdownVal: {},
+      executeUpdateValues: debounce(this.setUpdateValues, 2000),
+      editing: false,
+      editIndex: null,
+      currentOpp: null,
       updatedWorkflowList: [],
       newCloseDate: null,
+      booleans: ['true', 'false'],
       objectFields: CollectionManager.create({
         ModelClass: SObjectField,
         pagination: { size: 300 },
@@ -164,9 +362,23 @@ export default {
     stageData: {},
     closeDateData: {},
     ForecastCategoryNameData: {},
+    picklistOpts: {},
+    inlineLoader: {},
+    closeEdit: {},
+    stages: {},
   },
   watch: {
     closeDateData: 'futureDate',
+    closeEdit: 'closeInline',
+    dropdownValue: {
+      handler(val) {
+        if (this.stages.includes(val)) {
+          this.$emit('open-stage-form', val, this.workflow.id)
+        } else {
+          this.setUpdateValues('StageName', val)
+        }
+      },
+    },
   },
   async created() {
     await this.objectFields.refresh()
@@ -182,6 +394,26 @@ export default {
     },
   },
   methods: {
+    setDropdownValue(val) {
+      this.dropdownValue = val.value
+    },
+    closeInline() {
+      this.editing = false
+    },
+    editInline(index) {
+      this.currentRow = this.index
+      this.editIndex = index
+      this.editing = true
+    },
+    setUpdateValues(key, val, dataType) {
+      this.formData = {}
+      if (val) {
+        this.formData[key] = val
+      }
+      setTimeout(() => {
+        this.$emit('inline-edit', this.formData, this.workflow.id, dataType)
+      }, 200)
+    },
     emitCreateForm() {
       this.$emit('create-form')
     },
@@ -208,7 +440,6 @@ export default {
       let currentYear = currentDate.getFullYear()
       let dateString = currentYear + '-' + (currentMonth + 1) + '-' + currentDayOfMonth
       this.newCloseDate = dateString
-      console.log(this.newCloseDate)
     },
     async onAdvanceStage() {
       if (this.workflowCheckList.includes(this.workflow.id)) {
@@ -230,10 +461,12 @@ export default {
           console.log(e)
         } finally {
           this.updatedWorkflowList = []
-          this.$Alert.alert({
+          this.$toast('Salesforce Update Successful', {
+            timeout: 2000,
+            position: 'top-left',
             type: 'success',
-            timeout: 750,
-            message: 'Salesforce update successful!',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         }
       }
@@ -258,10 +491,12 @@ export default {
           console.log(e)
         } finally {
           this.updatedWorkflowList = []
-          this.$Alert.alert({
+          this.$toast('Salesforce Update Successful', {
+            timeout: 2000,
+            position: 'top-left',
             type: 'success',
-            timeout: 750,
-            message: 'Salesforce update successful!',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         }
       }
@@ -286,10 +521,12 @@ export default {
           console.log(e)
         } finally {
           this.updatedWorkflowList = []
-          this.$Alert.alert({
+          this.$toast('Salesforce Update Successful', {
+            timeout: 2000,
+            position: 'top-left',
             type: 'success',
-            timeout: 750,
-            message: 'Salesforce update successful!',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         }
       }
@@ -302,12 +539,90 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+#user-input {
+  border: 1px solid #e8e8e8;
+  border-radius: 0.3rem;
+  background-color: white;
+  min-height: 2rem;
+  width: 12vw;
+}
+#user-input-wide {
+  border: 1px solid #e8e8e8;
+  border-radius: 0.3rem;
+  background-color: white;
+  min-height: 2rem;
+  width: 20vw;
+  font-family: $base-font-family;
+  margin: 1.5rem 1rem;
+  padding: 7px;
+}
+#user-input:focus,
+#user-input-wide:focus {
+  outline: none;
+}
+input[type='text']:focus {
+  outline: none;
+  cursor: text;
+}
+textarea {
+  resize: none;
+  position: absolute;
+  margin-top: -1rem;
+}
+input[type='date'] {
+  background-color: $soft-gray !important;
+  color: $base-gray !important;
+}
+input[type='date']::-webkit-calendar-picker-indicator {
+  background-color: white;
+  border-radius: 3px;
+  padding: 5px;
+}
+input[type='date']::-webkit-datetime-edit-text,
+input[type='date']::-webkit-datetime-edit-month-field,
+input[type='date']::-webkit-datetime-edit-day-field,
+input[type='date']::-webkit-datetime-edit-year-field {
+  // color: #888;
+  cursor: pointer;
+  padding: 0.25rem;
+}
+input {
+  padding: 7px;
+}
+.inline-edit {
+  cursor: text;
+}
+.inline-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+.active-edit {
+  border-bottom: 2px solid $dark-green !important;
+  border-left: 1px solid $soft-gray !important;
+  border-right: 1px solid $soft-gray !important;
+  border-top: 1px solid $soft-gray !important;
+  background-color: white !important;
+}
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 1rem !important;
+    margin-right: 0.25rem;
+    filter: invert(70%);
+  }
+}
 .table-row {
   display: table-row;
 }
 .empty {
   display: table-cell;
-  background: white;
+  background: white !important;
   min-width: 12vw;
   border-left: 1px solid $soft-gray;
   border-right: 1px solid $soft-gray;
@@ -330,6 +645,13 @@ export default {
   position: sticky;
   left: 3.5vw;
   z-index: 2;
+}
+.table-cell:hover,
+.empty:hover {
+  border: 1px solid $dark-green;
+}
+.cell-name:hover {
+  border: none;
 }
 .table-cell-wide {
   display: table-cell;
@@ -443,10 +765,15 @@ input[type='checkbox'] + label::before {
   margin-right: 0.5em;
 }
 .limit-cell-height {
-  max-height: 4rem;
-  width: 110%;
+  max-height: 8rem;
+  // width: 110%;
+  padding: 0;
   overflow: auto;
-  direction: rtl;
+  img {
+    height: 0.25rem;
+  }
+  // cursor: url('../assets/images/edit-cursor.svg'), auto;
+  cursor: pointer;
 }
 .name-cell-note-button-2 {
   height: 1.5rem;

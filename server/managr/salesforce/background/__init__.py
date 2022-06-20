@@ -28,7 +28,7 @@ from managr.organization.models import (
     PricebookEntry,
     OpportunityLineItem,
 )
-from managr.organization.serializers import AccountSerializer, StageSerializer
+from managr.organization.serializers import AccountSerializer, StageSerializer, ContactSerializer
 from managr.opportunity.models import Opportunity, Lead
 from managr.opportunity.serializers import OpportunitySerializer
 from managr.slack import constants as slack_consts
@@ -904,6 +904,13 @@ def _process_create_new_contacts(workflow_id, *args):
                         sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                         time.sleep(sleep)
                         attempts += 1
+        try:
+            serializer = ContactSerializer(data=res.as_dict)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+        except Exception as e:
+            logger.exception(f"Failed to create contact in DB because of {e}")
+            return
     return
 
 
@@ -1178,7 +1185,7 @@ def _process_list_tasks(user_id, data, *args):
 def _process_workflow_tracker(workflow_id):
     """gets workflow and check's if all tasks are completed and manually completes if not already completed"""
     workflow = MeetingWorkflow.objects.filter(id=workflow_id).first()
-    # workflow.user.activity.add_meeting_activity(workflow_id)
+    workflow.user.activity.add_meeting_activity(workflow_id)
     if workflow and workflow.in_progress:
         completed_tasks = set(workflow.completed_operations)
         all_tasks = set(workflow.operations)

@@ -28,11 +28,11 @@
         <img
           v-if="nameSortWorkflows === 0"
           style="height: 0.75rem"
-          src="@/assets/images/sort.png"
+          src="@/assets/images/sort.svg"
           alt=""
         />
         <span v-if="nameSortWorkflows === 2">
-          <img class="light-green" src="@/assets/images/ascend.png" style="height: 0.6rem" alt="" />
+          <img class="light-green" src="@/assets/images/ascend.svg" style="height: 0.6rem" alt="" />
         </span>
       </div>
     </div>
@@ -53,13 +53,13 @@
         <img
           v-if="nameSortWorkflows === 0"
           style="height: 0.75rem"
-          src="@/assets/images/sort.png"
+          src="@/assets/images/sort.svg"
           alt=""
         />
         <span v-if="nameSortWorkflows === 1">
           <img
             class="light-green"
-            src="@/assets/images/descend.png"
+            src="@/assets/images/descend.svg"
             style="height: 0.6rem"
             alt=""
           />
@@ -87,11 +87,11 @@
         <img
           v-if="reverseIndexWorkflows !== i"
           style="height: 0.75rem"
-          src="@/assets/images/sort.png"
+          src="@/assets/images/sort.svg"
           alt=""
         />
         <span v-if="reverseIndexWorkflows === i">
-          <img class="light-green" src="@/assets/images/ascend.png" style="height: 0.6rem" alt="" />
+          <img class="light-green" src="@/assets/images/ascend.svg" style="height: 0.6rem" alt="" />
         </span>
       </p>
 
@@ -114,13 +114,13 @@
         <img
           v-if="sortingIndexWorkflows !== i"
           style="height: 0.75rem"
-          src="@/assets/images/sort.png"
+          src="@/assets/images/sort.svg"
           alt=""
         />
         <span v-if="sortingIndexWorkflows === i">
           <img
             class="light-green"
-            src="@/assets/images/descend.png"
+            src="@/assets/images/descend.svg"
             style="height: 0.6rem"
             alt=""
           />
@@ -148,17 +148,17 @@
         <img
           v-if="reverseIndexWorkflows !== oppFields.length + i"
           style="height: 0.75rem"
-          src="@/assets/images/sort.png"
+          src="@/assets/images/sort.svg"
           alt=""
         />
         <span v-if="reverseIndexWorkflows === oppFields.length + i">
-          <img class="light-green" src="@/assets/images/ascend.png" style="height: 0.6rem" alt="" />
+          <img class="light-green" src="@/assets/images/ascend.svg" style="height: 0.6rem" alt="" />
         </span>
         <img
           style="margin-left: 0.1rem"
           class="red"
           @click="removeExtraField(i)"
-          src="@/assets/images/closer.png"
+          src="@/assets/images/close.svg"
           alt=""
         />
       </p>
@@ -182,18 +182,18 @@
         <img
           v-if="sortingIndexWorkflows !== oppFields.length + i"
           style="height: 0.75rem"
-          src="@/assets/images/sort.png"
+          src="@/assets/images/sort.svg"
           alt=""
         />
         <span v-if="sortingIndexWorkflows === oppFields.length + i">
           <img
             class="light-green"
-            src="@/assets/images/descend.png"
+            src="@/assets/images/descend.svg"
             style="height: 0.6rem"
             alt=""
           />
         </span>
-        <img class="red" @click="removeExtraField(i)" src="@/assets/images/closer.png" alt="" />
+        <img class="red" @click="removeExtraField(i)" src="@/assets/images/close.svg" alt="" />
       </p>
 
       <div v-if="removingField && removingIndex === i" class="remove-field-section">
@@ -254,10 +254,12 @@ export default {
         const res = await SObjects.api.removeExtraField({
           field_ids: [id],
         })
-        this.$Alert.alert({
+        this.$toast('Field removed successfully', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 1000,
-          message: 'Field removed successfully',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } catch (e) {
         console.log(e)

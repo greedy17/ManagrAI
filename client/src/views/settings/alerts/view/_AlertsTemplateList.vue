@@ -4,7 +4,7 @@
       <div class="delete_modal">
         <div class="delete_modal__header">
           <h2>Delete Workflow</h2>
-          <img @click="deleteOpen = !deleteOpen" src="@/assets/images/close.png" alt="" />
+          <img @click="deleteOpen = !deleteOpen" src="@/assets/images/close.svg" alt="" />
         </div>
 
         <div class="delete_modal__body">
@@ -18,12 +18,12 @@
       </div>
     </Modal>
 
-    <div class="center__">
+    <div @click="test" class="center__">
       <h3 v-if="!editing" :class="templates.refreshing ? 'loading-title titles' : 'titles'">
         Edit your Workflow Automation
       </h3>
       <h3 v-else :class="templates.refreshing ? 'loading-title titles' : 'titles'">
-        Saved Workflow Automations
+        Active Workflow Automations
       </h3>
       <p
         :class="templates.refreshing ? 'loading-title titles' : ''"
@@ -32,7 +32,7 @@
         Edit, Run, and Schedule your saved Automations
       </p>
     </div>
-    <div v-if="!alertsCount(templates.list.length)">
+    <div v-if="!alertsCount(templates.list.length) && !templates.refreshing">
       <h3
         class="bouncy"
         style="
@@ -68,7 +68,7 @@
             </div>
             <div class="added-collection__body">
               <button
-                :disabled="clicked.includes(alert.id)"
+                :disabled="clicked.includes(alert.id) || !hasSlackIntegration"
                 @click.stop="onRunAlertTemplateNow(alert.id)"
                 class="green_button"
               >
@@ -77,13 +77,14 @@
             </div>
             <div class="added-collection__footer">
               <img
+                v-if="hasSlackIntegration"
                 style="margin-right: 0.25rem"
                 src="@/assets/images/slackLogo.png"
                 height="15px"
                 alt=""
               />
-              <p style="font-size: 13px">Schedule:</p>
-              <div class="row__">
+              <p v-if="hasSlackIntegration" style="font-size: 13px">Schedule:</p>
+              <div v-if="hasSlackIntegration" class="row__">
                 <p
                   :class="!alert.isActive ? 'green' : ''"
                   style="margin-right: 0.5rem; font-size: 12px; letter-spacing: 1px"
@@ -103,14 +104,34 @@
                   ON
                 </p>
               </div>
+              <div style="width: 30vw" v-else>
+                <img
+                  style="margin-right: 0.2rem"
+                  src="@/assets/images/slackLogo.png"
+                  height="8px"
+                  alt=""
+                />
+                <small
+                  >Connect <span class="link" @click="goToConnect">Slack</span> for
+                  notifications</small
+                >
+              </div>
 
               <div class="row__two">
                 <span class="img-border">
-                  <img @click="makeAlertCurrent(alert)" src="@/assets/images/edit.png" />
+                  <img
+                    @click="makeAlertCurrent(alert)"
+                    src="@/assets/images/edit.svg"
+                    class="invert"
+                  />
                 </span>
 
                 <span class="img-border">
-                  <img src="@/assets/images/whitetrash.png" @click="deleteClosed(alert.id)" />
+                  <img
+                    src="@/assets/images/trash.svg"
+                    class="invert"
+                    @click="deleteClosed(alert.id)"
+                  />
                 </span>
               </div>
             </div>
@@ -172,7 +193,7 @@
         </div>
       </transition>
     </template>
-    <div class="center-loader" v-if="templates.refreshing && alertsCount(templates.list.length)">
+    <div class="center-loader" v-if="templates.refreshing">
       <Loader loaderText="Gathering your workflows" />
     </div>
   </div>
@@ -240,9 +261,9 @@ export default {
     })
   },
   methods: {
-    // test() {
-    //   console.log(this.templates)
-    // },
+    test() {
+      console.log(this.templates)
+    },
     async getRecapChannel() {
       const res = await SlackOAuth.api.channelDetails(this.hasRecapChannel)
       this.currentRecapChannel = res.channel.name
@@ -284,6 +305,9 @@ export default {
     goToRecap() {
       this.$router.push({ name: 'ZoomRecap' })
     },
+    goToConnect() {
+      this.$router.push({ name: 'Integrations' })
+    },
     makeAlertCurrent(val) {
       this.currentAlert = val
       this.editing = !this.editing
@@ -318,16 +342,20 @@ export default {
         this.handleUpdate()
 
         this.deleteOpen = !this.deleteOpen
-        this.$Alert.alert({
-          message: 'Workflow removed',
-          type: 'success',
+        this.$toast('Workflow removed', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } catch {
-        this.$Alert.alert({
-          message: 'There was an error removing your alert',
-          type: 'error',
+        this.$toast('Error removing workflow', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
@@ -335,33 +363,42 @@ export default {
       try {
         await AlertTemplate.api.updateAlertTemplate(id, { is_active: value })
         await this.templates.refresh()
-        this.$Alert.alert({
-          message: `Alert is now ${value ? 'active' : 'inactive'}`,
-          type: 'success',
+
+        this.$toast(`Alert is now ${value ? 'active' : 'inactive'}`, {
           timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } catch {
-        this.$Alert.alert({
-          message: 'There was an error toggling your alert',
-          type: 'error',
+        this.$toast('Error toggling workflow', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
     async onRunAlertTemplateNow(id) {
       try {
         await AlertTemplate.api.runAlertTemplateNow(id)
-        this.$Alert.alert({
-          message: `Alert has been initiated`,
-          type: 'success',
+        this.$toast('Workflow initiated', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
         this.clicked.push(id)
       } catch {
-        this.$Alert.alert({
-          message: 'There was an error removing your alert',
-          type: 'error',
+        this.$toast('Error removing workflow', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
@@ -370,11 +407,18 @@ export default {
     user() {
       return this.$store.state.user
     },
+    hasSlackIntegration() {
+      return !!this.$store.state.user.slackRef
+    },
     hasRecapChannel() {
-      return this.$store.state.user.slackAccount.recapChannel
+      return this.$store.state.user.slackAccount
+        ? this.$store.state.user.slackAccount.recapChannel
+        : null
     },
     zoomChannel() {
-      return this.$store.state.user.slackAccount.zoomChannel
+      return this.$store.state.user.slackAccount
+        ? this.$store.state.user.slackAccount.zoomChannel
+        : null
     },
     userLevel() {
       return this.$store.state.user.userLevel
@@ -604,8 +648,11 @@ a {
   img {
     height: 0.8rem;
     cursor: pointer;
-    filter: invert(70%);
+    filter: invert(20%);
   }
+}
+.invert {
+  filter: invert(20%);
 }
 .green_button:disabled {
   background-color: $soft-gray;
@@ -638,5 +685,10 @@ a {
 }
 .loading-title {
   display: none;
+}
+.link {
+  color: $dark-green;
+  border-bottom: 1px solid $dark-green;
+  cursor: pointer;
 }
 </style>

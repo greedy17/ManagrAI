@@ -1,6 +1,55 @@
 <template>
   <div class="pipelines">
     <Modal
+      v-if="modalOpen"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), resetNotes()
+        }
+      "
+    >
+      <div v-if="notes.length" class="modal-container">
+        <div class="flex-row-spread">
+          <div class="flex-row">
+            <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <h3>Notes</h3>
+          </div>
+
+          <img
+            src="@/assets/images/close.svg"
+            style="height: 1.5rem; margin-top: -0.5rem; margin-right: 0.5rem; cursor: pointer"
+            @click="resetNotes"
+            alt=""
+          />
+        </div>
+        <section class="note-section" :key="i" v-for="(note, i) in notes">
+          <p class="note-section__title">
+            {{ note.saved_data__meeting_type ? note.saved_data__meeting_type + ':' : 'Untitled:' }}
+          </p>
+          <pre class="note-section__body">{{ note.saved_data__meeting_comments }}</pre>
+          <p class="note-section__date">{{ formatDateTime(note.submission_date) }}</p>
+        </section>
+      </div>
+      <div v-else class="modal-container">
+        <div class="flex-row-spread">
+          <div class="flex-row">
+            <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <h3>Notes</h3>
+          </div>
+          <img
+            src="@/assets/images/close.svg"
+            style="height: 1.5rem; margin-top: -0.5rem; margin-right: 0.5rem; cursor: pointer"
+            @click="resetNotes"
+            alt=""
+          />
+        </div>
+        <section class="note-section">
+          <p class="note-section__title">No notes for this opportunity</p>
+        </section>
+      </div>
+    </Modal>
+    <Modal
       v-if="editOpModalOpen"
       dimmed
       @close-modal="
@@ -20,7 +69,7 @@
             <h2>Update Opportunity</h2>
           </div>
           <img
-            src="@/assets/images/closer.png"
+            src="@/assets/images/close.svg"
             style="height: 1.5rem; margin-top: -1rem; margin-right: 0.75rem; cursor: pointer"
             @click="resetEdit"
             alt=""
@@ -147,7 +196,7 @@
 
                         <template slot="placeholder">
                           <p class="slot-icon">
-                            <img src="@/assets/images/search.png" alt="" />
+                            <img src="@/assets/images/search.svg" alt="" />
                             {{
                               `${currentVals[field.apiName]}` !== 'null'
                                 ? `${currentVals[field.apiName]}`
@@ -263,7 +312,7 @@
                         </template>
                         <template slot="placeholder">
                           <p class="slot-icon">
-                            <img src="@/assets/images/search.png" alt="" />
+                            <img src="@/assets/images/search.svg" alt="" />
                             {{ currentOwner }}
                           </p>
                         </template>
@@ -290,7 +339,7 @@
 
                         <template slot="placeholder">
                           <p class="slot-icon">
-                            <img src="@/assets/images/search.png" alt="" />
+                            <img src="@/assets/images/search.svg" alt="" />
                             {{ currentAccount }}
                           </p>
                         </template>
@@ -359,7 +408,7 @@
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
+                    <img src="@/assets/images/search.svg" alt="" />
                     {{ currentOwner }}
                   </p>
                 </template>
@@ -386,8 +435,30 @@
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
+                    <img src="@/assets/images/search.svg" alt="" />
                     {{ currentAccount }}
+                  </p>
+                </template>
+              </Multiselect>
+            </div>
+            <div v-else-if="field.dataType === 'Boolean'">
+              <p>{{ field.referenceDisplayLabel }}:</p>
+
+              <Multiselect
+                v-model="dropdownVal[field.apiName]"
+                :options="booleans"
+                @select="setUpdateValues(field.apiName, $event)"
+                openDirection="below"
+                style="width: 18vw"
+                selectLabel="Enter"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.svg" alt="" />
+                    {{ currentVals[field.apiName] }}
                   </p>
                 </template>
               </Multiselect>
@@ -427,6 +498,7 @@
             @no-update="NoMeetingUpdate"
             @remove-participant="removeParticipant"
             @add-participant="addParticipant"
+            @get-notes="getNotes"
             @filter-accounts="getAccounts"
             :dropdowns="picklistQueryOptsContacts"
             :contactFields="createContactForm"
@@ -472,7 +544,6 @@ export default {
   },
   data() {
     return {
-      id: this.$route.params.id,
       stageGateField: null,
       stageValidationFields: {},
       stagesWithForms: [],
@@ -539,6 +610,10 @@ export default {
       showMeetingList: true,
       selectedMeeting: false,
       meetings: null,
+      referenceOpts: {},
+      stageGateId: null,
+      booleans: ['true', 'false'],
+      notes: [],
     }
   },
   computed: {
@@ -551,26 +626,74 @@ export default {
     this.getObjects()
     this.templates.refresh()
     this.getAllForms()
+  },
+  beforeMount() {
     this.getUsers()
   },
   watch: {
     accountSobjectId: 'getInitialAccounts',
-    updateList: {
-      async handler(currList) {
-        if (currList.length === 0 && this.recapList.length) {
-          let bulk = true ? this.recapList.length > 1 : false
-          try {
-            const res = await SObjects.api.sendRecap(bulk, this.recapList)
-          } catch (e) {
-            console.log(e)
-          } finally {
-            this.recapList = []
-          }
-        }
-      },
-    },
+    updateOppForm: 'setForms',
+    stageGateField: 'stageGateInstance',
+    // updateList: {
+    //   async handler(currList) {
+    //     if (currList.length === 0 && this.recapList.length) {
+    //       let bulk = true ? this.recapList.length > 1 : false
+    //       try {
+    //         const res = await SObjects.api.sendRecap(bulk, this.recapList)
+    //       } catch (e) {
+    //         console.log(e)
+    //       } finally {
+    //         this.recapList = []
+    //       }
+    //     }
+    //   },
+    // },
   },
   methods: {
+    resetNotes() {
+      this.modalOpen = !this.modalOpen
+      this.notes = []
+    },
+    async getNotes(id) {
+      console.log(id)
+      try {
+        const res = await SObjects.api.getNotes({
+          resourceId: id,
+        })
+        this.modalOpen = true
+        if (res.length) {
+          for (let i = 0; i < res.length; i++) {
+            this.notes.push(res[i])
+            this.notes = this.notes.filter((note) => note.saved_data__meeting_comments !== null)
+          }
+        }
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    async stageGateInstance(field) {
+      this.stageGateId = null
+      try {
+        const res = await SObjects.api.createFormInstance({
+          resourceType: 'Opportunity',
+          formType: 'STAGE_GATING',
+          stageName: field ? field : this.stageGateField,
+        })
+        this.stageGateId = res.form_id
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    async getReferenceFieldList(key, val) {
+      try {
+        const res = await SObjects.api.getSobjectPicklistValues({
+          sobject_id: val,
+        })
+        this.referenceOpts[key] = res
+      } catch (e) {
+        console.log(e)
+      }
+    },
     async getMeetingList() {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
@@ -627,10 +750,12 @@ export default {
       } finally {
         setTimeout(() => {
           this.meetingLoading = false
-          this.$Alert.alert({
-            type: 'success',
+          this.$toast('Contact Added Successfully', {
             timeout: 2000,
-            message: 'Contact Added Successfully',
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         }, 500)
       }
@@ -703,11 +828,12 @@ export default {
         console.log(e)
       } finally {
         this.meetingLoading = false
-        this.$Alert.alert({
-          type: 'success',
+        this.$toast('Meeting logged Successfully', {
           timeout: 2000,
-          message: 'Meeting Logged successfully',
-          sub: 'No update necessary',
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
@@ -717,6 +843,8 @@ export default {
       this.editOpModalOpen = true
       this.updatingMeeting = true
       this.meetingWorkflowId = meetingWorkflow
+      this.dropdownVal = {}
+      this.formData = {}
       try {
         const res = await SObjects.api.createFormInstance({
           resourceType: 'Opportunity',
@@ -737,6 +865,7 @@ export default {
         const res = await MeetingWorkflows.api
           .updateWorkflow({
             workflow_id: this.meetingWorkflowId,
+            stage_form_id: this.stageGateId ? [this.stageGateId] : [],
             form_data: this.formData,
           })
           .then((res) => {
@@ -747,11 +876,12 @@ export default {
       } finally {
         this.updatingMeeting = false
         this.meetingLoading = false
-        this.$Alert.alert({
-          type: 'success',
+        this.$toast('Meeting logged Successfully', {
           timeout: 2000,
-          message: 'Meeting Logged successfully',
-          sub: 'Opportunity updated',
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
@@ -806,10 +936,10 @@ export default {
       if (val) {
         this.formData[key] = val
       }
-      if (this.stagesWithForms.includes(val)) {
-        this.stageGateField = val
-      } else {
-        this.stageGateField = null
+      if (key === 'StageName') {
+        this.stagesWithForms.includes(val)
+          ? (this.stageGateField = val)
+          : (this.stageGateField = null)
       }
     },
     setUpdateValidationValues(key, val) {
@@ -817,31 +947,17 @@ export default {
         this.formData[key] = val
       }
     },
-    async manualSync() {
-      this.loading = true
-      try {
-        const res = await SObjects.api.resourceSync()
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.getObjects()
-        this.loading = false
-        this.$Alert.alert({
-          type: 'success',
-          timeout: 3000,
-          message: 'Sync complete',
-          sub: 'All fields reflect your current SFDC data',
-        })
-      }
-    },
+
     async updateResource() {
       this.updateList.push(this.oppId)
       this.editOpModalOpen = false
       try {
         const res = await SObjects.api
           .updateResource({
-            form_id: this.instanceId,
+            form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
             form_data: this.formData,
+            from_workflow: false,
+            workflow_title: 'None',
           })
           .then(async () => {
             let updatedRes = await SObjects.api.getObjects('Opportunity')
@@ -850,10 +966,12 @@ export default {
           })
         this.updateList = []
         this.formData = {}
-        this.$Alert.alert({
+        this.$toast('Salesforce Update Successful', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 1000,
-          message: 'Salesforce update successful!',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } catch (e) {
         console.log(e)
@@ -875,14 +993,110 @@ export default {
       } catch (e) {
         console.log(e)
       } finally {
-        this.$Alert.alert({
+        this.$toast('Opportunity created Successfully', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 1000,
-          message: 'Opportunity created successfully!',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
+    setForms() {
+      for (let i = 0; i < this.createContactForm.length; i++) {
+        if (
+          this.createContactForm[i].dataType === 'Picklist' ||
+          this.createContactForm[i].dataType === 'MultiPicklist'
+        ) {
+          this.picklistQueryOptsContacts[this.createContactForm[i].apiName] =
+            this.createContactForm[i].apiName
+        } else if (this.createContactForm[i].dataType === 'Reference') {
+          this.picklistQueryOptsContacts[this.createContactForm[i].referenceDisplayLabel] =
+            this.createContactForm[i].referenceDisplayLabel
+        }
+      }
+      for (let i in this.picklistQueryOptsContacts) {
+        this.picklistQueryOptsContacts[i] = this.listPicklists(i, {
+          picklistFor: i,
+          salesforceObject: 'Opportunity',
+        })
+      }
 
+      for (let i = 0; i < this.oppFormCopy.length; i++) {
+        if (
+          this.oppFormCopy[i].dataType === 'Picklist' ||
+          this.oppFormCopy[i].dataType === 'MultiPicklist'
+        ) {
+          this.picklistQueryOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].apiName
+        } else if (this.oppFormCopy[i].dataType === 'Reference') {
+          this.referenceOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].id
+        }
+      }
+
+      for (let i in this.picklistQueryOpts) {
+        this.picklistQueryOpts[i] = this.listPicklists(i, {
+          picklistFor: i,
+          salesforceObject: 'Opportunity',
+        })
+      }
+
+      for (let i in this.referenceOpts) {
+        this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i])
+      }
+
+      for (let i = 0; i < this.createOppForm.length; i++) {
+        if (
+          this.createOppForm[i].dataType === 'Picklist' ||
+          this.createOppForm[i].dataType === 'MultiPicklist'
+        ) {
+          this.createQueryOpts[this.createOppForm[i].apiName] = this.createOppForm[i].apiName
+        } else if (this.createOppForm[i].dataType === 'Reference') {
+          this.createQueryOpts[this.createOppForm[i].referenceDisplayLabel] =
+            this.createOppForm[i].referenceDisplayLabel
+        }
+      }
+
+      for (let i in this.createQueryOpts) {
+        this.createQueryOpts[i] = this.listCreatePicklists(i, {
+          picklistFor: i,
+          salesforceObject: 'Opportunity',
+        })
+      }
+
+      this.filterFields = this.updateOppForm[0].fieldsRef.filter(
+        (field) =>
+          field.apiName !== 'meeting_type' &&
+          field.apiName !== 'meeting_comments' &&
+          !field.apiName.includes('__c'),
+      )
+      this.filterFields = [...this.filterFields, this.ladFilter, this.lmdFilter]
+
+      this.updateOppForm[0].fieldsRef.filter((field) => field.apiName === 'AccountId').length
+        ? (this.accountSobjectId = this.updateOppForm[0].fieldsRef.filter(
+            (field) => field.apiName === 'AccountId',
+          )[0].id)
+        : this.createOppForm.filter((field) => field.apiName === 'AccountId').length
+        ? (this.accountSobjectId = this.createOppForm.filter(
+            (field) => field.apiName === 'AccountId',
+          )[0].id)
+        : (this.accountSobjectId = null)
+
+      this.oppFields = this.updateOppForm[0].fieldsRef.filter(
+        (field) =>
+          field.apiName !== 'meeting_type' &&
+          field.apiName !== 'meeting_comments' &&
+          field.apiName !== 'Name' &&
+          field.apiName !== 'AccountId' &&
+          field.apiName !== 'OwnerId',
+      )
+
+      for (let i in this.stagePicklistQueryOpts) {
+        this.stagePicklistQueryOpts[i] = this.listStagePicklists(i, {
+          picklistFor: i,
+          salesforceObject: 'Opportunity',
+        })
+      }
+    },
     async getAllForms() {
       try {
         let res = await SlackOAuth.api.getOrgCustomForm()
@@ -893,11 +1107,11 @@ export default {
         this.createOppForm = res.filter(
           (obj) => obj.formType === 'CREATE' && obj.resource === 'Opportunity',
         )
-        this.createContactForm = res.filter(
-          (obj) => obj.formType === 'CREATE' && obj.resource === 'Contact',
-        )
         let stageGateForms = res.filter(
           (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Opportunity',
+        )
+        this.createContactForm = res.filter(
+          (obj) => obj.formType === 'CREATE' && obj.resource === 'Contact',
         )
 
         let stages = stageGateForms.map((field) => field.stage)
@@ -905,64 +1119,6 @@ export default {
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
         this.createOppForm = this.createOppForm[0].fieldsRef
         this.createContactForm = this.createContactForm[0].fieldsRef
-
-        for (let i = 0; i < this.createContactForm.length; i++) {
-          if (
-            this.createContactForm[i].dataType === 'Picklist' ||
-            this.createContactForm[i].dataType === 'MultiPicklist'
-          ) {
-            this.picklistQueryOptsContacts[this.createContactForm[i].apiName] =
-              this.createContactForm[i].apiName
-          } else if (this.createContactForm[i].dataType === 'Reference') {
-            this.picklistQueryOptsContacts[this.createContactForm[i].referenceDisplayLabel] =
-              this.createContactForm[i].referenceDisplayLabel
-          }
-        }
-        for (let i in this.picklistQueryOptsContacts) {
-          this.picklistQueryOptsContacts[i] = this.listPicklists(i, { picklistFor: i })
-        }
-
-        for (let i = 0; i < this.oppFormCopy.length; i++) {
-          if (
-            this.oppFormCopy[i].dataType === 'Picklist' ||
-            this.oppFormCopy[i].dataType === 'MultiPicklist'
-          ) {
-            this.picklistQueryOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].apiName
-          } else if (this.oppFormCopy[i].dataType === 'Reference') {
-            this.picklistQueryOpts[this.oppFormCopy[i].referenceDisplayLabel] =
-              this.oppFormCopy[i].referenceDisplayLabel
-          }
-        }
-
-        for (let i in this.picklistQueryOpts) {
-          this.picklistQueryOpts[i] = this.listPicklists(i, { picklistFor: i })
-        }
-
-        for (let i = 0; i < this.createOppForm.length; i++) {
-          if (
-            this.createOppForm[i].dataType === 'Picklist' ||
-            this.createOppForm[i].dataType === 'MultiPicklist'
-          ) {
-            this.createQueryOpts[this.createOppForm[i].apiName] = this.createOppForm[i].apiName
-          } else if (this.createOppForm[i].dataType === 'Reference') {
-            this.createQueryOpts[this.createOppForm[i].referenceDisplayLabel] =
-              this.createOppForm[i].referenceDisplayLabel
-          }
-        }
-
-        for (let i in this.createQueryOpts) {
-          this.createQueryOpts[i] = this.listCreatePicklists(i, { picklistFor: i })
-        }
-
-        this.updateOppForm[0].fieldsRef.filter((field) => field.apiName === 'AccountId').length
-          ? (this.accountSobjectId = this.updateOppForm[0].fieldsRef.filter(
-              (field) => field.apiName === 'AccountId',
-            )[0].id)
-          : this.createOppForm.filter((field) => field.apiName === 'AccountId').length
-          ? (this.accountSobjectId = this.createOppForm.filter(
-              (field) => field.apiName === 'AccountId',
-            )[0].id)
-          : (this.accountSobjectId = null)
 
         for (const field of stageGateForms) {
           this.stageValidationFields[field.stage] = field.fieldsRef
@@ -984,18 +1140,11 @@ export default {
               dupeStagesRemoved[i].referenceDisplayLabel
           }
         }
-
-        for (let i in this.stagePicklistQueryOpts) {
-          this.stagePicklistQueryOpts[i] = this.listStagePicklists(i, { picklistFor: i })
-        }
-
-        this.createContactForm = this.createContactForm.filter(
-          (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
-        )
       } catch (error) {
         console.log(error)
       }
     },
+
     async getUsers() {
       try {
         const res = await SObjects.api.getObjects('User')
@@ -1148,7 +1297,7 @@ select {
   background-color: #fafafa;
   height: 40px;
   width: 100%;
-  background-image: url('../assets/images/dropdown.png');
+  background-image: url('../assets/images/dropdown.svg');
   background-size: 1rem;
   background-position: 100%;
   background-repeat: no-repeat;
@@ -1215,7 +1364,7 @@ input {
   overflow: scroll;
   margin-top: 0.5rem;
   border-radius: 5px;
-  box-shadow: 2px 2px 20px 2px $soft-gray;
+  border: 1px solid #e8e8e8;
   background-color: $off-white;
 }
 
@@ -1462,9 +1611,51 @@ section {
   justify-content: flex-end;
 }
 textarea {
-  resize: none;
+  resize: vertical;
 }
 a {
   text-decoration: none;
+}
+.modal-container {
+  background-color: $white;
+  overflow: auto;
+  min-width: 32vw;
+  max-width: 40vw;
+  min-height: 44vh;
+  max-height: 80vh;
+  align-items: center;
+  border-radius: 0.3rem;
+  padding: 0.25rem;
+  border: 1px solid #e8e8e8;
+}
+.logo {
+  height: 1.75rem;
+  margin-left: 0.5rem;
+  margin-right: 0.25rem;
+  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+    brightness(93%) contrast(89%);
+}
+.note-section {
+  padding: 0.5rem 1rem;
+  margin-bottom: 0.25rem;
+  background-color: white;
+  border-bottom: 1px solid $soft-gray;
+  overflow: scroll;
+  &__title {
+    font-size: 16px;
+    font-weight: bolder;
+    color: $dark-green;
+    letter-spacing: 1.2px;
+  }
+  &__body {
+    color: $base-gray;
+    font-family: $base-font-family;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+  }
+  &__date {
+    color: $mid-gray;
+    font-size: 11px;
+  }
 }
 </style>

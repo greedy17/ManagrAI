@@ -1,6 +1,6 @@
 import { apiClient } from '@/services/api'
 import { objectToCamelCase } from '@thinknimble/tn-utils'
-import moment from 'moment'
+import moment from 'moment/src/moment'
 const POLLING_COUNT_ENDPOINT = 'polling/count'
 
 export default {

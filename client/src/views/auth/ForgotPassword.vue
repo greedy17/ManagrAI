@@ -32,19 +32,22 @@ export default {
       User.api
         .requestPasswordReset(this.email)
         .then((response) => {
-          this.$Alert.alert({
-            type: 'success',
-            message: 'Please check your email for instructions on how to reset password',
+          this.$toast('Please check your email for instructions on how to reset password', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
-
           this.$router.push({ name: 'Login' })
         })
         .catch((error) => {
-          this.$Alert.alert({
-            type: 'error',
-            message: 'There was an error, please try again',
+          this.$toast('There was an error please try again', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         })
         .finally(() => {

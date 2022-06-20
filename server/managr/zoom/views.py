@@ -1,27 +1,12 @@
 import logging
-import requests
 import json
-from faker import Faker
 from urllib.parse import urlencode
-from datetime import datetime
-from django.db.models import Q
-
+from managr.core.background import emit_create_calendar_event
+from managr.zoom.background import emit_process_schedule_zoom_meeting
 from django.core.management import call_command
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect
 from django.conf import settings
-from django.views.decorators.csrf import csrf_exempt, csrf_protect
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.views import APIView
-from rest_framework import (
-    authentication,
-    filters,
-    permissions,
-    generics,
-    mixins,
-    status,
-    views,
-    viewsets,
-)
+from rest_framework import permissions, status
 from rest_framework.decorators import (
     api_view,
     permission_classes,
@@ -415,3 +400,52 @@ def fake_recording(request):
         logger.warning(f"Zoom recording error: {e}")
     return Response()
 
+
+@api_view(["post"])
+@permission_classes([permissions.AllowAny])
+def schedule_zoom_meeting(request):
+    from managr.organization.models import Contact
+
+    user = request.user
+    data = request.data
+    description = data["meeting_description"]
+    zoom_data = {
+        "meeting_topic": data["meeting_topic"],
+        "meeting_date": data["meeting_date"],
+        "meeting_hour": data["meeting_hour"],
+        "meeting_minute": data["meeting_minute"],
+        "meeting_time": data["meeting_time"],
+        "meeting_duration": data["meeting_duration"],
+    }
+    participant_data = []
+    contacts = Contact.objectsd.filter(id__in=data.get("contacts"))
+    internal = User.objects.filter(id__in=data.get("internal"))
+    extra_participants = data.get("extra_participants")
+    for contact in contacts:
+        participant_data.append(
+            {
+                "email": contact.email,
+                "name": contact["secondary_data"]["Name"],
+                "status": "noreply",
+            }
+        )
+    for u in internal:
+        participant_data.append(
+            {"email": u.email, "name": f"{u.first_name} {u.last_name}", "status": "noreply",}
+        )
+    for participant in extra_participants:
+        participant_data.append({"email": participant})
+    try:
+        zoom_res = emit_process_schedule_zoom_meeting(user, zoom_data)
+        cal_res = emit_create_calendar_event(
+            user,
+            zoom_res["topic"],
+            zoom_res["start_time"],
+            participant_data,
+            zoom_res["join_url"],
+            description,
+        )
+    except Exception as e:
+        logger.exception(f"Scheduling Zoom Meeting Error {e}")
+        return Response(data={"error": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
+    return Response(status=status.HTTP_200_OK)
