@@ -14,6 +14,8 @@ class ZoomAuthRefSerializer(serializers.ModelSerializer):
 
 
 class ZoomAuthSerializer(serializers.ModelSerializer):
+    fake_meeting_id_ref = serializers.SerializerMethodField("get_fake_meeting_id")
+
     class Meta:
         model = ZoomAuthAccount
         fields = (
@@ -31,7 +33,11 @@ class ZoomAuthSerializer(serializers.ModelSerializer):
             "refresh_token",
             "token_generated_date",
             "token_scope",
+            "fake_meeting_id_ref",
         )
+
+    def get_fake_meeting_id(self, instance):
+        return instance.fake_meeting_id
 
 
 class ZoomMeetingWebhookSerializer(serializers.ModelSerializer):
