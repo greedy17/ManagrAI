@@ -522,14 +522,15 @@ export default {
   },
   async created() {
     this.getOpportunites()
+    this.getForecastValues()
   },
   beforeMount() {
     this.setPicklist()
   },
-  mounted() {
-    console.log(this.forecastOpps)
-    console.log(this.currentValues)
-  },
+  // mounted() {
+  //   console.log(this.forecastOpps)
+  //   console.log(this.currentValues)
+  // },
   methods: {
     resetNotes() {
       this.notesOpen = !this.notesOpen
@@ -601,6 +602,20 @@ export default {
       } finally {
         this.$store.dispatch('refreshCurrentUser')
         this.resetSettings()
+      }
+    },
+    async getForecastValues() {
+      try {
+        const res = await User.api.getForecastValues()
+        console.log(res)
+      } catch (e) {
+        this.$toast('Error gathering tracked opportunities', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async getOpportunites() {
@@ -719,7 +734,6 @@ export default {
           opp.data[this.filterApiName].includes(this.currentVal),
         )
       }
-
       this.closeFilterSelection()
       console.log(this.activeFilters)
     },

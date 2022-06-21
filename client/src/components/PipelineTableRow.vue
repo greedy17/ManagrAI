@@ -652,7 +652,7 @@ input {
   display: table-cell;
   position: sticky;
   min-width: 12vw;
-  background-color: $off-white;
+  background-color: $white;
   padding: 2vh 3vh;
   border: none;
   border-bottom: 1px solid $soft-gray;
@@ -677,7 +677,7 @@ input {
   display: table-cell;
   position: sticky;
   min-width: 26vw;
-  background-color: $off-white;
+  background-color: $white;
   padding: 2vh 3.5vh;
   border: none;
   border-bottom: 1px solid $soft-gray;
@@ -693,7 +693,7 @@ input {
   top: 0;
   left: 0;
   position: sticky;
-  background-color: $off-white;
+  background-color: $white;
 }
 .table-cell-checkbox {
   display: table-cell;
@@ -704,7 +704,7 @@ input {
   position: sticky;
   z-index: 1;
   border-bottom: 1px solid $soft-gray;
-  background-color: $off-white;
+  background-color: $white;
 }
 .cell-name-header {
   display: table-cell;
@@ -716,7 +716,7 @@ input {
   left: 3.5vw;
   top: 0;
   position: sticky;
-  background-color: $off-white;
+  background-color: $white;
   font-weight: bold;
   font-size: 13px;
   letter-spacing: 0.5px;
