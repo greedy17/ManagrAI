@@ -669,6 +669,7 @@ input {
 .table-cell:hover,
 .empty:hover {
   border: 1px solid $dark-green;
+  border-radius: 4px;
 }
 .cell-name:hover {
   border: none;
