@@ -757,7 +757,7 @@
                 class="invert"
                 style="height: 0.8rem; margin-right: 0.25rem"
                 alt=""
-              />Add filter
+              />Filter
             </button>
             <div v-outside-click="closeFilters" v-if="filtering">
               <Filters @select-filter="selectFilter" :filterFields="filterFields" />
@@ -2867,7 +2867,7 @@ h3 {
   margin-top: 0.5rem;
   border-radius: 5px;
   border: 1px solid #e8e8e8;
-  background-color: $off-white;
+  // background-color: $off-white;
 }
 .table-section::-webkit-scrollbar {
   width: 0px; /* Mostly for vertical scrollbars */

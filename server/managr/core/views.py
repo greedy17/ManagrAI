@@ -323,9 +323,13 @@ class UserViewSet(
 
         user = request.user
         res = user.current_forecast.get_current_values()
-        opps = OpportunitySerializer(data=res["records"], many=True)
-        opps.is_valid()
-        return Response(data=opps.data, status=status.HTTP_200_OK)
+        opps = []
+        for item in res:
+            serializer = OpportunitySerializer(data=item.as_dict)
+            serializer.is_valid()
+            opps.append(serializer.data)
+        print(opps)
+        return Response(data=opps, status=status.HTTP_200_OK)
 
 
 class ActivationLinkView(APIView):

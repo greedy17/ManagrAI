@@ -256,27 +256,29 @@
             </span>
           </p>
         </div>
-        <div v-else-if="forecastOpps" v-for="(opp, i) in forecastOpps" :key="i" class="table-row">
+        <div
+          v-else-if="forecastOpps"
+          v-for="(opp, i, index) in forecastOpps"
+          :key="i"
+          class="table-row"
+        >
           <p class="no-display">{{ setOriginalAmount(opp.data.Amount) }}</p>
           <div class="table-cell cell-name row">
             <div class="row-spread">
               <div>
+                <!-- <p>{{ index }}</p> -->
                 <p>{{ opp.data.Name }}</p>
                 <p class="green-text">
                   {{
-                    currentValues[opp.data.Name].account_ref
-                      ? currentValues[opp.data.Name].account_ref.name
-                      : ''
+                    currentValues[index].account_ref ? currentValues[index].account_ref.name : ''
                   }}
                 </p>
-                <p class="gray-text">
-                  Owned by: {{ currentValues[opp.data.Name].owner_ref.full_name }}
-                </p>
+                <p class="gray-text">Owned by: {{ currentValues[index].owner_ref.full_name }}</p>
               </div>
 
               <div class="row">
                 <button
-                  @click="getNotes(currentValues[opp.data.Name].id)"
+                  @click="getNotes(allOpps.filter((opp) => opp.integration_id === i)[0].id)"
                   class="name-cell-edit-note-button"
                 >
                   <img
@@ -301,14 +303,14 @@
           </div>
           <div class="table-cell">
             <p class="green-text align-center letter-spacing">
-              {{ opp.data.Amount ? formatCash(currentValues[opp.data.Name].amount) : '' }}
-              <span v-if="currentValues[opp.data.Name].amount < opp.data.Amount"
+              {{ opp.data.Amount ? formatCash(currentValues[index].amount) : '' }}
+              <span v-if="currentValues[index].amount < opp.data.Amount"
                 ><img
                   class="filter-red margin-left-s"
                   src="@/assets/images/trendingDown.svg"
                   alt=""
               /></span>
-              <span v-else-if="currentValues[opp.data.Name].amount > opp.data.Amount"
+              <span v-else-if="currentValues[index].amount > opp.data.Amount"
                 ><img
                   class="filter-green margin-left-s"
                   src="@/assets/images/trendingUp.svg"
@@ -324,11 +326,10 @@
           </div>
           <div class="table-cell">
             <p class="align-center">
-              {{ currentValues[opp.data.Name].stage }}
+              {{ currentValues[index].stage }}
               <span
                 v-if="
-                  stages.indexOf(currentValues[opp.data.Name].stage) <
-                  stages.indexOf(opp.data.StageName)
+                  stages.indexOf(currentValues[index].stage) < stages.indexOf(opp.data.StageName)
                 "
                 ><img
                   class="filter-red margin-left-s"
@@ -337,8 +338,7 @@
               /></span>
               <span
                 v-else-if="
-                  stages.indexOf(currentValues[opp.data.Name].stage) >
-                  stages.indexOf(opp.data.StageName)
+                  stages.indexOf(currentValues[index].stage) > stages.indexOf(opp.data.StageName)
                 "
                 ><img
                   class="filter-green margin-left-s"
@@ -350,10 +350,10 @@
           </div>
           <div class="table-cell">
             <p class="align-center">
-              {{ currentValues[opp.data.Name].forecast_category }}
+              {{ currentValues[index].forecast_category }}
               <span
                 v-if="
-                  forecasts.indexOf(currentValues[opp.data.Name].forecast_category) <
+                  forecasts.indexOf(currentValues[index].forecast_category) <
                   forecasts.indexOf(opp.data.ForecastCategoryName)
                 "
                 ><img
@@ -363,7 +363,7 @@
               /></span>
               <span
                 v-else-if="
-                  forecasts.indexOf(currentValues[opp.data.Name].forecast_category) >
+                  forecasts.indexOf(currentValues[index].forecast_category) >
                   forecasts.indexOf(opp.data.ForecastCategoryName)
                 "
                 ><img
@@ -378,18 +378,14 @@
           </div>
           <div class="table-cell">
             <p class="align-center">
-              {{
-                currentValues[opp.data.Name]
-                  ? formatDate(currentValues[opp.data.Name].close_date)
-                  : ''
-              }}
-              <span v-if="currentValues[opp.data.Name].close_date > opp.data.CloseDate"
+              {{ currentValues[index] ? formatDate(currentValues[index].close_date) : '' }}
+              <span v-if="currentValues[index].close_date > opp.data.CloseDate"
                 ><img
                   class="filter-red margin-left-s"
                   src="@/assets/images/trendingDown.svg"
                   alt=""
               /></span>
-              <span v-else-if="currentValues[opp.data.Name].close_date < opp.data.CloseDate"
+              <span v-else-if="currentValues[index].close_date < opp.data.CloseDate"
                 ><img
                   class="filter-green margin-left-s"
                   src="@/assets/images/trendingUp.svg"
@@ -404,7 +400,7 @@
             <p>
               {{
                 opp.data.LastActivityDate
-                  ? formatDateTime(currentValues[opp.data.Name].last_activity_date)
+                  ? formatDateTime(currentValues[index].last_activity_date)
                   : ''
               }}
             </p>
@@ -500,7 +496,7 @@ export default {
       totalAmount: 0,
       limit: 0,
       picklistQueryOpts: { StageName: null, ForecastCategoryName: null },
-      currentValues: {},
+      currentValues: null,
       addedOpportunities: [],
       activeOperators: [],
       addedFilters: [],
@@ -518,17 +514,15 @@ export default {
     FilterSelection: () => import(/* webpackPrefetch: true */ '@/components/FilterSelection'),
   },
   watch: {
-    allOpps: ['setCurrentValues', 'getStagesAndForecast'],
+    allOpps: ['getStagesAndForecast'],
   },
   async created() {
+    this.getForecastValues()
     this.getOpportunites()
   },
-  beforeMount() {
-    this.setPicklist()
-  },
+
   mounted() {
-    console.log(this.forecastOpps)
-    console.log(this.currentValues)
+    this.setPicklist()
   },
   methods: {
     resetNotes() {
@@ -603,11 +597,34 @@ export default {
         this.resetSettings()
       }
     },
+    async getForecastValues() {
+      this.loading = true
+      try {
+        const res = await User.api.getForecastValues()
+        this.currentValues = res
+
+        for (let i = 0; i < res.length; i++) {
+          this.totalAmount += parseInt(res[i].amount) ? parseInt(res[i].amount) : 0
+        }
+        this.forecastLength = res.length
+        this.averageDeal = this.totalAmount / this.forecastLength
+      } catch (e) {
+        this.$toast('Error gathering tracked opportunities', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.loading = false
+      }
+    },
     async getOpportunites() {
       try {
         let res = await SObjects.api.getObjects('Opportunity')
         this.allOpps = res.results
-        // console.log(this.allOpps)
+        console.log(res.results)
       } catch (e) {
         this.$toast('Error gathering opportunities', {
           timeout: 2000,
@@ -618,23 +635,23 @@ export default {
         })
       }
     },
-    setCurrentValues() {
-      this.loading = true
-      if (this.forecastOpps) {
-        let forecast = []
-        for (let i in this.forecastOpps) {
-          forecast.push(i)
-        }
-        let newOpps = this.allOpps.filter((opp) => forecast.includes(opp.integration_id))
-        for (let i = 0; i < newOpps.length; i++) {
-          this.currentValues[newOpps[i].name] = newOpps[i]
-          this.totalAmount += parseInt(newOpps[i].amount) ? parseInt(newOpps[i].amount) : 0
-        }
-        this.forecastLength = forecast.length
-        this.averageDeal = this.totalAmount / this.forecastLength
-        this.loading = false
-      }
-    },
+    // setCurrentValues() {
+    //   this.loading = true
+    //   if (this.forecastOpps) {
+    //     let forecast = []
+    //     for (let i in this.forecastOpps) {
+    //       forecast.push(i)
+    //     }
+    //     let newOpps = this.allOpps.filter((opp) => forecast.includes(opp.integration_id))
+    //     for (let i = 0; i < newOpps.length; i++) {
+    //       this.currentValues[newOpps[i].name] = newOpps[i]
+    //       this.totalAmount += parseInt(newOpps[i].amount) ? parseInt(newOpps[i].amount) : 0
+    //     }
+    //     this.forecastLength = forecast.length
+    //     this.averageDeal = this.totalAmount / this.forecastLength
+    //     this.loading = false
+    //   }
+    // },
     setOriginalAmount(i) {
       if (this.limit < this.forecastLength) {
         this.originalAmount += i
@@ -719,7 +736,6 @@ export default {
           opp.data[this.filterApiName].includes(this.currentVal),
         )
       }
-
       this.closeFilterSelection()
       console.log(this.activeFilters)
     },
