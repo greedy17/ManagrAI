@@ -115,9 +115,9 @@ export default {
 }
 .cash {
   color: $dark-green;
-  background-color: $white-green;
-  align-items: center;
-  border-radius: 4px;
-  padding: 4px;
+  // background-color: $white-green;
+  // align-items: center;
+  // border-radius: 4px;
+  // padding: 4px;
 }
 </style>

@@ -653,6 +653,7 @@ input {
 }
 .cell-name:hover {
   border: none;
+  border-bottom: 1px solid $soft-gray;
 }
 .table-cell-wide {
   display: table-cell;

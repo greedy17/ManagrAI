@@ -673,6 +673,7 @@ input {
 }
 .cell-name:hover {
   border: none;
+  border-bottom: 1px solid #e8e8e8;
 }
 .table-cell-wide {
   display: table-cell;
