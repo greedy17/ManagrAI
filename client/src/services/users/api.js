@@ -175,7 +175,7 @@ export default class UserAPI {
     const url = FORECAST_VALUES_ENDPOINT
     return this.client
       .get(url)
-      .then(response => this.cls.fromAPI(response.data))
+      .then(response => response.data)
       .catch(apiErrorHandler({ apiName: 'Get Forecast values error' }))
   }
 
