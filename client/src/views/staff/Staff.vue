@@ -55,9 +55,104 @@
             </div>
           </div>
         </div>
-        <div v-else-if="modalName === 'MeetingWorkflow'">
+        <div v-else-if="modalName === 'meetingWorkflow'">
           <div class="modal-container__body">
-            {{modalInfo}}
+            <!-- {{modalInfo}} -->
+            <div>
+              <h3>Meeting ID:</h3>
+              <h4>{{modalInfo.meeting_ref.meeting_id ? modalInfo.meeting_ref.meeting_id : 'null'}}</h4>
+            </div>
+            <div>
+              <h3>Meeting UUID:</h3>
+              <h4>{{modalInfo.meeting_ref.meeting_uuid ? modalInfo.meeting_ref.meeting_uuid : 'null'}}</h4>
+            </div>
+            <div>
+              <h3>Account ID:</h3>
+              <h4>{{modalInfo.meeting_ref.account_id ? modalInfo.meeting_ref.account_id : 'null'}}</h4>
+            </div>
+            <div>
+              <h3>Host ID:</h3>
+              <h4>{{modalInfo.meeting_ref.host_id ? modalInfo.meeting_ref.host_id : 'null'}}</h4>
+            </div>
+            <div>
+              <h3>Operator ID:</h3>
+              <h4>{{modalInfo.meeting_ref.operator_id ? modalInfo.meeting_ref.operator_id : 'null'}}</h4>
+            </div>
+            <div>
+              <h3>Status:</h3>
+              <h4>{{modalInfo.meeting_ref.status ? modalInfo.meeting_ref.status : 'null'}}</h4>
+            </div>
+            <div>
+              <h3>Timezone:</h3>
+              <h4>{{modalInfo.meeting_ref.timezone ? modalInfo.meeting_ref.timezone : 'null'}}</h4>
+            </div>
+            <div>
+              <h3>Start Time:</h3>
+              <h4>{{modalInfo.meeting_ref.start_time ? modalInfo.meeting_ref.start_time : 'null'}}</h4>
+            </div>
+            <div>
+              <h3>End Time:</h3>
+              <h4>{{modalInfo.meeting_ref.end_time ? modalInfo.meeting_ref.end_time : 'null'}}</h4>
+            </div>
+            <div>
+              <h3>Start URL:</h3>
+              <h4>{{modalInfo.meeting_ref.start_url ? modalInfo.meeting_ref.start_url : 'null'}}</h4>
+            </div>
+            <div>
+              <h3>Duration:</h3>
+              <h4>{{modalInfo.meeting_ref.duration ? modalInfo.meeting_ref.duration : 'null'}}</h4>
+            </div>
+            <div>
+              <h3>Original Duration:</h3>
+              <h4>{{modalInfo.meeting_ref.original_duration ? modalInfo.meeting_ref.original_duration : 'null'}}</h4>
+            </div>
+            <div>
+              <h3>Total Minutes:</h3>
+              <h4>{{modalInfo.meeting_ref.total_minutes ? modalInfo.meeting_ref.total_minutes : 'null'}}</h4>
+            </div>
+            <div>
+              <h3>Recurrence:</h3>
+              <h4>{{modalInfo.meeting_ref.recurrence ? modalInfo.meeting_ref.recurrence : 'null'}}</h4>
+            </div>
+            <div>
+              <h3>Join URL:</h3>
+              <h4>{{modalInfo.meeting_ref.join_url ? modalInfo.meeting_ref.join_url : 'null'}}</h4>
+            </div>
+            <div>
+              <h3>Operator:</h3>
+              <h4>{{modalInfo.meeting_ref.operator ? modalInfo.meeting_ref.operator : 'null'}}</h4>
+            </div>
+            <div>
+              <h3>Operation:</h3>
+              <h4>{{modalInfo.meeting_ref.operation ? modalInfo.meeting_ref.operation : 'null'}}</h4>
+            </div>
+            <div>
+              <h3>Participants:</h3>
+              <div v-if="modalInfo.meeting_ref.participants.length">
+                <div v-for="participant in modalInfo.meeting_ref.participants" :key="participant.id">
+                  <h4>ID: {{participant.id ? participant.id : 'null'}}</h4>
+                  <h4>Name: {{participant.secondary_data ? `${participant.secondary_data.FirstName} ${participant.secondary_data.LastName}` : 'null'}}</h4>
+                  <h4>Email: {{participant.email ? participant.email : 'null'}}</h4>
+                  <h4>Owner: {{participant.owner ? participant.owner : 'null'}}</h4>
+                  <h4>Account: {{participant.account ? participant.account : 'null'}}</h4>
+                  <h4>External Owner: {{participant.external_owner ? participant.external_owner : 'null'}}</h4>
+                  <h4>External Account: {{participant.external_account ? participant.external_account : 'null'}}</h4>
+                  <h4>Imported By: {{participant.imported_by ? participant.imported_by : 'null'}}</h4>
+                  <h4>Integration ID: {{participant.integration_id ? participant.integration_id : 'null'}}</h4>
+                  <h4>Integration Source: {{participant.integration_source ? participant.integration_source : 'null'}}</h4>
+                </div>
+              </div>
+              <div v-else><h4>null</h4></div>
+              <!-- <h4>{{modalInfo.meeting_ref.participants ? modalInfo.meeting_ref.participants : 'null'}}</h4> -->
+            </div>
+            <div>
+              <h3>Type:</h3>
+              <h4>{{modalInfo.meeting_ref.type ? modalInfo.meeting_ref.type : 'null'}}</h4>
+            </div>
+            <div>
+              <h3>Zoom Account:</h3>
+              <h4>{{modalInfo.meeting_ref.zoom_account ? modalInfo.meeting_ref.zoom_account : 'null'}}</h4>
+            </div>
           </div>
         </div>
       </div>
@@ -405,11 +500,16 @@
             <div class="user_item_container">
               <h3>Event Calendar ID:</h3>
               <div v-if="user.nylasRef.eventCalendarId">
-                <h4>{{user.nylasRef.eventCalendarId}}</h4>
+                <!-- Value will be eventCalendarIDVal[i] -->
+                <!-- eventCalendarIDVal will be assigned when selected users are assigned -->
+                <!-- For every user, push in an array that is user.nylasRef.eventCalendarId -->
+                <!-- Set up object with i as key and eventCalendarIDVal[i] as value -->
+                <!-- On change, change the key of i to value of input -->
+                <input v-model="eventCalendarIDObj[i]">
               </div>
-              <div v-else>
-                <h4>null</h4>
-              </div>
+              <!-- <div v-else>
+                <input>null</input>
+              </div> -->
             </div>
             <div class="user_item_container">
               <h3>Provider:</h3>
@@ -461,8 +561,8 @@
             </div>
             <div class="user_item_container">
               <h3>Fake Meeting ID:</h3>
-              <div v-if="user.zoomRef.fakeMeetingId">
-                <h4>{{user.zoomRef.fakeMeetingId}}</h4>
+              <div v-if="user.zoomRef.fakeMeetingIdRef">
+                <h4>{{user.zoomRef.fakeMeetingIdRef}}</h4>
               </div>
               <div v-else>
                 <h4>null</h4>
@@ -717,6 +817,7 @@ export default {
       ignoreEmailText: '',
       ignoreEmails: [], // change to whatever info is coming in
       newIgnoreEmails: [],
+      eventCalendarIDObj: {},
       hasProducts: false, // change to whatever info is coming in
       allForms: null,
       allMeetingWorkflows: null,
@@ -744,7 +845,7 @@ export default {
   },
   methods: {
     test() {
-      console.log('test', this.selectedSlackForms)
+      console.log('test', this.eventCalendarIDObj)
     },
     async getAllForms() {
       try {
@@ -841,7 +942,8 @@ export default {
       if (!this.selectedUsers || !this.selectedUsers.length) {
         return;
       }
-      console.log('selectedUsers', this.selectedUsers)
+      this.selectedUsers.forEach((u, i) => this.eventCalendarIDObj[i] = u.nylasRef.eventCalendarId)
+      console.log('this.eventCalendarIDObj', this.eventCalendarIDObj)
       this.old_selected_org = this.selected_org;
       this.selected_org = null;
       this.page = 'Users';
