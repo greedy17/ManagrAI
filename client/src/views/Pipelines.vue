@@ -1403,12 +1403,6 @@ export default {
     currentCheckList: 'addToForecastList',
   },
   methods: {
-    test(n) {
-      console.log(n)
-    },
-    testBool(i) {
-      console.log(i)
-    },
     addToForecastList() {
       let list = []
       for (let i = 0; i < this.currentCheckList.length; i++) {
@@ -1463,7 +1457,13 @@ export default {
           this.createReferenceOpts[key] = res
         }
       } catch (e) {
-        console.log(e)
+        this.$toast('Error gathering reference fields', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     emitCloseEdit() {
@@ -1494,7 +1494,13 @@ export default {
               })
           })
       } catch (e) {
-        console.log(e)
+        this.$toast('Error updating Opportunity!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         setTimeout(() => {
           this.inlineLoader = false
@@ -1555,7 +1561,13 @@ export default {
           this.allOpps = res.results
         }
       } catch (e) {
-        console.log(e)
+        this.$toast('Error creating filter, please try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         this.operatorValue = 'EQUALS'
         this.currentOperator = ['equals']
@@ -1899,7 +1911,13 @@ export default {
         const res = await SObjectPicklist.api.listPicklists(query_params)
         this.picklistQueryOpts[type] = res.length ? res[0]['values'] : []
       } catch (e) {
-        console.log(e)
+        this.$toast('Error gathering update picklist fields', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async listStagePicklists(type, query_params) {
@@ -1907,7 +1925,13 @@ export default {
         const res = await SObjectPicklist.api.listPicklists(query_params)
         this.stagePicklistQueryOpts[type] = res.length ? res[0]['values'] : []
       } catch (e) {
-        console.log(e)
+        this.$toast('Error gathering stage picklist fields', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async listCreatePicklists(type, query_params) {
@@ -1915,7 +1939,13 @@ export default {
         const res = await SObjectPicklist.api.listPicklists(query_params)
         this.createQueryOpts[type] = res.length ? res[0]['values'] : []
       } catch (e) {
-        console.log(e)
+        this.$toast("Error gathering 'create' picklist fields", {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async updateWorkflow(id) {
@@ -1924,7 +1954,13 @@ export default {
           fromWorkflow: true,
         })
       } catch (e) {
-        console.log(e)
+        this.$toast('Error running workflow, refreh page and try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     resetNotes() {
@@ -1946,7 +1982,13 @@ export default {
         // this.addOppModalOpen = true
         this.contactInstanceId = res.form_id
       } catch (e) {
-        console.log(e)
+        this.$toast('Error updating conacts', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async createFormInstance(id, alertInstanceId = null) {
@@ -1982,7 +2024,13 @@ export default {
               : (this.currentAccount = 'Account')
           })
       } catch (e) {
-        console.log(e)
+        this.$toast('Error creating update form', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         this.dropdownLoading = false
       }
@@ -1999,7 +2047,13 @@ export default {
         this.addOppModalOpen = true
         this.oppInstanceId = res.form_id
       } catch (e) {
-        console.log(e)
+        this.$toast('Error building create form', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async oppInstance(id) {
@@ -2012,7 +2066,13 @@ export default {
         this.currentVals = res.current_values
         this.oppInstanceId = res.form_id
       } catch (e) {
-        console.log(e)
+        this.$toast('Error building update form', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async stageGateInstance(field) {
@@ -2025,7 +2085,13 @@ export default {
         })
         this.stageGateId = res.form_id
       } catch (e) {
-        console.log(e)
+        this.$toast('Error creating stage form', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     pushCloseDate() {
@@ -2104,7 +2170,13 @@ export default {
           this.stillNextMonth()
         }
       } catch (e) {
-        console.log(e)
+        this.$toast('Error updating Opporunity', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async resourceSync() {
@@ -2115,7 +2187,13 @@ export default {
         try {
           await SObjects.api.resourceSync()
         } catch (e) {
-          console.log(e)
+          this.$toast('Error syncing your resources, refresh page', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
         } finally {
           this.$store.dispatch('refreshCurrentUser')
           setTimeout(() => {
@@ -2135,7 +2213,13 @@ export default {
       try {
         await SObjects.api.resourceSync()
       } catch (e) {
-        console.log(e)
+        this.$toast('Error syncing your resources, refresh page', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         this.$store.dispatch('refreshCurrentUser')
         setTimeout(() => {
@@ -2172,7 +2256,13 @@ export default {
           this.stillNextMonth()
         }
       } catch (e) {
-        console.log(e)
+        this.$toast('Error updating stage form', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         this.closeStageForm()
         this.formData = {}
@@ -2211,7 +2301,13 @@ export default {
           this.stillNextMonth()
         }
       } catch (e) {
-        console.log(e)
+        this.$toast('Error updating Opporutniy, pleae try again.', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         this.updateList = []
         this.formData = {}
@@ -2239,7 +2335,13 @@ export default {
             this.originalList = updatedRes.results
           })
       } catch (e) {
-        console.log(e)
+        this.$toast('Error creating opportunity', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         this.$toast('Opportunity created successfully.', {
           timeout: 2000,
@@ -2265,7 +2367,13 @@ export default {
             this.updateWorkflow(id ? id : this.id)
           }
         } catch (error) {
-          console.log(error)
+          this.$toast('Error gathering workflow!', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
         } finally {
           this.selectedWorkflow = true
           this.loadingWorkflows = false
@@ -2284,7 +2392,13 @@ export default {
         )
         this.filteredWorkflows = this.currentWorkflow
       } catch (error) {
-        console.log(error)
+        this.$toast('Error updateing workflow', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         this.selectedWorkflow = true
         this.showList = false
@@ -2423,7 +2537,13 @@ export default {
           }
         }
       } catch (error) {
-        console.log(error)
+        this.$toast('Error setting form fields!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async getUsers() {
@@ -2431,7 +2551,13 @@ export default {
         const res = await SObjects.api.getObjects('User')
         this.allUsers = res.results.filter((user) => user.has_salesforce_integration)
       } catch (e) {
-        console.log(e)
+        this.$toast('Error gathering users!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     // async getInitialAccounts() {
@@ -2458,7 +2584,13 @@ export default {
         })
         this.allAccounts = res
       } catch (e) {
-        console.log(e)
+        this.$toast('Error gathering Accounts!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         this.loadingAccounts = false
       }
@@ -2470,7 +2602,13 @@ export default {
         this.allOpps = res.results
         this.originalList = res.results
       } catch (e) {
-        console.log(e)
+        this.$toast('Error gathering Opportunities!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         setTimeout(() => {
           this.loading = false
@@ -2490,7 +2628,13 @@ export default {
           }
         }
       } catch (e) {
-        console.log(e)
+        this.$toast('Error gathering Notes!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     closeDatesThisMonth() {
