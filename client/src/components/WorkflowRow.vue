@@ -1,6 +1,10 @@
 <template>
   <div class="table-row">
-    <div style="padding: 2vh" class="table-cell-checkbox">
+    <div
+      style="padding: 2vh"
+      class="table-cell-checkbox"
+      :class="{ selected: workflowCheckList.includes(workflow.id) }"
+    >
       <div
         v-if="updateWorkflowList.includes(workflow.id) || updatedWorkflowList.includes(workflow.id)"
       >
@@ -18,7 +22,11 @@
       </div>
     </div>
 
-    <div style="min-width: 26vw" class="table-cell cell-name">
+    <div
+      style="min-width: 26vw"
+      class="table-cell cell-name"
+      :class="{ selected: workflowCheckList.includes(workflow.id) }"
+    >
       <div class="flex-row-spread">
         <div>
           <div
@@ -78,6 +86,7 @@
           workflow['secondary_data'][field.apiName] ||
           workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
         ),
+        selected: workflowCheckList.includes(workflow.id),
       }"
     >
       <SkeletonBox
@@ -622,7 +631,7 @@ input {
 }
 .empty {
   display: table-cell;
-  background: white !important;
+  background: $off-white !important;
   min-width: 12vw;
   border-left: 1px solid $soft-gray;
   border-right: 1px solid $soft-gray;
@@ -632,7 +641,7 @@ input {
   display: table-cell;
   position: sticky;
   min-width: 12vw;
-  background-color: $white;
+  background-color: $off-white;
   padding: 2vh 3vh;
   border: none;
   border-bottom: 1px solid $soft-gray;
@@ -659,7 +668,7 @@ input {
   display: table-cell;
   position: sticky;
   min-width: 26vw;
-  background-color: $white;
+  background-color: $off-white;
   padding: 2vh 3vh;
   border: none;
   border-bottom: 1px solid $soft-gray;
@@ -687,6 +696,9 @@ input {
   z-index: 1;
   border-bottom: 1px solid $soft-gray;
   background-color: $white;
+}
+.selected {
+  color: $dark-green !important;
 }
 .cell-name-header {
   display: table-cell;
@@ -782,12 +794,12 @@ input[type='checkbox'] + label::before {
   width: 1.5rem;
   margin-right: 0.2rem;
   padding: 0.25rem;
-  border-radius: 0.25rem;
+  border-radius: 6px;
   background-color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e8e8e8;
+  border: 0.7px solid $gray;
   img {
     height: 0.8rem;
     padding: 1px;
@@ -804,12 +816,12 @@ input[type='checkbox'] + label::before {
   width: 1.5rem;
   margin-right: 0.2rem;
   padding: 0.25rem;
-  border-radius: 0.25rem;
+  border-radius: 6px;
   background-color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e8e8e8;
+  border: 0.7px solid $gray;
   img {
     height: 1.2rem;
   }

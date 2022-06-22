@@ -459,7 +459,7 @@
                         ccols="30"
                         rows="2"
                         :placeholder="currentVals[field.apiName]"
-                        style="width: 20vw; border-radius: 0.2rem; padding: 7px"
+                        style="width: 20vw; border-radius: 6px; padding: 7px"
                         v-model="currentVals[field.apiName]"
                         @input="
                           ;(value = $event.target.value),
@@ -595,7 +595,7 @@
             {{ currentList }}
             <img
               v-if="!showList"
-              style="height: 1rem; margin-left: 0.5rem"
+              style="height: 0.7rem; margin-left: 0.5rem"
               src="@/assets/images/rightArrow.svg"
               class="invert"
               alt=""
@@ -603,7 +603,7 @@
             <img
               v-else
               class="invert"
-              style="height: 1rem; margin-left: 0.5rem"
+              style="height: 0.7rem; margin-left: 0.5rem"
               src="@/assets/images/downArrow.svg"
               alt=""
             />
@@ -663,14 +663,14 @@
             {{ currentWorkflowName ? currentWorkflowName : 'Active Workflows' }}
             <img
               v-if="!workList"
-              style="height: 1rem; margin-left: 0.5rem"
+              style="height: 0.7rem; margin-left: 0.5rem"
               src="@/assets/images/rightArrow.svg"
               class="invert"
               alt=""
             />
             <img
               v-else
-              style="height: 1rem; margin-left: 0.5rem"
+              style="height: 0.7rem; margin-left: 0.5rem"
               class="invert"
               src="@/assets/images/downArrow.svg"
               alt=""
@@ -996,7 +996,7 @@
                 ccols="30"
                 rows="2"
                 :placeholder="currentVals[field.apiName]"
-                style="width: 20vw; border-radius: 0.2rem; padding: 7px"
+                style="width: 20vw; border-radius: 6px; padding: 7px"
                 v-model="currentVals[field.apiName]"
                 @input="
                   ;(value = $event.target.value), setUpdateValidationValues(field.apiName, value)
@@ -2748,12 +2748,12 @@ select {
   border-radius: 0;
 }
 .select-btn1 {
-  border: 1px solid #e8e8e8;
+  border: 0.7px solid $very-light-gray;
   padding: 0.5rem 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0.25rem;
+  border-radius: 6px;
   background-color: white;
   cursor: pointer;
   color: $dark-green;
@@ -2771,7 +2771,7 @@ select {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0.25rem;
+  border-radius: 6px;
   background-color: white;
   cursor: pointer;
   color: $dark-green;
@@ -2791,7 +2791,7 @@ select {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0.25rem;
+  border-radius: 6px;
   background-color: $base-gray;
   cursor: pointer;
   color: white;
@@ -2865,9 +2865,11 @@ h3 {
   max-height: 76vh;
   overflow: scroll;
   margin-top: 0.5rem;
-  border-radius: 5px;
+  border-radius: 8px;
   border: 1px solid #e8e8e8;
-  // background-color: $off-white;
+  border-collapse: separate;
+  border-spacing: 3px;
+  background-color: white;
 }
 .table-section::-webkit-scrollbar {
   width: 0px; /* Mostly for vertical scrollbars */
@@ -3105,6 +3107,7 @@ section {
 .pipelines {
   padding-top: 5rem;
   color: $base-gray;
+  margin: 0 1rem 0 0.5rem;
 }
 .invert {
   filter: invert(80%);
@@ -3117,7 +3120,7 @@ section {
   align-items: center;
   border: none;
   padding: 0.25rem 0.6rem;
-  border-radius: 0.2rem;
+  border-radius: 6px;
   background-color: $gray;
   cursor: text;
   color: white;
@@ -3132,7 +3135,7 @@ section {
   height: 4.5vh;
   margin: 0 0.5rem 0 0;
   padding: 0.25rem 0.6rem;
-  border-radius: 0.2rem;
+  border-radius: 6px;
   background-color: transparent;
   cursor: pointer;
   color: $dark-green;
@@ -3147,7 +3150,7 @@ section {
   border: none;
   margin: 0 0.5rem 0 0;
   padding: 0.5rem 1.25rem;
-  border-radius: 0.2rem;
+  border-radius: 6px;
   background-color: $dark-green;
   cursor: pointer;
   color: white;
@@ -3159,7 +3162,7 @@ section {
   border: none;
   padding: 0.5rem 1rem;
   font-size: 16px;
-  border-radius: 0.2rem;
+  border-radius: 6px;
   background-color: $dark-green;
   cursor: pointer;
   color: white;
@@ -3181,7 +3184,7 @@ section {
 .search-bar {
   height: 4.5vh;
   background-color: $off-white;
-  border: 1px solid #e8e8e8;
+  border: 0.7px solid $gray;
   display: flex;
   align-items: center;
   padding: 2px;
@@ -3190,7 +3193,7 @@ section {
 }
 #update-input {
   border: none;
-  border-radius: 0.25rem;
+  border-radius: 6px;
   box-shadow: 1px 1px 1px 1px $very-light-gray;
   background-color: white;
   min-height: 2.5rem;
@@ -3265,7 +3268,7 @@ section {
   max-width: 10vw;
   margin: 0 0.5rem 0 0;
   padding: 0.25rem 0.6rem;
-  border-radius: 0.2rem;
+  border-radius: 6px;
   background-color: $white-green;
   cursor: pointer;
   color: $dark-green;
@@ -3293,7 +3296,7 @@ main:hover > span {
   min-height: 5vh;
   margin: 0 0.5rem 0 0;
   padding: 0.25rem 0.6rem;
-  border-radius: 0.2rem;
+  border-radius: 6px;
   background-color: $dark-green;
   cursor: pointer;
   color: white;
@@ -3304,7 +3307,7 @@ main:hover > span {
   position: absolute;
   top: 20vh;
   left: 12.5vw;
-  border-radius: 0.25rem;
+  border-radius: 6px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -3313,7 +3316,7 @@ main:hover > span {
   max-height: 70vh;
   overflow: scroll;
   margin-right: 0.5rem;
-  box-shadow: 1px 1px 2px 2px $very-light-gray;
+  box-shadow: 1px 1px 2px 1px $very-light-gray;
   &__title {
     position: sticky;
     top: 0;
@@ -3349,7 +3352,7 @@ main:hover > span {
   position: absolute;
   top: 20vh;
   left: 1rem;
-  border-radius: 0.25rem;
+  border-radius: 6px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -3358,7 +3361,7 @@ main:hover > span {
   max-height: 70vh;
   overflow: scroll;
   margin-right: 0.5rem;
-  box-shadow: 1px 1px 2px 2px $very-light-gray;
+  box-shadow: 1px 1px 2px 1px $very-light-gray;
   &__title {
     position: sticky;
     top: 0;
@@ -3397,7 +3400,7 @@ main:hover > span {
   background-color: transparent;
   border: none;
   padding: 0.75rem;
-  border-radius: 0.2rem;
+  border-radius: 6px;
   color: $mid-gray;
   cursor: pointer;
   font-size: 11px;

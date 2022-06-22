@@ -473,7 +473,7 @@ export default {
   z-index: 2;
   top: 0;
   position: sticky;
-  background-color: $off-white;
+  background-color: white;
   font-weight: bolder;
   font-size: 13.5px;
   letter-spacing: 0.75px;
@@ -504,7 +504,7 @@ export default {
   top: 0;
   left: 0;
   position: sticky;
-  background-color: $off-white;
+  background-color: white;
 }
 .cell-name-header {
   display: table-cell;
@@ -516,7 +516,7 @@ export default {
   left: 3.5vw;
   top: 0;
   position: sticky;
-  background-color: $off-white;
+  background-color: white;
   font-weight: bolder;
   font-size: 13.5px;
   letter-spacing: 0.75px;
@@ -531,7 +531,7 @@ export default {
   z-index: 2;
   top: 0;
   position: sticky;
-  background-color: $off-white;
+  background-color: white;
   font-weight: bolder;
   font-size: 13.5px;
   letter-spacing: 0.75px;

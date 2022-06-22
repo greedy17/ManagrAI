@@ -76,6 +76,7 @@ export default {
 body {
   overflow: auto;
   margin: 0;
+  //  margin: 0 1rem 0 1rem;
   min-height: 100vh;
   background-color: $off-white;
 }

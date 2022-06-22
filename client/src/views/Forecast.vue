@@ -62,7 +62,7 @@
     >
       <div class="modal-container-small">
         <header class="modal-container__header">
-          <h3>Remove from Forecast</h3>
+          <h3>Remove from Tracker</h3>
           <img class="invert" @click="resetDelete" src="@/assets/images/close.svg" alt="" />
         </header>
         <div class="modal-container__body center">
@@ -142,7 +142,7 @@
             {{ currentForecast }}
             <img
               v-if="!showList"
-              style="height: 1rem; margin-left: 0.5rem"
+              style="height: 0.75rem; margin-left: 0.5rem"
               src="@/assets/images/rightArrow.svg"
               class="invert"
               alt=""
@@ -150,7 +150,7 @@
             <img
               v-else
               class="invert"
-              style="height: 1rem; margin-left: 0.5rem"
+              style="height: 0.75rem; margin-left: 0.5rem"
               src="@/assets/images/downArrow.svg"
               alt=""
             />
@@ -240,7 +240,7 @@
         </button>
       </div>
     </header>
-    <section v-if="!loading" class="table-section">
+    <section v-if="!loading && stages" class="table-section">
       <div class="table">
         <div class="table-row">
           <div class="cell-name-header">Opportunity Name</div>
@@ -302,7 +302,7 @@
             </div>
           </div>
           <div class="table-cell">
-            <p class="green-text align-center letter-spacing">
+            <p class="green-text-amount align-center letter-spacing">
               {{ opp.data.Amount ? formatCash(currentValues[index].amount) : '' }}
               <span v-if="currentValues[index].amount < opp.data.Amount"
                 ><img
@@ -513,10 +513,11 @@ export default {
     PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
     FilterSelection: () => import(/* webpackPrefetch: true */ '@/components/FilterSelection'),
   },
-  watch: {
-    allOpps: ['getStagesAndForecast'],
-  },
+  // watch: {
+  //   allOpps: ['getStagesAndForecast'],
+  // },
   async created() {
+    this.getStagesAndForecast()
     this.getForecastValues()
     this.getOpportunites()
   },
@@ -616,15 +617,12 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
-      } finally {
-        this.loading = false
       }
     },
     async getOpportunites() {
       try {
         let res = await SObjects.api.getObjects('Opportunity')
         this.allOpps = res.results
-        console.log(res.results)
       } catch (e) {
         this.$toast('Error gathering opportunities', {
           timeout: 2000,
@@ -635,23 +633,6 @@ export default {
         })
       }
     },
-    // setCurrentValues() {
-    //   this.loading = true
-    //   if (this.forecastOpps) {
-    //     let forecast = []
-    //     for (let i in this.forecastOpps) {
-    //       forecast.push(i)
-    //     }
-    //     let newOpps = this.allOpps.filter((opp) => forecast.includes(opp.integration_id))
-    //     for (let i = 0; i < newOpps.length; i++) {
-    //       this.currentValues[newOpps[i].name] = newOpps[i]
-    //       this.totalAmount += parseInt(newOpps[i].amount) ? parseInt(newOpps[i].amount) : 0
-    //     }
-    //     this.forecastLength = forecast.length
-    //     this.averageDeal = this.totalAmount / this.forecastLength
-    //     this.loading = false
-    //   }
-    // },
     setOriginalAmount(i) {
       if (this.limit < this.forecastLength) {
         this.originalAmount += i
@@ -857,12 +838,19 @@ export default {
 .green-text {
   color: $dark-green;
 }
+.green-text-amount {
+  color: $dark-green;
+  background-color: $white-green;
+  padding: 4px;
+  border-radius: 6px;
+}
 .align-center {
   display: flex;
   align-items: center;
 }
 .forecast {
   margin-top: 3.5rem;
+  padding: 0 1rem 0rem 0.75rem;
 }
 .letter-spacing {
   letter-spacing: 1px;
@@ -909,14 +897,16 @@ export default {
   height: 78vh;
   overflow: scroll;
   margin-top: -0.5rem;
-  border-radius: 5px;
+  border-radius: 8px;
   border: 1.25px solid $soft-gray;
-  border-bottom: 3px solid $soft-gray;
+  border-bottom: 1px solid $soft-gray;
   background-color: white;
 }
 .table {
   display: table;
   overflow: scroll;
+  border-collapse: separate;
+  border-spacing: 3px;
   width: 100vw;
   padding-bottom: -0.5rem !important;
 }
@@ -928,10 +918,10 @@ export default {
   display: table-row;
   position: sticky;
   z-index: 2;
-
   bottom: 0;
-  outline: 2px solid #e8e8e8;
-  //   background-color: white;
+  outline: none;
+  border-top: 1px solid #e8e8e8;
+  padding: 0.5rem;
 }
 .table-cell {
   display: table-cell;
@@ -1011,7 +1001,7 @@ export default {
 
   &__button {
     background-color: white;
-    border: 1.25px solid $soft-gray;
+    border: 0.8px solid $gray;
     height: 2rem;
     width: 3rem;
     display: flex;
@@ -1094,7 +1084,7 @@ export default {
   width: 26vw;
   height: 28vh;
   align-items: center;
-  border-radius: 0.3rem;
+  border-radius: 8px;
   border: 1px solid #e8e8e8;
 }
 .modal-container {
@@ -1103,7 +1093,7 @@ export default {
   width: 34vw;
   min-height: 48vh;
   align-items: center;
-  border-radius: 0.3rem;
+  border-radius: 8px;
   border: 1px solid #e8e8e8;
 
   &__header {
@@ -1177,19 +1167,19 @@ export default {
 }
 .select-btn1 {
   width: 9rem !important;
-  border: 1px solid #e8e8e8;
+  border: 0.25px solid $very-light-gray;
   padding: 0.5rem 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between !important;
-  border-radius: 0.25rem;
+  border-radius: 6px;
   background-color: white;
   cursor: pointer;
-  color: $dark-green;
+  color: $base-gray;
   letter-spacing: 0.2px;
 
   img {
-    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%) !important;
+    filter: invert(40%);
   }
 }
 .list-section {
@@ -1197,7 +1187,7 @@ export default {
   position: absolute;
   top: 3rem;
   left: 0.5rem;
-  border-radius: 0.25rem;
+  border-radius: 6px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -1206,7 +1196,7 @@ export default {
   max-height: 70vh;
   overflow: scroll;
   margin-right: 0.5rem;
-  box-shadow: 1px 1px 2px 2px $very-light-gray;
+  box-shadow: 1px 1px 2px 1px $very-light-gray;
   &__title {
     position: sticky;
     top: 0;
@@ -1333,12 +1323,12 @@ export default {
   width: 1.5rem;
   margin-right: 0.2rem;
   padding: 0.25rem;
-  border-radius: 0.25rem;
+  border-radius: 5px;
   background-color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e8e8e8;
+  border: 0.8px solid $gray;
   cursor: pointer;
 }
 .no__button {

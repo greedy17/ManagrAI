@@ -329,7 +329,7 @@ export default {
   top: 0;
   left: 0;
   position: sticky;
-  background-color: $off-white;
+  background-color: $white;
 }
 .remove-field-section {
   z-index: 5;
@@ -389,7 +389,7 @@ export default {
   z-index: 2;
   top: 0;
   position: sticky;
-  background-color: $off-white;
+  background-color: white;
   font-weight: bold;
   font-size: 13px;
   letter-spacing: 0.5px;
@@ -405,7 +405,7 @@ export default {
   left: 3.5vw;
   top: 0;
   position: sticky;
-  background-color: $off-white;
+  background-color: white;
   font-weight: bold;
   font-size: 13px;
   letter-spacing: 0.5px;
@@ -420,7 +420,7 @@ export default {
   z-index: 2;
   top: 0;
   position: sticky;
-  background-color: $off-white;
+  background-color: white;
   font-weight: bold;
   font-size: 13px;
   letter-spacing: 0.5px;
