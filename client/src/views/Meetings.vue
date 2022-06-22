@@ -145,8 +145,10 @@
                   setUpdateValues(
                     field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
                     $event.value,
+                    field.dataType === 'MultiPicklist' ? true : false,
                   )
                 "
+                :multiple="field.dataType === 'MultiPicklist' ? true : false"
                 v-model="dropdownVal[field.apiName]"
                 openDirection="below"
                 :loading="dropdownLoading"
@@ -933,8 +935,11 @@ export default {
         console.log(e)
       }
     },
-    setUpdateValues(key, val) {
-      if (val) {
+    setUpdateValues(key, val, multi) {
+      if (multi) {
+        this.formData[key] = this.formData[key] ? this.formData[key] + ';' + val : val
+      }
+      if (val && !multi) {
         this.formData[key] = val
       }
       if (key === 'StageName') {

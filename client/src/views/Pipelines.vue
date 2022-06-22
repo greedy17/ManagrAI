@@ -119,6 +119,7 @@
                     field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                       ? $event.value
                       : $event.id,
+                    field.dataType === 'MultiPicklist' ? true : false,
                   )
                 "
                 @search-change="
@@ -126,6 +127,7 @@
                     ? getReferenceFieldList(field.apiName, field.id, 'create', $event)
                     : null
                 "
+                :multiple="field.dataType === 'MultiPicklist' ? true : false"
                 openDirection="below"
                 style="width: 18vw"
                 selectLabel="Enter"
@@ -335,11 +337,13 @@
                     field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                       ? $event.value
                       : $event.id,
+                    field.dataType === 'MultiPicklist' ? true : false,
                   )
                 "
                 openDirection="below"
                 style="width: 18vw"
                 selectLabel="Enter"
+                :multiple="field.dataType === 'MultiPicklist' ? true : false"
                 :track-by="
                   field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                     ? 'value'
@@ -2070,8 +2074,12 @@ export default {
         this.primaryCheckList = []
       }
     },
-    setUpdateValues(key, val) {
-      if (val) {
+    setUpdateValues(key, val, multi) {
+      if (multi) {
+        this.formData[key] = this.formData[key] ? this.formData[key] + ';' + val : val
+      }
+
+      if (val && !multi) {
         this.formData[key] = val
       }
       if (key === 'StageName') {

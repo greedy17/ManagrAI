@@ -177,11 +177,13 @@
               track-by="value"
               label="label"
               v-model="dropdownVal[field.apiName]"
+              :multiple="field.dataType === 'MultiPicklist' ? true : false"
               @select="
                 setUpdateValues(
                   field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
                   $event.value,
                   field.dataType,
+                  field.dataType === 'MultiPicklist' ? true : false,
                 )
               "
             >
@@ -414,14 +416,17 @@ export default {
       this.editIndex = index
       this.editing = true
     },
-    setUpdateValues(key, val, dataType) {
+    setUpdateValues(key, val, dataType, multi) {
       this.formData = {}
-      if (val) {
+      if (multi) {
+        this.formData[key] = this.formData[key] ? this.formData[key] + ';' + val : val
+      }
+      if (val && !multi) {
         this.formData[key] = val
       }
       setTimeout(() => {
         this.$emit('inline-edit', this.formData, this.workflow.id, dataType)
-      }, 200)
+      }, 500)
     },
     emitCreateForm() {
       this.$emit('create-form')
