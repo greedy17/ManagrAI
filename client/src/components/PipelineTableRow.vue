@@ -1,5 +1,5 @@
 <template>
-  <div class="table-row">
+  <div class="table-row" :class="{ selected: primaryCheckList.includes(opp.id) }">
     <div v-if="opp" class="table-cell-checkbox">
       <div v-if="updateList.includes(opp.id) || updatedList.includes(opp.id)">
         <SkeletonBox width="10px" height="9px" />
@@ -17,7 +17,7 @@
     </div>
 
     <div style="min-width: 26vw" class="table-cell cell-name">
-      <div class="flex-row-spread">
+      <div class="flex-row-spread" :class="{ selected: primaryCheckList.includes(opp.id) }">
         <div>
           <div
             class="flex-column"
@@ -642,17 +642,20 @@ input {
 }
 .empty {
   display: table-cell;
-  background: white !important;
+  background: $off-white;
   min-width: 12vw;
   border-left: 1px solid $soft-gray;
   border-right: 1px solid $soft-gray;
   border-bottom: 1px solid $soft-gray;
 }
+.selected {
+  color: $dark-green !important;
+}
 .table-cell {
   display: table-cell;
   position: sticky;
   min-width: 12vw;
-  background-color: $white;
+  background-color: $off-white;
   padding: 2vh 3vh;
   border: none;
   border-bottom: 1px solid $soft-gray;
@@ -679,7 +682,7 @@ input {
   display: table-cell;
   position: sticky;
   min-width: 26vw;
-  background-color: $white;
+  background-color: $off-white;
   padding: 2vh 3.5vh;
   border: none;
   border-bottom: 1px solid $soft-gray;
@@ -802,12 +805,12 @@ input[type='checkbox'] + label::before {
   width: 1.5rem;
   margin-right: 0.2rem;
   padding: 0.25rem;
-  border-radius: 0.25rem;
+  border-radius: 4px;
   background-color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e8e8e8;
+  border: 0.7px solid $gray;
   img {
     height: 0.8rem;
     padding: 1px;
@@ -824,12 +827,12 @@ input[type='checkbox'] + label::before {
   width: 1.5rem;
   margin-right: 0.2rem;
   padding: 0.25rem;
-  border-radius: 0.25rem;
+  border-radius: 4px;
   background-color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e8e8e8;
+  border: 0.7px solid $gray;
   img {
     height: 1.2rem;
   }

@@ -698,6 +698,7 @@ export default {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
         this.meetings = res.results
+        console.log(this.meetings)
       } catch (e) {
         console.log(e)
       } finally {
@@ -1363,14 +1364,16 @@ input {
   max-height: 80vh;
   overflow: scroll;
   margin-top: 0.5rem;
-  border-radius: 5px;
+  border-radius: 8px;
   border: 1px solid #e8e8e8;
-  background-color: $off-white;
+  background-color: white;
 }
 
 .table {
   display: table;
   overflow: scroll;
+  border-collapse: separate;
+  border-spacing: 4px;
   width: 100vw;
 }
 .opp-modal-container {
@@ -1428,7 +1431,7 @@ section {
   justify-content: space-between;
 }
 .pipelines {
-  padding-top: 5rem;
+  padding: 4rem 1rem 0 0.75rem;
   color: $base-gray;
 }
 .invert {
@@ -1657,5 +1660,8 @@ a {
     color: $mid-gray;
     font-size: 11px;
   }
+}
+.logged {
+  border-left: 1px solid $dark-green;
 }
 </style>
