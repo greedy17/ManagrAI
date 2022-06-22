@@ -1,7 +1,8 @@
 <template>
   <div id="app">
     <NavBar v-if="!hideNavBar && userIsLoggedIn" />
-    <alert-alert />
+    <SideDrawer></SideDrawer>
+    <!-- <alert-alert /> -->
     <!-- Binding a key to the full path will remount a view if
         the detail endpoint changes-->
     <div :class="{ 'page-content': !hideNavBar }">
@@ -16,6 +17,7 @@ import { mapGetters, mapActions } from 'vuex'
 import VueScrollTo from 'vue-scrollto'
 
 import NavBar from '@/components/NavBar'
+import SideDrawer from '@/components/SideDrawer'
 
 const routesWithoutNavBar = ['StoryReportDetail', 'PerformanceReportDetail']
 
@@ -23,6 +25,7 @@ export default {
   name: 'app',
   components: {
     NavBar,
+    SideDrawer,
   },
   data() {
     return {
@@ -63,7 +66,9 @@ export default {
 @import '@/styles/cards';
 @import '@/styles/mixins/utils';
 @import '@/styles/mixins/inputs';
-
+.Vue-Toastification__toast--success.custom {
+  background-color: $dark-green;
+}
 * {
   box-sizing: border-box;
 }
@@ -71,6 +76,7 @@ export default {
 body {
   overflow: auto;
   margin: 0;
+  //  margin: 0 1rem 0 1rem;
   min-height: 100vh;
   background-color: $off-white;
 }

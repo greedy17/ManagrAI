@@ -96,10 +96,12 @@ export default {
         this.formFields.filters = query_params
         this.formFields.refresh()
       } catch {
-        this.$Alert.alert({
-          message: 'There was an error gathering fields',
+        this.$toast('Error gathering fields', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'error',
-          timeout: 3000,
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },

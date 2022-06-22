@@ -18,7 +18,7 @@
       </div>
     </Modal>
 
-    <div class="center__">
+    <div @click="test" class="center__">
       <h3 v-if="!editing" :class="templates.refreshing ? 'loading-title titles' : 'titles'">
         Edit your Workflow Automation
       </h3>
@@ -261,9 +261,9 @@ export default {
     })
   },
   methods: {
-    // test() {
-    //   console.log(this.templates)
-    // },
+    test() {
+      console.log(this.templates)
+    },
     async getRecapChannel() {
       const res = await SlackOAuth.api.channelDetails(this.hasRecapChannel)
       this.currentRecapChannel = res.channel.name
@@ -342,16 +342,20 @@ export default {
         this.handleUpdate()
 
         this.deleteOpen = !this.deleteOpen
-        this.$Alert.alert({
-          message: 'Workflow removed',
-          type: 'success',
+        this.$toast('Workflow removed', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } catch {
-        this.$Alert.alert({
-          message: 'There was an error removing your alert',
-          type: 'error',
+        this.$toast('Error removing workflow', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
@@ -359,33 +363,42 @@ export default {
       try {
         await AlertTemplate.api.updateAlertTemplate(id, { is_active: value })
         await this.templates.refresh()
-        this.$Alert.alert({
-          message: `Alert is now ${value ? 'active' : 'inactive'}`,
-          type: 'success',
+
+        this.$toast(`Alert is now ${value ? 'active' : 'inactive'}`, {
           timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } catch {
-        this.$Alert.alert({
-          message: 'There was an error toggling your alert',
-          type: 'error',
+        this.$toast('Error toggling workflow', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
     async onRunAlertTemplateNow(id) {
       try {
         await AlertTemplate.api.runAlertTemplateNow(id)
-        this.$Alert.alert({
-          message: `Alert has been initiated`,
-          type: 'success',
+        this.$toast('Workflow initiated', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
         this.clicked.push(id)
       } catch {
-        this.$Alert.alert({
-          message: 'There was an error removing your alert',
-          type: 'error',
+        this.$toast('Error removing workflow', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },

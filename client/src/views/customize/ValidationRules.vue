@@ -277,17 +277,21 @@ export default {
       try {
         const res = await SObjectPicklist.api.getStagePicklistValues()
         if (res.status == 200) {
-          this.$Alert.alert({
-            type: 'success',
+          this.$toast('Successfully Retrieved Picklist Values please refresh your page', {
             timeout: 2000,
-            message: 'Successfully Retrieved Picklist Values please refresh your page',
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         }
       } catch {
-        this.$Alert.alert({
-          type: 'error',
+        this.$toast('There was an error collecting stages.', {
           timeout: 2000,
-          message: 'There was an error collecting stages',
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } finally {
         this.loadingStages = false
@@ -316,10 +320,12 @@ export default {
         this.formFields.filters = query_params
         this.formFields.refresh()
       } catch {
-        this.$Alert.alert({
-          message: 'There was an error gathering fields',
+        this.$toast('Error gathering fields', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'error',
-          timeout: 3000,
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
@@ -365,12 +371,12 @@ export default {
           })
 
           .catch((e) => {
-            this.$Alert.alert({
-              type: 'error',
-
-              message: 'There was an error, please try again',
-
+            this.$toast('Error, please try again', {
               timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
             })
           })
 
@@ -390,7 +396,13 @@ export default {
         await this.listPicklists({ salesforceObject: this.Opportunity, picklistFor: 'StageName' })
       } catch (e) {
         this.$modal.close('add-stage-modal')
-        this.$Alert.alert({ message: 'Failed to retrieve stages', timeout: 3000 })
+        this.$toast('Failed to retreive stages', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         this.loadingStages = false
       }
@@ -400,9 +412,12 @@ export default {
       /** Method for Creating a new stage-gating form, this is only available for Opportunities at this time */
 
       if (this.currentStagesWithForms.includes(stage)) {
-        return this.$Alert.alert({
-          message: 'This Stage already has a form',
-          timeout: 5000,
+        this.$toast('This stage already has a form', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'default',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
       let newForm = SlackOAuth.customSlackForm.create({

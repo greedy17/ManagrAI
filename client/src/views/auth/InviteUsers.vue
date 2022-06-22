@@ -96,10 +96,12 @@ export default {
       User.api
         .update(this.getUser.id, this.profileForm.value)
         .then((response) => {
-          this.$Alert.alert({
-            message: 'Successfully Updated Profile info',
-            type: 'success',
+          this.$toast('Sucessfully updated profile info', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
           this.$store.dispatch('updateUser', User.fromAPI(response.data))
 

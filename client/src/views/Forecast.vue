@@ -62,7 +62,7 @@
     >
       <div class="modal-container-small">
         <header class="modal-container__header">
-          <h3>Remove from Forecast</h3>
+          <h3>Remove from Tracker</h3>
           <img class="invert" @click="resetDelete" src="@/assets/images/close.svg" alt="" />
         </header>
         <div class="modal-container__body center">
@@ -142,7 +142,7 @@
             {{ currentForecast }}
             <img
               v-if="!showList"
-              style="height: 1rem; margin-left: 0.5rem"
+              style="height: 0.75rem; margin-left: 0.5rem"
               src="@/assets/images/rightArrow.svg"
               class="invert"
               alt=""
@@ -150,7 +150,7 @@
             <img
               v-else
               class="invert"
-              style="height: 1rem; margin-left: 0.5rem"
+              style="height: 0.75rem; margin-left: 0.5rem"
               src="@/assets/images/downArrow.svg"
               alt=""
             />
@@ -240,7 +240,7 @@
         </button>
       </div>
     </header>
-    <section v-if="!loading" class="table-section">
+    <section v-if="!loading && stages" class="table-section">
       <div class="table">
         <div class="table-row">
           <div class="cell-name-header">Opportunity Name</div>
@@ -256,27 +256,29 @@
             </span>
           </p>
         </div>
-        <div v-else-if="forecastOpps" v-for="(opp, i) in forecastOpps" :key="i" class="table-row">
+        <div
+          v-else-if="forecastOpps"
+          v-for="(opp, i, index) in forecastOpps"
+          :key="i"
+          class="table-row"
+        >
           <p class="no-display">{{ setOriginalAmount(opp.data.Amount) }}</p>
           <div class="table-cell cell-name row">
             <div class="row-spread">
               <div>
+                <!-- <p>{{ index }}</p> -->
                 <p>{{ opp.data.Name }}</p>
                 <p class="green-text">
                   {{
-                    currentValues[opp.data.Name].account_ref
-                      ? currentValues[opp.data.Name].account_ref.name
-                      : ''
+                    currentValues[index].account_ref ? currentValues[index].account_ref.name : ''
                   }}
                 </p>
-                <p class="gray-text">
-                  Owned by: {{ currentValues[opp.data.Name].owner_ref.full_name }}
-                </p>
+                <p class="gray-text">Owned by: {{ currentValues[index].owner_ref.full_name }}</p>
               </div>
 
               <div class="row">
                 <button
-                  @click="getNotes(currentValues[opp.data.Name].id)"
+                  @click="getNotes(allOpps.filter((opp) => opp.integration_id === i)[0].id)"
                   class="name-cell-edit-note-button"
                 >
                   <img
@@ -300,15 +302,15 @@
             </div>
           </div>
           <div class="table-cell">
-            <p class="green-text align-center letter-spacing">
-              {{ opp.data.Amount ? formatCash(currentValues[opp.data.Name].amount) : '' }}
-              <span v-if="currentValues[opp.data.Name].amount < opp.data.Amount"
+            <p class="green-text-amount align-center letter-spacing">
+              {{ opp.data.Amount ? formatCash(currentValues[index].amount) : '' }}
+              <span v-if="currentValues[index].amount < opp.data.Amount"
                 ><img
                   class="filter-red margin-left-s"
                   src="@/assets/images/trendingDown.svg"
                   alt=""
               /></span>
-              <span v-else-if="currentValues[opp.data.Name].amount > opp.data.Amount"
+              <span v-else-if="currentValues[index].amount > opp.data.Amount"
                 ><img
                   class="filter-green margin-left-s"
                   src="@/assets/images/trendingUp.svg"
@@ -324,11 +326,10 @@
           </div>
           <div class="table-cell">
             <p class="align-center">
-              {{ currentValues[opp.data.Name].stage }}
+              {{ currentValues[index].stage }}
               <span
                 v-if="
-                  stages.indexOf(currentValues[opp.data.Name].stage) <
-                  stages.indexOf(opp.data.StageName)
+                  stages.indexOf(currentValues[index].stage) < stages.indexOf(opp.data.StageName)
                 "
                 ><img
                   class="filter-red margin-left-s"
@@ -337,8 +338,7 @@
               /></span>
               <span
                 v-else-if="
-                  stages.indexOf(currentValues[opp.data.Name].stage) >
-                  stages.indexOf(opp.data.StageName)
+                  stages.indexOf(currentValues[index].stage) > stages.indexOf(opp.data.StageName)
                 "
                 ><img
                   class="filter-green margin-left-s"
@@ -350,10 +350,10 @@
           </div>
           <div class="table-cell">
             <p class="align-center">
-              {{ currentValues[opp.data.Name].forecast_category }}
+              {{ currentValues[index].forecast_category }}
               <span
                 v-if="
-                  forecasts.indexOf(currentValues[opp.data.Name].forecast_category) <
+                  forecasts.indexOf(currentValues[index].forecast_category) <
                   forecasts.indexOf(opp.data.ForecastCategoryName)
                 "
                 ><img
@@ -363,7 +363,7 @@
               /></span>
               <span
                 v-else-if="
-                  forecasts.indexOf(currentValues[opp.data.Name].forecast_category) >
+                  forecasts.indexOf(currentValues[index].forecast_category) >
                   forecasts.indexOf(opp.data.ForecastCategoryName)
                 "
                 ><img
@@ -378,18 +378,14 @@
           </div>
           <div class="table-cell">
             <p class="align-center">
-              {{
-                currentValues[opp.data.Name]
-                  ? formatDate(currentValues[opp.data.Name].close_date)
-                  : ''
-              }}
-              <span v-if="currentValues[opp.data.Name].close_date > opp.data.CloseDate"
+              {{ currentValues[index] ? formatDate(currentValues[index].close_date) : '' }}
+              <span v-if="currentValues[index].close_date > opp.data.CloseDate"
                 ><img
                   class="filter-red margin-left-s"
                   src="@/assets/images/trendingDown.svg"
                   alt=""
               /></span>
-              <span v-else-if="currentValues[opp.data.Name].close_date < opp.data.CloseDate"
+              <span v-else-if="currentValues[index].close_date < opp.data.CloseDate"
                 ><img
                   class="filter-green margin-left-s"
                   src="@/assets/images/trendingUp.svg"
@@ -404,7 +400,7 @@
             <p>
               {{
                 opp.data.LastActivityDate
-                  ? formatDateTime(currentValues[opp.data.Name].last_activity_date)
+                  ? formatDateTime(currentValues[index].last_activity_date)
                   : ''
               }}
             </p>
@@ -500,7 +496,7 @@ export default {
       totalAmount: 0,
       limit: 0,
       picklistQueryOpts: { StageName: null, ForecastCategoryName: null },
-      currentValues: {},
+      currentValues: null,
       addedOpportunities: [],
       activeOperators: [],
       addedFilters: [],
@@ -517,17 +513,17 @@ export default {
     PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
     FilterSelection: () => import(/* webpackPrefetch: true */ '@/components/FilterSelection'),
   },
-  watch: {
-    allOpps: ['setCurrentValues', 'getStagesAndForecast'],
-  },
+  // watch: {
+  //   allOpps: ['getStagesAndForecast'],
+  // },
   async created() {
+    this.getStagesAndForecast()
+    this.getForecastValues()
     this.getOpportunites()
   },
-  beforeMount() {
-    this.setPicklist()
-  },
+
   mounted() {
-    console.log(this.forecastOpps)
+    this.setPicklist()
   },
   methods: {
     resetNotes() {
@@ -558,16 +554,20 @@ export default {
     async removeForecast() {
       try {
         await User.api.modifyForecast('remove', this.deleteIds)
-        this.$Alert.alert({
+        this.$toast('Opportunity Removed. Refresh to see changes', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 1500,
-          message: 'Opportunity removed. Refresh to see changes.',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } catch (e) {
-        this.$Alert.alert({
+        this.$toast('Error removing opportunity!', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'error',
-          timeout: 1500,
-          message: 'Error Removing Opportunity',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } finally {
         this.$store.dispatch('refreshCurrentUser')
@@ -578,50 +578,59 @@ export default {
     async modifyForecast(action) {
       try {
         await User.api.modifyForecast(action, this.addedOpportunities)
-        this.$Alert.alert({
+        this.$toast('Opportunity Added to Tracker', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 1500,
-          message: 'Opportunity added to Tracker.',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } catch (e) {
-        this.$Alert.alert({
+        this.$toast('Error adding opportunities', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'error',
-          timeout: 1500,
-          message: 'Error adding Opportunities',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } finally {
         this.$store.dispatch('refreshCurrentUser')
         this.resetSettings()
       }
     },
+    async getForecastValues() {
+      this.loading = true
+      try {
+        const res = await User.api.getForecastValues()
+        this.currentValues = res
+
+        for (let i = 0; i < res.length; i++) {
+          this.totalAmount += parseInt(res[i].amount) ? parseInt(res[i].amount) : 0
+        }
+        this.forecastLength = res.length
+        this.averageDeal = this.totalAmount / this.forecastLength
+      } catch (e) {
+        this.$toast('Error gathering tracked opportunities', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      }
+    },
     async getOpportunites() {
       try {
         let res = await SObjects.api.getObjects('Opportunity')
         this.allOpps = res.results
-        // console.log(this.allOpps)
       } catch (e) {
-        this.$Alert.alert({
+        this.$toast('Error gathering opportunities', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'error',
-          timeout: 1500,
-          message: 'Error gathering your Opportunities',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
-      }
-    },
-    setCurrentValues() {
-      this.loading = true
-      if (this.forecastOpps) {
-        let forecast = []
-        for (let i in this.forecastOpps) {
-          forecast.push(i)
-        }
-        let newOpps = this.allOpps.filter((opp) => forecast.includes(opp.integration_id))
-        for (let i = 0; i < newOpps.length; i++) {
-          this.currentValues[newOpps[i].name] = newOpps[i]
-          this.totalAmount += parseInt(newOpps[i].amount) ? parseInt(newOpps[i].amount) : 0
-        }
-        this.forecastLength = forecast.length
-        this.averageDeal = this.totalAmount / this.forecastLength
-        this.loading = false
       }
     },
     setOriginalAmount(i) {
@@ -646,10 +655,12 @@ export default {
         this.forecasts = res2.length ? res2[0]['values'] : []
         this.forecasts ? (this.forecasts = this.forecasts.map((forecast) => forecast.value)) : []
       } catch (e) {
-        this.$Alert.alert({
+        this.$toast('Error gathering your stages', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'error',
-          timeout: 1500,
-          message: 'Error gathering your stages',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } finally {
         this.loading = false
@@ -706,7 +717,6 @@ export default {
           opp.data[this.filterApiName].includes(this.currentVal),
         )
       }
-
       this.closeFilterSelection()
       console.log(this.activeFilters)
     },
@@ -828,12 +838,19 @@ export default {
 .green-text {
   color: $dark-green;
 }
+.green-text-amount {
+  color: $dark-green;
+  background-color: $white-green;
+  padding: 4px;
+  border-radius: 6px;
+}
 .align-center {
   display: flex;
   align-items: center;
 }
 .forecast {
   margin-top: 3.5rem;
+  padding: 0 1rem 0rem 0.75rem;
 }
 .letter-spacing {
   letter-spacing: 1px;
@@ -880,14 +897,16 @@ export default {
   height: 78vh;
   overflow: scroll;
   margin-top: -0.5rem;
-  border-radius: 5px;
+  border-radius: 8px;
   border: 1.25px solid $soft-gray;
-  border-bottom: 3px solid $soft-gray;
+  border-bottom: 1px solid $soft-gray;
   background-color: white;
 }
 .table {
   display: table;
   overflow: scroll;
+  border-collapse: separate;
+  border-spacing: 3px;
   width: 100vw;
   padding-bottom: -0.5rem !important;
 }
@@ -899,10 +918,10 @@ export default {
   display: table-row;
   position: sticky;
   z-index: 2;
-
   bottom: 0;
-  outline: 2px solid #e8e8e8;
-  //   background-color: white;
+  outline: none;
+  border-top: 1px solid #e8e8e8;
+  padding: 0.5rem;
 }
 .table-cell {
   display: table-cell;
@@ -982,7 +1001,7 @@ export default {
 
   &__button {
     background-color: white;
-    border: 1.25px solid $soft-gray;
+    border: 0.8px solid $gray;
     height: 2rem;
     width: 3rem;
     display: flex;
@@ -1065,7 +1084,7 @@ export default {
   width: 26vw;
   height: 28vh;
   align-items: center;
-  border-radius: 0.3rem;
+  border-radius: 8px;
   border: 1px solid #e8e8e8;
 }
 .modal-container {
@@ -1074,7 +1093,7 @@ export default {
   width: 34vw;
   min-height: 48vh;
   align-items: center;
-  border-radius: 0.3rem;
+  border-radius: 8px;
   border: 1px solid #e8e8e8;
 
   &__header {
@@ -1148,19 +1167,19 @@ export default {
 }
 .select-btn1 {
   width: 9rem !important;
-  border: 1px solid #e8e8e8;
+  border: 0.25px solid $very-light-gray;
   padding: 0.5rem 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between !important;
-  border-radius: 0.25rem;
+  border-radius: 6px;
   background-color: white;
   cursor: pointer;
-  color: $dark-green;
+  color: $base-gray;
   letter-spacing: 0.2px;
 
   img {
-    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%) !important;
+    filter: invert(40%);
   }
 }
 .list-section {
@@ -1168,7 +1187,7 @@ export default {
   position: absolute;
   top: 3rem;
   left: 0.5rem;
-  border-radius: 0.25rem;
+  border-radius: 6px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -1177,7 +1196,7 @@ export default {
   max-height: 70vh;
   overflow: scroll;
   margin-right: 0.5rem;
-  box-shadow: 1px 1px 2px 2px $very-light-gray;
+  box-shadow: 1px 1px 2px 1px $very-light-gray;
   &__title {
     position: sticky;
     top: 0;
@@ -1304,12 +1323,12 @@ export default {
   width: 1.5rem;
   margin-right: 0.2rem;
   padding: 0.25rem;
-  border-radius: 0.25rem;
+  border-radius: 5px;
   background-color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e8e8e8;
+  border: 0.8px solid $gray;
   cursor: pointer;
 }
 .no__button {

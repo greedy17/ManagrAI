@@ -1,5 +1,5 @@
 <template>
-  <div class="table-row">
+  <div class="table-row" :class="{ selected: primaryCheckList.includes(opp.id) }">
     <div v-if="opp" class="table-cell-checkbox">
       <div v-if="updateList.includes(opp.id) || updatedList.includes(opp.id)">
         <SkeletonBox width="10px" height="9px" />
@@ -17,7 +17,7 @@
     </div>
 
     <div style="min-width: 26vw" class="table-cell cell-name">
-      <div class="flex-row-spread">
+      <div class="flex-row-spread" :class="{ selected: primaryCheckList.includes(opp.id) }">
         <div>
           <div
             class="flex-column"
@@ -449,10 +449,12 @@ export default {
           console.log(e)
         } finally {
           this.updatedList = []
-          this.$Alert.alert({
+          this.$toast('Salesforce Update Successful', {
+            timeout: 2000,
+            position: 'top-left',
             type: 'success',
-            timeout: 750,
-            message: 'Salesforce update successful!',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         }
       }
@@ -477,10 +479,12 @@ export default {
           console.log(e)
         } finally {
           this.updatedList = []
-          this.$Alert.alert({
+          this.$toast('Salesforce Update Successful', {
+            timeout: 2000,
+            position: 'top-left',
             type: 'success',
-            timeout: 750,
-            message: 'Salesforce update successful!',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         }
       }
@@ -505,10 +509,12 @@ export default {
           console.log(e)
         } finally {
           this.updatedList = []
-          this.$Alert.alert({
+          this.$toast('Salesforce Update Successful', {
+            timeout: 2000,
+            position: 'top-left',
             type: 'success',
-            timeout: 750,
-            message: 'Salesforce update successful!',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         }
       }
@@ -636,11 +642,14 @@ input {
 }
 .empty {
   display: table-cell;
-  background: white !important;
+  background: $off-white;
   min-width: 12vw;
   border-left: 1px solid $soft-gray;
   border-right: 1px solid $soft-gray;
   border-bottom: 1px solid $soft-gray;
+}
+.selected {
+  color: $dark-green !important;
 }
 .table-cell {
   display: table-cell;
@@ -663,9 +672,11 @@ input {
 .table-cell:hover,
 .empty:hover {
   border: 1px solid $dark-green;
+  border-radius: 4px;
 }
 .cell-name:hover {
   border: none;
+  border-bottom: 1px solid #e8e8e8;
 }
 .table-cell-wide {
   display: table-cell;
@@ -687,7 +698,7 @@ input {
   top: 0;
   left: 0;
   position: sticky;
-  background-color: $off-white;
+  background-color: $white;
 }
 .table-cell-checkbox {
   display: table-cell;
@@ -698,7 +709,7 @@ input {
   position: sticky;
   z-index: 1;
   border-bottom: 1px solid $soft-gray;
-  background-color: $off-white;
+  background-color: $white;
 }
 .cell-name-header {
   display: table-cell;
@@ -710,7 +721,7 @@ input {
   left: 3.5vw;
   top: 0;
   position: sticky;
-  background-color: $off-white;
+  background-color: $white;
   font-weight: bold;
   font-size: 13px;
   letter-spacing: 0.5px;
@@ -794,12 +805,12 @@ input[type='checkbox'] + label::before {
   width: 1.5rem;
   margin-right: 0.2rem;
   padding: 0.25rem;
-  border-radius: 0.25rem;
+  border-radius: 4px;
   background-color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e8e8e8;
+  border: 0.7px solid $gray;
   img {
     height: 0.8rem;
     padding: 1px;
@@ -816,12 +827,12 @@ input[type='checkbox'] + label::before {
   width: 1.5rem;
   margin-right: 0.2rem;
   padding: 0.25rem;
-  border-radius: 0.25rem;
+  border-radius: 4px;
   background-color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e8e8e8;
+  border: 0.7px solid $gray;
   img {
     height: 1.2rem;
   }

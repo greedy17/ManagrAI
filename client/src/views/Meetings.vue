@@ -698,6 +698,7 @@ export default {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
         this.meetings = res.results
+        console.log(this.meetings)
       } catch (e) {
         console.log(e)
       } finally {
@@ -750,10 +751,12 @@ export default {
       } finally {
         setTimeout(() => {
           this.meetingLoading = false
-          this.$Alert.alert({
-            type: 'success',
+          this.$toast('Contact Added Successfully', {
             timeout: 2000,
-            message: 'Contact Added Successfully',
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         }, 500)
       }
@@ -826,11 +829,12 @@ export default {
         console.log(e)
       } finally {
         this.meetingLoading = false
-        this.$Alert.alert({
-          type: 'success',
+        this.$toast('Meeting logged Successfully', {
           timeout: 2000,
-          message: 'Meeting Logged successfully',
-          sub: 'No update necessary',
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
@@ -873,11 +877,12 @@ export default {
       } finally {
         this.updatingMeeting = false
         this.meetingLoading = false
-        this.$Alert.alert({
-          type: 'success',
+        this.$toast('Meeting logged Successfully', {
           timeout: 2000,
-          message: 'Meeting Logged successfully',
-          sub: 'Opportunity updated',
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
@@ -962,10 +967,12 @@ export default {
           })
         this.updateList = []
         this.formData = {}
-        this.$Alert.alert({
+        this.$toast('Salesforce Update Successful', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 1000,
-          message: 'Salesforce update successful!',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } catch (e) {
         console.log(e)
@@ -987,10 +994,12 @@ export default {
       } catch (e) {
         console.log(e)
       } finally {
-        this.$Alert.alert({
+        this.$toast('Opportunity created Successfully', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 1000,
-          message: 'Opportunity created successfully!',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
@@ -1355,14 +1364,16 @@ input {
   max-height: 80vh;
   overflow: scroll;
   margin-top: 0.5rem;
-  border-radius: 5px;
+  border-radius: 8px;
   border: 1px solid #e8e8e8;
-  background-color: $off-white;
+  background-color: white;
 }
 
 .table {
   display: table;
   overflow: scroll;
+  border-collapse: separate;
+  border-spacing: 4px;
   width: 100vw;
 }
 .opp-modal-container {
@@ -1420,7 +1431,7 @@ section {
   justify-content: space-between;
 }
 .pipelines {
-  padding-top: 5rem;
+  padding: 4rem 1rem 0 0.75rem;
   color: $base-gray;
 }
 .invert {
@@ -1649,5 +1660,8 @@ a {
     color: $mid-gray;
     font-size: 11px;
   }
+}
+.logged {
+  border-left: 1px solid $dark-green;
 }
 </style>
