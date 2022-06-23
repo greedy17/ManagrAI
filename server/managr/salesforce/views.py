@@ -526,7 +526,7 @@ class SalesforceSObjectViewSet(
             user.activity.add_workflow_activity(str(main_form.id), title)
 
         value_update = main_form.resource_object.update_database_values(all_form_data)
-        return Response(data={"success": True})
+        return Response(data=data)
 
     @action(
         methods=["get"],

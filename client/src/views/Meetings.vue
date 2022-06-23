@@ -863,6 +863,7 @@ export default {
               meeting_type: 'No Update',
               meeting_comments: 'No Update',
             },
+            stage_form_id: [],
           })
           .then(() => {
             this.getMeetingList()
