@@ -232,12 +232,12 @@
               <input 
                 class="wide" 
                 type="search" 
-                v-model="ignoreEmailText" 
+                v-model="ignoreEmails" 
                 placeholder="Ignore Emails" 
                 @keyup.enter="ignoreEmail"
               />
               <!-- <p>{{ignoreEmailText}}</p> -->
-              <div v-for="email in ignoreEmails" :key="email">
+              <!-- <div v-for="email in ignoreEmails" :key="email">
                 <div v-if="!newIgnoreEmails.includes(email)" class="email_text_container">
                   <div class="removed_email">{{email}}</div>
                 </div>
@@ -245,7 +245,7 @@
                   <div>{{email}}</div>
                   <div @click="removeEmail(email)" style="cursor: pointer;">X</div>
                 </div>
-              </div>
+              </div> -->
             </div>
             <div>
               <div @click="test">Has Products</div>
@@ -254,7 +254,7 @@
                 v-model="hasProducts" 
               />
             </div>
-            <button class="green_button" @click="postOrgUpdates({ignore_emails: newIgnoreEmails, has_products: hasProducts, state_active: stateActive, org_id: selected_org ? selected_org.id : old_selected_org.id})">Save Changes</button>
+            <button class="green_button" @click="postOrgUpdates()">Save Changes</button>
           </div>
           
 
@@ -837,11 +837,29 @@ export default {
         console.log('Error in getSlackFormInstance', e)
       }
     },
-    async postOrgUpdates(data) {
-      console.log(data)
-      const res = await Organization.api.orgUpdate(data).then(() => {
-        this.organizations.refresh();
-      });
+    async postOrgUpdates() {
+      const orgUpdates = {
+        state_active: this.stateActive,
+        has_products: this.hasProducts,
+        ignore_emails: this.ignoreEmails,
+        org_id: this.selected_org.id
+      }
+      try {
+        const res = await Organization.api.orgUpdate(orgUpdates)
+        const refresh = await this.organizations.refresh();
+        this.$Alert.alert({
+              type: 'success',
+              timeout: 4000,
+              message: 'Organization Updated. Please wait a few seconds and then hard refresh (ctrl + shift + r)',
+            })
+      } catch(e) {
+        console.log('error: ', e)
+        this.$Alert.alert({
+              type: 'failure',
+              timeout: 4000,
+              message: 'Something went wrong. Check the console for full error report.',
+            })
+      }
       // console.log('res!!!', res)
     },
     async postUserInfo(index, userID) {
@@ -1123,9 +1141,6 @@ input[type='search']:focus {
     margin: .25rem .5rem;
     overflow-wrap: break-word;
   }
-}
-.form_field_underline {
-  border-bottom: 1px solid $very-light-gray;
 }
 .back {
   margin: 1rem;

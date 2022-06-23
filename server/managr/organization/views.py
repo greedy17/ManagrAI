@@ -105,13 +105,16 @@ class OrganizationViewSet(
         ignore_emails = d.get("ignore_emails")
         has_products = d.get("has_products")
         org_id = d.get("org_id")
-        organization = Organization.objecxts.get(id = org_id)
+        print('\n\norg_id\n\n', org_id, '\n\n')
+        organization = Organization.objects.get(id = org_id)
         print('\n\norganization\n\n', organization, '\n\n')
         if organization.state != state:
             organization.state = state
         if organization.has_products != has_products:
             organization.has_products = has_products
-        organization.ignore_emails = list(set(ignore_emails))
+        split_emails = ignore_emails.split(",")
+        print('\n\nignore emails\n\n', ignore_emails.split(","), '\n\n')
+        organization.ignore_emails = split_emails
         organization.save()
         return Response(data=status.HTTP_200_OK)
 
