@@ -58,7 +58,7 @@
         <div v-else-if="modalName === 'meetingWorkflow'">
           <div class="modal-container__body">
             <!-- {{modalInfo}} -->
-            <h1>{{modalInfo.meeting_ref.topic}}</h1>
+            <h1 class="user_title">{{modalInfo.meeting_ref.topic}}</h1>
             <div class="user_item_container">
               <div class="border-break tiny-spacing">
                 <h3>Meeting ID:</h3>
@@ -690,7 +690,7 @@
       <template v-else-if="page === 'SlackFormInstance'">
         <button class="green_button back" @click="goBack">Back</button>
         <div v-for="(slackFormInstance, i) in slackFormInstances" :key="slackFormInstance.id">
-          <h3 :class="i%2===0 ? 'light-back' : 'dark-back'" @click="openModal('slackFormInstance', slackFormInstance)">{{slackFormInstance.template_id}} by {{getUserName(slackFormInstance.user_id)}}</h3>
+          <h3 :class="i%2===0 ? '' : 'light-back'" @click="openModal('slackFormInstance', slackFormInstance)">{{slackFormInstance.template_id}} by {{getUserName(slackFormInstance.user_id)}}</h3>
           <!-- <div>
             <h3>Resource ID:</h3>
             <h4>{{slackFormInstance.resource_id}}</h4>
@@ -701,7 +701,7 @@
         <!-- <div>{{orgMeetingWorkflows[0]}}</div> -->
         <button class="green_button back" @click="goBack">Back</button>
         <div v-for="(meetingWorkflow) in orgMeetingWorkflows" :key="meetingWorkflow.id">
-          <h3 :class="i%2===0 ? 'light-back' : 'dark-back'" @click="openModal('meetingWorkflow', meetingWorkflow)">{{meetingWorkflow.meeting_ref.topic}}</h3>
+          <h3 :class="i%2===0 ? '' : 'light-back'" @click="openModal('meetingWorkflow', meetingWorkflow)">{{meetingWorkflow.meeting_ref.topic}}</h3>
           <!-- <h3>Full Name: {{slackForm.fullName}}</h3> -->
           <!-- <h3>Email: {{slackForm.email}}</h3> -->
           <!-- <h3>Role: {{slackForm.role}}</h3> -->
@@ -1185,9 +1185,6 @@ input[type='search']:focus {
 .light-back {
   background-color: $white-green;
 }
-.dark-back {
-  background-color: $lighter-green;
-}
 .big_card_container {
   border: 1px solid black;
   box-shadow: 1px 1px 3px black;
@@ -1198,7 +1195,6 @@ input[type='search']:focus {
   border-bottom: 1px solid $very-light-gray;
 }
 .tiny-spacing {
-  // margin: .25rem 0;
   h3 {
     margin: .25rem 0;
   }
