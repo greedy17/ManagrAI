@@ -1,7 +1,7 @@
 <template>
   <div class="table-row">
     <div class="table-cell">
-      <div v-if="!meeting.event_data">
+      <div>
         <div>
           <p style="letter-spacing: 0.25px; font-size: 12px; margin-bottom: 3px">
             {{ meeting.topic ? meeting.topic : 'Meeting' }}
@@ -12,7 +12,7 @@
         </div>
       </div>
 
-      <div v-else>
+      <!-- <div v-else>
         <div>
           <p style="letter-spacing: 0.25px; font-size: 15px; margin-bottom: 3px">
             {{ meeting.event_data.title }}
@@ -21,7 +21,7 @@
             Time: {{ formatUnix(meeting.event_data.times.start_time) }}
           </span>
         </div>
-      </div>
+      </div> -->
     </div>
     <div class="table-cell">
       {{ meeting.participants.length }}
@@ -463,6 +463,7 @@ export default {
   },
   mounted() {
     if (this.resourceId) {
+      console.log(this.meeting)
       this.getCurrentVals()
     }
   },
