@@ -56,7 +56,10 @@
         <span @click="goToWorkflow(alert.id)" :key="i" v-for="(alert, i) in templates.list"
           ><a class="green-border">
             {{ alert.title }} <small class="green">{{ workflows[i] ? workflows[i] : '--' }}</small>
-            <p class="small-font no-margin grey">owner: {{ users ? owner(alert.user) : '' }}</p>
+            <p class="small-font no-margin grey">
+              {{ owner(alert.user) !== 'Activated by Manager' ? 'Owner:' : '' }}
+              {{ users ? owner(alert.user) : '' }}
+            </p>
           </a>
         </span>
 
@@ -96,7 +99,10 @@ export default {
         5: 'Friday',
         6: 'Saturday',
       },
-      templates: CollectionManager.create({ ModelClass: AlertTemplate }),
+      templates: CollectionManager.create({
+        ModelClass: AlertTemplate,
+        filters: { forPipeline: true },
+      }),
       users: CollectionManager.create({ ModelClass: User }),
       //   months: {
       //       01:'January',
@@ -130,7 +136,9 @@ export default {
       }
     },
     owner(usr) {
-      return this.users.list.filter((user) => user.id === usr)[0].fullName
+      return this.users.list.filter((user) => user.id === usr)[0]
+        ? this.users.list.filter((user) => user.id === usr)[0].fullName
+        : 'Activated by Manager'
     },
     formatDateTimeToTime(input) {
       let preDate = new Date(input)
