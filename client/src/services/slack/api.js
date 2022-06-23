@@ -147,7 +147,6 @@ export default class SlackAPI {
   }
 
   async slackInstances() {
-    console.log('orgid here', )
     return this.client
       .get(SLACK_LIST_INSTANCES)
       .then(response => {
@@ -155,15 +154,6 @@ export default class SlackAPI {
       }) 
       .catch(apiErrorHandler({ apiName: 'SlackApi.slackInstances' }))
   }
-  // const promise = apiClient()
-  //     .post(ACCOUNTS_ENDPOINT, data)
-  //     .then(response => this.cls.fromAPI(response.data))
-  //     .catch(
-  //       apiErrorHandler({
-  //         apiName: 'AccountAPI.create error',
-  //       }),
-  //     )
-  //   return promise
 
   async updateZoomChannel(slack_id, zoom_channel) {
     return this.client

@@ -233,19 +233,8 @@
                 class="wide" 
                 type="search" 
                 v-model="ignoreEmails" 
-                placeholder="Ignore Emails" 
-                @keyup.enter="ignoreEmail"
+                placeholder="Ignore Emails"
               />
-              <!-- <p>{{ignoreEmailText}}</p> -->
-              <!-- <div v-for="email in ignoreEmails" :key="email">
-                <div v-if="!newIgnoreEmails.includes(email)" class="email_text_container">
-                  <div class="removed_email">{{email}}</div>
-                </div>
-                <div v-else class="email_text_container">
-                  <div>{{email}}</div>
-                  <div @click="removeEmail(email)" style="cursor: pointer;">X</div>
-                </div>
-              </div> -->
             </div>
             <div>
               <div @click="test">Has Products</div>
@@ -691,20 +680,12 @@
         <button class="green_button back" @click="goBack">Back</button>
         <div v-for="(slackFormInstance, i) in slackFormInstances" :key="slackFormInstance.id">
           <h3 :class="i%2===0 ? '' : 'light-back'" @click="openModal('slackFormInstance', slackFormInstance)">{{slackFormInstance.template_id}} by {{getUserName(slackFormInstance.user_id)}}</h3>
-          <!-- <div>
-            <h3>Resource ID:</h3>
-            <h4>{{slackFormInstance.resource_id}}</h4>
-          </div> -->
         </div>
       </template>
       <template v-else-if="page === 'MeetingWorkflow'">
-        <!-- <div>{{orgMeetingWorkflows[0]}}</div> -->
         <button class="green_button back" @click="goBack">Back</button>
         <div v-for="(meetingWorkflow) in orgMeetingWorkflows" :key="meetingWorkflow.id">
           <h3 :class="i%2===0 ? '' : 'light-back'" @click="openModal('meetingWorkflow', meetingWorkflow)">{{meetingWorkflow.meeting_ref.topic}}</h3>
-          <!-- <h3>Full Name: {{slackForm.fullName}}</h3> -->
-          <!-- <h3>Email: {{slackForm.email}}</h3> -->
-          <!-- <h3>Role: {{slackForm.role}}</h3> -->
         </div>
       </template>
     </div>
@@ -743,16 +724,14 @@ export default {
       editOpModalOpen: false,
       modalInfo: null,
       states: ['ACTIVE', 'INACTIVE'],
-      stateActive: null, // change to whatever info is coming in
-      ignoreEmailText: '',
-      ignoreEmails: [], // change to whatever info is coming in
-      newIgnoreEmails: [],
+      stateActive: null,
+      ignoreEmails: [],
       eventCalendarIDObj: {},
       fakeMeetingIDObj: {},
       zoomChannelObj: {},
       recapObj: {},
       realTimeAlertConfigObj: {},
-      hasProducts: false, // change to whatever info is coming in
+      hasProducts: false,
       allForms: null,
       allMeetingWorkflows: null,
       selected_org: null,
@@ -774,8 +753,6 @@ export default {
     this.stateActive = this.user.organizationRef.state;
     this.hasProducts = this.user.organizationRef.hasProducts;
     this.ignoreEmails = this.user.organizationRef.ignoreEmailRef;
-    this.newIgnoreEmails = this.ignoreEmails;
-    console.log('this.stateActive', this.user)
   },
   methods: {
     test() {
@@ -783,7 +760,6 @@ export default {
     },
     getUserName(id) {
       const user = this.orgUsers.filter((user) => user.id == id)[0]
-      console.log('this hit', this.orgUsers, id)
       return `${user.firstName} ${user.lastName}`
     },
     async getAllForms() {
@@ -797,7 +773,6 @@ export default {
     async getAllMeetingWorkflows() {
       try {
         let res = await MeetingWorkflows.api.getMeetingList()
-        console.log('res.results', res.results)
         this.allMeetingWorkflows = res.results
       } catch (e) {
         console.log(e)
@@ -827,21 +802,23 @@ export default {
     async getSlackFormInstance() {
       try {
         const res = await SlackOAuth.api.slackInstances()
-        // User.api.getUser(this.user.id).then((response) => {
-          //   this.$store.commit('UPDATE_USER', response)
-          // })
         console.log('uh oh', res)
         this.slackFormInstances = res;
-        console.log('this.slackFormInstance', this.slackFormInstance)
       } catch(e) {
         console.log('Error in getSlackFormInstance', e)
       }
     },
     async postOrgUpdates() {
+      let noSpacesEmails = '';
+      for (let i = 0; i < this.ignoreEmails.length; i++){
+        if (this.ignoreEmails[i] !== ' ') {
+          noSpacesEmails += this.ignoreEmails[i]
+        }
+      }
       const orgUpdates = {
         state_active: this.stateActive,
         has_products: this.hasProducts,
-        ignore_emails: this.ignoreEmails,
+        ignore_emails: noSpacesEmails,
         org_id: this.selected_org.id
       }
       try {
@@ -860,7 +837,6 @@ export default {
               message: 'Something went wrong. Check the console for full error report.',
             })
       }
-      // console.log('res!!!', res)
     },
     async postUserInfo(index, userID) {
       const data = {
@@ -874,43 +850,6 @@ export default {
       const res = await User.api.usersUpdate(data).then(() => {
         this.allUsers.refresh();
       });
-      console.log('res', res)
-    },
-    ignoreEmail() {
-      if (!this.checkEmail()) {
-        return console.log('Please enter a valid email')
-      }
-      this.ignoreEmails.push(this.ignoreEmailText);
-      this.newIgnoreEmails.push(this.ignoreEmailText);
-      this.ignoreEmailText = '';
-      console.log('ignoreEmails', this.newIgnoreEmails, Array.isArray(this.ignoreEmails));
-    },
-    checkEmail() {
-      let symbol = false;
-      let dot = false;
-      if (this.ignoreEmailText[0] === '.' || this.ignoreEmailText[0] === '@') {
-        return false;
-      }
-      for (let i = 0; i < this.ignoreEmailText.length; i++) {
-        if (!symbol) {
-          if (this.ignoreEmailText[i] === '@') {
-            if (this.ignoreEmailText[i+1] === '.' || this.ignoreEmailText[i-1] === '.') {
-              return false;
-            }
-            symbol = true;
-          }
-        } else if (!dot) {
-          if (this.ignoreEmailText[i] === '.') {
-            dot = true;
-          }
-        } else {
-          return true;
-        }
-      }
-      return false;
-    },
-    removeEmail(email) {
-      this.newIgnoreEmails = this.newIgnoreEmails.filter(em => em !== email)
     },
     goBack() {
       this.selected_org = this.old_selected_org;
@@ -929,7 +868,6 @@ export default {
         // VV this is busted VV
         this.realTimeAlertConfigObj[i] = u.slackAccount.realtimeAlertConfigs.toString();
       })
-      console.log('this.selectedUsers', this.selectedUsers)
       this.old_selected_org = this.selected_org;
       this.selected_org = null;
       this.page = 'Users';
@@ -941,7 +879,6 @@ export default {
       this.old_selected_org = this.selected_org;
       this.selected_org = null;
       this.page = 'SlackForm';
-      console.log('selectedSlackForms', this.selectedSlackForms)
     },
     goToSlackFormInstace() {
       this.getSlackFormInstance()
@@ -957,7 +894,6 @@ export default {
     openModal(name, data) {
       this.modalName = name;
       this.modalInfo = data;
-      console.log('modal data', data)
       this.editOpModalOpen = true;
     },
     resetEdit() {
@@ -1002,7 +938,6 @@ export default {
         this.orgUsers = this.filterUsers(this.selected_org.id)
         this.orgSlackForms = this.filterSlackForms(this.selected_org.id)
         this.orgMeetingWorkflows = this.filterMeetingWorkflow(this.selected_org.id)
-        // console.log('this.orgSlackForms', this.orgSlackForms)
       }
     },
     selected_org() {
@@ -1011,7 +946,6 @@ export default {
         this.loading = false
         this.orgUsers = this.filterUsers(this.selected_org.id)
         this.orgSlackForms = this.filterSlackForms(this.selected_org.id)
-        console.log('this.orgSlackForms', this.orgSlackForms)
       }
     },
   },

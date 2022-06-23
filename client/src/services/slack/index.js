@@ -80,7 +80,6 @@ export class SlackInstance extends Model {
   static fields_ref = new fields.Field()
 
   static fromAPI(json) {
-    console.log('json', json)
     return new SlackInstance(objectToCamelCase(json))
   }
 }
