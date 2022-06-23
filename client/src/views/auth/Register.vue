@@ -32,7 +32,6 @@
                 :errors="registrationForm.field.fullName.errors"
                 v-model="registrationForm.field.fullName.value"
                 large
-                bordered
                 placeholder=""
                 id="fullname"
               />
@@ -42,7 +41,6 @@
                 :errors="registrationForm.field.email.errors"
                 v-model="registrationForm.field.email.value"
                 large
-                bordered
                 :disabled="true"
                 placeholder=""
                 id="email"
@@ -55,7 +53,6 @@
                 placeholder=""
                 intputType="password"
                 large
-                bordered
                 id="password"
               />
               <FormField
@@ -66,7 +63,6 @@
                 placeholder=""
                 inputType="password"
                 large
-                bordered
                 id="renterpassword"
               />
 
@@ -240,6 +236,11 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
+input:focus {
+  outline: none;
+  border: none;
+}
+
 .registration {
   display: flex;
   padding: 2rem 0rem 0rem 0rem;
@@ -351,5 +352,9 @@ a {
 }
 ::v-deep .input-content {
   border: 1px solid #e8e8e8;
+  border-radius: 4px;
+}
+::v-deep .input-form__active {
+  border: none;
 }
 </style>

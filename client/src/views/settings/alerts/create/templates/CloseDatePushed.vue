@@ -169,7 +169,7 @@ import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 //Internal
 import FormField from '@/components/forms/FormField'
-import { UserConfigForm } from '@/services/users/forms'
+
 
 /**
  * Services
@@ -214,7 +214,7 @@ export default {
       SOBJECTS_LIST,
       pageNumber: 0,
       configName: '',
-      userConfigForm: new UserConfigForm({}),
+     
       realTimeAlertForm: new RealTimeAlertForm(),
       selectedBindings: [],
       fields: CollectionManager.create({ ModelClass: SObjectField }),
@@ -261,9 +261,7 @@ export default {
       await this.users.refresh()
       this.userList = this.users.list.filter((user) => user.salesforceAccountRef)
     }
-    this.userConfigForm = new UserConfigForm({
-      activatedManagrConfigs: this.user.activatedManagrConfigs,
-    })
+ 
   },
 
   methods: {

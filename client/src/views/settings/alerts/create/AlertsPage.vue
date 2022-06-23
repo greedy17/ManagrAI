@@ -5,7 +5,7 @@
       <p style="margin-top: -0.5rem" class="sub__">Step 2/2: Activate at least 2 workflows</p>
       <button
         class="orange_button bouncy"
-        v-if="isOnboarding && user.activatedManagrConfigs.includes('Close Date Passed')"
+        v-if="isOnboarding && user.activatedTemplateRef.includes('Close Date Passed')"
         @click="onboardComplete"
       >
         Complete Onboarding
@@ -106,7 +106,7 @@
         <div class="card__footer">
           <button
             v-if="
-              hasSalesforceIntegration && !user.activatedManagrConfigs.includes('Close Date Passed')
+              hasSalesforceIntegration && !user.activatedTemplateRef.includes('Close Date Passed')
             "
             @click="goToCloseDatePassed"
             :class="
@@ -118,7 +118,7 @@
           <h4 v-else-if="!hasSalesforceIntegration">Connect Salesforce to acivate</h4>
           <h4
             class="active-workflow"
-            v-else-if="user.activatedManagrConfigs.includes('Close Date Passed')"
+            v-else-if="user.activatedTemplateRef.includes('Close Date Passed')"
           >
             Active <img src="@/assets/images/configCheck.svg" alt="" />
           </h4>
@@ -127,7 +127,7 @@
 
       <div
         :class="
-          !user.activatedManagrConfigs.includes('Close Date Passed') &&
+          !user.activatedTemplateRef.includes('Close Date Passed') &&
           isOnboarding &&
           !isAdmin &&
           userLevel !== 'MANAGER'
@@ -157,7 +157,7 @@
         <div class="card__footer">
           <button
             v-if="
-              hasSalesforceIntegration && !user.activatedManagrConfigs.includes('Update Forecast')
+              hasSalesforceIntegration && !user.activatedTemplateRef.includes('Update Forecast')
             "
             @click="goToUpdateForecast"
             class="orange_button"
@@ -167,7 +167,7 @@
           <h4 v-else-if="!hasSalesforceIntegration">Connect Salesforce to acivate</h4>
           <h4
             class="active-workflow"
-            v-else-if="user.activatedManagrConfigs.includes('Update Forecast')"
+            v-else-if="user.activatedTemplateRef.includes('Update Forecast')"
           >
             Active <img src="@/assets/images/configCheck.svg" alt="" />
           </h4>
@@ -176,7 +176,7 @@
 
       <div
         :class="
-          !user.activatedManagrConfigs.includes('Close Date Passed') &&
+          !user.activatedTemplateRef.includes('Close Date Passed') &&
           isOnboarding &&
           !isAdmin &&
           userLevel !== 'MANAGER'
@@ -208,7 +208,7 @@
 
         <div class="card__footer">
           <button
-            v-if="hasSalesforceIntegration && !user.activatedManagrConfigs.includes('Deal Rotting')"
+            v-if="hasSalesforceIntegration && !user.activatedTemplateRef.includes('Deal Rotting')"
             @click="goToDealRotting"
             class="orange_button"
           >
@@ -217,7 +217,7 @@
           <h4 v-else-if="!hasSalesforceIntegration">Connect Salesforce to acivate</h4>
           <h4
             class="active-workflow"
-            v-else-if="user.activatedManagrConfigs.includes('Deal Rotting')"
+            v-else-if="user.activatedTemplateRef.includes('Deal Rotting')"
           >
             Active <img src="@/assets/images/configCheck.svg" alt="" />
           </h4>
@@ -226,7 +226,7 @@
 
       <div
         :class="
-          !user.activatedManagrConfigs.includes('Close Date Passed') &&
+          !user.activatedTemplateRef.includes('Close Date Passed') &&
           isOnboarding &&
           !isAdmin &&
           userLevel !== 'MANAGER'
@@ -257,7 +257,7 @@
           <button
             v-if="
               hasSalesforceIntegration &&
-              !user.activatedManagrConfigs.includes('Close Date Approaching')
+              !user.activatedTemplateRef.includes('Close Date Approaching')
             "
             @click="goToCloseDateApproaching"
             class="orange_button"
@@ -269,7 +269,7 @@
           </h4>
           <h4
             class="active-workflow"
-            v-else-if="user.activatedManagrConfigs.includes('Close Date Approaching')"
+            v-else-if="user.activatedTemplateRef.includes('Close Date Approaching')"
           >
             Active <img src="@/assets/images/configCheck.svg" alt="" />
           </h4>
@@ -278,7 +278,7 @@
 
       <div
         :class="
-          !user.activatedManagrConfigs.includes('Close Date Passed') &&
+          !user.activatedTemplateRef.includes('Close Date Passed') &&
           isOnboarding &&
           !isAdmin &&
           userLevel !== 'MANAGER'
@@ -308,8 +308,7 @@
         <div class="card__footer">
           <button
             v-if="
-              hasSalesforceIntegration &&
-              !user.activatedManagrConfigs.includes('Upcoming Next Step')
+              hasSalesforceIntegration && !user.activatedTemplateRef.includes('Upcoming Next Step')
             "
             @click="goToNextStep"
             class="orange_button"
@@ -319,7 +318,7 @@
           <h4 v-else-if="!hasSalesforceIntegration">Connect Salesforce to acivate</h4>
           <h4
             class="active-workflow"
-            v-else-if="user.activatedManagrConfigs.includes('Upcoming Next Step')"
+            v-else-if="user.activatedTemplateRef.includes('Upcoming Next Step')"
           >
             Active <img src="@/assets/images/configCheck.svg" alt="" />
           </h4>
@@ -328,7 +327,7 @@
 
       <div
         :class="
-          !user.activatedManagrConfigs.includes('Close Date Passed') &&
+          !user.activatedTemplateRef.includes('Close Date Passed') &&
           isOnboarding &&
           !isAdmin &&
           userLevel !== 'MANAGER'
@@ -359,7 +358,7 @@
           <button
             v-if="
               hasSalesforceIntegration &&
-              !user.activatedManagrConfigs.includes('Required Field Empty')
+              !user.activatedTemplateRef.includes('Required Field Empty')
             "
             @click="goToEmptyField"
             class="orange_button"
@@ -369,7 +368,7 @@
           <h4 v-else-if="!hasSalesforceIntegration">Connect Salesforce to acivate</h4>
           <h4
             class="active-workflow"
-            v-else-if="user.activatedManagrConfigs.includes('Required Field Empty')"
+            v-else-if="user.activatedTemplateRef.includes('Required Field Empty')"
           >
             Active <img src="@/assets/images/configCheck.svg" alt="" />
           </h4>
@@ -378,7 +377,7 @@
 
       <div
         :class="
-          !user.activatedManagrConfigs.includes('Close Date Passed') &&
+          !user.activatedTemplateRef.includes('Close Date Passed') &&
           isOnboarding &&
           !isAdmin &&
           userLevel !== 'MANAGER'
@@ -408,8 +407,7 @@
         <div class="card__footer">
           <button
             v-if="
-              hasSalesforceIntegration &&
-              !user.activatedManagrConfigs.includes('Large Opportunities')
+              hasSalesforceIntegration && !user.activatedTemplateRef.includes('Large Opportunities')
             "
             @click="goToLargeOpps"
             class="orange_button"
@@ -419,7 +417,7 @@
           <h4 v-else-if="!hasSalesforceIntegration">Connect Salesforce to acivate</h4>
           <h4
             class="active-workflow"
-            v-else-if="user.activatedManagrConfigs.includes('Large Opportunities')"
+            v-else-if="user.activatedTemplateRef.includes('Large Opportunities')"
           >
             Active <img src="@/assets/images/configCheck.svg" alt="" />
           </h4>

@@ -324,7 +324,12 @@ a {
   color: $dark-green;
   font-weight: bold;
 }
+
 ::v-deep .input-content {
   border: 1px solid #e8e8e8;
+  border-radius: 4px;
+}
+::v-deep .input-form__active {
+  border: none;
 }
 </style>
