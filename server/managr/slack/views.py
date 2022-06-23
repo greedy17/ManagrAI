@@ -53,7 +53,11 @@ from .models import (
     OrgCustomSlackForm,
     OrgCustomSlackFormInstance,
 )
-from .serializers import OrgCustomSlackFormSerializer, OrgSlackIntegrationWriteSerializer
+from .serializers import (
+    OrgCustomSlackFormSerializer,
+    OrgSlackIntegrationWriteSerializer,
+    OrgCustomSlackFormInstanceSerializer,
+)
 
 
 from managr.salesforce.routes import routes as model_routes
@@ -1212,11 +1216,19 @@ def launch_digest(request):
 
     return Response()
 
-@api_view(["GET"])
-@permission_classes(
-    [permissions.IsAuthenticated,]
-)
-def get_orgs_custom_slack_form_instances(request):
-    org_id = request.query_params.get("org_id")
-    org=OrgCustomSlackFormInstance.objects.filter(user__organization=org_id).values()[:50]
-    return Response(data=org)
+
+class SlackFormInstanceViewSet(
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+):
+    serializer_class = OrgCustomSlackFormSerializer
+
+    def get_queryset(self):
+        return OrgCustomSlackFormInstance.objects.filter(
+            user__organization=self.request.user.organization
+        )
+
