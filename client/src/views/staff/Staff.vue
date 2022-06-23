@@ -684,7 +684,7 @@
       </template>
       <template v-else-if="page === 'MeetingWorkflow'">
         <button class="green_button back" @click="goBack">Back</button>
-        <div v-for="(meetingWorkflow) in orgMeetingWorkflows" :key="meetingWorkflow.id">
+        <div v-for="(meetingWorkflow, i) in orgMeetingWorkflows" :key="meetingWorkflow.id">
           <h3 :class="i%2===0 ? '' : 'light-back'" @click="openModal('meetingWorkflow', meetingWorkflow)">{{meetingWorkflow.meeting_ref.topic}}</h3>
         </div>
       </template>

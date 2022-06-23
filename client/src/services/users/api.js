@@ -56,7 +56,6 @@ export default class UserAPI {
     }
     try {
       const res = await this.client.get(url, options)
-      console.log('res here', res)
       return {
         ...res.data,
         results: res.data.results.map(this.cls.fromAPI),
