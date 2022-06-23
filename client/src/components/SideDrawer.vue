@@ -19,8 +19,18 @@
         <div v-else>
           <span :key="i" v-for="(meeting, i) in meetings"
             ><a class="yellow-border no-cursor"
-              >{{ meeting.meeting_ref.topic }}
-              <span class="grey">{{ formatDateTimeToTime(meeting.meeting_ref.start_time) }}</span>
+              >{{
+                meeting.meeting_ref.event_data
+                  ? meeting.meeting_ref.event_data.title
+                  : meeting.meeting_ref.topic
+              }}
+              <span class="grey">{{
+                formatDateTimeToTime(
+                  meeting.meeting_ref.event_data
+                    ? meeting.meeting_ref.event_data.times.start_time
+                    : meeting.meeting_ref.start_time,
+                )
+              }}</span>
               <p
                 :class="
                   meeting.is_completed ? 'small-font no-margin yellow' : 'small-font no-margin'
@@ -53,10 +63,10 @@
         <!-- <span><a class="green-border" href="">Pipeline 3</a></span>  -->
       </div>
 
-      <div class="noti-section">
+      <!-- <div class="noti-section">
         <p class="sticky light-gray">Task<small class="light-gray-bg">0</small></p>
         <span><a style="pointer-events: none" class="red-border" href="">Coming Soon</a></span>
-      </div>
+      </div> -->
     </section>
   </div>
 </template>
@@ -272,7 +282,7 @@ button:disabled {
   margin-bottom: -5px;
 }
 .noti-section-lg {
-  height: 250px;
+  height: 350px;
   overflow-y: scroll;
   padding: 0px 16px;
   border-bottom: 1px solid $soft-gray;

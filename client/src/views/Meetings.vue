@@ -145,8 +145,10 @@
                   setUpdateValues(
                     field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
                     $event.value,
+                    field.dataType === 'MultiPicklist' ? true : false,
                   )
                 "
+                :multiple="field.dataType === 'MultiPicklist' ? true : false"
                 v-model="dropdownVal[field.apiName]"
                 openDirection="below"
                 :loading="dropdownLoading"
@@ -655,7 +657,6 @@ export default {
       this.notes = []
     },
     async getNotes(id) {
-      console.log(id)
       try {
         const res = await SObjects.api.getNotes({
           resourceId: id,
@@ -668,7 +669,13 @@ export default {
           }
         }
       } catch (e) {
-        console.log(e)
+        this.$toast('Error gathering Notes!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async stageGateInstance(field) {
@@ -681,7 +688,13 @@ export default {
         })
         this.stageGateId = res.form_id
       } catch (e) {
-        console.log(e)
+        this.$toast('Error creating stage form instance', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async getReferenceFieldList(key, val) {
@@ -691,16 +704,27 @@ export default {
         })
         this.referenceOpts[key] = res
       } catch (e) {
-        console.log(e)
+        this.$toast('Error gathering reference fields', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async getMeetingList() {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
         this.meetings = res.results
-        console.log(this.meetings)
       } catch (e) {
-        console.log(e)
+        this.$toast('Error gathering Meetings!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
       }
     },
@@ -713,7 +737,13 @@ export default {
             this.getMeetingList()
           })
       } catch (e) {
-        console.log(e)
+        this.$toast('Error mapping Opportunity', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         setTimeout(() => {
           this.meetingLoading = false
@@ -727,7 +757,13 @@ export default {
           this.getMeetingList()
         })
       } catch (e) {
-        console.log(e)
+        this.$toast('Error removing participant', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         setTimeout(() => {
           this.meetingLoading = false
@@ -747,7 +783,13 @@ export default {
             this.getMeetingList()
           })
       } catch (e) {
-        console.log(e)
+        this.$toast('Error adding contact', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         setTimeout(() => {
           this.meetingLoading = false
@@ -826,7 +868,13 @@ export default {
             this.getMeetingList()
           })
       } catch (e) {
-        console.log(e)
+        this.$toast('Meeting log unsuccessful, error with no update', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         this.meetingLoading = false
         this.$toast('Meeting logged Successfully', {
@@ -854,7 +902,13 @@ export default {
         })
         this.currentVals = res.current_values
       } catch (e) {
-        console.log(e)
+        this.$toast('Error creating update form', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         this.dropdownLoading = false
       }
@@ -873,7 +927,13 @@ export default {
             this.getMeetingList()
           })
       } catch (e) {
-        console.log(e)
+        this.$toast('Error updating opportunity', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         this.updatingMeeting = false
         this.meetingLoading = false
@@ -933,8 +993,11 @@ export default {
         console.log(e)
       }
     },
-    setUpdateValues(key, val) {
-      if (val) {
+    setUpdateValues(key, val, multi) {
+      if (multi) {
+        this.formData[key] = this.formData[key] ? this.formData[key] + ';' + val : val
+      }
+      if (val && !multi) {
         this.formData[key] = val
       }
       if (key === 'StageName') {
@@ -975,29 +1038,10 @@ export default {
           bodyClassName: ['custom'],
         })
       } catch (e) {
-        console.log(e)
-      }
-    },
-    async createResource() {
-      this.addOppModalOpen = false
-      try {
-        const res = await SObjects.api
-          .createResource({
-            form_id: this.oppInstanceId,
-            form_data: this.formData,
-          })
-          .then(async () => {
-            let updatedRes = await SObjects.api.getObjects('Opportunity')
-            this.allOpps = updatedRes.results
-            this.originalList = updatedRes.results
-          })
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.$toast('Opportunity created Successfully', {
+        this.$toast('Error updating opportunity', {
           timeout: 2000,
           position: 'top-left',
-          type: 'success',
+          type: 'error',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
@@ -1142,7 +1186,13 @@ export default {
           }
         }
       } catch (error) {
-        console.log(error)
+        this.$toast('Error setting forms', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
 
@@ -1151,7 +1201,13 @@ export default {
         const res = await SObjects.api.getObjects('User')
         this.allUsers = res.results.filter((user) => user.has_salesforce_integration)
       } catch (e) {
-        console.log(e)
+        this.$toast('Error gathering users', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async getInitialAccounts() {
@@ -1163,7 +1219,13 @@ export default {
           })
           this.allAccounts = res
         } catch (e) {
-          console.log(e)
+          this.$toast('Error gatherign accounts', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
         } finally {
           this.loadingAccounts = false
         }
