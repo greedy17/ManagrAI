@@ -67,6 +67,23 @@ export class CustomSlackForm extends Model {
     return CustomSlackForm.create(objectToCamelCase(obj))
   }
 }
+export class SlackInstance extends Model {
+  static api = SlackAPI.create(SlackInstance)
+
+  static id = new fields.CharField()
+  static organization = new fields.Field()
+  static config = new fields.Field()
+  static form_type = new fields.Field()
+  static resource = new fields.Field()
+  static stage = new fields.Field()
+  static fields = new fields.Field()
+  static fields_ref = new fields.Field()
+
+  static fromAPI(json) {
+    console.log('json', json)
+    return new SlackInstance(objectToCamelCase(json))
+  }
+}
 export default class SlackOAuth {
   static api = SlackAPI.create(SlackOAuth)
   static customSlackForm = CustomSlackForm
