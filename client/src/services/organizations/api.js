@@ -35,7 +35,6 @@ export default class OrganizationAPI {
     }
   }
   async orgUpdate(data) {
-    console.log('data here', data)
     return this.client
       .post(ORGANIZATIONS_UPDATE, data)
       .then(response => response.data)

@@ -499,7 +499,7 @@
             </div>
             <div class="user_item_container">
               <h3>Event Calendar ID:</h3>
-              <div v-if="user.nylasRef.eventCalendarId">
+              <div>
                 <!-- Value will be eventCalendarIDVal[i] -->
                 <!-- eventCalendarIDVal will be assigned when selected users are assigned -->
                 <!-- For every user, push in an array that is user.nylasRef.eventCalendarId -->
@@ -561,12 +561,14 @@
             </div>
             <div class="user_item_container">
               <h3>Fake Meeting ID:</h3>
-              <div v-if="user.zoomRef.fakeMeetingIdRef">
-                <h4>{{user.zoomRef.fakeMeetingIdRef}}</h4>
+              <!-- <div v-if="user.zoomRef.fakeMeetingIdRef"> -->
+              <div>
+                <!-- <h4>{{user.zoomRef.fakeMeetingIdRef}}</h4> -->
+                <input v-model="fakeMeetingIDObj[i]">
               </div>
-              <div v-else>
+              <!-- <div v-else>
                 <h4>null</h4>
-              </div>
+              </div> -->
             </div>
           </div>
           <div>
@@ -591,31 +593,40 @@
             </div>
             <div class="user_item_container">
               <h3>Zoom Channel:</h3>
-              <div v-if="user.slackAccount.zoomChannel">
-                <h4>{{user.slackAccount.zoomChannel}}</h4>
+              <!-- <div v-if="user.slackAccount.zoomChannel"> -->
+              <div>
+                <!-- <h4>{{user.slackAccount.zoomChannel}}</h4> -->
+                <input v-model="zoomChannelObj[i]">
               </div>
-              <div v-else>
+              <!-- <div v-else>
                 <h4>null</h4>
-              </div>
+              </div> -->
             </div>
             <div class="user_item_container">
               <h3>Recap Receivers:</h3>
-              <div v-if="user.slackAccount.recapReceivers">
-                <h4>{{user.slackAccount.recapReceivers}}</h4>
+              <!-- <div v-if="user.slackAccount.recapReceivers"> -->
+              <div>
+                <!-- <h4>{{user.slackAccount.recapReceivers}}</h4> -->
+                <input v-model="recapObj[i]">
               </div>
-              <div v-else>
+              <!-- <div v-else>
                 <h4>null</h4>
-              </div>
+              </div> -->
             </div>
             <div class="user_item_container">
               <h3>Real Time Alert Configs:</h3>
-              <div v-if="user.slackAccount.realtimeAlertConfigs">
-                <h4>{{user.slackAccount.realtimeAlertConfigs}}</h4>
+              <!-- <div v-if="user.slackAccount.realtimeAlertConfigs"> -->
+              <div>
+                <!-- <h4>{{user.slackAccount.realtimeAlertConfigs}}</h4> -->
+                <input v-model="realTimeAlertConfigObj[i]">
               </div>
-              <div v-else>
+              <!-- <div v-else>
                 <h4>null</h4>
-              </div>
+              </div> -->
             </div>
+          </div>
+          <div>
+            <button class="green_button" @click="postUserInfo(i, user.id)">Save Changes</button>
           </div>
           <!-- <div>
             <div class="user_item_container">
@@ -720,10 +731,6 @@
           <!-- <h4>{{slackForm}}</h4> -->
           <div>
             <div class="user_item_container">
-              <h3>Organization</h3>
-              <!-- <h4>{{old_selected_org.name}}</h4> -->
-            </div>
-            <div class="user_item_container">
               <h3>Form Type</h3>
               <h4>{{slackForm.formType}}</h4>
             </div>
@@ -760,7 +767,7 @@
       <template v-else-if="page === 'SlackFormInstance'">
         <button class="green_button back" @click="goBack">Back</button>
         <div v-for="(slackFormInstance, i) in slackFormInstances" :key="slackFormInstance.id">
-          <h3 @click="openModal('slackFormInstance', slackFormInstance)">{{slackFormInstance.id}}</h3>
+          <h3 @click="openModal('slackFormInstance', slackFormInstance)">{{slackFormInstance.template_id}} by {{getUserName(slackFormInstance.user_id)}}</h3>
           <!-- <div>
             <h3>Resource ID:</h3>
             <h4>{{slackFormInstance.resource_id}}</h4>
@@ -818,6 +825,10 @@ export default {
       ignoreEmails: [], // change to whatever info is coming in
       newIgnoreEmails: [],
       eventCalendarIDObj: {},
+      fakeMeetingIDObj: {},
+      zoomChannelObj: {},
+      recapObj: {},
+      realTimeAlertConfigObj: {},
       hasProducts: false, // change to whatever info is coming in
       allForms: null,
       allMeetingWorkflows: null,
@@ -847,11 +858,14 @@ export default {
     test() {
       console.log('test', this.eventCalendarIDObj)
     },
+    getUserName(id) {
+      const user = this.orgUsers.filter((user) => user.id == id)[0]
+      return `${user.firstName} ${user.lastName}`
+    },
     async getAllForms() {
       try {
         let res = await SlackOAuth.api.getOrgCustomForm()
         this.allForms = res
-        console.log('getAllForms', this.allForms[0])
       } catch (e) {
         console.log(e)
       }
@@ -866,6 +880,14 @@ export default {
       }
     },
     async runCommand() {
+      if (!this.selectedCommand || !this.selectedCommand.value) {
+        this.$Alert.alert({
+            type: 'failure',
+            timeout: 4000,
+            message: 'Please select a command.',
+          })
+          return;
+      }
       try {
         const res = await User.api.callCommand(this.selectedCommand.value).then((res) => {
           this.$Alert.alert({
@@ -881,7 +903,6 @@ export default {
     async getSlackFormInstance() {
       try {
         const res = await SlackOAuth.api.slackInstances(this.selected_org.id)
-        console.log('slackFormInstanceRes', res)
         // User.api.getUser(this.user.id).then((response) => {
           //   this.$store.commit('UPDATE_USER', response)
           // })
@@ -896,6 +917,20 @@ export default {
         this.organizations.refresh();
       });
       // console.log('res!!!', res)
+    },
+    async postUserInfo(index, userID) {
+      const data = {
+        event_calendar_id: this.eventCalendarIDObj[index],
+        fake_meeting_id: this.fakeMeetingIDObj[index],
+        zoom_channel: this.zoomChannelObj[index],
+        recap_receivers: this.recapObj[index],
+        realtime_alert_config: this.realTimeAlertConfigObj[index],
+        user_id: userID,
+      }
+      const res = await User.api.usersUpdate(data).then(() => {
+        this.allUsers.refresh();
+      });
+      console.log('res', res)
     },
     ignoreEmail() {
       if (!this.checkEmail()) {
@@ -942,8 +977,15 @@ export default {
       if (!this.selectedUsers || !this.selectedUsers.length) {
         return;
       }
-      this.selectedUsers.forEach((u, i) => this.eventCalendarIDObj[i] = u.nylasRef.eventCalendarId)
-      console.log('this.eventCalendarIDObj', this.eventCalendarIDObj)
+      this.selectedUsers.forEach((u, i) => {
+        this.eventCalendarIDObj[i] = u.nylasRef.eventCalendarId
+        this.fakeMeetingIDObj[i] = u.zoomRef.fakeMeetingIdRef
+        this.zoomChannelObj[i] = u.slackAccount.zoomChannel
+        this.recapObj[i] = u.slackAccount.recapReceivers
+        // VV this is busted VV
+        this.realTimeAlertConfigObj[i] = u.slackAccount.realtimeAlertConfigs.toString();
+      })
+      console.log('this.selectedUsers', this.selectedUsers)
       this.old_selected_org = this.selected_org;
       this.selected_org = null;
       this.page = 'Users';

@@ -6,6 +6,7 @@ import store from '@/store'
 const LOGIN_ENDPOINT = '/login/'
 const REGISTRATION_ENDPOINT = '/register/'
 const USERS_ENDPOINT = '/users/'
+const USERS_UPDATE = '/users/update-user-info/'
 const GET_USER_ENDPOINT = uid => `/users/${uid}/`
 const GET_USER_PHOTO_ENDPOINT = uid => `/users/${uid}/profile-photo/`
 const INVITE_ENDPOINT = '/users/invite/'
@@ -55,7 +56,7 @@ export default class UserAPI {
     }
     try {
       const res = await this.client.get(url, options)
-      
+      console.log('res here', res)
       return {
         ...res.data,
         results: res.data.results.map(this.cls.fromAPI),
@@ -260,5 +261,11 @@ export default class UserAPI {
     } catch (e) {
       console.log(e)
     }
+  }
+  async usersUpdate(data) {
+    return this.client
+      .post(USERS_UPDATE, data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'User.usersUpdate' }))
   }
 }

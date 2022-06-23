@@ -372,6 +372,40 @@ class UserViewSet(
         res = user.current_forecast.get_current_values()
         data = {"opps": res["records"]}
         return Response(data=data, status=status.HTTP_200_OK)
+    
+    @action(
+        methods=["POST"],
+        # permission_classes=(IsSalesPerson,),
+        detail=False,
+        url_path="update-user-info",
+    )
+    def update_user_info(self, request, *args, **kwargs):
+        """endpoint to update the Event Calendar ID, the Fake Meeting ID, the Zoom Channel, the Recap Receiver, and the Realtime Alert Config sections"""
+        d = request.data
+        print('\n!!data!!!!\n', d)
+        event_calendar_id = d.get("event_calendar_id")
+        fake_meeting_id = d.get("fake_meeting_id")
+        zoom_channel = d.get("zoom_channel")
+        recap_receivers = d.get("recap_receivers")
+        realtime_alert_config = d.get("realtime_alert_config")
+        user_id = d.get("user_id")
+        user = User.objects.get(id = user_id)
+        print('\n\nuser\n\n', user, '\n\n')
+        if user.event_calendar_id != event_calendar_id:
+            user.event_calendar_id = event_calendar_id
+        if user.fake_meeting_id != fake_meeting_id:
+            user.fake_meeting_id = fake_meeting_id
+        if user.zoom_channel != zoom_channel:
+            user.zoom_channel = zoom_channel
+        if user.recap_receivers != recap_receivers:
+            user.recap_receivers = recap_receivers
+        # Uncomment this when it's working
+        # if user.realtime_alert_config != realtime_alert_config:
+        #     user.realtime_alert_config = realtime_alert_config
+        user.save()
+        print("Job's done")
+        return Response(data=status.HTTP_200_OK)
+
 
 
 class ActivationLinkView(APIView):
