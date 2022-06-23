@@ -232,11 +232,11 @@ export default {
 
 .registration {
   display: flex;
-  padding: 2rem;
+  padding: 2rem 0rem 0rem 0rem;
   flex-flow: column;
   justify-content: center;
-  max-width: 24rem;
-  margin: 1.5rem auto;
+  // max-width: 24rem;
+  // margin: 1.5rem auto;
 
   &__text {
     color: $base-gray;
@@ -263,7 +263,8 @@ export default {
 .header {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  margin-left: 10vw;
 
   img {
     height: 1.5rem;

@@ -1,6 +1,6 @@
 <template>
   <div class="registration">
-    <div class="registration-card">
+    <div>
       <div class="header">
         <img class="logo" src="@/assets/images/logo.png" />
         <h2>Register</h2>
@@ -242,16 +242,16 @@ export default {
 
 .registration {
   display: flex;
-  padding: 2rem;
+  padding: 2rem 0rem 0rem 0rem;
   flex-flow: column;
   justify-content: center;
-  max-width: 24rem;
-  margin: 1.5rem auto;
+  // max-width: 24rem;
+  // margin: 1.5rem auto;
 
   &__text {
     color: $base-gray;
     font-family: #{$base-font-family};
-    margin-bottom: 1rem;
+    margin-bottom: 2rem;
     text-align: center;
     font-size: 14px;
   }
@@ -280,7 +280,8 @@ input:focus {
 .header {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  margin-left: 10vw;
 
   img {
     height: 1.5rem;
