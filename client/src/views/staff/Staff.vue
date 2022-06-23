@@ -723,9 +723,9 @@
         </div>
       </template>
       <template v-else-if="page === 'SlackForm'">
+        <button class="green_button back" @click="goBack">Back</button>
         <div v-for="(slackForm, i) in selectedSlackForms" :key="slackForm.id">
           <div>
-            <button class="green_button back" @click="goBack">Back</button>
             <h2 class="user_title">Slack Form {{i + 1}}</h2>
           </div>
           <!-- <h4>{{slackForm}}</h4> -->
@@ -752,13 +752,15 @@
             <div v-for="(fieldRef) in slackForm.fieldsRef" :key="fieldRef.id">
               <!-- <h3>Label: {{fieldRef.label}}</h3>
               <h3>Order: {{fieldRef.order}}</h3> -->
-              <div class="user_item_container">
-                <h3>Field</h3>
-                <h4>{{fieldRef.referenceDisplayLabel}}</h4>
-              </div>
-              <div class="user_item_container">
-                <h3>Order</h3>
-                <h4>{{fieldRef.order}}</h4>
+              <div class="form_field">
+                <div class="form_field_item form_field_underline">
+                  <h3>Field:</h3>
+                  <h4>{{fieldRef.referenceDisplayLabel}}</h4>
+                </div>
+                <div class="form_field_item">
+                  <h3>Order:</h3>
+                  <h4>{{fieldRef.order}}</h4>
+                </div>
               </div>
             </div>
           </div>
@@ -1180,6 +1182,26 @@ input[type='search']:focus {
     margin: .25rem .5rem;
     overflow-wrap: break-word;
   }
+}
+.form_field {
+  border: 1px solid black;
+  margin: 1rem;
+  padding: .25rem 1rem;
+}
+.form_field_item {
+  margin: .5rem 0;
+
+  h3 {
+    margin: 0;
+  }
+
+  h4 {
+    margin: .25rem .5rem;
+    overflow-wrap: break-word;
+  }
+}
+.form_field_underline {
+  border-bottom: 1px solid $very-light-gray;
 }
 .back {
   margin: 1rem;
