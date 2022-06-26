@@ -97,11 +97,45 @@
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
+            <div v-else-if="field.apiName === 'AccountId'">
+              <p>{{ field.referenceDisplayLabel }}</p>
+              <Multiselect
+                v-model="selectedAccount"
+                :options="allAccounts"
+                @search-change="getAccounts($event)"
+                @select="
+                  setUpdateValues(
+                    field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+                    field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                      ? $event.value
+                      : $event.id,
+                    field.dataType === 'MultiPicklist' ? true : false,
+                  )
+                "
+                openDirection="below"
+                style="width: 18vw"
+                selectLabel="Enter"
+                track-by="integration_id"
+                label="name"
+                :loading="dropdownLoading || loadingAccounts"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.svg" alt="" />
+                    Select Account
+                  </p>
+                </template>
+              </Multiselect>
+            </div>
             <div
               v-else-if="
                 field.dataType === 'Picklist' ||
                 field.dataType === 'MultiPicklist' ||
-                field.dataType === 'Reference'
+                (field.dataType === 'Reference' && field.apiName !== 'AccountId')
               "
             >
               <p>{{ field.referenceDisplayLabel }}:</p>
@@ -124,7 +158,7 @@
                 "
                 @search-change="
                   field.dataType === 'Reference'
-                    ? getReferenceFieldList(field.apiName, field.id, 'create', $event)
+                    ? getReferenceFieldList(field.apiName, field.id, 'create1', $event)
                     : null
                 "
                 :multiple="field.dataType === 'MultiPicklist' ? true : false"
@@ -143,12 +177,17 @@
                 "
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results ? Try loading more</p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{ `${field.referenceDisplayLabel}` }}
+                  </p>
+                </template>
+                <template slot="afterList">
+                  <p class="multi-slot__more">
+                    Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
                   </p>
                 </template>
               </Multiselect>
@@ -316,11 +355,45 @@
                 </template>
               </Multiselect>
             </div>
+            <div v-else-if="field.apiName === 'AccountId'">
+              <p>{{ field.referenceDisplayLabel }}</p>
+              <Multiselect
+                v-model="selectedAccount"
+                :options="allAccounts"
+                @search-change="getAccounts($event)"
+                @select="
+                  setUpdateValues(
+                    field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+                    field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                      ? $event.value
+                      : $event.id,
+                    field.dataType === 'MultiPicklist' ? true : false,
+                  )
+                "
+                openDirection="below"
+                style="width: 18vw"
+                selectLabel="Enter"
+                track-by="integration_id"
+                label="name"
+                :loading="dropdownLoading || loadingAccounts"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.svg" alt="" />
+                    {{ currentAccount }}
+                  </p>
+                </template>
+              </Multiselect>
+            </div>
             <div
               v-else-if="
                 field.dataType === 'Picklist' ||
                 field.dataType === 'MultiPicklist' ||
-                field.dataType === 'Reference'
+                (field.dataType === 'Reference' && field.apiName !== 'AccountId')
               "
             >
               <p>{{ field.referenceDisplayLabel }}:</p>
@@ -340,6 +413,12 @@
                     field.dataType === 'MultiPicklist' ? true : false,
                   )
                 "
+                @search-change="
+                  field.dataType === 'Reference'
+                    ? getReferenceFieldList(field.apiName, field.id, 'update', $event)
+                    : null
+                "
+                :loading="dropdownLoading"
                 openDirection="below"
                 style="width: 18vw"
                 selectLabel="Enter"
@@ -356,7 +435,12 @@
                 "
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more</p>
+                </template>
+                <template slot="afterList">
+                  <p class="multi-slot__more">
+                    Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+                  </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -387,7 +471,7 @@
                       v-if="
                         field.dataType === 'Picklist' ||
                         field.dataType === 'MultiPicklist' ||
-                        field.dataType === 'Reference'
+                        (field.dataType === 'Reference' && field.apiName !== 'AccountId')
                       "
                     >
                       <p>{{ field.referenceDisplayLabel }}:</p>
@@ -433,6 +517,32 @@
                                 ? `${currentVals[field.apiName]}`
                                 : `${field.referenceDisplayLabel}`
                             }}
+                          </p>
+                        </template>
+                      </Multiselect>
+                    </div>
+                    <div v-else-if="field.apiName === 'AccountId'">
+                      <p>{{ field.referenceDisplayLabel }}*</p>
+                      <Multiselect
+                        v-model="selectedAccount"
+                        :options="allAccounts"
+                        @search-change="getAccounts($event)"
+                        @select="setUpdateValidationValues(field.apiName, $event.id)"
+                        openDirection="below"
+                        style="width: 18vw"
+                        selectLabel="Enter"
+                        track-by="integration_id"
+                        label="name"
+                        :loading="dropdownLoading || loadingAccounts"
+                      >
+                        <template slot="noResult">
+                          <p class="multi-slot">No results.</p>
+                        </template>
+
+                        <template slot="placeholder">
+                          <p class="slot-icon">
+                            <img src="@/assets/images/search.svg" alt="" />
+                            {{ currentAccount }}
                           </p>
                         </template>
                       </Multiselect>
@@ -928,7 +1038,7 @@
               v-if="
                 field.dataType === 'Picklist' ||
                 field.dataType === 'MultiPicklist' ||
-                field.dataType === 'Reference'
+                (field.dataType === 'Reference' && field.apiName !== 'AccountId')
               "
             >
               <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
@@ -972,6 +1082,32 @@
                         ? `${currentVals[field.apiName]}`
                         : `${field.referenceDisplayLabel}`
                     }}
+                  </p>
+                </template>
+              </Multiselect>
+            </div>
+            <div v-else-if="field.apiName === 'AccountId'">
+              <p>{{ field.referenceDisplayLabel }}*</p>
+              <Multiselect
+                v-model="selectedAccount"
+                :options="allAccounts"
+                @search-change="getAccounts($event)"
+                @select="setUpdateValidationValues(field.apiName, $event.id)"
+                openDirection="below"
+                style="width: 18vw"
+                selectLabel="Enter"
+                track-by="integration_id"
+                label="name"
+                :loading="dropdownLoading || loadingAccounts"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.svg" alt="" />
+                    {{ currentAccount }}
                   </p>
                 </template>
               </Multiselect>
@@ -1401,6 +1537,7 @@ export default {
     stageGateField: 'stageGateInstance',
     updateOppForm: 'setForms',
     currentCheckList: 'addToForecastList',
+    accountSobjectId: 'getInitialAccounts',
   },
   methods: {
     addToForecastList() {
@@ -2560,21 +2697,21 @@ export default {
         })
       }
     },
-    // async getInitialAccounts() {
-    //   this.loadingAccounts = true
-    //   if (this.accountSobjectId) {
-    //     try {
-    //       const res = await SObjects.api.getSobjectPicklistValues({
-    //         sobject_id: this.accountSobjectId,
-    //       })
-    //       this.allAccounts = res
-    //     } catch (e) {
-    //       console.log(e)
-    //     } finally {
-    //       this.loadingAccounts = false
-    //     }
-    //   }
-    // },
+    async getInitialAccounts() {
+      this.loadingAccounts = true
+      if (this.accountSobjectId) {
+        try {
+          const res = await SObjects.api.getSobjectPicklistValues({
+            sobject_id: this.accountSobjectId,
+          })
+          this.allAccounts = res
+        } catch (e) {
+          console.log(e)
+        } finally {
+          this.loadingAccounts = false
+        }
+      }
+    },
     async getAccounts(val) {
       this.loadingAccounts = true
       try {
@@ -3040,6 +3177,10 @@ h3 {
 .table-section::-webkit-scrollbar-track-piece:end {
   margin-right: 50vw;
 }
+.green-text {
+  color: $dark-green;
+  text-decoration: underline;
+}
 .multi-slot {
   display: flex;
   align-items: center;
@@ -3047,7 +3188,7 @@ h3 {
   color: $gray;
   font-size: 12px;
   width: 100%;
-  padding: 0.5rem 0rem;
+  padding: 0;
   margin: 0;
   cursor: text;
   &__more {
@@ -3056,10 +3197,11 @@ h3 {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: bold;
-    border-top: 1px solid #e8e8e8;
+    font-size: 12px;
+    // border-top: 1px solid #e8e8e8;
     width: 100%;
-    padding: 0.75rem 0rem;
+    height: 40px;
+    padding: 4px 0px 6px 0px;
     margin: 0;
     cursor: pointer;
 
