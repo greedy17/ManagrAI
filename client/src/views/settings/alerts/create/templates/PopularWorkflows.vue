@@ -355,7 +355,7 @@
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import FormField from '@/components/forms/FormField'
-import { UserConfigForm } from '@/services/users/forms'
+
 import AlertTemplate, { AlertTemplateForm } from '@/services/alerts/'
 import { CollectionManager } from '@thinknimble/tn-models'
 import { SObjectField } from '@/services/salesforce'
@@ -395,7 +395,7 @@ export default {
       selectFieldBool: false,
       selectUsersBool: false,
       directToUsers: true,
-      userConfigForm: new UserConfigForm({}),
+     
       alertTemplateForm: new AlertTemplateForm(),
       fields: CollectionManager.create({ ModelClass: SObjectField }),
       users: CollectionManager.create({ ModelClass: User }),
@@ -424,9 +424,6 @@ export default {
     if (this.user.userLevel == 'MANAGER') {
       await this.users.refresh()
     }
-    this.userConfigForm = new UserConfigForm({
-      activatedManagrConfigs: this.user.activatedManagrConfigs,
-    })
     this.objectFields.filters = {
       ...this.objectFields.filters,
       salesforceObject: this.resourceType,
@@ -537,7 +534,7 @@ export default {
       this.loading = true
 
       User.api
-        .update(this.user.id, this.userConfigForm.value)
+        .update(this.user.id, )
         .then((response) => {
           this.$store.dispatch('updateUser', User.fromAPI(response.data))
         })
@@ -701,7 +698,7 @@ export default {
           directToUsers: true,
         })
         console.log(res)
-        this.userConfigForm.field.activatedManagrConfigs.value.push(res.title)
+       
         this.handleUpdate()
 
         this.$toast('Workflow saved successfully', {
@@ -749,7 +746,7 @@ export default {
             directToUsers: this.directToUsers,
           })
           console.log(res)
-          this.userConfigForm.field.activatedManagrConfigs.value.push(res.title)
+        
           this.handleUpdate()
 
           this.$toast('Workflow saved Successfully', {

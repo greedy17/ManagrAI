@@ -526,7 +526,7 @@ class SalesforceSObjectViewSet(
             user.activity.add_workflow_activity(str(main_form.id), title)
 
         value_update = main_form.resource_object.update_database_values(all_form_data)
-        return Response(data={"success": True})
+        return Response(data=data)
 
     @action(
         methods=["get"],
@@ -806,7 +806,8 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type, slack_const.FORM_TYPE_UPDATE,
+            resource_type,
+            slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)

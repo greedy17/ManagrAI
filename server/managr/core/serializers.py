@@ -53,7 +53,7 @@ class UserSerializer(serializers.ModelSerializer):
     slack_account = UserFrontEndSlackIntegrationSerializer(
         source="slack_integration", read_only=True
     )
-    activated_managr_templates = serializers.SerializerMethodField("get_alert_template_refs")
+    activated_template_ref = serializers.SerializerMethodField("get_alert_template_refs")
     forecast = UserForecastSerializer(many=False, source="current_forecast", read_only=True)
     activation_link_ref = serializers.SerializerMethodField("get_activation_link")
 
@@ -96,8 +96,7 @@ class UserSerializer(serializers.ModelSerializer):
             "has_zoom_integration",
             "has_salesforce_integration",
             "timezone",
-            "activated_managr_configs",
-            "activated_managr_templates",
+            "activated_template_ref",
             "onboarding",
             "forecast",
         )

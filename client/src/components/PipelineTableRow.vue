@@ -53,7 +53,7 @@
       :key="i"
       v-for="(field, i) in oppFields"
       :class="{
-        'active-edit': editing && editIndex === i && currentRow === index,
+        'active-edit': editing && editIndex === i && currentInlineRow === index,
         'table-cell-wide':
           field.dataType === 'TextArea' ||
           (field.length > 250 &&
@@ -76,7 +76,7 @@
       />
 
       <div class="limit-cell-height" v-else-if="!updateList.includes(opp.id)">
-        <div class="inline-edit" v-if="editing && editIndex === i && currentRow === index">
+        <div class="inline-edit" v-if="editing && editIndex === i && currentInlineRow === index">
           <div
             v-if="
               field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
@@ -259,7 +259,7 @@
         </div>
         <PipelineField
           :index="i"
-          v-show="!editing || editIndex !== i"
+          v-show="!(editing && editIndex === i && currentInlineRow === index)"
           style="direction: ltr; border: "
           :apiName="field.apiName"
           :dataType="field.dataType"
@@ -373,6 +373,7 @@ export default {
     inlineLoader: {},
     closeEdit: {},
     stages: {},
+    currentInlineRow: {},
   },
   computed: {
     extraPipelineFields() {
@@ -392,6 +393,7 @@ export default {
       this.dropdownValue = val.value
     },
     editInline(index) {
+      this.$emit('current-inline-row', this.index)
       this.currentRow = this.index
       this.editIndex = index
       this.editing = true
@@ -648,6 +650,7 @@ input {
 }
 .empty {
   display: table-cell;
+  position: sticky;
   background: $off-white;
   min-width: 12vw;
   border-left: 1px solid $soft-gray;

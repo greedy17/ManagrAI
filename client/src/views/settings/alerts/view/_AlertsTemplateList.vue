@@ -214,7 +214,7 @@ import AlertsEditPanel from '@/views/settings/alerts/view/_AlertsEditPanel'
  */
 import { CollectionManager } from '@thinknimble/tn-models'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
-import { UserConfigForm } from '@/services/users/forms'
+// import { UserConfigForm } from '@/services/users/forms'
 import User from '@/services/users'
 
 import AlertTemplate from '@/services/alerts/'
@@ -238,7 +238,7 @@ export default {
       currentAlert: {},
       editing: true,
       isHiding: false,
-      userConfigForm: new UserConfigForm({}),
+      // userConfigForm: new UserConfigForm({}),
       configName: '',
       configArray: [],
       currentZoomChannel: '',
@@ -256,9 +256,6 @@ export default {
       this.getRecapChannel()
     }
     await this.listUserChannels()
-    this.userConfigForm = new UserConfigForm({
-      activatedManagrConfigs: this.user.activatedManagrConfigs,
-    })
   },
   methods: {
     test() {
@@ -280,7 +277,7 @@ export default {
     handleUpdate() {
       // this.loading = true
       User.api
-        .update(this.user.id, this.userConfigForm.value)
+        .update(this.user.id)
         .then((response) => {
           this.$store.dispatch('updateUser', User.fromAPI(response.data))
         })
@@ -335,10 +332,6 @@ export default {
       try {
         await AlertTemplate.api.deleteAlertTemplate(id)
         await this.templates.refresh()
-        this.userConfigForm.field.activatedManagrConfigs.value =
-          this.userConfigForm.field.activatedManagrConfigs.value.filter(
-            (val) => val !== this.deleteTitle,
-          )
         this.handleUpdate()
 
         this.deleteOpen = !this.deleteOpen

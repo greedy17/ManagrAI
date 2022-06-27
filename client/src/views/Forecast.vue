@@ -610,10 +610,10 @@ export default {
         this.forecastLength = res.length
         this.averageDeal = this.totalAmount / this.forecastLength
       } catch (e) {
-        this.$toast('Error gathering tracked opportunities', {
+        this.$toast('No tracked opportunities', {
           timeout: 2000,
           position: 'top-left',
-          type: 'error',
+          type: 'default',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })

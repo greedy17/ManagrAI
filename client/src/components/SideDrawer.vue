@@ -1,6 +1,13 @@
 <template>
   <div class="row">
-    <button @click="changeWidth" class="notis" :style="`right: ${notiRight}px`">
+    <button
+      @click="
+        changeWidth()
+        runWorkflows()
+      "
+      class="notis"
+      :style="`right: ${notiRight}px`"
+    >
       <img v-if="notiRight === 0" src="@/assets/images/dropdown-arrow.svg" height="16px" alt="" />
       <img v-else src="@/assets/images/dropdown-arrow.svg" class="rotate" height="16px" alt="" />
       <!-- <small class="red">5</small> -->
@@ -8,17 +15,16 @@
     <section @click="test" id="mySidenav" :style="`width: ${navWidth}px`" class="sidenav">
       <h3 class="neg-mar-bottom">{{ `${day} ${today}` }}</h3>
       <div class="noti-section">
-        <p class="sticky">
+        <p class="sticky yellowish">
           Meetings <small class="yellow-bg">{{ meetings ? meetings.length : 0 }}</small>
-          <button class="yellow-button" @click="goToMeetings">View</button>
         </p>
         <span v-if="meetings ? !meetings.length : null"
           ><a class="yellow-border no-cursor">No meetings today.</a></span
         >
 
         <div v-else>
-          <span :key="i" v-for="(meeting, i) in meetings"
-            ><a class="yellow-border no-cursor"
+          <span @click="goToMeetings" :key="i" v-for="(meeting, i) in meetings"
+            ><a class="yellow-border"
               >{{
                 meeting.meeting_ref.event_data
                   ? meeting.meeting_ref.event_data.title
@@ -33,7 +39,7 @@
               }}</span>
               <p
                 :class="
-                  meeting.is_completed ? 'small-font no-margin yellow' : 'small-font no-margin'
+                  meeting.is_completed ? 'small-font no-margin yellow' : 'small-font no-margin red'
                 "
               >
                 {{ meeting.is_completed ? 'Logged' : 'Please log' }}
@@ -44,19 +50,24 @@
       </div>
 
       <div class="noti-section-lg">
-        <p class="sticky">
-          Pipeline <small class="green-bg">{{ templates.list ? templates.list.length : 0 }}</small>
-          <button :disabled="!templates.list.length" class="green-button" @click="runWorkflows">
-            Refresh
-          </button>
-        </p>
+        <div class="sticky m-bottom">
+          <p class="greenish">
+            Pipeline
+            <small class="green-bg">{{ templates.list ? templates.list.length : 0 }}</small>
+          </p>
+        </div>
+
         <span v-if="!templates.list.length"
           ><a class="green-border no-cursor">No active workflow.</a></span
         >
         <span @click="goToWorkflow(alert.id)" :key="i" v-for="(alert, i) in templates.list"
           ><a class="green-border">
-            {{ alert.title }} <small class="green">{{ workflows[i] ? workflows[i] : '--' }}</small>
-            <p class="small-font no-margin grey">owner: {{ users ? owner(alert.user) : '' }}</p>
+            {{ alert.title }}
+            <small class="green">{{ workflows[i] ? workflows[i] : '--' }}</small>
+            <p class="small-font no-margin grey">
+              {{ owner(alert.user) !== 'Activated by Manager' ? 'Owner:' : '' }}
+              {{ users ? owner(alert.user) : '' }}
+            </p>
           </a>
         </span>
 
@@ -96,7 +107,10 @@ export default {
         5: 'Friday',
         6: 'Saturday',
       },
-      templates: CollectionManager.create({ ModelClass: AlertTemplate }),
+      templates: CollectionManager.create({
+        ModelClass: AlertTemplate,
+        filters: { forPipeline: true },
+      }),
       users: CollectionManager.create({ ModelClass: User }),
       //   months: {
       //       01:'January',
@@ -117,7 +131,6 @@ export default {
   methods: {
     async runWorkflows() {
       let ids = this.templates.list.map((wf) => wf.id)
-      console.log(ids)
       try {
         for (let i = 0; i < ids.length; i++) {
           let res = await AlertTemplate.api.runAlertTemplateNow(ids[i], {
@@ -130,7 +143,9 @@ export default {
       }
     },
     owner(usr) {
-      return this.users.list.filter((user) => user.id === usr)[0].fullName
+      return this.users.list.filter((user) => user.id === usr)[0]
+        ? this.users.list.filter((user) => user.id === usr)[0].fullName
+        : 'Activated by Manager'
     },
     formatDateTimeToTime(input) {
       let preDate = new Date(input)
@@ -201,6 +216,9 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 
+.m-bottom {
+  margin-bottom: 1rem;
+}
 button:disabled {
   color: $very-light-gray;
   border: 1px solid $very-light-gray;
@@ -220,7 +238,7 @@ button:disabled {
   flex-direction: column;
 }
 .grey {
-  color: $gray;
+  color: $gray !important;
 }
 .light-gray-bg {
   border-radius: 50%;
@@ -247,6 +265,11 @@ button:disabled {
 .yellow {
   color: $yellow !important;
 }
+.yellowish {
+  color: $yellow !important;
+  background-color: #fdf7e6 !important;
+  border-radius: 6px;
+}
 .green-bg {
   border-radius: 50%;
   background-color: $dark-green;
@@ -263,7 +286,15 @@ button:disabled {
   cursor: pointer;
 }
 .green {
-  color: $dark-green;
+  color: $dark-green !important;
+}
+.greenish {
+  color: $dark-green !important;
+  background-color: $white-green !important;
+  border-radius: 6px;
+}
+.red {
+  color: $coral !important;
 }
 .red-bg {
   border-radius: 50%;
@@ -279,7 +310,7 @@ button:disabled {
   background-color: white;
 }
 .neg-mar-bottom {
-  margin-bottom: -5px;
+  margin-bottom: -3px;
 }
 .noti-section-lg {
   height: 350px;
@@ -302,16 +333,18 @@ button:disabled {
   height: 26px;
 }
 .yellow-border {
-  border: 1px solid $yellow;
-  border-radius: 4px;
+  border-left: 1px solid $yellow;
+  background-color: $off-white;
+  border-radius: 1px;
   min-height: 56px;
   margin-bottom: 3px;
 }
 .green-border {
-  border: 1px solid $dark-green;
-  border-radius: 4px;
+  border-left: 1px solid $dark-green;
+  border-radius: 1px;
   min-height: 56px;
   margin-bottom: 3px;
+  background-color: $off-white;
 }
 .red-border {
   border: 1px solid $very-light-gray;

@@ -254,15 +254,12 @@
         </div>
       </div>
     </Modal>
-    <Modal
-      v-if="editOpModalOpen"
-      dimmed
-      @close-modal="
+    <!-- @close-modal="
         () => {
           $emit('cancel'), resetEdit()
         }
-      "
-    >
+      " -->
+    <Modal v-if="editOpModalOpen" dimmed>
       <div class="opp-modal-container">
         <div class="flex-row-spread header">
           <div class="flex-row">
@@ -1240,6 +1237,7 @@
             @checked-box="selectPrimaryCheckbox(opp.id)"
             @inline-edit="inlineUpdate"
             @open-stage-form="openStageForm"
+            @current-inline-row="changeCurrentRow"
             :closeEdit="closeInline"
             :stages="stagesWithForms"
             :inlineLoader="inlineLoader"
@@ -1252,6 +1250,7 @@
             :stageData="newStage"
             :closeDateData="daysForward"
             :ForecastCategoryNameData="newForecast"
+            :currentInlineRow="currentInlineRow"
           />
         </div>
       </section>
@@ -1277,6 +1276,7 @@
             @checked-box="selectWorkflowCheckbox(workflow.id)"
             @inline-edit="inlineUpdate"
             @open-stage-form="openStageForm"
+            @current-inline-row="changeCurrentRow"
             :closeEdit="closeInline"
             :stages="stagesWithForms"
             :inlineLoader="inlineLoader"
@@ -1289,6 +1289,7 @@
             :stageData="newStage"
             :closeDateData="daysForward"
             :ForecastCategoryNameData="newForecast"
+            :currentInlineRow="currentInlineRow"
           />
         </div>
       </section>
@@ -1347,6 +1348,7 @@ export default {
   },
   data() {
     return {
+      currentInlineRow: null,
       inlineResourceId: null,
       stageFormOpen: false,
       closeInline: 0,
@@ -1540,6 +1542,9 @@ export default {
     accountSobjectId: 'getInitialAccounts',
   },
   methods: {
+    changeCurrentRow(i) {
+      this.currentInlineRow = i
+    },
     addToForecastList() {
       let list = []
       for (let i = 0; i < this.currentCheckList.length; i++) {
@@ -2173,6 +2178,7 @@ export default {
       }
     },
     async createOppInstance() {
+      thiz.formData = {}
       this.currentVals = []
       this.selectedAccount = null
       this.selectedOwner = null
@@ -2438,7 +2444,7 @@ export default {
           this.stillNextMonth()
         }
       } catch (e) {
-        this.$toast('Error updating Opporutniy, pleae try again.', {
+        this.$toast('Error updating Opporutniy, please try again.', {
           timeout: 2000,
           position: 'top-left',
           type: 'error',
