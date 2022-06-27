@@ -1,11 +1,6 @@
-import json
-from rest_framework import serializers, status, filters, permissions
-from rest_framework.exceptions import ValidationError, PermissionDenied
-from rest_framework.response import Response
+from rest_framework import serializers
 
 from managr.organization.models import ActionChoice
-from managr.slack.serializers import OrganizationSlackIntegrationSerializer
-from managr.utils.numbers import validate_phone_number
 from managr.opportunity import constants as opp_consts
 from managr.salesforce.models import SalesforceAuthAccount
 from managr.opportunity.models import Opportunity
