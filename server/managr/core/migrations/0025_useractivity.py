@@ -10,7 +10,7 @@ import managr.core.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("core", "0025_user_crm"),
+        ("core", "0024_meetingprepinstance_form"),
     ]
 
     operations = [
