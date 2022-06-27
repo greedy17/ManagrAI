@@ -2,7 +2,7 @@ import { apiClient, apiErrorHandler } from '@/services/api'
 import { objectToCamelCase, objectToSnakeCase } from '@/services/utils'
 import User from '@/services/users'
 import { SlackListResponse, SlackUserList } from '.'
-import { SlackInstance } from './index'
+import { SlackFormInstance } from './index'
 
 const TEST_CHANNEL_ENDPOINT = '/slack/test-channel/'
 const TEST_DM_ENDPOINT = '/slack/test-dm/'
@@ -14,7 +14,7 @@ const SLACK_LIST_PUBLIC_CHANNELS_ENDPOINT = '/slack/list-channels/'
 const SLACK_LIST_CHANNELS_ENDPOINT = '/slack/list-user-channels/'
 const SLACK_LIST_USERS = '/slack/list-users/'
 const SLACK_CREATE_CHANNEL = '/slack/create-channel/'
-const SLACK_LIST_INSTANCES = '/slack/slack-form-instances/'
+const SLACK_LIST_INSTANCES = '/slack/instances/'
 const SLACK_ZOOM_CHANNEL_UPDATE = '/slack/update-zoom-channel/'
 const ZOOM_RECAP_CHANNEL_UPDATE = '/slack/update-recap-channel/'
 const SLACK_CHANNEL_DETAILS = '/slack/channel-details/'
@@ -146,12 +146,13 @@ export default class SlackAPI {
       .catch(apiErrorHandler({ apiName: 'SlackApi.channelDetails' }))
   }
 
-  async slackInstances() {
+  async slackFormInstances() {
     return this.client
       .get(SLACK_LIST_INSTANCES)
       .then(response => {
-       return SlackInstance.fromAPI(response.data)
-      }) 
+        console.log(response.data)
+        return SlackFormInstance.fromAPI(response.data)
+      })
       .catch(apiErrorHandler({ apiName: 'SlackApi.slackInstances' }))
   }
 

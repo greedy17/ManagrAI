@@ -1225,9 +1225,12 @@ class SlackFormInstanceViewSet(
     mixins.CreateModelMixin,
     mixins.DestroyModelMixin,
 ):
-    serializer_class = OrgCustomSlackFormSerializer
+    serializer_class = OrgCustomSlackFormInstanceSerializer
 
     def get_queryset(self):
+        print(self)
+        if self.request.user.is_staff:
+            return OrgCustomSlackFormInstance.objects.all()[:50]
         return OrgCustomSlackFormInstance.objects.filter(
             user__organization=self.request.user.organization
         )
