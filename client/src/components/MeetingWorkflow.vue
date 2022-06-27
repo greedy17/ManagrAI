@@ -320,7 +320,7 @@
         {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
 
         <button class="name-cell-edit-note-button-1" @click="addingOpp = !addingOpp">
-          <img style="filter: invert(10%); height: 0.6rem" src="@/assets/images/edit.svg" />
+          <img style="filter: invert(10%); height: 0.6rem" src="@/assets/images/replace.svg" />
         </button>
 
         <button class="name-cell-edit-note-button-1" @click="emitGetNotes(resourceId)">
@@ -660,6 +660,7 @@ a {
   align-items: center;
   justify-content: center;
   border: 0.7px solid $gray;
+  cursor: pointer;
 }
 .add-contact {
   img {

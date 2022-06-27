@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <NavBar v-if="!hideNavBar && userIsLoggedIn" />
-    <SideDrawer></SideDrawer>
+    <SideDrawer :key="$route.fullPath"></SideDrawer>
     <!-- <alert-alert /> -->
     <!-- Binding a key to the full path will remount a view if
         the detail endpoint changes-->
