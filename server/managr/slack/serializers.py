@@ -90,7 +90,6 @@ class OrgCustomSlackFormInstanceSerializer(serializers.ModelSerializer):
             "id",
             "workflow",
             "resource_id",
-            "resource",
             "is_submitted",
             "submission_date",
             "update_source",

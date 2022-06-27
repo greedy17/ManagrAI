@@ -73,7 +73,6 @@ export class SlackFormInstance extends Model {
   static id = new fields.Field()
   static workflow = new fields.Field()
   static resource_id = new fields.Field()
-  static resource = new fields.Field()
   static is_submitted = new fields.Field()
   static submission_date = new fields.Field()
   static update_source = new fields.Field()
