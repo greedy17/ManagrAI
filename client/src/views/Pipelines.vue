@@ -2178,7 +2178,7 @@ export default {
       }
     },
     async createOppInstance() {
-      thiz.formData = {}
+      this.formData = {}
       this.currentVals = []
       this.selectedAccount = null
       this.selectedOwner = null
