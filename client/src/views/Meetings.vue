@@ -49,15 +49,7 @@
         </section>
       </div>
     </Modal>
-    <Modal
-      v-if="editOpModalOpen"
-      dimmed
-      @close-modal="
-        () => {
-          $emit('cancel'), resetEdit()
-        }
-      "
-    >
+    <Modal v-if="editOpModalOpen" dimmed>
       <div class="opp-modal-container">
         <div class="flex-row-spread header">
           <div class="flex-row">

@@ -103,7 +103,12 @@
 
           <div v-if="hasLastName" class="contact-field-section__body">
             <div v-for="(field, i) in contactFields" :key="i">
-              <div v-if="field.dataType === 'Reference'">
+              <div
+                v-if="
+                  field.dataType === 'Reference' &&
+                  (field.apiName === 'AccountId' || field.apiName === 'OwnerId')
+                "
+              >
                 <p>{{ field.referenceDisplayLabel }}:</p>
                 <Multiselect
                   v-if="field.apiName === 'AccountId'"
@@ -313,20 +318,14 @@
     <div class="table-cell">
       <p class="roww" v-if="resourceId && resourceType === 'Opportunity' && !meetingUpdated">
         {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
-        <img
-          @click="addingOpp = !addingOpp"
-          style="margin-left: 0.5rem; margin-right: 0.5rem; cursor: pointer"
-          height="12px"
-          src="@/assets/images/edit.svg"
-          alt=""
-        />
-        <img
-          @click="emitGetNotes(resourceId)"
-          src="@/assets/images/white-note.svg"
-          class="invert"
-          height="14px"
-          alt=""
-        />
+
+        <button class="name-cell-edit-note-button-1" @click="addingOpp = !addingOpp">
+          <img style="filter: invert(10%); height: 0.6rem" src="@/assets/images/edit.svg" />
+        </button>
+
+        <button class="name-cell-edit-note-button-1" @click="emitGetNotes(resourceId)">
+          <img src="@/assets/images/white-note.svg" class="invert" height="12px" alt="" />
+        </button>
       </p>
       <p v-else-if="meetingUpdated">
         {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
@@ -573,7 +572,7 @@ a {
   font-weight: bold;
 }
 .invert {
-  filter: invert(50%);
+  filter: invert(30%);
   cursor: pointer;
 }
 .inverted {
@@ -650,7 +649,18 @@ a {
   }
   cursor: pointer;
 }
-
+.name-cell-edit-note-button-1 {
+  height: 1.1rem;
+  width: 1.1rem;
+  margin: 0 0.2rem;
+  padding: 0.25rem;
+  border-radius: 4px;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0.7px solid $gray;
+}
 .add-contact {
   img {
     height: 0.6rem;

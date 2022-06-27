@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="red">
     <div v-if="dataType">
       <p
         v-if="
@@ -101,7 +101,9 @@ export default {
 <style lang="scss" >
 @import '@/styles/variables';
 @import '@/styles/buttons';
-
+.red {
+  width: fit-content;
+}
 .flex-columned {
   display: flex;
   flex-direction: column;
