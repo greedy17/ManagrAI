@@ -72,15 +72,15 @@ export class SlackFormInstance extends Model {
 
   static id = new fields.Field()
   static workflow = new fields.Field()
-  static resource_id = new fields.Field()
-  static is_submitted = new fields.Field()
-  static submission_date = new fields.Field()
-  static update_source = new fields.Field()
+  static resourceId = new fields.Field()
+  static isSubmitted = new fields.Field()
+  static submissionDate = new fields.Field()
+  static updateSource = new fields.Field()
   static user = new fields.Field()
   static template = new fields.Field()
-  static template_ref = new fields.Field()
-  static saved_data = new fields.Field()
-  static previous_data = new fields.Field()
+  static templateRef = new fields.Field()
+  static savedData = new fields.Field()
+  static previousData = new fields.Field()
 
   static fromAPI(json) {
     return new SlackFormInstance(objectToCamelCase(json))

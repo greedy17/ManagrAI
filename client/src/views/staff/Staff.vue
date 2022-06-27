@@ -15,45 +15,39 @@
             <!-- {{modalInfo}} -->
             <div>
               <h3>Resource ID:</h3>
-              <h4>{{ modalInfo.resource_id ? modalInfo.resource_id : 'null' }}</h4>
+              <h4>{{ modalInfo.resourceId ? modalInfo.resourceId : 'null' }}</h4>
             </div>
             <div>
               <h3>Workflow:</h3>
-              <h4>{{ modalInfo.workflow_id ? modalInfo.workflow_id : 'null' }}</h4>
+              <h4>{{ modalInfo.workflowId ? modalInfo.workflowId : 'null' }}</h4>
             </div>
             <div>
               <h3>Is Submitted:</h3>
-              <h4>{{ modalInfo.submission_date ? 'true' : 'false' }}</h4>
+              <h4>{{ modalInfo.submissionDate ? 'true' : 'false' }}</h4>
             </div>
             <div>
               <h3>Submission Date:</h3>
-              <h4>{{ modalInfo.submission_date ? modalInfo.submission_date : 'null' }}</h4>
+              <h4>{{ modalInfo.submissionDate ? modalInfo.submissionDate : 'null' }}</h4>
             </div>
             <div>
               <h3>Update Source:</h3>
-              <h4>{{ modalInfo.update_source ? modalInfo.update_source : 'null' }}</h4>
+              <h4>{{ modalInfo.updateSource ? modalInfo.updateSource : 'null' }}</h4>
             </div>
             <div>
               <h3>User ID:</h3>
-              <h4>{{ modalInfo.user_id }}</h4>
+              <h4>{{ modalInfo.user }}</h4>
             </div>
             <div>
               <h3>Template ID:</h3>
-              <h4>{{ modalInfo.template_id }}</h4>
+              <h4>{{ modalInfo.template }}</h4>
             </div>
             <div>
               <h3>Saved Data:</h3>
-              <h4>{{ modalInfo.saved_data }}</h4>
+              <h4>{{ modalInfo.savedData }}</h4>
             </div>
             <div>
               <h3>Previous Data:</h3>
-              <h4>{{ modalInfo.previous_data }}</h4>
-            </div>
-            <div>
-              <h3>Alert Instance ID:</h3>
-              <h4>
-                {{ modalInfo.alert_instance_id_id ? modalInfo.alert_instance_id_id : 'null' }}
-              </h4>
+              <h4>{{ modalInfo.previousData }}</h4>
             </div>
           </div>
         </div>
@@ -807,7 +801,7 @@
             :class="i % 2 === 0 ? '' : 'light-back'"
             @click="openModal('slackFormInstance', slackFormInstance)"
           >
-            {{ slackFormInstance.template_id }} by {{ getUserName(slackFormInstance.user_id) }}
+            {{ slackFormInstance.templateRef.resource }} {{ slackFormInstance.templateRef.formType }} by {{ getUserName(slackFormInstance.user) }}
           </h3>
         </div>
       </template>
@@ -935,7 +929,6 @@ export default {
               newResContent.push(item)
             }
             this.contentModalInfo = newResContent
-            console.log('this.contentModalInfo', this.contentModalInfo)
             this.displayCommandModal = true
             this.contentType = 'PullUsageData'
           } else {
@@ -953,19 +946,9 @@ export default {
     async getSlackFormInstance() {
       try {
         const res = await SlackOAuth.api.slackFormInstances()
-        console.log('uh oh', res)
         this.slackFormInstances = res
       } catch (e) {
         console.log('Error in getSlackFormInstance', e)
-      }
-    },
-    async pullUsage() {
-      try {
-        const res = await User.api.pullUsageData()
-        console.log('not going to work?', res)
-        // this.slackFormInstances = res;
-      } catch (e) {
-        console.log('Error in pullUsage', e)
       }
     },
     async postOrgUpdates() {
@@ -1034,9 +1017,7 @@ export default {
       this.page = 'Users'
     },
     goToSlackForm() {
-      console.log('this.selectedSlackForms', this.selectedSlackForms)
       if (!this.selectedSlackForms) {
-        //|| !this.selectedSlackForms.length) {
         return
       }
       this.old_selected_org = this.selected_org

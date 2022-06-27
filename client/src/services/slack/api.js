@@ -150,8 +150,7 @@ export default class SlackAPI {
     return this.client
       .get(SLACK_LIST_INSTANCES)
       .then(response => {
-        console.log(response.data)
-        return SlackFormInstance.fromAPI(response.data)
+        return response.data.results.map(res => SlackFormInstance.fromAPI(res))
       })
       .catch(apiErrorHandler({ apiName: 'SlackApi.slackInstances' }))
   }
