@@ -135,6 +135,7 @@ class CustomUserForm(UserCreationForm):
             "organization",
             "user_level",
             "role",
+            "onboarding",
             "timezone",
         )
 
@@ -164,6 +165,7 @@ class CustomUserAdmin(UserAdmin):
                     "role",
                     "timezone",
                     "reminders",
+                    "onboarding",
                     "activated_managr_configs",
                 )
             },

@@ -526,7 +526,7 @@ class SalesforceSObjectViewSet(
             user.activity.add_workflow_activity(str(main_form.id), title)
 
         value_update = main_form.resource_object.update_database_values(all_form_data)
-        return Response(data={"success": True})
+        return Response(data=data)
 
     @action(
         methods=["get"],
@@ -572,10 +572,11 @@ class SalesforceSObjectViewSet(
         url_path="create",
     )
     def create_resource(self, request, *args, **kwargs):
-        data = self.request.data
+        request_data = self.request.data
+        logger.info(f"CREATE START ---- {request_data}")
         user = User.objects.get(id=self.request.user.id)
-        form_id = data.get("form_id")
-        form_data = data.get("form_data")
+        form_id = request_data.get("form_id")
+        form_data = request_data.get("form_data")
         main_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
         stage_forms = []
         stage_form_data_collector = {}
@@ -629,6 +630,10 @@ class SalesforceSObjectViewSet(
                 else:
                     time.sleep(2)
                     attempts += 1
+            except Exception as e:
+                data = {"success": False, "error": str(e)}
+                break
+            logger.info(f"RETURN DATA ----- {data}")
         return Response(data=data)
 
     @action(
@@ -801,7 +806,8 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type, slack_const.FORM_TYPE_UPDATE,
+            resource_type,
+            slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)

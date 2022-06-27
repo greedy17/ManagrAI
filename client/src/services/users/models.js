@@ -44,7 +44,7 @@ export default class User extends Model {
   static hasGongIntegration = new fields.Field({ readOnly: true })
   static outreachAccount = new fields.Field()
   static hasOutreachIntegration = new fields.Field({ readOnly: true })
-  static activatedManagrConfigs = new fields.Field()
+  static activatedTemplateRef = new fields.Field()
   static onboarding = new fields.BooleanField()
   static forecast = new fields.Field()
   static activationLinkRef = new fields.Field()
