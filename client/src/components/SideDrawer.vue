@@ -6,6 +6,9 @@
         runWorkflows()
       "
       class="notis"
+      :class="{
+        'pulse green-img': notiRight === 0 && (activeNotis || $route.name === 'Pipelines'),
+      }"
       :style="`right: ${notiRight}px`"
     >
       <img v-if="notiRight === 0" src="@/assets/images/dropdown-arrow.svg" height="16px" alt="" />
@@ -39,7 +42,9 @@
               }}</span>
               <p
                 :class="
-                  meeting.is_completed ? 'small-font no-margin yellow' : 'small-font no-margin red'
+                  meeting.is_completed
+                    ? 'small-font no-margin yellow-text'
+                    : 'small-font no-margin red'
                 "
               >
                 {{ meeting.is_completed ? 'Logged' : 'Please log' }}
@@ -95,6 +100,7 @@ export default {
       notiRight: 0,
       navWidth: 18,
       meetings: null,
+      activeNotis: false,
       today: null,
       day: null,
       workflows: [],
@@ -128,7 +134,20 @@ export default {
       //   }
     }
   },
+  watch: {
+    meetings: 'needsAction',
+  },
   methods: {
+    needsAction() {
+      let NA = 0
+      if (this.meetings.length) {
+        for (let i = 0; i < this.meetings.length; i++) {
+          !this.meetings[i].is_completed ? (NA += 1) : null
+          console.log(NA)
+          NA === 0 ? (this.activeNotis = false) : (this.activeNotis = true)
+        }
+      }
+    },
     async runWorkflows() {
       let ids = this.templates.list.map((wf) => wf.id)
       try {
@@ -187,7 +206,7 @@ export default {
       }
     },
     changeWidth() {
-      this.notiRight === 0 ? (this.notiRight = 235) : (this.notiRight = 0)
+      this.notiRight === 0 ? (this.notiRight = 235) && this.getMeetingList() : (this.notiRight = 0)
       this.navWidth === 18 ? (this.navWidth = 250) : (this.navWidth = 18)
     },
     setDate() {
@@ -216,6 +235,32 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 $dark-green;
+  }
+
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+  }
+
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  }
+}
+.pulse {
+  box-shadow: 0 0 0 0 $dark-green;
+  transform: scale(1);
+  animation: pulse 2s infinite;
+}
+.green-img {
+  img {
+    filter: invert(62%) sepia(73%) saturate(347%) hue-rotate(101deg) brightness(87%) contrast(86%);
+  }
+}
 .m-bottom {
   margin-bottom: 1rem;
 }
@@ -263,6 +308,9 @@ button:disabled {
   cursor: pointer;
 }
 .yellow {
+  color: $yellow !important;
+}
+.yellow-text {
   color: $yellow !important;
 }
 .yellowish {
@@ -364,6 +412,14 @@ button:disabled {
 .row {
   display: flex;
   flex-direction: row;
+}
+.green-drawer {
+  border: 1px solid $dark-green !important;
+  background-color: $dark-green !important;
+  img {
+    // filter: invert(62%) sepia(73%) saturate(347%) hue-rotate(101deg) brightness(87%) contrast(86%);
+    filter: invert(99%);
+  }
 }
 .notis {
   display: flex;
