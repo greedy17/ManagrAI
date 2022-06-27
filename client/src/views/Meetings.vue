@@ -9,43 +9,46 @@
         }
       "
     >
-      <div v-if="notes.length" class="modal-container">
-        <div class="flex-row-spread">
+      <div v-if="notes.length" class="modal-container rel">
+        <div class="flex-row-spread sticky border-bottom">
           <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" alt="" />
-            <h3>Notes</h3>
+            <h4>Notes</h4>
           </div>
 
-          <img
-            src="@/assets/images/close.svg"
-            style="height: 1.5rem; margin-top: -0.5rem; margin-right: 0.5rem; cursor: pointer"
-            @click="resetNotes"
-            alt=""
-          />
+          <div class="flex-row">
+            <small class="note-border">Total: {{ notesLength }}</small>
+            <small class="note-border light-green-bg"
+              >Most recent: {{ formatMostRecent(notes[0].submission_date) }} days</small
+            >
+            <small class="note-border"
+              >Oldest: {{ formatMostRecent(notes[notes.length - 1].submission_date) }} days</small
+            >
+          </div>
         </div>
         <section class="note-section" :key="i" v-for="(note, i) in notes">
           <p class="note-section__title">
-            {{ note.saved_data__meeting_type ? note.saved_data__meeting_type + ':' : 'Untitled:' }}
+            {{ note.saved_data__meeting_type ? note.saved_data__meeting_type : 'Untitled' }}
           </p>
-          <pre class="note-section__body">{{ note.saved_data__meeting_comments }}</pre>
           <p class="note-section__date">{{ formatDateTime(note.submission_date) }}</p>
+          <pre class="note-section__body">{{ note.saved_data__meeting_comments }}</pre>
         </section>
       </div>
       <div v-else class="modal-container">
-        <div class="flex-row-spread">
+        <div class="flex-row-spread sticky border-bottom">
           <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" alt="" />
-            <h3>Notes</h3>
+            <h4>Notes</h4>
           </div>
-          <img
-            src="@/assets/images/close.svg"
-            style="height: 1.5rem; margin-top: -0.5rem; margin-right: 0.5rem; cursor: pointer"
-            @click="resetNotes"
-            alt=""
-          />
+
+          <div class="flex-row">
+            <small class="note-border">Total: {{ notesLength }}</small>
+            <small class="note-border light-green-bg">Most recent: 0 days</small>
+            <small class="note-border">Oldest: 0 days</small>
+          </div>
         </div>
         <section class="note-section">
-          <p class="note-section__title">No notes for this opportunity</p>
+          <p class="note-section__body">No notes for this opportunity</p>
         </section>
       </div>
     </Modal>
@@ -627,6 +630,16 @@ export default {
       stageGateId: null,
       booleans: ['true', 'false'],
       notes: [],
+      notesLength: 0,
+      days: {
+        0: 'Sunday',
+        1: 'Monday',
+        2: 'Tuesday',
+        3: 'Wednesday',
+        4: 'Thursday',
+        5: 'Friday',
+        6: 'Saturday',
+      },
     }
   },
   computed: {
@@ -677,6 +690,7 @@ export default {
           for (let i = 0; i < res.length; i++) {
             this.notes.push(res[i])
             this.notes = this.notes.filter((note) => note.saved_data__meeting_comments !== null)
+            this.notesLength = this.notes.length
           }
         }
       } catch (e) {
@@ -1283,6 +1297,10 @@ export default {
     allOpportunities() {
       this.$router.replace({ path: '/Pipelines' })
     },
+    weekDay(input) {
+      let newer = new Date(input)
+      return this.days[newer.getDay()]
+    },
     formatDateTime(input) {
       var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
       if (!input || !input.match(pattern)) {
@@ -1291,6 +1309,13 @@ export default {
       let newDate = input.replace(pattern, '$2/$3/$1')
       return newDate.split('T')[0]
     },
+    formatMostRecent(date2) {
+      let today = new Date()
+      let d = new Date(date2)
+      let diff = today.getTime() - d.getTime()
+      let days = diff / (1000 * 3600 * 24)
+      return Math.floor(days)
+    },
   },
 }
 </script>
@@ -1298,6 +1323,32 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+.light-green-bg {
+  background-color: $white-green;
+  color: $dark-green !important;
+  border: 1px solid $dark-green !important;
+}
+.note-border {
+  border: 1px solid $very-light-gray;
+  border-radius: 6px;
+  padding: 4px;
+  margin: 0px 6px;
+  font-size: 12px;
+}
+.border-bottom {
+  border-bottom: 1.25px solid $soft-gray;
+}
+.sticky {
+  position: sticky;
+  background-color: white;
+  width: 100%;
+  left: 0;
+  top: 0;
+  padding: 0px 6px 8px -2px;
+}
+.rel {
+  position: relative;
+}
 .adding-stage-gate {
   border: 2px solid #e8e8e8;
   border-radius: 0.3rem;
@@ -1738,12 +1789,12 @@ a {
   background-color: $white;
   overflow: auto;
   min-width: 32vw;
-  max-width: 40vw;
+  max-width: 34vw;
   min-height: 44vh;
   max-height: 80vh;
   align-items: center;
   border-radius: 0.3rem;
-  padding: 0.25rem;
+
   border: 1px solid #e8e8e8;
 }
 .logo {
@@ -1754,26 +1805,33 @@ a {
     brightness(93%) contrast(89%);
 }
 .note-section {
-  padding: 0.5rem 1rem;
+  padding: 0.25rem 1rem;
   margin-bottom: 0.25rem;
   background-color: white;
   border-bottom: 1px solid $soft-gray;
   overflow: scroll;
   &__title {
-    font-size: 16px;
+    font-size: 19px;
     font-weight: bolder;
-    color: $dark-green;
-    letter-spacing: 1.2px;
+    letter-spacing: 0.6px;
+    color: $base-gray;
+    padding: 0;
   }
   &__body {
     color: $base-gray;
     font-family: $base-font-family;
     word-wrap: break-word;
     white-space: pre-wrap;
+    border-left: 2px solid $dark-green;
+    padding-left: 8px;
+    font-size: 14px;
   }
   &__date {
     color: $mid-gray;
-    font-size: 11px;
+    font-size: 12px;
+    margin-top: -14px;
+    margin-bottom: 8px;
+    letter-spacing: 0.6px;
   }
 }
 .logged {
