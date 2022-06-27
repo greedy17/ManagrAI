@@ -372,26 +372,6 @@
             </div>
           </div>
           <hr />
-          <div class="form__List">
-            <div :key="i" class="field__list_item" v-for="(workflow, i) in orgMeetingWorkflows">
-              <h4>
-                {{ 'event_data' in workflow.meeting_ref ? 'Google Meet' : 'Zoom Meeting' }} --
-                {{
-                  'event_data' in workflow.meeting_ref
-                    ? workflow.meeting_ref['event_data']['title']
-                    : workflow.meeting_ref.topic
-                }}
-              </h4>
-              <ul>
-                <li
-                  v-for="(participant, index) in workflow.meeting_ref.participants"
-                  :key="participant['email']"
-                >
-                  {{ participant['email'] }}
-                </li>
-              </ul>
-            </div>
-          </div>
         </template>
       </template>
       <template v-else-if="page === 'Users'">
@@ -574,16 +554,8 @@
               <div class="border-break">
                 <h3>Event Calendar ID:</h3>
                 <div>
-                  <!-- Value will be eventCalendarIDVal[i] -->
-                  <!-- eventCalendarIDVal will be assigned when selected users are assigned -->
-                  <!-- For every user, push in an array that is user.nylasRef.eventCalendarId -->
-                  <!-- Set up object with i as key and eventCalendarIDVal[i] as value -->
-                  <!-- On change, change the key of i to value of input -->
                   <input v-model="eventCalendarIDObj[i]">
                 </div>
-                <!-- <div v-else>
-                  <input>null</input>
-                </div> -->
               </div>
               <div class="border-break">
                 <h3>Provider:</h3>
