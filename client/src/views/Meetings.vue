@@ -924,13 +924,13 @@ export default {
             )[0].account_ref.name)
           : (this.currentAccount = 'Account')
       } catch (e) {
-        this.$toast('Error creating update form', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+        // this.$toast('Error creating update form', {
+        //   timeout: 2000,
+        //   position: 'top-left',
+        //   type: 'error',
+        //   toastClassName: 'custom',
+        //   bodyClassName: ['custom'],
+        // })
       } finally {
         this.dropdownLoading = false
       }
