@@ -238,7 +238,7 @@ button:disabled {
   flex-direction: column;
 }
 .grey {
-  color: $gray;
+  color: $gray !important;
 }
 .light-gray-bg {
   border-radius: 50%;
