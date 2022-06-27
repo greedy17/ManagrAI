@@ -15,135 +15,211 @@
             <!-- {{modalInfo}} -->
             <div>
               <h3>Resource ID:</h3>
-              <h4>{{modalInfo.resource_id ? modalInfo.resource_id : 'null'}}</h4>
+              <h4>{{ modalInfo.resource_id ? modalInfo.resource_id : 'null' }}</h4>
             </div>
             <div>
               <h3>Workflow:</h3>
-              <h4>{{modalInfo.workflow_id ? modalInfo.workflow_id : 'null'}}</h4>
+              <h4>{{ modalInfo.workflow_id ? modalInfo.workflow_id : 'null' }}</h4>
             </div>
             <div>
               <h3>Is Submitted:</h3>
-              <h4>{{modalInfo.submission_date ? "true" : "false"}}</h4>
+              <h4>{{ modalInfo.submission_date ? 'true' : 'false' }}</h4>
             </div>
             <div>
               <h3>Submission Date:</h3>
-              <h4>{{modalInfo.submission_date ? modalInfo.submission_date : "null"}}</h4>
+              <h4>{{ modalInfo.submission_date ? modalInfo.submission_date : 'null' }}</h4>
             </div>
             <div>
               <h3>Update Source:</h3>
-              <h4>{{modalInfo.update_source ? modalInfo.update_source : 'null'}}</h4>
+              <h4>{{ modalInfo.update_source ? modalInfo.update_source : 'null' }}</h4>
             </div>
             <div>
               <h3>User ID:</h3>
-              <h4>{{modalInfo.user_id}}</h4>
+              <h4>{{ modalInfo.user_id }}</h4>
             </div>
             <div>
               <h3>Template ID:</h3>
-              <h4>{{modalInfo.template_id}}</h4>
+              <h4>{{ modalInfo.template_id }}</h4>
             </div>
             <div>
               <h3>Saved Data:</h3>
-              <h4>{{modalInfo.saved_data}}</h4>
+              <h4>{{ modalInfo.saved_data }}</h4>
             </div>
             <div>
               <h3>Previous Data:</h3>
-              <h4>{{modalInfo.previous_data}}</h4>
+              <h4>{{ modalInfo.previous_data }}</h4>
             </div>
             <div>
               <h3>Alert Instance ID:</h3>
-              <h4>{{modalInfo.alert_instance_id_id ? modalInfo.alert_instance_id_id : 'null'}}</h4>
+              <h4>
+                {{ modalInfo.alert_instance_id_id ? modalInfo.alert_instance_id_id : 'null' }}
+              </h4>
             </div>
           </div>
         </div>
         <div v-else-if="modalName === 'meetingWorkflow'">
           <div class="modal-container__body">
             <!-- {{modalInfo}} -->
-            <h1 class="user_title">{{modalInfo.meeting_ref.topic}}</h1>
+            <h1 class="user_title">{{ modalInfo.meeting_ref.topic }}</h1>
             <div class="user_item_container">
               <div class="border-break tiny-spacing">
                 <h3>Meeting ID:</h3>
-                <h4>{{modalInfo.meeting_ref.meeting_id ? modalInfo.meeting_ref.meeting_id : 'null'}}</h4>
+                <h4>
+                  {{ modalInfo.meeting_ref.meeting_id ? modalInfo.meeting_ref.meeting_id : 'null' }}
+                </h4>
               </div>
               <div class="border-break tiny-spacing">
                 <h3>Meeting UUID:</h3>
-                <h4>{{modalInfo.meeting_ref.meeting_uuid ? modalInfo.meeting_ref.meeting_uuid : 'null'}}</h4>
+                <h4>
+                  {{
+                    modalInfo.meeting_ref.meeting_uuid ? modalInfo.meeting_ref.meeting_uuid : 'null'
+                  }}
+                </h4>
               </div>
               <div class="border-break tiny-spacing">
                 <h3>Account ID:</h3>
-                <h4>{{modalInfo.meeting_ref.account_id ? modalInfo.meeting_ref.account_id : 'null'}}</h4>
+                <h4>
+                  {{ modalInfo.meeting_ref.account_id ? modalInfo.meeting_ref.account_id : 'null' }}
+                </h4>
               </div>
               <div class="border-break tiny-spacing">
                 <h3>Host ID:</h3>
-                <h4>{{modalInfo.meeting_ref.host_id ? modalInfo.meeting_ref.host_id : 'null'}}</h4>
+                <h4>
+                  {{ modalInfo.meeting_ref.host_id ? modalInfo.meeting_ref.host_id : 'null' }}
+                </h4>
               </div>
               <div class="border-break tiny-spacing">
                 <h3>Operator ID:</h3>
-                <h4>{{modalInfo.meeting_ref.operator_id ? modalInfo.meeting_ref.operator_id : 'null'}}</h4>
+                <h4>
+                  {{
+                    modalInfo.meeting_ref.operator_id ? modalInfo.meeting_ref.operator_id : 'null'
+                  }}
+                </h4>
               </div>
               <div class="border-break tiny-spacing">
                 <h3>Status:</h3>
-                <h4>{{modalInfo.meeting_ref.status ? modalInfo.meeting_ref.status : 'null'}}</h4>
+                <h4>{{ modalInfo.meeting_ref.status ? modalInfo.meeting_ref.status : 'null' }}</h4>
               </div>
               <div class="border-break tiny-spacing">
                 <h3>Timezone:</h3>
-                <h4>{{modalInfo.meeting_ref.timezone ? modalInfo.meeting_ref.timezone : 'null'}}</h4>
+                <h4>
+                  {{ modalInfo.meeting_ref.timezone ? modalInfo.meeting_ref.timezone : 'null' }}
+                </h4>
               </div>
               <div class="border-break tiny-spacing">
                 <h3>Start Time:</h3>
-                <h4>{{modalInfo.meeting_ref.start_time ? modalInfo.meeting_ref.start_time : 'null'}}</h4>
+                <h4>
+                  {{ modalInfo.meeting_ref.start_time ? modalInfo.meeting_ref.start_time : 'null' }}
+                </h4>
               </div>
               <div class="border-break tiny-spacing">
                 <h3>End Time:</h3>
-                <h4>{{modalInfo.meeting_ref.end_time ? modalInfo.meeting_ref.end_time : 'null'}}</h4>
+                <h4>
+                  {{ modalInfo.meeting_ref.end_time ? modalInfo.meeting_ref.end_time : 'null' }}
+                </h4>
               </div>
               <div class="border-break tiny-spacing">
                 <h3>Start URL:</h3>
-                <h4>{{modalInfo.meeting_ref.start_url ? modalInfo.meeting_ref.start_url : 'null'}}</h4>
+                <h4>
+                  {{ modalInfo.meeting_ref.start_url ? modalInfo.meeting_ref.start_url : 'null' }}
+                </h4>
               </div>
               <div class="border-break tiny-spacing">
                 <h3>Duration:</h3>
-                <h4>{{modalInfo.meeting_ref.duration ? modalInfo.meeting_ref.duration : 'null'}}</h4>
+                <h4>
+                  {{ modalInfo.meeting_ref.duration ? modalInfo.meeting_ref.duration : 'null' }}
+                </h4>
               </div>
               <div class="border-break tiny-spacing">
                 <h3>Original Duration:</h3>
-                <h4>{{modalInfo.meeting_ref.original_duration ? modalInfo.meeting_ref.original_duration : 'null'}}</h4>
+                <h4>
+                  {{
+                    modalInfo.meeting_ref.original_duration
+                      ? modalInfo.meeting_ref.original_duration
+                      : 'null'
+                  }}
+                </h4>
               </div>
               <div class="border-break tiny-spacing">
                 <h3>Total Minutes:</h3>
-                <h4>{{modalInfo.meeting_ref.total_minutes ? modalInfo.meeting_ref.total_minutes : 'null'}}</h4>
+                <h4>
+                  {{
+                    modalInfo.meeting_ref.total_minutes
+                      ? modalInfo.meeting_ref.total_minutes
+                      : 'null'
+                  }}
+                </h4>
               </div>
               <div class="border-break tiny-spacing">
                 <h3>Recurrence:</h3>
-                <h4>{{modalInfo.meeting_ref.recurrence ? modalInfo.meeting_ref.recurrence : 'null'}}</h4>
+                <h4>
+                  {{ modalInfo.meeting_ref.recurrence ? modalInfo.meeting_ref.recurrence : 'null' }}
+                </h4>
               </div>
               <div class="border-break tiny-spacing">
                 <h3>Join URL:</h3>
-                <h4>{{modalInfo.meeting_ref.join_url ? modalInfo.meeting_ref.join_url : 'null'}}</h4>
+                <h4>
+                  {{ modalInfo.meeting_ref.join_url ? modalInfo.meeting_ref.join_url : 'null' }}
+                </h4>
               </div>
               <div class="border-break tiny-spacing">
                 <h3>Operator:</h3>
-                <h4>{{modalInfo.meeting_ref.operator ? modalInfo.meeting_ref.operator : 'null'}}</h4>
+                <h4>
+                  {{ modalInfo.meeting_ref.operator ? modalInfo.meeting_ref.operator : 'null' }}
+                </h4>
               </div>
               <div class="border-break tiny-spacing">
                 <h3>Operation:</h3>
-                <h4>{{modalInfo.meeting_ref.operation ? modalInfo.meeting_ref.operation : 'null'}}</h4>
+                <h4>
+                  {{ modalInfo.meeting_ref.operation ? modalInfo.meeting_ref.operation : 'null' }}
+                </h4>
               </div>
             </div>
             <div class="user_item_container">
               <h3>Participants:</h3>
               <div v-if="modalInfo.meeting_ref.participants.length">
-                <div v-for="participant in modalInfo.meeting_ref.participants" :key="participant.id">
+                <div
+                  v-for="participant in modalInfo.meeting_ref.participants"
+                  :key="participant.id"
+                >
                   <div class="form_field tiny-spacing">
-                    <h4 class="border-break">ID: {{participant.id ? participant.id : 'null'}}</h4>
-                    <h4 class="border-break">Name: {{participant.secondary_data ? `${participant.secondary_data.FirstName} ${participant.secondary_data.LastName}` : 'null'}}</h4>
-                    <h4 class="border-break">Email: {{participant.email ? participant.email : 'null'}}</h4>
-                    <h4 class="border-break">Owner: {{participant.owner ? participant.owner : 'null'}}</h4>
-                    <h4 class="border-break">Account: {{participant.account ? participant.account : 'null'}}</h4>
-                    <h4 class="border-break">External Owner: {{participant.external_owner ? participant.external_owner : 'null'}}</h4>
-                    <h4 class="border-break">External Account: {{participant.external_account ? participant.external_account : 'null'}}</h4>
-                    <h4 class="border-break">Imported By: {{participant.imported_by ? participant.imported_by : 'null'}}</h4>
-                    <h4 class="border-break">Integration ID: {{participant.integration_id ? participant.integration_id : 'null'}}</h4>
-                    <h4 class="border-break">Integration Source: {{participant.integration_source ? participant.integration_source : 'null'}}</h4>
+                    <h4 class="border-break">ID: {{ participant.id ? participant.id : 'null' }}</h4>
+                    <h4 class="border-break">
+                      Name:
+                      {{
+                        participant.secondary_data
+                          ? `${participant.secondary_data.FirstName} ${participant.secondary_data.LastName}`
+                          : 'null'
+                      }}
+                    </h4>
+                    <h4 class="border-break">
+                      Email: {{ participant.email ? participant.email : 'null' }}
+                    </h4>
+                    <h4 class="border-break">
+                      Owner: {{ participant.owner ? participant.owner : 'null' }}
+                    </h4>
+                    <h4 class="border-break">
+                      Account: {{ participant.account ? participant.account : 'null' }}
+                    </h4>
+                    <h4 class="border-break">
+                      External Owner:
+                      {{ participant.external_owner ? participant.external_owner : 'null' }}
+                    </h4>
+                    <h4 class="border-break">
+                      External Account:
+                      {{ participant.external_account ? participant.external_account : 'null' }}
+                    </h4>
+                    <h4 class="border-break">
+                      Imported By: {{ participant.imported_by ? participant.imported_by : 'null' }}
+                    </h4>
+                    <h4 class="border-break">
+                      Integration ID:
+                      {{ participant.integration_id ? participant.integration_id : 'null' }}
+                    </h4>
+                    <h4 class="border-break">
+                      Integration Source:
+                      {{ participant.integration_source ? participant.integration_source : 'null' }}
+                    </h4>
                   </div>
                 </div>
               </div>
@@ -153,11 +229,15 @@
             <div class="user_item_container">
               <div class="border-break tiny-spacing">
                 <h3>Type:</h3>
-                <h4>{{modalInfo.meeting_ref.type ? modalInfo.meeting_ref.type : 'null'}}</h4>
+                <h4>{{ modalInfo.meeting_ref.type ? modalInfo.meeting_ref.type : 'null' }}</h4>
               </div>
               <div class="border-break tiny-spacing">
                 <h3>Zoom Account:</h3>
-                <h4>{{modalInfo.meeting_ref.zoom_account ? modalInfo.meeting_ref.zoom_account : 'null'}}</h4>
+                <h4>
+                  {{
+                    modalInfo.meeting_ref.zoom_account ? modalInfo.meeting_ref.zoom_account : 'null'
+                  }}
+                </h4>
               </div>
             </div>
           </div>
@@ -180,58 +260,58 @@
             <div class="big_card_container">
               <div class="border-break">
                 <h3>Date:</h3>
-                <h4>{{content.date}}</h4>
+                <h4>{{ content.date }}</h4>
               </div>
               <div class="border-break">
                 <h3>Users:</h3>
-                <h4>{{content.users}}</h4>
+                <h4>{{ content.users }}</h4>
               </div>
               <div class="border-break">
                 <h3>Workflows:</h3>
-                <h4>{{content.workflows}}</h4>
+                <h4>{{ content.workflows }}</h4>
               </div>
               <div class="user_item_container">
                 <div class="border-break">
                   <h3>Accounts Created:</h3>
-                  <h4>{{content.creates.accounts}}</h4>
+                  <h4>{{ content.creates.accounts }}</h4>
                 </div>
                 <div class="border-break">
                   <h3>Contacts Created:</h3>
-                  <h4>{{content.creates.contacts}}</h4>
+                  <h4>{{ content.creates.contacts }}</h4>
                 </div>
                 <div class="border-break">
                   <h3>Opportunities Created:</h3>
-                  <h4>{{content.creates.opportunities}}</h4>
+                  <h4>{{ content.creates.opportunities }}</h4>
                 </div>
                 <div class="border-break">
                   <h3>Products Created:</h3>
-                  <h4>{{content.creates.products}}</h4>
+                  <h4>{{ content.creates.products }}</h4>
                 </div>
                 <div class="border-break">
                   <h3>Total Created:</h3>
-                  <h4>{{content.creates.total}}</h4>
+                  <h4>{{ content.creates.total }}</h4>
                 </div>
               </div>
               <div class="user_item_container">
                 <div class="border-break">
                   <h3>Alert Updates:</h3>
-                  <h4>{{content.updates.alert}}</h4>
+                  <h4>{{ content.updates.alert }}</h4>
                 </div>
                 <div class="border-break">
                   <h3>Command Updates:</h3>
-                  <h4>{{content.updates.command}}</h4>
+                  <h4>{{ content.updates.command }}</h4>
                 </div>
                 <div class="border-break">
                   <h3>Meeting Updates:</h3>
-                  <h4>{{content.updates.meeting}}</h4>
+                  <h4>{{ content.updates.meeting }}</h4>
                 </div>
                 <div class="border-break">
                   <h3>Pipeline Updates:</h3>
-                  <h4>{{content.updates.pipeline}}</h4>
+                  <h4>{{ content.updates.pipeline }}</h4>
                 </div>
                 <div class="border-break">
                   <h3>Total Updates:</h3>
-                  <h4>{{content.updates.total}}</h4>
+                  <h4>{{ content.updates.total }}</h4>
                 </div>
               </div>
             </div>
@@ -304,23 +384,19 @@
             </div>
             <div>
               <div>Ignore Emails</div>
-              <input 
-                class="wide" 
-                type="search" 
-                v-model="ignoreEmails" 
+              <input
+                class="wide"
+                type="search"
+                v-model="ignoreEmails"
                 placeholder="Ignore Emails"
               />
             </div>
             <div>
               <div @click="test">Has Products</div>
-              <input 
-                type="checkbox" 
-                v-model="hasProducts" 
-              />
+              <input type="checkbox" v-model="hasProducts" />
             </div>
             <button class="green_button" @click="postOrgUpdates()">Save Changes</button>
           </div>
-          
 
           <!-- <div>{{allForms}}</div> -->
           <div class="form__list">
@@ -398,49 +474,49 @@
         <div v-for="(user, i) in selectedUsers" :key="user.id">
           <div>
             <button class="green_button back" @click="goBack">Back</button>
-            <h2 class="user_title">User {{i + 1}}</h2>
+            <h2 class="user_title">User {{ i + 1 }}</h2>
           </div>
           <div class="big_card_container">
             <div class="user_item_container">
               <div class="border-break">
                 <h3>First Name:</h3>
-                <h4>{{user.firstName}}</h4>
+                <h4>{{ user.firstName }}</h4>
               </div>
               <div class="border-break">
                 <h3>Last Name:</h3>
-                <h4>{{user.lastName}}</h4>
+                <h4>{{ user.lastName }}</h4>
               </div>
               <div class="border-break">
                 <h3>Email:</h3>
-                <h4>{{user.email}}</h4>
+                <h4>{{ user.email }}</h4>
               </div>
               <div class="border-break">
                 <h3>Is Active:</h3>
-                <h4>{{user.isActive}}</h4>
+                <h4>{{ user.isActive }}</h4>
               </div>
               <div class="border-break">
                 <h3>Is Invited:</h3>
-                <h4>{{user.isInvited}}</h4>
+                <h4>{{ user.isInvited }}</h4>
               </div>
               <div class="border-break">
                 <h3>Is Admin:</h3>
-                <h4>{{user.isAdmin}}</h4>
+                <h4>{{ user.isAdmin }}</h4>
               </div>
               <div class="border-break">
                 <h3>Is Staff:</h3>
-                <h4>{{user.isStaff}}</h4>
+                <h4>{{ user.isStaff }}</h4>
               </div>
               <div class="border-break">
                 <h3>User Level:</h3>
-                <h4>{{user.userLevel}}</h4>
+                <h4>{{ user.userLevel }}</h4>
               </div>
               <div class="border-break">
                 <h3>Role:</h3>
-                <h4>{{user.role}}</h4>
+                <h4>{{ user.role }}</h4>
               </div>
               <div class="border-break">
                 <h3>Timezone:</h3>
-                <h4>{{user.timezone}}</h4>
+                <h4>{{ user.timezone }}</h4>
               </div>
               <div class="border-break">
                 <h3>Reminders:</h3>
@@ -449,23 +525,23 @@
               </div>
               <div class="border-break">
                 <h3>Activated Managr Configs:</h3>
-                <h4>{{user.activatedManagrConfigs}}</h4>
+                <h4>{{ user.activatedManagrConfigs }}</h4>
               </div>
             </div>
             <div class="user_item_container">
               <h2>User Slack Integrations</h2>
               <div class="border-break">
                 <h3>Slack ID:</h3>
-                <h4>{{user.slackRef.slackId}}</h4>
+                <h4>{{ user.slackRef.slackId }}</h4>
               </div>
               <div class="border-break">
                 <h3>Channel:</h3>
-                <h4>{{user.slackAccount.channel}}</h4>
+                <h4>{{ user.slackAccount.channel }}</h4>
               </div>
               <div class="border-break">
                 <h3>Organization Slack:</h3>
                 <!-- VV This is clearly wrong. Figure out where list of these are VV -->
-                <h4>{{user.organizationRef.slackIntegration}}</h4>
+                <h4>{{ user.organizationRef.slackIntegration }}</h4>
               </div>
               <!-- <div class="border-break">
                 <h3>Is Revoked:</h3>
@@ -473,12 +549,12 @@
               </div> -->
               <div class="border-break">
                 <h3>Is Onboarded:</h3>
-                <h4>{{user.onboarding}}</h4>
+                <h4>{{ user.onboarding }}</h4>
               </div>
               <div class="border-break">
                 <h3>Zoom Channel:</h3>
                 <div v-if="user.slackAccount.zoomChannel">
-                  <h4>{{user.slackAccount.zoomChannel}}</h4>
+                  <h4>{{ user.slackAccount.zoomChannel }}</h4>
                 </div>
                 <div v-else>
                   <h4>null</h4>
@@ -487,7 +563,7 @@
               <div class="border-break">
                 <h3>Recap Channel:</h3>
                 <div v-if="user.slackAccount.recapChannel">
-                  <h4>{{user.slackAccount.recapChannel}}</h4>
+                  <h4>{{ user.slackAccount.recapChannel }}</h4>
                 </div>
                 <div v-else>
                   <h4>null</h4>
@@ -496,8 +572,8 @@
               <div class="border-break">
                 <h3>Recap Recievers:</h3>
                 <div v-if="user.slackAccount.recapReceivers.length">
-                  <div v-for="(receiver) in user.slackAccount.recapReceivers" :key="receiver">
-                    <h4>{{user.receiver}}</h4>
+                  <div v-for="receiver in user.slackAccount.recapReceivers" :key="receiver">
+                    <h4>{{ user.receiver }}</h4>
                   </div>
                 </div>
                 <div v-else>null</div>
@@ -513,11 +589,11 @@
               </div> -->
             </div>
             <div class="user_item_container">
-              <h2>Salesforce ({{user.salesforceAccountRef.id}})</h2>
+              <h2>Salesforce ({{ user.salesforceAccountRef.id }})</h2>
               <div class="border-break">
                 <h3>SFDC ID:</h3>
                 <div v-if="user.salesforceAccountRef.salesforceId">
-                  <h4>{{user.salesforceAccountRef.salesforceId}}</h4>
+                  <h4>{{ user.salesforceAccountRef.salesforceId }}</h4>
                 </div>
                 <div v-else>
                   <h4>null</h4>
@@ -526,7 +602,7 @@
               <div class="border-break">
                 <h3>sobjects:</h3>
                 <div v-if="user.salesforceAccountRef.sobjects">
-                  <h4>{{user.salesforceAccountRef.sobjects}}</h4>
+                  <h4>{{ user.salesforceAccountRef.sobjects }}</h4>
                 </div>
                 <div v-else>
                   <h4>null</h4>
@@ -535,7 +611,7 @@
               <div class="border-break">
                 <h3>Instance URL:</h3>
                 <div v-if="user.salesforceAccountRef.instanceUrl">
-                  <h4>{{user.salesforceAccountRef.instanceUrl}}</h4>
+                  <h4>{{ user.salesforceAccountRef.instanceUrl }}</h4>
                 </div>
                 <div v-else>
                   <h4>null</h4>
@@ -544,7 +620,7 @@
               <div class="border-break">
                 <h3>Access Token:</h3>
                 <div v-if="user.salesforceAccountRef.accessToken">
-                  <h4>{{user.salesforceAccountRef.accessToken}}</h4>
+                  <h4>{{ user.salesforceAccountRef.accessToken }}</h4>
                 </div>
                 <div v-else>
                   <h4>null</h4>
@@ -552,11 +628,11 @@
               </div>
             </div>
             <div class="user_item_container">
-              <h2>Nylas ({{user.nylasRef.id}})</h2>
+              <h2>Nylas ({{ user.nylasRef.id }})</h2>
               <div class="border-break">
                 <h3>Access Token:</h3>
                 <div v-if="user.nylasRef.accessToken">
-                  <h4>{{user.nylasRef.accessToken}}</h4>
+                  <h4>{{ user.nylasRef.accessToken }}</h4>
                 </div>
                 <div v-else>
                   <h4>null</h4>
@@ -565,7 +641,7 @@
               <div class="border-break">
                 <h3>Email:</h3>
                 <div v-if="user.nylasRef.emailAddress">
-                  <h4>{{user.nylasRef.emailAddress}}</h4>
+                  <h4>{{ user.nylasRef.emailAddress }}</h4>
                 </div>
                 <div v-else>
                   <h4>null</h4>
@@ -579,7 +655,7 @@
                   <!-- For every user, push in an array that is user.nylasRef.eventCalendarId -->
                   <!-- Set up object with i as key and eventCalendarIDVal[i] as value -->
                   <!-- On change, change the key of i to value of input -->
-                  <input v-model="eventCalendarIDObj[i]">
+                  <input v-model="eventCalendarIDObj[i]" />
                 </div>
                 <!-- <div v-else>
                   <input>null</input>
@@ -588,7 +664,7 @@
               <div class="border-break">
                 <h3>Provider:</h3>
                 <div v-if="user.nylasRef.provider">
-                  <h4>{{user.nylasRef.provider}}</h4>
+                  <h4>{{ user.nylasRef.provider }}</h4>
                 </div>
                 <div v-else>
                   <h4>null</h4>
@@ -596,11 +672,11 @@
               </div>
             </div>
             <div class="user_item_container">
-              <h2>Zoom ({{user.zoomRef.id}})</h2>
+              <h2>Zoom ({{ user.zoomRef.id }})</h2>
               <div class="border-break">
                 <h3>Zoom ID:</h3>
                 <div v-if="user.zoomRef.zoomId">
-                  <h4>{{user.zoomRef.zoomId}}</h4>
+                  <h4>{{ user.zoomRef.zoomId }}</h4>
                 </div>
                 <div v-else>
                   <h4>null</h4>
@@ -609,7 +685,7 @@
               <div class="border-break">
                 <h3>Timezone:</h3>
                 <div v-if="user.zoomRef.timezone">
-                  <h4>{{user.zoomRef.timezone}}</h4>
+                  <h4>{{ user.zoomRef.timezone }}</h4>
                 </div>
                 <div v-else>
                   <h4>null</h4>
@@ -618,7 +694,7 @@
               <div class="border-break">
                 <h3>Account ID:</h3>
                 <div v-if="user.zoomRef.accountId">
-                  <h4>{{user.zoomRef.accountId}}</h4>
+                  <h4>{{ user.zoomRef.accountId }}</h4>
                 </div>
                 <div v-else>
                   <h4>null</h4>
@@ -627,7 +703,7 @@
               <div class="border-break">
                 <h3>Access Token:</h3>
                 <div v-if="user.zoomRef.accessToken">
-                  <h4>{{user.zoomRef.accessToken}}</h4>
+                  <h4>{{ user.zoomRef.accessToken }}</h4>
                 </div>
                 <div v-else>
                   <h4>null</h4>
@@ -638,7 +714,7 @@
                 <!-- <div v-if="user.zoomRef.fakeMeetingIdRef"> -->
                 <div>
                   <!-- <h4>{{user.zoomRef.fakeMeetingIdRef}}</h4> -->
-                  <input v-model="fakeMeetingIDObj[i]">
+                  <input v-model="fakeMeetingIDObj[i]" />
                 </div>
                 <!-- <div v-else>
                   <h4>null</h4>
@@ -646,11 +722,11 @@
               </div>
             </div>
             <div class="user_item_container">
-              <h2>Slack Account ({{user.slackAccount.slackId}})</h2>
+              <h2>Slack Account ({{ user.slackAccount.slackId }})</h2>
               <div class="border-break">
                 <h3>Slack ID:</h3>
                 <div v-if="user.slackAccount.slackId">
-                  <h4>{{user.slackAccount.slackId}}</h4>
+                  <h4>{{ user.slackAccount.slackId }}</h4>
                 </div>
                 <div v-else>
                   <h4>null</h4>
@@ -659,7 +735,7 @@
               <div class="border-break">
                 <h3>Channel:</h3>
                 <div v-if="user.slackAccount.channel">
-                  <h4>{{user.slackAccount.channel}}</h4>
+                  <h4>{{ user.slackAccount.channel }}</h4>
                 </div>
                 <div v-else>
                   <h4>null</h4>
@@ -670,7 +746,7 @@
                 <!-- <div v-if="user.slackAccount.zoomChannel"> -->
                 <div>
                   <!-- <h4>{{user.slackAccount.zoomChannel}}</h4> -->
-                  <input v-model="zoomChannelObj[i]">
+                  <input v-model="zoomChannelObj[i]" />
                 </div>
                 <!-- <div v-else>
                   <h4>null</h4>
@@ -681,7 +757,7 @@
                 <!-- <div v-if="user.slackAccount.recapReceivers"> -->
                 <div>
                   <!-- <h4>{{user.slackAccount.recapReceivers}}</h4> -->
-                  <input v-model="recapObj[i]">
+                  <input v-model="recapObj[i]" />
                 </div>
                 <!-- <div v-else>
                   <h4>null</h4>
@@ -691,7 +767,7 @@
                 <h3>Real Time Alert Configs:</h3>
                 <!-- <div v-if="user.slackAccount.realtimeAlertConfigs"> -->
                 <div>
-                  <h4>{{user.slackAccount.realtimeAlertConfigs}}</h4>
+                  <h4>{{ user.slackAccount.realtimeAlertConfigs }}</h4>
                   <!-- <input v-model="realTimeAlertConfigObj[i]"> -->
                 </div>
                 <!-- <div v-else>
@@ -717,34 +793,34 @@
             <div class="user_item_container">
               <div class="border-break">
                 <h3>Form Type</h3>
-                <h4>{{selectedSlackForms.formType}}</h4>
+                <h4>{{ selectedSlackForms.formType }}</h4>
               </div>
               <div class="border-break">
                 <h3>Resource</h3>
-                <h4>{{selectedSlackForms.resource}}</h4>
+                <h4>{{ selectedSlackForms.resource }}</h4>
               </div>
               <div class="border-break">
                 <h3>Config</h3>
-                <h4>>{{selectedSlackForms.config}}</h4>
+                <h4>>{{ selectedSlackForms.config }}</h4>
               </div>
               <div class="border-break">
                 <h3>Stage</h3>
-                <h4>{{selectedSlackForms.stage ? slackForm.stage : 'null'}}</h4>
+                <h4>{{ selectedSlackForms.stage ? slackForm.stage : 'null' }}</h4>
               </div>
             </div>
             <div class="user_item_container">
               <h3>Form Fields</h3>
-              <div v-for="(fieldRef) in selectedSlackForms.fieldsRef" :key="fieldRef.id">
+              <div v-for="fieldRef in selectedSlackForms.fieldsRef" :key="fieldRef.id">
                 <!-- <h3>Label: {{fieldRef.label}}</h3>
                 <h3>Order: {{fieldRef.order}}</h3> -->
                 <div class="form_field">
                   <div class="form_field_item border-break">
                     <h3>Field:</h3>
-                    <h4>{{fieldRef.referenceDisplayLabel}}</h4>
+                    <h4>{{ fieldRef.referenceDisplayLabel }}</h4>
                   </div>
                   <div class="form_field_item border-break">
                     <h3>Order:</h3>
-                    <h4>{{fieldRef.order}}</h4>
+                    <h4>{{ fieldRef.order }}</h4>
                   </div>
                 </div>
               </div>
@@ -755,13 +831,23 @@
       <template v-else-if="page === 'SlackFormInstance'">
         <button class="green_button back" @click="goBack">Back</button>
         <div v-for="(slackFormInstance, i) in slackFormInstances" :key="slackFormInstance.id">
-          <h3 :class="i%2===0 ? '' : 'light-back'" @click="openModal('slackFormInstance', slackFormInstance)">{{slackFormInstance.template_id}} by {{getUserName(slackFormInstance.user_id)}}</h3>
+          <h3
+            :class="i % 2 === 0 ? '' : 'light-back'"
+            @click="openModal('slackFormInstance', slackFormInstance)"
+          >
+            {{ slackFormInstance.template_id }} by {{ getUserName(slackFormInstance.user_id) }}
+          </h3>
         </div>
       </template>
       <template v-else-if="page === 'MeetingWorkflow'">
         <button class="green_button back" @click="goBack">Back</button>
         <div v-for="(meetingWorkflow, i) in orgMeetingWorkflows" :key="meetingWorkflow.id">
-          <h3 :class="i%2===0 ? '' : 'light-back'" @click="openModal('meetingWorkflow', meetingWorkflow)">{{meetingWorkflow.meeting_ref.topic}}</h3>
+          <h3
+            :class="i % 2 === 0 ? '' : 'light-back'"
+            @click="openModal('meetingWorkflow', meetingWorkflow)"
+          >
+            {{ meetingWorkflow.meeting_ref.topic }}
+          </h3>
         </div>
       </template>
     </div>
@@ -830,9 +916,9 @@ export default {
     },
   },
   mounted() {
-    this.stateActive = this.user.organizationRef.state;
-    this.hasProducts = this.user.organizationRef.hasProducts;
-    this.ignoreEmails = this.user.organizationRef.ignoreEmailRef;
+    this.stateActive = this.user.organizationRef.state
+    this.hasProducts = this.user.organizationRef.hasProducts
+    this.ignoreEmails = this.user.organizationRef.ignoreEmailRef
   },
   methods: {
     test() {
@@ -861,20 +947,20 @@ export default {
     async runCommand() {
       if (!this.selectedCommand || !this.selectedCommand.value) {
         this.$Alert.alert({
-            type: 'failure',
-            timeout: 4000,
-            message: 'Please select a command.',
-          })
-          return;
+          type: 'failure',
+          timeout: 4000,
+          message: 'Please select a command.',
+        })
+        return
       }
       try {
         const res = await User.api.callCommand(this.selectedCommand.value).then((res) => {
           if (res.data) {
-            const newResContent = [];
+            const newResContent = []
             for (let key in res.data) {
               const item = res.data[key]
               item['date'] = key
-              newResContent.push(item);
+              newResContent.push(item)
             }
             this.contentModalInfo = newResContent
             console.log('this.contentModalInfo', this.contentModalInfo)
@@ -894,10 +980,10 @@ export default {
     },
     async getSlackFormInstance() {
       try {
-        const res = await SlackOAuth.api.slackInstances()
+        const res = await SlackOAuth.api.slackFormInstances()
         console.log('uh oh', res)
-        this.slackFormInstances = res;
-      } catch(e) {
+        this.slackFormInstances = res
+      } catch (e) {
         console.log('Error in getSlackFormInstance', e)
       }
     },
@@ -906,13 +992,13 @@ export default {
         const res = await User.api.pullUsageData()
         console.log('not going to work?', res)
         // this.slackFormInstances = res;
-      } catch(e) {
+      } catch (e) {
         console.log('Error in pullUsage', e)
       }
     },
     async postOrgUpdates() {
-      let noSpacesEmails = '';
-      for (let i = 0; i < this.ignoreEmails.length; i++){
+      let noSpacesEmails = ''
+      for (let i = 0; i < this.ignoreEmails.length; i++) {
         if (this.ignoreEmails[i] !== ' ') {
           noSpacesEmails += this.ignoreEmails[i]
         }
@@ -921,23 +1007,24 @@ export default {
         state_active: this.stateActive,
         has_products: this.hasProducts,
         ignore_emails: noSpacesEmails,
-        org_id: this.selected_org.id
+        org_id: this.selected_org.id,
       }
       try {
         const res = await Organization.api.orgUpdate(orgUpdates)
-        const refresh = await this.organizations.refresh();
+        const refresh = await this.organizations.refresh()
         this.$Alert.alert({
-              type: 'success',
-              timeout: 4000,
-              message: 'Organization Updated. Please wait a few seconds and then hard refresh (ctrl + shift + r)',
-            })
-      } catch(e) {
+          type: 'success',
+          timeout: 4000,
+          message:
+            'Organization Updated. Please wait a few seconds and then hard refresh (ctrl + shift + r)',
+        })
+      } catch (e) {
         console.log('error: ', e)
         this.$Alert.alert({
-              type: 'failure',
-              timeout: 4000,
-              message: 'Something went wrong. Check the console for full error report.',
-            })
+          type: 'failure',
+          timeout: 4000,
+          message: 'Something went wrong. Check the console for full error report.',
+        })
       }
     },
     async postUserInfo(index, userID) {
@@ -950,17 +1037,17 @@ export default {
         user_id: userID,
       }
       const res = await User.api.usersUpdate(data).then(() => {
-        this.allUsers.refresh();
-      });
+        this.allUsers.refresh()
+      })
     },
     goBack() {
-      this.selected_org = this.old_selected_org;
-      this.old_selected_org = null;
-      this.page = null;
+      this.selected_org = this.old_selected_org
+      this.old_selected_org = null
+      this.page = null
     },
     goToUser() {
       if (!this.selectedUsers || !this.selectedUsers.length) {
-        return;
+        return
       }
       this.selectedUsers.forEach((u, i) => {
         this.eventCalendarIDObj[i] = u.nylasRef.eventCalendarId
@@ -968,53 +1055,54 @@ export default {
         this.zoomChannelObj[i] = u.slackAccount.zoomChannel
         this.recapObj[i] = u.slackAccount.recapReceivers
         // VV this is busted VV
-        this.realTimeAlertConfigObj[i] = u.slackAccount.realtimeAlertConfigs.toString();
+        this.realTimeAlertConfigObj[i] = u.slackAccount.realtimeAlertConfigs.toString()
       })
-      this.old_selected_org = this.selected_org;
-      this.selected_org = null;
-      this.page = 'Users';
+      this.old_selected_org = this.selected_org
+      this.selected_org = null
+      this.page = 'Users'
     },
     goToSlackForm() {
       console.log('this.selectedSlackForms', this.selectedSlackForms)
-      if (!this.selectedSlackForms) { //|| !this.selectedSlackForms.length) {
-        return;
+      if (!this.selectedSlackForms) {
+        //|| !this.selectedSlackForms.length) {
+        return
       }
-      this.old_selected_org = this.selected_org;
-      this.selected_org = null;
-      this.page = 'SlackForm';
+      this.old_selected_org = this.selected_org
+      this.selected_org = null
+      this.page = 'SlackForm'
     },
     goToSlackFormInstace() {
       this.getSlackFormInstance()
-      this.old_selected_org = this.selected_org;
-      this.selected_org = null;
-      this.page = 'SlackFormInstance';
+      this.old_selected_org = this.selected_org
+      this.selected_org = null
+      this.page = 'SlackFormInstance'
     },
     goToMeetingWorkflow() {
-      this.old_selected_org = this.selected_org;
-      this.selected_org = null;
-      this.page = 'MeetingWorkflow';
+      this.old_selected_org = this.selected_org
+      this.selected_org = null
+      this.page = 'MeetingWorkflow'
     },
     openModal(name, data) {
-      this.modalName = name;
-      this.modalInfo = data;
-      this.editOpModalOpen = true;
+      this.modalName = name
+      this.modalInfo = data
+      this.editOpModalOpen = true
     },
     resetEdit() {
-      this.editOpModalOpen = !this.editOpModalOpen;
-      this.modalName = '';
-      this.modalInfo = null;
+      this.editOpModalOpen = !this.editOpModalOpen
+      this.modalName = ''
+      this.modalInfo = null
     },
     resetCommandsEdit() {
-      this.displayCommandModal = !this.displayCommandModal;
-      this.contentType = '';
-      this.contentModalInfo = null;
+      this.displayCommandModal = !this.displayCommandModal
+      this.contentType = ''
+      this.contentModalInfo = null
     },
-    slackFormLabel({formType, resource}) {
-      let formattedFormType = formType[0];
+    slackFormLabel({ formType, resource }) {
+      let formattedFormType = formType[0]
       for (let i = 1; i < formType.length; i++) {
-        formattedFormType += formType[i].toLowerCase();
+        formattedFormType += formType[i].toLowerCase()
       }
-      return `${formattedFormType} ${resource}`;
+      return `${formattedFormType} ${resource}`
     },
     filterOrgForms(org_id) {
       return this.allForms.filter((form) => form.organization == org_id)
@@ -1127,7 +1215,7 @@ ul {
   cursor: pointer;
 }
 
-.sized{
+.sized {
   height: 3em;
   align-self: center;
 }
@@ -1156,31 +1244,31 @@ input[type='search']:focus {
 .user_item_container {
   border: 1px solid black;
   margin: 1rem;
-  padding: .25rem 1rem;
+  padding: 0.25rem 1rem;
 
   h3 {
     margin: 0;
   }
 
   h4 {
-    margin: .25rem .5rem;
+    margin: 0.25rem 0.5rem;
     overflow-wrap: break-word;
   }
 }
 .form_field {
   border: 1px dashed black;
   margin: 1rem 0;
-  padding: .25rem 1rem;
+  padding: 0.25rem 1rem;
 }
 .form_field_item {
-  margin: .5rem 0;
+  margin: 0.5rem 0;
 
   h3 {
     margin: 0;
   }
 
   h4 {
-    margin: .25rem .5rem;
+    margin: 0.25rem 0.5rem;
     overflow-wrap: break-word;
   }
 }
@@ -1229,10 +1317,10 @@ input[type='search']:focus {
   }
 }
 
-.email_text_container{
+.email_text_container {
   display: flex;
   div {
-    margin: .5rem .5rem .5rem 0;
+    margin: 0.5rem 0.5rem 0.5rem 0;
   }
 }
 .removed_email {
@@ -1246,17 +1334,17 @@ input[type='search']:focus {
   border: 1px solid black;
   box-shadow: 1px 1px 3px black;
   margin: 1rem;
-  padding: .25rem;
+  padding: 0.25rem;
 }
 .border-break {
   border-bottom: 1px solid $very-light-gray;
 }
 .tiny-spacing {
   h3 {
-    margin: .25rem 0;
+    margin: 0.25rem 0;
   }
   h4 {
-    margin: .25rem 0;
+    margin: 0.25rem 0;
   }
 }
 </style>
