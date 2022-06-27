@@ -33,6 +33,7 @@ from rest_framework.response import Response
 
 from managr.api.emails import send_html_email
 from managr.utils import sites as site_utils
+from managr.core.utils import get_totals_for_year
 from managr.slack.helpers import requests as slack_requests, block_builders
 from .nylas.auth import get_access_token, get_account_details
 from .models import (
@@ -66,6 +67,7 @@ def GET_COMMAND_OBJECTS():
     commands = {
         "SALESFORCE_FIELDS": emit_gen_next_object_field_sync,
         "SALESFORCE_RESOURCES": emit_gen_next_sync,
+        "PULL_USAGE_DATA": get_totals_for_year
     }
     return commands
 
@@ -332,12 +334,19 @@ class UserViewSet(
                 "success": True,
                 "message": "Successfully started field sync for users",
             }
-        else:
+        elif command == "SALESFORCE_RESOURCES":
             operations = user.salesforce_account.resource_sync_opts
             command_function(str(user.id), operations, formatted_time)
             response_data = {
                 "success": True,
                 "message": "Successfully started resource sync for users",
+            }
+        else:
+            # Here
+            response_data = {
+                "success": True,
+                "message": "Successfully started resource sync for users",
+                "data": command_function()
             }
         return Response(data=response_data)
 
@@ -403,7 +412,6 @@ class UserViewSet(
         # if user.realtime_alert_config != realtime_alert_config:
         #     user.realtime_alert_config = realtime_alert_config
         user.save()
-        print("Job's done")
         return Response(data=status.HTTP_200_OK)
 
 

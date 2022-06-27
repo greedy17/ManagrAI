@@ -18,6 +18,7 @@ const DELETE_MESSAGE_ACCOUNT_URI = '/users/remove-twilio-account/'
 const PASSWORD_RESET_EMAIL_ENDPOINT = `${USERS_ENDPOINT}password/reset/link/`
 const PASSWORD_RESET_ENDPOINT = `${USERS_ENDPOINT}password/reset/`
 const FORECAST_ENDPOINT = '/users/modify-forecast/'
+const PULL_USAGE_DATA = '/users/pull-usage-data/'
 
 export default class UserAPI {
   get client() {
@@ -260,6 +261,18 @@ export default class UserAPI {
     } catch (e) {
       console.log(e)
     }
+  }
+  pullUsageData() {
+    const promise = apiClient()
+      .get(PULL_USAGE_DATA)
+      .catch(
+        apiErrorHandler({
+          apiName: 'UserAPI.activate',
+          enable400Alert: false,
+          enable500Alert: false,
+        }),
+      )
+    return promise
   }
   async usersUpdate(data) {
     return this.client

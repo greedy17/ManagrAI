@@ -165,6 +165,81 @@
       </div>
       <div v-else>No Modal Info</div>
     </Modal>
+    <Modal
+      v-if="displayCommandModal"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), resetCommandsEdit()
+        }
+      "
+    >
+      <div class="modal-container" v-if="contentModalInfo">
+        <div v-if="contentType === 'PullUsageData'">
+          <div class="modal-container__body" v-for="(content, i) in contentModalInfo" :key="i">
+            <div class="big_card_container">
+              <div class="border-break">
+                <h3>Date:</h3>
+                <h4>{{content.date}}</h4>
+              </div>
+              <div class="border-break">
+                <h3>Users:</h3>
+                <h4>{{content.users}}</h4>
+              </div>
+              <div class="border-break">
+                <h3>Workflows:</h3>
+                <h4>{{content.workflows}}</h4>
+              </div>
+              <div class="user_item_container">
+                <div class="border-break">
+                  <h3>Accounts Created:</h3>
+                  <h4>{{content.creates.accounts}}</h4>
+                </div>
+                <div class="border-break">
+                  <h3>Contacts Created:</h3>
+                  <h4>{{content.creates.contacts}}</h4>
+                </div>
+                <div class="border-break">
+                  <h3>Opportunities Created:</h3>
+                  <h4>{{content.creates.opportunities}}</h4>
+                </div>
+                <div class="border-break">
+                  <h3>Products Created:</h3>
+                  <h4>{{content.creates.products}}</h4>
+                </div>
+                <div class="border-break">
+                  <h3>Total Created:</h3>
+                  <h4>{{content.creates.total}}</h4>
+                </div>
+              </div>
+              <div class="user_item_container">
+                <div class="border-break">
+                  <h3>Alert Updates:</h3>
+                  <h4>{{content.updates.alert}}</h4>
+                </div>
+                <div class="border-break">
+                  <h3>Command Updates:</h3>
+                  <h4>{{content.updates.command}}</h4>
+                </div>
+                <div class="border-break">
+                  <h3>Meeting Updates:</h3>
+                  <h4>{{content.updates.meeting}}</h4>
+                </div>
+                <div class="border-break">
+                  <h3>Pipeline Updates:</h3>
+                  <h4>{{content.updates.pipeline}}</h4>
+                </div>
+                <div class="border-break">
+                  <h3>Total Updates:</h3>
+                  <h4>{{content.updates.total}}</h4>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-else>No Modal Info</div>
+    </Modal>
     <div class="staff__drawer">
       <h3>Quick Commands</h3>
       <div class="command_dropdown">
@@ -279,7 +354,7 @@
                 selectLabel="Enter"
                 track-by="id"
                 :custom-label="slackFormLabel"
-                :multiple="true"
+                :multiple="false"
               >
                 <template slot="noResult">
                   <p class="multi-slot">No results.</p>
@@ -616,8 +691,8 @@
                 <h3>Real Time Alert Configs:</h3>
                 <!-- <div v-if="user.slackAccount.realtimeAlertConfigs"> -->
                 <div>
-                  <!-- <h4>{{user.slackAccount.realtimeAlertConfigs}}</h4> -->
-                  <input v-model="realTimeAlertConfigObj[i]">
+                  <h4>{{user.slackAccount.realtimeAlertConfigs}}</h4>
+                  <!-- <input v-model="realTimeAlertConfigObj[i]"> -->
                 </div>
                 <!-- <div v-else>
                   <h4>null</h4>
@@ -632,33 +707,34 @@
       </template>
       <template v-else-if="page === 'SlackForm'">
         <button class="green_button back" @click="goBack">Back</button>
-        <div v-for="(slackForm, i) in selectedSlackForms" :key="slackForm.id">
+        <!-- <div v-for="(slackForm, i) in selectedSlackForms" :key="slackForm.id"> -->
+        <div>
           <div>
-            <h2 class="user_title">Slack Form {{i + 1}}</h2>
+            <h2 class="user_title">Slack Form</h2>
           </div>
           <!-- <h4>{{slackForm}}</h4> -->
           <div class="big_card_container">
             <div class="user_item_container">
               <div class="border-break">
                 <h3>Form Type</h3>
-                <h4>{{slackForm.formType}}</h4>
+                <h4>{{selectedSlackForms.formType}}</h4>
               </div>
               <div class="border-break">
                 <h3>Resource</h3>
-                <h4>{{slackForm.resource}}</h4>
+                <h4>{{selectedSlackForms.resource}}</h4>
               </div>
               <div class="border-break">
                 <h3>Config</h3>
-                <h4>>{{slackForm.config}}</h4>
+                <h4>>{{selectedSlackForms.config}}</h4>
               </div>
               <div class="border-break">
                 <h3>Stage</h3>
-                <h4>{{slackForm.stage ? slackForm.stage : 'null'}}</h4>
+                <h4>{{selectedSlackForms.stage ? slackForm.stage : 'null'}}</h4>
               </div>
             </div>
             <div class="user_item_container">
               <h3>Form Fields</h3>
-              <div v-for="(fieldRef) in slackForm.fieldsRef" :key="fieldRef.id">
+              <div v-for="(fieldRef) in selectedSlackForms.fieldsRef" :key="fieldRef.id">
                 <!-- <h3>Label: {{fieldRef.label}}</h3>
                 <h3>Order: {{fieldRef.order}}</h3> -->
                 <div class="form_field">
@@ -711,6 +787,7 @@ export default {
       commandOptions: [
         { label: 'Salesforce Resources', value: 'SALESFORCE_RESOURCES' },
         { label: 'Salesforce Fields', value: 'SALESFORCE_FIELDS' },
+        { label: 'Pull Usage Data', value: 'PULL_USAGE_DATA' },
       ],
       allUsers: CollectionManager.create({
         ModelClass: User,
@@ -723,6 +800,9 @@ export default {
       loading: true,
       editOpModalOpen: false,
       modalInfo: null,
+      displayCommandModal: false,
+      contentModalInfo: null,
+      contentType: '',
       states: ['ACTIVE', 'INACTIVE'],
       stateActive: null,
       ignoreEmails: [],
@@ -789,11 +869,24 @@ export default {
       }
       try {
         const res = await User.api.callCommand(this.selectedCommand.value).then((res) => {
-          this.$Alert.alert({
-            type: 'success',
-            timeout: 4000,
-            message: res['message'],
-          })
+          if (res.data) {
+            const newResContent = [];
+            for (let key in res.data) {
+              const item = res.data[key]
+              item['date'] = key
+              newResContent.push(item);
+            }
+            this.contentModalInfo = newResContent
+            console.log('this.contentModalInfo', this.contentModalInfo)
+            this.displayCommandModal = true
+            this.contentType = 'PullUsageData'
+          } else {
+            this.$Alert.alert({
+              type: 'success',
+              timeout: 4000,
+              message: res['message'],
+            })
+          }
         })
       } catch (e) {
         console.log(e)
@@ -806,6 +899,15 @@ export default {
         this.slackFormInstances = res;
       } catch(e) {
         console.log('Error in getSlackFormInstance', e)
+      }
+    },
+    async pullUsage() {
+      try {
+        const res = await User.api.pullUsageData()
+        console.log('not going to work?', res)
+        // this.slackFormInstances = res;
+      } catch(e) {
+        console.log('Error in pullUsage', e)
       }
     },
     async postOrgUpdates() {
@@ -873,7 +975,8 @@ export default {
       this.page = 'Users';
     },
     goToSlackForm() {
-      if (!this.selectedSlackForms || !this.selectedSlackForms.length) {
+      console.log('this.selectedSlackForms', this.selectedSlackForms)
+      if (!this.selectedSlackForms) { //|| !this.selectedSlackForms.length) {
         return;
       }
       this.old_selected_org = this.selected_org;
@@ -900,6 +1003,11 @@ export default {
       this.editOpModalOpen = !this.editOpModalOpen;
       this.modalName = '';
       this.modalInfo = null;
+    },
+    resetCommandsEdit() {
+      this.displayCommandModal = !this.displayCommandModal;
+      this.contentType = '';
+      this.contentModalInfo = null;
     },
     slackFormLabel({formType, resource}) {
       let formattedFormType = formType[0];

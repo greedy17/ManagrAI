@@ -116,8 +116,7 @@
           <p class="section-title">Select required form fields:</p>
           <div v-if="formType === 'CREATE'">
             <div v-if="!addedFieldNames.includes('LastName')" class="centered">
-              <p style="margin-left: 0.5rem">Last Name <span style="color: #fa646a">*</span></p>
-
+              <p style="margin-left: 0.5rem">Last Name<span style="color: #fa646a">*</span></p>
               <Multiselect
                 placeholder="Search for 'Last Name'"
                 :options="
@@ -494,7 +493,6 @@
             <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
           </button>
         </div>
-
         <div
           v-else-if="
             resource === 'Contact' &&
@@ -544,7 +542,6 @@
             <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
           </button>
         </div>
-
         <div
           v-else-if="
             resource === 'OpportunityLineItem' &&
@@ -618,7 +615,6 @@
             <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
           </button>
         </div>
-
         <div
           v-else-if="
             resource === 'Account' &&
@@ -646,7 +642,6 @@
             <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
           </button>
         </div>
-
         <div
           v-else-if="!addingFields && formType === 'UPDATE' && resource === 'Account'"
           style="
