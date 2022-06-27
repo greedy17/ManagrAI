@@ -573,7 +573,7 @@ class SalesforceSObjectViewSet(
     )
     def create_resource(self, request, *args, **kwargs):
         request_data = self.request.data
-        logger.info(f"UPDATE START ---- {request_data}")
+        logger.info(f"CREATE START ---- {request_data}")
         user = User.objects.get(id=self.request.user.id)
         form_id = request_data.get("form_id")
         form_data = request_data.get("form_data")
@@ -633,7 +633,7 @@ class SalesforceSObjectViewSet(
             except Exception as e:
                 data = {"success": False, "error": str(e)}
                 break
-            logger.info(f"CREATE RETURN DATA ----- {data}")
+            logger.info(f"RETURN DATA ----- {data}")
         return Response(data=data)
 
     @action(
@@ -806,7 +806,8 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type, slack_const.FORM_TYPE_UPDATE,
+            resource_type,
+            slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)
