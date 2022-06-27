@@ -16,6 +16,8 @@ const CREATE_MESSAGING_ACCOUNT_ENDPOINT = '/users/create-twilio-account/'
 const DELETE_MESSAGE_ACCOUNT_URI = '/users/remove-twilio-account/'
 const PASSWORD_RESET_EMAIL_ENDPOINT = `${USERS_ENDPOINT}password/reset/link/`
 const PASSWORD_RESET_ENDPOINT = `${USERS_ENDPOINT}password/reset/`
+const FORECAST_ENDPOINT = '/users/modify-forecast/'
+const FORECAST_VALUES_ENDPOINT = '/users/get-forecast-values/'
 
 export default class UserAPI {
   get client() {
@@ -169,6 +171,14 @@ export default class UserAPI {
       .catch(apiErrorHandler({ apiName: 'Get User Profile Data API error' }))
   }
 
+  getForecastValues() {
+    const url = FORECAST_VALUES_ENDPOINT
+    return this.client
+      .get(url)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'Get Forecast values error' }))
+  }
+
   update(id, data) {
     const promise = apiClient()
       .patch(GET_USER_ENDPOINT(id), this.cls.toAPI(data))
@@ -195,6 +205,18 @@ export default class UserAPI {
       await this.client.post(url, data)
     } catch {
       apiErrorHandler({ apiName: 'UserAPI.Messaging' })
+    }
+  }
+  async modifyForecast(action, ids) {
+    const url = FORECAST_ENDPOINT
+    const data = {
+      action: action,
+      ids: ids
+    }
+    try {
+      await this.client.post(url, data)
+    } catch {
+      apiErrorHandler({ apiName: 'API error' })
     }
   }
   async deleteMessagingAccount() {

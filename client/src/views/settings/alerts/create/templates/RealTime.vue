@@ -14,7 +14,7 @@
           <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/zoom.png" alt="" />
           <img
             style="height: 1rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             class="filter-plus"
             alt=""
           />
@@ -34,7 +34,7 @@
           </button>
 
           <p class="active-workflow" v-else-if="recapChannel">
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </p>
         </div>
       </div>
@@ -43,15 +43,15 @@
         <div class="card__header">
           <h3>Stage Advanced</h3>
           <p class="active-workflow-small" v-if="advancedConfigActive">
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </p>
         </div>
 
         <div class="card__body">
           <img style="height: 1.5rem; margin-right: 1rem" src="@/assets/images/logo.png" alt="" />
           <img
-            style="height: 1rem; margin-right: 1rem; filter: invert(60%)"
-            src="@/assets/images/plusOne.png"
+            style="height: 1rem; margin-right: 1rem; filter: invert(40%)"
+            src="@/assets/images/plusOne.svg"
             alt=""
           />
           <img
@@ -76,15 +76,15 @@
         <div class="card__header">
           <h3>Moved to Commit</h3>
           <p class="active-workflow-small" v-if="commitConfigActive">
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </p>
         </div>
 
         <div class="card__body">
           <img style="height: 1.5rem; margin-right: 1rem" src="@/assets/images/logo.png" alt="" />
           <img
-            style="height: 1rem; margin-right: 1rem; filter: invert(60%)"
-            src="@/assets/images/plusOne.png"
+            style="height: 1rem; margin-right: 1rem; filter: invert(40%)"
+            src="@/assets/images/plusOne.svg"
             alt=""
           />
           <img
@@ -109,15 +109,15 @@
         <div class="card__header">
           <h3>Close Date Pushed</h3>
           <p class="active-workflow-small" v-if="pushedConfigActive">
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </p>
         </div>
 
         <div class="card__body">
           <img style="height: 1.5rem; margin-right: 1rem" src="@/assets/images/logo.png" alt="" />
           <img
-            style="height: 1rem; margin-right: 1rem; filter: invert(60%)"
-            src="@/assets/images/plusOne.png"
+            style="height: 1rem; margin-right: 1rem; filter: invert(40%)"
+            src="@/assets/images/plusOne.svg"
             alt=""
           />
           <img
@@ -142,15 +142,15 @@
         <div class="card__header">
           <h3>Closed Won</h3>
           <p class="active-workflow-small" v-if="wonConfigActive">
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </p>
         </div>
 
         <div class="card__body">
           <img style="height: 1.5rem; margin-right: 1rem" src="@/assets/images/logo.png" alt="" />
           <img
-            style="height: 1rem; margin-right: 1rem; filter: invert(60%)"
-            src="@/assets/images/plusOne.png"
+            style="height: 1rem; margin-right: 1rem; filter: invert(40%)"
+            src="@/assets/images/plusOne.svg"
             alt=""
           />
           <img
@@ -344,7 +344,7 @@ export default {
   }
 }
 .filter-plus {
-  filter: invert(90%);
+  filter: invert(10%);
   margin-left: 0.5rem;
   margin-right: 0.5rem;
 }

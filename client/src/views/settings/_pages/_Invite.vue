@@ -9,7 +9,7 @@
         }
       "
     >
-      <form class="invite-form" @submit.prevent="handleInvite">
+      <form v-if="hasSlack" class="invite-form" @submit.prevent="handleInvite">
         <div class="header">
           <h3 class="invite-form__title">Invite Users via Slack</h3>
           <h4 class="invite-form__subtitle">
@@ -40,12 +40,12 @@
                   <template slot="afterList">
                     <p class="multi-slot__more" @click="listUsers(slackMembers.nextCursor)">
                       Load More
-                      <img src="@/assets/images/plusOne.png" alt="" />
+                      <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
                     </p>
                   </template>
                   <template slot="placeholder">
                     <p class="slot-icon">
-                      <img src="@/assets/images/search.png" alt="" />
+                      <img src="@/assets/images/search.svg" alt="" />
                       Select Slack User
                     </p>
                   </template>
@@ -71,7 +71,7 @@
                   </template>
                   <template slot="placeholder">
                     <p class="slot-icon">
-                      <img src="@/assets/images/search.png" alt="" />
+                      <img src="@/assets/images/search.svg" alt="" />
                       Select User Level
                     </p>
                   </template>
@@ -93,6 +93,79 @@
           </template>
         </div>
       </form>
+      <div v-else class="invite-form" style="padding: 2rem">
+        <div class="header">
+          <h3 class="invite-form__title">Invite Users to Managr</h3>
+          <h4 class="invite-form__subtitle">
+            {{ $store.state.user.organizationRef.name }}
+          </h4>
+        </div>
+
+        <div style="margin-top: 1rem">
+          <FormField>
+            <template v-slot:input>
+              <Multiselect
+                placeholder="Select User Level"
+                @input="mapUserLevel"
+                v-model="selectedLevel"
+                :options="userTypesNoSlack"
+                openDirection="below"
+                style="min-width: 16vw"
+                selectLabel="Enter"
+                label="key"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.svg" alt="" />
+                    Select User Level
+                  </p>
+                </template>
+              </Multiselect>
+            </template>
+          </FormField>
+          <div class="form_field">
+            <input
+              v-model="userInviteForm.field.email.value"
+              placeholder="Enter User email"
+              type="email"
+            />
+          </div>
+        </div>
+
+        <div class="invite-form__actions-noslack">
+          <template>
+            <PulseLoadingSpinnerButton
+              v-if="!activationLink"
+              @click="handleInviteNonSlack"
+              class="invite-button"
+              text="Invite"
+              :loading="loading"
+              >Invite</PulseLoadingSpinnerButton
+            >
+            <span style="margin-top: 1rem; cursor: pointer" v-else
+              ><small
+                v-clipboard:copy="activationLink"
+                v-clipboard:success="onCopy"
+                v-clipboard:error="onError"
+                >{{ activationLink }}
+                <img
+                  src="@/assets/images/copy.svg"
+                  height="18px"
+                  style="margin-left: 0.5rem"
+                  alt="" /></small
+            ></span>
+            <div v-if="!activationLink" class="cancel-button" @click="handleCancel">Cancel</div>
+            <small v-else class="copyText">Copy above link and send to user</small>
+          </template>
+        </div>
+
+        <div v-if="activationLink">
+          <button @click="handleCancel" class="invite-button">Reset form</button>
+        </div>
+      </div>
     </Modal>
     <div class="invite-list__container">
       <div class="key">
@@ -257,6 +330,7 @@ export default {
   },
   data() {
     return {
+      activationLink: null,
       selectedMember: null,
       selectedLevel: null,
       sendSlackInvite: false,
@@ -268,6 +342,10 @@ export default {
       selectedUserType: User.types.REP,
       userTypes: [
         { key: 'Manager', value: User.types.MANAGER },
+        { key: 'Representative', value: User.types.REP },
+        { key: 'SDR', value: User.types.SDR },
+      ],
+      userTypesNoSlack: [
         { key: 'Representative', value: User.types.REP },
         { key: 'SDR', value: User.types.SDR },
       ],
@@ -288,6 +366,25 @@ export default {
     await this.listUsers()
   },
   methods: {
+    onCopy: function () {
+      this.$toast('Link copied.', {
+        timeout: 2000,
+        position: 'top-left',
+        type: 'success',
+        toastClassName: 'custom',
+        bodyClassName: ['custom'],
+      })
+      this.handleCancel()
+    },
+    onError: function () {
+      this.$toast('Error copying template', {
+        timeout: 2000,
+        position: 'top-left',
+        type: 'error',
+        toastClassName: 'custom',
+        bodyClassName: ['custom'],
+      })
+    },
     mapMember() {
       this.userInviteForm.field.slackId.value = this.selectedMember.id
     },
@@ -317,6 +414,7 @@ export default {
       await this.refresh()
       this.resetData()
       this.$emit('cancel')
+      this.activationLink = null
     },
     async handleInvite() {
       // reset component data when submission begins, in case of prior request
@@ -324,10 +422,12 @@ export default {
       this.userInviteForm.validate()
       if (!this.userInviteForm.isValid) {
         this.loading = false
-        this.$Alert.alert({
-          type: 'error',
-          message: 'Please check form errors',
+        this.$toast('Please check form for errors', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
         return
       }
@@ -338,25 +438,71 @@ export default {
         )[0].profile.email
         const res = await User.api.invite(this.userInviteForm.value)
         console.log(res)
-        this.$Alert.alert({
-          message: 'Your invitation was sent',
+        this.$toast('Invitation Sent', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 3000,
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
         await this.refresh()
         this.resetData()
       } catch (e) {
         let err = e.response.data
         if (err.email) {
-          this.$Alert.alert({
-            type: 'error',
-            message: `Looks like a ${err.email}`,
+          this.$toast('Emanil error', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         }
       } finally {
         this.loading = false
         this.inviteOpen = !this.inviteOpen
+      }
+    },
+    async handleInviteNonSlack() {
+      // reset component data when submission begins, in case of prior request
+      this.loading = true
+      this.userInviteForm.validate()
+      if (!this.userInviteForm.isValid) {
+        this.loading = false
+        this.$toast('Please check form for errors', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        return
+      }
+      // check form data for this request
+      try {
+        const res = await User.api.invite(this.userInviteForm.value)
+        this.activationLink = res.data.activation_link_ref
+        this.$toast('Invite link created successfully', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        await this.refresh()
+        this.resetData()
+      } catch (e) {
+        this.$toast('Error sending invite', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.loading = false
+
+        // this.inviteOpen = !this.inviteOpen
       }
     },
     resetData() {
@@ -367,6 +513,9 @@ export default {
     isStaff() {
       return this.$store.state.user.isStaff
     },
+    hasSlack() {
+      return !!this.$store.state.user.slackRef
+    },
   },
 }
 </script>
@@ -376,9 +525,27 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
+::placeholder {
+  // color: #35495e;
+  color: $very-light-gray;
+  padding-left: 1rem;
+}
+input {
+  width: 16vw;
+  height: 2.5rem;
+  border-radius: 5px;
+  border: 1px solid #e8e8e8;
+}
+input:focus {
+  outline: none;
+}
 .col {
   display: flex;
   flex-direction: column;
+}
+.copyText {
+  color: $dark-green;
+  margin-top: 1rem;
 }
 .multi-slot {
   display: flex;
@@ -423,6 +590,9 @@ export default {
     filter: invert(70%);
   }
 }
+.invert {
+  filter: invert(80%);
+}
 .section-header {
   font-size: 15px;
   font-weight: bold;
@@ -451,14 +621,13 @@ export default {
 }
 .complete {
   border-bottom: 2.9px solid $dark-green;
-  border-radius: 10%;
+
   margin-right: 0.5rem;
   color: $base-gray;
 }
 .incomplete {
   border-bottom: 2px solid $coral;
   color: $base-gray;
-  border-radius: 10%;
 }
 .back-logo {
   position: absolute;
@@ -472,13 +641,13 @@ export default {
 .active {
   border-bottom: 2px solid $dark-green;
   padding: 0.2rem;
-  border-radius: 10%;
+
   margin-right: 0.25rem;
 }
 .inactive {
   border-bottom: 2px solid $coral;
   padding: 0.2rem;
-  border-radius: 10%;
+
   margin-right: 0.25rem;
 }
 .invite-container {
@@ -530,6 +699,12 @@ button {
     flex-direction: column;
     align-items: center;
     margin-top: -4rem;
+  }
+  &__actions-noslack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 1rem;
   }
 }
 .invite-list {

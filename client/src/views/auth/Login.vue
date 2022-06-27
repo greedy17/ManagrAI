@@ -79,6 +79,16 @@ export default {
       execCheckEmail: debounce(this.checkAccountStatus, 900),
     }
   },
+  mounted() {
+    // let logScript = document.getElementById('logrocket-script')
+    // logScript.remove()
+    // let pkg = document.getElementById('logrocket-package')
+    // let installedPkg = document.querySelector(
+    //   'script[src="https://cdn.lr-in-prod.com/logger-1.min.js"]',
+    // )
+    // installedPkg.remove()
+    // pkg.remove()
+  },
   methods: {
     async checkAccountStatus() {
       this.loginForm.field.email.validate()
@@ -118,16 +128,20 @@ export default {
           const e = error
 
           if (!error.response || !error.response.status) {
-            this.$Alert.alert({
-              message: 'An Unknown Error occured please reach out to support',
-              timeout: 3000,
+            this.$toast('An Unknown Error occured please reach out to support', {
+              timeout: 2000,
+              position: 'top-left',
               type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
             })
           } else if (error.response.status >= 400) {
-            this.$Alert.alert({
-              message: 'Incorrect Email/Password combination',
-              timeout: 3000,
+            this.$toast('Incorrect Email/Password combo', {
+              timeout: 2000,
+              position: 'top-left',
               type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
             })
           }
         } finally {

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="red">
     <div v-if="dataType">
       <p
         v-if="
@@ -94,13 +94,16 @@ export default {
     },
     fieldData: {},
     lastStageUpdate: {},
+    index: {},
   },
 }
 </script>
 <style lang="scss" >
 @import '@/styles/variables';
 @import '@/styles/buttons';
-
+.red {
+  width: fit-content;
+}
 .flex-columned {
   display: flex;
   flex-direction: column;
@@ -114,5 +117,8 @@ export default {
 }
 .cash {
   color: $dark-green;
+  background-color: $white-green;
+  border-radius: 6px;
+  padding: 5px;
 }
 </style>

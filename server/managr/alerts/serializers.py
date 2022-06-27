@@ -172,6 +172,8 @@ class AlertConfigRefSerializer(serializers.ModelSerializer):
         ]
 
     def get_recipients_ref(self, instance):
+        if instance.recipient_type == "SELF" and "default" in instance.recipients:
+            return ["default"]
         if instance.recipient_type == "USER_LEVEL":
             target_groups = list(
                 filter(
@@ -436,9 +438,11 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
             "message_template",
             "new_configs",
             "alert_level",
+            "target_reference",
         )
 
     def create(self, validated_data, *args, **kwargs):
+        print(validated_data)
         new_groups = validated_data.pop("new_groups", [])
         message_template = validated_data.pop("message_template")
         new_configs = validated_data.pop("new_configs", [])

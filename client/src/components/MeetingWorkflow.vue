@@ -1,6 +1,9 @@
 <template>
   <div class="table-row">
-    <div class="table-cell">
+    <div
+      class="table-cell wt-bg"
+      :class="{ 'left-green': meetingUpdated, 'left-red': !meetingUpdated }"
+    >
       <div v-if="!meeting.event_data">
         <div>
           <p style="letter-spacing: 0.25px; font-size: 12px; margin-bottom: 3px">
@@ -48,7 +51,7 @@
             <img
               @click="addContact(participantIndex)"
               class="contact-img"
-              src="@/assets/images/add-contact.png"
+              src="@/assets/images/add-contact.svg"
               alt=""
             />
           </span>
@@ -68,7 +71,7 @@
             />
           </span>
           <span v-if="meeting.participants[participantIndex].__has_changes">
-            <img class="filter" src="@/assets/images/profile.png" alt="" />
+            <img class="filter" src="@/assets/images/profile.svg" alt="" />
           </span>
         </div>
 
@@ -92,7 +95,7 @@
               Add <span>"{{ meeting.participants[participantIndex].email }}"</span> to your Contacts
             </p>
             <img
-              src="@/assets/images/closer.png"
+              src="@/assets/images/close.svg"
               style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
               @click="addingContact = !addingContact"
             />
@@ -100,7 +103,12 @@
 
           <div v-if="hasLastName" class="contact-field-section__body">
             <div v-for="(field, i) in contactFields" :key="i">
-              <div v-if="field.dataType === 'Reference'">
+              <div
+                v-if="
+                  field.dataType === 'Reference' &&
+                  (field.apiName === 'AccountId' || field.apiName === 'OwnerId')
+                "
+              >
                 <p>{{ field.referenceDisplayLabel }}:</p>
                 <Multiselect
                   v-if="field.apiName === 'AccountId'"
@@ -278,7 +286,7 @@
               Remove <span>"{{ meeting.participants[participantIndex].email }}"</span>
             </p>
             <img
-              src="@/assets/images/closer.png"
+              src="@/assets/images/close.svg"
               style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
               @click="removingParticipant = !removingParticipant"
             />
@@ -308,18 +316,16 @@
     </div>
 
     <div class="table-cell">
-      <p
-        class="roww"
-        @click="addingOpp = !addingOpp"
-        v-if="resourceId && resourceType === 'Opportunity' && !meetingUpdated"
-      >
+      <p class="roww" v-if="resourceId && resourceType === 'Opportunity' && !meetingUpdated">
         {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
-        <img
-          class="invert"
-          style="height: 0.6rem; margin-left: 0.2rem"
-          src="@/assets/images/edit.png"
-          alt=""
-        />
+
+        <button class="name-cell-edit-note-button-1" @click="addingOpp = !addingOpp">
+          <img style="filter: invert(10%); height: 0.6rem" src="@/assets/images/edit.svg" />
+        </button>
+
+        <button class="name-cell-edit-note-button-1" @click="emitGetNotes(resourceId)">
+          <img src="@/assets/images/white-note.svg" class="invert" height="12px" alt="" />
+        </button>
       </p>
       <p v-else-if="meetingUpdated">
         {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
@@ -335,7 +341,7 @@
         <div class="add-field-section__title">
           <p>Map to Opportunity</p>
           <img
-            src="@/assets/images/closer.png"
+            src="@/assets/images/close.svg"
             style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
             @click="addingOpp = !addingOpp"
           />
@@ -373,8 +379,9 @@
         v-if="
           (!resourceId && !meetingLoading) || (resourceType !== 'Opportunity' && !meetingLoading)
         "
+        class="red-text"
       >
-        Please map meeting to an Opp in order to take action.
+        Map meeting to take action.
       </p>
       <div>
         <div class="column" v-if="resourceId && !meetingLoading && resourceType === 'Opportunity'">
@@ -387,7 +394,7 @@
           <div class="noupdate-field-section__title">
             <p>No Update Needed</p>
             <img
-              src="@/assets/images/closer.png"
+              src="@/assets/images/close.svg"
               style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
               @click="noUpdate = !noUpdate"
             />
@@ -408,7 +415,7 @@
       </div>
     </div>
     <div v-else class="table-cell">
-      <p class="success">Meeting Logged <img src="@/assets/images/complete.png" alt="" /></p>
+      <p class="success">Meeting Logged</p>
     </div>
   </div>
 </template>
@@ -468,6 +475,9 @@ export default {
     }
   },
   methods: {
+    emitGetNotes(id) {
+      this.$emit('get-notes', id)
+    },
     async getCurrentVals() {
       try {
         const res = await SObjects.api.createFormInstance({
@@ -519,7 +529,7 @@ export default {
       let noAmPm = newTime.replace(amPm, '')
       let noAmPmSeconds = noAmPm.replace(':', ' ')
 
-      if (parseInt(hour) < 9) {
+      if (parseInt(hour) < 10) {
         newTime = '0' + newTime
         noAmPm = '0' + noAmPm
         noSeconds = '0' + noSeconds
@@ -527,7 +537,7 @@ export default {
       }
       noSeconds = noSeconds.replace(' ', ':')
       noSeconds = noSeconds.split(':')
-      noSeconds = noSeconds[0] + noSeconds[1]
+      noSeconds = noSeconds[0] + ':' + noSeconds[1] + amPm
       return noSeconds
     },
   },
@@ -562,8 +572,10 @@ a {
   font-weight: bold;
 }
 .invert {
-  filter: invert(80%);
+  filter: invert(30%);
   cursor: pointer;
+}
+.inverted {
 }
 .add-button {
   border: none;
@@ -595,9 +607,10 @@ a {
 .contact-img {
   height: 1.25rem;
   margin-right: 0.2rem;
+  margin-left: 0.1rem;
   padding: 0.25rem;
   border-radius: 0.25rem;
-  border: 1px solid #e8e8e8;
+  border: 0.8px solid $gray;
 }
 .green {
   margin-left: 0.2rem;
@@ -613,13 +626,22 @@ a {
   margin-left: 0.25rem;
 }
 .success {
+  color: $dark-green;
+  background-color: $white-green;
+  padding: 5px;
+  border-radius: 6px;
+  max-width: 140px;
   display: flex;
   align-items: center;
-  img {
-    height: 1rem;
-    filter: invert(40%) sepia(95%) saturate(370%) hue-rotate(90deg) brightness(54%) contrast(94%);
-    margin-left: 0.25rem;
-  }
+}
+.red-text {
+  color: $coral;
+  background-color: $light-coral;
+  padding: 4px;
+  border-radius: 4px;
+  max-width: 180px;
+  display: flex;
+  align-items: center;
 }
 .red:hover {
   img {
@@ -627,7 +649,18 @@ a {
   }
   cursor: pointer;
 }
-
+.name-cell-edit-note-button-1 {
+  height: 1.1rem;
+  width: 1.1rem;
+  margin: 0 0.2rem;
+  padding: 0.25rem;
+  border-radius: 4px;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0.7px solid $gray;
+}
 .add-contact {
   img {
     height: 0.6rem;
@@ -639,11 +672,11 @@ a {
   z-index: 7;
   right: 0;
   top: 0;
-  border-radius: 0.33rem;
+  border-radius: 8px;
   background-color: $white;
   width: 46vw;
   overflow: scroll;
-  box-shadow: 1px 1px 7px 2px $very-light-gray;
+  box-shadow: 1px 1px 2px 1px $very-light-gray;
   &__title {
     display: flex;
     justify-content: space-between;
@@ -718,11 +751,11 @@ a {
   z-index: 7;
   left: 1.5rem;
   top: 10vh;
-  border-radius: 0.33rem;
+  border-radius: 8px;
   background-color: $white;
   min-width: 20vw;
   overflow: scroll;
-  box-shadow: 1px 1px 7px 2px $very-light-gray;
+  box-shadow: 1px 1px 2px 1px $very-light-gray;
   &__title {
     display: flex;
     justify-content: space-between;
@@ -762,11 +795,11 @@ a {
   position: absolute;
   z-index: 7;
   right: 0.5rem;
-  border-radius: 0.33rem;
+  border-radius: 8px;
   background-color: $white;
   min-width: 20vw;
   overflow: scroll;
-  box-shadow: 1px 1px 7px 2px $very-light-gray;
+  box-shadow: 1px 1px 2px 1px $very-light-gray;
   &__title {
     display: flex;
     justify-content: space-between;
@@ -806,7 +839,7 @@ a {
   z-index: 7;
   top: 10vh;
   right: 0.5rem;
-  border-radius: 0.33rem;
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -814,7 +847,7 @@ a {
   min-width: 25vw;
   height: auto;
   overflow: scroll;
-  box-shadow: 1px 1px 7px 2px $very-light-gray;
+  box-shadow: 1px 1px 2px 1px $very-light-gray;
   &__title {
     display: flex;
     justify-content: space-between;
@@ -863,6 +896,18 @@ a {
   border-bottom: 1px solid $soft-gray;
   font-size: 13px;
 }
+.left-green {
+  border-left: 2px solid $dark-green !important;
+  bottom: 2px;
+}
+.left-red {
+  border-left: 2px solid $coral !important;
+  bottom: 2px;
+}
+.wt-bg {
+  background-color: white;
+}
+
 .table-cell:hover {
   cursor: text;
   background-color: white;

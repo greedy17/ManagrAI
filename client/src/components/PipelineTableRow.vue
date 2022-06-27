@@ -1,5 +1,5 @@
 <template>
-  <div class="table-row">
+  <div class="table-row" :class="{ selected: primaryCheckList.includes(opp.id) }">
     <div v-if="opp" class="table-cell-checkbox">
       <div v-if="updateList.includes(opp.id) || updatedList.includes(opp.id)">
         <SkeletonBox width="10px" height="9px" />
@@ -17,7 +17,7 @@
     </div>
 
     <div style="min-width: 26vw" class="table-cell cell-name">
-      <div class="flex-row-spread">
+      <div class="flex-row-spread" :class="{ selected: primaryCheckList.includes(opp.id) }">
         <div>
           <div
             class="flex-column"
@@ -40,20 +40,20 @@
         </div>
         <div v-else class="flex-row">
           <button @click="emitCreateForm" class="name-cell-edit-note-button-1">
-            <img style="filter: invert(90%); height: 0.6rem" src="@/assets/images/edit.png" />
+            <img style="filter: invert(10%); height: 0.6rem" src="@/assets/images/edit.svg" />
           </button>
           <button @click="emitGetNotes" class="name-cell-note-button-1">
-            <img class="gray" src="@/assets/images/white-note.png" />
+            <img class="gray" src="@/assets/images/white-note.svg" />
           </button>
         </div>
       </div>
     </div>
     <div
-      :key="i"
       @click="editInline(i)"
+      :key="i"
       v-for="(field, i) in oppFields"
       :class="{
-        'active-edit': editing && editIndex === i && currentRow === index,
+        'active-edit': editing && editIndex === i && currentInlineRow === index,
         'table-cell-wide':
           field.dataType === 'TextArea' ||
           (field.length > 250 &&
@@ -76,7 +76,7 @@
       />
 
       <div class="limit-cell-height" v-else-if="!updateList.includes(opp.id)">
-        <div class="inline-edit" v-if="editing && editIndex === i && currentRow === index">
+        <div class="inline-edit" v-if="editing && editIndex === i && currentInlineRow === index">
           <div
             v-if="
               field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
@@ -134,12 +134,14 @@
               style="width: 14vw; padding-bottom: 8rem"
               track-by="value"
               label="label"
-              v-model="dropdownValue"
+              v-model="dropdownVal[field.apiName]"
+              :multiple="field.dataType === 'MultiPicklist' ? true : false"
               @select="
                 setUpdateValues(
                   field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
                   $event.value,
                   field.dataType,
+                  field.dataType === 'MultiPicklist' ? true : false,
                 )
               "
             >
@@ -149,8 +151,12 @@
 
               <template slot="placeholder">
                 <p class="slot-icon">
-                  <img src="@/assets/images/search.png" alt="" />
-                  {{ `${field.referenceDisplayLabel}` }}
+                  <img src="@/assets/images/search.svg" alt="" />
+                  {{
+                    field.apiName.includes('__c')
+                      ? opp['secondary_data'][field.apiName]
+                      : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+                  }}
                 </p>
               </template>
             </Multiselect>
@@ -162,7 +168,7 @@
               style="width: 14vw; padding-bottom: 8rem"
               track-by="value"
               label="label"
-              v-model="dropdownValue"
+              @select="setDropdownValue($event)"
             >
               <template slot="noResult">
                 <p class="multi-slot">No results.</p>
@@ -170,8 +176,8 @@
 
               <template slot="placeholder">
                 <p class="slot-icon">
-                  <img src="@/assets/images/search.png" alt="" />
-                  {{ `${field.referenceDisplayLabel}` }}
+                  <img src="@/assets/images/search.svg" alt="" />
+                  {{ opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))] }}
                 </p>
               </template>
             </Multiselect>
@@ -230,10 +236,31 @@
               <PipelineLoader />
             </div>
           </div>
+          <div v-else-if="field.dataType === 'Boolean'">
+            <Multiselect
+              v-model="dropdownVal[field.apiName]"
+              :options="booleans"
+              @select="setUpdateValues(field.apiName, $event)"
+              openDirection="below"
+              style="width: 14vw; padding-bottom: 8rem"
+              selectLabel="Enter"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.svg" alt="" />
+                  {{ opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))] }}
+                </p>
+              </template>
+            </Multiselect>
+          </div>
         </div>
         <PipelineField
-          v-else
-          style="direction: ltr"
+          :index="i"
+          v-show="!(editing && editIndex === i && currentInlineRow === index)"
+          style="direction: ltr; border: "
           :apiName="field.apiName"
           :dataType="field.dataType"
           :fieldData="
@@ -300,10 +327,12 @@ export default {
   },
   data() {
     return {
+      booleans: ['true', 'false'],
       currentRow: null,
       formData: {},
-      dropdownValue: null,
-      executeUpdateValues: debounce(this.setUpdateValues, 800),
+      dropdownValue: {},
+      dropdownVal: {},
+      executeUpdateValues: debounce(this.setUpdateValues, 2000),
       editing: false,
       editIndex: null,
       currentOpp: null,
@@ -322,13 +351,11 @@ export default {
     closeDateData: 'futureDate',
     closeEdit: 'closeInline',
     dropdownValue: {
-      // immediate: true,
-      // deep: true,
       handler(val) {
-        if (this.stages.includes(val.value)) {
-          this.$emit('open-stage-form', val.value, this.opp.id)
+        if (this.stages.includes(val)) {
+          this.$emit('open-stage-form', val, this.opp.id)
         } else {
-          this.setUpdateValues('StageName', val.value)
+          this.setUpdateValues('StageName', val)
         }
       },
     },
@@ -346,6 +373,7 @@ export default {
     inlineLoader: {},
     closeEdit: {},
     stages: {},
+    currentInlineRow: {},
   },
   computed: {
     extraPipelineFields() {
@@ -361,18 +389,26 @@ export default {
     closeInline() {
       this.editing = false
     },
+    setDropdownValue(val) {
+      this.dropdownValue = val.value
+    },
     editInline(index) {
+      this.$emit('current-inline-row', this.index)
       this.currentRow = this.index
       this.editIndex = index
       this.editing = true
     },
-    setUpdateValues(key, val, dataType) {
-      if (val) {
+    setUpdateValues(key, val, dataType, multi) {
+      if (multi) {
+        this.formData[key] = this.formData[key] ? this.formData[key] + ';' + val : val
+      }
+
+      if (val && !multi) {
         this.formData[key] = val
       }
       setTimeout(() => {
         this.$emit('inline-edit', this.formData, this.opp.id, dataType)
-      }, 200)
+      }, 500)
     },
     emitCreateForm() {
       this.$emit('create-form')
@@ -400,7 +436,6 @@ export default {
       let currentYear = currentDate.getFullYear()
       let dateString = currentYear + '-' + (currentMonth + 1) + '-' + currentDayOfMonth
       this.newCloseDate = dateString
-      console.log(this.newCloseDate)
     },
     async onAdvanceStage() {
       if (this.primaryCheckList.includes(this.opp.id)) {
@@ -422,10 +457,12 @@ export default {
           console.log(e)
         } finally {
           this.updatedList = []
-          this.$Alert.alert({
+          this.$toast('Salesforce Update Successful', {
+            timeout: 2000,
+            position: 'top-left',
             type: 'success',
-            timeout: 750,
-            message: 'Salesforce update successful!',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         }
       }
@@ -450,10 +487,12 @@ export default {
           console.log(e)
         } finally {
           this.updatedList = []
-          this.$Alert.alert({
+          this.$toast('Salesforce Update Successful', {
+            timeout: 2000,
+            position: 'top-left',
             type: 'success',
-            timeout: 750,
-            message: 'Salesforce update successful!',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         }
       }
@@ -478,10 +517,12 @@ export default {
           console.log(e)
         } finally {
           this.updatedList = []
-          this.$Alert.alert({
+          this.$toast('Salesforce Update Successful', {
+            timeout: 2000,
+            position: 'top-left',
             type: 'success',
-            timeout: 750,
-            message: 'Salesforce update successful!',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         }
       }
@@ -598,7 +639,7 @@ input {
   padding: 0;
   margin: 0;
   img {
-    height: 0.8rem;
+    height: 1rem !important;
     margin-right: 0.25rem;
     filter: invert(70%);
   }
@@ -609,11 +650,15 @@ input {
 }
 .empty {
   display: table-cell;
-  background: white;
+  position: sticky;
+  background: $off-white;
   min-width: 12vw;
   border-left: 1px solid $soft-gray;
   border-right: 1px solid $soft-gray;
   border-bottom: 1px solid $soft-gray;
+}
+.selected {
+  color: $dark-green !important;
 }
 .table-cell {
   display: table-cell;
@@ -633,11 +678,14 @@ input {
   left: 3.5vw;
   z-index: 2;
 }
-.table-cell:hover {
+.table-cell:hover,
+.empty:hover {
   border: 1px solid $dark-green;
+  border-radius: 4px;
 }
 .cell-name:hover {
   border: none;
+  border-bottom: 1px solid #e8e8e8;
 }
 .table-cell-wide {
   display: table-cell;
@@ -659,7 +707,7 @@ input {
   top: 0;
   left: 0;
   position: sticky;
-  background-color: $off-white;
+  background-color: $white;
 }
 .table-cell-checkbox {
   display: table-cell;
@@ -670,7 +718,7 @@ input {
   position: sticky;
   z-index: 1;
   border-bottom: 1px solid $soft-gray;
-  background-color: $off-white;
+  background-color: $white;
 }
 .cell-name-header {
   display: table-cell;
@@ -682,7 +730,7 @@ input {
   left: 3.5vw;
   top: 0;
   position: sticky;
-  background-color: $off-white;
+  background-color: $white;
   font-weight: bold;
   font-size: 13px;
   letter-spacing: 0.5px;
@@ -752,7 +800,8 @@ input[type='checkbox'] + label::before {
 }
 .limit-cell-height {
   max-height: 8rem;
-  width: 110%;
+  // width: 110%;
+  padding: 0;
   overflow: auto;
   img {
     height: 0.25rem;
@@ -765,12 +814,12 @@ input[type='checkbox'] + label::before {
   width: 1.5rem;
   margin-right: 0.2rem;
   padding: 0.25rem;
-  border-radius: 0.25rem;
+  border-radius: 4px;
   background-color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e8e8e8;
+  border: 0.7px solid $gray;
   img {
     height: 0.8rem;
     padding: 1px;
@@ -787,12 +836,12 @@ input[type='checkbox'] + label::before {
   width: 1.5rem;
   margin-right: 0.2rem;
   padding: 0.25rem;
-  border-radius: 0.25rem;
+  border-radius: 4px;
   background-color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e8e8e8;
+  border: 0.7px solid $gray;
   img {
     height: 1.2rem;
   }

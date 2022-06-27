@@ -80,6 +80,17 @@ def SALESFORCE_RESOURCE_QUERY_URI(
     return f"{url} order by LastModifiedDate DESC limit {limit}"
 
 
+def SALESFORCE_RESOURCE_QUERY_BY_ID_URI(resource, fields, ids):
+    fields = set(fields)
+    ids_string = ""
+    for i, id in enumerate(ids):
+        ids_string += f"'{id}'"
+        if i != len(ids) - 1:
+            ids_string += ","
+    url = f"{CUSTOM_BASE_URI}/query/?q=SELECT {','.join(fields)} FROM {resource} WHERE Id IN ({ids_string})"
+    return f"{url}"
+
+
 def SALSFORCE_TASK_QUERY_URI(
     owner_id,
     resource,

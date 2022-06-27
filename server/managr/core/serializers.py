@@ -16,7 +16,13 @@ from managr.slack.serializers import (
 )
 
 
-from .models import User, NylasAuthAccount, MeetingPrepInstance
+from .models import User, NylasAuthAccount, MeetingPrepInstance, UserForecast
+
+
+class UserForecastSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserForecast
+        fields = ("user", "state")
 
 
 class NylasAuthAccountSerializer(serializers.ModelSerializer):
@@ -47,7 +53,9 @@ class UserSerializer(serializers.ModelSerializer):
     slack_account = UserFrontEndSlackIntegrationSerializer(
         source="slack_integration", read_only=True
     )
-    activated_managr_templates = serializers.SerializerMethodField("get_alert_template_refs")
+    activated_template_ref = serializers.SerializerMethodField("get_alert_template_refs")
+    forecast = UserForecastSerializer(many=False, source="current_forecast", read_only=True)
+    activation_link_ref = serializers.SerializerMethodField("get_activation_link")
 
     class Meta:
         model = User
@@ -70,6 +78,7 @@ class UserSerializer(serializers.ModelSerializer):
             "user_level",
             "profile_photo",
             "role",
+            "activation_link_ref",
             # integrations
             "nylas",
             "nylas_ref",
@@ -89,10 +98,9 @@ class UserSerializer(serializers.ModelSerializer):
             "has_zoom_integration",
             "has_salesforce_integration",
             "timezone",
-            "activated_managr_configs",
-            "activated_managr_templates",
+            "activated_template_ref",
             "onboarding",
-            "crm",
+            "forecast",
         )
 
     read_only_fields = (
@@ -113,6 +121,9 @@ class UserSerializer(serializers.ModelSerializer):
 
         templates = AlertTemplate.objects.for_user(instance).values_list("title", flat=True)
         return templates
+
+    def get_activation_link(self, instance):
+        return instance.activation_link
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -217,34 +228,3 @@ class MeetingPrepInstanceSerializer(serializers.ModelSerializer):
             "resource_id",
             "resource_type",
         )
-
-
-"""
-class NotificationSelectionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = NotificationSelection
-        fields = ("id", "option", "user", "value")
-
-
-class NotificationOptionSerializer(serializers.ModelSerializer):
-    value = serializers.SerializerMethodField("get_value")
-
-    class Meta:
-        model = NotificationOption
-        fields = (
-            "id",
-            "title",
-            "description",
-            "default_value",
-            "notification_type",
-            "resource",
-            "key",
-            "value",
-        )
-
-    def get_value(self, instance):
-        selection = instance.get_value(self.context["request"].user)
-        serializer = NotificationSelectionSerializer(selection)
-
-        return serializer.data
- """

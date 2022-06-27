@@ -8,6 +8,7 @@
           v-model="selectedOperator"
           :options="operators"
           @select="$emit('operator-selected', $event.value)"
+          preselectFirst="true"
           openDirection="below"
           selectLabel="Enter"
           track-by="value"
@@ -180,6 +181,9 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 
+input:focus {
+  outline: none;
+}
 #input-field-id {
   border: 1px solid #e8e8e8;
   border-radius: 0.25rem;

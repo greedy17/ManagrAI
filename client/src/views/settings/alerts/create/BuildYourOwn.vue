@@ -31,7 +31,7 @@
               v-clipboard:success="onCopy"
               v-clipboard:error="onError"
             >
-              <img src="@/assets/images/copy.png" style="height: 1.25rem" alt="" />
+              <img src="@/assets/images/copy.svg" class="invert" style="height: 1.25rem" alt="" />
             </button>
           </div>
         </div>
@@ -44,7 +44,7 @@
           <h3>Create a Custom Workflow</h3>
           <div class="button-space">
             <button class="plus_button" @click="onAddAlertGroup">
-              <img src="@/assets/images/plusOne.png" class="filtered" alt="" />
+              <img src="@/assets/images/plusOne.svg" class="filtered" alt="" />
               Add Group
             </button>
           </div>
@@ -139,7 +139,12 @@
 
             <div class="fixed__right" v-if="alertTemplateForm.field.alertGroups.groups.length > 1">
               <button class="remove__group" @click="onRemoveAlertGroup(index)">
-                <img src="@/assets/images/trash.png" style="height: 0.85rem" alt="" />
+                <img
+                  src="@/assets/images/trash.svg"
+                  class="invert"
+                  style="height: 0.85rem"
+                  alt=""
+                />
               </button>
             </div>
           </div>
@@ -183,7 +188,7 @@
                 <img
                   @click="viewingTemplate = !viewingTemplate"
                   style="height: 1rem"
-                  src="@/assets/images/close.png"
+                  src="@/assets/images/close.svg"
                   alt=""
                 />
               </div>
@@ -209,7 +214,12 @@
                   v-clipboard:success="onCopy"
                   v-clipboard:error="onError"
                 >
-                  <img src="@/assets/images/copy.png" style="height: 1.25rem" alt="" />
+                  <img
+                    src="@/assets/images/copy.svg"
+                    class="invert"
+                    style="height: 1.25rem"
+                    alt=""
+                  />
                 </button>
               </div>
             </div>
@@ -237,7 +247,7 @@
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
+                    <img src="@/assets/images/search.svg" alt="" />
                     Select Field
                   </p>
                 </template>
@@ -299,7 +309,7 @@
                           </template>
                           <template slot="placeholder">
                             <p class="slot-icon">
-                              <img src="@/assets/images/search.png" alt="" />
+                              <img src="@/assets/images/search.svg" alt="" />
                               Select a Day
                             </p>
                           </template>
@@ -352,12 +362,12 @@
                       <template slot="afterList">
                         <p class="multi-slot__more" @click="onUsersNextPage">
                           Load More
-                          <img src="@/assets/images/plusOne.png" alt="" />
+                          <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
                         </p>
                       </template>
                       <template slot="placeholder">
                         <p class="slot-icon">
-                          <img src="@/assets/images/search.png" alt="" />
+                          <img src="@/assets/images/search.svg" alt="" />
                           Select Users
                         </p>
                       </template>
@@ -438,12 +448,12 @@
                           @click="listUserChannels(userChannelOpts.nextCursor)"
                         >
                           Load More
-                          <img src="@/assets/images/plusOne.png" alt="" />
+                          <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
                         </p>
                       </template>
                       <template slot="placeholder">
                         <p class="slot-icon">
-                          <img src="@/assets/images/search.png" alt="" />
+                          <img src="@/assets/images/search.svg" alt="" />
                           Select Channel
                         </p>
                       </template>
@@ -692,7 +702,7 @@ export default {
       immediate: true,
       async handler(val, prev) {
         if (prev && val !== prev) {
-          this.alertTemplateForm = this.alertTemplateForm.reset()
+          // this.alertTemplateForm = this.alertTemplateForm.reset()
           this.selectedResourceType = val
         }
         if (this.selectedResourceType) {
@@ -740,17 +750,21 @@ export default {
       this.clickCount += 1
     },
     onCopy: function () {
-      this.$Alert.alert({
-        message: 'Message Copied to clipboard successfully',
-        type: 'success',
+      this.$toast('Copied', {
         timeout: 2000,
+        position: 'top-left',
+        type: 'success',
+        toastClassName: 'custom',
+        bodyClassName: ['custom'],
       })
     },
     onError: function () {
-      this.$Alert.alert({
-        message: 'error copying template',
-        type: 'error',
+      this.$toast('Error copying template', {
         timeout: 2000,
+        position: 'top-left',
+        type: 'error',
+        toastClassName: 'custom',
+        bodyClassName: ['custom'],
       })
     },
     changeCreate() {
@@ -794,76 +808,97 @@ export default {
         console.log(res.error)
         this.channelName = ''
         if (res.error == 'name_taken') {
-          this.$Alert.alert({
-            message: 'Channel name already taken',
-            type: 'error',
+          this.$toast('Channel name already taken', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         } else if (res.error == 'invalid_name_maxlength') {
-          this.$Alert.alert({
-            message: 'Channel name exceeds maximum length',
-            type: 'error',
+          this.$toast('Channel name exceeds max-length', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         } else if (res.error == 'restricted_action') {
-          this.$Alert.alert({
-            message: 'A team preference is preventing you from creating channels',
-            type: 'error',
+          this.$toast('A team preference is preventing you from creating channels', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         } else if (res.error == 'invalid_name_specials') {
-          this.$Alert.alert({
-            message:
-              'The only special characters allowed are hyphens and underscores. Channel names must also begin with a letter ',
-            type: 'error',
-            timeout: 3000,
-          })
+          this.$toast(
+            'The only special characters allowed are hyphens and underscores. Channel names must also begin with a letter ',
+            {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            },
+          )
         } else if (res.error == 'org_login_required') {
-          this.$Alert.alert({
-            message:
-              'The workspace is undergoing an enterprise migration and will not be available until migration is complete.',
-            type: 'error',
-            timeout: 2000,
-          })
-        } else if (res.error == 'ekm_access_denied') {
-          this.$Alert.alert({
-            message: 'Administrators have suspended the ability to post a message.',
-            type: 'error',
-            timeout: 2000,
-          })
+          this.$toast(
+            'The workspace is undergoing an enterprise migration and will not be available until migration is complete.',
+            {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            },
+          )
         } else if (res.error == 'too_many_convos_for_team') {
-          this.$Alert.alert({
-            message: 'The workspace has exceeded its limit of public and private channels.',
-            type: 'error',
+          this.$toast('The workspace has exceeded its limit of public and private channels.', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         } else if (res.error == 'no_permission') {
-          this.$Alert.alert({
-            message:
-              'The workspace token used in this request does not have the permissions necessary to complete the request. Make sure your app is a member of the conversation its attempting to post a message to.',
-            type: 'error',
-            timeout: 4000,
-          })
+          this.$toast(
+            'The workspace token used in this request does not have the permissions necessary to complete the request. Make sure your app is a member of the conversation its attempting to post a message to.',
+            {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            },
+          )
         } else if (res.error == 'team_access_not_granted') {
-          this.$Alert.alert({
-            message:
-              'You are not granted the specific workspace access required to complete this request.',
-            type: 'error',
-            timeout: 2000,
-          })
+          this.$toast(
+            'You are not granted the specific workspace access required to complete this request.',
+            {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            },
+          )
         } else if (res.error == 'invalid_name') {
-          this.$Alert.alert({
-            message: 'Channel name invalid. Please try again',
-            type: 'error',
+          this.$toast('Channel name invalid. Please try again', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         } else {
-          this.$Alert.alert({
-            message: 'Something went wrong..Please try again',
-            type: 'error',
+          this.$toast('Something went wrong, please try again', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
-          console.log(res.error)
         }
       }
     },
@@ -897,10 +932,12 @@ export default {
           })
           this.$router.push({ name: 'ListTemplates' })
         } catch (e) {
-          this.$Alert.alert({
-            message: 'An error occured saving template',
+          this.$toast('An error occured saving template', {
             timeout: 2000,
+            position: 'top-left',
             type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         } finally {
           this.savingTemplate = false
@@ -947,7 +984,13 @@ export default {
       // length determines order
       const order = this.alertTemplateForm.field.alertGroups.groups.length
       if (order >= 3) {
-        this.$Alert.alert({ message: 'You can only add 3 groups', timeout: 2000 })
+        this.$toast('You can only add 3 groups', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'default',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
         return
       }
       // set next order
@@ -1261,8 +1304,11 @@ button img {
   flex-direction: column;
 }
 .filtered {
-  filter: invert(1%);
+  filter: invert(99%);
   height: 1rem;
+}
+.invert {
+  filter: invert(99%);
 }
 .alert__column {
   display: flex;

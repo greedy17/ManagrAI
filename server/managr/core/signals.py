@@ -7,7 +7,7 @@ from .models import User
 from background_task.models import CompletedTask
 from managr.hubspot import constants as hs_consts
 from managr.salesforce import constants as sf_consts
-from .models import User, UserActivity
+from .models import User, UserActivity, UserForecast
 
 
 @receiver(post_save, sender=User)
@@ -42,6 +42,8 @@ def update_succesful_task_operations(sender, instance=None, created=False, **kwa
 
 
 @receiver(post_save, sender=get_user_model())
-def create_activity(sender, instance, created, **kwargs):
+def create_user_related_models(sender, instance, created, **kwargs):
     if created:
         UserActivity.objects.create(user=instance)
+        UserForecast.objects.create(user=instance)
+

@@ -52,7 +52,14 @@ export default {
     addOperandForm() {
       const order = this.form.field.alertOperands.groups.length
       if (order >= 3) {
-        this.$Alert.alert({ message: 'You can only add 3 items per group', timeout: 2000 })
+        this.$toast('You can only add 3 items per group', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'default',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+
         return
       }
       this.form.addToArray('alertOperands', new AlertOperandForm())

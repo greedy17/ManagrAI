@@ -51,7 +51,7 @@
             <h3>{{ alert.title }}</h3>
             <p class="even">
               Cant edit templated alert titles &nbsp;
-              <img src="@/assets/images/exclamation.png" alt="" />
+              <img src="@/assets/images/exclamation.svg" class="invert" alt="" />
             </p>
           </div>
         </div>
@@ -62,8 +62,8 @@
                 <div class="img-border">
                   <img
                     @click.stop="onRemoveAlertGroup(group.id, index)"
-                    style="height: 1rem; cursor: pointer; filter: invert(90%)"
-                    src="@/assets/images/trash.png"
+                    style="height: 1rem; cursor: pointer; filter: invert(10%)"
+                    src="@/assets/images/trash.svg"
                     alt=""
                   />
                 </div>
@@ -80,7 +80,7 @@
                   <span class="img-border">
                     <img
                       class="remove-color"
-                      src="@/assets/images/remove.png"
+                      src="@/assets/images/remove.svg"
                       style="height: 1rem"
                       alt=""
                     />
@@ -154,12 +154,12 @@
                 <template slot="afterList">
                   <p class="multi-slot__more" @click="fieldNextPage">
                     Load More
-                    <img src="@/assets/images/plusOne.png" alt="" />
+                    <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
                   </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
+                    <img src="@/assets/images/search.svg" alt="" />
                     Select field
                   </p>
                 </template>
@@ -176,7 +176,7 @@
                   <img
                     class="remove-color"
                     @click="onDeleteConfig(config.id, index)"
-                    src="@/assets/images/remove.png"
+                    src="@/assets/images/remove.svg"
                     style="height: 1rem"
                     alt=""
                   />
@@ -490,10 +490,12 @@ export default {
       let countOperands = this.alert.groupsRef[groupIndex].operandsRef.length
       if (confirmation) {
         if (countOperands <= 1) {
-          return this.$Alert.alert({
-            type: 'error',
-            message: 'Groups must have at least one operand',
+          this.$toast('Must have at least 1 operand', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         }
 
@@ -519,10 +521,12 @@ export default {
 
       if (confirmation) {
         if (this.alert.groupsRef[index] <= 1) {
-          return this.$Alert.alert({
-            type: 'error',
-            message: 'Groups must have at least one operand',
+          this.$toast('Must have at least 1 operand', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         }
         try {
@@ -565,10 +569,12 @@ export default {
           }, 1000)
         } catch (e) {
           console.log(e)
-          this.$Alert.alert({
-            message: 'There was an error updating your template',
-            type: 'error',
+          this.$toast('Error updating template', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         } finally {
           this.savingInTab = false
@@ -593,10 +599,12 @@ export default {
           }, 1000)
         } catch (e) {
           console.log(e)
-          this.$Alert.alert({
-            message: 'There was an error updating your template',
-            type: 'error',
+          this.$toast('Error updating template', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         } finally {
           this.savingInTab = false
@@ -758,8 +766,11 @@ h3 {
   }
 }
 .remove-color {
-  filter: invert(70%);
+  filter: invert(30%);
   cursor: pointer;
+}
+.invert {
+  filter: invert(80%);
 }
 .message__box {
   margin-bottom: 2rem;
