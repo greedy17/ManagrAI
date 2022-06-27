@@ -121,4 +121,10 @@ export default {
   border-radius: 6px;
   padding: 5px;
 }
+.yellow {
+  color: $yellow !important;
+  background-color: #fdf7e6;
+  border-radius: 6px;
+  padding: 5px 1px;
+}
 </style>
