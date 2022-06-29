@@ -523,11 +523,11 @@ class HubspotContactAdapter:
         self.id = kwargs.get("id", None)
         self.integration_source = kwargs.get("integration_source", None)
         self.integration_id = kwargs.get("integration_id", None)
-        self.company = kwargs.get("company", None)
+        self.account = kwargs.get("company", None)
         self.email = kwargs.get("email", None)
         self.owner = kwargs.get("owner", None)
         self.external_owner = kwargs.get("external_owner", None)
-        self.external_company = kwargs.get("external_company", None)
+        self.external_account = kwargs.get("external_company", None)
         self.imported_by = kwargs.get("imported_by", None)
         self.secondary_data = kwargs.get("secondary_data", None)
 
@@ -536,7 +536,6 @@ class HubspotContactAdapter:
         email="email",
         owner="hubspot_owner_id",
         external_owner="hubspot_owner_id",
-        # external_company=""
     )
 
     @staticmethod
