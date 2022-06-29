@@ -977,7 +977,7 @@ def _morning_refresh_message(user_id):
             block_builders.section_with_button_block(
                 "View in Managr",
                 "NONE",
-                f"Hey {user.first_name}, view your upcoming meetings and pipeline for today",
+                f"Hey {user.first_name}, your pipeline has been updated, take a look",
                 url=url,
                 style="primary",
             )
