@@ -12,42 +12,43 @@
       <div class="modal-container" v-if="modalInfo">
         <div v-if="modalName === 'slackFormInstance'">
           <div class="modal-container__body">
-            <!-- {{modalInfo}} -->
-            <div>
-              <h3>Resource ID:</h3>
-              <h4>{{ modalInfo.resourceId ? modalInfo.resourceId : 'null' }}</h4>
-            </div>
-            <div>
-              <h3>Workflow:</h3>
-              <h4>{{ modalInfo.workflowId ? modalInfo.workflowId : 'null' }}</h4>
-            </div>
-            <div>
-              <h3>Is Submitted:</h3>
-              <h4>{{ modalInfo.submissionDate ? 'true' : 'false' }}</h4>
-            </div>
-            <div>
-              <h3>Submission Date:</h3>
-              <h4>{{ modalInfo.submissionDate ? modalInfo.submissionDate : 'null' }}</h4>
-            </div>
-            <div>
-              <h3>Update Source:</h3>
-              <h4>{{ modalInfo.updateSource ? modalInfo.updateSource : 'null' }}</h4>
-            </div>
-            <div>
-              <h3>User ID:</h3>
-              <h4>{{ modalInfo.user }}</h4>
-            </div>
-            <div>
-              <h3>Template ID:</h3>
-              <h4>{{ modalInfo.template }}</h4>
-            </div>
-            <div>
-              <h3>Saved Data:</h3>
-              <h4>{{ modalInfo.savedData }}</h4>
-            </div>
-            <div>
-              <h3>Previous Data:</h3>
-              <h4>{{ modalInfo.previousData }}</h4>
+            <div class="user_item_container">
+              <div class="border-break">
+                <h3>Resource ID:</h3>
+                <h4>{{ modalInfo.resourceId ? modalInfo.resourceId : 'null' }}</h4>
+              </div>
+              <div class="border-break">
+                <h3>Workflow:</h3>
+                <h4>{{ modalInfo.workflowId ? modalInfo.workflowId : 'null' }}</h4>
+              </div>
+              <div class="border-break">
+                <h3>Is Submitted:</h3>
+                <h4>{{ modalInfo.submissionDate ? 'true' : 'false' }}</h4>
+              </div>
+              <div class="border-break">
+                <h3>Submission Date:</h3>
+                <h4>{{ modalInfo.submissionDate ? modalInfo.submissionDate : 'null' }}</h4>
+              </div>
+              <div class="border-break">
+                <h3>Update Source:</h3>
+                <h4>{{ modalInfo.updateSource ? modalInfo.updateSource : 'null' }}</h4>
+              </div>
+              <div class="border-break">
+                <h3>User ID:</h3>
+                <h4>{{ modalInfo.user }}</h4>
+              </div>
+              <div class="border-break">
+                <h3>Template ID:</h3>
+                <h4>{{ modalInfo.template }}</h4>
+              </div>
+              <div class="border-break">
+                <h3>Saved Data:</h3>
+                <h4>{{ modalInfo.savedData }}</h4>
+              </div>
+              <div class="border-break">
+                <h3>Previous Data:</h3>
+                <h4>{{ modalInfo.previousData }}</h4>
+              </div>
             </div>
           </div>
         </div>
@@ -389,7 +390,7 @@
               <div @click="test">Has Products</div>
               <input type="checkbox" v-model="hasProducts" />
             </div>
-            <button class="green_button" @click="postOrgUpdates()">Save Changes</button>
+            <button style="margin-bottom: 1rem;" class="green_button" @click="postOrgUpdates()">Save Changes</button>
           </div>
 
           <!-- <div>{{allForms}}</div> -->
@@ -796,9 +797,9 @@
       </template>
       <template v-else-if="page === 'SlackFormInstance'">
         <button class="green_button back" @click="goBack">Back</button>
-        <div v-for="(slackFormInstance, i) in slackFormInstances" :key="slackFormInstance.id">
+        <div :class="i % 2 === 0 ? 'padding' : 'light-back padding'" v-for="(slackFormInstance, i) in slackFormInstances" :key="slackFormInstance.id">
           <h3
-            :class="i % 2 === 0 ? '' : 'light-back'"
+            class='click click_width'
             @click="openModal('slackFormInstance', slackFormInstance)"
           >
             {{ slackFormInstance.templateRef.resource }} {{ slackFormInstance.templateRef.formType }} by {{ getUserName(slackFormInstance.user) }}
@@ -807,9 +808,9 @@
       </template>
       <template v-else-if="page === 'MeetingWorkflow'">
         <button class="green_button back" @click="goBack">Back</button>
-        <div v-for="(meetingWorkflow, i) in orgMeetingWorkflows" :key="meetingWorkflow.id">
+        <div :class="i % 2 === 0 ? 'padding' : 'light-back padding'" v-for="(meetingWorkflow, i) in orgMeetingWorkflows" :key="meetingWorkflow.id">
           <h3
-            :class="i % 2 === 0 ? '' : 'light-back'"
+            class='click click_width'
             @click="openModal('meetingWorkflow', meetingWorkflow)"
           >
             {{ meetingWorkflow.meeting_ref.topic }}
@@ -1139,6 +1140,7 @@ ul {
 .form__list_item {
   padding: 0 2rem 2rem 2rem;
   border: 1px solid black;
+  border-radius: 0.4rem;
   width: 30vw;
   margin: 1rem;
 }
@@ -1198,6 +1200,7 @@ input[type='search']:focus {
   border: 1px solid black;
   margin: 1rem;
   padding: 0.25rem 1rem;
+  border-radius: 0.4rem;
 
   h3 {
     margin: 0;
@@ -1210,6 +1213,7 @@ input[type='search']:focus {
 }
 .form_field {
   border: 1px dashed black;
+  border-radius: 0.4rem;
   margin: 1rem 0;
   padding: 0.25rem 1rem;
 }
@@ -1285,6 +1289,7 @@ input[type='search']:focus {
 }
 .big_card_container {
   border: 1px solid black;
+  border-radius: 0.4rem;
   box-shadow: 1px 1px 3px black;
   margin: 1rem;
   padding: 0.25rem;
@@ -1299,5 +1304,14 @@ input[type='search']:focus {
   h4 {
     margin: 0.25rem 0;
   }
+}
+.click {
+  cursor: pointer;
+}
+.click_width {
+  width: max-content;
+}
+.padding {
+  padding: .5rem 1rem;
 }
 </style>
