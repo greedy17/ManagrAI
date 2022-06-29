@@ -16,7 +16,6 @@ class Command(BaseCommand):
         parser.add_argument("-m", "--meetings", action="store_true")
 
     def handle(self, *args, **options):
-        print(options)
         if options["users"]:
             for t in options["users"]:
                 user = User.objects.filter(email=t).first()
@@ -25,9 +24,9 @@ class Command(BaseCommand):
                         str(user.id), f"non-zoom-meetings-{user.email}-{str(uuid.uuid4())}"
                     )
                 else:
-                    emit_check_reminders(
-                        str(user.id), f"reminders-{user.email}-{str(uuid.uuid4())}"
-                    )
+                    # emit_check_reminders(
+                    #     str(user.id), f"reminders-{user.email}-{str(uuid.uuid4())}"
+                    # )
 
                     emit_timezone_tasks(
                         str(user.id), f"timezone_tasks-{user.email}-{str(uuid.uuid4())}"
@@ -45,9 +44,9 @@ class Command(BaseCommand):
                         str(user.id), f"non-zoom-meetings-{user.email}-{str(uuid.uuid4())}"
                     )
                 else:
-                    emit_check_reminders(
-                        str(user.id), f"reminders-{user.email}-{str(uuid.uuid4())}"
-                    )
+                    # emit_check_reminders(
+                    #     str(user.id), f"reminders-{user.email}-{str(uuid.uuid4())}"
+                    # )
                     emit_timezone_tasks(
                         str(user.id), f"emit_timezone_tasks-{user.email}-{str(uuid.uuid4())}"
                     )
