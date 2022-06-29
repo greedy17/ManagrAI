@@ -570,7 +570,8 @@ class SalesforceAuthAccountAdapter:
                 f"{self.instance_url}{sf_consts.SALESFORCE_RESOURCE_QUERY_BY_ID_URI(resource, fields, id_list)}",
                 headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
             )
-        return self._handle_response(res)
+            res = self._handle_response(res)
+        return self._format_resource_response(res, resource)
 
     def execute_alert_query(self, url, resource):
         """Handles alert requests to salesforce"""

@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from django.core.management.base import BaseCommand, CommandError
 from managr.core.models import User
 from managr.core.background import (
@@ -24,9 +25,9 @@ class Command(BaseCommand):
                         str(user.id), f"non-zoom-meetings-{user.email}-{str(uuid.uuid4())}"
                     )
                 else:
-                    emit_check_reminders(
-                        str(user.id), f"reminders-{user.email}-{str(uuid.uuid4())}"
-                    )
+                    # emit_check_reminders(
+                    #     str(user.id), f"reminders-{user.email}-{str(uuid.uuid4())}"
+                    # )
 
                     emit_timezone_tasks(
                         str(user.id), f"timezone_tasks-{user.email}-{str(uuid.uuid4())}"
@@ -37,18 +38,21 @@ class Command(BaseCommand):
                     ),
                 )
         else:
-            users = User.objects.filter(is_active=True)
-            for user in users:
-                if options["meetings"]:
-                    emit_process_non_zoom_meetings(
-                        str(user.id), f"non-zoom-meetings-{user.email}-{str(uuid.uuid4())}"
-                    )
-                else:
-                    emit_check_reminders(
-                        str(user.id), f"reminders-{user.email}-{str(uuid.uuid4())}"
-                    )
-                    emit_timezone_tasks(
-                        str(user.id), f"emit_timezone_tasks-{user.email}-{str(uuid.uuid4())}"
-                    )
-            self.stdout.write(self.style.SUCCESS("Checking Timezone Dependant Tasks for all users"))
+            if datetime.weekday() < 5:
+                users = User.objects.filter(is_active=True)
+                for user in users:
+                    if options["meetings"]:
+                        emit_process_non_zoom_meetings(
+                            str(user.id), f"non-zoom-meetings-{user.email}-{str(uuid.uuid4())}"
+                        )
+                    else:
+                        # emit_check_reminders(
+                        #     str(user.id), f"reminders-{user.email}-{str(uuid.uuid4())}"
+                        # )
+                        emit_timezone_tasks(
+                            str(user.id), f"emit_timezone_tasks-{user.email}-{str(uuid.uuid4())}"
+                        )
+                self.stdout.write(
+                    self.style.SUCCESS("Checking Timezone Dependant Tasks for all users")
+                )
 

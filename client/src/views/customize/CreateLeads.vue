@@ -97,10 +97,12 @@ export default {
         this.formFields.filters = query_params
         this.formFields.refresh()
       } catch {
-        this.$Alert.alert({
-          message: 'There was an error gathering fields',
+        this.$toast('Error gathering fields', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'error',
-          timeout: 3000,
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
@@ -145,7 +147,13 @@ export default {
       await this.listPicklists({ salesforceObject: this.Opportunity, picklistFor: 'StageName' })
     } catch (e) {
       this.$modal.close('add-stage-modal')
-      this.$Alert.alert({ message: 'Failed to retrieve stages', timeout: 3000 })
+      this.$toast('Failed to retrieve stages', {
+        timeout: 2000,
+        position: 'top-left',
+        type: 'error',
+        toastClassName: 'custom',
+        bodyClassName: ['custom'],
+      })
     } finally {
       this.loadingStages = false
     }
@@ -154,9 +162,12 @@ export default {
     /** Method for Creating a new stage-gating form, this is only available for Opportunities at this time */
 
     if (this.currentStagesWithForms.includes(stage)) {
-      return this.$Alert.alert({
-        message: 'This Stage already has a form',
-        timeout: 5000,
+      this.$toast('This stage already has a form', {
+        timeout: 2000,
+        position: 'top-left',
+        type: 'default',
+        toastClassName: 'custom',
+        bodyClassName: ['custom'],
       })
     }
     let newForm = SlackOAuth.customSlackForm.create({
@@ -194,5 +205,4 @@ export default {
 h3 {
   font-size: 1.35rem;
 }
-
 </style>

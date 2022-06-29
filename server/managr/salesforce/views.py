@@ -518,7 +518,7 @@ class SalesforceSObjectViewSet(
                 break
         if all_form_data.get("meeting_comments") is not None:
             emit_add_update_to_sf(str(main_form.id))
-        if len(user.slack_integration.realtime_alert_configs):
+        if user.has_slack_integration and len(user.slack_integration.realtime_alert_configs):
             _send_instant_alert(form_ids)
         forms.update(is_submitted=True, update_source="pipeline", submission_date=timezone.now())
         if from_workflow:
@@ -526,7 +526,7 @@ class SalesforceSObjectViewSet(
             user.activity.add_workflow_activity(str(main_form.id), title)
 
         value_update = main_form.resource_object.update_database_values(all_form_data)
-        return Response(data={"success": True})
+        return Response(data=data)
 
     @action(
         methods=["get"],
@@ -572,10 +572,11 @@ class SalesforceSObjectViewSet(
         url_path="create",
     )
     def create_resource(self, request, *args, **kwargs):
-        data = self.request.data
+        request_data = self.request.data
+        logger.info(f"CREATE START ---- {request_data}")
         user = User.objects.get(id=self.request.user.id)
-        form_id = data.get("form_id")
-        form_data = data.get("form_data")
+        form_id = request_data.get("form_id")
+        form_data = request_data.get("form_data")
         main_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
         stage_forms = []
         stage_form_data_collector = {}
@@ -629,6 +630,10 @@ class SalesforceSObjectViewSet(
                 else:
                     time.sleep(2)
                     attempts += 1
+            except Exception as e:
+                data = {"success": False, "error": str(e)}
+                break
+            logger.info(f"RETURN DATA ----- {data}")
         return Response(data=data)
 
     @action(
@@ -643,7 +648,7 @@ class SalesforceSObjectViewSet(
         bulk_status = data["bulk"]
         user = User.objects.get(id=self.request.user.id)
         main_form = OrgCustomSlackFormInstance.objects.get(id=form_ids[0])
-        if len(user.slack_integration.realtime_alert_configs):
+        if user.has_slack_integration and len(user.slack_integration.realtime_alert_configs):
             _send_instant_alert(form_ids)
         try:
             if bulk_status:
@@ -943,7 +948,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         else:
             workflow.operations_list = ops
 
-        if len(user.slack_integration.realtime_alert_configs):
+        if user.has_slack_integration and len(user.slack_integration.realtime_alert_configs):
             _send_instant_alert(current_form_ids)
 
         workflow.save()

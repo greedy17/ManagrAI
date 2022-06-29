@@ -1,18 +1,14 @@
 <template>
   <div class="password-reset">
     <form @submit.prevent="handleSubmit">
-      <h2 class="password-reset__title">
-        Enter and confirm a new password below.
-      </h2>
+      <h2 class="password-reset__title">Enter and confirm a new password below.</h2>
 
       <input v-model="password" type="password" placeholder="New Password" />
       <input v-model="confirmPassword" type="password" placeholder="Confirm Password" />
 
       <button type="submit">Reset Password</button>
       <div style="margin-top: 1rem">
-        <router-link :to="{ name: 'Login' }">
-          Back to login
-        </router-link>
+        <router-link :to="{ name: 'Login' }"> Back to login </router-link>
       </div>
     </form>
   </div>
@@ -37,20 +33,24 @@ export default {
       const token = this.$route.params.token
 
       if (!this.password.length || !this.confirmPassword.length) {
-        this.$Alert.alert({
-          type: 'error',
-          message: 'Please enter a new password',
+        this.$toast('Please enter a new password', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
         this.loading = false
         return
       }
 
       if (this.password !== this.confirmPassword) {
-        this.$Alert.alert({
-          type: 'error',
-          message: 'Please make sure you passwords match',
+        this.$toast('Please make sure your passwords match', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
         this.loading = false
         return
@@ -58,25 +58,29 @@ export default {
 
       await User.api
         .resetPassword(this.password, userId, token)
-        .then(res => {
-          this.$Alert.alert({
+        .then((res) => {
+          this.$toast('Successfully reset password', {
+            timeout: 2000,
+            position: 'top-left',
             type: 'success',
-            message: `Successfully Reset Password`,
-            timeout: 5000,
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
 
           this.$router.push({
             name: 'Login',
           })
         })
-        .catch(e => {
-          this.$Alert.alert({
+        .catch((e) => {
+          this.$toast('Error. please try again', {
+            timeout: 2000,
+            position: 'top-left',
             type: 'error',
-            message: `There was an error, please try again later`,
-            timeout: 5000,
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         })
-        .finally(e => {
+        .finally((e) => {
           this.loading = false
         })
     },

@@ -5,14 +5,7 @@
         <div class="welcome">
           <div>
             <h3>Hi, {{ user.fullName }}</h3>
-            <div
-              v-if="
-                (!(!orgHasSlackIntegration && userCanIntegrateSlack) ||
-                  (orgHasSlackIntegration && !hasSlackIntegration)) &&
-                hasNylasIntegration &&
-                hasSalesforceIntegration
-              "
-            >
+            <div v-if="hasNylasIntegration && hasSalesforceIntegration">
               <p>
                 Connect
                 <span> <img src="@/assets/images/logo.png" height="9px" alt="" /> Managr</span> to
@@ -47,7 +40,7 @@
             <PulseLoadingSpinnerButton
               v-if="!hasSalesforceIntegration"
               @click="onGetAuthLink('SALESFORCE')"
-              class="orange_button"
+              class="orange_button test"
               style="margin-left: 0.5rem"
               text="Connect"
               :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
@@ -67,7 +60,7 @@
           </div>
         </div>
 
-        <div :class="!hasSalesforceIntegration ? 'card onboarding' : 'card'">
+        <div v-if="hasSalesforceIntegration" class="card">
           <div class="card__header">
             <img src="@/assets/images/gmailCal.png" style="margin-right: 1rem; height: 1rem" />
             <img src="@/assets/images/outlookMail.png" style="height: 1rem" />
@@ -80,7 +73,7 @@
             <PulseLoadingSpinnerButton
               @click="onGetAuthLink('NYLAS')"
               style="margin-left: 1rem"
-              :class="!hasSalesforceIntegration ? 'orange_button test' : 'orange_button'"
+              class="orange_button test"
               text="Connect"
               :loading="generatingToken && selectedIntegration == 'NYLAS'"
             ></PulseLoadingSpinnerButton>
@@ -145,13 +138,7 @@
             </div>
           </div>
           <p class="card-text">Interact with Managr through Slack</p>
-          <div
-            v-if="
-              (!orgHasSlackIntegration && userCanIntegrateSlack) ||
-              (orgHasSlackIntegration && !hasSlackIntegration)
-            "
-            class="card__body"
-          >
+          <div v-if="!hasSlackIntegration" class="card__body">
             <PulseLoadingSpinnerButton
               @click="onIntegrateSlack"
               class="orange_button"
@@ -354,10 +341,7 @@
           <p class="card-text">Interact with Managr through Slack</p>
           <div class="card__body">
             <PulseLoadingSpinnerButton
-              v-if="
-                (!orgHasSlackIntegration && userCanIntegrateSlack) ||
-                (orgHasSlackIntegration && !hasSlackIntegration)
-              "
+              v-if="!hasSlackIntegration"
               :disabled="(!orgHasSlackIntegration && !userCanIntegrateSlack) || hasSlackIntegration"
               @click="onIntegrateSlack"
               class="orange_button"
@@ -692,11 +676,16 @@ export default {
         if (response && response.status >= 400 && response.status < 500 && response.status != 401) {
           let { data } = response
           if (data.timezone) {
-            this.$Alert.alert({
-              type: 'error',
-              message:
-                '<h3>We could not retrieve your timezone from zoom, to fix this please login to the zoom.us portal through a browser and return to managr to reintegrate</h3>',
-            })
+            this.$toast(
+              'We could not retrieve your timezone from zoom, to fix this please login to the zoom.us portal through a browser and return to managr to reintegrate',
+              {
+                timeout: 2000,
+                position: 'top-left',
+                type: 'success',
+                toastClassName: 'custom',
+                bodyClassName: ['custom'],
+              },
+            )
           }
         }
       } finally {

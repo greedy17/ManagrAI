@@ -9,43 +9,55 @@
         }
       "
     >
-      <div v-if="notes.length" class="modal-container">
-        <div class="flex-row-spread">
+      <div v-if="notes.length" class="modal-container rel">
+        <div class="flex-row-spread sticky border-bottom">
           <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" alt="" />
-            <h3>Notes</h3>
+            <h4>Notes</h4>
           </div>
 
-          <img
+          <div class="flex-row">
+            <small class="note-border">Total: {{ notesLength }}</small>
+            <small class="note-border light-green-bg"
+              >Most recent: {{ formatMostRecent(notes[0].submission_date) }} days</small
+            >
+            <small class="note-border"
+              >Oldest: {{ formatMostRecent(notes[notes.length - 1].submission_date) }} days</small
+            >
+          </div>
+
+          <!-- <img
             src="@/assets/images/close.svg"
             style="height: 1.5rem; margin-top: -0.5rem; margin-right: 0.5rem; cursor: pointer"
             @click="resetNotes"
             alt=""
-          />
+          /> -->
         </div>
         <section class="note-section" :key="i" v-for="(note, i) in notes">
           <p class="note-section__title">
-            {{ note.saved_data__meeting_type ? note.saved_data__meeting_type + ':' : 'Untitled:' }}
+            {{ note.saved_data__meeting_type ? note.saved_data__meeting_type : 'Untitled' }}
+          </p>
+          <p class="note-section__date">
+            {{ weekDay(note.submission_date) }} {{ formatDateTime(note.submission_date) }}
           </p>
           <pre class="note-section__body">{{ note.saved_data__meeting_comments }}</pre>
-          <p class="note-section__date">{{ formatDateTime(note.submission_date) }}</p>
         </section>
       </div>
       <div v-else class="modal-container">
         <div class="flex-row-spread">
           <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" alt="" />
-            <h3>Notes</h3>
+            <h4>Notes</h4>
           </div>
-          <img
-            src="@/assets/images/close.svg"
-            style="height: 1.5rem; margin-top: -0.5rem; margin-right: 0.5rem; cursor: pointer"
-            @click="resetNotes"
-            alt=""
-          />
+
+          <div class="flex-row">
+            <small class="note-border">Total: 0</small>
+            <small class="note-border light-green-bg">Most recent: 0 days</small>
+            <small class="note-border">Oldest: 0 days</small>
+          </div>
         </div>
         <section class="note-section">
-          <p class="note-section__title">No notes for this opportunity</p>
+          <p class="note-section__body">No notes for this opportunity</p>
         </section>
       </div>
     </Modal>
@@ -97,14 +109,49 @@
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
+            <div v-else-if="field.apiName === 'AccountId'">
+              <p>{{ field.referenceDisplayLabel }}</p>
+              <Multiselect
+                v-model="selectedAccount"
+                :options="allAccounts"
+                @search-change="getAccounts($event)"
+                @select="
+                  setUpdateValues(
+                    field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+                    field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                      ? $event.value
+                      : $event.id,
+                    field.dataType === 'MultiPicklist' ? true : false,
+                  )
+                "
+                openDirection="below"
+                style="width: 18vw"
+                selectLabel="Enter"
+                track-by="integration_id"
+                label="name"
+                :loading="dropdownLoading || loadingAccounts"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.svg" alt="" />
+                    Select Account
+                  </p>
+                </template>
+              </Multiselect>
+            </div>
             <div
               v-else-if="
                 field.dataType === 'Picklist' ||
                 field.dataType === 'MultiPicklist' ||
-                field.dataType === 'Reference'
+                (field.dataType === 'Reference' && field.apiName !== 'AccountId')
               "
             >
               <p>{{ field.referenceDisplayLabel }}:</p>
+
               <Multiselect
                 v-model="currentVals[field.apiName]"
                 :options="
@@ -118,8 +165,15 @@
                     field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                       ? $event.value
                       : $event.id,
+                    field.dataType === 'MultiPicklist' ? true : false,
                   )
                 "
+                @search-change="
+                  field.dataType === 'Reference'
+                    ? getReferenceFieldList(field.apiName, field.id, 'create1', $event)
+                    : null
+                "
+                :multiple="field.dataType === 'MultiPicklist' ? true : false"
                 openDirection="below"
                 style="width: 18vw"
                 selectLabel="Enter"
@@ -135,7 +189,7 @@
                 "
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results ? Try loading more</p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -143,7 +197,205 @@
                     {{ `${field.referenceDisplayLabel}` }}
                   </p>
                 </template>
+                <template slot="afterList">
+                  <p class="multi-slot__more">
+                    Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+                  </p>
+                </template>
               </Multiselect>
+
+              <div
+                :class="stageGateField ? 'adding-stage-gate' : 'hide'"
+                v-if="field.apiName === 'StageName'"
+              >
+                <div class="adding-stage-gate__header">
+                  <img src="@/assets/images/warning.svg" alt="" />
+                  <p>This Stage has validation rules</p>
+                </div>
+                <div class="adding-stage-gate__body">
+                  <div v-for="(field, i) in stageValidationFields[stageGateField]" :key="i">
+                    <div
+                      v-if="
+                        field.dataType === 'Picklist' ||
+                        field.dataType === 'MultiPicklist' ||
+                        (field.dataType === 'Reference' && field.apiName !== 'AccountId')
+                      "
+                    >
+                      <p>{{ field.referenceDisplayLabel }}:</p>
+                      <Multiselect
+                        :options="
+                          field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                            ? stagePicklistQueryOpts[field.apiName]
+                            : createReferenceOpts[field.apiName]
+                        "
+                        @select="
+                          setUpdateValidationValues(
+                            field.apiName === 'ForecastCategory'
+                              ? 'ForecastCategoryName'
+                              : field.apiName,
+                            field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                              ? $event.value
+                              : $event.id,
+                          )
+                        "
+                        openDirection="below"
+                        v-model="dropdownVal[field.apiName]"
+                        style="width: 18vw"
+                        selectLabel="Enter"
+                        :track-by="
+                          field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                            ? 'value'
+                            : 'id'
+                        "
+                        :label="
+                          field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                            ? 'label'
+                            : 'name'
+                        "
+                      >
+                        <template slot="noResult">
+                          <p class="multi-slot">No results.</p>
+                        </template>
+                        <template slot="placeholder">
+                          <p class="slot-icon">
+                            <img src="@/assets/images/search.svg" alt="" />
+                            {{ `${field.apiName}'s` }}
+                          </p>
+                        </template>
+                      </Multiselect>
+                    </div>
+                    <div v-else-if="field.apiName === 'AccountId'">
+                      <p>{{ field.referenceDisplayLabel }}*</p>
+                      <Multiselect
+                        v-model="selectedAccount"
+                        :options="allAccounts"
+                        @search-change="getAccounts($event)"
+                        @select="setUpdateValidationValues(field.apiName, $event.id)"
+                        openDirection="below"
+                        style="width: 18vw"
+                        selectLabel="Enter"
+                        track-by="integration_id"
+                        label="name"
+                        :loading="dropdownLoading || loadingAccounts"
+                      >
+                        <template slot="noResult">
+                          <p class="multi-slot">No results.</p>
+                        </template>
+
+                        <template slot="placeholder">
+                          <p class="slot-icon">
+                            <img src="@/assets/images/search.svg" alt="" />
+                            Accounts
+                          </p>
+                        </template>
+                      </Multiselect>
+                    </div>
+                    <div v-else-if="field.dataType === 'String' && field.apiName !== 'NextStep'">
+                      <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                      <input
+                        id="user-input"
+                        type="text"
+                        :placeholder="currentVals[field.apiName]"
+                        v-model="currentVals[field.apiName]"
+                        @input="
+                          ;(value = $event.target.value),
+                            setUpdateValidationValues(field.apiName, value)
+                        "
+                      />
+                    </div>
+
+                    <div
+                      v-else-if="
+                        field.dataType === 'TextArea' ||
+                        (field.length > 250 && field.dataType === 'String')
+                      "
+                    >
+                      <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                      <textarea
+                        id="user-input"
+                        ccols="30"
+                        rows="2"
+                        :placeholder="currentVals[field.apiName]"
+                        style="width: 20vw; border-radius: 6px; padding: 7px"
+                        v-model="currentVals[field.apiName]"
+                        @input="
+                          ;(value = $event.target.value),
+                            setUpdateValidationValues(field.apiName, value)
+                        "
+                      >
+                      </textarea>
+                    </div>
+                    <div v-else-if="field.dataType === 'Date'">
+                      <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                      <input
+                        type="text"
+                        onfocus="(this.type='date')"
+                        onblur="(this.type='text')"
+                        :placeholder="currentVals[field.apiName]"
+                        v-model="currentVals[field.apiName]"
+                        id="user-input"
+                        @input="
+                          ;(value = $event.target.value),
+                            setUpdateValidationValues(field.apiName, value)
+                        "
+                      />
+                    </div>
+                    <div v-else-if="field.dataType === 'DateTime'">
+                      <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                      <input
+                        type="datetime-local"
+                        id="start"
+                        v-model="currentVals[field.apiName]"
+                        @input="
+                          ;(value = $event.target.value),
+                            setUpdateValidationValues(field.apiName, value)
+                        "
+                      />
+                    </div>
+                    <div
+                      v-else-if="
+                        field.dataType === 'Phone' ||
+                        field.dataType === 'Double' ||
+                        field.dataType === 'Currency'
+                      "
+                    >
+                      <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                      <input
+                        id="user-input"
+                        type="number"
+                        v-model="currentVals[field.apiName]"
+                        :placeholder="currentVals[field.apiName]"
+                        @input="
+                          ;(value = $event.target.value),
+                            setUpdateValidationValues(field.apiName, value)
+                        "
+                      />
+                    </div>
+                    <div v-else-if="field.dataType === 'Boolean'">
+                      <p>{{ field.referenceDisplayLabel }}:</p>
+
+                      <Multiselect
+                        v-model="dropdownVal[field.apiName]"
+                        :options="booleans"
+                        @select="setUpdateValidationValues(field.apiName, $event)"
+                        openDirection="below"
+                        style="width: 18vw"
+                        selectLabel="Enter"
+                      >
+                        <template slot="noResult">
+                          <p class="multi-slot">No results.</p>
+                        </template>
+                        <template slot="placeholder">
+                          <p class="slot-icon">
+                            <img src="@/assets/images/search.svg" alt="" />
+                            {{ currentVals[field.apiName] }}
+                          </p>
+                        </template>
+                      </Multiselect>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
             <div v-else-if="field.dataType === 'Date'">
               <p>{{ field.referenceDisplayLabel }}:</p>
@@ -207,15 +459,12 @@
         </div>
       </div>
     </Modal>
-    <Modal
-      v-if="editOpModalOpen"
-      dimmed
-      @close-modal="
+    <!-- @close-modal="
         () => {
           $emit('cancel'), resetEdit()
         }
-      "
-    >
+      " -->
+    <Modal v-if="editOpModalOpen" dimmed>
       <div class="opp-modal-container">
         <div class="flex-row-spread header">
           <div class="flex-row">
@@ -308,11 +557,45 @@
                 </template>
               </Multiselect>
             </div>
+            <div v-else-if="field.apiName === 'AccountId'">
+              <p>{{ field.referenceDisplayLabel }}</p>
+              <Multiselect
+                v-model="selectedAccount"
+                :options="allAccounts"
+                @search-change="getAccounts($event)"
+                @select="
+                  setUpdateValues(
+                    field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+                    field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                      ? $event.value
+                      : $event.id,
+                    field.dataType === 'MultiPicklist' ? true : false,
+                  )
+                "
+                openDirection="below"
+                style="width: 18vw"
+                selectLabel="Enter"
+                track-by="integration_id"
+                label="name"
+                :loading="dropdownLoading || loadingAccounts"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.svg" alt="" />
+                    {{ currentAccount }}
+                  </p>
+                </template>
+              </Multiselect>
+            </div>
             <div
               v-else-if="
                 field.dataType === 'Picklist' ||
                 field.dataType === 'MultiPicklist' ||
-                field.dataType === 'Reference'
+                (field.dataType === 'Reference' && field.apiName !== 'AccountId')
               "
             >
               <p>{{ field.referenceDisplayLabel }}:</p>
@@ -329,11 +612,19 @@
                     field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                       ? $event.value
                       : $event.id,
+                    field.dataType === 'MultiPicklist' ? true : false,
                   )
                 "
+                @search-change="
+                  field.dataType === 'Reference'
+                    ? getReferenceFieldList(field.apiName, field.id, 'update', $event)
+                    : null
+                "
+                :loading="dropdownLoading"
                 openDirection="below"
                 style="width: 18vw"
                 selectLabel="Enter"
+                :multiple="field.dataType === 'MultiPicklist' ? true : false"
                 :track-by="
                   field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                     ? 'value'
@@ -346,7 +637,12 @@
                 "
               >
                 <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
+                  <p class="multi-slot">No results. Try loading more</p>
+                </template>
+                <template slot="afterList">
+                  <p class="multi-slot__more">
+                    Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+                  </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -377,7 +673,7 @@
                       v-if="
                         field.dataType === 'Picklist' ||
                         field.dataType === 'MultiPicklist' ||
-                        field.dataType === 'Reference'
+                        (field.dataType === 'Reference' && field.apiName !== 'AccountId')
                       "
                     >
                       <p>{{ field.referenceDisplayLabel }}:</p>
@@ -427,6 +723,32 @@
                         </template>
                       </Multiselect>
                     </div>
+                    <div v-else-if="field.apiName === 'AccountId'">
+                      <p>{{ field.referenceDisplayLabel }}*</p>
+                      <Multiselect
+                        v-model="selectedAccount"
+                        :options="allAccounts"
+                        @search-change="getAccounts($event)"
+                        @select="setUpdateValidationValues(field.apiName, $event.id)"
+                        openDirection="below"
+                        style="width: 18vw"
+                        selectLabel="Enter"
+                        track-by="integration_id"
+                        label="name"
+                        :loading="dropdownLoading || loadingAccounts"
+                      >
+                        <template slot="noResult">
+                          <p class="multi-slot">No results.</p>
+                        </template>
+
+                        <template slot="placeholder">
+                          <p class="slot-icon">
+                            <img src="@/assets/images/search.svg" alt="" />
+                            {{ currentAccount }}
+                          </p>
+                        </template>
+                      </Multiselect>
+                    </div>
                     <div v-else-if="field.dataType === 'String' && field.apiName !== 'NextStep'">
                       <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
                       <input
@@ -453,7 +775,7 @@
                         ccols="30"
                         rows="2"
                         :placeholder="currentVals[field.apiName]"
-                        style="width: 20vw; border-radius: 0.2rem; padding: 7px"
+                        style="width: 20vw; border-radius: 6px; padding: 7px"
                         v-model="currentVals[field.apiName]"
                         @input="
                           ;(value = $event.target.value),
@@ -572,9 +894,6 @@
               />
             </div>
           </section>
-          <!-- <div class="adding-product">
-            <button>Add product <img src="@/assets/images/plusOne.png" alt="" /></button>
-          </div> -->
         </div>
         <div class="flex-end-opp">
           <div style="display: flex; align-items: center">
@@ -592,7 +911,7 @@
             {{ currentList }}
             <img
               v-if="!showList"
-              style="height: 1rem; margin-left: 0.5rem"
+              style="height: 0.7rem; margin-left: 0.5rem"
               src="@/assets/images/rightArrow.svg"
               class="invert"
               alt=""
@@ -600,7 +919,7 @@
             <img
               v-else
               class="invert"
-              style="height: 1rem; margin-left: 0.5rem"
+              style="height: 0.7rem; margin-left: 0.5rem"
               src="@/assets/images/downArrow.svg"
               alt=""
             />
@@ -611,12 +930,12 @@
             </div>
             <p @click="showPopularList = !showPopularList" class="list-section__sub-title">
               Standard Lists
-              <img v-if="showPopularList" class="invert" src="@/assets/images/downArrow.svg" alt="" /><img
-                v-else
-                src="@/assets/images/rightArrow.svg"
+              <img
+                v-if="showPopularList"
                 class="invert"
+                src="@/assets/images/downArrow.svg"
                 alt=""
-              />
+              /><img v-else src="@/assets/images/rightArrow.svg" class="invert" alt="" />
             </p>
             <router-link style="width: 100%" v-bind:to="'/pipelines/'">
               <button v-if="showPopularList" @click="allOpportunities" class="list-button">
@@ -660,14 +979,14 @@
             {{ currentWorkflowName ? currentWorkflowName : 'Active Workflows' }}
             <img
               v-if="!workList"
-              style="height: 1rem; margin-left: 0.5rem"
+              style="height: 0.7rem; margin-left: 0.5rem"
               src="@/assets/images/rightArrow.svg"
               class="invert"
               alt=""
             />
             <img
               v-else
-              style="height: 1rem; margin-left: 0.5rem"
+              style="height: 0.7rem; margin-left: 0.5rem"
               class="invert"
               src="@/assets/images/downArrow.svg"
               alt=""
@@ -679,12 +998,12 @@
             </div>
             <p @click="showWorkflowList = !showWorkflowList" class="work-section__sub-title">
               Workflows
-              <img v-if="showWorkflowList" class="invert" src="@/assets/images/downArrow.svg" alt="" /><img
-                v-else
-                src="@/assets/images/rightArrow.svg"
+              <img
+                v-if="showWorkflowList"
                 class="invert"
+                src="@/assets/images/downArrow.svg"
                 alt=""
-              />
+              /><img v-else src="@/assets/images/rightArrow.svg" class="invert" alt="" />
             </p>
             <div style="width: 100%" v-if="showWorkflowList">
               <div :key="i" v-for="(template, i) in templates.list">
@@ -754,7 +1073,7 @@
                 class="invert"
                 style="height: 0.8rem; margin-right: 0.25rem"
                 alt=""
-              />Add filter
+              />Filter
             </button>
             <div v-outside-click="closeFilters" v-if="filtering">
               <Filters @select-filter="selectFilter" :filterFields="filterFields" />
@@ -767,20 +1086,32 @@
               <div class="flex-row">
                 <button @click="closeDateSelected = !closeDateSelected" class="select-btn1">
                   Push Close Date
-                  <img src="@/assets/images/date.svg" height="14px" style="margin-left: 0.25rem" alt="" />
+                  <img
+                    src="@/assets/images/date.svg"
+                    height="14px"
+                    style="margin-left: 0.25rem"
+                    alt=""
+                  />
                 </button>
                 <button @click="advanceStageSelected = !advanceStageSelected" class="select-btn1">
                   Advance Stage
-                  <img src="@/assets/images/stairs.svg" height="14px" style="margin-left: 0.25rem" alt="" />
+                  <img
+                    src="@/assets/images/stairs.svg"
+                    height="14px"
+                    style="margin-left: 0.25rem"
+                    alt=""
+                  />
                 </button>
                 <button @click="forecastSelected = !forecastSelected" class="select-btn1">
                   Change Forecast
-                  <img src="@/assets/images/monetary.svg" height="14px" style="margin-left: 0.25rem" alt="" />
+                  <img
+                    src="@/assets/images/monetary.svg"
+                    height="14px"
+                    style="margin-left: 0.25rem"
+                    alt=""
+                  />
                 </button>
-                <button @click="modifyForecast('add')" class="select-btn">
-                  Start Tracking
-                 
-                </button>
+                <button @click="modifyForecast('add')" class="select-btn">Start Tracking</button>
               </div>
             </div>
             <div class="flex-row-pad" v-if="closeDateSelected">
@@ -909,7 +1240,7 @@
               v-if="
                 field.dataType === 'Picklist' ||
                 field.dataType === 'MultiPicklist' ||
-                field.dataType === 'Reference'
+                (field.dataType === 'Reference' && field.apiName !== 'AccountId')
               "
             >
               <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
@@ -957,6 +1288,32 @@
                 </template>
               </Multiselect>
             </div>
+            <div v-else-if="field.apiName === 'AccountId'">
+              <p>{{ field.referenceDisplayLabel }}*</p>
+              <Multiselect
+                v-model="selectedAccount"
+                :options="allAccounts"
+                @search-change="getAccounts($event)"
+                @select="setUpdateValidationValues(field.apiName, $event.id)"
+                openDirection="below"
+                style="width: 18vw"
+                selectLabel="Enter"
+                track-by="integration_id"
+                label="name"
+                :loading="dropdownLoading || loadingAccounts"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.svg" alt="" />
+                    {{ currentAccount }}
+                  </p>
+                </template>
+              </Multiselect>
+            </div>
             <div v-else-if="field.dataType === 'String' && field.apiName !== 'NextStep'">
               <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
               <input
@@ -981,7 +1338,7 @@
                 ccols="30"
                 rows="2"
                 :placeholder="currentVals[field.apiName]"
-                style="width: 20vw; border-radius: 0.2rem; padding: 7px"
+                style="width: 20vw; border-radius: 6px; padding: 7px"
                 v-model="currentVals[field.apiName]"
                 @input="
                   ;(value = $event.target.value), setUpdateValidationValues(field.apiName, value)
@@ -1085,6 +1442,7 @@
             @checked-box="selectPrimaryCheckbox(opp.id)"
             @inline-edit="inlineUpdate"
             @open-stage-form="openStageForm"
+            @current-inline-row="changeCurrentRow"
             :closeEdit="closeInline"
             :stages="stagesWithForms"
             :inlineLoader="inlineLoader"
@@ -1097,6 +1455,7 @@
             :stageData="newStage"
             :closeDateData="daysForward"
             :ForecastCategoryNameData="newForecast"
+            :currentInlineRow="currentInlineRow"
           />
         </div>
       </section>
@@ -1122,6 +1481,7 @@
             @checked-box="selectWorkflowCheckbox(workflow.id)"
             @inline-edit="inlineUpdate"
             @open-stage-form="openStageForm"
+            @current-inline-row="changeCurrentRow"
             :closeEdit="closeInline"
             :stages="stagesWithForms"
             :inlineLoader="inlineLoader"
@@ -1134,6 +1494,7 @@
             :stageData="newStage"
             :closeDateData="daysForward"
             :ForecastCategoryNameData="newForecast"
+            :currentInlineRow="currentInlineRow"
           />
         </div>
       </section>
@@ -1192,6 +1553,17 @@ export default {
   },
   data() {
     return {
+      notesLength: 0,
+      days: {
+        0: 'Sunday',
+        1: 'Monday',
+        2: 'Tuesday',
+        3: 'Wednesday',
+        4: 'Thursday',
+        5: 'Friday',
+        6: 'Saturday',
+      },
+      currentInlineRow: null,
       inlineResourceId: null,
       stageFormOpen: false,
       closeInline: 0,
@@ -1382,10 +1754,11 @@ export default {
     stageGateField: 'stageGateInstance',
     updateOppForm: 'setForms',
     currentCheckList: 'addToForecastList',
+    accountSobjectId: 'getInitialAccounts',
   },
   methods: {
-    testBool(i) {
-      console.log(i)
+    changeCurrentRow(i) {
+      this.currentInlineRow = i
     },
     addToForecastList() {
       let list = []
@@ -1397,16 +1770,21 @@ export default {
     async modifyForecast(action) {
       try {
         await User.api.modifyForecast(action, this.forecastList)
-        this.$Alert.alert({
+
+        this.$toast('Opportunities added to Tracker.', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 1500,
-          message: 'Opportunities added to forecast.',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } catch (e) {
-        this.$Alert.alert({
-          type: 'error',
-          timeout: 1500,
-          message: 'Error adding Opportunities',
+        this.$toast('Error adding opportunities.', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } finally {
         this.$store.dispatch('refreshCurrentUser')
@@ -1424,10 +1802,11 @@ export default {
       this.stageGateField = null
       this.stageFormOpen = false
     },
-    async getReferenceFieldList(key, val, type) {
+    async getReferenceFieldList(key, val, type, eventVal) {
       try {
         const res = await SObjects.api.getSobjectPicklistValues({
           sobject_id: val,
+          value: eventVal ? eventVal : '',
         })
         if (type === 'update') {
           this.referenceOpts[key] = res
@@ -1435,7 +1814,13 @@ export default {
           this.createReferenceOpts[key] = res
         }
       } catch (e) {
-        console.log(e)
+        this.$toast('Error gathering reference fields', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     emitCloseEdit() {
@@ -1466,16 +1851,24 @@ export default {
               })
           })
       } catch (e) {
-        console.log(e)
+        this.$toast('Error updating Opportunity!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         setTimeout(() => {
           this.inlineLoader = false
           this.closeInline += 1
         }, 1500)
-        this.$Alert.alert({
+        this.$toast('Salesforce Update Successful', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 750,
-          message: 'Salesforce update successful!',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
@@ -1525,7 +1918,13 @@ export default {
           this.allOpps = res.results
         }
       } catch (e) {
-        console.log(e)
+        this.$toast('Error creating filter, please try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         this.operatorValue = 'EQUALS'
         this.currentOperator = ['equals']
@@ -1869,7 +2268,13 @@ export default {
         const res = await SObjectPicklist.api.listPicklists(query_params)
         this.picklistQueryOpts[type] = res.length ? res[0]['values'] : []
       } catch (e) {
-        console.log(e)
+        this.$toast('Error gathering update picklist fields', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async listStagePicklists(type, query_params) {
@@ -1877,7 +2282,13 @@ export default {
         const res = await SObjectPicklist.api.listPicklists(query_params)
         this.stagePicklistQueryOpts[type] = res.length ? res[0]['values'] : []
       } catch (e) {
-        console.log(e)
+        this.$toast('Error gathering stage picklist fields', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async listCreatePicklists(type, query_params) {
@@ -1885,7 +2296,13 @@ export default {
         const res = await SObjectPicklist.api.listPicklists(query_params)
         this.createQueryOpts[type] = res.length ? res[0]['values'] : []
       } catch (e) {
-        console.log(e)
+        this.$toast("Error gathering 'create' picklist fields", {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async updateWorkflow(id) {
@@ -1894,7 +2311,13 @@ export default {
           fromWorkflow: true,
         })
       } catch (e) {
-        console.log(e)
+        this.$toast('Error running workflow, refreh page and try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     resetNotes() {
@@ -1916,7 +2339,13 @@ export default {
         // this.addOppModalOpen = true
         this.contactInstanceId = res.form_id
       } catch (e) {
-        console.log(e)
+        this.$toast('Error updating conacts', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async createFormInstance(id, alertInstanceId = null) {
@@ -1952,12 +2381,19 @@ export default {
               : (this.currentAccount = 'Account')
           })
       } catch (e) {
-        console.log(e)
+        this.$toast('Error creating update form', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         this.dropdownLoading = false
       }
     },
     async createOppInstance() {
+      this.formData = {}
       this.currentVals = []
       this.selectedAccount = null
       this.selectedOwner = null
@@ -1969,7 +2405,13 @@ export default {
         this.addOppModalOpen = true
         this.oppInstanceId = res.form_id
       } catch (e) {
-        console.log(e)
+        this.$toast('Error building create form', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async oppInstance(id) {
@@ -1982,7 +2424,13 @@ export default {
         this.currentVals = res.current_values
         this.oppInstanceId = res.form_id
       } catch (e) {
-        console.log(e)
+        this.$toast('Error building update form', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async stageGateInstance(field) {
@@ -1995,7 +2443,13 @@ export default {
         })
         this.stageGateId = res.form_id
       } catch (e) {
-        console.log(e)
+        this.$toast('Error creating stage form', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     pushCloseDate() {
@@ -2044,8 +2498,12 @@ export default {
         this.primaryCheckList = []
       }
     },
-    setUpdateValues(key, val) {
-      if (val) {
+    setUpdateValues(key, val, multi) {
+      if (multi) {
+        this.formData[key] = this.formData[key] ? this.formData[key] + ';' + val : val
+      }
+
+      if (val && !multi) {
         this.formData[key] = val
       }
       if (key === 'StageName') {
@@ -2070,7 +2528,13 @@ export default {
           this.stillNextMonth()
         }
       } catch (e) {
-        console.log(e)
+        this.$toast('Error updating Opporunity', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async resourceSync() {
@@ -2081,17 +2545,24 @@ export default {
         try {
           await SObjects.api.resourceSync()
         } catch (e) {
-          console.log(e)
+          this.$toast('Error syncing your resources, refresh page', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
         } finally {
           this.$store.dispatch('refreshCurrentUser')
           setTimeout(() => {
             this.loading = false
           }, 100)
-          this.$Alert.alert({
+          this.$toast('Daily sync complete', {
+            timeout: 2000,
+            position: 'top-left',
             type: 'success',
-            timeout: 3000,
-            message: 'Daily Sync complete',
-            sub: 'All fields reflect your current SFDC data',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         }
       }
@@ -2100,17 +2571,24 @@ export default {
       try {
         await SObjects.api.resourceSync()
       } catch (e) {
-        console.log(e)
+        this.$toast('Error syncing your resources, refresh page', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         this.$store.dispatch('refreshCurrentUser')
         setTimeout(() => {
           this.loading = false
         }, 100)
-        this.$Alert.alert({
+        this.$toast('Sync complete', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 1500,
-          message: 'Sync complete',
-          sub: 'All fields reflect your current SFDC data',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
@@ -2126,6 +2604,9 @@ export default {
             let updatedRes = await SObjects.api.getObjects('Opportunity')
             this.allOpps = updatedRes.results
             this.originalList = updatedRes.results
+            if (this.selectedWorkflow) {
+              this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+            }
           })
         if (this.currentList === 'Closing this month') {
           this.stillThisMonth()
@@ -2133,14 +2614,22 @@ export default {
           this.stillNextMonth()
         }
       } catch (e) {
-        console.log(e)
+        this.$toast('Error updating stage form', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         this.closeStageForm()
         this.formData = {}
-        this.$Alert.alert({
+        this.$toast('Salesforce Update Successful', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 1000,
-          message: 'Salesforce update successful!',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
         this.dropdownLoading = false
       }
@@ -2170,14 +2659,22 @@ export default {
           this.stillNextMonth()
         }
       } catch (e) {
-        console.log(e)
+        this.$toast('Error updating Opporutniy, please try again.', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         this.updateList = []
         this.formData = {}
-        this.$Alert.alert({
+        this.$toast('Salesforce Update Successful', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 1000,
-          message: 'Salesforce update successful!',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
         this.closeFilterSelection()
       }
@@ -2196,12 +2693,20 @@ export default {
             this.originalList = updatedRes.results
           })
       } catch (e) {
-        console.log(e)
+        this.$toast('Error creating opportunity', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
-        this.$Alert.alert({
+        this.$toast('Opportunity created successfully.', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 1000,
-          message: 'Opportunity created successfully!',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
@@ -2220,7 +2725,13 @@ export default {
             this.updateWorkflow(id ? id : this.id)
           }
         } catch (error) {
-          console.log(error)
+          this.$toast('Error gathering workflow!', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
         } finally {
           this.selectedWorkflow = true
           this.loadingWorkflows = false
@@ -2239,7 +2750,13 @@ export default {
         )
         this.filteredWorkflows = this.currentWorkflow
       } catch (error) {
-        console.log(error)
+        this.$toast('Error updateing workflow', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         this.selectedWorkflow = true
         this.showList = false
@@ -2353,7 +2870,9 @@ export default {
         let stages = stageGateForms.map((field) => field.stage)
         this.stagesWithForms = stages
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
-        this.createOppForm = this.createOppForm[0].fieldsRef
+        this.createOppForm = this.createOppForm[0].fieldsRef.filter(
+          (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+        )
 
         for (const field of stageGateForms) {
           this.stageValidationFields[field.stage] = field.fieldsRef
@@ -2376,7 +2895,13 @@ export default {
           }
         }
       } catch (error) {
-        console.log(error)
+        this.$toast('Error setting form fields!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async getUsers() {
@@ -2384,24 +2909,30 @@ export default {
         const res = await SObjects.api.getObjects('User')
         this.allUsers = res.results.filter((user) => user.has_salesforce_integration)
       } catch (e) {
-        console.log(e)
+        this.$toast('Error gathering users!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
-    // async getInitialAccounts() {
-    //   this.loadingAccounts = true
-    //   if (this.accountSobjectId) {
-    //     try {
-    //       const res = await SObjects.api.getSobjectPicklistValues({
-    //         sobject_id: this.accountSobjectId,
-    //       })
-    //       this.allAccounts = res
-    //     } catch (e) {
-    //       console.log(e)
-    //     } finally {
-    //       this.loadingAccounts = false
-    //     }
-    //   }
-    // },
+    async getInitialAccounts() {
+      this.loadingAccounts = true
+      if (this.accountSobjectId) {
+        try {
+          const res = await SObjects.api.getSobjectPicklistValues({
+            sobject_id: this.accountSobjectId,
+          })
+          this.allAccounts = res
+        } catch (e) {
+          console.log(e)
+        } finally {
+          this.loadingAccounts = false
+        }
+      }
+    },
     async getAccounts(val) {
       this.loadingAccounts = true
       try {
@@ -2411,7 +2942,13 @@ export default {
         })
         this.allAccounts = res
       } catch (e) {
-        console.log(e)
+        this.$toast('Error gathering Accounts!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         this.loadingAccounts = false
       }
@@ -2423,7 +2960,13 @@ export default {
         this.allOpps = res.results
         this.originalList = res.results
       } catch (e) {
-        console.log(e)
+        this.$toast('Error gathering Opportunities!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         setTimeout(() => {
           this.loading = false
@@ -2440,10 +2983,17 @@ export default {
           for (let i = 0; i < res.length; i++) {
             this.notes.push(res[i])
             this.notes = this.notes.filter((note) => note.saved_data__meeting_comments !== null)
+            this.notesLength = this.notes.length
           }
         }
       } catch (e) {
-        console.log(e)
+        this.$toast('Error gathering Notes!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     closeDatesThisMonth() {
@@ -2488,6 +3038,10 @@ export default {
       this.showList = !this.showList
       this.closeFilterSelection()
     },
+    weekDay(input) {
+      let newer = new Date(input)
+      return this.days[newer.getDay()]
+    },
     formatDateTime(input) {
       var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
       if (!input || !input.match(pattern)) {
@@ -2495,6 +3049,13 @@ export default {
       }
       let newDate = input.replace(pattern, '$2/$3/$1')
       return newDate.split('T')[0]
+    },
+    formatMostRecent(date2) {
+      let today = new Date()
+      let d = new Date(date2)
+      let diff = today.getTime() - d.getTime()
+      let days = diff / (1000 * 3600 * 24)
+      return Math.floor(days)
     },
   },
   beforeUpdate() {
@@ -2510,8 +3071,33 @@ export default {
 </script>
 <style lang="scss" scoped>
 @import '@/styles/variables';
-@import '@/styles/buttons';
 
+.light-green-bg {
+  background-color: $white-green;
+  color: $dark-green !important;
+  border: 1px solid $dark-green !important;
+}
+.note-border {
+  border: 1px solid $very-light-gray;
+  border-radius: 6px;
+  padding: 4px;
+  margin: 0px 6px;
+  font-size: 12px;
+}
+.border-bottom {
+  border-bottom: 1.25px solid $soft-gray;
+}
+.sticky {
+  position: sticky;
+  background-color: white;
+  width: 100%;
+  left: 0;
+  top: 0;
+  padding: 0px 6px 8px -2px;
+}
+.rel {
+  position: relative;
+}
 .adding-product {
   height: 3rem;
   margin: 1rem 0rem;
@@ -2707,12 +3293,12 @@ select {
   border-radius: 0;
 }
 .select-btn1 {
-  border: 1px solid #e8e8e8;
+  border: 0.7px solid $very-light-gray;
   padding: 0.5rem 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0.25rem;
+  border-radius: 6px;
   background-color: white;
   cursor: pointer;
   color: $dark-green;
@@ -2730,7 +3316,7 @@ select {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0.25rem;
+  border-radius: 6px;
   background-color: white;
   cursor: pointer;
   color: $dark-green;
@@ -2750,7 +3336,7 @@ select {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0.25rem;
+  border-radius: 6px;
   background-color: $base-gray;
   cursor: pointer;
   color: white;
@@ -2824,9 +3410,11 @@ h3 {
   max-height: 76vh;
   overflow: scroll;
   margin-top: 0.5rem;
-  border-radius: 5px;
-  box-shadow: 1px 2px 20px 2px $soft-gray;
-  background-color: $off-white;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+  border-collapse: separate;
+  border-spacing: 3px;
+  background-color: white;
 }
 .table-section::-webkit-scrollbar {
   width: 0px; /* Mostly for vertical scrollbars */
@@ -2845,6 +3433,10 @@ h3 {
 .table-section::-webkit-scrollbar-track-piece:end {
   margin-right: 50vw;
 }
+.green-text {
+  color: $dark-green;
+  text-decoration: underline;
+}
 .multi-slot {
   display: flex;
   align-items: center;
@@ -2852,7 +3444,7 @@ h3 {
   color: $gray;
   font-size: 12px;
   width: 100%;
-  padding: 0.5rem 0rem;
+  padding: 0;
   margin: 0;
   cursor: text;
   &__more {
@@ -2861,10 +3453,11 @@ h3 {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: bold;
-    border-top: 1px solid #e8e8e8;
+    font-size: 12px;
+    // border-top: 1px solid #e8e8e8;
     width: 100%;
-    padding: 0.75rem 0rem;
+    height: 40px;
+    padding: 4px 0px 6px 0px;
     margin: 0;
     cursor: pointer;
 
@@ -2901,13 +3494,13 @@ h3 {
   background-color: $white;
   overflow: auto;
   min-width: 32vw;
-  max-width: 40vw;
+  max-width: 36vw;
   min-height: 44vh;
   max-height: 80vh;
   align-items: center;
-  border-radius: 0.3rem;
-  padding: 0.25rem;
-  border: 1px solid #e8e8e8;
+  border-radius: 0.5rem;
+  border: 1px solid $very-light-gray;
+  padding: 0px 4px;
 }
 .close-button {
   border-radius: 50%;
@@ -2929,7 +3522,7 @@ h3 {
   // min-height: 80vh;
   width: 40vw;
   align-items: center;
-  border-radius: 0.6rem;
+  border-radius: 0.5rem;
   padding: 1rem;
   border: 1px solid #e8e8e8;
 }
@@ -2952,26 +3545,33 @@ h3 {
   }
 }
 .note-section {
-  padding: 0.5rem 1rem;
+  padding: 0.25rem 1rem;
   margin-bottom: 0.25rem;
   background-color: white;
   border-bottom: 1px solid $soft-gray;
   overflow: scroll;
   &__title {
-    font-size: 16px;
+    font-size: 19px;
     font-weight: bolder;
-    color: $dark-green;
-    letter-spacing: 1.2px;
+    letter-spacing: 0.6px;
+    color: $base-gray;
+    padding: 0;
   }
   &__body {
     color: $base-gray;
     font-family: $base-font-family;
     word-wrap: break-word;
     white-space: pre-wrap;
+    border-left: 2px solid $dark-green;
+    padding-left: 8px;
+    font-size: 14px;
   }
   &__date {
     color: $mid-gray;
-    font-size: 11px;
+    font-size: 12px;
+    margin-top: -14px;
+    margin-bottom: 8px;
+    letter-spacing: 0.6px;
   }
 }
 .table-cell-header {
@@ -3029,6 +3629,9 @@ section {
   flex-direction: row;
   align-items: center;
   letter-spacing: 1px;
+  h4 {
+    font-size: 20px;
+  }
 }
 .flex-row-pad {
   margin-top: -1rem;
@@ -3064,6 +3667,7 @@ section {
 .pipelines {
   padding-top: 5rem;
   color: $base-gray;
+  margin: 0 1rem 0 0.5rem;
 }
 .invert {
   filter: invert(80%);
@@ -3076,7 +3680,7 @@ section {
   align-items: center;
   border: none;
   padding: 0.25rem 0.6rem;
-  border-radius: 0.2rem;
+  border-radius: 6px;
   background-color: $gray;
   cursor: text;
   color: white;
@@ -3091,7 +3695,7 @@ section {
   height: 4.5vh;
   margin: 0 0.5rem 0 0;
   padding: 0.25rem 0.6rem;
-  border-radius: 0.2rem;
+  border-radius: 6px;
   background-color: transparent;
   cursor: pointer;
   color: $dark-green;
@@ -3106,7 +3710,7 @@ section {
   border: none;
   margin: 0 0.5rem 0 0;
   padding: 0.5rem 1.25rem;
-  border-radius: 0.2rem;
+  border-radius: 6px;
   background-color: $dark-green;
   cursor: pointer;
   color: white;
@@ -3118,7 +3722,7 @@ section {
   border: none;
   padding: 0.5rem 1rem;
   font-size: 16px;
-  border-radius: 0.2rem;
+  border-radius: 6px;
   background-color: $dark-green;
   cursor: pointer;
   color: white;
@@ -3140,7 +3744,7 @@ section {
 .search-bar {
   height: 4.5vh;
   background-color: $off-white;
-  border: 1px solid #e8e8e8;
+  border: 0.7px solid $gray;
   display: flex;
   align-items: center;
   padding: 2px;
@@ -3149,7 +3753,7 @@ section {
 }
 #update-input {
   border: none;
-  border-radius: 0.25rem;
+  border-radius: 6px;
   box-shadow: 1px 1px 1px 1px $very-light-gray;
   background-color: white;
   min-height: 2.5rem;
@@ -3224,7 +3828,7 @@ section {
   max-width: 10vw;
   margin: 0 0.5rem 0 0;
   padding: 0.25rem 0.6rem;
-  border-radius: 0.2rem;
+  border-radius: 6px;
   background-color: $white-green;
   cursor: pointer;
   color: $dark-green;
@@ -3252,7 +3856,7 @@ main:hover > span {
   min-height: 5vh;
   margin: 0 0.5rem 0 0;
   padding: 0.25rem 0.6rem;
-  border-radius: 0.2rem;
+  border-radius: 6px;
   background-color: $dark-green;
   cursor: pointer;
   color: white;
@@ -3263,7 +3867,7 @@ main:hover > span {
   position: absolute;
   top: 20vh;
   left: 12.5vw;
-  border-radius: 0.25rem;
+  border-radius: 6px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -3272,7 +3876,7 @@ main:hover > span {
   max-height: 70vh;
   overflow: scroll;
   margin-right: 0.5rem;
-  box-shadow: 1px 1px 2px 2px $very-light-gray;
+  box-shadow: 1px 1px 2px 1px $very-light-gray;
   &__title {
     position: sticky;
     top: 0;
@@ -3308,7 +3912,7 @@ main:hover > span {
   position: absolute;
   top: 20vh;
   left: 1rem;
-  border-radius: 0.25rem;
+  border-radius: 6px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -3317,7 +3921,7 @@ main:hover > span {
   max-height: 70vh;
   overflow: scroll;
   margin-right: 0.5rem;
-  box-shadow: 1px 1px 2px 2px $very-light-gray;
+  box-shadow: 1px 1px 2px 1px $very-light-gray;
   &__title {
     position: sticky;
     top: 0;
@@ -3356,7 +3960,7 @@ main:hover > span {
   background-color: transparent;
   border: none;
   padding: 0.75rem;
-  border-radius: 0.2rem;
+  border-radius: 6px;
   color: $mid-gray;
   cursor: pointer;
   font-size: 11px;
@@ -3404,7 +4008,7 @@ a {
   text-decoration: none;
 }
 .logo {
-  height: 1.75rem;
+  height: 20px;
   margin-left: 0.5rem;
   margin-right: 0.25rem;
   filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)

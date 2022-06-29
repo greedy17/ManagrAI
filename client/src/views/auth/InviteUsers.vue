@@ -1,24 +1,26 @@
 <template>
   <div class="invite-users">
-    <div v-if="getUser.userLevel === 'MANAGER'" class="invite-users__header">
+    <div class="invite-users__header">
       <h3 style="color: #4d4e4c">Manage Your Team</h3>
 
       <button class="invite_button" type="submit" @click="handleInvite">
         Invite Member
         <img
+          v-if="hasSlack"
           style="height: 0.8rem; margin-left: 0.25rem"
           src="@/assets/images/slackLogo.png"
+          alt=""
+        />
+        <img
+          v-else
+          style="height: 0.8rem; margin-left: 0.25rem"
+          src="@/assets/images/logo.png"
           alt=""
         />
       </button>
     </div>
 
-    <Invite
-      v-if="getUser.userLevel === 'MANAGER' || user.isAdmin"
-      class="invite-users__inviter"
-      :inviteOpen="inviteOpen"
-      @cancel="handleCancel"
-    />
+    <Invite class="invite-users__inviter" :inviteOpen="inviteOpen" @cancel="handleCancel" />
 
     <section>
       <header class="invite-users__header">
@@ -94,10 +96,12 @@ export default {
       User.api
         .update(this.getUser.id, this.profileForm.value)
         .then((response) => {
-          this.$Alert.alert({
-            message: 'Successfully Updated Profile info',
-            type: 'success',
+          this.$toast('Sucessfully updated profile info', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
           this.$store.dispatch('updateUser', User.fromAPI(response.data))
 
@@ -128,6 +132,12 @@ export default {
   computed: {
     getUser() {
       return this.$store.state.user
+    },
+    isAdmin() {
+      return this.$store.state.user.isAdmin
+    },
+    hasSlack() {
+      return !!this.$store.state.user.slackRef
     },
   },
 }

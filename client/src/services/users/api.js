@@ -19,6 +19,7 @@ const PASSWORD_RESET_EMAIL_ENDPOINT = `${USERS_ENDPOINT}password/reset/link/`
 const PASSWORD_RESET_ENDPOINT = `${USERS_ENDPOINT}password/reset/`
 const FORECAST_ENDPOINT = '/users/modify-forecast/'
 const PULL_USAGE_DATA = '/users/pull-usage-data/'
+const FORECAST_VALUES_ENDPOINT = '/users/get-forecast-values/'
 
 export default class UserAPI {
   get client() {
@@ -169,6 +170,14 @@ export default class UserAPI {
       .get(url)
       .then(response => this.cls.fromAPI(response.data))
       .catch(apiErrorHandler({ apiName: 'Get User Profile Data API error' }))
+  }
+
+  getForecastValues() {
+    const url = FORECAST_VALUES_ENDPOINT
+    return this.client
+      .get(url)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'Get Forecast values error' }))
   }
 
   update(id, data) {

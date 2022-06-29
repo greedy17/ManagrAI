@@ -18,7 +18,7 @@
       </div>
     </Modal>
 
-    <div class="center__">
+    <div @click="test" class="center__">
       <h3 v-if="!editing" :class="templates.refreshing ? 'loading-title titles' : 'titles'">
         Edit your Workflow Automation
       </h3>
@@ -32,7 +32,7 @@
         Edit, Run, and Schedule your saved Automations
       </p>
     </div>
-    <div v-if="!alertsCount(templates.list.length)">
+    <div v-if="!alertsCount(templates.list.length) && !templates.refreshing">
       <h3
         class="bouncy"
         style="
@@ -68,7 +68,7 @@
             </div>
             <div class="added-collection__body">
               <button
-                :disabled="clicked.includes(alert.id)"
+                :disabled="clicked.includes(alert.id) || !hasSlackIntegration"
                 @click.stop="onRunAlertTemplateNow(alert.id)"
                 class="green_button"
               >
@@ -119,11 +119,19 @@
 
               <div class="row__two">
                 <span class="img-border">
-                  <img @click="makeAlertCurrent(alert)" src="@/assets/images/edit.svg" class="invert" />
+                  <img
+                    @click="makeAlertCurrent(alert)"
+                    src="@/assets/images/edit.svg"
+                    class="invert"
+                  />
                 </span>
 
                 <span class="img-border">
-                  <img src="@/assets/images/trash.svg" class="invert" @click="deleteClosed(alert.id)" />
+                  <img
+                    src="@/assets/images/trash.svg"
+                    class="invert"
+                    @click="deleteClosed(alert.id)"
+                  />
                 </span>
               </div>
             </div>
@@ -185,7 +193,7 @@
         </div>
       </transition>
     </template>
-    <div class="center-loader" v-if="templates.refreshing && alertsCount(templates.list.length)">
+    <div class="center-loader" v-if="templates.refreshing">
       <Loader loaderText="Gathering your workflows" />
     </div>
   </div>
@@ -206,7 +214,7 @@ import AlertsEditPanel from '@/views/settings/alerts/view/_AlertsEditPanel'
  */
 import { CollectionManager } from '@thinknimble/tn-models'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
-import { UserConfigForm } from '@/services/users/forms'
+// import { UserConfigForm } from '@/services/users/forms'
 import User from '@/services/users'
 
 import AlertTemplate from '@/services/alerts/'
@@ -230,7 +238,7 @@ export default {
       currentAlert: {},
       editing: true,
       isHiding: false,
-      userConfigForm: new UserConfigForm({}),
+      // userConfigForm: new UserConfigForm({}),
       configName: '',
       configArray: [],
       currentZoomChannel: '',
@@ -248,14 +256,11 @@ export default {
       this.getRecapChannel()
     }
     await this.listUserChannels()
-    this.userConfigForm = new UserConfigForm({
-      activatedManagrConfigs: this.user.activatedManagrConfigs,
-    })
   },
   methods: {
-    // test() {
-    //   console.log(this.templates)
-    // },
+    test() {
+      console.log(this.templates)
+    },
     async getRecapChannel() {
       const res = await SlackOAuth.api.channelDetails(this.hasRecapChannel)
       this.currentRecapChannel = res.channel.name
@@ -272,7 +277,7 @@ export default {
     handleUpdate() {
       // this.loading = true
       User.api
-        .update(this.user.id, this.userConfigForm.value)
+        .update(this.user.id)
         .then((response) => {
           this.$store.dispatch('updateUser', User.fromAPI(response.data))
         })
@@ -327,23 +332,23 @@ export default {
       try {
         await AlertTemplate.api.deleteAlertTemplate(id)
         await this.templates.refresh()
-        this.userConfigForm.field.activatedManagrConfigs.value =
-          this.userConfigForm.field.activatedManagrConfigs.value.filter(
-            (val) => val !== this.deleteTitle,
-          )
         this.handleUpdate()
 
         this.deleteOpen = !this.deleteOpen
-        this.$Alert.alert({
-          message: 'Workflow removed',
-          type: 'success',
+        this.$toast('Workflow removed', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } catch {
-        this.$Alert.alert({
-          message: 'There was an error removing your alert',
-          type: 'error',
+        this.$toast('Error removing workflow', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
@@ -351,33 +356,42 @@ export default {
       try {
         await AlertTemplate.api.updateAlertTemplate(id, { is_active: value })
         await this.templates.refresh()
-        this.$Alert.alert({
-          message: `Alert is now ${value ? 'active' : 'inactive'}`,
-          type: 'success',
+
+        this.$toast(`Alert is now ${value ? 'active' : 'inactive'}`, {
           timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } catch {
-        this.$Alert.alert({
-          message: 'There was an error toggling your alert',
-          type: 'error',
+        this.$toast('Error toggling workflow', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
     async onRunAlertTemplateNow(id) {
       try {
         await AlertTemplate.api.runAlertTemplateNow(id)
-        this.$Alert.alert({
-          message: `Alert has been initiated`,
-          type: 'success',
+        this.$toast('Workflow initiated', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
         this.clicked.push(id)
       } catch {
-        this.$Alert.alert({
-          message: 'There was an error removing your alert',
-          type: 'error',
+        this.$toast('Error removing workflow', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
@@ -390,10 +404,14 @@ export default {
       return !!this.$store.state.user.slackRef
     },
     hasRecapChannel() {
-      return this.$store.state.user.slackAccount.recapChannel
+      return this.$store.state.user.slackAccount
+        ? this.$store.state.user.slackAccount.recapChannel
+        : null
     },
     zoomChannel() {
-      return this.$store.state.user.slackAccount.zoomChannel
+      return this.$store.state.user.slackAccount
+        ? this.$store.state.user.slackAccount.zoomChannel
+        : null
     },
     userLevel() {
       return this.$store.state.user.userLevel

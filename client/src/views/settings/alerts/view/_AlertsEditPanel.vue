@@ -490,10 +490,12 @@ export default {
       let countOperands = this.alert.groupsRef[groupIndex].operandsRef.length
       if (confirmation) {
         if (countOperands <= 1) {
-          return this.$Alert.alert({
-            type: 'error',
-            message: 'Groups must have at least one operand',
+          this.$toast('Must have at least 1 operand', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         }
 
@@ -519,10 +521,12 @@ export default {
 
       if (confirmation) {
         if (this.alert.groupsRef[index] <= 1) {
-          return this.$Alert.alert({
-            type: 'error',
-            message: 'Groups must have at least one operand',
+          this.$toast('Must have at least 1 operand', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         }
         try {
@@ -565,10 +569,12 @@ export default {
           }, 1000)
         } catch (e) {
           console.log(e)
-          this.$Alert.alert({
-            message: 'There was an error updating your template',
-            type: 'error',
+          this.$toast('Error updating template', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         } finally {
           this.savingInTab = false
@@ -593,10 +599,12 @@ export default {
           }, 1000)
         } catch (e) {
           console.log(e)
-          this.$Alert.alert({
-            message: 'There was an error updating your template',
-            type: 'error',
+          this.$toast('Error updating template', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         } finally {
           this.savingInTab = false

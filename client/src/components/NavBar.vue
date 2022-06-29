@@ -8,7 +8,7 @@
       </router-link>
 
       <div class="left" ref="user-menu-icon">
-        <div class="mar" v-if="isAdmin">
+        <div class="mar" v-if="isAdmin && userLevel !== 'REP'">
           <ul>
             <li>
               <router-link active-class="active" :to="{ name: 'ListTemplates' }"
@@ -86,7 +86,7 @@
           </ul>
         </div>
 
-        <div v-else-if="userLevel === 'REP'">
+        <div class="mar" v-else-if="userLevel === 'REP'">
           <ul>
             <!-- <li>
               <router-link
@@ -114,7 +114,7 @@
                 >Meetings</router-link
               >
             </li>
-            <li>
+            <li v-if="!isOnboarding">
               <router-link exact-active-class="active" :to="{ name: 'Forecast' }"
                 >Tracker<span>Beta</span></router-link
               >
@@ -125,7 +125,7 @@
 
       <div v-if="userLevel == 'REP' && !user.onboarding" class="right">
         <router-link exact-active-class="active-img" :to="{ name: 'Integrations' }"
-          ><img src="@/assets/images/connect.svg" alt="" />
+          ><img src="@/assets/images/connect.svg" class="nav-img" alt="" />
         </router-link>
 
         <router-link v-if="isAdmin" exact-active-class="active-img" :to="{ name: 'Required' }"
@@ -140,16 +140,8 @@
         </div>
 
         <div class="center">
-          <router-link class="pad" :to="{ name: 'Login' }">
-            <button class="logout">
-              Log out
-              <img
-                @click="logOut"
-                src="@/assets/images/blacklogout.svg"
-                alt=""
-                style="height: 0.75rem; margin: 0.25rem"
-              />
-            </button>
+          <router-link :to="{ name: 'Login' }">
+            <img @click="logOut" src="@/assets/images/logout.svg" alt="" height="16px" />
           </router-link>
         </div>
       </div>
@@ -171,16 +163,8 @@
         </div>
 
         <div class="center">
-          <router-link class="pad" :to="{ name: 'Login' }">
-            <button class="logout">
-              Log out
-              <img
-                @click="logOut"
-                src="@/assets/images/blacklogout.svg"
-                alt=""
-                style="height: 0.75rem; margin: 0.25rem"
-              />
-            </button>
+          <router-link :to="{ name: 'Login' }">
+            <img @click="logOut" src="@/assets/images/logout.svg" alt="" height="16px" />
           </router-link>
         </div>
       </div>
@@ -275,7 +259,7 @@ export default {
 span {
   font-size: 11px;
   color: $dark-green;
-  background-color: $soft-gray;
+  background-color: #f3f0f0;
   margin-left: 0.25rem;
   padding: 0.2rem;
   border-radius: 0.2rem;
@@ -285,7 +269,7 @@ span {
   align-items: center !important;
   border: none;
   margin: 1rem 0rem 0.25rem 0rem;
-  background-color: $soft-gray;
+  background-color: #f3f0f0;
   padding: 0.2rem;
   border-radius: 0.3rem;
   small {
@@ -331,7 +315,7 @@ nav {
   z-index: 200;
   width: 100vw;
   padding: 0.25rem 0 1rem 0;
-  border-bottom: 2px solid $soft-gray;
+  border-bottom: 1px solid #e8e8e8;
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }

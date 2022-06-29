@@ -1,10 +1,10 @@
 <template>
   <div class="alerts-page">
     <div class="alerts-header">
-      <div>
-        <h3>{{config.title}}</h3>
+      <div @click="test">
+        <h3>{{ config.title }}</h3>
         <p style="margin-top: -0.5rem; font-size: 14px; color: #9b9b9b">
-          {{config.subtitle}}
+          {{ config.subtitle }}
         </p>
       </div>
 
@@ -13,197 +13,150 @@
         Back to workflows
       </button>
     </div>
-
-    <div style="margin-top: 1rem" v-if="pageNumber === 0" class="alert__column">
-      <template>
-        <div
-          class="forecast__collection"
-          :key="i"
-          v-for="(form, i) in alertTemplateForm.field.alertConfig.groups"
-        >
-          <div v-if="selectField">
-            <div
-              class="delivery__row"
-              :key="index"
-              v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
-            >
-              <div v-if="largeOpps">
-                <span style="margin-bottom: 0.5rem">Select your "Amount" Field</span>
-                  <div>
-                    <div class="alert-group-row__operands">
-                      <div
-                        :key="i"
-                        v-for="(alertOperand, i) in alertGroup.field.alertOperands.groups"
-                        class="alert-group-row__operands__row rows"
-                      >
-                        <div :class="i > 0 ? 'visible' : ''">
-                          <div>
-                            <div>
-                              <FormField>
-                                <template v-slot:input>
-                                  <Multiselect
-                                    placeholder="Select Field"
-                                    v-model="identity"
-                                    :options="objectFields.list"
-                                    openDirection="below"
-                                    style="min-width: 13vw"
-                                    selectLabel="Enter"
-                                    track-by="apiName"
-                                    label="referenceDisplayLabel"
-                                  >
-                                    <template slot="noResult">
-                                      <p class="multi-slot">No results. Try loading more</p>
-                                    </template>
-                                    <template slot="afterList">
-                                      <p class="multi-slot__more" @click="objectFieldNextPage">
-                                        Load More <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
-                                      </p>
-                                    </template>
-                                    <template slot="placeholder">
-                                      <p class="slot-icon">
-                                        <img src="@/assets/images/search.svg" alt="" />
-                                        Select Field
-                                      </p>
-                                    </template>
-                                  </Multiselect>
+    <div style="margin-top: 1rem" class="alert__column container">
+      <div
+        class="forecast__collection"
+        :key="i"
+        v-for="(form, i) in alertTemplateForm.field.alertConfig.groups"
+      >
+        <div v-if="selectField">
+          <div
+            class="delivery__row"
+            :key="index"
+            v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
+          >
+            <div v-if="largeOpps">
+              <span style="margin-bottom: 0.5rem">Select your "Amount" Field</span>
+              <div>
+                <div class="alert-group-row__operands">
+                  <div
+                    :key="i"
+                    v-for="(alertOperand, i) in alertGroup.field.alertOperands.groups"
+                    class="alert-group-row__operands__row rows"
+                  >
+                    <div :class="i > 0 ? 'visible' : ''">
+                      <div>
+                        <div>
+                          <FormField>
+                            <template v-slot:input>
+                              <Multiselect
+                                placeholder="Select Field"
+                                v-model="largeOpp"
+                                :options="objectFields.list"
+                                openDirection="below"
+                                style="min-width: 13vw"
+                                selectLabel="Enter"
+                                track-by="apiName"
+                                label="referenceDisplayLabel"
+                              >
+                                <template slot="noResult">
+                                  <p class="multi-slot">No results. Try loading more</p>
                                 </template>
-                              </FormField>
-                            </div>
+                                <template slot="afterList">
+                                  <p class="multi-slot__more" @click="objectFieldNextPage">
+                                    Load More
+                                    <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+                                  </p>
+                                </template>
+                                <template slot="placeholder">
+                                  <p class="slot-icon">
+                                    <img src="@/assets/images/search.svg" alt="" />
+                                    Select Field
+                                  </p>
+                                </template>
+                              </Multiselect>
+                            </template>
+                          </FormField>
+                        </div>
 
-                            <div class="alert-operand-row__value">
-                              <span style="margin-bottom: 0.5rem">"Amount" is greater than:</span>
-                              <template>
-                                <div>
-                                  <FormField
-                                    :errors="alertOperand.field.operandValue.errors"
-                                    v-model="largeOppValue"
-                                    :inputType="getInputType(alertOperand.field._operandIdentifier.value)"
-                                    large
-                                    bordered
-                                    placeholder="Enter a value"
-                                  />
-                                </div>
-                              </template>
+                        <div class="alert-operand-row__value">
+                          <span style="margin-bottom: 0.5rem">"Amount" is greater than:</span>
+                          <template>
+                            <div>
+                              <FormField
+                                :errors="alertOperand.field.operandValue.errors"
+                                v-model="largeOppValue"
+                                :inputType="
+                                  getInputType(alertOperand.field._operandIdentifier.value)
+                                "
+                                large
+                                bordered
+                                placeholder="Enter a value"
+                              />
                             </div>
-                          </div>
+                          </template>
                         </div>
                       </div>
                     </div>
                   </div>
-              </div>
-              <div v-else>
-                <span style="margin-bottom: 0.5rem">Select your Field</span>
-                <Multiselect
-                  placeholder="Select Field"
-                  v-model="identity"
-                  :options="objectFields.list"
-                  openDirection="below"
-                  style="min-width: 13vw"
-                  selectLabel="Enter"
-                  track-by="apiName"
-                  label="referenceDisplayLabel"
-                >
-                  <template slot="noResult">
-                    <p class="multi-slot">No results. Try loading more</p>
-                  </template>
-                  <template slot="afterList">
-                    <p class="multi-slot__more" @click="objectFieldNextPage">
-                      Load More <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
-                    </p>
-                  </template>
-                  <template slot="placeholder">
-                    <p class="slot-icon">
-                      <img src="@/assets/images/search.svg" alt="" />
-                      Select Field
-                    </p>
-                  </template>
-                </Multiselect>
+                </div>
               </div>
             </div>
-          </div>
-          <div
-            v-else
-            style="margin-top: 1rem"
-            class="delivery__row"
-            :errors="form.field.recurrenceDay.errors"
-          >
-            <div style="margin-bottom: 0.5rem" class="row__">
-              <label :class="config.newConfigs[0].recurrenceFrequency == 'WEEKLY' ? 'green' : ''"
-                >Weekly</label
+            <div v-else>
+              <span>Select your Field</span>
+              <Multiselect
+                placeholder="Select Field"
+                v-model="identity"
+                :options="objectFields.list"
+                openDirection="below"
+                style="min-width: 13vw; margin-top: 0.75rem"
+                selectLabel="Enter"
+                track-by="apiName"
+                label="referenceDisplayLabel"
               >
-              <ToggleCheckBox
-                @input="
-                  config.newConfigs[0].recurrenceFrequency == 'WEEKLY'
-                    ? (config.newConfigs[0].recurrenceFrequency = 'MONTHLY')
-                    : (config.newConfigs[0].recurrenceFrequency = 'WEEKLY')
-                "
-                :value="config.newConfigs[0].recurrenceFrequency !== 'WEEKLY'"
-                offColor="#41b883"
-                onColor="#41b883"
-                style="margin-left: 0.25rem; margin-right: 0.25rem"
-              />
-              <label :class="config.newConfigs[0].recurrenceFrequency == 'MONTHLY' ? 'green' : ''"
-                >Monthly</label
-              >
-            </div>
-
-            <div v-if="config.newConfigs[0].recurrenceFrequency == 'WEEKLY'">
-              <FormField>
-                <template v-slot:input>
-                  <Multiselect
-                    placeholder="Select Day"
-                    @input="setDay($event)"
-                    v-model="selectedDays"
-                    :options="weeklyOpts"
-                    openDirection="below"
-                    style="width: 14vw"
-                    selectLabel="Enter"
-                    track-by="value"
-                    label="key"
-                    :multiple="true"
-                    :closeOnSelect="false"
-                  >
-                    <template slot="noResult">
-                      <p class="multi-slot">No results.</p>
-                    </template>
-                    <template slot="placeholder">
-                      <p class="slot-icon">
-                        <img src="@/assets/images/search.svg" alt="" />
-                        Select Days
-                      </p>
-                    </template>
-                  </Multiselect>
+                <template slot="noResult">
+                  <p class="multi-slot">No results. Try loading more</p>
                 </template>
-              </FormField>
+                <template slot="afterList">
+                  <p class="multi-slot__more" @click="objectFieldNextPage">
+                    Load More <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+                  </p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.svg" alt="" />
+                    Select Field
+                  </p>
+                </template>
+              </Multiselect>
             </div>
-            <FormField
-              id="delivery"
-              v-if="config.newConfigs[0].recurrenceFrequency == 'MONTHLY'"
-              placeholder="Day of month"
-              v-model="config.newConfigs[0].recurrenceDay"
-              small
-            />
           </div>
-
-          <div
-            style="margin-top: 1rem; margin-left: 0.5rem"
-            v-if="userLevel == 'MANAGER'"
-            class="delivery__row"
-          >
-            <span style="margin-bottom: 0.5rem">Select Users</span>
-
-            <FormField :errors="form.field.alertTargets.errors">
+        </div>
+        <div v-else class="delivery__row" :errors="form.field.recurrenceDay.errors">
+          <div style="margin-bottom: 0.5rem" class="row__">
+            <label :class="config.newConfigs[0].recurrenceFrequency == 'WEEKLY' ? 'green' : ''"
+              >Weekly</label
+            >
+            <ToggleCheckBox
+              v-if="hasSlack"
+              @input="
+                config.newConfigs[0].recurrenceFrequency == 'WEEKLY'
+                  ? (config.newConfigs[0].recurrenceFrequency = 'MONTHLY')
+                  : (config.newConfigs[0].recurrenceFrequency = 'WEEKLY')
+              "
+              :value="config.newConfigs[0].recurrenceFrequency !== 'WEEKLY'"
+              offColor="#41b883"
+              onColor="#41b883"
+              style="margin-left: 0.25rem; margin-right: 0.25rem"
+            />
+            <label :class="config.newConfigs[0].recurrenceFrequency == 'MONTHLY' ? 'green' : ''"
+              >Monthly</label
+            >
+          </div>
+          <div v-if="config.newConfigs[0].recurrenceFrequency == 'WEEKLY'">
+            <FormField>
               <template v-slot:input>
                 <Multiselect
-                  placeholder="Select Users"
-                  @input="mapIds"
-                  v-model="selectedUsers"
-                  :options="userTargetsOpts"
+                  :disabled="!hasSlack"
+                  placeholder="Select Day"
+                  @input="setDay($event)"
+                  v-model="selectedDays"
+                  :options="weeklyOpts"
                   openDirection="below"
                   style="width: 14vw"
                   selectLabel="Enter"
-                  track-by="id"
-                  label="fullName"
+                  track-by="value"
+                  label="key"
                   :multiple="true"
                   :closeOnSelect="false"
                 >
@@ -213,161 +166,195 @@
                   <template slot="placeholder">
                     <p class="slot-icon">
                       <img src="@/assets/images/search.svg" alt="" />
-                      Select Users
+                      {{ hasSlack ? 'Select Days' : 'Connect slack' }}
                     </p>
                   </template>
                 </Multiselect>
               </template>
             </FormField>
           </div>
+          <FormField
+            id="delivery"
+            v-if="config.newConfigs[0].recurrenceFrequency == 'MONTHLY'"
+            placeholder="Day of month"
+            v-model="config.newConfigs[0].recurrenceDay"
+            small
+          />
+        </div>
+        <div v-if="userLevel == 'MANAGER'" class="delivery__row">
+          <span style="margin-bottom: 0.5rem">Select Users</span>
+          <FormField :errors="form.field.alertTargets.errors">
+            <template v-slot:input>
+              <Multiselect
+                :disabled="!hasSlack"
+                placeholder="Select Users"
+                @input="mapIds"
+                v-model="selectedUsers"
+                :options="userTargetsOpts"
+                openDirection="below"
+                style="width: 14vw"
+                selectLabel="Enter"
+                track-by="id"
+                label="fullName"
+                :multiple="true"
+                :closeOnSelect="false"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.svg" alt="" />
+                    {{ hasSlack ? 'Select Users' : 'Connect slack' }}
+                  </p>
+                </template>
+              </Multiselect>
+            </template>
+          </FormField>
+        </div>
+        <div
+          v-if="hasSlack"
+          style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+          "
+        >
+          <div v-if="!channelName" class="row__">
+            <label :class="!create ? 'green' : ''">Select #channel</label>
+            <ToggleCheckBox
+              style="margin-left: 0.25rem; margin-right: 0.25rem"
+              @input="changeCreate"
+              :value="create"
+              offColor="#41b883"
+              onColor="#41b883"
+            />
+            <label :class="create ? 'green' : ''">Create #channel</label>
+          </div>
 
+          <label v-else for="channel" style="font-weight: bold"
+            >Alert will send to
+            <span style="color: #41b883; font-size: 1.2rem">{{ channelName }}</span>
+            channel</label
+          >
           <div
             style="
               display: flex;
               flex-direction: column;
               align-items: center;
               justify-content: flex-start;
-              padding: 0.5rem;
-              margin-top: 0.5rem;
             "
+            v-if="create"
           >
-            <div v-if="!channelName" class="row__">
-              <label :class="!create ? 'green' : ''">Select #channel</label>
-              <ToggleCheckBox
-                style="margin-left: 0.25rem; margin-right: 0.25rem"
-                @input="changeCreate"
-                :value="create"
-                offColor="#41b883"
-                onColor="#41b883"
-              />
-              <label :class="create ? 'green' : ''">Create #channel</label>
+            <input
+              v-model="channelName"
+              class="search__input"
+              type="text"
+              name="channel"
+              id="channel"
+              placeholder="Name your channel"
+              @input="logNewName(channelName)"
+            />
+            <div v-if="!channelCreated" v style="margin-top: 1.25rem">
+              <button
+                v-if="channelName"
+                @click="createChannel(channelName)"
+                class="purple__button bouncy"
+              >
+                Create Channel
+              </button>
+              <button v-else class="disabled__button">Create Channel</button>
+            </div>
+          </div>
+          <div style="margin-top: 0.5rem" v-else>
+            <template>
+              <Multiselect
+                v-if="!directToUsers"
+                placeholder="Select Channel"
+                v-model="selectedChannel"
+                @input="setRecipient"
+                :options="userChannelOpts.channels"
+                openDirection="below"
+                style="min-width: 13vw"
+                selectLabel="Enter"
+                track-by="id"
+                label="name"
+                :loading="dropdownLoading"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results. Try loading more</p>
+                </template>
+                <template slot="afterList">
+                  <p class="multi-slot__more" @click="listUserChannels(userChannelOpts.nextCursor)">
+                    Load More
+                    <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+                  </p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.svg" alt="" />
+                    Select Channels
+                  </p>
+                </template>
+              </Multiselect>
+            </template>
+            <div v-if="userLevel !== 'REP'" class="sendAll">
+              <input type="checkbox" id="allUsers" v-model="directToUsers" />
+              <label for="allUsers">Send directly to users</label>
             </div>
 
-            <label v-else for="channel" style="font-weight: bold"
-              >Alert will send to
-              <span style="color: #41b883; font-size: 1.2rem">{{ channelName }}</span>
-              channel</label
-            >
-            <div
-              style="
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: flex-start;
-              "
-              v-if="create"
-            >
-              <input
-                v-model="channelName"
-                class="search__input"
-                type="text"
-                name="channel"
-                id="channel"
-                placeholder="Name your channel"
-                @input="logNewName(channelName)"
-              />
-
-              <div v-if="!channelCreated" v style="margin-top: 1.25rem">
-                <button
-                  v-if="channelName"
-                  @click="createChannel(channelName)"
-                  class="purple__button bouncy"
-                >
-                  Create Channel
-                </button>
-                <button v-else class="disabled__button">Create Channel</button>
-              </div>
-            </div>
-
-            <div style="margin-top: 0.5rem" v-else>
-              <template>
-                <Multiselect
-                  v-if="!directToUsers"
-                  placeholder="Select Channel"
-                  v-model="selectedChannel"
-                  @input="setRecipient"
-                  :options="userChannelOpts.channels"
-                  openDirection="below"
-                  style="min-width: 13vw"
-                  selectLabel="Enter"
-                  track-by="id"
-                  label="name"
-                  :loading="dropdownLoading"
-                >
-                  <template slot="noResult">
-                    <p class="multi-slot">No results. Try loading more</p>
-                  </template>
-                  <template slot="afterList">
-                    <p
-                      class="multi-slot__more"
-                      @click="listUserChannels(userChannelOpts.nextCursor)"
-                    >
-                      Load More
-                      <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
-                    </p>
-                  </template>
-                  <template slot="placeholder">
-                    <p class="slot-icon">
-                      <img src="@/assets/images/search.svg" alt="" />
-                      Select Channels
-                    </p>
-                  </template>
-                </Multiselect>
-              </template>
-
-              <div v-if="userLevel !== 'REP'" class="sendAll">
-                <input type="checkbox" id="allUsers" v-model="directToUsers" />
-                <label for="allUsers">Send directly to users</label>
-              </div>
-
-              <div v-else class="sendAll">
-                <input type="checkbox" id="allUsers" v-model="directToUsers" />
-                <label for="allUsers">Send to primary channel</label>
-              </div>
+            <div v-else class="sendAll">
+              <input type="checkbox" id="allUsers" v-model="directToUsers" />
+              <label for="allUsers">Send to primary channel</label>
             </div>
           </div>
         </div>
-      </template>
+      </div>
+      <div v-if="!hasSlack && !selectField" class="overlay">
+        <p class="text">
+          <!-- <img src="@/assets/images/slackLogo.png" height="10px" class="margin-right-s" alt="" /> -->
+          <span class="link" @click="goToConnect"> Connect Slack</span>
+          in order to recieve notifications.
+        </p>
+      </div>
     </div>
 
-    <div
-      :key="index"
-      v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
-      class="visible"
-    >
-    </div>
-
-    <div class="bottom_locked">
+    <div v-if="hasSlack" class="bottom_locked margin-top">
       <PulseLoadingSpinnerButton
         :loading="savingTemplate"
-        :class="
-          !(verifySubmit()) || savingTemplate
-            ? 'disabled__button'
-            : 'purple__button bouncy'
-        "
+        :class="!verifySubmit() || savingTemplate ? 'disabled__button' : 'purple__button bouncy'"
         text="Activate alert"
         @click.stop="onSave"
-        :disabled="!(verifySubmit()) || savingTemplate"
+        :disabled="!verifySubmit() || savingTemplate"
       />
+    </div>
+
+    <div class="bottom_locked margin-top" v-else>
+      <button
+        v-if="largeOpps"
+        :disabled="!selectFieldBool || !largeOppsBool"
+        @click="noSlackSave"
+        :class="!selectFieldBool || !largeOppsBool ? 'disabled__button' : 'purple__button bouncy'"
+      >
+        Activate without Slack
+      </button>
+      <button
+        v-else
+        @click="noSlackSave"
+        :disabled="selectField ? !selectFieldBool : null"
+        :class="selectField && !selectFieldBool ? 'disabled__button' : 'purple__button bouncy'"
+      >
+        Activate without Slack
+      </button>
     </div>
   </div>
 </template>
 
 <script>
-/**
- * Components
- * */
-// Pacakges
-
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
-//Internal
 import FormField from '@/components/forms/FormField'
-import { UserConfigForm } from '@/services/users/forms'
-
-/**
- * Services
- */
 
 import AlertTemplate, { AlertTemplateForm } from '@/services/alerts/'
 import { CollectionManager } from '@thinknimble/tn-models'
@@ -377,11 +364,7 @@ import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
   name: 'PopularWorkflows',
-  props: [
-    'selectField',
-    'largeOpps',
-    'config',
-  ],
+  props: ['selectField', 'largeOpps', 'config'],
   components: {
     ToggleCheckBox,
     FormField,
@@ -405,14 +388,14 @@ export default {
       savingTemplate: false,
       channelName: '',
       identity: '',
+      largeOpp: null,
       largeOppValue: '',
-      pageNumber: 0,
       setDaysBool: false,
       largeOppsBool: false,
       selectFieldBool: false,
       selectUsersBool: false,
       directToUsers: true,
-      userConfigForm: new UserConfigForm({}),
+     
       alertTemplateForm: new AlertTemplateForm(),
       fields: CollectionManager.create({ ModelClass: SObjectField }),
       users: CollectionManager.create({ ModelClass: User }),
@@ -441,9 +424,6 @@ export default {
     if (this.user.userLevel == 'MANAGER') {
       await this.users.refresh()
     }
-    this.userConfigForm = new UserConfigForm({
-      activatedManagrConfigs: this.user.activatedManagrConfigs,
-    })
     this.objectFields.filters = {
       ...this.objectFields.filters,
       salesforceObject: this.resourceType,
@@ -476,6 +456,16 @@ export default {
         this.objectFields.refresh()
       },
     },
+    largeOpp: function () {
+      if (this.largeOpp) {
+        this.config.newGroups[0].newOperands[0].operandIdentifier = this.largeOpp.apiName
+        this.config.newGroups[0].newOperands[0].dataType = this.largeOpp.dataType
+        this.selectFieldBool = true
+      } else {
+        this.config.newGroups[0].newOperands[0].operandIdentifier = ''
+        this.selectFieldBool = false
+      }
+    },
     identity: function () {
       if (this.identity) {
         this.config.newGroups[0].newOperands[0].operandIdentifier = this.identity.apiName
@@ -497,6 +487,18 @@ export default {
     directToUsers: 'setDefaultChannel',
   },
   methods: {
+    repsPipeline() {
+      if (this.userLevel !== 'MANAGER') {
+        this.config.newConfigs[0].alertTargets = ['SELF']
+        this.selectUsersBool = true
+      }
+    },
+    goToConnect() {
+      this.$router.push({ name: 'Integrations' })
+    },
+    test() {
+      console.log(this.config)
+    },
     setDefaultChannel() {
       this.directToUsers
         ? (this.config.newConfigs[0].recipients = 'default')
@@ -505,20 +507,21 @@ export default {
     verifySubmit() {
       if (this.largeOpps) {
         return (
-          this.config.newGroups[0].newOperands[0].operandIdentifier
-          && this.config.newGroups[0].newOperands[0].operandValue
-          && this.config.newConfigs[0].alertTargets.length 
-          && this.selectUsersBool 
-          && this.selectFieldBool
-          && this.largeOppsBool
-          )
+          this.config.newGroups[0].newOperands[0].operandIdentifier &&
+          this.config.newGroups[0].newOperands[0].operandValue &&
+          this.config.newConfigs[0].alertTargets.length &&
+          this.selectUsersBool &&
+          this.selectFieldBool &&
+          this.largeOppsBool
+        )
       } else {
         return (
-          (this.config.newConfigs[0].recurrenceDays.length || this.config.newGroups[0].newOperands[0].operandIdentifier)
-          && this.config.newConfigs[0].alertTargets.length 
-          && this.selectUsersBool 
-          && (this.setDaysBool || this.selectFieldBool)
-          )
+          (this.config.newConfigs[0].recurrenceDays.length ||
+            this.config.newGroups[0].newOperands[0].operandIdentifier) &&
+          this.config.newConfigs[0].alertTargets.length &&
+          this.selectUsersBool &&
+          (this.setDaysBool || this.selectFieldBool)
+        )
       }
     },
     getInputType(type) {
@@ -531,7 +534,7 @@ export default {
       this.loading = true
 
       User.api
-        .update(this.user.id, this.userConfigForm.value)
+        .update(this.user.id, )
         .then((response) => {
           this.$store.dispatch('updateUser', User.fromAPI(response.data))
         })
@@ -567,74 +570,96 @@ export default {
         console.log(res.error)
         this.channelName = ''
         if (res.error == 'name_taken') {
-          this.$Alert.alert({
-            message: 'Channel name already taken',
-            type: 'error',
+          this.$toast('Channel name already taken', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         } else if (res.error == 'invalid_name_maxlength') {
-          this.$Alert.alert({
-            message: 'Channel name exceeds maximum length',
-            type: 'error',
+          this.$toast('Channel name exceeds max-length', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         } else if (res.error == 'restricted_action') {
-          this.$Alert.alert({
-            message: 'A team preference is preventing you from creating channels',
-            type: 'error',
+          this.$toast('A team preference is preventing you from creating channels', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         } else if (res.error == 'invalid_name_specials') {
-          this.$Alert.alert({
-            message:
-              'The only special characters allowed are hyphens and underscores. Channel names must also begin with a letter ',
-            type: 'error',
-            timeout: 3000,
-          })
+          this.$toast(
+            'The only special characters allowed are hyphens and underscores. Channel names must also begin with a letter ',
+            {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            },
+          )
         } else if (res.error == 'org_login_required') {
-          this.$Alert.alert({
-            message:
-              'The workspace is undergoing an enterprise migration and will not be available until migration is complete.',
-            type: 'error',
-            timeout: 2000,
-          })
-        } else if (res.error == 'ekm_access_denied') {
-          this.$Alert.alert({
-            message: 'Administrators have suspended the ability to post a message.',
-            type: 'error',
-            timeout: 2000,
-          })
+          this.$toast(
+            'The workspace is undergoing an enterprise migration and will not be available until migration is complete.',
+            {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            },
+          )
         } else if (res.error == 'too_many_convos_for_team') {
-          this.$Alert.alert({
-            message: 'The workspace has exceeded its limit of public and private channels.',
-            type: 'error',
+          this.$toast('The workspace has exceeded its limit of public and private channels.', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         } else if (res.error == 'no_permission') {
-          this.$Alert.alert({
-            message:
-              'The workspace token used in this request does not have the permissions necessary to complete the request. Make sure your app is a member of the conversation its attempting to post a message to.',
-            type: 'error',
-            timeout: 4000,
-          })
+          this.$toast(
+            'The workspace token used in this request does not have the permissions necessary to complete the request. Make sure your app is a member of the conversation its attempting to post a message to.',
+            {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            },
+          )
         } else if (res.error == 'team_access_not_granted') {
-          this.$Alert.alert({
-            message:
-              'You are not granted the specific workspace access required to complete this request.',
-            type: 'error',
-            timeout: 2000,
-          })
+          this.$toast(
+            'You are not granted the specific workspace access required to complete this request.',
+            {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            },
+          )
         } else if (res.error == 'invalid_name') {
-          this.$Alert.alert({
-            message: 'Channel name invalid. Please try again',
-            type: 'error',
+          this.$toast('Channel name invalid. Please try again', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         } else {
-          this.$Alert.alert({
-            message: 'Something went wrong..Please try again',
-            type: 'error',
+          this.$toast('Something went wrong, please try again', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
           console.log(res.error)
         }
@@ -648,8 +673,7 @@ export default {
     setRecipient() {
       this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value =
         this.selectedChannel
-      this.config.newConfigs[0].recipients =
-        this.selectedChannel.id
+      this.config.newConfigs[0].recipients = this.selectedChannel.id
     },
     setDay(n) {
       this.config.newConfigs[0].recurrenceDay = 0
@@ -657,49 +681,89 @@ export default {
       n.forEach((day) => days.push(day.value))
       let newDays = [...new Set(days)]
       this.config.newConfigs[0].recurrenceDays = newDays
-      this.setDaysBool = true;
+      this.setDaysBool = true
     },
     mapIds() {
       let mappedIds = this.selectedUsers.map((user) => user.id)
       this.config.newConfigs[0].alertTargets = mappedIds
       this.selectUsersBool = true
     },
+    async noSlackSave() {
+      this.savingTemplate = true
+      try {
+        console.log(this.config)
+        const res = await AlertTemplate.api.createAlertTemplate({
+          ...this.config,
+          user: this.$store.state.user.id,
+          directToUsers: true,
+        })
+        console.log(res)
+       
+        this.handleUpdate()
+
+        this.$toast('Workflow saved successfully', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        this.$router.push({ name: 'CreateNew' })
+      } catch (e) {
+        this.$toast('One or more of your users do not have slack connected', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.savingTemplate = false
+      }
+    },
     async onSave() {
       this.savingTemplate = true
-        const newConfigs = this.config.newConfigs[0];
-        const operandIden = this.config.newGroups[0].newOperands[0].operandIdentifier
-        let largeOpsCheck = true;
-        if (this.largeOpps) {
-          largeOpsCheck = false;
-          if (this.largeOppsBool) {
-            largeOpsCheck = true
-          }
+      const newConfigs = this.config.newConfigs[0]
+      const operandIden = this.config.newGroups[0].newOperands[0].operandIdentifier
+      let largeOpsCheck = true
+      if (this.largeOpps) {
+        largeOpsCheck = false
+        if (this.largeOppsBool) {
+          largeOpsCheck = true
         }
-        if (
-          (newConfigs.recurrenceDays.length || operandIden) && 
-          newConfigs.alertTargets.length && 
-          this.selectUsersBool && 
-          largeOpsCheck &&
-          (this.setDaysBool || this.selectFieldBool)) {
+      }
+      if (
+        (newConfigs.recurrenceDays.length || operandIden) &&
+        newConfigs.alertTargets.length &&
+        this.selectUsersBool &&
+        largeOpsCheck &&
+        (this.setDaysBool || this.selectFieldBool)
+      ) {
         try {
           const res = await AlertTemplate.api.createAlertTemplate({
             ...this.config,
             user: this.$store.state.user.id,
             directToUsers: this.directToUsers,
           })
-          this.userConfigForm.field.activatedManagrConfigs.value.push(res.title)
+          console.log(res)
+        
           this.handleUpdate()
-          this.$router.push({ name: 'CreateNew' })
-          this.$Alert.alert({
-            message: 'Workflow saved succcessfully!',
+
+          this.$toast('Workflow saved Successfully', {
             timeout: 2000,
+            position: 'top-left',
             type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
+          this.$router.push({ name: 'CreateNew' })
         } catch (e) {
-          this.$Alert.alert({
-            message: 'Error, one or more of your users do not have slack connected',
-            timeout: 3000,
+          this.$toast('One or more of these users do not have Slack.', {
+            timeout: 2000,
+            position: 'top-left',
             type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         } finally {
           this.savingTemplate = false
@@ -707,6 +771,7 @@ export default {
       }
     },
   },
+
   computed: {
     userLevel() {
       return this.$store.state.user.userLevel
@@ -726,6 +791,9 @@ export default {
         return [{ fullName: 'Myself', id: 'SELF' }]
       }
     },
+    hasSlack() {
+      return !!this.$store.state.user.slackRef
+    },
     user() {
       return this.$store.state.user
     },
@@ -740,9 +808,9 @@ export default {
   },
   mounted() {
     this.setDefaultChannel()
+    this.repsPipeline()
   },
-  beforeMount() {
-  },
+  beforeMount() {},
 }
 </script>
 
@@ -927,20 +995,15 @@ input[type='text']:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.25rem 1rem;
+  padding: 0.5rem 1rem;
   border-radius: 0.3rem;
-  font-weight: bold;
-  line-height: 1.14;
-  text-indent: none;
   border-style: none;
   letter-spacing: 0.03rem;
   color: white;
   background-color: $dark-green;
   cursor: pointer;
-  height: 2rem;
-  width: 10rem;
-  font-weight: bold;
-  font-size: 1.02rem;
+  min-width: 10rem;
+  font-size: 14px;
 }
 .disabled__button {
   display: flex;
@@ -1002,11 +1065,6 @@ input {
   padding: 2rem;
   margin-bottom: 1rem;
 }
-// .items_height {
-//   overflow-y: scroll;
-//   max-height: 30vh;
-//   width: 100%;
-// }
 img {
   filter: invert(60%);
 }
@@ -1021,5 +1079,49 @@ img {
 .green {
   color: $dark-green;
 }
-
+.spacer {
+  height: 20vh;
+}
+.overlay {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  // left: 0;
+  // right: 0;
+  height: 100%;
+  width: 80%;
+  padding-left: 10vw;
+  padding-right: 10vw;
+  opacity: 0;
+  transition: 0.5s ease;
+  background-color: $dark-green;
+  border-radius: 5px;
+}
+.container {
+  position: relative;
+}
+.container:hover .overlay {
+  opacity: 0.85;
+}
+.text {
+  color: white;
+  font-size: 16px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+  -ms-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+.margin-right-s {
+  margin-right: 0.5rem;
+}
+.link {
+  border-bottom: 1px solid white;
+  cursor: pointer;
+}
+.margin-top {
+  margin-top: 3rem;
+}
 </style>

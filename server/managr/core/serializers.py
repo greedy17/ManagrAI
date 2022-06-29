@@ -54,8 +54,9 @@ class UserSerializer(serializers.ModelSerializer):
         source="slack_integration", read_only=True
     )
     zoom_ref = ZoomAuthSerializer(source="zoom_account", read_only=True)
-    activated_managr_templates = serializers.SerializerMethodField("get_alert_template_refs")
+    activated_template_ref = serializers.SerializerMethodField("get_alert_template_refs")
     forecast = UserForecastSerializer(many=False, source="current_forecast", read_only=True)
+    activation_link_ref = serializers.SerializerMethodField("get_activation_link")
 
     class Meta:
         model = User
@@ -78,6 +79,7 @@ class UserSerializer(serializers.ModelSerializer):
             "user_level",
             "profile_photo",
             "role",
+            "activation_link_ref",
             # integrations
             "nylas",
             "nylas_ref",
@@ -96,8 +98,7 @@ class UserSerializer(serializers.ModelSerializer):
             "has_zoom_integration",
             "has_salesforce_integration",
             "timezone",
-            "activated_managr_configs",
-            "activated_managr_templates",
+            "activated_template_ref",
             "onboarding",
             "forecast",
         )
@@ -120,6 +121,9 @@ class UserSerializer(serializers.ModelSerializer):
 
         templates = AlertTemplate.objects.for_user(instance).values_list("title", flat=True)
         return templates
+
+    def get_activation_link(self, instance):
+        return instance.activation_link
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -224,4 +228,3 @@ class MeetingPrepInstanceSerializer(serializers.ModelSerializer):
             "resource_id",
             "resource_type",
         )
-

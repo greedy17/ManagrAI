@@ -3,7 +3,7 @@
     <div class="opportunity_title">
       <h3>Update Opportunity</h3>
       <p style="color: #9b9b9b; margin-top: -0.5rem; font-size: 14px">
-        Select the Opportunity fields you’d like to display and update via Slack:
+        Select the Opportunity fields you’d like to display and update via Managr or Slack:
       </p>
     </div>
     <div class="box__content--expanded">
@@ -96,10 +96,12 @@ export default {
         this.formFields.filters = query_params
         this.formFields.refresh()
       } catch {
-        this.$Alert.alert({
-          message: 'There was an error gathering fields',
+        this.$toast('Error gathering fields', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'error',
-          timeout: 3000,
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },

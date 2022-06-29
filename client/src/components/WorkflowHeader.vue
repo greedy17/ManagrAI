@@ -254,10 +254,12 @@ export default {
         const res = await SObjects.api.removeExtraField({
           field_ids: [id],
         })
-        this.$Alert.alert({
+        this.$toast('Field removed successfully', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'success',
-          timeout: 1000,
-          message: 'Field removed successfully',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } catch (e) {
         console.log(e)
@@ -327,7 +329,7 @@ export default {
   top: 0;
   left: 0;
   position: sticky;
-  background-color: $off-white;
+  background-color: $white;
 }
 .remove-field-section {
   z-index: 5;
@@ -387,7 +389,7 @@ export default {
   z-index: 2;
   top: 0;
   position: sticky;
-  background-color: $off-white;
+  background-color: white;
   font-weight: bold;
   font-size: 13px;
   letter-spacing: 0.5px;
@@ -403,7 +405,7 @@ export default {
   left: 3.5vw;
   top: 0;
   position: sticky;
-  background-color: $off-white;
+  background-color: white;
   font-weight: bold;
   font-size: 13px;
   letter-spacing: 0.5px;
@@ -418,7 +420,7 @@ export default {
   z-index: 2;
   top: 0;
   position: sticky;
-  background-color: $off-white;
+  background-color: white;
   font-weight: bold;
   font-size: 13px;
   letter-spacing: 0.5px;
