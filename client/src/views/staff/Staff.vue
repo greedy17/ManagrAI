@@ -12,7 +12,7 @@
       <div class="modal-container" v-if="modalInfo">
         <div v-if="modalName === 'slackFormInstance'">
           <div class="modal-container__body">
-            <div class="user_item_container">
+            <!-- <div class="user_item_container">
               <div class="border-break">
                 <h3>Resource ID:</h3>
                 <h4>{{ modalInfo.resourceId ? modalInfo.resourceId : 'null' }}</h4>
@@ -49,7 +49,29 @@
                 <h3>Previous Data:</h3>
                 <h4>{{ modalInfo.previousData }}</h4>
               </div>
+            </div> -->
+            <div class="flex-row-spread sticky border-bottom">
+              <div class="flex-row">
+                <img src="@/assets/images/logo.png" class="logo" alt="" />
+                <h4>{{ modalInfo.templateRef.resource }} {{ modalInfo.templateRef.formType }} by {{ getUserName(modalInfo.user) }}</h4>
+              </div>
             </div>
+            <section class="note-section">
+              <p class="note-section__title">
+                Resource: {{modalInfo.resourceId ? modalInfo.resourceId : 'N/A'}}
+              </p>
+              <p class="note-section__date">
+                {{modalInfo.submissionDate ? `Submitted on ${weekDay(modalInfo.submissionDate)} ${formatDateTime(modalInfo.submissionDate)}` : 'Not Submitted'}}
+              </p>
+              <p class="note-section__body">
+                <span class="underline">Workflow ID:</span> {{ modalInfo.workflowId ? modalInfo.workflowId : 'null' }}
+                <span class="underline">Update Source:</span> {{ modalInfo.updateSource ? modalInfo.updateSource : 'null' }}
+                <span class="underline">User ID:</span> {{ modalInfo.user ? modalInfo.user : 'null' }}
+                <span class="underline">Template ID:</span> {{ modalInfo.template ? modalInfo.template : 'null' }}
+                <span class="underline">Saved Data:</span> {{ modalInfo.savedData ? modalInfo.savedData : 'null' }}
+                <span class="underline">Previous Data:</span> {{ modalInfo.previousData ? modalInfo.previousData : 'null' }}
+              </p>
+            </section>
           </div>
         </div>
         <div v-else-if="modalName === 'meetingWorkflow'">
@@ -845,6 +867,15 @@ export default {
       allUsers: CollectionManager.create({
         ModelClass: User,
       }),
+      days: {
+        0: 'Sunday',
+        1: 'Monday',
+        2: 'Tuesday',
+        3: 'Wednesday',
+        4: 'Thursday',
+        5: 'Friday',
+        6: 'Saturday',
+      },
       selectedUsers: null,
       selectedSlackForms: null,
       orgUsers: null,
@@ -995,6 +1026,18 @@ export default {
       const res = await User.api.usersUpdate(data).then(() => {
         this.allUsers.refresh()
       })
+    },
+    weekDay(input) {
+      let newer = new Date(input)
+      return this.days[newer.getDay()]
+    },
+    formatDateTime(input) {
+      var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
+      if (!input || !input.match(pattern)) {
+        return null
+      }
+      let newDate = input.replace(pattern, '$2/$3/$1')
+      return newDate.split('T')[0]
     },
     goBack() {
       this.selected_org = this.old_selected_org
@@ -1313,5 +1356,87 @@ input[type='search']:focus {
 }
 .padding {
   padding: .5rem 1rem;
+}
+.rel {
+  position: relative;
+}
+.flex-row-spread {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+.sticky {
+  position: sticky;
+  background-color: white;
+  width: 100%;
+  left: 0;
+  top: 0;
+  padding: 0px 6px 8px -2px;
+}
+.border-bottom {
+  border-bottom: 1.25px solid $soft-gray;
+}
+.flex-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  letter-spacing: 1px;
+  h4 {
+    font-size: 20px;
+  }
+}
+.logo {
+  height: 20px;
+  margin-left: 0.5rem;
+  margin-right: 0.25rem;
+  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+    brightness(93%) contrast(89%);
+}
+.note-border {
+  border: 1px solid $very-light-gray;
+  border-radius: 6px;
+  padding: 4px;
+  margin: 0px 6px;
+  font-size: 12px;
+}
+.light-green-bg {
+  background-color: $white-green;
+  color: $dark-green !important;
+  border: 1px solid $dark-green !important;
+}
+.note-section {
+  padding: 0.25rem 1rem;
+  margin-bottom: 0.25rem;
+  background-color: white;
+  border-bottom: 1px solid $soft-gray;
+  overflow: scroll;
+  &__title {
+    font-size: 19px;
+    font-weight: bolder;
+    letter-spacing: 0.6px;
+    color: $base-gray;
+    padding: 0;
+  }
+  &__body {
+    color: $base-gray;
+    font-family: $base-font-family;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    border-left: 2px solid $dark-green;
+    padding-left: 32px;
+    font-size: 16px;
+    white-space: pre-line;
+  }
+  &__date {
+    color: $mid-gray;
+    font-size: 12px;
+    margin-top: -14px;
+    margin-bottom: 8px;
+    letter-spacing: 0.6px;
+  }
+}
+.underline {
+  text-decoration: underline;
 }
 </style>
