@@ -87,6 +87,8 @@ def calendar_participants_from_zoom_meeting(zoom_meeting, user):
         nylas_response = nylas.events.where(**filters)
         events = list(nylas_response)
     except:
+        logger.info(f"NYLAS RESPONSE: {nylas_response}")
+        logger.info(f"EVENTS: {events}")
         logger.error("Error calling the Nylas API")
         events = list()
     # Force-invoke the API call
