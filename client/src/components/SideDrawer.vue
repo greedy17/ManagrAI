@@ -361,7 +361,7 @@ button:disabled {
   margin-bottom: -3px;
 }
 .noti-section-lg {
-  height: 350px;
+  height: 48vh;
   overflow-y: scroll;
   padding: 0px 16px;
   border-bottom: 1px solid $soft-gray;
@@ -369,7 +369,7 @@ button:disabled {
   width: 100%;
 }
 .noti-section {
-  height: 200px;
+  height: 36vh;
   overflow-y: scroll;
   padding: 0px 16px;
   border-bottom: 1px solid $soft-gray;
