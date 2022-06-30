@@ -498,7 +498,7 @@
                 ccols="30"
                 rows="4"
                 style="width: 36.5vw; border-radius: 0.2rem"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                @input=";(value = $event.target.value), replaceURLs(value, field.apiName)"
               >
               </textarea>
             </div>
@@ -975,7 +975,7 @@
             </button>
           </div>
 
-          <button @click.stop="workList = !workList" class="select-btn">
+          <!-- <button @click.stop="workList = !workList" class="select-btn">
             {{ currentWorkflowName ? currentWorkflowName : 'Active Workflows' }}
             <img
               v-if="!workList"
@@ -1022,7 +1022,7 @@
                 </button>
               </div>
             </div>
-          </div>
+          </div> -->
           <div
             v-for="(filter, i) in activeFilters"
             :key="i"
@@ -1031,8 +1031,8 @@
             class="main"
           >
             <strong style="font-size: 14px">{{ filter }}</strong>
-            <small style="font-weight: 400px; margin-left: 0.2rem">{{ currentOperators[i] }}</small>
-            <small style="margin-left: 0.2rem">{{ filterValues[i] }}</small>
+            <small style="font-weight: 400px; margin-left: 0.2rem">{{ setFilters[i][0] }}</small>
+            <small style="margin-left: 0.2rem">{{ setFilters[i][1] }}</small>
             <span v-if="hoveredIndex === i" class="selected-filters__close"
               ><img src="@/assets/images/close.svg" @click="removeFilter(filter, i)" alt=""
             /></span>
@@ -1043,7 +1043,9 @@
               <small
                 ><strong>{{ currentFilter }}</strong></small
               >
-              <small style="margin-left: 0.2rem">{{ currentOperators[-1] }}</small>
+              <small style="margin-left: 0.2rem">{{
+                currentOperators[currentOperators.length - 1]
+              }}</small>
             </main>
             <div>
               <FilterSelection
@@ -1641,6 +1643,7 @@ export default {
       createQueryOpts: {},
       picklistQueryOptsContacts: {},
       stagePicklistQueryOpts: {},
+      setFilters: {},
       instanceIds: [],
       allAccounts: null,
       allUsers: null,
@@ -1649,8 +1652,8 @@ export default {
       activeFilters: [],
       hoveredIndex: null,
       currentFilter: null,
-      operatorValue: 'EQUALS',
-      currentOperators: ['equals'],
+      operatorValue: null,
+      currentOperators: [],
       filterType: null,
       filterFields: [],
       filterApiName: null,
@@ -1755,8 +1758,27 @@ export default {
     updateOppForm: 'setForms',
     currentCheckList: 'addToForecastList',
     accountSobjectId: 'getInitialAccounts',
+    // currentOperators: 'removeDupes',
   },
   methods: {
+    // removeDupes() {
+    // },
+    replaceURLs(message, field) {
+      if (!message) return
+
+      var urlRegex = /(((https?:\/\/)|(www\.))[^\s]+)/g
+      message.replace(urlRegex, function (url) {
+        var hyperlink = url
+        if (!hyperlink.match('^https?://')) {
+          hyperlink = 'http://' + hyperlink
+        }
+        return (
+          '<a href="' + hyperlink + '" target="_blank" rel="noopener noreferrer">' + url + '</a>'
+        )
+      })
+      console.log(message)
+      this.setUpdateValues(field, message)
+    },
     changeCurrentRow(i) {
       this.currentInlineRow = i
     },
@@ -1845,6 +1867,14 @@ export default {
                 let updatedRes = await SObjects.api.getObjects('Opportunity')
                 this.allOpps = updatedRes.results
                 this.originalList = updatedRes.results
+                if (this.activeFilters) {
+                  this.getFilteredObjects(this.updateFilterValue)
+                }
+                if (this.currentList === 'Closing this month') {
+                  this.stillThisMonth()
+                } else if (this.currentList === 'Closing next month') {
+                  this.stillNextMonth()
+                }
                 if (this.selectedWorkflow) {
                   this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
                 }
@@ -1883,8 +1913,8 @@ export default {
     closeFilterSelection() {
       this.filterSelected = false
       this.activeFilters = []
-      this.operatorValue = 'EQUALS'
-      this.currentOperator = ['equals']
+      this.operatorValue = null
+      this.currentOperator = []
       this.filterValues = []
       this.filters = []
     },
@@ -1898,6 +1928,8 @@ export default {
       this.loadingWorkflows = true
       if (value) {
         this.filters.push([this.operatorValue, this.filterApiName, value])
+        this.setFilters[this.activeFilters.length] = [this.operatorValue, value]
+        console.log(this.setFilters)
       }
       try {
         const res = await SObjects.api.getObjects('Opportunity', true, this.filters)
@@ -1926,51 +1958,52 @@ export default {
           bodyClassName: ['custom'],
         })
       } finally {
-        this.operatorValue = 'EQUALS'
-        this.currentOperator = ['equals']
         this.loadingWorkflows = false
       }
     },
     addOperator(name) {
+      console.log(name)
       this.operatorValue = name
       switch (name) {
         case 'EQUALS':
-          this.currentOperators.length === 1
+          this.currentOperators.length === 0
             ? (this.currentOperators = ['equals'])
             : this.currentOperators.push('equals')
           break
         case 'NOT_EQUALS':
-          this.currentOperators.length === 1
+          this.currentOperators.length === 0
             ? (this.currentOperators = ['not equals'])
             : this.currentOperators.push('not equals')
           break
         case 'GREATER_THAN':
-          this.currentOperators.length === 1
+          this.currentOperators.length === 0
             ? (this.currentOperators = ['greater than'])
             : this.currentOperators.push('greater than')
           break
         case 'GREATER_THAN_EQUALS':
-          this.currentOperators.length === 1
+          this.currentOperators.length === 0
             ? (this.currentOperators = ['greater or equal'])
             : this.currentOperators.push('greater or equal')
           break
         case 'LESS_THAN':
-          this.currentOperators.length === 1
+          this.currentOperators.length === 0
             ? (this.currentOperators = ['less than'])
             : this.currentOperators.push('less than')
           break
         case 'LESS_THAN_EQUALS':
-          this.currentOperators.length === 1
+          this.currentOperators.length === 0
             ? (this.currentOperators = ['less or equal'])
             : this.currentOperators.push('less or equal')
           break
         case 'CONTAINS':
-          this.currentOperators.length === 1
+          this.currentOperators.length === 0
             ? (this.currentOperators = ['contains'])
             : this.currentOperators.push('contains')
+
+          console.log(this.currentOperators)
           break
         case 'RANGE':
-          this.currentOperators.length === 1
+          this.currentOperators.length === 0
             ? (this.currentOperators = ['range'])
             : this.currentOperators.push('range')
           break
@@ -1989,9 +2022,9 @@ export default {
     applyFilter(value) {
       this.updateFilterValue = value
       this.operatorsLength += 1
-      if (this.currentOperators.length < this.operatorsLength) {
-        this.currentOperators.push('equals')
-      }
+      // if (this.currentOperators.length < this.operatorsLength) {
+      //   this.currentOperators.push('equals')
+      // }
       this.getFilteredObjects(value)
       this.filterSelected = false
       this.activeFilters.push(this.currentFilter)
@@ -2006,7 +2039,7 @@ export default {
         let account = this.allAccounts.filter((account) => account.id === value)
         this.filterValues.push(account[0].name)
       } else {
-        this.filterValues.push(value.value)
+        this.filterValues.push(value)
       }
     },
     selectFilter(name, type, label) {
@@ -2022,9 +2055,12 @@ export default {
       this.filterValues.splice(index, 1)
       this.currentOperators.splice(index, 1)
       this.getFilteredObjects()
+      if (this.activeFilters.length < 1) {
+        this.getObjects()
+      }
       this.filterSelected = false
       this.currentFilter = null
-      this.operatorValue = 'EQUALS'
+      this.operatorValue = null
       this.filterApiName = null
     },
     capitalizeFirstLetter(string) {
@@ -2608,6 +2644,9 @@ export default {
               this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
             }
           })
+        if (this.activeFilters) {
+          this.getFilteredObjects(this.updateFilterValue)
+        }
         if (this.currentList === 'Closing this month') {
           this.stillThisMonth()
         } else if (this.currentList === 'Closing next month') {
@@ -2635,6 +2674,9 @@ export default {
       }
     },
     async updateResource() {
+      // console.log(this.currentOperators)
+      // console.log(this.operatorValue)
+      // console.log(this.filterApiName)
       this.updateList.push(this.oppId)
       this.editOpModalOpen = false
       try {
@@ -2653,6 +2695,9 @@ export default {
               this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
             }
           })
+        if (this.activeFilters) {
+          this.getFilteredObjects(this.updateFilterValue)
+        }
         if (this.currentList === 'Closing this month') {
           this.stillThisMonth()
         } else if (this.currentList === 'Closing next month') {
@@ -2676,7 +2721,10 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
-        this.closeFilterSelection()
+
+        if (!this.activeFilters) {
+          this.closeFilterSelection()
+        }
       }
     },
     async createResource() {
@@ -2958,7 +3006,13 @@ export default {
       try {
         const res = await SObjects.api.getObjects('Opportunity')
         this.allOpps = res.results
+
         this.originalList = res.results
+        if (this.currentList === 'Closing this month') {
+          this.stillThisMonth()
+        } else if (this.currentList === 'Closing next month') {
+          this.stillNextMonth()
+        }
       } catch (e) {
         this.$toast('Error gathering Opportunities!', {
           timeout: 2000,
@@ -3742,7 +3796,7 @@ section {
   box-shadow: 1px 2px 2px $very-light-gray;
 }
 .search-bar {
-  height: 4.5vh;
+  height: 2rem;
   background-color: $off-white;
   border: 0.7px solid $gray;
   display: flex;
@@ -3835,6 +3889,7 @@ section {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size: 12px;
 }
 .main:hover {
   overflow: visible;

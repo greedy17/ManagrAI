@@ -306,7 +306,7 @@
           </div>
           <div class="table-cell">
             <p class="green-text-amount align-center letter-spacing">
-              {{ opp.data.Amount ? formatCash(currentValues[index].amount) : '' }}
+              {{ currentValues[index].amount ? formatCash(currentValues[index].amount) : '' }}
               <span v-if="currentValues[index].amount < opp.data.Amount"
                 ><img
                   class="filter-red margin-left-s"
