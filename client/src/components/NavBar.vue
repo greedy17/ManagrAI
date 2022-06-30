@@ -31,7 +31,7 @@
               </router-link>
             </li>
             <li v-if="user.isStaff">
-              <router-link exact-active-class="active" :to="{ name: 'Staff' }">Staff</router-link>
+              <router-link exact-active-class="active" :to="{ name: 'Staff' }">Admin</router-link>
             </li>
           </ul>
         </div>
