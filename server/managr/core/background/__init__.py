@@ -972,7 +972,7 @@ def _morning_refresh_message(user_id):
     user = User.objects.get(id=user_id)
 
     if user.has_slack_integration and user.user_level == "REP":
-        url = f"{MANAGR_URL}/meetings"
+        url = f"{MANAGR_URL}/pipelines"
         blocks = [
             block_builders.section_with_button_block(
                 "View in Managr",
