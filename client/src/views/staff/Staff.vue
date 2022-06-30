@@ -76,8 +76,7 @@
         </div>
         <div v-else-if="modalName === 'meetingWorkflow'">
           <div class="modal-container__body">
-            <!-- {{modalInfo}} -->
-            <h1 class="user_title">{{ modalInfo.meeting_ref.topic }}</h1>
+            <!-- <h1 class="user_title">{{ modalInfo.meeting_ref.topic }}</h1>
             <div class="user_item_container">
               <div class="border-break tiny-spacing">
                 <h3>Meeting ID:</h3>
@@ -241,7 +240,6 @@
                 </div>
               </div>
               <div v-else><h4 class="border-break tiny-spacing">null</h4></div>
-              <!-- <h4>{{modalInfo.meeting_ref.participants ? modalInfo.meeting_ref.participants : 'null'}}</h4> -->
             </div>
             <div class="user_item_container">
               <div class="border-break tiny-spacing">
@@ -256,7 +254,44 @@
                   }}
                 </h4>
               </div>
+            </div> -->
+            <div class="flex-row-spread sticky border-bottom">
+              <div class="flex-row">
+                <img src="@/assets/images/logo.png" class="logo" alt="" />
+                <h4>{{ modalInfo.meeting_ref.topic }}</h4>
+              </div>
             </div>
+            <section class="note-section">
+              <p class="note-section__title">
+                Meeting ID: {{ modalInfo.meeting_ref.meeting_id ? modalInfo.meeting_ref.meeting_id : 'N/A' }}
+              </p>
+              <p class="note-section__date">
+                Start Time: {{ modalInfo.meeting_ref.start_time ? `${weekDay(modalInfo.meeting_ref.start_time)} ${formatDateTime(modalInfo.meeting_ref.start_time)} at ${getTime(modalInfo.meeting_ref.start_time)}` : 'null' }}
+              </p>
+              <br>
+              <p class="note-section__date">
+                End Time: {{ modalInfo.meeting_ref.end_time ? `${weekDay(modalInfo.meeting_ref.end_time)} ${formatDateTime(modalInfo.meeting_ref.end_time)} at ${getTime(modalInfo.meeting_ref.end_time)}` : 'null' }}
+              </p>
+              <p class="note-section__body">
+                <span class="underline">Meeting UUID:</span> {{ modalInfo.meeting_ref.meeting_uuid ? modalInfo.meeting_ref.meeting_uuid : 'null' }}
+                <span class="underline">Account ID:</span> {{ modalInfo.meeting_ref.account_id ? modalInfo.meeting_ref.account_id : 'null' }}
+                <span class="underline">Host ID:</span> {{ modalInfo.meeting_ref.host_id ? modalInfo.meeting_ref.host_id : 'null' }}
+                <span class="underline">Operator ID:</span> {{ modalInfo.meeting_ref.operator_id ? modalInfo.meeting_ref.operator_id : 'null' }}
+                <span class="underline">Status:</span> {{ modalInfo.meeting_ref.status ? modalInfo.meeting_ref.status : 'null' }}
+                <span class="underline">Timezone:</span> {{ modalInfo.meeting_ref.timezone ? modalInfo.meeting_ref.timezone : 'null' }}
+                <span class="underline">Start URL:</span> {{ modalInfo.meeting_ref.start_url ? modalInfo.meeting_ref.start_url : 'null' }}
+                <span class="underline">Duration:</span> {{ modalInfo.meeting_ref.duration ? modalInfo.meeting_ref.duration : 'null' }}
+                <span class="underline">Original Duration:</span> {{ modalInfo.meeting_ref.original_duration ? modalInfo.meeting_ref.original_duration : 'null' }}
+                <span class="underline">Total Minutes:</span> {{ modalInfo.meeting_ref.total_minutes ? modalInfo.meeting_ref.total_minutes : 'null' }}
+                <span class="underline">Recurrence:</span> {{ modalInfo.meeting_ref.recurrence ? modalInfo.meeting_ref.recurrence : 'null' }}
+                <span class="underline">Join URL:</span> {{ modalInfo.meeting_ref.join_url ? modalInfo.meeting_ref.join_url : 'null' }}
+                <span class="underline">Operator:</span> {{ modalInfo.meeting_ref.operator ? modalInfo.meeting_ref.operator : 'null' }}
+                <span class="underline">Operation:</span> {{ modalInfo.meeting_ref.operation ? modalInfo.meeting_ref.operation : 'null' }}
+                <span class="underline">Participants:</span> {{ modalInfo.meeting_ref.participants ? modalInfo.meeting_ref.participants : 'null' }}
+                <span class="underline">Type:</span> {{ modalInfo.meeting_ref.type ? modalInfo.meeting_ref.type : 'null' }}
+                <span class="underline">Zoom Account:</span> {{ modalInfo.meeting_ref.zoom_account ? modalInfo.meeting_ref.zoom_account : 'null' }}
+              </p>
+            </section>
           </div>
         </div>
       </div>
@@ -1030,6 +1065,28 @@ export default {
     weekDay(input) {
       let newer = new Date(input)
       return this.days[newer.getDay()]
+    },
+    getTime(input) {
+      let newer = new Date(input)
+      console.log(`Time: ${newer.getHours()}:${newer.getMinutes()}`)
+      let hours = newer.getHours();
+      let minutes = newer.getMinutes();
+      let afternoon = false;
+      if (hours === 0) {
+        hours = 12;
+      }
+      else if (hours === 12) {
+        afternoon = true;
+      }
+      else if (hours > 12) {
+        hours = hours - 12;
+        afternoon = true
+      }
+      if (afternoon) {
+        return `${hours}:${minutes} PM`
+      } else {
+        return `${hours}:${minutes} AM`
+      }
     },
     formatDateTime(input) {
       var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
