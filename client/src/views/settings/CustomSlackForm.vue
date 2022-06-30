@@ -801,10 +801,6 @@ export default {
       type: String,
       required: true,
     },
-    showValidations: {
-      type: Boolean,
-      default: false,
-    },
     fields: {
       type: Array,
       default: () => [],
@@ -816,6 +812,10 @@ export default {
     managrFields: {
       type: Array,
       default: () => [],
+    },
+    fromAdmin: {
+      type: Boolean,
+      default: false,
     },
   },
   data() {
@@ -1221,7 +1221,11 @@ export default {
         })
         .finally(() => {
           this.savingForm = false
-          this.$router.push({ name: 'ProductForm' })
+          if (this.fromAdmin) {
+            this.$router.go();
+          } else {
+            this.$router.push({ name: 'ProductForm' })
+          }
         })
     },
     lowerCase(word1, word2) {
@@ -1334,7 +1338,7 @@ export default {
         })
         .finally(() => {
           this.savingForm = false
-          if (this.formType !== 'STAGE_GATING') {
+          if (this.formType !== 'STAGE_GATING' && !this.fromAdmin) {
             this.$router.push({ name: 'Required' })
           } else {
             this.$router.go()

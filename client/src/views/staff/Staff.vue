@@ -809,11 +809,17 @@
         <button class="green_button back" @click="goBack">Back</button>
         <!-- <div v-for="(slackForm, i) in selectedSlackForms" :key="slackForm.id"> -->
         <div>
-          <div>
+          <!-- <div>
             <h2 class="user_title">Slack Form</h2>
-          </div>
+          </div> -->
           <!-- <h4>{{slackForm}}</h4> -->
-          <div class="big_card_container">
+           <CustomSlackForm
+            :formType="selectedSlackForms.formType"
+            :customForm="selectedSlackForms"
+            :resource="selectedSlackForms.resource"
+            :fromAdmin="true"
+          />
+          <!-- <div class="big_card_container">
             <div class="user_item_container">
               <div class="border-break">
                 <h3>Form Type</h3>
@@ -835,8 +841,6 @@
             <div class="user_item_container">
               <h3>Form Fields</h3>
               <div v-for="fieldRef in selectedSlackForms.fieldsRef" :key="fieldRef.id">
-                <!-- <h3>Label: {{fieldRef.label}}</h3>
-                <h3>Order: {{fieldRef.order}}</h3> -->
                 <div class="form_field">
                   <div class="form_field_item border-break">
                     <h3>Field:</h3>
@@ -849,7 +853,7 @@
                 </div>
               </div>
             </div>
-          </div>
+          </div> -->
         </div>
       </template>
       <template v-else-if="page === 'SlackFormInstance'">
@@ -885,10 +889,13 @@ import CollectionManager from '@/services/collectionManager'
 import Organization from '@/services/organizations'
 import COMMANDS from './staff-constants'
 import User from '@/services/users'
+import CustomSlackForm from '@/views/settings/CustomSlackForm'
+import * as FORM_CONSTS from '@/services/slack'
 
 export default {
   name: 'Staff',
   components: {
+    CustomSlackForm,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
