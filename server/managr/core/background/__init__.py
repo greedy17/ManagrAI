@@ -11,7 +11,6 @@ from copy import copy
 import re
 from background_task import background
 from django.conf import settings
-from rest_framework.request import Request
 
 from django.db.models import Q
 from django.utils import timezone
@@ -29,7 +28,7 @@ from managr.slack.helpers.block_sets.command_views_blocksets import (
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.slack import constants as slack_consts
-from managr.slack.helpers import block_builders, block_sets
+from managr.slack.helpers import block_builders
 from managr.organization.models import Contact
 from managr.organization.models import Account
 from managr.opportunity.models import Lead, Opportunity
@@ -38,6 +37,13 @@ from managr.utils.misc import custom_paginator
 from managr.zoom.background import emit_kick_off_slack_interaction
 
 logger = logging.getLogger("managr")
+
+if settings.IN_DEV:
+    MANAGR_URL = "http://localhost:8080"
+elif settings.IN_STAGING:
+    MANAGR_URL = "https://staging.managr.ai"
+else:
+    MANAGR_URL = "https://app.managr.ai"
 
 
 #########################################################
@@ -96,31 +102,8 @@ def emit_process_workflow_config_check(user_id, verbose_name):
     return _process_workflow_config_check(user_id, verbose_name=verbose_name)
 
 
-@background()
-def non_zoom_meeting_message(workflow_id, user_id, user_tz, non_zoom_end_times):
-    # Convert Non-Zoom Meeting from UNIX time to UTC
-    unix_time = datetime.utcfromtimestamp(int(non_zoom_end_times))
-    tz = pytz.timezone("UTC")
-    local_end = unix_time.astimezone(tz)
-
-    # Convert their 7am local time to UTC
-    # user_7am_naive = timezone.now()
-    # user_7am = timezone.make_aware(user_7am_naive, timezone=pytz.timezone(user_tz))
-    current_time = datetime.now()
-    local_current = current_time.astimezone(pytz.timezone("UTC"))
-    if local_end < local_current:
-        seconds = local_current
-        time_difference = "Meeting passed current time"
-    else:
-        time_difference = local_end - local_current
-        # seconds = a_timedelta.total_seconds()
-        seconds = time_difference.total_seconds()
-        seconds = int(seconds)
-    logger.info(
-        f"NON ZOOM MEETING SCHEDULER: \n END TIME: {non_zoom_end_times}\n LOCAL END: {local_end}\n CURRENT TIME: {current_time} \n TIME DIFFERENCE: {time_difference}"
-    )
-    # Use time difference in UTC to schedule realtime meeting alert
-    return emit_kick_off_slack_interaction(user_id, workflow_id, schedule=seconds)
+def emit_morning_refresh_message(user_id, verbose_name):
+    return _morning_refresh_message(user_id, verbose_name=verbose_name)
 
 
 #########################################################
@@ -653,7 +636,7 @@ def process_current_alert_list(user_id):
 @background()
 def _process_non_zoom_meetings(user_id):
     user = User.objects.get(id=user_id)
-    if hasattr(user, "nylas"):
+    if user.has_nylas_integration:
         try:
             processed_data = _process_calendar_details(user_id)
         except Exception as e:
@@ -666,6 +649,27 @@ def _process_non_zoom_meetings(user_id):
             for event in processed_data:
                 meeting_prep(event, user_id, current_invocation, from_task=True)
     return
+
+
+@background()
+def non_zoom_meeting_message(workflow_id, user_id, user_tz, non_zoom_end_times):
+    # Convert Non-Zoom Meeting from UNIX time to UTC
+    unix_time = datetime.utcfromtimestamp(int(non_zoom_end_times))
+    tz = pytz.timezone("UTC")
+    local_end = unix_time.astimezone(tz)
+    current_time = datetime.now()
+    local_current = current_time.astimezone(pytz.timezone("UTC"))
+    if local_end < local_current:
+        seconds = local_current
+        time_difference = "Meeting passed current time"
+    else:
+        time_difference = local_end - local_current
+        seconds = time_difference.total_seconds()
+        seconds = int(seconds)
+    logger.info(
+        f"NON ZOOM MEETING SCHEDULER: \n END TIME: {non_zoom_end_times}\n LOCAL END: {local_end}\n CURRENT TIME: {current_time} \n TIME DIFFERENCE: {time_difference}"
+    )
+    return emit_kick_off_slack_interaction(user_id, workflow_id, schedule=seconds)
 
 
 @background()
@@ -845,7 +849,6 @@ def _process_workflow_config_check(user_id):
             if "REPS" in template.target_reference:
                 config_targets = []
                 [config_targets.extend(config.alert_targets) for config in configs]
-                print(config_targets)
                 config_reference = configs[0]
                 new_config_base = {
                     "recurrence_frequency": config_reference.recurrence_frequency,
@@ -859,7 +862,6 @@ def _process_workflow_config_check(user_id):
                     user_level="REP",
                     slack_integration__isnull=False,
                 )
-                print(f"ALL REPS {all_reps}")
                 for rep in all_reps:
                     if str(rep.id) not in config_targets:
                         config_copy = copy(new_config_base)
@@ -869,12 +871,10 @@ def _process_workflow_config_check(user_id):
                             if rep.slack_integration.zoom_channel
                             else rep.slack_integration.channel
                         ]
-                        print(f"CONFIG {config_copy}")
                         try:
                             serializer = AlertConfigWriteSerializer(
                                 data=config_copy, context=template
                             )
-                            print(f"SERIALZIER: {serializer}")
                             serializer.is_valid(raise_exception=True)
                             serializer.save()
                         except Exception as e:
@@ -885,10 +885,15 @@ def _process_workflow_config_check(user_id):
         return
 
 
+####################################################
+# TIMEZONE TASK FUNCTIONS
+####################################################
+
 TIMEZONE_TASK_FUNCTION = {
     core_consts.NON_ZOOM_MEETINGS: emit_process_non_zoom_meetings,
     core_consts.CALENDAR_CHECK: emit_process_add_calendar_id,
     core_consts.WORKFLOW_CONFIG_CHECK: emit_process_workflow_config_check,
+    core_consts.MORNING_REFRESH: emit_morning_refresh_message,
 }
 
 
@@ -960,3 +965,29 @@ def _process_add_calendar_id(user_id):
         else:
             logger.info(f"COULD NOT FIND A CALENDAR ID FOR {user.email}")
         return
+
+
+@background()
+def _morning_refresh_message(user_id):
+    user = User.objects.get(id=user_id)
+
+    if user.has_slack_integration and user.user_level == "REP":
+        url = f"{MANAGR_URL}/pipelines"
+        blocks = [
+            block_builders.section_with_button_block(
+                "View in Managr",
+                "NONE",
+                f"Hey {user.first_name}, your pipeline has been updated, take a look",
+                url=url,
+                style="primary",
+            )
+        ]
+        try:
+            slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                block_set=blocks,
+            )
+        except Exception as e:
+            logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
+    return
