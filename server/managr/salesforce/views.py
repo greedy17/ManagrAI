@@ -335,7 +335,6 @@ class SalesforceSObjectViewSet(
         if param_sobject == "User":
             return User.objects.filter(organization=self.request.user.organization)
         sobject = routes[param_sobject]
-
         query = (
             sobject["model"].objects.filter(id=param_resource_id)
             if param_resource_id
@@ -648,7 +647,7 @@ class SalesforceSObjectViewSet(
         bulk_status = data["bulk"]
         user = User.objects.get(id=self.request.user.id)
         main_form = OrgCustomSlackFormInstance.objects.get(id=form_ids[0])
-        if len(user.slack_integration.realtime_alert_configs):
+        if user.has_slack_integration and len(user.slack_integration.realtime_alert_configs):
             _send_instant_alert(form_ids)
         try:
             if bulk_status:
@@ -806,8 +805,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type,
-            slack_const.FORM_TYPE_UPDATE,
+            resource_type, slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)
@@ -947,7 +945,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         else:
             workflow.operations_list = ops
 
-        if len(user.slack_integration.realtime_alert_configs):
+        if user.has_slack_integration and len(user.slack_integration.realtime_alert_configs):
             _send_instant_alert(current_form_ids)
 
         workflow.save()
