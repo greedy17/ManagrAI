@@ -986,10 +986,9 @@ export default {
     },
     async runCommand() {
       if (!this.selectedCommand || !this.selectedCommand.value) {
-        this.$Alert.alert({
-          type: 'failure',
-          timeout: 4000,
-          message: 'Please select a command.',
+        this.$toast('Please select a command.', {
+          type: 'error',
+          timeout: 3000,
         })
         return
       }
@@ -1006,10 +1005,9 @@ export default {
             this.displayCommandModal = true
             this.contentType = 'PullUsageData'
           } else {
-            this.$Alert.alert({
+            this.$toast(res['message'], {
               type: 'success',
-              timeout: 4000,
-              message: res['message'],
+              timeout: 3000,
             })
           }
         })
@@ -1041,18 +1039,15 @@ export default {
       try {
         const res = await Organization.api.orgUpdate(orgUpdates)
         const refresh = await this.organizations.refresh()
-        this.$Alert.alert({
+        this.$toast('Organization Updated. Please wait a few seconds and then hard refresh (ctrl + shift + r)', {
           type: 'success',
           timeout: 4000,
-          message:
-            'Organization Updated. Please wait a few seconds and then hard refresh (ctrl + shift + r)',
         })
       } catch (e) {
         console.log('error: ', e)
-        this.$Alert.alert({
-          type: 'failure',
-          timeout: 4000,
-          message: 'Something went wrong. Check the console for full error report.',
+        this.$toast('Something went wrong. Check the console for full error report.', {
+          type: 'error',
+          timeout: 3000,
         })
       }
     },
