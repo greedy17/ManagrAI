@@ -1867,7 +1867,7 @@ export default {
                 let updatedRes = await SObjects.api.getObjects('Opportunity')
                 this.allOpps = updatedRes.results
                 this.originalList = updatedRes.results
-                if (this.activeFilters) {
+                if (this.activeFilters.length) {
                   this.getFilteredObjects(this.updateFilterValue)
                 }
                 if (this.currentList === 'Closing this month') {
@@ -1929,7 +1929,6 @@ export default {
       if (value) {
         this.filters.push([this.operatorValue, this.filterApiName, value])
         this.setFilters[this.activeFilters.length] = [this.operatorValue, value]
-        console.log(this.setFilters)
       }
       try {
         const res = await SObjects.api.getObjects('Opportunity', true, this.filters)
@@ -1962,7 +1961,6 @@ export default {
       }
     },
     addOperator(name) {
-      console.log(name)
       this.operatorValue = name
       switch (name) {
         case 'EQUALS':
@@ -2000,7 +1998,6 @@ export default {
             ? (this.currentOperators = ['contains'])
             : this.currentOperators.push('contains')
 
-          console.log(this.currentOperators)
           break
         case 'RANGE':
           this.currentOperators.length === 0
@@ -2644,7 +2641,7 @@ export default {
               this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
             }
           })
-        if (this.activeFilters) {
+        if (this.activeFilters.length) {
           this.getFilteredObjects(this.updateFilterValue)
         }
         if (this.currentList === 'Closing this month') {
@@ -2695,7 +2692,7 @@ export default {
               this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
             }
           })
-        if (this.activeFilters) {
+        if (this.activeFilters.length) {
           this.getFilteredObjects(this.updateFilterValue)
         }
         if (this.currentList === 'Closing this month') {

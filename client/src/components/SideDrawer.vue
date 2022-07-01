@@ -7,12 +7,12 @@
       "
       class="notis"
       :class="{
-        'pulse green-img': notiRight === 0 && (activeNotis || $route.name === 'Pipelines'),
+        'pulse green-img': notiRight === 8 && (activeNotis || $route.name === 'Pipelines'),
       }"
       :style="`right: ${notiRight}px`"
     >
-      <img v-if="notiRight === 0" src="@/assets/images/dropdown-arrow.svg" height="16px" alt="" />
-      <img v-else src="@/assets/images/dropdown-arrow.svg" class="rotate" height="16px" alt="" />
+      <img v-if="notiRight === 8" src="@/assets/images/dropdown-arrow.svg" height="20px" alt="" />
+      <img v-else src="@/assets/images/dropdown-arrow.svg" class="rotate" height="18px" alt="" />
       <!-- <small class="red">5</small> -->
     </button>
     <section @click="test" id="mySidenav" :style="`width: ${navWidth}px`" class="sidenav">
@@ -97,8 +97,8 @@ export default {
   name: 'SideDrawer',
   data() {
     return {
-      notiRight: 0,
-      navWidth: 18,
+      notiRight: 8,
+      navWidth: 26,
       meetings: null,
       activeNotis: false,
       today: null,
@@ -206,8 +206,8 @@ export default {
       }
     },
     changeWidth() {
-      this.notiRight === 0 ? (this.notiRight = 235) && this.getMeetingList() : (this.notiRight = 0)
-      this.navWidth === 18 ? (this.navWidth = 250) : (this.navWidth = 18)
+      this.notiRight === 8 ? (this.notiRight = 288) && this.getMeetingList() : (this.notiRight = 8)
+      this.navWidth === 26 ? (this.navWidth = 300) : (this.navWidth = 26)
     },
     setDate() {
       let today = new Date()
@@ -361,17 +361,17 @@ button:disabled {
   margin-bottom: -3px;
 }
 .noti-section-lg {
-  height: 48vh;
+  height: 58vh;
   overflow-y: scroll;
-  padding: 0px 16px;
+  padding: 2px 16px;
   border-bottom: 1px solid $soft-gray;
   margin: 0px 0px 5px 0px;
   width: 100%;
 }
 .noti-section {
-  height: 36vh;
+  height: 32vh;
   overflow-y: scroll;
-  padding: 0px 16px;
+  padding: 2px 16px;
   border-bottom: 1px solid $soft-gray;
   margin: 0px 0px 5px 0px;
   width: 100%;
@@ -455,6 +455,8 @@ button:disabled {
   background-color: white;
   overflow-x: hidden;
   padding-top: 60px;
+  padding-left: 10px;
+  padding-right: 6px;
   transition: 0.5s;
 }
 
