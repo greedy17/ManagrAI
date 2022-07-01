@@ -1867,7 +1867,7 @@ export default {
                 let updatedRes = await SObjects.api.getObjects('Opportunity')
                 this.allOpps = updatedRes.results
                 this.originalList = updatedRes.results
-                if (this.activeFilters) {
+                if (this.activeFilters.length) {
                   this.getFilteredObjects(this.updateFilterValue)
                 }
                 if (this.currentList === 'Closing this month') {
@@ -2641,7 +2641,7 @@ export default {
               this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
             }
           })
-        if (this.activeFilters) {
+        if (this.activeFilters.length) {
           this.getFilteredObjects(this.updateFilterValue)
         }
         if (this.currentList === 'Closing this month') {
@@ -2692,7 +2692,7 @@ export default {
               this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
             }
           })
-        if (this.activeFilters) {
+        if (this.activeFilters.length) {
           this.getFilteredObjects(this.updateFilterValue)
         }
         if (this.currentList === 'Closing this month') {
