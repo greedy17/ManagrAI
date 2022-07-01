@@ -436,8 +436,7 @@ class NylasAuthAccount(TimeStampModel):
                 "error_param": error_param,
                 "error_message": error_message,
             }
-
-            data = error_data
+            return NylasAPIError(error_message)
         return data
 
     def _get_calendar_data(self):
