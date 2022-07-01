@@ -1597,7 +1597,7 @@ section {
   justify-content: space-between;
 }
 .pipelines {
-  padding: 4rem 1rem 0 0.75rem;
+  padding: 4rem 1.5rem 0.5rem 1rem;
   color: $base-gray;
 }
 .invert {

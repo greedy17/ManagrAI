@@ -912,7 +912,7 @@ export default {
   align-items: center;
 }
 .forecast {
-  margin-top: 3.5rem;
+  margin: 3.5rem 1rem 0.5rem 0.5rem;
   padding: 0 1rem 0rem 0.75rem;
 }
 .letter-spacing {

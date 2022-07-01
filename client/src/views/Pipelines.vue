@@ -3716,7 +3716,8 @@ section {
   justify-content: space-between;
 }
 .pipelines {
-  padding-top: 5rem;
+  padding: 5rem 1rem 0.5rem 0.5rem;
+
   color: $base-gray;
   margin: 0 1rem 0 0.5rem;
 }
