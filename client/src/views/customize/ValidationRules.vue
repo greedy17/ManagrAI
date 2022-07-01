@@ -110,7 +110,6 @@
       <template v-if="selectedForm">
         <div class="box__content--expanded">
           <CustomSlackForm
-            :show-validations="showValidations"
             :formType="formType"
             :customForm="selectedForm"
             :resource="resource"
@@ -207,7 +206,6 @@ export default {
       selectedTab: null,
       resource: null,
       selectedForm: null,
-      showValidations: false,
       newForms: [],
       selectedStage: null,
       selectedFormFields: [],
