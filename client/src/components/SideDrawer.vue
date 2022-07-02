@@ -425,7 +425,7 @@ button:disabled {
   position: fixed;
   z-index: 21;
   right: 0;
-  top: 10vh;
+  top: 4rem;
   border: 1px solid $soft-gray;
   border-radius: 50%;
   background-color: white;
