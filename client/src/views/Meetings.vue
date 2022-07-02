@@ -809,13 +809,14 @@ export default {
             this.getMeetingList()
           })
       } catch (e) {
-        this.$toast('Error adding contact', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+        console.log(e)
+        // this.$toast('Error adding contact', {
+        //   timeout: 2000,
+        //   position: 'top-left',
+        //   type: 'error',
+        //   toastClassName: 'custom',
+        //   bodyClassName: ['custom'],
+        // })
       } finally {
         setTimeout(() => {
           this.meetingLoading = false
