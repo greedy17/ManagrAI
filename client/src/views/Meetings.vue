@@ -809,13 +809,14 @@ export default {
             this.getMeetingList()
           })
       } catch (e) {
-        this.$toast('Error adding contact', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+        console.log(e)
+        // this.$toast('Error adding contact', {
+        //   timeout: 2000,
+        //   position: 'top-left',
+        //   type: 'error',
+        //   toastClassName: 'custom',
+        //   bodyClassName: ['custom'],
+        // })
       } finally {
         setTimeout(() => {
           this.meetingLoading = false
@@ -1597,7 +1598,7 @@ section {
   justify-content: space-between;
 }
 .pipelines {
-  padding: 4rem 1rem 0 0.75rem;
+  padding: 4rem 1.5rem 0.5rem 1rem;
   color: $base-gray;
 }
 .invert {

@@ -15,7 +15,7 @@
       <img v-else src="@/assets/images/dropdown-arrow.svg" class="rotate" height="18px" alt="" />
       <!-- <small class="red">5</small> -->
     </button>
-    <section @click="test" id="mySidenav" :style="`width: ${navWidth}px`" class="sidenav">
+    <section id="mySidenav" :style="`width: ${navWidth}px`" class="sidenav">
       <h3 class="neg-mar-bottom">{{ `${day} ${today}` }}</h3>
       <div class="noti-section">
         <p class="sticky yellowish">
@@ -143,7 +143,7 @@ export default {
       if (this.meetings.length) {
         for (let i = 0; i < this.meetings.length; i++) {
           !this.meetings[i].is_completed ? (NA += 1) : null
-          console.log(NA)
+
           NA === 0 ? (this.activeNotis = false) : (this.activeNotis = true)
         }
       }
@@ -192,10 +192,7 @@ export default {
     goToMeetings() {
       this.$router.push({ name: 'Meetings' })
     },
-    test() {
-      console.log(this.users.list)
-      console.log(this.templates.list)
-    },
+
     async getMeetingList() {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
@@ -428,7 +425,7 @@ button:disabled {
   position: fixed;
   z-index: 21;
   right: 0;
-  bottom: 2rem;
+  top: 4rem;
   border: 1px solid $soft-gray;
   border-radius: 50%;
   background-color: white;
