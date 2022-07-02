@@ -2053,7 +2053,7 @@ export default {
       this.currentOperators.splice(index, 1)
       this.getFilteredObjects()
       if (this.activeFilters.length < 1) {
-        this.getObjects()
+        this.updateOpps()
       }
       this.filterSelected = false
       this.currentFilter = null

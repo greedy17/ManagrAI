@@ -25,7 +25,6 @@ export default class User extends Model {
   static emailAuthLink = new fields.CharField()
   static nylas = new fields.Field({ default: () => { } })
   static nylasRef = new fields.Field({ default: () => { } })
-  // static noteTemplates = new fields.Field({})
   static isStaff = new fields.BooleanField()
   static isAdmin = new fields.BooleanField()
   static isActive = new fields.BooleanField()
