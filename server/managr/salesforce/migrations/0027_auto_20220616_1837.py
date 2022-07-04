@@ -29,7 +29,7 @@ def recreate_from_zoom_meeting_model(zoom_meeting_id, workflow_id):
 
 def recreate_from_non_zoom(meeting_id, workflow_id):
     from managr.core.models import MeetingPrepInstance
-    from managr.meetings.serializers import MeetingSerializer
+    from managr.meetings.serializers import MeetingConverterSerializer
     from datetime import datetime
     from managr.meetings.models import Meeting
     import pytz
@@ -49,7 +49,7 @@ def recreate_from_non_zoom(meeting_id, workflow_id):
     meeting_data["user"] = meeting.user.id
     meeting_data["meeting_uuid"] = "None"
     meeting_data["meta_data"] = event_data
-    serializer = MeetingSerializer(data=meeting_data)
+    serializer = MeetingConverterSerializer(data=meeting_data)
     serializer.is_valid(raise_exception=True)
     serializer.save()
     new_meeting = Meeting.objects.get(id=serializer.data.get("id"))

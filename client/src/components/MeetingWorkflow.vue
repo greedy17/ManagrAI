@@ -1,7 +1,9 @@
 <template>
   <div class="table-row">
-    <div class="table-cell">
-      <!-- <div v-if="!meeting.event_data"> -->
+    <div
+      class="table-cell wt-bg"
+      :class="{ 'left-green': meetingUpdated, 'left-red': !meetingUpdated }"
+    >
       <div>
         <p style="letter-spacing: 0.25px; font-size: 12px; margin-bottom: 3px">
           {{ meeting.topic ? meeting.topic : 'Meeting' }}
@@ -100,7 +102,12 @@
 
           <div v-if="hasLastName" class="contact-field-section__body">
             <div v-for="(field, i) in contactFields" :key="i">
-              <div v-if="field.dataType === 'Reference'">
+              <div
+                v-if="
+                  field.dataType === 'Reference' &&
+                  (field.apiName === 'AccountId' || field.apiName === 'OwnerId')
+                "
+              >
                 <p>{{ field.referenceDisplayLabel }}:</p>
                 <Multiselect
                   v-if="field.apiName === 'AccountId'"
@@ -310,20 +317,14 @@
     <div class="table-cell">
       <p class="roww" v-if="resourceId && resourceType === 'Opportunity' && !meetingUpdated">
         {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
-        <img
-          @click="addingOpp = !addingOpp"
-          style="margin-left: 0.5rem; margin-right: 0.5rem; cursor: pointer"
-          height="12px"
-          src="@/assets/images/edit.svg"
-          alt=""
-        />
-        <img
-          @click="emitGetNotes(resourceId)"
-          src="@/assets/images/white-note.svg"
-          class="invert"
-          height="14px"
-          alt=""
-        />
+
+        <button class="name-cell-edit-note-button-1" @click="addingOpp = !addingOpp">
+          <img style="filter: invert(10%); height: 0.6rem" src="@/assets/images/replace.svg" />
+        </button>
+
+        <button class="name-cell-edit-note-button-1" @click="emitGetNotes(resourceId)">
+          <img src="@/assets/images/white-note.svg" class="invert" height="12px" alt="" />
+        </button>
       </p>
       <p v-else-if="meetingUpdated">
         {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
@@ -377,8 +378,9 @@
         v-if="
           (!resourceId && !meetingLoading) || (resourceType !== 'Opportunity' && !meetingLoading)
         "
+        class="red-text"
       >
-        Please map meeting to an Opp in order to take action.
+        Map meeting to take action.
       </p>
       <div>
         <div class="column" v-if="resourceId && !meetingLoading && resourceType === 'Opportunity'">
@@ -412,7 +414,7 @@
       </div>
     </div>
     <div v-else class="table-cell">
-      <p class="success">Meeting Logged <img src="@/assets/images/complete.svg" alt="" /></p>
+      <p class="success">Meeting Logged</p>
     </div>
   </div>
 </template>
@@ -569,7 +571,7 @@ a {
   font-weight: bold;
 }
 .invert {
-  filter: invert(50%);
+  filter: invert(30%);
   cursor: pointer;
 }
 .inverted {
@@ -604,9 +606,10 @@ a {
 .contact-img {
   height: 1.25rem;
   margin-right: 0.2rem;
+  margin-left: 0.1rem;
   padding: 0.25rem;
   border-radius: 0.25rem;
-  border: 1px solid #e8e8e8;
+  border: 0.8px solid $gray;
 }
 .green {
   margin-left: 0.2rem;
@@ -622,13 +625,22 @@ a {
   margin-left: 0.25rem;
 }
 .success {
+  color: $dark-green;
+  background-color: $white-green;
+  padding: 5px;
+  border-radius: 6px;
+  max-width: 140px;
   display: flex;
   align-items: center;
-  img {
-    height: 1rem;
-    filter: invert(40%) sepia(95%) saturate(370%) hue-rotate(90deg) brightness(54%) contrast(94%);
-    margin-left: 0.25rem;
-  }
+}
+.red-text {
+  color: $coral;
+  background-color: $light-coral;
+  padding: 4px;
+  border-radius: 4px;
+  max-width: 180px;
+  display: flex;
+  align-items: center;
 }
 .red:hover {
   img {
@@ -636,7 +648,19 @@ a {
   }
   cursor: pointer;
 }
-
+.name-cell-edit-note-button-1 {
+  height: 1.1rem;
+  width: 1.1rem;
+  margin: 0 0.2rem;
+  padding: 0.25rem;
+  border-radius: 4px;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0.7px solid $gray;
+  cursor: pointer;
+}
 .add-contact {
   img {
     height: 0.6rem;
@@ -648,11 +672,11 @@ a {
   z-index: 7;
   right: 0;
   top: 0;
-  border-radius: 0.33rem;
+  border-radius: 8px;
   background-color: $white;
   width: 46vw;
   overflow: scroll;
-  box-shadow: 1px 1px 7px 2px $very-light-gray;
+  box-shadow: 1px 1px 2px 1px $very-light-gray;
   &__title {
     display: flex;
     justify-content: space-between;
@@ -727,11 +751,11 @@ a {
   z-index: 7;
   left: 1.5rem;
   top: 10vh;
-  border-radius: 0.33rem;
+  border-radius: 8px;
   background-color: $white;
   min-width: 20vw;
   overflow: scroll;
-  box-shadow: 1px 1px 7px 2px $very-light-gray;
+  box-shadow: 1px 1px 2px 1px $very-light-gray;
   &__title {
     display: flex;
     justify-content: space-between;
@@ -771,11 +795,11 @@ a {
   position: absolute;
   z-index: 7;
   right: 0.5rem;
-  border-radius: 0.33rem;
+  border-radius: 8px;
   background-color: $white;
   min-width: 20vw;
   overflow: scroll;
-  box-shadow: 1px 1px 7px 2px $very-light-gray;
+  box-shadow: 1px 1px 2px 1px $very-light-gray;
   &__title {
     display: flex;
     justify-content: space-between;
@@ -815,7 +839,7 @@ a {
   z-index: 7;
   top: 10vh;
   right: 0.5rem;
-  border-radius: 0.33rem;
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -823,7 +847,7 @@ a {
   min-width: 25vw;
   height: auto;
   overflow: scroll;
-  box-shadow: 1px 1px 7px 2px $very-light-gray;
+  box-shadow: 1px 1px 2px 1px $very-light-gray;
   &__title {
     display: flex;
     justify-content: space-between;
@@ -872,6 +896,18 @@ a {
   border-bottom: 1px solid $soft-gray;
   font-size: 13px;
 }
+.left-green {
+  border-left: 2px solid $dark-green !important;
+  bottom: 2px;
+}
+.left-red {
+  border-left: 2px solid $coral !important;
+  bottom: 2px;
+}
+.wt-bg {
+  background-color: white;
+}
+
 .table-cell:hover {
   cursor: text;
   background-color: white;

@@ -287,7 +287,7 @@ export default {
         })
         this.$toast('Field removed successfully', {
           timeout: 2000,
-          position: 'top-left',
+          position: 'bottom-right',
           type: 'success',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
@@ -331,7 +331,7 @@ export default {
         })
         this.$toast('Field added successfully', {
           timeout: 2000,
-          position: 'top-left',
+          position: 'bottom-right',
           type: 'success',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
@@ -381,7 +381,7 @@ export default {
     background-color: $off-white;
     letter-spacing: 0.4px;
     padding-left: 1rem;
-    font-weight: bold;
+    font-weight: bolder;
     font-size: 16px;
     width: 100%;
   }
@@ -401,7 +401,7 @@ export default {
     p {
       cursor: pointer;
       color: $dark-green;
-      font-weight: bold;
+      font-weight: bolder;
     }
   }
 }
@@ -425,7 +425,7 @@ export default {
     background-color: $off-white;
     letter-spacing: 0.4px;
     padding-left: 1rem;
-    font-weight: bold;
+    font-weight: bolder;
     font-size: 14px;
     width: 100%;
     height: 3rem;
@@ -447,7 +447,7 @@ export default {
     border-top: 1px solid $soft-gray;
     p {
       cursor: pointer;
-      font-weight: bold;
+      font-weight: bolder;
     }
   }
 }
@@ -473,10 +473,10 @@ export default {
   z-index: 2;
   top: 0;
   position: sticky;
-  background-color: $off-white;
-  font-weight: bold;
-  font-size: 13px;
-  letter-spacing: 0.5px;
+  background-color: white;
+  font-weight: bolder;
+  font-size: 13.5px;
+  letter-spacing: 0.75px;
   color: $base-gray;
 }
 .sort-img-visible {
@@ -504,7 +504,7 @@ export default {
   top: 0;
   left: 0;
   position: sticky;
-  background-color: $off-white;
+  background-color: white;
 }
 .cell-name-header {
   display: table-cell;
@@ -516,10 +516,10 @@ export default {
   left: 3.5vw;
   top: 0;
   position: sticky;
-  background-color: $off-white;
-  font-weight: bold;
-  font-size: 13px;
-  letter-spacing: 0.5px;
+  background-color: white;
+  font-weight: bolder;
+  font-size: 13.5px;
+  letter-spacing: 0.75px;
   color: $base-gray;
 }
 .table-cell-header {
@@ -531,10 +531,10 @@ export default {
   z-index: 2;
   top: 0;
   position: sticky;
-  background-color: $off-white;
-  font-weight: bold;
-  font-size: 13px;
-  letter-spacing: 0.5px;
+  background-color: white;
+  font-weight: bolder;
+  font-size: 13.5px;
+  letter-spacing: 0.75px;
   color: $base-gray;
 }
 .add-row {

@@ -102,9 +102,7 @@ export class UserProfileForm extends Form {
   })
 }
 
-export class UserConfigForm extends Form {
-  static activatedManagrConfigs = new FormField({ validators: [new RequiredValidator()] })
-}
+
 
 export class UserOnboardingForm extends Form {
   static onboarding = new FormField({ validators: [new RequiredValidator()] })

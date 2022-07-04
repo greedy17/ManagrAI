@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <NavBar v-if="!hideNavBar && userIsLoggedIn" />
-    <SideDrawer></SideDrawer>
+    <SideDrawer :key="$route.fullPath"></SideDrawer>
     <!-- <alert-alert /> -->
     <!-- Binding a key to the full path will remount a view if
         the detail endpoint changes-->
@@ -69,6 +69,9 @@ export default {
 .Vue-Toastification__toast--success.custom {
   background-color: $dark-green;
 }
+.Vue-Toastification__toast--default.custom {
+  background-color: $base-gray;
+}
 * {
   box-sizing: border-box;
 }
@@ -76,6 +79,7 @@ export default {
 body {
   overflow: auto;
   margin: 0;
+  //  margin: 0 1rem 0 1rem;
   min-height: 100vh;
   background-color: $off-white;
 }

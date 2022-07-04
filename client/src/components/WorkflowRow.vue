@@ -1,6 +1,10 @@
 <template>
   <div class="table-row">
-    <div style="padding: 2vh" class="table-cell-checkbox">
+    <div
+      style="padding: 2vh"
+      class="table-cell-checkbox"
+      :class="{ selected: workflowCheckList.includes(workflow.id) }"
+    >
       <div
         v-if="updateWorkflowList.includes(workflow.id) || updatedWorkflowList.includes(workflow.id)"
       >
@@ -18,7 +22,11 @@
       </div>
     </div>
 
-    <div style="min-width: 26vw" class="table-cell cell-name">
+    <div
+      style="min-width: 26vw"
+      class="table-cell cell-name"
+      :class="{ selected: workflowCheckList.includes(workflow.id) }"
+    >
       <div class="flex-row-spread">
         <div>
           <div
@@ -64,7 +72,7 @@
       :key="i"
       v-for="(field, i) in oppFields"
       :class="{
-        'active-edit': editing && editIndex === i && currentRow === index,
+        'active-edit': editing && editIndex === i && currentInlineRow === index,
         'table-cell-wide':
           field.dataType === 'TextArea' ||
           (field.length > 250 &&
@@ -78,6 +86,7 @@
           workflow['secondary_data'][field.apiName] ||
           workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
         ),
+        selected: workflowCheckList.includes(workflow.id),
       }"
     >
       <SkeletonBox
@@ -88,7 +97,7 @@
       />
 
       <div class="limit-cell-height" v-else>
-        <div class="inline-edit" v-if="editing && editIndex === i && currentRow === index">
+        <div class="inline-edit" v-if="editing && editIndex === i && currentInlineRow === index">
           <div
             v-if="
               field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
@@ -168,11 +177,13 @@
               track-by="value"
               label="label"
               v-model="dropdownVal[field.apiName]"
+              :multiple="field.dataType === 'MultiPicklist' ? true : false"
               @select="
                 setUpdateValues(
                   field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
                   $event.value,
                   field.dataType,
+                  field.dataType === 'MultiPicklist' ? true : false,
                 )
               "
             >
@@ -270,7 +281,7 @@
         </div>
         <PipelineField
           style="direction: ltr"
-          v-show="!editing || editIndex !== i"
+          v-show="!(editing && editIndex === i && currentInlineRow === index)"
           :apiName="field.apiName"
           :dataType="field.dataType"
           :fieldData="
@@ -366,6 +377,7 @@ export default {
     inlineLoader: {},
     closeEdit: {},
     stages: {},
+    currentInlineRow: {},
   },
   watch: {
     closeDateData: 'futureDate',
@@ -401,18 +413,22 @@ export default {
       this.editing = false
     },
     editInline(index) {
+      this.$emit('current-inline-row', this.index)
       this.currentRow = this.index
       this.editIndex = index
       this.editing = true
     },
-    setUpdateValues(key, val, dataType) {
+    setUpdateValues(key, val, dataType, multi) {
       this.formData = {}
-      if (val) {
+      if (multi) {
+        this.formData[key] = this.formData[key] ? this.formData[key] + ';' + val : val
+      }
+      if (val && !multi) {
         this.formData[key] = val
       }
       setTimeout(() => {
         this.$emit('inline-edit', this.formData, this.workflow.id, dataType)
-      }, 200)
+      }, 500)
     },
     emitCreateForm() {
       this.$emit('create-form')
@@ -621,8 +637,9 @@ input {
   display: table-row;
 }
 .empty {
+  position: sticky;
   display: table-cell;
-  background: white !important;
+  background: $off-white !important;
   min-width: 12vw;
   border-left: 1px solid $soft-gray;
   border-right: 1px solid $soft-gray;
@@ -649,9 +666,11 @@ input {
 .table-cell:hover,
 .empty:hover {
   border: 1px solid $dark-green;
+  border-radius: 4px;
 }
 .cell-name:hover {
   border: none;
+  border-bottom: 1px solid $soft-gray;
 }
 .table-cell-wide {
   display: table-cell;
@@ -673,7 +692,7 @@ input {
   top: 0;
   left: 0;
   position: sticky;
-  background-color: $off-white;
+  background-color: $white;
 }
 .table-cell-checkbox {
   display: table-cell;
@@ -684,7 +703,10 @@ input {
   position: sticky;
   z-index: 1;
   border-bottom: 1px solid $soft-gray;
-  background-color: $off-white;
+  background-color: $white;
+}
+.selected {
+  color: $dark-green !important;
 }
 .cell-name-header {
   display: table-cell;
@@ -780,12 +802,12 @@ input[type='checkbox'] + label::before {
   width: 1.5rem;
   margin-right: 0.2rem;
   padding: 0.25rem;
-  border-radius: 0.25rem;
+  border-radius: 6px;
   background-color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e8e8e8;
+  border: 0.7px solid $gray;
   img {
     height: 0.8rem;
     padding: 1px;
@@ -802,12 +824,12 @@ input[type='checkbox'] + label::before {
   width: 1.5rem;
   margin-right: 0.2rem;
   padding: 0.25rem;
-  border-radius: 0.25rem;
+  border-radius: 6px;
   background-color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e8e8e8;
+  border: 0.7px solid $gray;
   img {
     height: 1.2rem;
   }

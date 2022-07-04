@@ -40,7 +40,7 @@
             <PulseLoadingSpinnerButton
               v-if="!hasSalesforceIntegration"
               @click="onGetAuthLink('SALESFORCE')"
-              class="orange_button"
+              class="orange_button test"
               style="margin-left: 0.5rem"
               text="Connect"
               :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
@@ -60,7 +60,7 @@
           </div>
         </div>
 
-        <div :class="!hasSalesforceIntegration ? 'card onboarding' : 'card'">
+        <div v-if="hasSalesforceIntegration" class="card">
           <div class="card__header">
             <img src="@/assets/images/gmailCal.png" style="margin-right: 1rem; height: 1rem" />
             <img src="@/assets/images/outlookMail.png" style="height: 1rem" />
@@ -73,7 +73,7 @@
             <PulseLoadingSpinnerButton
               @click="onGetAuthLink('NYLAS')"
               style="margin-left: 1rem"
-              :class="!hasSalesforceIntegration ? 'orange_button test' : 'orange_button'"
+              class="orange_button test"
               text="Connect"
               :loading="generatingToken && selectedIntegration == 'NYLAS'"
             ></PulseLoadingSpinnerButton>

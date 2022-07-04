@@ -80,3 +80,31 @@ class MeetingFrontendSerializer(serializers.ModelSerializer):
             "provider",
             "meta_data",
         )
+
+
+class MeetingConverterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Meeting
+        fields = (
+            "id",
+            "user",
+            "meeting_id",
+            "topic",
+            "start_time",
+            "end_time",
+            "provider",
+            "meta_data",
+        )
+
+    def to_internal_value(self, data):
+        user = data.pop("user")
+        model_data = {
+            "user": user,
+            "meeting_id": "None",
+            "topic": data["title"],
+            "start_time": data.pop("start_time"),
+            "end_time": data.pop("end_time"),
+            "provider": data["provider"],
+            "meta_data": data,
+        }
+        return super().to_internal_value(model_data)

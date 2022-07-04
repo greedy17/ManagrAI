@@ -335,7 +335,6 @@ class SalesforceSObjectViewSet(
         if param_sobject == "User":
             return User.objects.filter(organization=self.request.user.organization)
         sobject = routes[param_sobject]
-
         query = (
             sobject["model"].objects.filter(id=param_resource_id)
             if param_resource_id
@@ -526,7 +525,7 @@ class SalesforceSObjectViewSet(
             user.activity.add_workflow_activity(str(main_form.id), title)
 
         value_update = main_form.resource_object.update_database_values(all_form_data)
-        return Response(data={"success": True})
+        return Response(data=data)
 
     @action(
         methods=["get"],
@@ -572,10 +571,11 @@ class SalesforceSObjectViewSet(
         url_path="create",
     )
     def create_resource(self, request, *args, **kwargs):
-        data = self.request.data
+        request_data = self.request.data
+        logger.info(f"CREATE START ---- {request_data}")
         user = User.objects.get(id=self.request.user.id)
-        form_id = data.get("form_id")
-        form_data = data.get("form_data")
+        form_id = request_data.get("form_id")
+        form_data = request_data.get("form_data")
         main_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
         stage_forms = []
         stage_form_data_collector = {}
@@ -629,6 +629,10 @@ class SalesforceSObjectViewSet(
                 else:
                     time.sleep(2)
                     attempts += 1
+            except Exception as e:
+                data = {"success": False, "error": str(e)}
+                break
+            logger.info(f"RETURN DATA ----- {data}")
         return Response(data=data)
 
     @action(
@@ -643,7 +647,7 @@ class SalesforceSObjectViewSet(
         bulk_status = data["bulk"]
         user = User.objects.get(id=self.request.user.id)
         main_form = OrgCustomSlackFormInstance.objects.get(id=form_ids[0])
-        if len(user.slack_integration.realtime_alert_configs):
+        if user.has_slack_integration and len(user.slack_integration.realtime_alert_configs):
             _send_instant_alert(form_ids)
         try:
             if bulk_status:
@@ -804,6 +808,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             resource_type, slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
+        print(workflow.forms.all())
         return Response(data=data)
 
     @action(
@@ -884,6 +889,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
     def update_workflow(self, request, *args, **kwargs):
         request_data = self.request.data
+        print(request_data)
         user = request.user
         stage_form_ids = request_data.get("stage_form_id", None)
         workflow = MeetingWorkflow.objects.get(id=request_data.get("workflow_id"))
@@ -893,7 +899,11 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             else []
         )
         current_form_ids = []
-        main_form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
+        main_form = (
+            workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE)
+            .exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT)
+            .first()
+        )
         current_form_ids.append(str(main_form.id))
         main_form.save_form(request_data.get("form_data"), False)
         if len(forms):
@@ -926,7 +936,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         else:
             workflow.operations_list = ops
 
-        if len(user.slack_integration.realtime_alert_configs):
+        if user.has_slack_integration and len(user.slack_integration.realtime_alert_configs):
             _send_instant_alert(current_form_ids)
 
         workflow.save()

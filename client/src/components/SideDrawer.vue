@@ -1,29 +1,50 @@
 <template>
   <div class="row">
-    <button @click="changeWidth" class="notis" :style="`right: ${notiRight}px`">
-      <img v-if="notiRight === 0" src="@/assets/images/dropdown-arrow.svg" height="16px" alt="" />
-      <img v-else src="@/assets/images/dropdown-arrow.svg" class="rotate" height="16px" alt="" />
+    <button
+      @click="
+        changeWidth()
+        runWorkflows()
+      "
+      class="notis"
+      :class="{
+        'pulse green-img': notiRight === 8 && (activeNotis || $route.name === 'Pipelines'),
+      }"
+      :style="`right: ${notiRight}px`"
+    >
+      <img v-if="notiRight === 8" src="@/assets/images/dropdown-arrow.svg" height="20px" alt="" />
+      <img v-else src="@/assets/images/dropdown-arrow.svg" class="rotate" height="18px" alt="" />
       <!-- <small class="red">5</small> -->
     </button>
-    <section @click="test" id="mySidenav" :style="`width: ${navWidth}px`" class="sidenav">
+    <section id="mySidenav" :style="`width: ${navWidth}px`" class="sidenav">
       <h3 class="neg-mar-bottom">{{ `${day} ${today}` }}</h3>
       <div class="noti-section">
-        <p class="sticky">
+        <p class="sticky yellowish">
           Meetings <small class="yellow-bg">{{ meetings ? meetings.length : 0 }}</small>
-          <button class="yellow-button" @click="goToMeetings">View</button>
         </p>
         <span v-if="meetings ? !meetings.length : null"
           ><a class="yellow-border no-cursor">No meetings today.</a></span
         >
 
         <div v-else>
-          <span :key="i" v-for="(meeting, i) in meetings"
-            ><a class="yellow-border no-cursor"
-              >{{ meeting.meeting_ref.topic }}
-              <span class="grey">{{ formatDateTimeToTime(meeting.meeting_ref.start_time) }}</span>
+          <span @click="goToMeetings" :key="i" v-for="(meeting, i) in meetings"
+            ><a class="yellow-border"
+              >{{
+                meeting.meeting_ref.event_data
+                  ? meeting.meeting_ref.event_data.title
+                  : meeting.meeting_ref.topic
+              }}
+              <span class="grey">{{
+                formatDateTimeToTime(
+                  meeting.meeting_ref.event_data
+                    ? meeting.meeting_ref.event_data.times.start_time
+                    : meeting.meeting_ref.start_time,
+                )
+              }}</span>
               <p
                 :class="
-                  meeting.is_completed ? 'small-font no-margin yellow' : 'small-font no-margin'
+                  meeting.is_completed
+                    ? 'small-font no-margin yellow-text'
+                    : 'small-font no-margin red'
                 "
               >
                 {{ meeting.is_completed ? 'Logged' : 'Please log' }}
@@ -34,29 +55,34 @@
       </div>
 
       <div class="noti-section-lg">
-        <p class="sticky">
-          Pipeline <small class="green-bg">{{ templates.list ? templates.list.length : 0 }}</small>
-          <button :disabled="!templates.list.length" class="green-button" @click="runWorkflows">
-            Refresh
-          </button>
-        </p>
+        <div class="sticky m-bottom">
+          <p class="greenish">
+            Pipeline
+            <small class="green-bg">{{ templates.list ? templates.list.length : 0 }}</small>
+          </p>
+        </div>
+
         <span v-if="!templates.list.length"
           ><a class="green-border no-cursor">No active workflow.</a></span
         >
         <span @click="goToWorkflow(alert.id)" :key="i" v-for="(alert, i) in templates.list"
           ><a class="green-border">
-            {{ alert.title }} <small class="green">{{ workflows[i] ? workflows[i] : '--' }}</small>
-            <p class="small-font no-margin grey">owner: {{ users ? owner(alert.user) : '' }}</p>
+            {{ alert.title }}
+            <small class="green">{{ workflows[i] ? workflows[i] : '--' }}</small>
+            <p class="small-font no-margin grey">
+              {{ owner(alert.user) !== 'Activated by Manager' ? 'Owner:' : '' }}
+              {{ users ? owner(alert.user) : '' }}
+            </p>
           </a>
         </span>
 
         <!-- <span><a class="green-border" href="">Pipeline 3</a></span>  -->
       </div>
 
-      <div class="noti-section">
+      <!-- <div class="noti-section">
         <p class="sticky light-gray">Task<small class="light-gray-bg">0</small></p>
         <span><a style="pointer-events: none" class="red-border" href="">Coming Soon</a></span>
-      </div>
+      </div> -->
     </section>
   </div>
 </template>
@@ -71,9 +97,10 @@ export default {
   name: 'SideDrawer',
   data() {
     return {
-      notiRight: 0,
-      navWidth: 18,
+      notiRight: 8,
+      navWidth: 26,
       meetings: null,
+      activeNotis: false,
       today: null,
       day: null,
       workflows: [],
@@ -86,7 +113,10 @@ export default {
         5: 'Friday',
         6: 'Saturday',
       },
-      templates: CollectionManager.create({ ModelClass: AlertTemplate }),
+      templates: CollectionManager.create({
+        ModelClass: AlertTemplate,
+        filters: { forPipeline: true },
+      }),
       users: CollectionManager.create({ ModelClass: User }),
       //   months: {
       //       01:'January',
@@ -104,10 +134,22 @@ export default {
       //   }
     }
   },
+  watch: {
+    meetings: 'needsAction',
+  },
   methods: {
+    needsAction() {
+      let NA = 0
+      if (this.meetings.length) {
+        for (let i = 0; i < this.meetings.length; i++) {
+          !this.meetings[i].is_completed ? (NA += 1) : null
+
+          NA === 0 ? (this.activeNotis = false) : (this.activeNotis = true)
+        }
+      }
+    },
     async runWorkflows() {
       let ids = this.templates.list.map((wf) => wf.id)
-      console.log(ids)
       try {
         for (let i = 0; i < ids.length; i++) {
           let res = await AlertTemplate.api.runAlertTemplateNow(ids[i], {
@@ -120,7 +162,9 @@ export default {
       }
     },
     owner(usr) {
-      return this.users.list.filter((user) => user.id === usr)[0].fullName
+      return this.users.list.filter((user) => user.id === usr)[0]
+        ? this.users.list.filter((user) => user.id === usr)[0].fullName
+        : 'Activated by Manager'
     },
     formatDateTimeToTime(input) {
       let preDate = new Date(input)
@@ -148,10 +192,7 @@ export default {
     goToMeetings() {
       this.$router.push({ name: 'Meetings' })
     },
-    test() {
-      console.log(this.users.list)
-      console.log(this.templates.list)
-    },
+
     async getMeetingList() {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
@@ -162,8 +203,8 @@ export default {
       }
     },
     changeWidth() {
-      this.notiRight === 0 ? (this.notiRight = 235) : (this.notiRight = 0)
-      this.navWidth === 18 ? (this.navWidth = 250) : (this.navWidth = 18)
+      this.notiRight === 8 ? (this.notiRight = 288) && this.getMeetingList() : (this.notiRight = 8)
+      this.navWidth === 26 ? (this.navWidth = 300) : (this.navWidth = 26)
     },
     setDate() {
       let today = new Date()
@@ -191,6 +232,35 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 $dark-green;
+  }
+
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+  }
+
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  }
+}
+.pulse {
+  box-shadow: 0 0 0 0 $dark-green;
+  transform: scale(1);
+  animation: pulse 2s infinite;
+}
+.green-img {
+  img {
+    filter: invert(62%) sepia(73%) saturate(347%) hue-rotate(101deg) brightness(87%) contrast(86%);
+  }
+}
+.m-bottom {
+  margin-bottom: 1rem;
+}
 button:disabled {
   color: $very-light-gray;
   border: 1px solid $very-light-gray;
@@ -210,7 +280,7 @@ button:disabled {
   flex-direction: column;
 }
 .grey {
-  color: $gray;
+  color: $gray !important;
 }
 .light-gray-bg {
   border-radius: 50%;
@@ -237,6 +307,14 @@ button:disabled {
 .yellow {
   color: $yellow !important;
 }
+.yellow-text {
+  color: $yellow !important;
+}
+.yellowish {
+  color: $yellow !important;
+  background-color: #fdf7e6 !important;
+  border-radius: 6px;
+}
 .green-bg {
   border-radius: 50%;
   background-color: $dark-green;
@@ -253,7 +331,15 @@ button:disabled {
   cursor: pointer;
 }
 .green {
-  color: $dark-green;
+  color: $dark-green !important;
+}
+.greenish {
+  color: $dark-green !important;
+  background-color: $white-green !important;
+  border-radius: 6px;
+}
+.red {
+  color: $coral !important;
 }
 .red-bg {
   border-radius: 50%;
@@ -269,20 +355,20 @@ button:disabled {
   background-color: white;
 }
 .neg-mar-bottom {
-  margin-bottom: -5px;
+  margin-bottom: -3px;
 }
 .noti-section-lg {
-  height: 250px;
+  height: 58vh;
   overflow-y: scroll;
-  padding: 0px 16px;
+  padding: 2px 16px;
   border-bottom: 1px solid $soft-gray;
   margin: 0px 0px 5px 0px;
   width: 100%;
 }
 .noti-section {
-  height: 200px;
+  height: 32vh;
   overflow-y: scroll;
-  padding: 0px 16px;
+  padding: 2px 16px;
   border-bottom: 1px solid $soft-gray;
   margin: 0px 0px 5px 0px;
   width: 100%;
@@ -292,16 +378,18 @@ button:disabled {
   height: 26px;
 }
 .yellow-border {
-  border: 1px solid $yellow;
-  border-radius: 4px;
+  border-left: 1px solid $yellow;
+  background-color: $off-white;
+  border-radius: 1px;
   min-height: 56px;
   margin-bottom: 3px;
 }
 .green-border {
-  border: 1px solid $dark-green;
-  border-radius: 4px;
+  border-left: 1px solid $dark-green;
+  border-radius: 1px;
   min-height: 56px;
   margin-bottom: 3px;
+  background-color: $off-white;
 }
 .red-border {
   border: 1px solid $very-light-gray;
@@ -322,6 +410,14 @@ button:disabled {
   display: flex;
   flex-direction: row;
 }
+.green-drawer {
+  border: 1px solid $dark-green !important;
+  background-color: $dark-green !important;
+  img {
+    // filter: invert(62%) sepia(73%) saturate(347%) hue-rotate(101deg) brightness(87%) contrast(86%);
+    filter: invert(99%);
+  }
+}
 .notis {
   display: flex;
   flex-direction: row;
@@ -329,7 +425,7 @@ button:disabled {
   position: fixed;
   z-index: 21;
   right: 0;
-  bottom: 2rem;
+  top: 4rem;
   border: 1px solid $soft-gray;
   border-radius: 50%;
   background-color: white;
@@ -356,6 +452,8 @@ button:disabled {
   background-color: white;
   overflow-x: hidden;
   padding-top: 60px;
+  padding-left: 10px;
+  padding-right: 6px;
   transition: 0.5s;
 }
 
