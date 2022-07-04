@@ -2,6 +2,7 @@ import logging
 import random
 import pytz
 import json
+import uuid
 from urllib.parse import unquote
 from datetime import datetime
 from .routes import routes
@@ -52,15 +53,14 @@ from .serializers import (
 from .adapter.models import SalesforceAuthAccountAdapter
 from .background import (
     emit_gen_next_sync,
-    emit_add_update_to_sf,
     emit_gen_next_object_field_sync,
     emit_generate_form_template,
     emit_add_update_to_sf,
     _send_instant_alert,
+    emit_process_update_resources_in_salesforce,
     _process_pipeline_sync,
     emit_meeting_workflow_tracker,
 )
-from managr.salesforce.utils import process_text_field_format
 from managr.salesforce import constants as sf_consts
 from managr.salesforce.adapter.exceptions import (
     TokenExpired,
@@ -376,35 +376,20 @@ class SalesforceSObjectViewSet(
         methods=["get"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
-        url_path="create-form-instance",
+        url_path="get-curent-values",
     )
-    def create_form_instance(self, request, *args, **kwargs):
-        from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
-
-        user = self.request.user
-        form_type = self.request.GET.get("form_type")
-        resource_type = self.request.GET.get("resource_type")
-        resource_id = self.request.GET.get("resource_id", None)
-        stage_name = self.request.GET.get("stage_name", None)
-        template_list = OrgCustomSlackForm.objects.for_user(user).filter(
-            Q(resource=resource_type, form_type=form_type)
-        )
-        template = (
-            template_list.filter(stage=stage_name).first() if stage_name else template_list.first()
-        )
-        slack_form = (
-            OrgCustomSlackFormInstance.objects.create(
-                template=template, user=user, resource_id=resource_id
-            )
-            if form_type == "UPDATE"
-            else OrgCustomSlackFormInstance.objects.create(template=template, user=user)
-        )
+    def get_current_values(self, request, *args, **kwargs):
+        user = request.user
+        resource_type = request.GET.get("resource_type")
+        resource_id = request.GET.get("resource_id", None)
+        route = model_routes[resource_type]
+        model_class = route["model"]
+        model_object = model_class.objects.filter(id=resource_id).first()
         attempts = 1
         while True:
             try:
-                current_values = slack_form.generate_form_values()
+                current_values = model_object.get_current_values()
                 data = {
-                    "form_id": str(slack_form.id),
                     "current_values": current_values,
                     "success": True,
                 }
@@ -420,14 +405,11 @@ class SalesforceSObjectViewSet(
                 logger.info(f"CREATE FORM INSTANCE ERROR ---- {e}")
                 data = {"error": str(e), "success": False}
                 break
-        if data["success"] is True and (resource_type == "Opportunity" and form_type == "UPDATE"):
+        if data["success"] is True and user.organization.has_products:
             current_products = user.salesforce_account.list_resource_data(
                 "OpportunityLineItem",
                 0,
-                filter=[
-                    "AND IsDeleted = false",
-                    f"AND OpportunityId = '{slack_form.resource_object.integration_id}'",
-                ],
+                filter=["AND IsDeleted = false", f"AND OpportunityId = '{resource_id}'",],
             )
             product_values = [product.as_dict for product in current_products]
             data["current_products"] = product_values
@@ -440,92 +422,29 @@ class SalesforceSObjectViewSet(
         url_path="update",
     )
     def update_resource(self, request, *args, **kwargs):
-        from managr.slack.models import OrgCustomSlackFormInstance
         from managr.core.models import User
 
         data = self.request.data
         logger.info(f"UPDATE START ---- {data}")
         user = User.objects.get(id=self.request.user.id)
-        form_ids = data.get("form_id")
+        integration_ids = data.get("integration_ids")
         form_data = data.get("form_data")
-        from_workflow = data.get("from_workflow")
-        title = data.get("workflow_title", None)
-        forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
-        main_form = forms.filter(template__form_type="UPDATE").first()
-        stage_form_data_collector = {}
-        for form in forms:
-            form.save_form(form_data, False)
-            stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
-        all_form_data = {**stage_form_data_collector, **main_form.saved_data}
-        formatted_saved_data = process_text_field_format(
-            str(user.id), main_form.template.resource, all_form_data
+        form_type = data.get("form_type")
+        resource_type = data.get("resource_type")
+        resource_id = data.get("resource_id", None)
+        stage_name = data.get("stage_name", None)
+        instance_data = {
+            "user": user,
+            "resource_type": resource_type,
+            "form_type": form_type,
+            "resource_id": resource_id,
+            "stage_name": stage_name,
+        }
+        update_name = f"resource_update_{user.email}_{str(uuid.uuid4())}"
+        emit_process_update_resources_in_salesforce(
+            form_data, user, instance_data, integration_ids, update_name
         )
-        data = None
-        attempts = 1
-        while True:
-            sf = user.salesforce_account
-            try:
-                resource = main_form.resource_object.update_in_salesforce(all_form_data, True)
-                data = {
-                    "success": True,
-                    "task_hash": resource["task_hash"],
-                    "verbose_name": resource["verbose_name"],
-                }
-                break
-            except FieldValidationError as e:
-                logger.info(f"UPDATE FIELD VALIDATION ERROR {e}")
-                data = {"success": False, "error": str(e)}
-                break
-
-            except RequiredFieldError as e:
-                logger.info(f"UPDATE REQUIRED FIELD ERROR {e}")
-
-                data = {"success": False, "error": str(e)}
-                break
-            except UnhandledSalesforceError as e:
-                logger.info(f"UPDATE UNHANDLED SF ERROR {e}")
-                data = {"success": False, "error": str(e)}
-                break
-
-            except SFNotFoundError as e:
-                logger.info(f"UPDATE SF NOT FOUND ERROR {e}")
-                data = {"success": False, "error": str(e)}
-                break
-
-            except TokenExpired:
-                if attempts >= 5:
-                    logger.info(f"UPDATE REFRESHING TOKEN ERROR {e}")
-                    data = {"success": False, "error": "Could not refresh token"}
-                    break
-                else:
-                    if main_form.resource_object.owner == user:
-                        sf.regenerate_token()
-                    else:
-                        main_form.resource_object.owner.salesforce_account.regenerate_token()
-                    attempts += 1
-
-            except ConnectionResetError:
-                if attempts >= 5:
-                    logger.info(f"UPDATE CONNECTION RESET ERROR {e}")
-                    data = {"success": False, "error": "Connection was reset"}
-                    break
-                else:
-                    time.sleep(2)
-                    attempts += 1
-            except Exception as e:
-                logger.info(f"UPDATE ERROR {e}")
-                break
-        if all_form_data.get("meeting_comments") is not None:
-            emit_add_update_to_sf(str(main_form.id))
-        if user.has_slack_integration and len(user.slack_integration.realtime_alert_configs):
-            _send_instant_alert(form_ids)
-        forms.update(is_submitted=True, update_source="pipeline", submission_date=timezone.now())
-        if from_workflow:
-            user.activity.increment_untouched_count("workflows")
-            user.activity.add_workflow_activity(str(main_form.id), title)
-
-        value_update = main_form.resource_object.update_database_values(all_form_data)
-        return Response(data=data)
+        return Response(data={"verbose_name": update_name})
 
     @action(
         methods=["get"],
@@ -954,3 +873,12 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         serializer = MeetingWorkflowSerializer(instance=workflow)
         data = {"success": True, "workflow": serializer.data}
         return Response(data=data)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="get-update-status",
+    )
+    def get_update_status(self, request, *args, **kwargs):
+        return
