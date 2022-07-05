@@ -1,7 +1,7 @@
 <template>
-  <div style="margin-top: 4rem">
+  <div style="margin-top: 3rem">
     <div class="sidenav">
-      <div
+      <!-- <div
         style="
           margin-bottom: 1rem;
           margin-left: 0.5rem;
@@ -12,11 +12,16 @@
       >
         <h3 class="title">Manage Actions</h3>
         <h5 style="margin-top: -0.5rem">Access & Update CRM Fields</h5>
-      </div>
+      </div> -->
       <router-link exact-active-class="active" :to="{ name: 'Required' }">
         <div class="row">
-          <img src="@/assets/images/optional.svg" class="invert" style="height: 1rem; margin-right: 1rem" alt="" />
-          <h5>Field Mapping</h5>
+          <img
+            src="@/assets/images/optional.svg"
+            class="invert"
+            style="height: 1rem; margin-right: 1rem"
+            alt=""
+          />
+          <!-- <h5>Field Mapping</h5> -->
         </div>
       </router-link>
 
@@ -29,8 +34,13 @@
 
       <router-link exact-active-class="active" :to="{ name: 'ValidationRules' }">
         <div class="row">
-          <img src="@/assets/images/gavel.svg" class="invert" style="height: 1rem; margin-right: 1rem" alt="" />
-          <h5>Validation Rules</h5>
+          <img
+            src="@/assets/images/gavel.svg"
+            class="invert"
+            style="height: 1rem; margin-right: 1rem"
+            alt=""
+          />
+          <!-- <h5>Validation Rules</h5> -->
         </div>
       </router-link>
     </div>
@@ -101,7 +111,7 @@ img {
 
 .sidenav {
   height: 100%;
-  width: 15.5vw;
+  width: 64px;
   font-size: 0.85rem;
   position: fixed;
   left: 0;
@@ -109,7 +119,7 @@ img {
   border-right: 2px solid $soft-gray;
   color: $gray;
   overflow-x: hidden;
-  padding: 1rem;
+  padding: 32px 4px;
   margin-top: -1.5rem;
 }
 a {

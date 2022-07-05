@@ -1,7 +1,7 @@
 <template>
   <div>
     <nav id="nav" v-if="userIsLoggedIn">
-      <router-link :to="{ name: 'Integrations' }">
+      <router-link :to="{ name: 'Pipelines' }">
         <div class="logo">
           <img style="height: 2rem" src="@/assets/images/logo.png" />
         </div>
@@ -235,24 +235,26 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
-@import '@/styles/mixins/utils';
+
+@media only screen and (max-width: 600px) {
+}
+/* Small devices (portrait tablets and large phones, 600px and up) */
+@media only screen and (min-width: 600px) {
+}
+/* Medium devices (landscape tablets, 768px and up) */
+@media only screen and (min-width: 768px) {
+}
+/* Large devices (laptops/desktops, 992px and up) */
+@media only screen and (min-width: 992px) {
+}
+/* Extra large devices (large laptops and desktops, 1200px and up) */
+@media only screen and (min-width: 1200px) {
+}
 
 .nav-img {
   height: 16px;
 }
-.nameOrg {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  p {
-    font-size: 11px;
-  }
-  small {
-    font-size: 10px;
-    margin-left: 0.2rem;
-    color: $dark-green;
-  }
-}
+
 span {
   font-size: 11px;
   color: $dark-green;
@@ -372,12 +374,6 @@ li {
   @media only screen and (max-width: 700px) {
     margin-right: 0.25rem;
     font-size: 10px;
-  }
-}
-
-@media only screen and (max-width: 768px) {
-  img {
-    height: 0.5rem;
   }
 }
 

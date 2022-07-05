@@ -1,10 +1,10 @@
 <template>
   <div>
     <div v-if="userLevel == 'REP'" class="sidenav">
-      <div style="margin-bottom: 2rem; margin-left: 0.5rem">
+      <!-- <div style="margin-bottom: 2rem; margin-left: 0.5rem">
         <h4 class="title">Workflow Automations</h4>
         <h5 style="margin-top: -0.65rem; color: #9b9b9b">Let us do the work for you</h5>
-      </div>
+      </div> -->
 
       <router-link exact-active-class="active" :to="{ name: 'CreateNew' }">
         <div :class="isOnboarding ? 'onboarding row' : 'row'">
@@ -26,12 +26,7 @@
             style="margin-right: 1rem; padding-left: 0.25rem"
             alt=""
           />
-          <h5>
-            Active Workflows
-            <span style="margin-left: 0.5rem" class="counter">{{
-              alertsCount(templates.list.length)
-            }}</span>
-          </h5>
+          <h5>Active Workflows</h5>
         </div>
       </router-link>
 
@@ -52,10 +47,10 @@
       v-else-if="userLevel !== 'MANAGER' && userLevel !== 'REP'"
       class="sidenav sidenav__background"
     >
-      <div style="margin-bottom: 2rem; margin-left: 0.5rem">
+      <!-- <div style="margin-bottom: 2rem; margin-left: 0.5rem">
         <h4 class="title">Workflow Automations</h4>
         <h5 style="margin-top: -0.65rem; color: #9b9b9b">Let us do the work for you</h5>
-      </div>
+      </div> -->
 
       <router-link exact-active-class="active" :to="{ name: 'CreateNew' }">
         <div class="row">
@@ -78,12 +73,7 @@
             style="margin-right: 1rem; padding-left: 0.25rem"
             alt=""
           />
-          <h5>
-            Active Workflows
-            <span style="margin-left: 0.5rem" class="counter">{{
-              alertsCount(templates.list.length)
-            }}</span>
-          </h5>
+          <h5>Active Workflows</h5>
         </div>
       </router-link>
 
@@ -101,10 +91,10 @@
     </div>
 
     <div v-else-if="userLevel == 'MANAGER'" class="sidenav sidenav__background">
-      <div style="margin-bottom: 2rem; margin-left: 0.5rem">
+      <!-- <div style="margin-bottom: 2rem; margin-left: 0.5rem">
         <h4 class="title">Workflow Automations</h4>
         <h5 style="margin-top: -0.65rem; color: #9b9b9b">Let us do the work for you</h5>
-      </div>
+      </div> -->
 
       <div style="border-radius: 0.3rem; margin-bottom: 0.25rem">
         <div style="margin-top: -0.25rem" class="col">
@@ -116,7 +106,7 @@
                 style="height: 0.9rem; margin-right: 1rem; margin-left: 1rem"
                 alt=""
               />
-              <h5>Instant Updates</h5>
+              <!-- <h5>Instant Updates</h5> -->
             </div>
           </router-link>
           <router-link
@@ -132,7 +122,7 @@
                 alt=""
               />
 
-              <h5>Popular Workflows</h5>
+              <!-- <h5>Popular Workflows</h5> -->
             </div>
           </router-link>
         </div>
@@ -147,12 +137,7 @@
             style="margin-right: 1rem; padding-left: 0.25rem"
             alt=""
           />
-          <h5>
-            Active Workflows
-            <span style="margin-left: 0.5rem" class="counter">{{
-              alertsCount(templates.list.length)
-            }}</span>
-          </h5>
+          <!-- <h5>Active Workflows</h5> -->
         </div>
       </router-link>
 
@@ -164,7 +149,7 @@
             style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
             alt=""
           />
-          <h5>Custom</h5>
+          <!-- <h5>Custom</h5> -->
         </div>
       </router-link>
     </div>
@@ -195,16 +180,16 @@ export default {
     this.templates.refresh()
   },
   methods: {
-    alertsCount(num) {
-      let int = num
-      if (this.hasZoomChannel) {
-        int++
-      }
-      if (this.hasRecapChannel) {
-        int++
-      }
-      return int
-    },
+    // alertsCount(num) {
+    //   let int = num
+    //   if (this.hasZoomChannel) {
+    //     int++
+    //   }
+    //   if (this.hasRecapChannel) {
+    //     int++
+    //   }
+    //   return int
+    // },
   },
   computed: {
     hasZoomChannel() {
@@ -266,15 +251,15 @@ img {
 }
 .sidenav {
   height: 100%;
-  width: 16vw;
-  font-size: 0.85rem;
+  width: 62px;
+  font-size: 14px;
   position: fixed;
   left: 0;
   background-color: #fafbfc;
   border-right: 2px solid $soft-gray;
   color: $base-gray;
   overflow-x: hidden;
-  padding: 1rem;
+  padding: 6px;
   margin-top: -1rem;
 }
 a {

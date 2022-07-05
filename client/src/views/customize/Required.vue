@@ -1,9 +1,9 @@
 <template>
   <div class="customizations">
-    <div class="row-spread width-100 margin-top-negative">
+    <div class="row-spread width-100">
       <div>
         <h4 style="color: 4d4e4c">Field Mapping</h4>
-        <p class="margin-top-negative sub__">Map CRM fields to Managr</p>
+        <p class="sub__ margin-top-negative">Map CRM fields to Managr</p>
       </div>
       <button
         @click="goToWorkflows"
@@ -19,7 +19,7 @@
       </button>
     </div>
 
-    <p class="sub__ green-background">Required</p>
+    <p class="sub__">Required</p>
     <div class="customizations__cards">
       <div class="card">
         <div class="card__header">
@@ -95,7 +95,7 @@
     </div>
     <p class="sub__ margin-top">Optional</p>
 
-    <div class="margin-left-negative customizations__cards">
+    <div class="customizations__cards">
       <div class="card">
         <div class="card__header">
           <h3>Update Contacts</h3>
@@ -410,18 +410,18 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  margin-top: 2rem;
-  margin-left: 20vw;
+  margin-left: 120px;
   &__cards {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: flex-start;
     border-radius: 0.5rem;
   }
 }
 .sub__ {
   font-size: 14px;
   color: $gray;
+  padding: 0;
 }
 .card:hover {
   box-shadow: 1px 2px 2px $very-light-gray;
@@ -431,7 +431,7 @@ export default {
   background-color: white;
   border: 1px solid #e8e8e8;
   border-radius: 0.5rem;
-  width: 24vw;
+  width: 20vw;
   margin-right: 1rem;
   margin-bottom: 1rem;
   transition: all 0.25s;
