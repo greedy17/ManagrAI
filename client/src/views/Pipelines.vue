@@ -2053,7 +2053,7 @@ export default {
       this.currentOperators.splice(index, 1)
       this.getFilteredObjects()
       if (this.activeFilters.length < 1) {
-        this.getObjects()
+        this.updateOpps()
       }
       this.filterSelected = false
       this.currentFilter = null
@@ -3716,7 +3716,8 @@ section {
   justify-content: space-between;
 }
 .pipelines {
-  padding-top: 5rem;
+  padding: 5rem 1rem 0.5rem 0.5rem;
+
   color: $base-gray;
   margin: 0 1rem 0 0.5rem;
 }
