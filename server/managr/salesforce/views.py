@@ -447,43 +447,6 @@ class SalesforceSObjectViewSet(
         return Response(data={"verbose_name": update_name})
 
     @action(
-        methods=["get"],
-        permission_classes=[permissions.IsAuthenticated],
-        detail=False,
-        url_path="confirm-update",
-    )
-    def confirm_update(self, request, *args, **kwargs):
-        task_hash = self.request.GET.get("task_hash")
-        verbose_name = self.request.GET.get("verbose_name")
-        logger.info(
-            f"CONFIRM UPDATE START FOR TASK HASH:<{task_hash}>, VERBOSE NAME:<{verbose_name}>"
-        )
-
-        attempts = 1
-        has_error = False
-        while True:
-            if attempts >= 5:
-                has_error = True
-                break
-            try:
-                task = CompletedTask.objects.filter(task_hash=task_hash).order_by("-run_at").first()
-                logger.info(f"CONFIRM UPDATE TASK ---- {task}")
-                if task and task.verbose_name == verbose_name:
-                    break
-                else:
-                    attempts += 1
-                    sleep = 1 * 2 ** attempts + random.uniform(0, 1)
-                    time.sleep(sleep)
-            except Exception as e:
-                logger.exception(
-                    f"Error retreiving update status from task {verbose_name}, <HASH: {task_hash}> because of: {e}"
-                )
-                attempts += 1
-        if has_error:
-            return Response(data={"success": False})
-        return Response(data={"success": True})
-
-    @action(
         methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
@@ -874,11 +837,3 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         data = {"success": True, "workflow": serializer.data}
         return Response(data=data)
 
-    @action(
-        methods=["get"],
-        permission_classes=[permissions.IsAuthenticated],
-        detail=False,
-        url_path="get-update-status",
-    )
-    def get_update_status(self, request, *args, **kwargs):
-        return
