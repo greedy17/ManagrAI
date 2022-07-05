@@ -620,6 +620,7 @@
       <div
         style="cursor: not-allowed"
         :class="formType !== 'STAGE_GATING' ? 'collection_fields' : 'stage_fields'"
+        v-if="!fromAdmin"
       >
         <div
           style="
