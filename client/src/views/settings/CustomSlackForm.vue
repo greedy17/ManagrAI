@@ -1278,7 +1278,11 @@ export default {
       // this.formFields.refresh()
     },
     goBack() {
-      this.$router.push({ name: 'Required' })
+      if (this.fromAdmin) {
+        this.$router.go()
+      } else {
+        this.$router.push({ name: 'Required' })
+      }
     },
     goToUpdateOpp() {
       this.$router.push({ name: 'UpdateOpportunity' })

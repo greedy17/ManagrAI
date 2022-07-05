@@ -550,11 +550,11 @@
                 <h3>Timezone:</h3>
                 <h4>{{ user.timezone }}</h4>
               </div>
-              <div class="border-break">
-                <h3>Reminders:</h3>
+              <!-- <div class="border-break"> -->
+                <!-- <h3>Reminders:</h3> -->
                 <!-- <h4>{{user.isInvited}}</h4> -->
-                <h4>???</h4>
-              </div>
+                <!-- <h4>???</h4> -->
+              <!-- </div> -->
               <div class="border-break">
                 <h3>Activated Managr Configs:</h3>
                 <h4>{{ user.activatedManagrConfigs }}</h4>
@@ -682,7 +682,8 @@
               <div class="border-break">
                 <h3>Event Calendar ID:</h3>
                 <div>
-                  <input v-model="eventCalendarIDObj[i]">
+                  <!-- <input v-model="eventCalendarIDObj[i]"> -->
+                  <h4>{{user.nylasRef.eventCalendarId ? user.nylasRef.eventCalendarId : 'null'}}</h4>
                 </div>
               </div>
               <div class="border-break">
@@ -735,10 +736,10 @@
               </div>
               <div class="border-break">
                 <h3>Fake Meeting ID:</h3>
-                <!-- <div v-if="user.zoomRef.fakeMeetingIdRef"> -->
-                <div>
-                  <!-- <h4>{{user.zoomRef.fakeMeetingIdRef}}</h4> -->
-                  <input v-model="fakeMeetingIDObj[i]" />
+                <div v-if="user.zoomRef.fakeMeetingIdRef">
+                <!-- <div> -->
+                  <h4>{{user.zoomRef.fakeMeetingIdRef}}</h4>
+                  <!-- <input v-model="fakeMeetingIDObj[i]" /> -->
                 </div>
                 <!-- <div v-else>
                   <h4>null</h4>
@@ -767,25 +768,25 @@
               </div>
               <div class="border-break">
                 <h3>Zoom Channel:</h3>
-                <!-- <div v-if="user.slackAccount.zoomChannel"> -->
-                <div>
-                  <!-- <h4>{{user.slackAccount.zoomChannel}}</h4> -->
-                  <input v-model="zoomChannelObj[i]" />
+                <div v-if="user.slackAccount.zoomChannel">
+                <!-- <div> -->
+                  <h4>{{user.slackAccount.zoomChannel}}</h4>
+                  <!-- <input v-model="zoomChannelObj[i]" /> -->
                 </div>
-                <!-- <div v-else>
+                <div v-else>
                   <h4>null</h4>
-                </div> -->
+                </div>
               </div>
               <div class="border-break">
                 <h3>Recap Receivers:</h3>
-                <!-- <div v-if="user.slackAccount.recapReceivers"> -->
-                <div>
-                  <!-- <h4>{{user.slackAccount.recapReceivers}}</h4> -->
-                  <input v-model="recapObj[i]" />
+                <div v-if="user.slackAccount.recapReceivers">
+                <!-- <div> -->
+                  <h4>{{user.slackAccount.recapReceivers}}</h4>
+                  <!-- <input v-model="recapObj[i]" /> -->
                 </div>
-                <!-- <div v-else>
+                <div v-else>
                   <h4>null</h4>
-                </div> -->
+                </div>
               </div>
               <div class="border-break">
                 <h3>Real Time Alert Configs:</h3>
@@ -806,7 +807,7 @@
         </div>
       </template>
       <template v-else-if="page === 'SlackForm'">
-        <button class="green_button back" @click="goBack">Back</button>
+        <!-- <button class="green_button back" @click="goBack">Back</button> -->
         <!-- <div v-for="(slackForm, i) in selectedSlackForms" :key="slackForm.id"> -->
         <div>
           <!-- <div>
