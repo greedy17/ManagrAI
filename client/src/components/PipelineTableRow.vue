@@ -6,7 +6,7 @@
       </div>
       <div v-else>
         <input
-          @click="emitCheckedBox"
+          @click="emitCheckedBox(index)"
           type="checkbox"
           :id="index"
           v-model="primaryCheckList"
@@ -328,6 +328,7 @@ export default {
   data() {
     return {
       booleans: ['true', 'false'],
+      isSelected: false,
       currentRow: null,
       formData: {},
       dropdownValue: {},
@@ -350,6 +351,7 @@ export default {
   watch: {
     closeDateData: 'futureDate',
     closeEdit: 'closeInline',
+    primaryCheckList: 'checkSelect',
     dropdownValue: {
       handler(val) {
         if (this.stages.includes(val)) {
@@ -386,6 +388,23 @@ export default {
     },
   },
   methods: {
+    // async setForm() {
+    //   try {
+    //     const res = await SObjects.api.createFormInstance({
+    //       resourceType: 'Opportunity',
+    //       formType: 'UPDATE',
+    //       resourceId: this.opp.id,
+    //     })
+    //     this.formId = res.form_id
+    //   } catch (e) {
+    //     console.log(e)
+    //   }
+    // },
+    checkSelect() {
+      this.primaryCheckList.includes(this.opp.id)
+        ? (this.isSelected = true)
+        : (this.isSelected = false)
+    },
     closeInline() {
       this.editing = false
     },
@@ -416,8 +435,8 @@ export default {
     emitGetNotes() {
       this.$emit('get-notes')
     },
-    emitCheckedBox() {
-      this.$emit('checked-box')
+    emitCheckedBox(i) {
+      this.$emit('checked-box', this.opp.id, i)
     },
     capitalizeFirstLetter(string) {
       return string.charAt(0).toUpperCase() + string.slice(1)
@@ -438,93 +457,86 @@ export default {
       this.newCloseDate = dateString
     },
     async onAdvanceStage() {
-      if (this.primaryCheckList.includes(this.opp.id)) {
-        this.updatedList.push(this.opp.id)
-        try {
-          const res = await SObjects.api
-            .createFormInstance({
-              resourceType: 'Opportunity',
-              formType: 'UPDATE',
-              resourceId: this.opp.id,
-            })
-            .then(async (res) => {
-              const response = await SObjects.api.updateResource({
-                form_id: [res.form_id],
-                form_data: { StageName: this.stageData },
-              })
-            })
-        } catch (e) {
-          console.log(e)
-        } finally {
-          this.updatedList = []
-          this.$toast('Salesforce Update Successful', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'success',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
+      this.updatedList.push(this.opp.id)
+      try {
+        const res = await SObjects.api
+          .createBulkFormInstance({
+            resourceId: this.opp.id,
           })
-        }
+          .then(async (res) => {
+            console.log(res)
+            const response = await SObjects.api.updateResource({
+              form_id: [res.form_id],
+              form_data: { StageName: this.stageData },
+            })
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.updatedList = []
+        this.$toast('Salesforce Update Successful', {
+          timeout: 1000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async onPushCloseDate() {
-      if (this.primaryCheckList.includes(this.opp.id)) {
-        this.updatedList.push(this.opp.id)
-        try {
-          const res = await SObjects.api
-            .createFormInstance({
-              resourceType: 'Opportunity',
-              formType: 'UPDATE',
-              resourceId: this.opp.id,
-            })
-            .then(async (res) => {
-              const response = await SObjects.api.updateResource({
-                form_id: [res.form_id],
-                form_data: { CloseDate: this.newCloseDate },
-              })
-            })
-        } catch (e) {
-          console.log(e)
-        } finally {
-          this.updatedList = []
-          this.$toast('Salesforce Update Successful', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'success',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
+      this.updatedList.push(this.opp.id)
+      try {
+        const res = await SObjects.api
+          .createFormInstance({
+            resourceType: 'Opportunity',
+            formType: 'UPDATE',
+            resourceId: this.opp.id,
           })
-        }
+          .then(async (res) => {
+            const response = await SObjects.api.updateResource({
+              form_id: [res.form_id],
+              form_data: { CloseDate: this.newCloseDate },
+            })
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.updatedList = []
+        this.$toast('Salesforce Update Successful', {
+          timeout: 1000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async onChangeForecast() {
-      if (this.primaryCheckList.includes(this.opp.id)) {
-        this.updatedList.push(this.opp.id)
-        try {
-          const res = await SObjects.api
-            .createFormInstance({
-              resourceType: 'Opportunity',
-              formType: 'UPDATE',
-              resourceId: this.opp.id,
-            })
-            .then(async (res) => {
-              const response = await SObjects.api.updateResource({
-                form_id: [res.form_id],
-                form_data: { ForecastCategoryName: this.ForecastCategoryNameData },
-              })
-            })
-        } catch (e) {
-          console.log(e)
-        } finally {
-          this.updatedList = []
-          this.$toast('Salesforce Update Successful', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'success',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
+      this.updatedList.push(this.opp.id)
+      try {
+        const res = await SObjects.api
+          .createFormInstance({
+            resourceType: 'Opportunity',
+            formType: 'UPDATE',
+            resourceId: this.opp.id,
           })
-        }
+          .then(async (res) => {
+            const response = await SObjects.api.updateResource({
+              form_id: [res.form_id],
+              form_data: { ForecastCategoryName: this.ForecastCategoryNameData },
+            })
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.updatedList = []
+        this.$toast('Salesforce Update Successful', {
+          timeout: 1000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
   },

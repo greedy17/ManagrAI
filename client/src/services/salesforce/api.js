@@ -210,10 +210,21 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'Confirmation error' })(e)
     }
   }
+
   async createFormInstance(formData) {
     let d = objectToSnakeCase(formData)
     try {
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/create-form-instance/', { params: d })
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+    }
+  }
+
+  async createBulkFormInstance(formData) {
+    let d = objectToSnakeCase(formData)
+    try {
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/create-bulk-form-instance/', { params: d })
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)

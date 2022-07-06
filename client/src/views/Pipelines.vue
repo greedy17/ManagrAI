@@ -495,8 +495,8 @@
               <p>Notes:</p>
               <textarea
                 id="user-input"
-                ccols="30"
-                rows="4"
+                cols="30"
+                rows="8"
                 style="width: 36.5vw; border-radius: 0.2rem"
                 @input=";(value = $event.target.value), replaceURLs(value, field.apiName)"
               >
@@ -942,10 +942,7 @@
                 All Opportunities
                 <span
                   class="filter"
-                  v-if="
-                    currentList === 'All Opportunities' &&
-                    currentWorkflowName === 'Active Workflows'
-                  "
+                  v-if="currentList === 'All Opportunities' && !currentWorkflowName"
                 >
                   active</span
                 >
@@ -955,9 +952,7 @@
               Closing this month
               <span
                 class="filter"
-                v-if="
-                  currentList === 'Closing this month' && currentWorkflowName === 'Active Workflows'
-                "
+                v-if="currentList === 'Closing this month' && !currentWorkflowName"
               >
                 active</span
               >
@@ -966,9 +961,7 @@
               Closing next month
               <span
                 class="filter"
-                v-if="
-                  currentList === 'Closing next month' && currentWorkflowName === 'Active Workflows'
-                "
+                v-if="currentList === 'Closing next month' && !currentWorkflowName"
               >
                 active</span
               >
@@ -1441,7 +1434,7 @@
             v-for="(opp, i) in allOppsFiltered"
             @create-form="createFormInstance(opp.id)"
             @get-notes="getNotes(opp.id)"
-            @checked-box="selectPrimaryCheckbox(opp.id)"
+            @checked-box="selectPrimaryCheckbox"
             @inline-edit="inlineUpdate"
             @open-stage-form="openStageForm"
             @current-inline-row="changeCurrentRow"
@@ -2233,12 +2226,18 @@ export default {
         })
       }
     },
-    selectPrimaryCheckbox(id) {
+    selectPrimaryCheckbox(id, index) {
       if (this.primaryCheckList.includes(id)) {
         this.primaryCheckList = this.primaryCheckList.filter((opp) => opp !== id)
       } else {
         this.primaryCheckList.push(id)
       }
+
+      // if (this.selectedRows.includes(index)) {
+      //   this.selectedRows = this.selectedRows.filter((i) => i !== index)
+      // } else {
+      //   this.selectedRows.push(index)
+      // }
     },
     selectWorkflowCheckbox(id) {
       if (this.workflowCheckList.includes(id)) {
@@ -2488,14 +2487,18 @@ export default {
     pushCloseDate() {
       if (this.selectedWorkflow) {
         for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
-          this.$refs.workflowTableChild[i].onPushCloseDate()
-          this.updateOpps()
+          if (this.$refs.workflowTableChild[i].isSelected) {
+            this.$refs.workflowTableChild[i].onPushCloseDate()
+            this.updateOpps()
+          }
         }
         this.workflowCheckList = []
       } else {
         for (let i = 0; i < this.$refs.pipelineTableChild.length; i++) {
-          this.$refs.pipelineTableChild[i].onPushCloseDate()
-          this.updateOpps()
+          if (this.$refs.pipelineTableChild[i].isSelected) {
+            this.$refs.pipelineTableChild[i].onPushCloseDate()
+            this.updateOpps()
+          }
         }
         this.primaryCheckList = []
       }
@@ -2503,14 +2506,18 @@ export default {
     advanceStage() {
       if (this.selectedWorkflow) {
         for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
-          this.$refs.workflowTableChild[i].onAdvanceStage()
-          this.updateOpps()
+          if (this.$refs.workflowTableChild[i].isSelected) {
+            this.$refs.workflowTableChild[i].onAdvanceStage()
+            this.updateOpps()
+          }
         }
         this.workflowCheckList = []
       } else {
         for (let i = 0; i < this.$refs.pipelineTableChild.length; i++) {
-          this.$refs.pipelineTableChild[i].onAdvanceStage()
-          this.updateOpps()
+          if (this.$refs.pipelineTableChild[i].isSelected) {
+            this.$refs.pipelineTableChild[i].onAdvanceStage()
+            this.updateOpps()
+          }
         }
         this.primaryCheckList = []
       }
@@ -2518,15 +2525,19 @@ export default {
     changeForecast() {
       if (this.selectedWorkflow) {
         for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
-          this.$refs.workflowTableChild[i].onChangeForecast()
-          this.updateOpps()
+          if (this.$refs.workflowTableChild[i].isSelected) {
+            this.$refs.workflowTableChild[i].onChangeForecast()
+            this.updateOpps()
+          }
           // this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
         }
         this.workflowCheckList = []
       } else {
         for (let i = 0; i < this.$refs.pipelineTableChild.length; i++) {
-          this.$refs.pipelineTableChild[i].onChangeForecast()
-          this.updateOpps()
+          if (this.$refs.pipelineTableChild[i].isSelected) {
+            this.$refs.pipelineTableChild[i].onChangeForecast()
+            this.updateOpps()
+          }
         }
         this.primaryCheckList = []
       }
@@ -3458,7 +3469,7 @@ h3 {
   margin: 0;
   padding: 0;
   min-height: 50vh;
-  max-height: 76vh;
+  max-height: 70vh;
   overflow: scroll;
   margin-top: 0.5rem;
   border-radius: 8px;
@@ -3716,7 +3727,7 @@ section {
   justify-content: space-between;
 }
 .pipelines {
-  padding: 5rem 1rem 0.5rem 0.5rem;
+  padding: 4rem 1rem 0.5rem 0.5rem;
 
   color: $base-gray;
   margin: 0 1rem 0 0.5rem;

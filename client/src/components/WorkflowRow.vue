@@ -344,6 +344,7 @@ export default {
   },
   data() {
     return {
+      isSelected: false,
       currentRow: null,
       formData: {},
       dropdownValue: null,
@@ -382,6 +383,7 @@ export default {
   watch: {
     closeDateData: 'futureDate',
     closeEdit: 'closeInline',
+    workflowCheckList: 'checkSelect',
     dropdownValue: {
       handler(val) {
         if (this.stages.includes(val)) {
@@ -406,6 +408,11 @@ export default {
     },
   },
   methods: {
+    checkSelect() {
+      this.workflowCheckList.includes(this.workflow.id)
+        ? (this.isSelected = true)
+        : (this.isSelected = false)
+    },
     setDropdownValue(val) {
       this.dropdownValue = val.value
     },
@@ -458,93 +465,87 @@ export default {
       this.newCloseDate = dateString
     },
     async onAdvanceStage() {
-      if (this.workflowCheckList.includes(this.workflow.id)) {
-        this.updatedWorkflowList.push(this.workflow.id)
-        try {
-          const res = await SObjects.api
-            .createFormInstance({
-              resourceType: 'Opportunity',
-              formType: 'UPDATE',
-              resourceId: this.workflow.id,
-            })
-            .then(async (res) => {
-              await SObjects.api.updateResource({
-                form_id: [res.form_id],
-                form_data: { StageName: this.stageData },
-              })
-            })
-        } catch (e) {
-          console.log(e)
-        } finally {
-          this.updatedWorkflowList = []
-          this.$toast('Salesforce Update Successful', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'success',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
+      this.updatedWorkflowList.push(this.workflow.id)
+      try {
+        const res = await SObjects.api
+          .createFormInstance({
+            resourceType: 'Opportunity',
+            formType: 'UPDATE',
+            resourceId: this.workflow.id,
           })
-        }
+          .then(async (res) => {
+            await SObjects.api.updateResource({
+              form_id: [res.form_id],
+              form_data: { StageName: this.stageData },
+            })
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.updatedWorkflowList = []
+        this.$toast('Salesforce Update Successful', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async onPushCloseDate() {
-      if (this.workflowCheckList.includes(this.workflow.id)) {
-        this.updatedWorkflowList.push(this.workflow.id)
-        try {
-          const res = await SObjects.api
-            .createFormInstance({
-              resourceType: 'Opportunity',
-              formType: 'UPDATE',
-              resourceId: this.workflow.id,
-            })
-            .then(async (res) => {
-              await SObjects.api.updateResource({
-                form_id: [res.form_id],
-                form_data: { CloseDate: this.newCloseDate },
-              })
-            })
-        } catch (e) {
-          console.log(e)
-        } finally {
-          this.updatedWorkflowList = []
-          this.$toast('Salesforce Update Successful', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'success',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
+      this.updatedWorkflowList.push(this.workflow.id)
+      try {
+        const res = await SObjects.api
+          .createFormInstance({
+            resourceType: 'Opportunity',
+            formType: 'UPDATE',
+            resourceId: this.workflow.id,
           })
-        }
+          .then(async (res) => {
+            await SObjects.api.updateResource({
+              form_id: [res.form_id],
+              form_data: { CloseDate: this.newCloseDate },
+            })
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.updatedWorkflowList = []
+        this.$toast('Salesforce Update Successful', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async onChangeForecast() {
-      if (this.workflowCheckList.includes(this.workflow.id)) {
-        this.updatedWorkflowList.push(this.workflow.id)
-        try {
-          const res = await SObjects.api
-            .createFormInstance({
-              resourceType: 'Opportunity',
-              formType: 'UPDATE',
-              resourceId: this.workflow.id,
-            })
-            .then(async (res) => {
-              await SObjects.api.updateResource({
-                form_id: [res.form_id],
-                form_data: { ForecastCategoryName: this.ForecastCategoryNameData },
-              })
-            })
-        } catch (e) {
-          console.log(e)
-        } finally {
-          this.updatedWorkflowList = []
-          this.$toast('Salesforce Update Successful', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'success',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
+      this.updatedWorkflowList.push(this.workflow.id)
+      try {
+        const res = await SObjects.api
+          .createFormInstance({
+            resourceType: 'Opportunity',
+            formType: 'UPDATE',
+            resourceId: this.workflow.id,
           })
-        }
+          .then(async (res) => {
+            await SObjects.api.updateResource({
+              form_id: [res.form_id],
+              form_data: { ForecastCategoryName: this.ForecastCategoryNameData },
+            })
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.updatedWorkflowList = []
+        this.$toast('Salesforce Update Successful', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
   },
