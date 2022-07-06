@@ -788,7 +788,10 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             Q(user=user, datetime_created__range=(start, end))
         ).order_by("-datetime_created")
         logger.info(f"Pulled workflow for user {user.full_name}: {len(meetings)}")
-        return meetings
+        if len(meetings):
+            return meetings
+        else:
+            return MeetingWorkflow.objects.none()
 
     @action(
         methods=["post"],
