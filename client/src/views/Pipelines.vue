@@ -1521,6 +1521,15 @@
           <PipelineLoader />
         </div>
       </section>
+      <div class="pagination">
+        <button @click="prevPage" class="pag-button">
+          <img src="@/assets/images/rightArrow.svg" class="rotate" height="12px" alt="" />
+        </button>
+        <span class="pagination-num">1</span>
+        <button @click="nextPage" class="pag-button">
+          <img src="@/assets/images/rightArrow.svg" height="12px" alt="" />
+        </button>
+      </div>
     </div>
     <div v-if="loading">
       <Loader loaderText="Pulling in your latest Salesforce data" />
@@ -1757,6 +1766,8 @@ export default {
     accountSobjectId: 'getInitialAccounts',
   },
   methods: {
+    nextPage() {},
+    prevPage() {},
     changeCurrentRow(i) {
       this.currentInlineRow = i
     },
@@ -2638,21 +2649,22 @@ export default {
       this.updateList.push(this.oppId)
       this.editOpModalOpen = false
       try {
-        const res = await SObjects.api
-          .updateResource({
-            form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
-            form_data: this.formData,
-            from_workflow: this.selectedWorkflow ? true : false,
-            workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
-          })
-          .then(async () => {
-            let updatedRes = await SObjects.api.getObjects('Opportunity')
-            this.allOpps = updatedRes.results
-            this.originalList = updatedRes.results
-            if (this.selectedWorkflow) {
-              this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
-            }
-          })
+        const res = await SObjects.api.updateResource({
+          form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
+          form_data: this.formData,
+          from_workflow: this.selectedWorkflow ? true : false,
+          workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
+        })
+
+        cosnole.log(res)
+        // .then(async () => {
+        //   let updatedRes = await SObjects.api.getObjects('Opportunity')
+        //   this.allOpps = updatedRes.results
+        //   this.originalList = updatedRes.results
+        //   if (this.selectedWorkflow) {
+        //     this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+        //   }
+
         if (this.currentList === 'Closing this month') {
           this.stillThisMonth()
         } else if (this.currentList === 'Closing next month') {
@@ -2957,6 +2969,7 @@ export default {
       this.loading = true
       try {
         const res = await SObjects.api.getObjects('Opportunity')
+        console.log(res)
         this.allOpps = res.results
         this.originalList = res.results
       } catch (e) {
@@ -3407,7 +3420,7 @@ h3 {
   margin: 0;
   padding: 0;
   min-height: 50vh;
-  max-height: 76vh;
+  max-height: 70vh;
   overflow: scroll;
   margin-top: 0.5rem;
   border-radius: 8px;
@@ -3665,7 +3678,7 @@ section {
   justify-content: space-between;
 }
 .pipelines {
-  padding-top: 5rem;
+  padding-top: 4.5rem;
   color: $base-gray;
   margin: 0 1rem 0 0.5rem;
 }
@@ -4013,5 +4026,34 @@ a {
   margin-right: 0.25rem;
   filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
     brightness(93%) contrast(89%);
+}
+.pagination {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  margin: 8px 0px 0px 0px;
+
+  &-num {
+    margin-right: 8px;
+    font-size: 11px;
+  }
+  &-rotate {
+  }
+  button {
+    margin-right: 8px;
+  }
+}
+.pag-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  border: 1px solid #e8e8e8;
+  padding: 2px;
+}
+.rotate {
+  transform: rotate(180deg);
 }
 </style>
