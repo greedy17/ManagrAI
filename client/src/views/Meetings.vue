@@ -1200,7 +1200,9 @@ export default {
         this.stagesWithForms = stages
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
         this.createOppForm = this.createOppForm[0].fieldsRef
-        this.createContactForm = this.createContactForm[0].fieldsRef
+        this.createContactForm = this.createContactForm[0].fieldsRef.filter(
+          (f) => f.apiName !== 'meeting_type' && f.apiName !== 'meeting_comments',
+        )
 
         for (const field of stageGateForms) {
           this.stageValidationFields[field.stage] = field.fieldsRef

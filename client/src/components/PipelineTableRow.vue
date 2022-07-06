@@ -693,6 +693,7 @@ input {
 .table-cell:hover,
 .empty:hover {
   border: 1px solid $dark-green;
+  background-color: white;
   border-radius: 4px;
 }
 .cell-name:hover {

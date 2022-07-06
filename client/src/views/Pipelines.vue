@@ -1516,6 +1516,8 @@
           <PipelineLoader />
         </div>
       </section>
+
+      <button @click="nextPage">testing next</button>
     </div>
     <div v-if="loading">
       <Loader loaderText="Pulling in your latest Salesforce data" />
@@ -1548,6 +1550,7 @@ export default {
   },
   data() {
     return {
+      oppTotal: 0,
       notesLength: 0,
       days: {
         0: 'Sunday',
@@ -1756,6 +1759,9 @@ export default {
   methods: {
     // removeDupes() {
     // },
+    nextPage() {
+      this.getObjects(2)
+    },
     replaceURLs(message, field) {
       if (!message) return
 
@@ -3009,12 +3015,13 @@ export default {
         this.loadingAccounts = false
       }
     },
-    async getObjects() {
+    async getObjects(page = 1) {
       this.loading = true
       try {
-        const res = await SObjects.api.getObjects('Opportunity')
+        const res = await SObjects.api.getObjects('Opportunity', page)
         this.allOpps = res.results
-
+        this.oppTotal = res.count
+        console.log(res)
         this.originalList = res.results
         if (this.currentList === 'Closing this month') {
           this.stillThisMonth()
