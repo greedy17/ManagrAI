@@ -440,10 +440,12 @@ class SalesforceSObjectViewSet(
         methods=["get"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
-        url_path="get-curent-values",
+        url_path="get-current-values",
     )
     def get_current_values(self, request, *args, **kwargs):
         user = request.user
+        print(request.GET.get("resource_type"))
+        print(request.GET.get("resource_id"))
         resource_type = request.GET.get("resource_type")
         resource_id = request.GET.get("resource_id", None)
         route = model_routes[resource_type]
@@ -454,7 +456,7 @@ class SalesforceSObjectViewSet(
             try:
                 current_values = model_object.get_current_values()
                 data = {
-                    "current_values": current_values,
+                    "current_values": current_values.secondary_data,
                     "success": True,
                 }
                 break
@@ -473,7 +475,10 @@ class SalesforceSObjectViewSet(
             current_products = user.salesforce_account.list_resource_data(
                 "OpportunityLineItem",
                 0,
-                filter=["AND IsDeleted = false", f"AND OpportunityId = '{resource_id}'",],
+                filter=[
+                    "AND IsDeleted = false",
+                    f"AND OpportunityId = '{model_object.integration_id}'",
+                ],
             )
             product_values = [product.as_dict for product in current_products]
             data["current_products"] = product_values
@@ -587,7 +592,7 @@ class SalesforceSObjectViewSet(
             if from_workflow:
                 user.activity.increment_untouched_count("workflows")
                 user.activity.add_workflow_activity(str(main_form.id), title)
-        return Response(data={"verbose_name": update_name})
+        return Response(data=data)
 
     @action(
         methods=["post"],
@@ -830,7 +835,8 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type, slack_const.FORM_TYPE_UPDATE,
+            resource_type,
+            slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)
@@ -979,4 +985,3 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         serializer = MeetingWorkflowSerializer(instance=workflow)
         data = {"success": True, "workflow": serializer.data}
         return Response(data=data)
-

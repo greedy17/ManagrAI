@@ -146,9 +146,9 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
     }
   }
-  async updateResource(formData) {
+  async updateResource(formData, formType, integrationIds, resourceType, resourceId, stageName) {
     try {
-      const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'sobject/update/', formData)
+      const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'sobject/update/', formData, formType, integrationIds, resourceType, resourceId, stageName)
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
@@ -214,6 +214,16 @@ export class SObjectFormBuilderAPI extends ModelAPI {
     let d = objectToSnakeCase(formData)
     try {
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/create-form-instance/', { params: d })
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+    }
+  }
+
+  async getCurrentValues(formData) {
+    let d = objectToSnakeCase(formData)
+    try {
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/get-current-values/', { params: d })
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)

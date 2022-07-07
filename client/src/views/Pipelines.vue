@@ -1437,7 +1437,7 @@
             ref="pipelineTableChild"
             :key="i"
             v-for="(opp, i) in allOppsFiltered"
-            @create-form="createFormInstance(opp.id)"
+            @create-form="createFormInstance(opp.id, opp.integration_id)"
             @get-notes="getNotes(opp.id)"
             @checked-box="selectPrimaryCheckbox(opp.id)"
             @inline-edit="inlineUpdate"
@@ -1562,6 +1562,7 @@ export default {
   },
   data() {
     return {
+      integrationId: null,
       notesLength: 0,
       days: {
         0: 'Sunday',
@@ -2359,8 +2360,9 @@ export default {
         })
       }
     },
-    async createFormInstance(id, alertInstanceId = null) {
+    async createFormInstance(id, integrationId, alertInstanceId = null) {
       this.formData = {}
+      this.integrationId = integrationId
       this.stageGateField = null
       this.dropdownLoading = true
       this.editOpModalOpen = true
@@ -2373,24 +2375,19 @@ export default {
       this.alertInstanceId = alertInstanceId
       this.oppId = id
       try {
-        const res = await SObjects.api
-          .createFormInstance({
-            resourceType: 'Opportunity',
-            formType: 'UPDATE',
-            resourceId: id,
-          })
-          .then((res) => {
-            this.currentVals = res.current_values
-            this.instanceId = res.form_id
-            this.currentOwner = this.allUsers.filter(
-              (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
-            )[0].full_name
-            this.allOpps.filter((opp) => opp.id === this.oppId)[0].account_ref
-              ? (this.currentAccount = this.allOpps.filter(
-                  (opp) => opp.id === this.oppId,
-                )[0].account_ref.name)
-              : (this.currentAccount = 'Account')
-          })
+        const res = await SObjects.api.getCurrentValues({
+          resourceType: 'Opportunity',
+          resourceId: id,
+        })
+        this.currentVals = res.current_values
+        this.currentOwner = this.allUsers.filter(
+          (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
+        )[0].full_name
+        this.allOpps.filter((opp) => opp.id === this.oppId)[0].account_ref
+          ? (this.currentAccount = this.allOpps.filter(
+              (opp) => opp.id === this.oppId,
+            )[0].account_ref.name)
+          : (this.currentAccount = 'Account')
       } catch (e) {
         this.$toast('Error creating update form', {
           timeout: 2000,
@@ -2649,14 +2646,21 @@ export default {
       this.updateList.push(this.oppId)
       this.editOpModalOpen = false
       try {
-        const res = await SObjects.api.updateResource({
-          form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
-          form_data: this.formData,
-          from_workflow: this.selectedWorkflow ? true : false,
-          workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
-        })
+        const res = await SObjects.api.updateResource(
+          {
+            form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
+            form_data: this.formData,
+            from_workflow: this.selectedWorkflow ? true : false,
+            workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
+          },
+          'UPDATE',
+          [this.integrationId],
+          'Opportunity',
+          this.oppId,
+          this.stageGateField ? this.stageGateField : null,
+        )
 
-        cosnole.log(res)
+        console.log(res)
         // .then(async () => {
         //   let updatedRes = await SObjects.api.getObjects('Opportunity')
         //   this.allOpps = updatedRes.results
@@ -2665,12 +2669,25 @@ export default {
         //     this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
         //   }
 
+        this.$toast('Salesforce Update Successful', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+
         if (this.currentList === 'Closing this month') {
           this.stillThisMonth()
         } else if (this.currentList === 'Closing next month') {
           this.stillNextMonth()
         }
       } catch (e) {
+        if (e.response) {
+          // console.log(e.response.data)
+          // console.log(e.response.status)
+          // console.log(e.response.headers)
+        }
         this.$toast('Error updating Opporutniy, please try again.', {
           timeout: 2000,
           position: 'top-left',
@@ -2681,13 +2698,6 @@ export default {
       } finally {
         this.updateList = []
         this.formData = {}
-        this.$toast('Salesforce Update Successful', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
         this.closeFilterSelection()
       }
     },
