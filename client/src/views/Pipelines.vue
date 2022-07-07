@@ -1515,24 +1515,21 @@
         <div class="results">
           <h6 style="color: #9b9b9b">
             {{ !currentWorkflowName ? currentList : currentWorkflowName }}
-            <!-- <span>{{ selectedWorkflow ? currentWorkflow.length : allOpps.length }}</span> -->
+            <span>{{ selectedWorkflow ? currentWorkflow.length : oppTotal }}</span>
           </h6>
         </div>
 
         <div class="pagination">
           <h6>
-            <span>
-              1 - {{ selectedWorkflow ? currentWorkflow.length : allOpps.length }} of
-              {{ oppTotal }}</span
-            >
+            <span>20 per page</span>
           </h6>
 
-          <button @click="prevPage" class="pag-button">
+          <button v-if="hasPrev" @click="prevPage" class="pag-button">
             <img src="@/assets/images/rightArrow.svg" class="rotate" height="12px" alt="" />
           </button>
           <span class="pagination-num">{{ this.currentPage }}</span>
           <!-- <span class="pagination-num2">{{ this.currentPage + 1 }}</span> -->
-          <button @click="nextPage" class="pag-button">
+          <button v-if="hasNext" @click="nextPage" class="pag-button">
             <img src="@/assets/images/rightArrow.svg" height="12px" alt="" />
           </button>
         </div>
@@ -1569,6 +1566,8 @@ export default {
   },
   data() {
     return {
+      hasNext: false,
+      hasPrev: false,
       currentPage: 1,
       oppTotal: 0,
       notesLength: 0,
@@ -3044,9 +3043,11 @@ export default {
       try {
         const res = await SObjects.api.getObjects('Opportunity', page)
         this.allOpps = res.results
-        this.oppTotal = res.count
-        console.log(res)
         this.originalList = res.results
+        res.next ? (this.hasNext = true) : (this.hasNext = false)
+        res.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+        this.oppTotal = res.count
+
         if (this.currentList === 'Closing this month') {
           this.stillThisMonth()
         } else if (this.currentList === 'Closing next month') {
