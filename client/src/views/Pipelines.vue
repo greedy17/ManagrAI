@@ -1838,30 +1838,34 @@ export default {
     emitCloseEdit() {
       this.closeInline += 1
     },
-    async inlineUpdate(formData, id) {
+    async inlineUpdate(formData, id, integrationId) {
       this.inlineLoader = true
       try {
         const res = await SObjects.api
-          .createFormInstance({
-            resourceType: 'Opportunity',
-            formType: 'UPDATE',
-            resourceId: id,
+          .updateResource({
+            form_data: formData,
+            resource_type: 'Opportunity',
+            form_type: 'UPDATE',
+            resource_id: id,
+            integration_ids: [integrationId],
+            from_workflow: this.selectedWorkflow ? true : false,
+            workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
           })
-          .then(async (res) => {
-            SObjects.api
-              .updateResource({
-                form_id: [res.form_id],
-                form_data: formData,
-              })
-              .then(async () => {
-                let updatedRes = await SObjects.api.getObjects('Opportunity')
-                this.allOpps = updatedRes.results
-                this.originalList = updatedRes.results
-                if (this.selectedWorkflow) {
-                  this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
-                }
-              })
+          .then(async () => {
+            let updatedRes = await SObjects.api.getObjects('Opportunity')
+            this.allOpps = updatedRes.results
+            this.originalList = updatedRes.results
+            if (this.selectedWorkflow) {
+              this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+            }
           })
+        this.$toast('Salesforce Update Successful', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } catch (e) {
         this.$toast('Error updating Opportunity!', {
           timeout: 2000,
@@ -1875,13 +1879,6 @@ export default {
           this.inlineLoader = false
           this.closeInline += 1
         }, 1500)
-        this.$toast('Salesforce Update Successful', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
       }
     },
     setOpps() {
@@ -2645,29 +2642,28 @@ export default {
     async updateResource() {
       this.updateList.push(this.oppId)
       this.editOpModalOpen = false
+
       try {
-        const res = await SObjects.api.updateResource(
-          {
-            form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
+        const res = await SObjects.api
+          .updateResource({
+            // form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
             form_data: this.formData,
             from_workflow: this.selectedWorkflow ? true : false,
             workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
-          },
-          'UPDATE',
-          [this.integrationId],
-          'Opportunity',
-          this.oppId,
-          this.stageGateField ? this.stageGateField : null,
-        )
-
-        console.log(res)
-        // .then(async () => {
-        //   let updatedRes = await SObjects.api.getObjects('Opportunity')
-        //   this.allOpps = updatedRes.results
-        //   this.originalList = updatedRes.results
-        //   if (this.selectedWorkflow) {
-        //     this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
-        //   }
+            form_type: 'UPDATE',
+            integration_ids: [this.integrationId],
+            resource_type: 'Opportunity',
+            resource_id: this.oppId,
+            stage_name: this.stageGateField ? this.stageGateField : null,
+          })
+          .then(async () => {
+            let updatedRes = await SObjects.api.getObjects('Opportunity')
+            this.allOpps = updatedRes.results
+            this.originalList = updatedRes.results
+            if (this.selectedWorkflow) {
+              this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+            }
+          })
 
         this.$toast('Salesforce Update Successful', {
           timeout: 2000,
@@ -2676,7 +2672,6 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
-
         if (this.currentList === 'Closing this month') {
           this.stillThisMonth()
         } else if (this.currentList === 'Closing next month') {

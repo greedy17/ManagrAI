@@ -407,7 +407,7 @@ export default {
         this.formData[key] = val
       }
       setTimeout(() => {
-        this.$emit('inline-edit', this.formData, this.opp.id, dataType)
+        this.$emit('inline-edit', this.formData, this.opp.id, this.opp.integration_id, dataType)
       }, 500)
     },
     emitCreateForm() {

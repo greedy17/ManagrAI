@@ -385,7 +385,7 @@ export default {
     dropdownValue: {
       handler(val) {
         if (this.stages.includes(val)) {
-          this.$emit('open-stage-form', val, this.workflow.id)
+          this.$emit('open-stage-form', val, this.workflow.id, this.workflow.integration_id)
         } else {
           this.setUpdateValues('StageName', val)
         }
