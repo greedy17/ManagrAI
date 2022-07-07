@@ -587,7 +587,7 @@ class SalesforceSObjectViewSet(
             if from_workflow:
                 user.activity.increment_untouched_count("workflows")
                 user.activity.add_workflow_activity(str(main_form.id), title)
-        return Response(data={"verbose_name": update_name})
+        return Response(data=data)
 
     @action(
         methods=["post"],
