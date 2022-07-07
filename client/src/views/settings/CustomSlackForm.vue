@@ -818,6 +818,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    goBackAdmin: {
+      type: Function,
+      default: () => null
+    }
   },
   data() {
     return {
@@ -1280,7 +1284,7 @@ export default {
     },
     goBack() {
       if (this.fromAdmin) {
-        this.$router.go()
+        this.goBackAdmin()
       } else {
         this.$router.push({ name: 'Required' })
       }
