@@ -45,7 +45,7 @@ class BaseAccount(TimeStampModel, IntegrationModel):
         data = self.__dict__
         data["id"] = str(data["id"])
         data["owner"] = str(self.owner.id)
-        return adapters[self.crm]["Account"](**data)
+        return adapters[self.integration_source]["Account"](**data)
 
 
 class BaseOpportunityQuerySet(models.QuerySet):
@@ -144,4 +144,4 @@ class BaseContact(TimeStampModel, IntegrationModel):
         data = self.__dict__
         data["id"] = str(data["id"])
         data["owner"] = str(self.owner.id)
-        return adapters[self.crm]["Contact"](**data)
+        return adapters[self.integration_source]["Contact"](**data)

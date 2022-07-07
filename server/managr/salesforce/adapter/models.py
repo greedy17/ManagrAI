@@ -601,8 +601,6 @@ class AccountAdapter:
         self.integration_source = kwargs.get("integration_source", None)
         self.name = kwargs.get("name", None)
         self.organization = kwargs.get("organization", None)
-        self.parent = kwargs.get("parent", None)
-        self.parent_integration_id = kwargs.get("parent_integration_id", None)
         self.owner = kwargs.get("owner", None)
         self.external_owner = kwargs.get("external_owner", None)
         self.imported_by = kwargs.get("imported_by", None)
