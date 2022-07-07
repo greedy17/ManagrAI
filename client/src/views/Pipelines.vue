@@ -1207,12 +1207,6 @@
           </button>
         </div>
       </section>
-      <div class="results">
-        <h6 style="color: #9b9b9b">
-          {{ !currentWorkflowName ? currentList : currentWorkflowName }}:
-          <span>{{ selectedWorkflow ? currentWorkflow.length : allOpps.length }}</span>
-        </h6>
-      </div>
 
       <div class="adding-stage-gate2" v-if="stageFormOpen">
         <div class="adding-stage-gate2__header">
@@ -1517,7 +1511,32 @@
         </div>
       </section>
 
-      <button @click="nextPage">testing next</button>
+      <div class="row between height-s">
+        <div class="results">
+          <h6 style="color: #9b9b9b">
+            {{ !currentWorkflowName ? currentList : currentWorkflowName }}
+            <!-- <span>{{ selectedWorkflow ? currentWorkflow.length : allOpps.length }}</span> -->
+          </h6>
+        </div>
+
+        <div class="pagination">
+          <h6>
+            <span>
+              1 - {{ selectedWorkflow ? currentWorkflow.length : allOpps.length }} of
+              {{ oppTotal }}</span
+            >
+          </h6>
+
+          <button @click="prevPage" class="pag-button">
+            <img src="@/assets/images/rightArrow.svg" class="rotate" height="12px" alt="" />
+          </button>
+          <span class="pagination-num">{{ this.currentPage }}</span>
+          <!-- <span class="pagination-num2">{{ this.currentPage + 1 }}</span> -->
+          <button @click="nextPage" class="pag-button">
+            <img src="@/assets/images/rightArrow.svg" height="12px" alt="" />
+          </button>
+        </div>
+      </div>
     </div>
     <div v-if="loading">
       <Loader loaderText="Pulling in your latest Salesforce data" />
@@ -1550,6 +1569,7 @@ export default {
   },
   data() {
     return {
+      currentPage: 1,
       oppTotal: 0,
       notesLength: 0,
       days: {
@@ -1760,7 +1780,10 @@ export default {
     // removeDupes() {
     // },
     nextPage() {
-      this.getObjects(2)
+      this.getObjects(this.currentPage + 1)
+    },
+    prevPage() {
+      this.getObjects(this.currentPage - 1)
     },
     replaceURLs(message, field) {
       if (!message) return
@@ -3016,6 +3039,7 @@ export default {
       }
     },
     async getObjects(page = 1) {
+      this.currentPage = page
       this.loading = true
       try {
         const res = await SObjects.api.getObjects('Opportunity', page)
@@ -3306,6 +3330,7 @@ export default {
       color: $coral;
     }
   }
+
   &__body::-webkit-scrollbar {
     width: 2px; /* Mostly for vertical scrollbars */
     height: 0px; /* Mostly for horizontal scrollbars */
@@ -3340,12 +3365,75 @@ export default {
 }
 .results {
   margin: 0;
-  width: 100%;
   display: flex;
-  padding-left: 1rem;
-  margin-bottom: -1.25rem;
-  margin-top: -0.75rem;
   justify-content: flex-start;
+  width: 30vw;
+}
+.pagination {
+  width: 50vw;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  margin: 8px 0px 0px 0px;
+
+  h6 {
+    span {
+      letter-spacing: 0.5px;
+      margin-right: 1rem;
+      color: $gray;
+    }
+  }
+  &-num {
+    margin-right: 8px;
+    font-size: 11px;
+    border-radius: 6px;
+    border: none;
+    background-color: $dark-green;
+    color: white;
+    padding: 3px 6px;
+  }
+  &-num2 {
+    margin-right: 8px;
+    font-size: 11px;
+    border-radius: 6px;
+    border: none;
+    background-color: $very-light-gray;
+    color: $white;
+    padding: 3px 6px;
+  }
+  &-rotate {
+  }
+  button {
+    margin-right: 8px;
+  }
+}
+.pag-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  padding: 3px;
+  font-size: 12px;
+  cursor: pointer;
+  img {
+    filter: invert(60%);
+  }
+}
+.rotate {
+  transform: rotate(180deg);
+}
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.height-s {
+  height: 36px;
+}
+.between {
+  justify-content: space-between;
 }
 select {
   -webkit-appearance: none !important;
@@ -3476,9 +3564,9 @@ h3 {
   margin: 0;
   padding: 0;
   min-height: 50vh;
-  max-height: 70vh;
+  max-height: 72vh;
   overflow: scroll;
-  margin-top: 0.5rem;
+  margin-top: 1.5rem;
   border-radius: 8px;
   border: 1px solid #e8e8e8;
   border-collapse: separate;
@@ -3734,7 +3822,7 @@ section {
   justify-content: space-between;
 }
 .pipelines {
-  padding: 4rem 1rem 0.5rem 0.5rem;
+  padding: 4.5rem 1rem 0.5rem 0.5rem;
 
   color: $base-gray;
   margin: 0 1rem 0 0.5rem;
