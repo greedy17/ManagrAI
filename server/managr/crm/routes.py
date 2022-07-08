@@ -34,5 +34,4 @@ routes = {
         OPPORTUNITYLINEITEM: salesforce_adapters.OpportunityLineItemAdapter,
         sf_consts.SALESFORCE_RESOURCE_TASK: salesforce_adapters.TaskAdapter,
     },
-    USER_RESOURCE: {"model": core_models.User, "serializer": core_ser.UserSerializer,},
 }
