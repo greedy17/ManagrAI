@@ -188,6 +188,7 @@ a:hover {
 
 .invert {
   filter: invert(40%);
+  height: 20px !important;
 }
 .tooltip {
   position: relative;
@@ -195,7 +196,7 @@ a:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 16px 0px;
+  margin: 20px 0px;
 }
 .tooltip .tooltiptext {
   visibility: hidden;
