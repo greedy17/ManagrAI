@@ -922,6 +922,7 @@ def timezone_tasks(user_id):
     else:
         tasks = core_consts.TIMEZONE_TASK_TIMES
     user = User.objects.get(id=user_id)
+    print("test change")
     for key in tasks.keys():
         check = check_for_time(user.timezone, tasks[key]["HOUR"], tasks[key]["MINUTE"])
         if check:

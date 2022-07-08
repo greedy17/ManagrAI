@@ -528,6 +528,7 @@ export default {
 
   mounted() {
     this.setPicklist()
+    console.log(this.forecastOpps)
   },
   methods: {
     resetNotes() {

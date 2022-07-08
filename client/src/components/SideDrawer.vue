@@ -251,7 +251,7 @@ export default {
 .pulse {
   box-shadow: 0 0 0 0 $dark-green;
   transform: scale(1);
-  animation: pulse 2s infinite;
+  animation: pulse 1.25s infinite;
 }
 .green-img {
   img {
