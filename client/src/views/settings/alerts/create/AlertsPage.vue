@@ -24,7 +24,7 @@
           </div>
           <div class="card__body">
             <img
-              style="height: 1.75rem; margin-right: 1rem"
+              style="height: 1.25rem; margin-right: 1rem"
               src="@/assets/images/zoom.png"
               alt=""
             />
@@ -35,7 +35,7 @@
               alt=""
             />
             <img
-              style="height: 1.5rem; margin-right: 0.5rem"
+              style="height: 1.25rem; margin-right: 0.5rem"
               src="@/assets/images/gmailCal.png"
               alt=""
             />
@@ -324,25 +324,21 @@
           </div>
 
           <div class="card__body">
-            <img
-              style="height: 1.5rem; margin-right: 0.5rem"
-              src="@/assets/images/logo.png"
-              alt=""
-            />
+            <img style="height: 1rem; margin-right: 0.5rem" src="@/assets/images/logo.png" alt="" />
             <img
               style="height: 1rem; margin-right: 0.5rem"
               src="@/assets/images/plusOne.svg"
               class="filter-plus"
               alt=""
             />
-            <img class="filter-loft" style="height: 1rem" src="@/assets/images/salesloft.svg" />
+            <img class="filter-loft" style="height: 0.7rem" src="@/assets/images/salesloft.svg" />
             <img
               style="height: 1rem; margin-right: 0.5rem"
               src="@/assets/images/plusOne.svg"
               class="filter-plus"
               alt=""
             />
-            <img style="height: 1rem" src="@/assets/images/outreach.webp" />
+            <img style="height: 0.7rem" src="@/assets/images/outreach.webp" />
           </div>
 
           <div class="card__footer">
@@ -741,7 +737,6 @@ export default {
 }
 
 .alerts-page {
-  margin-left: 10vw;
   margin-top: 3.5rem;
   color: $base-gray;
 }
@@ -754,6 +749,7 @@ export default {
   margin-top: 0.5rem;
   padding-right: 0.5rem;
   padding-bottom: 0.5rem;
+  width: 86vw;
 }
 .card:hover {
   box-shadow: 1px 2px 2px $very-light-gray;
@@ -763,7 +759,7 @@ export default {
   background-color: white;
   border: 1px solid #e8e8e8;
   border-radius: 0.5rem;
-  width: 22vw;
+  width: 20vw;
   margin-right: 1rem;
   margin-bottom: 1rem;
   transition: all 0.25s;
@@ -781,7 +777,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 5rem;
+    height: 110px;
     font-size: 13px;
   }
   &__footer {
@@ -797,14 +793,16 @@ export default {
   filter: invert(10%);
 }
 .sub__ {
-  font-size: 14px;
-  margin-top: -0.5rem;
+  font-size: 12px;
+  letter-spacing: 0.25px;
   color: $gray;
 }
 .col {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 82vw;
 }
 .orange_button {
   background-color: $dark-green;

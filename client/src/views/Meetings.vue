@@ -809,13 +809,14 @@ export default {
             this.getMeetingList()
           })
       } catch (e) {
-        this.$toast('Error adding contact', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+        console.log(e)
+        // this.$toast('Error adding contact', {
+        //   timeout: 2000,
+        //   position: 'top-left',
+        //   type: 'error',
+        //   toastClassName: 'custom',
+        //   bodyClassName: ['custom'],
+        // })
       } finally {
         setTimeout(() => {
           this.meetingLoading = false
@@ -1199,7 +1200,9 @@ export default {
         this.stagesWithForms = stages
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
         this.createOppForm = this.createOppForm[0].fieldsRef
-        this.createContactForm = this.createContactForm[0].fieldsRef
+        this.createContactForm = this.createContactForm[0].fieldsRef.filter(
+          (f) => f.apiName !== 'meeting_type' && f.apiName !== 'meeting_comments',
+        )
 
         for (const field of stageGateForms) {
           this.stageValidationFields[field.stage] = field.fieldsRef
@@ -1597,7 +1600,7 @@ section {
   justify-content: space-between;
 }
 .pipelines {
-  padding: 4rem 1rem 0 0.75rem;
+  padding: 4rem 1.5rem 0.5rem 1rem;
   color: $base-gray;
 }
 .invert {

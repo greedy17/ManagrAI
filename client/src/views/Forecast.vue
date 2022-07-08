@@ -306,7 +306,7 @@
           </div>
           <div class="table-cell">
             <p class="green-text-amount align-center letter-spacing">
-              {{ opp.data.Amount ? formatCash(currentValues[index].amount) : '' }}
+              {{ currentValues[index].amount ? formatCash(currentValues[index].amount) : '' }}
               <span v-if="currentValues[index].amount < opp.data.Amount"
                 ><img
                   class="filter-red margin-left-s"
@@ -528,6 +528,7 @@ export default {
 
   mounted() {
     this.setPicklist()
+    console.log(this.forecastOpps)
   },
   methods: {
     resetNotes() {
@@ -912,7 +913,7 @@ export default {
   align-items: center;
 }
 .forecast {
-  margin-top: 3.5rem;
+  margin: 3.5rem 1rem 0.5rem 0.5rem;
   padding: 0 1rem 0rem 0.75rem;
 }
 .letter-spacing {

@@ -379,6 +379,46 @@ class SalesforceSObjectViewSet(
         methods=["get"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
+        url_path="create-bulk-form-instance",
+    )
+    def create_bulk_form_instance(self, request, *args, **kwargs):
+        from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
+
+        user = self.request.user
+        resource_id = self.request.GET.get("resource_id", None)
+        template_list = OrgCustomSlackForm.objects.for_user(user).filter(
+            Q(resource="Opportunity", form_type="UPDATE")
+        )
+        template = template_list.first()
+        slack_form = OrgCustomSlackFormInstance.objects.create(
+            template=template, user=user, resource_id=resource_id
+        )
+        attempts = 1
+        while True:
+            try:
+
+                data = {
+                    "form_id": str(slack_form.id),
+                    "success": True,
+                }
+                break
+            except TokenExpired:
+                if attempts >= 5:
+                    logger.info(f"CREATE FORM INSTANCE TOKEN EXPIRED ERROR ---- {e}")
+
+                else:
+                    user.salesforce_account.regenerate_token()
+                    attempts += 1
+            except Exception as e:
+                logger.info(f"CREATE FORM INSTANCE ERROR ---- {e}")
+                data = {"error": str(e), "success": False}
+                break
+        return Response(data=data)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
         url_path="create-form-instance",
     )
     def create_form_instance(self, request, *args, **kwargs):

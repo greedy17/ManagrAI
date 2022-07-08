@@ -128,15 +128,26 @@ export class SObjectFormBuilderAPI extends ModelAPI {
     }
   }
 
-  async getObjects(sobject, for_filter = false, filters = false, resource_id = false) {
+  async getObjects(sobject, page = 1, for_filter = false, filters = false, resource_id = false,) {
 
     try {
-      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/', { params: { sobject: sobject, resource_id: resource_id, for_filter: for_filter, filters: JSON.stringify(filters), page_size: 750 } })
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/', { params: { sobject: sobject, page: page, resource_id: resource_id, for_filter: for_filter, filters: JSON.stringify(filters), page_size: 20, } })
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
     }
   }
+
+  async getObjectsForWorkflows(sobject, for_filter = false, filters = false, resource_id = false,) {
+
+    try {
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/', { params: { sobject: sobject, resource_id: resource_id, for_filter: for_filter, filters: JSON.stringify(filters), page_size: 500, } })
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+    }
+  }
+
   async getNotes(resourceId) {
     let id = objectToSnakeCase(resourceId)
     try {
@@ -210,6 +221,7 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'Confirmation error' })(e)
     }
   }
+
   async createFormInstance(formData) {
     let d = objectToSnakeCase(formData)
     try {
@@ -224,6 +236,16 @@ export class SObjectFormBuilderAPI extends ModelAPI {
     let d = objectToSnakeCase(formData)
     try {
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/get-current-values/', { params: d })
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+    }
+  }
+
+  async createBulkFormInstance(formData) {
+    let d = objectToSnakeCase(formData)
+    try {
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/create-bulk-form-instance/', { params: d })
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)

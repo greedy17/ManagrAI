@@ -495,10 +495,10 @@
               <p>Notes:</p>
               <textarea
                 id="user-input"
-                ccols="30"
-                rows="4"
+                cols="30"
+                rows="8"
                 style="width: 36.5vw; border-radius: 0.2rem"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                @input=";(value = $event.target.value), replaceURLs(value, field.apiName)"
               >
               </textarea>
             </div>
@@ -942,10 +942,7 @@
                 All Opportunities
                 <span
                   class="filter"
-                  v-if="
-                    currentList === 'All Opportunities' &&
-                    currentWorkflowName === 'Active Workflows'
-                  "
+                  v-if="currentList === 'All Opportunities' && !currentWorkflowName"
                 >
                   active</span
                 >
@@ -955,9 +952,7 @@
               Closing this month
               <span
                 class="filter"
-                v-if="
-                  currentList === 'Closing this month' && currentWorkflowName === 'Active Workflows'
-                "
+                v-if="currentList === 'Closing this month' && !currentWorkflowName"
               >
                 active</span
               >
@@ -966,16 +961,14 @@
               Closing next month
               <span
                 class="filter"
-                v-if="
-                  currentList === 'Closing next month' && currentWorkflowName === 'Active Workflows'
-                "
+                v-if="currentList === 'Closing next month' && !currentWorkflowName"
               >
                 active</span
               >
             </button>
           </div>
 
-          <button @click.stop="workList = !workList" class="select-btn">
+          <!-- <button @click.stop="workList = !workList" class="select-btn">
             {{ currentWorkflowName ? currentWorkflowName : 'Active Workflows' }}
             <img
               v-if="!workList"
@@ -1022,7 +1015,7 @@
                 </button>
               </div>
             </div>
-          </div>
+          </div> -->
           <div
             v-for="(filter, i) in activeFilters"
             :key="i"
@@ -1031,8 +1024,8 @@
             class="main"
           >
             <strong style="font-size: 14px">{{ filter }}</strong>
-            <small style="font-weight: 400px; margin-left: 0.2rem">{{ currentOperators[i] }}</small>
-            <small style="margin-left: 0.2rem">{{ filterValues[i] }}</small>
+            <small style="font-weight: 400px; margin-left: 0.2rem">{{ setFilters[i][0] }}</small>
+            <small style="margin-left: 0.2rem">{{ setFilters[i][1] }}</small>
             <span v-if="hoveredIndex === i" class="selected-filters__close"
               ><img src="@/assets/images/close.svg" @click="removeFilter(filter, i)" alt=""
             /></span>
@@ -1043,7 +1036,9 @@
               <small
                 ><strong>{{ currentFilter }}</strong></small
               >
-              <small style="margin-left: 0.2rem">{{ currentOperators[-1] }}</small>
+              <small style="margin-left: 0.2rem">{{
+                currentOperators[currentOperators.length - 1]
+              }}</small>
             </main>
             <div>
               <FilterSelection
@@ -1212,12 +1207,6 @@
           </button>
         </div>
       </section>
-      <div class="results">
-        <h6 style="color: #9b9b9b">
-          {{ !currentWorkflowName ? currentList : currentWorkflowName }}:
-          <span>{{ selectedWorkflow ? currentWorkflow.length : allOpps.length }}</span>
-        </h6>
-      </div>
 
       <div class="adding-stage-gate2" v-if="stageFormOpen">
         <div class="adding-stage-gate2__header">
@@ -1439,7 +1428,7 @@
             v-for="(opp, i) in allOppsFiltered"
             @create-form="createFormInstance(opp.id, opp.integration_id)"
             @get-notes="getNotes(opp.id)"
-            @checked-box="selectPrimaryCheckbox(opp.id)"
+            @checked-box="selectPrimaryCheckbox"
             @inline-edit="inlineUpdate"
             @open-stage-form="openStageForm"
             @current-inline-row="changeCurrentRow"
@@ -1521,14 +1510,34 @@
           <PipelineLoader />
         </div>
       </section>
-      <div class="pagination">
-        <button @click="prevPage" class="pag-button">
-          <img src="@/assets/images/rightArrow.svg" class="rotate" height="12px" alt="" />
-        </button>
-        <span class="pagination-num">1</span>
-        <button @click="nextPage" class="pag-button">
-          <img src="@/assets/images/rightArrow.svg" height="12px" alt="" />
-        </button>
+
+      <div class="row between height-s">
+        <div class="results">
+          <h6 style="color: #9b9b9b">
+            {{ !currentWorkflowName ? currentList : currentWorkflowName }}
+            <!-- <span>{{ selectedWorkflow ? currentWorkflow.length : oppTotal }}</span> -->
+          </h6>
+        </div>
+
+        <div class="pagination">
+          <h6>
+            <!-- <span>20 per page</span> -->
+            <span
+              >{{ checkStartingPageNumber() }} -
+              {{ selectedWorkflow ? currentWorkflow.length : checkEndingPageNumber() }} of
+              {{ selectedWorkflow ? currentWorkflow.length : oppTotal }}</span
+            >
+          </h6>
+
+          <button v-if="hasPrev" @click="prevPage" class="pag-button">
+            <img src="@/assets/images/rightArrow.svg" class="rotate" height="12px" alt="" />
+          </button>
+          <span class="pagination-num">{{ this.currentPage }}</span>
+          <!-- <span class="pagination-num2">{{ this.currentPage + 1 }}</span> -->
+          <button v-if="hasNext" @click="nextPage" class="pag-button">
+            <img src="@/assets/images/rightArrow.svg" height="12px" alt="" />
+          </button>
+        </div>
       </div>
     </div>
     <div v-if="loading">
@@ -1563,6 +1572,10 @@ export default {
   data() {
     return {
       integrationId: null,
+      hasNext: false,
+      hasPrev: false,
+      currentPage: 1,
+      oppTotal: 0,
       notesLength: 0,
       days: {
         0: 'Sunday',
@@ -1651,6 +1664,7 @@ export default {
       createQueryOpts: {},
       picklistQueryOptsContacts: {},
       stagePicklistQueryOpts: {},
+      setFilters: {},
       instanceIds: [],
       allAccounts: null,
       allUsers: null,
@@ -1659,8 +1673,8 @@ export default {
       activeFilters: [],
       hoveredIndex: null,
       currentFilter: null,
-      operatorValue: 'EQUALS',
-      currentOperators: ['equals'],
+      operatorValue: null,
+      currentOperators: [],
       filterType: null,
       filterFields: [],
       filterApiName: null,
@@ -1669,6 +1683,9 @@ export default {
       operatorsLength: 0,
       stageGateId: null,
       forecastList: [],
+      stageIntegrationId: null,
+      stageId: null,
+      allOppsForWorkflows: null,
       booleans: ['true', 'false'],
       ladFilter: {
         apiName: 'LastActivityDate',
@@ -1750,6 +1767,7 @@ export default {
     this.templates.refresh()
     this.getObjects()
     this.getAllForms()
+    this.getObjectsForWorkflows()
   },
   beforeMount() {
     this.getUsers()
@@ -1765,10 +1783,51 @@ export default {
     updateOppForm: 'setForms',
     currentCheckList: 'addToForecastList',
     accountSobjectId: 'getInitialAccounts',
+    // currentOperators: 'removeDupes',
   },
   methods: {
-    nextPage() {},
-    prevPage() {},
+    // removeDupes() {
+    // },
+    checkStartingPageNumber() {
+      if (this.currentPage === 1) {
+        return this.currentPage
+      } else {
+        return (this.currentPage - 1) * 20 + 1
+      }
+    },
+    checkEndingPageNumber() {
+      let pages = this.oppTotal / 20
+      if (pages % 1 !== 0) {
+        pages = Math.ceil(pages)
+      }
+      if (this.currentPage * 20 > this.oppTotal) {
+        return this.oppTotal
+      } else {
+        return this.currentPage * 20
+      }
+    },
+    nextPage() {
+      this.getObjects(this.currentPage + 1)
+    },
+    prevPage() {
+      this.getObjects(this.currentPage - 1)
+    },
+    replaceURLs(message, field) {
+      if (!message) return
+
+      var urlRegex = /(((https?:\/\/)|(www\.))[^\s]+)/g
+      message.replace(urlRegex, function (url) {
+        var hyperlink = url
+        if (!hyperlink.match('^https?://')) {
+          hyperlink = 'http://' + hyperlink
+        }
+        return (
+          '<a href="' + hyperlink + '" target="_blank" rel="noopener noreferrer">' + url + '</a>'
+        )
+      })
+      console.log(message)
+      this.setUpdateValues(field, message)
+    },
     changeCurrentRow(i) {
       this.currentInlineRow = i
     },
@@ -1803,16 +1862,21 @@ export default {
         this.primaryCheckList = []
       }
     },
-    openStageForm(field, id) {
+    openStageForm(field, id, integrationId) {
       this.setUpdateValues('StageName', field)
       this.stageGateField = field
       this.stageFormOpen = true
-      this.stageGateInstance(field)
-      this.oppInstance(id)
+      this.stageId = id
+      this.stageIntegrationId = integrationId
+      // this.stageGateInstance(field)
+      // this.oppInstance(id)
     },
     closeStageForm() {
-      this.stageGateField = null
       this.stageFormOpen = false
+      this.stageGateField = null
+      this.resource_id = null
+      this.stageId = null
+      this.stageIntegrationId = null
     },
     async getReferenceFieldList(key, val, type, eventVal) {
       try {
@@ -1855,10 +1919,19 @@ export default {
             let updatedRes = await SObjects.api.getObjects('Opportunity')
             this.allOpps = updatedRes.results
             this.originalList = updatedRes.results
+            if (this.activeFilters.length) {
+              this.getFilteredObjects(this.updateFilterValue)
+            }
+            if (this.currentList === 'Closing this month') {
+              this.stillThisMonth()
+            } else if (this.currentList === 'Closing next month') {
+              this.stillNextMonth()
+            }
             if (this.selectedWorkflow) {
               this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
             }
           })
+
         this.$toast('Salesforce Update Successful', {
           timeout: 2000,
           position: 'top-left',
@@ -1892,8 +1965,8 @@ export default {
     closeFilterSelection() {
       this.filterSelected = false
       this.activeFilters = []
-      this.operatorValue = 'EQUALS'
-      this.currentOperator = ['equals']
+      this.operatorValue = null
+      this.currentOperator = []
       this.filterValues = []
       this.filters = []
     },
@@ -1907,9 +1980,10 @@ export default {
       this.loadingWorkflows = true
       if (value) {
         this.filters.push([this.operatorValue, this.filterApiName, value])
+        this.setFilters[this.activeFilters.length] = [this.operatorValue, value]
       }
       try {
-        const res = await SObjects.api.getObjects('Opportunity', true, this.filters)
+        const res = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
         if (this.selectedWorkflow) {
           this.allOpps = res.results
           this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
@@ -1935,8 +2009,6 @@ export default {
           bodyClassName: ['custom'],
         })
       } finally {
-        this.operatorValue = 'EQUALS'
-        this.currentOperator = ['equals']
         this.loadingWorkflows = false
       }
     },
@@ -1944,42 +2016,43 @@ export default {
       this.operatorValue = name
       switch (name) {
         case 'EQUALS':
-          this.currentOperators.length === 1
+          this.currentOperators.length === 0
             ? (this.currentOperators = ['equals'])
             : this.currentOperators.push('equals')
           break
         case 'NOT_EQUALS':
-          this.currentOperators.length === 1
+          this.currentOperators.length === 0
             ? (this.currentOperators = ['not equals'])
             : this.currentOperators.push('not equals')
           break
         case 'GREATER_THAN':
-          this.currentOperators.length === 1
+          this.currentOperators.length === 0
             ? (this.currentOperators = ['greater than'])
             : this.currentOperators.push('greater than')
           break
         case 'GREATER_THAN_EQUALS':
-          this.currentOperators.length === 1
+          this.currentOperators.length === 0
             ? (this.currentOperators = ['greater or equal'])
             : this.currentOperators.push('greater or equal')
           break
         case 'LESS_THAN':
-          this.currentOperators.length === 1
+          this.currentOperators.length === 0
             ? (this.currentOperators = ['less than'])
             : this.currentOperators.push('less than')
           break
         case 'LESS_THAN_EQUALS':
-          this.currentOperators.length === 1
+          this.currentOperators.length === 0
             ? (this.currentOperators = ['less or equal'])
             : this.currentOperators.push('less or equal')
           break
         case 'CONTAINS':
-          this.currentOperators.length === 1
+          this.currentOperators.length === 0
             ? (this.currentOperators = ['contains'])
             : this.currentOperators.push('contains')
+
           break
         case 'RANGE':
-          this.currentOperators.length === 1
+          this.currentOperators.length === 0
             ? (this.currentOperators = ['range'])
             : this.currentOperators.push('range')
           break
@@ -1998,9 +2071,9 @@ export default {
     applyFilter(value) {
       this.updateFilterValue = value
       this.operatorsLength += 1
-      if (this.currentOperators.length < this.operatorsLength) {
-        this.currentOperators.push('equals')
-      }
+      // if (this.currentOperators.length < this.operatorsLength) {
+      //   this.currentOperators.push('equals')
+      // }
       this.getFilteredObjects(value)
       this.filterSelected = false
       this.activeFilters.push(this.currentFilter)
@@ -2015,7 +2088,7 @@ export default {
         let account = this.allAccounts.filter((account) => account.id === value)
         this.filterValues.push(account[0].name)
       } else {
-        this.filterValues.push(value.value)
+        this.filterValues.push(value)
       }
     },
     selectFilter(name, type, label) {
@@ -2031,9 +2104,12 @@ export default {
       this.filterValues.splice(index, 1)
       this.currentOperators.splice(index, 1)
       this.getFilteredObjects()
+      if (this.activeFilters.length < 1) {
+        this.updateOpps()
+      }
       this.filterSelected = false
       this.currentFilter = null
-      this.operatorValue = 'EQUALS'
+      this.operatorValue = null
       this.filterApiName = null
     },
     capitalizeFirstLetter(string) {
@@ -2209,12 +2285,18 @@ export default {
         })
       }
     },
-    selectPrimaryCheckbox(id) {
+    selectPrimaryCheckbox(id, index) {
       if (this.primaryCheckList.includes(id)) {
         this.primaryCheckList = this.primaryCheckList.filter((opp) => opp !== id)
       } else {
         this.primaryCheckList.push(id)
       }
+
+      // if (this.selectedRows.includes(index)) {
+      //   this.selectedRows = this.selectedRows.filter((i) => i !== index)
+      // } else {
+      //   this.selectedRows.push(index)
+      // }
     },
     selectWorkflowCheckbox(id) {
       if (this.workflowCheckList.includes(id)) {
@@ -2380,7 +2462,7 @@ export default {
         this.currentOwner = this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
         )[0].full_name
-        this.allOpps.filter((opp) => opp.id === this.oppId)[0].account_ref
+        this.allOppsForWorkflows.filter((opp) => opp.id === this.oppId)[0].account_ref
           ? (this.currentAccount = this.allOpps.filter(
               (opp) => opp.id === this.oppId,
             )[0].account_ref.name)
@@ -2460,45 +2542,59 @@ export default {
     pushCloseDate() {
       if (this.selectedWorkflow) {
         for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
-          this.$refs.workflowTableChild[i].onPushCloseDate()
-          this.updateOpps()
+          if (this.$refs.workflowTableChild[i].isSelected) {
+            this.$refs.workflowTableChild[i].onPushCloseDate()
+            this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+          }
         }
         this.workflowCheckList = []
       } else {
         for (let i = 0; i < this.$refs.pipelineTableChild.length; i++) {
-          this.$refs.pipelineTableChild[i].onPushCloseDate()
-          this.updateOpps()
+          if (this.$refs.pipelineTableChild[i].isSelected) {
+            this.$refs.pipelineTableChild[i].onPushCloseDate()
+            this.updateOpps()
+          }
         }
+
         this.primaryCheckList = []
       }
     },
     advanceStage() {
       if (this.selectedWorkflow) {
         for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
-          this.$refs.workflowTableChild[i].onAdvanceStage()
-          this.updateOpps()
+          if (this.$refs.workflowTableChild[i].isSelected) {
+            this.$refs.workflowTableChild[i].onAdvanceStage()
+            this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+          }
         }
         this.workflowCheckList = []
       } else {
         for (let i = 0; i < this.$refs.pipelineTableChild.length; i++) {
-          this.$refs.pipelineTableChild[i].onAdvanceStage()
-          this.updateOpps()
+          if (this.$refs.pipelineTableChild[i].isSelected) {
+            this.$refs.pipelineTableChild[i].onAdvanceStage()
+            this.updateOpps()
+          }
         }
+
         this.primaryCheckList = []
       }
     },
     changeForecast() {
       if (this.selectedWorkflow) {
         for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
-          this.$refs.workflowTableChild[i].onChangeForecast()
-          this.updateOpps()
+          if (this.$refs.workflowTableChild[i].isSelected) {
+            this.$refs.workflowTableChild[i].onChangeForecast()
+            this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+          }
           // this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
         }
         this.workflowCheckList = []
       } else {
         for (let i = 0; i < this.$refs.pipelineTableChild.length; i++) {
-          this.$refs.pipelineTableChild[i].onChangeForecast()
-          this.updateOpps()
+          if (this.$refs.pipelineTableChild[i].isSelected) {
+            this.$refs.pipelineTableChild[i].onChangeForecast()
+            this.updateOpps()
+          }
         }
         this.primaryCheckList = []
       }
@@ -2602,8 +2698,12 @@ export default {
       try {
         const res = await SObjects.api
           .updateResource({
-            form_id: [this.oppInstanceId, this.stageGateId],
             form_data: this.formData,
+            resource_type: 'Opportunity',
+            form_type: 'UPDATE',
+            resource_id: this.stageId,
+            integration_ids: [this.stageIntegrationId],
+            stage_name: this.stageGateField ? this.stageGateField : null,
           })
           .then(async () => {
             let updatedRes = await SObjects.api.getObjects('Opportunity')
@@ -2613,6 +2713,16 @@ export default {
               this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
             }
           })
+        this.$toast('Salesforce Update Successful', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        if (this.activeFilters.length) {
+          this.getFilteredObjects(this.updateFilterValue)
+        }
         if (this.currentList === 'Closing this month') {
           this.stillThisMonth()
         } else if (this.currentList === 'Closing next month') {
@@ -2629,20 +2739,12 @@ export default {
       } finally {
         this.closeStageForm()
         this.formData = {}
-        this.$toast('Salesforce Update Successful', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
         this.dropdownLoading = false
       }
     },
     async updateResource() {
       this.updateList.push(this.oppId)
       this.editOpModalOpen = false
-
       try {
         const res = await SObjects.api
           .updateResource({
@@ -2672,6 +2774,9 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+        if (this.activeFilters.length) {
+          this.getFilteredObjects(this.updateFilterValue)
+        }
         if (this.currentList === 'Closing this month') {
           this.stillThisMonth()
         } else if (this.currentList === 'Closing next month') {
@@ -2735,7 +2840,7 @@ export default {
           let res = await AlertTemplate.api.runAlertTemplateNow(id ? id : this.id, {
             fromWorkflow: true,
           })
-          this.currentWorkflow = this.allOpps.filter((opp) =>
+          this.currentWorkflow = this.allOppsForWorkflows.filter((opp) =>
             res.data.ids.includes(opp.integration_id),
           )
           if (this.currentWorkflow.length < 1) {
@@ -2752,6 +2857,7 @@ export default {
         } finally {
           this.selectedWorkflow = true
           this.loadingWorkflows = false
+          this.hasNext = false
         }
       }
     },
@@ -2762,7 +2868,7 @@ export default {
         let res = await AlertTemplate.api.runAlertTemplateNow(id, {
           fromWorkflow: true,
         })
-        this.currentWorkflow = this.allOpps.filter((opp) =>
+        this.currentWorkflow = this.allOppsForWorkflows.filter((opp) =>
           res.data.ids.includes(opp.integration_id),
         )
         this.filteredWorkflows = this.currentWorkflow
@@ -2970,13 +3076,41 @@ export default {
         this.loadingAccounts = false
       }
     },
-    async getObjects() {
+    async getObjectsForWorkflows() {
       this.loading = true
       try {
-        const res = await SObjects.api.getObjects('Opportunity')
-        console.log(res)
+        const res = await SObjects.api.getObjectsForWorkflows('Opportunity')
+        this.allOppsForWorkflows = res.results
+      } catch (e) {
+        this.$toast('Error gathering Opportunities!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        setTimeout(() => {
+          this.loading = false
+        }, 100)
+      }
+    },
+    async getObjects(page = 1) {
+      this.currentPage = page
+      this.loading = true
+      try {
+        const res = await SObjects.api.getObjects('Opportunity', page)
         this.allOpps = res.results
         this.originalList = res.results
+        res.next ? (this.hasNext = true) : (this.hasNext = false)
+        res.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+        this.oppTotal = res.count
+
+        if (this.currentList === 'Closing this month') {
+          this.stillThisMonth()
+        } else if (this.currentList === 'Closing next month') {
+          this.stillNextMonth()
+        }
       } catch (e) {
         this.$toast('Error gathering Opportunities!', {
           timeout: 2000,
@@ -3255,6 +3389,7 @@ export default {
       color: $coral;
     }
   }
+
   &__body::-webkit-scrollbar {
     width: 2px; /* Mostly for vertical scrollbars */
     height: 0px; /* Mostly for horizontal scrollbars */
@@ -3289,12 +3424,75 @@ export default {
 }
 .results {
   margin: 0;
-  width: 100%;
   display: flex;
-  padding-left: 1rem;
-  margin-bottom: -1.25rem;
-  margin-top: -0.75rem;
   justify-content: flex-start;
+  width: 30vw;
+}
+.pagination {
+  width: 50vw;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  margin: 8px 0px 0px 0px;
+
+  h6 {
+    span {
+      letter-spacing: 0.5px;
+      margin-right: 1rem;
+      color: $gray;
+    }
+  }
+  &-num {
+    margin-right: 8px;
+    font-size: 11px;
+    border-radius: 6px;
+    border: none;
+    background-color: $dark-green;
+    color: white;
+    padding: 3px 6px;
+  }
+  &-num2 {
+    margin-right: 8px;
+    font-size: 11px;
+    border-radius: 6px;
+    border: none;
+    background-color: $very-light-gray;
+    color: $white;
+    padding: 3px 6px;
+  }
+  &-rotate {
+  }
+  button {
+    margin-right: 8px;
+  }
+}
+.pag-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  padding: 3px;
+  font-size: 12px;
+  cursor: pointer;
+  img {
+    filter: invert(60%);
+  }
+}
+.rotate {
+  transform: rotate(180deg);
+}
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.height-s {
+  height: 36px;
+}
+.between {
+  justify-content: space-between;
 }
 select {
   -webkit-appearance: none !important;
@@ -3425,9 +3623,9 @@ h3 {
   margin: 0;
   padding: 0;
   min-height: 50vh;
-  max-height: 70vh;
+  max-height: 72vh;
   overflow: scroll;
-  margin-top: 0.5rem;
+  margin-top: 1.5rem;
   border-radius: 8px;
   border: 1px solid #e8e8e8;
   border-collapse: separate;
@@ -3683,7 +3881,8 @@ section {
   justify-content: space-between;
 }
 .pipelines {
-  padding-top: 4.5rem;
+  padding: 4.5rem 1rem 0.5rem 0.5rem;
+
   color: $base-gray;
   margin: 0 1rem 0 0.5rem;
 }
@@ -3760,7 +3959,7 @@ section {
   box-shadow: 1px 2px 2px $very-light-gray;
 }
 .search-bar {
-  height: 4.5vh;
+  height: 2rem;
   background-color: $off-white;
   border: 0.7px solid $gray;
   display: flex;
@@ -3853,6 +4052,7 @@ section {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size: 12px;
 }
 .main:hover {
   overflow: visible;

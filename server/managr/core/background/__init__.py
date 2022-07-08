@@ -218,7 +218,7 @@ def _process_calendar_details(user_id):
     if events:
         processed_data = []
         for event in events:
-            description = event.get("description")
+            description = event.get("description", None)
             if description is None:
                 description = "No Description"
             data = {}
@@ -641,6 +641,7 @@ def _process_non_zoom_meetings(user_id):
             processed_data = _process_calendar_details(user_id)
         except Exception as e:
             logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
+            processed_data = None
         if processed_data is not None:
             last_instance = (
                 MeetingPrepInstance.objects.filter(user=user).order_by("-datetime_created").first()

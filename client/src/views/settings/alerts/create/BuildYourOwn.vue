@@ -51,7 +51,10 @@
         </div>
 
         <div v-show="pageNumber === 0">
-          <h5 style="text-align: center; margin-top: -0.75rem; color: #4d4e4c" class="title">
+          <h5
+            style="text-align: center; margin-top: -0.75rem; color: #4d4e4c; letter-spacing: 0.5px"
+            class="title"
+          >
             {{ alertTemplateForm.field.resourceType.value }} Selected. Switch to
             <span
               v-if="selectedResourceType !== 'Account'"
@@ -141,8 +144,7 @@
               <button class="remove__group" @click="onRemoveAlertGroup(index)">
                 <img
                   src="@/assets/images/trash.svg"
-                  class="invert"
-                  style="height: 0.85rem"
+                  style="height: 0.85rem; filter: invert(50%)"
                   alt=""
                 />
               </button>
@@ -216,8 +218,7 @@
                 >
                   <img
                     src="@/assets/images/copy.svg"
-                    class="invert"
-                    style="height: 1.25rem"
+                    style="height: 1.25rem; filter: invert(40%)"
                     alt=""
                   />
                 </button>
@@ -1321,6 +1322,7 @@ button img {
   display: flex;
   flex-direction: row;
   justify-content: center;
+  width: 100vw;
 }
 
 .delivery__row {
@@ -1373,7 +1375,6 @@ textarea {
 .alerts-page {
   height: 88vh;
   color: $base-gray;
-  margin-left: 18vw;
   margin-top: 3.5rem;
   display: flex;
   flex-direction: column;
@@ -1450,11 +1451,10 @@ input {
   &__popup {
     width: 18rem;
     visibility: hidden;
-
-    padding: 13px 21px;
-    border-radius: 5px;
+    padding: 10px 18px;
+    border-radius: 6px;
     box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
-    border: solid 2px $very-light-gray;
+    // border: solid 2px $very-light-gray;
     background-color: $base-gray;
     color: white;
     position: absolute;
@@ -1464,5 +1464,12 @@ input {
 }
 .tooltip:hover .tooltip__popup {
   visibility: visible;
+}
+::v-deep .input-content {
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+}
+::v-deep .input-form__active {
+  border: none;
 }
 </style>
