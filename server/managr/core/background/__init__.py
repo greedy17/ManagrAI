@@ -25,6 +25,8 @@ from managr.slack.helpers.block_sets.command_views_blocksets import (
     custom_meeting_paginator_block,
     custom_task_paginator_block,
 )
+from managr.meetings.models import Meeting
+from managr.meetings.serializers import MeetingSerializer
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.slack import constants as slack_consts
@@ -239,7 +241,7 @@ def _process_calendar_details(user_id):
         return None
 
 
-def meeting_prep(processed_data, user_id, invocation=1, from_task=False):
+def meeting_prep(processed_data, user_id):
     def get_domain(email):
         """Parse domain out of an email"""
         return email[email.index("@") + 1 :]
@@ -391,54 +393,47 @@ def meeting_prep(processed_data, user_id, invocation=1, from_task=False):
             contact_forms.append(form)
             contact["_form"] = str(form.id)
     processed_data.pop("participants")
-    data = {
-        "user": user.id,
-        "participants": meeting_contacts,
-        "event_data": processed_data,
-        "invocation": invocation,
+    meeting_data = {
+        **processed_data,
+        "user": user,
     }
+    meeting_serializer = MeetingSerializer(data=meeting_data)
+    meeting_serializer.is_valid(raise_exception=True)
+    meeting_serializer.save()
     resource_check = meeting_resource_data.get("resource_id", None)
-    if resource_check:
-        data["resource_id"] = meeting_resource_data["resource_id"]
-        data["resource_type"] = meeting_resource_data["resource_type"]
-
-    # Creates Meeting Prep Instance
-    serializer = MeetingPrepInstanceSerializer(data=data)
-    serializer.is_valid(raise_exception=True)
-    serializer.save()
-
-    meeting_prep_instance = (
-        MeetingPrepInstance.objects.filter(user=user).order_by("-datetime_created").first()
+    meeting = Meeting.objects.filter(user=user).first()
+    meeting.participants = meeting_contacts
+    meeting.save()
+    provider = processed_data.get("provider")
+    # Conditional Check for Zoom meeting or Non-Zoom Meeting
+    meeting_workflow = MeetingWorkflow.objects.create(
+        operation_type="MEETING_REVIEW",
+        meeting=meeting,
+        user=user,
+        resource_id=meeting_resource_data["resource_id"],
+        resource_type=meeting_resource_data["resource_type"],
     )
-    if from_task:
-        provider = processed_data.get("provider")
-        # Conditional Check for Zoom meeting or Non-Zoom Meeting
-        if user.has_zoom_integration:
-            if (provider == "Zoom Meeting" and user.email not in processed_data["owner"]) or (
-                provider not in [None, "Zoom Meeting",]
-                and "Zoom meeting" not in processed_data["description"]
-            ):
-                # Google Meet (Non-Zoom)
-                meeting_workflow = MeetingWorkflow.objects.create(
-                    non_zoom_meeting=meeting_prep_instance, user=user,
-                )
-                meeting_workflow.forms.set(contact_forms)
-                # Sending end_times, workflow_id, and user values to emit function
-                non_zoom_end_times = processed_data.get("times").get("end_time")
-                workflow_id = str(meeting_workflow.id)
-                user_id = str(user.id)
-                user_tz = str(user.timezone)
-                emit_non_zoom_meetings(workflow_id, user_id, user_tz, non_zoom_end_times)
-                logger.info(
-                    f"-------------------------\nMEETING PREP INFO FOR {user.email}\nMEETING PREP INSTANCE: {meeting_prep_instance.id}\nMEETING WORKFLOW: {meeting_workflow.id}\n-------------------------"
-                )
-                return
-        else:
-            meeting_workflow = MeetingWorkflow.objects.create(
-                non_zoom_meeting=meeting_prep_instance, user=user,
+    meeting_workflow.forms.set(contact_forms)
+    if resource_check:
+        meeting_workflow.add_form(
+            meeting_resource_data["resource_type"], slack_consts.FORM_TYPE_UPDATE,
+        )
+    if user.has_zoom_integration:
+        if (provider == "Zoom Meeting" and user.email not in processed_data["owner"]) or (
+            provider not in [None, "Zoom Meeting",]
+            and "Zoom meeting" not in processed_data["description"]
+        ):
+            # Google Meet (Non-Zoom)
+            # Sending end_times, workflow_id, and user values to emit function
+            non_zoom_end_times = processed_data.get("times").get("end_time")
+            workflow_id = str(meeting_workflow.id)
+            user_id = str(user.id)
+            user_tz = str(user.timezone)
+            emit_non_zoom_meetings(workflow_id, user_id, user_tz, non_zoom_end_times)
+            logger.info(
+                f"-------------------------\nMEETING PREP INFO FOR {user.email}\nMEETING PREP INSTANCE: {meeting_prep_instance.id}\nMEETING WORKFLOW: {meeting_workflow.id}\n-------------------------"
             )
-            meeting_workflow.forms.set(contact_forms)
-            return
+        return
 
 
 def _send_calendar_details(
@@ -643,12 +638,8 @@ def _process_non_zoom_meetings(user_id):
             logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
             processed_data = None
         if processed_data is not None:
-            last_instance = (
-                MeetingPrepInstance.objects.filter(user=user).order_by("-datetime_created").first()
-            )
-            current_invocation = last_instance.invocation + 1 if last_instance else 1
             for event in processed_data:
-                meeting_prep(event, user_id, current_invocation, from_task=True)
+                meeting_prep(event, user_id)
     return
 
 
