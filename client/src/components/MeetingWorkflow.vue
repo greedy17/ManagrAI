@@ -4,7 +4,6 @@
       class="table-cell wt-bg"
       :class="{ 'left-green': meetingUpdated, 'left-red': !meetingUpdated }"
     >
-<<<<<<< HEAD
       <div>
         <p style="letter-spacing: 0.25px; font-size: 12px; margin-bottom: 3px">
           {{ meeting.topic ? meeting.topic : 'Meeting' }}
@@ -12,17 +11,6 @@
         <span style="color: #9b9b9b; font-size: 11px">
           Time: {{ meeting.start_time ? formatDateTimeToTime(meeting.start_time) : '' }}
         </span>
-=======
-      <div v-if="!meeting.event_data">
-        <div>
-          <p style="letter-spacing: 0.25px; font-size: 12px; margin-bottom: 3px">
-            {{ meeting.topic ? meeting.topic : 'Meeting' }}
-          </p>
-          <span style="color: #9b9b9b; font-size: 11px">
-            Time: {{ meeting.start_time ? formatDateTimeToTime(meeting.start_time) : '' }}
-          </span>
-        </div>
->>>>>>> develop
       </div>
     </div>
 
