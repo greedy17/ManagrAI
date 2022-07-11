@@ -412,9 +412,6 @@ def meeting_prep(processed_data, user_id):
             user_id = str(user.id)
             user_tz = str(user.timezone)
             emit_non_zoom_meetings(workflow_id, user_id, user_tz, non_zoom_end_times)
-            logger.info(
-                f"-------------------------\nMEETING PREP INFO FOR {user.email}\nMEETING PREP INSTANCE: {meeting_prep_instance.id}\nMEETING WORKFLOW: {meeting_workflow.id}\n-------------------------"
-            )
         return
 
 
@@ -621,7 +618,13 @@ def _process_non_zoom_meetings(user_id):
             processed_data = None
         if processed_data is not None:
             for event in processed_data:
-                meeting_prep(event, user_id)
+                conferencing = event.get("conferencing", None)
+                provider = conferencing["provider"] if conferencing is not None else None
+                description = (
+                    event.get("description") if event.get("description") else "No Description"
+                )
+                if provider != "Zoom Meeting" and "Zoom" not in description:
+                    meeting_prep(event, user_id)
     return
 
 
