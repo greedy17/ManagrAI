@@ -7,15 +7,15 @@
       "
       class="notis"
       :class="{
-        'pulse green-img': notiRight === 0 && (activeNotis || $route.name === 'Pipelines'),
+        'pulse green-img': notiRight === 8 && (activeNotis || $route.name === 'Pipelines'),
       }"
       :style="`right: ${notiRight}px`"
     >
-      <img v-if="notiRight === 0" src="@/assets/images/dropdown-arrow.svg" height="16px" alt="" />
-      <img v-else src="@/assets/images/dropdown-arrow.svg" class="rotate" height="16px" alt="" />
+      <img v-if="notiRight === 8" src="@/assets/images/dropdown-arrow.svg" height="20px" alt="" />
+      <img v-else src="@/assets/images/dropdown-arrow.svg" class="rotate" height="18px" alt="" />
       <!-- <small class="red">5</small> -->
     </button>
-    <section @click="test" id="mySidenav" :style="`width: ${navWidth}px`" class="sidenav">
+    <section id="mySidenav" :style="`width: ${navWidth}px`" class="sidenav">
       <h3 class="neg-mar-bottom">{{ `${day} ${today}` }}</h3>
       <div class="noti-section">
         <p class="sticky yellowish">
@@ -28,18 +28,8 @@
         <div v-else>
           <span @click="goToMeetings" :key="i" v-for="(meeting, i) in meetings"
             ><a class="yellow-border"
-              >{{
-                meeting.meeting_ref.event_data
-                  ? meeting.meeting_ref.event_data.title
-                  : meeting.meeting_ref.topic
-              }}
-              <span class="grey">{{
-                formatDateTimeToTime(
-                  meeting.meeting_ref.event_data
-                    ? meeting.meeting_ref.event_data.times.start_time
-                    : meeting.meeting_ref.start_time,
-                )
-              }}</span>
+              >{{ meeting.meeting_ref.topic }}
+              <span class="grey">{{ formatDateTimeToTime(meeting.meeting_ref.start_time) }}</span>
               <p
                 :class="
                   meeting.is_completed
@@ -97,8 +87,8 @@ export default {
   name: 'SideDrawer',
   data() {
     return {
-      notiRight: 0,
-      navWidth: 18,
+      notiRight: 8,
+      navWidth: 26,
       meetings: null,
       activeNotis: false,
       today: null,
@@ -143,7 +133,7 @@ export default {
       if (this.meetings.length) {
         for (let i = 0; i < this.meetings.length; i++) {
           !this.meetings[i].is_completed ? (NA += 1) : null
-          console.log(NA)
+
           NA === 0 ? (this.activeNotis = false) : (this.activeNotis = true)
         }
       }
@@ -192,13 +182,11 @@ export default {
     goToMeetings() {
       this.$router.push({ name: 'Meetings' })
     },
-    test() {
-      console.log(this.users.list)
-      console.log(this.templates.list)
-    },
+
     async getMeetingList() {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
+        console.log(res)
         this.meetings = res.results
       } catch (e) {
         console.log(e)
@@ -206,8 +194,8 @@ export default {
       }
     },
     changeWidth() {
-      this.notiRight === 0 ? (this.notiRight = 235) && this.getMeetingList() : (this.notiRight = 0)
-      this.navWidth === 18 ? (this.navWidth = 250) : (this.navWidth = 18)
+      this.notiRight === 8 ? (this.notiRight = 288) && this.getMeetingList() : (this.notiRight = 8)
+      this.navWidth === 26 ? (this.navWidth = 300) : (this.navWidth = 26)
     },
     setDate() {
       let today = new Date()
@@ -254,7 +242,7 @@ export default {
 .pulse {
   box-shadow: 0 0 0 0 $dark-green;
   transform: scale(1);
-  animation: pulse 2s infinite;
+  animation: pulse 1.25s infinite;
 }
 .green-img {
   img {
@@ -361,17 +349,17 @@ button:disabled {
   margin-bottom: -3px;
 }
 .noti-section-lg {
-  height: 350px;
+  height: 58vh;
   overflow-y: scroll;
-  padding: 0px 16px;
+  padding: 2px 16px;
   border-bottom: 1px solid $soft-gray;
   margin: 0px 0px 5px 0px;
   width: 100%;
 }
 .noti-section {
-  height: 200px;
+  height: 32vh;
   overflow-y: scroll;
-  padding: 0px 16px;
+  padding: 2px 16px;
   border-bottom: 1px solid $soft-gray;
   margin: 0px 0px 5px 0px;
   width: 100%;
@@ -428,7 +416,7 @@ button:disabled {
   position: fixed;
   z-index: 21;
   right: 0;
-  bottom: 2rem;
+  top: 4rem;
   border: 1px solid $soft-gray;
   border-radius: 50%;
   background-color: white;
@@ -455,6 +443,8 @@ button:disabled {
   background-color: white;
   overflow-x: hidden;
   padding-top: 60px;
+  padding-left: 10px;
+  padding-right: 6px;
   transition: 0.5s;
 }
 

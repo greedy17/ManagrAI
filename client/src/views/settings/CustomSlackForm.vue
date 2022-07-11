@@ -1216,6 +1216,7 @@ export default {
         })
         .then((res) => {
           this.$emit('update:selectedForm', res)
+          this.$store.dispatch('refreshCurrentUser')
           this.$toast('Form added successfully', {
             timeout: 2000,
             position: 'top-left',

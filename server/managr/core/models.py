@@ -436,8 +436,7 @@ class NylasAuthAccount(TimeStampModel):
                 "error_param": error_param,
                 "error_message": error_message,
             }
-
-            data = error_data
+            return NylasAPIError(error_message)
         return data
 
     def _get_calendar_data(self):
@@ -699,11 +698,9 @@ class UserForecast(models.Model):
         return "Opportunity already in current forecast state"
 
     def remove_from_state(self, id):
-        from managr.opportunity.models import Opportunity
 
-        opp = Opportunity.objects.get(integration_id=id)
-        if opp.integration_id in self.state.keys():
-            del self.state[opp.integration_id]
+        if id in self.state.keys():
+            del self.state[id]
             self.save()
             return "Opportunity removed from current forecast state"
         return "Opportunity not in current forecast state"

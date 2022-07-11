@@ -38,7 +38,7 @@ class Command(BaseCommand):
                     ),
                 )
         else:
-            if datetime.weekday() < 5:
+            if datetime.today().weekday() < 5:
                 users = User.objects.filter(is_active=True)
                 for user in users:
                     if options["meetings"]:

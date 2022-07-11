@@ -12,6 +12,7 @@ from django.shortcuts import render
 from django.contrib.auth import authenticate, login
 from django.conf import settings
 from django_filters.rest_framework import DjangoFilterBackend
+from background_task.models import CompletedTask
 
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
@@ -824,3 +825,19 @@ def request_reset_link(request):
         )
 
     return Response({"detail": "password reset email sent"})
+
+
+@api_view(["GET"])
+@permission_classes(
+    [permissions.AllowAny,]
+)
+def get_task_status(request):
+    verbose_name = request.GET.get("verbose_name", None)
+    if verbose_name:
+        try:
+            task = CompletedTask.object.get(verbose_name=verbose_name)
+            if task:
+                data = {"completed": True}
+        except CompletedTask.DoesNotExist:
+            data = {"completed": False}
+    return Response(data=data)
