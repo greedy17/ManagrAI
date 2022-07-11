@@ -52,6 +52,8 @@ class MeetingSerializer(serializers.ModelSerializer):
         utc_start = datetime.utcfromtimestamp(data["when"]["start_time"])
         utc_end = datetime.utcfromtimestamp(data["when"]["end_time"])
         tz = pytz.timezone(user.timezone)
+        conferencing = data.get("conferencing", None)
+        provider = conferencing["provider"] if conferencing else "None"
         local_start = utc_start.astimezone(tz)
         local_end = utc_end.astimezone(tz)
         model_data = {
@@ -60,7 +62,7 @@ class MeetingSerializer(serializers.ModelSerializer):
             "topic": data["title"],
             "start_time": local_start,
             "end_time": local_end,
-            "provider": data["conferencing"]["provider"],
+            "provider": provider,
             "meta_data": json.dumps(data),
         }
         return super().to_internal_value(model_data)
