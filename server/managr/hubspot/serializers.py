@@ -51,9 +51,9 @@ class HubspotContactSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "email",
-            "company",
+            "account",
             "external_owner",
-            "external_company",
+            "external_account",
             "owner",
             "integration_source",
             "integration_id",
@@ -101,13 +101,14 @@ class DealSerializer(serializers.ModelSerializer):
             "amount",
             "close_date",
             "forecast_category",
-            "company",
+            "account",
             "stage",
             "owner",
-            "external_company",
+            "external_account",
             "external_owner",
             "imported_by",
             "contacts",
+            "is_stale",
             "secondary_data",
         )
 

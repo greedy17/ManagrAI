@@ -223,7 +223,6 @@ def _process_resource_sync(user_id, sync_id, resource, limit, offset, attempts=1
     user = User.objects.filter(id=user_id).select_related("salesforce_account").first()
     if not hasattr(user, "salesforce_account"):
         return
-
     # if route doesnt exist catch all will catch the value error here
     route = routes[resource]
     model_class = route["model"]

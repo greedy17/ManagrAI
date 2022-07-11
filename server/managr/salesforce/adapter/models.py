@@ -1018,8 +1018,6 @@ class OpportunityAdapter:
         self.close_date = kwargs.get("close_date", None)
         self.forecast_category = kwargs.get("forecast_category", None)
         self.owner = kwargs.get("owner", None)
-        self.last_stage_update = kwargs.get("last_stage_update", None)
-        self.last_activity_date = kwargs.get("last_activity_date", None)
         self.external_owner = kwargs.get("external_owner", None)
         self.external_account = kwargs.get("external_account", None)
         self.imported_by = kwargs.get("imported_by", None)
@@ -1039,7 +1037,6 @@ class OpportunityAdapter:
         owner="OwnerId",  # overwritten (ignored in reverse)
         external_account="AccountId",
         external_owner="OwnerId",
-        last_activity_date="LastActivityDate",
     )
 
     @staticmethod

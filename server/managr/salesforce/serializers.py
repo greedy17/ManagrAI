@@ -161,6 +161,7 @@ class AccountSerializer(serializers.ModelSerializer):
             "integration_source",
             "imported_by",
             "owner",
+            "external_owner",
             "secondary_data",
         )
 
@@ -222,7 +223,7 @@ class ContactSerializer(serializers.ModelSerializer):
             user = sf_account.user.id if sf_account else sf_account
             data.update({"owner": user})
         if account:
-            acct = Account.objects.filter(
+            acct = BaseAccount.objects.filter(
                 integration_id=account, organization__users__id=imported_by
             ).first()
             acct = acct.id if acct else acct
@@ -247,8 +248,6 @@ class OpportunitySerializer(serializers.ModelSerializer):
             "account",
             "stage",
             "owner",
-            "last_stage_update",
-            "last_activity_date",
             "external_account",
             "external_owner",
             "imported_by",
@@ -281,17 +280,19 @@ class OpportunitySerializer(serializers.ModelSerializer):
             user = sf_account.user.id if sf_account else sf_account
             data.update({"owner": user})
         if account:
-            acct = Account.objects.filter(
+            acct = BaseAccount.objects.filter(
                 integration_id=account, organization__users__id=imported_by
             ).first()
             acct = acct.id if acct else acct
             data.update({"account": acct})
-        if data.get("last_activity_date"):
-            data["last_activity_date"] = self._format_date_time_from_api(data["last_activity_date"])
+        # if data.get("last_activity_date"):
+        #     data["last_activity_date"] = self._format_date_time_from_api(data["last_activity_date"])
         # remove contacts from validation
 
         contacts = data.pop("contacts", [])
-        contacts = Contact.objects.filter(integration_id__in=contacts).values_list("id", flat=True)
+        contacts = BaseContact.objects.filter(integration_id__in=contacts).values_list(
+            "id", flat=True
+        )
         data.update({"contacts": contacts})
         internal_data = super().to_internal_value(data)
         return internal_data

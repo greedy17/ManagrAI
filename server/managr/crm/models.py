@@ -96,6 +96,9 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
     )
     objects = BaseOpportunityQuerySet.as_manager()
 
+    def __str__(self):
+        return f"{self.name} {self.stage}"
+
     class Meta:
         ordering = ["-datetime_created"]
 

@@ -21,7 +21,8 @@ class Command(BaseCommand):
                     self.style.ERROR("User does not have an sf account {}".format(user.email,))
                 )
 
-            operations = user.salesforce_account.resource_sync_opts
+            # operations = user.salesforce_account.resource_sync_opts
+            operations = ["Account", "Contact", "Opportunity"]
 
             scheduled_time = timezone.now()
             formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
