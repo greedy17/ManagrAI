@@ -26,12 +26,12 @@
                 {{modalInfo.submissionDate ? `Submitted on ${weekDay(modalInfo.submissionDate)} ${formatDateTime(modalInfo.submissionDate)}` : 'Not Submitted'}}
               </p>
               <p class="note-section__body">
-                <span class="underline">Workflow ID:</span> {{ modalInfo.workflowId ? modalInfo.workflowId : 'null' }}
-                <span class="underline">Update Source:</span> {{ modalInfo.updateSource ? modalInfo.updateSource : 'null' }}
-                <span class="underline">User ID:</span> {{ modalInfo.user ? modalInfo.user : 'null' }}
-                <span class="underline">Template ID:</span> {{ modalInfo.template ? modalInfo.template : 'null' }}
-                <span class="underline">Saved Data:</span> {{ modalInfo.savedData ? modalInfo.savedData : 'null' }}
-                <span class="underline">Previous Data:</span> {{ modalInfo.previousData ? modalInfo.previousData : 'null' }}
+                <span class="underline">Workflow ID:</span> {{ modalInfo.workflowId ? modalInfo.workflowId : 'None' }}
+                <span class="underline">Update Source:</span> {{ modalInfo.updateSource ? modalInfo.updateSource : 'None' }}
+                <span class="underline">User ID:</span> {{ modalInfo.user ? modalInfo.user : 'None' }}
+                <span class="underline">Template ID:</span> {{ modalInfo.template ? modalInfo.template : 'None' }}
+                <span class="underline">Saved Data:</span> {{ modalInfo.savedData ? modalInfo.savedData : 'None' }}
+                <span class="underline">Previous Data:</span> {{ modalInfo.previousData ? modalInfo.previousData : 'None' }}
               </p>
             </section>
           </div>
@@ -49,30 +49,30 @@
                 Meeting ID: {{ modalInfo.meeting_ref.meeting_id ? modalInfo.meeting_ref.meeting_id : 'N/A' }}
               </p>
               <p class="note-section__date">
-                Start Time: {{ modalInfo.meeting_ref.start_time ? `${weekDay(modalInfo.meeting_ref.start_time)} ${formatDateTime(modalInfo.meeting_ref.start_time)} at ${getTime(modalInfo.meeting_ref.start_time)}` : 'null' }}
+                Start Time: {{ modalInfo.meeting_ref.start_time ? `${weekDay(modalInfo.meeting_ref.start_time)} ${formatDateTime(modalInfo.meeting_ref.start_time)} at ${getTime(modalInfo.meeting_ref.start_time)}` : 'None' }}
               </p>
               <br>
               <p class="note-section__date">
-                End Time: {{ modalInfo.meeting_ref.end_time ? `${weekDay(modalInfo.meeting_ref.end_time)} ${formatDateTime(modalInfo.meeting_ref.end_time)} at ${getTime(modalInfo.meeting_ref.end_time)}` : 'null' }}
+                End Time: {{ modalInfo.meeting_ref.end_time ? `${weekDay(modalInfo.meeting_ref.end_time)} ${formatDateTime(modalInfo.meeting_ref.end_time)} at ${getTime(modalInfo.meeting_ref.end_time)}` : 'None' }}
               </p>
               <p class="note-section__body">
-                <span class="underline">Meeting UUID:</span> {{ modalInfo.meeting_ref.meeting_uuid ? modalInfo.meeting_ref.meeting_uuid : 'null' }}
-                <span class="underline">Account ID:</span> {{ modalInfo.meeting_ref.account_id ? modalInfo.meeting_ref.account_id : 'null' }}
-                <span class="underline">Host ID:</span> {{ modalInfo.meeting_ref.host_id ? modalInfo.meeting_ref.host_id : 'null' }}
-                <span class="underline">Operator ID:</span> {{ modalInfo.meeting_ref.operator_id ? modalInfo.meeting_ref.operator_id : 'null' }}
-                <span class="underline">Status:</span> {{ modalInfo.meeting_ref.status ? modalInfo.meeting_ref.status : 'null' }}
-                <span class="underline">Timezone:</span> {{ modalInfo.meeting_ref.timezone ? modalInfo.meeting_ref.timezone : 'null' }}
-                <span class="underline">Start URL:</span> {{ modalInfo.meeting_ref.start_url ? modalInfo.meeting_ref.start_url : 'null' }}
-                <span class="underline">Duration:</span> {{ modalInfo.meeting_ref.duration ? modalInfo.meeting_ref.duration : 'null' }}
-                <span class="underline">Original Duration:</span> {{ modalInfo.meeting_ref.original_duration ? modalInfo.meeting_ref.original_duration : 'null' }}
-                <span class="underline">Total Minutes:</span> {{ modalInfo.meeting_ref.total_minutes ? modalInfo.meeting_ref.total_minutes : 'null' }}
-                <span class="underline">Recurrence:</span> {{ modalInfo.meeting_ref.recurrence ? modalInfo.meeting_ref.recurrence : 'null' }}
-                <span class="underline">Join URL:</span> {{ modalInfo.meeting_ref.join_url ? modalInfo.meeting_ref.join_url : 'null' }}
-                <span class="underline">Operator:</span> {{ modalInfo.meeting_ref.operator ? modalInfo.meeting_ref.operator : 'null' }}
-                <span class="underline">Operation:</span> {{ modalInfo.meeting_ref.operation ? modalInfo.meeting_ref.operation : 'null' }}
-                <span class="underline">Participants:</span> {{ modalInfo.meeting_ref.participants ? modalInfo.meeting_ref.participants : 'null' }}
-                <span class="underline">Type:</span> {{ modalInfo.meeting_ref.type ? modalInfo.meeting_ref.type : 'null' }}
-                <span class="underline">Zoom Account:</span> {{ modalInfo.meeting_ref.zoom_account ? modalInfo.meeting_ref.zoom_account : 'null' }}
+                <span class="underline">Meeting UUID:</span> {{ modalInfo.meeting_ref.meeting_uuid ? modalInfo.meeting_ref.meeting_uuid : 'None' }}
+                <span class="underline">Account ID:</span> {{ modalInfo.meeting_ref.account_id ? modalInfo.meeting_ref.account_id : 'None' }}
+                <span class="underline">Host ID:</span> {{ modalInfo.meeting_ref.host_id ? modalInfo.meeting_ref.host_id : 'None' }}
+                <span class="underline">Operator ID:</span> {{ modalInfo.meeting_ref.operator_id ? modalInfo.meeting_ref.operator_id : 'None' }}
+                <span class="underline">Status:</span> {{ modalInfo.meeting_ref.status ? modalInfo.meeting_ref.status : 'None' }}
+                <span class="underline">Timezone:</span> {{ modalInfo.meeting_ref.timezone ? modalInfo.meeting_ref.timezone : 'None' }}
+                <span class="underline">Start URL:</span> {{ modalInfo.meeting_ref.start_url ? modalInfo.meeting_ref.start_url : 'None' }}
+                <span class="underline">Duration:</span> {{ modalInfo.meeting_ref.duration ? modalInfo.meeting_ref.duration : 'None' }}
+                <span class="underline">Original Duration:</span> {{ modalInfo.meeting_ref.original_duration ? modalInfo.meeting_ref.original_duration : 'None' }}
+                <span class="underline">Total Minutes:</span> {{ modalInfo.meeting_ref.total_minutes ? modalInfo.meeting_ref.total_minutes : 'None' }}
+                <span class="underline">Recurrence:</span> {{ modalInfo.meeting_ref.recurrence ? modalInfo.meeting_ref.recurrence : 'None' }}
+                <span class="underline">Join URL:</span> {{ modalInfo.meeting_ref.join_url ? modalInfo.meeting_ref.join_url : 'None' }}
+                <span class="underline">Operator:</span> {{ modalInfo.meeting_ref.operator ? modalInfo.meeting_ref.operator : 'None' }}
+                <span class="underline">Operation:</span> {{ modalInfo.meeting_ref.operation ? modalInfo.meeting_ref.operation : 'None' }}
+                <span class="underline">Participants:</span> {{ modalInfo.meeting_ref.participants ? modalInfo.meeting_ref.participants : 'None' }}
+                <span class="underline">Type:</span> {{ modalInfo.meeting_ref.type ? modalInfo.meeting_ref.type : 'None' }}
+                <span class="underline">Zoom Account:</span> {{ modalInfo.meeting_ref.zoom_account ? modalInfo.meeting_ref.zoom_account : 'None' }}
               </p>
             </section>
           </div>
@@ -90,7 +90,7 @@
                 General Info
               </p>
               <p class="note-section__body">
-                <span class="underline">Email:</span> {{ modalInfo.email ? modalInfo.email : 'null' }}
+                <span class="underline">Email:</span> {{ modalInfo.email ? modalInfo.email : 'None' }}
                 <span class="underline">Is Active:</span> {{ modalInfo.isActive }}
                 <span class="underline">Is Invited:</span> {{ modalInfo.isInvited }}
                 <span class="underline">Is Admin:</span> {{ modalInfo.isAdmin }}
@@ -98,7 +98,7 @@
                 <span class="underline">User Level:</span> {{ modalInfo.userLevel }}
                 <span class="underline">Role:</span> {{ modalInfo.role }}
                 <span class="underline">Timezone:</span> {{ modalInfo.timezone }}
-                <span class="underline">Activated Managr Configs:</span> {{ modalInfo.activatedManagrConfigs ? modalInfo.activatedManagrConfigs : 'null' }}
+                <span class="underline">Activated Managr Configs:</span> {{ modalInfo.activatedManagrConfigs ? modalInfo.activatedManagrConfigs : 'None' }}
               </p>
             </section>
             <section class="note-section">
@@ -106,12 +106,12 @@
                 User Slack Integrations
               </p>
               <p class="note-section__body">
-                <span class="underline">Slack ID:</span> {{ modalInfo.slackRef.slackId ? modalInfo.slackRef.slackId : 'null' }}
-                <span class="underline">Channel:</span> {{ modalInfo.slackAccount.channel ? modalInfo.slackAccount.channel : 'null' }}
+                <span class="underline">Slack ID:</span> {{ modalInfo.slackRef.slackId ? modalInfo.slackRef.slackId : 'None' }}
+                <span class="underline">Channel:</span> {{ modalInfo.slackAccount.channel ? modalInfo.slackAccount.channel : 'None' }}
                 <span class="underline">Organization Slack:</span> {{ modalInfo.organizationRef.slackIntegration }}
                 <span class="underline">Is Onboarded:</span> {{ modalInfo.onboarding }}
-                <span class="underline">Recap Channel:</span> {{ modalInfo.slackAccount.recapChannel ? modalInfo.slackAccount.recapChannel : 'null' }}
-                <span class="underline">Recap Recievers:</span> {{ modalInfo.slackAccount.recapReceivers ? modalInfo.slackAccount.recapReceivers : 'null' }}
+                <span class="underline">Recap Channel:</span> {{ modalInfo.slackAccount.recapChannel ? modalInfo.slackAccount.recapChannel : 'None' }}
+                <span class="underline">Recap Recievers:</span> {{ modalInfo.slackAccount.recapReceivers ? modalInfo.slackAccount.recapReceivers : 'None' }}
               </p>
             </section>
             <section class="note-section">
@@ -119,10 +119,10 @@
                 Salesforce ({{ modalInfo.salesforceAccountRef.id }})
               </p>
               <p class="note-section__body">
-                <span class="underline">SFDC ID:</span> {{ modalInfo.salesforceAccountRef.salesforceId ? modalInfo.salesforceAccountRef.salesforceId : 'null' }}
-                <span class="underline">sobjects:</span> {{ modalInfo.salesforceAccountRef.sobjects ? modalInfo.salesforceAccountRef.sobjects : 'null' }}
-                <span class="underline">Instance URL:</span> {{ modalInfo.salesforceAccountRef.instanceUrl ? modalInfo.salesforceAccountRef.instanceUrl : 'null' }}
-                <span class="underline">Access Token:</span> {{ modalInfo.salesforceAccountRef.accessToken ? modalInfo.salesforceAccountRef.accessToken : 'null' }}
+                <span class="underline">SFDC ID:</span> {{ modalInfo.salesforceAccountRef.salesforceId ? modalInfo.salesforceAccountRef.salesforceId : 'None' }}
+                <span class="underline">sobjects:</span> {{ modalInfo.salesforceAccountRef.sobjects ? modalInfo.salesforceAccountRef.sobjects : 'None' }}
+                <span class="underline">Instance URL:</span> {{ modalInfo.salesforceAccountRef.instanceUrl ? modalInfo.salesforceAccountRef.instanceUrl : 'None' }}
+                <span class="underline">Access Token:</span> {{ modalInfo.salesforceAccountRef.accessToken ? modalInfo.salesforceAccountRef.accessToken : 'None' }}
               </p>
             </section>
             <section class="note-section">
@@ -130,10 +130,10 @@
                 Nylas ({{ modalInfo.nylasRef.id }})
               </p>
               <p class="note-section__body">
-                <span class="underline">Access Token:</span> {{ modalInfo.nylasRef.accessToken ? modalInfo.nylasRef.accessToken : 'null' }}
-                <span class="underline">Email:</span> {{ modalInfo.nylasRef.emailAddress ? modalInfo.nylasRef.emailAddress : 'null' }}
-                <span class="underline">Event Calendar ID:</span> {{ modalInfo.nylasRef.eventCalendarId ? modalInfo.nylasRef.eventCalendarId : 'null' }}
-                <span class="underline">Provider:</span> {{ modalInfo.nylasRef.provider ? modalInfo.nylasRef.provider : 'null' }}
+                <span class="underline">Access Token:</span> {{ modalInfo.nylasRef.accessToken ? modalInfo.nylasRef.accessToken : 'None' }}
+                <span class="underline">Email:</span> {{ modalInfo.nylasRef.emailAddress ? modalInfo.nylasRef.emailAddress : 'None' }}
+                <span class="underline">Event Calendar ID:</span> {{ modalInfo.nylasRef.eventCalendarId ? modalInfo.nylasRef.eventCalendarId : 'None' }}
+                <span class="underline">Provider:</span> {{ modalInfo.nylasRef.provider ? modalInfo.nylasRef.provider : 'None' }}
               </p>
             </section>
             <section class="note-section">
@@ -141,11 +141,11 @@
                 Zoom ({{ modalInfo.zoomRef.id }})
               </p>
               <p class="note-section__body">
-                <span class="underline">Zoom ID:</span> {{ modalInfo.zoomRef.zoomId ? modalInfo.zoomRef.zoomId : 'null' }}
-                <span class="underline">Timezone:</span> {{ modalInfo.zoomRef.timezone ? modalInfo.zoomRef.timezone : 'null' }}
-                <span class="underline">Account ID:</span> {{ modalInfo.zoomRef.accountId ? modalInfo.zoomRef.accountId : 'null' }}
-                <span class="underline">Access Token:</span> {{ modalInfo.zoomRef.accessToken ? modalInfo.zoomRef.accessToken : 'null' }}
-                <span class="underline">Fake Meeting ID:</span> {{ modalInfo.zoomRef.fakeMeetingIdRef ? modalInfo.zoomRef.fakeMeetingIdRef : 'null' }}
+                <span class="underline">Zoom ID:</span> {{ modalInfo.zoomRef.zoomId ? modalInfo.zoomRef.zoomId : 'None' }}
+                <span class="underline">Timezone:</span> {{ modalInfo.zoomRef.timezone ? modalInfo.zoomRef.timezone : 'None' }}
+                <span class="underline">Account ID:</span> {{ modalInfo.zoomRef.accountId ? modalInfo.zoomRef.accountId : 'None' }}
+                <span class="underline">Access Token:</span> {{ modalInfo.zoomRef.accessToken ? modalInfo.zoomRef.accessToken : 'None' }}
+                <span class="underline">Fake Meeting ID:</span> {{ modalInfo.zoomRef.fakeMeetingIdRef ? modalInfo.zoomRef.fakeMeetingIdRef : 'None' }}
               </p>
             </section>
             <section class="note-section">
@@ -153,11 +153,11 @@
                 Slack Account ({{ modalInfo.slackAccount.slackId }})
               </p>
               <p class="note-section__body">
-                <span class="underline">Slack ID:</span> {{ modalInfo.slackAccount.slackId ? modalInfo.slackAccount.slackId : 'null' }}
-                <span class="underline">Channel:</span> {{ modalInfo.slackAccount.channel ? modalInfo.slackAccount.channel : 'null' }}
-                <span class="underline">Zoom Channel:</span> {{ modalInfo.slackAccount.zoomChannel ? modalInfo.slackAccount.zoomChannel : 'null' }}
-                <span class="underline">Recap Receivers:</span> {{ modalInfo.slackAccount.recapReceivers ? modalInfo.slackAccount.recapReceivers : 'null' }}
-                <span class="underline">Real Time Alert Configs:</span> {{ modalInfo.slackAccount.realtimeAlertConfigs ? modalInfo.slackAccount.realtimeAlertConfigs : 'null' }}
+                <span class="underline">Slack ID:</span> {{ modalInfo.slackAccount.slackId ? modalInfo.slackAccount.slackId : 'None' }}
+                <span class="underline">Channel:</span> {{ modalInfo.slackAccount.channel ? modalInfo.slackAccount.channel : 'None' }}
+                <span class="underline">Zoom Channel:</span> {{ modalInfo.slackAccount.zoomChannel ? modalInfo.slackAccount.zoomChannel : 'None' }}
+                <span class="underline">Recap Receivers:</span> {{ modalInfo.slackAccount.recapReceivers ? modalInfo.slackAccount.recapReceivers : 'None' }}
+                <span class="underline">Real Time Alert Configs:</span> {{ modalInfo.slackAccount.realtimeAlertConfigs ? modalInfo.slackAccount.realtimeAlertConfigs : 'None' }}
               </p>
             </section>
           </div>
@@ -181,24 +181,46 @@
               <img src="@/assets/images/logo.png" class="logo" alt="" />
               <h4>Pull Usage Data</h4>
             </div>
+            <div>
+              <button
+              class="green_button sized copy-margin"
+              v-clipboard:copy="formatCopyObject(contentModalInfo)"
+              v-clipboard:success="onCopy"
+              v-clipboard:error="onError"
+            >
+              <!-- <img src="@/assets/images/copy.svg" class="invert" style="height: 1.25rem" alt="" /> -->
+              Copy All
+            </button>
+            </div>
           </div>
           <section class="note-section" v-for="(content, i) in contentModalInfo" :key="i">
-            <p class="note-section__title">
-              {{content.date ? `${getMonth(content.date)}, ${getYear(content.date)}` : 'N/A'}}
-            </p>
+            <div style="display: flex; justify-content: space-between">
+              <p class="note-section__title">
+                {{content.date ? `${getMonth(content.date)}, ${getYear(content.date)}` : 'N/A'}}
+              </p>
+              <button
+                class="green_button sized"
+                v-clipboard:copy="formatCopyObject(content)"
+                v-clipboard:success="onCopy"
+                v-clipboard:error="onError"
+              >
+                <!-- <img src="@/assets/images/copy.svg" class="invert" style="height: 1.25rem" alt="" /> -->
+                Copy
+              </button>
+            </div>
             <p class="note-section__body">
-              <span class="underline">Users:</span> {{ content.users !== null ? content.users : 'null' }}
-              <span class="underline">Workflows:</span> {{ content.workflows !== null ? content.workflows : 'null' }}
-              <span class="underline">Accounts Created:</span> {{ content.creates.accounts !== null ? content.creates.accounts : 'null' }}
-              <span class="underline">Contacts Created:</span> {{ content.creates.contacts !== null ? content.creates.contacts : 'null' }}
+              <span class="underline">Users:</span> {{ content.users !== null ? content.users : 'None' }}
+              <span class="underline">Workflows:</span> {{ content.workflows !== null ? content.workflows : 'None' }}
+              <span class="underline">Accounts Created:</span> {{ content.creates.accounts !== null ? content.creates.accounts : 'None' }}
+              <span class="underline">Contacts Created:</span> {{ content.creates.contacts !== null ? content.creates.contacts : 'None' }}
               <span class="underline">Opportunities Created:</span> {{ content.creates.opportunities !== null ? content.creates.opportunities : 'null' }}
-              <span class="underline">Products Created:</span> {{ content.creates.products !== null ? content.creates.products : 'null' }}
-              <span class="underline">Total Created:</span> {{ content.creates.total !== null ? content.creates.total : 'null' }}
-              <span class="underline">Alert Updates:</span> {{ content.updates.alert !== null ? content.updates.alert : 'null' }}
-              <span class="underline">Command Updates:</span> {{ content.updates.command !== null ? content.updates.command : 'null' }}
-              <span class="underline">Meeting Updates:</span> {{ content.updates.meeting !== null ? content.updates.meeting : 'null' }}
-              <span class="underline">Pipeline Updates:</span> {{ content.updates.pipeline !== null ? content.updates.pipeline : 'null' }}
-              <span class="underline">Total Updates:</span> {{ content.updates.total !== null ? content.updates.total : 'null' }}
+              <span class="underline">Products Created:</span> {{ content.creates.products !== null ? content.creates.products : 'None' }}
+              <span class="underline">Total Created:</span> {{ content.creates.total !== null ? content.creates.total : 'None' }}
+              <span class="underline">Alert Updates:</span> {{ content.updates.alert !== null ? content.updates.alert : 'None' }}
+              <span class="underline">Command Updates:</span> {{ content.updates.command !== null ? content.updates.command : 'None' }}
+              <span class="underline">Meeting Updates:</span> {{ content.updates.meeting !== null ? content.updates.meeting : 'None' }}
+              <span class="underline">Pipeline Updates:</span> {{ content.updates.pipeline !== null ? content.updates.pipeline : 'None' }}
+              <span class="underline">Total Updates:</span> {{ content.updates.total !== null ? content.updates.total : 'None' }}
             </p>
           </section>
         </div>
@@ -354,7 +376,6 @@
               </div>
             </div>
           </div>
-          <hr />
         </template>
       </template>
       <template v-else-if="page === 'SlackForm'">
@@ -370,12 +391,13 @@
       </template>
       <template v-else-if="page === 'SlackFormInstance'">
         <button class="green_button back" @click="goBack">Back</button>
+        <!-- {{slackFormInstances[0]}} -->
         <div :class="i % 2 === 0 ? 'light-back padding' : 'pure-white padding'" v-for="(slackFormInstance, i) in slackFormInstances" :key="slackFormInstance.id">
           <h3
             class='click click_width'
             @click="openModal('slackFormInstance', slackFormInstance)"
           >
-            {{ slackFormInstance.templateRef.resource }} {{ slackFormInstance.templateRef.formType }} by {{ getUserName(slackFormInstance.user) }}
+            {{ slackFormInstance.templateRef.resource }} {{ slackFormInstance.templateRef.formType }} by {{ getUserName(slackFormInstance.user) }} {{slackFormInstance.submissionDate ? `at ${formatDateTime(slackFormInstance.submissionDate)} from ${slackFormInstance.updateSource}` : `(Not Submitted)`}} 
           </h3>
         </div>
       </template>
@@ -623,6 +645,7 @@ export default {
       }
     },
     formatDateTime(input) {
+      console.log('slackFormInstances', this.slackFormInstances)
       var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
       if (!input || !input.match(pattern)) {
         return null
@@ -685,6 +708,60 @@ export default {
       this.contentType = ''
       this.contentModalInfo = null
     },
+    onCopy: function () {
+      this.$toast('Copied', {
+        timeout: 2000,
+        position: 'top-left',
+        type: 'success',
+        toastClassName: 'custom',
+        bodyClassName: ['custom'],
+      })
+    },
+    onError: function () {
+      this.$toast('Error copying template', {
+        timeout: 2000,
+        position: 'top-left',
+        type: 'error',
+        toastClassName: 'custom',
+        bodyClassName: ['custom'],
+      })
+    },
+    getObjString(obj, i) {
+      const stringObj = `
+      ${i}: {
+        creates: {
+            accounts: ${obj.creates.accounts}
+            contacts: ${obj.creates.contacts}
+            opportunities: ${obj.creates.opportunities}
+            products: ${obj.creates.products}
+            total: ${obj.creates.total}
+          }
+          date: ${obj.date}
+          updates: {
+            alert: ${obj.updates.alert}
+            command: ${obj.updates.command}
+            meeting: ${obj.updates.meeting}
+            pipeline: ${obj.updates.pipeline}
+            total: ${obj.updates.total}
+          }
+          users: ${obj.users}
+          workflows: ${obj.workflows}
+        }
+      }
+      `
+      return stringObj
+    },
+    formatCopyObject(obj) {
+      let string = '';
+      if (obj.length) {
+        for (let i = 0; i < obj.length; i++) {
+          string += this.getObjString(obj[i], i+1)
+        }
+      } else {
+        string += this.getObjString(obj, 1)
+      }
+      return string;
+    },
     slackFormLabel({ formType, resource }) {
       let formattedFormType = formType[0]
       for (let i = 1; i < formType.length; i++) {
@@ -743,12 +820,12 @@ export default {
 .staff {
   margin-top: 3rem;
   display: flex;
-  height: 100vh;
+  height: 90vh;
 }
 
 .staff__drawer {
   width: 20vw;
-  border-right: 1px solid black;
+  border-right: 1px solid $very-light-gray;
   padding-right: 1rem;
 }
 
@@ -976,6 +1053,9 @@ input[type='search']:focus {
   align-items: center;
   justify-content: space-between;
 }
+.copy-margin {
+  margin-right: 1rem;
+}
 .sticky {
   position: sticky;
   background-color: white;
@@ -1048,6 +1128,8 @@ input[type='search']:focus {
 }
 .underline {
   text-decoration: underline;
+  font-weight: 900;
+  font-size: 1.05rem;
 }
 .invite-list {
   &__container {
