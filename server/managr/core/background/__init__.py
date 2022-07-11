@@ -218,25 +218,7 @@ def _process_calendar_details(user_id):
     user = User.objects.get(id=user_id)
     events = user.nylas._get_calendar_data()
     if events:
-        processed_data = []
-        for event in events:
-            description = event.get("description", None)
-            if description is None:
-                description = "No Description"
-            data = {}
-            data["title"] = event.get("title", None)
-            data["owner"] = event.get("owner", None)
-            data["participants"] = event.get("participants", None)
-            data["description"] = description
-            conferencing = event.get("conferencing", None)
-            if conferencing:
-                if "Zoom" in description:
-                    data["provider"] = "Zoom Meeting"
-                else:
-                    data["provider"] = conferencing["provider"]
-            data["times"] = event.get("when", None)
-            processed_data.append(data)
-        return processed_data
+        return events
     else:
         return None
 
