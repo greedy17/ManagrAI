@@ -633,32 +633,15 @@ def _process_add_call_to_sf(workflow_id, *args):
     review_form = workflow.forms.filter(template__form_type=slack_consts.FORM_TYPE_UPDATE).first()
     subject = review_form.saved_data.get("meeting_type")
     description = review_form.saved_data.get("meeting_comments")
-    if workflow.meeting:
-        title = workflow.meeting.topic if subject is None else subject
-        user_timezone = user.zoom_account.timezone
-        start_time = workflow.meeting.start_time
-        end_time = workflow.meeting.end_time
-
-    else:
-        title = workflow.non_zoom_meeting.event_data["title"] if subject is None else subject
-        user_timezone = user.timezone
-        start_time = datetime.utcfromtimestamp(
-            int(workflow.non_zoom_meeting.event_data["times"]["start_time"])
-        )
-        end_time = datetime.utcfromtimestamp(
-            int(workflow.non_zoom_meeting.event_data["times"]["end_time"])
-        )
-    formatted_start = (
-        datetime.strftime(
-            start_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p"
-        )
-        if start_time
-        else start_time
+    title = workflow.meeting.topic
+    user_timezone = user.timezone
+    start_time = workflow.meeting.start_time
+    end_time = workflow.meeting.end_time
+    formatted_start = datetime.strftime(
+        start_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p"
     )
-    formatted_end = (
-        datetime.strftime(end_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p")
-        if end_time
-        else end_time
+    formatted_end = datetime.strftime(
+        end_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p"
     )
     data = dict(
         Subject=f"Zoom Meeting - {title}",
@@ -932,7 +915,7 @@ def _process_create_new_contacts(workflow_id, *args):
         return logger.exception(f"User not found unable to log call {str(user.id)}")
     if not hasattr(user, "salesforce_account"):
         return logger.exception("User does not have a salesforce account cannot push to sf")
-    meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
+    meeting = workflow.meeting
     attempts = 1
     if not len(args):
         return

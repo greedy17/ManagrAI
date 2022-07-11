@@ -698,11 +698,9 @@ class UserForecast(models.Model):
         return "Opportunity already in current forecast state"
 
     def remove_from_state(self, id):
-        from managr.opportunity.models import Opportunity
 
-        opp = Opportunity.objects.get(integration_id=id)
-        if opp.integration_id in self.state.keys():
-            del self.state[opp.integration_id]
+        if id in self.state.keys():
+            del self.state[id]
             self.save()
             return "Opportunity removed from current forecast state"
         return "Opportunity not in current forecast state"
