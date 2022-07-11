@@ -160,13 +160,8 @@ def process_zoom_meeting_data(payload, context):
         form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
         current_form_ids.append(str(form.id))
         form.save_form(state)
-    if workflow.meeting:
-        contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
-    else:
-        contact_ids = [
-            participant["_form"] for participant in workflow.non_zoom_meeting.participants
-        ]
-        contact_forms = OrgCustomSlackFormInstance.objects.filter(id__in=contact_ids)
+    contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
+
     ops = [
         # update
         f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}",
@@ -826,7 +821,7 @@ def process_update_meeting_contact(payload, context):
         form = OrgCustomSlackFormInstance.objects.get(id=contact["_form"])
     else:
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-        meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
+        meeting = workflow.meeting
         contact = dict(
             *filter(
                 lambda contact: contact["_tracking_id"] == context.get("tracking_id"),
@@ -891,8 +886,7 @@ def process_update_meeting_contact(payload, context):
             "original_message_channel": context.get("original_message_channel"),
             "original_message_timestamp": context.get("original_message_timestamp"),
         }
-        meeting_type = "zoom" if workflow.meeting else "non-zoom"
-        if check_contact_last_name(workflow.id, meeting_type):
+        if check_contact_last_name(workflow.id):
             update_res = slack_requests.update_channel_message(
                 context.get("original_message_channel"),
                 context.get("original_message_timestamp"),

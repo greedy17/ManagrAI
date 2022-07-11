@@ -341,7 +341,7 @@ class SalesforceSObjectViewSet(
         query = (
             sobject["model"].objects.filter(id=param_resource_id)
             if param_resource_id
-            else sobject["model"].objects.filter(owner=self.request.user)
+            else sobject["model"].objects.for_user(self.request.user)
         )
         if for_filter:
             filtered_query = SalesforceSObjectFilterSet.for_filter(
@@ -854,7 +854,10 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             Q(user=user, datetime_created__range=(start, end))
         ).order_by("-datetime_created")
         logger.info(f"Pulled workflow for user {user.full_name}: {len(meetings)}")
-        return meetings
+        if len(meetings):
+            return meetings
+        else:
+            return MeetingWorkflow.objects.none()
 
     @action(
         methods=["post"],
@@ -874,6 +877,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             resource_type, slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
+        print(workflow.forms.all())
         return Response(data=data)
 
     @action(
@@ -887,7 +891,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
 
         request_data = self.request.data
         workflow = MeetingWorkflow.objects.get(id=request_data.get("workflow_id"))
-        meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
+        meeting = workflow.meeting
         contact = dict(
             *filter(
                 lambda contact: contact["_tracking_id"] == request_data.get("tracking_id"),
@@ -911,30 +915,18 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             "id": contact.get("id", None),
             "__has_changes": True,
         }
-        if workflow.non_zoom_meeting is not None:
-            part_index = None
-            for index, participant in enumerate(workflow.participants):
-                if participant["_tracking_id"] == new_contact["_tracking_id"]:
-                    part_index = index
-                    break
-            workflow.participants = [
-                *workflow.participants[:part_index],
-                new_contact,
-                *workflow.participants[part_index + 1 :],
-            ]
-            workflow.save()
-        else:
-            part_index = None
-            for index, participant in enumerate(meeting.participants):
-                if participant["_tracking_id"] == new_contact["_tracking_id"]:
-                    part_index = index
-                    break
-            meeting.participants = [
-                *meeting.participants[:part_index],
-                new_contact,
-                *meeting.participants[part_index + 1 :],
-            ]
-            meeting.save()
+
+        part_index = None
+        for index, participant in enumerate(meeting.participants):
+            if participant["_tracking_id"] == new_contact["_tracking_id"]:
+                part_index = index
+                break
+        meeting.participants = [
+            *meeting.participants[:part_index],
+            new_contact,
+            *meeting.participants[part_index + 1 :],
+        ]
+        meeting.save()
         data = meeting.participants
         return Response(data=data)
 
@@ -947,7 +939,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     def remove_participant(self, request, *args, **kwargs):
         request_data = self.request.data
         workflow = MeetingWorkflow.objects.get(id=request_data.get("workflow_id"))
-        meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
+        meeting = workflow.meeting
         for i, part in enumerate(meeting.participants):
             if part["_tracking_id"] == request_data.get("tracking_id"):
                 # remove its form if it exists
@@ -966,11 +958,21 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
     def update_workflow(self, request, *args, **kwargs):
         request_data = self.request.data
+        print(request_data)
         user = request.user
+        stage_form_ids = request_data.get("stage_form_id", None)
         workflow = MeetingWorkflow.objects.get(id=request_data.get("workflow_id"))
-        forms = OrgCustomSlackFormInstance.objects.filter(id__in=request_data.get("stage_form_id"))
+        forms = (
+            OrgCustomSlackFormInstance.objects.filter(id__in=request_data.get("stage_form_id"))
+            if stage_form_ids
+            else []
+        )
         current_form_ids = []
-        main_form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
+        main_form = (
+            workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE)
+            .exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT)
+            .first()
+        )
         current_form_ids.append(str(main_form.id))
         main_form.save_form(request_data.get("form_data"), False)
         if len(forms):
@@ -980,15 +982,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
                 form.save_form(request_data.get("form_data"), False)
 
         # otherwise we save the meeting review form
-        if workflow.meeting:
-            contact_forms = workflow.forms.filter(
-                template__resource=slack_const.FORM_RESOURCE_CONTACT
-            )
-        else:
-            contact_ids = [
-                participant["_form"] for participant in workflow.non_zoom_meeting.participants
-            ]
-            contact_forms = OrgCustomSlackFormInstance.objects.filter(id__in=contact_ids)
+        contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
         ops = [
             f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}",
             f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}",

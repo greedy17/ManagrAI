@@ -128,19 +128,20 @@ def _send_slack_int_email(user):
 def _process_calendar_details(user_id):
     user = User.objects.get(id=user_id)
     events = user.nylas._get_calendar_data()
+    print(events)
     if events:
-        processed_data = []
-        for event in events:
-            data = {}
-            data["title"] = event.get("title", None)
-            data["owner"] = event.get("owner", None)
-            data["participants"] = event.get("participants", None)
-            conferencing = event.get("conferencing", None)
-            if conferencing:
-                data["provider"] = conferencing["provider"]
-            data["times"] = event.get("when", None)
-            processed_data.append(data)
-        return processed_data
+        # processed_data = []
+        # for event in events:
+        #     data = {}
+        #     data["title"] = event.get("title", None)
+        #     data["owner"] = event.get("owner", None)
+        #     data["participants"] = event.get("participants", None)
+        #     conferencing = event.get("conferencing", None)
+        #     if conferencing:
+        #         data["provider"] = conferencing["provider"]
+        #     data["times"] = event.get("when", None)
+        #     processed_data.append(data)
+        return events
     else:
         return None
 

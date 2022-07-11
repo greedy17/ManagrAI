@@ -319,9 +319,9 @@ def generate_call_block(call_res, resource_id=None):
     return blocks
 
 
-def check_contact_last_name(meeting_id, meeting_type):
+def check_contact_last_name(meeting_id):
     workflow = MeetingWorkflow.objects.get(id=meeting_id)
-    meeting = workflow.meeting if meeting_type == "zoom" else workflow.non_zoom_meeting
+    meeting = workflow.meeting
     if meeting:
         contacts = meeting.participants
         for contact in contacts:
