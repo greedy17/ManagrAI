@@ -341,7 +341,7 @@ class SalesforceSObjectViewSet(
         query = (
             sobject["model"].objects.filter(id=param_resource_id)
             if param_resource_id
-            else sobject["model"].objects.for_user(self.request.user)
+            else sobject["model"].objects.filter(owner=self.request.user)
         )
         if for_filter:
             filtered_query = SalesforceSObjectFilterSet.for_filter(
@@ -484,8 +484,6 @@ class SalesforceSObjectViewSet(
     )
     def get_current_values(self, request, *args, **kwargs):
         user = request.user
-        print(request.GET.get("resource_type"))
-        print(request.GET.get("resource_id"))
         resource_type = request.GET.get("resource_type")
         resource_id = request.GET.get("resource_id", None)
         route = model_routes[resource_type]
@@ -766,42 +764,40 @@ class SalesforceSObjectViewSet(
         currenttime = datetime.now()
         to_sync_ids = []
         synced_ids = []
-        if user.user_level in ["MANAGER", "SDR"]:
-            users = User.objects.filter(Q(organization=user.organization, is_active=True))
-            for user in users:
-                if hasattr(user, "salesforce_account"):
-                    sync = SFResourceSync.objects.create(
-                        user=user,
-                        operations_list=operations,
-                        operation_type=sf_consts.SALESFORCE_RESOURCE_SYNC,
-                    )
-                    user_timezone = pytz.timezone(user.timezone)
-                    current = (
-                        pytz.utc.localize(currenttime)
-                        .astimezone(user_timezone)
-                        .strftime("%Y-%m-%d %H:%M:%S")
-                    )
-                    user.salesforce_account.last_sync_time = current
-                    user.salesforce_account.save()
-                    to_sync_ids.append(str(sync.id))
-                    _process_pipeline_sync(str(sync.id))
-        else:
-            sync = SFResourceSync.objects.create(
-                user=user,
-                operations_list=operations,
-                operation_type=sf_consts.SALESFORCE_RESOURCE_SYNC,
-            )
-            user_timezone = pytz.timezone(user.timezone)
+        # if user.user_level in ["MANAGER", "SDR"]:
+        #     users = User.objects.filter(Q(organization=user.organization, is_active=True))
+        #     for user in users:
+        #         if hasattr(user, "salesforce_account"):
+        #             sync = SFResourceSync.objects.create(
+        #                 user=user,
+        #                 operations_list=operations,
+        #                 operation_type=sf_consts.SALESFORCE_RESOURCE_SYNC,
+        #             )
+        #             user_timezone = pytz.timezone(user.timezone)
+        #             current = (
+        #                 pytz.utc.localize(currenttime)
+        #                 .astimezone(user_timezone)
+        #                 .strftime("%Y-%m-%d %H:%M:%S")
+        #             )
+        #             user.salesforce_account.last_sync_time = current
+        #             user.salesforce_account.save()
+        #             to_sync_ids.append(str(sync.id))
+        #             _process_pipeline_sync(str(sync.id))
+        # else:
+        sync = SFResourceSync.objects.create(
+            user=user,
+            operations_list=operations,
+            operation_type=sf_consts.SALESFORCE_RESOURCE_SYNC,
+        )
+        user_timezone = pytz.timezone(user.timezone)
 
-            current = (
-                pytz.utc.localize(currenttime)
-                .astimezone(user_timezone)
-                .strftime("%Y-%m-%d %H:%M:%S")
-            )
-            user.salesforce_account.last_sync_time = current
-            user.salesforce_account.save()
-            to_sync_ids.append(str(sync.id))
-            _process_pipeline_sync(str(sync.id))
+        current = (
+            pytz.utc.localize(currenttime).astimezone(user_timezone).strftime("%Y-%m-%d %H:%M:%S")
+        )
+        user.salesforce_account.last_sync_time = current
+        user.salesforce_account.save()
+        to_sync_ids.append(str(sync.id))
+        _process_pipeline_sync(str(sync.id))
         attempts = 1
         logger.info(f"TO SYNC: {to_sync_ids}")
         logger.info(f"SYNCED: {synced_ids}")
@@ -875,8 +871,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type,
-            slack_const.FORM_TYPE_UPDATE,
+            resource_type, slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)
