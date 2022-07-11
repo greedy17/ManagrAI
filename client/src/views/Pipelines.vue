@@ -1191,7 +1191,12 @@
         </div>
         <div class="flex-row">
           <div v-if="!selectedWorkflow" class="search-bar">
-            <input type="search" v-model="filterText" placeholder="search" />
+            <input
+              type="search"
+              v-model="filterText"
+              @input="getFilteredOpps"
+              placeholder="search"
+            />
             <img src="@/assets/images/search.svg" style="height: 1rem" alt="" />
           </div>
           <div v-else class="search-bar">
@@ -1199,7 +1204,12 @@
             <img src="@/assets/images/search.svg" style="height: 1rem" alt="" />
           </div>
           <button @click="createOppInstance()" class="add-button">
-            <img src="@/assets/images/plusOne.svg" class="fullInvert" style="height: 1rem" alt="" />
+            <img
+              src="@/assets/images/plusOne.svg"
+              class="fullInvert"
+              style="height: 0.8rem"
+              alt=""
+            />
             Create Opportunity
           </button>
           <button @click="manualSync" class="select-btn">
@@ -1412,6 +1422,13 @@
         </div>
       </div>
 
+      <div class="results">
+        <h6 style="color: #9b9b9b">
+          {{ !currentWorkflowName ? currentList : currentWorkflowName }}:
+          <span>{{ selectedWorkflow ? currentWorkflow.length : oppTotal }}</span>
+        </h6>
+      </div>
+
       <section v-if="!selectedWorkflow && !loadingWorkflows" class="table-section">
         <div v-outside-click="emitCloseEdit" class="table">
           <PipelineHeader
@@ -1425,7 +1442,7 @@
           <PipelineTableRow
             ref="pipelineTableChild"
             :key="i"
-            v-for="(opp, i) in allOppsFiltered"
+            v-for="(opp, i) in allOpps"
             @create-form="createFormInstance(opp.id, opp.integration_id)"
             @get-notes="getNotes(opp.id)"
             @checked-box="selectPrimaryCheckbox"
@@ -1512,16 +1529,8 @@
       </section>
 
       <div class="row between height-s">
-        <div class="results">
-          <h6 style="color: #9b9b9b">
-            {{ !currentWorkflowName ? currentList : currentWorkflowName }}
-            <!-- <span>{{ selectedWorkflow ? currentWorkflow.length : oppTotal }}</span> -->
-          </h6>
-        </div>
-
         <div class="pagination">
           <h6>
-            <!-- <span>20 per page</span> -->
             <span
               >{{ checkStartingPageNumber() }} -
               {{ selectedWorkflow ? currentWorkflow.length : checkEndingPageNumber() }} of
@@ -1766,8 +1775,8 @@ export default {
   async created() {
     this.templates.refresh()
     this.getObjects()
-    this.getAllForms()
     this.getObjectsForWorkflows()
+    this.getAllForms()
   },
   beforeMount() {
     this.getUsers()
@@ -1783,11 +1792,35 @@ export default {
     updateOppForm: 'setForms',
     currentCheckList: 'addToForecastList',
     accountSobjectId: 'getInitialAccounts',
-    // currentOperators: 'removeDupes',
   },
   methods: {
-    // removeDupes() {
-    // },
+    async getFilteredOpps() {
+      try {
+        const res = await SObjects.api.getObjects('Opportunity', 1, true, [
+          ['CONTAINS', 'Name', this.filterText.toLowerCase()],
+        ])
+        console.log(res)
+        this.allOpps = res.results
+        this.originalList = res.results
+        res.next ? (this.hasNext = true) : (this.hasNext = false)
+        res.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+        this.oppTotal = res.count
+
+        if (this.currentList === 'Closing this month') {
+          this.stillThisMonth()
+        } else if (this.currentList === 'Closing next month') {
+          this.stillNextMonth()
+        }
+      } catch (e) {
+        this.$toast('Error gathering Opportunities!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      }
+    },
     checkStartingPageNumber() {
       if (this.currentPage === 1) {
         return this.currentPage
@@ -1917,6 +1950,8 @@ export default {
           })
           .then(async () => {
             let updatedRes = await SObjects.api.getObjects('Opportunity')
+            let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
+            this.allOppsForWorkflows = wfr.results
             this.allOpps = updatedRes.results
             this.originalList = updatedRes.results
             if (this.activeFilters.length) {
@@ -1982,6 +2017,7 @@ export default {
         this.filters.push([this.operatorValue, this.filterApiName, value])
         this.setFilters[this.activeFilters.length] = [this.operatorValue, value]
       }
+
       try {
         const res = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
         if (this.selectedWorkflow) {
@@ -2320,16 +2356,16 @@ export default {
     },
     onCheckAll() {
       if (this.primaryCheckList.length < 1) {
-        for (let i = 0; i < this.allOppsFiltered.length; i++) {
-          this.primaryCheckList.push(this.allOppsFiltered[i].id)
+        for (let i = 0; i < this.allOpps.length; i++) {
+          this.primaryCheckList.push(this.allOpps[i].id)
         }
       } else if (
         this.primaryCheckList.length > 0 &&
-        this.primaryCheckList.length < this.allOppsFiltered.length
+        this.primaryCheckList.length < this.allOpps.length
       ) {
-        for (let i = 0; i < this.allOppsFiltered.length; i++) {
-          !this.primaryCheckList.includes(this.allOppsFiltered[i].id)
-            ? this.primaryCheckList.push(this.allOppsFiltered[i].id)
+        for (let i = 0; i < this.allOpps.length; i++) {
+          !this.primaryCheckList.includes(this.allOpps[i].id)
+            ? this.primaryCheckList.push(this.allOpps[i].id)
             : (this.primaryCheckList = this.primaryCheckList)
         }
       } else {
@@ -2468,7 +2504,7 @@ export default {
             )[0].account_ref.name)
           : (this.currentAccount = 'Account')
       } catch (e) {
-        this.$toast('Error creating update form', {
+        this.$toast('Error creating update form, close modal and try again.', {
           timeout: 2000,
           position: 'top-left',
           type: 'error',
@@ -2511,7 +2547,7 @@ export default {
         this.currentVals = res.current_values
         this.oppInstanceId = res.form_id
       } catch (e) {
-        this.$toast('Error building update form', {
+        this.$toast('Error building update form, close modal and try again.', {
           timeout: 2000,
           position: 'top-left',
           type: 'error',
@@ -2873,7 +2909,7 @@ export default {
         )
         this.filteredWorkflows = this.currentWorkflow
       } catch (error) {
-        this.$toast('Error updateing workflow', {
+        this.$toast('Error updating workflow', {
           timeout: 2000,
           position: 'top-left',
           type: 'error',
@@ -3424,9 +3460,11 @@ export default {
 }
 .results {
   margin: 0;
+  padding-left: 4px;
+  height: 34px;
   display: flex;
   justify-content: flex-start;
-  width: 30vw;
+  align-items: center;
 }
 .pagination {
   width: 50vw;
@@ -3510,7 +3548,8 @@ select {
 }
 .select-btn1 {
   border: 0.7px solid $very-light-gray;
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3528,7 +3567,7 @@ select {
 }
 .select-btn {
   border: 0.5px solid $dark-green;
-  padding: 0.475rem 1rem;
+  padding: 0.375rem 0.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3542,7 +3581,7 @@ select {
 
   img {
     filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
-    height: 1rem;
+    height: 1rem !important;
   }
 }
 .work-btn {
@@ -3625,7 +3664,6 @@ h3 {
   min-height: 50vh;
   max-height: 72vh;
   overflow: scroll;
-  margin-top: 1.5rem;
   border-radius: 8px;
   border: 1px solid #e8e8e8;
   border-collapse: separate;
@@ -3881,8 +3919,7 @@ section {
   justify-content: space-between;
 }
 .pipelines {
-  padding: 4.5rem 1rem 0.5rem 0.5rem;
-
+  padding: 4.2rem 1.25rem 0.75rem 0.75rem;
   color: $base-gray;
   margin: 0 1rem 0 0.5rem;
 }
@@ -3926,7 +3963,8 @@ section {
   align-items: center;
   border: none;
   margin: 0 0.5rem 0 0;
-  padding: 0.5rem 1.25rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 12px;
   border-radius: 6px;
   background-color: $dark-green;
   cursor: pointer;
@@ -3937,8 +3975,8 @@ section {
   display: flex;
   align-items: center;
   border: none;
-  padding: 0.5rem 1rem;
-  font-size: 16px;
+  padding: 0.4rem 0.75rem;
+  font-size: 14px;
   border-radius: 6px;
   background-color: $dark-green;
   cursor: pointer;
@@ -3959,7 +3997,7 @@ section {
   box-shadow: 1px 2px 2px $very-light-gray;
 }
 .search-bar {
-  height: 2rem;
+  height: 1.8rem;
   background-color: $off-white;
   border: 0.7px solid $gray;
   display: flex;
@@ -4238,7 +4276,8 @@ a {
   flex-direction: row;
   align-items: center;
   justify-content: flex-end;
-  margin: 8px 0px 0px 0px;
+  margin: 4px 0px 0px 0px;
+  height: 30px;
 
   &-num {
     margin-right: 8px;
