@@ -2649,11 +2649,13 @@ export default {
     },
     setUpdateValues(key, val, multi) {
       if (multi) {
-        this.formData[key] = this.formData[key] ? this.formData[key] + ';' + val : val
+        this.formData[key] = this.formData[key]
+          ? this.formData[key] + ';' + val
+          : val.replace(/&#39;/g, '')
       }
 
       if (val && !multi) {
-        this.formData[key] = val
+        this.formData[key] = val.replace(/&#39;/g, '')
       }
       if (key === 'StageName') {
         this.stagesWithForms.includes(val)
@@ -2663,7 +2665,7 @@ export default {
     },
     setUpdateValidationValues(key, val) {
       if (val) {
-        this.formData[key] = val
+        this.formData[key] = val.replace(/&#39;/g, '')
       }
     },
     async updateOpps() {
