@@ -217,7 +217,10 @@ def init_fake_meeting(request):
     user = slack.user
     if not user.has_zoom_integration:
         return Response(
-            data={"response_type": "ephemeral", "text": "Sorry I cant find your zoom account",}
+            data={
+                "response_type": "ephemeral",
+                "text": "Sorry I cant find your zoom account",
+            }
         )
     text = request.data.get("text", "")
     if len(text):
@@ -245,7 +248,10 @@ def init_fake_meeting(request):
     )
     if not meeting_uuid:
         return Response(
-            data={"response_type": "ephemeral", "text": "Sorry I cant find your zoom meeting",}
+            data={
+                "response_type": "ephemeral",
+                "text": "Sorry I cant find your zoom meeting",
+            }
         )
     meeting = Meeting.objects.filter(meeting_id=meeting_uuid).first()
     if meeting:
@@ -263,7 +269,12 @@ def init_fake_meeting(request):
             str(zoom_account.user.id), meeting_uuid, original_duration, send_slack=False
         )
         if not workflow:
-            return Response(data={"response_type": "ephemeral", "text": "An error occured",})
+            return Response(
+                data={
+                    "response_type": "ephemeral",
+                    "text": "An error occured",
+                }
+            )
         # get meeting
         workflow.begin_communication(now=True)
         workflow = MeetingWorkflow.objects.filter(meeting__meeting_id=meeting_uuid).first()
@@ -305,6 +316,7 @@ def init_fake_meeting(request):
                     block_builders.context_block(f"Owned by {user.full_name}"),
                 ],
             )
+            print(res)
         except InvalidBlocksException as e:
             return logger.exception(
                 f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
@@ -393,7 +405,8 @@ def fake_recording(request):
             user.organization.slack_integration.access_token,
             text="Your meeting recording is ready!",
             block_set=get_block_set(
-                "zoom_recording_blockset", {"u": str(user.id), "url": download_url, "topic": topic},
+                "zoom_recording_blockset",
+                {"u": str(user.id), "url": download_url, "topic": topic},
             ),
         )
     except Exception as e:
@@ -431,7 +444,11 @@ def schedule_zoom_meeting(request):
         )
     for u in internal:
         participant_data.append(
-            {"email": u.email, "name": f"{u.first_name} {u.last_name}", "status": "noreply",}
+            {
+                "email": u.email,
+                "name": f"{u.first_name} {u.last_name}",
+                "status": "noreply",
+            }
         )
     for participant in extra_participants:
         participant_data.append({"email": participant})

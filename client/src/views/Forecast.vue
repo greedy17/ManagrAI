@@ -627,7 +627,7 @@ export default {
     },
     async getOpportunites() {
       try {
-        let res = await SObjects.api.getObjects('Opportunity')
+        let res = await SObjects.api.getObjectsForWorkflows('Opportunity')
         this.allOpps = res.results
       } catch (e) {
         this.$toast('Error gathering opportunities', {
