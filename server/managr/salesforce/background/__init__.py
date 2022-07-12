@@ -633,7 +633,6 @@ def _process_add_call_to_sf(workflow_id, *args):
     review_form = workflow.forms.filter(template__form_type=slack_consts.FORM_TYPE_UPDATE).first()
     subject = review_form.saved_data.get("meeting_type")
     description = review_form.saved_data.get("meeting_comments")
-    title = workflow.meeting.topic
     user_timezone = user.timezone
     start_time = workflow.meeting.start_time
     end_time = workflow.meeting.end_time
@@ -644,7 +643,7 @@ def _process_add_call_to_sf(workflow_id, *args):
         end_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p"
     )
     data = dict(
-        Subject=f"Zoom Meeting - {title}",
+        Subject=f"Meeting - {subject}",
         Description=f"{'No comments' if description is None else description}, this meeting started on {formatted_start} and ended on {formatted_end} ",
         WhatId=workflow.resource.integration_id,
         ActivityDate=start_time.strftime("%Y-%m-%d"),
