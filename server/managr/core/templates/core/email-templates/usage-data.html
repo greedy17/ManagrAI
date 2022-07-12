@@ -1,0 +1,42 @@
+<br />
+<h3>Current usage data</h3>
+<br />
+
+<table>
+  <tbody>
+    <tr>
+      <th>End Month Data</th>
+      <th>Users</th>
+      <th>Workflows</th>
+      <th>Total Updates</th>
+      <th>Workflow Updates</th>
+      <th>Command Updates</th>
+      <th>Meeting Updates</th>
+      <th>Pipeline Updates</th>
+      <th>Total Creates</th>
+      <th>Contact Creates</th>
+      <th>Account Creates</th>
+      <th>Opportunity Creates</th>
+      <th>Product Creates</th>
+    </tr>
+    {% for key,value in data.items %}
+        <tr>
+            <th>{{key}}</th>
+            <td>{{ value.users }}</td>
+            <td>{{ value.workflows }}</td>
+            <td>{{ value.updates.total }}</td>
+            <td>{{ value.updates.alert }}</td>
+            <td>{{ value.updates.command }}</td>
+            <td>{{ value.updates.meeting }}</td>
+            <td>{{ value.updates.contact }}</td>
+            <td>{{ value.creates.total }}</td>
+            <td>{{ value.creates.contacts }}</td>
+            <td>{{ value.creates.accounts }}</td>
+            <td>{{ value.creates.opportunities }}</td>
+            <td>{{ value.creates.products }}</td>
+        </tr>    
+    {% endfor %}
+
+  </tbody>
+</table>
+  

@@ -495,8 +495,8 @@
               <p>Notes:</p>
               <textarea
                 id="user-input"
-                ccols="30"
-                rows="4"
+                cols="30"
+                rows="8"
                 style="width: 36.5vw; border-radius: 0.2rem"
                 @input=";(value = $event.target.value), replaceURLs(value, field.apiName)"
               >
@@ -942,10 +942,7 @@
                 All Opportunities
                 <span
                   class="filter"
-                  v-if="
-                    currentList === 'All Opportunities' &&
-                    currentWorkflowName === 'Active Workflows'
-                  "
+                  v-if="currentList === 'All Opportunities' && !currentWorkflowName"
                 >
                   active</span
                 >
@@ -955,9 +952,7 @@
               Closing this month
               <span
                 class="filter"
-                v-if="
-                  currentList === 'Closing this month' && currentWorkflowName === 'Active Workflows'
-                "
+                v-if="currentList === 'Closing this month' && !currentWorkflowName"
               >
                 active</span
               >
@@ -966,9 +961,7 @@
               Closing next month
               <span
                 class="filter"
-                v-if="
-                  currentList === 'Closing next month' && currentWorkflowName === 'Active Workflows'
-                "
+                v-if="currentList === 'Closing next month' && !currentWorkflowName"
               >
                 active</span
               >
@@ -1198,7 +1191,12 @@
         </div>
         <div class="flex-row">
           <div v-if="!selectedWorkflow" class="search-bar">
-            <input type="search" v-model="filterText" placeholder="search" />
+            <input
+              type="search"
+              v-model="filterText"
+              @input="getFilteredOpps"
+              placeholder="search"
+            />
             <img src="@/assets/images/search.svg" style="height: 1rem" alt="" />
           </div>
           <div v-else class="search-bar">
@@ -1206,7 +1204,12 @@
             <img src="@/assets/images/search.svg" style="height: 1rem" alt="" />
           </div>
           <button @click="createOppInstance()" class="add-button">
-            <img src="@/assets/images/plusOne.svg" class="fullInvert" style="height: 1rem" alt="" />
+            <img
+              src="@/assets/images/plusOne.svg"
+              class="fullInvert"
+              style="height: 0.8rem"
+              alt=""
+            />
             Create Opportunity
           </button>
           <button @click="manualSync" class="select-btn">
@@ -1214,12 +1217,6 @@
           </button>
         </div>
       </section>
-      <div class="results">
-        <h6 style="color: #9b9b9b">
-          {{ !currentWorkflowName ? currentList : currentWorkflowName }}:
-          <span>{{ selectedWorkflow ? currentWorkflow.length : allOpps.length }}</span>
-        </h6>
-      </div>
 
       <div class="adding-stage-gate2" v-if="stageFormOpen">
         <div class="adding-stage-gate2__header">
@@ -1425,6 +1422,13 @@
         </div>
       </div>
 
+      <div class="results">
+        <h6 style="color: #9b9b9b">
+          {{ !currentWorkflowName ? currentList : currentWorkflowName }}:
+          <span>{{ selectedWorkflow ? currentWorkflow.length : oppTotal }}</span>
+        </h6>
+      </div>
+
       <section v-if="!selectedWorkflow && !loadingWorkflows" class="table-section">
         <div v-outside-click="emitCloseEdit" class="table">
           <PipelineHeader
@@ -1438,10 +1442,10 @@
           <PipelineTableRow
             ref="pipelineTableChild"
             :key="i"
-            v-for="(opp, i) in allOppsFiltered"
-            @create-form="createFormInstance(opp.id)"
+            v-for="(opp, i) in allOpps"
+            @create-form="createFormInstance(opp.id, opp.integration_id)"
             @get-notes="getNotes(opp.id)"
-            @checked-box="selectPrimaryCheckbox(opp.id)"
+            @checked-box="selectPrimaryCheckbox"
             @inline-edit="inlineUpdate"
             @open-stage-form="openStageForm"
             @current-inline-row="changeCurrentRow"
@@ -1523,6 +1527,27 @@
           <PipelineLoader />
         </div>
       </section>
+
+      <div class="row between height-s">
+        <div class="pagination">
+          <h6>
+            <span
+              >{{ checkStartingPageNumber() }} -
+              {{ selectedWorkflow ? currentWorkflow.length : checkEndingPageNumber() }} of
+              {{ selectedWorkflow ? currentWorkflow.length : oppTotal }}</span
+            >
+          </h6>
+
+          <button v-if="hasPrev" @click="prevPage" class="pag-button">
+            <img src="@/assets/images/rightArrow.svg" class="rotate" height="12px" alt="" />
+          </button>
+          <span class="pagination-num">{{ this.currentPage }}</span>
+          <!-- <span class="pagination-num2">{{ this.currentPage + 1 }}</span> -->
+          <button v-if="hasNext" @click="nextPage" class="pag-button">
+            <img src="@/assets/images/rightArrow.svg" height="12px" alt="" />
+          </button>
+        </div>
+      </div>
     </div>
     <div v-if="loading">
       <Loader loaderText="Pulling in your latest Salesforce data" />
@@ -1555,6 +1580,11 @@ export default {
   },
   data() {
     return {
+      integrationId: null,
+      hasNext: false,
+      hasPrev: false,
+      currentPage: 1,
+      oppTotal: 0,
       notesLength: 0,
       days: {
         0: 'Sunday',
@@ -1662,6 +1692,9 @@ export default {
       operatorsLength: 0,
       stageGateId: null,
       forecastList: [],
+      stageIntegrationId: null,
+      stageId: null,
+      allOppsForWorkflows: null,
       booleans: ['true', 'false'],
       ladFilter: {
         apiName: 'LastActivityDate',
@@ -1742,6 +1775,7 @@ export default {
   async created() {
     this.templates.refresh()
     this.getObjects()
+    this.getObjectsForWorkflows()
     this.getAllForms()
   },
   beforeMount() {
@@ -1758,11 +1792,59 @@ export default {
     updateOppForm: 'setForms',
     currentCheckList: 'addToForecastList',
     accountSobjectId: 'getInitialAccounts',
-    // currentOperators: 'removeDupes',
   },
   methods: {
-    // removeDupes() {
-    // },
+    async getFilteredOpps() {
+      try {
+        const res = await SObjects.api.getObjects('Opportunity', 1, true, [
+          ['CONTAINS', 'Name', this.filterText.toLowerCase()],
+        ])
+        console.log(res)
+        this.allOpps = res.results
+        this.originalList = res.results
+        res.next ? (this.hasNext = true) : (this.hasNext = false)
+        res.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+        this.oppTotal = res.count
+
+        if (this.currentList === 'Closing this month') {
+          this.stillThisMonth()
+        } else if (this.currentList === 'Closing next month') {
+          this.stillNextMonth()
+        }
+      } catch (e) {
+        this.$toast('Error gathering Opportunities!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      }
+    },
+    checkStartingPageNumber() {
+      if (this.currentPage === 1) {
+        return this.currentPage
+      } else {
+        return (this.currentPage - 1) * 20 + 1
+      }
+    },
+    checkEndingPageNumber() {
+      let pages = this.oppTotal / 20
+      if (pages % 1 !== 0) {
+        pages = Math.ceil(pages)
+      }
+      if (this.currentPage * 20 > this.oppTotal) {
+        return this.oppTotal
+      } else {
+        return this.currentPage * 20
+      }
+    },
+    nextPage() {
+      this.getObjects(this.currentPage + 1)
+    },
+    prevPage() {
+      this.getObjects(this.currentPage - 1)
+    },
     replaceURLs(message, field) {
       if (!message) return
 
@@ -1813,16 +1895,21 @@ export default {
         this.primaryCheckList = []
       }
     },
-    openStageForm(field, id) {
+    openStageForm(field, id, integrationId) {
       this.setUpdateValues('StageName', field)
       this.stageGateField = field
       this.stageFormOpen = true
-      this.stageGateInstance(field)
-      this.oppInstance(id)
+      this.stageId = id
+      this.stageIntegrationId = integrationId
+      // this.stageGateInstance(field)
+      // this.oppInstance(id)
     },
     closeStageForm() {
-      this.stageGateField = null
       this.stageFormOpen = false
+      this.stageGateField = null
+      this.resource_id = null
+      this.stageId = null
+      this.stageIntegrationId = null
     },
     async getReferenceFieldList(key, val, type, eventVal) {
       try {
@@ -1848,51 +1935,56 @@ export default {
     emitCloseEdit() {
       this.closeInline += 1
     },
-    async inlineUpdate(formData, id) {
+    async inlineUpdate(formData, id, integrationId) {
       this.inlineLoader = true
       try {
         const res = await SObjects.api
-          .createFormInstance({
-            resourceType: 'Opportunity',
-            formType: 'UPDATE',
-            resourceId: id,
+          .updateResource({
+            form_data: formData,
+            resource_type: 'Opportunity',
+            form_type: 'UPDATE',
+            resource_id: id,
+            integration_ids: [integrationId],
+            from_workflow: this.selectedWorkflow ? true : false,
+            workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
           })
-          .then(async (res) => {
-            SObjects.api
-              .updateResource({
-                form_id: [res.form_id],
-                form_data: formData,
-              })
-              .then(async () => {
-                let updatedRes = await SObjects.api.getObjects('Opportunity')
-                this.allOpps = updatedRes.results
-                this.originalList = updatedRes.results
-                if (this.activeFilters.length) {
-                  this.getFilteredObjects(this.updateFilterValue)
-                }
-                if (this.currentList === 'Closing this month') {
-                  this.stillThisMonth()
-                } else if (this.currentList === 'Closing next month') {
-                  this.stillNextMonth()
-                }
-                if (this.selectedWorkflow) {
-                  this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
-                }
-              })
+          .then(async () => {
+            if (this.filterText) {
+              let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
+                ['CONTAINS', 'Name', this.filterText],
+              ])
+              let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
+              this.allOppsForWorkflows = wfr.results
+              this.allOpps = updatedRes.results
+              this.originalList = updatedRes.results
+              updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
+              updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+              this.oppTotal = updatedRes.count
+              this.currentPage = 1
+            } else {
+              let updatedRes = await SObjects.api.getObjects('Opportunity', 1)
+              let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
+              this.allOppsForWorkflows = wfr.results
+              this.allOpps = updatedRes.results
+              this.originalList = updatedRes.results
+              updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
+              updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+              this.oppTotal = updatedRes.count
+              this.currentPage = 1
+            }
+
+            if (this.selectedWorkflow) {
+              this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+            }
+            if (this.activeFilters.length) {
+              this.getFilteredObjects(this.updateFilterValue)
+            }
+            if (this.currentList === 'Closing this month') {
+              this.stillThisMonth()
+            } else if (this.currentList === 'Closing next month') {
+              this.stillNextMonth()
+            }
           })
-      } catch (e) {
-        this.$toast('Error updating Opportunity!', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        setTimeout(() => {
-          this.inlineLoader = false
-          this.closeInline += 1
-        }, 1500)
         this.$toast('Salesforce Update Successful', {
           timeout: 2000,
           position: 'top-left',
@@ -1900,6 +1992,13 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.inlineLoader = false
+          this.closeInline += 1
+        }, 1000)
       }
     },
     setOpps() {
@@ -1930,8 +2029,9 @@ export default {
         this.filters.push([this.operatorValue, this.filterApiName, value])
         this.setFilters[this.activeFilters.length] = [this.operatorValue, value]
       }
+
       try {
-        const res = await SObjects.api.getObjects('Opportunity', true, this.filters)
+        const res = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
         if (this.selectedWorkflow) {
           this.allOpps = res.results
           this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
@@ -2233,12 +2333,18 @@ export default {
         })
       }
     },
-    selectPrimaryCheckbox(id) {
+    selectPrimaryCheckbox(id, index) {
       if (this.primaryCheckList.includes(id)) {
         this.primaryCheckList = this.primaryCheckList.filter((opp) => opp !== id)
       } else {
         this.primaryCheckList.push(id)
       }
+
+      // if (this.selectedRows.includes(index)) {
+      //   this.selectedRows = this.selectedRows.filter((i) => i !== index)
+      // } else {
+      //   this.selectedRows.push(index)
+      // }
     },
     selectWorkflowCheckbox(id) {
       if (this.workflowCheckList.includes(id)) {
@@ -2262,16 +2368,16 @@ export default {
     },
     onCheckAll() {
       if (this.primaryCheckList.length < 1) {
-        for (let i = 0; i < this.allOppsFiltered.length; i++) {
-          this.primaryCheckList.push(this.allOppsFiltered[i].id)
+        for (let i = 0; i < this.allOpps.length; i++) {
+          this.primaryCheckList.push(this.allOpps[i].id)
         }
       } else if (
         this.primaryCheckList.length > 0 &&
-        this.primaryCheckList.length < this.allOppsFiltered.length
+        this.primaryCheckList.length < this.allOpps.length
       ) {
-        for (let i = 0; i < this.allOppsFiltered.length; i++) {
-          !this.primaryCheckList.includes(this.allOppsFiltered[i].id)
-            ? this.primaryCheckList.push(this.allOppsFiltered[i].id)
+        for (let i = 0; i < this.allOpps.length; i++) {
+          !this.primaryCheckList.includes(this.allOpps[i].id)
+            ? this.primaryCheckList.push(this.allOpps[i].id)
             : (this.primaryCheckList = this.primaryCheckList)
         }
       } else {
@@ -2381,8 +2487,9 @@ export default {
         })
       }
     },
-    async createFormInstance(id, alertInstanceId = null) {
+    async createFormInstance(id, integrationId, alertInstanceId = null) {
       this.formData = {}
+      this.integrationId = integrationId
       this.stageGateField = null
       this.dropdownLoading = true
       this.editOpModalOpen = true
@@ -2395,26 +2502,21 @@ export default {
       this.alertInstanceId = alertInstanceId
       this.oppId = id
       try {
-        const res = await SObjects.api
-          .createFormInstance({
-            resourceType: 'Opportunity',
-            formType: 'UPDATE',
-            resourceId: id,
-          })
-          .then((res) => {
-            this.currentVals = res.current_values
-            this.instanceId = res.form_id
-            this.currentOwner = this.allUsers.filter(
-              (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
-            )[0].full_name
-            this.allOpps.filter((opp) => opp.id === this.oppId)[0].account_ref
-              ? (this.currentAccount = this.allOpps.filter(
-                  (opp) => opp.id === this.oppId,
-                )[0].account_ref.name)
-              : (this.currentAccount = 'Account')
-          })
+        const res = await SObjects.api.getCurrentValues({
+          resourceType: 'Opportunity',
+          resourceId: id,
+        })
+        this.currentVals = res.current_values
+        this.currentOwner = this.allUsers.filter(
+          (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
+        )[0].full_name
+        this.allOppsForWorkflows.filter((opp) => opp.id === this.oppId)[0].account_ref
+          ? (this.currentAccount = this.allOpps.filter(
+              (opp) => opp.id === this.oppId,
+            )[0].account_ref.name)
+          : (this.currentAccount = 'Account')
       } catch (e) {
-        this.$toast('Error creating update form', {
+        this.$toast('Error creating update form, close modal and try again.', {
           timeout: 2000,
           position: 'top-left',
           type: 'error',
@@ -2457,7 +2559,7 @@ export default {
         this.currentVals = res.current_values
         this.oppInstanceId = res.form_id
       } catch (e) {
-        this.$toast('Error building update form', {
+        this.$toast('Error building update form, close modal and try again.', {
           timeout: 2000,
           position: 'top-left',
           type: 'error',
@@ -2488,56 +2590,72 @@ export default {
     pushCloseDate() {
       if (this.selectedWorkflow) {
         for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
-          this.$refs.workflowTableChild[i].onPushCloseDate()
-          this.updateOpps()
+          if (this.$refs.workflowTableChild[i].isSelected) {
+            this.$refs.workflowTableChild[i].onPushCloseDate()
+            this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+          }
         }
         this.workflowCheckList = []
       } else {
         for (let i = 0; i < this.$refs.pipelineTableChild.length; i++) {
-          this.$refs.pipelineTableChild[i].onPushCloseDate()
-          this.updateOpps()
+          if (this.$refs.pipelineTableChild[i].isSelected) {
+            this.$refs.pipelineTableChild[i].onPushCloseDate()
+            this.updateOpps()
+          }
         }
+
         this.primaryCheckList = []
       }
     },
     advanceStage() {
       if (this.selectedWorkflow) {
         for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
-          this.$refs.workflowTableChild[i].onAdvanceStage()
-          this.updateOpps()
+          if (this.$refs.workflowTableChild[i].isSelected) {
+            this.$refs.workflowTableChild[i].onAdvanceStage()
+            this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+          }
         }
         this.workflowCheckList = []
       } else {
         for (let i = 0; i < this.$refs.pipelineTableChild.length; i++) {
-          this.$refs.pipelineTableChild[i].onAdvanceStage()
-          this.updateOpps()
+          if (this.$refs.pipelineTableChild[i].isSelected) {
+            this.$refs.pipelineTableChild[i].onAdvanceStage()
+            this.updateOpps()
+          }
         }
+
         this.primaryCheckList = []
       }
     },
     changeForecast() {
       if (this.selectedWorkflow) {
         for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
-          this.$refs.workflowTableChild[i].onChangeForecast()
-          this.updateOpps()
+          if (this.$refs.workflowTableChild[i].isSelected) {
+            this.$refs.workflowTableChild[i].onChangeForecast()
+            this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+          }
           // this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
         }
         this.workflowCheckList = []
       } else {
         for (let i = 0; i < this.$refs.pipelineTableChild.length; i++) {
-          this.$refs.pipelineTableChild[i].onChangeForecast()
-          this.updateOpps()
+          if (this.$refs.pipelineTableChild[i].isSelected) {
+            this.$refs.pipelineTableChild[i].onChangeForecast()
+            this.updateOpps()
+          }
         }
         this.primaryCheckList = []
       }
     },
     setUpdateValues(key, val, multi) {
       if (multi) {
-        this.formData[key] = this.formData[key] ? this.formData[key] + ';' + val : val
+        this.formData[key] = this.formData[key]
+          ? this.formData[key] + ';' + val
+          : val.replace(/&#39;/g, '')
       }
 
       if (val && !multi) {
-        this.formData[key] = val
+        this.formData[key] = val.replace(/&#39;/g, '')
       }
       if (key === 'StageName') {
         this.stagesWithForms.includes(val)
@@ -2547,7 +2665,7 @@ export default {
     },
     setUpdateValidationValues(key, val) {
       if (val) {
-        this.formData[key] = val
+        this.formData[key] = val.replace(/&#39;/g, '')
       }
     },
     async updateOpps() {
@@ -2630,36 +2748,56 @@ export default {
       try {
         const res = await SObjects.api
           .updateResource({
-            form_id: [this.oppInstanceId, this.stageGateId],
             form_data: this.formData,
+            resource_type: 'Opportunity',
+            form_type: 'UPDATE',
+            resource_id: this.stageId,
+            integration_ids: [this.stageIntegrationId],
+            stage_name: this.stageGateField ? this.stageGateField : null,
           })
           .then(async () => {
-            let updatedRes = await SObjects.api.getObjects('Opportunity')
-            this.allOpps = updatedRes.results
-            this.originalList = updatedRes.results
+            if (this.filterText) {
+              let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
+                ['CONTAINS', 'Name', this.filterText],
+              ])
+              let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
+              this.allOppsForWorkflows = wfr.results
+              this.allOpps = updatedRes.results
+              this.originalList = updatedRes.results
+              updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
+              updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+              this.oppTotal = updatedRes.count
+              this.currentPage = 1
+            } else {
+              let updatedRes = await SObjects.api.getObjects('Opportunity', 1)
+              let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
+              this.allOppsForWorkflows = wfr.results
+              this.allOpps = updatedRes.results
+              this.originalList = updatedRes.results
+              updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
+              updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+              this.oppTotal = updatedRes.count
+              this.currentPage = 1
+            }
+
             if (this.selectedWorkflow) {
               this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
             }
+            if (this.activeFilters.length) {
+              this.getFilteredObjects(this.updateFilterValue)
+            }
+            if (this.currentList === 'Closing this month') {
+              this.stillThisMonth()
+            } else if (this.currentList === 'Closing next month') {
+              this.stillNextMonth()
+            }
           })
-        if (this.activeFilters.length) {
-          this.getFilteredObjects(this.updateFilterValue)
-        }
-        if (this.currentList === 'Closing this month') {
-          this.stillThisMonth()
-        } else if (this.currentList === 'Closing next month') {
-          this.stillNextMonth()
-        }
       } catch (e) {
-        this.$toast('Error updating stage form', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+        console.log(e)
       } finally {
         this.closeStageForm()
         this.formData = {}
+        this.dropdownLoading = false
         this.$toast('Salesforce Update Successful', {
           timeout: 2000,
           position: 'top-left',
@@ -2667,50 +2805,67 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
-        this.dropdownLoading = false
       }
     },
     async updateResource() {
-      // console.log(this.currentOperators)
-      // console.log(this.operatorValue)
-      // console.log(this.filterApiName)
       this.updateList.push(this.oppId)
       this.editOpModalOpen = false
       try {
         const res = await SObjects.api
           .updateResource({
-            form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
+            // form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
             form_data: this.formData,
             from_workflow: this.selectedWorkflow ? true : false,
             workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
+            form_type: 'UPDATE',
+            integration_ids: [this.integrationId],
+            resource_type: 'Opportunity',
+            resource_id: this.oppId,
+            stage_name: this.stageGateField ? this.stageGateField : null,
           })
           .then(async () => {
-            let updatedRes = await SObjects.api.getObjects('Opportunity')
-            this.allOpps = updatedRes.results
-            this.originalList = updatedRes.results
+            if (this.filterText) {
+              let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
+                ['CONTAINS', 'Name', this.filterText],
+              ])
+              let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
+              this.allOppsForWorkflows = wfr.results
+              this.allOpps = updatedRes.results
+              this.originalList = updatedRes.results
+              updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
+              updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+              this.oppTotal = updatedRes.count
+              this.currentPage = 1
+            } else {
+              let updatedRes = await SObjects.api.getObjects('Opportunity', 1)
+              let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
+              this.allOppsForWorkflows = wfr.results
+              this.allOpps = updatedRes.results
+              this.originalList = updatedRes.results
+              updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
+              updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+              this.oppTotal = updatedRes.count
+              this.currentPage = 1
+            }
+
             if (this.selectedWorkflow) {
               this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
             }
+            if (this.activeFilters.length) {
+              this.getFilteredObjects(this.updateFilterValue)
+            }
+            if (this.currentList === 'Closing this month') {
+              this.stillThisMonth()
+            } else if (this.currentList === 'Closing next month') {
+              this.stillNextMonth()
+            }
           })
-        if (this.activeFilters.length) {
-          this.getFilteredObjects(this.updateFilterValue)
-        }
-        if (this.currentList === 'Closing this month') {
-          this.stillThisMonth()
-        } else if (this.currentList === 'Closing next month') {
-          this.stillNextMonth()
-        }
       } catch (e) {
-        this.$toast('Error updating Opporutniy, please try again.', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+        console.log(e)
       } finally {
         this.updateList = []
         this.formData = {}
+        this.closeFilterSelection()
         this.$toast('Salesforce Update Successful', {
           timeout: 2000,
           position: 'top-left',
@@ -2718,10 +2873,6 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
-
-        if (!this.activeFilters) {
-          this.closeFilterSelection()
-        }
       }
     },
     async createResource() {
@@ -2763,7 +2914,7 @@ export default {
           let res = await AlertTemplate.api.runAlertTemplateNow(id ? id : this.id, {
             fromWorkflow: true,
           })
-          this.currentWorkflow = this.allOpps.filter((opp) =>
+          this.currentWorkflow = this.allOppsForWorkflows.filter((opp) =>
             res.data.ids.includes(opp.integration_id),
           )
           if (this.currentWorkflow.length < 1) {
@@ -2780,6 +2931,7 @@ export default {
         } finally {
           this.selectedWorkflow = true
           this.loadingWorkflows = false
+          this.hasNext = false
         }
       }
     },
@@ -2790,12 +2942,12 @@ export default {
         let res = await AlertTemplate.api.runAlertTemplateNow(id, {
           fromWorkflow: true,
         })
-        this.currentWorkflow = this.allOpps.filter((opp) =>
+        this.currentWorkflow = this.allOppsForWorkflows.filter((opp) =>
           res.data.ids.includes(opp.integration_id),
         )
         this.filteredWorkflows = this.currentWorkflow
       } catch (error) {
-        this.$toast('Error updateing workflow', {
+        this.$toast('Error updating workflow', {
           timeout: 2000,
           position: 'top-left',
           type: 'error',
@@ -2998,13 +3150,36 @@ export default {
         this.loadingAccounts = false
       }
     },
-    async getObjects() {
+    async getObjectsForWorkflows() {
       this.loading = true
       try {
-        const res = await SObjects.api.getObjects('Opportunity')
+        const res = await SObjects.api.getObjectsForWorkflows('Opportunity')
+        this.allOppsForWorkflows = res.results
+      } catch (e) {
+        this.$toast('Error gathering Opportunities!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        setTimeout(() => {
+          this.loading = false
+        }, 100)
+      }
+    },
+    async getObjects(page = 1) {
+      this.currentPage = page
+      this.loading = true
+      try {
+        const res = await SObjects.api.getObjects('Opportunity', page)
         this.allOpps = res.results
-
         this.originalList = res.results
+        res.next ? (this.hasNext = true) : (this.hasNext = false)
+        res.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+        this.oppTotal = res.count
+
         if (this.currentList === 'Closing this month') {
           this.stillThisMonth()
         } else if (this.currentList === 'Closing next month') {
@@ -3288,6 +3463,7 @@ export default {
       color: $coral;
     }
   }
+
   &__body::-webkit-scrollbar {
     width: 2px; /* Mostly for vertical scrollbars */
     height: 0px; /* Mostly for horizontal scrollbars */
@@ -3322,12 +3498,77 @@ export default {
 }
 .results {
   margin: 0;
-  width: 100%;
+  padding-left: 4px;
+  height: 34px;
   display: flex;
-  padding-left: 1rem;
-  margin-bottom: -1.25rem;
-  margin-top: -0.75rem;
   justify-content: flex-start;
+  align-items: center;
+}
+.pagination {
+  width: 50vw;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  margin: 8px 0px 0px 0px;
+
+  h6 {
+    span {
+      letter-spacing: 0.5px;
+      margin-right: 1rem;
+      color: $gray;
+    }
+  }
+  &-num {
+    margin-right: 8px;
+    font-size: 11px;
+    border-radius: 6px;
+    border: none;
+    background-color: $dark-green;
+    color: white;
+    padding: 3px 6px;
+  }
+  &-num2 {
+    margin-right: 8px;
+    font-size: 11px;
+    border-radius: 6px;
+    border: none;
+    background-color: $very-light-gray;
+    color: $white;
+    padding: 3px 6px;
+  }
+  &-rotate {
+  }
+  button {
+    margin-right: 8px;
+  }
+}
+.pag-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  padding: 3px;
+  font-size: 12px;
+  cursor: pointer;
+  img {
+    filter: invert(60%);
+  }
+}
+.rotate {
+  transform: rotate(180deg);
+}
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.height-s {
+  height: 36px;
+}
+.between {
+  justify-content: space-between;
 }
 select {
   -webkit-appearance: none !important;
@@ -3345,7 +3586,8 @@ select {
 }
 .select-btn1 {
   border: 0.7px solid $very-light-gray;
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3363,7 +3605,7 @@ select {
 }
 .select-btn {
   border: 0.5px solid $dark-green;
-  padding: 0.475rem 1rem;
+  padding: 0.375rem 0.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3377,7 +3619,7 @@ select {
 
   img {
     filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
-    height: 1rem;
+    height: 1rem !important;
   }
 }
 .work-btn {
@@ -3458,9 +3700,8 @@ h3 {
   margin: 0;
   padding: 0;
   min-height: 50vh;
-  max-height: 76vh;
+  max-height: 72vh;
   overflow: scroll;
-  margin-top: 0.5rem;
   border-radius: 8px;
   border: 1px solid #e8e8e8;
   border-collapse: separate;
@@ -3716,8 +3957,7 @@ section {
   justify-content: space-between;
 }
 .pipelines {
-  padding: 5rem 1rem 0.5rem 0.5rem;
-
+  padding: 4.2rem 1.25rem 0.75rem 0.75rem;
   color: $base-gray;
   margin: 0 1rem 0 0.5rem;
 }
@@ -3761,7 +4001,8 @@ section {
   align-items: center;
   border: none;
   margin: 0 0.5rem 0 0;
-  padding: 0.5rem 1.25rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 12px;
   border-radius: 6px;
   background-color: $dark-green;
   cursor: pointer;
@@ -3772,8 +4013,8 @@ section {
   display: flex;
   align-items: center;
   border: none;
-  padding: 0.5rem 1rem;
-  font-size: 16px;
+  padding: 0.4rem 0.75rem;
+  font-size: 14px;
   border-radius: 6px;
   background-color: $dark-green;
   cursor: pointer;
@@ -3794,7 +4035,7 @@ section {
   box-shadow: 1px 2px 2px $very-light-gray;
 }
 .search-bar {
-  height: 2rem;
+  height: 1.8rem;
   background-color: $off-white;
   border: 0.7px solid $gray;
   display: flex;
@@ -4066,5 +4307,35 @@ a {
   margin-right: 0.25rem;
   filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
     brightness(93%) contrast(89%);
+}
+.pagination {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  margin: 4px 0px 0px 0px;
+  height: 30px;
+
+  &-num {
+    margin-right: 8px;
+    font-size: 11px;
+  }
+  &-rotate {
+  }
+  button {
+    margin-right: 8px;
+  }
+}
+.pag-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  border: 1px solid #e8e8e8;
+  padding: 2px;
+}
+.rotate {
+  transform: rotate(180deg);
 }
 </style>

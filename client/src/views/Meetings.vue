@@ -560,6 +560,7 @@ export default {
   },
   data() {
     return {
+      integrationId: null,
       stageGateField: null,
       stageValidationFields: {},
       stagesWithForms: [],
@@ -914,7 +915,7 @@ export default {
         })
       }
     },
-    async updateMeeting(meetingWorkflow, id) {
+    async updateMeeting(meetingWorkflow, id, integrationId) {
       this.dropdownLoading = true
       this.currentVals = []
       this.editOpModalOpen = true
@@ -923,17 +924,17 @@ export default {
       this.dropdownVal = {}
       this.formData = {}
       this.oppId = id
+      this.integrationId = integrationId
       try {
-        const res = await SObjects.api.createFormInstance({
+        const res = await SObjects.api.getCurrentValues({
           resourceType: 'Opportunity',
-          formType: 'UPDATE',
           resourceId: id,
         })
         this.currentVals = res.current_values
         this.currentOwner = this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
         )[0].full_name
-        this.allOpps.filter((opp) => opp.id === this.oppId)[0].account_ref
+        this.allOppsForWorkflows.filter((opp) => opp.id === this.oppId)[0].account_ref
           ? (this.currentAccount = this.allOpps.filter(
               (opp) => opp.id === this.oppId,
             )[0].account_ref.name)
@@ -983,8 +984,9 @@ export default {
         })
       }
     },
-    async createFormInstance(id, alertInstanceId = null) {
+    async createFormInstance(id, integrationId, alertInstanceId = null) {
       this.stageGateField = null
+      this.integrationId = integrationId
       this.dropdownLoading = true
       this.editOpModalOpen = true
       this.currentVals = []
@@ -994,24 +996,19 @@ export default {
       this.alertInstanceId = alertInstanceId
       this.oppId = id
       try {
-        const res = await SObjects.api
-          .createFormInstance({
-            resourceType: 'Opportunity',
-            formType: 'UPDATE',
-            resourceId: id,
-          })
-          .then((res) => {
-            this.currentVals = res.current_values
-            this.instanceId = res.form_id
-            this.currentOwner = this.allUsers.filter(
-              (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
-            )[0].full_name
-            this.allOpps.filter((opp) => opp.id === this.oppId)[0].account_ref
-              ? (this.currentAccount = this.allOpps.filter(
-                  (opp) => opp.id === this.oppId,
-                )[0].account_ref.name)
-              : (this.currentAccount = 'Account')
-          })
+        const res = await SObjects.api.getCurrentValues({
+          resourceType: 'Opportunity',
+          resourceId: id,
+        })
+        this.currentVals = res.current_values
+        this.currentOwner = this.allUsers.filter(
+          (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
+        )[0].full_name
+        this.allOppsForWorkflows.filter((opp) => opp.id === this.oppId)[0].account_ref
+          ? (this.currentAccount = this.allOpps.filter(
+              (opp) => opp.id === this.oppId,
+            )[0].account_ref.name)
+          : (this.currentAccount = 'Account')
       } catch (e) {
         console.log(e)
       } finally {
@@ -1032,10 +1029,12 @@ export default {
     },
     setUpdateValues(key, val, multi) {
       if (multi) {
-        this.formData[key] = this.formData[key] ? this.formData[key] + ';' + val : val
+        this.formData[key] = this.formData[key]
+          ? this.formData[key] + ';' + val
+          : val.replace(/&#39;/g, '')
       }
       if (val && !multi) {
-        this.formData[key] = val
+        this.formData[key] = val.replace(/&#39;/g, '')
       }
       if (key === 'StageName') {
         this.stagesWithForms.includes(val)
@@ -1045,7 +1044,7 @@ export default {
     },
     setUpdateValidationValues(key, val) {
       if (val) {
-        this.formData[key] = val
+        this.formData[key] = val.replace(/&#39;/g, '')
       }
     },
 
@@ -1055,10 +1054,12 @@ export default {
       try {
         const res = await SObjects.api
           .updateResource({
-            form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
             form_data: this.formData,
-            from_workflow: false,
-            workflow_title: 'None',
+            stage_name: this.stageGateField ? this.stageGateField : null,
+            integration_ids: [this.integrationId],
+            resource_type: 'Opportunity',
+            form_type: 'UPDATE',
+            resource_id: this.oppId,
           })
           .then(async () => {
             let updatedRes = await SObjects.api.getObjects('Opportunity')
@@ -1200,7 +1201,9 @@ export default {
         this.stagesWithForms = stages
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
         this.createOppForm = this.createOppForm[0].fieldsRef
-        this.createContactForm = this.createContactForm[0].fieldsRef
+        this.createContactForm = this.createContactForm[0].fieldsRef.filter(
+          (f) => f.apiName !== 'meeting_type' && f.apiName !== 'meeting_comments',
+        )
 
         for (const field of stageGateForms) {
           this.stageValidationFields[field.stage] = field.fieldsRef
@@ -1285,7 +1288,7 @@ export default {
     async getObjects() {
       this.loading = true
       try {
-        const res = await SObjects.api.getObjects('Opportunity')
+        const res = await SObjects.api.getObjectsForWorkflows('Opportunity')
         this.allOpps = res.results
         this.originalList = res.results
       } catch (e) {
