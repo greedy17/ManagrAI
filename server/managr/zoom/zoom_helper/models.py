@@ -248,7 +248,7 @@ class ZoomAcct:
         auth_data = cls.get_auth_token(code)
         user_data = cls._get_user_data(auth_data["access_token"])
         data = {**auth_data, **user_data}
-        data["user"] = str(managr_user_id)
+        data["user_id"] = str(managr_user_id)
 
         zoom_id = data.pop("id", None)
         data["zoom_id"] = zoom_id
