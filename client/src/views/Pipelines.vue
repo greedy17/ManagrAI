@@ -1949,11 +1949,33 @@ export default {
             workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
           })
           .then(async () => {
-            let updatedRes = await SObjects.api.getObjects('Opportunity')
-            let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
-            this.allOppsForWorkflows = wfr.results
-            this.allOpps = updatedRes.results
-            this.originalList = updatedRes.results
+            if (this.filterText) {
+              let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
+                ['CONTAINS', 'Name', this.filterText],
+              ])
+              let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
+              this.allOppsForWorkflows = wfr.results
+              this.allOpps = updatedRes.results
+              this.originalList = updatedRes.results
+              updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
+              updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+              this.oppTotal = updatedRes.count
+              this.currentPage = 1
+            } else {
+              let updatedRes = await SObjects.api.getObjects('Opportunity', 1)
+              let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
+              this.allOppsForWorkflows = wfr.results
+              this.allOpps = updatedRes.results
+              this.originalList = updatedRes.results
+              updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
+              updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+              this.oppTotal = updatedRes.count
+              this.currentPage = 1
+            }
+
+            if (this.selectedWorkflow) {
+              this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+            }
             if (this.activeFilters.length) {
               this.getFilteredObjects(this.updateFilterValue)
             }
@@ -1962,11 +1984,7 @@ export default {
             } else if (this.currentList === 'Closing next month') {
               this.stillNextMonth()
             }
-            if (this.selectedWorkflow) {
-              this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
-            }
           })
-
         this.$toast('Salesforce Update Successful', {
           timeout: 2000,
           position: 'top-left',
@@ -1975,18 +1993,12 @@ export default {
           bodyClassName: ['custom'],
         })
       } catch (e) {
-        this.$toast('Error updating Opportunity!', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+        console.log(e)
       } finally {
         setTimeout(() => {
           this.inlineLoader = false
           this.closeInline += 1
-        }, 1500)
+        }, 1000)
       }
     },
     setOpps() {
@@ -2637,11 +2649,13 @@ export default {
     },
     setUpdateValues(key, val, multi) {
       if (multi) {
-        this.formData[key] = this.formData[key] ? this.formData[key] + ';' + val : val
+        this.formData[key] = this.formData[key]
+          ? this.formData[key] + ';' + val
+          : val.replace(/&#39;/g, '')
       }
 
       if (val && !multi) {
-        this.formData[key] = val
+        this.formData[key] = val.replace(/&#39;/g, '')
       }
       if (key === 'StageName') {
         this.stagesWithForms.includes(val)
@@ -2651,7 +2665,7 @@ export default {
     },
     setUpdateValidationValues(key, val) {
       if (val) {
-        this.formData[key] = val
+        this.formData[key] = val.replace(/&#39;/g, '')
       }
     },
     async updateOpps() {
@@ -2742,13 +2756,48 @@ export default {
             stage_name: this.stageGateField ? this.stageGateField : null,
           })
           .then(async () => {
-            let updatedRes = await SObjects.api.getObjects('Opportunity')
-            this.allOpps = updatedRes.results
-            this.originalList = updatedRes.results
+            if (this.filterText) {
+              let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
+                ['CONTAINS', 'Name', this.filterText],
+              ])
+              let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
+              this.allOppsForWorkflows = wfr.results
+              this.allOpps = updatedRes.results
+              this.originalList = updatedRes.results
+              updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
+              updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+              this.oppTotal = updatedRes.count
+              this.currentPage = 1
+            } else {
+              let updatedRes = await SObjects.api.getObjects('Opportunity', 1)
+              let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
+              this.allOppsForWorkflows = wfr.results
+              this.allOpps = updatedRes.results
+              this.originalList = updatedRes.results
+              updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
+              updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+              this.oppTotal = updatedRes.count
+              this.currentPage = 1
+            }
+
             if (this.selectedWorkflow) {
               this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
             }
+            if (this.activeFilters.length) {
+              this.getFilteredObjects(this.updateFilterValue)
+            }
+            if (this.currentList === 'Closing this month') {
+              this.stillThisMonth()
+            } else if (this.currentList === 'Closing next month') {
+              this.stillNextMonth()
+            }
           })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.closeStageForm()
+        this.formData = {}
+        this.dropdownLoading = false
         this.$toast('Salesforce Update Successful', {
           timeout: 2000,
           position: 'top-left',
@@ -2756,26 +2805,6 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
-        if (this.activeFilters.length) {
-          this.getFilteredObjects(this.updateFilterValue)
-        }
-        if (this.currentList === 'Closing this month') {
-          this.stillThisMonth()
-        } else if (this.currentList === 'Closing next month') {
-          this.stillNextMonth()
-        }
-      } catch (e) {
-        this.$toast('Error updating stage form', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        this.closeStageForm()
-        this.formData = {}
-        this.dropdownLoading = false
       }
     },
     async updateResource() {
@@ -2795,14 +2824,48 @@ export default {
             stage_name: this.stageGateField ? this.stageGateField : null,
           })
           .then(async () => {
-            let updatedRes = await SObjects.api.getObjects('Opportunity')
-            this.allOpps = updatedRes.results
-            this.originalList = updatedRes.results
+            if (this.filterText) {
+              let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
+                ['CONTAINS', 'Name', this.filterText],
+              ])
+              let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
+              this.allOppsForWorkflows = wfr.results
+              this.allOpps = updatedRes.results
+              this.originalList = updatedRes.results
+              updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
+              updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+              this.oppTotal = updatedRes.count
+              this.currentPage = 1
+            } else {
+              let updatedRes = await SObjects.api.getObjects('Opportunity', 1)
+              let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
+              this.allOppsForWorkflows = wfr.results
+              this.allOpps = updatedRes.results
+              this.originalList = updatedRes.results
+              updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
+              updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+              this.oppTotal = updatedRes.count
+              this.currentPage = 1
+            }
+
             if (this.selectedWorkflow) {
               this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
             }
+            if (this.activeFilters.length) {
+              this.getFilteredObjects(this.updateFilterValue)
+            }
+            if (this.currentList === 'Closing this month') {
+              this.stillThisMonth()
+            } else if (this.currentList === 'Closing next month') {
+              this.stillNextMonth()
+            }
           })
-
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.updateList = []
+        this.formData = {}
+        this.closeFilterSelection()
         this.$toast('Salesforce Update Successful', {
           timeout: 2000,
           position: 'top-left',
@@ -2810,31 +2873,6 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
-        if (this.activeFilters.length) {
-          this.getFilteredObjects(this.updateFilterValue)
-        }
-        if (this.currentList === 'Closing this month') {
-          this.stillThisMonth()
-        } else if (this.currentList === 'Closing next month') {
-          this.stillNextMonth()
-        }
-      } catch (e) {
-        if (e.response) {
-          // console.log(e.response.data)
-          // console.log(e.response.status)
-          // console.log(e.response.headers)
-        }
-        this.$toast('Error updating Opporutniy, please try again.', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        this.updateList = []
-        this.formData = {}
-        this.closeFilterSelection()
       }
     },
     async createResource() {
