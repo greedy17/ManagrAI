@@ -412,10 +412,10 @@ export default {
       this.dropdownValue = val.value
     },
     editInline(index) {
+      this.editing = true
       this.$emit('current-inline-row', this.index)
       this.currentRow = this.index
       this.editIndex = index
-      this.editing = true
     },
     setUpdateValues(key, val, dataType, multi) {
       if (multi) {
