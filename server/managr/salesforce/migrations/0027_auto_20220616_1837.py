@@ -63,14 +63,11 @@ def convert_to_meeting(apps, schema_editor):
     MeetingWorkflow = apps.get_model("salesforce", "MeetingWorkflow")
     workflows = MeetingWorkflow.objects.all()
     for meeting in workflows:
-        print(meeting)
         if meeting.non_zoom_meeting is None:
             if meeting.meeting is not None:
-                recreate_from_zoom_meeting_model(str(meeting.meeting.id), str(meeting.id))
                 meeting.meeting = None
         else:
             if meeting.non_zoom_meeting is not None:
-                recreate_from_non_zoom(str(meeting.non_zoom_meeting.id), str(meeting.id))
                 meeting.non_zoom_meeting = None
         meeting.save()
     return
