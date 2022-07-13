@@ -6,6 +6,7 @@ import store from '@/store'
 const LOGIN_ENDPOINT = '/login/'
 const REGISTRATION_ENDPOINT = '/register/'
 const USERS_ENDPOINT = '/users/'
+const USERS_UPDATE = '/users/update-user-info/'
 const GET_USER_ENDPOINT = uid => `/users/${uid}/`
 const GET_USER_PHOTO_ENDPOINT = uid => `/users/${uid}/profile-photo/`
 const INVITE_ENDPOINT = '/users/invite/'
@@ -17,6 +18,7 @@ const DELETE_MESSAGE_ACCOUNT_URI = '/users/remove-twilio-account/'
 const PASSWORD_RESET_EMAIL_ENDPOINT = `${USERS_ENDPOINT}password/reset/link/`
 const PASSWORD_RESET_ENDPOINT = `${USERS_ENDPOINT}password/reset/`
 const FORECAST_ENDPOINT = '/users/modify-forecast/'
+const PULL_USAGE_DATA = '/users/pull-usage-data/'
 const FORECAST_VALUES_ENDPOINT = '/users/get-forecast-values/'
 
 export default class UserAPI {
@@ -56,7 +58,6 @@ export default class UserAPI {
     }
     try {
       const res = await this.client.get(url, options)
-
       return {
         ...res.data,
         results: res.data.results.map(this.cls.fromAPI),
@@ -255,5 +256,37 @@ export default class UserAPI {
       .post(url, data)
       .then(response => this.cls.fromAPI(response.data))
       .catch(apiErrorHandler({ apiName: 'API error' }))
+  }
+
+  async callCommand(keyword) {
+    const url = `${USERS_ENDPOINT}staff/commands/`
+    const data = {
+      command: keyword
+    }
+    try {
+      let res = await this.client.post(url, data)
+      console.log(res)
+      return res.data
+    } catch (e) {
+      console.log(e)
+    }
+  }
+  pullUsageData() {
+    const promise = apiClient()
+      .get(PULL_USAGE_DATA)
+      .catch(
+        apiErrorHandler({
+          apiName: 'UserAPI.activate',
+          enable400Alert: false,
+          enable500Alert: false,
+        }),
+      )
+    return promise
+  }
+  async usersUpdate(data) {
+    return this.client
+      .post(USERS_UPDATE, data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'User.usersUpdate' }))
   }
 }

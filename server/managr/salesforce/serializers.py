@@ -121,6 +121,7 @@ class SObjectPicklistSerializer(serializers.ModelSerializer):
 
 
 class MeetingWorkflowSerializer(serializers.ModelSerializer):
+    org_ref = serializers.SerializerMethodField("get_org_ref")
     meeting_ref = MeetingFrontendSerializer(many=False, source="meeting", read_only=True)
     resource_ref = serializers.SerializerMethodField("get_resource_ref")
     is_completed = serializers.SerializerMethodField("get_completed_status")
@@ -134,8 +135,15 @@ class MeetingWorkflowSerializer(serializers.ModelSerializer):
             "resource_id",
             "resource_type",
             "resource_ref",
+            "user",
+            "org_ref",
             "is_completed",
         )
+
+    def get_org_ref(self, instance):
+        from managr.core.serializers import OrganizationSerializer
+
+        return OrganizationSerializer(instance=instance.user.organization).data
 
     def get_completed_status(self, instance):
         form = instance.forms.filter(template__form_type="UPDATE").first()
