@@ -1795,6 +1795,7 @@ export default {
   },
   methods: {
     async getFilteredOpps() {
+      this.currentPage = 1
       try {
         const res = await SObjects.api.getObjects('Opportunity', 1, true, [
           ['CONTAINS', 'Name', this.filterText.toLowerCase()],
@@ -1840,7 +1841,8 @@ export default {
       }
     },
     nextPage() {
-      this.addMore(this.currentPage + 1)
+      this.currentPage += 1
+      this.addMore(this.currentPage)
     },
     prevPage() {
       this.getObjects(this.currentPage - 1)
@@ -2025,12 +2027,14 @@ export default {
     },
     async getFilteredObjects(value) {
       this.loadingWorkflows = true
+      this.currentPage = 1
       if (value) {
         this.filters.push([this.operatorValue, this.filterApiName, value])
         this.setFilters[this.activeFilters.length] = [this.operatorValue, value]
       }
       try {
         const res = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
+
         if (this.selectedWorkflow) {
           this.allOpps = res.results
           this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
@@ -2042,7 +2046,8 @@ export default {
           this.stillNextMonth()
         } else {
           this.allOpps = res.results
-          this.oppTotal = this.allOpps.length
+          this.oppTotal = res.count
+          console.log(res)
           res.next ? (this.hasNext = true) : (this.hasNext = false)
         }
       } catch (e) {
@@ -2151,6 +2156,7 @@ export default {
       this.getFilteredObjects()
       if (this.activeFilters.length < 1) {
         this.updateOpps()
+        this.currentPage = 1
         this.hasNext = this.hasNextOriginal
         this.oppTotal = this.originalOppTotal
       }
@@ -3204,9 +3210,21 @@ export default {
     async addMore(page) {
       try {
         const res = await SObjects.api.getObjects('Opportunity', page)
+        let filtRes = await SObjects.api.getObjects('Opportunity', page, true, [
+          ['CONTAINS', 'Name', this.filterText],
+        ])
 
-        this.allOpps = [...res.results, ...this.allOpps]
-        res.next ? (this.hasNext = true) : (this.hasNext = false)
+        if (this.filterText) {
+          this.allOpps = [...filtRes.results, ...this.allOpps]
+          filtRes.next ? (this.hasNext = true) : (this.hasNext = false)
+        } else if (this.activeFilters.length) {
+          let filteredRes = await SObjects.api.getObjects('Opportunity', page, true, this.filters)
+          this.allOpps = [...filteredRes.results, ...this.allOpps]
+          filteredRes.next ? (this.hasNext = true) : (this.hasNext = false)
+        } else {
+          this.allOpps = [...res.results, ...this.allOpps]
+          res.next ? (this.hasNext = true) : (this.hasNext = false)
+        }
 
         // if (this.currentList === 'Closing this month') {
         //   this.stillThisMonth()
@@ -3261,6 +3279,7 @@ export default {
       this.closeFilterSelection()
     },
     stillThisMonth() {
+      this.currentPage = 1
       this.allOpps = this.originalList
       this.allOpps = this.allOpps.filter(
         (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth,
@@ -3283,6 +3302,7 @@ export default {
       this.closeFilterSelection()
     },
     stillNextMonth() {
+      this.currentPage = 1
       this.allOpps = this.originalList
       this.allOpps = this.allOpps.filter(
         (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth + 1,
