@@ -76,10 +76,10 @@ export class RepRegistrationForm extends Form {
 }
 
 export class UserInviteForm extends Form {
-  static role = new FormField({ validators: [new RequiredValidator()] })
+  static role = new FormField()
   static userLevel = new FormField({ validators: [new RequiredValidator()] })
   static organization = new FormField({ validators: [new RequiredValidator()] })
-  static slackId = new FormField({ validators: [new RequiredValidator()] })
+  static slackId = new FormField()
   static email = new FormField()
 }
 
@@ -102,9 +102,7 @@ export class UserProfileForm extends Form {
   })
 }
 
-export class UserConfigForm extends Form {
-  static activatedManagrConfigs = new FormField({ validators: [new RequiredValidator()] })
-}
+
 
 export class UserOnboardingForm extends Form {
   static onboarding = new FormField({ validators: [new RequiredValidator()] })

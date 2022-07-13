@@ -14,7 +14,7 @@
           <img style="height: 1.5rem; margin-right: 0.5rem" src="@/assets/images/zoom.png" alt="" />
           <img
             style="height: 1rem; margin-right: 0.5rem"
-            src="@/assets/images/plusOne.png"
+            src="@/assets/images/plusOne.svg"
             class="filter-plus"
             alt=""
           />
@@ -34,7 +34,7 @@
           </button>
 
           <p class="active-workflow" v-else-if="recapChannel">
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </p>
         </div>
       </div>
@@ -43,15 +43,15 @@
         <div class="card__header">
           <h3>Stage Advanced</h3>
           <p class="active-workflow-small" v-if="advancedConfigActive">
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </p>
         </div>
 
         <div class="card__body">
           <img style="height: 1.5rem; margin-right: 1rem" src="@/assets/images/logo.png" alt="" />
           <img
-            style="height: 1rem; margin-right: 1rem; filter: invert(60%)"
-            src="@/assets/images/plusOne.png"
+            style="height: 1rem; margin-right: 1rem; filter: invert(40%)"
+            src="@/assets/images/plusOne.svg"
             alt=""
           />
           <img
@@ -76,15 +76,15 @@
         <div class="card__header">
           <h3>Moved to Commit</h3>
           <p class="active-workflow-small" v-if="commitConfigActive">
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </p>
         </div>
 
         <div class="card__body">
           <img style="height: 1.5rem; margin-right: 1rem" src="@/assets/images/logo.png" alt="" />
           <img
-            style="height: 1rem; margin-right: 1rem; filter: invert(60%)"
-            src="@/assets/images/plusOne.png"
+            style="height: 1rem; margin-right: 1rem; filter: invert(40%)"
+            src="@/assets/images/plusOne.svg"
             alt=""
           />
           <img
@@ -109,15 +109,15 @@
         <div class="card__header">
           <h3>Close Date Pushed</h3>
           <p class="active-workflow-small" v-if="pushedConfigActive">
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </p>
         </div>
 
         <div class="card__body">
           <img style="height: 1.5rem; margin-right: 1rem" src="@/assets/images/logo.png" alt="" />
           <img
-            style="height: 1rem; margin-right: 1rem; filter: invert(60%)"
-            src="@/assets/images/plusOne.png"
+            style="height: 1rem; margin-right: 1rem; filter: invert(40%)"
+            src="@/assets/images/plusOne.svg"
             alt=""
           />
           <img
@@ -142,15 +142,15 @@
         <div class="card__header">
           <h3>Closed Won</h3>
           <p class="active-workflow-small" v-if="wonConfigActive">
-            Active <img src="@/assets/images/configCheck.png" alt="" />
+            Active <img src="@/assets/images/configCheck.svg" alt="" />
           </p>
         </div>
 
         <div class="card__body">
           <img style="height: 1.5rem; margin-right: 1rem" src="@/assets/images/logo.png" alt="" />
           <img
-            style="height: 1rem; margin-right: 1rem; filter: invert(60%)"
-            src="@/assets/images/plusOne.png"
+            style="height: 1rem; margin-right: 1rem; filter: invert(40%)"
+            src="@/assets/images/plusOne.svg"
             alt=""
           />
           <img
@@ -344,12 +344,11 @@ export default {
   }
 }
 .filter-plus {
-  filter: invert(90%);
+  filter: invert(10%);
   margin-left: 0.5rem;
   margin-right: 0.5rem;
 }
 .alerts-page {
-  margin-left: 10vw;
   margin-top: 3.5rem;
   font-family: $base-font-family;
 }
@@ -360,6 +359,7 @@ export default {
   align-items: center;
   margin-top: 0.5rem;
   flex-wrap: wrap;
+  width: 86vw;
 }
 .card:hover {
   box-shadow: 1px 2px 2px $very-light-gray;
@@ -368,7 +368,7 @@ export default {
   background-color: white;
   border: 1px solid #e8e8e8;
   border-radius: 0.5rem;
-  width: 22vw;
+  width: 20vw;
   margin-right: 1rem;
   margin-bottom: 1rem;
   transition: all 0.25s;
@@ -388,7 +388,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 5rem;
+    height: 100px;
     font-size: 13px;
   }
   &__footer {
@@ -400,16 +400,16 @@ export default {
   }
 }
 .sub__ {
-  font-size: 14px;
-  margin-top: -0.5rem;
+  font-size: 12px;
+  letter-spacing: 0.25px;
   color: $gray;
 }
 .col {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  margin-left: 0.75rem;
-  margin-top: 1rem;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 82vw;
 }
 .orange_button {
   background-color: $dark-green;

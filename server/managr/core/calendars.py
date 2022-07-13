@@ -67,8 +67,11 @@ def calendar_participants_from_zoom_meeting(zoom_meeting, user):
      - "Topic": The title of the meeting. Searchable in the Nylas API.
      - "Owner": NOT searchable in the Nylas API, but we can check the resulting event objects.
     """
-    zoom_start = zoom_meeting.start_time_timestamp
-    zoom_end = zoom_meeting.end_time_timestamp
+    # MEETING CODE
+    zoom_start = zoom_meeting.zoom_adapter_class.start_time_timestamp
+    zoom_end = zoom_meeting.zoom_adapter_class.end_time_timestamp
+    # zoom_start = zoom_meeting.start_time_timestamp
+    # zoom_end = zoom_meeting.end_time_timestamp
     filters = {
         "limit": 50,
         # Get all events starting within two hours of the start/end times
@@ -86,7 +89,8 @@ def calendar_participants_from_zoom_meeting(zoom_meeting, user):
     try:
         nylas_response = nylas.events.where(**filters)
         events = list(nylas_response)
-    except:
+    except Exception as e:
+        logger.info(f"NYLAS RESPONSE: {e}")
         logger.error("Error calling the Nylas API")
         events = list()
     # Force-invoke the API call

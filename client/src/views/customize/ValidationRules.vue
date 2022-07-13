@@ -62,7 +62,7 @@
 
             <template slot="placeholder">
               <p class="slot-icon">
-                <img src="@/assets/images/search.png" alt="" />
+                <img src="@/assets/images/search.svg" alt="" />
                 {{ selectedStage ? selectedStage : 'Select Stage' }}
               </p>
             </template>
@@ -138,34 +138,33 @@
         "
         class="stage__dropdown"
       >
-        <div>
-          <div class="stage__dropdown__header">
-            {{ formLength ? 'Saved Validation Rules' : 'No Saved Validation Rules' }}
-          </div>
+        <div class="stage__dropdown__header">
+          {{ formLength ? 'Saved Validation Rules' : 'No Saved Validation Rules' }}
+        </div>
+        <div
+          v-for="form in formStages"
+          :key="form.stage"
+          class="stage__dropdown__stages__container"
+          :class="{
+            'stage__dropdown__stages__container--selected':
+              selectedForm &&
+              selectedForm.formType == 'STAGE_GATING' &&
+              selectedForm.resource == 'Opportunity' &&
+              selectedForm.stage == form.stage,
+          }"
+        >
           <div
-            v-for="form in formStages"
-            :key="form.stage"
-            class="stage__dropdown__stages__container"
-            :class="{
-              'stage__dropdown__stages__container--selected':
-                selectedForm &&
-                selectedForm.formType == 'STAGE_GATING' &&
-                selectedForm.resource == 'Opportunity' &&
-                selectedForm.stage == form.stage,
-            }"
+            class="stage__dropdown__stages__title"
+            @click="selectForm('Opportunity', 'STAGE_GATING', form.stage)"
           >
-            <div
-              class="stage__dropdown__stages__title"
-              @click="selectForm('Opportunity', 'STAGE_GATING', form.stage)"
-            >
-              {{ form.stage }}
-            </div>
+            {{ form.stage }}
+          </div>
 
-            <div class="img-border" @click.prevent="deleteForm(form)">
-              <img src="@/assets/images/trash.png" alt="" />
-            </div>
+          <div class="img-border" @click.prevent="deleteForm(form)">
+            <img src="@/assets/images/trash.svg" class="invertTrash" alt="" />
           </div>
         </div>
+
         <div style="display: flex; justify-content: center; margin-top: 1rem">
           <button @click="onAddForm" class="modal-container__box__button">Add</button>
         </div>
@@ -277,17 +276,21 @@ export default {
       try {
         const res = await SObjectPicklist.api.getStagePicklistValues()
         if (res.status == 200) {
-          this.$Alert.alert({
-            type: 'success',
+          this.$toast('Successfully Retrieved Picklist Values please refresh your page', {
             timeout: 2000,
-            message: 'Successfully Retrieved Picklist Values please refresh your page',
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         }
       } catch {
-        this.$Alert.alert({
-          type: 'error',
+        this.$toast('There was an error collecting stages.', {
           timeout: 2000,
-          message: 'There was an error collecting stages',
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } finally {
         this.loadingStages = false
@@ -316,10 +319,12 @@ export default {
         this.formFields.filters = query_params
         this.formFields.refresh()
       } catch {
-        this.$Alert.alert({
-          message: 'There was an error gathering fields',
+        this.$toast('Error gathering fields', {
+          timeout: 2000,
+          position: 'top-left',
           type: 'error',
-          timeout: 3000,
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
@@ -365,12 +370,12 @@ export default {
           })
 
           .catch((e) => {
-            this.$Alert.alert({
-              type: 'error',
-
-              message: 'There was an error, please try again',
-
+            this.$toast('Error, please try again', {
               timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
             })
           })
 
@@ -390,7 +395,13 @@ export default {
         await this.listPicklists({ salesforceObject: this.Opportunity, picklistFor: 'StageName' })
       } catch (e) {
         this.$modal.close('add-stage-modal')
-        this.$Alert.alert({ message: 'Failed to retrieve stages', timeout: 3000 })
+        this.$toast('Failed to retreive stages', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         this.loadingStages = false
       }
@@ -400,9 +411,12 @@ export default {
       /** Method for Creating a new stage-gating form, this is only available for Opportunities at this time */
 
       if (this.currentStagesWithForms.includes(stage)) {
-        return this.$Alert.alert({
-          message: 'This Stage already has a form',
-          timeout: 5000,
+        this.$toast('This stage already has a form', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'default',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
       let newForm = SlackOAuth.customSlackForm.create({
@@ -472,6 +486,9 @@ export default {
     filter: invert(70%);
   }
 }
+.invertTrash {
+  filter: invert(20%);
+}
 .multi-slot {
   display: flex;
   align-items: center;
@@ -493,15 +510,19 @@ export default {
 
   img {
     height: 1rem;
-    filter: invert(80%);
+    filter: invert(20%);
   }
 }
 .header {
-  width: 50vw;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+
   p {
     font-size: 14px;
     color: $gray;
-    margin-top: -0.75rem;
   }
 }
 @keyframes dotFlashing {
@@ -518,13 +539,14 @@ export default {
   justify-content: center;
   flex-direction: column;
   align-items: center;
+  width: 80vw;
 }
 .container {
-  margin-left: 12vw;
-  margin-top: 3.5rem;
   color: $base-gray;
   display: flex;
-  align-items: center;
+  margin: 0px 120px;
+  justify-content: center;
+  align-items: flex-start;
   flex-direction: column;
   height: 100%;
 }
@@ -547,7 +569,7 @@ export default {
   border-radius: 0.3rem;
   background-color: $white;
   color: $base-gray;
-  width: 50vw;
+  width: 82vw;
   border: 1px solid #e8e8e8;
 
   &__header {
@@ -609,6 +631,7 @@ button:disabled {
 .popup-paginator {
   @include paginator();
 }
+
 .centered__stage {
   display: flex;
   justify-content: center;
@@ -616,10 +639,11 @@ button:disabled {
   flex-direction: row;
   height: 100%;
 }
+
 .stage {
   &__dropdown {
     min-height: 40vh;
-    width: 50vw;
+    width: 82vw;
     border-radius: 0.3rem;
     border: 1px solid #e8e8e8;
     background-color: $white;

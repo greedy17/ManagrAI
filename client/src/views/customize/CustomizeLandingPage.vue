@@ -1,7 +1,7 @@
 <template>
-  <div style="margin-top: 4rem">
+  <div style="margin-top: 3rem">
     <div class="sidenav">
-      <div
+      <!-- <div
         style="
           margin-bottom: 1rem;
           margin-left: 0.5rem;
@@ -11,26 +11,36 @@
         "
       >
         <h3 class="title">Manage Actions</h3>
-        <h5 style="margin-top: -0.5rem">Where Salesforce meets Slack</h5>
-      </div>
+        <h5 style="margin-top: -0.5rem">Access & Update CRM Fields</h5>
+      </div> -->
       <router-link exact-active-class="active" :to="{ name: 'Required' }">
-        <div class="row">
-          <img src="@/assets/images/warning.png" style="height: 1rem; margin-right: 1rem" alt="" />
-          <h5>Required</h5>
+        <div class="tooltip">
+          <img
+            src="@/assets/images/optional.svg"
+            class="invert"
+            style="height: 1rem; margin-right: 1rem"
+            alt=""
+          />
+          <span class="tooltiptext">Field Mapping</span>
         </div>
       </router-link>
 
-      <router-link exact-active-class="active" :to="{ name: 'Custom' }">
+      <!-- <router-link exact-active-class="active" :to="{ name: 'Custom' }">
         <div class="row">
           <img src="@/assets/images/optional.png" style="height: 1rem; margin-right: 1rem" alt="" />
           <h5>Optional</h5>
         </div>
-      </router-link>
+      </router-link> -->
 
       <router-link exact-active-class="active" :to="{ name: 'ValidationRules' }">
-        <div class="row">
-          <img src="@/assets/images/gavel.png" style="height: 1rem; margin-right: 1rem" alt="" />
-          <h5>Validation Rules</h5>
+        <div class="tooltip">
+          <img
+            src="@/assets/images/gavel.svg"
+            class="invert"
+            style="height: 1rem; margin-right: 1rem"
+            alt=""
+          />
+          <span class="tooltiptext">Validation Rules</span>
         </div>
       </router-link>
     </div>
@@ -40,7 +50,6 @@
 </template>
 
 <script>
-
 import { CollectionManager } from '@thinknimble/tn-models'
 import { UserOnboardingForm } from '@/services/users/forms'
 import User from '@/services/users'
@@ -95,6 +104,13 @@ export default {
   }
 }
 
+@keyframes tooltips-horz {
+  to {
+    opacity: 0.975;
+    transform: translate(10%, 0%);
+  }
+}
+
 img {
   filter: invert(90%);
   margin-left: 0.5rem;
@@ -102,15 +118,14 @@ img {
 
 .sidenav {
   height: 100%;
-  width: 15.5vw;
+  width: 64px;
   font-size: 0.85rem;
   position: fixed;
   left: 0;
   background-color: #fafbfc;
   border-right: 2px solid $soft-gray;
   color: $gray;
-  overflow-x: hidden;
-  padding: 1rem;
+  padding: 24px 6px;
   margin-top: -1.5rem;
 }
 a {
@@ -125,7 +140,7 @@ a:hover {
 }
 .active div:hover {
   img {
-    filter: none;
+    filter: invert(99%);
   }
   color: white;
 }
@@ -137,7 +152,7 @@ a:hover {
   position: relative;
   color: white;
   img {
-    filter: none;
+    filter: invert(99%);
   }
 }
 .active div:after {
@@ -169,6 +184,61 @@ a:hover {
       brightness(93%) contrast(89%);
   }
   color: $dark-green;
+}
+
+.invert {
+  filter: invert(40%);
+  height: 20px !important;
+}
+.tooltip {
+  position: relative;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 20px 0px;
+}
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 160px;
+  background-color: $base-gray;
+  color: white;
+  text-align: center;
+  border: none !important;
+
+  letter-spacing: 0.5px;
+  padding: 6px 0;
+  border-radius: 6px;
+  font-size: 12px;
+
+  /* Position the tooltip text */
+  position: absolute;
+  z-index: 1;
+  top: 6px;
+  left: 215%;
+  margin-left: -60px;
+
+  /* Fade in tooltip */
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+/* Tooltip arrow */
+
+// .tooltip .tooltiptext::after {
+//   content: ' ';
+//   position: absolute;
+//   top: 50%;
+//   right: 100%; /* To the left of the tooltip */
+//   margin-top: -6px;
+//   border-width: 4px;
+//   border-style: solid;
+//   border-color: transparent black transparent transparent;
+// }
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  animation: tooltips-horz 300ms ease-out forwards;
 }
 </style>
 

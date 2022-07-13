@@ -6,11 +6,13 @@
         v-for="(alertOperand, i) in form.field.alertOperands.groups"
         class="alert-group-row__operands__row rows"
       >
-        <EmptyAlertOperandRow
-          @remove-operand="onRemoveOperand(i)"
-          :resourceType="resourceType"
-          :form.sync="alertOperand"
-        />
+        <!-- <div v-show="i===0"> -->
+          <EmptyAlertOperandRow
+            @remove-operand="onRemoveOperand(i)"
+            :resourceType="resourceType"
+            :form.sync="alertOperand"
+          />
+        <!-- </div> -->
       </div>
     </div>
   </div>

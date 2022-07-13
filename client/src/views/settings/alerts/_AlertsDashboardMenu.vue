@@ -1,43 +1,44 @@
 <template>
   <div>
-    <div v-if="userLevel == 'REP'" class="sidenav">
-      <div style="margin-bottom: 2rem; margin-left: 0.5rem">
+    <div v-if="userLevel == 'REP' && !isOnboarding" class="sidenav">
+      <!-- <div style="margin-bottom: 2rem; margin-left: 0.5rem">
         <h4 class="title">Workflow Automations</h4>
         <h5 style="margin-top: -0.65rem; color: #9b9b9b">Let us do the work for you</h5>
-      </div>
+      </div> -->
 
       <router-link exact-active-class="active" :to="{ name: 'CreateNew' }">
-        <div :class="isOnboarding ? 'onboarding row' : 'row'">
+        <div class="tooltip">
           <img
-            src="@/assets/images/trophy.png"
-            style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
+            src="@/assets/images/org.svg"
+            class="invert"
+            style="height: 0.8rem; margin-right: 1rem; margin-left: 1rem"
             alt=""
           />
-          <h5>Popular</h5>
+          <span class="tooltiptext">Popular Workflows</span>
         </div>
       </router-link>
-      <router-link v-if="!isOnboarding" exact-active-class="active" :to="{ name: 'ListTemplates' }">
-        <div :class="isOnboarding ? 'onboarding row' : 'row'">
+      <router-link exact-active-class="active" :to="{ name: 'ListTemplates' }">
+        <div class="tooltip">
           <img
-            src="@/assets/images/star.png"
-            style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
+            src="@/assets/images/star.svg"
+            class="invert"
+            height="20px"
+            style="margin-right: 1rem; padding-left: 0.25rem"
             alt=""
           />
-          <h5>
-            Active Workflows
-            <span class="counter">{{ alertsCount(templates.list.length) }}</span>
-          </h5>
+          <span class="tooltiptext">Active Workflows</span>
         </div>
       </router-link>
 
-      <router-link v-if="!isOnboarding" exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
-        <div :class="isOnboarding ? 'onboarding row' : 'row'">
+      <router-link exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
+        <div class="tooltip">
           <img
-            src="@/assets/images/build.png"
+            class="invert"
+            src="@/assets/images/build.svg"
             style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
             alt=""
           />
-          <h5>Custom</h5>
+          <span class="tooltiptext">Custom Workflows</span>
         </div>
       </router-link>
     </div>
@@ -46,108 +47,105 @@
       v-else-if="userLevel !== 'MANAGER' && userLevel !== 'REP'"
       class="sidenav sidenav__background"
     >
-      <div style="margin-bottom: 2rem; margin-left: 0.5rem">
+      <!-- <div style="margin-bottom: 2rem; margin-left: 0.5rem">
         <h4 class="title">Workflow Automations</h4>
         <h5 style="margin-top: -0.65rem; color: #9b9b9b">Let us do the work for you</h5>
-      </div>
+      </div> -->
 
       <router-link exact-active-class="active" :to="{ name: 'CreateNew' }">
-        <div class="row">
+        <div class="tooltip">
           <img
-            src="@/assets/images/trophy.png"
-            style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
+            src="@/assets/images/org.svg"
+            class="invert"
+            style="height: 0.8rem; margin-right: 1rem; margin-left: 1rem"
             alt=""
           />
-          <h5>Popular</h5>
+          <span class="tooltiptext">Popular Workflows</span>
         </div>
       </router-link>
 
       <router-link exact-active-class="active" :to="{ name: 'ListTemplates' }">
-        <div class="row">
+        <div class="tooltip">
           <img
-            src="@/assets/images/star.png"
-            style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
+            src="@/assets/images/star.svg"
+            class="invert"
+            height="20px"
+            style="margin-right: 1rem; padding-left: 0.25rem"
             alt=""
           />
-          <h5>
-            Active Workflows
-            <span class="counter">{{ alertsCount(templates.list.length) }}</span>
-          </h5>
+          <span class="tooltiptext">Active Workflows</span>
         </div>
       </router-link>
 
       <router-link exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
-        <div class="row">
+        <div class="tooltip">
           <img
-            src="@/assets/images/build.png"
+            class="invert"
+            src="@/assets/images/build.svg"
             style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
             alt=""
           />
-          <h5>Custom</h5>
+          <span class="tooltiptext">Custom Workflows</span>
         </div>
       </router-link>
     </div>
 
     <div v-else-if="userLevel == 'MANAGER'" class="sidenav sidenav__background">
-      <div style="margin-bottom: 2rem; margin-left: 0.5rem">
+      <!-- <div style="margin-bottom: 2rem; margin-left: 0.5rem">
         <h4 class="title">Workflow Automations</h4>
         <h5 style="margin-top: -0.65rem; color: #9b9b9b">Let us do the work for you</h5>
-      </div>
+      </div> -->
 
-      <div style="border-radius: 0.3rem; margin-bottom: 0.25rem">
-        <div style="margin-top: -0.25rem" class="col">
-          <router-link exact-active-class="active" :to="{ name: 'RealTime' }">
-            <div style="height: 2.25rem" class="row">
-              <img
-                src="@/assets/images/bolt.png"
-                style="height: 0.9rem; margin-right: 1rem; margin-left: 1rem"
-                alt=""
-              />
-              <h5>Instant Updates</h5>
-            </div>
-          </router-link>
-          <router-link
-            style="margin-top: -1rem"
-            exact-active-class="active"
-            :to="{ name: 'CreateNew' }"
-          >
-            <div style="height: 2.25rem" class="row">
-              <img
-                src="@/assets/images/org.png"
-                style="height: 0.8rem; margin-right: 1rem; margin-left: 1rem"
-                alt=""
-              />
-
-              <h5>Scheduled Updates</h5>
-            </div>
-          </router-link>
-        </div>
-      </div>
-
-      <router-link exact-active-class="active" :to="{ name: 'ListTemplates' }">
-        <div class="row">
+      <router-link exact-active-class="active" :to="{ name: 'RealTime' }">
+        <div class="tooltip">
           <img
-            src="@/assets/images/star.png"
-            style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
+            class="invert"
+            src="@/assets/images/bolt.svg"
+            style="height: 0.9rem; margin-right: 1rem; margin-left: 1rem"
             alt=""
           />
-          <h5>
-            Active Workflows
-            <span style="margin-left: 0.5rem" class="counter">{{
-              alertsCount(templates.list.length)
-            }}</span>
-          </h5>
+          <span class="tooltiptext">Instant Updates</span>
+        </div>
+        <!-- <h5>Instant Updates</h5> -->
+      </router-link>
+
+      <router-link exact-active-class="active" :to="{ name: 'CreateNew' }">
+        <div class="tooltip">
+          <img
+            src="@/assets/images/org.svg"
+            class="invert"
+            style="height: 0.8rem; margin-right: 1rem; margin-left: 1rem"
+            alt=""
+          />
+          <span class="tooltiptext">Popular Workflows</span>
+          <!-- <h5>Popular Workflows</h5> -->
+        </div>
+      </router-link>
+
+      <router-link exact-active-class="active" :to="{ name: 'ListTemplates' }">
+        <div class="tooltip">
+          <img
+            src="@/assets/images/star.svg"
+            class="invert"
+            height="20px"
+            style="margin-right: 1rem; padding-left: 0.25rem"
+            alt=""
+          />
+          <span class="tooltiptext">Active Workflows</span>
+          <!-- <h5>Active Workflows</h5> -->
         </div>
       </router-link>
 
       <router-link exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
-        <div class="row">
+        <div class="tooltip">
           <img
-            src="@/assets/images/build.png"
+            class="invert"
+            src="@/assets/images/build.svg"
             style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
             alt=""
           />
-          <h5>Custom</h5>
+          <span class="tooltiptext">Custom Workflows</span>
+          <!-- <h5>Custom</h5> -->
         </div>
       </router-link>
     </div>
@@ -178,16 +176,16 @@ export default {
     this.templates.refresh()
   },
   methods: {
-    alertsCount(num) {
-      let int = num
-      if (this.hasZoomChannel) {
-        int++
-      }
-      if (this.hasRecapChannel) {
-        int++
-      }
-      return int
-    },
+    // alertsCount(num) {
+    //   let int = num
+    //   if (this.hasZoomChannel) {
+    //     int++
+    //   }
+    //   if (this.hasRecapChannel) {
+    //     int++
+    //   }
+    //   return int
+    // },
   },
   computed: {
     hasZoomChannel() {
@@ -228,6 +226,13 @@ export default {
     transform: translateY(-6px);
   }
 }
+
+@keyframes tooltips-horz {
+  to {
+    opacity: 0.9;
+    transform: translate(10%, 0%);
+  }
+}
 .onboarding {
   filter: blur(10px);
 }
@@ -249,15 +254,14 @@ img {
 }
 .sidenav {
   height: 100%;
-  width: 16vw;
-  font-size: 0.85rem;
+  width: 62px;
+  font-size: 14px;
   position: fixed;
   left: 0;
   background-color: #fafbfc;
   border-right: 2px solid $soft-gray;
   color: $base-gray;
-  overflow-x: hidden;
-  padding: 1rem;
+  padding: 6px;
   margin-top: -1rem;
 }
 a {
@@ -272,7 +276,7 @@ a:hover {
 .active div:hover {
   color: white;
   img {
-    filter: none;
+    filter: invert(99%);
   }
 }
 .active div {
@@ -282,7 +286,7 @@ a:hover {
   font-weight: bold;
   position: relative;
   img {
-    filter: none;
+    filter: invert(99%);
   }
   span {
     color: white !important;
@@ -306,6 +310,10 @@ a:hover div {
       brightness(93%) contrast(89%);
   }
 }
+.invert {
+  filter: invert(40%);
+  height: 14px !important;
+}
 a:hover span {
   border-color: $dark-green;
   color: $dark-green;
@@ -326,4 +334,61 @@ a:hover span {
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
 }
+.tooltip {
+  position: relative;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 16px 0px;
+}
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 160px;
+  background-color: $base-gray;
+  color: white;
+  text-align: center;
+  border: none !important;
+  letter-spacing: 1px;
+  padding: 8px 0;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: bold !important;
+
+  /* Position the tooltip text */
+  position: absolute;
+  z-index: 1;
+  top: 8px;
+  left: 215%;
+  margin-left: -60px;
+
+  /* Fade in tooltip */
+  opacity: 70%;
+  transition: opacity 0.3s;
+}
+
+/* Tooltip arrow */
+
+// .tooltip .tooltiptext::after {
+//   content: ' ';
+//   position: absolute;
+//   top: 50%;
+//   right: 100%;
+//   margin-top: -6px;
+//   border-width: 2px;
+//   border-style: solid;
+//   border-color: transparent $base-gray transparent transparent;
+// }
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  animation: tooltips-horz 300ms ease-out forwards;
+}
+
+// [tooltiptext][flow^='left']:hover::before,
+// [tooltiptext][flow^='left']:hover::after,
+// [tooltiptext][flow^='right']:hover::before,
+// [tooltiptext][flow^='right']:hover::after {
+//   animation: tooltips-horz 300ms ease-out forwards;
+// }
 </style>

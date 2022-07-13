@@ -8,6 +8,7 @@
           v-model="selectedOperator"
           :options="operators"
           @select="$emit('operator-selected', $event.value)"
+          :preselectFirst="true"
           openDirection="below"
           selectLabel="Enter"
           track-by="value"

@@ -3,7 +3,7 @@ from rest_framework.exceptions import ValidationError, PermissionDenied
 
 from managr.zoom.serializers import ZoomMeetingSerializer
 from managr.slack.models import OrgCustomSlackFormInstance
-
+from managr.meetings.serializers import MeetingFrontendSerializer
 from .models import (
     MeetingWorkflow,
     SalesforceAuthAccount,
@@ -121,21 +121,21 @@ class SObjectPicklistSerializer(serializers.ModelSerializer):
 
 
 class MeetingWorkflowSerializer(serializers.ModelSerializer):
-    meeting_ref = serializers.SerializerMethodField("get_meeting_ref")
+    meeting_ref = MeetingFrontendSerializer(many=False, source="meeting", read_only=True)
+    resource_ref = serializers.SerializerMethodField("get_resource_ref")
     is_completed = serializers.SerializerMethodField("get_completed_status")
 
     class Meta:
         model = MeetingWorkflow
-        fields = ("id", "meeting", "meeting_ref", "resource_id", "resource_type", "is_completed")
-
-    def get_meeting_ref(self, instance):
-        from managr.core.serializers import MeetingPrepInstanceSerializer
-
-        if instance.non_zoom_meeting is None:
-            meeting = ZoomMeetingSerializer(instance=instance.meeting)
-        else:
-            meeting = MeetingPrepInstanceSerializer(instance=instance.non_zoom_meeting)
-        return meeting.data
+        fields = (
+            "id",
+            "meeting",
+            "meeting_ref",
+            "resource_id",
+            "resource_type",
+            "resource_ref",
+            "is_completed",
+        )
 
     def get_completed_status(self, instance):
         form = instance.forms.filter(template__form_type="UPDATE").first()
@@ -143,3 +143,15 @@ class MeetingWorkflowSerializer(serializers.ModelSerializer):
             if form.saved_data:
                 return True
         return False
+
+    def get_resource_ref(self, instance):
+        from managr.salesforce.routes import routes
+
+        if instance.resource_type:
+            resource = instance.resource_type
+            serializer = routes[resource]["serializer"]
+            resource_id = routes[resource]["model"].objects.get(id=instance.resource_id)
+            return serializer(instance=resource_id).data
+        else:
+            return None
+

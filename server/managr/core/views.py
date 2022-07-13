@@ -11,6 +11,7 @@ from django.shortcuts import render
 from django.contrib.auth import authenticate, login
 from django.conf import settings
 from django_filters.rest_framework import DjangoFilterBackend
+from background_task.models import CompletedTask
 
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
@@ -319,10 +320,17 @@ class UserViewSet(
         url_path="get-forecast-values",
     )
     def get_forecast_values(self, request, *args, **kwargs):
+        from managr.opportunity.serializers import OpportunitySerializer
+
         user = request.user
         res = user.current_forecast.get_current_values()
-        data = {"opps": res["records"]}
-        return Response(data=data, status=status.HTTP_200_OK)
+        opps = []
+        for item in res:
+            serializer = OpportunitySerializer(data=item.as_dict)
+            serializer.is_valid()
+            opps.append(serializer.data)
+        print(opps)
+        return Response(data=opps, status=status.HTTP_200_OK)
 
 
 class ActivationLinkView(APIView):
@@ -339,8 +347,7 @@ class ActivationLinkView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         if user and user.is_active:
             return Response(
-                data={"activation_link": user.activation_link},
-                status=status.HTTP_204_NO_CONTENT,
+                data={"activation_link": user.activation_link}, status=status.HTTP_204_NO_CONTENT,
             )
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -348,9 +355,7 @@ class ActivationLinkView(APIView):
 
 @api_view(["GET"])
 @permission_classes(
-    [
-        permissions.IsAuthenticated,
-    ]
+    [permissions.IsAuthenticated,]
 )
 def get_email_authorization_link(request):
     u = request.user
@@ -465,9 +470,7 @@ class NylasAccountWebhook(APIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [
-        permissions.IsAuthenticated,
-    ]
+    [permissions.IsAuthenticated,]
 )
 def email_auth_token(request):
     u = request.user
@@ -596,7 +599,7 @@ def get_account_status(request):
 
 class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
     serializer_class = UserInvitationSerializer
-    permission_classes = (IsSuperUser | IsOrganizationManager,)
+    # permission_classes = (IsSuperUser | IsOrganizationManager,)
 
     def create(self, request, *args, **kwargs):
         u = request.user
@@ -612,26 +615,25 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
         serializer = UserSerializer(user, context={"request": request})
         response_data = serializer.data
-
-        text = f"{u.full_name} has invited you to join the Managr! Activate your account here"
-        channel_res = slack_requests.request_user_dm_channel(
-            slack_id, u.organization.slack_integration.access_token
-        ).json()
-        channel = channel_res.get("channel", {}).get("id")
-        logger.info(f"User {user.id} activation link: {user.activation_link}")
-        blocks = [
-            block_builders.section_with_button_block(
-                "Register", "register", text, url=user.activation_link
-            )
-        ]
-        if hasattr(u.organization, "slack_integration"):
-            slack_requests.send_channel_message(
-                channel,
-                u.organization.slack_integration.access_token,
-                text="You've been invited to Managr!",
-                block_set=blocks,
-            )
-
+        if slack_id:
+            text = f"{u.full_name} has invited you to join the Managr! Activate your account here"
+            channel_res = slack_requests.request_user_dm_channel(
+                slack_id, u.organization.slack_integration.access_token
+            ).json()
+            channel = channel_res.get("channel", {}).get("id")
+            logger.info(f"User {user.id} activation link: {user.activation_link}")
+            blocks = [
+                block_builders.section_with_button_block(
+                    "Register", "register", text, url=user.activation_link
+                )
+            ]
+            if hasattr(u.organization, "slack_integration"):
+                slack_requests.send_channel_message(
+                    channel,
+                    u.organization.slack_integration.access_token,
+                    text="You've been invited to Managr!",
+                    block_set=blocks,
+                )
         return Response(response_data)
 
 
@@ -702,9 +704,7 @@ class UserPasswordManagmentView(generics.GenericAPIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [
-        permissions.AllowAny,
-    ]
+    [permissions.AllowAny,]
 )
 def request_reset_link(request):
     """endpoint to request a password reset email (forgot password)"""
@@ -734,3 +734,19 @@ def request_reset_link(request):
         )
 
     return Response({"detail": "password reset email sent"})
+
+
+@api_view(["GET"])
+@permission_classes(
+    [permissions.AllowAny,]
+)
+def get_task_status(request):
+    verbose_name = request.GET.get("verbose_name", None)
+    if verbose_name:
+        try:
+            task = CompletedTask.object.get(verbose_name=verbose_name)
+            if task:
+                data = {"completed": True}
+        except CompletedTask.DoesNotExist:
+            data = {"completed": False}
+    return Response(data=data)

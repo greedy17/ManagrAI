@@ -198,6 +198,8 @@ def zoom_meetings_webhook(request):
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 def init_fake_meeting(request):
+    from managr.meetings.models import Meeting
+
     # list of accepted commands for this fake endpoint
     allowed_commands = ["opp", "acc", "lead"]
     slack_id = request.data.get("user_id", None)
@@ -215,9 +217,11 @@ def init_fake_meeting(request):
     user = slack.user
     if not user.has_zoom_integration:
         return Response(
-            data={"response_type": "ephemeral", "text": "Sorry I cant find your zoom account",}
+            data={
+                "response_type": "ephemeral",
+                "text": "Sorry I cant find your zoom account",
+            }
         )
-    host_id = user.zoom_account.zoom_id
     text = request.data.get("text", "")
     if len(text):
         command_params = text.split(" ")
@@ -244,10 +248,12 @@ def init_fake_meeting(request):
     )
     if not meeting_uuid:
         return Response(
-            data={"response_type": "ephemeral", "text": "Sorry I cant find your zoom meeting",}
+            data={
+                "response_type": "ephemeral",
+                "text": "Sorry I cant find your zoom meeting",
+            }
         )
-    host_id = host_id
-    meeting = ZoomMeeting.objects.filter(meeting_uuid=meeting_uuid).first()
+    meeting = Meeting.objects.filter(meeting_id=meeting_uuid).first()
     if meeting:
         meeting.delete()
     original_duration = None
@@ -263,10 +269,15 @@ def init_fake_meeting(request):
             str(zoom_account.user.id), meeting_uuid, original_duration, send_slack=False
         )
         if not workflow:
-            return Response(data={"response_type": "ephemeral", "text": "An error occured",})
+            return Response(
+                data={
+                    "response_type": "ephemeral",
+                    "text": "An error occured",
+                }
+            )
         # get meeting
         workflow.begin_communication(now=True)
-        workflow = MeetingWorkflow.objects.filter(meeting__meeting_uuid=meeting_uuid).first()
+        workflow = MeetingWorkflow.objects.filter(meeting__meeting_id=meeting_uuid).first()
         if meeting_resource and meeting_resource.lower() == "acc":
             acc = user.accounts.first()
             workflow.resource_id = str(acc.id)
@@ -305,6 +316,7 @@ def init_fake_meeting(request):
                     block_builders.context_block(f"Owned by {user.full_name}"),
                 ],
             )
+            print(res)
         except InvalidBlocksException as e:
             return logger.exception(
                 f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
@@ -393,7 +405,8 @@ def fake_recording(request):
             user.organization.slack_integration.access_token,
             text="Your meeting recording is ready!",
             block_set=get_block_set(
-                "zoom_recording_blockset", {"u": str(user.id), "url": download_url, "topic": topic},
+                "zoom_recording_blockset",
+                {"u": str(user.id), "url": download_url, "topic": topic},
             ),
         )
     except Exception as e:
@@ -437,7 +450,11 @@ def schedule_zoom_meeting(request):
     print('\n\np5\n\n')
     for u in internal:
         participant_data.append(
-            {"email": u.email, "name": f"{u.first_name} {u.last_name}", "status": "noreply",}
+            {
+                "email": u.email,
+                "name": f"{u.first_name} {u.last_name}",
+                "status": "noreply",
+            }
         )
     print('\n\np6\n\n')
     for participant in extra_participants:

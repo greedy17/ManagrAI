@@ -3,7 +3,7 @@
     <div class="filter-section__title">
       <div class="filter-search-bar wide">
         <input class="wide" type="search" v-model="searchFilterText" placeholder="Search filters" />
-        <img src="@/assets/images/search.png" style="height: 1rem" alt="" />
+        <img src="@/assets/images/search.svg" style="height: 1rem" alt="" />
       </div>
     </div>
 
@@ -74,7 +74,7 @@ input[type='search']:focus {
   min-width: 20vw;
   max-height: 40vh;
   overflow: scroll;
-  box-shadow: 1px 1px 7px 2px $very-light-gray;
+  box-shadow: 1px 1px 2px 1px $very-light-gray;
   padding: 0rem 1rem;
   &__title {
     position: sticky;

@@ -1,12 +1,12 @@
 <template>
-  <div class="table-row">
+  <div class="table-row" :class="{ selected: primaryCheckList.includes(opp.id) }">
     <div v-if="opp" class="table-cell-checkbox">
       <div v-if="updateList.includes(opp.id) || updatedList.includes(opp.id)">
         <SkeletonBox width="10px" height="9px" />
       </div>
       <div v-else>
         <input
-          @click="emitCheckedBox"
+          @click="emitCheckedBox(index)"
           type="checkbox"
           :id="index"
           v-model="primaryCheckList"
@@ -17,7 +17,7 @@
     </div>
 
     <div style="min-width: 26vw" class="table-cell cell-name">
-      <div class="flex-row-spread">
+      <div class="flex-row-spread" :class="{ selected: primaryCheckList.includes(opp.id) }">
         <div>
           <div
             class="flex-column"
@@ -40,10 +40,10 @@
         </div>
         <div v-else class="flex-row">
           <button @click="emitCreateForm" class="name-cell-edit-note-button-1">
-            <img style="filter: invert(90%); height: 0.6rem" src="@/assets/images/edit.png" />
+            <img style="filter: invert(10%); height: 0.6rem" src="@/assets/images/edit.svg" />
           </button>
           <button @click="emitGetNotes" class="name-cell-note-button-1">
-            <img class="gray" src="@/assets/images/white-note.png" />
+            <img class="gray" src="@/assets/images/white-note.svg" />
           </button>
         </div>
       </div>
@@ -53,7 +53,7 @@
       :key="i"
       v-for="(field, i) in oppFields"
       :class="{
-        'active-edit': editing && editIndex === i,
+        'active-edit': editing && editIndex === i && currentInlineRow === index,
         'table-cell-wide':
           field.dataType === 'TextArea' ||
           (field.length > 250 &&
@@ -76,7 +76,7 @@
       />
 
       <div class="limit-cell-height" v-else-if="!updateList.includes(opp.id)">
-        <div class="inline-edit" v-if="editing && editIndex === i">
+        <div class="inline-edit" v-if="editing && editIndex === i && currentInlineRow === index">
           <div
             v-if="
               field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
@@ -135,11 +135,13 @@
               track-by="value"
               label="label"
               v-model="dropdownVal[field.apiName]"
+              :multiple="field.dataType === 'MultiPicklist' ? true : false"
               @select="
                 setUpdateValues(
                   field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
                   $event.value,
                   field.dataType,
+                  field.dataType === 'MultiPicklist' ? true : false,
                 )
               "
             >
@@ -149,7 +151,7 @@
 
               <template slot="placeholder">
                 <p class="slot-icon">
-                  <img src="@/assets/images/search.png" alt="" />
+                  <img src="@/assets/images/search.svg" alt="" />
                   {{
                     field.apiName.includes('__c')
                       ? opp['secondary_data'][field.apiName]
@@ -174,7 +176,7 @@
 
               <template slot="placeholder">
                 <p class="slot-icon">
-                  <img src="@/assets/images/search.png" alt="" />
+                  <img src="@/assets/images/search.svg" alt="" />
                   {{ opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))] }}
                 </p>
               </template>
@@ -234,10 +236,30 @@
               <PipelineLoader />
             </div>
           </div>
+          <div v-else-if="field.dataType === 'Boolean'">
+            <Multiselect
+              v-model="dropdownVal[field.apiName]"
+              :options="booleans"
+              @select="setUpdateValues(field.apiName, $event)"
+              openDirection="below"
+              style="width: 14vw; padding-bottom: 8rem"
+              selectLabel="Enter"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.svg" alt="" />
+                  {{ opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))] }}
+                </p>
+              </template>
+            </Multiselect>
+          </div>
         </div>
         <PipelineField
           :index="i"
-          v-show="!editing || editIndex !== i"
+          v-show="!(editing && editIndex === i && currentInlineRow === index)"
           style="direction: ltr; border: "
           :apiName="field.apiName"
           :dataType="field.dataType"
@@ -305,6 +327,9 @@ export default {
   },
   data() {
     return {
+      booleans: ['true', 'false'],
+      isSelected: false,
+      currentRow: null,
       formData: {},
       dropdownValue: {},
       dropdownVal: {},
@@ -326,10 +351,11 @@ export default {
   watch: {
     closeDateData: 'futureDate',
     closeEdit: 'closeInline',
+    primaryCheckList: 'checkSelect',
     dropdownValue: {
       handler(val) {
         if (this.stages.includes(val)) {
-          this.$emit('open-stage-form', val, this.opp.id)
+          this.$emit('open-stage-form', val, this.opp.id, this.opp.integration_id)
         } else {
           this.setUpdateValues('StageName', val)
         }
@@ -349,6 +375,7 @@ export default {
     inlineLoader: {},
     closeEdit: {},
     stages: {},
+    currentInlineRow: {},
   },
   computed: {
     extraPipelineFields() {
@@ -361,6 +388,23 @@ export default {
     },
   },
   methods: {
+    // async setForm() {
+    //   try {
+    //     const res = await SObjects.api.createFormInstance({
+    //       resourceType: 'Opportunity',
+    //       formType: 'UPDATE',
+    //       resourceId: this.opp.id,
+    //     })
+    //     this.formId = res.form_id
+    //   } catch (e) {
+    //     console.log(e)
+    //   }
+    // },
+    checkSelect() {
+      this.primaryCheckList.includes(this.opp.id)
+        ? (this.isSelected = true)
+        : (this.isSelected = false)
+    },
     closeInline() {
       this.editing = false
     },
@@ -368,16 +412,22 @@ export default {
       this.dropdownValue = val.value
     },
     editInline(index) {
-      this.editIndex = index
       this.editing = true
+      this.$emit('current-inline-row', this.index)
+      this.currentRow = this.index
+      this.editIndex = index
     },
-    setUpdateValues(key, val, dataType) {
-      if (val) {
+    setUpdateValues(key, val, dataType, multi) {
+      if (multi) {
+        this.formData[key] = this.formData[key] ? this.formData[key] + ';' + val : val
+      }
+
+      if (val && !multi) {
         this.formData[key] = val
       }
       setTimeout(() => {
-        this.$emit('inline-edit', this.formData, this.opp.id, dataType)
-      }, 200)
+        this.$emit('inline-edit', this.formData, this.opp.id, this.opp.integration_id, dataType)
+      }, 500)
     },
     emitCreateForm() {
       this.$emit('create-form')
@@ -385,8 +435,8 @@ export default {
     emitGetNotes() {
       this.$emit('get-notes')
     },
-    emitCheckedBox() {
-      this.$emit('checked-box')
+    emitCheckedBox(i) {
+      this.$emit('checked-box', this.opp.id, i)
     },
     capitalizeFirstLetter(string) {
       return string.charAt(0).toUpperCase() + string.slice(1)
@@ -407,87 +457,88 @@ export default {
       this.newCloseDate = dateString
     },
     async onAdvanceStage() {
-      if (this.primaryCheckList.includes(this.opp.id)) {
-        this.updatedList.push(this.opp.id)
-        try {
-          const res = await SObjects.api
-            .createFormInstance({
-              resourceType: 'Opportunity',
-              formType: 'UPDATE',
-              resourceId: this.opp.id,
-            })
-            .then(async (res) => {
-              const response = await SObjects.api.updateResource({
-                form_id: [res.form_id],
-                form_data: { StageName: this.stageData },
-              })
-            })
-        } catch (e) {
-          console.log(e)
-        } finally {
-          this.updatedList = []
-          this.$Alert.alert({
-            type: 'success',
-            timeout: 750,
-            message: 'Salesforce update successful!',
+      this.updatedList.push(this.opp.id)
+      try {
+        const res = await SObjects.api
+        SObjects.api
+          .updateResource({
+            form_data: { StageName: this.stageData },
+            resource_type: 'Opportunity',
+            form_type: 'UPDATE',
+            resource_id: this.opp.id,
+            integration_ids: [this.opp.integration_id],
           })
-        }
+          .then(
+            this.$toast('Salesforce Update Successful', {
+              timeout: 1000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            }),
+          )
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.updatedList = []
+        }, 1000)
       }
     },
     async onPushCloseDate() {
-      if (this.primaryCheckList.includes(this.opp.id)) {
-        this.updatedList.push(this.opp.id)
-        try {
-          const res = await SObjects.api
-            .createFormInstance({
-              resourceType: 'Opportunity',
-              formType: 'UPDATE',
-              resourceId: this.opp.id,
-            })
-            .then(async (res) => {
-              const response = await SObjects.api.updateResource({
-                form_id: [res.form_id],
-                form_data: { CloseDate: this.newCloseDate },
-              })
-            })
-        } catch (e) {
-          console.log(e)
-        } finally {
-          this.updatedList = []
-          this.$Alert.alert({
-            type: 'success',
-            timeout: 750,
-            message: 'Salesforce update successful!',
+      this.updatedList.push(this.opp.id)
+      try {
+        const res = await SObjects.api
+          .updateResource({
+            form_data: { CloseDate: this.newCloseDate },
+            resource_type: 'Opportunity',
+            form_type: 'UPDATE',
+            resource_id: this.opp.id,
+            integration_ids: [this.opp.integration_id],
           })
-        }
+          .then(
+            this.$toast('Salesforce Update Successful', {
+              timeout: 1000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            }),
+          )
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.updatedList = []
+        }, 1000)
       }
     },
     async onChangeForecast() {
-      if (this.primaryCheckList.includes(this.opp.id)) {
-        this.updatedList.push(this.opp.id)
-        try {
-          const res = await SObjects.api
-            .createFormInstance({
-              resourceType: 'Opportunity',
-              formType: 'UPDATE',
-              resourceId: this.opp.id,
-            })
-            .then(async (res) => {
-              const response = await SObjects.api.updateResource({
-                form_id: [res.form_id],
-                form_data: { ForecastCategoryName: this.ForecastCategoryNameData },
-              })
-            })
-        } catch (e) {
-          console.log(e)
-        } finally {
-          this.updatedList = []
-          this.$Alert.alert({
-            type: 'success',
-            timeout: 750,
-            message: 'Salesforce update successful!',
+      this.updatedList.push(this.opp.id)
+      try {
+        const res = await SObjects.api
+          .updateResource({
+            form_data: { ForecastCategoryName: this.ForecastCategoryNameData },
+            resource_type: 'Opportunity',
+            form_type: 'UPDATE',
+            resource_id: this.opp.id,
+            integration_ids: [this.opp.integration_id],
           })
-        }
+          .then(
+            this.$toast('Salesforce Update Successful', {
+              timeout: 1000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            }),
+          )
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.updatedList = []
+        }, 2000)
       }
     },
   },
@@ -613,11 +664,15 @@ input {
 }
 .empty {
   display: table-cell;
-  background: white !important;
+  position: sticky;
+  background: $off-white;
   min-width: 12vw;
   border-left: 1px solid $soft-gray;
   border-right: 1px solid $soft-gray;
   border-bottom: 1px solid $soft-gray;
+}
+.selected {
+  color: $dark-green !important;
 }
 .table-cell {
   display: table-cell;
@@ -640,10 +695,12 @@ input {
 .table-cell:hover,
 .empty:hover {
   border: 1px solid $dark-green;
-  border-radius: 3px;
+  background-color: white;
+  border-radius: 4px;
 }
 .cell-name:hover {
   border: none;
+  border-bottom: 1px solid #e8e8e8;
 }
 .table-cell-wide {
   display: table-cell;
@@ -665,7 +722,7 @@ input {
   top: 0;
   left: 0;
   position: sticky;
-  background-color: $off-white;
+  background-color: $white;
 }
 .table-cell-checkbox {
   display: table-cell;
@@ -676,7 +733,7 @@ input {
   position: sticky;
   z-index: 1;
   border-bottom: 1px solid $soft-gray;
-  background-color: $off-white;
+  background-color: $white;
 }
 .cell-name-header {
   display: table-cell;
@@ -688,7 +745,7 @@ input {
   left: 3.5vw;
   top: 0;
   position: sticky;
-  background-color: $off-white;
+  background-color: $white;
   font-weight: bold;
   font-size: 13px;
   letter-spacing: 0.5px;
@@ -772,12 +829,12 @@ input[type='checkbox'] + label::before {
   width: 1.5rem;
   margin-right: 0.2rem;
   padding: 0.25rem;
-  border-radius: 0.25rem;
+  border-radius: 4px;
   background-color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e8e8e8;
+  border: 0.7px solid $gray;
   img {
     height: 0.8rem;
     padding: 1px;
@@ -794,12 +851,12 @@ input[type='checkbox'] + label::before {
   width: 1.5rem;
   margin-right: 0.2rem;
   padding: 0.25rem;
-  border-radius: 0.25rem;
+  border-radius: 4px;
   background-color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e8e8e8;
+  border: 0.7px solid $gray;
   img {
     height: 1.2rem;
   }

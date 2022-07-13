@@ -35,7 +35,7 @@ export default {
   left: 0;
   top: 0;
   position: sticky;
-  // background-color: $soft-gray;
+  background-color: white;
   font-weight: bold;
   font-size: 13px;
   letter-spacing: 0.5px;
@@ -50,7 +50,7 @@ export default {
   z-index: 2;
   top: 0;
   position: sticky;
-  // background-color: $soft-gray;
+  background-color: white;
   font-weight: bold;
   font-size: 13px;
   letter-spacing: 0.5px;

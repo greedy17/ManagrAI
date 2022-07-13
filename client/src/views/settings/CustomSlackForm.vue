@@ -36,7 +36,7 @@
                 class="default_button"
               >
                 Add Fields
-                <img src="@/assets/images/plusOne.png" alt="" />
+                <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
               </button>
             </div>
           </div>
@@ -65,13 +65,13 @@
                 </template>
                 <template slot="afterList">
                   <p class="multi-slot__more" @click="onFieldsNextPage">
-                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                    Load More <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
                   </p>
                 </template>
 
                 <template slot="placeholder">
                   <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
+                    <img src="@/assets/images/search.svg" alt="" />
                     Select Pricebook field
                   </p>
                 </template>
@@ -98,12 +98,12 @@
                 </template>
                 <template slot="afterList">
                   <p class="multi-slot__more" @click="onFieldsNextPage">
-                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                    Load More <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
                   </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
+                    <img src="@/assets/images/search.svg" alt="" />
                     Select Quantity field
                   </p>
                 </template>
@@ -135,12 +135,12 @@
                 </template>
                 <template slot="afterList">
                   <p class="multi-slot__more" @click="onFieldsNextPage">
-                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                    Load More <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
                   </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
+                    <img src="@/assets/images/search.svg" alt="" />
                     Search for 'Last Name'
                   </p>
                 </template>
@@ -171,12 +171,12 @@
                 </template>
                 <template slot="afterList">
                   <p class="multi-slot__more" @click="onFieldsNextPage">
-                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                    Load More <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
                   </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
+                    <img src="@/assets/images/search.svg" alt="" />
                     Search for 'Last Name'
                   </p>
                 </template>
@@ -202,12 +202,12 @@
                 </template>
                 <template slot="afterList">
                   <p class="multi-slot__more" @click="onFieldsNextPage">
-                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                    Load More <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
                   </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
+                    <img src="@/assets/images/search.svg" alt="" />
                     Search for 'Company'
                   </p>
                 </template>
@@ -233,12 +233,12 @@
                 </template>
                 <template slot="afterList">
                   <p class="multi-slot__more" @click="onFieldsNextPage">
-                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                    Load More <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
                   </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
+                    <img src="@/assets/images/search.svg" alt="" />
                     Search for 'Status'
                   </p>
                 </template>
@@ -270,12 +270,12 @@
                 </template>
                 <template slot="afterList">
                   <p class="multi-slot__more" @click="onFieldsNextPage">
-                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                    Load More <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
                   </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
+                    <img src="@/assets/images/search.svg" alt="" />
                     Search for 'Account'
                   </p>
                 </template>
@@ -304,12 +304,12 @@
               </template>
               <template slot="afterList">
                 <p class="multi-slot__more" @click="onFieldsNextPage">
-                  Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  Load More <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
                 </p>
               </template>
               <template slot="placeholder">
                 <p class="slot-icon">
-                  <img src="@/assets/images/search.png" alt="" />
+                  <img src="@/assets/images/search.svg" alt="" />
                   Search for 'Name'
                 </p>
               </template>
@@ -335,12 +335,12 @@
               </template>
               <template slot="afterList">
                 <p class="multi-slot__more" @click="onFieldsNextPage">
-                  Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  Load More <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
                 </p>
               </template>
               <template slot="placeholder">
                 <p class="slot-icon">
-                  <img src="@/assets/images/search.png" alt="" />
+                  <img src="@/assets/images/search.svg" alt="" />
                   Search for 'Stage'
                 </p>
               </template>
@@ -367,12 +367,12 @@
               </template>
               <template slot="afterList">
                 <p class="multi-slot__more" @click="onFieldsNextPage">
-                  Load More <img src="@/assets/images/plusOne.png" alt="" />
+                  Load More <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
                 </p>
               </template>
               <template slot="placeholder">
                 <p class="slot-icon">
-                  <img src="@/assets/images/search.png" alt="" />
+                  <img src="@/assets/images/search.svg" alt="" />
                   Search for 'Close Date'
                 </p>
               </template>
@@ -417,12 +417,12 @@
                 </template>
                 <template slot="afterList">
                   <p class="multi-slot__more" @click="onFieldsNextPage">
-                    Load More <img src="@/assets/images/plusOne.png" alt="" />
+                    Load More <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
                   </p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
-                    <img src="@/assets/images/search.png" alt="" />
+                    <img src="@/assets/images/search.svg" alt="" />
                     Search for 'Amount'
                   </p>
                 </template>
@@ -449,8 +449,8 @@
             <div :class="unshownIds.includes(field.id) ? 'invisible' : 'centered'">
               <div class="drag-item">
                 <img
-                  :class="unshownIds.includes(field.id) ? 'invisible' : ''"
-                  src="@/assets/images/drag.png"
+                  :class="unshownIds.includes(field.id) ? 'invisible' : 'invert2'"
+                  src="@/assets/images/drag.svg"
                   id="drag"
                   style="height: 1rem; width: auto; cursor: grab"
                   alt=""
@@ -462,7 +462,7 @@
 
               <div class="img-border">
                 <img
-                  src="@/assets/images/trash.png"
+                  src="@/assets/images/trash.svg"
                   alt=""
                   id="remove"
                   :class="unshownIds.includes(field.id) ? 'invisible' : 'invert'"
@@ -491,7 +491,7 @@
             class="default_button"
           >
             Add more fields
-            <img src="@/assets/images/plusOne.png" alt="" />
+            <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
           </button>
         </div>
 
@@ -519,7 +519,7 @@
             class="default_button"
           >
             Add more fields
-            <img src="@/assets/images/plusOne.png" alt="" />
+            <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
           </button>
         </div>
         <div
@@ -541,7 +541,7 @@
             class="default_button"
           >
             Add fields
-            <img src="@/assets/images/plusOne.png" alt="" />
+            <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
           </button>
         </div>
 
@@ -567,7 +567,7 @@
             class="default_button"
           >
             Add more fields
-            <img src="@/assets/images/plusOne.png" alt="" />
+            <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
           </button>
         </div>
         <div
@@ -589,7 +589,7 @@
             class="default_button"
           >
             Add more fields
-            <img src="@/assets/images/plusOne.png" alt="" />
+            <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
           </button>
         </div>
         <div
@@ -615,7 +615,7 @@
             class="default_button"
           >
             Add more fields
-            <img src="@/assets/images/plusOne.png" alt="" />
+            <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
           </button>
         </div>
 
@@ -643,7 +643,7 @@
             class="default_button"
           >
             Add more fields
-            <img src="@/assets/images/plusOne.png" alt="" />
+            <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
           </button>
         </div>
 
@@ -666,7 +666,7 @@
             class="default_button"
           >
             Add more fields
-            <img src="@/assets/images/plusOne.png" alt="" />
+            <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
           </button>
         </div>
 
@@ -681,7 +681,7 @@
               )
             "
             style="margin-right: 0.5rem"
-            @click="goToOptional"
+            @click="goBack"
             class="disabled__"
           >
             Back
@@ -811,7 +811,7 @@
               }
             "
             height="1rem"
-            src="@/assets/images/close.png"
+            src="@/assets/images/close.svg"
             alt=""
           />
         </div>
@@ -824,7 +824,7 @@
               }
             "
             height="1rem"
-            src="@/assets/images/close.png"
+            src="@/assets/images/close.svg"
             alt=""
           />
         </div>
@@ -844,12 +844,12 @@
             </template>
             <template slot="afterList">
               <p class="multi-slot__more" @click="onFieldsNextPage">
-                Load More <img src="@/assets/images/plusOne.png" alt="" />
+                Load More <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
               </p>
             </template>
             <template slot="placeholder">
               <p class="slot-icon">
-                <img src="@/assets/images/search.png" alt="" />
+                <img src="@/assets/images/search.svg" alt="" />
                 Search for Validation Fields
               </p>
             </template>
@@ -871,12 +871,12 @@
             </template>
             <template slot="afterList">
               <p class="multi-slot__more" @click="onFieldsNextPage">
-                Load More <img src="@/assets/images/plusOne.png" alt="" />
+                Load More <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
               </p>
             </template>
             <template slot="placeholder">
               <p class="slot-icon">
-                <img src="@/assets/images/search.png" alt="" />
+                <img src="@/assets/images/search.svg" alt="" />
                 Search Fields
               </p>
             </template>
@@ -916,8 +916,13 @@
               filter: invert(90%);
             "
           >
-            <img src="@/assets/images/share.png" style="height: 1rem" alt="" />
-            <img src="@/assets/images/clear.png" style="height: 1rem; margin-left: 0.5rem" alt="" />
+            <img src="@/assets/images/share.svg" class="invert2" style="height: 1rem" alt="" />
+            <img
+              src="@/assets/images/close.svg"
+              class="invert2"
+              style="height: 1rem; margin-left: 0.5rem"
+              alt=""
+            />
           </div>
         </div>
 
@@ -1473,10 +1478,12 @@ export default {
         this.customForm.formType == FORM_CONSTS.MEETING_REVIEW
       ) {
         if (!this.meetingType.length && !this.actionChoices.length) {
-          this.$Alert.alert({
+          this.$toast('Please enter a meeting type', {
+            timeout: 2000,
+            position: 'top-left',
             type: 'error',
-            message: 'Please enter a Meeting Type',
-            timeout: 1000,
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
           return
         }
@@ -1496,10 +1503,13 @@ export default {
         })
         .then((res) => {
           this.$emit('update:selectedForm', res)
-          this.$Alert.alert({
+          this.$store.dispatch('refreshCurrentUser')
+          this.$toast('Form added successfully', {
+            timeout: 2000,
+            position: 'top-left',
             type: 'success',
-            message: 'Form Added Succesfully!',
-            timeout: 1000,
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         })
         .finally(() => {
@@ -1559,9 +1569,6 @@ export default {
     goBack() {
       this.$router.push({ name: 'Required' })
     },
-    goToOptional() {
-      this.$router.push({ name: 'Custom' })
-    },
     goToUpdateOpp() {
       this.$router.push({ name: 'UpdateOpportunity' })
     },
@@ -1585,10 +1592,12 @@ export default {
         this.customForm.formType == FORM_CONSTS.MEETING_REVIEW
       ) {
         if (!this.meetingType.length && !this.actionChoices.length) {
-          this.$Alert.alert({
+          this.$toast('Please enter a meeting type', {
+            timeout: 2000,
+            position: 'top-left',
             type: 'error',
-            message: 'Please enter a Meeting Type',
-            timeout: 1000,
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
           return
         }
@@ -1608,10 +1617,12 @@ export default {
         })
         .then((res) => {
           this.$emit('update:selectedForm', res)
-          this.$Alert.alert({
+          this.$toast('Form added successfully', {
+            timeout: 2000,
+            position: 'top-left',
             type: 'success',
-            message: 'Form Added Succesfully!',
-            timeout: 1000,
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
         })
         .finally(() => {
@@ -1684,6 +1695,9 @@ export default {
 .invert {
   filter: invert(80%);
   height: 1rem;
+}
+.invert2 {
+  filter: invert(80%);
 }
 .img-border {
   display: flex;
@@ -1774,7 +1788,7 @@ export default {
   filter: invert(60%);
 }
 #remove {
-  filter: invert(60%);
+  filter: invert(40%);
 }
 .drag-item {
   display: flex;

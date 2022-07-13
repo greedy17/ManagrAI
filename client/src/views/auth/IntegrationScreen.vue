@@ -3,17 +3,9 @@
     <div v-if="userLevel == 'REP'">
       <div>
         <div class="welcome">
-          <h3>Hi, {{ user.fullName }}</h3>
-
           <div>
-            <div
-              v-if="
-                (!(!orgHasSlackIntegration && userCanIntegrateSlack) ||
-                  (orgHasSlackIntegration && !hasSlackIntegration)) &&
-                hasNylasIntegration &&
-                hasSalesforceIntegration
-              "
-            >
+            <h3>Hi, {{ user.fullName }}</h3>
+            <div v-if="hasNylasIntegration && hasSalesforceIntegration">
               <p>
                 Connect
                 <span> <img src="@/assets/images/logo.png" height="9px" alt="" /> Managr</span> to
@@ -25,6 +17,8 @@
         </div>
       </div>
 
+      <p class="grey-text margin-left">Required</p>
+
       <div class="integrations__cards">
         <div class="card">
           <div class="required__header">
@@ -33,7 +27,7 @@
               <h3 class="card__title">Salesforce</h3>
               <img
                 class="filter-dot"
-                src="@/assets/images/dot.png"
+                src="@/assets/images/dot.svg"
                 v-if="hasSalesforceIntegration"
               />
             </div>
@@ -46,7 +40,7 @@
             <PulseLoadingSpinnerButton
               v-if="!hasSalesforceIntegration"
               @click="onGetAuthLink('SALESFORCE')"
-              class="orange_button"
+              class="orange_button test"
               style="margin-left: 0.5rem"
               text="Connect"
               :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
@@ -57,7 +51,7 @@
               <div class="img-border">
                 <img
                   @click="onRevoke('SALESFORCE')"
-                  src="@/assets/images/revoke.png"
+                  src="@/assets/images/revoke.svg"
                   height="16"
                   alt=""
                 />
@@ -66,63 +60,12 @@
           </div>
         </div>
 
-        <div :class="!hasSalesforceIntegration ? 'card onboarding' : 'card'">
-          <div class="required__header">
-            <div class="card__header">
-              <img style="height: 1rem" src="@/assets/images/slackLogo.png" />
-              <h3 class="card__title">Slack</h3>
-              <img
-                class="filter-dot"
-                src="@/assets/images/dot.png"
-                v-if="orgHasSlackIntegration || !hasSlackIntegration"
-              />
-            </div>
-          </div>
-          <p class="card-text">Interact with Managr through Slack</p>
-          <div
-            v-if="
-              (!orgHasSlackIntegration && userCanIntegrateSlack) ||
-              (orgHasSlackIntegration && !hasSlackIntegration)
-            "
-            class="card__body"
-          >
-            <PulseLoadingSpinnerButton
-              @click="onIntegrateSlack"
-              :class="hasSalesforceIntegration ? 'orange_button test' : 'orange_button'"
-              text="Connect"
-              :loading="generatingToken && selectedIntegration == 'SLACK'"
-            ></PulseLoadingSpinnerButton>
-          </div>
-
-          <div v-else class="card__body">
-            <div class="img-border">
-              <img @click="onRevoke('SLACK')" src="@/assets/images/revoke.png" height="16" alt="" />
-            </div>
-            <div class="img-border">
-              <img
-                @click="onGetAuthLink('SLACK')"
-                src="@/assets/images/refresh.png"
-                height="16"
-                class="invert"
-                alt=""
-              />
-            </div>
-          </div>
-        </div>
-
-        <div
-          :class="
-            (!orgHasSlackIntegration && userCanIntegrateSlack) ||
-            (orgHasSlackIntegration && !hasSlackIntegration)
-              ? 'card onboarding'
-              : 'card'
-          "
-        >
+        <div v-if="hasSalesforceIntegration" class="card">
           <div class="card__header">
             <img src="@/assets/images/gmailCal.png" style="margin-right: 1rem; height: 1rem" />
             <img src="@/assets/images/outlookMail.png" style="height: 1rem" />
             <h3 class="card__title">Calendar</h3>
-            <img class="filter-dot" src="@/assets/images/dot.png" v-if="hasNylasIntegration" />
+            <img class="filter-dot" src="@/assets/images/dot.svg" v-if="hasNylasIntegration" />
           </div>
 
           <p class="card-text">Accesses your upcoming meetings + attendees</p>
@@ -130,30 +73,99 @@
             <PulseLoadingSpinnerButton
               @click="onGetAuthLink('NYLAS')"
               style="margin-left: 1rem"
-              :class="
-                !(
-                  (!orgHasSlackIntegration && userCanIntegrateSlack) ||
-                  (orgHasSlackIntegration && !hasSlackIntegration)
-                )
-                  ? 'orange_button test'
-                  : 'orange_button'
-              "
+              class="orange_button test"
               text="Connect"
               :loading="generatingToken && selectedIntegration == 'NYLAS'"
             ></PulseLoadingSpinnerButton>
           </div>
           <div v-else class="card__body">
             <div class="img-border">
-              <img @click="onRevoke('NYLAS')" src="@/assets/images/revoke.png" height="16" alt="" />
+              <img @click="onRevoke('NYLAS')" src="@/assets/images/revoke.svg" height="16" alt="" />
             </div>
           </div>
         </div>
 
+        <div
+          v-if="hasNylasIntegration && hasSalesforceIntegration && user.onboarding && !user.isAdmin"
+          class="card"
+        >
+          <div class="card__header centered">
+            <h3>Last Step...</h3>
+          </div>
+
+          <div class="card__text centered">
+            <button
+              @click="goToTemplates"
+              style="display: flex; align-items: center"
+              class="orange_button test"
+            >
+              Activate Workflows
+            </button>
+          </div>
+        </div>
+
+        <div
+          v-if="hasNylasIntegration && hasSalesforceIntegration && user.onboarding && user.isAdmin"
+          class="card"
+        >
+          <div class="card__header centered">
+            <h4>Map CRM fields to Managr</h4>
+          </div>
+
+          <div class="card__text centered">
+            <button
+              @click="goToForms"
+              style="display: flex; align-items: center"
+              class="orange_button test"
+            >
+              Continue to Field Mapping
+            </button>
+          </div>
+        </div>
+      </div>
+      <p class="grey-text margin-left">Optional</p>
+      <div class="integrations__cards">
+        <div v-if="hasNylasIntegration" class="card">
+          <div class="required__header">
+            <div class="card__header">
+              <img style="height: 1rem" src="@/assets/images/slackLogo.png" />
+              <h3 class="card__title">Slack</h3>
+              <img
+                class="filter-dot"
+                src="@/assets/images/dot.svg"
+                v-if="orgHasSlackIntegration || !hasSlackIntegration"
+              />
+            </div>
+          </div>
+          <p class="card-text">Interact with Managr through Slack</p>
+          <div v-if="!hasSlackIntegration" class="card__body">
+            <PulseLoadingSpinnerButton
+              @click="onIntegrateSlack"
+              class="orange_button"
+              text="Connect"
+              :loading="generatingToken && selectedIntegration == 'SLACK'"
+            ></PulseLoadingSpinnerButton>
+          </div>
+
+          <div v-else class="card__body">
+            <div class="img-border">
+              <img @click="onRevoke('SLACK')" src="@/assets/images/revoke.svg" height="16" alt="" />
+            </div>
+            <div class="img-border">
+              <img
+                @click="onGetAuthLink('SLACK')"
+                src="@/assets/images/refresh.svg"
+                height="16"
+                alt=""
+              />
+            </div>
+          </div>
+        </div>
         <div v-if="hasNylasIntegration" class="card">
           <div class="card__header">
             <img style="height: 1rem" src="@/assets/images/zoom.png" />
             <h3 class="card__title">Zoom</h3>
-            <img class="filter-dot" src="@/assets/images/dot.png" v-if="hasZoomIntegration" />
+            <img class="filter-dot" src="@/assets/images/dot.svg" v-if="hasZoomIntegration" />
           </div>
           <p class="card-text">Activates the zoom meeting workflow automation.</p>
           <div v-if="!hasZoomIntegration" class="card__body">
@@ -171,46 +183,20 @@
 
           <div v-else class="card__body">
             <div class="img-border">
-              <img @click="onRevoke('ZOOM')" src="@/assets/images/revoke.png" height="16" alt="" />
+              <img @click="onRevoke('ZOOM')" src="@/assets/images/revoke.svg" height="16" alt="" />
             </div>
             <div class="img-border">
               <img
                 @click="onGetAuthLink('ZOOM')"
-                src="@/assets/images/refresh.png"
+                src="@/assets/images/refresh.svg"
                 height="16"
-                class="invert"
                 alt=""
               />
             </div>
           </div>
         </div>
 
-        <div
-          v-if="
-            (!(!orgHasSlackIntegration && userCanIntegrateSlack) ||
-              (orgHasSlackIntegration && !hasSlackIntegration)) &&
-            hasNylasIntegration &&
-            hasSalesforceIntegration &&
-            user.onboarding
-          "
-          class="card"
-        >
-          <div class="card__header centered">
-            <h2>Last Step...</h2>
-          </div>
-
-          <div class="card__text centered">
-            <button
-              @click="goToTemplates"
-              style="display: flex; align-items: center"
-              class="orange_button test"
-            >
-              Activate Workflows
-            </button>
-          </div>
-        </div>
-
-        <div v-if="!user.onboarding" class="card">
+        <div v-if="hasNylasIntegration" class="card">
           <div class="card__header">
             <img style="height: 1rem" src="@/assets/images/outreach.webp" />
           </div>
@@ -230,7 +216,7 @@
               <div class="img-border">
                 <img
                   @click="onRevoke('OUTREACH')"
-                  src="@/assets/images/revoke.png"
+                  src="@/assets/images/revoke.svg"
                   height="16"
                   alt=""
                 />
@@ -238,9 +224,8 @@
               <div class="img-border">
                 <img
                   @click="onGetAuthLink('OUTREACH')"
-                  src="@/assets/images/refresh.png"
+                  src="@/assets/images/refresh.svg"
                   height="16"
-                  class="invert"
                   alt=""
                 />
               </div>
@@ -264,7 +249,7 @@
           </div>
         </div>
       </div>
-
+      <p class="grey-text margin-left">Required</p>
       <div class="integrations__cards">
         <div class="card">
           <div class="required__header">
@@ -273,7 +258,7 @@
               <h3 class="card__title">Salesforce</h3>
               <img
                 class="filter-dot"
-                src="@/assets/images/dot.png"
+                src="@/assets/images/dot.svg"
                 v-if="hasSalesforceIntegration"
               />
             </div>
@@ -297,7 +282,7 @@
               <div class="img-border">
                 <img
                   @click="onRevoke('SALESFORCE')"
-                  src="@/assets/images/revoke.png"
+                  src="@/assets/images/revoke.svg"
                   height="16"
                   alt=""
                 />
@@ -307,13 +292,47 @@
         </div>
 
         <div class="card">
+          <div class="card__header">
+            <img src="@/assets/images/gmailCal.png" style="margin-right: 1rem; height: 1rem" />
+            <img src="@/assets/images/outlookMail.png" style="height: 1rem" />
+            <h3 class="card__title">Calendar</h3>
+            <img class="filter-dot" src="@/assets/images/dot.svg" v-if="hasNylasIntegration" />
+          </div>
+
+          <p class="card-text">Accesses your upcoming meetings + attendees</p>
+          <div class="card__body">
+            <PulseLoadingSpinnerButton
+              v-if="!hasNylasIntegration"
+              @click="onGetAuthLink('NYLAS')"
+              style="margin-left: 1rem"
+              class="orange_button"
+              text="Connect"
+              :loading="generatingToken && selectedIntegration == 'NYLAS'"
+            ></PulseLoadingSpinnerButton>
+            <div v-else class="card__body">
+              <div class="img-border">
+                <img
+                  @click="onRevoke('NYLAS')"
+                  src="@/assets/images/revoke.svg"
+                  height="16"
+                  alt=""
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="grey-text margin-left">Optional</p>
+      <div class="integrations__cards">
+        <div class="card">
           <div class="required__header">
             <div class="card__header">
               <img style="height: 1rem" src="@/assets/images/slackLogo.png" />
               <h3 class="card__title">Slack</h3>
               <img
                 class="filter-dot"
-                src="@/assets/images/dot.png"
+                src="@/assets/images/dot.svg"
                 v-if="orgHasSlackIntegration || !hasSlackIntegration"
               />
             </div>
@@ -322,10 +341,7 @@
           <p class="card-text">Interact with Managr through Slack</p>
           <div class="card__body">
             <PulseLoadingSpinnerButton
-              v-if="
-                (!orgHasSlackIntegration && userCanIntegrateSlack) ||
-                (orgHasSlackIntegration && !hasSlackIntegration)
-              "
+              v-if="!hasSlackIntegration"
               :disabled="(!orgHasSlackIntegration && !userCanIntegrateSlack) || hasSlackIntegration"
               @click="onIntegrateSlack"
               class="orange_button"
@@ -337,7 +353,7 @@
               <div class="img-border">
                 <img
                   @click="onRevoke('SLACK')"
-                  src="@/assets/images/revoke.png"
+                  src="@/assets/images/revoke.svg"
                   height="16"
                   alt=""
                 />
@@ -345,9 +361,8 @@
               <div class="img-border">
                 <img
                   @click="onGetAuthLink('SLACK')"
-                  src="@/assets/images/refresh.png"
+                  src="@/assets/images/refresh.svg"
                   height="16"
-                  class="invert"
                   alt=""
                 />
               </div>
@@ -359,7 +374,7 @@
           <div class="card__header">
             <img style="height: 1rem" src="@/assets/images/zoom.png" />
             <h3 class="card__title">Zoom</h3>
-            <img class="filter-dot" src="@/assets/images/dot.png" v-if="hasZoomIntegration" />
+            <img class="filter-dot" src="@/assets/images/dot.svg" v-if="hasZoomIntegration" />
           </div>
 
           <p class="card-text">Activates the meeting workflow automation.</p>
@@ -377,7 +392,7 @@
               <div class="img-border">
                 <img
                   @click="onRevoke('ZOOM')"
-                  src="@/assets/images/revoke.png"
+                  src="@/assets/images/revoke.svg"
                   height="16"
                   alt=""
                 />
@@ -385,39 +400,7 @@
               <div class="img-border">
                 <img
                   @click="onGetAuthLink('ZOOM')"
-                  src="@/assets/images/refresh.png"
-                  height="16"
-                  class="invert"
-                  alt=""
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card__header">
-            <img src="@/assets/images/gmailCal.png" style="margin-right: 1rem; height: 1rem" />
-            <img src="@/assets/images/outlookMail.png" style="height: 1rem" />
-            <h3 class="card__title">Calendar</h3>
-            <img class="filter-dot" src="@/assets/images/dot.png" v-if="hasNylasIntegration" />
-          </div>
-
-          <p class="card-text">Accesses your upcoming meetings + attendees</p>
-          <div class="card__body">
-            <PulseLoadingSpinnerButton
-              v-if="!hasNylasIntegration"
-              @click="onGetAuthLink('NYLAS')"
-              style="margin-left: 1rem"
-              class="orange_button"
-              text="Connect"
-              :loading="generatingToken && selectedIntegration == 'NYLAS'"
-            ></PulseLoadingSpinnerButton>
-            <div v-else class="card__body">
-              <div class="img-border">
-                <img
-                  @click="onRevoke('NYLAS')"
-                  src="@/assets/images/revoke.png"
+                  src="@/assets/images/refresh.svg"
                   height="16"
                   alt=""
                 />
@@ -429,7 +412,7 @@
         <div class="card">
           <div class="card__header">
             <img class="filter-loft" style="height: 1rem" src="@/assets/images/salesloft.svg" />
-            <img class="filter-dot" src="@/assets/images/dot.png" v-if="hasSalesloftIntegration" />
+            <img class="filter-dot" src="@/assets/images/dot.svg" v-if="hasSalesloftIntegration" />
           </div>
           <p class="card-text">Add Contacts to Cadences</p>
           <div class="card__body">
@@ -446,7 +429,7 @@
               <div class="img-border">
                 <img
                   @click="onRevoke('SALESLOFT')"
-                  src="@/assets/images/revoke.png"
+                  src="@/assets/images/revoke.svg"
                   height="16"
                   alt=""
                 />
@@ -458,7 +441,7 @@
         <div class="card">
           <div class="card__header">
             <img style="height: 1rem" src="@/assets/images/outreach.webp" />
-            <img class="filter-dot" src="@/assets/images/dot.png" v-if="hasOutreachIntegration" />
+            <img class="filter-dot" src="@/assets/images/dot.svg" v-if="hasOutreachIntegration" />
           </div>
           <p class="card-text">Add Contacts to Sequences</p>
           <div class="card__body">
@@ -475,7 +458,7 @@
               <div class="img-border">
                 <img
                   @click="onRevoke('OUTREACH')"
-                  src="@/assets/images/revoke.png"
+                  src="@/assets/images/revoke.svg"
                   height="16"
                   alt=""
                 />
@@ -483,9 +466,8 @@
               <div class="img-border">
                 <img
                   @click="onGetAuthLink('OUTREACH')"
-                  src="@/assets/images/refresh.png"
+                  src="@/assets/images/refresh.svg"
                   height="16"
-                  class="invert"
                   alt=""
                 />
               </div>
@@ -513,7 +495,7 @@
                 ></path>
               </g>
             </svg>
-            <img class="filter-dot" src="@/assets/images/dot.png" v-if="hasGongIntegration" />
+            <img class="filter-dot" src="@/assets/images/dot.svg" v-if="hasGongIntegration" />
           </div>
           <p class="card-text">Access call recordings and insights</p>
           <div class="card__body">
@@ -531,7 +513,7 @@
               <div class="img-border">
                 <img
                   @click="onRevoke('GONG')"
-                  src="@/assets/images/revoke.png"
+                  src="@/assets/images/revoke.svg"
                   height="16"
                   alt=""
                 />
@@ -564,7 +546,7 @@
       </div>
     </div>
 
-    <img style="margin-top: 1rem" class="lock" src="@/assets/images/blackLock.png" />
+    <img style="margin-top: 1rem" class="lock" src="@/assets/images/blackLock.svg" />
     <p class="privacy">SOC2 certified, and GDPR compliant</p>
   </div>
 </template>
@@ -600,6 +582,9 @@ export default {
   methods: {
     goToTemplates() {
       this.$router.push({ name: 'CreateNew' })
+    },
+    goToForms() {
+      this.$router.push({ name: 'Required' })
     },
     async onGetAuthLink(integration) {
       integration === 'NYLAS'
@@ -691,11 +676,16 @@ export default {
         if (response && response.status >= 400 && response.status < 500 && response.status != 401) {
           let { data } = response
           if (data.timezone) {
-            this.$Alert.alert({
-              type: 'error',
-              message:
-                '<h3>We could not retrieve your timezone from zoom, to fix this please login to the zoom.us portal through a browser and return to managr to reintegrate</h3>',
-            })
+            this.$toast(
+              'We could not retrieve your timezone from zoom, to fix this please login to the zoom.us portal through a browser and return to managr to reintegrate',
+              {
+                timeout: 2000,
+                position: 'top-left',
+                type: 'success',
+                toastClassName: 'custom',
+                bodyClassName: ['custom'],
+              },
+            )
           }
         }
       } finally {
@@ -937,5 +927,17 @@ a {
 
 .orange_button:hover {
   transform: scale(1.05);
+}
+.grey-text {
+  color: $gray;
+}
+.margin-left {
+  margin-left: 1.75rem;
+}
+.green-outline {
+  outline: 1px solid $dark-green;
+}
+.font-12 {
+  font-size: 12px;
 }
 </style>

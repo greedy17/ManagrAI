@@ -629,14 +629,23 @@ class SFObjectFieldsOperation(SFSyncOperation):
         return super(SFObjectFieldsOperation, self).save(*args, **kwargs)
 
 
+class MeetingWorkflowQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.organization and user.is_active:
+            user_timezone = pytz.timezone(user.timezone)
+            currenttime = datetime.now()
+            user_tz_time = currenttime.astimezone(user_timezone)
+            start = user_tz_time.replace(hour=0, minute=0)
+            meetings = self.filter(user=user, datetime_created__gte=start.astimezone(pytz.utc))
+            return meetings
+        else:
+            return self.none()
+
+
 class MeetingWorkflow(SFSyncOperation):
     meeting = models.OneToOneField(
-        "zoom.ZoomMeeting", models.CASCADE, related_name="workflow", null=True, blank=True
+        "meetings.Meeting", models.CASCADE, related_name="workflow", null=True, blank=True
     )
-    non_zoom_meeting = models.OneToOneField(
-        "core.MeetingPrepInstance", models.CASCADE, related_name="workflow", null=True, blank=True
-    )
-
     resource_id = models.CharField(
         max_length=255,
         null=True,
@@ -662,6 +671,7 @@ class MeetingWorkflow(SFSyncOperation):
         blank=True,
         help_text="list of dict failures",
     )
+    objects = MeetingWorkflowQuerySet.as_manager()
 
     class Meta:
         ordering = ["-datetime_created"]

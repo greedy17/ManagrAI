@@ -57,10 +57,12 @@ export default {
       if (this.form.isValid) {
         try {
           const res = await AlertGroupModel.api.createGroup(this.form.toAPI)
-          this.$Alert.alert({
-            message: 'Successfully Added new group and operands',
-            type: 'success',
+          this.$toast('Successfully added group and operand', {
             timeout: 2000,
+            position: 'top-left',
+            type: 'sucess',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
           })
           this.createdObj = res
           this.$modal.hide('alert-groups-modal', { createdObj: this.createdObj })

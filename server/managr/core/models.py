@@ -51,9 +51,7 @@ class IntegrationModel(models.Model):
         max_length=255, blank=True, help_text="The UUID from the integration source"
     )
     integration_source = models.CharField(
-        max_length=255,
-        choices=org_consts.INTEGRATION_SOURCES,
-        blank=True,
+        max_length=255, choices=org_consts.INTEGRATION_SOURCES, blank=True,
     )
     imported_by = models.ForeignKey(
         "core.User", on_delete=models.CASCADE, null=True, related_name="imported_%(class)s"
@@ -119,7 +117,7 @@ class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
         extra_fields["is_superuser"] = False
         extra_fields["is_active"] = True
         extra_fields["is_admin"] = True
-        extra_fields["user_level"] = core_consts.USER_LEVEL_MANAGER
+        extra_fields["user_level"] = core_consts.USER_LEVEL_REP
         return self._create_user(email, password, **extra_fields)
 
     def create_superuser(self, email, password, **extra_fields):
@@ -149,34 +147,13 @@ class User(AbstractUser, TimeStampModel):
     ENABLEMENT = "ENABLEMENT"
     SDR = "SDR"
     ROLE_CHOICES = [
-        (
-            LEADERSHIP,
-            "Leadership",
-        ),
-        (
-            FRONTLINE_MANAGER,
-            "Frontline Manager",
-        ),
-        (
-            ACCOUNT_EXEC,
-            "Account Executive",
-        ),
-        (
-            ACCOUNT_MANAGER,
-            "Account Manager",
-        ),
-        (
-            OPERATIONS,
-            "OPERATIONS",
-        ),
-        (
-            ENABLEMENT,
-            "Enablement",
-        ),
-        (
-            SDR,
-            "SDR",
-        ),
+        (LEADERSHIP, "Leadership",),
+        (FRONTLINE_MANAGER, "Frontline Manager",),
+        (ACCOUNT_EXEC, "Account Executive",),
+        (ACCOUNT_MANAGER, "Account Manager",),
+        (OPERATIONS, "OPERATIONS",),
+        (ENABLEMENT, "Enablement",),
+        (SDR, "SDR",),
     ]
     role = models.CharField(max_length=32, choices=ROLE_CHOICES, blank=True)
 
@@ -191,14 +168,9 @@ class User(AbstractUser, TimeStampModel):
         null=True,
     )
     user_level = models.CharField(
-        choices=core_consts.USER_LEVELS,
-        max_length=255,
-        default=core_consts.USER_LEVEL_REP,
+        choices=core_consts.USER_LEVELS, max_length=255, default=core_consts.USER_LEVEL_REP,
     )
-    first_name = models.CharField(
-        max_length=255,
-        blank=True,
-    )
+    first_name = models.CharField(max_length=255, blank=True,)
     last_name = models.CharField(max_length=255, blank=True, null=False)
     phone_number = models.CharField(max_length=255, blank=True, default="")
     is_invited = models.BooleanField(max_length=255, default=True)
@@ -452,9 +424,9 @@ class NylasAuthAccount(TimeStampModel):
                 return logger.error(f"An error occured with a nylas integration, {e}")
 
         else:
-
             status_code = response.status_code
             error_data = response.json()
+            print(error_data)
             error_param = error_data.get("error", None)
             error_message = error_data.get("message", None)
             error_code = error_data.get("code", None)
@@ -464,8 +436,7 @@ class NylasAuthAccount(TimeStampModel):
                 "error_param": error_param,
                 "error_message": error_message,
             }
-
-            NylasAPIError(kwargs)
+            return NylasAPIError(error_message)
         return data
 
     def _get_calendar_data(self):
@@ -477,12 +448,7 @@ class NylasAuthAccount(TimeStampModel):
         starts_after = convert_local_time_to_unix(user_timezone, 7, 00)
         ends_before = convert_local_time_to_unix(user_timezone, 20, 00)
 
-        query = dict(
-            {
-                "starts_after": starts_after,
-                "ends_before": ends_before,
-            }
-        )
+        query = dict({"starts_after": starts_after, "ends_before": ends_before,})
         if self.event_calendar_id:
             query["calendar_id"] = self.event_calendar_id
         params = urlencode(query)
@@ -491,6 +457,7 @@ class NylasAuthAccount(TimeStampModel):
                 f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.EVENT_POST}?{params}",
                 headers=headers,
             )
+            print(events.json())
             return self._handle_response(events)
         except Exception as e:
             logger.info(f"Nylas api exception: {e}")
@@ -582,8 +549,7 @@ class MeetingPrepInstance(TimeStampModel):
         max_length=255, null=True, blank=True, help_text="The class name of the resource"
     )
     invocation = models.PositiveIntegerField(
-        default=0,
-        help_text="Keeps track of the number of times the meeting instance was called",
+        default=0, help_text="Keeps track of the number of times the meeting instance was called",
     )
     form = models.OneToOneField(
         "slack.OrgCustomSlackFormInstance",
@@ -704,10 +670,7 @@ class UserForecast(models.Model):
     user = models.OneToOneField(
         "core.User", on_delete=models.CASCADE, related_name="current_forecast"
     )
-    state = JSONField(
-        default=dict,
-        null=True,
-    )
+    state = JSONField(default=dict, null=True,)
 
     def __str__(self):
         return f"Forecast for {self.user.email}"
@@ -736,11 +699,9 @@ class UserForecast(models.Model):
         return "Opportunity already in current forecast state"
 
     def remove_from_state(self, id):
-        from managr.opportunity.models import Opportunity
 
-        opp = Opportunity.objects.get(integration_id=id)
-        if opp.integration_id in self.state.keys():
-            del self.state[opp.integration_id]
+        if id in self.state.keys():
+            del self.state[id]
             self.save()
             return "Opportunity removed from current forecast state"
         return "Opportunity not in current forecast state"

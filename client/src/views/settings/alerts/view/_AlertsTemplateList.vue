@@ -4,7 +4,7 @@
       <div class="delete_modal">
         <div class="delete_modal__header">
           <h2>Delete Workflow</h2>
-          <img @click="deleteOpen = !deleteOpen" src="@/assets/images/close.png" alt="" />
+          <img @click="deleteOpen = !deleteOpen" src="@/assets/images/close.svg" alt="" />
         </div>
 
         <div class="delete_modal__body">
@@ -23,16 +23,16 @@
         Edit your Workflow Automation
       </h3>
       <h3 v-else :class="templates.refreshing ? 'loading-title titles' : 'titles'">
-        Saved Workflow Automations
+        Active Workflow Automations
       </h3>
       <p
         :class="templates.refreshing ? 'loading-title titles' : ''"
-        style="font-weight: bold; color: #aaaaaa; margin-top: -0.5rem; font-size: 13px"
+        style="font-weight: bold; color: #aaaaaa; font-size: 13px"
       >
         Edit, Run, and Schedule your saved Automations
       </p>
     </div>
-    <div v-if="!alertsCount(templates.list.length)">
+    <div v-if="!alertsCount(templates.list.length) && !templates.refreshing">
       <h3
         class="bouncy"
         style="
@@ -68,7 +68,7 @@
             </div>
             <div class="added-collection__body">
               <button
-                :disabled="clicked.includes(alert.id)"
+                :disabled="clicked.includes(alert.id) || !hasSlackIntegration"
                 @click.stop="onRunAlertTemplateNow(alert.id)"
                 class="green_button"
               >
@@ -77,16 +77,17 @@
             </div>
             <div class="added-collection__footer">
               <img
+                v-if="hasSlackIntegration"
                 style="margin-right: 0.25rem"
                 src="@/assets/images/slackLogo.png"
-                height="15px"
+                height="12px"
                 alt=""
               />
-              <p style="font-size: 13px">Schedule:</p>
-              <div class="row__">
+              <!-- <p v-if="hasSlackIntegration" style="font-size: 13px">Schedule:</p> -->
+              <div v-if="hasSlackIntegration" class="row__">
                 <p
                   :class="!alert.isActive ? 'green' : ''"
-                  style="margin-right: 0.5rem; font-size: 12px; letter-spacing: 1px"
+                  style="margin-right: 0.25rem; font-size: 11px; letter-spacing: 0.5px"
                 >
                   OFF
                 </p>
@@ -98,19 +99,39 @@
                 />
                 <p
                   :class="alert.isActive ? 'green' : ''"
-                  style="margin-left: 0.5rem; font-size: 12px; letter-spacing: 1px"
+                  style="margin-left: 0.25rem; font-size: 11px; letter-spacing: 0.5px"
                 >
                   ON
                 </p>
               </div>
+              <div style="width: 30vw" v-else>
+                <img
+                  style="margin-right: 0.2rem"
+                  src="@/assets/images/slackLogo.png"
+                  height="8px"
+                  alt=""
+                />
+                <small
+                  >Connect <span class="link" @click="goToConnect">Slack</span> for
+                  notifications</small
+                >
+              </div>
 
               <div class="row__two">
                 <span class="img-border">
-                  <img @click="makeAlertCurrent(alert)" src="@/assets/images/edit.png" />
+                  <img
+                    @click="makeAlertCurrent(alert)"
+                    src="@/assets/images/edit.svg"
+                    class="invert"
+                  />
                 </span>
 
                 <span class="img-border">
-                  <img src="@/assets/images/whitetrash.png" @click="deleteClosed(alert.id)" />
+                  <img
+                    src="@/assets/images/trash.svg"
+                    class="invert"
+                    @click="deleteClosed(alert.id)"
+                  />
                 </span>
               </div>
             </div>
@@ -172,7 +193,7 @@
         </div>
       </transition>
     </template>
-    <div class="center-loader" v-if="templates.refreshing && alertsCount(templates.list.length)">
+    <div class="center-loader" v-if="templates.refreshing">
       <Loader loaderText="Gathering your workflows" />
     </div>
   </div>
@@ -193,7 +214,7 @@ import AlertsEditPanel from '@/views/settings/alerts/view/_AlertsEditPanel'
  */
 import { CollectionManager } from '@thinknimble/tn-models'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
-import { UserConfigForm } from '@/services/users/forms'
+// import { UserConfigForm } from '@/services/users/forms'
 import User from '@/services/users'
 
 import AlertTemplate from '@/services/alerts/'
@@ -217,7 +238,7 @@ export default {
       currentAlert: {},
       editing: true,
       isHiding: false,
-      userConfigForm: new UserConfigForm({}),
+      // userConfigForm: new UserConfigForm({}),
       configName: '',
       configArray: [],
       currentZoomChannel: '',
@@ -235,14 +256,8 @@ export default {
       this.getRecapChannel()
     }
     await this.listUserChannels()
-    this.userConfigForm = new UserConfigForm({
-      activatedManagrConfigs: this.user.activatedManagrConfigs,
-    })
   },
   methods: {
-    // test() {
-    //   console.log(this.templates)
-    // },
     async getRecapChannel() {
       const res = await SlackOAuth.api.channelDetails(this.hasRecapChannel)
       this.currentRecapChannel = res.channel.name
@@ -259,7 +274,7 @@ export default {
     handleUpdate() {
       // this.loading = true
       User.api
-        .update(this.user.id, this.userConfigForm.value)
+        .update(this.user.id)
         .then((response) => {
           this.$store.dispatch('updateUser', User.fromAPI(response.data))
         })
@@ -283,6 +298,9 @@ export default {
     },
     goToRecap() {
       this.$router.push({ name: 'ZoomRecap' })
+    },
+    goToConnect() {
+      this.$router.push({ name: 'Integrations' })
     },
     makeAlertCurrent(val) {
       this.currentAlert = val
@@ -311,23 +329,23 @@ export default {
       try {
         await AlertTemplate.api.deleteAlertTemplate(id)
         await this.templates.refresh()
-        this.userConfigForm.field.activatedManagrConfigs.value =
-          this.userConfigForm.field.activatedManagrConfigs.value.filter(
-            (val) => val !== this.deleteTitle,
-          )
         this.handleUpdate()
 
         this.deleteOpen = !this.deleteOpen
-        this.$Alert.alert({
-          message: 'Workflow removed',
-          type: 'success',
+        this.$toast('Workflow removed', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } catch {
-        this.$Alert.alert({
-          message: 'There was an error removing your alert',
-          type: 'error',
+        this.$toast('Error removing workflow', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
@@ -335,33 +353,42 @@ export default {
       try {
         await AlertTemplate.api.updateAlertTemplate(id, { is_active: value })
         await this.templates.refresh()
-        this.$Alert.alert({
-          message: `Alert is now ${value ? 'active' : 'inactive'}`,
-          type: 'success',
+
+        this.$toast(`Alert is now ${value ? 'active' : 'inactive'}`, {
           timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } catch {
-        this.$Alert.alert({
-          message: 'There was an error toggling your alert',
-          type: 'error',
+        this.$toast('Error toggling workflow', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
     async onRunAlertTemplateNow(id) {
       try {
         await AlertTemplate.api.runAlertTemplateNow(id)
-        this.$Alert.alert({
-          message: `Alert has been initiated`,
-          type: 'success',
+        this.$toast('Workflow initiated', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
         this.clicked.push(id)
       } catch {
-        this.$Alert.alert({
-          message: 'There was an error removing your alert',
-          type: 'error',
+        this.$toast('Error removing workflow', {
           timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       }
     },
@@ -370,11 +397,18 @@ export default {
     user() {
       return this.$store.state.user
     },
+    hasSlackIntegration() {
+      return !!this.$store.state.user.slackRef
+    },
     hasRecapChannel() {
-      return this.$store.state.user.slackAccount.recapChannel
+      return this.$store.state.user.slackAccount
+        ? this.$store.state.user.slackAccount.recapChannel
+        : null
     },
     zoomChannel() {
-      return this.$store.state.user.slackAccount.zoomChannel
+      return this.$store.state.user.slackAccount
+        ? this.$store.state.user.slackAccount.zoomChannel
+        : null
     },
     userLevel() {
       return this.$store.state.user.userLevel
@@ -466,7 +500,7 @@ button:disabled {
   border: 1px solid #e8e8e8;
   border-radius: 0.3rem;
   color: $base-gray;
-  width: 100%;
+  width: 84vw;
   height: 74vh;
   overflow: scroll;
   display: flex;
@@ -521,7 +555,7 @@ button:disabled {
   font-size: 16px;
 }
 .alerts-template-list {
-  margin-left: 10vw;
+  // margin-left: 75px;
   margin-top: 3.5rem;
   color: $base-gray;
 }
@@ -529,10 +563,11 @@ button:disabled {
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
-  align-items: flex-start;
+  // align-items: flex-start;
   margin-top: 1rem;
   flex-wrap: wrap;
   padding: 0;
+  width: 86vw;
 }
 .added-collection:hover {
   box-shadow: 1px 2px 2px $very-light-gray;
@@ -543,12 +578,13 @@ button:disabled {
   background-color: white;
   border-radius: 0.3rem;
   border: 1px solid #e8e8e8;
-  width: 22vw;
+  width: 20vw;
   margin-right: 1rem;
   margin-bottom: 1rem;
   transition: all 0.25s;
+  font-size: 12px;
   &__header {
-    max-height: 3rem;
+    max-height: 50px;
     padding: 1.75rem 1rem;
     font-size: 13px;
     display: flex;
@@ -560,15 +596,13 @@ button:disabled {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 5rem;
-    font-size: 13px;
+    height: 100px;
   }
   &__footer {
     display: flex;
     align-items: center;
-    height: 3rem;
+    height: 50px;
     padding: 1rem;
-    font-size: 14px;
     justify-content: space-evenly;
   }
 }
@@ -604,8 +638,11 @@ a {
   img {
     height: 0.8rem;
     cursor: pointer;
-    filter: invert(70%);
+    filter: invert(20%);
   }
+}
+.invert {
+  filter: invert(20%);
 }
 .green_button:disabled {
   background-color: $soft-gray;
@@ -626,9 +663,9 @@ a {
 }
 .center__ {
   display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
-  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  width: 82vw;
 }
 .center-loader {
   display: flex;
@@ -638,5 +675,10 @@ a {
 }
 .loading-title {
   display: none;
+}
+.link {
+  color: $dark-green;
+  border-bottom: 1px solid $dark-green;
+  cursor: pointer;
 }
 </style>
