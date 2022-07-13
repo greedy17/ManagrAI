@@ -623,7 +623,10 @@ def _process_non_zoom_meetings(user_id):
                 description = (
                     event.get("description") if event.get("description") else "No Description"
                 )
-                if provider != "Zoom Meeting" and "Zoom" not in description:
+                if user.has_zoom_integration:
+                    if provider != "Zoom Meeting" and "Zoom" not in description:
+                        meeting_prep(event, user_id)
+                else:
                     meeting_prep(event, user_id)
     return
 
@@ -898,7 +901,6 @@ def timezone_tasks(user_id):
     else:
         tasks = core_consts.TIMEZONE_TASK_TIMES
     user = User.objects.get(id=user_id)
-    print("test change")
     for key in tasks.keys():
         check = check_for_time(user.timezone, tasks[key]["HOUR"], tasks[key]["MINUTE"])
         if check:
