@@ -948,7 +948,11 @@
                 >
               </button>
             </router-link>
-            <button v-if="showPopularList" @click="closeDatesThisMonth" class="list-button">
+            <button
+              v-if="showPopularList && !selectedWorkflow"
+              @click="closeDatesThisMonth"
+              class="list-button"
+            >
               Closing this month
               <span
                 class="filter"
@@ -957,7 +961,11 @@
                 active</span
               >
             </button>
-            <button v-if="showPopularList" @click="closeDatesNextMonth" class="list-button">
+            <button
+              v-if="showPopularList && !selectedWorkflow"
+              @click="closeDatesNextMonth"
+              class="list-button"
+            >
               Closing next month
               <span
                 class="filter"
@@ -1421,14 +1429,12 @@
           </div>
         </div>
       </div>
-
       <div class="results">
         <h6 style="color: #9b9b9b">
-          {{ !currentWorkflowName ? currentList : currentWorkflowName }}:
-          <span>{{ selectedWorkflow ? currentWorkflow.length : oppTotal }}</span>
+          {{ !currentWorkflowName ? currentList : currentWorkflowName }}
+          <!-- <span>{{ selectedWorkflow ? currentWorkflow.length : allOpps.length }}</span> -->
         </h6>
       </div>
-
       <section v-if="!selectedWorkflow && !loadingWorkflows" class="table-section">
         <div v-outside-click="emitCloseEdit" class="table">
           <PipelineHeader
@@ -1530,21 +1536,13 @@
 
       <div class="row between height-s">
         <div class="pagination">
-          <h6>
-            <span
-              >{{ checkStartingPageNumber() }} -
-              {{ selectedWorkflow ? currentWorkflow.length : checkEndingPageNumber() }} of
-              {{ selectedWorkflow ? currentWorkflow.length : oppTotal }}</span
-            >
-          </h6>
-
-          <button v-if="hasPrev" @click="prevPage" class="pag-button">
-            <img src="@/assets/images/rightArrow.svg" class="rotate" height="12px" alt="" />
-          </button>
-          <span class="pagination-num">{{ this.currentPage }}</span>
-          <!-- <span class="pagination-num2">{{ this.currentPage + 1 }}</span> -->
-          <button v-if="hasNext" @click="nextPage" class="pag-button">
-            <img src="@/assets/images/rightArrow.svg" height="12px" alt="" />
+          <span class="results-2">
+            Displaying {{ selectedWorkflow ? currentWorkflow.length : allOpps.length }} of
+            {{ selectedWorkflow ? currentWorkflow.length : oppTotal }}</span
+          >
+          <button v-if="hasNext && !selectedWorkflow" @click="nextPage" class="select-btn">
+            Load More
+            <!-- <img src="@/assets/images/plusOne.svg" height="12px" alt="" /> -->
           </button>
         </div>
       </div>
@@ -1580,6 +1578,8 @@ export default {
   },
   data() {
     return {
+      originalOppTotal: null,
+      hasNextOriginal: null,
       integrationId: null,
       hasNext: false,
       hasPrev: false,
@@ -1795,11 +1795,12 @@ export default {
   },
   methods: {
     async getFilteredOpps() {
+      this.currentPage = 1
       try {
         const res = await SObjects.api.getObjects('Opportunity', 1, true, [
           ['CONTAINS', 'Name', this.filterText.toLowerCase()],
         ])
-        console.log(res)
+
         this.allOpps = res.results
         this.originalList = res.results
         res.next ? (this.hasNext = true) : (this.hasNext = false)
@@ -1840,7 +1841,8 @@ export default {
       }
     },
     nextPage() {
-      this.getObjects(this.currentPage + 1)
+      this.currentPage += 1
+      this.addMore(this.currentPage)
     },
     prevPage() {
       this.getObjects(this.currentPage - 1)
@@ -1858,7 +1860,7 @@ export default {
           '<a href="' + hyperlink + '" target="_blank" rel="noopener noreferrer">' + url + '</a>'
         )
       })
-      console.log(message)
+
       this.setUpdateValues(field, message)
     },
     changeCurrentRow(i) {
@@ -1949,11 +1951,33 @@ export default {
             workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
           })
           .then(async () => {
-            let updatedRes = await SObjects.api.getObjects('Opportunity')
-            let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
-            this.allOppsForWorkflows = wfr.results
-            this.allOpps = updatedRes.results
-            this.originalList = updatedRes.results
+            if (this.filterText) {
+              let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
+                ['CONTAINS', 'Name', this.filterText],
+              ])
+              let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
+              this.allOppsForWorkflows = wfr.results
+              this.allOpps = updatedRes.results
+              this.originalList = updatedRes.results
+              updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
+              updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+              this.oppTotal = updatedRes.count
+              this.currentPage = 1
+            } else {
+              let updatedRes = await SObjects.api.getObjects('Opportunity', 1)
+              let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
+              this.allOppsForWorkflows = wfr.results
+              this.allOpps = updatedRes.results
+              this.originalList = updatedRes.results
+              updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
+              updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+              this.oppTotal = updatedRes.count
+              this.currentPage = 1
+            }
+
+            if (this.selectedWorkflow) {
+              this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+            }
             if (this.activeFilters.length) {
               this.getFilteredObjects(this.updateFilterValue)
             }
@@ -1962,11 +1986,7 @@ export default {
             } else if (this.currentList === 'Closing next month') {
               this.stillNextMonth()
             }
-            if (this.selectedWorkflow) {
-              this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
-            }
           })
-
         this.$toast('Salesforce Update Successful', {
           timeout: 2000,
           position: 'top-left',
@@ -1975,18 +1995,12 @@ export default {
           bodyClassName: ['custom'],
         })
       } catch (e) {
-        this.$toast('Error updating Opportunity!', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+        console.log(e)
       } finally {
         setTimeout(() => {
           this.inlineLoader = false
           this.closeInline += 1
-        }, 1500)
+        }, 1000)
       }
     },
     setOpps() {
@@ -2013,28 +2027,28 @@ export default {
     },
     async getFilteredObjects(value) {
       this.loadingWorkflows = true
+      this.currentPage = 1
       if (value) {
         this.filters.push([this.operatorValue, this.filterApiName, value])
         this.setFilters[this.activeFilters.length] = [this.operatorValue, value]
       }
-
       try {
         const res = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
+
         if (this.selectedWorkflow) {
           this.allOpps = res.results
           this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
         } else if (this.currentList === 'Closing this month') {
           this.allOpps = res.results
-          this.allOpps = this.allOpps.filter(
-            (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth,
-          )
+          this.stillThisMonth()
         } else if (this.currentList === 'Closing next month') {
           this.allOpps = res.results
-          this.allOpps = this.allOpps.filter(
-            (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth + 1,
-          )
+          this.stillNextMonth()
         } else {
           this.allOpps = res.results
+          this.oppTotal = res.count
+          console.log(res)
+          res.next ? (this.hasNext = true) : (this.hasNext = false)
         }
       } catch (e) {
         this.$toast('Error creating filter, please try again', {
@@ -2142,6 +2156,9 @@ export default {
       this.getFilteredObjects()
       if (this.activeFilters.length < 1) {
         this.updateOpps()
+        this.currentPage = 1
+        this.hasNext = this.hasNextOriginal
+        this.oppTotal = this.originalOppTotal
       }
       this.filterSelected = false
       this.currentFilter = null
@@ -2637,7 +2654,9 @@ export default {
     },
     setUpdateValues(key, val, multi) {
       if (multi) {
-        this.formData[key] = this.formData[key] ? this.formData[key] + ';' + val : val
+        this.formData[key] = this.formData[key]
+          ? this.formData[key] + ';' + val
+          : val.split(/&#39;/g)[0]
       }
 
       if (val && !multi) {
@@ -2656,9 +2675,16 @@ export default {
     },
     async updateOpps() {
       try {
-        let updatedRes = await SObjects.api.getObjects('Opportunity')
-        this.allOpps = updatedRes.results
-        this.originalList = updatedRes.results
+        let res = await SObjects.api.getObjects('Opportunity', 1)
+
+        this.allOpps = res.results
+        this.originalList = res.results
+        res.next ? (this.hasNext = true) : (this.hasNext = false)
+        this.hasNextOriginal = this.hasNext
+        res.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+        this.oppTotal = res.count
+        this.originalOppTotal = res.count
+
         if (this.currentList === 'Closing this month') {
           this.stillThisMonth()
         } else if (this.currentList === 'Closing next month') {
@@ -2742,13 +2768,48 @@ export default {
             stage_name: this.stageGateField ? this.stageGateField : null,
           })
           .then(async () => {
-            let updatedRes = await SObjects.api.getObjects('Opportunity')
-            this.allOpps = updatedRes.results
-            this.originalList = updatedRes.results
+            if (this.filterText) {
+              let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
+                ['CONTAINS', 'Name', this.filterText],
+              ])
+              let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
+              this.allOppsForWorkflows = wfr.results
+              this.allOpps = updatedRes.results
+              this.originalList = updatedRes.results
+              updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
+              updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+              this.oppTotal = updatedRes.count
+              this.currentPage = 1
+            } else {
+              let updatedRes = await SObjects.api.getObjects('Opportunity', 1)
+              let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
+              this.allOppsForWorkflows = wfr.results
+              this.allOpps = updatedRes.results
+              this.originalList = updatedRes.results
+              updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
+              updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+              this.oppTotal = updatedRes.count
+              this.currentPage = 1
+            }
+
             if (this.selectedWorkflow) {
               this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
             }
+            if (this.activeFilters.length) {
+              this.getFilteredObjects(this.updateFilterValue)
+            }
+            if (this.currentList === 'Closing this month') {
+              this.stillThisMonth()
+            } else if (this.currentList === 'Closing next month') {
+              this.stillNextMonth()
+            }
           })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.closeStageForm()
+        this.formData = {}
+        this.dropdownLoading = false
         this.$toast('Salesforce Update Successful', {
           timeout: 2000,
           position: 'top-left',
@@ -2756,26 +2817,6 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
-        if (this.activeFilters.length) {
-          this.getFilteredObjects(this.updateFilterValue)
-        }
-        if (this.currentList === 'Closing this month') {
-          this.stillThisMonth()
-        } else if (this.currentList === 'Closing next month') {
-          this.stillNextMonth()
-        }
-      } catch (e) {
-        this.$toast('Error updating stage form', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        this.closeStageForm()
-        this.formData = {}
-        this.dropdownLoading = false
       }
     },
     async updateResource() {
@@ -2795,14 +2836,48 @@ export default {
             stage_name: this.stageGateField ? this.stageGateField : null,
           })
           .then(async () => {
-            let updatedRes = await SObjects.api.getObjects('Opportunity')
-            this.allOpps = updatedRes.results
-            this.originalList = updatedRes.results
+            if (this.filterText) {
+              let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
+                ['CONTAINS', 'Name', this.filterText],
+              ])
+              let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
+              this.allOppsForWorkflows = wfr.results
+              this.allOpps = updatedRes.results
+              this.originalList = updatedRes.results
+              updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
+              updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+              this.oppTotal = updatedRes.count
+              this.currentPage = 1
+            } else {
+              let updatedRes = await SObjects.api.getObjects('Opportunity', 1)
+              let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
+              this.allOppsForWorkflows = wfr.results
+              this.allOpps = updatedRes.results
+              this.originalList = updatedRes.results
+              updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
+              updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+              this.oppTotal = updatedRes.count
+              this.currentPage = 1
+            }
+
             if (this.selectedWorkflow) {
               this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
             }
+            if (this.activeFilters.length) {
+              this.getFilteredObjects(this.updateFilterValue)
+            }
+            if (this.currentList === 'Closing this month') {
+              this.stillThisMonth()
+            } else if (this.currentList === 'Closing next month') {
+              this.stillNextMonth()
+            }
           })
-
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.updateList = []
+        this.formData = {}
+        this.closeFilterSelection()
         this.$toast('Salesforce Update Successful', {
           timeout: 2000,
           position: 'top-left',
@@ -2810,31 +2885,6 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
-        if (this.activeFilters.length) {
-          this.getFilteredObjects(this.updateFilterValue)
-        }
-        if (this.currentList === 'Closing this month') {
-          this.stillThisMonth()
-        } else if (this.currentList === 'Closing next month') {
-          this.stillNextMonth()
-        }
-      } catch (e) {
-        if (e.response) {
-          // console.log(e.response.data)
-          // console.log(e.response.status)
-          // console.log(e.response.headers)
-        }
-        this.$toast('Error updating Opporutniy, please try again.', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        this.updateList = []
-        this.formData = {}
-        this.closeFilterSelection()
       }
     },
     async createResource() {
@@ -3139,14 +3189,10 @@ export default {
         this.allOpps = res.results
         this.originalList = res.results
         res.next ? (this.hasNext = true) : (this.hasNext = false)
+        this.hasNextOriginal = this.hasNext
         res.previous ? (this.hasPrev = true) : (this.hasPrev = false)
         this.oppTotal = res.count
-
-        if (this.currentList === 'Closing this month') {
-          this.stillThisMonth()
-        } else if (this.currentList === 'Closing next month') {
-          this.stillNextMonth()
-        }
+        this.originalOppTotal = res.count
       } catch (e) {
         this.$toast('Error gathering Opportunities!', {
           timeout: 2000,
@@ -3159,6 +3205,40 @@ export default {
         setTimeout(() => {
           this.loading = false
         }, 100)
+      }
+    },
+    async addMore(page) {
+      try {
+        const res = await SObjects.api.getObjects('Opportunity', page)
+        let filtRes = await SObjects.api.getObjects('Opportunity', page, true, [
+          ['CONTAINS', 'Name', this.filterText],
+        ])
+
+        if (this.filterText) {
+          this.allOpps = [...filtRes.results, ...this.allOpps]
+          filtRes.next ? (this.hasNext = true) : (this.hasNext = false)
+        } else if (this.activeFilters.length) {
+          let filteredRes = await SObjects.api.getObjects('Opportunity', page, true, this.filters)
+          this.allOpps = [...filteredRes.results, ...this.allOpps]
+          filteredRes.next ? (this.hasNext = true) : (this.hasNext = false)
+        } else {
+          this.allOpps = [...res.results, ...this.allOpps]
+          res.next ? (this.hasNext = true) : (this.hasNext = false)
+        }
+
+        // if (this.currentList === 'Closing this month') {
+        //   this.stillThisMonth()
+        // } else if (this.currentList === 'Closing next month') {
+        //   this.stillNextMonth()
+        // }
+      } catch (e) {
+        this.$toast('Error gathering Opportunities!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async getNotes(id) {
@@ -3185,41 +3265,56 @@ export default {
       }
     },
     closeDatesThisMonth() {
+      this.currentPage = 1
       this.allOpps = this.originalList
       this.selectedWorkflow = false
       this.allOpps = this.allOpps.filter(
         (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth,
       )
+      this.allOpps.length < 20 ? (this.hasNext = false) : (this.hasNext = true)
+      this.oppTotal = this.allOpps.length
       this.currentList = 'Closing this month'
       this.showList = false
       this.workList = false
       this.closeFilterSelection()
     },
     stillThisMonth() {
+      this.currentPage = 1
       this.allOpps = this.originalList
       this.allOpps = this.allOpps.filter(
         (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth,
       )
+      this.allOpps.length < 20 ? (this.hasNext = false) : (this.hasNext = true)
+      this.oppTotal = this.allOpps.length
       this.currentList = 'Closing this month'
     },
     closeDatesNextMonth() {
+      this.currentPage = 1
       this.allOpps = this.originalList
       this.selectedWorkflow = false
       this.allOpps = this.allOpps.filter(
         (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth + 1,
       )
+      this.allOpps.length < 20 ? (this.hasNext = false) : (this.hasNext = true)
+      this.oppTotal = this.allOpps.length
       this.currentList = 'Closing next month'
       this.showList = false
       this.closeFilterSelection()
     },
     stillNextMonth() {
+      this.currentPage = 1
       this.allOpps = this.originalList
       this.allOpps = this.allOpps.filter(
         (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth + 1,
       )
+      this.allOpps.length < 20 ? (this.hasNext = false) : (this.hasNext = true)
+      this.oppTotal = this.allOpps.length
       this.currentList = 'Closing next month'
     },
     allOpportunities() {
+      this.currentPage = 1
+      this.oppTotal = this.originalOppTotal
+      this.hasNext = this.hasNextOriginal
       this.selectedWorkflow = false
       this.allOpps = this.originalList
       this.currentList = 'All Opportunities'
@@ -3460,14 +3555,18 @@ export default {
 }
 .results {
   margin: 0;
-  padding-left: 4px;
-  height: 34px;
+  padding-left: 3px;
+  width: 50vw;
   display: flex;
   justify-content: flex-start;
   align-items: center;
+  font-size: 18px;
+  letter-spacing: 0.5px;
+  // outline: 1px solid red;
+  height: 34px;
 }
 .pagination {
-  width: 50vw;
+  width: 100vw;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -3488,7 +3587,7 @@ export default {
     border: none;
     background-color: $dark-green;
     color: white;
-    padding: 3px 6px;
+    padding: 6px 8px;
   }
   &-num2 {
     margin-right: 8px;
@@ -3511,11 +3610,12 @@ export default {
   justify-content: center;
   border: none;
   background: transparent;
-  padding: 3px;
+  padding: 2px;
   font-size: 12px;
   cursor: pointer;
+  color: $dark-green;
   img {
-    filter: invert(60%);
+    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
   }
 }
 .rotate {
@@ -3531,6 +3631,7 @@ export default {
 }
 .between {
   justify-content: space-between;
+  width: 100%;
 }
 select {
   -webkit-appearance: none !important;
@@ -3548,8 +3649,8 @@ select {
 }
 .select-btn1 {
   border: 0.7px solid $very-light-gray;
-  padding: 0.4rem 0.75rem;
-  font-size: 12px;
+  padding: 0.45rem 1.25rem;
+  font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3662,7 +3763,7 @@ h3 {
   margin: 0;
   padding: 0;
   min-height: 50vh;
-  max-height: 72vh;
+  max-height: 68vh;
   overflow: scroll;
   border-radius: 8px;
   border: 1px solid #e8e8e8;
@@ -3904,7 +4005,7 @@ section {
   }
 }
 .bulk-action {
-  margin: 0.75rem 0rem;
+  margin: 0rem;
   &__title {
     font-weight: bold;
     font-size: 14px;
@@ -3919,7 +4020,7 @@ section {
   justify-content: space-between;
 }
 .pipelines {
-  padding: 4.2rem 1.25rem 0.75rem 0.75rem;
+  padding: 4.2rem 2rem 0.75rem 1.5rem;
   color: $base-gray;
   margin: 0 1rem 0 0.5rem;
 }
@@ -3946,7 +4047,6 @@ section {
   display: flex;
   align-items: center;
   border: none;
-  height: 4.5vh;
   margin: 0 0.5rem 0 0;
   padding: 0.25rem 0.6rem;
   border-radius: 6px;
@@ -3958,13 +4058,18 @@ section {
     filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
   }
 }
+.bg-light-green {
+  background-color: $white-green !important;
+  color: $dark-green !important;
+  font-weight: bold;
+}
 .add-button {
   display: flex;
   align-items: center;
   border: none;
   margin: 0 0.5rem 0 0;
-  padding: 0.4rem 0.75rem;
-  font-size: 12px;
+  padding: 0.45rem 1rem;
+  font-size: 13px;
   border-radius: 6px;
   background-color: $dark-green;
   cursor: pointer;
@@ -4166,8 +4271,8 @@ main:hover > span {
 .list-section {
   z-index: 4;
   position: absolute;
-  top: 20vh;
-  left: 1rem;
+  top: 18vh;
+  left: 3rem;
   border-radius: 6px;
   display: flex;
   flex-direction: column;
@@ -4270,34 +4375,12 @@ a {
   filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
     brightness(93%) contrast(89%);
 }
-.pagination {
-  width: 100%;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-end;
-  margin: 4px 0px 0px 0px;
-  height: 30px;
-
-  &-num {
-    margin-right: 8px;
-    font-size: 11px;
-  }
-  &-rotate {
-  }
-  button {
-    margin-right: 8px;
-  }
-}
-.pag-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 3px;
-  border: 1px solid #e8e8e8;
-  padding: 2px;
-}
 .rotate {
   transform: rotate(180deg);
+}
+.results-2 {
+  font-size: 11px;
+  margin-right: 16px;
+  color: $gray;
 }
 </style>

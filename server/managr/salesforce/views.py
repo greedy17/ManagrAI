@@ -452,7 +452,7 @@ class SalesforceSObjectViewSet(
                     "success": True,
                 }
                 break
-            except TokenExpired:
+            except TokenExpired as e:
                 if attempts >= 5:
                     logger.info(f"CREATE FORM INSTANCE TOKEN EXPIRED ERROR ---- {e}")
 
@@ -498,12 +498,15 @@ class SalesforceSObjectViewSet(
                     "success": True,
                 }
                 break
-            except TokenExpired:
+            except TokenExpired as e:
                 if attempts >= 5:
                     logger.info(f"CREATE FORM INSTANCE TOKEN EXPIRED ERROR ---- {e}")
 
                 else:
-                    user.salesforce_account.regenerate_token()
+                    if model_object.owner == user:
+                        user.salesforce_account.regenerate_token()
+                    else:
+                        model_object.owner.salesforce_account.regenerate_token()
                     attempts += 1
             except Exception as e:
                 logger.info(f"CREATE FORM INSTANCE ERROR ---- {e}")
@@ -854,17 +857,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         user = self.request.user
         if from_admin and user.is_staff:
             return MeetingWorkflow.objects.all()
-        curr_date = datetime.now()
-        start = curr_date.replace(hour=0, minute=0)
-        end = curr_date.replace(hour=23, minute=59)
-        meetings = MeetingWorkflow.objects.filter(
-            Q(user=user, datetime_created__range=(start, end))
-        ).order_by("-datetime_created")
-        logger.info(f"Pulled workflow for user {user.full_name}: {len(meetings)}")
-        if len(meetings):
-            return meetings
-        else:
-            return MeetingWorkflow.objects.none()
+        return MeetingWorkflow.objects.for_user(user)
 
     @action(
         methods=["post"],

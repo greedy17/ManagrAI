@@ -86,50 +86,52 @@
                 }}
               </p>
               <p class="note-section__body">
-                <span class="underline">Meeting UUID:</span>
-                {{
+                <span class="underline">Meeting UUID: </span
+                >{{
                   modalInfo.meeting_ref.meeting_uuid ? modalInfo.meeting_ref.meeting_uuid : 'None'
                 }}
-                <span class="underline">Account ID:</span>
-                {{ modalInfo.meeting_ref.account_id ? modalInfo.meeting_ref.account_id : 'None' }}
-                <span class="underline">Host ID:</span>
-                {{ modalInfo.meeting_ref.host_id ? modalInfo.meeting_ref.host_id : 'None' }}
-                <span class="underline">Operator ID:</span>
-                {{ modalInfo.meeting_ref.operator_id ? modalInfo.meeting_ref.operator_id : 'None' }}
-                <span class="underline">Status:</span>
-                {{ modalInfo.meeting_ref.status ? modalInfo.meeting_ref.status : 'None' }}
-                <span class="underline">Timezone:</span>
-                {{ modalInfo.meeting_ref.timezone ? modalInfo.meeting_ref.timezone : 'None' }}
-                <span class="underline">Start URL:</span>
-                {{ modalInfo.meeting_ref.start_url ? modalInfo.meeting_ref.start_url : 'None' }}
-                <span class="underline">Duration:</span>
-                {{ modalInfo.meeting_ref.duration ? modalInfo.meeting_ref.duration : 'None' }}
-                <span class="underline">Original Duration:</span>
-                {{
+                <span class="underline">Account ID: </span
+                >{{ modalInfo.meeting_ref.account_id ? modalInfo.meeting_ref.account_id : 'None' }}
+                <span class="underline">Host ID: </span
+                >{{ modalInfo.meeting_ref.host_id ? modalInfo.meeting_ref.host_id : 'None' }}
+                <span class="underline">Operator ID: </span
+                >{{
+                  modalInfo.meeting_ref.operator_id ? modalInfo.meeting_ref.operator_id : 'None'
+                }}
+                <span class="underline">Status: </span
+                >{{ modalInfo.meeting_ref.status ? modalInfo.meeting_ref.status : 'None' }}
+                <span class="underline">Timezone: </span
+                >{{ modalInfo.meeting_ref.timezone ? modalInfo.meeting_ref.timezone : 'None' }}
+                <span class="underline">Start URL: </span
+                >{{ modalInfo.meeting_ref.start_url ? modalInfo.meeting_ref.start_url : 'None' }}
+                <span class="underline">Duration: </span
+                >{{ modalInfo.meeting_ref.duration ? modalInfo.meeting_ref.duration : 'None' }}
+                <span class="underline">Original Duration: </span
+                >{{
                   modalInfo.meeting_ref.original_duration
                     ? modalInfo.meeting_ref.original_duration
                     : 'None'
                 }}
-                <span class="underline">Total Minutes:</span>
-                {{
+                <span class="underline">Total Minutes: </span
+                >{{
                   modalInfo.meeting_ref.total_minutes ? modalInfo.meeting_ref.total_minutes : 'None'
                 }}
-                <span class="underline">Recurrence:</span>
-                {{ modalInfo.meeting_ref.recurrence ? modalInfo.meeting_ref.recurrence : 'None' }}
-                <span class="underline">Join URL:</span>
-                {{ modalInfo.meeting_ref.join_url ? modalInfo.meeting_ref.join_url : 'None' }}
-                <span class="underline">Operator:</span>
-                {{ modalInfo.meeting_ref.operator ? modalInfo.meeting_ref.operator : 'None' }}
-                <span class="underline">Operation:</span>
-                {{ modalInfo.meeting_ref.operation ? modalInfo.meeting_ref.operation : 'None' }}
-                <span class="underline">Participants:</span>
-                {{
+                <span class="underline">Recurrence: </span
+                >{{ modalInfo.meeting_ref.recurrence ? modalInfo.meeting_ref.recurrence : 'None' }}
+                <span class="underline">Join URL: </span
+                >{{ modalInfo.meeting_ref.join_url ? modalInfo.meeting_ref.join_url : 'None' }}
+                <span class="underline">Operator: </span
+                >{{ modalInfo.meeting_ref.operator ? modalInfo.meeting_ref.operator : 'None' }}
+                <span class="underline">Operation: </span
+                >{{ modalInfo.meeting_ref.operation ? modalInfo.meeting_ref.operation : 'None' }}
+                <span class="underline">Participants: </span
+                >{{
                   modalInfo.meeting_ref.participants ? modalInfo.meeting_ref.participants : 'None'
                 }}
-                <span class="underline">Type:</span>
-                {{ modalInfo.meeting_ref.type ? modalInfo.meeting_ref.type : 'None' }}
-                <span class="underline">Zoom Account:</span>
-                {{
+                <span class="underline">Type: </span
+                >{{ modalInfo.meeting_ref.type ? modalInfo.meeting_ref.type : 'None' }}
+                <span class="underline">Zoom Account: </span
+                >{{
                   modalInfo.meeting_ref.zoom_account ? modalInfo.meeting_ref.zoom_account : 'None'
                 }}
               </p>
@@ -527,7 +529,7 @@
           v-for="(slackFormInstance, i) in slackFormInstances"
           :key="slackFormInstance.id"
         >
-          <h3 class="click click_width" @click="openModal('slackFormInstance', slackFormInstance)">
+          <h5 class="click click_width" @click="openModal('slackFormInstance', slackFormInstance)">
             {{ slackFormInstance.templateRef.resource }}
             {{ slackFormInstance.templateRef.formType }} by
             {{ getUserName(slackFormInstance.user) }}
@@ -538,7 +540,7 @@
                   }`
                 : `(Not Submitted)`
             }}
-          </h3>
+          </h5>
         </div>
       </template>
       <template v-else-if="page === 'MeetingWorkflow'">
@@ -666,6 +668,7 @@ export default {
     async getAllMeetingWorkflows() {
       try {
         let res = await MeetingWorkflows.api.getMeetingList({ fromAdmin: true })
+        console.log(res)
         this.allMeetingWorkflows = res.results
       } catch (e) {
         console.log(e)
@@ -960,12 +963,15 @@ export default {
 .staff {
   margin-top: 3rem;
   display: flex;
-  height: 90vh;
+  height: 100vh;
 }
 
 .staff__drawer {
   width: 20vw;
-  border-right: 1px solid $very-light-gray;
+  height: 40%;
+  background-color: #fafbfc;
+  border-right: 2px solid $soft-gray;
+  border-bottom: 2px solid $soft-gray;
   padding-right: 1rem;
 }
 
@@ -1098,7 +1104,7 @@ input[type='search']:focus {
 .modal-container {
   background-color: $white;
   overflow: auto;
-  width: 44vw;
+  width: 60vw;
   min-height: 48vh;
   align-items: center;
   border-radius: 0.3rem;
@@ -1182,7 +1188,7 @@ input[type='search']:focus {
   width: max-content;
 }
 .padding {
-  padding: 0.5rem 1rem;
+  padding: 0.25rem 1rem;
 }
 .rel {
   position: relative;
