@@ -895,6 +895,9 @@
             </div>
           </section>
         </div>
+        <input id="products" type="checkbox" />
+        <label :for="products">Add Product</label>
+
         <div class="flex-end-opp">
           <div style="display: flex; align-items: center">
             <button @click="updateResource()" class="add-button__">Update</button>
@@ -1709,6 +1712,9 @@ export default {
     }
   },
   computed: {
+    hasProducts() {
+      return this.$store.state.user.organizationRef.hasProducts
+    },
     currentCheckList() {
       if (this.primaryCheckList.length > 0) {
         return this.primaryCheckList
@@ -4020,7 +4026,7 @@ section {
   justify-content: space-between;
 }
 .pipelines {
-  padding: 4.2rem 2rem 0.75rem 1.5rem;
+  padding: 4.5rem 2rem 0.75rem 1.5rem;
   color: $base-gray;
   margin: 0 1rem 0 0.5rem;
 }
