@@ -1840,7 +1840,8 @@ export default {
       }
     },
     nextPage() {
-      this.addMore(this.currentPage + 1)
+      this.currentPage += 1
+      this.addMore(this.currentPage)
     },
     prevPage() {
       this.getObjects(this.currentPage - 1)
