@@ -846,18 +846,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
 
     def get_queryset(self):
-        user = self.request.user
-        curr_date = datetime.now()
-        start = curr_date.replace(hour=0, minute=0)
-        end = curr_date.replace(hour=23, minute=59)
-        meetings = MeetingWorkflow.objects.filter(
-            Q(user=user, datetime_created__range=(start, end))
-        ).order_by("-datetime_created")
-        logger.info(f"Pulled workflow for user {user.full_name}: {len(meetings)}")
-        if len(meetings):
-            return meetings
-        else:
-            return MeetingWorkflow.objects.none()
+        return MeetingWorkflow.objects.for_user(self.request.user)
 
     @action(
         methods=["post"],
