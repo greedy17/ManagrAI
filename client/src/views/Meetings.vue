@@ -88,7 +88,7 @@
               <textarea
                 id="user-input"
                 ccols="30"
-                rows="4"
+                rows="8"
                 style="width: 36.5vw; border-radius: 0.2rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
@@ -934,7 +934,7 @@ export default {
         this.currentOwner = this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
         )[0].full_name
-        this.allOppsForWorkflows.filter((opp) => opp.id === this.oppId)[0].account_ref
+        this.allOpps.filter((opp) => opp.id === this.oppId)[0].account_ref
           ? (this.currentAccount = this.allOpps.filter(
               (opp) => opp.id === this.oppId,
             )[0].account_ref.name)
@@ -1004,7 +1004,7 @@ export default {
         this.currentOwner = this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
         )[0].full_name
-        this.allOppsForWorkflows.filter((opp) => opp.id === this.oppId)[0].account_ref
+        this.allOpps.filter((opp) => opp.id === this.oppId)[0].account_ref
           ? (this.currentAccount = this.allOpps.filter(
               (opp) => opp.id === this.oppId,
             )[0].account_ref.name)
@@ -1031,10 +1031,10 @@ export default {
       if (multi) {
         this.formData[key] = this.formData[key]
           ? this.formData[key] + ';' + val
-          : val.replace(/&#39;/g, '')
+          : val.split(/&#39;/g)[0]
       }
       if (val && !multi) {
-        this.formData[key] = val.replace(/&#39;/g, '')
+        this.formData[key] = val
       }
       if (key === 'StageName') {
         this.stagesWithForms.includes(val)
@@ -1044,7 +1044,7 @@ export default {
     },
     setUpdateValidationValues(key, val) {
       if (val) {
-        this.formData[key] = val.replace(/&#39;/g, '')
+        this.formData[key] = val
       }
     },
 
@@ -1052,20 +1052,19 @@ export default {
       this.updateList.push(this.oppId)
       this.editOpModalOpen = false
       try {
-        const res = await SObjects.api
-          .updateResource({
-            form_data: this.formData,
-            stage_name: this.stageGateField ? this.stageGateField : null,
-            integration_ids: [this.integrationId],
-            resource_type: 'Opportunity',
-            form_type: 'UPDATE',
-            resource_id: this.oppId,
-          })
-          .then(async () => {
-            let updatedRes = await SObjects.api.getObjects('Opportunity')
-            this.allOpps = updatedRes.results
-            this.originalList = updatedRes.results
-          })
+        const res = await SObjects.api.updateResource({
+          form_data: this.formData,
+          stage_name: this.stageGateField ? this.stageGateField : null,
+          integration_ids: [this.integrationId],
+          resource_type: 'Opportunity',
+          form_type: 'UPDATE',
+          resource_id: this.oppId,
+        })
+        // .then(async () => {
+        //   let updatedRes = await SObjects.api.getObjects('Opportunity')
+        //   this.allOpps = updatedRes.results
+        //   this.originalList = updatedRes.results
+        // })
         this.updateList = []
         this.formData = {}
         this.$toast('Salesforce Update Successful', {

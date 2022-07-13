@@ -331,7 +331,10 @@ button:disabled {
   cursor: pointer;
 }
 .green {
-  color: $dark-green !important;
+  font-size: 11px !important;
+  font-weight: bold !important;
+  color: $dark-green;
+  margin-left: 2px;
 }
 .greenish {
   color: $dark-green !important;
