@@ -433,17 +433,22 @@
         <section class="modal-container__body">
           <span>
             <label>Meeting Title: </label>
-            <input id="zoom-input" type="text" />
+            <input v-model="meetingTitle" class="zoom-input" type="text" />
           </span>
 
           <span>
             <label class="">Description: </label>
-            <input id="zoom-input" type="text" />
+            <input v-model="description" class="zoom-input" type="text" />
+          </span>
+
+          <span>
+            <label class="">Start Date</label>
+            <input v-model="startDate" class="zoom-input" type="date" />
           </span>
 
           <span>
             <label class="">Start Time</label>
-            <input id="zoom-input" type="time" />
+            <input v-model="startTime" class="zoom-input" type="time" />
             <!-- <label class="">Minute</label>
             <input type="text" />
             <label class="">AM/PM</label>
@@ -452,19 +457,77 @@
 
           <span>
             <label class="">Duration</label>
-            <input type="text" />
+            <!-- <input v-model="duration" type="text" /> -->
+            <Multiselect
+              placeholder="Duration"
+              style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
+              v-model="meetingDuration"
+              :options="fiveMinuteIntervals"
+              openDirection="below"
+              selectLabel="Enter"
+              track-by="id"
+              :multiple="false"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+            </Multiselect>
           </span>
 
           <p>Select participants</p>
           <span>
             <label class="">Internal Users</label>
-            <input type="text" />
+            <!-- <input v-model="internalParticipantsSelected" type="text" /> -->
+            <Multiselect
+              placeholder="Internal Users"
+              style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
+              v-model="internalParticipantsSelected"
+              :options="internalParticipants"
+              openDirection="below"
+              selectLabel="Enter"
+              track-by="id"
+              :custom-label="internalCustomLabel"
+              :multiple="true"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+            </Multiselect>
           </span>
 
           <span>
             <label class="">External Users</label>
-            <input type="text" />
+            <!-- <input v-model="externalParticipantsSelected" type="text" /> -->
+            <Multiselect
+              placeholder="External Users"
+              style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
+              v-model="externalParticipantsSelected"
+              :options="externalParticipants"
+              openDirection="below"
+              selectLabel="Enter"
+              track-by="id"
+              :custom-label="externalCustomLabel"
+              :multiple="true"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+            </Multiselect>
           </span>
+
+          <span>
+            <label class="">Extra Users (separate emails by commas)</label>
+            <input v-model="extraParticipantsSelected" type="text" />
+          </span>
+
+          <div>
+            <button
+              class="green_button sized"
+              @click="submitZoomMeeting"
+            >
+            Submit
+            </button>
+          </div>
         </section>
       </div>
     </Modal>
@@ -519,6 +582,7 @@ import { SObjects, SObjectPicklist, MeetingWorkflows } from '@/services/salesfor
 import AlertTemplate from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
 import SlackOAuth from '@/services/slack'
+import ZoomMeetings from '@/services/zoommeetings'
 import MeetingWorkflow from '@/components/MeetingWorkflow'
 import MeetingWorkflowHeader from '@/components/MeetingWorkflowHeader'
 import User from '@/services/users'
@@ -604,6 +668,17 @@ export default {
       selectedMeeting: false,
       meetings: null,
       referenceOpts: {},
+      fiveMinuteIntervals: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55],
+      meetingTitle: '',
+      description: '',
+      startDate: null,
+      startTime: null,
+      meetingDuration: 30,
+      internalParticipants: null,
+      externalParticipants: null,
+      internalParticipantsSelected: [],
+      externalParticipantsSelected: [],
+      extraParticipantsSelected: '',
     }
   },
   computed: {
@@ -619,6 +694,7 @@ export default {
   },
   beforeMount() {
     this.getUsers()
+    this.getExternalParticipants()
   },
   watch: {
     accountSobjectId: 'getInitialAccounts',
@@ -641,6 +717,60 @@ export default {
   methods: {
     resetMeeting() {
       this.meetingOpen = !this.meetingOpen
+    },
+    async submitZoomMeeting() {
+      if (
+        !this.meetingTitle || !this.description || !this.startDate ||
+        !this.startTime || !this.meetingDuration || !this.externalParticipantsSelected
+      ) {
+        console.log('Please input all information')
+        return
+      }
+      let noSpacesExtra = '' 
+      for (let i = 0; i < this.extraParticipantsSelected.length; i++) {
+        this.extraParticipantsSelected[i] !== ' ' ? noSpacesExtra += this.extraParticipantsSelected[i] : null
+      }
+      let extraParticipants = [];
+      if (noSpacesExtra) {
+        extraParticipants = noSpacesExtra.split(',')
+      }
+      let extra_participants = [];
+      for (let i = 0; i < extraParticipants.length; i++) {
+        const participant = extraParticipants[i]
+        if (participant.length) {
+          extra_participants.push(participant)
+        }
+      }
+      if (!(this.internalParticipantsSelected.length || this.externalParticipantsSelected.length || extra_participants.length)) {
+        console.log('Please add participants to the meeting')
+        return
+      }
+      // console.log('internalPar', this.internalParticipantsSelected)
+      // console.log('externalPar', this.externalParticipantsSelected)
+      // not sure if using const date or just the normal date yet
+      // const date = new Date(`${this.startDate} ${this.startTime}`)
+      const hourMinute = this.startTime.split(':')
+      // console.log('date', date)
+      const data = {
+        meeting_topic: this.meetingTitle,
+        meeting_description: this.description,
+        meeting_date: this.startDate,
+        meeting_hour: hourMinute[0],
+        meeting_minute: hourMinute[1],
+        meeting_time: this.startTime,
+        meeting_duration: this.meetingDuration,
+        contacts: this.externalParticipantsSelected,
+        internal: this.internalParticipantsSelected,
+        extra_participants,
+      }
+
+      const request = {user: this.user, data}
+
+      console.log('request', request)
+
+      const res = await ZoomMeetings.api.createZoomMeeting(request)
+      console.log('done', res)
+      // callFunctionHere(request)
     },
     async getReferenceFieldList(key, val) {
       try {
@@ -1094,6 +1224,24 @@ export default {
       try {
         const res = await SObjects.api.getObjects('User')
         this.allUsers = res.results.filter((user) => user.has_salesforce_integration)
+        this.internalParticipants = this.allUsers;
+        console.log('this.allUsers', this.allUsers)
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    internalCustomLabel({full_name, email}) {
+      return `${full_name} (${email})`
+    },
+    externalCustomLabel({secondary_data, email}) {
+      return `${secondary_data.Name ? secondary_data.Name : 'N/A'} (${email ? email : 'N/A'})`
+    },
+    async getExternalParticipants() {
+      try {
+        const res = await SObjects.api.getObjects('Contact')
+        console.log('res', res)
+        this.externalParticipants = res.results//.filter((user) => user.has_salesforce_integration)
+        console.log('this.externalParticipants', this.externalParticipants)
       } catch (e) {
         console.log(e)
       }
@@ -1162,7 +1310,7 @@ export default {
   background-color: $white;
   overflow: auto;
   width: 36vw;
-  height: 80vh;
+  height: 85vh;
   align-items: center;
   border-radius: 0.3rem;
   padding: 0.25rem;
@@ -1497,7 +1645,7 @@ section {
   min-height: 2.5rem;
   width: 18vw;
 }
-#zoom-input {
+.zoom-input {
   border: 1px solid $soft-gray;
   border-radius: 0.3rem;
   padding: 0.25rem;
@@ -1604,5 +1752,20 @@ textarea {
 }
 a {
   text-decoration: none;
+}
+.green_button {
+  color: white;
+  background-color: $dark-green;
+  border-radius: 0.25rem;
+  padding: 0.5rem 1rem;
+  font-weight: bold;
+  font-size: 12px;
+  border: none;
+  cursor: pointer;
+}
+
+.sized {
+  height: 3em;
+  align-self: center;
 }
 </style>

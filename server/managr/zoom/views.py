@@ -404,10 +404,12 @@ def fake_recording(request):
 @api_view(["post"])
 @permission_classes([permissions.AllowAny])
 def schedule_zoom_meeting(request):
+    print('\n\nrequest\n\n', request, '\n\n')
     from managr.organization.models import Contact
-
+    print('\n\np0\n\n')
     user = request.user
     data = request.data
+    print('\n\np1\n\n')
     description = data["meeting_description"]
     zoom_data = {
         "meeting_topic": data["meeting_topic"],
@@ -417,9 +419,12 @@ def schedule_zoom_meeting(request):
         "meeting_time": data["meeting_time"],
         "meeting_duration": data["meeting_duration"],
     }
+    print('\n\np2\n\n')
     participant_data = []
     contacts = Contact.objectsd.filter(id__in=data.get("contacts"))
+    print('\n\np3\n\n')
     internal = User.objects.filter(id__in=data.get("internal"))
+    print('\n\np4\n\n')
     extra_participants = data.get("extra_participants")
     for contact in contacts:
         participant_data.append(
@@ -429,14 +434,18 @@ def schedule_zoom_meeting(request):
                 "status": "noreply",
             }
         )
+    print('\n\np5\n\n')
     for u in internal:
         participant_data.append(
             {"email": u.email, "name": f"{u.first_name} {u.last_name}", "status": "noreply",}
         )
+    print('\n\np6\n\n')
     for participant in extra_participants:
         participant_data.append({"email": participant})
+    print('\n\np7\n\n')
     try:
         zoom_res = emit_process_schedule_zoom_meeting(user, zoom_data)
+        print('\n\np8\n\n')
         cal_res = emit_create_calendar_event(
             user,
             zoom_res["topic"],
@@ -445,7 +454,9 @@ def schedule_zoom_meeting(request):
             zoom_res["join_url"],
             description,
         )
+        print('\n\nDone?\n\n')
     except Exception as e:
+        print('\n\n!!!ERROR!!!\n\n')
         logger.exception(f"Scheduling Zoom Meeting Error {e}")
         return Response(data={"error": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
     return Response(status=status.HTTP_200_OK)
