@@ -554,7 +554,7 @@
             </Multiselect>
           </span>
 
-          <h3 style=" margin-bottom: 0; margin-top: .5rem;">Select participants</h3>
+          <h3 style="margin-bottom: 0; margin-top: 0.5rem">Select participants</h3>
           <span class="multiselect-span">
             <label class="short">Internal Users</label>
             <!-- <input v-model="internalParticipantsSelected" type="text" /> -->
@@ -599,7 +599,16 @@
 
           <span>
             <label class="label">Extra Users</label>
-            <input :class="extraParticipantsSelected.length ? 'zoom-input' : 'light-gray-placeholder zoom-input'" v-model="extraParticipantsSelected" type="text" placeholder="Separate emails by commas" />
+            <input
+              :class="
+                extraParticipantsSelected.length
+                  ? 'zoom-input'
+                  : 'light-gray-placeholder zoom-input'
+              "
+              v-model="extraParticipantsSelected"
+              type="text"
+              placeholder="Separate emails by commas"
+            />
           </span>
 
           <div>
@@ -660,7 +669,7 @@ import { SObjects, SObjectPicklist, MeetingWorkflows } from '@/services/salesfor
 import AlertTemplate from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
 import SlackOAuth from '@/services/slack'
-import ZoomMeetings from '@/services/zoommeetings'
+import Zoom from '@/services/zoom/account'
 import MeetingWorkflow from '@/components/MeetingWorkflow'
 import MeetingWorkflowHeader from '@/components/MeetingWorkflowHeader'
 import User from '@/services/users'
@@ -884,12 +893,14 @@ export default {
         extra_participants,
       }
 
-      const request = { data }
+      try {
+        const res = await Zoom.api.createZoomMeeting(data)
 
-      const res = await ZoomMeetings.api.createZoomMeeting(request)
+        console.log('submitZoomMeeting', res)
+      } catch (e) {
+        console.log(e)
+      }
 
-      console.log('resin submitZoomMeeting', res)
-      
       // this.resetMeeting()
     },
     resetNotes() {
@@ -2110,19 +2121,19 @@ a {
   color: #adadad;
 }
 .multiselect-span {
-  display: flex; 
+  display: flex;
   align-items: center;
-  
+
   label {
-    margin-right: .5rem;
+    margin-right: 0.5rem;
   }
 }
 .multiselect-width {
-  // max-width: 23vw; 
+  // max-width: 23vw;
   width: 23vw;
 }
 .label {
-  margin-right: .5rem;
+  margin-right: 0.5rem;
 }
 .select-btn {
   border: 0.5px solid $dark-green;
@@ -2141,7 +2152,7 @@ a {
   img {
     // filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
     // height: 1rem !important;
-    margin-left: .25rem;
+    margin-left: 0.25rem;
   }
 }
 </style>

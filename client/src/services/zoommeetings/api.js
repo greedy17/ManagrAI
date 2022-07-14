@@ -32,19 +32,28 @@ export default class ZoomMeetingAPI extends ModelAPI {
   //   return new ZoomMeetingAPI(cls)
   // }
 
-  createZoomMeeting(zoomMeeting) {
-    // const data = zoomMeeting.toAPI()
+  // createZoomMeeting(zoomMeeting) {
+  //   // const data = zoomMeeting.toAPI()
 
-    console.log('hit?', zoomMeeting)
-    return this.client
-      .post(ZOOM_MEETING_ENDPOINT, zoomMeeting)
-      .then(response => response.data)
-      .catch(
-        apiErrorHandler({
-          apiName: 'Create Zoom Meeting',
-          enable400Alert: true,
-          enable500Alert: true,
-        }),
-      )
+  //   console.log('hit?', zoomMeeting)
+  //   return this.client
+  //     .post(ZOOM_MEETING_ENDPOINT, zoomMeeting)
+  //     .then(response => response.data)
+  //     .catch(
+  //       apiErrorHandler({
+  //         apiName: 'Create Zoom Meeting',
+  //         enable400Alert: true,
+  //         enable500Alert: true,
+  //       }),
+  //     )
+  // }
+
+  async createZoomMeeting(data) {
+    try {
+      const res = await this.client.post(ZOOM_MEETING_ENDPOINT, { data: data })
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Retrieving Zoom Auth Link' })(e)
+    }
   }
 }
