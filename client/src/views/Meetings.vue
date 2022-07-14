@@ -542,7 +542,7 @@
             <input type="text" /> -->
           </span>
 
-          <span>
+          <span class="multiselect-span">
             <label class="">Duration</label>
             <!-- <input v-model="duration" type="text" /> -->
             <Multiselect
@@ -561,13 +561,14 @@
             </Multiselect>
           </span>
 
-          <p>Select participants</p>
-          <span>
-            <label class="">Internal Users</label>
+          <h3 style=" margin-bottom: 0; margin-top: .5rem;">Select participants</h3>
+          <span class="multiselect-span">
+            <label class="short">Internal Users</label>
             <!-- <input v-model="internalParticipantsSelected" type="text" /> -->
             <Multiselect
               placeholder="Internal Users"
-              style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
+              class="multiselect-width"
+              style="margin-bottom: 1rem; margin-top: 1rem"
               v-model="internalParticipantsSelected"
               :options="internalParticipants"
               openDirection="below"
@@ -582,12 +583,13 @@
             </Multiselect>
           </span>
 
-          <span>
-            <label class="">External Users</label>
+          <span class="multiselect-span">
+            <label class="short">External Users</label>
             <!-- <input v-model="externalParticipantsSelected" type="text" /> -->
             <Multiselect
               placeholder="External Users"
-              style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
+              class="multiselect-width"
+              style="margin-bottom: 1rem; margin-top: 1rem"
               v-model="externalParticipantsSelected"
               :options="externalParticipants"
               openDirection="below"
@@ -1560,7 +1562,7 @@ export default {
   background-color: $white;
   overflow: auto;
   width: 36vw;
-  height: 90vh;
+  height: 82vh;
   align-items: center;
   border-radius: 0.3rem;
   padding: 0.25rem;
@@ -2119,5 +2121,17 @@ a {
 }
 .light-gray-placeholder::placeholder {
   color: #adadad;
+}
+.multiselect-span {
+  display: flex; 
+  align-items: center;
+  
+  label {
+    margin-right: .5rem;
+  }
+}
+.multiselect-width {
+  max-width: 23vw; 
+  // width: 23vw;
 }
 </style>
