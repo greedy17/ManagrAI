@@ -20,15 +20,15 @@ class Command(BaseCommand):
     help = "Pull usage statistics for the application"
 
     def handle(self, *args, **options):
-        email_subject = "Managr Usage Data"
-        recipients = ["zach@mymanagr.com"]
+        # email_subject = "Managr Usage Data"
+        # recipients = ["zach@mymanagr.com"]
         totals = get_totals_for_year()
-        send_html_email(
-            email_subject,
-            "core/email-templates/usage-data.html",
-            settings.SERVER_EMAIL,
-            recipients,
-            context=totals,
-        )
+        # send_html_email(
+        #     email_subject,
+        #     "core/email-templates/usage-data.html",
+        #     settings.SERVER_EMAIL,
+        #     recipients,
+        #     context=totals,
+        # )
         self.stdout.write(self.style.HTTP_INFO("{}").format(totals))
 

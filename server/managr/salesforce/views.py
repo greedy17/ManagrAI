@@ -849,7 +849,15 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
 
     def get_queryset(self):
-        return MeetingWorkflow.objects.for_user(self.request.user)
+        from_admin = (
+            json.loads(self.request.GET.get("fromAdmin", None))
+            if self.request.GET.get("fromAdmin", None) is not None
+            else None
+        )
+        user = self.request.user
+        if from_admin and user.is_staff:
+            return MeetingWorkflow.objects.all()[:100]
+        return MeetingWorkflow.objects.for_user(user)
 
     @action(
         methods=["post"],

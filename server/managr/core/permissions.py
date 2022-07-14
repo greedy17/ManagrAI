@@ -135,3 +135,9 @@ class SuperUserCreateOnly(permissions.BasePermission):
             return request.user.is_superuser
         else:
             return True
+
+
+class IsStaff(permissions.BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        return user.is_staff

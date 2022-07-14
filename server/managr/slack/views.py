@@ -53,7 +53,11 @@ from .models import (
     OrgCustomSlackForm,
     OrgCustomSlackFormInstance,
 )
-from .serializers import OrgCustomSlackFormSerializer, OrgSlackIntegrationWriteSerializer
+from .serializers import (
+    OrgCustomSlackFormSerializer,
+    OrgSlackIntegrationWriteSerializer,
+    OrgCustomSlackFormInstanceSerializer,
+)
 
 
 from managr.salesforce.routes import routes as model_routes
@@ -1211,3 +1215,22 @@ def launch_digest(request):
         generate_reminder_message(user.id)
 
     return Response()
+
+
+class SlackFormInstanceViewSet(
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+):
+    serializer_class = OrgCustomSlackFormInstanceSerializer
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return OrgCustomSlackFormInstance.objects.all()[:50]
+        return OrgCustomSlackFormInstance.objects.filter(
+            user__organization=self.request.user.organization
+        )
+

@@ -257,7 +257,11 @@ export default new Router({
         },
       ],
     },
-
+    {
+      path: '/staff',
+      name: 'Staff',
+      component: () => import('@/views/staff/Staff')
+    },
     {
       path: '/settings',
       component: () => import('@/views/settings/Settings'),
