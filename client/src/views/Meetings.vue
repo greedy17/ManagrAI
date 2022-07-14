@@ -603,8 +603,8 @@
           </span>
 
           <span>
-            <label class="">Extra Users (separate emails by commas)</label>
-            <input v-model="extraParticipantsSelected" type="text" />
+            <label class="">Extra Users</label>
+            <input v-model="extraParticipantsSelected" type="text" placeholder="Separate emails by commas" />
           </span>
 
           <div>
@@ -826,6 +826,13 @@ export default {
         !this.externalParticipantsSelected
       ) {
         console.log('Please input all information')
+        this.$toast('Please input all information', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
         return
       }
       let noSpacesExtra = ''
@@ -853,6 +860,13 @@ export default {
         )
       ) {
         console.log('Please add participants to the meeting')
+        this.$toast('Please add participants to the meeting', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
         return
       }
       // console.log('internalPar', this.internalParticipantsSelected)
@@ -876,11 +890,7 @@ export default {
 
       const request = { data }
 
-      console.log('request', request)
-
       const res = await ZoomMeetings.api.createZoomMeeting(request)
-      console.log('done', res)
-      // callFunctionHere(request)
     },
     resetNotes() {
       this.modalOpen = !this.modalOpen
@@ -1445,7 +1455,6 @@ export default {
         const res = await SObjects.api.getObjects('User')
         this.allUsers = res.results.filter((user) => user.has_salesforce_integration)
         this.internalParticipants = this.allUsers
-        console.log('this.allUsers', this.allUsers)
       } catch (e) {
         console.log(e)
       }
@@ -1459,9 +1468,7 @@ export default {
     async getExternalParticipants() {
       try {
         const res = await SObjects.api.getObjects('Contact')
-        console.log('res', res)
         this.externalParticipants = res.results //.filter((user) => user.has_salesforce_integration)
-        console.log('this.externalParticipants', this.externalParticipants)
       } catch (e) {
         this.$toast('Error gathering users', {
           timeout: 2000,
