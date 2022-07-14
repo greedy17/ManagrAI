@@ -856,7 +856,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         )
         user = self.request.user
         if from_admin and user.is_staff:
-            return MeetingWorkflow.objects.all()
+            return MeetingWorkflow.objects.all()[:100]
         return MeetingWorkflow.objects.for_user(user)
 
     @action(

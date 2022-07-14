@@ -56,7 +56,7 @@
             <div class="flex-row-spread sticky border-bottom">
               <div class="flex-row">
                 <img src="@/assets/images/logo.png" class="logo" alt="" />
-                <h4>{{ modalInfo.meeting_ref.topic }}</h4>
+                <h4>{{ modalInfo.meeting_ref.topic ? modalInfo.meeting_ref.topic : 'None' }}</h4>
               </div>
             </div>
             <section class="note-section">
@@ -551,7 +551,7 @@
           :key="meetingWorkflow.id"
         >
           <h3 class="click click_width" @click="openModal('meetingWorkflow', meetingWorkflow)">
-            {{ meetingWorkflow.meeting_ref.topic }}
+            {{ meetingWorkflow.meeting_ref.topic ? meetingWorkflow.meeting_ref.topic : 'None' }}
           </h3>
         </div>
       </template>
