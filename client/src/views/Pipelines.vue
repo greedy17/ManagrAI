@@ -944,7 +944,9 @@
               Add Product
             </button>
 
-            <p v-else class="product-text">Adding Product</p>
+            <p @click="addProduct" v-else class="product-text">
+              Adding Product <img src="@/assets/images/remove.svg" alt="" />
+            </p>
           </div>
           <div v-else></div>
 
@@ -3779,6 +3781,8 @@ export default {
   }
 }
 .product-text {
+  display: flex;
+  align-items: center;
   color: $dark-green;
   border-radius: 4px;
   padding: 4px 6px;
@@ -3786,6 +3790,13 @@ export default {
   font-size: 14px;
   letter-spacing: 0.5px;
   font-weight: bold;
+  cursor: pointer;
+
+  img {
+    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+    height: 16px;
+    margin-left: 4px;
+  }
 }
 .hide {
   display: none;
