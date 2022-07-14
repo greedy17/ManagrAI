@@ -1570,7 +1570,7 @@ export default {
   background-color: $white;
   overflow: auto;
   width: 36vw;
-  height: 82vh;
+  max-height: 90vh;
   align-items: center;
   border-radius: 0.3rem;
   padding: 0.25rem;
