@@ -536,15 +536,10 @@
           <span>
             <label class="label">Start Time</label>
             <input v-model="startTime" class="zoom-input" type="time" />
-            <!-- <label class="">Minute</label>
-            <input type="text" />
-            <label class="">AM/PM</label>
-            <input type="text" /> -->
           </span>
 
           <span class="multiselect-span">
             <label class="">Duration</label>
-            <!-- <input v-model="duration" type="text" /> -->
             <Multiselect
               placeholder="Duration"
               style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
