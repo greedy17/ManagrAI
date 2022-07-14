@@ -604,7 +604,7 @@
 
           <span>
             <label class="">Extra Users</label>
-            <input v-model="extraParticipantsSelected" type="text" placeholder="Separate emails by commas" />
+            <input :class="extraParticipantsSelected.length ? 'zoom-input' : 'light-gray-placeholder zoom-input'" v-model="extraParticipantsSelected" type="text" placeholder="Separate emails by commas" />
           </span>
 
           <div>
@@ -1560,7 +1560,7 @@ export default {
   background-color: $white;
   overflow: auto;
   width: 36vw;
-  height: 85vh;
+  height: 90vh;
   align-items: center;
   border-radius: 0.3rem;
   padding: 0.25rem;
@@ -2116,5 +2116,8 @@ a {
 }
 .logged {
   border-left: 1px solid $dark-green;
+}
+.light-gray-placeholder::placeholder {
+  color: #adadad;
 }
 </style>
