@@ -499,7 +499,7 @@
       dimmed
       @close-modal="
         () => {
-          $emit('cancel'), resetMeeting()
+          //$emit('cancel'), resetMeeting()
         }
       "
     >
@@ -519,22 +519,22 @@
         </header>
         <section class="modal-container__body">
           <span>
-            <label>Meeting Title: </label>
+            <label class="label">Meeting Title</label>
             <input v-model="meetingTitle" class="zoom-input" type="text" />
           </span>
 
           <span>
-            <label class="">Description: </label>
+            <label class="label">Description</label>
             <input v-model="description" class="zoom-input" type="text" />
           </span>
 
           <span>
-            <label class="">Start Date</label>
+            <label class="label">Start Date</label>
             <input v-model="startDate" class="zoom-input" type="date" />
           </span>
 
           <span>
-            <label class="">Start Time</label>
+            <label class="label">Start Time</label>
             <input v-model="startTime" class="zoom-input" type="time" />
             <!-- <label class="">Minute</label>
             <input type="text" />
@@ -551,8 +551,6 @@
               v-model="meetingDuration"
               :options="fiveMinuteIntervals"
               openDirection="below"
-              selectLabel="Enter"
-              track-by="id"
               :multiple="false"
             >
               <template slot="noResult">
@@ -605,7 +603,7 @@
           </span>
 
           <span>
-            <label class="">Extra Users</label>
+            <label class="label">Extra Users</label>
             <input :class="extraParticipantsSelected.length ? 'zoom-input' : 'light-gray-placeholder zoom-input'" v-model="extraParticipantsSelected" type="text" placeholder="Separate emails by commas" />
           </span>
 
@@ -622,7 +620,7 @@
           <span>{{ meetings ? meetings.length : 0 }}</span>
         </h6>
 
-        <button @click="resetMeeting()" class="add-button">
+        <button @click="resetMeeting()" class="select-btn">
           Create Meeting <img src="@/assets/images/zoom.png" alt="" style="height: 1rem" />
         </button>
       </div>
@@ -816,6 +814,7 @@ export default {
   },
   methods: {
     resetMeeting() {
+      this.clearData()
       this.meetingOpen = !this.meetingOpen
     },
     async submitZoomMeeting() {
@@ -893,6 +892,10 @@ export default {
       const request = { data }
 
       const res = await ZoomMeetings.api.createZoomMeeting(request)
+
+      console.log('resin submitZoomMeeting', res)
+      
+      // this.resetMeeting()
     },
     resetNotes() {
       this.modalOpen = !this.modalOpen
@@ -920,6 +923,16 @@ export default {
           bodyClassName: ['custom'],
         })
       }
+    },
+    clearData() {
+      this.meetingTitle = ''
+      this.description = ''
+      this.startDate = null
+      this.startTime = null
+      this.meetingDuration = 30
+      this.internalParticipantsSelected = []
+      this.externalParticipantsSelected = []
+      this.extraParticipantsSelected = ''
     },
     async stageGateInstance(field) {
       this.stageGateId = null
@@ -1710,27 +1723,6 @@ select {
   padding-left: 0.75rem;
   border-radius: 0;
 }
-.select-btn {
-  border: none;
-  min-height: 4.5vh;
-  padding: 0.5rem 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  // box-shadow: 1px 1px 2px $very-light-gray;
-  border-radius: 0.25rem;
-  background-color: white;
-  border: 1px solid #e8e8e8;
-  cursor: pointer;
-  color: $dark-green;
-  letter-spacing: 0.2px;
-  margin-right: 0.5rem;
-  transition: all 0.25s;
-
-  img {
-    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
-  }
-}
 .select-btn:hover {
   transform: scale(1.02);
   box-shadow: 1px 2px 3px $very-light-gray;
@@ -2131,7 +2123,30 @@ a {
   }
 }
 .multiselect-width {
-  max-width: 23vw; 
-  // width: 23vw;
+  // max-width: 23vw; 
+  width: 23vw;
+}
+.label {
+  margin-right: .5rem;
+}
+.select-btn {
+  border: 0.5px solid $dark-green;
+  padding: 0.375rem 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background-color: white;
+  cursor: pointer;
+  color: $dark-green;
+  letter-spacing: 0.2px;
+  margin-right: 0.5rem;
+  transition: all 0.25s;
+
+  img {
+    // filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+    // height: 1rem !important;
+    margin-left: .25rem;
+  }
 }
 </style>
