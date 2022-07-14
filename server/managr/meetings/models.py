@@ -28,6 +28,9 @@ class Meeting(TimeStampModel):
         default=dict, blank=True, null=True, help_text="Json object of extra meeting data"
     )
 
+    def __str__(self):
+        return f"{self.topic}, owner: {self.is_owner}"
+
     class Meta:
         ordering = ["-datetime_created"]
 
@@ -47,8 +50,7 @@ class Meeting(TimeStampModel):
         return ZoomMtg(**(self.meta_data))
 
     def get_past_meeting_participants(self, access_token):
-        if self.provider == "Zoom" and self.is_owner:
-            self.participants = self.zoom_adapter_class.get_past_meeting_participants(access_token)
+        self.participants = self.zoom_adapter_class.get_past_meeting_participants(access_token)
         self.save()
         return self
 

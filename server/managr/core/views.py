@@ -1,7 +1,8 @@
 import logging
+from urllib import response
 import requests
 import textwrap
-
+from django.utils import timezone
 from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
 from django.template.exceptions import TemplateDoesNotExist
@@ -33,6 +34,7 @@ from rest_framework.response import Response
 
 from managr.api.emails import send_html_email
 from managr.utils import sites as site_utils
+from managr.core.utils import get_totals_for_year
 from managr.slack.helpers import requests as slack_requests, block_builders
 from .nylas.auth import get_access_token, get_account_details
 from .models import (
@@ -45,7 +47,7 @@ from .serializers import (
     UserInvitationSerializer,
     UserRegistrationSerializer,
 )
-from .permissions import IsOrganizationManager, IsSuperUser
+from .permissions import IsOrganizationManager, IsSuperUser, IsStaff
 
 from .nylas.emails import (
     send_new_email_legacy,
@@ -55,6 +57,20 @@ from .nylas.emails import (
 from .nylas.models import NylasAccountStatusList
 
 logger = logging.getLogger("managr")
+
+
+def GET_COMMAND_OBJECTS():
+    from managr.salesforce.background import (
+        emit_gen_next_sync,
+        emit_gen_next_object_field_sync,
+    )
+
+    commands = {
+        "SALESFORCE_FIELDS": emit_gen_next_object_field_sync,
+        "SALESFORCE_RESOURCES": emit_gen_next_sync,
+        "PULL_USAGE_DATA": get_totals_for_year
+    }
+    return commands
 
 
 def index(request):
@@ -295,6 +311,48 @@ class UserViewSet(
 
     @action(
         methods=["post"],
+        permission_classes=[permissions.IsAuthenticated, IsStaff],
+        detail=False,
+        url_path="staff/commands",
+    )
+    def launch_command(self, request, *args, **kwargs):
+        COMMANDS = GET_COMMAND_OBJECTS()
+        user = request.user
+        data = request.data
+        command = data.get("command")
+        print(command)
+        print(COMMANDS)
+        command_function = COMMANDS[command]
+        scheduled_time = timezone.now()
+        formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
+        if command == "SALESFORCE_FIELDS":
+            operations = [
+                *user.salesforce_account.field_sync_opts,
+                *user.salesforce_account.validation_sync_opts,
+            ]
+            command_function(str(user.id), operations, False, formatted_time)
+            response_data = {
+                "success": True,
+                "message": "Successfully started field sync for users",
+            }
+        elif command == "SALESFORCE_RESOURCES":
+            operations = user.salesforce_account.resource_sync_opts
+            command_function(str(user.id), operations, formatted_time)
+            response_data = {
+                "success": True,
+                "message": "Successfully started resource sync for users",
+            }
+        else:
+            # Here
+            response_data = {
+                "success": True,
+                "message": "Successfully started resource sync for users",
+                "data": command_function()
+            }
+        return Response(data=response_data)
+
+    @action(
+        methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
         url_path="modify-forecast",
@@ -331,6 +389,39 @@ class UserViewSet(
             opps.append(serializer.data)
         print(opps)
         return Response(data=opps, status=status.HTTP_200_OK)
+    
+    @action(
+        methods=["POST"],
+        # permission_classes=(IsSalesPerson,),
+        detail=False,
+        url_path="update-user-info",
+    )
+    def update_user_info(self, request, *args, **kwargs):
+        """endpoint to update the Event Calendar ID, the Fake Meeting ID, the Zoom Channel, the Recap Receiver, and the Realtime Alert Config sections"""
+        d = request.data
+        print('\n!!data!!!!\n', d)
+        event_calendar_id = d.get("event_calendar_id")
+        fake_meeting_id = d.get("fake_meeting_id")
+        zoom_channel = d.get("zoom_channel")
+        recap_receivers = d.get("recap_receivers")
+        realtime_alert_config = d.get("realtime_alert_config")
+        user_id = d.get("user_id")
+        user = User.objects.get(id = user_id)
+        print('\n\nuser\n\n', user, '\n\n')
+        if user.event_calendar_id != event_calendar_id:
+            user.event_calendar_id = event_calendar_id
+        if user.fake_meeting_id != fake_meeting_id:
+            user.fake_meeting_id = fake_meeting_id
+        if user.zoom_channel != zoom_channel:
+            user.zoom_channel = zoom_channel
+        if user.recap_receivers != recap_receivers:
+            user.recap_receivers = recap_receivers
+        # Uncomment this when it's working
+        # if user.realtime_alert_config != realtime_alert_config:
+        #     user.realtime_alert_config = realtime_alert_config
+        user.save()
+        return Response(data=status.HTTP_200_OK)
+
 
 
 class ActivationLinkView(APIView):

@@ -8,7 +8,6 @@
     </div>
     <div class="box__content--expanded">
       <CustomSlackForm
-        :show-validations="showValidations"
         :formType="UPDATE"
         :customForm="
           (this.selectedForm = this.allForms.find(
@@ -47,7 +46,6 @@ export default {
       selectedTab: null,
       resource: null,
       selectedForm: null,
-      showValidations: false,
       newForms: [],
       selectedStage: null,
       selectedFormFields: [],

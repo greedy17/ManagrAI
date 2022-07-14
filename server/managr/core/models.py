@@ -73,7 +73,7 @@ class UserQuerySet(models.QuerySet):
     # TODO pb 10/15/20: Ideally, we are trying to attach user roles so that
     #       INTEGRATION can assume roles for managr
     def for_user(self, user):
-        if user.is_superuser:
+        if user.is_superuser or user.is_staff:
             return self.all()
         elif user.is_active:
             if user.user_level == core_consts.USER_LEVEL_MANAGER:

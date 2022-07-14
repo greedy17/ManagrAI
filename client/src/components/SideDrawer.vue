@@ -28,18 +28,8 @@
         <div v-else>
           <span @click="goToMeetings" :key="i" v-for="(meeting, i) in meetings"
             ><a class="yellow-border"
-              >{{
-                meeting.meeting_ref.event_data
-                  ? meeting.meeting_ref.event_data.title
-                  : meeting.meeting_ref.topic
-              }}
-              <span class="grey">{{
-                formatDateTimeToTime(
-                  meeting.meeting_ref.event_data
-                    ? meeting.meeting_ref.event_data.times.start_time
-                    : meeting.meeting_ref.start_time,
-                )
-              }}</span>
+              >{{ meeting.meeting_ref.topic }}
+              <span class="grey">{{ formatDateTimeToTime(meeting.meeting_ref.start_time) }}</span>
               <p
                 :class="
                   meeting.is_completed

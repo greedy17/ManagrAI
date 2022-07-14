@@ -68,4 +68,4 @@ def get_totals_for_year():
         creates["products"] = create_forms.filter(template__resource="OpportunityLineItem").count()
         curr_month["creates"] = creates
         totals[date[1]] = curr_month
-    return {"data": totals}
+    return totals

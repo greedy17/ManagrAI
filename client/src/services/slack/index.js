@@ -54,6 +54,7 @@ export class CustomSlackForm extends Model {
   static stage = new fields.CharField({})
   static fieldsRef = new fields.ModelField({ ModelClass: SObjectField, many: true })
   static fields = new fields.ArrayField({ type: new fields.CharField(), defaultVal: [] })
+  static organization = new fields.Field({})
 
   static fromAPI(obj) {
     // HACK WE USE A CUSTOM MANYTOMANY HERE SO WE NEED TO REORG
@@ -64,6 +65,25 @@ export class CustomSlackForm extends Model {
     obj['fields_ref'] = _refFields
 
     return CustomSlackForm.create(objectToCamelCase(obj))
+  }
+}
+export class SlackFormInstance extends Model {
+  static api = SlackAPI.create(SlackFormInstance)
+
+  static id = new fields.Field()
+  static workflow = new fields.Field()
+  static resourceId = new fields.Field()
+  static isSubmitted = new fields.Field()
+  static submissionDate = new fields.Field()
+  static updateSource = new fields.Field()
+  static user = new fields.Field()
+  static template = new fields.Field()
+  static templateRef = new fields.Field()
+  static savedData = new fields.Field()
+  static previousData = new fields.Field()
+
+  static fromAPI(json) {
+    return new SlackFormInstance(objectToCamelCase(json))
   }
 }
 export default class SlackOAuth {
