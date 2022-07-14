@@ -56,10 +56,12 @@
             <div class="flex-row-spread sticky border-bottom">
               <div class="flex-row">
                 <img src="@/assets/images/logo.png" class="logo" alt="" />
-                <h4>{{ modalInfo.meeting_ref.topic ? modalInfo.meeting_ref.topic : 'None' }}</h4>
+                <h4>
+                  {{ modalInfo.meeting_ref ? modalInfo.meeting_ref.topic : 'None' }}
+                </h4>
               </div>
             </div>
-            <section class="note-section">
+            <section class="note-section" v-if="modalInfo.meeting_ref">
               <p class="note-section__title">
                 Meeting ID:
                 {{ modalInfo.meeting_ref.meeting_id ? modalInfo.meeting_ref.meeting_id : 'N/A' }}
@@ -135,6 +137,9 @@
                   modalInfo.meeting_ref.zoom_account ? modalInfo.meeting_ref.zoom_account : 'None'
                 }}
               </p>
+            </section>
+            <section v-else>
+              <p>No Info To display</p>
             </section>
           </div>
         </div>
@@ -550,9 +555,13 @@
           v-for="(meetingWorkflow, i) in orgMeetingWorkflows"
           :key="meetingWorkflow.id"
         >
-          <h3 class="click click_width" @click="openModal('meetingWorkflow', meetingWorkflow)">
-            {{ meetingWorkflow.meeting_ref.topic ? meetingWorkflow.meeting_ref.topic : 'None' }}
-          </h3>
+          <h4 class="click click_width" @click="openModal('meetingWorkflow', meetingWorkflow)">
+            {{
+              meetingWorkflow.meeting_ref
+                ? `${meetingWorkflow.meeting_ref.topic}  (${meetingWorkflow.meeting_ref.start_time}) - ${meetingWorkflow.user_ref.email}`
+                : 'No meeting tied to this workflow'
+            }}
+          </h4>
         </div>
       </template>
     </div>
@@ -668,7 +677,6 @@ export default {
     async getAllMeetingWorkflows() {
       try {
         let res = await MeetingWorkflows.api.getMeetingList({ fromAdmin: true })
-        console.log(res)
         this.allMeetingWorkflows = res.results
       } catch (e) {
         console.log(e)
