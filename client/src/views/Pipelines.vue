@@ -91,18 +91,18 @@
                 (field.dataType === 'String' && field.apiName === 'NextStep')
               "
             >
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
               <textarea
                 id="user-input"
                 ccols="30"
                 rows="4"
-                style="width: 36.5vw; border-radius: 0.4rem"
+                style="width: 37vw; border-radius: 0.4rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
               </textarea>
             </div>
             <div v-else-if="field.dataType === 'String'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
               <input
                 id="user-input"
                 type="text"
@@ -125,7 +125,7 @@
                   )
                 "
                 openDirection="below"
-                style="width: 18vw"
+                style="width: 16.5vw"
                 selectLabel="Enter"
                 track-by="integration_id"
                 label="name"
@@ -150,7 +150,7 @@
                 (field.dataType === 'Reference' && field.apiName !== 'AccountId')
               "
             >
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
 
               <Multiselect
                 v-model="currentVals[field.apiName]"
@@ -175,7 +175,7 @@
                 "
                 :multiple="field.dataType === 'MultiPicklist' ? true : false"
                 openDirection="below"
-                style="width: 18vw"
+                style="width: 16.5vw"
                 selectLabel="Enter"
                 :track-by="
                   field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
@@ -209,7 +209,7 @@
                 v-if="field.apiName === 'StageName'"
               >
                 <div class="adding-stage-gate__header">
-                  <img src="@/assets/images/warning.svg" alt="" />
+                  <img class="fullInvert" src="@/assets/images/warning.svg" alt="" />
                   <p>This Stage has validation rules</p>
                 </div>
                 <div class="adding-stage-gate__body">
@@ -221,7 +221,7 @@
                         (field.dataType === 'Reference' && field.apiName !== 'AccountId')
                       "
                     >
-                      <p>{{ field.referenceDisplayLabel }}:</p>
+                      <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
                       <Multiselect
                         :options="
                           field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
@@ -240,7 +240,7 @@
                         "
                         openDirection="below"
                         v-model="dropdownVal[field.apiName]"
-                        style="width: 18vw"
+                        style="width: 16.5vw"
                         selectLabel="Enter"
                         :track-by="
                           field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
@@ -272,7 +272,7 @@
                         @search-change="getAccounts($event)"
                         @select="setUpdateValidationValues(field.apiName, $event.id)"
                         openDirection="below"
-                        style="width: 18vw"
+                        style="width: 16.5vw"
                         selectLabel="Enter"
                         track-by="integration_id"
                         label="name"
@@ -372,14 +372,14 @@
                       />
                     </div>
                     <div v-else-if="field.dataType === 'Boolean'">
-                      <p>{{ field.referenceDisplayLabel }}:</p>
+                      <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
 
                       <Multiselect
                         v-model="dropdownVal[field.apiName]"
                         :options="booleans"
                         @select="setUpdateValidationValues(field.apiName, $event)"
                         openDirection="below"
-                        style="width: 18vw"
+                        style="width: 16.5vw"
                         selectLabel="Enter"
                       >
                         <template slot="noResult">
@@ -398,7 +398,7 @@
               </div>
             </div>
             <div v-else-if="field.dataType === 'Date'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
               <input
                 type="date"
                 id="user-input"
@@ -422,7 +422,7 @@
                 field.dataType === 'Currency'
               "
             >
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
               <input
                 id="user-input"
                 type="number"
@@ -430,14 +430,14 @@
               />
             </div>
             <div v-else-if="field.dataType === 'Boolean'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
 
               <Multiselect
                 v-model="dropdownVal[field.apiName]"
                 :options="booleans"
                 @select="setUpdateValues(field.apiName, $event)"
                 openDirection="below"
-                style="width: 18vw"
+                style="width: 16.5vw"
                 selectLabel="Enter"
               >
                 <template slot="noResult">
@@ -480,40 +480,67 @@
         </div>
         <div class="opp-modal">
           <section :key="i" v-for="(field, i) in oppFormCopy">
-            <div v-if="field.apiName === 'meeting_type'">
-              <p>Note Title:</p>
+            <div style="margin-left: -0.5rem" v-if="field.apiName === 'meeting_type'">
+              <span class="input-container">
+                <input
+                  class="basic-slide"
+                  id="Title"
+                  type="text"
+                  @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                  placeholder="Title"
+                /><label for="Title">Title</label>
+              </span>
+
+              <!-- <p>Note Title:</p>
               <textarea
                 id="user-input"
                 cols="30"
                 rows="2"
-                style="width: 36.5vw; border-radius: 0.2rem"
+                style="width: 37vw; border-radius: 0.2rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
-              </textarea>
+              </textarea> -->
             </div>
-            <div v-else-if="field.apiName === 'meeting_comments'">
-              <p>Notes:</p>
+            <!-- @blur="closeNotes" -->
+            <div
+              style="margin-left: -0.5rem; margin-top: -2rem"
+              v-else-if="field.apiName === 'meeting_comments'"
+            >
+              <span class="input-container">
+                <textarea
+                  class="basic-slide"
+                  id="notes"
+                  type="text"
+                  cols="30"
+                  rows="4"
+                  placeholder="Note"
+                  style="line-height: 2rem"
+                  @input=";(value = $event.target.value), replaceURLs(value, field.apiName)"
+                /><label for="Note">Note</label>
+              </span>
+
+              <!-- <p>Notes:</p>
               <textarea
                 id="user-input"
                 cols="30"
                 rows="8"
-                style="width: 36.5vw; border-radius: 0.2rem"
+                style="width: 37vw; border-radius: 0.2rem"
                 @input=";(value = $event.target.value), replaceURLs(value, field.apiName)"
               >
-              </textarea>
+              </textarea> -->
             </div>
             <div
               v-else-if="
                 field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
               "
             >
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
               <textarea
                 id="user-input"
                 ccols="30"
                 rows="4"
                 :placeholder="currentVals[field.apiName]"
-                style="width: 36.5vw; border-radius: 0.4rem; padding: 7px"
+                style="width: 34vw; border-radius: 0.4rem; padding: 7px; resize: none"
                 v-model="currentVals[field.apiName]"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
@@ -526,7 +553,7 @@
                 (field.dataType === 'String' && field.apiName !== 'NextStep')
               "
             >
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
               <input
                 id="user-input"
                 type="text"
@@ -536,14 +563,14 @@
               />
             </div>
             <div v-else-if="field.dataType === 'Boolean'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
 
               <Multiselect
                 v-model="dropdownVal[field.apiName]"
                 :options="booleans"
                 @select="setUpdateValues(field.apiName, $event)"
                 openDirection="below"
-                style="width: 18vw"
+                style="width: 16.5vw"
                 selectLabel="Enter"
               >
                 <template slot="noResult">
@@ -573,7 +600,7 @@
                   )
                 "
                 openDirection="below"
-                style="width: 18vw"
+                style="width: 16.5vw"
                 selectLabel="Enter"
                 track-by="integration_id"
                 label="name"
@@ -598,7 +625,7 @@
                 (field.dataType === 'Reference' && field.apiName !== 'AccountId')
               "
             >
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
               <Multiselect
                 v-model="dropdownVal[field.apiName]"
                 :options="
@@ -622,7 +649,7 @@
                 "
                 :loading="dropdownLoading"
                 openDirection="below"
-                style="width: 18vw"
+                style="width: 16.5vw"
                 selectLabel="Enter"
                 :multiple="field.dataType === 'MultiPicklist' ? true : false"
                 :track-by="
@@ -664,7 +691,7 @@
                 v-if="field.apiName === 'StageName'"
               >
                 <div class="adding-stage-gate__header">
-                  <img src="@/assets/images/warning.svg" alt="" />
+                  <img class="fullInvert" src="@/assets/images/warning.svg" alt="" />
                   <p>This Stage has validation rules</p>
                 </div>
                 <div class="adding-stage-gate__body">
@@ -676,7 +703,7 @@
                         (field.dataType === 'Reference' && field.apiName !== 'AccountId')
                       "
                     >
-                      <p>{{ field.referenceDisplayLabel }}:</p>
+                      <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
                       <Multiselect
                         :options="
                           field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
@@ -695,7 +722,7 @@
                         "
                         openDirection="below"
                         v-model="dropdownVal[field.apiName]"
-                        style="width: 18vw"
+                        style="width: 16.5vw"
                         selectLabel="Enter"
                         :track-by="
                           field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
@@ -731,7 +758,7 @@
                         @search-change="getAccounts($event)"
                         @select="setUpdateValidationValues(field.apiName, $event.id)"
                         openDirection="below"
-                        style="width: 18vw"
+                        style="width: 16.5vw"
                         selectLabel="Enter"
                         track-by="integration_id"
                         label="name"
@@ -831,14 +858,14 @@
                       />
                     </div>
                     <div v-else-if="field.dataType === 'Boolean'">
-                      <p>{{ field.referenceDisplayLabel }}:</p>
+                      <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
 
                       <Multiselect
                         v-model="dropdownVal[field.apiName]"
                         :options="booleans"
                         @select="setUpdateValidationValues(field.apiName, $event)"
                         openDirection="below"
-                        style="width: 18vw"
+                        style="width: 16.5vw"
                         selectLabel="Enter"
                       >
                         <template slot="noResult">
@@ -857,7 +884,7 @@
               </div>
             </div>
             <div v-else-if="field.dataType === 'Date'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
               <input
                 type="text"
                 onfocus="(this.type='date')"
@@ -869,7 +896,7 @@
               />
             </div>
             <div v-else-if="field.dataType === 'DateTime'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
               <input
                 type="datetime-local"
                 id="start"
@@ -884,7 +911,7 @@
                 field.dataType === 'Currency'
               "
             >
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
               <input
                 id="user-input"
                 type="number"
@@ -894,11 +921,33 @@
               />
             </div>
           </section>
+
+          <div class="adding-product" v-if="addingProduct">
+            <div class="adding-product__header">
+              <img class="fullInvert" src="@/assets/images/warning.svg" alt="" />
+              <p>Add Product</p>
+            </div>
+            <div class="adding-product__body">
+              <p v-for="(field, i) in createProductForm" :key="i">{{ field.apiName }}</p>
+            </div>
+          </div>
         </div>
-        <input id="products" type="checkbox" />
-        <label :for="products">Add Product</label>
 
         <div class="flex-end-opp">
+          <div v-if="hasProducts">
+            <button
+              v-if="!addingProduct"
+              @click="addProduct"
+              style="margin-bottom: 0.75rem"
+              class="select-btn1"
+            >
+              Add Product
+            </button>
+
+            <p v-else class="product-text">Adding Product</p>
+          </div>
+          <div v-else></div>
+
           <div style="display: flex; align-items: center">
             <button @click="updateResource()" class="add-button__">Update</button>
             <p @click="resetEdit" class="cancel">Cancel</p>
@@ -1136,7 +1185,7 @@
                 v-model="dropdownVal['StageName']"
                 openDirection="below"
                 :loading="dropdownLoading"
-                style="width: 14vw"
+                style="width: 16.5vw"
                 selectLabel="Enter"
                 track-by="value"
                 label="label"
@@ -1170,7 +1219,7 @@
                 v-model="dropdownVal['ForecastCategoryName']"
                 openDirection="below"
                 :loading="dropdownLoading"
-                style="width: 14vw"
+                style="width: 16.5vw"
                 selectLabel="Enter"
                 track-by="value"
                 label="label"
@@ -1232,7 +1281,7 @@
       <div class="adding-stage-gate2" v-if="stageFormOpen">
         <div class="adding-stage-gate2__header">
           <div>
-            <img src="@/assets/images/warning.svg" alt="" />
+            <img class="fullInvert" src="@/assets/images/warning.svg" alt="" />
             <p>This Stage has validation rules</p>
           </div>
 
@@ -1270,7 +1319,7 @@
                 "
                 openDirection="below"
                 v-model="dropdownVal[field.apiName]"
-                style="width: 18vw"
+                style="width: 16.5vw"
                 selectLabel="Enter"
                 :track-by="
                   field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
@@ -1306,7 +1355,7 @@
                 @search-change="getAccounts($event)"
                 @select="setUpdateValidationValues(field.apiName, $event.id)"
                 openDirection="below"
-                style="width: 18vw"
+                style="width: 16.5vw"
                 selectLabel="Enter"
                 track-by="integration_id"
                 label="name"
@@ -1400,14 +1449,14 @@
               />
             </div>
             <div v-else-if="field.dataType === 'Boolean'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
 
               <Multiselect
                 v-model="dropdownVal[field.apiName]"
                 :options="booleans"
                 @select="setUpdateValidationValues(field.apiName, $event)"
                 openDirection="below"
-                style="width: 18vw"
+                style="width: 16.5vw"
                 selectLabel="Enter"
               >
                 <template slot="noResult">
@@ -1581,6 +1630,9 @@ export default {
   },
   data() {
     return {
+      createProductForm: null,
+      addingProduct: false,
+      // rowHeight: 1.5,
       originalOppTotal: null,
       hasNextOriginal: null,
       integrationId: null,
@@ -1674,6 +1726,7 @@ export default {
       createReferenceOpts: {},
       picklistQueryOpts: {},
       createQueryOpts: {},
+      createProductOpts: {},
       picklistQueryOptsContacts: {},
       stagePicklistQueryOpts: {},
       setFilters: {},
@@ -1800,6 +1853,25 @@ export default {
     accountSobjectId: 'getInitialAccounts',
   },
   methods: {
+    //     async testPicklist() {
+    //   try {
+    //     const res = await SObjectPicklist.api.listPicklists({
+    //       salesforceObject: 'Opportunity',
+    //     })
+    //     console.log(res)
+    //   } catch (e) {
+    //     console.log(e)
+    //   }
+    // },
+    addProduct() {
+      this.addingProduct = !this.addingProduct
+    },
+    // expandNotes() {
+    //   this.rowHeight = 8
+    // },
+    // closeNotes() {
+    //   this.rowHeight = 1.5
+    // },
     async getFilteredOpps() {
       this.currentPage = 1
       try {
@@ -2527,13 +2599,14 @@ export default {
             )[0].account_ref.name)
           : (this.currentAccount = 'Account')
       } catch (e) {
-        this.$toast('Error creating update form, close modal and try again.', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+        // this.$toast('Error creating update form, close modal and try again.', {
+        //   timeout: 2000,
+        //   position: 'top-left',
+        //   type: 'error',
+        //   toastClassName: 'custom',
+        //   bodyClassName: ['custom'],
+        // })
+        console.log(e)
       } finally {
         this.dropdownLoading = false
       }
@@ -2997,6 +3070,18 @@ export default {
         }
       }
 
+      for (let i = 0; i < this.createProductForm.length; i++) {
+        if (
+          this.createProductForm[i].dataType === 'Picklist' ||
+          this.createProductForm[i].dataType === 'MultiPicklist'
+        ) {
+          this.createQueryOpts[this.createProductForm[i].apiName] =
+            this.createProductForm[i].apiName
+        } else if (this.createProductForm[i].dataType === 'Reference') {
+          this.createReferenceOpts[this.createProductForm[i].apiName] = this.createProductForm[i].id
+        }
+      }
+
       for (let i in this.picklistQueryOpts) {
         this.picklistQueryOpts[i] = this.listPicklists(i, {
           picklistFor: i,
@@ -3023,6 +3108,12 @@ export default {
         this.createQueryOpts[i] = this.listCreatePicklists(i, {
           picklistFor: i,
           salesforceObject: 'Opportunity',
+        })
+      }
+      for (let i in this.createProductOpts) {
+        this.createProductOpts[i] = this.listCreatePicklists(i, {
+          picklistFor: i,
+          salesforceObject: 'OpportunityLineItem',
         })
       }
 
@@ -3067,6 +3158,8 @@ export default {
           salesforceObject: 'Opportunity',
         })
       }
+
+      this.createProductForm
     },
     async getAllForms() {
       try {
@@ -3081,11 +3174,17 @@ export default {
         let stageGateForms = res.filter(
           (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Opportunity',
         )
+        let productForm = res.filter(
+          (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
+        )
 
         let stages = stageGateForms.map((field) => field.stage)
         this.stagesWithForms = stages
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
         this.createOppForm = this.createOppForm[0].fieldsRef.filter(
+          (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+        )
+        this.createProductForm = productForm[0].fieldsRef.filter(
           (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
         )
 
@@ -3361,6 +3460,96 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 
+@mixin epic-sides() {
+  position: relative;
+  z-index: 1;
+
+  &:before {
+    position: absolute;
+    content: '';
+    display: block;
+    top: 0;
+    left: -5000px;
+    height: 100%;
+    width: 15000px;
+    z-index: -1;
+    @content;
+  }
+}
+
+.input-container {
+  position: relative;
+  display: inline-block;
+  margin: 30px 10px;
+  @include epic-sides() {
+    background: inherit;
+  }
+}
+
+.basic-slide {
+  display: inline-block;
+  width: 34vw;
+  padding: 9px 0 10px 16px;
+  font-family: $base-font-family !important;
+  font-weight: 400;
+  color: $base-gray;
+  background: $white;
+  border: 1px solid $soft-gray !important;
+  border: 0;
+  border-radius: 3px;
+  outline: 0;
+  text-indent: 70px; // Arbitrary.
+  transition: all 0.3s ease-in-out;
+
+  &::-webkit-input-placeholder {
+    color: #efefef;
+    text-indent: 0;
+    font-weight: 300;
+  }
+
+  + label {
+    display: inline-block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 9px 8px;
+    font-size: 15px;
+    text-align: center;
+    width: 80px;
+    // text-shadow: 0 1px 0 rgba(19, 74, 70, 0.4);
+    background: $dark-green;
+    color: $white;
+    transition: all 0.3s ease-in-out;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 2px;
+  }
+}
+.basic-slide:focus,
+.basic-slide:active {
+  color: $base-gray;
+  text-indent: 0;
+  background: #fff;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+
+  &::-webkit-input-placeholder {
+    color: #aaa;
+  }
+  + label {
+    transform: translateX(-100%);
+  }
+}
+
+// .form-label {
+//   background-color: $dark-green;
+//   color: white;
+//   border-radius: 4px;
+//   padding: 8px;
+//   font-size: 16px;
+//   width: fit-content;
+// }
+
 .light-green-bg {
   background-color: $white-green;
   color: $dark-green !important;
@@ -3387,31 +3576,10 @@ export default {
 .rel {
   position: relative;
 }
-.adding-product {
-  height: 3rem;
-  margin: 1rem 0rem;
-  display: flex;
-  justify-content: center;
 
-  button {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    color: $dark-green;
-    background: transparent;
-    padding: none;
-    border: none;
-    cursor: pointer;
-    img {
-      height: 1rem;
-      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
-        brightness(93%) contrast(89%);
-    }
-  }
-}
 .adding-stage-gate2 {
-  border: 1px solid $very-light-gray;
-  box-shadow: 1px 3px 7px 2px $very-light-gray;
+  border: 1px solid $coral;
+  // box-shadow: 1px 3px 7px 2px $very-light-gray;
   background-color: white;
   border-radius: 0.3rem;
   margin: 0.5rem 0rem;
@@ -3428,9 +3596,10 @@ export default {
     justify-content: space-between;
     font-size: 16px;
     padding: 0.75rem 0.5rem;
-    color: $base-gray;
+    color: white;
     width: 100%;
-    border-bottom: 1px solid $soft-gray;
+    border-bottom: 1px solid $coral;
+    background-color: $coral;
     img {
       height: 1rem;
       margin-right: 0.5rem;
@@ -3470,7 +3639,7 @@ export default {
     height: 0px; /* Mostly for horizontal scrollbars */
   }
   &__body::-webkit-scrollbar-thumb {
-    background-color: $dark-green;
+    background-color: $coral;
     box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
     border-radius: 0.3rem;
   }
@@ -3483,7 +3652,7 @@ export default {
   }
 }
 .adding-stage-gate {
-  border: 1px solid #e8e8e8;
+  border: 1px solid $coral;
   border-radius: 0.3rem;
   margin: 0.5rem 0rem;
   width: 36vw;
@@ -3494,9 +3663,74 @@ export default {
     align-items: center;
     font-size: 14px;
     padding: 0.5rem;
-    color: $base-gray;
+    color: $white;
     width: 100%;
-    border-bottom: 1px solid #e8e8e8;
+    border-bottom: 1px solid $coral;
+    background-color: $coral;
+    img {
+      height: 1rem;
+      margin-right: 0.5rem;
+    }
+  }
+  &__body {
+    padding: 0.25rem;
+    font-size: 11px !important;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.2rem;
+    overflow: auto;
+    height: 30vh;
+    input {
+      width: 10vw !important;
+      height: 1.5rem !important;
+    }
+    .multiselect {
+      width: 12vw !important;
+      font-weight: 11px !important;
+    }
+    p {
+      margin-left: 0.25rem;
+    }
+    span {
+      color: $coral;
+    }
+  }
+
+  &__body::-webkit-scrollbar {
+    width: 2px; /* Mostly for vertical scrollbars */
+    height: 0px; /* Mostly for horizontal scrollbars */
+  }
+  &__body::-webkit-scrollbar-thumb {
+    background-color: $coral;
+    box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+    border-radius: 0.3rem;
+  }
+  &__body::-webkit-scrollbar-track {
+    box-shadow: inset 2px 2px 4px 0 $soft-gray;
+    border-radius: 0.3rem;
+  }
+  &__body::-webkit-scrollbar-track-piece {
+    margin-top: 0.25rem;
+  }
+}
+
+.adding-product {
+  border: 1px solid $dark-green;
+  border-radius: 0.3rem;
+  margin: 0.5rem 0rem;
+  width: 36vw;
+  min-height: 30vh;
+  &__header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    font-size: 14px;
+    padding: 0.5rem;
+    color: $white;
+    width: 100%;
+    border-bottom: 1px solid $dark-green;
+    background-color: $dark-green;
     img {
       height: 1rem;
       margin-right: 0.5rem;
@@ -3543,6 +3777,15 @@ export default {
   &__body::-webkit-scrollbar-track-piece {
     margin-top: 0.25rem;
   }
+}
+.product-text {
+  color: $dark-green;
+  border-radius: 4px;
+  padding: 4px 6px;
+  background-color: $white-green;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  font-weight: bold;
 }
 .hide {
   display: none;
@@ -3878,17 +4121,17 @@ h3 {
   }
 }
 .opp-modal-container {
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   background-color: white;
-  // min-height: 80vh;
   width: 40vw;
-  align-items: center;
   border-radius: 0.5rem;
   padding: 1rem;
   border: 1px solid #e8e8e8;
 }
 .opp-modal {
-  width: 40vw;
+  width: 38vw;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -4123,14 +4366,14 @@ section {
   box-shadow: 1px 1px 1px 1px $very-light-gray;
   background-color: white;
   min-height: 2.5rem;
-  width: 14vw;
+  width: 16.5vw;
 }
 #user-input {
   border: 1px solid #e8e8e8;
   border-radius: 0.3rem;
   background-color: white;
   min-height: 2.5rem;
-  width: 18vw;
+  width: 16.5vw;
   font-family: $base-font-family;
 }
 #user-input:focus {
@@ -4366,16 +4609,17 @@ main:hover > span {
   height: 5rem;
   display: flex;
   align-items: flex-end;
-  justify-content: flex-end;
+  justify-content: space-between;
 }
 textarea {
   resize: vertical;
 }
+
 a {
   text-decoration: none;
 }
 .logo {
-  height: 20px;
+  height: 24px;
   margin-left: 0.5rem;
   margin-right: 0.25rem;
   filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
