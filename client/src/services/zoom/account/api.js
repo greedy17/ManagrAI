@@ -98,7 +98,7 @@ export default class ZoomAPI extends ModelAPI {
 
   async createZoomMeeting(data) {
     try {
-      const res = await this.client.post('zoom/schedule-meeting/', data)
+      const res = await this.client.post(ZoomAPI.ENDPOINT + 'schedule-meeting', data)
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Creating Zoom meeting' })(e)
