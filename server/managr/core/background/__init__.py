@@ -395,6 +395,7 @@ def meeting_prep(processed_data, user_id):
         resource_id=meeting_resource_data["resource_id"],
         resource_type=meeting_resource_data["resource_type"],
     )
+    logger.info(f"WORKFLOW FOR {meeting.topic} CREATED")
     meeting_workflow.forms.set(contact_forms)
     if resource_check:
         meeting_workflow.add_form(
@@ -617,6 +618,7 @@ def _process_non_zoom_meetings(user_id):
             logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
             processed_data = None
         if processed_data is not None:
+            logger.info(f"FOUND {len(processed_data)} MEETINGS FOR {user.email}")
             for event in processed_data:
                 conferencing = event.get("conferencing", None)
                 provider = conferencing["provider"] if conferencing is not None else None

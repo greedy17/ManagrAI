@@ -619,20 +619,24 @@ class SalesforceSObjectViewSet(
                         attempts += 1
                 except Exception as e:
                     logger.info(f"UPDATE ERROR {e}")
+                    data = {"success": False, "error": f"UPDATE ERROR {e}"}
                     break
-            if all_form_data.get("meeting_comments") is not None:
-                emit_add_update_to_sf(str(main_form.id))
-            if user.has_slack_integration and len(user.slack_integration.realtime_alert_configs):
-                _send_instant_alert(form_ids)
-            forms.update(
-                is_submitted=True, update_source="pipeline", submission_date=timezone.now()
-            )
-            value_update = main_form.resource_object.update_database_values(all_form_data)
-            from_workflow = data.get("from_workflow")
-            title = data.get("workflow_title", None)
-            if from_workflow:
-                user.activity.increment_untouched_count("workflows")
-                user.activity.add_workflow_activity(str(main_form.id), title)
+            if data["success"]:
+                if all_form_data.get("meeting_comments") is not None:
+                    emit_add_update_to_sf(str(main_form.id))
+                if user.has_slack_integration and len(
+                    user.slack_integration.realtime_alert_configs
+                ):
+                    _send_instant_alert(form_ids)
+                forms.update(
+                    is_submitted=True, update_source="pipeline", submission_date=timezone.now()
+                )
+                value_update = main_form.resource_object.update_database_values(all_form_data)
+                from_workflow = data.get("from_workflow")
+                title = data.get("workflow_title", None)
+                if from_workflow:
+                    user.activity.increment_untouched_count("workflows")
+                    user.activity.add_workflow_activity(str(main_form.id), title)
         return Response(data=data)
 
     @action(
