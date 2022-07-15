@@ -880,6 +880,8 @@ export default {
       // const date = new Date(`${this.startDate} ${this.startTime}`)
       const hourMinute = this.startTime.split(':')
       // console.log('date', date)
+      const contacts = this.externalParticipantsSelected.map(contact => contact.id)
+      const internal = this.internalParticipantsSelected.map(internal => internal.id)
       const data = {
         meeting_topic: this.meetingTitle,
         meeting_description: this.description,
@@ -888,20 +890,39 @@ export default {
         meeting_minute: hourMinute[1],
         meeting_time: this.startTime,
         meeting_duration: this.meetingDuration,
-        contacts: this.externalParticipantsSelected,
-        internal: this.internalParticipantsSelected,
+        contacts,
+        internal,
         extra_participants,
       }
+
+      console.log('contacts', data.contacts);
 
       try {
         const res = await Zoom.api.createZoomMeeting(data)
 
         console.log('submitZoomMeeting', res)
+
+        if (res.status === 200) {
+          this.$toast('Meeting Scheduled', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+          this.resetMeeting()
+        } else {
+          this.$toast('Error Scheduling Meeting', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        }
       } catch (e) {
         console.log(e)
       }
-
-      // this.resetMeeting()
     },
     resetNotes() {
       this.modalOpen = !this.modalOpen

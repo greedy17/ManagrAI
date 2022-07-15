@@ -2,7 +2,7 @@
   <div class="slack-form-builder">
     <div>
       <div>
-        <template v-if="showValidations">
+        <template v-if="showValidations">x
           <template v-if="sfValidations.length">
             <ul :key="val.id" v-for="val in sfValidations">
               <li>
