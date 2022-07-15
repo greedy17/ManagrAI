@@ -824,7 +824,6 @@ export default {
     async submitZoomMeeting() {
       if (
         !this.meetingTitle ||
-        !this.description ||
         !this.startDate ||
         !this.startTime ||
         !this.meetingDuration ||
@@ -874,12 +873,7 @@ export default {
         })
         return
       }
-      // console.log('internalPar', this.internalParticipantsSelected)
-      // console.log('externalPar', this.externalParticipantsSelected)
-      // not sure if using const date or just the normal date yet
-      // const date = new Date(`${this.startDate} ${this.startTime}`)
       const hourMinute = this.startTime.split(':')
-      // console.log('date', date)
       const contacts = this.externalParticipantsSelected.map(contact => contact.id)
       const internal = this.internalParticipantsSelected.map(internal => internal.id)
       const data = {
@@ -895,13 +889,8 @@ export default {
         extra_participants,
       }
 
-      console.log('contacts', data.contacts);
-
       try {
         const res = await Zoom.api.createZoomMeeting(data)
-
-        console.log('submitZoomMeeting', res)
-
         if (res.status === 200) {
           this.$toast('Meeting Scheduled', {
             timeout: 2000,
