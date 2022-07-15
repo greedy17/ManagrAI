@@ -400,13 +400,14 @@ def meeting_prep(processed_data, user_id):
             meeting_resource_data["resource_type"], slack_consts.FORM_TYPE_UPDATE,
         )
     if user.has_slack_integration:
-        # Google Meet (Non-Zoom)
-        # Sending end_times, workflow_id, and user values to emit function
-        meeting_end_time = meeting.end_time
-        workflow_id = str(meeting_workflow.id)
-        user_id = str(user.id)
-        user_tz = str(user.timezone)
-        emit_process_calendar_meeting_message(workflow_id, user_id, user_tz, meeting_end_time)
+        if not user.has_zoom_integration or (
+            user.has_zoom_integration and "Zoom" not in meeting.provider
+        ):
+            meeting_end_time = meeting.end_time.strftime("%m/%d/%Y, %H:%M:%S")
+            workflow_id = str(meeting_workflow.id)
+            user_id = str(user.id)
+            user_tz = str(user.timezone)
+            emit_process_calendar_meeting_message(workflow_id, user_id, user_tz, meeting_end_time)
     return
 
 
@@ -618,21 +619,18 @@ def _process_calendar_meetings(user_id):
 
 
 @background()
-def _process_calendar_meeting_message(workflow_id, user_id, user_tz, meeting_end_times):
-    unix_time = datetime.utcfromtimestamp(int(meeting_end_times))
-    tz = pytz.timezone("UTC")
-    local_end = unix_time.astimezone(tz)
+def _process_calendar_meeting_message(workflow_id, user_id, user_tz, meeting_end_time):
+    end_time_timestamp = datetime.strptime(meeting_end_time, "%m/%d/%Y, %H:%M:%S")
     current_time = datetime.now()
-    local_current = current_time.astimezone(pytz.timezone("UTC"))
-    if local_end < local_current:
-        seconds = local_current
+    if current_time > end_time_timestamp:
+        seconds = current_time.timetuple()
         time_difference = "Meeting passed current time"
     else:
-        time_difference = local_end - local_current
+        time_difference = end_time_timestamp - current_time
         seconds = time_difference.total_seconds()
         seconds = int(seconds)
     logger.info(
-        f"MEETING SCHEDULER: \n END TIME: {meeting_end_times}\n LOCAL END: {local_end}\n CURRENT TIME: {current_time} \n TIME DIFFERENCE: {time_difference}"
+        f"MEETING SCHEDULER: \n END TIME: {end_time_timestamp}\n CURRENT TIME: {current_time} \n TIME DIFFERENCE: {time_difference}"
     )
     return emit_kick_off_slack_interaction(user_id, workflow_id, schedule=seconds)
 
