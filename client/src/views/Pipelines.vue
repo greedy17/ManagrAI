@@ -922,13 +922,153 @@
             </div>
           </section>
 
-          <div class="adding-product" v-if="addingProduct">
+          <div ref="product" class="adding-product" v-if="addingProduct">
             <div class="adding-product__header">
               <img class="fullInvert" src="@/assets/images/warning.svg" alt="" />
               <p>Add Product</p>
             </div>
             <div class="adding-product__body">
-              <p v-for="(field, i) in createProductForm" :key="i">{{ field.apiName }}</p>
+              <div v-for="(field, i) in createProductForm" :key="i">
+                <div
+                  v-if="
+                    field.dataType === 'Picklist' ||
+                    field.dataType === 'MultiPicklist' ||
+                    (field.dataType === 'Reference' && field.apiName !== 'AccountId')
+                  "
+                >
+                  <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+                  <Multiselect
+                    :options="
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? productQueryOpts[field.apiName]
+                        : productReferenceOpts[field.apiName]
+                    "
+                    @select="
+                      setCreateValues(
+                        field.apiName === 'ForecastCategory'
+                          ? 'ForecastCategoryName'
+                          : field.apiName,
+                        field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                          ? $event.value
+                          : $event.id,
+                      )
+                    "
+                    openDirection="below"
+                    v-model="dropdownVal[field.apiName]"
+                    style="width: 16.5vw"
+                    selectLabel="Enter"
+                    :track-by="
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? 'value'
+                        : 'id'
+                    "
+                    :label="
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? 'label'
+                        : 'name'
+                    "
+                  >
+                    <template slot="noResult">
+                      <p class="multi-slot">No results.</p>
+                    </template>
+                    <template slot="placeholder">
+                      <p class="slot-icon">
+                        <img src="@/assets/images/search.svg" alt="" />
+                        {{ field.referenceDisplayLabel }}
+                      </p>
+                    </template>
+                  </Multiselect>
+                </div>
+
+                <div v-else-if="field.dataType === 'String'">
+                  <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                  <input
+                    id="user-input"
+                    type="text"
+                    :placeholder="currentVals[field.apiName]"
+                    v-model="currentVals[field.apiName]"
+                    @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
+                  />
+                </div>
+
+                <div
+                  v-else-if="
+                    field.dataType === 'TextArea' ||
+                    (field.length > 250 && field.dataType === 'String')
+                  "
+                >
+                  <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                  <textarea
+                    id="user-input"
+                    ccols="30"
+                    rows="2"
+                    :placeholder="currentVals[field.apiName]"
+                    style="width: 20vw; border-radius: 6px; padding: 7px"
+                    v-model="currentVals[field.apiName]"
+                    @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
+                  >
+                  </textarea>
+                </div>
+                <div v-else-if="field.dataType === 'Date'">
+                  <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                  <input
+                    type="text"
+                    onfocus="(this.type='date')"
+                    onblur="(this.type='text')"
+                    :placeholder="currentVals[field.apiName]"
+                    v-model="currentVals[field.apiName]"
+                    id="user-input"
+                    @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
+                  />
+                </div>
+                <div v-else-if="field.dataType === 'DateTime'">
+                  <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                  <input
+                    type="datetime-local"
+                    id="start"
+                    v-model="currentVals[field.apiName]"
+                    @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
+                  />
+                </div>
+                <div
+                  v-else-if="
+                    field.dataType === 'Phone' ||
+                    field.dataType === 'Double' ||
+                    field.dataType === 'Currency'
+                  "
+                >
+                  <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                  <input
+                    id="user-input"
+                    type="number"
+                    v-model="currentVals[field.apiName]"
+                    :placeholder="currentVals[field.apiName]"
+                    @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
+                  />
+                </div>
+                <!-- <div v-else-if="field.dataType === 'Boolean'">
+                  <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+
+                  <Multiselect
+                    v-model="dropdownVal[field.apiName]"
+                    :options="booleans"
+                    @select="setUpdateValidationValues(field.apiName, $event)"
+                    openDirection="below"
+                    style="width: 16.5vw"
+                    selectLabel="Enter"
+                  >
+                    <template slot="noResult">
+                      <p class="multi-slot">No results.</p>
+                    </template>
+                    <template slot="placeholder">
+                      <p class="slot-icon">
+                        <img src="@/assets/images/search.svg" alt="" />
+                        {{ currentVals[field.apiName] }}
+                      </p>
+                    </template>
+                  </Multiselect>
+                </div> -->
+              </div>
             </div>
           </div>
         </div>
@@ -945,13 +1085,21 @@
             </button>
 
             <p @click="addProduct" v-else class="product-text">
-              Adding Product <img src="@/assets/images/remove.svg" alt="" />
+              Product form <img src="@/assets/images/remove.svg" alt="" />
             </p>
           </div>
           <div v-else></div>
 
           <div style="display: flex; align-items: center">
-            <button @click="updateResource()" class="add-button__">Update</button>
+            <button
+              @click="
+                updateResource()
+                createProduct()
+              "
+              class="add-button__"
+            >
+              Update
+            </button>
             <p @click="resetEdit" class="cancel">Cancel</p>
           </div>
         </div>
@@ -1121,7 +1269,7 @@
 
           <section style="position: relative">
             <button
-              v-if="activeFilters.length < 4"
+              v-if="activeFilters.length < 4 && !selectedWorkflow"
               @click.stop="addingFilter"
               class="add-filter-button"
             >
@@ -1503,7 +1651,7 @@
             ref="pipelineTableChild"
             :key="i"
             v-for="(opp, i) in allOpps"
-            @create-form="createFormInstance(opp.id, opp.integration_id)"
+            @create-form="createFormInstance(opp.id, opp.integration_id), getProductForm(opp.id)"
             @get-notes="getNotes(opp.id)"
             @checked-box="selectPrimaryCheckbox"
             @inline-edit="inlineUpdate"
@@ -1614,6 +1762,7 @@ import SlackOAuth from '@/services/slack'
 import PipelineTableRow from '@/components/PipelineTableRow'
 import PipelineHeader from '@/components/PipelineHeader'
 import User from '@/services/users'
+import VueScrollTo from 'vue-scrollto'
 
 export default {
   name: 'Pipelines',
@@ -1632,6 +1781,9 @@ export default {
   },
   data() {
     return {
+      productFormId: null,
+      createData: {},
+      productQueryOpts: {},
       createProductForm: null,
       addingProduct: false,
       // rowHeight: 1.5,
@@ -1726,6 +1878,7 @@ export default {
       noteInfo: '',
       referenceOpts: {},
       createReferenceOpts: {},
+      productReferenceOpts: {},
       picklistQueryOpts: {},
       createQueryOpts: {},
       createProductOpts: {},
@@ -1855,6 +2008,19 @@ export default {
     accountSobjectId: 'getInitialAccounts',
   },
   methods: {
+    async getProductForm(id) {
+      try {
+        const res = await SObjects.api.createFormInstance({
+          resourceType: 'OpportunityLineItem',
+          formType: 'CREATE',
+          resourceId: id,
+        })
+        this.productFormId = res.form_id
+        console.log(res)
+      } catch (e) {
+        console.log(e)
+      }
+    },
     //     async testPicklist() {
     //   try {
     //     const res = await SObjectPicklist.api.listPicklists({
@@ -1867,6 +2033,10 @@ export default {
     // },
     addProduct() {
       this.addingProduct = !this.addingProduct
+      // let products = this.$refs.products
+      setTimeout(() => {
+        this.$refs.product ? this.$refs.product.scrollIntoView() : null
+      }, 200)
     },
     // expandNotes() {
     //   this.rowHeight = 8
@@ -2001,6 +2171,8 @@ export default {
         })
         if (type === 'update') {
           this.referenceOpts[key] = res
+        } else if (type === 'createProduct') {
+          this.productReferenceOpts[key] = res
         } else {
           this.createReferenceOpts[key] = res
         }
@@ -2591,6 +2763,7 @@ export default {
           resourceType: 'Opportunity',
           resourceId: id,
         })
+        console.log(res)
         this.currentVals = res.current_values
         this.currentOwner = this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
@@ -2754,6 +2927,11 @@ export default {
         this.formData[key] = val
       }
     },
+    setCreateValues(key, val) {
+      if (val) {
+        this.createData[key] = val
+      }
+    },
     async updateOpps() {
       try {
         let res = await SObjects.api.getObjects('Opportunity', 1)
@@ -2898,6 +3076,28 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+      }
+    },
+    async createProduct() {
+      if (this.addingProduct) {
+        try {
+          const res = await SObjects.api.createResource({
+            form_id: this.productFormId,
+            form_data: this.createData,
+          })
+          console.log(res)
+          this.$toast('Product created successfully', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        } catch (e) {
+          console.log(e)
+        }
+      } else {
+        return
       }
     },
     async updateResource() {
@@ -3077,10 +3277,11 @@ export default {
           this.createProductForm[i].dataType === 'Picklist' ||
           this.createProductForm[i].dataType === 'MultiPicklist'
         ) {
-          this.createQueryOpts[this.createProductForm[i].apiName] =
+          this.productQueryOpts[this.createProductForm[i].apiName] =
             this.createProductForm[i].apiName
         } else if (this.createProductForm[i].dataType === 'Reference') {
-          this.createReferenceOpts[this.createProductForm[i].apiName] = this.createProductForm[i].id
+          this.productReferenceOpts[this.createProductForm[i].apiName] =
+            this.createProductForm[i].id
         }
       }
 
@@ -3124,6 +3325,14 @@ export default {
           i,
           this.createReferenceOpts[i],
           'create',
+        )
+      }
+
+      for (let i in this.productReferenceOpts) {
+        this.productReferenceOpts[i] = this.getReferenceFieldList(
+          i,
+          this.productReferenceOpts[i],
+          'createProduct',
         )
       }
 
@@ -3179,6 +3388,11 @@ export default {
         let productForm = res.filter(
           (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
         )
+
+        let updateProductForm = res.filter(
+          (obj) => obj.formType === 'UPDATE' && obj.resource === 'OpportunityLineItem',
+        )
+        console.log(updateProductForm)
 
         let stages = stageGateForms.map((field) => field.stage)
         this.stagesWithForms = stages
@@ -3585,7 +3799,7 @@ export default {
   background-color: white;
   border-radius: 0.3rem;
   margin: 0.5rem 0rem;
-  width: 36vw;
+  width: 34vw;
   min-height: 50vh;
   left: 32vw;
   top: 18vh;
@@ -3657,7 +3871,7 @@ export default {
   border: 1px solid $coral;
   border-radius: 0.3rem;
   margin: 0.5rem 0rem;
-  width: 36vw;
+  width: 34vw;
   min-height: 30vh;
   &__header {
     display: flex;
@@ -3721,7 +3935,7 @@ export default {
   border: 1px solid $dark-green;
   border-radius: 0.3rem;
   margin: 0.5rem 0rem;
-  width: 36vw;
+  width: 34vw;
   min-height: 30vh;
   &__header {
     display: flex;
@@ -4136,13 +4350,13 @@ h3 {
   flex-direction: column;
   overflow: hidden;
   background-color: white;
-  width: 40vw;
+  width: 38vw;
   border-radius: 0.5rem;
   padding: 1rem;
   border: 1px solid #e8e8e8;
 }
 .opp-modal {
-  width: 38vw;
+  width: 36vw;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -4150,8 +4364,6 @@ h3 {
   padding: 0.5rem;
   overflow: auto;
   max-height: 56vh;
-  border-radius: 0.3rem;
-  border-bottom: 3px solid $white;
   color: $base-gray;
   font-size: 16px;
   letter-spacing: 0.75px;
@@ -4159,6 +4371,23 @@ h3 {
     margin-right: 0.25rem;
   }
 }
+// .opp-modal::-webkit-scrollbar {
+//   width: 6px; /* Mostly for vertical scrollbars */
+//   height: 0px; /* Mostly for horizontal scrollbars */
+// }
+// .opp-modal::-webkit-scrollbar-thumb {
+//   background-color: $dark-green;
+//   box-shadow: inset 4px 4px 8px 0 rgba(rgb(243, 240, 240), 0.5);
+//   border-radius: 0.3rem;
+// }
+// .opp-modal::-webkit-scrollbar-track {
+//   // background: $soft-gray;
+//   box-shadow: inset 4px 4px 8px 0 $soft-gray;
+//   border-radius: 0.3rem;
+// }
+// .opp-modal::-webkit-scrollbar-track-piece {
+//   margin-top: 8px;
+// }
 .note-section {
   padding: 0.25rem 1rem;
   margin-bottom: 0.25rem;
