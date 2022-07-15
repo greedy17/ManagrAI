@@ -87,13 +87,13 @@ def emit_check_reminders(user_id, verbose_name):
     return check_reminders(user_id, verbose_name=verbose_name)
 
 
-def emit_process_non_zoom_meetings(user_id, verbose_name):
-    return _process_non_zoom_meetings(user_id, verbose_name=verbose_name)
+def emit_process_calendar_meetings(user_id, verbose_name):
+    return _process_calendar_meetings(user_id, verbose_name=verbose_name)
 
 
 # Functions for Scheduling Meeting
-def emit_non_zoom_meetings(workflow_id, user_id, user_tz, non_zoom_end_times):
-    return non_zoom_meeting_message(workflow_id, user_id, user_tz, non_zoom_end_times)
+def emit_process_calendar_meeting_message(workflow_id, user_id, user_tz, meeting_end_times):
+    return _process_calendar_meeting_message(workflow_id, user_id, user_tz, meeting_end_times)
 
 
 def emit_timezone_tasks(user_id, verbose_name):
@@ -386,7 +386,6 @@ def meeting_prep(processed_data, user_id):
     meeting = Meeting.objects.filter(user=user).first()
     meeting.participants = meeting_contacts
     meeting.save()
-    provider = processed_data.get("provider")
     # Conditional Check for Zoom meeting or Non-Zoom Meeting
     meeting_workflow = MeetingWorkflow.objects.create(
         operation_type="MEETING_REVIEW",
@@ -400,19 +399,15 @@ def meeting_prep(processed_data, user_id):
         meeting_workflow.add_form(
             meeting_resource_data["resource_type"], slack_consts.FORM_TYPE_UPDATE,
         )
-    if user.has_zoom_integration:
-        if (provider == "Zoom Meeting" and user.email not in processed_data["owner"]) or (
-            provider not in [None, "Zoom Meeting",]
-            and "Zoom meeting" not in processed_data["description"]
-        ):
-            # Google Meet (Non-Zoom)
-            # Sending end_times, workflow_id, and user values to emit function
-            non_zoom_end_times = processed_data.get("times").get("end_time")
-            workflow_id = str(meeting_workflow.id)
-            user_id = str(user.id)
-            user_tz = str(user.timezone)
-            emit_non_zoom_meetings(workflow_id, user_id, user_tz, non_zoom_end_times)
-        return
+    if user.has_slack_integration:
+        # Google Meet (Non-Zoom)
+        # Sending end_times, workflow_id, and user values to emit function
+        meeting_end_time = meeting.end_time
+        workflow_id = str(meeting_workflow.id)
+        user_id = str(user.id)
+        user_tz = str(user.timezone)
+        emit_process_calendar_meeting_message(workflow_id, user_id, user_tz, meeting_end_time)
+    return
 
 
 def _send_calendar_details(
@@ -608,7 +603,7 @@ def process_current_alert_list(user_id):
 
 
 @background()
-def _process_non_zoom_meetings(user_id):
+def _process_calendar_meetings(user_id):
     user = User.objects.get(id=user_id)
     if user.has_nylas_integration:
         try:
@@ -618,23 +613,13 @@ def _process_non_zoom_meetings(user_id):
             processed_data = None
         if processed_data is not None:
             for event in processed_data:
-                conferencing = event.get("conferencing", None)
-                provider = conferencing["provider"] if conferencing is not None else None
-                description = (
-                    event.get("description") if event.get("description") else "No Description"
-                )
-                if user.has_zoom_integration:
-                    if provider != "Zoom Meeting" and "Zoom" not in description:
-                        meeting_prep(event, user_id)
-                else:
-                    meeting_prep(event, user_id)
+                meeting_prep(event, user_id)
     return
 
 
 @background()
-def non_zoom_meeting_message(workflow_id, user_id, user_tz, non_zoom_end_times):
-    # Convert Non-Zoom Meeting from UNIX time to UTC
-    unix_time = datetime.utcfromtimestamp(int(non_zoom_end_times))
+def _process_calendar_meeting_message(workflow_id, user_id, user_tz, meeting_end_times):
+    unix_time = datetime.utcfromtimestamp(int(meeting_end_times))
     tz = pytz.timezone("UTC")
     local_end = unix_time.astimezone(tz)
     current_time = datetime.now()
@@ -647,7 +632,7 @@ def non_zoom_meeting_message(workflow_id, user_id, user_tz, non_zoom_end_times):
         seconds = time_difference.total_seconds()
         seconds = int(seconds)
     logger.info(
-        f"NON ZOOM MEETING SCHEDULER: \n END TIME: {non_zoom_end_times}\n LOCAL END: {local_end}\n CURRENT TIME: {current_time} \n TIME DIFFERENCE: {time_difference}"
+        f"MEETING SCHEDULER: \n END TIME: {meeting_end_times}\n LOCAL END: {local_end}\n CURRENT TIME: {current_time} \n TIME DIFFERENCE: {time_difference}"
     )
     return emit_kick_off_slack_interaction(user_id, workflow_id, schedule=seconds)
 
@@ -870,7 +855,7 @@ def _process_workflow_config_check(user_id):
 ####################################################
 
 TIMEZONE_TASK_FUNCTION = {
-    core_consts.NON_ZOOM_MEETINGS: emit_process_non_zoom_meetings,
+    core_consts.NON_ZOOM_MEETINGS: emit_process_calendar_meetings,
     core_consts.CALENDAR_CHECK: emit_process_add_calendar_id,
     core_consts.WORKFLOW_CONFIG_CHECK: emit_process_workflow_config_check,
     core_consts.MORNING_REFRESH: emit_morning_refresh_message,
