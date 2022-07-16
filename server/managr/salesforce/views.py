@@ -652,6 +652,8 @@ class SalesforceSObjectViewSet(
         form_id = request_data.get("form_id")
         form_data = request_data.get("form_data")
         main_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
+        if main_form.template.resource == "OpportunityLineItem":
+            opp_ref = form_data["OpportunityId"]
         stage_forms = []
         stage_form_data_collector = {}
         for form in stage_forms:
@@ -667,6 +669,8 @@ class SalesforceSObjectViewSet(
         while True:
             sf = user.salesforce_account
             try:
+                if main_form.template.resource == "OpportunityLineItem":
+                    all_form_data["OpportunityId"] = opp_ref
                 resource = model_routes[main_form.resource_type]["model"].create_in_salesforce(
                     all_form_data, user.id
                 )

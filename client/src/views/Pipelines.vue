@@ -924,7 +924,7 @@
 
           <div ref="product" class="adding-product" v-if="addingProduct">
             <div class="adding-product__header">
-              <img class="fullInvert" src="@/assets/images/warning.svg" alt="" />
+              <img class="fullInvert" src="@/assets/images/tag.svg" alt="" />
               <p>Add Product</p>
             </div>
             <div class="adding-product__body">
@@ -1085,7 +1085,7 @@
             </button>
 
             <p @click="addProduct" v-else class="product-text">
-              Product form <img src="@/assets/images/remove.svg" alt="" />
+              Adding product <img src="@/assets/images/remove.svg" alt="" />
             </p>
           </div>
           <div v-else></div>
@@ -1423,7 +1423,7 @@
             Create Opportunity
           </button>
           <button @click="manualSync" class="select-btn">
-            <img src="@/assets/images/refresh.svg" style="height: 1.15rem" alt="" />
+            <img src="@/assets/images/cloud.svg" style="height: 1rem" alt="" />
           </button>
         </div>
       </section>
@@ -1651,7 +1651,10 @@
             ref="pipelineTableChild"
             :key="i"
             v-for="(opp, i) in allOpps"
-            @create-form="createFormInstance(opp.id, opp.integration_id), getProductForm(opp.id)"
+            @create-form="
+              createFormInstance(opp.id, opp.integration_id),
+                getProductForm(opp.id, opp.integration_id)
+            "
             @get-notes="getNotes(opp.id)"
             @checked-box="selectPrimaryCheckbox"
             @inline-edit="inlineUpdate"
@@ -1781,8 +1784,11 @@ export default {
   },
   data() {
     return {
+      pId: null,
       productFormId: null,
-      createData: {},
+      createData: {
+        OpportunityId: null,
+      },
       productQueryOpts: {},
       createProductForm: null,
       addingProduct: false,
@@ -2008,7 +2014,8 @@ export default {
     accountSobjectId: 'getInitialAccounts',
   },
   methods: {
-    async getProductForm(id) {
+    async getProductForm(id, id2) {
+      this.pId = id2
       try {
         const res = await SObjects.api.createFormInstance({
           resourceType: 'OpportunityLineItem',
@@ -3079,6 +3086,8 @@ export default {
       }
     },
     async createProduct() {
+      this.createData.OpportunityId = this.pId
+      console.log(this.createData)
       if (this.addingProduct) {
         try {
           const res = await SObjects.api.createResource({
