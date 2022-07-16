@@ -619,20 +619,24 @@ class SalesforceSObjectViewSet(
                         attempts += 1
                 except Exception as e:
                     logger.info(f"UPDATE ERROR {e}")
+                    data = {"success": False, "error": f"UPDATE ERROR {e}"}
                     break
-            if all_form_data.get("meeting_comments") is not None:
-                emit_add_update_to_sf(str(main_form.id))
-            if user.has_slack_integration and len(user.slack_integration.realtime_alert_configs):
-                _send_instant_alert(form_ids)
-            forms.update(
-                is_submitted=True, update_source="pipeline", submission_date=timezone.now()
-            )
-            value_update = main_form.resource_object.update_database_values(all_form_data)
-            from_workflow = data.get("from_workflow")
-            title = data.get("workflow_title", None)
-            if from_workflow:
-                user.activity.increment_untouched_count("workflows")
-                user.activity.add_workflow_activity(str(main_form.id), title)
+            if data["success"]:
+                if all_form_data.get("meeting_comments") is not None:
+                    emit_add_update_to_sf(str(main_form.id))
+                if user.has_slack_integration and len(
+                    user.slack_integration.realtime_alert_configs
+                ):
+                    _send_instant_alert(form_ids)
+                forms.update(
+                    is_submitted=True, update_source="pipeline", submission_date=timezone.now()
+                )
+                value_update = main_form.resource_object.update_database_values(all_form_data)
+                from_workflow = data.get("from_workflow")
+                title = data.get("workflow_title", None)
+                if from_workflow:
+                    user.activity.increment_untouched_count("workflows")
+                    user.activity.add_workflow_activity(str(main_form.id), title)
         return Response(data=data)
 
     @action(
@@ -648,6 +652,8 @@ class SalesforceSObjectViewSet(
         form_id = request_data.get("form_id")
         form_data = request_data.get("form_data")
         main_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
+        if main_form.template.resource == "OpportunityLineItem":
+            opp_ref = form_data["OpportunityId"]
         stage_forms = []
         stage_form_data_collector = {}
         for form in stage_forms:
@@ -663,6 +669,8 @@ class SalesforceSObjectViewSet(
         while True:
             sf = user.salesforce_account
             try:
+                if main_form.template.resource == "OpportunityLineItem":
+                    all_form_data["OpportunityId"] = opp_ref
                 resource = model_routes[main_form.resource_type]["model"].create_in_salesforce(
                     all_form_data, user.id
                 )

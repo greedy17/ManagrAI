@@ -1578,11 +1578,13 @@ class OpportunityLineItemAdapter:
 
     @staticmethod
     def create(data, access_token, custom_base, object_fields, user_id):
+        print(data)
         json_data = json.dumps(
             OpportunityLineItemAdapter.to_api(
                 data, OpportunityLineItemAdapter.integration_mapping, object_fields
             ),
         )
+        print(json_data)
         url = sf_consts.SALESFORCE_WRITE_URI(
             custom_base, sf_consts.RESOURCE_SYNC_OPPORTUNITYLINEITEM, ""
         )
@@ -1591,6 +1593,7 @@ class OpportunityLineItemAdapter:
             r = client.post(
                 url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
             )
+            print(r.json())
             # get the opp as well uses the same url as the write but with get
             r = SalesforceAuthAccountAdapter._handle_response(r)
             url = f"{url}{r['id']}"
