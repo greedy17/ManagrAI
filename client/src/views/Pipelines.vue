@@ -4134,7 +4134,7 @@ select {
   border-radius: 0;
 }
 .select-btn1 {
-  border: 0.7px solid $very-light-gray;
+  border: 0.7px solid $dark-green;
   padding: 0.45rem 1.25rem;
   font-size: 13px;
   display: flex;
