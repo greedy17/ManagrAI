@@ -687,6 +687,7 @@
                 </template>
               </Multiselect>
               <div
+                ref="primaryStageForm"
                 :class="stageGateField ? 'adding-stage-gate' : 'hide'"
                 v-if="field.apiName === 'StageName'"
               >
@@ -1693,7 +1694,9 @@
             :key="i"
             ref="workflowTableChild"
             v-for="(workflow, i) in filteredWorkflows"
-            @create-form="createFormInstance(workflow.id)"
+            @create-form="
+              createFormInstance(workflow.id), getProductForm(workflow.id, workflow.integration_id)
+            "
             @get-notes="getNotes(workflow.id)"
             @checked-box="selectWorkflowCheckbox(workflow.id)"
             @inline-edit="inlineUpdate"
@@ -1765,7 +1768,6 @@ import SlackOAuth from '@/services/slack'
 import PipelineTableRow from '@/components/PipelineTableRow'
 import PipelineHeader from '@/components/PipelineHeader'
 import User from '@/services/users'
-import VueScrollTo from 'vue-scrollto'
 
 export default {
   name: 'Pipelines',
@@ -2015,17 +2017,20 @@ export default {
   },
   methods: {
     async getProductForm(id, id2) {
-      this.pId = id2
-      try {
-        const res = await SObjects.api.createFormInstance({
-          resourceType: 'OpportunityLineItem',
-          formType: 'CREATE',
-          resourceId: id,
-        })
-        this.productFormId = res.form_id
-        console.log(res)
-      } catch (e) {
-        console.log(e)
+      if (this.hasProducts) {
+        this.pId = id2
+        try {
+          const res = await SObjects.api.createFormInstance({
+            resourceType: 'OpportunityLineItem',
+            formType: 'CREATE',
+            resourceId: id,
+          })
+          this.productFormId = res.form_id
+        } catch (e) {
+          console.log(e)
+        }
+      } else {
+        return
       }
     },
     //     async testPicklist() {
@@ -2043,7 +2048,7 @@ export default {
       // let products = this.$refs.products
       setTimeout(() => {
         this.$refs.product ? this.$refs.product.scrollIntoView() : null
-      }, 200)
+      }, 100)
     },
     // expandNotes() {
     //   this.rowHeight = 8
@@ -2306,7 +2311,7 @@ export default {
         } else {
           this.allOpps = res.results
           this.oppTotal = res.count
-          console.log(res)
+
           res.next ? (this.hasNext = true) : (this.hasNext = false)
         }
       } catch (e) {
@@ -2752,6 +2757,7 @@ export default {
       }
     },
     async createFormInstance(id, integrationId, alertInstanceId = null) {
+      this.addingProduct = false
       this.formData = {}
       this.integrationId = integrationId
       this.stageGateField = null
@@ -2770,7 +2776,7 @@ export default {
           resourceType: 'Opportunity',
           resourceId: id,
         })
-        console.log(res)
+
         this.currentVals = res.current_values
         this.currentOwner = this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
@@ -3087,14 +3093,14 @@ export default {
     },
     async createProduct() {
       this.createData.OpportunityId = this.pId
-      console.log(this.createData)
+
       if (this.addingProduct) {
         try {
           const res = await SObjects.api.createResource({
             form_id: this.productFormId,
             form_data: this.createData,
           })
-          console.log(res)
+
           this.$toast('Product created successfully', {
             timeout: 2000,
             position: 'top-left',
@@ -3104,6 +3110,8 @@ export default {
           })
         } catch (e) {
           console.log(e)
+        } finally {
+          this.addingProduct = !this.addingProduct
         }
       } else {
         return
@@ -3397,11 +3405,6 @@ export default {
         let productForm = res.filter(
           (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
         )
-
-        let updateProductForm = res.filter(
-          (obj) => obj.formType === 'UPDATE' && obj.resource === 'OpportunityLineItem',
-        )
-        console.log(updateProductForm)
 
         let stages = stageGateForms.map((field) => field.stage)
         this.stagesWithForms = stages
