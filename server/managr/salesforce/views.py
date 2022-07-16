@@ -405,7 +405,7 @@ class SalesforceSObjectViewSet(
             except TokenExpired:
                 if attempts >= 5:
                     logger.info(f"CREATE FORM INSTANCE TOKEN EXPIRED ERROR ---- {e}")
-
+                    break
                 else:
                     user.salesforce_account.regenerate_token()
                     attempts += 1
@@ -455,7 +455,7 @@ class SalesforceSObjectViewSet(
             except TokenExpired as e:
                 if attempts >= 5:
                     logger.info(f"CREATE FORM INSTANCE TOKEN EXPIRED ERROR ---- {e}")
-
+                    break
                 else:
                     user.salesforce_account.regenerate_token()
                     attempts += 1
@@ -501,7 +501,7 @@ class SalesforceSObjectViewSet(
             except TokenExpired as e:
                 if attempts >= 5:
                     logger.info(f"CREATE FORM INSTANCE TOKEN EXPIRED ERROR ---- {e}")
-
+                    break
                 else:
                     if model_object.owner == user:
                         user.salesforce_account.regenerate_token()
