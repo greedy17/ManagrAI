@@ -8,7 +8,7 @@ from collections import OrderedDict
 from urllib.parse import urlencode, quote_plus, urlparse
 from requests.exceptions import HTTPError
 from django.contrib.postgres.fields import JSONField
-from managr.salesforce.utils import process_xml_dict
+from managr.salesforce.utils import process_xml_dict, map_records
 from managr.utils.client import HttpClient, Client
 from managr.utils.misc import object_to_snake_case
 from managr.organization import constants as org_consts
@@ -227,7 +227,6 @@ class SalesforceAuthAccountAdapter:
         return data
 
     def _format_resource_response(self, response_data, class_name, *args, **kwargs):
-
         res = response_data.get("records", [])
         formatted_data = []
         from .routes import routes
@@ -486,38 +485,56 @@ class SalesforceAuthAccountAdapter:
             resource_class.additional_filters() if add_filters is None else add_filters
         )
         limit = kwargs.pop("limit", sf_consts.SALESFORCE_QUERY_LIMIT)
-        url = f"{self.instance_url}{sf_consts.SALESFORCE_RESOURCE_QUERY_URI(self.salesforce_id, resource, extra_items, relationships, limit=limit, additional_filters=additional_filters)}"
-        print(url)
-        if offset:
-            url = f"{url} offset {offset}"
-        logger.info(f"{url} was sent")
-        with Client as client:
-            res = client.get(
-                url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
-            )
-            res = self._handle_response(res)
-            saved_response = res
-            logger.info(
-                f"Request returned {res.get('totalSize')} number of results for {resource} at offset {offset} with limit {limit}"
-            )
-            # regardless of the offset if the data is too large Salesforce will paginate
-            while True:
-                has_next_page = res.get("nextRecordsUrl", None)
-                if has_next_page:
-                    logger.info(f"Request returned a next page {has_next_page}")
-                    next_page_url = self.instance_url + has_next_page
-                    with Client as client:
-                        res = client.get(
-                            next_page_url,
-                            headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
-                        )
-                        res = self._handle_response(res)
-                        saved_response["records"] = [*saved_response["records"], *res["records"]]
-                else:
-                    break
-
-            res = self._format_resource_response(saved_response, resource)
-            return res
+        url_list = sf_consts.SALESFORCE_RESOURCE_QUERY_URI(
+            self.salesforce_id,
+            resource,
+            extra_items,
+            relationships,
+            limit=limit,
+            additional_filters=additional_filters,
+        )
+        merged_res = None
+        for u in url_list:
+            url = f"{self.instance_url}{u}"
+            if offset:
+                url = f"{url} offset {offset}"
+            logger.info(f"{url} was sent")
+            with Client as client:
+                res = client.get(
+                    url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+                )
+                res = self._handle_response(res)
+                saved_response = res
+                logger.info(
+                    f"Request returned {res.get('totalSize')} number of results for {resource} at offset {offset} with limit {limit}"
+                )
+                # regardless of the offset if the data is too large Salesforce will paginate
+                while True:
+                    has_next_page = res.get("nextRecordsUrl", None)
+                    if has_next_page:
+                        logger.info(f"Request returned a next page {has_next_page}")
+                        next_page_url = self.instance_url + has_next_page
+                        with Client as client:
+                            res = client.get(
+                                next_page_url,
+                                headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(
+                                    self.access_token
+                                ),
+                            )
+                            res = self._handle_response(res)
+                            saved_response["records"] = [
+                                *saved_response["records"],
+                                *res["records"],
+                            ]
+                    else:
+                        break
+            if merged_res:
+                post_merge_res = map_records(merged_res["records"], saved_response["records"])
+                merged_res["records"] = post_merge_res
+            else:
+                merged_res = saved_response
+        merged_res = self._format_resource_response(merged_res, resource)
+        return merged_res
 
     def list_relationship_data(self, relationship, fields, value, *args, **kwargs):
         # build the filter query from the name fields and value
@@ -1578,13 +1595,11 @@ class OpportunityLineItemAdapter:
 
     @staticmethod
     def create(data, access_token, custom_base, object_fields, user_id):
-        print(data)
         json_data = json.dumps(
             OpportunityLineItemAdapter.to_api(
                 data, OpportunityLineItemAdapter.integration_mapping, object_fields
             ),
         )
-        print(json_data)
         url = sf_consts.SALESFORCE_WRITE_URI(
             custom_base, sf_consts.RESOURCE_SYNC_OPPORTUNITYLINEITEM, ""
         )
@@ -1593,7 +1608,6 @@ class OpportunityLineItemAdapter:
             r = client.post(
                 url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
             )
-            print(r.json())
             # get the opp as well uses the same url as the write but with get
             r = SalesforceAuthAccountAdapter._handle_response(r)
             url = f"{url}{r['id']}"
