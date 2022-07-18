@@ -142,4 +142,4 @@ def map_records(arr1, arr2):
         found_obj = list(filter(lambda x: x["Id"] == obj["Id"], arr2))[0]
         obj.update(found_obj)
         merged_list.append(obj)
-    return
+    return merged_list

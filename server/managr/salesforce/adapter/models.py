@@ -498,7 +498,7 @@ class SalesforceAuthAccountAdapter:
             url = f"{self.instance_url}{u}"
             if offset:
                 url = f"{url} offset {offset}"
-            logger.info(f"{url} was sent")
+            # logger.info(f"{url} was sent")
             with Client as client:
                 res = client.get(
                     url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
@@ -528,11 +528,11 @@ class SalesforceAuthAccountAdapter:
                             ]
                     else:
                         break
-            if merged_res:
-                post_merge_res = map_records(merged_res["records"], saved_response["records"])
-                merged_res["records"] = post_merge_res
-            else:
-                merged_res = saved_response
+                if merged_res:
+                    post_merge_res = map_records(merged_res["records"], saved_response["records"])
+                    merged_res["records"] = post_merge_res
+                else:
+                    merged_res = saved_response
         merged_res = self._format_resource_response(merged_res, resource)
         return merged_res
 

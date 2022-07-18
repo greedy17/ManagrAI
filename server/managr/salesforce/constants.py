@@ -46,12 +46,11 @@ ADD_RESOURCE_TYPE_FIELDS = ["RecordType"]
 def SEPARATE_FIELDS(fields):
     char_count = ",".join(fields)
     field_list = []
-    print(len(char_count))
     if len(char_count) > SF_CHAR_LIMIT:
         fields_listed = list(fields)
         divider = 2
         while True:
-            if (len(char_count) / divider) > 12000:
+            if (len(char_count) / divider) > SF_CHAR_LIMIT:
                 divider += 1
             else:
                 step = round(len(fields) / divider)
@@ -68,7 +67,7 @@ def SEPARATE_FIELDS(fields):
                             field_slice.append("Id")
                         field_list.append(",".join(field_slice))
                     current_step += step
-            break
+                break
     else:
         field_list.append(char_count)
     return field_list
@@ -90,16 +89,16 @@ def SALESFORCE_RESOURCE_QUERY_URI(
         additional_filters.insert(0, f"OwnerId = '{owner_id}'")
     field_list = SEPARATE_FIELDS(fields)
     url_list = []
-    for i in field_list:
+    for idx, field_string in enumerate(field_list):
         if resource in ADD_RESOURCE_TYPE_FIELDS:
             if len(additional_filters):
                 additional_filters.append(f"AND SobjectType = '{SobjectType}'")
             else:
                 additional_filters.append(f"SobjectType = '{SobjectType}'")
-        url = f"{CUSTOM_BASE_URI}/query/?q=SELECT {','.join(fields)}"
-        if len(childRelationshipFields):
+        url = f"{CUSTOM_BASE_URI}/query/?q=SELECT {field_string}"
+        if len(childRelationshipFields) and idx == 0:
             for rel, v in childRelationshipFields.items():
-                url += f", (SELECT {i} FROM {rel} {' '.join(v['attrs'])})"
+                url += f", (SELECT {','.join(v['fields'])} FROM {rel} {' '.join(v['attrs'])})"
         url = f"{url} FROM {resource}"
         for i, f in enumerate(additional_filters):
             if i == 0:
