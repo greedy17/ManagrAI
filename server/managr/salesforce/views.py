@@ -646,12 +646,26 @@ class SalesforceSObjectViewSet(
         url_path="create",
     )
     def create_resource(self, request, *args, **kwargs):
-        request_data = self.request.data
-        logger.info(f"CREATE START ---- {request_data}")
+        data = self.request.data
+        logger.info(f"CREATE START ---- {data}")
         user = User.objects.get(id=self.request.user.id)
-        form_id = request_data.get("form_id")
-        form_data = request_data.get("form_data")
-        main_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
+        integration_ids = data.get("integration_ids")
+        form_data = data.get("form_data")
+        form_type = data.get("form_type")
+        resource_type = data.get("resource_type")
+        resource_id = data.get("resource_id", None)
+        stage_name = data.get("stage_name", None)
+        instance_data = {
+            "user": user,
+            "resource_type": resource_type,
+            "form_type": form_type,
+            "resource_id": resource_id,
+            "stage_name": stage_name,
+        }
+        form_ids = create_form_instance(**instance_data)
+
+        forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
+        main_form = forms.filter(template__form_type="CREATE").first()
         if main_form.template.resource == "OpportunityLineItem":
             opp_ref = form_data["OpportunityId"]
         stage_forms = []
@@ -674,7 +688,11 @@ class SalesforceSObjectViewSet(
                 resource = model_routes[main_form.resource_type]["model"].create_in_salesforce(
                     all_form_data, user.id
                 )
+<<<<<<< HEAD
                 data = {"success": True}
+=======
+                data = {"success": True, "integration_id": resource.id}
+>>>>>>> 0ea04981f081f1ec1431c526a03f8ba3ddf54e89
                 break
             except FieldValidationError as e:
                 data = {"success": False, "error": str(e)}
@@ -709,7 +727,6 @@ class SalesforceSObjectViewSet(
             except Exception as e:
                 data = {"success": False, "error": str(e)}
                 break
-            logger.info(f"RETURN DATA ----- {data}")
         return Response(data=data)
 
     @action(
