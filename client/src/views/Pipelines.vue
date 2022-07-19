@@ -3252,6 +3252,17 @@ export default {
         })
       }
 
+      for (let i = 0; i < this.oppFormCopy.length; i++) {
+        if (
+          this.oppFormCopy[i].dataType === 'Picklist' ||
+          this.oppFormCopy[i].dataType === 'MultiPicklist'
+        ) {
+          this.picklistQueryOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].apiName
+        } else if (this.oppFormCopy[i].dataType === 'Reference') {
+          this.referenceOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].id
+        }
+      }
+
       if (this.hasProducts) {
         for (let i = 0; i < this.createProductForm.length; i++) {
           if (
@@ -3381,17 +3392,6 @@ export default {
           (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
         )
 
-        for (let i = 0; i < this.oppFormCopy.length; i++) {
-          if (
-            this.oppFormCopy[i].dataType === 'Picklist' ||
-            this.oppFormCopy[i].dataType === 'MultiPicklist'
-          ) {
-            this.picklistQueryOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].apiName
-          } else if (this.oppFormCopy[i].dataType === 'Reference') {
-            this.referenceOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].id
-          }
-        }
-
         for (const field of stageGateForms) {
           this.stageValidationFields[field.stage] = field.fieldsRef
         }
@@ -3412,14 +3412,15 @@ export default {
               dupeStagesRemoved[i].referenceDisplayLabel
           }
         }
-      } catch (error) {
-        this.$toast('Error setting form fields!', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+      } catch (e) {
+        console.log(e)
+        // this.$toast('Error setting form fields!', {
+        //   timeout: 2000,
+        //   position: 'top-left',
+        //   type: 'error',
+        //   toastClassName: 'custom',
+        //   bodyClassName: ['custom'],
+        // })
       }
     },
     async getUsers() {
