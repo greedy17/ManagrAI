@@ -61,7 +61,7 @@
               style="height: 1.75rem; margin-left: 0.5rem; margin-right: 0.25rem"
               alt=""
             />
-            <h2>Update Opportunity</h2>
+            <h3>Update Opportunity</h3>
           </div>
           <img
             src="@/assets/images/close.svg"
@@ -73,7 +73,16 @@
         <div class="opp-modal">
           <section :key="field.id" v-for="field in oppFormCopy">
             <div v-if="field.apiName === 'meeting_type'">
-              <p>Note Title:</p>
+              <span class="input-container">
+                <input
+                  class="basic-slide"
+                  id="Title"
+                  type="text"
+                  @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                  placeholder="Title"
+                /><label for="Title">Title</label>
+              </span>
+              <!-- <p>Note Title:</p>
               <textarea
                 id="user-input"
                 cols="30"
@@ -81,10 +90,22 @@
                 style="width: 36.5vw; border-radius: 0.2rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
-              </textarea>
+              </textarea> -->
             </div>
             <div v-else-if="field.apiName === 'meeting_comments'">
-              <p>Notes:</p>
+              <span class="input-container">
+                <textarea
+                  class="basic-slide"
+                  id="notes"
+                  type="text"
+                  cols="30"
+                  rows="4"
+                  placeholder="Note"
+                  style="line-height: 2rem"
+                  @input=";(value = $event.target.value), setUpdateValues(value, field.apiName)"
+                /><label for="Note">Note</label>
+              </span>
+              <!-- <p>Notes:</p>
               <textarea
                 id="user-input"
                 ccols="30"
@@ -92,7 +113,7 @@
                 style="width: 36.5vw; border-radius: 0.2rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
-              </textarea>
+              </textarea> -->
             </div>
             <div
               v-else-if="
@@ -235,6 +256,7 @@
                 v-if="field.apiName === 'StageName'"
               >
                 <div class="adding-stage-gate__header">
+                  <img src="@/assets/images/warning.svg" alt="" />
                   <p>This Stage has validation rules</p>
                 </div>
 
@@ -1326,6 +1348,87 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+@mixin epic-sides() {
+  position: relative;
+  z-index: 1;
+
+  &:before {
+    position: absolute;
+    content: '';
+    display: block;
+    top: 0;
+    left: -5000px;
+    height: 100%;
+    width: 15000px;
+    z-index: -1;
+    @content;
+  }
+}
+
+.input-container {
+  position: relative;
+  display: inline-block;
+  margin: 30px 10px;
+  @include epic-sides() {
+    background: inherit;
+  }
+}
+
+.basic-slide {
+  display: inline-block;
+  width: 34vw;
+  padding: 9px 0 10px 16px;
+  font-family: $base-font-family !important;
+  font-weight: 400;
+  color: $base-gray;
+  background: $white;
+  border: 1px solid $soft-gray !important;
+  border: 0;
+  border-radius: 3px;
+  outline: 0;
+  text-indent: 70px; // Arbitrary.
+  transition: all 0.3s ease-in-out;
+
+  &::-webkit-input-placeholder {
+    color: #efefef;
+    text-indent: 0;
+    font-weight: 300;
+  }
+
+  + label {
+    display: inline-block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 9px 8px;
+    font-size: 15px;
+    text-align: center;
+    width: 80px;
+    // text-shadow: 0 1px 0 rgba(19, 74, 70, 0.4);
+    background: $dark-green;
+    color: $white;
+    transition: all 0.3s ease-in-out;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 2px;
+  }
+}
+.basic-slide:focus,
+.basic-slide:active {
+  color: $base-gray;
+  text-indent: 0;
+  background: #fff;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+
+  &::-webkit-input-placeholder {
+    color: #aaa;
+  }
+  + label {
+    transform: translateX(-100%);
+  }
+}
+
 .light-green-bg {
   background-color: $white-green;
   color: $dark-green !important;
@@ -1353,17 +1456,25 @@ export default {
   position: relative;
 }
 .adding-stage-gate {
-  border: 2px solid #e8e8e8;
+  border: 2px solid $coral;
   border-radius: 0.3rem;
   margin: 0.5rem 0rem;
   width: 36vw;
   min-height: 30vh;
   &__header {
     font-size: 11px;
-    color: $coral;
+    color: white;
     padding: 0.5rem;
     width: 100%;
-    border-bottom: 1px solid #e8e8e8;
+    border-bottom: 1px solid $coral;
+    background-color: $coral;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    img {
+      height: 16px;
+      filter: invert(90%);
+    }
   }
   &__body {
     padding: 0.25rem;
@@ -1391,7 +1502,7 @@ export default {
     height: 0px; /* Mostly for horizontal scrollbars */
   }
   &__body::-webkit-scrollbar-thumb {
-    background-image: linear-gradient(100deg, $darker-green 0%, $lighter-green 99%);
+    background-color: $coral;
     box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
     border-radius: 0.3rem;
   }
@@ -1636,10 +1747,9 @@ section {
   display: flex;
   align-items: center;
   border: none;
-  min-height: 4.5vh;
-  padding: 0.75rem 1rem;
-  font-size: 16px;
-  border-radius: 0.2rem;
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 6px;
   background-color: $dark-green;
   cursor: pointer;
   color: white;
