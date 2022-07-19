@@ -279,9 +279,7 @@
                 <p class="gray-text">
                   Owned by:
                   {{
-                    currentValues[index].owner_ref.full_name
-                      ? currentValues[index].owner_ref.full_name
-                      : ''
+                    currentValues[index].owner_ref ? currentValues[index].owner_ref.full_name : ''
                   }}
                 </p>
               </div>
@@ -535,7 +533,6 @@ export default {
 
   mounted() {
     this.setPicklist()
-    console.log(this.forecastOpps)
   },
   methods: {
     resetNotes() {
@@ -562,7 +559,6 @@ export default {
     setDeleteId(id) {
       this.deleteIds = []
       this.deleteIds.push(id)
-      console.log(this.deleteIds)
     },
     async removeForecast() {
       try {
@@ -636,7 +632,6 @@ export default {
       try {
         let res = await SObjects.api.getObjectsForWorkflows('Opportunity')
         this.allOpps = res.results
-        console.log(res)
       } catch (e) {
         this.$toast('Error gathering opportunities', {
           timeout: 2000,
@@ -732,7 +727,6 @@ export default {
         )
       }
       this.closeFilterSelection()
-      console.log(this.activeFilters)
     },
     valueSelected(value) {
       this.currentVal = value
@@ -741,7 +735,6 @@ export default {
       this.currentOperator = val
     },
     removeFilter(name, index) {
-      console.log(index)
       this.activeFilters.splice(index, 1)
       this.filterValues.splice(index, 1)
       this.activeOperators.splice(index, 1)

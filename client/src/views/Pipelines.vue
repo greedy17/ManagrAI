@@ -2780,6 +2780,7 @@ export default {
       this.selectedOwner = null
       this.addOppModalOpen = true
       this.addingProduct = false
+      this.stageGateField = null
     },
     async oppInstance(id) {
       try {
