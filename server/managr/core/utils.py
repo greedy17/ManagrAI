@@ -1,8 +1,10 @@
 import calendar
 from datetime import datetime
+from xml.parsers.expat import model
 from managr.core.models import User
 from managr.alerts.models import AlertConfig
 from managr.slack.models import OrgCustomSlackFormInstance
+from managr.organization.models import Organization
 
 
 def get_month_start_and_end(year, current_month):
@@ -69,3 +71,50 @@ def get_totals_for_year():
         curr_month["creates"] = creates
         totals[date[1]] = curr_month
     return totals
+
+
+def get_user_averages(model_queryset):
+    obj = {}
+    for record in model_queryset:
+        if record.datetime_created.date() in obj.keys():
+            obj[record.datetime_created.date()] += 1
+        else:
+            obj[record.datetime_created.date()] = 1
+    return obj
+
+
+def get_organization_totals():
+    totals = {}
+    current_date = datetime.now()
+    date_list = get_month_start_and_end(current_date.year, current_date.month)
+    orgs = Organization.objects.all()
+    users = User.objects.all()
+    for date in date_list:
+        start = datetime.strptime(f"{date[0]} 00:01", "%Y-%m-%d %H:%M")
+        end = datetime.strptime(f"{date[1]} 23:59", "%Y-%m-%d %H:%M")
+        slack_form_instances = (
+            OrgCustomSlackFormInstance.objects.filter(datetime_created__range=(start, end))
+            .filter(is_submitted=True)
+            .exclude(user__organization__name="Managr")
+        )
+        org_totals = {}
+        for org in orgs:
+            org_obj = {}
+            org_totals_instances = slack_form_instances.filter(user__organization=org)
+            org_users = users.filter(organization=org)
+            users_obj = {}
+            for user in org_users:
+                user_obj = {}
+                user_instances = org_totals_instances.filter(user=user)
+                per_day = get_user_averages(user_instances)
+                user_obj = {**per_day}
+                user_obj["updates"] = user_instances.filter(template__form_type="UPDATE").count()
+                user_obj["creates"] = user_instances.filter(template__form_type="CREATE").count()
+                users_obj[user.email] = user_obj
+            org_obj["users"] = users_obj
+            org_obj["updates"] = org_totals_instances.filter(template__form_type="UPDATE").count()
+            org_obj["creates"] = org_totals_instances.filter(template__form_type="CREATE").count()
+            org_totals[org.name] = org_obj
+        totals[date[1]] = org_totals
+    return totals
+
