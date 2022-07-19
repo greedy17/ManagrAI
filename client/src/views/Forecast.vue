@@ -276,7 +276,14 @@
                     currentValues[index].account_ref ? currentValues[index].account_ref.name : ''
                   }}
                 </p>
-                <p class="gray-text">Owned by: {{ currentValues[index].owner_ref.full_name }}</p>
+                <p class="gray-text">
+                  Owned by:
+                  {{
+                    currentValues[index].owner_ref.full_name
+                      ? currentValues[index].owner_ref.full_name
+                      : ''
+                  }}
+                </p>
               </div>
 
               <div class="row">
@@ -629,6 +636,7 @@ export default {
       try {
         let res = await SObjects.api.getObjectsForWorkflows('Opportunity')
         this.allOpps = res.results
+        console.log(res)
       } catch (e) {
         this.$toast('Error gathering opportunities', {
           timeout: 2000,

@@ -133,7 +133,7 @@
         v-if="sortingIndexWorkflows !== oppFields.length + i"
         @click="
           $emit(
-            'sort-opps',
+            'sort-opps-workflows',
             `${field.dataType}`,
             `${field.referenceDisplayLabel}`,
             `${field.apiName}`,
@@ -167,7 +167,7 @@
         v-if="sortingIndexWorkflows === oppFields.length + i"
         @click="
           $emit(
-            'sort-opps-reverse',
+            'sort-opps-reverse-workflows',
             `${field.dataType}`,
             `${field.referenceDisplayLabel}`,
             `${field.apiName}`,

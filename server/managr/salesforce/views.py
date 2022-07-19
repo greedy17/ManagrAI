@@ -674,9 +674,7 @@ class SalesforceSObjectViewSet(
                 resource = model_routes[main_form.resource_type]["model"].create_in_salesforce(
                     all_form_data, user.id
                 )
-                data = {
-                    "success": True,
-                }
+                data = {"success": True}
                 break
             except FieldValidationError as e:
                 data = {"success": False, "error": str(e)}
@@ -882,7 +880,8 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type, slack_const.FORM_TYPE_UPDATE,
+            resource_type,
+            slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         print(workflow.forms.all())
