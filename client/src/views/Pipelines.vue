@@ -3251,16 +3251,19 @@ export default {
           salesforceObject: 'Opportunity',
         })
       }
-      for (let i = 0; i < this.createProductForm.length; i++) {
-        if (
-          this.createProductForm[i].dataType === 'Picklist' ||
-          this.createProductForm[i].dataType === 'MultiPicklist'
-        ) {
-          this.productQueryOpts[this.createProductForm[i].apiName] =
-            this.createProductForm[i].apiName
-        } else if (this.createProductForm[i].dataType === 'Reference') {
-          this.productReferenceOpts[this.createProductForm[i].apiName] =
-            this.createProductForm[i].id
+
+      if (this.hasProducts) {
+        for (let i = 0; i < this.createProductForm.length; i++) {
+          if (
+            this.createProductForm[i].dataType === 'Picklist' ||
+            this.createProductForm[i].dataType === 'MultiPicklist'
+          ) {
+            this.productQueryOpts[this.createProductForm[i].apiName] =
+              this.createProductForm[i].apiName
+          } else if (this.createProductForm[i].dataType === 'Reference') {
+            this.productReferenceOpts[this.createProductForm[i].apiName] =
+              this.createProductForm[i].id
+          }
         }
       }
 
