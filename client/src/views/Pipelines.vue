@@ -25,13 +25,6 @@
               >Oldest: {{ formatMostRecent(notes[notes.length - 1].submission_date) }} days</small
             >
           </div>
-
-          <!-- <img
-            src="@/assets/images/close.svg"
-            style="height: 1.5rem; margin-top: -0.5rem; margin-right: 0.5rem; cursor: pointer"
-            @click="resetNotes"
-            alt=""
-          /> -->
         </div>
         <section class="note-section" :key="i" v-for="(note, i) in notes">
           <p class="note-section__title">
@@ -96,6 +89,7 @@
                 id="user-input"
                 ccols="30"
                 rows="4"
+                :disabled="savingCreateForm"
                 style="width: 37vw; border-radius: 0.4rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
@@ -104,6 +98,7 @@
             <div v-else-if="field.dataType === 'String'">
               <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
               <input
+                :disabled="savingCreateForm"
                 id="user-input"
                 type="text"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
@@ -296,6 +291,7 @@
                         id="user-input"
                         type="text"
                         :placeholder="currentVals[field.apiName]"
+                        :disabled="savingCreateForm"
                         v-model="currentVals[field.apiName]"
                         @input="
                           ;(value = $event.target.value),
@@ -315,6 +311,7 @@
                         id="user-input"
                         ccols="30"
                         rows="2"
+                        :disabled="savingCreateForm"
                         :placeholder="currentVals[field.apiName]"
                         style="width: 20vw; border-radius: 6px; padding: 7px"
                         v-model="currentVals[field.apiName]"
@@ -329,6 +326,7 @@
                       <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
                       <input
                         type="text"
+                        :disabled="savingCreateForm"
                         onfocus="(this.type='date')"
                         onblur="(this.type='text')"
                         :placeholder="currentVals[field.apiName]"
@@ -345,6 +343,7 @@
                       <input
                         type="datetime-local"
                         id="start"
+                        :disabled="savingCreateForm"
                         v-model="currentVals[field.apiName]"
                         @input="
                           ;(value = $event.target.value),
@@ -363,6 +362,7 @@
                       <input
                         id="user-input"
                         type="number"
+                        :disabled="savingCreateForm"
                         v-model="currentVals[field.apiName]"
                         :placeholder="currentVals[field.apiName]"
                         @input="
@@ -402,6 +402,7 @@
               <input
                 type="date"
                 id="user-input"
+                :disabled="savingCreateForm"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
@@ -412,6 +413,7 @@
               <input
                 type="datetime-local"
                 id="start"
+                :disabled="savingCreateForm"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
@@ -426,6 +428,7 @@
               <input
                 id="user-input"
                 type="number"
+                :disabled="savingCreateForm"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
@@ -515,6 +518,7 @@
                   <input
                     id="user-input"
                     type="text"
+                    :disabled="savingCreateForm"
                     :placeholder="currentVals[field.apiName]"
                     v-model="currentVals[field.apiName]"
                     @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
@@ -532,6 +536,7 @@
                     id="user-input"
                     ccols="30"
                     rows="2"
+                    :disabled="savingCreateForm"
                     :placeholder="currentVals[field.apiName]"
                     style="width: 20vw; border-radius: 6px; padding: 7px"
                     v-model="currentVals[field.apiName]"
@@ -545,6 +550,7 @@
                     type="text"
                     onfocus="(this.type='date')"
                     onblur="(this.type='text')"
+                    :disabled="savingCreateForm"
                     :placeholder="currentVals[field.apiName]"
                     v-model="currentVals[field.apiName]"
                     id="user-input"
@@ -556,6 +562,7 @@
                   <input
                     type="datetime-local"
                     id="start"
+                    :disabled="savingCreateForm"
                     v-model="currentVals[field.apiName]"
                     @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
                   />
@@ -571,6 +578,7 @@
                   <input
                     id="user-input"
                     type="number"
+                    :disabled="savingCreateForm"
                     v-model="currentVals[field.apiName]"
                     :placeholder="currentVals[field.apiName]"
                     @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
@@ -587,6 +595,7 @@
               @click="addProduct"
               style="margin-bottom: 0.75rem"
               class="select-btn1"
+              :disabled="savingCreateForm"
             >
               Add Product
             </button>
@@ -597,18 +606,18 @@
           </div>
           <div v-else></div>
 
-          <div style="display: flex; align-items: center">
-            <button class="add-button" @click="createResource">Create Opportunity</button>
+          <div v-if="!savingCreateForm" style="display: flex; align-items: center">
+            <button class="add-button" @click="createResource(addingProduct ? true : false)">
+              Create Opportunity
+            </button>
             <p @click="resetAddOpp" class="cancel">Cancel</p>
+          </div>
+          <div v-else>
+            <PipelineLoader />
           </div>
         </div>
       </div>
     </Modal>
-    <!-- @close-modal="
-        () => {
-          $emit('cancel'), resetEdit()
-        }
-      " -->
     <Modal v-if="editOpModalOpen" dimmed>
       <div class="opp-modal-container">
         <div class="flex-row-spread header">
@@ -635,18 +644,7 @@
                   placeholder="Title"
                 /><label for="Title">Title</label>
               </span>
-
-              <!-- <p>Note Title:</p>
-              <textarea
-                id="user-input"
-                cols="30"
-                rows="2"
-                style="width: 37vw; border-radius: 0.2rem"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-              >
-              </textarea> -->
             </div>
-            <!-- @blur="closeNotes" -->
             <div
               style="margin-left: -0.5rem; margin-top: -2rem"
               v-else-if="field.apiName === 'meeting_comments'"
@@ -663,16 +661,6 @@
                   @input=";(value = $event.target.value), replaceURLs(value, field.apiName)"
                 /><label for="Note">Note</label>
               </span>
-
-              <!-- <p>Notes:</p>
-              <textarea
-                id="user-input"
-                cols="30"
-                rows="8"
-                style="width: 37vw; border-radius: 0.2rem"
-                @input=";(value = $event.target.value), replaceURLs(value, field.apiName)"
-              >
-              </textarea> -->
             </div>
             <div
               v-else-if="
@@ -1301,55 +1289,6 @@
               >
             </button>
           </div>
-
-          <!-- <button @click.stop="workList = !workList" class="select-btn">
-            {{ currentWorkflowName ? currentWorkflowName : 'Active Workflows' }}
-            <img
-              v-if="!workList"
-              style="height: 0.7rem; margin-left: 0.5rem"
-              src="@/assets/images/rightArrow.svg"
-              class="invert"
-              alt=""
-            />
-            <img
-              v-else
-              style="height: 0.7rem; margin-left: 0.5rem"
-              class="invert"
-              src="@/assets/images/downArrow.svg"
-              alt=""
-            />
-          </button>
-          <div v-outside-click="closeWorkSelect" v-show="workList" class="work-section">
-            <div class="work-section__title flex-row-spread">
-              <p>{{ currentWorkflowName ? currentWorkflowName : 'Active Workflows' }}</p>
-            </div>
-            <p @click="showWorkflowList = !showWorkflowList" class="work-section__sub-title">
-              Workflows
-              <img
-                v-if="showWorkflowList"
-                class="invert"
-                src="@/assets/images/downArrow.svg"
-                alt=""
-              /><img v-else src="@/assets/images/rightArrow.svg" class="invert" alt="" />
-            </p>
-            <div style="width: 100%" v-if="showWorkflowList">
-              <div :key="i" v-for="(template, i) in templates.list">
-                <button
-                  class="list-button"
-                  @click="
-                    $router.replace({
-                      name: 'Pipelines',
-                      params: { id: template.id, title: template.title },
-                    }),
-                      selectList(template.id)
-                  "
-                >
-                  {{ template.title }}
-                  <span class="filter" v-if="currentWorkflowName === template.title"> active</span>
-                </button>
-              </div>
-            </div>
-          </div> -->
           <div
             v-for="(filter, i) in activeFilters"
             :key="i"
@@ -1775,10 +1714,7 @@
             ref="pipelineTableChild"
             :key="i"
             v-for="(opp, i) in allOpps"
-            @create-form="
-              createFormInstance(opp.id, opp.integration_id),
-                getProductForm(opp.id, opp.integration_id)
-            "
+            @create-form="createFormInstance(opp.id, opp.integration_id)"
             @get-notes="getNotes(opp.id)"
             @checked-box="selectPrimaryCheckbox"
             @inline-edit="inlineUpdate"
@@ -1817,9 +1753,7 @@
             :key="i"
             ref="workflowTableChild"
             v-for="(workflow, i) in filteredWorkflows"
-            @create-form="
-              createFormInstance(workflow.id), getProductForm(workflow.id, workflow.integration_id)
-            "
+            @create-form="createFormInstance(workflow.id, workflow.integration_id)"
             @get-notes="getNotes(workflow.id)"
             @checked-box="selectWorkflowCheckbox(workflow.id)"
             @inline-edit="inlineUpdate"
@@ -1862,12 +1796,6 @@
           </div>
         </div>
       </section>
-      <!-- <section v-if="loadingWorkflows" class="empty-table-section">
-        <div>
-          <PipelineLoader />
-        </div>
-      </section> -->
-
       <div class="row between height-s">
         <div class="pagination">
           <span class="results-2">
@@ -1876,7 +1804,6 @@
           >
           <button v-if="hasNext && !selectedWorkflow" @click="nextPage" class="select-btn">
             Load More
-            <!-- <img src="@/assets/images/plusOne.svg" height="12px" alt="" /> -->
           </button>
         </div>
       </div>
@@ -1912,12 +1839,9 @@ export default {
   },
   data() {
     return {
+      createData: {},
+      savingCreateForm: false,
       allPicklistOptions: {},
-      pId: null,
-      productFormId: null,
-      createData: {
-        OpportunityId: null,
-      },
       productQueryOpts: {},
       createProductForm: null,
       addingProduct: false,
@@ -2138,23 +2062,6 @@ export default {
     accountSobjectId: 'getInitialAccounts',
   },
   methods: {
-    async getProductForm(id, id2) {
-      if (this.hasProducts) {
-        this.pId = id2
-        try {
-          const res = await SObjects.api.createFormInstance({
-            resourceType: 'OpportunityLineItem',
-            formType: 'CREATE',
-            resourceId: id,
-          })
-          this.productFormId = res.form_id
-        } catch (e) {
-          console.log(e)
-        }
-      } else {
-        return
-      }
-    },
     // async testPicklist() {
     //   try {
     //     const res = await SObjectPicklist.api.listPicklists()
@@ -2168,7 +2075,6 @@ export default {
     // },
     addProduct() {
       this.addingProduct = !this.addingProduct
-      // let products = this.$refs.products
       setTimeout(() => {
         this.$refs.product ? this.$refs.product.scrollIntoView() : null
       }, 100)
@@ -2201,30 +2107,9 @@ export default {
         })
       }
     },
-    checkStartingPageNumber() {
-      if (this.currentPage === 1) {
-        return this.currentPage
-      } else {
-        return (this.currentPage - 1) * 20 + 1
-      }
-    },
-    checkEndingPageNumber() {
-      let pages = this.oppTotal / 20
-      if (pages % 1 !== 0) {
-        pages = Math.ceil(pages)
-      }
-      if (this.currentPage * 20 > this.oppTotal) {
-        return this.oppTotal
-      } else {
-        return this.currentPage * 20
-      }
-    },
     nextPage() {
       this.currentPage += 1
       this.addMore(this.currentPage)
-    },
-    prevPage() {
-      this.getObjects(this.currentPage - 1)
     },
     replaceURLs(message, field) {
       if (!message) return
@@ -2282,8 +2167,6 @@ export default {
       this.stageFormOpen = true
       this.stageId = id
       this.stageIntegrationId = integrationId
-      // this.stageGateInstance(field)
-      // this.oppInstance(id)
     },
     closeStageForm() {
       this.stageFormOpen = false
@@ -2415,7 +2298,6 @@ export default {
       }
       try {
         const res = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
-
         if (this.selectedWorkflow) {
           this.allOpps = res.results
           this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
@@ -2502,9 +2384,6 @@ export default {
     applyFilter(value) {
       this.updateFilterValue = value
       this.operatorsLength += 1
-      // if (this.currentOperators.length < this.operatorsLength) {
-      //   this.currentOperators.push('equals')
-      // }
       this.getFilteredObjects(value)
       this.filterSelected = false
       this.activeFilters.push(this.currentFilter)
@@ -2726,12 +2605,6 @@ export default {
       } else {
         this.primaryCheckList.push(id)
       }
-
-      // if (this.selectedRows.includes(index)) {
-      //   this.selectedRows = this.selectedRows.filter((i) => i !== index)
-      // } else {
-      //   this.selectedRows.push(index)
-      // }
     },
     selectWorkflowCheckbox(id) {
       if (this.workflowCheckList.includes(id)) {
@@ -2856,27 +2729,10 @@ export default {
     resetAddOpp() {
       this.addOppModalOpen = !this.addOppModalOpen
     },
-    async updateContactInstance() {
-      try {
-        const res = await SObjects.api.createFormInstance({
-          resourceType: 'Contact',
-          formType: 'UPDATE',
-        })
-        // this.addOppModalOpen = true
-        this.contactInstanceId = res.form_id
-      } catch (e) {
-        this.$toast('Error updating conacts', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      }
-    },
     async createFormInstance(id, integrationId, alertInstanceId = null) {
       this.addingProduct = false
       this.formData = {}
+      this.createData = {}
       this.integrationId = integrationId
       this.stageGateField = null
       this.dropdownLoading = true
@@ -2894,7 +2750,6 @@ export default {
           resourceType: 'Opportunity',
           resourceId: id,
         })
-        // console.log(res)
         this.currentVals = res.current_values
         this.currentOwner = this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
@@ -2919,25 +2774,12 @@ export default {
     },
     async createOppInstance() {
       this.formData = {}
+      this.createData = {}
       this.currentVals = []
       this.selectedAccount = null
       this.selectedOwner = null
-      try {
-        const res = await SObjects.api.createFormInstance({
-          resourceType: 'Opportunity',
-          formType: 'CREATE',
-        })
-        this.addOppModalOpen = true
-        this.oppInstanceId = res.form_id
-      } catch (e) {
-        this.$toast('Error building create form', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      }
+      this.addOppModalOpen = true
+      this.addingProduct = false
     },
     async oppInstance(id) {
       try {
@@ -3024,7 +2866,6 @@ export default {
             this.$refs.workflowTableChild[i].onChangeForecast()
             this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
           }
-          // this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
         }
         this.workflowCheckList = []
       } else {
@@ -3066,7 +2907,6 @@ export default {
     async updateOpps() {
       try {
         let res = await SObjects.api.getObjects('Opportunity', 1)
-
         this.allOpps = res.results
         this.originalList = res.results
         res.next ? (this.hasNext = true) : (this.hasNext = false)
@@ -3209,13 +3049,15 @@ export default {
         })
       }
     },
-    async createProduct() {
-      this.createData.OpportunityId = this.pId
-
+    async createProduct(id = this.integrationId) {
       if (this.addingProduct) {
         try {
           const res = await SObjects.api.createResource({
-            form_id: this.productFormId,
+            integration_ids: [id],
+            form_type: 'CREATE',
+            resource_type: 'OpportunityLineItem',
+            stage_name: this.stageGateField ? this.stageGateField : null,
+            resource_id: this.oppId,
             form_data: this.createData,
           })
 
@@ -3227,7 +3069,13 @@ export default {
             bodyClassName: ['custom'],
           })
         } catch (e) {
-          console.log(e)
+          this.$toast('Error creating Product!', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
         } finally {
           this.addingProduct = !this.addingProduct
         }
@@ -3303,16 +3151,20 @@ export default {
         })
       }
     },
-    async createResource() {
-      this.addOppModalOpen = false
+    async createResource(product) {
+      this.savingCreateForm = true
       try {
         let res = await SObjects.api
           .createResource({
-            form_id: this.oppInstanceId,
             form_data: this.formData,
+            form_type: 'CREATE',
+            resource_type: 'Opportunity',
+            stage_name: this.stageGateField ? this.stageGateField : null,
           })
           .then(async (res) => {
-            console.log(res)
+            if (product) {
+              this.createProduct(res.integration_id)
+            }
             let updatedRes = await SObjects.api.getObjects('Opportunity')
             this.allOpps = updatedRes.results
             this.originalList = updatedRes.results
@@ -3333,6 +3185,8 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+        this.savingCreateForm = false
+        this.addOppModalOpen = false
       }
     },
     async selectList(id) {
@@ -3396,18 +3250,6 @@ export default {
           salesforceObject: 'Opportunity',
         })
       }
-
-      // for (let i = 0; i < this.oppFormCopy.length; i++) {
-      //   if (
-      //     this.oppFormCopy[i].dataType === 'Picklist' ||
-      //     this.oppFormCopy[i].dataType === 'MultiPicklist'
-      //   ) {
-      //     this.picklistQueryOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].apiName
-      //   } else if (this.oppFormCopy[i].dataType === 'Reference') {
-      //     this.referenceOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].id
-      //   }
-      // }
-
       for (let i = 0; i < this.createProductForm.length; i++) {
         if (
           this.createProductForm[i].dataType === 'Picklist' ||
@@ -3690,12 +3532,6 @@ export default {
           this.allOpps = [...res.results, ...this.allOpps]
           res.next ? (this.hasNext = true) : (this.hasNext = false)
         }
-
-        // if (this.currentList === 'Closing this month') {
-        //   this.stillThisMonth()
-        // } else if (this.currentList === 'Closing next month') {
-        //   this.stillNextMonth()
-        // }
       } catch (e) {
         this.$toast('Error gathering Opportunities!', {
           timeout: 2000,
@@ -4516,23 +4352,6 @@ h3 {
     margin-right: 0.25rem;
   }
 }
-// .opp-modal::-webkit-scrollbar {
-//   width: 6px; /* Mostly for vertical scrollbars */
-//   height: 0px; /* Mostly for horizontal scrollbars */
-// }
-// .opp-modal::-webkit-scrollbar-thumb {
-//   background-color: $dark-green;
-//   box-shadow: inset 4px 4px 8px 0 rgba(rgb(243, 240, 240), 0.5);
-//   border-radius: 0.3rem;
-// }
-// .opp-modal::-webkit-scrollbar-track {
-//   // background: $soft-gray;
-//   box-shadow: inset 4px 4px 8px 0 $soft-gray;
-//   border-radius: 0.3rem;
-// }
-// .opp-modal::-webkit-scrollbar-track-piece {
-//   margin-top: 8px;
-// }
 .note-section {
   padding: 0.25rem 1rem;
   margin-bottom: 0.25rem;

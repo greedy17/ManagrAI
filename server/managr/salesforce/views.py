@@ -667,7 +667,7 @@ class SalesforceSObjectViewSet(
         forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
         main_form = forms.filter(template__form_type="CREATE").first()
         if main_form.template.resource == "OpportunityLineItem":
-            opp_ref = form_data["OpportunityId"]
+            opp_ref = integration_ids[0]
         stage_forms = []
         stage_form_data_collector = {}
         for form in stage_forms:
@@ -688,11 +688,7 @@ class SalesforceSObjectViewSet(
                 resource = model_routes[main_form.resource_type]["model"].create_in_salesforce(
                     all_form_data, user.id
                 )
-<<<<<<< HEAD
-                data = {"success": True}
-=======
-                data = {"success": True, "integration_id": resource.id}
->>>>>>> 0ea04981f081f1ec1431c526a03f8ba3ddf54e89
+                data = {"success": True, "integration_id": resource.integration_id}
                 break
             except FieldValidationError as e:
                 data = {"success": False, "error": str(e)}
