@@ -3321,7 +3321,7 @@ export default {
         )
       }
 
-      if (this.hasproducts) {
+      if (this.hasProducts) {
         for (let i in this.productReferenceOpts) {
           this.productReferenceOpts[i] = this.getReferenceFieldList(
             i,
