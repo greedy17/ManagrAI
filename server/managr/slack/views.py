@@ -590,15 +590,9 @@ class SlackFormsViewSet(
                 form_type="UPDATE",
             ).first()
             org.update_has_settings("products")
-            update_data = data
-            update_data["form_type"] = "UPDATE"
-            update_serializer = self.get_serializer(data=update_data, instance=form)
-            update_serializer.is_valid(raise_exception=True)
-            update_serializer.save()
-            instance = update_serializer.instance
-            instance.fields.clear()
+            form.fields.clear()
             for i, field in enumerate(fields):
-                instance.fields.add(field, through_defaults={"order": i})
+                form.fields.add(field, through_defaults={"order": i})
         return Response(serializer.data)
 
 
