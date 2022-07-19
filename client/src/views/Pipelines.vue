@@ -3321,12 +3321,14 @@ export default {
         )
       }
 
-      for (let i in this.productReferenceOpts) {
-        this.productReferenceOpts[i] = this.getReferenceFieldList(
-          i,
-          this.productReferenceOpts[i],
-          'createProduct',
-        )
+      if (hasproducts) {
+        for (let i in this.productReferenceOpts) {
+          this.productReferenceOpts[i] = this.getReferenceFieldList(
+            i,
+            this.productReferenceOpts[i],
+            'createProduct',
+          )
+        }
       }
 
       this.filterFields = this.updateOppForm[0].fieldsRef.filter(
